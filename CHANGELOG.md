@@ -1,0 +1,2637 @@
+# v1.22.11 / build 2226 — Bounded Granite restoration preflight
+
+Add one operator-authenticated, explicitly Granite-scoped metadata operation at `/api/inspect/operations/restoration-preflight`. It observes the serving process's lifecycle and shared container memory, safely pins cache metadata without reading its contents, and explains a current resource/coordination assessment. Unknown inputs and unsupported safe file handling remain unknown. A positive response is advisory and non-atomic; normal entry still rechecks admission and payload compatibility.
+
+Restoration and the probe share the unchanged raw-headroom calculation: effective 2 GiB cap, 16× serialized-size allowance, 128 MiB minimum/cache safety, and the existing FOIS 512 MiB working plus 256 MiB safety policy. Existing token authentication is unchanged; only the exact approved Granite league can use the new operation. No hydration, provider work, heavy lease, payload decoding or deep sizing occurs in the diagnostic.
+
+This diagnostic does not establish Granite recovery or the cause of the earlier 503. Render-local credential success is Main Chat-supplied evidence; Codex does not claim to reproduce it. See docs/audits/RESTORATION_PREFLIGHT_2226.md for the scope, provenance and verification procedure.
+
+# v1.22.10 / build 2225 — Trade lineup transparency and evidence limits
+
+Completed Trade assessments expose both franchises’ independently optimized before/after analytical starters and disjoint projected reserves. Details show actual league-configured slots, player names/positions, individual contributions, weekly totals and compatible publication identity. Missing positions remain explicit, genuine zeros remain numeric, and incompatible slot evidence is withheld without inventing a lineup. Submitted Sleeper starters remain separate and unchanged.
+
+Current-week incoming/starter availability warnings are visible beside the decision. Weekly details distinguish eligible projected reserves, excluded cover and unknown projections without extrapolating injury recovery. Recorded search-limit diagnostics now distinguish overlapping projection, Market and future-capital requirements from contextual reserve, freshness and manager-history qualifications. They do not infer upstream absence or change search classification.
+
+Primary fantasy-point displays use two decimals; expanded weekly totals retain up to four decimals without binary artifacts. Canonical values, all decision thresholds, prices, saved preferences, exact picks and resource policies are unchanged. Expanding details performs no new requests or optimization. Original Granite 107/44/29 counts are reported observations, not a reconstruction: its full matched diagnostics were not available during implementation. See docs/audits/TRADE_LINEUP_EVIDENCE_2225.md.
+
+# v1.22.9 / build 2224 — League entry and bounded preparation recovery
+
+A secondary league can restore its existing compatible, retained Sleeper cache before attempting synchronization. Restored pages identify the last successful sync, while projection, Market and historical evidence keep their independent compatibility requirements. Cache restoration never starts provider requests, historical imports, FOIS or Market construction.
+
+When another heavyweight operation prevents hydration, DTOS now reports waiting for capacity rather than claiming no supported roster exists. An explicit retry is limited to one attempt per minute and shares the existing per-league flight. Navigation and favicon requests cannot repeatedly start the same blocked hydration. Warm league reads remain local while FOIS runs.
+
+JSON cache restoration also restores canonical integer week keys in prepared lineup evidence. Cached pre-trade and newly calculated post-trade weeks now join without changing points, projections, source generations or verdict rules.
+
+Restoration uses actual raw cgroup memory, a serialized-size allocation allowance and a safety margin, without counting inactive file memory as free. An active FOIS lease retains its full outstanding working allowance and safety margin before a new cache decode is admitted. Source reads are owned through cancellation and shutdown. Existing FOIS 768 MiB and Trade 256+128 MiB policies, calculations, authorization and saved preferences are unchanged. Disposable constrained-container evidence is separate from live Granite acceptance. See docs/audits/LEAGUE_ENTRY_RECOVERY_2224.md.
+
+# v1.22.8 / build 2223 — Trade resource readiness and bounded recovery
+
+Explicit Trade searches and full evaluations now check current container memory and share lifecycle coordination with Sleeper, FOIS and historical preparation. One Trade operation runs at a time. Unsafe or unknown capacity returns a specific deferred state and preserves the workspace; retry is explicit. Compatible projections, capacity readiness and completed searches with no qualified offers remain distinct.
+
+A measured Trade policy reserves 256 MiB for work plus 128 MiB safety. With complete cgroup evidence, only half of clean inactive file-backed memory, capped at 384 MiB, may count as conditional reclaim capacity. Raw memory measurements remain intact. FOIS retains its separate raw-memory 768 MiB policy. Explicit admission may retire an idle FOIS worker, expire already-expired cache entries and return unused allocator pages; it never clears active publications or refreshes sources.
+
+Cooperative cancellation and a 105-second server deadline retain ownership until the actual Trade thread exits. No search caps, prices, Custom formulas, lineups, ownership rules or bilateral qualification thresholds change. Resource tests separate preparation from observation, label harness padding, and exercise actual execution, deferral, recovery, timeout and cleanup inside 2 GiB. This is bounded operating evidence, not general production-capacity clearance. See docs/audits/TRADE_RESOURCE_READINESS_2223.md.
+
+# v1.22.7 / build 2222 — League-configured K and DEF projection continuity
+
+Reconcile the held K/DEF candidate with build 2221 without changing its FOIS memory admission, 768 MiB reserve, lifecycle coordination, retirement or deferred-retry behavior.
+
+Request K/DEF in the existing bounded Sleeper projection call, preserve explicit defensive statistics under each league's scoring coefficients, and evaluate required K/DEF slots using legal lineup rules. Missing projections remain unknown; no Market prices, Custom formulas, Trade thresholds, pick ownership, submitted lineups or retained FOIS grades change. Incompatible or incomplete required evidence remains qualified.
+
+The original Week 8 source replay is historical acceptance evidence, not proof of a current live DTOS publication. Combined-source validation and any new live observations are recorded separately. See docs/audits/MULTILEAGUE_PROJECTIONS_2220.md.
+
+# v1.22.6 / build 2221 — FOIS memory admission safety
+
+Reserve build2220 and PR310 for the separate K/DEF candidate. This production-baseline safety candidate checks raw container headroom before FOIS scratch preparation and executor submission, with512MiB working reserve plus256MiB safety margin. No inactive-file discount or host-free-memory override. Unknown container telemetry defers work.
+
+Serialize FOIS reservation against existing heavy phases; defer sync rather than blocking its event loop while FOIS owns its lease. Reap an idle FOIS worker before sync allocations. Retain previous grades as RETAINED / NOT REVALIDATED and report deferred generation distinctly, with a60-second automatic-attempt cooldown and existing retry controls. No source prices, projections, lineup or grading formulas change.
+
+Reserve sizing is conservative relative to observed243MiB worker residency, not a formal maximum-allocation guarantee. Retained parent pressure remains an operating limitation. Release requires complete canonical, Product and resource acceptance; no production stress or infrastructure changes.
+
+# v1.22.4 / build 2219 — Optional Relative Custom Valuation
+
+Add a previewed, explicit and reversible Relative Priced-Order Custom pricing method. Existing accounts retain Absolute Slot unchanged. Relative permutes compatible current prices among priced saved assets in their relative saved order; unsupported rows remain saved and unvalued. Neutral prices, source admission, exact identities and all bilateral Trade safeguards remain independent.
+
+Compare availability, representative values and hypothetical personal package totals before confirming. Preview confirmation is bound to the session, scope, ranking revision, target method and current Market publication. Method changes increment the existing preference revision without editing order, baseline, tiers or flags. Publication changes recompute the selected method and show eligibility changes since the last explicit review; no prices or personal maps are stored.
+
+No production preferences are changed by validation. No provider calls, solvers, discovery, historical work or polling are added to ordinary reads. See docs/audits/RELATIVE_CUSTOM_2219.md for numerical contracts, migration/rollback and verification boundaries.
+
+# v1.22.3 / build 2218 — Two-sided Trade decision clarity
+
+Show admitted current-week and supported-week production changes, both sides’ Market compensation, reserve evidence and future-capital costs in primary Trade summaries. State unconfirmed manager direction and the conditions behind production-for-capital plausibility. Give evidence-specific near-miss actions; adding picks cannot repair missing projections.
+
+Preserve qualification thresholds, search, Neutral/Custom mathematics, exact identities, lineup calculation, source guards and saved intent. No new source, solver, history or discovery work for explanations.
+
+# v1.22.2 / build 2217 — Trade search diagnostic reuse
+
+Remove repeated preparation, decoding and qualification of identical pre-trade league diagnostics within each package evaluation. Reuse one same-call baseline for both team views, independently construct and qualify post-trade rosters, and retain the latest refresh/freshness qualification for both sides.
+
+Preserve every candidate, full evaluator, legal-lineup solve, search cap, ownership/capacity rule and final verdict. No new cross-request cache, provider calls, persistence or concurrency change. Cold Market preparation and non-preemptive synchronous cancellation remain explicitly qualified; this is not a new readiness policy or instant-cancellation mechanism.
+
+See docs/audits/TRADE_RESPONSE_2217.md for source tracing, controlled comparison requirements and limitations.
+
+# v1.22.1 / build 2216 — Rebuild roster-space and ownership integrity
+
+Keep known roster-space and ownership blockers out of Recommended Trades before bounded package selection and expensive evaluation. Use the existing configured active-roster rules, exact player/pick ownership and compatible prepared lineup evidence. Consider legal balancing player-plus-pick packages within unchanged search caps; never assume drops, IR/taxi moves or extra roster slots.
+
+Keep all bilateral quality, overpay, lineup, depth, Market and Custom safeguards. Add bounded construction-rejection and preparation timing evidence, and explain legitimate zero-result capacity/ownership obstacles without endorsing Shop leads. Preserve temporary Trade strategy isolation, saved rankings/goals, navigation, public/account behavior and retained historical grades.
+
+No new provider calls, ordinary-read analytics, persistent analytical storage or infrastructure. See docs/audits/REBUILD_ROSTER_SPACE_2216.md for proof, qualifications and acceptance boundaries.
+
+# v1.22 / build 2215 — Trade strategy state and discovery clarity
+
+Separate temporary Trade strategy from the saved franchise goal. Trade choices stay in the existing workspace; reload and contextual Back restore them, while fresh primary Trade entry starts from the franchise goal. Changing Trade strategy never saves or clears a goal.
+
+My Team now labels unsaved goal previews and requires an explicit **Save goal** action to persist the goal across sessions. The existing account database holds only a bounded, account/league/franchise-scoped preference with transactional revision and authorization checks. Legacy browser-session goals remain readable and unchanged; no automatic import or restoration is performed. Existing rankings and production goals are not edited by acceptance testing.
+
+Replace joined discovery labels with: “DTOS explored a limited set of possible offers, not every theoretical trade.” Preserve zero-result explanations, Shop leads, bilateral admission and all build 2214 discovery mathematics. No new analytical work, provider calls or analytical storage.
+
+Technical SemVer/tag: v1.22.0; customer-facing product version: v1.22. See docs/audits/TRADE_STRATEGY_STATE_2215.md for root causes, boundaries and validation requirements.
+
+# v1.21.112 / build 2212 — Customer clarity and accessible Back
+
+## v1.21.114 / build 2214
+
+- Explore multiple exact capital returns for supported Rebuild sale opportunities within the existing discovery budgets.
+- Enforce both discovery anchors before package pruning; reserve bounded coverage for player-plus-pick returns.
+- Prioritize supported buyer utility and own starter costs; age is only a late search tie-break.
+- Explain assessed zero-result limits and optional Shop review leads without endorsing rejected trades.
+- Preserve bilateral thresholds, Neutral/Custom mathematics, source qualification and all existing workflows.
+
+## v1.21.113 / build 2213
+
+- Reconcile prepared Custom admission only after an exact canonical semantic-generation match; preserve immutable prices and build provenance.
+- Provide an explicit prepared-evidence reload without resetting rankings or entered offers.
+- Preserve exact partial rank slots, Neutral independence, source fences, security and resource controls.
+
+Keep the existing contextual Back link available after its header scrolls away, using a compact top strip and a reserved header slot. Preserve its DOM/tab order, focus, existing history and authorization checks, five-tab navigation and Trade workspace/fresh-entry behavior. The top strip blocks clicks on obscured content. No scroll-triggered requests or additional navigation history.
+
+Explain projection-source timing in plain English, separate completed historical seasons from pending evidence, and show concise mode-aware Custom warnings with their full original limitations still available through disclosure. Label supported multiweek Trade lineup changes as totals rather than per-week averages. Preserve existing number formatting, unrounded comparisons, canonical facts, prices, projections, legal lineups, strategy/verdicts, grades and saved preferences.
+
+Welcome/account behavior and build2211 Market recovery remain intact. No new provider work, analytical storage, cache or infrastructure. See docs/audits/CUSTOMER_CLARITY_2212.md for the bounded audit and acceptance contract.
+
+# v1.21.111 / build 2211 — Market preparation and recovery
+
+Show readable, truthful Market preparation stages from existing resident cache state. Fix dark-on-dark preparing-page copy and provide accessible recovery, qualified last-successful Market notices and bounded automatic transition to a compatible nonempty publication. Checks run only while the page is visible, at most twelve times over one minute, and never acquire a runtime, prepare a Market or call providers.
+
+Preserve account/session/league/franchise scope and contextual Back history when opening the ready Market. Stop on failed or incompatible preparation, scope changes and repeated connection failures; keep an explicit retry and useful Home/My Team navigation. Custom asset limitations remain separate from overall Market readiness.
+
+Pricing, source admission, subset preservation, failed-refresh evidence, Custom rank slots, Trade verdicts, projections, legal lineups, saved preferences, Welcome and account behavior remain unchanged. No new analytical storage, worker, provider polling or paid service. See docs/audits/MARKET_PREPARATION_2211.md for state contracts and limitations.
+
+# v1.21.110 / build 2210 — Contextual Back and workspace return
+
+Add a consistent authenticated Back control that returns through meaningful, same-tab page context rather than a fixed section landing. Preserve Market queries, explicit My Team sections, safe direct-link fallbacks and browser Back/Forward. Validate account/session/league/franchise scope before contextual or cached-page return; private context checks require no league runtime or analytics.
+
+Restore the existing exact Trade draft, Neutral/Custom mode, strategy, temporary filters and preview/Keep/Adopt/Adjust context. Retained results remain not revalidated and pending departures are cancelled. Deliberate primary Trade-tab entry preserves the existing fresh-session policy. Keep My DTOS editor view without writing rankings. Bound temporary navigation state to 32 entries, 64 KiB and two hours; no permanent history database or recommendation cache.
+
+Preserve Welcome/account admission, five primary destinations, prices, projections, legal lineups, Trade verdicts, exact picks, historical qualifications, saved preferences and resource safeguards. See docs/audits/CONTEXTUAL_BACK_2210.md for source audit, security boundaries and acceptance limitations.
+
+# v1.21.109 / build 2209 — Trade workflow and discoverability
+
+Separate Generate Trades from Evaluate Trade. Put the goal and Neutral/Custom valuation controls ahead of owned assets, keep search preferences optional, and place generated results directly beneath the primary action. Preserve exact packages and the established Preview/Keep/Adopt/Adjust lifecycle.
+
+Use honest preparation, searching, complete, error and cancellation states; prevent duplicate submissions and reject stale or incomplete responses. An optional picks toggle maps only this search to existing exact-asset exclusions, without changing an entered offer, saved intent, selection mathematics or recommendation policy. No new persistent preference memory or automatic discovery is added.
+
+Keep final bilateral recommendation headings authoritative. Separate qualified recommendations from optional, exploratory, rejected and unsupported alternatives; no personal upside upgrades a limited offer. Valuation, projections, legal lineups, exact picks, history, security and build 2208 lineup safeguards remain unchanged.
+
+# v1.21.108 / build 2208 — Prepared lineup review and game-lock integrity
+
+Keep the actual Sleeper submitted lineup separate from the prepared optimal lineup, including explicitly empty slots. Show a higher-projected lineup alert only when the exact current-week changes have compatible projections, fresh roster/preparation checks, verified player identity, eligible slots and future recorded game times. Unknown or started-game changes remain informational; no lineup is submitted automatically. Open tabs expire the actionable suggestion without polling.
+
+Resolve optimal player names and positions, explain prepared bye/Out/unassigned-team evidence, and apply the existing projection provenance check to matchup rows and optimal disclosures. Reuse the existing bounded schedule preparation and add no ordinary-read provider, solver, FOIS, history or discovery work. Neutral/Custom valuations, Trade verdicts, historical grades and saved state remain unchanged.
+
+The live 0/10 versus 3/10 needs count is not resolved without a matching publication identity and reconnected browser. Controlled fixtures do not establish live Day Traders or physical Safari acceptance. See docs/audits/LINEUP_REVIEW_2208.md.
+
+# v1.21.107 / build 2207 — Projection coverage and legal eligibility
+
+Preserve Sleeper's explicit fantasy positions separately from primary NFL position, and apply exact league slots without counting one athlete twice. Current Out/IR and already-prepared known-bye exclusions now agree across Team Strength, roster diagnostics and useful reserve production. Original quotes and genuine zero remain intact; explicit source identity conflicts are withheld.
+
+My Team explains supported versus total lineup population and excluded starting slots. League needs distinguishes full replacement-evidence coverage from a valid starting lineup. Weekly views explain ADP-only, absent, incompatible and participation evidence without inventing projections. No new request-time source, optimizer, FOIS, discovery, history or persistence work is introduced.
+
+Fresh authorized Sleeper source replay still supports seven of ten Day Traders lineups; all seven totals are unchanged. One dual-eligible player's usable slot is recovered, but three teams still lack complete lineups. The five reported players have ADP-only Week 8 records, not scoring projections. The original 182.03 production snapshot and live authenticated browser remain unverified; current source replay gives 185.4278. See docs/audits/PROJECTION_COVERAGE_2207.md.
+
+# v1.21.106 / build 2206 — Trade recommendation integrity and context
+
+Make the existing bilateral qualification the primary Trade conclusion. User-side or Custom upside remains visible as subordinate context and cannot promote a counterparty-limited, incomplete or non-executable offer. Apply the same contract to the shared explanation, preview and alternative cards; retain prior assessments as not revalidated.
+
+Keep prepared legal-lineup comparisons distinct from stricter roster-availability diagnostics. Preserve supported numeric comparisons with conditional availability where required, name current season/week and separate multi-week totals and supported-week averages. Do not combine different windows or erase known numbers with a generic unavailable heading. Missing/incompatible comparisons remain missing, genuine zero remains zero.
+
+No evaluation thresholds, prices, ranking preferences, projections, solver mathematics, pick identities, history/FOIS grades or discovery policy change. No extra provider, solver, FOIS, history or discovery calls are introduced by formatting. The connected live browser requires app reauthentication; reproduction and positive authenticated acceptance use disposable source-compatible fixtures, not live Day Traders evidence. See docs/audits/TRADE_RECOMMENDATION_CLARITY_2206.md for precise scope and remaining limits.
+
+Apply the same completed-evidence admission to headline, expanded weekly totals, averages, horizon subtotals and preview/alternative explanations. Verify pinned season, week, scoring, source generation and before/after snapshot references without calculating new projections. An invalid future week does not erase independently supported current or playoff comparisons. Preserve unsupported values as missing. Correct the incomplete Preview/Keep/Adopt and precision fixtures without promoting unqualified offers or inventing numerical evidence.
+
+# v1.21.105 / build 2205 — Historical decision evidence continuity
+
+Join Trade player identities to existing canonical retained Market observations and the compatible neutral current endpoint. Preserve original package keys, current-price provenance, historical cutoffs, source formats and Custom/Neutral separation. Exact draft picks are not guessed into global player trends.
+
+Keep uniquely acquired transaction periods when an active-window duplicate omits them, including genuine week zero. Conflicting periods remain unqualified; exact assets, status, ownership and source payloads are unchanged.
+
+Keep failed, pending, cancelled and unknown-status actions explicitly qualified in My Team recent activity rather than presenting completed additions or drops. Keep those activity rows readable on narrow phones. Carry supported dated neutral movement into the existing Trade evidence disclosure. This context does not change recommendation thresholds, lineup calculations or manager-confidence rules. No new provider requests, historical imports, grades, permanent warehouse or personalized price cache.
+
+Continue the 24-surface inventory in docs/audits/DATA_COMPLETENESS_2205.md and data_completeness_2205.csv. Source-pinned before/after controls and disposable source → cache → private HTTP → Chromium controls cover the recovered paths. Live tenant inspection remains unauthorized with the configured credential; fixture acceptance does not establish live historical completeness or production capacity.
+
+# v1.21.104 / build 2204 — Exact partial Custom values
+
+Preserve every saved rank slot when Market evidence is missing. Expose a supported asset’s personal value only when its existing slot is identical under every compatible completion of missing prices; otherwise withhold it. Missing assets never receive prices, and no order, tier, flag or revision is rewritten on reads. The existing full-cohort valuation rule and neutral Market mathematics are unchanged.
+
+Allow supported Custom packages through the existing Trade workflows while dependent packages remain qualified or blocked. Explain partial availability and asset-specific recovery. Keep source/revision/publication and membership fencing, resource limits, Welcome and account behavior unchanged. See docs/audits/DATA_COMPLETENESS_2204.md for the proof, scope and unresolved production source access.
+
+# v1.21.103 / build 2203 — Source to screen continuity
+
+Preserve coherent full-population Market normalization references when cached preparation receives only a retained league subset. Reject changed, incomplete or mixed partial references atomically instead of deriving a new price curve from the subset. Fresh complete provider publications retain the existing normalization methodology. Saved ranking intent and Neutral/Custom separation are unchanged.
+
+Make 320px matchup player rows readable by stacking paired sides with franchise labels. Keep wider comparisons, scores, projections, navigation and disclosures unchanged. See docs/audits/DATA_COMPLETENESS_2203.md for source qualifications and remaining gaps; private production Market access was unavailable, so this release does not claim restored numerical Custom availability for the four reported IDs.
+
+# v1.21.102 / build 2202 — Source actuals and data completeness
+
+Recover same-row Sleeper player actuals when starter entries are missing; preserve missing versus zero across sync and matchup presentation. Clarify projection recovery states and remove customer-facing beta labels without changing account access or demo qualifications. Preserve Custom slot-curve safeguards and saved preferences. See docs/audits/DATA_COMPLETENESS_2202.md for measured scope and unresolved inventory.
+
+# v1.21.101 / build 2201 — Names-only welcome demonstrations
+
+- Replace visible fictional player labels with verified NFL player names and positions.
+- Retain text-only position indicators, fictional team scenarios, exact example picks and all illustrative calculations.
+- State beside every demo that values and rosters are illustrative, not live player valuations or actual trades; include a visible non-endorsement statement.
+- No portraits, external imagery, provider data imports, private account changes or additional anonymous analytical work.
+- Make the simulated HTTP-worker test timestamp deterministic and add a predating-artifact rejection control; production watchdog and freshness checks remain unchanged.
+
+# v1.21.100 / build 2200 — Operator diagnostics, selected league identity and Trade pickers
+
+Trade roster pickers group actual positions QB/RB/WR/TE then other supported positions, sort prepared neutral prices descending with unavailable last, and separate exact draft picks. Selected packages, valuation policy and discovery behavior remain unchanged.
+
+Replace raw orchestration error serialization with a stable failure category and warning while preserving protected diagnostic state and authorization. Render source-independent account headers from selected membership instead of the default league runtime, reject incompatible runtime identity, and fence asynchronous rankings reads to the rendered league/franchise/session. Preserve rankings, numerical engines and the fictional welcome page.
+
+## v1.21.99 / build 2199 — Public Welcome and Read Only Demo
+
+- Reconcile the original held welcome candidate with secured build 2198; anonymous Home opens `/welcome`, while authenticated Home and private navigation retain their existing behavior.
+- Present three frozen, clearly fictional Team, bilateral Trade and Neutral/Custom examples using the existing charcoal/green design and native accessible disclosures.
+- Preserve exact fixture identities and verified 528/528 Market, 108→120 and 112→116 lineup, 43→27 replacement-production and 528→785 personal-value relationships.
+- Serve one prepared, no-script/no-network public HTML document without provider, solver, FOIS, historical, discovery or preference work. Preserve all accepted security, resource and source-publication protections.
+- Keep public account creation honest about controlled-beta capacity; no invitation gate, registration-policy change, billing or beta expansion. Separately document the strictly privileged orchestration-error field.
+
+## v1.21.98 / build 2198 — Safe Cached Synchronization
+
+- Replace raw cached synchronization warnings in legacy inspection, shared HTML, manual-sync JSON and prepared health summaries with fixed availability-aware messages.
+- Preserve last-valid league facts, timestamps and recovery without treating cached data as newly verified.
+- Store safe league/transaction failure status, normalize legacy cache status on load/save without changing source facts, and retain bounded message-free correlated server diagnostics.
+- Sanitize cached runtime-error fields for operator and member health alike, retaining protected operational metadata and bounded server diagnostics.
+- Preserve private/no-store inspection, existing runtime 422/503/500 contracts, authorization, valuations, historical grades and resource protections. Keep the welcome candidate unreleased.
+
+## v1.21.97 / build 2197 — Private Runtime Failures
+
+- Replace reflected runtime exception strings with stable public-safe 422/503 messages and error codes in league-context middleware and explicit runtime APIs.
+- Preserve request correlation and bounded server-side type/location diagnostics without exception messages, credentials, source identifiers or traceback payloads.
+- Qualify cached runtime errors in member health views while retaining existing authorized operational inspection; keep protected failure/denial responses private and non-cacheable.
+- Preserve the accepted generic diagnostic 500, account/league isolation, recovery navigation, valuations and resource safeguards. The welcome candidate remains unreleased.
+
+## v1.21.95 / build 2195 — Premium Decision Hierarchy
+
+## v1.21.96 — Private Diagnostic Boundaries
+
+- Require active, league-scoped authorization for legacy semantic inspection, including alternate paths and standalone-router defense in depth.
+- Fence member franchise inspection, validate runtime league identity, and preserve existing authorized operational inspection.
+- Limit public health/readiness/status to explicit deployment-safe fields; keep detailed platform/data/Market health private under required authentication.
+- Reserve shared operational health/resource diagnostics for the existing inspection credential, preventing cross-league cached-error disclosure to ordinary sessions.
+- Close matching legacy HTML search/report and manual-sync authorization omissions.
+- Keep the unreleased public welcome candidate separate. No registration, valuation, grading or saved-preference changes.
+
+Compact the shared account/league header and keep secondary league tools in an accessible disclosure. Bring prepared Home guidance and Market search forward, distinguish selected modes from primary actions, and present existing player evidence in one identity-led summary with quieter supporting sections. Keep Roster, Depth and Capital visible in a compact row, with secondary Trade shortcuts in the existing assessment disclosure.
+
+Presentation only: neutral and personal values, exact assets and picks, projections, legal lineups, recommendation eligibility, saved rankings and historical qualifications are preserved. No new provider, discovery, solver, FOIS or historical preparation work, persistent records or infrastructure. Unsupported Custom assets retain deliberate recovery; no production preferences are changed. Author Chromium fixtures do not establish physical Safari or unfamiliar-user acceptance.
+
+## v1.21.94 / build 2194 — Priced inactive dynasty assets
+
+Keep a saved inactive player in Custom Rankings when the same compatible current Market publication supplies its exact identity and supported price. Sleeper inactivity is not retirement or absence of a dynasty price. Explain that a priced inactive asset is not confirmation of availability to play. Preserve the same saved-cohort slot curve, ordering, tiers, preferences and revision on reads.
+
+Retired, missing, unpriced, conflicted and unsupported exact-pick assets remain qualified blockers; missing values never become zero. Individual confirmed recovery and optional Restart remain unchanged. No production ranking edits, new provider or analytical work, grading changes, storage or resource-limit changes. Authenticated production-account recovery and independent Scout acceptance remain separate from disposable author controls.
+
+## v1.21.93 / build 2193 — Custom Rankings Compatibility & Recovery
+
+Saved Custom Rankings now identify the exact assets whose current evidence cannot support personal values. Review cause-specific pricing, retirement, identity or exact-pick ownership limitations and retry prepared evidence without changing saved intent. A confirmed, revision-checked removal from Custom ordering preserves all other relative ranks, other tier breaks and Target/Avoid/Protect choices; Restart remains a separate full reset. Removing an asset changes the saved cohort and can change the remaining personal value slots.
+
+Neutral Market prices, Custom slot-curve mathematics, canonical projections, legal lineups and Trade safeguards are preserved. New assets do not silently enter saved rankings; missing evidence never becomes zero. No new storage schema, providers, background analysis or historical FOIS regeneration. Author fixtures and hosted gates are separate from future Scout acceptance; exact production revision-9 asset diagnosis requires authorized account access and is not inferred from counts.
+
+## v1.21.92 / build 2192 — Final Plain-English Experience Correction
+
+Explain player dossier outlook, strengths, weaknesses and schedule/bye limits in football terms using the same prepared reports. Preserve genuinely supported findings and distinguish missing evidence from unfavorable evidence. Keep useful methodology and provenance in advanced disclosures rather than exposing internal scalar, baseline, threshold or evidence-object instructions in ordinary dossier content.
+
+Explain Home strategy choices and the best projected starting lineup without inferring an unsupported competitive direction. Share identical Depth evidence limits once across the affected positions while retaining distinct positional warnings. Show supported league names and understandable Market totals in Builder, with exact source identifiers in technical evidence.
+
+Presentation-only integration: no price, projection, lineup, verdict, eligibility, strategy, Custom valuation, saved-ranking or historical-evidence changes. No added providers, discovery, solver, FOIS, reconstruction, storage or background jobs. Production rankings and preferences are not edited or reset. Retained FOIS grades remain RETAINED / NOT REVALIDATED. Physical Safari, unfamiliar-human and independent Scout acceptance are separate from author-run Chromium fixtures. Existing beta/concurrency restrictions remain.
+
+## v1.21.91 / build 2191 — Plain-English Decision Experience
+
+Explain missing depth evidence as uncertainty, separately from a supported replacement weakness. Keep projected lineup rankings distinct from record/PF standing and provisional evidence visibly qualified. Preserve detailed source/availability evidence in existing disclosures.
+
+Explain why a supported current-week trade effect can coexist with an incomplete overall recommendation. Show the other roster’s prepared benefit and cost without elevating historical manager observations or changing eligibility. Use cost/uncertainty labels rather than manufacturing a tradeoff from reassurance. Keep missing-price conditional exploration and all canonical verdicts intact.
+
+My DTOS explains Create rankings to personalize and the Custom Trade setup prerequisite; remove repeated introductory wording while preserving saved order, Restart, recovery and Neutral/Custom behavior. Market describes comparable dated observations without internal Step 2 terminology. Home uses supported original-team labels for owned firsts and keeps exact source identifiers in Supporting evidence.
+
+Presentation-only prepared reads: no additional provider, discovery, solver, FOIS, reconstruction, inference or durable analytical work. No pricing, projection, lineup, strategy, authorization, source-publication or cache-budget changes. Retained historical grades remain RETAINED / NOT REVALIDATED. Responsive Chromium and simulated walkthroughs are author evidence; physical Safari, unfamiliar-human and independent Scout acceptance remain open. Existing beta/concurrency restrictions remain.
+
+## v1.21.90 / build 2190 — Custom Rankings Availability and Recovery
+
+Use the canonical Market cache's immutable prepared-input identity for Custom Rankings compatibility. The normal provider publication has no top-level generation timestamp; requiring one rejected a ready Market directory indefinitely. Preserve explicit legacy source checks, exact league/player/pick identities, current prepared-generation admission and saved rank-slot valuation semantics. Reject input changes during directory reads and source replacement before preference commits/publication; never reset saved intent on reads or refresh.
+
+Offer a visible Retry rankings action with Check Market and Neutral Trade recovery. Explain unavailable Custom mode in the existing Trade valuation panel. Preserve previously loaded rows for reference while disabling edits until a current read succeeds; ignore older responses after a newer read. Empty or incompatible evidence remains unavailable, not zero. Retry is a bounded prepared read, not an instruction to start discovery or providers.
+
+Actual canonical Market → authenticated store/HTTP → rendered Chromium controls cover recovery, source races, saved edits, exact picks and Custom/Neutral Trade navigation. No provider/solver/FOIS/history/discovery factory is added to ranking reads or edits; no schema, cache-budget or persistent price-store change. Physical Safari, unfamiliar-human and independent Scout acceptance remain separate. Beta expansion remains unauthorized.
+
+## v1.21.89 / build 2189 — Current-Manager Evidence and Waiver Activity Integrity
+
+Bind prepared manager observations to the actual producer's league, franchise, current owner, method and unchanged source publication. Revalidate at Trade consumption and protected response publication; superseded evaluations fail with the established retryable canonical-evidence error. Prior-owner decisions remain franchise history and retained grades remain RETAINED / NOT REVALIDATED. Missing manager history is neutral; current bilateral roster and capital quality precede historical confidence tie-breaks.
+
+Deduplicate canonical source-league/transaction identities and separate completed claims, additions and drops from failed, pending, cancelled and unknown attempts. Preserve exact asset identity, directed FAAB including zero and historical owner attribution. Apply the shared admission to League DNA, activity APIs, rendered summaries and completed Commissioner news. Explain the counterparty's current benefit and cost before qualified manager observations, sample period and limitations.
+
+No new provider, solver, FOIS, reconstruction, discovery or persistent analytical work is introduced by these qualification reads. Market prices, Sleeper projections, legal lineups, Custom/Neutral valuation contracts, bounded caches and heavyweight execution protections remain unchanged. Responsive Chromium controls are author evidence; physical Safari, unfamiliar-human acceptance and independent Scout review remain separate. Beta expansion is not authorized.
+
+## v1.21.88 / build 2188 — Custom Rankings Accessibility and Phone UX
+
+Keep keyboard focus on an enabled control for the same exact asset after ranking moves, including first/last and page boundaries. Preserve visible focus, overall-position announcements and the moved asset's viewport anchor.
+
+Browse compact ranking rows with Market/Personal values and on-demand reorder, Target/Avoid/Protect, tier and supporting controls. Put pagination above and below the list; keep search, positions and Neutral/Custom switching near the top. Preserve visible evidence warnings and scoped preferences.
+
+Personal order/value methodology, Market prices, projections, legal lineups, Trade conclusions, persistence and security are unchanged. No provider, solver, FOIS, history reconstruction or automatic discovery is added to ordinary editing. Responsive Chromium and emulated touch remain separate from physical iPhone/Safari and independent Scout acceptance.
+
+## v1.21.87 / build 2187 — My DTOS Custom Rankings
+
+Add complete Market-seeded overall player and exact-pick rankings under Account, with positional search, paginated editing, drag/touch and keyboard move controls, optional tier breaks and saved Target/Avoid/Protect intent. Neutral view preserves the saved custom order; explicit confirmed Restart uses the latest compatible Market baseline while retaining separate preferences by default.
+
+Custom DTOS assigns the current compatible Market price slots of the saved cohort to its saved global order. This personal current-value permutation never changes neutral prices, projections, legal lineup effects or opponent valuation evidence. New or unavailable identities do not acquire invented personal prices. Preserve canonical severe-loss and missing-evidence safeguards and expose separate personal and neutral conclusions across Calculator, Trade For, Shop, Recommended, Balance and Adjust.
+
+Persist only bounded account/league/franchise-owned identity/order/tier intent in the existing account database, with private reads, CSRF, commit-time ownership/session checks, revision conflicts and stale-result publication fences. No copied price warehouse, automatic discovery, FOIS regeneration, historical reconstruction or paid infrastructure is added. Physical Safari, unfamiliar-human usability and independent Scout acceptance remain separate requirements. Beta expansion is not authorized.
+
+## v1.21.86 / build 2186 — Phone-first Front Office Brief
+
+Bring Home's first supported insight forward by compacting franchise identity, official record and primary actions. Place secondary franchise/context controls after the Brief. Remove redundant introductory copy and display prepared insights before secondary Find/Explore controls; loading, empty and recovery messages remain ahead of those controls. Reasons, drawbacks, exact trade assets, eligibility and all evidence disclosures are unchanged.
+
+Preserve explicit discovery, prepared-only reads, source/strategy guards and the existing 24-entry/2 MiB/15-minute opportunity cache. No provider, solver, FOIS, historical reconstruction, background job or persistent state is added. Responsive Chromium evidence is separate from physical Safari, unfamiliar-user and independent Scout acceptance, which remain open. Existing resource and source-integrity safeguards remain unchanged.
+
+## v1.21.85 / build 2185 — Prepared Front Office Brief
+
+Combine Home Attention and hypothetical Trade Opportunities into one prepared Front Office Brief before completed League Trade News. Show up to four supported insights, two initially visible, each with a reason, tradeoff and existing action. Explicit manager goals determine family precedence without changing objective lineup calculations or neutral Market prices. Exact owned capital, legal replacement quality and evaluator-supported offers remain separately qualified; related needs and offers are composed using their existing pre/post diagnostics.
+
+Read matching TeamAssessment and roster-diagnostic publications without cache-miss factories. Missing trade evidence cannot hide unrelated prepared roster/capital facts. Only eligible, fully priced favorable cached offers appear as recommendations; optional, rejected, exploratory, incomplete and stale offers are not promoted. Preserve exact opaque opportunity tokens, You Send/Receive identities and Preview/Keep Original/Adopt navigation. Source/goal changes and failed prepared reads clear obsolete client content.
+
+No automatic discovery, provider acquisition, historical Market reader, solver, FOIS or AI work is added. Keep the existing 24-entry/2 MiB/15-minute opportunity cache, historical execution/publication protections, 2 GiB budget and 500 ms liveness requirement. No new persistence or background work. Author-run browser and comprehension walkthroughs are not physical Safari, human-usability or independent Scout acceptance. Beta expansion remains restricted.
+
+## v1.21.84 / build 2184 — Actionable My Team outlook
+
+Move the existing roster takeaway directly below franchise identity, record and strategy. Reuse the prepared, generation-bound TeamAssessment, positional replacement diagnostics and exact future-capital inventory to explain current position, supported strength, principal concern, future flexibility and one goal-specific action. Statistical record/PF standing remains distinct from the selected week's league-scored optimal-lineup comparison and its supported population. Missing or provisional depth is not proven weak depth; age context is descriptive, with no new sustainability forecast or overall team grade.
+
+Keep roster, depth and capital shortcuts and read-only opponent views. Changing a goal updates the explanatory action immediately using prepared choices and the existing scoped session contract; neutral Market values, Sleeper projections and legal-lineup mathematics are unchanged. Supporting evidence is available in an accessible disclosure. No additional provider requests, FOIS/history work, solver runs, background jobs, persistent records or cache-budget changes are introduced by the formatter.
+
+Separately display unavailable preseason directory forecasts without `None%`, preserving genuine zero, and format derived projected depth changes with the established point formatter without altering underlying precision. Phone and expert comprehension controls are author-run evidence; physical iPhone/Safari, unfamiliar-human comprehension and independent Scout acceptance are not claimed. Beta expansion remains restricted.
+
+Keep browser test coverage, dependency packages and deadlines unchanged while selecting the official Ubuntu CI mirror after repeated measured Azure package-transfer timeouts. This changes validation setup only, not production infrastructure.
+
+## v1.21.83 / build 2183 — FOIS flight source ownership
+
+Release the persistent FOIS child's canonical current-source reference when its work unit completes or fails. Keep that source available throughout historical evaluation, and use the existing identity-checked release so cleanup cannot remove a newer publication or another league. Shared player identity/conflict evidence and bounded verified historical caches remain reusable. No scoring, source, schema, cache-budget or infrastructure change; retained historical grades are not regenerated or revalidated.
+
+Disposable before/after real-engine controls preserve complete qualified score contents (excluding only observation generation time), while completed work no longer accumulates current league dictionaries in the child. This is a demonstrated worker-retention correction, not an explanation or resolution of the much larger production parent footprint, recurring memory-limit events, historical OOM or cold-Home gap. Independent Scout acceptance and production headroom observation remain required before beta expansion.
+
+## v1.21.82 / build 2182 — Bounded historical cache residency
+
+Share one canonical cache owner across history services, intelligence-memory exports and Weekly Reports. Bound its retained-season sections independently of runtime eviction: at most 36 compact sections and an estimated 8 MiB of Python objects, with 12 verified checksum entries. Least-recently-used sections lose cache ownership; existing readers retain their exact objects. Oversized sections remain complete on demand without permanent residency.
+
+Serialize cold local archive decodes, recheck warm entries after admission, and invalidate superseded file identities. Source writes retain their own exact file identity; a late writer cannot attach old facts to a newer publication. Shutdown clears residency with a refill epoch fence. Cache misses verify existing local archives without fetching providers or writing historical records. Historical grades, source admission, heavyweight response bounds and the 2 GiB/500 ms contracts remain unchanged.
+
+Independent Scout acceptance is required. This scoped residency correction does not establish the cause or resolution of the historical production OOM, the original cold-Home delay or sustained large-scale capacity.
+
+## v1.21.81 / build 2181 — Sleeper source publication integrity
+
+- Commit live Sleeper sync-thread source replacements and rollback through the owning event loop and existing per-runtime historical-publication lock. Provider acquisition and preparation stay outside the short critical section.
+- Invalidate current FOIS qualification on source replacement and preserve a monotonic publication revision through rollback, so restoring an earlier pointer cannot erase an intervening source transition. No historical grade regeneration or grading changes.
+- Wire configured-default, cold-recovery and selected-league synchronization through the same owner. Drain repeated cancellation until the source writer retires; preserve bounded historical admission, response serialization ownership and cleanup.
+- Protect the independently reproduced transaction-only source mutation with the same per-runtime boundary. Preserve shared consumer references and reject a fetch superseded by a full source replacement.
+- Deterministic real-worker controls reproduce the build 2180 timeline/profile header and first-body race, then verify ordered publication, rollback qualification, account/league isolation and cancellation. No schema, cache-limit or infrastructure changes. Historical production OOM, cold-Home delay and sustained scale remain open.
+
+## v1.21.80 / build 2180 — Historical publication integrity
+
+- Pin the admitted league context, source generations and FOIS publication revision for full-history profile and timeline responses. Recheck qualification immediately before committing successful response headers; superseded verified evidence is RETAINED / NOT REVALIDATED, and lost or incompatible league contexts fail safely with retryable unavailability.
+- Serialize qualification changes and header handoff through a per-runtime publication boundary. Keep heavyweight reconstruction, bulk serialization and backpressured output outside that boundary and inside the existing single-response resource lease.
+- Finalize only a bounded metadata prefix in the parent. Preserve complete verified historical bodies, source checksums, exact identities, retained grades, the eight-root / 8 MiB memo and cleanup on cancellation or error. No grading, schema, persistent cache or infrastructure change.
+- Deterministic controls cover same-context A→B refreshes, child reconstruction/serialization, publication interleavings and cleanup. Production OOM, the original cold-Home delay and sustained multi-league capacity remain unresolved; independent Scout acceptance is required.
+
+## v1.21.79 / build 2179 — Bounded historical requests
+
+- Admit one complete FOIS profile/timeline API response across all accounts and leagues, with no queued heavy results. Coordinate admission with existing heavy phases and cgroup headroom; return qualified retryable unavailability when resources are busy.
+- Verify retained evidence and serialize complete JSON in one disposable, read-only child. Produce the response row by row into an anonymous temporary file, preserving exact evidence, canonical JSON, current/retained qualifications and the eight-root / 8 MiB memo. No permanent response archive or schema change.
+- Hold ownership through backpressured response output and cleanup. Bound preparation and output time, retire children on cancellation or parent death, and drain cleanup before allowing another request. Ordinary liveness remains on the serving event loop.
+- Controlled Python 3.14.3 / 2 GiB external probes verify complete 193/384/1,153-row responses, overlap rejection, source-file stability and cancellation. These are author-run fixtures, not a production OOM resolution or a sustained scalability guarantee. Historical grades remain RETAINED / NOT REVALIDATED; independent Scout acceptance is required.
+
+## v1.21.78 / build 2178 — Historical delta integrity
+
+- Reject non-string object paths, non-integer or boolean array indices, invalid bounds and incompatible path/container combinations before admitting retained historical evidence. Do not normalize malformed paths into apparently valid evidence.
+- Stage only shallow copies of changed ancestor containers. Invalid later instructions leave the private base and operation values unchanged; valid reads keep the summary optimization and avoid full-tree copies. The eight-root / 8 MiB per-read memo, hash/byte/scope/dependency checks and independent returned evidence remain intact.
+- Qualify invalid retained history with HTTP 503 across GM profile, full profile and timeline consumers; do not expose a misleading historical assessment. No grade regeneration, valuation change, schema, persistent cache or infrastructure change. Production OOM, profile latency and sustained multi-league scalability remain unresolved; independent Scout acceptance is required.
+
+## v1.21.76 / build 2176 — Chronological history and bounded FOIS reads
+
+## v1.21.77 / build 2177 — Verified retained-history efficiency
+
+- Apply retained deltas only to privately owned decoded trees, preserving every hash, byte-count, scope and dependency check while avoiding redundant deep copies and JSON reparsing.
+- Keep verified lightweight history summaries for HTML profiles. Full DTO validation still runs for every retained row; full-evidence APIs, provenance, grades and RETAINED / NOT REVALIDATED qualification are unchanged.
+- Preserve the per-read eight-root/8 MiB serialized memo, source generations, storage schemas and infrastructure. Disposable Python 3.14.3 / 2 GiB controls compare identical evidence, allocations, multi-league and concurrent publication behavior.
+- Historical production OOM, original cold Home gap and unmeasured production waiting remain open. Fixture improvements are not a universal production latency or capacity guarantee; independent Scout acceptance remains required.
+
+
+- Select historical Market observations by validated quote instants and source-knowledge cutoffs, preserving fractional precision, UTC-offset equivalence, exact identity and genuine zero. Stream candidates without unsafe text-ordered truncation; equal times use immutable observation IDs without rewriting retained evidence.
+- Reuse only identical, fully verified FOIS semantic roots within one timeline call, bounded to eight roots / 8 MiB of existing serialized bytes. Keep recursive validation, independently owned results, ordinary concurrent publication and all retained-grade qualifications. No grading, source, schema or persistent-cache change.
+- Split bounded profile diagnostics into retained SQL fetch, decode, current-score classification and rankings. Disposable profiling is author-run evidence, not proof that historical production OOM, cold delay, worker contention or sustained liveness is resolved. Independent Scout acceptance remains required.
+
+## v1.21.75 / build 2175 — Qualified preparation and FOIS profile diagnostics
+
+- Use the same selected league/NFL season-week evidence for projection horizons and Team Strength. Preserve the original Sleeper calendar fields and reject incompatible league, scoring, week or generation inputs; pin one projection publication through preparation.
+- Capture scheduled checkpoints at their actual timezone-aware observation time, keeping milestone labels in event identity. Reject unsupported timestamps individually and compare quote/knowledge cutoffs as typed UTC instants, including fractional seconds. Preserve genuine zero prices and existing retained records.
+- Extend bounded, payload-free profile tracing across context, retained lookup, history, activity/behavior, qualification and rendering. Add Team Strength/checkpoint/profile memory boundaries to the existing sampler without additional computation, archives, schemas, infrastructure or cache limits.
+- Preserve Home/FOIS failure isolation, cancellation cleanup, canonical intelligence, authorization and RETAINED / NOT REVALIDATED historical grades. Original production OOM, cold-delay attribution and sustained 2 GiB safety remain unproven; independent Scout acceptance is required.
+
+## v1.21.74 / build 2174 — Request-correlated reliability diagnostics
+
+- Distinguish request/account/runtime admission, transport headers, HTTPX hook work, full body transfer, JSON parsing, projection/valuation preparation, cache publication and Home/body completion with bounded, payload-free correlated clocks.
+- Observe parent/FOIS-child processes, qualified PSS/RSS and cgroup anonymous/file memory around existing heavy work. Use capped sampling and the existing hosted log sink; no new diagnostic endpoint, database, source archive, resource allowance or infrastructure.
+- Keep browser-driver heap budgeting and Python-version setup fixtures in validation only. Preserve all test coverage and the unchanged 2 GiB/500 ms gates, canonical sources, authorization, runtime ownership and FOIS cancellation/retained-grade boundaries.
+- These are diagnostic boundaries, not a claimed latency or production OOM fix. Original incident causes remain open unless new correlated evidence establishes them. Author-run evidence requires independent Scout review.
+
+## v1.21.73 / build 2173 — Navigation ownership and bounded sync diagnostics
+
+- Reserve request ownership before a cold runtime can become evictable. Release it after the response, trim temporary active-reader overflow back to the existing warm limit, and drain cancellation through the shared hydration/eviction writer. A cancelled waiter cannot cancel another reader's hydration.
+- Add one bounded numeric synchronization profile with source/processing/publication phase clocks and parent/child/cgroup samples. No source payloads, account names, new archive/schema, provider calls or historical FOIS regeneration. Add a disposable authenticated 2 GiB residency control for independent reproduction.
+- Preserve FOIS timeout isolation, source qualifications, accepted intelligence and unchanged memory/liveness limits. The original production OOM and 50-second cold request are not claimed resolved; diagnostic samples and controlled cache corrections do not establish complete production safety. Independent Scout verification remains required.
+
+## v1.21.72 / build 2172 — FOIS navigation isolation and owned-worker cleanup
+
+- Publish supported league context before optional FOIS preparation. Home/account/league browsing stays available during slow or failed FOIS work, with league-scoped pending/unavailable or retained/not-revalidated evidence; explicit computation reports pending or a qualified failure.
+- Use existing runtime-owned maintenance and one bounded compute slot. Remove duplicate hydration generations, serialize admission against an already-running Market build, and drain submission, shutdown and publication through repeated cancellation before scratch cleanup. Timed-out or broken workers are reaped before returning.
+- Preserve canonical sources, projections, legal lineups, reserve-quality and recommendation safeguards, account isolation and retained historical grades. No new schema, permanent archive, worker service, cache limit or infrastructure. Production OOM causation remains unresolved; bounded measurements do not establish complete production safety. Independent Scout verification is required.
+
+## v1.21.71 / build 2171 — Useful reserve production in trade decisions
+
+- Carry existing disjoint legal-reserve production into bilateral package quality, strategy, costs, counterparty context, Shop ordering and Adjust evidence. Equal reserve counts no longer conceal material replacement-production losses.
+- Preserve supported starter consolidation with an explicit depth cost, keep missing projections unavailable and genuine zero supported, and qualify availability/freshness from original source clocks. Reuse existing My Team/HQ replacement scenarios without a new roster score or solver.
+- Preserve canonical Market/Sleeper values, lineup mathematics, severe-overpay and missing-price safeguards, exact assets, account isolation and retained FOIS boundaries. No new schema, warehouse, provider, paid service or author-triggered FOIS regeneration. Independent Scout acceptance remains required.
+
+## v1.21.70 / build 2170 — Qualified historical Market comparisons
+
+- Wire the current selected canonical Market observation into the existing historical trend evaluator. Compatible 100/120/200 evidence now reports +100; history-only comparisons remain explicit when current evidence is missing or incompatible.
+- Preserve asset, units, method, dates and source generations; exclude future/unsupported observations and contradictory generations. Report comparison scope/dates and v2 method metadata consistently, with a canonical history link from player dossiers.
+- Reuse existing prepared evidence and bounded caches without provider calls, new schema, archives, snapshots or FOIS regeneration. Preserve Market arithmetic, Trade recommendation policy, Sleeper projections and legal-lineup formulas. Independent Scout acceptance remains required.
+
+## v1.21.69 / build 2169 — Historical provenance and missing-data presentation
+
+- Pin retained facts and their exact source checksum to one verified CachedSeason publication. Concurrent replacement cannot label an earlier score with a later generation; preserve all active, retained and compact-recovery admission safeguards without a new lock or storage path.
+- Replace unavailable historical points/PPG/floor/ceiling/consistency output with readable unavailable evidence. Preserve genuine numeric zero, player identity, season and dossier navigation.
+- Add deterministic repeated A/B interleavings, real concurrent publication, actual HTTP and responsive two-league controls. No Market, Trade, projection, lineup, account or FOIS policy changes; retained grades remain RETAINED / NOT REVALIDATED and the integration batch remains open for Scout.
+
+## v1.21.68 / build 2168 — Historical evidence admission and identity integrity
+
+- Apply strict provider-confirmed completion to active and retained matchup/player-week sources, including compact reader checkpoints. Missing, malformed, noninteger and out-of-range markers cannot admit future actuals into career totals or leaderboards.
+- Qualify retained numeric production against source league/season/scoring and compatible same-season operational context. Preserve raw observations, genuine zero, starter roles and independently supported historical rules; keep unavailable scoring unavailable through reconciliation and downstream evaluation.
+- Preserve accepted birth-date conflict evidence across rejected identity updates, later single-date refreshes and existing-cache reload. Reject raw dates from mismatched identities; ordinary refresh cannot resolve a known conflict.
+- No new schema, archive, permanent store, provider requests, FOIS regeneration or unrelated product changes. Preserve 2 GiB/500 ms gates. Historical integration remains open pending independent Scout acceptance; controlled source/HTTP and responsive Chromium evidence are not physical-device or human acceptance.
+
+## v1.21.67 / build 2167 — Historical player-week and age integration
+
+- Project existing prepared Sleeper completed-week observations into canonical historical player/week and matchup records. Preserve league-specific scores, explicit starter roles, source identity, missing-versus-zero semantics and bounded read behavior. Future placeholders remain excluded; decision-time consumers retain their stricter completed-week cutoff.
+- Preserve supported birth dates through normalization, canonical updates, ordinary existing-cache publication/reload and compact process handoff. Compute age at the decision date, qualify missing/invalid/conflicting or mismatched identities, and never substitute current age.
+- Carry prepared observations through the existing isolated-worker handoff and qualify incomplete season-to-date coverage. Reuse historical player, franchise-state and transaction consumers without a warehouse, schema, additional provider requests or new valuation/lineup model. Retained FOIS grades remain RETAINED / NOT REVALIDATED; no production regeneration or historical migration.
+- Captured read-only Day Traders/Arkham Week 5 fixtures reproduce 285/273 supported player entries. Author-run source/HTTP, real-spawn and responsive Chromium controls are separate from Scout's independent acceptance and physical iPhone/Safari or human testing. Preserve the 2 GiB and 500 ms release gates.
+
+## v1.21.66 / build 2166 — Historical evidence integrity
+
+- Admit historical franchise-state prices only with supported canonical Market units, source/comparison identity, normalization/method and decision-eligible clocks. Withhold mixed currencies and unsupported totals/window labels; preserve compatible observations and genuine zero. Older-than-seven-day quotes remain numeric, qualified evidence.
+- Separate transaction-period acquisition, dated roster anchors and event-order coverage. Missing periods/records or uncertain anchors qualify reconstructed ownership, cap confidence and withhold unsupported competitive windows and process grades. Preserve observed trades, exact picks and owner identities.
+- Apply the shared price boundary to preparation-time FOIS decision context and propagate reconstruction limitations. Retained historical FOIS grades remain RETAINED / NOT REVALIDATED; no regeneration, source rewrite, schema, archive or paid infrastructure. Market/Trade/Sleeper/lineup rules and 2 GiB/500 ms gates are unchanged.
+
+## v1.21.65 / build 2165 — Missing-price decision clarity
+
+- Keep the canonical assessment vocabulary while placing a separate conditional-exploration / not-an-endorsement qualification beside a favorable but ineligible missing-price assessment.
+- State that Market cost cannot be fully assessed; preserve known lineup gains, strategy, reserve costs and source qualifications in primary and disclosed evidence. Keep missing-price discovery guards and eligibility unchanged.
+- Align server, fallback, offer, Balance/Preview and older bounded saved-field presentation. Add actual source/HTTP and responsive-browser controls without new storage, dependencies, calculation changes or recommendation recalibration. Scout-independent and physical-device/human acceptance remain separate.
+
+## v1.21.64 / build 2164 — Recommendation integrity
+
+- Apply the existing severe-Market-loss safeguard to player-only evaluations; a trivial positive lineup change cannot rescue a 995-to-75 return. Require existing material weekly production evidence before positive-horizon endorsement.
+- Preserve meaningful intentional overpays, complementary bilateral exchanges, strategy-specific capital policy, exact canonical Market/Sleeper evidence and legal lineup calculations. Keep legality, user-side judgment, counterparty plausibility and generated eligibility separate.
+- Add actual publisher/evaluator/authenticated HTTP and released-client regression controls across strategies, Trade For, Shop, Recommended and Adjust. No new storage, source writes, FOIS regeneration or unrelated UI/history changes. Independent Scout and physical-device/human acceptance remain separate.
+
+## v1.21.63 / build 2163 — Cancellation cleanup
+
+- Keep every cancellation-drain wait shielded while the existing scratch-preparation thread is active. Repeated cancellation cannot make cleanup race that thread or recreate an orphan directory; propagate cancellation after completion and never submit/publish abandoned work.
+- Preserve normal preparation failures and successful computation/publication. Add deterministic real-storage controls for repeated cancellation, preparation failure, thirty mixed operations without temporary growth, graceful POSIX interruption and the documented hard-kill limitation.
+- Extend the existing Linux recovery/lifecycle gate with these controls. No new persistent store, schema, janitor, source archive, paid infrastructure, calculation or account/Trade changes; unchanged 2 GiB / 500 ms gates. SIGKILL/power loss cannot execute application cleanup and may leave scratch; no unsafe sweeping of active copies is introduced.
+- Independent Scout review, physical iPhone/Safari, screen-reader and unfamiliar-user acceptance remain separate. Author-operated automated evidence does not establish unconditional public readiness.
+
+## v1.21.62 / build 2162 — Franchise import recovery
+
+- Give manual and discovered unmatched-franchise imports the same clearly labeled Your leagues and Review Sleeper identity recovery actions, using existing authenticated destinations.
+- Explain that no ownership was guessed and saved leagues/selection remain unchanged. Preserve authorization, CSRF, atomic import commits and source-supported successful retries.
+- Add actual account-store/HTTP and authenticated native-browser coverage for both submitted forms, recovery navigation, discovery failure, session expiration, CSRF rejection, safe retry and phone/keyboard controls. No schema, saved state, cache, source or intelligence changes; unchanged 2 GiB/500 ms gates. Scout-independent, physical iPhone/Safari and unfamiliar-user acceptance remain separate.
+
+## v1.21.61 / build 2161 — League source recovery
+
+- Stop cold selected-league preparation before intelligence work when Sleeper sync has no retained supported facts. Return a bounded unavailable response instead of an empty-input500; retain valid existing facts and ordinary retry behavior.
+- Keep account recovery, lightweight health/readiness and static assets independent of league hydration while preserving existing authentication, CSRF, preparation, revision and activation checks.
+- Give browser source failures same-origin retry and account/league recovery actions. Preserve structured API failures. Show existing saved connections with explicit not-refreshed qualification when discovery is unavailable; do not fabricate current source facts or write account records.
+- Drain an in-flight FOIS scratch-database preparation thread before cancellation removes its temporary directory. Preserve cancellation, published evidence and the unchanged graceful-shutdown/resource gates; add deterministic barrier regression coverage to lifecycle CI.
+- Preserve all Trade, Market, exact Sleeper projection, legal-lineup, prior-assessment, historical and FOIS contracts. No new persistent store/schema/cache or infrastructure. Unchanged2GiB/500ms gates; physical Safari and unfamiliar-human acceptance remain separate.
+
+## v1.21.60 / build 2160 — Atomic imports and truthful lineup evidence
+
+- Commit prepared league imports atomically: recheck the existing account revision, account/Sleeper identity and live session, then save membership, series/season references and active selection in the same existing SQLite transaction. A stale operation returns conflict without account-state changes. Provider preparation remains outside the write lock.
+- Preserve source-supported imports and retries; roll back all account rows on a failed commit. Keep existing authentication/CSRF, no-membership guidance, loading feedback and activation protections; expose Your leagues from the conflict page for a deliberate retry.
+- Label Commissioner’s existing metric Optimal Projected Lineup. Show supported projected points, scoring league/week, comparison population, lineup-relative grade and evidence coverage/limitations. Keep Competitive Window separate; remove borrowed card-confidence percentages and format percentile ordinals correctly.
+- Reuse existing source/assessment evidence and SQL writers. No schema, tables, import-attempt history, duplicate sources or new permanent cache. Preserve Market, Sleeper projections, legal-lineup math, recommendations, Trade, historical/FOIS contracts and unchanged 500 ms / 2 GiB gates.
+
+## v1.21.59 / build 2159 — First-use recovery and evidence
+
+- Keep Sleeper connection and league-add failures actionable without guessing ownership or changing the active league. Finish league preparation before saving a new membership; preserve existing authentication and source admission.
+- Show connection/import progress, restore controls on browser history navigation, expose existing account recovery and keep readable form fields inside their phone cards.
+- Give browser Market warming a concise retry/Home/My Team page while preserving the existing API/JSON, background preparation and bounded cache contracts. No automatic polling or fabricated prices.
+- Disclose already-retained counterparty package explanations and absolute before/after lineup totals as previous, NOT REVALIDATED evidence. No recalculation, additional stored fields or assessment copies.
+- Preserve all Trade, Market, projection, legal-lineup, historical and FOIS contracts; no new permanent store or schema. Unchanged 500 ms liveness and 2 GiB resource gates. Responsive Chromium is separate from physical iPhone/Safari and Scout-independent acceptance.
+
+## v1.21.58 / build 2158 — Complete retained evidence and canonical Market display
+
+- Expose complete already-saved prior assessment evidence inside the closed Previous assessment / NOT REVALIDATED disclosure. Preserve original counterparty, qualified lineup costs, risks, all supported limitations, strategy and source context; keep current incomplete results separate.
+- Reuse canonical adjustment display strings in Balance and Preview Compare. Match the existing decimal half-even display contract in editable Market/Calculator labels and the evaluated Trade Market panel without changing arithmetic, projections, prices, generations or target intent.
+- Preserve bounded existing draft/prior state and all Preview/Keep/Adopt, reevaluation, reset, navigation, exact-protection and isolation contracts. No new persistence, schema, archive, snapshot or provider work; unchanged 500 ms / 2 GiB gates.
+- Correct validation-only graceful shutdown ordering so the application drains its workers before process-group escalation; retain the existing 15-second bound. Scope the legacy rendered test to the current result while preserving all prior assertions.
+- Reap abandoned optional FOIS scratch computations on cancellation/shutdown instead of waiting for a running process-pool job after its caller is gone. Preserve published evidence, normal calculations and recovery; retain existing resource and liveness gates.
+
+## v1.21.57 / build 2157 — Trade assessment and phone integrity
+
+- Keep selected player names, positions/teams, exact picks and controls readable on narrow phones; place supporting Market/protection disclosures below the full-width identity.
+- Put complete Balance packages and coherent current Market totals before concise supported reasoning and the main drawback. Keep full evaluator/counterparty evidence on demand; format derived totals without changing arithmetic or canonical Sleeper displays.
+- Separate current complete/incomplete evaluation attempts from genuine retained assessments. Preserve one prior assessment, clearly not revalidated, when a new attempt is incomplete; successful compatible reevaluation restores current status. Preserve failure/reset/newer-intent safety.
+- Preserve target-first Balance, exact protections, Preview/Keep Original/explicit Adopt, Home draft boundaries, canonical pricing/projections, legal lineups, source qualifications and retained FOIS grades. No new permanent store or model; unchanged 500 ms / 2 GiB gates.
+
+## v1.21.56 / build 2156 — Canonical projection display parity
+
+- Reuse the prepared canonical player/week projection display in Trade facts, matching the player dossier without a second screen-specific rounding policy.
+- Preserve raw Sleeper projections, legal-lineup calculations, recommendation labels, Market values and every v1.21.55 Trade workflow. Genuine zeros and unavailable evidence keep their supported source display.
+- Add actual-publisher/evaluator and authenticated route/Chromium controls for fractional and zero projections. This is a forward correction to immutable v1.21.55; no new model, store or infrastructure.
+
+## v1.21.55 / build 2155 — Trade decision experience
+
+- Lead Trade evaluation with a concise roster-specific decision, current Market totals/bar, starter versus depth impact, main cost and material qualification. Keep complete evaluator, weekly, positional and source evidence available on demand.
+- Name unresolved competitive direction precisely for future-capital trades. Offer explicit WIN NOW / RETOOL / REBUILD selection and separate conditional considerations without changing recommendation standards, canonical prices or legal lineups.
+- Bring selected-player Sleeper projections and prepared actual production into Trade with scoring, season/week, sample, freshness and source generation. Label Market ranks accurately; do not invent season or points-per-game ranks.
+- Put Shop target, scope, search action/status and results before manual asset inventory. Clarify automatic versus explicit search and preserve honest empty/error recovery without completion scroll jumps.
+- Prioritize target-preserving Balance options; separate any changed-target ideas and show complete packages/totals. Preview, Keep Original and explicit Adopt remain required.
+- Apply the revised navigation contract: Home ends this tab's proposal; internal steps, supporting returns and active reload preserve work. Keep strategy independent, separate cloned opener-tab drafts, and prevent history/late-response resurrection.
+- Use shared phone standings headers and aligned statistics without changing order, cutoff or badge meanings. Preserve readable names, source limitations, exact protections and retained FOIS grades.
+- No new permanent store, provider loop, valuation/projection model or historical regeneration. Unchanged 500 ms liveness and 2 GiB gates. Contract: [Trade decision experience](docs/TRADE_DECISION_EXPERIENCE.md).
+
+## v1.21.54 / build 2154 — Historical evidence integrity
+
+- Qualify truncated or invalid retained gzip seasons without breaking League or own/opponent Team HQ. Continue valid independent evidence, preserve corrupt originals and recover after an explicit valid publication.
+- Separate completed decisions from supported, partial and unavailable consideration. Missing player/pick/FAAB evidence does not become zero-asset behavior; legitimate category zeros and directed transfers remain supported.
+- Deduplicate reordered participant sets while retaining exact source/transaction identity and rejecting genuine player, pick, FAAB, participant or version conflicts.
+- Share coverage and consideration qualifications across League, HQ, Trade and prepared Home partner context. Preserve manager-tenure boundaries, soft historical context, canonical prices/projections, legal lineups, protections and retained FOIS grades.
+- No permanent source store, automatic archive repair, historical regeneration or provider loop. Unchanged 2 GiB and 500 ms release gates.
+- Contract and coverage: [League/GM historical evidence integrity](docs/LEAGUE_GM_EVIDENCE_INTEGRITY.md). Controlled rendered Chromium is distinct from Scout-independent production and physical-device acceptance.
+
+## v1.21.53 / build 2153 — League and franchise trade context
+
+- Extend shared GM Behavioral Intelligence with bounded completed-trade observations: league activity, original directed assets, exact picks, package shape and repeat counterparties. Distinguish observed zero from partial/unavailable history and unsupported completion clocks.
+- Keep franchise actions separate from season-observed current-manager attribution. Current ownership and roster composition do not establish historical preferences; unknown takeover timing and transaction-time ages remain explicit limitations.
+- Add concise League identity and progressive franchise insights in the existing League area and Team HQ. Reuse current Dynamic Needs/Surplus for possible conversations; do not replace canonical roster, Market or projection intelligence.
+- Carry qualified partner context through shared Trade evaluation, Shop, Trade For, Recommended Trades, adjustments and prepared Home opportunities. History is neutral when absent or unattributed to the current manager, and only breaks otherwise equivalent discovery results.
+- Exclude pending/cancelled trades from fallback activity, remove unsupported count-based manager-style labels, and reuse verified season sections without retaining full matchup archives. Reject source changes during section reads rather than pinning mixed publications.
+- No new permanent store, provider loop, historical grading, acceptance probability or Home diagnostic panel. Accepted source-age/provenance disclosures, 500 ms liveness and 2 GiB resource gates remain required.
+- Audit and source/coverage contract: [League/GM diagnostic audit](docs/LEAGUE_GM_DIAGNOSTIC_AUDIT.md). Browser evidence is Codex-operated isolated Chromium; physical Safari and Scout live acceptance remain separate.
+
+## v1.21.52 / build 2152 — Readable source evidence
+
+- Keep source freshness, retained-refresh warnings and observation ranges concise above named replacement scenarios.
+- Preserve every original source timestamp and canonical publication identity in closed Detailed source provenance disclosures on Team HQ/My Team and Trade.
+- Add 238/200-observation canonical publisher, actual HTTP and responsive Chromium coverage. No numerical, eligibility, freshness-boundary or storage-policy changes.
+- Correct product-browser CI wall-clock budgeting: 15-minute job, 12-minute bounded test step, unchanged test command and assertions.
+- Run prepared Home evidence/rendering through the existing manager-read worker boundary, keeping liveness responsive during concurrent reads and cache waits while preserving account/league scope.
+
+## v1.21.51 / build 2151 — Post-Trade Eligibility and Source Aging Integrity
+
+- Re-admit complete proposed rosters through shared canonical availability. Preserve separate PRE/POST identities and status evidence; incoming uncertainty qualifies conditional lineup impact without changing player projections, prices or ownership.
+- Age diagnostics at read time from original source observations: Aging from exactly one hour, Stale from exactly six hours. Requalify cached numerical results cheaply; expire higher-level explanations and Home opportunities at evidence boundaries.
+- Expose scoped failed-refresh retention separately from source age. Keep valid numbers and clocks, clear failure provenance on successful publication, and reject foreign-publication contamination.
+- Present before/after Trade evidence, readable source-clock details and display zero without a negative sign. Preserve existing legal solver/resource guards, bounded caches and no permanent diagnostic store.
+- Acceptance contract: [source aging and post-trade evidence](docs/ROSTER_DIAGNOSTIC_SOURCE_AGING.md).
+
+## v1.21.50 / build 2150 — Roster Diagnostic Evidence and Eligibility Integrity
+
+- Reuse canonical player availability to exclude Inactive, Retired and Out from usable replacement coverage while preserving roster identity. Keep questionable, unknown and unsupported status evidence qualified.
+- Require compatible, supported scoring and lineup evidence for numeric diagnostics. Genuine zero remains valid; missing scoring, malformed weights, unsupported slots and mixed projection generations withhold dependent conclusions.
+- Carry stale/retained projection qualifications through shared team and package evidence, with provisional conclusions and semantic cache invalidation rather than retrieval-clock churn.
+- Apply the existing 14-starter/2,048-player diagnostic expansion guard before package and horizon reconstruction; preserve independent trade editing and evidence.
+- Replace primary solver dictionaries with named, rounded removal scenarios and readable availability exclusions; use full-width phone evidence cards. No new permanent storage, player projections, Market formula or FOIS regeneration.
+- Source controls and independent acceptance: [diagnostic corrections](docs/ROSTER_DIAGNOSTIC_ADMISSION.md).
+
+## v1.21.49 / build 2149 — Dynamic Roster Needs and Replacement Evidence
+
+- Replace fixed QB/RB/WR/TE count-based depth grades with shared league/week/scoring-scoped legal-lineup diagnostics. Separate starter improvement, resilience, current-week strength, conditional expendability and uncertain evidence.
+- Verify remove-one effects against a newly optimized disjoint reserve lineup; require observed recipient benefit before labeling conditional expendable depth. Peer references are context, not assumed available offers. No universal surplus or count-only pick surplus.
+- Reuse canonical Sleeper projections, legal-lineup memo and existing package/horizon/capacity gates. Add actual pre/post package roster evidence, supported need tie-breaks and consistent My Team/Team HQ/League/Trade/Home explanations. Explicit strategy changes interpretation, never prices or source projections.
+- Bound disposable diagnostic results to 12 entries / 2 MiB / 180 seconds with semantic roster/status/projection/scoring identity; no retrieval-clock churn, new permanent store, provider backfill, projection model or FOIS regeneration.
+- Current-week diagnostic limitations and unavailable future/long-term evidence remain explicit. Independent acceptance: [diagnostic audit and handoff](docs/DYNAMIC_NEEDS_AUDIT.md).
+
+## v1.21.48 / build 2148 — Trade Opportunity Assessment Integrity
+
+- Separate explicit package adoption from assessment validation. Retain exact assets, original strategy/source evidence, benefits and drawbacks with NOT REVALIDATED qualification and Reevaluate Trade; prior positive/legality claims are labeled previous evidence.
+- Bind successful HTTP evaluations to stable semantic canonical source identity. Ownership failures and incomplete/failed reevaluations preserve the package and qualified prior assessment; newer strategy intent rejects obsolete responses.
+- Prefer package-specific Home reasons, keep drawbacks and unfavorable labels, and move generic methodology into optional evidence.
+- Stop repeated Home focus/visibility/history events safely after context invalidation; clear old cards and provide working Reload Home.
+- Preserve shared evaluator, pricing/projections, exact locks, preview/Keep Original/Adopt, bounded cache, historical intelligence and FOIS retained grades. No new store or provider work.
+- Independent acceptance: [Integrity correction handoff](docs/HOME_OPPORTUNITY_INTEGRITY_V1_21_48.md).
+
+## v1.21.47 / build 2147 — Home Trade Opportunities
+
+- Add compact hypothetical opportunities after completed League Trade News, with qualified Recommendations separate from editable Trade Ideas and original evaluation labels intact.
+- Reuse completed canonical Recommended discovery and explicit Find Trade Ideas; Home never starts a full synchronous search. Up to four distinct supported families, two initially visible, no fabricated padding.
+- Scope a disposable 24-entry/2 MiB/15-minute cache to authority, league/franchise, strategy, exact protections and semantic source generations. Reject intervening Market/ownership/projection changes and obsolete pending responses.
+- Explore/Edit opens existing preview/Keep Original/explicit Adopt; preserves draft, exact picks, strategy and protections until adoption. No pricing/projection model, permanent recommendation store, provider loop or historical regeneration.
+- Independent acceptance: [Home opportunities handoff](docs/HOME_OPPORTUNITIES_V1_21_47.md).
+
+## v1.21.46 / build 2146 — Compact Trade News & Coherent Market
+
+- Show the controlled franchise, record, standing and My Team/Trade actions before Home Trade News. Large packages use a compact preview and an independent Complete Assets disclosure preserving every original player, exact pick and FAAB transfer.
+- Prepare canonical normalization off the published rows and commit complete replacement tables. Home captures one detached, checked Market publication for valuation, comparison, ranking and cache identity; changing or incompatible evidence cannot certify a mixed total or bar.
+- Carry canonical freshness, fallback, provider/context, source clocks and normalization qualifications into concise card indicators and expanded pricing details. Current values remain separate from historical trade-date grades.
+- Preserve rolling 168-hour eligibility, six-card admission, original-trade return, league isolation, existing intelligence and lean storage. No new store, pricing model, provider polling, backfill or FOIS regeneration.
+- Independent acceptance: [Home News correction handoff](docs/HOME_NEWS_CORRECTIONS_V1_21_46.md).
+
+## v1.21.45 / build 2145 — Home League Trade News
+
+- Compact completed league trades near Home top, with actual player headshots, exact received picks/FAAB and original-trade return.
+- Supported rolling 168-hour status-update eligibility; six-card cap, complete compatible current-Market ranking and qualified unknown-size placement.
+- Current-value totals and accessible balance bars stay separate from historical grades; gains/costs and source limitations are available on demand.
+- Reuses prepared canonical facts and bounded temporary caches; no new permanent store, provider backfill, pricing/projection model or FOIS regeneration.
+- Scope and independent acceptance: [Home Trade News handoff](docs/HOME_TRADE_NEWS_V1_21_45.md).
+
+## v1.21.44 · build 2144 — Beginner Navigation Final Corrections
+
+- Carry the existing validated, league-scoped Market return context into exact-pick dossiers; preserve search, filters, sort, page and selected asset without retaining navigation history.
+- Open Home's franchise selector at the existing authorized read-only Team HQ. Keep authenticated Home, selected strategy and owner-only Trade actions scoped to the controlled franchise.
+- Intersect recognized free-agent/Taxi search intent with structured availability filters. Contradictory conditions return an honest empty set with accurate counts, without changing prices or ownership.
+- Format unavailable and non-finite Commissioner evidence honestly while preserving genuine zero. Keep the My Team trophy beside the identity and the Trade guide beside its heading without smaller text or controls.
+- Extend actual authenticated Chromium acceptance to multi-asset/acquired-pick proposals, real evaluation and Balance/preview, pending-response cleanup, objective-preserving Clear Package, reload/history and separate league drafts.
+- Preserve Market/projection/Trade/history/FOIS admission contracts and bounded existing session state. No new permanent storage, pricing/projection model, Sleeper write, historical migration or grade regeneration. Independent Scout production acceptance remains separate from controlled browser evidence.
+
+## v1.21.43 · build 2143 — Beginner Experience and Navigation
+
+- Unify Market search, exact player/pick terms, current ownership filters, sorting, counts and pagination. Next advances the actual result set; Browse All clears search/filter scope.
+- Open Home’s asset links at the authenticated franchise’s full roster. Show My Team players first, preserve roster/depth/pick facts, and keep the useful shortcuts with advanced evidence on demand.
+- Put Trade partner/target and compact asset selection before empty analysis. Keep canonical prices, exact protections and all evaluation/Preview/Keep Original/Adopt behavior; load picker source detail on request.
+- Add explicit Start New Trade cleanup for the current draft/objective/temporary protections, preserving selected strategy and other league drafts in bounded session state. Distinguish package-only cleanup that retains a Shop/Trade For objective.
+- Compact shared standings into one readable franchise row, retain source facts, ranking/cutoff/tie honesty, and expose canonical champion/streak/movement provenance through shared evidence.
+- Link Home to the real Weekly Report, qualify its period state, preserve Market search returns from player dossiers, and serve the existing dossier week-navigation script through the actual application router.
+- Clarify selected-franchise, unavailable percentile, scoring-key and historical-scope labels. Use QB red/RB teal/WR blue/TE yellow chips with readable position letters.
+- No valuation, projection, scoring, discovery, historical-grade or lineage engine changes; no new permanent store, provider backfill, infrastructure or Sleeper mutation. Trade News and Home Trade Ideas are deferred to a separately scoped release.
+
+## v1.21.42 · build 2142 — Championship Evidence Consistency
+
+- Home, League and My Team trophies now consume the same admitted canonical historical playoff result as season history, rather than deriving a champion from raw bracket rows.
+- Require completed historical source-season identity, historical roster membership, distinct admitted finalists and matching predecessor linkage. Current roster membership cannot validate a historical opponent.
+- Reuse the existing bounded, generation-aware season cache; corrected or conflicting historical evidence invalidates the trophy decision and warm Home presentation. Preserve raw evidence and retained FOIS grades.
+- Preserve valid Day Traders championship provenance, partial-history availability, numeric production weeks, exact lineage, FAAB and all pricing/projection safeguards. No new permanent store, backfill, migration or engine.
+
+## v1.21.41 · build 2141 — Historical Playoff Participant Integrity
+
+- Validate known/resolved playoff participants before set conversion; withhold contradictory championship and placement conclusions while preserving independent history and raw source evidence.
+- Apply the same qualification to retained historical results without rewriting checkpoints or regenerating FOIS grades. Preserve valid absent/null participant outcomes, observed advancement and first-round byes.
+- Display historical recipient-production weeks in numeric season/week order without changing scoring, role admission or ownership intervals.
+- Preserve released production-script delivery, scoped ownership timing, exact lineage, directed FAAB and historical Market gates. No new store, backfill, migration or scoring/projection model.
+
+## v1.21.40 · build 2140 — Historical Source Delivery and Ownership Freshness
+
+- Serve historical-production JavaScript through the released router asset contract; remove the fixture-only static mount. Add bounded requests, visible errors, keyboard retry and obsolete-response protection.
+- Carry league-scoped Sleeper retrieval/sync observations from published state into ownership views. Refresh warm timing without new history writes or index rebuilds.
+- Withhold malformed/conflicting optional bracket outcome identities at canonical admission and retained reads; preserve independent season content and source limitations.
+- Preserve transaction bucket Week 0 in filters and labels. Separate Market source confidence, comparison eligibility, quote clocks and legacy attachment references.
+- Link supported FOIS activity references to existing completed-trade dossiers only for the matching league and participating franchise; retain unavailable navigation honestly.
+- Preserve exact conversions, directed FAAB, partial production, historical pricing gates and retained FOIS grades. No new store, backfill, scoring/pricing model or Sleeper mutation.
+
+## v1.21.39 · build 2139 — Historical Trade Source Integrity and Readable Insights
+
+- Separate current pick ledger ownership from historical holders; preserve consumed picks, exact conversions and source-scoped observation dates.
+- Keep known trades and independent history sections available under partial/missing source evidence. Explain acquired, empty, unavailable, unacquired and malformed periods.
+- Repair Archive filters, optional numeric form fields and pagination using source-season franchise/manager facts.
+- Preserve original-trade returns across picks, converted players, historical performance and subsequent trades; reject foreign origins.
+- Group original consideration by franchise, retain directed FAAB once, expose converted-player endpoints and readable historical evidence links.
+- Preserve unknown lineup roles and scoring conflicts; disclose partial recipient-roster production without assigning season totals or exact holding-period benefit.
+- Explain provider, units/context, dates, normalization, coverage and rejected raw quotes while preserving historical admission gates.
+- Reuse bounded canonical services/caches. No new permanent store, provider backfill, pricing/projection engine, legacy rewrite or historical FOIS regeneration.
+
+## v1.21.38 · build 2138 — Historical FAAB and Score Conflict Integrity
+
+- Show original directed FAAB consideration beside historical players and exact picks, with franchise names and source provenance; do not assign a Market price to FAAB.
+- Reconcile all player-week observations before canonical key collapse. Conflicting scores or franchises remain unavailable with retained reasons; identical observations deduplicate, zero remains valid and later source generations can correct scores.
+- Limit last-scored ownership to actually scored evidence, distinguish observed season roster snapshots from weekly holdings, retain original quote attachment clocks and describe consumed picks as verified conversions.
+- Preserve exact lineage, legacy evidence, bounded caches and the 2 GiB resource contract. No new store, migration, provider backfill, scoring/projection model or FOIS regeneration.
+- See `docs/HISTORICAL_FAAB_SCORE_INTEGRITY.md` for contracts, validation and Scout checks.
+
+## v1.21.37 · build 2137 — Historical Trade Timeline Foundation
+
+- Honor explicit My Team full-roster return intent over saved closed disclosure state; keep strategy writes unchanged.
+
+- Preserve exact league/draft/selection identity, original franchise and selecting roster; expose confirmed pick-to-player conversions and directed subsequent transactions through existing historical dossiers.
+- Admit historical Market evidence by provider quote/knowledge clocks and compatible canonical units; retain missing pick prices, stale qualifications and original evidence without historical repair.
+- Preserve nullable started production, genuine zero, deduplicated player weeks and observed ownership separately from last scoring franchise; qualify uncertain chronology.
+- Add bounded generation-aware event/selection reuse, current source-family freshness, completed-trade/pick actions and phone-readable timelines. No new permanent history store, pricing/projection model or FOIS regeneration.
+- See `docs/HISTORICAL_TRADE_TIMELINE.md` for limits and Scout acceptance.
+
+## v1.21.36 · build 2136 — Assessment Context & Display Integrity
+
+- Preserve the original evaluated strategy, source identity, rationale and stale qualification through old rendered offer controls, Preview and Adopt; reconcile shared intent before response admission.
+- Qualify incompatible retained projection display methods independently of canonical scoring compatibility, preserving original evidence and canonical Sleeper-sourced values even after failed refresh.
+- Add real prior-version publisher/current-reader, no-growth and responsive route checks plus multi-tab retained assessment journeys. No new persistent storage, projection model or Market changes.
+- See `docs/ASSESSMENT_DISPLAY_INTEGRITY.md` for contracts and Scout acceptance scenarios.
+
+## v1.21.35 · build 2135 — My Team Status & Intent Integrity
+
+- Source availability is enriched before roster-group copies, preserving known injury/status evidence on every roster card and truthful missing states.
+- Shared strategy writes occur only on explicit selection or validated migration. Older tabs reconcile shared intent on return and ordinary edits, retaining compatible packages while qualifying strategy-dependent assessments.
+- Submitted, optimal/horizon and bye-context player dossiers retain validated My Team section/franchise and supported selected-week context; primary roster and exact-pick returns remain intact.
+- Missing TE bonus-stat evidence cannot claim an exact Sleeper source-order display replay. Existing canonical league scoring remains unchanged, and the displayed comparison is explicitly qualified; explicit bonus fields are not counted twice.
+- No new projection/scoring engine, permanent preference/roster storage, polling, migration or historical FOIS regeneration. See [correction contracts and Scout handoff](docs/MY_TEAM_FINAL_CORRECTNESS.md).
+
+## v1.21.34 · build 2134 — My Team Evidence & Session Intent
+
+- League/franchise strategy lives separately from temporary Trade proposals in a bounded, account-session-scoped browser cookie; league switching and proposal cleanup preserve the selected goal.
+- Partial reserve projections retain a qualified known subtotal without a complete depth grade. Genuine zero remains distinct from missing evidence; holdings alone no longer establish surplus.
+- My Team presents roster identity, strategy, supported starter contributions, backup risks and existing record/PF standings first. Roster and capital shortcuts, canonical player/pick dossiers and direct owned-asset Shop actions reuse existing workflows.
+- Current-week canonical evidence is pinned across the page; incompatible rollover/scoring/season evidence is withheld. Comparative grades disclose the complete-evidence cohort, and missing Max PF remains unavailable.
+- No new projection or valuation engine, permanent roster/preferences store, provider backfill, migration or historical FOIS regeneration. See [audit reconciliation and Scout scenarios](docs/MY_TEAM_INTELLIGENCE.md).
+
+## v1.21.33 · build 2133 — Source-Backed Standings & Playoff Positioning
+
+- Shared Home/League standings rank complete, equal-opportunity/equal-tie-count records by wins then source cumulative Points For, with explicit DTOS provenance. Equal record/PF placements remain unresolved; PA and roster IDs do not break ties.
+- Supported standard leagues show a current playoff-position cutoff; complete division rules use per-team indicators. Unknown division/custom rules withhold qualification without hiding valid statistical ranks. This is not final seeding, clinching or a bye guarantee.
+- Comparable complete weekly evidence supports separately labeled reconstructed movement. Cumulative source PF/PA remain authoritative. Home consumes the prepared season-matchup semantic identity directly, including historical recovery/corrections.
+- Badge explanations expand across the standings panel, with truthful missing-record states and singular streak wording.
+- No projection/Market/Trade scoring changes, historical-grade regeneration, storage migration, backfill or new polling. See [contracts, limitations and Scout acceptance](docs/STANDINGS_POSITIONING.md).
+
+## v1.21.32 · build 2132 — Matchup Portrait Readability
+
+- Matchup wrappers, loaded headshots and fallback initials share one contained 28px sizing contract. Shared portraits on other pages remain unchanged.
+- Rendered image-state tests cover loaded, loading, failed and missing images; long identity/status text; actual/unavailable projected points; both sides and empty slots at short/tall phone and desktop widths.
+- Scoring, Sleeper projections, lineup rules, standings, Trade intelligence and historical persistence are unchanged.
+- See `docs/MATCHUP_PORTRAIT_READABILITY.md` for geometry validation, evidence boundaries and Scout handoff.
+
+## v1.21.31 · build 2131 — Phone Matchups & Standings
+
+- Compact side-by-side matchups, authenticated own-matchup-first ordering, full-card activation and preserved selected-week navigation.
+- Aligned submitted starters plus visible bench, current IR and taxi; canonical player dossiers return to the same matchup/week. Historical IR/taxi assignments remain unavailable rather than inferred.
+- Prominent shared Home/League standings with official records, PF/PA, own-team highlighting, evidence-gated medals/champion badges and completed-game streaks.
+- Official ranks and playoff boundaries remain unavailable unless complete rank and standard non-division qualification evidence supports them. No invented win probability or remaining-game estimate.
+- Reuses canonical Sleeper projections and prepared optimal-lineup evidence, separately labeled; no new model, polling, storage migration or historical-grade regeneration.
+- See `docs/MATCHUPS_STANDINGS_PHONE.md` for acceptance evidence, limitations and Scout handoff.
+
+## DTOS v1.21.30 / build 2130 — Canonical Projection Freshness
+
+Trade uses the actual canonical Sleeper publication identity rather than a constant fallback. Freshness checks cover exploratory alternatives, qualifying results, assessed near misses and Shop returns. Changed evidence qualifies retained assessments without erasing their drawbacks; existing reevaluation and preview/adoption remain explicit.
+
+No new projection model, pricing/ranking change, historical regeneration or storage migration. See [source contract, evidence boundaries and Scout handoff](docs/CANONICAL_PROJECTION_FRESHNESS.md).
+
+## DTOS v1.21.29 / build 2129 — Preview Context, Explicit Shop Scope
+
+Trade previews retain bounded structured assessment context across reload, including exploratory qualification, major drawbacks, confidence/limitations and provenance. Restored evidence is explicitly not revalidated. Balance preserves the completed offer assessment separately from search/loading feedback.
+
+New explicit Shop assets start All eligible teams / Best Overall unless fresh navigation explicitly supplies supported refinements. Compatible same-asset resume preserves chosen scope without duplicate automatic searches. Pricing, intelligence, exact protections and historical records are unchanged.
+
+See [contracts, validation boundaries and Scout handoff](docs/TRADE_PREVIEW_SCOPE.md).
+
+## DTOS v1.21.28 / build 2128 — Simple Trade, Supported Discovery
+
+Build a Trade shows live canonical Market totals, favored manager, gap and a relative-value bar before evaluation. The existing Calculator Balance engine is available alongside the assessment, with preview and explicit adoption. Shop and Trade For begin a bounded search on a fresh valid target entry; refinements retain exact protections.
+
+Trade For and empty Recommended searches can expose supported unfavorable alternatives separately, without changing their labels or promoting missing evidence. Trade For orders qualifying offers by the existing separate-dimension strategy ranking instead of outgoing price alone. Historical grades, valuation formulas and storage remain unchanged.
+
+See [contracts, validation and Scout handoff](docs/TRADE_SIMPLE_DISCOVERY.md).
+
+## v1.21.27 / build 2127 — Historical Common-Week Evidence
+
+- Compare before/after legal lineups only on the latest complete common pre-decision week. Preserve week/source provenance and fail closed when evidence is incompatible.
+- Extend existing same-key preservation to earlier integrity-versioned assessments; no historical regeneration or migration.
+- Verify real full/spawn computation and qualify confidence-ranking and exact-lineage documentation.
+
+## v1.21.26 / build 2126 — FOIS Final Trust & Verification
+
+- Ground legacy negotiation advice in supported complementary needs; disclose missing need evidence.
+- Distinguish supported category findings from an unavailable overall strongest-area comparison without recomputing retained grades.
+- Add independent raw-source verification across actual full/spawn FOIS, historical quotes, behavioral packages and non-destructive storage boundaries.
+- Document retained-grade impact limits and a planning-only future regeneration process.
+
+# DTOS v1.21.25 / build 2125 — FOIS Evidence Integrity & Trust
+
+- Fail closed on missing historical eligibility, incomplete weekly coverage and incompatible Market observations; preserve incoming-player evidence across franchises.
+- Admit price behavior only from complete comparable packages; count independent transactions and share oriented package shapes with Trade.
+- Replace unsupported acceptance and preference claims with factual context; surface supported profile dimensions and accessible evidence.
+- Preserve pre-integrity persisted grades without regeneration and namespace future exact pick-lineage records without migrating legacy history.
+
+# DTOS v1.21.24 / build 2124 — Reachable Trade Actions
+
+- Place the shared proposal summary and View Trade action in normal document flow, preserving send/receive counts and persisted assets without blocking workflow controls.
+- Keep Recommended discovery ahead of the proposal tray and reserve navigation clearance when controls scroll into view.
+- Add actual authenticated-route pointer hit-testing, real clicks, nearby loading, keyboard, history/reload and cross-workflow responsive coverage.
+- Preserve pricing, intelligence, exact protections, preview/adoption, account boundaries and the unchanged 2 GiB release gates.
+
+# DTOS v1.21.23 / build 2123 — Clear User Journeys
+
+Trade evaluation now lands on its current verdict, uses neutral assessment wording, and keeps the major drawback nearby. Recommended discovery appears before manual construction. Shop explicitly defaults to all eligible teams; missing-source guidance names evidence limits and supported next steps.
+
+Exact acquired-pick dossiers resolve available league-specific franchise names, retain complete technical identities, and scroll ownership history locally. Sparse Market selections show an explicit detail-unavailable destination. My Team roster and Calculator Balance have early access links. FOIS movement and trading-style labels withhold unsupported historical conclusions without changing scoring or trade intelligence.
+
+See [audit reconciliation, acceptance and Scout handoff](docs/USER_JOURNEY_CORRECTIONS.md).
+
+# DTOS v1.21.22 / build 2122 — Readable Dossier Status
+
+The actual player-dossier intelligence cards now adapt to a 220px minimum where space permits and stack on narrow phones. Short availability words remain intact at the existing readable value size. The correction targets `article.ai-value > b`, preserving evidence disclosures, technical identifier wrapping and locally scrollable Market tables.
+
+Real `/players/11563` (Bo Nix) and `/players/10225` (McBride) route browser coverage checks status text geometry, labels, numeric values, evidence disclosure and page bounds at 320/375/390px and desktop. No intelligence, pricing, projection, protection or Trade behavior changes.
+
+See [reproduction, visual evidence and Scout handoff](docs/DOSSIER_STATUS_WRAPPING.md).
+
+# DTOS v1.21.21 / build 2121 — Accessible Phone Details
+
+- Stack narrow FOIS leaderboard cards and wrap full manager/franchise names without changing scores or ranks.
+- Reuse native protection disclosures for Shop badges and Calculator summaries; distinguish exact locks from required workflow anchors and update explanations with current state.
+- Keep dossier short availability words intact through responsive value-card sizing; preserve technical wrapping and local evidence-table scrolling.
+- Preserve all pricing, balancing, discovery, ownership, navigation, security and resource contracts.
+
+# DTOS v1.21.20 / build 2120 — Phone-First Front Office
+
+- Consolidate the shared charcoal surfaces, green actions, neutral position chips, touch targets, focus, disabled/loading/error and disclosure primitives.
+- Keep official standings medals separate from DTOS/FOIS assessments; admit champion trophies only from the active league’s prior completed championship bracket. Explain factual badges on tap/keyboard; You uses authenticated membership.
+- Keep Home concise with two supported Attention items at most, clear record/strength labels and progressive detail.
+- Bring concrete owned/exact balancing changes and previews beside Balance; show Next Five feedback beside its action and invalidate obsolete status.
+- Stack exact protection labels/controls and format derived Trade summary points without changing underlying or weekly technical precision.
+- Preserve canonical values, ownership, workflows, navigation, security and the 2 GiB lifecycle contract.
+
+# Changelog
+
+# v1.21.19 / build 2119 — Offer-Bound Balancing Feedback
+
+- Bind calculator loading/completion/error feedback to its exact offer revision and request generation.
+- Clear invalid balancing status and retained suggestions when the offer or balancing context changes.
+- Clear obsolete balancing previews on exact-lock and strategy changes while preserving unrelated workspace messages.
+- Preserve Market arithmetic, balancing construction, ownership, exact picks and explicit adoption.
+- Cover equal-value pick swaps, rebalancing, pending stale responses, reload/navigation and 320/375/390px responsive Chromium.
+
+# v1.21.18 / build 2118 — Calculator Balancing Feedback
+
+- Show immediate, accessible processing feedback beside Balance without hiding the offer.
+- Visibly disable package edits and protection changes that cannot run during a search; retain search, evidence and navigation.
+- Cancel obsolete balancing requests on newer intent/navigation, bound waiting to 45 seconds and restore controls on all completion paths.
+- Preserve canonical prices, exact ownership/picks, balancing construction and explicit preview/adoption.
+- Cover pending controls, duplicate clicks, success/empty/error/network/timeout and stale results at 320/375/390px responsive Chromium.
+
+# v1.21.17 / build 2117 — Trade Calculator & Smart Offer Editor
+
+- Add a discoverable Trade Calculator using the existing canonical player/pick adapters and owned-asset editor.
+- Show immediate individual prices, complete/partial totals, receiving-side Market advantage and exact numerical gap; strategy does not reprice assets.
+- Preview bounded owned additions, swaps, removals and small combinations with separate bilateral quality/capacity/strategy cautions.
+- Preserve exact pick identity, outgoing protections, required incoming/Shop anchors, original offers and explicit adoption.
+- Reuse prepared canonical facts and existing request-scoped projection/lineup memoization; only requested balancing or advanced analysis builds strategic evidence.
+- Cover arithmetic, missing prices, ownership/security, generation changes, integration, reload/navigation and responsive Chromium at 320/375/390px.
+
+# v1.21.16 / build 2116 — Explicit Trade Navigation
+
+- Replace incompatible restored targets and proposals when a new Shop/Trade For action is selected.
+- Retain exact protections and clear the previous targeted package, preview and adjustment context predictably.
+- Restore each authorized browser history entry's own draft on reload/back-forward, preserving matching adopted multi-asset packages.
+- Keep unsupported ownership entries blocked even when a saved proposal exists; preserve all server identity and ownership checks.
+- Cover both workflow directions, target switching, legacy drafts, pending work, fresh tabs and 320/375/390px responsive Chromium.
+
+# v1.21.15 / build 2115 — Trade Workspace Navigation Reliability
+
+- Separate canonical evidence publication during search from authenticated workspace identity rejection.
+- Retry a changed-evidence search once with the same binding, target, proposal and exact protections while intent remains current.
+- Ignore pre-navigation responses and keep their completion from unlocking or replacing a newer search.
+- Keep genuine account/session/league/franchise mismatches blocked with an authorized Trade Center recovery link.
+- Cover the Daniels/McBride Cheaper navigation journey, history/reload, isolated accounts/leagues, bounded retries and phone presentation.
+
+# v1.21.14 / build 2114 — Ownership Label Presentation
+
+- Place ownership wrapping in the rendered shared theme and remove the unused migration-file rule.
+- Keep complete long franchise names bounded in Market cards, dossier actions and Live Data ownership.
+- Extend responsive Chromium ownership coverage with unbroken long names at phone and desktop widths.
+
+# v1.21.13 / build 2113 — Ownership-Aware Player Actions
+
+- Resolve supported player actions from one request-scoped league ownership map.
+- Show Free Agent or unresolved ownership without impossible Trade For/Shop actions.
+- Reject unsupported player deep links before opening a trade editor and return an explicit API rejection.
+- Keep current ownership/action labels coherent through retained Market artifacts and roster transitions without changing prices or pick identity.
+- Cover phone widths, shared entry points, ownership transitions and accepted Trade contracts.
+
+# v1.21.12 / build 2112 — Faster Trade Discovery
+
+- Reuse exact immutable lineup mathematics across matching search/session generations with bounded TTL, byte and entry limits.
+- Avoid allocating losing lineup transitions and repeatedly filtering, valuing and sorting identical package combinations.
+- Preserve all progressive search budgets, package ordering, evidence, counterparty gates, strategy judgments and near misses.
+- Add repeated cold/warm and budget-exhaustion profiles, exact before/after contracts, cache safety and phone stale-response coverage.
+
+# v1.21.11 / build 2111 — Readable Market Evidence
+
+- Scope arbitrary wrapping to technical values, preserving complete selectable identifiers.
+- Restore intrinsic evidence-table column widths with bounded local scrolling and keyboard focus.
+- Verify readable headers, numeric cells, wheel/keyboard/touch-style scrolling and phone bounds in Chromium.
+
+# v1.21.10 / build 2110 — Responsive Technical Details
+
+- Wrap complete technical identifiers inside shared progressive disclosures so
+  opening Brain snapshot/hash evidence cannot widen manager-facing pages.
+- Keep expanded Market unavailable-value metrics bounded at 320px.
+- Add responsive Chromium contracts at 320/375/390 and desktop widths for full
+  evidence selection, shared definition lists and local evidence-table scrolling.
+
+# v1.21.9 - Canonical Asset Facts
+
+- Resolve dossier Market headlines globally, independently of Front Office roster membership.
+- Share canonical value, source generation, source/retrieval times, freshness, provider support and unavailable reasons across Market, dossier and Trade boundaries.
+- Preserve provider normalization, strategy price invariance, exact pick identity and league ownership context.
+- Render selected-week Sleeper projection availability from the same prepared evidence as its numeric panel.
+- Add deterministic cross-page HTTP and responsive Chromium 375/390 contracts, including retained and unavailable evidence.
+
+# v1.21.8 - Make It Cheaper Repair Completeness
+
+- Try cheaper current-offer substitutions before expanding through bounded package changes.
+- Return a small evaluated set with strictly lower canonical outgoing Market cost while retaining exact targets and locks.
+- Explain repair pruning, missing evidence and bounded-search exhaustion; keep alternatives preview-only until adoption.
+
+# v1.21.7 - Trade Discovery + Repair Reliability
+
+- Expand bounded trade discovery when the first pass yields too few credible choices, with diverse recommendation families and session browsing.
+- Preserve exact Shop assets and Trade For targets while searching varied packages and precise repair constraints.
+- Preview alternatives before adoption; explain evaluated near misses, strategic costs and limited manager history.
+- Keep canonical Market prices, capital evidence, legal-lineup production and hard constraints separate.
+- Retain exact session locks across workflows, present specific conflicts, and preserve adopted packages on targeted reload.
+
+# v1.21.6 - Trade Center Capital + Strategy Reconciliation
+
+- Evaluate legal draft-capital trades under Win Now, Retool and Rebuild strategies.
+- Keep Market prices, legal-lineup production, future capital, strategy fit and counterparty plausibility distinct.
+- Disclose strategic costs, preserve exact pick identity and keep missing evidence explicit across Trade Center workflows.
+
+# v1.21.5 - Private Operations Inspection
+
+- Add authenticated, bounded read-only operational diagnostics over HTTPS.
+- Reuse the existing inspection security boundary and preserve normal product behavior.
+- Keep detailed operational and security validation evidence private.
+
+# v1.21.4 - Protected Projection Evidence
+
+- Preserve complete source evidence while supported Projection generations remain protected.
+- Keep unsupported legacy evidence auditable without presenting it as supported historical evidence.
+- Validate atomic operational generation transitions and distinct, fully sourced rollback baselines.
+- Preserve prepared reads, scoring precision, missing-data semantics and league isolation.
+- Keep detailed operational acceptance evidence private.
+
+# v1.21.3 - Bounded Storage Retention
+
+- Bound redundant operational history while preserving meaningful historical evidence.
+- Preserve supported historical reads and explicit missing-evidence states across cache recovery.
+- Validate cache publication before retiring eligible recoverable entries.
+- Add bounded storage-growth monitoring without changing fantasy intelligence semantics.
+- Keep detailed operational and capacity acceptance evidence private.
+
+# v1.21.2 - Guarded Storage Recovery
+
+- Strengthen operator-controlled storage recovery and rollback verification.
+- Retain the previous store until explicit validation and acceptance complete.
+- Enforce bounded recovery resources without changing product evidence or league isolation.
+- Keep detailed operational acceptance evidence private.
+
+# v1.21.1 - Bounded Historical Storage
+
+- Reduce redundant historical storage while preserving FOIS conclusions and retained projection evidence.
+- Keep unchanged refreshes deduplicated and distinguish unavailable historical evidence from current evidence.
+- Preserve league isolation, projection precision, and normal product reads across storage updates.
+- Keep detailed operational acceptance evidence private.
+
+# v1.21.0 - Season Operations and Final Acceptance
+
+- Keep completed leagues on their selected league season and week when the global NFL clock advances.
+- Restore projections only when league, season, week and scoring identities all match.
+- Restore the exact last-valid active state after failed preparation and resume canonical evidence after recovery.
+- Deduplicate unchanged projection refreshes and synchronization markers without adding a new schema or durable store.
+- Preserve historical reports, matchups, Trade, Picks, FOIS, Market and team context across two-league and season transitions.
+- Complete responsive, accessibility, lifecycle and bounded-storage acceptance for the integrated DTOS product.
+
+# v1.20.0 - Manager Experience and Reporting
+
+- Present full-season Matchups and Matchup Desk with projected-versus-locked playoff states and historical boundaries.
+- Add supported player projection context, shared evidence explanations, Home attention, and weekly league reports.
+- Clarify Team HQ, Market, rank, history and FOIS presentation without changing canonical player, Trade, Pick or FOIS conclusions.
+- Preserve league isolation, prepared reads, responsive controls and bounded unchanged-read storage.
+
+# v1.19.1 - Trade Point Presentation
+
+- Present projected lineup and horizon changes consistently to two decimal places without altering canonical values or evaluation results.
+- Preserve unavailable evidence and genuine numeric zero across manual and generated trade displays.
+- Narrow live-acceptance correction; v1.19.0 remains immutable. Batch 6 remains not started.
+
+# v1.19.0 - Bilateral Trade and Multi-Horizon Intelligence (candidate)
+
+- Preserve precise supported weekly projections, source freshness and missing-versus-zero semantics through atomic horizon publication.
+- Prepare optimal legal lineups and explicit current-week, Next-N, regular-season, playoff and depth/bye evidence under each league's rules.
+- Use one bilateral evaluator across Create Trade, Trade For, Shop Asset, Recommended Trades, Adjust Offer and alternatives.
+- Keep Market fairness, Package Quality, strategic fit, counterparty plausibility, confidence and limitations distinct; never fabricate offers or unavailable evidence.
+- Bound generated searches, preserve request-local constraints and hypothetical ownership isolation, and deduplicate unchanged semantic history.
+- Implementation checkpoint complete. Required comprehensive release and production acceptance pending. Batch 6 not started.
+
+# v1.18.1 - Pick Evidence Cache Upgrade
+
+- Materialize absent provider pick-quote families during preparation even when a pre-upgrade player cache remains within its refresh interval.
+- Preserve legitimate empty quote sets, normal refresh timing after materialization, source timestamps, provider isolation and disclosed cached fallback on fetch failure.
+- No request-path analysis, synthetic price, schema change or infrastructure change. Batch 4 live acceptance remains pending; Batch 5 is not started.
+
+# v1.18.0 - FOIS and Pick Evidence Intelligence (candidate)
+
+- Reconcile Results and historical GM tenure; separate activity, process, outcomes, confidence and evidence availability.
+- Carry supported decision-time assessments through active FOIS preparation and category aggregation; missing categories never become poor grades or Results-only overall scores.
+- Preserve original-franchise pick identity and ownership chains; select compatible external generic/range/exact Market evidence with shared normalization.
+- Replace legacy calculated pick scalars with explicit evidence; normal Picks reads avoid full intelligence orchestration.
+- Add generation-bound conservative ranges, portfolio distributions and bounded semantic range history with zero-growth unchanged replay.
+- Production publication, live acceptance, storage admission and controlled restart remain pending. Batch 5 is not started.
+
+# v1.17.2 - Single-Provider Market Coverage
+
+- Preserve the valid FantasyCalc reference when secondary Market formats cannot join consensus; never average incompatible formats.
+- Keep single-source confidence unchanged, preserve separate provider evidence, and reject explicitly historical, invalid, expired, ambiguous or incompatible current quotes.
+- Version the Market selection boundary so repaired availability is not misrepresented as organic player movement.
+- Add read-only aggregate coverage diagnostics and active Trade/valuation consistency regressions. Pick Intelligence and Batch 4 remain untouched.
+
+# v1.17.1 - Sparse Market Trend Compatibility
+
+- Preserve method, normalization, context and knowledge identity through the sparse Market reader.
+- Reject incompatible or unproven concept/scale/format/methodology before calculating movement, volatility, ranges or milestones.
+- Keep historical records unchanged and distinguish semantic boundaries from player movement.
+- Do not append unlabeled current scalars to history; retain explicitly compatible trends.
+- Preserve v1.17.0 architecture. Production acceptance remains pending; Batch 4 is not started.
+
+# v1.17.0 - Player and Market Evidence Intelligence (candidate)
+
+- Separate external Market prices from supported intrinsic evidence profiles; unsupported long-term scalars remain unavailable.
+- Preserve canonical production, explicit projection missingness, rank scopes and generation-bound roster/team assessments.
+- Keep unproven provider formats separate, prevent mirrored-source confidence inflation and disclose single-source evidence.
+- Add bounded structured semantic changes and an explicit methodology transition identity; unchanged replay does not create movement.
+- Preserve historical boundaries, multi-league isolation, retired visual systems and existing Market replacement/resource contracts.
+- Release and production acceptance remain pending; Batch 4 is not started.
+
+# v1.16.1 - Reserved League Route Classification
+
+- Classify exact static runtime/resource API paths before dynamic league-ID authorization.
+- Preserve authentication, active membership, CSRF, account/franchise scoping and fail-closed handling of unknown descendants.
+- Add real-router security regressions covering sibling static paths, cross-account/league denial, trailing-slash behavior and OpenAPI registration.
+- Make the validation-only material Market replacement probe wait for lifecycle admission and hold atomic publication until warming observations finish; retain the 503 contract and fail-closed timing gates.
+- No global evidence, backfill, storage, intelligence or infrastructure changes. Batch 3 remains not started.
+
+# v1.16.0 - Canonical Data Foundation (Master Roadmap Batch 2)
+
+- Add bounded, source-pinned, resumable global NFL evidence ingestion with atomic feed publication and cross-process single-flight coordination.
+- Store semantic global facts once; derive league-specific production/scoring and usage without per-league durable copies or request-time ingestion.
+- Preserve source identity, publication/as-of boundaries, missing values, ambiguous player IDs, and incomplete scoring separately from available raw production.
+- Reconcile Sleeper postseason qualification/byes/semifinals/placements, fractional standings, draft identity, transaction attempts, and season-observed franchise ownership.
+- Correct historical roster/weekly-result boundaries; retain draft lifecycle bounds without inventing exact selection times or original pick ownership.
+- Add source-backed schedule/bye derivation, bounded player evidence reads and an explicit downstream migration map.
+- Preserve v1.15.1 storage behavior and Batch 1 Trade Center. Batch 3 is not started; retired capture/publication systems remain retired.
+
+# v1.15.1 - Lossless Storage Prerequisite
+
+- Separate FOIS semantic states from observation provenance without discarding history.
+- Normalize historical projection player evidence while preserving exact snapshots and missing values.
+- Replace full FOIS database copies with scoped compute inputs and transactional publication.
+- Add bounded reversible compaction, logical-equivalence checks, connection fencing and storage counts.
+- Preserve all Batch 1 intelligence and isolation contracts; Batch 2 is not started.
+
+# v1.15.0 - Trade Center Workspace & Mechanics
+
+- Replace competing Trade Center pickers with one temporary, session/league/
+  franchise-scoped asset-board and editable proposal workspace.
+- Supply existing authenticated request protection on evaluation and adjustment;
+  distinguish stale ownership, invalid proposals and internal evaluation errors.
+- Preserve player/pick selections through filters, review, editing and refresh;
+  validate current ownership before evaluating, including traded draft picks.
+- Expose canonical bilateral reasoning, confidence, package quality and lineup
+  evidence without recalibrating intelligence or substituting missing evidence.
+- Preserve explicit target-repair modes, reject unresolved protected-asset names,
+  and keep generated offers editable without submitting anything to Sleeper.
+- Keep subsequent roadmap batches and retired visual publication systems off.
+
+# v1.14.1 — Matchups Evidence & Interaction Correctness
+
+- Compare canonical projections for pregame starter battles, current actuals for
+  live games, and final actual results for completed games.
+- Preserve missing projection totals/ranges as unavailable, including incomplete
+  bounds; genuine numeric zero remains valid evidence.
+- Link starter portraits/names to existing player dossiers with keyboard focus
+  and mobile tap targets. Preserve franchise links and active league context.
+- Keep v1.14.0 visual/FOIS architecture and retired visual publication unchanged.
+
+# v1.14.0 — Premium Visual System & UX Coherence
+
+- Establish one shared dark/navy, green-action, blue-value visual system across
+  the manager platform, with compact responsive headers and accessible navigation.
+- Preserve authenticated league switching in a compact disclosure; My Team opens
+  the active account's mapped franchise rather than a fixed or unrelated team.
+- Recompose trade offers as bilateral player/pick packages, canonical impact
+  summaries, balanced reasoning, and real expandable offer evidence.
+- Strengthen franchise/player identity in Team HQ, team listings, player dossiers,
+  Market, standings, draft capital, season archives and executive profiles.
+- Prioritize canonical assessments and manager decisions; retain detailed evidence
+  and application diagnostics in subordinate native disclosures.
+- Correct dead legacy card controls, Market pagination context, unavailable-state
+  typography, page navigation selection, and Commissioner Desk shell consistency.
+- Remove repeated season-history expansion during startup synchronization using
+  one league-local batch read with identical per-player evidence and limits.
+- Isolate default HTTP-validation intelligence stores and include untagged
+  computation children in owned-process teardown.
+- Reuse canonical global checkpoint evidence within one bounded FOIS preparation
+  snapshot; preserve event-time selection and reject changed evidence before publication.
+- Preserve intelligence semantics, isolation, security, provider-free request paths,
+  all resource/latency thresholds, and retirement of automated visual publication.
+
+# v1.13.7 — Canonical Team Assessment
+
+- Bind Team HQ, Roster identity and unified recommendation outlook to one shared
+  league-relative assessment and the existing competitive-window engine.
+- Pin the correct league projection publication, include its generation and Brain
+  generation in cache identity, and use its effective forecast week in preseason.
+- Display complete canonical starter points/bounds only; missing bounds remain
+  unavailable. Remove mislabeled proxy projection rankings from Team HQ.
+- Preserve legacy results/coverage diagnostics with explicit subordinate labeling;
+  preserve trade selection, canonical valuation formulas and historical intelligence.
+- Automated visual capture/publication remains retired; all application safety gates remain.
+
+# v1.13.6 — Automated Visual System Retirement
+
+- Retire automated Current/Live Visual, DINS and External Visual Mirror workers,
+  routes, archives, relays and publication workflows by explicit product decision.
+- Retain semantic inspection, numerical reconciliation, accessibility and lightweight
+  authenticated browser journeys independently of screenshot publication.
+- Separate browser test dependencies from production; keep all application lifecycle,
+  memory, responsiveness, isolation and stable-boundary restart gates.
+- Preserve reviewed idle FOIS worker cleanup, expired-cache reclamation and bounded
+  calibration iteration, with unchanged intelligence and storage semantics.
+- Keep historical release assets immutable; no paid infrastructure change.
+
+# v1.13.5 — FOIS Active Tenure Continuity
+
+- Preserve an existing active GM tenure when earlier historical evidence arrives.
+- Publish newly evaluated scores against that persisted identity, avoiding an
+  ignored unique-active insert and unreachable evidence-backed profiles.
+- Preserve immutable takeover snapshots, owner-change isolation, scoring rules,
+  provider-free requests, and bounded process execution.
+
+# v1.13.4 — Bounded Restart Evidence Deduplication
+
+- Correct a diagnostic-only production capture size failure by retaining normalized
+  provider rows once, in their existing canonical valuation location.
+- Preserve exact safe confidence/freshness fields, every structural difference,
+  private-data protection, atomic persistence and unchanged node/byte bounds.
+- Extend the production-shaped regression to prove the old duplicate layout fails
+  while the complete deduplicated layout fits. No intelligence or compatibility change.
+
+# v1.13.3 - Semantic Freshness and Restart Evidence
+
+- Use the established family-aware material freshness boundaries for normalized
+  provider confidence instead of continuous wall-clock micro-drift.
+- Preserve stale status, new-source invalidation, league isolation and shared
+  global market evidence; add cross-process confidence regressions.
+- Add bounded authenticated restart capture with paginated retained normalization
+  inputs, identity checks, structural differences and atomic private evidence.
+- The earlier v1.13.2 restart remains historically unclassified: exact inputs were
+  not retained. The confidence defect was independently reproduced.
+
+# v1.13.2 - League-Scoped Projection Restoration
+
+- Bind the configured projection service to its league before durable restoration,
+  preventing a newer foreign-league snapshot from appearing during startup.
+- Preserve pending state when that league has no compatible snapshot; keep shared
+  provider evidence and all projection/scoring semantics unchanged.
+- Reproduce fresh-process startup across three league overrides, a newer foreign
+  snapshot, and missing own evidence, including provider-free repeated reads.
+
+# v1.13.1 - Account and League Presentation Isolation
+
+- Keep Market and FOIS cached league evidence separate from request-local account,
+  membership controls, and session CSRF fields.
+- Resolve Valuation synchronization freshness from the active league runtime.
+- Keep authenticated FOIS warming bound to its membership, never another
+  league's sole persisted profile.
+- Cover nested route discovery, colliding identifiers, concurrent authenticated
+  accounts, repeated league switching, and all 500 scale-test memberships.
+- Preserve global market memory, authorization, and bounded evidence caching.
+- Hydrate each cold league's own disposable Sleeper history cache and use its
+  name on player career history; release operational history references on eviction.
+- Refresh resident secondary leagues at the established interval and resolve
+  their historical trades through the same league-scoped background pipeline.
+
+# v1.13.0 - Multi-League Intelligence Isolation
+
+- Added a fail-closed league-identity boundary for private Front Office,
+  manager-behavior, bilateral-history, and league-liquidity evidence.
+- Preserved globally shared player market trends while preventing a nested
+  league-liquidity signal from crossing into another active league.
+- Made wrong-league evidence rejection visible through bounded Trade
+  Intelligence provenance without exposing private source data.
+- Added adversarial direct-load, switch-order, same-roster-ID, A/B/C, and
+  concurrent-read regressions while preserving bounded cached execution.
+
+# v1.12.9 - Trade Intelligence Historical Upgrade
+
+- Integrated canonical Step 4 transaction evidence, Step 5 Front Office
+  summaries, Step 6 manager behavior, and Step 7 sparse market trends into the
+  existing bilateral Trade Intelligence evaluator.
+- Kept current ownership, legality, neutral value, roster fit, competitive
+  window, and package quality authoritative while using supported history only
+  as qualitative counterparty plausibility and timing evidence.
+- Added deterministic evidence lineage, honest low-history behavior, bounded
+  one-pass context reads, and zero provider/raw-history/profile-rebuild work in
+  candidate loops across Trade For, Shop Asset, and Recommended Trades.
+- Preserved manual Create/Edit/Adjust workflows, multi-league isolation,
+  no-trade results, and the existing resource and responsiveness contracts.
+
+# v1.12.8 - Draft Event Timestamp Contract Correction
+
+- Separated deterministic draft-event identity from trustworthy historical
+  temporal evidence; undated selections remain identifiable through canonical
+  pick lineage without fabricating an observation timestamp.
+- Quarantined malformed legacy observation timestamps from chronological trend
+  calculations while preserving valid dated evidence and deterministic output.
+- Added bounded aggregate diagnostics for excluded undated evidence and exact
+  production-shaped coverage for the previously failing draft identifier.
+
+# v1.12.7 - Market Trends Integration
+
+- Added one canonical, rebuildable Market Trend model over Step 2 sparse global
+  observations, with explicit direction, magnitude, horizons, milestones,
+  observed range, volatility, confidence, coverage, and event provenance.
+- Added separate league-scoped transaction/liquidity context using indexed
+  canonical references without contaminating global market truth.
+- Replaced the Asset Market trend API and presentation path with bounded list
+  summaries and targeted detail reads; reads create no history and make no
+  provider calls or raw Sleeper scans.
+- Kept the legacy `MarketHistoryStore` as runtime compatibility only and left
+  current values, FOIS, Brain, Trade recommendations, Step 8, and artifact
+  compatibility unchanged.
+
+# v1.12.6 - GM Behavioral Intelligence
+
+- Added one deterministic, league-scoped behavioral evidence model over the
+  canonical Step 4 transaction evaluations and Step 5 Front Office summaries.
+- Describes sample-aware activity, asset direction, package style, draft
+  capital, position, price, window, partner, timing, and recency patterns while
+  keeping Process quality and later Outcome separate.
+- Preserves manager-tenure and league isolation, bounded evidence references,
+  generation-aware reuse, zero provider calls, and zero Step 6 history scans.
+- Leaves FOIS scoring, Brain semantics, current Trade Intelligence, Market
+  Trends, offers, recommendations, and presentation unchanged.
+
+# v1.12.5 - FOIS Front Office Brain Unification
+
+- Added one immutable, versioned Front Office evidence contract shared by FOIS,
+  Front Office Intelligence, and the DTOS Brain.
+- Integrated Step 4 Process and Outcome evidence without hindsight, score
+  collapse, current-GM inheritance, or duplicate grading paths.
+- Removed canonical historical trade scans from the shared request-time path;
+  background generation publishes bounded generation-aware summaries instead.
+- Preserved current recommendation scoring and all league-isolation, provider,
+  storage, responsiveness, and artifact contracts.
+
+# v1.12.4 - Historical Transaction Intelligence
+
+- Added a canonical bilateral historical-trade evaluation layer that consumes
+  Step 1 events, Step 2 global market evidence through Step 3, and Step 3
+  before/after franchise states without replaying or querying providers.
+- Separates contemporaneous Process from later Outcome, preserves partial and
+  invalid evidence honestly, supports non-zero-sum conclusions, and records
+  confidence, maturity, provenance, source generations, and method identity.
+- Added bounded, restartable, deterministic backlog batches with idempotent
+  semantic reuse and no request-loop execution, raw-history store, or per-league
+  market duplication.
+
+# v1.12.3 - Historical Franchise State Reconstruction
+
+- Added one canonical, deterministic franchise-state reconstruction layer over
+  Step 1 league history and Step 2 global sparse market evidence.
+- Reconstructs transaction-boundary roster and pick ownership, historical league
+  rules, season-to-date record/production, legal lineup evidence, partial value,
+  and competitive-window context without current-state or future-outcome fallback.
+- Preserves honest per-dimension availability, confidence, provenance, optional
+  traces, multi-league isolation, zero provider calls, and no permanent snapshot
+  warehouse or per-league market duplication.
+
+# v1.12.2 - Event-Relevant Global Player Market Memory
+
+- Connected the canonical Historical Intelligence read contract to the existing
+  durable global market-observation store with no-hindsight lookup semantics.
+- Limited scheduled milestones to the persisted Relevant Player Universe and
+  added bounded, explainable related-player evaluation for supported global events.
+- Preserved only material provider-backed observations, deduplicated shared
+  cross-league states, and kept private league-event linkage out of global payloads.
+- Added bounded, idempotent historical backfill support that never attaches
+  current valuation evidence to an old event or fabricates unavailable history.
+
+# v1.12.1 - DINS Public-Origin Serialization Correction
+
+- Separated DINS browser transport origin from publication identity.
+- Rebased only structured application-owned absolute URLs through the configured public origin while preserving paths, queries, and fragments.
+- Kept external URLs unchanged and retained every fail-closed packaging prohibition.
+- Required an explicit public origin whenever authenticated capture uses loopback transport.
+
+# v1.12.0 - Canonical Historical Intelligence Contract
+
+- Establish one normalized, multi-league historical-intelligence read boundary
+  above the existing Sleeper-backed `CanonicalHistoryStore`.
+- Separate league-private events from sparse globally reusable market
+  checkpoints with stable identity, honest timestamp provenance, and explicit
+  event-time lookup semantics.
+- Deduplicate active and completed-season facts without creating a permanent
+  provider archive, full-market snapshot stream, or new history database.
+
+# v1.10.71 - External Visual Mirror Authenticated Source Contract
+
+- Acquire the protected current projection audit inside the authenticated
+  Render inspection boundary and atomically retain its sanitized snapshot with
+  the matching Current Visual generation.
+- Keep `/api/audit/projections/current` private while allowing the credential-free
+  GitHub mirror publisher to consume only the retained publication-safe artifact.
+- Fail immediately on deterministic authentication-contract failures while
+  preserving bounded retries for genuinely transient production readiness.
+
+# v1.10.70 - DINS DOM-Origin Serialization Correction
+
+- Rebase browser-resolved DTOS application links from the loopback inspection
+  origin to the configured public origin during structured DOM serialization.
+- Preserve URL paths, queries, fragments, and legitimate external origins
+  without broad string replacement.
+- Retain the unchanged fail-closed DINS packaging validator for any surviving
+  loopback, credential, header, or filesystem reference.
+
+# v1.10.69 - Symbol Rendering Correction
+
+- Render trophy and fire status glyphs as direct Unicode content so Python
+  cannot consume CSS escape sequences before they reach the browser.
+- Preserve championship, HOT-state, podium, layout, intelligence, and lifecycle
+  semantics unchanged while adding control-character regression protection.
+
+# v1.10.68 - Visual Fidelity Correction
+
+- Recompose Home as a franchise command dashboard, My Team as an identity-led
+  roster, League rankings as a visible podium, and Market as a visual dynasty
+  asset exchange rather than an administrative table.
+- Rebuild Trade Center presentation around recognizable player and pick assets,
+  unmistakable send/receive packages, bilateral reasoning, confidence, and one
+  dominant action, following the approved mobile references.
+- Introduce visible, data-bound podium and championship vocabulary while keeping
+  unsupported hot streak and movement states honest and absent.
+- Preserve the accepted v1.10.67 intelligence, routes, synchronization,
+  authentication, artifact, inspection, and resource contracts.
+
+# v1.10.67 - Site-Wide Visual System
+
+- Establish a premium dark DTOS visual language with layered navy surfaces,
+  clearer hierarchy, restrained semantic color, and consistent responsive
+  spacing across the existing product shell.
+- Refine the five-destination manager navigation into a compact desktop rail
+  and accessible mobile bottom navigation without changing product routes.
+- Upgrade Trade Center workflows, bilateral proposal cards, controls, and the
+  honest no-opportunity state while preserving every intelligence contract.
+- Treat the approved mobile references as visual direction only and explicitly
+  exclude their editor, sharing, and device overlay controls from DTOS.
+
+# v1.10.66 - Artifact-Build Provenance Identity Stability
+
+- Restore immutable historical dataset provenance from the compatible Asset
+  Market artifact instead of relabeling it with the current live-store identity.
+- Keep directory and health provenance scoped to `artifact_build` while search
+  and detail routes continue to expose bounded `live_store` identity.
+- Reject artifacts that lack explicit build provenance rather than fabricating
+  an identity, without changing semantic compatibility or market output.
+
+# v1.10.65 - Authenticated Production Smoke Contract
+
+- Split production smoke into explicit anonymous authorization checks and
+  inspection-safe authenticated product checks without changing route access.
+- Reuse the existing constant-time inspection-header boundary with its
+  deterministic active league and mapped franchise; create no user session and
+  require no real account password.
+- Keep public health and inspection routes anonymous while protected product
+  HTML and APIs receive the scoped inspection context.
+- Fail closed when production authentication is enabled without the complete
+  token, league, and roster fixture, and keep all credentials out of evidence.
+- Preserve v1.10.64 Front Office semantics, historical-leader aggregation,
+  process isolation, one web worker, and every latency and memory threshold.
+
+# v1.10.64 - Front Office Context Contract
+
+- Align canonical production smoke with the established authenticated-manager
+  boundary: protected Front Office and Trade requests resolve to the active
+  membership's true mapped franchise.
+- Preserve request-local explicit Front Office selection in unscoped local
+  validation without inventing session-persistent View As state.
+- Prove that explicit query values do not mutate account membership and cannot
+  leak across league switches, logout, accounts, or browser sessions.
+- Preserve v1.10.63 Trade manager resolution, homepage behavior, multi-league
+  membership, FOIS scheduling, and every latency and resource threshold.
+- Bound canonical historical-leader aggregation to player scoring facts instead
+  of materializing and filtering every record type in a season.
+- Preserve leader counts, identities, ordering, statistics, and cache behavior
+  while removing the archive-warmed full-season temporary-copy peak.
+- Move FOIS snapshot traversal and compaction behind the existing one-process
+  compute boundary by handing the worker a bounded canonical-cache reference.
+- Keep one web worker and one persistent spawn worker while eliminating large
+  parent-process IPC pickling during startup intelligence generation.
+
+# v1.10.63 - Authenticated Trade Manager Context
+
+- Replace the obsolete unconditional Trade franchise-chooser smoke assertion
+  with a state-aware semantic contract.
+- Require authenticated inspection requests to resolve the controlled Trade
+  franchise to the exact configured league membership roster without manual
+  reselection.
+- Preserve the explicit chooser and `manager_context_required` API state when
+  no membership mapping exists, including strict rejection of guessed rosters.
+- Preserve Trade product behavior, account authorization, multi-league
+  switching, homepage presentation, FOIS isolation, and all existing gates.
+
+# v1.10.62 - Homepage Primary Action Presentation
+
+- Correct canonical HTTP primary-action detection to recognize the established
+  semantic `data-dtos-action="primary"` contract on account/onboarding actions,
+  regardless of harmless CSS class ordering or additional button classes.
+- Preserve the authenticated Home `Open Team HQ` action and the signed-out
+  root redirect to the real `Sign in` action; no authentication, multi-league,
+  FOIS, or product-latency behavior changes.
+- Add regression coverage for the exact production signed-out-root redirect,
+  semantic account action, and rejection of markers on non-action elements.
+- Serialize validation-progress publication across Windows/Linux processes with
+  unique atomic snapshots, locked readers, and deterministic temporary cleanup.
+- Prewarm one bounded FOIS spawn worker and reduce its immutable input from the
+  full synchronized league payload to only FOIS-consumed league, roster,
+  historical, and owned-asset Brain evidence while preserving exact scores.
+- Measure canonical client latency from the socket boundary, retaining
+  validator evidence-publication time separately so diagnostics cannot consume
+  the unchanged 500 ms HTTP response budget.
+
+# v1.10.61 - Account/Onboarding Inspection Presentation
+
+- Integrates the six account and onboarding routes with the canonical shared
+  account page-header contract in ordinary and deterministic inspection modes.
+- Marks each real account-state action with a stable semantic identity so DINS
+  validates behavior without depending on mutable button prose.
+- Preserves the reduced signed-out shell, mobile-first forms, authentication,
+  multi-league authorization, and league-series behavior from v1.10.60.
+- Requires production DINS capture to publish public artifact identities from
+  `https://dtos.onrender.com` while the inspection token remains private.
+
+# v1.10.60 - Multi-League Onboarding Authorization Boundary
+
+- Allows only authenticated league onboarding/import and established-membership
+  switching routes to reach their own server-side authorization handlers before
+  active-league path enforcement.
+- Groups continuing Sleeper season league IDs into authoritative dynasty-series
+  entries using `previous_league_id`, preserving every season ID without guessing
+  from league names.
+- Adds durable, normalized account-to-series season references while retaining the
+  unbounded one-to-many account membership model and bounded lazy runtime residency.
+- Preserves ordinary private-league authorization, neutral market truth, secure
+  sessions, CSRF, and league-specific scoring, roster, pick, and franchise context.
+
+# v1.10.59 - Accounts, Identity, and Sleeper Onboarding Foundation
+
+- Add durable DTOS accounts with Argon2 password hashing, opaque server-side sessions, one-time recovery codes, CSRF protection, and bounded authentication attempts.
+- Resolve public Sleeper identities truthfully, discover eligible leagues, map the associated roster without claiming independent ownership verification, and persist active league context.
+- Enforce account-derived league and controlled-manager context on private product surfaces while preserving deterministic, separately authorized inspection access.
+- Keep HistoricalStore retired, avoid provider payload duplication, and preserve all Asset Market, history, intelligence, memory, and latency contracts.
+
+# v1.10.58 - Asset Market Front Office Link Correction
+
+- Omit absent optional Front Office context from Asset Market navigation instead of serializing an invalid empty integer query value.
+- Preserve explicit league-scoped manager context and canonical selected-asset identity without introducing a default franchise.
+- Keep Asset Market values, rankings, generation and compatibility semantics, Trade Center, and DynastyProcess behavior unchanged.
+
+# v1.10.57 - DynastyProcess Player Interaction Correction
+
+- Preserve external link origins in deterministic DINS interaction evidence.
+- Validate the existing DynastyProcess attribution against its legitimate GitHub destination instead of rewriting it as a DTOS-local path.
+- Keep player-page provider presentation and all v1.10.56 Trade Center behavior unchanged.
+
+# v1.10.56 - Mobile Trade Asset Browser Filtering
+
+- Make semantic `hidden` state authoritative for Trade asset tiles and roster groups at every responsive breakpoint.
+- Add computed-visibility coverage for the full YOUR TEAM/THEIR TEAM and ALL/QB/RB/WR/TE/PICKS matrix on desktop, tablet, and mobile.
+- Preserve selected proposals, neutral Market Balance, controlled-manager context, Trade For semantics, and one-tap asset interaction while browsing filters change.
+
+# v1.10.55 - Controlled Manager Trade Discovery and Mobile Experience
+
+- Replaced Trade Center's first-roster fallback with an explicit league-scoped controlled-manager contract and a safe manager-selection state.
+- Added bounded Trade For funnel evidence and closest-path guidance while preserving all bilateral quality gates.
+- Added ownership revalidation before evaluation and generation.
+- Added a mobile-first roster asset browser with player imagery, positional rank/value context, distinct pick tiles, filters, selected-asset controls, and a neutral live market-balance indicator.
+
+# v1.10.54 - Target-Preserving Trade Repair Mode
+
+- Normalize Trade Center repair requests into three mutually exclusive modes.
+- Prevent Make This Trade Work and Alternative Construction from returning target-changing proposals.
+- Return an honest, structured no-path result when no target-preserving repair clears bilateral quality gates.
+- Make target-preservation evidence non-vacuous and reject unknown explicit repair modes.
+
+# v1.10.53 - Trade Builder and Repair Intelligence
+
+- Made target preservation a hard contract for Make This Trade Work and Alternative Construction; only explicitly labeled Alternative Target results may replace the requested asset.
+- Added one shared, generation-local neutral-market positional rank contract and richer player/pick identities across Trade Center pickers and search.
+- Added concrete proposal presentation metadata, honest no-path acquisition guidance, and target-preserving bilateral repair regressions.
+- Preserved cached manager reads, zero request-time providers, retired HistoricalStore behavior, and all v1.10.52 scheduling boundaries.
+
+# v1.10.52 - Trade Center Accessible Name Correction
+
+- Corrected DINS visibility classification for controls inside collapsed native disclosures.
+- Added contextual accessible names to dynamic Trade Center asset-removal buttons.
+- Kept Trade Center intelligence and workspace computation off the request event loop, and removed full intelligence generation from initial workflow-page rendering.
+- Added one shared manager-read execution boundary so Front Office and Trade view construction cannot block unrelated request acceptance.
+- Preserved every v1.10.51 recommendation and workflow contract unchanged.
+
+# v1.10.51 - Trade Center Recommendation Quality and Ownership-Aware Entry
+
+- Recalibrated bilateral recommendation gates so future-pick optimism cannot disguise elite Superflex quarterback replacement cost or produce a false championship-push label.
+- Added ownership-aware player and pick entry into league-wide Shop Asset or preloaded Trade For workflows.
+- Added immediate asset selection, calculated Create Trade alternatives, protected-asset override, and progressive mobile adjustment controls.
+
+# v1.10.50 - Trade Center Value Integrity and Workflow Conformance
+
+- Preserved canonical neutral market values as the Value Fairness input while keeping DTOS intrinsic opinion and team fit separate.
+- Bounded age/status-only intrinsic evidence so unsupported developmental upside cannot erase established market tiers.
+- Added original-franchise future-pick ranges, confidence, uncertainty-aware values, and coherent player/pick comparisons.
+- Required concrete controlled-team and counterparty reasons before generated trades qualify as plausible or worth pursuing.
+- Added executable multi-asset Create Trade, complete proposal editing, assisted adjustments, and calculated repair alternatives.
+- Added real-browser interaction coverage and request-time workspace reuse so assistance remains bounded without provider or market-build work.
+
+# v1.10.49 - Trade Center Overhaul and Bilateral Trade Intelligence
+
+- Introduced one workflow-independent bilateral trade evaluation contract for Create Trade, Trade For, Shop Asset, and Recommended Trades.
+- Added explicit Value Fairness, Strategic Fit, Counterparty Plausibility, Package Quality, Best For, and qualitative Confidence dimensions.
+- Added canonical league-configured Optimal Legal Lineup comparison for both teams, including Superflex and unavailable-projection handling.
+- Added legal ownership validation, contextual future-pick identity, bounded generation, quiet states, repair actions, and deterministic evaluation provenance.
+- Reworked the manager-facing Trade landing around the four workflows while preserving existing Trade Intelligence compatibility routes.
+
+## v1.10.48 - External Visual Mirror Semantic Validator Correction
+
+- Replaced the mirror's stale provider-phrase visibility gate with structured
+  canonical projection evidence from the browser capture contract.
+- Required exact semantic projection-node counts, reconciled manager labels,
+  strict numeric and availability results, and zero DOM mismatches.
+- Preserved the accepted matchup UI, intelligence semantics, storage model,
+  lifecycle thresholds, and v1.10.47 text normalization.
+
+## v1.10.47 - Live Visual Text-Normalization Contract Correction
+
+- Normalized browser-rendered manager labels for case and presentation-only
+  whitespace while retaining the exact `Pregame projection` semantic contract.
+- Trimmed only surrounding team-name whitespace at the visual reconciliation
+  boundary without fuzzy identity matching or relaxed numeric validation.
+- Added real Chromium coverage for CSS-transformed labels, production-like
+  matchup routes, strict values, and unavailable-versus-zero behavior.
+
+## v1.10.46 - Matchup Label/Inspection Contract Correction
+
+- Identified rendered pregame projections with a stable semantic DOM contract
+  while preserving the manager-facing `Pregame projection` label.
+- Made Live Visual reconcile canonical availability and exact two-decimal values
+  without requiring internal provider terminology in visible matchup cards.
+- Added real matchup-route coverage for available, unavailable, legitimate-zero,
+  and mismatched projection states without changing intelligence or storage.
+
+## v1.10.45 - Matchup Presentation Contract Correction
+
+- Standardized canonical matchup projection values at the shared rendered-score
+  boundary so Live Visual, Live Inspection, and the manager-facing DOM compare
+  the same two-decimal value without changing projection semantics.
+- Preserved distinct unavailable, legitimate-zero, nonzero, pregame, in-game,
+  and final presentation states across all matchup surfaces.
+- Retained the v1.10.44 manager-first UX, Live Visual responsiveness, intelligence
+  semantics, storage model, and HistoricalStore retirement.
+
+## v1.10.44 - UX Foundation Polish / Correctness
+
+- Distinguished legitimate numeric zero from unavailable, unsupported, unknown,
+  and not-yet-started evidence in shared manager-facing presentation helpers.
+- Replaced preseason `0-0-0` and `0.00` summaries with honest preseason
+  briefings and outlook labels on Home and League.
+- Made canonical pregame projections primary before kickoff at team and player
+  level, while preserving actual-first in-game and final-state hierarchy.
+- Collapsed unavailable Market evidence and moved dataset/model identifiers
+  behind manager-first Why/Evidence/Technical Details disclosure.
+- Standardized Sleeper-backed player summaries and safe headshot fallbacks in
+  Team Headquarters roster rooms without adding durable presentation storage.
+- Preserved the five-destination navigation, League hub, Market search-first
+  architecture, FOIS relationship, Trade experience, intelligence semantics,
+  sparse global market memory, and HistoricalStore retirement.
+
+## v1.10.43 - UX Foundation
+
+- Replaced the infrastructure-first homepage with a manager briefing organized
+  around recap, actions, rankings, matchups, movement, activity, and owned assets.
+- Introduced one responsive five-destination shell for Home, My Team, Trade,
+  League, and Market while keeping FOIS and advanced tools subordinate.
+- Restructured My Team, League, Market, and Matchup presentation around answer,
+  action, explanation, and evidence without changing intelligence semantics.
+- Added provider-backed player summaries with safe fallbacks and derived current
+  league-scoring positional ranks without new persistent storage or provider calls.
+
+## v1.10.42 - Actual ChatGPT-Retrievable Visual Transport
+
+- Published the verified Current Visual generation through ordinary static
+  GitHub Pages transport without changing DTOS product intelligence.
+
+## v1.10.41 - Native ChatGPT Visual-Mirror Accessibility
+
+- Added one stable, release-number-free Current Visual discovery endpoint and
+  manifest with direct human-readable current PNG paths.
+- Added GET/HEAD-compatible JSON and native PNG delivery with explicit MIME,
+  inline disposition, cache revalidation, ETags, and crawler discovery.
+- Kept reads strictly allowlisted and side-effect free while preserving atomic
+  rolling promotion, restart reuse, privacy, and bounded current-only storage.
+
+## v1.10.40 - Post-Restart Live Visual Responsiveness
+
+- Defer Live Visual scheduling until the canonical Asset Market generation has
+  published atomically.
+- Reuse compatible retained visual captures across process restart without
+  launching Chromium when their semantic dependencies are unchanged.
+- Trigger presentation capture from the completed market-publication boundary
+  while keeping optional capture failures isolated from product publication.
+
+## v1.10.39 - Live Visual Process Isolation
+
+- Moved synchronous Playwright orchestration, DOM extraction, screenshots, and
+  image preparation into one bounded, lower-priority capture subprocess at a time.
+- Added fail-closed subprocess timeout and descendant cleanup plus one explicitly
+  tracked retry for transient browser-capture failures.
+- Added capture worker, browser memory, retry, completion, candidate, and elapsed
+  telemetry without exposing raw payloads or local paths.
+- Extended every Linux 2 GiB lifecycle scenario with a production-shaped 38-image
+  flight and continuous ordinary-route responsiveness checks.
+- Preserved atomic current-mirror promotion, compact rolling retention, and the
+  validated public HTTPS origin contract from v1.10.38.
+
+## v1.10.38 - Public Current Visual Origin Correction
+
+- Separated the loopback Playwright capture origin from the externally trusted
+  current-visual delivery origin.
+- Persisted environment-neutral relative image identities and derived validated
+  HTTPS public URLs only at the inspection response boundary.
+- Preserved compatible v1.10.37 rolling generations through safe legacy-manifest
+  normalization while retaining direct `image/png` delivery and current-only access.
+- Added loopback/private-origin, path-safety, public discovery, PNG decoding, hash,
+  and rolling-retention regressions.
+
+## v1.10.37 - ChatGPT-Inspectable Rolling Visual Mirror
+
+- Added a stable, public current-visual manifest with direct native PNG delivery.
+- Added verified candidate staging, atomic generation promotion, and automatic prior-generation retirement.
+- Reused Live Visual bytes through filesystem links where supported to avoid duplicating DINS or screenshot storage.
+- Added external image decoding, hash, dimension, privacy, and bounded-retention validation.
+
+## v1.10.36 - Canonical FOIS GM Intelligence, Confidence Calibration & League Leaderboard
+
+- Present exactly one active-tenure, current canonical FOIS evaluation per current GM.
+- Preserve meaningful historical snapshots and prior tenures behind explicit GM history drill-downs.
+- Separate supported weight, completeness, and versioned confidence without scoring unavailable evidence as zero.
+- Consume full canonical results, trade-process, draft, waiver, partner, and Brain team-state evidence without request-time provider work.
+- Replace the duplicate evaluation grid with a deterministic, responsive league GM leaderboard and canonical profile pages.
+
+## v1.10.35 - Historical Resolution Bulk Reuse & Request Responsiveness
+
+- Replaced per-asset historical market replay reads with a bounded bulk compatibility lookup.
+- Added replay connection, query, row, decode, batch, and elapsed-time diagnostics.
+- Added bounded request-entry correlation and event-loop lag telemetry for heavy phases.
+- Reused verified completed-season checksums so warm asset details never redecode unchanged archives.
+- Preserved historical valuation, provider, sparse-market-memory, and retired HistoricalStore contracts.
+
+## v1.10.34 - Live Visual Stale Capture Refresh Correction
+
+- Make the documented Live Visual metadata path schedule registered stale or
+  missing capture evidence instead of returning stale metadata indefinitely.
+- Preserve current-capture single-flight deduplication while allowing stale
+  fingerprints to execute one bounded replacement capture.
+- Publish image, metadata, artifact hash, and refresh telemetry as one
+  rollback-safe update without weakening External Visual Mirror safety.
+
+## v1.10.33 - Historical Resolution Replay Resilience & Durable Reuse
+
+- Recognize version-compatible event/asset resolution references before consulting
+  historical providers, including after process restart and disposable-cache loss.
+- Persist only compact final-unavailable completion metadata and keep provider
+  rate limits retryable without fabricating evidence or invalidating preserved grades.
+- Expose per-run reuse, provider-request, rate-limit, and replay-skip diagnostics
+  while retaining zero per-league market archives and zero current-market fallback.
+
+## v1.10.32 - Historical Trade Gradability Accounting Correction
+
+- Classify completed FAAB-only and otherwise unsupported historical trades as
+  execution-value unavailable and explicitly process not gradable without
+  fabricating dynasty market value.
+- Enforce balanced execution-value and process-gradability accounting for every
+  completed historical trade and expose the unclassified count in health diagnostics.
+- Preserve supported player/pick evidence for mixed FAAB trades while leaving
+  global observations, references, FOIS scoring, and HistoricalStore retirement unchanged.
+
+## v1.10.31 - Sparse Historical Trade Market Matching
+
+- Add bounded pre-event market resolution that reuses global observations before
+  consulting approved historical providers and never substitutes later/current values.
+- Add one auditable ephemeral-versus-global preservation policy plus a disposable,
+  globally keyed provider cache with no league identity in its keys.
+- Preserve compact global evidence and lightweight references without introducing
+  permanent per-league historical market snapshots or restoring HistoricalStore.
+
+## v1.10.30 - FOIS TradeFact occurred_at Integration Correction
+
+- Migrate the FOIS `TradeFact` boundary to retain canonical UTC trade occurrence
+  timestamps and bounded transaction-time process evidence.
+- Preserve nullable timestamps for genuinely unavailable provider evidence without
+  substituting cache, import, or current time.
+- Preserve historical trade identity, process/outcome separation, sparse market
+  observation semantics, and the retired HistoricalStore contract.
+
+## v1.10.29 - Canonical Historical Trade-Time Intelligence
+
+- Normalize Sleeper transaction `created` timestamps, with `status_updated` as
+  the explicit fallback, into one offset-aware UTC `occurred_at` contract.
+- Preserve transaction and asset-event identities while rebuilding chronology
+  directly from disposable completed-season caches.
+- Link only existing pre-event Global Sparse Market observations and report
+  complete, partial, or unavailable execution-time coverage without hindsight.
+- Separate historical process eligibility from current/outcome state and expose
+  bounded coverage metrics by season.
+- Feed full canonical completed-trade counts, partner identities, occurrence
+  times, and available process evidence into Front Office and FOIS adapters.
+- Preserve zero request-time provider calls/writes, zero historical-current
+  fallback, cross-league deduplication, and retired HistoricalStore guarantees.
+
+## v1.10.28 - Global Sparse Market Memory & Cross-League Deduplication
+
+- Added immutable global market observations keyed by asset, provider-compatible
+  market context, and versioned semantic market state rather than league ID.
+- Added lightweight league-event references with deterministic reuse,
+  unavailable-state handling, temporal safeguards, and transactional writes.
+- Migrated compatible embedded checkpoint evidence without deleting or rewriting
+  legacy evidence that cannot be proven equivalent.
+- Made scheduled market benchmarks global and idempotent across leagues while
+  preserving bounded affected-asset capture for trades, waivers, drafts, and NFL events.
+- Added bounded public-safe health and sparse asset timeline APIs with storage,
+  provenance, reference, reuse, and cross-league diagnostics.
+- Preserved fresh-provider current intelligence, retired HistoricalStore guards,
+  one-worker lifecycle behavior, and private-league isolation.
+
+## v1.10.27 - HistoricalStore Physical Retirement & Disk Reclamation
+
+- Added a path-specific fail-closed retirement guard that prevents the configured
+  legacy HistoricalStore from being opened or recreated while preserving isolated
+  legacy fixtures and migration tests.
+- Added bounded retirement observability for file presence, read/write/create
+  attempts, caller identity, retirement version, and retirement timestamp.
+- Added a schema-verified physical-retirement utility that removes only the legacy
+  database and its SQLite sidecars after the production zero-access gate passes;
+  it never vacuums, copies, exports, or rewrites the archive.
+- Added no-recreation and production-shaped retirement rehearsal coverage.
+
+## v1.10.26 - Sleeper Season Cache Chain Restoration
+
+- Persist the complete provider-discovered dynasty chain before cache hydration,
+  so partial cache state cannot redefine a league's historical beginning.
+- Hydrate completed seasons independently and retain explicit cached,
+  unavailable, and current-season lifecycle states with bounded diagnostics.
+- Report historical background failures truthfully while preserving zero legacy
+  HistoricalStore reads and writes and leaving the legacy archive untouched.
+
+## v1.10.25 - FOIS Canonical History Null-Placement Correction
+
+- Treat unresolved current-season playoff bracket participants as unavailable placement evidence instead of coercing them to integers.
+- Restrict completed-season FOIS scoring to canonically complete seasons while retaining trades, drafts, and checkpoint evidence from partial seasons.
+- Expose bounded placement-evidence completeness without changing existing completed-season scoring semantics.
+
+## v1.10.24 - Legacy Access Observability Route Correction
+
+- Disambiguate the static bounded resource-measurement endpoint from league-scoped runtime hydration in request-context middleware.
+- Preserve strict Sleeper league-ID validation for the actual `/api/leagues/{league_id}/runtime` route.
+- Add runtime-routing regressions proving production legacy access counters remain directly observable without exposing private league data.
+
+## v1.10.23 - HistoricalStore Consumer & Writer Migration
+
+- Migrated canonical league-history consumers to disposable normalized Sleeper
+  season caches and current operational league contexts.
+- Preserved sparse DTOS-owned historical intelligence in IntelligenceCheckpoint
+  while removing recurring current-sync writes to the legacy provider archive.
+- Added a compact system metadata store for cache checkpoints and sync generations.
+- Added shadow-forbidden legacy read/write accounting and made legacy package
+  imports non-opening and non-initializing.
+- Preserved the legacy HistoricalStore database physically and non-destructively
+  for the separately authorized v1.10.24 retirement decision.
+
+## v1.10.22 - Resource Admission & Heavy-Work Coordination
+
+- Replaced the static raw-memory emergency boundary with a deterministic,
+  reclaimable-cache-aware hard-pressure calculation while preserving the 2 GiB
+  cgroup limit, 1.5 GiB effective ceiling, and 500 MiB reserve.
+- Added versioned admission evidence for reclaimable allowance, predicted hard
+  pressure, and the absolute cgroup safety margin.
+- Prioritized first Asset Market generation work over Live Visual and DINS browser
+  capture without changing projection, market, or warming contracts.
+
+## v1.10.21 - Sleeper Canonical Projection Mirror
+
+- Make league-scored Sleeper weekly projections the sole canonical production projection.
+- Cover relevant rostered and unowned players with explicit projected-zero and unavailable states.
+- Add scoring-profile identities, bounded Week 1-18 provider caching, and semantic no-change behavior.
+- Migrate canonical intelligence, matchup, audit, inspection, and market consumers away from the legacy forecast.
+- Keep provider caches disposable and permanent projection evidence compact and event-scoped.
+
+## v1.10.20 - Intelligence Checkpoint Runtime Integration
+
+- Connect canonical Sleeper transaction and fantasy-draft ingestion to permanent intelligence checkpoints.
+- Add idempotent trade, waiver, drop, draft, and scheduled checkpoint processing with league isolation.
+- Expose bounded checkpoint-pipeline health while preserving side-effect-free request routes.
+- Make permanent checkpoint evidence available to FOIS without treating reconstructed or unavailable evidence as definitive process quality.
+
+## v1.10.19 - Sleeper-Backed League Memory & Permanent Intelligence Checkpoints
+
+- Discover each dynasty league's actual Year 1 through Sleeper's season chain with no calendar cutoff.
+- Add compact, checksummed, disposable completed-season provider caches with honest partial/unavailable states.
+- Add an immutable, deduplicated IntelligenceCheckpoint store with provenance, temporal confidence, triggers, pick lineage, and storage contracts.
+- Separate current Market Value from historical evidence and prohibit stale historical fallback.
+- Expose public-safe ownership, completeness, cache, checkpoint, and storage diagnostics while preserving legacy Historical Memory unchanged.
+
+## v1.10.18 - Multi-League Resource Observability & Storage Hygiene
+
+- Added bounded durable Asset Market admission history with explicit reason
+  codes, cgroup/OOM evidence, browser counts, and public-safe lifecycle context.
+- Added explicit diagnostic-only retained-memory attribution for league runtime,
+  projection, Brain, FOIS, player-catalog, and Market components.
+- Added manifest-safe one-current-artifact-per-league pruning with non-fatal
+  cleanup telemetry, disk health, and 30/100/300-league storage projections.
+- Added public-safe multi-league resource health without request-time provider,
+  Market-construction, Brain-generation, or deep-sizing work.
+
+## v1.10.17 - Multi-League Consumer Integration
+
+- Added a request-scoped CanonicalLeagueContext that routes canonical crawl,
+  projections, Brain, Asset Market, FOIS, history, audit, and inspection reads
+  through the explicitly requested hydrated LeagueRuntime.
+- Added league-scoped source-generation and product-readiness diagnostics while
+  preserving bounded two-runtime residency and derived-context eviction.
+- Prevented secondary/private league visual artifacts from being exposed or
+  generated through ordinary inspection routes.
+- Added explicit secondary routing, concurrency, feature-gate, and state
+  isolation regressions.
+
+## v1.10.16 - Multi-League Runtime Foundation
+
+- Added a lazy bounded LeagueRuntimeManager with per-league single-flight, LRU
+  eviction, failure isolation, health metrics, and deterministic shutdown.
+- Added structured league/scoring cache identities and deterministic scoring
+  profiles for future shared projection evidence.
+- Scoped Sleeper state, locks, current-state caches, projection restoration,
+  Asset Market manifests, and inspection artifacts by league identity.
+- Added permanent A/B, concurrent, invalid-league, eviction, shutdown,
+  projection-restore, and 30-league residency regressions.
+
+
+## v1.10.15 - Projection Snapshot Upgrade Compatibility
+
+- Added explicit schema, model, contract, and semantic-policy compatibility checks
+  before a durable Projection snapshot can become canonical.
+- Added one cached-input upgrade generation when the provider fingerprint is
+  unchanged but the running Projection contract advances.
+- Separated application and active-snapshot identity in projection health, with
+  compatible/incompatible restore and durable-publication lifecycle counters.
+
+## v1.10.14 - Player-Specific Projection Calibration
+
+- Replaced final positional-default projection clusters with deterministic player,
+  role, production, and cached Sleeper-evidence calibration.
+- Preserved raw DTOS forecasts separately from calibrated canonical projections,
+  with confidence, evidence depth, fallback state, and disagreement explanations.
+- Expanded projection health and audit exports with fallback concentration,
+  disagreement, distribution, and calibration diagnostics.
+
+## v1.10.13 - External Mirror Matchup Surface Classification Correction
+
+- Added one strict shared parser for numeric matchup-detail surface IDs.
+- Kept `matchups-page` mirrorable as the directory without applying detail-only
+  22-starter reconciliation.
+- Added explicit matchup-directory traversal metadata and matching GitHub-only
+  verification coverage.
+
+## v1.10.12 - Permanent External Visual Mirror
+
+- Added a small immutable GitHub mirror of exact Live Visual PNGs, semantic page
+  contracts, current projection audit, and discovery metadata.
+- Added stable latest-release discovery plus deterministic, human-readable artifact
+  names and cross-artifact SHA-256 validation.
+- Made core visual capture and mirror eligibility inherit automatically from the
+  canonical public-surface registry.
+- Added bounded release/scheduled publication automation with no DTOS runtime
+  dependency on GitHub.
+
+## v1.10.11 - Live Visual Inspection
+
+- Added durable, anonymous mobile and desktop screenshots of every current
+  matchup, captured from the real rendered DTOS production routes.
+- Added compact DOM presentation metadata, canonical projection reconciliation,
+  semantic fingerprints, single-flight capture, and last-valid failure behavior.
+- Added automatic post-deployment and material-matchup refresh scheduling while
+  preserving zero-work HTTP reads and v1.10.10 Live Product Inspection.
+
+## v1.10.10 - Universal Live Product Inspection & Matchup Projection Presentation
+
+- Added a compact anonymous Live Product Inspection root derived automatically
+  from the canonical FastAPI route registry, with dynamic team, matchup, player,
+  pick, season, API, search, health, and semantic traversal contracts.
+- Added default-on public-surface participation and explicit approved exclusions,
+  shared with existing dynamic DINS page discovery.
+- Added canonical Sleeper and DTOS projection values, differences, explicit
+  missing states, coverage, and reconciled team totals to matchup presentation.
+- Preserved the v1.10.9 projection audit exports and all zero-side-effect lifecycle
+  contracts.
+
+## v1.10.9 - Projection Intelligence Audit Export
+
+- Added bounded JSON and CSV exports for current matchup starters, canonical
+  projections, valuation layers, FOIS context, reconciliation, and snapshot identity.
+- Reused only retained Projection Intelligence, Asset Market, and persisted FOIS
+  state; audit requests cannot synchronize providers or regenerate intelligence.
+- Added explicit unavailable states where no persisted canonical recommendation
+  exists, plus a clearly labeled static screenshot regression fixture.
+
+## v1.10.8 - Asset Market No-Op Invalidation Correction
+
+- Replaced process-local synchronized-data identity with a bounded semantic
+  Asset Market request revision.
+- Added a final semantic-generation admission guard so stale or duplicate
+  refresh requests cannot enter artifact loading or market construction.
+- Added explicit rebuild-request, admission-skip, and actual-construction
+  metrics for production zero-work verification.
+
+## v1.10.7 - Freshness Semantic Threshold Correction
+
+- Replaced continuously decaying evidence freshness with a shared, versioned,
+  evidence-family-aware tier contract.
+- Preserved exact evidence age for health and diagnostics while stabilizing
+  Brain confidence, provider weights, explanations, and Asset Market identity
+  inside each semantic freshness tier.
+- Added deterministic same-tier, threshold-crossing, immutable-history, and
+  production confidence-drift regression coverage.
+
+## v1.10.6 - Brain No-Change Regeneration Correction
+
+- Removed raw provider evidence age from Brain semantic identity while retaining every derived confidence, reliability, weight, score, rank, and valuation output as a strict semantic dependency.
+- Added bounded Brain input-family manifests and per-asset semantic-change diagnostics without exposing raw provider, league, or player datasets.
+- Added explicit regeneration-attempt, candidate, no-change, changed-asset, and downstream-invalidation counters for production acceptance evidence.
+- Preserved projection semantics, valuation formulas, Asset Market construction, FOIS, Matchups, and Historical Memory unchanged.
+
+## v1.10.5 - Projection Semantic Compatibility Correction
+
+- Canonicalized Brain and Asset Market semantic hashing to exclude only named observational metadata while retaining every value, confidence, ordering, ownership, and provider dependency.
+- Retained the currently published Brain report when a refresh produces the same semantic generation, preventing false downstream invalidation.
+- Added explicit projection refresh/change/no-change metrics and compact Brain/market semantic diagnostics.
+- Preserved v1.10.4 durable projection and Asset Market restoration, including offline startup and original freshness timestamps.
+
+## v1.10.4 - Durable Projection & Asset Market Restoration
+
+- Anchored the normalized Sleeper cache and Projection Intelligence database to the configured durable storage root on production deployments while preserving every explicit path override.
+- Restored the last valid canonical projection snapshot and compatible Asset Market artifact before background provider refresh, without changing projection, Brain, valuation, FOIS, or matchup formulas.
+- Added atomic Asset Market manifests, bounded manifest recovery, explicit discovery states, and restore/publication counters.
+
+## v1.10.3 - Sleeper Projection Provider Redirect Correction
+
+- Added a provider-scoped, HTTPS-only, allowlisted, three-hop redirect policy for the undocumented Sleeper projection feed.
+- Preserved the shared HTTP client, projection parser, semantic snapshot contract, and every downstream intelligence formula unchanged.
+- Added sanitized redirect diagnostics and deterministic regressions for success, loops, excessive chains, missing locations, host escape, downgrade, and final-response failure.
+
+## v1.10.2 - Sleeper Projection Sync & System-Wide Forward Intelligence
+
+- Added the optional, undocumented Sleeper bulk weekly projection feed as defensively parsed external evidence with a provider kill switch, immutable durable snapshots, freshness, fingerprints, single-flight synchronization, and stale fallback.
+- Added league-scoring reconciliation and a bounded canonical consensus that keeps Sleeper, DTOS, and consensus projections separately attributed.
+- Extended projection health, provider, accuracy, matchup starter, team-total, Brain, and valuation contracts without request-time provider calls.
+- Added semantic no-change detection so observational refreshes do not regenerate Projection Intelligence, Brain, or Asset Market state.
+- Preserved startup readiness, historical isolation, source-pure partial coverage, and the independent DTOS Forward Production fallback.
+
+## v1.9.6 - Historical Player Leaders Query Optimization
+
+- Added a measured league/entity/season/player index for bounded player-week aggregation.
+- Split season statistical aggregation from one canonical bulk identity-enrichment query.
+- Removed correlated per-leader identity sorting while preserving totals, ordering, names, positions, and warm section caching.
+- Preserved all v1.9.5 section isolation and event-loop offloading behavior.
+
+## v1.9.5 - History Read-Path Performance
+
+- Replaced full-archive construction on season subroutes with bounded, section-specific Historical Memory reads.
+- Moved season read-model construction off the event loop and added request-safe section caching keyed by durable dataset identity.
+- Aggregated season leaders in SQLite with one bounded identity join instead of hydrating every player-week record and issuing identity N+1 queries.
+- Preserved historical schemas, ordering, provenance, canonical progress, and provider-free read behavior.
+
+## v1.9.4 - Valuation, FOIS & League History Corrections
+
+- Completed independent intrinsic, contender, and rebuilder valuation layers for supported active players and draft picks, with explicit evidence limitations for genuinely unavailable assets.
+- Corrected the FOIS centered-score calibration while preserving confidence and completeness as separate evidence-quality measures and retaining prior model snapshots under their original versions.
+- Added provider-free season archives with human standings, verified postseason results, weekly matchups, transactions, drafts, player leaders, and explicit current/partial completeness states.
+- Routed Asset Market, Brain valuation intelligence, rankings, history presentation, APIs, and inspection discovery through the corrected canonical contracts.
+
+## v1.9.3 - Asset Market Restart Lifecycle Correction
+
+- Added lifecycle-driven Asset Market reconciliation after startup and periodic synchronization.
+- Enforced a single-flight self-healing invariant when construction is eligible but no model or compatible artifact exists.
+- Added sanitized scheduler state, invocation, and skip-reason diagnostics to market health.
+- Preserved background-only construction, bounded warming responses, memory gates, and v1.9.2 presentation behavior.
+
+## v1.9.2 - Intelligence Presentation & Data Utilization
+
+- Added reusable human-first status, availability, rank, and technical-detail presentation contracts.
+- Upgraded player history, pick lineage, search, matchup state, and FOIS executive presentation using existing canonical intelligence.
+- Added a human Executive Profile with explicit league rank, category evidence, confidence, strengths, and opportunities.
+- Documented the site-wide presentation audit and Human Meaning First policy.
+
+## v1.9.1 - FOIS Presentation Contract Correction
+
+- Routed `/fois` through the canonical DTOS shared page header and navigation contract.
+- Resolved an omitted league parameter through the current loaded-league state so persisted profiles render by default.
+- Added a functional GM Rankings primary action and distinct pending, unavailable, and no-league states.
+- Preserved FOIS scoring, persistence, startup orchestration, Historical Memory, and Asset Market behavior.
+
+## v1.9.0 - FOIS General Manager Intelligence System
+
+- Promoted the v1.6 FOIS foundation into a tenure-scoped General Manager
+  Intelligence System with permanent GM/franchise separation and immutable
+  takeover context.
+- Added full-history Results, impact-weighted process/outcome/recovery evidence,
+  production Trading, Roster Construction, and Drafting contracts, confidence,
+  completeness, honest missing-evidence states, and model versioning.
+- Added append-only FOIS snapshots, evidence provenance, executive profiles,
+  resumes, comparisons, franchise ownership history, category APIs, a compact UI,
+  and Front Office integration without adding a second Brain or history store.
+
+## v1.8.15 - Relevant Player Universe
+
+- Adds one canonical Relevant Player Universe spanning durable league history, current ownership, reserve states, and the top 150 canonically ranked free agents.
+- Persists deterministic membership reasons and ranking-snapshot provenance without rewriting immutable historical evidence.
+- Routes valuation, Brain, Asset Market, search, and downstream consumers through the same membership contract while preserving pick assets.
+
+## v1.8.14 - Deterministic Asset Market Restart Lifecycle
+
+- Establishes a process startup epoch that keeps Asset Market generation fenced until durable storage, canonical synchronization, Brain/valuation generation, cache persistence, and bounded historical maintenance have completed.
+- Consolidates startup-adjacent synchronization into one deterministic cycle and begins periodic refresh timing only after that cycle reaches its terminal state.
+- Defers durable artifact discovery until canonical startup inputs are stable, while retaining precise missing, incomplete, corrupt, and incompatible classifications.
+- Fsyncs completed Asset Market artifacts before atomic rename and persists the containing-directory rename on supported platforms.
+- Exposes bounded startup-fence state and reason through existing lifecycle-aware market health metadata.
+
+## v1.8.13 - Production Combined-Read Memory Safety
+
+- Adds a production-shaped 1 GiB sanitized historical fixture covering 461,166 records and 2,050,532 identity observations.
+- Adds an exact sequential and overlapping combined-read cgroup lifecycle audit with phase-level retained-memory evidence.
+- Preserves the 2 GiB hard limit, 1.5 GiB target, 500 MiB reserve, complete outputs, and provider-free read routes.
+
+## v1.8.12 - Cgroup-Aware Market Memory Admission
+
+- Distinguishes verified Linux cgroup v2 `inactive_file` cache from live working memory while preserving the 2 GiB hard limit, 1.5 GiB target, and 500 MiB reserve.
+- Adds fail-closed cgroup metric validation, memory-event and construction-growth safeguards, and sanitized admission diagnostics.
+- Adds bounded generation-aware retry backoff so repeated directory polling cannot launch identical memory-rejected workers.
+
+## v1.8.11 - Retained Asset Market Summary Contract
+
+- Made `/api/market` an immediate metadata-only index over retained Asset Market health.
+- Preserved honest cold, warming, ready, replacement, and failed-replacement states without starting market work.
+- Kept directory warming, live-store search/detail provenance, memory safety, and semantic compatibility unchanged.
+
+## v1.8.10 - Asset Market Health Dataset Scope
+
+- Added the canonical `artifact_build` dataset-version scope to retained Asset Market health metadata.
+- Published the historical dataset version and scope atomically across cold construction, compatible artifact loading, replacement, and last-valid warming.
+- Preserved `live_store` semantics for search and detail responses without adding request-time database or provider work.
+
+## v1.8.9 - Semantic Asset Market Artifact Identity
+
+- Replaced timestamp and archive-wide Asset Market artifact invalidation with deterministic semantic content identities.
+- Separated compact directory compatibility from live historical-detail reads so current evidence remains visible without unnecessary reconstruction.
+- Added bounded manifest discovery with precise sanitized rejection reasons for corrupt, incomplete, cross-store, cross-league, schema, and semantic mismatches.
+- Preserved single-flight construction, atomic publication, durable restart reuse, and all historical capture and checkpoint contracts.
+
+## v1.8.8 - Season-Scoped Historical Checkpoint Compatibility
+
+- Replaced global identity-generation checkpoint invalidation with deterministic season-scoped dependency identities.
+- Added verified, metadata-only legacy checkpoint migration and compatibility audit records.
+- Added a durable audit ledger for committed material identity-mapping changes.
+- Added explicit sanitized compatibility reasons across canonical historical progress diagnostics.
+- Preserved importer 1.2 event identities, immutable evidence, and the canonical 2026 pending state.
+
+## v1.8.7 - Canonical Historical Progress Selection
+
+- Derives league-wide player-week progress from the configured season universe and durable checkpoints instead of the newest enrichment job.
+- Separates canonical history, latest refresh job, active job, and foundation progress without mutating historical evidence.
+- Aligns history, coverage, readiness, inspection, DINS, and Asset Market metadata on one progress serializer.
+- Extends smoke validation to poll exact warming during registered lifecycle blockers before requiring one market build and HTTP 200.
+
+## v1.8.6 - Asynchronous Market Generation
+
+- Moves cold cache-key, durable generation, identity aggregation, artifact discovery, construction, and publication into one background worker.
+- Returns bounded Asset Market warming responses using only retained in-memory lifecycle and build state.
+- Preserves a labeled last-valid generation during compatible replacement and publishes completed replacements atomically.
+- Adds preparation, loading, building, publishing, failure, duration, and refresh diagnostics to metadata-only market health.
+- Keeps liveness, historical reads, and market health responsive during production-scale identity aggregation.
+
+## v1.8.5 - Bounded Historical Identity Context
+
+- Evaluates durable player-week checkpoints before constructing enrichment identity state.
+- Streams one compact current identity projection instead of hydrating identity history.
+- Treats unchanged identity observations as no-ops and advances durable semantic generations only for material changes.
+- Persists enrichment preparation, lease, generation, and context-build diagnostics.
+- Adds a metadata-only migration with a fail-safe disk-capacity gate; existing identity history remains untouched.
+
+## v1.8.4 - Bounded Asset Market Construction
+
+- Replaced process-resident Asset Market universe copies with a streaming, atomic SQLite read model that paginates, filters, and searches before hydration.
+- Added cgroup-aware construction budgets, single-flight background warming, durable compatible-generation reuse, and bounded stage-level allocation telemetry.
+- Preserved canonical Brain, valuation, ranking, history, provenance, and provider-free read contracts while reducing retained cold-build memory to a few megabytes.
+
+## v1.8.3 - Production Memory Lifecycle
+
+- Added one process-local lifecycle coordinator that prevents overlapping synchronization, provider, valuation, historical-import, persistence, and market-build memory peaks.
+- Changed Asset Market health to report bounded retained metadata without constructing assets, indexes, recommendations, or historical dossiers.
+- Serialized startup maintenance and replaced whole-string cache serialization with durable incremental encoding and atomic replacement.
+- Added bounded RSS, available-memory, and Linux cgroup telemetry at lifecycle boundaries plus warming, last-valid, persistence-failure, and startup-order regressions.
+
+## v1.8.2 - Asset Market Query Performance
+
+- Memoized canonical Historical Memory dataset identities with committed-write invalidation, cross-league isolation, and durable database-generation detection.
+- Added build-time compact search documents so current, structured, empty, and no-result queries avoid unnecessary Historical Graph discovery and per-asset normalization.
+- Added a bounded, single-flight, dataset-versioned player-dossier cache while preserving canonical Brain snapshots, serialized outputs, provenance, and provider-free reads.
+
+## v1.8.1 - Asset Market Cache Stability
+
+- Added a private durable database UUID that survives ordinary SQLite/WAL activity and changes only for a genuinely recreated HistoricalStore database.
+- Prevented unrelated enrichment commits from rebuilding the compact 12,000+ asset directory while retaining live historical dataset identity and on-demand detail/search invalidation.
+- Avoided unnecessary historical discovery for already-satisfied current-asset searches and added cache-generation, replacement, concurrency, and path-disclosure regressions.
+
+## v1.8.0 - Asset Market & Dynasty Exchange
+
+- Replaced the primary homepage destination with a canonical, searchable Asset Market while retaining the Commissioner Desk at `/commissioner`.
+- Added deterministic player and draft-pick rankings, layered valuation filters, pagination, canonical Brain recommendations, and on-demand Historical Asset Graph dossiers.
+- Added provider-free market search across current assets, former players, teams, managers, trades, and transactions, with explicit unavailable and evidence states.
+- Added a versioned, single-flight, bounded read model plus market health, inspection, route, smoke, and regression contracts.
+
+## v1.7.14 - Canonical Trade History Discovery
+
+- Derived DINS historical trade pages from completed durable Historical Memory records instead of current cached Sleeper transactions.
+- Added deterministic, machine-readable exclusions for current trades that do not yet have canonical historical evidence.
+- Kept discovery bounded and provider-free while preserving the historical trade detail contract, dataset identity, and stable ordering.
+
+## v1.7.13 - Canonical History Progress Presentation
+
+- Added one presentation-ready player-week enrichment progress contract shared by the History UI, progress and coverage APIs, inspection health, and DINS artifacts.
+- Distinguished completed foundation import work from the canonical enrichment state, exact season counters, completed seasons, and expected pending active-season evidence.
+- Preserved historical evidence, checkpoints, importer behavior, storage, and the durable v1.7.12 progress repair without mutation.
+
+## v1.7.12 - Historical Enrichment Progress Contract
+
+- Separated enrichment batch sequence/counts from season-level job progress.
+- Derived player-week completion exclusively from distinct durable completed-season checkpoints and enforced bounded counters.
+- Added an idempotent migration repair with an audit record for inconsistent persisted progress such as `78/6`, without rewriting historical evidence.
+- Added explicit completed, pending, and failed season details to import-status progress diagnostics while preserving foundation workflow semantics.
+
+## v1.7.11 - Historical Enrichment Batch Persistence
+
+- Streamed nflverse enrichment data in bounded configurable batches instead of retaining an entire season payload.
+- Added durable, atomic batch progress that commits raw evidence, derived scoring, checkpoint metadata, and lease renewal together.
+- Preserved importer version 1.2 record identities so replaying v1.7.10 evidence remains idempotent and creates no logical duplicates.
+- Added database migration version 4 and regression coverage for streaming, checkpoint reuse, identity reuse, and v1.7.10-compatible record keys.
+
+## v1.7.10 - Durable Historical Storage
+
+- Added a strict production storage boundary that validates the Render disk mount, path containment, and writable state without silently creating an ephemeral fallback.
+- Added atomic first-time SQLite initialization and durable single-instance journaling settings while preserving existing databases, checkpoints, leases, reconciliation state, and historical records.
+- Added a versioned durable Historical Asset Graph read-model manifest and explicit storage health in readiness responses.
+- Kept temporary league caches, source, logs, and unrelated application state outside the persistent disk.
+
+## v1.7.9 - Historical Import Memory Stability
+
+- Replaced coverage event hydration with compact indexed SQLite aggregation and lazy identity resolution.
+- Added asset-specific player, pick, trade, franchise, and search reads that remain available during an active import without constructing the global graph.
+- Bounded Sleeper weekly retrieval to one week at a time and released normalized provider payloads after each persistence batch.
+- Added a retained-dataset 512 MB concurrency benchmark covering import, coverage, player, directory, and post-import read workloads.
+
+## v1.7.8 - Historical Import & Read-Model Lifecycle Stability
+
+- Replaced eager full-history graph hydration with lazy, route-specific indexes and compact SQLite coverage aggregation.
+- Reduced production-scale read-model peak allocation and retained only one immutable dataset generation per process.
+- Added automatic expired-worker lease recovery with checkpoint continuation and removal of stale lock records.
+- Added full-dataset memory, latency, provider-free read, concurrency, and worker-recovery regression coverage.
+
+## v1.7.7 - Historical Asset Graph Read-Path Optimization
+
+- Added a single-flight, dataset-versioned Historical Asset Graph cache shared by historical APIs, dossiers, search, Team Headquarters, Transactions Center, and Front Office reads.
+- Added bounded player, pick, event, transaction, trade, ownership, season-summary, and directory indexes with pagination before dossier hydration.
+- Added cache invalidation, stale-model recovery, bounded memory retention, build/query instrumentation, and production-scale performance regression coverage.
+- Preserved v1.7.6 historical schemas, ordering, provenance, missing-data disclosures, transaction rules, and provider-free read behavior.
+
+## v1.7.6 - Historical Asset Graph & Connected Dossiers
+
+- Added a versioned, deterministic Historical Asset Graph connecting players, picks, transactions, trades, franchises, ownership intervals, and season summaries.
+- Added Player, Pick, and Historical Trade dossier contracts with stable canonical IDs, provenance, explicit missing-data states, and bidirectional links.
+- Expanded Transactions Center, Team Headquarters, Front Office Intelligence, League History, unified search, public APIs, and DINS discovery with historical evidence.
+- Extended resumable Sleeper history ingestion with traded-pick snapshots and lossless source metadata while ensuring failed and pending transactions never alter ownership.
+- Added a capped historical-coverage contribution to Brain Decision Confidence without backdating current values or changing intrinsic valuation.
+
+## v1.7.5 - League Payload Memory Safety
+
+- Replaced embedded full-universe Brain caches in `/api/league` with a compact backwards-compatible Brain summary and canonical endpoint links.
+- Removed the duplicated internal Brain timeline from the generic league response while preserving dedicated asset and timeline APIs.
+- Reduced response serialization memory pressure that could intermittently restart the production worker and surface as an empty HTTP 502.
+
+## v1.7.4 - Brain Integration & Unified Decision Engine
+
+- Established `BrainService` as the cached public source for canonical valuation layers, evidence quality, explanations, diagnostics, and timelines.
+- Migrated application intelligence consumers through the Intelligence Orchestrator and added explainable Decision Confidence.
+- Added Brain health, migration, asset, timeline, dashboard, and DINS inspection contracts.
+- Retained the v1.7.3 valuation APIs as backwards-compatible adapters and added cross-consumer consistency tests.
+
+## v1.7.3 - Valuation Intelligence Engine (DTOS Brain Phase I)
+
+- Added a canonical cached Evidence Engine for every player and draft pick.
+- Added distinct, reproducible Evidence Coverage, Confidence, and Provider Agreement scores.
+- Added dynamic provider contributions based on reliability, freshness, identity quality, observation confidence, and evidence-family independence.
+- Added explainable asset reports, bounded evidence timelines, and valuation diagnostics.
+- Added eight versioned evidence-intelligence APIs and expanded valuation asset responses, dashboard, and DINS contracts.
+- Preserved Market, Intrinsic, League Adjusted, Contender, and Rebuilder values as independent layers with zero request-time provider calls.
+
+## v1.7.2 - Multi-Source Market Intelligence Provider Network
+
+- Added a canonical, versioned provider registry and immutable evidence contract with explicit licensing, availability, lineage, freshness, identity, and redistribution rules.
+- Added dynamic category reliability, independent-family weighted consensus, and transparent missing/disagreement evidence.
+- Promoted completed Sleeper trades and league-local demand into quality-filtered, league-isolated observed-market providers.
+- Expanded calibration safety, provider APIs, the calibration dashboard, and DINS inspection without adding request-time provider calls.
+- Added permanent compliance, privacy, deterministic-output, trade-quality, API, and pending-lifecycle regression gates.
+
+## v1.7.0 - Market Calibration Foundation
+
+- Added one canonical valuation universe for every cached Sleeper player and every canonical future pick.
+- Added live valuation status, provider, asset, detail, JSON export, and CSV export APIs.
+- Exposed twelve independent, traceable valuation layers without recalibrating existing values.
+- Added explicit synchronization and provider freshness contracts, comparison metadata, identity auditing, and DINS valuation inspection.
+- Added regression coverage for uniqueness, ownership, free agents, picks, providers, exports, layers, and unchanged DTOS values.
+
+## v1.6.7 - GitHub DINS Artifact Publication Completion
+
+- Added immutable DINS publication through deterministic GitHub Release assets.
+- Added public release discovery with brief caching, identity and checksum checks,
+  explicit pending/partial/failed/stale states, and production health integration.
+- Added deterministic ZIP, manifest, checksum, sanitization, and idempotency tests.
+- Kept generated inspection artifacts outside Git history and preserved v1.6.6
+  mobile, accessibility, product-contract, and intelligence behavior.
+
+## v1.6.6 - Team Headquarters Mobile Overflow Correction
+
+- Corrected the Team Headquarters intelligence grid so it collapses to two
+  columns on tablets and one column on narrow mobile viewports.
+- Added a permanent regression contract for the mobile grid breakpoint.
+- Preserved all v1.6.5 product design, intelligence, and data behavior.
+
+## v1.6.5 - Product Design System, Navigation & Consistency
+
+- Added Product Design System 1.0 with shared page headers, action hierarchy,
+  recommendation evidence, grade context, freshness, accessibility, and mobile rules.
+- Standardized primary navigation and Commissioner Desk briefing order around the
+  General Manager workflow.
+- Replaced generic dynamic-page and internal-identifier presentation with real
+  franchise, player, owner, and matchup language.
+- Added truthful preseason projections to the Teams directory and preserved all
+  underlying intelligence calculations.
+- Extended DINS and canonical HTTP validation with product-contract and deployment-
+  provenance gates.
+
+## v1.6.4 - Team Identity Normalization & Team Headquarters Polish
+
+- Centralized canonical team-name resolution across presentation, intelligence, inspection, and transaction boundaries.
+- Reorganized Team Headquarters around recommendation, core intelligence, roster, assets, activity, and collapsed evidence.
+- Made the canonical Competitive Window Contract the sole visible team-window classification.
+- Replaced misleading preseason results with projected wins, power ranking, and playoff/championship outlook.
+- Removed unavailable bye labels and unfinished Team Headquarters controls.
+- Added a permanent HTTP validation gate that rejects rendered generic numbered team and roster labels.
+
+## v1.6.3 - Complete Visual Inspection & Release Verification System
+
+- Upgraded DINS to schema 2.0 with automatic public-page discovery and deterministic dynamic fixtures.
+- Added cached public visual, DOM, accessibility, geometry, interaction, health, schema, site-map, and release-manifest APIs.
+- Added Playwright Chromium capture at 1440x1200, 1024x1366, and 390x844 with viewport and full-page screenshots.
+- Added version-namespaced artifact storage, tolerant image comparison, inspection-mode no-sync isolation, and route-coverage validation.
+- Centralized v1.6.3/build 1603 metadata across status, crawl, OpenAPI, and inspection contracts.
+
+## v1.6.2 - AI Inspection System Foundation
+
+- Added DINS, a deterministic read-only page inspection contract under
+  `/api/inspect` that projects only the current cached DTOS state.
+- Added page catalog, Team Headquarters, Player Dossier, Front Office, and Trade
+  Intelligence inspection endpoints with typed structural JSON.
+- Standardized sections, cards, tables, charts, buttons, navigation, links,
+  empty states, placeholders, warnings, page metrics, and cache timestamps.
+- Prohibited synchronization, provider access, intelligence execution, HTML
+  rendering, and application-state mutation from the inspection boundary.
+- Added contract, determinism, immutability, cached-data, empty-state, and
+  no-execution regression coverage.
+
+## v1.6.1 - FOIS Results and Competitive Cycle Engine
+
+- Promoted all 15 Results registry metrics to deterministic production scoring
+  over canonical Historical Memory standings, playoff placements, and matchups.
+- Added reusable season-timeline, competitive-cycle, rebuild, contention-window,
+  reload-efficiency, peak, longevity, and historical-window analysis.
+- Added league-size-normalized finishes, actual-matchup win rates, explicit
+  strengths and weaknesses, and ownership/missing-history confidence handling.
+- Persisted Results timelines and cycles inside existing idempotent FOIS score
+  snapshots and exposed them through a dedicated feature-flagged Results API.
+- Added ten representative Results scenarios plus cycle, window, history adapter,
+  determinism, confidence, persistence, and API regression coverage.
+
+## v1.6.0 - Front Office Intelligence System Foundation
+
+- Added a parallel, feature-flagged FOIS domain with versioned score, category,
+  metric, evidence, configuration, identity, and cross-category trait contracts.
+- Added configurable 35/25/20/20 category weighting, deterministic aggregation,
+  letter grades, and explicit confidence, completeness, and availability states.
+- Added idempotent SQLite score persistence and nonblocking orchestration over
+  explicitly supplied historical facts.
+- Added feature-flagged model, score, category, metric, and completeness APIs
+  without changing existing intelligence or UI behavior.
+- Added ten representative management scenarios and focused regressions.
+
+## v1.5.11 - Competitive Window Contract
+
+- Added one immutable, versioned competitive-window contract with classification, confidence, horizon scores, evidence, strengths, weaknesses, and generation metadata.
+- Removed the Decision Engine and Front Office secondary classifiers; Team Intelligence now creates the sole league-relative classification.
+- Reordered orchestration so calibrated market/player valuation and Team Intelligence complete before Front Office, Trade Intelligence, and recommendations.
+- Added public contract serialization and consistency regressions proving every consumer shares the same result.
+
+## v1.5.10 - Intelligence Quality Audit
+
+- Audited all ten league franchises, representative player tiers, every supported pick category, competitive windows, and 120 prioritized trade recommendations.
+- Fixed active-Front-Office bias in league comparisons by evaluating every franchise against the same cached market-backed calibration context.
+- Removed a stale duplicate draft-pick scale from Team Intelligence and reused the canonical pick evaluator.
+- Corrected elite-asset counts and prevented older low-value players from receiving a developmental label.
+- Expanded the permanent golden benchmark from 50 to 82 player, pick, archetype, team-window, and trade-package scenarios.
+
+## v1.5.9 - Valuation Calibration
+
+- Added one explainable player calibration boundary that blends independent DTOS intrinsic value with normalized, confidence-weighted market consensus.
+- Corrected roster grades, tiers, positional ranks, contender/rebuilder values, and Trade Intelligence to consume the calibrated value without duplicating provider logic.
+- Rebalanced draft-pick rounds and disclosed slot adjustments so low-value pick bundles cannot impersonate premium assets.
+- Added a permanent 50-asset golden calibration set spanning every player tier and representative rookie-pick slots.
+
+## v1.5.8 - Matchup Performance
+
+- Prepared provider market distributions once per evaluation instead of rebuilding and scanning them for every player quote.
+- Replaced linear percentile counting with equivalent binary-search lookups over the prepared immutable distribution.
+- Preserved matchup projections, player values, market normalization formulas, ordering, request isolation, and historical behavior.
+- Added equivalence, work-reduction, concurrency, and request-isolation regression coverage.
+
+## v1.5.7 - Historical Recovery
+
+- Classified interrupted HTTP response reads as retryable transport failures under the existing bounded four-attempt policy.
+- Added path-aware retry logging while preserving the original exception when all attempts fail.
+- Resume foundation imports by skipping completed season checkpoints and replaying only incomplete seasons through immutable duplicate-safe record keys.
+- Distinguished preseason 2026 weekly, matchup, transaction, trade, and player data as pending instead of unsupported or failed.
+- Reconciled a fresh real-provider import to 30,051 records; consecutive recovery runs produced no duplicate rows or identities.
+
+## v1.5.6 - Deployment Readiness
+
+- Separated lightweight process liveness from cached-data readiness with dedicated `/health/live` and `/health/ready` probes.
+- Added a configurable cached-deployment maintenance delay so first requests do not compete with synchronization and historical backfill startup.
+- Added opt-in request timing and process-uptime response headers for deployment diagnosis without changing normal responses.
+- Added lifecycle, readiness, diagnostics, failure-state, and canonical HTTP smoke regression coverage.
+
+## v1.5.5 - Production Request Latency
+
+- Removed redundant Trade Intelligence package valuations from cold Commissioner Desk requests by valuing each eligible combination once.
+- Deferred trade guardrail evaluation until after the existing balance filter and reused the already-calculated package values.
+- Preserved proposal selection, ordering, guardrails, matchup request isolation, and serialized trade output.
+- Reduced the populated-league cold homepage model from approximately 4.49 seconds to 1.04 seconds locally.
+
+## v1.5.2 - Initial Backfill Performance
+
+- Changed bounded historical record batches to use one SQLite transaction per batch instead of one transaction per record.
+- Reduced a measured 30,051-record empty-database backfill from 468 seconds to 29 seconds while preserving immutable record keys, checkpoints, leases, and idempotency.
+- Added regression coverage for bounded transaction count and duplicate-safe batch replays.
+
+## v1.5.1 - Historical Data Reliability & Player Data Enrichment
+
+- Added persistent import jobs, per-season/data-type checkpoints, database leases, bounded provider retries, stalled-worker recovery, and deterministic completeness reporting.
+- Added an approved nflverse CC-BY-4.0 adapter for free weekly raw player statistics with stable-ID reconciliation and explicit metric availability.
+- Added versioned raw-stat and league-specific fantasy scoring records without conflating missing values with observed zero.
+- Added read-only completeness, provider, stats, fantasy, availability, aggregate, signal, and player-quality APIs plus import monitoring on League History.
+- Added reliability, restart, locking, retry, scoring, normalization, enrichment, idempotency, and API regressions.
+
+## v1.5.0 - Historical League Memory & Player Performance Intelligence
+
+- Added an indexed, versioned, append-only SQLite historical evidence store with migrations, stable dimensions, provenance, availability, confidence, and model versions.
+- Added resumable and idempotent Sleeper season backfills for league settings, franchise identity, weekly rosters, matchups, standings, playoffs, drafts, transactions, trades, and observed player points.
+- Added current-sync valuation, roster, Team Intelligence, and prediction snapshots without overwriting earlier observations.
+- Added deterministic player production aggregation, season-specific scoring recalculation, conservative role signals, explicit usage gaps, and data-quality reporting.
+- Added paginated historical crawl endpoints plus minimal League, Team, and Player History views.
+- Added focused identity, rename, idempotency, checkpoint, scoring, usage, aggregation, and historical API regressions.
+
+## v1.4.5 - League Intelligence & Team Grading
+
+- Added league-relative grades, ranks, percentiles, confidence, and explanations across 13 team categories.
+- Added one reusable Team Intelligence Card consumed by team, homepage, league, Front Office, and crawl surfaces.
+- Standardized competitive windows to six mutually exclusive classifications.
+- Replaced meaningless 0–0 standings presentation with preseason projected order.
+- Corrected canonical 0–1000 player values before roster-level 0–100 scoring.
+- Added deterministic homepage league summaries and 12 focused grading regressions.
+
+## v1.4.4 - Valuation Calibration and Trade Safety
+
+- Added a shared canonical 0–1000 valuation layer for players, picks, consensus, and trade packages.
+- Added provider-specific normalization with raw-value preservation, freshness, confidence, and method versioning.
+- Added calibrated market consensus, Player Intelligence Cards, explicit calibration states, and cautious recommendation language.
+- Added package-quality adjustments and guardrails for market floors, elite consolidation, low-value aggregation, and superflex quarterbacks.
+- Added concise valuation summaries and schema versioning to public crawl responses without removing existing fields.
+- Added 20 focused valuation and trade-safety regressions, including the 50-vs-7500 mismatch and two-thirds-for-a-premium-QB cases.
+
+## v1.4.3 - Public Crawl API
+
+- Added a lightweight public crawl index, consolidated snapshot, and section-specific JSON endpoints backed by synchronized DTOS data.
+- Added safe league selection, pagination and filtering, strict public serialization, explicit JSON errors, and cross-origin read access.
+- Reused the shared intelligence cache with per-sync namespaces, serialized cache creation, stale-data continuity, and sync-driven invalidation.
+- Added `robots.txt` and a public-page-only XML sitemap for `https://dtos.onrender.com`.
+- Added regression coverage for discovery, snapshots, every section, cache reuse and invalidation, league selection, empty data, sensitive fields, robots, and sitemap behavior.
+
+## v1.4.2 - Provider Data Flow Activation
+
+- Activated cached, attributed FantasyCalc and DynastyProcess public market ingestion with canonical Sleeper-ID reconciliation.
+- Added isolated provider refresh status, record counts, timestamps, next-refresh schedules, recovery, and disclosed cached fallback.
+- Completed player-page market, trend, Sleeper metadata, depth-chart, ownership, transaction, and trending data flow.
+- Replaced generic unavailable states in the player workflow with provider-specific explanations and disabled unsupported sources.
+- Added regression coverage for empty, partial, failed, recovered, and successful provider responses plus end-to-end consensus and player context.
+
+## v1.4.1 - Provider Activation & Data Normalization Platform
+
+- Added mandatory player identity and provider normalization contracts for names, IDs, teams, positions, values, rankings, ADP, timestamps, confidence, and metadata reconciliation.
+- Added observable provider reliability scoring and freshness-, reliability-, agreement-, and coverage-aware consensus weighting.
+- Activated official Sleeper trending add/drop ingestion alongside existing league, player, roster, transaction, trade, matchup, and metadata synchronization.
+- Added normalized player intelligence APIs and live player-page market sections with provider values, confidence, freshness, availability, licensing, and explicit unavailable reasons.
+- Expanded Settings into a Provider Activation Dashboard with reliability, failures, licensing, schedules, and missing configuration.
+- Added regression coverage for identity resolution, normalization, invalid values, reliability, weighted consensus, player APIs, availability, deterministic outputs, and engine boundaries.
+
+## v1.4.0 - Live Data Platform & Market Integration
+
+- Added a unified external-data platform with a public provider SDK, dynamic registry, licensing-aware configuration, refresh scheduling, isolated cache namespaces, durable historical snapshots, health reporting, and deterministic fallback states.
+- Added source-preserving robust consensus, confidence, disagreement, bullish/bearish source, quality, and 7-day through lifetime trend contracts.
+- Registered Sleeper, dynasty-market, rankings, ADP, and news provider capabilities with transparent disabled states where approved access is not configured.
+- Routed Market Intelligence and Sleeper HTTP transport through the Data Platform boundary while preserving Intelligence Orchestrator behavior.
+- Added standardized provider, health, data, history, trend, consensus, and on-demand refresh API endpoints plus a Provider Health table on Settings.
+- Added deterministic structured news interpretation and regression coverage for registration, refresh, storage, consensus, trend, outages, rate limits, licensing, fallback, determinism, and architecture boundaries.
+
+## v1.3.0 - League Intelligence Engine v1
+
+- Added deterministic league-wide needs, surpluses, directions, asset availability, market mapping, positional economy, and pairwise trade-compatibility analysis.
+- Added evidence-backed GM profiles and team reports derived only from observable fantasy-football data, with neutral unavailable states for unsupported behavior metrics.
+- Added prioritized league opportunity and complete trade recommendation contracts that preserve separate current, future, lineup, risk, market, and negotiation impacts.
+- Added a League Opportunity Dashboard to the Commissioner Desk and additive League Intelligence output to the unified intelligence API.
+- Extended Roster Intelligence with reusable league-wide room, player, and construction metrics so League Intelligence consumes shared evaluations instead of duplicating them.
+- Added regression coverage for quality-based needs, evidence-backed surpluses, deterministic compatibility, economy, availability, GM evidence, opportunities, dashboard integration, and architecture boundaries.
+
+## v1.2.0 - Player Value & Projection Integration v1
+
+- Added shared, contextual player-value profiles that keep DTOS dynasty, market consensus, contender, rebuilder, current-season, positional, replacement-adjusted, and liquidity values independent.
+- Added registry-backed weekly projection and production contracts with league-scoring awareness and explicit live, cached, fallback, and unavailable states.
+- Added roster-specific lineup roles, points above replacement/current starter, positional scarcity/ranks, market posture, evidence, freshness, and portrait fallbacks.
+- Integrated player values into player dossiers, Roster Intelligence, weekly matchups, Trade Intelligence, unified APIs, and multidimensional league rankings.
+- Added regression coverage for scoring settings, provider states, replacement value, team context, matchup aggregation, trade horizons, portrait fallback, determinism, and architecture boundaries.
+
+## v1.1.0 - Roster Intelligence Engine v1
+
+- Replaced position-count grading with quality-first room evaluations built from shared Asset, Market, Decision, and league context.
+- Added independent position-room dimensions, elite asset tiers, league-relative positional advantages, and explainable reasoning.
+- Added deterministic roster construction metrics, team identities, enhanced Team HQ player cards, and championship/future window widgets.
+- Added regression coverage for elite-but-thin rooms, deep replacement rooms, identities, consistency, integration, and explainability.
+
+Notable DTOS changes are recorded here from the repository's Git history.
+
+## v1.0.0 - 2026-07-21
+
+- Stabilized Decision, Asset, Trade, Front Office, and Market Intelligence behind the single Intelligence Orchestrator boundary.
+- Added validated production configuration with preserved environment overrides and configurable intelligence/market cache TTLs.
+- Added structured JSON logging, request correlation IDs, request/error/runtime metrics, startup timing, and expanded health reporting.
+- Added a single permanent release-validation entry point covering documentation, architecture, whitespace, compilation, lint, dependencies, regression tests, routes, OpenAPI, HTTP smoke tests, and process cleanup.
+- Added production-readiness, large-league, cache-performance, configuration, observability, documentation, and architecture regression coverage.
+- Froze and documented v1 public APIs, compatibility guarantees, and deprecation policy.
+- Completed installation, architecture, developer, deployment, configuration, validation, API, market-provider, caching, release, contribution, troubleshooting, versioning, readiness, and validation-report documentation.
+- Added updated architecture diagrams, production-readiness checklist, and post-release v1.1 roadmap.
+- Updated application metadata to DTOS v1.0.0, build 1000, codename Front Office Operating System.
+
+## v0.9.9 - 2026-07-21
+
+- Added Market Intelligence as a fifth provider behind the unified Intelligence Orchestrator.
+- Added replaceable FantasyCalc, KeepTradeCut, Sleeper ADP, and DynastyProcess adapters with explicit missing-provider behavior.
+- Added robust market consensus, agreement, dispersion, confidence, intrinsic-versus-market value gaps, opportunity discovery, and explainable evidence.
+- Added persistent-capable provider snapshot history with 7-day, 30-day, season, and career trends, momentum, volatility, and confidence drift.
+- Added execution-mode-aware provider caching, explicit cached fallback, freshness and age reporting, invalidation, provider health, and offline isolation.
+- Enriched player dossiers and Trade Dossiers with provider-backed market context while preserving DTOS intrinsic evaluations.
+- Extended `/api/intelligence` and `/api/platform/health` with backward-compatible market output.
+- Added provider, consensus, outlier, value-gap, trend, history, cache, offline, recovery, health, and cross-engine regression coverage.
+- Updated application metadata to DTOS v0.9.9, build 909, codename Market Intelligence v1.
+
+## v0.9.8 - 2026-07-21
+
+- Added the unified Intelligence Orchestrator, shared request context, provider registry, timed pipeline, and one final recommendation contract.
+- Combined Decision, Asset, Trade, and Front Office evidence with explicit conflict resolution, counterarguments, assumptions, change conditions, and centralized confidence.
+- Added shared TTL caching for league decisions, asset portfolios, Front Office profiles, trade evaluations, and final results, including refresh invalidation and health metrics.
+- Added `/api/intelligence` and `/api/platform/health` without changing existing API contracts.
+- Updated Commissioner Desk, Team Headquarters, Trade Center, and Front Office services to reuse the same orchestration result.
+- Promoted route, OpenAPI, lifecycle, process, smoke, and release validation behind `src/platform/validation/`.
+- Added cross-engine, API compatibility, cache, performance, health, and validation-platform regression tests.
+- Updated application metadata to DTOS v0.9.8, build 908, codename Intelligence Integration Platform v1.
+
+## v0.9.7 - 2026-07-21
+
+- Added centralized Front Office Intelligence profiles derived only from observable cached fantasy-football actions.
+- Added deterministic competitive windows, organizational philosophies, activity profiles, negotiation styles, asset preferences, evidence, confidence, and explicit sparse-data defaults.
+- Added pairwise Trade Compatibility, conservative Negotiation Forecasts, and an informational league relationship graph.
+- Updated Trade Intelligence to consume shared Front Office Intelligence rather than maintaining duplicate partner logic.
+- Added Front Office dossiers at `/front-offices` and a stable `/api/front-offices` contract, with Commissioner Desk navigation and Team Headquarters integration.
+- Added privacy and fairness boundaries prohibiting personal-trait inference and unsupported manager judgments.
+- Added focused behavioral, integration, relationship, probability-threshold, and API/page contract tests.
+- Updated application metadata to DTOS v0.9.7, build 907, codename Front Office Intelligence v1.
+
+## v0.9.6 - 2026-07-21
+
+- Added a centralized Trade Intelligence module that consumes Decision Engine and Asset Intelligence outputs without duplicating their evaluations.
+- Added deterministic partner compatibility, balanced package generation, contextual trade impacts, opportunity prioritization, and negotiation guardrails.
+- Added support for 1-for-1, 2-for-1, 3-for-2, player-plus-pick, pick-package, and multi-asset proposal structures.
+- Added explainable Trade Dossiers covering both sides, current and future impact, risk, evidence, alternatives, fallback, counter, and walk-away guidance.
+- Added the read-only Trade Intelligence Center at `/trades` and a stable `/api/trades` contract.
+- Connected Team Headquarters and shared navigation to Trade Intelligence.
+- Added focused tests for package realism, evidence, engine reuse, API/page parity, and contextual evaluation.
+- Updated application metadata to DTOS v0.9.6, build 906, codename Trade Intelligence v1.
+
+## v0.9.5 - 2026-07-20
+
+- Added a centralized Asset Intelligence module as the shared source of player and draft-pick evaluations.
+- Added contextual player dossiers with independent Dynasty, Redraft, Market, and Team Fit values.
+- Added traceable evidence, explicit confidence, limitations, risk, opportunity horizons, conservative archetypes, and contextual recommendations.
+- Added deterministic draft-pick value, uncertainty, expected range, time horizon, and strategic recommendation reports.
+- Updated player pages and the draft-pick ledger with collapsed supporting evidence while preserving the existing visual system.
+- Added a canonical cached `/api/players` dossier index and optional lightweight player inclusion in `/api/league`.
+- Replaced Decision Engine player and pick heuristics with Asset Intelligence portfolio adapters.
+- Added focused Asset Intelligence contract tests and architecture documentation.
+- Updated application metadata to DTOS v0.9.5, build 905, codename Asset Intelligence v1.
+
+## v0.9.4 - 2026-07-20
+
+- Added a centralized, reusable Decision Engine with typed context, profile, evaluation, team-window, and recommendation contracts.
+- Separated Current Championship Outlook from Future Outlook and added independent Depth and Asset Health evaluations.
+- Added deterministic positional depth analysis, five competitive-window classifications, and contextual recommendation categories.
+- Standardized recommendation priority, confidence, metrics, collapsed reasoning, and future explanation hooks across DTOS.
+- Connected Commissioner Desk and Team Headquarters intelligence surfaces to the shared engine without redesigning either page.
+- Replaced the ambiguous overall team grade with a clearly scoped Roster Construction grade.
+- Added Decision Philosophy documentation and focused engine contract tests.
+- Updated application metadata to DTOS v0.9.4, build 904, codename Decision Engine v1.
+
+## v0.9.3 - 2026-07-20
+
+- Replaced the homepage with the Commissioner Desk executive briefing organized around what changed, what matters, and what to do.
+- Added extensible Active League and Active Front Office models, selectors, URL state, and browser-local persistence.
+- Added deterministic daily briefings, evidence-backed league headlines, personalized Front Office summaries, explainable prioritized recommendations, league intelligence, and expandable league snapshots.
+- Added reusable Commissioner models, services, and presentation components with future intelligence hooks.
+- Removed the hardcoded league identity from shared application chrome and added league-personality extension points.
+- Added `docs/CommissionerDesk.md`, expanded the README, and added targeted Commissioner Desk tests.
+- Updated application metadata to DTOS v0.9.3, build 903, codename Commissioner Desk.
+
+## v1.10.42 - 2026-08-20
+
+- Added a rolling GitHub Pages Current Visual transport with static HTML discovery, JSON manifest, and direct PNG delivery.
+- Kept visual bytes out of Git history and limited the transient Pages artifact to one-day retention.
+- Added current-generation, privacy, identity, MIME, decode, hash, failed-publication, and discovery verification.
+
+## v0.9.2 - 2026-07-20
+
+- Rebuilt every franchise detail page as a responsive Team Headquarters with front-office identity, assets, performance, roster rooms, draft capital, recent activity, future outlook, and quick actions.
+- Added deterministic, explainable roster-construction grades for core positions, youth, depth, draft capital, flexibility, and the overall team.
+- Added objective Front Office Summaries that disclose missing data and avoid speculative player-value or competitive claims.
+- Added reusable Team Headquarters calculation and view-model services plus targeted unit tests.
+- Added `DTOS_PHILOSOPHY.md` to establish evidence-first, transparent, deterministic standards for future intelligence systems.
+- Updated application metadata to DTOS v0.9.2, build 902, codename Team Headquarters.
+
+## v0.9.1 - 2026-07-20
+
+- Rebuilt the Transactions page as a responsive Front Office dashboard with activity summaries.
+- Added cached filtering by team, owner, transaction type, player, draft-pick involvement, date range, and search text.
+- Added sortable transaction columns, configurable pagination, team links, player transaction pages, position badges, asset movement details, and preserved raw Sleeper payload access.
+- Added transaction-only Sleeper synchronization with preserved filter state, last-successful-refresh reporting, and graceful failure handling.
+- Added a dedicated transaction business-logic service and targeted unit tests.
+- Updated application metadata to DTOS v0.9.1, build 901, codename Transactions Center.
+
+## v0.9.0 - 2026-07-20
+
+- Completed the Settings migration into `routes/settings.py`.
+- Moved health, API, and synchronization endpoints into `routes/api.py` so `dtos_app.py` remains focused on application setup and router registration.
+- Centralized application name, version, build number, and release codename in `app_metadata.py`.
+- Added DTOS version, build, Git branch, and latest commit information to the Settings page.
+- Cleaned and reorganized `dtos_app.py` without changing existing endpoint behavior.
+- Made the default cache location portable across Linux and Windows.
+
+## v0.8.9 - 2026-07-20
+
+- Moved the Draft Picks page from `dtos_app.py` into a dependency-injected router in `routes/draft.py`.
+- Registered the Draft router with the FastAPI application while preserving the existing `/picks` endpoint behavior.
+
+## v0.8.8 - 2026-07-20
+
+- Moved transaction history rendering from `dtos_app.py` into `routes/transactions.py`.
+- Registered the Transactions router through the shared application dependencies.
+- Refreshed the repository's packaged DTOS archive.
+
+## v0.8.7 - 2026-07-20
+
+- Moved the Front Office HQ dashboard from `dtos_app.py` into `routes/hq.py`.
+- Registered the HQ router through the shared application dependencies.
+
+## v0.8.6 - 2026-07-19
+
+- Moved team list and team detail routes from `dtos_app.py` into `routes/teams.py`.
+- Registered the Teams router through the shared application dependencies.
+- Added a packaged v0.8.5 archive to the repository at that point in history.
+
+## v0.8.5 - 2026-07-19
+
+- Moved matchup list and matchup detail routes from `dtos_app.py` into `routes/matchups.py`.
+- Registered the Matchups router through the shared application dependencies.
+- Added a packaged DTOS archive to the repository.
+# v1.7.1 - Automated Market Calibration Dashboard
+
+- Added full-universe, category-level market calibration audits after provider refreshes.
+- Added explainable recommendations, impact scoring, safety-gated automatic model adjustments, and retained calibration history.
+- Added calibration dashboard and status, category, recommendation, and history APIs.
+- Preserved independent DTOS intrinsic valuation; market consensus remains evidence rather than authority.
+# DTOS Changelog
+
+## v1.7.4 - Brain Integration & Unified Decision Engine
+
+- Established `BrainService` as the public, cached source for canonical valuation layers, evidence quality, explanations, diagnostics, and timelines.
+- Migrated application intelligence consumers through the Intelligence Orchestrator and added explainable Decision Confidence.
+- Added Brain health, migration, asset, timeline, dashboard, and DINS inspection contracts.
+- Retained the v1.7.3 valuation APIs as backwards-compatible adapters and added permanent cross-consumer consistency tests.
+# v1.10.0 - Live Projection Intelligence & Forward Production Engine
+
+- Added one persisted canonical projection snapshot used by Brain and matchup intelligence.
+- Added league-scoring-aware forward production, immutable snapshots, provider health, coverage, and accuracy foundations.
+- Added read-only Projection Intelligence APIs with explicit provider provenance and no request-time provider access.
+- Documented that Sleeper remains the league/roster/matchup source; no approved Sleeper projection feed was found.
+# v1.10.1 - Projection Generation Production-Shape Correction
+
+- Normalized canonical mapping- and sequence-shaped player containers without duplicate projection identities.
+- Added deterministic mapping-key fallback, identity-conflict rejection, relevant-universe filtering, and coverage diagnostics.
+- Added explicit generating, ready, failed, and stale health states with sanitized lifecycle errors.

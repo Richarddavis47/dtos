@@ -1,0 +1,125 @@
+"""Server-rendered Asset Intelligence dossier components."""
+from __future__ import annotations
+
+from html import escape
+
+from src.ui import player_summary, recommendation_panel
+from src.ui.intelligence_presentation import exact_rank
+from src.ui.market_facts import market_fact_html
+from src.ui.player_actions import player_action, player_actions_html
+from src.ui.player_dossier_text import evidence_text, outlook_text, recommendation_text, strengths_text, weaknesses_text
+from src.core.player_ownership import PlayerOwnershipIndex
+
+from src.core.asset_intelligence import AssetEvaluation, PlayerReport
+
+ASSET_CSS = """
+<style>
+.ai-context{display:block;border:0;border-left:3px solid var(--accent);border-radius:0 12px 12px 0;padding:16px}
+.ai-context .ds-actions{justify-content:flex-start}.ai-context form{display:grid;gap:8px}
+.ai-player-identity{margin:8px 0}.ai-player-identity .player-portrait,.ai-player-identity .player-headshot,.ai-player-identity .player-headshot-fallback{width:64px;height:64px;flex-basis:64px;border-radius:12px}
+.ai-player-identity .player-summary-copy b{font-size:26px;line-height:1.2;overflow-wrap:anywhere}.ai-player-identity .player-summary-copy span{font-size:14px}
+.ai-summary-market{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin:12px 0}.ai-summary-market strong{font-size:24px;color:var(--blue);font-variant-numeric:tabular-nums}.ai-summary-market[data-availability=unavailable] strong{font-size:15px;color:var(--text-secondary)}.ai-summary-market small{color:var(--text-secondary)}
+.ai-takeaway{font-size:18px;line-height:1.4;margin:12px 0}.ai-summary-limit{border-left:2px solid var(--warning);padding-left:10px;line-height:1.5}.ai-context form{grid-template-columns:auto minmax(0,1fr);align-items:center;margin-top:12px}.ai-context form select{width:100%;min-width:0}
+.ai-values{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:12px;margin:20px 0}
+.ai-value{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);padding:16px}
+.ai-value>b{font-size:30px;color:var(--blue);display:block;margin:8px 0;overflow-wrap:normal;word-break:normal}
+.ai-value span{font-size:13px;color:var(--text-secondary)}.ai-value small{display:block;color:var(--muted);margin:6px 0}
+.ai-sections{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin:20px 0;align-items:start}
+.ai-card{background:transparent;border:0;border-top:1px solid var(--border);border-radius:0;padding:16px 0;min-width:0;overflow-wrap:anywhere}
+.ai-card h3{margin:0 0 12px;font-size:19px}.ai-card ul{padding-left:20px;margin:8px 0}.ai-card li{margin:8px 0;color:var(--text-secondary)}
+.ai-evidence summary{cursor:pointer;color:var(--text-secondary);font-size:14px;min-height:44px;display:list-item;align-content:center;list-style:disclosure-closed inside}.ai-evidence[open]>summary{list-style-type:disclosure-open}
+.ai-evidence li{margin-bottom:8px}.ai-recommendation{border-color:#365334}.ai-priority{font-size:12px;color:var(--gold)}
+@media(max-width:760px){.ai-context{padding:12px}.ai-sections{grid-template-columns:1fr;gap:0}.ai-player-identity .player-summary-copy b{font-size:24px}.ai-context form{grid-template-columns:1fr;gap:4px}}
+</style>
+"""
+
+
+def _number(value, *, signed=False) -> str:
+    if value is None:
+        return "Unavailable"
+    return f"{value:+.2f}" if signed else str(value)
+
+
+def _evidence(evaluation: AssetEvaluation) -> str:
+    rows = "".join(
+        f"<li><b>{escape(item.factor)}:</b> {escape(item.observed_value)} — {escape(evidence_text(item.explanation))} <small>Source: {escape(item.source)}</small></li>"
+        for item in evaluation.evidence
+    )
+    limits = "".join(f"<li>{escape(item)}</li>" for item in evaluation.limitations)
+    return f'<details class="ai-evidence"><summary>Supporting Evidence</summary><ul>{rows}</ul>{f"<b>Limitations</b><ul>{limits}</ul>" if limits else ""}</details>'
+
+
+def _scoped_rank_summary(scoped_ranks: dict) -> str:
+    """Label global/league comparisons explicitly; never promote a roster rank."""
+    lines = []
+    for key, label in (("global_intrinsic", "Global DTOS intrinsic dynasty"),
+                       ("global_market", "Global provider Market"),
+                       ("league_adjusted", "League-adjusted dynasty")):
+        pair = scoped_ranks.get(key) or {}
+        overall = pair.get("overall") or {}
+        positional = pair.get("position") or {}
+        rank = exact_rank(overall.get("rank"))
+        position_rank = exact_rank(positional.get("rank"))
+        parts = [f'{rank} overall' if rank.startswith('#') else 'Overall rank unavailable']
+        parts.append(f"{positional.get('position') or 'Position'} {position_rank}" if position_rank.startswith('#')
+                     else 'Position rank unavailable')
+        count = overall.get('ranked_count')
+        parts.append(f'{count} ranked players' if count is not None else 'Ranked-universe coverage unavailable')
+        display = ' · '.join(parts)
+        lines.append(f"<p><b>{escape(label)}:</b> {escape(display)}</p>")
+    return "".join(lines)
+
+
+def player_dossier(report: PlayerReport, selected_team: dict, teams: list[dict], *, weekly_projection_html: str | None = None, ownership: dict | None = None) -> str:
+    profile = report.profile
+    options = "".join(
+        f'<option value="{int(team.get("roster_id") or 0)}" {"selected" if int(team.get("roster_id") or 0) == int(selected_team.get("roster_id") or 0) else ""}>{escape(str(team.get("owner") or team.get("team_name")))}</option>'
+        for team in teams
+    )
+    values = "".join(
+        f'<article class="ai-value"><span>{escape(value.name)}</span><b>{_number(value.score)}</b><small>Scale 0–{value.scale_maximum} · {value.confidence}% {"evidence confidence" if value is report.core_values.market else "confidence"}</small>{market_fact_html(report.market_fact) if value is report.core_values.market else ""}{_evidence(value)}</article>'
+        for value in (report.core_values.market, report.core_values.dynasty, report.core_values.redraft, report.core_values.team_fit)
+    )
+    snapshot = (("Asset Tier", report.archetypes[0]), ("Position", profile.position), ("NFL Team", profile.nfl_team), ("Age", str(profile.age or "Sleeper metadata does not provide age.")), ("Experience", str(profile.experience if profile.experience is not None else "Sleeper metadata does not provide NFL experience.")), ("Contract", profile.contract_status if profile.contract_status != "Unavailable" else "No supported provider supplies contract data."), ("Injury", profile.injury_status), ("Bye", profile.bye_week if profile.bye_week != "Unavailable" else "Bye week not confirmed; check the NFL schedule."))
+    snapshot_html = "".join(f"<li><b>{escape(label)}:</b> {escape(value)}</li>" for label, value in snapshot)
+    strengths = "".join(f"<li>{escape(item)}</li>" for item in strengths_text(report))
+    weaknesses = "".join(f"<li>{escape(item)}</li>" for item in weaknesses_text(report))
+    # Reuse the existing qualified recommendation and concern; no new evaluation.
+    takeaway = recommendation_text(report.recommendation)
+    concern = weaknesses_text(report)[0]
+    market_availability = 'unavailable' if report.core_values.market.score is None else 'available'
+    risk_evidence = "".join(f"<li><b>{escape(item.factor)}:</b> {escape(item.observed_value)} — {escape(evidence_text(item.explanation))}</li>" for item in report.risk.evidence)
+    opportunity = "".join(f"<li><b>{escape(label)}:</b> {_number(value.score)} — {escape(outlook_text(value.summary))}</li>" for label, value in report.opportunity.items())
+    recommendation_evidence = tuple(f"{item.factor}: {item.observed_value} — {evidence_text(item.explanation)}" for item in report.recommendation.evidence)
+    active_roster_id = int(selected_team.get("roster_id") or 0)
+    player_id = str(profile.player_id)
+    ownership = ownership or PlayerOwnershipIndex({"teams": teams, "players": {player_id: profile}}).resolve(player_id, active_roster_id)
+    trade_action, trade_href = player_action(ownership, player_id, active_roster_id)
+    actions_html = player_actions_html(ownership, player_id, active_roster_id)
+    impact_text = ("Review the available evidence before deciding whether to acquire or move this player."
+                   if report.core_values.team_fit.score is None else
+                   "Compare this player's assessed team fit with the price and any lineup or depth tradeoff.")
+    primary_recommendation = recommendation_panel(title=report.recommendation.action, recommendation=recommendation_text(report.recommendation), confidence=report.recommendation.confidence, primary_reason=recommendation_evidence[0] if recommendation_evidence else report.executive_summary, evidence=recommendation_evidence, expected_impact=impact_text, action_label=trade_action, action_href=trade_href, limitations=tuple(report.risk.limitations))
+    value = report.value_profile
+    integrated = ""
+    if value is not None:
+        card = value.intelligence_card
+        market_range = f"{value.market_range[0]:.0f}–{value.market_range[1]:.0f}" if value.market_range else "No enabled market provider returned a value."
+        projection = value.projection
+        production = next((window.fantasy_points for window in value.production.windows if window.label == "Season Average"), None)
+        providers = ", ".join(f"{item.provider}: raw {item.raw_value:g} → {item.normalized_value}/1000" for item in card.provider_evidence) if card and card.provider_evidence else "No calibrated provider evidence."
+        calibration = f'{escape(card.calibration_status.value)} · {card.confidence_score}% confidence' if card else "insufficient_data"
+        warning = "" if card and card.calibration_status.value == "calibrated" else "Experimental — market calibration incomplete."
+        weekly_outlook = '' if weekly_projection_html is not None else f'''<article class="ai-card"><h3>Weekly Outlook · {escape(projection.status.value)}</h3><ul><li><b>Projection:</b> {_number(projection.projected_points)}</li><li><b>Floor / Median / Ceiling:</b> {_number(projection.floor)} / {_number(projection.median)} / {_number(projection.ceiling)}</li><li><b>Role:</b> {escape(value.lineup.role)}</li><li><b>Above Replacement:</b> {_number(value.lineup.points_above_replacement, signed=True)}</li><li><b>Above Current Starter:</b> {_number(value.lineup.points_above_current_starter, signed=True)}</li><li><b>Source:</b> {escape(projection.source)}</li></ul></article>'''
+        integrated = f'''<p class="muted"><b>Calibration:</b> {calibration}. {escape(warning)}</p><section class="ai-sections"><article class="ai-card"><h3>Independent Evidence · Market price 0–1000</h3><ul><li><b>DTOS Intrinsic:</b> {_number(value.dtos_dynasty.value)}</li><li><b>Market Consensus:</b> {value.market_consensus.value if value.market_consensus.value is not None else "Unavailable"} ({escape(value.market_consensus.status.value)})</li><li><b>Normalized Market Range:</b> {escape(market_range)}</li><li><b>Canonical Value Gap:</b> {value.value_gap if value.value_gap is not None else "Unavailable"}</li><li><b>Win-Now / Rebuild:</b> {_number(value.contender.value)} / {_number(value.rebuilder.value)}</li><li><b>Liquidity (0–100):</b> {_number(value.trade_liquidity.value)}</li><li><b>Posture:</b> {escape(value.market_posture)}</li><li><b>Provider Evidence:</b> {escape(providers)}</li></ul></article>{weekly_outlook}<article class="ai-card"><h3>Production</h3><ul><li><b>Season Average:</b> {production if production is not None else "Unavailable"}</li><li><b>Consistency:</b> {value.production.consistency if value.production.consistency is not None else "Unavailable"}</li><li><b>Trend:</b> {escape(value.production.trend)}</li><li><b>Status:</b> {escape(value.production.status.value)}</li></ul></article><article class="ai-card"><h3>Positional Context</h3>{_scoped_rank_summary(value.positional.scoped_ranks)}<ul><li><b>Roster Dynasty Position Rank:</b> {_number(value.positional.dynasty_rank)}</li><li><b>Roster Weekly Position Rank:</b> {value.positional.weekly_rank if value.positional.weekly_rank is not None else "Unavailable"}</li><li><b>Tier:</b> {escape(value.positional.tier)}</li><li><b>Scarcity:</b> {_number(value.positional.scarcity)}</li><li><b>Replacement Gap:</b> {_number(value.positional.replacement_gap, signed=True)}</li></ul><details class="ai-evidence"><summary>Supporting Evidence</summary><ul>{"".join(f"<li>{escape(item)}</li>" for item in value.evidence)}</ul></details></article></section>'''
+        production_reason = value.production.limitations[0] if value.production.limitations else "No supported production-stat provider is configured."
+        integrated = integrated.replace("Season Average:</b> Unavailable", f"Season Average:</b> {escape(production_reason)}")
+        integrated = integrated.replace("Consistency:</b> Unavailable", f"Consistency:</b> {escape(production_reason)}")
+        integrated = integrated.replace("Trend:</b> Unavailable", f"Trend:</b> {escape(production_reason)}")
+    return f"""
+{ASSET_CSS}
+<section class="card ai-context" aria-label="Player decision summary"><div class="identity-kicker">Player Dossier</div><div class="ai-player-identity">{player_summary(player_id=player_id, name=profile.name, position=profile.position, nfl_team=profile.nfl_team)}</div><div class="ai-summary-market" data-availability="{market_availability}"><b>Market:</b> <strong>{_number(report.core_values.market.score)}</strong><small>Neutral DTOS price</small></div><p class="ai-takeaway">{escape(takeaway)}</p><p class="ai-summary-limit"><b>Concern or uncertainty:</b> {escape(concern)}</p>{actions_html}<form method="get"><label for="front_office">Active Front Office</label><select id="front_office" name="front_office" onchange="this.form.submit()">{options}</select></form></section>
+{weekly_projection_html or ""}
+<details class="ai-evidence"><summary>Valuation, fit and source evidence</summary>{primary_recommendation}<section class="ai-values">{values}</section>{integrated}</details>
+<section class="ai-sections"><article class="ai-card"><h3>Strength Analysis</h3><ul>{strengths}</ul></article><article class="ai-card"><h3>Weakness Analysis</h3><ul>{weaknesses}</ul></article><article class="ai-card"><h3>Opportunity Analysis</h3><ul>{opportunity}</ul></article><article class="ai-card"><details class="ai-evidence"><summary>Player Snapshot</summary><p>{escape(report.executive_summary)}</p><ul>{snapshot_html}</ul><p><b>Archetypes:</b> {escape(", ".join(report.archetypes))}</p></details></article><article class="ai-card"><h3>Risk Analysis · {escape(report.risk.level)} ({report.risk.score}/100)</h3><details class="ai-evidence"><summary>Supporting Evidence</summary><ul>{risk_evidence}</ul></details></article></section>
+"""

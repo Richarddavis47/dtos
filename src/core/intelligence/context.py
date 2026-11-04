@@ -1,0 +1,89 @@
+"""Shared immutable request context for every intelligence provider."""
+from __future__ import annotations
+
+from dataclasses import dataclass
+from hashlib import sha256
+from typing import Any
+
+from .league_scope import scoped_evidence
+
+
+@dataclass(frozen=True)
+class IntelligenceContext:
+    league_id: str
+    active_roster_id: int
+    league: dict[str, Any]
+    roster: dict[str, Any]
+    teams: tuple[dict[str, Any], ...]
+    picks: tuple[dict[str, Any], ...]
+    settings: dict[str, Any]
+    opponents: tuple[dict[str, Any], ...]
+    market: dict[str, Any]
+    front_offices: tuple[dict[str, Any], ...]
+    cached_data: dict[str, Any]
+    user_preferences: dict[str, Any]
+    snapshot_key: str
+    projection_snapshot: dict[str, Any] | None = None
+    evidence_generation: str = ""
+
+
+def build_context(data: dict[str, Any], roster_id: int, user_preferences: dict[str, Any] | None = None) -> IntelligenceContext:
+    teams = tuple(data.get("teams") or ())
+    roster = next((team for team in teams if int(team.get("roster_id") or 0) == roster_id), None)
+    if roster is None:
+        raise ValueError(f"Front Office {roster_id} is not available.")
+    league = data.get("league") or {}
+    league_id = str(league.get("league_id") or "configured-league")
+    # Pin the published snapshot once. A single assessment must not mix player
+    # reads from different publications, nor cache a pre-projection result.
+    from src.platform.league_context import current_league_context
+    from src.core.projection_intelligence import projection_service
+    runtime = current_league_context()
+    service = runtime.projection if runtime is not None and runtime.league_id == league_id else projection_service
+    projection_snapshot = service.snapshot()
+    if projection_snapshot and data.get('week') is not None and projection_snapshot.get('week') != (data['week'] or 1):
+        if str(data['week'] or 1) in (projection_snapshot.get('horizon_snapshot_ids') or {}):
+            projection_snapshot = service.week_snapshot(data['week'] or 1, generation_snapshot=projection_snapshot)
+    if projection_snapshot and str(projection_snapshot.get("league_id") or "") != league_id:
+        projection_snapshot = None
+    projection_generation = str((projection_snapshot or {}).get("projection_snapshot_id") or "unavailable")
+    generations = tuple(sorted((runtime.runtime.source_generations or {}).items())) if runtime is not None and runtime.league_id == league_id else ()
+    settings = {**(data.get("league_settings") or {}), "roster_positions": league.get("roster_positions") or []}
+    transactions = data.get("transactions") or []
+    players_updated = str(data.get("players_fetched_at") or "")
+    front_office_rows = scoped_evidence(data, "front_office_evidence").rows
+    behavior_rows = scoped_evidence(data, "gm_behavioral_intelligence").rows
+    front_office_generation = ",".join(sorted(
+        str(row.get("semantic_identity") or "")
+        for row in front_office_rows.values()
+        if isinstance(row, dict)
+    ))
+    behavior_generation = ",".join(sorted(
+        str(row.get("semantic_identity") or "")
+        for row in behavior_rows.values()
+        if isinstance(row, dict)
+    ))
+    market_generation = str(
+        (data.get("market_data") or {}).get("generation")
+        or (data.get("market_data") or {}).get("generated_at") or ""
+    )
+    from src.core.gm_behavioral_intelligence.diagnostics import league_gm_observations
+    observation_generation = league_gm_observations.source_identity(data)
+    snapshot_key = f"{league_id}:{len(teams)}:{len(transactions)}:{players_updated}:{data.get('week', '')}:{front_office_generation}:{behavior_generation}:{market_generation}:{observation_generation}"
+    brain_generation = str((data.get("valuation_intelligence") or {}).get("semantic_generation") or "pending")
+    production_generation = str((data.get("canonical_player_production") or {}).get("generation") or "unprepared")
+    from .team_strength import compatible_profile
+    strength = compatible_profile(data, projection_snapshot)
+    snapshot_key += ':' + str((strength or {}).get('semantic_generation') or 'team-strength-unavailable')
+    snapshot_key += f":{generations}:{brain_generation}:{projection_generation}:{production_generation}:roster-evidence-grading-v2:pick-evidence-no-scalar-v1"
+    from .roster_diagnostics import diagnostic_identity
+    snapshot_key += ':' + diagnostic_identity(data, projection_snapshot, include_qualification=True)
+    evidence_generation = sha256(snapshot_key.encode()).hexdigest()
+    # Selection scopes the view cache, not the league's canonical evidence generation.
+    snapshot_key += f":{roster_id}:{id(data)}:{(user_preferences or {}).get('strategy', '')}"
+    return IntelligenceContext(
+        league_id, roster_id, league, roster, teams, tuple(roster.get("picks_owned") or ()), settings,
+        tuple(team for team in teams if int(team.get("roster_id") or 0) != roster_id),
+        {"players": data.get("players") or {}, "position_counts": data.get("position_counts") or {}},
+        teams, data, dict(user_preferences or {}), snapshot_key, projection_snapshot, evidence_generation,
+    )

@@ -1,0 +1,115 @@
+"""Thread-safe TTL cache with fallback-safe health and invalidation."""
+from __future__ import annotations
+
+from dataclasses import dataclass
+from threading import RLock
+from time import monotonic
+from typing import Any, Callable, Hashable
+
+from config import INTELLIGENCE_CACHE_TTL
+
+
+@dataclass
+class CacheEntry:
+    value: Any
+    expires_at: float
+
+
+class IntelligenceCache:
+    def __init__(self, default_ttl: float = 60.0) -> None:
+        self.default_ttl = default_ttl
+        self._entries: dict[Hashable, CacheEntry] = {}
+        self.max_entries = 512
+        self._lock = RLock()
+        self.hits = 0
+        self.misses = 0
+        self.invalidations = 0
+
+    def peek(self, key: Hashable) -> Any | None:
+        """Read an unexpired prepared value without invoking a factory."""
+        with self._lock:
+            entry = self._entries.get(key)
+            return entry.value if entry is not None and entry.expires_at > monotonic() else None
+
+    def get_or_create(self, key: Hashable, factory: Callable[[], Any], ttl: float | None = None) -> Any:
+        now = monotonic()
+        with self._lock:
+            entry = self._entries.get(key)
+            if entry is not None and entry.expires_at > now:
+                self.hits += 1
+                return entry.value
+            self.misses += 1
+        value = factory()
+        with self._lock:
+            self._evict_for_capacity(key)
+            self._entries[key] = CacheEntry(value, monotonic() + (self.default_ttl if ttl is None else ttl))
+        return value
+
+    def get_or_create_with_status(self, key: Hashable, factory: Callable[[], Any], ttl: float | None = None) -> tuple[Any, bool]:
+        """Return a cached value and hit status while serializing expensive creation."""
+        now = monotonic()
+        with self._lock:
+            entry = self._entries.get(key)
+            if entry is not None and entry.expires_at > now:
+                self.hits += 1
+                return entry.value, True
+            self.misses += 1
+            value = factory()
+            self._evict_for_capacity(key)
+            self._entries[key] = CacheEntry(value, monotonic() + (self.default_ttl if ttl is None else ttl))
+            return value, False
+
+    def _evict_for_capacity(self, incoming: Hashable) -> None:
+        if incoming in self._entries:
+            return
+        while len(self._entries) >= self.max_entries:
+            oldest = next(iter(self._entries))
+            del self._entries[oldest]
+            self.invalidations += 1
+
+    def expire_one(self) -> bool:
+        """Release one already-expired graph off-loop, without blocking readers.
+
+        Normal lookups already reject these entries. Unrelated keys previously
+        retained their expired graphs until capacity eviction or another lookup.
+        Caller-held results remain valid; no factory or provider is invoked.
+        """
+        if not self._lock.acquire(blocking=False):
+            return False
+        expired = None
+        try:
+            now = monotonic()
+            for key, entry in self._entries.items():
+                if entry.expires_at <= now:
+                    expired = self._entries.pop(key)
+                    self.invalidations += 1
+                    break
+        finally:
+            self._lock.release()
+        # Destruction of the graph must not hold the shared cache lock.
+        return expired is not None
+
+    def invalidate(self, prefix: str | None = None) -> int:
+        with self._lock:
+            keys = [
+                key for key in self._entries
+                if prefix is None or (
+                    isinstance(key, str) and key.startswith(prefix)
+                ) or getattr(key, "namespace", "").startswith(prefix)
+            ]
+            for key in keys:
+                del self._entries[key]
+            self.invalidations += len(keys)
+            return len(keys)
+
+    def health(self) -> dict[str, Any]:
+        with self._lock:
+            total = self.hits + self.misses
+            namespaces: dict[str, int] = {}
+            for key in self._entries:
+                namespace = getattr(key, "namespace", None) or str(key).rsplit(":", 1)[-1]
+                namespaces[namespace] = namespaces.get(namespace, 0) + 1
+            return {"status": "healthy", "entries": len(self._entries), "namespaces": namespaces, "hits": self.hits, "misses": self.misses, "hit_rate": round(self.hits / total, 3) if total else 0.0, "invalidations": self.invalidations, "default_ttl_seconds": self.default_ttl}
+
+
+intelligence_cache = IntelligenceCache(default_ttl=INTELLIGENCE_CACHE_TTL)

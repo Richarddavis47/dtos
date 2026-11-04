@@ -1,0 +1,308 @@
+"""Bounded Step 8 join over canonical Steps 4-7 intelligence products."""
+from __future__ import annotations
+
+from dataclasses import dataclass
+from time import perf_counter
+from math import isfinite
+from typing import Any, Iterable
+
+from src.core.intelligence_memory import intelligence_checkpoint_store
+from src.core.market_trends import MarketTrendService
+
+
+TRADE_HISTORY_SCHEMA_VERSION = "trade-historical-context-1"
+TRADE_HISTORY_METHOD_VERSION = "step8-bilateral-evidence-2"
+
+
+@dataclass(frozen=True)
+class TradeEvidenceContext:
+    league_id: str
+    behavior_by_roster: dict[str, dict[str, Any]]
+    front_office_by_roster: dict[str, dict[str, Any]]
+    trends_by_asset: dict[str, dict[str, Any]]
+    generation: str
+    provider_requests: int = 0
+    raw_history_scans: int = 0
+    profile_rebuilds: int = 0
+    trend_rebuilds: int = 0
+    wrong_league_evidence_rejected: int = 0
+    wrong_league_evidence_consumed: int = 0
+    manager_evidence_rejected: int = 0
+    preparation_duration_ms: float = 0.0
+    schema_version: str = TRADE_HISTORY_SCHEMA_VERSION
+    method_version: str = TRADE_HISTORY_METHOD_VERSION
+    league_observations: dict[str, Any] | None = None
+    manager_source_identity: str = ""
+
+
+def _market_generation(data: dict[str, Any]) -> str:
+    market = data.get("market_data") or {}
+    return str(market.get("generation") or market.get("generated_at") or "current")
+
+
+def _market_player_id(data, asset):
+    """Join Trade's player key to Market by exact prepared identity only.
+
+    Exact picks remain outside this player-only join: an original-franchise
+    number is not a globally unique league/pick history identity.
+    """
+    key = str(getattr(asset, "asset_id", asset) or "")
+    if getattr(asset, "kind", None) not in {None, "player"}:
+        return None
+    raw = key.removeprefix("player:")
+    canonical = f"player:{raw}"
+    players = data.get("normalized_players") or data.get("players") or {}
+    prepared = (data.get("valuation_intelligence") or {}).get("assets") or {}
+    if raw in players or canonical in prepared:
+        return canonical
+    return None
+
+
+def build_trade_evidence_context(
+    data: dict[str, Any], assets: Iterable[Any] = (),
+) -> TradeEvidenceContext:
+    """Read derived products once; prepare bounded league observations per search."""
+    # Importing the public Intelligence package at module initialization also
+    # imports Trade Intelligence. Resolve helpers after both APIs are initialized.
+    from src.core.intelligence.league_scope import scoped_evidence, scoped_market_trends
+
+    from src.core.intelligence.manager_evidence import consumer_identity as source_identity
+    manager_source = source_identity(data)
+    started = perf_counter()
+    league = data.get("league") or {}
+    league_id = str(league.get("league_id") or data.get("league_id") or "")
+    rows_by_id: dict[str, dict[str, Any]] = {}
+    market_ids = {}
+    for value in assets:
+        asset_id = str(getattr(value, "asset_id", value) or "")
+        if not asset_id:
+            continue
+        # A Custom workspace changes trade_value, never the neutral endpoint
+        # used for externally observed Market movement.
+        current = getattr(value, "market_value", getattr(value, "trade_value", None))
+        market_ids[asset_id] = _market_player_id(data, value)
+        rows_by_id.setdefault(
+            asset_id, {"asset_id": asset_id, "values": {"market_value": current}},
+        )
+    ids = tuple(sorted(rows_by_id))[:250]
+    supplied = data.get("market_trend_summaries")
+    trend_rejections = 0
+    if isinstance(supplied, dict):
+        trends, trend_rejections = scoped_market_trends(
+            data, ids, league_id=league_id,
+        )
+    elif ids:
+        from src.core.market_trends.current import current_comparison
+        market_rows = [{**rows_by_id[key], "asset_id": market_ids[key]}
+                       for key in ids if market_ids[key] is not None]
+        summaries = MarketTrendService(intelligence_checkpoint_store).summaries(
+            market_rows, league_id=league_id or None, as_of=None,
+            generation=_market_generation(data), compact=False,
+            current_comparisons={row["asset_id"]: current_comparison(
+                data, row["asset_id"], row["values"]["market_value"])
+                for row in market_rows},
+        ) if market_rows else {}
+        # Consumers retain their original exact package keys. No canonical
+        # prices, source records or package identities are rewritten.
+        trends = {key: summaries[market_ids[key]] for key in ids
+                  if market_ids[key] in summaries}
+    else:
+        trends = {}
+    behavior = scoped_evidence(
+        data, "gm_behavioral_intelligence", expected_league_id=league_id,
+    )
+    front_office = scoped_evidence(
+        data, "front_office_evidence", expected_league_id=league_id,
+    )
+    from src.core.gm_behavioral_intelligence.diagnostics import league_gm_observations
+    observations = league_gm_observations.report(data)
+    return TradeEvidenceContext(
+        league_id=league_id,
+        behavior_by_roster=behavior.rows,
+        front_office_by_roster=front_office.rows,
+        trends_by_asset=trends,
+        generation=_market_generation(data),
+        league_observations=observations,
+        manager_source_identity=manager_source,
+        wrong_league_evidence_rejected=(
+            behavior.rejected - behavior.manager_rejected + front_office.rejected - front_office.manager_rejected + trend_rejections
+        ),
+        manager_evidence_rejected=behavior.manager_rejected + front_office.manager_rejected,
+        preparation_duration_ms=round((perf_counter() - started) * 1000, 3),
+    )
+
+
+def _dimension(profile: dict[str, Any], key: str) -> dict[str, Any] | None:
+    return next((row for row in profile.get("dimensions") or () if row.get("key") == key), None)
+
+
+def assess_historical_fit(
+    context: TradeEvidenceContext | None, *, partner_roster_id: int,
+    active_roster_id: int, partner_receives: Iterable[Any], active_receives: Iterable[Any],
+) -> dict[str, Any]:
+    """Return qualitative, lineage-preserving soft evidence for one proposal."""
+    if context is None:
+        return {
+            "assessment": "INSUFFICIENT EVIDENCE", "confidence": "LOW", "score": 0,
+            "reasons": ["Canonical historical behavior evidence is unavailable; current trade quality is unchanged."],
+            "evidence_references": [], "trend_signals": [],
+            "reason_codes": ["INSUFFICIENT_HISTORY"],
+            "behavioral_sample_count": 0, "evidence_completeness": None,
+            "source_evidence_identity": None, "behavior_semantic_identity": None,
+            "process_distribution": {}, "outcome_distribution": {},
+            "liquidity_supported": False,
+        }
+    profile = context.behavior_by_roster.get(str(partner_roster_id), {}) if context.manager_source_identity else {}
+    from src.core.gm_behavioral_intelligence.models import GM_BEHAVIOR_METHOD_VERSION
+    if profile.get("method_version") != GM_BEHAVIOR_METHOD_VERSION:
+        # Cached pre-integrity asset counts and price subsets were not admitted
+        # under this contract. They cannot become new historical-fit support.
+        profile = {}
+    reasons: list[str] = []
+    references: list[str] = []
+    reason_codes: list[str] = []
+    score = 0
+    confidence = str(profile.get("overall_confidence") or "low").upper()
+    incoming, outgoing = tuple(partner_receives), tuple(active_receives)
+    asset_direction = _dimension(profile, "asset_direction")
+    positional = _dimension(profile, "positional")
+    package = _dimension(profile, "package_preference") or _dimension(profile, "package_style")
+    for row, expected in (
+        (asset_direction, {f"acquire_{asset.kind}" for asset in incoming}),
+        (positional, {f"acquire_{asset.position}" for asset in incoming if asset.position}),
+    ):
+        if not row or str(row.get("confidence") or "low") == "low":
+            continue
+        tendency = str(row.get("tendency") or "")
+        if tendency in expected:
+            score += 1
+            reasons.append(f"Supported manager history includes {tendency.replace('_', ' ')} behavior.")
+            reason_codes.append("POSITIONAL_HISTORY_MATCH" if row is positional else "ASSET_BEHAVIOR_MATCH")
+            references.extend(str(value) for value in row.get("evidence_references") or ())
+    if package and str(package.get("confidence") or "low") != "low":
+        tendency = str(package.get("tendency") or "")
+        from src.core.trade_intelligence.package_shape import package_shape
+        shape = package_shape((asset.kind for asset in incoming), (asset.kind for asset in outgoing))
+        if tendency == shape:
+            score += 1
+            reasons.append(f"The package is consistent with supported {tendency.replace('_', ' ')} evidence.")
+            reason_codes.append("PACKAGE_STYLE_MATCH")
+            references.extend(str(value) for value in package.get("evidence_references") or ())
+    bilateral = context.front_office_by_roster.get(str(partner_roster_id), {}) if context.manager_source_identity else {}
+    count = int((bilateral.get("partner_counts") or {}).get(str(active_roster_id)) or 0)
+    if count:
+        score += 1
+        reasons.append(f"The two franchises have {count} supported prior trade interaction{'s' if count != 1 else ''}.")
+        reason_codes.append("BILATERAL_HISTORY")
+        references.extend(str(value) for value in bilateral.get("evidence_references") or ())
+
+    trend_signals: list[dict[str, str]] = []
+    for direction, assets in (("acquire", active_receives), ("send", partner_receives)):
+        for asset in assets:
+            trend = context.trends_by_asset.get(asset.asset_id) or {}
+            trend_direction = str(trend.get("direction") or "insufficient_evidence")
+            trend_confidence = str(trend.get("confidence") or "unavailable")
+            if trend_direction in {"rising", "falling", "volatile"} and trend_confidence in {"medium", "high"}:
+                signal = {
+                    "asset_id": asset.asset_id, "direction": trend_direction,
+                    "confidence": trend_confidence, "trade_direction": direction,
+                }
+                from src.core.history_context.timestamps import canonical_utc_timestamp
+                start = canonical_utc_timestamp(trend.get("comparison_start_at"))
+                end = canonical_utc_timestamp(trend.get("comparison_end_at"))
+                change = trend.get("magnitude")
+                scope = trend.get("comparison_scope")
+                if (start and end and start <= end and trend.get("comparison_units") == "0-1000"
+                        and scope in {"history_only", "historical_to_current"}
+                        and isinstance(change, (int, float)) and not isinstance(change, bool) and isfinite(change)):
+                    signal["explanation"] = (
+                        f"{asset.label}: recorded neutral Market change {change:+.2f} points "
+                        f"from {start[:10]} to {end[:10]}. "
+                        + ("This includes the compatible current publication at its observation time."
+                           if scope == "historical_to_current" else
+                           "This is history only; the current price is not part of that comparison."))
+                trend_signals.append(signal)
+    if trend_signals:
+        details = " ".join(row["explanation"] for row in trend_signals[:2] if row.get("explanation"))
+        reasons.append("Supported market movement informs timing, but does not alter canonical value."
+                       + (" " + details if details else ""))
+        reason_codes.append("MARKET_TIMING_CONTEXT")
+    liquidity_rows = [
+        trend.get("league_liquidity") for trend in context.trends_by_asset.values()
+        if isinstance(trend.get("league_liquidity"), dict)
+    ]
+    liquid = any(
+        int(row.get("recent_transaction_count") or 0) >= 3
+        and str(row.get("confidence") or "low") in {"medium", "high"}
+        for row in liquidity_rows
+    )
+    if liquid:
+        reasons.append("Supported league transaction evidence indicates a liquid market for relevant assets.")
+        reason_codes.append("LIQUID_MARKET")
+    assessment = "HIGH" if score >= 3 and confidence == "HIGH" else "MEDIUM" if score >= 1 else "LOW"
+    if not reasons:
+        reasons.append("Canonical manager-history and market-timing evidence is unavailable or too limited to influence this proposal.")
+        reason_codes.append("INSUFFICIENT_HISTORY")
+    from src.core.gm_behavioral_intelligence.diagnostics import partner_context
+    observations = context.league_observations
+    if observations and str(observations.get('league_id') or '') == context.league_id:
+        observed_partner = partner_context(observations, partner_roster_id)
+        if not profile:
+            reasons.append(observed_partner.get('short_summary') or observed_partner['summary'])
+        reason_codes.append('FRANCHISE_OBSERVATIONS_NOT_ACCEPTANCE')
+    else:
+        observed_partner = None
+    return {
+        "assessment": assessment, "confidence": confidence, "score": score,
+        "reasons": reasons[:4], "evidence_references": sorted(set(references))[:12],
+        "trend_signals": trend_signals[:6],
+        "reason_codes": sorted(set(reason_codes)),
+        "behavioral_sample_count": int(profile.get("transaction_count") or 0),
+        "evidence_completeness": profile.get("evidence_completeness"),
+        "source_evidence_identity": profile.get("source_evidence_identity"),
+        "behavior_semantic_identity": profile.get("semantic_identity"),
+        "process_distribution": dict(profile.get("process_distribution") or {}),
+        "outcome_distribution": dict(profile.get("outcome_distribution") or {}),
+        "liquidity_supported": liquid,
+        "league_partner_observations": observed_partner,
+    }
+
+
+def qualify_partner_explanation(evaluation, observations, profile):
+    """Pure prepared-evidence prose: their current benefit, cost, then history."""
+    from .strategy_dimensions import disclosed_costs
+    from src.core.history_context.timestamps import canonical_utc_timestamp
+    strategy = evaluation['dimensions']['strategic_fit']['partner']
+    market = evaluation.get('market_evidence') or {}
+    sent = (market.get('sent') or {}).get('total')
+    received = (market.get('received') or {}).get('total')
+    costs = disclosed_costs(strategy, sent - received if sent is not None and received is not None else None)
+    if market.get('availability') != 'full':
+        costs.insert(0, 'Required neutral Market pricing is missing; the other team’s full cost is unavailable')
+    cost = '; '.join(costs) if costs else 'No additional material cost established in the supported dimensions; projections remain conditional'
+    benefit = evaluation.get('why_they_would_do_it') or 'A supported current-roster benefit is not established.'
+    if profile:
+        count = profile.get('transaction_count')
+        first, last = canonical_utc_timestamp(profile.get('first_observed_at')), canonical_utc_timestamp(profile.get('last_observed_at'))
+        period = f'{first[:10]} to {last[:10]}' if first and last else 'observation dates unavailable'
+        history = (f'{count} supported current-manager trade observations; {period}. '
+            'Historical actions do not establish willingness to move these assets or an acceptance probability.')
+        qualification = 'Prepared current-manager identity and source publication are compatible; historical observations are not a forecast.'
+    else:
+        count, period = 0, 'observation dates unavailable'
+        history = 'Compatible current-manager history is unavailable or insufficient; no manager tendency is established.'
+        qualification = 'Franchise observations remain separately attributed; missing manager evidence does not disqualify a sound current offer.'
+    observations.update(current_benefit=benefit, current_cost=cost, manager_observations=history,
+        admitted_manager_sample=count, admitted_manager_period=period, manager_qualification=qualification)
+    # Keep independent raw franchise counts/coverage and their source references;
+    # do not turn an unavailable observation adapter into a denial of another
+    # properly admitted canonical manager sample.
+    consideration = observations.get('consideration_coverage') or {}
+    limits = ''
+    if consideration.get('composition_unavailable_trades'):
+        limits += f" Consideration unavailable in {consideration['composition_unavailable_trades']} observed franchise trades."
+    if consideration.get('composition_partial_trades'):
+        limits += f" Original consideration is partial in {consideration['composition_partial_trades']} observed franchise trades."
+    observations['summary'] = f'{benefit} Main cost: {cost}. {history} {qualification}' + limits + ' ' + observations.get('coverage_explanation', '')
+    observations['short_summary'] = f'{benefit} Main cost: {cost}.'
+    return observations

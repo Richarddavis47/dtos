@@ -1,0 +1,570 @@
+"""Asset Market and Dynasty Exchange read-only routes."""
+from __future__ import annotations
+
+from src.ui.market_facts import market_fact_html
+
+import re
+from datetime import datetime
+from html import escape
+from typing import Any, Callable
+from types import SimpleNamespace
+from urllib.parse import urlencode
+
+from fastapi import APIRouter, HTTPException, Query, Request
+from fastapi.encoders import jsonable_encoder
+from fastapi.responses import HTMLResponse
+from starlette.concurrency import run_in_threadpool
+
+from app_metadata import BUILD_NUMBER, VERSION
+from src.core.asset_market import AssetMarketCache, MarketWarmingError, asset_market_cache, availability_conditions
+from src.core.intelligence_memory import intelligence_checkpoint_store
+from src.core.market_trends import MarketTrendService, TREND_METHOD_VERSION
+from src.core.market_trends.current import current_comparison
+from src.core.history_context import canonical_history_store
+from services.history import (
+    history_progress_contracts,
+    retained_history_progress_contracts,
+)
+from src.ui.intelligence_presentation import available
+from src.ui.render_cache import GenerationRenderCache
+from src.ui import player_summary
+from src.core.player_ownership import PlayerOwnershipIndex
+from src.ui.player_actions import player_actions_html
+from src.platform.account_context import current_account
+from src.core.projection_intelligence import projection_service
+from services.player_projection_view import player_projection_view, player_projection_views
+
+RequireData = Callable[[], dict[str, Any]]
+PageRenderer = Callable[..., HTMLResponse]
+
+# Compatibility injection point for isolated route tests. Canonical production
+# binds this name to the Sleeper-backed context store, never HistoricalStore.
+historical_store = canonical_history_store
+home_render_cache = GenerationRenderCache("home", max_entries=8)
+market_render_cache = GenerationRenderCache("market", max_entries=24)
+home_body_render_cache = GenerationRenderCache("home_body", max_entries=8)
+market_body_render_cache = GenerationRenderCache("market_body", max_entries=24)
+
+
+def _market_query(**values: Any) -> str:
+    """Serialize market navigation without invalid empty optional context."""
+    return urlencode({key: value for key, value in values.items() if value is not None})
+
+
+def _value(
+    row: dict[str, Any], name: str,
+    layers: dict[str, Any] | None = None,
+) -> str:
+    value = row["values"].get(name)
+    if value is not None:
+        return f"{value:,.0f}"
+    layer = (layers or {}).get(name) or {}
+    return str(layer.get("reason") or "Insufficient DTOS evidence")
+
+
+def _trend_boundary_notice(trend: dict[str, Any]) -> str:
+    reasons = trend.get("comparison_reasons") or ()
+    if not reasons:
+        return ""
+    label = ("Methodology / semantic boundary" if "METHODOLOGY_VERSION_CHANGED" in reasons
+             else "Comparable Market history unavailable")
+    return (
+        f'<p class="evidence-unavailable"><b>{label}.</b> '
+        'Historical observations are preserved, but their value concept, scale, '
+        'format, methodology or time ordering cannot support a numerical comparison. '
+        'This is not player movement.</p>'
+    )
+
+
+def _trend_observation_summary(trend: dict[str, Any]) -> str:
+    """Only comparable evidence gets numerical movement presentation."""
+    count = trend.get('checkpoint_count', 0)
+    if (not trend.get('comparison_reasons') and trend.get('magnitude') is None
+            and trend.get('direction') in ('rising', 'falling', 'stable', 'volatile')
+            and trend.get('observed_low') is not None and trend.get('observed_high') is not None):
+        # Preserve the available range on older prepared summary DTOs without
+        # inventing an endpoint difference from that range.
+        return (f'{count} retained checkpoints · observed range '
+                f'{escape(available(trend["observed_low"]))}–{escape(available(trend["observed_high"]))}')
+    if trend.get('comparison_reasons') or trend.get('magnitude') is None:
+        return f'{count} recorded prices. There is not enough compatible dated evidence to show a numerical change; missing history does not mean the value stayed the same.'
+    scope = ('Historical to current publication' if trend.get('comparison_scope') == 'historical_to_current'
+             else 'Historical observations only')
+    magnitude = trend.get('magnitude')
+    units = 'Market points' if trend.get('comparison_units') == '0-1000' else str(trend.get('comparison_units') or 'observed units')
+    movement = f'{magnitude:+,.2f} {escape(units)}' if magnitude is not None else 'Movement unavailable'
+    return (f'{scope} · {movement} · {count} retained checkpoints. '
+            f'{escape(str(trend.get("comparison_start_at") or "Date unavailable"))} → '
+            f'{escape(str(trend.get("comparison_end_at") or "Date unavailable"))}. '
+            f'{escape(str(trend.get("current_qualification") or ""))}')
+
+
+def create_market_router(
+    *, require_data: RequireData, state: dict[str, Any], league_id: str,
+    page: PageRenderer,
+    context_resolver: Callable[[], Any | None] | None = None,
+) -> APIRouter:
+    router = APIRouter(tags=["asset-market"])
+    trend_service = MarketTrendService(intelligence_checkpoint_store)
+
+    def current_trend_evidence(market: Any, assets: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
+        return {str(asset["asset_id"]): current_comparison(
+            market.data, str(asset["asset_id"]), (asset.get("values") or {}).get("market_value"),
+        ) for asset in assets[:250]}
+
+    def add_trends(
+        market: Any, assets: list[dict[str, Any]], selected_league: str,
+    ) -> None:
+        if not assets:
+            return
+        summaries = trend_service.summaries(
+            assets, league_id=selected_league, as_of=None,
+            generation=market.semantic_generation,
+            current_comparisons=current_trend_evidence(market, assets),
+        )
+        for asset in assets:
+            asset["market_trend"] = summaries.get(str(asset.get("asset_id")))
+
+    def dependencies() -> tuple[dict[str, Any], str, AssetMarketCache]:
+        context = context_resolver() if context_resolver is not None else None
+        if context is None:
+            return state, league_id, asset_market_cache
+        return context.state, context.league_id, context.market
+
+    def model():
+        selected_state, selected_league, cache = dependencies()
+        try:
+            return cache.get(
+                require_data(), selected_state, historical_store,
+                selected_league, background=True,
+            )
+        except MarketWarmingError as exc:
+            metrics = cache.metrics()
+            headers = {
+                "Retry-After": "5",
+                "X-DTOS-Market-Refresh": str(metrics.get("refresh_state") or "warming"),
+            }
+            if metrics.get("last_valid_model"):
+                headers["X-DTOS-Last-Valid-Generation"] = str(
+                    metrics.get("market_generation") or "retained"
+                )
+            raise HTTPException(
+                status_code=503, detail=str(exc), headers=headers,
+            ) from exc
+
+    @router.get("/api/market")
+    async def market_index() -> Any:
+        """Return retained lifecycle metadata without requiring a market model."""
+        _selected_state, selected_league, cache = dependencies()
+        health = cache.health()
+        return {
+            **health,
+            "historical_progress": retained_history_progress_contracts(selected_league),
+            "endpoints": [
+            "/api/market/assets", "/api/market/assets/{asset_id}",
+            "/api/market/search", "/api/market/trending", "/api/market/health",
+            ],
+        }
+
+    @router.get("/api/market/health")
+    async def market_health() -> Any:
+        selected_state, selected_league, cache = dependencies()
+        cache.reconcile(
+            selected_state.get("data") or {}, selected_state,
+            historical_store, selected_league,
+        )
+        health = cache.health()
+        return {
+            "application_version": VERSION, **health,
+            "render_caches": {
+                "home": home_render_cache.health(),
+                "market": market_render_cache.health(),
+                "home_body": home_body_render_cache.health(),
+                "market_body": market_body_render_cache.health(),
+            },
+            "reason": (
+                None if health["status"] == "ready"
+                else "Awaiting a safe Asset Market snapshot."
+            ),
+        }
+
+    def ownership_index():
+        return PlayerOwnershipIndex(require_data())
+
+    def ownership_row(row, index, front_office=None):
+        # Current league context remains independent of a retained price artifact.
+        asset_id = str(row.get('asset_id') or '')
+        if asset_id.startswith(('player:', 'DTOS-P-')):
+            account = current_account()
+            active = front_office if front_office is not None else (account.membership.roster_id if account and account.membership else None)
+            row = dict(row)
+            player_id = asset_id.removeprefix('player:').removeprefix('DTOS-P-')
+            row["ownership"] = index.resolve(player_id, active)
+            row["owner"] = row["ownership"]["owner"]
+            if row["ownership"]["state"] == "UNKNOWN":
+                row["availability"] = "ownership_unavailable"
+            elif row.get("availability") != "retired":
+                row["availability"] = ("taxi" if str((row["owner"] or {}).get("roster_slot") or "").casefold() == "taxi" else "rostered") if row["owner"] else "day_traders_free_agent"
+        return row
+
+    def availability_ids(index, availability, q=""):
+        # Count and page use the same current ownership as labels/actions,
+        # including during a bounded last-valid Market publication fallback.
+        conditions = availability_conditions(q, availability)
+        if len(set(conditions)) > 1:
+            return ()
+        kind = next(iter(conditions), "")
+        if kind not in {"rostered", "taxi", "day_traders_free_agent", "ownership_unavailable"}:
+            return None
+        rows = []
+        for pid, metadata in index.players.items():
+            ownership = index.resolve(str(pid))
+            owner = ownership.get("owner") or {}
+            if ownership["state"] == "UNKNOWN":
+                observed = "ownership_unavailable"
+            elif ownership["state"] == "FREE_AGENT":
+                observed = "day_traders_free_agent"
+            else:
+                observed = "taxi" if str(owner.get("roster_slot") or "").casefold() == "taxi" else "rostered"
+            retired = isinstance(metadata, dict) and str(metadata.get("status") or "").casefold() == "retired"
+            if observed == kind and not retired:
+                rows.append("player:" + str(pid))
+        return tuple(rows)
+
+    @router.get("/api/market/assets")
+    async def market_assets(
+        offset: int = Query(0, ge=0), limit: int = Query(50, ge=1, le=250),
+        sort: str = "market", direction: str = "desc",
+        asset_type: str | None = None, position: str | None = None,
+        availability: str | None = None, owner: int | None = None,
+        minimum: float | None = Query(None, alias="min_value"),
+        maximum: float | None = Query(None, alias="max_value"),
+        age_min: float | None = None, age_max: float | None = None,
+        year: int | None = None,
+        round_number: int | None = Query(None, alias="round"),
+    ) -> Any:
+        market = model()
+        index = ownership_index()
+        result = market.directory(
+            offset=offset, limit=limit, sort=sort, direction=direction,
+            asset_type=asset_type, position=position, availability=availability,
+            owner=owner, minimum=minimum, maximum=maximum,
+            age_min=age_min, age_max=age_max, year=year,
+            round_number=round_number,
+            availability_asset_ids=availability_ids(index, availability),
+        )
+        result["assets"] = [ownership_row(row, index) for row in result["assets"]]
+        if availability:
+            result["ownership_filter_coverage"] = {"available": index.complete, "generation": index.generation,
+                "reason": None if index.complete else "Current league roster evidence is incomplete; no complete ownership-filter count is established."}
+        selected_league = dependencies()[1]
+        await run_in_threadpool(add_trends, market, result["assets"], selected_league)
+        result["historical_progress"] = history_progress_contracts(selected_league)
+        return jsonable_encoder(result)
+
+    @router.get("/api/market/assets/{asset_id:path}")
+    async def market_asset(
+        asset_id: str, front_office: int | None = None, as_of: datetime | None = None,
+    ) -> Any:
+        market = model()
+        result = market.detail(asset_id, front_office)
+        if result is None:
+            raise HTTPException(404, "Canonical market asset not found.")
+        selected_league = dependencies()[1]
+        result = dict(result)
+        asset = result["asset"] = ownership_row(result["asset"], ownership_index(), front_office)
+        boundary = as_of.isoformat() if as_of else None
+        current = (
+            (asset.get("values") or {}).get("market_value")
+            if as_of is None else None
+        )
+        result["market_trend"] = await run_in_threadpool(
+            trend_service.trend_for_asset, str(asset["asset_id"]), current,
+            league_id=selected_league, as_of=boundary,
+            generation=market.semantic_generation,
+            current_semantics=current_trend_evidence(market, [asset]).get(str(asset["asset_id"])),
+        )
+        result["historical_progress"] = history_progress_contracts(selected_league)
+        return jsonable_encoder(result)
+
+    @router.get("/api/market/search")
+    async def market_search(q: str = "", limit: int = Query(50, ge=1, le=100),
+                            offset: int = Query(0, ge=0), position: str = "",
+                            availability: str = "", sort: str = "market",
+                            direction: str = "desc") -> Any:
+        index = ownership_index()
+        result = model().search(q, limit, offset=offset, position=position or None,
+                                availability=availability or None, sort=sort, direction=direction,
+                                availability_asset_ids=availability_ids(index, availability, q))
+        for key in ("assets", "results"):
+            if key in result:
+                result[key] = [ownership_row(row, index) for row in result[key]]
+        if availability or re.search(r'\b(?:free[ -]+agents?|taxi)\b', q, re.I):
+            result["ownership_filter_coverage"] = {"available": index.complete, "generation": index.generation,
+                "reason": None if index.complete else "Current league roster evidence is incomplete; no complete ownership-filter count is established."}
+        return jsonable_encoder(result)
+
+    @router.get("/api/market/trending")
+    async def market_trending(
+        limit: int = Query(10, ge=1, le=50), as_of: datetime | None = None,
+    ) -> Any:
+        market = model()
+        selected_league = dependencies()[1]
+        candidates = market.directory(limit=min(250, max(limit * 8, 50)))["assets"]
+        if as_of is None:
+            await run_in_threadpool(add_trends, market, candidates, selected_league)
+        else:
+            evidence = await run_in_threadpool(
+                intelligence_checkpoint_store.market_trend_evidence,
+                asset_ids=tuple(str(row["asset_id"]) for row in candidates),
+                league_id=selected_league, as_of=as_of.isoformat(),
+            )
+            for row in candidates:
+                asset_id = str(row["asset_id"])
+                row["market_trend"] = trend_service.trend_for_asset(
+                    asset_id, None, league_id=selected_league, as_of=as_of.isoformat(),
+                    generation=market.semantic_generation, compact=True,
+                    evidence=evidence.get(asset_id),
+                )
+        comparable = [row for row in candidates if (row.get("market_trend") or {}).get("direction") in {"rising", "falling", "stable", "volatile"}]
+        risers = sorted(
+            (row for row in comparable if row["market_trend"]["direction"] == "rising"),
+            key=lambda row: (row["market_trend"].get("magnitude") or 0, str(row["asset_id"])), reverse=True,
+        )[:limit]
+        fallers = sorted(
+            (row for row in comparable if row["market_trend"]["direction"] == "falling"),
+            key=lambda row: (row["market_trend"].get("magnitude") or 0, str(row["asset_id"])),
+        )[:limit]
+        return jsonable_encoder({
+            **market.identity(), "method_version": TREND_METHOD_VERSION,
+            "historical_source": "step_2_global_market_memory",
+            "biggest_risers": risers, "biggest_fallers": fallers,
+            "most_stable": [row for row in comparable if row["market_trend"]["direction"] == "stable"][:limit],
+            "most_volatile": [row for row in comparable if row["market_trend"]["direction"] == "volatile"][:limit],
+            "availability": "available" if comparable else "unavailable",
+            "unavailable_reason": None if comparable else "At least two compatible dated prices are required; missing history is not unchanged value.",
+            "provider_calls": 0, "raw_history_scans": 0,
+        })
+
+    def market_page(
+        request: Request,
+        q: str = "", position: str = "", availability: str = "",
+        sort: str = "market", direction: str = "desc",
+        front_office: int | None = None, selected: str = "",
+        offset: int = Query(0, ge=0), limit: int = Query(10, ge=10, le=100),
+    ) -> HTMLResponse:
+        try:
+            market = model()
+        except HTTPException as exc:
+            if exc.status_code != 503 or 'text/html' not in request.headers.get('accept', ''):
+                raise
+            from src.platform.market_warming import warming_page
+            selected_state, selected_league, cache = dependencies()
+            snapshot = cache.preparation_status(
+                selected_state.get('data') or {}, selected_state, historical_store, selected_league,
+            ) if hasattr(cache, 'preparation_status') else None
+            return warming_page(request.url.query, headers=exc.headers, snapshot=snapshot)
+        selected_state, selected_league, _cache = dependencies()
+        data = selected_state.get("data") or {}
+        ownership = PlayerOwnershipIndex(data)
+        league_name = str((data.get("league") or {}).get("name") or "Sleeper League")
+        generation = str(market.semantic_generation)
+        projection_context = context_resolver() if context_resolver is not None else None
+        projection_reader = getattr(projection_context, 'projection', None) or projection_service
+        pinned_projection = projection_reader.snapshot()
+        pinned_reader = SimpleNamespace(snapshot=lambda: pinned_projection, week_snapshot=projection_reader.week_snapshot)
+        projection_key = ((pinned_projection or {}).get('horizon_generation'), data.get('week'),
+                          repr(data.get('scoring_settings') or (data.get('league') or {}).get('scoring_settings') or {}))
+        route_variant = "market"
+        key = (
+            route_variant, selected_league, generation, market.dataset_version,
+            VERSION, BUILD_NUMBER, league_name, selected_state.get("last_sync"),
+            selected_state.get("last_error"), q, position, availability, sort,
+            direction, front_office, selected, offset, limit, projection_key, ownership.generation,
+        )
+        render_cache = home_render_cache if route_variant == "home" else market_render_cache
+        body_cache = (
+            home_body_render_cache
+            if route_variant == "home" else market_body_render_cache
+        )
+        body_key = (
+            route_variant, selected_league, generation, market.dataset_version,
+            VERSION, BUILD_NUMBER, q, position, availability, sort,
+            direction, front_office, selected, offset, limit, projection_key, ownership.generation,
+        )
+
+        def render_body() -> bytes:
+            directory_limit = limit
+            result = market.search(q, limit, offset=offset, sort=sort, direction=direction,
+                                   position=position or None, availability=availability or None,
+                                   availability_asset_ids=availability_ids(ownership, availability, q)) if q else market.directory(
+                offset=offset, limit=directory_limit, sort=sort, direction=direction,
+                position=position or None, availability=availability or None,
+                availability_asset_ids=availability_ids(ownership, availability),
+            )
+            rows = [ownership_row(row, ownership, front_office) for row in (result.get("assets") or result.get("results") or [])]
+            card_projections = player_projection_views(data,
+                [str(row.get('asset_id', '')).split(':', 1)[1] for row in rows
+                 if str(row.get('asset_id', '')).startswith('player:')], pinned_reader)
+            add_trends(market, rows, selected_league)
+            table_rows = []
+            market_cards = []
+            for index, row in enumerate(rows, start=offset + 1):
+                values = row.get("values") or {}
+                owner = row.get("owner") or {}
+                asset_id = str(row["asset_id"])
+                query = _market_query(
+                    q=q, position=position, availability=availability,
+                    sort=sort, direction=direction,
+                    front_office=front_office, selected=asset_id,
+                    offset=offset, limit=limit,
+                )
+                def shown(name: str) -> str:
+                    value = values.get(name)
+                    fallback = row.get(name)
+                    return available(value if value is not None else fallback)
+                display_name = str(row.get("display_name") or asset_id)
+                asset_label = (
+                    player_summary(
+                        player_id=asset_id.removeprefix("player:"),
+                        name=display_name,
+                        position=str(row.get("position") or ""),
+                        nfl_team=str(row.get("nfl_team") or "Free Agent"),
+                        context=f'Result #{row.get("result_position") or index}',
+                        projection=card_projections.get(asset_id.split(':', 1)[1]),
+                    )
+                    if asset_id.startswith("player:") else
+                    f'<b>{escape(display_name)}</b><br><code>{escape(asset_id)}</code>'
+                )
+                table_rows.append(
+                    f'''<tr><td>{row.get("result_position") or index}</td><td><a href="/market?{escape(query)}">{asset_label}</a></td><td>{escape(str((row.get("ownership") or {}).get("label") or owner.get("team_name") or owner.get("owner") or "Unrostered"))}</td><td>{escape(shown("market_value"))}</td><td>{escape(shown("intrinsic_dtos_value"))}</td><td>{escape(shown("contender_value"))}</td><td>{escape(shown("rebuilder_value"))}</td><td>{escape(available(row.get("confidence"), reason="Unavailable"))}</td><td>{escape(available(row.get("agreement"), reason="Unavailable"))}</td><td>{escape(available(row.get("evidence_coverage"), reason="Unavailable"))}</td></tr>'''
+                )
+                rank = int(row.get("result_position") or index)
+                rank_class = ""  # Result order is not a podium/global rank.
+                market_availability = "available" if values.get("market_value") is not None or row.get("market_value") is not None else "unavailable"
+                market_cards.append(
+                    f'''<a class="market-asset"{rank_class} href="/market?{escape(query)}#selected-asset"><span class="market-rank">Result #{rank}</span>{asset_label}<span class="market-owner player-ownership-label">{escape(str((row.get("ownership") or {}).get("label") or owner.get("team_name") or owner.get("owner") or "Unrostered"))}</span><span class="market-value" data-availability="{market_availability}">{escape(shown("market_value"))}<small>DTOS market</small></span><span class="market-open">View asset →</span></a>'''
+                )
+            detail = market.detail(selected, front_office) if selected else None
+            expanded = ""
+            if selected and detail is None:
+                # Historical search identities need not exist in the current
+                # canonical Market index. Never turn absent detail into pricing
+                # or ownership, and never leave the selected link a silent no-op.
+                expanded = ('<section class="card" id="selected-asset" tabindex="-1">'
+                            '<h2>Asset details unavailable</h2>'
+                            '<p>This result has no supported detail in the current Market generation. '
+                            'A historical identity does not establish current pricing or ownership.</p>'
+                            '<p><a class="ds-action" href="/market">Browse current Market</a> '
+                            '<a class="ds-action" href="/history">Review league history</a></p>'
+                            '<details class="technical-details"><summary>Selected identity</summary>'
+                            f'<code>{escape(selected)}</code></details></section>')
+            if detail:
+                asset, recommendation = detail["asset"], detail["recommendation"]
+                trend = trend_service.trend_for_asset(
+                    str(asset["asset_id"]), (asset.get("values") or {}).get("market_value"),
+                    league_id=selected_league, as_of=None,
+                    generation=market.semantic_generation,
+                    current_semantics=current_trend_evidence(market, [asset]).get(str(asset["asset_id"])),
+                )
+                history = detail.get("history") or {}
+                layers = detail.get("value_layers") or {}
+                forward_html = ""
+                if str(asset['asset_id']).startswith('player:'):
+                    selected_projection = player_projection_view(data, str(asset['asset_id']).split(':', 1)[1], pinned_reader)
+                    weekly = selected_projection['value']
+                    weekly_display = escape(selected_projection['display'])
+                    confidence = selected_projection['confidence']
+                    confidence_html = "Unavailable" if confidence is None else f"{confidence}%"
+                    forward_html = f'''<section class="card"><p class="eyebrow">Sleeper Weekly Projection</p>{f'<div class="summary-grid"><article class="metric"><b>{weekly_display}</b><span>Sleeper projection</span></article><article class="metric"><b>{confidence_html}</b><span>Evidence confidence</span></article></div>' if weekly is not None else '<div class="evidence-unavailable"><b>Weekly projection unavailable.</b><br>A matching Sleeper projection for this player, week and league scoring is not available. Check this league again after its next update; no missing score is shown as zero.</div>'}<details><summary>Evidence</summary><p>Sleeper supplies the weekly projection under this league's scoring profile. DTOS does not fabricate a fallback.</p></details></section>'''
+                values = asset.get("values") or {}
+                values_available = any(values.get(name) is not None for name in ("market_value", "intrinsic_dtos_value", "contender_value", "rebuilder_value"))
+                value_html = (
+                    f'<div class="summary-grid"><article class="metric"><b>{escape(_value(asset, "market_value", layers))}</b><span>Market</span></article><article class="metric"><b>{escape(_value(asset, "intrinsic_dtos_value", layers))}</b><span>Intrinsic</span></article><article class="metric"><b>{escape(_value(asset, "contender_value", layers))}</b><span>Contender</span></article><article class="metric"><b>{escape(_value(asset, "rebuilder_value", layers))}</b><span>Rebuilder</span></article></div>'
+                    if values_available else
+                    '<div class="evidence-unavailable"><b>Current market values are unavailable.</b><br>DTOS will show them when canonical market evidence supports this asset.</div>'
+                )
+                trade_href = "/trades" if front_office is None else f"/trades?front_office={front_office}"
+                milestone_html = "".join(
+                    f'<li>{escape(name.replace("_", " ").title())}: {float(row["change"]):+,.2f} Market points since {escape(str(row["observed_at"]))}</li>'
+                    for name, row in trend["milestones"].items()
+                )
+                trend_heading = (str(trend['direction']).replace('_', ' ').upper() + ' · ' + trend['confidence'].upper() + ' CONFIDENCE'
+                                 if trend['direction'] in ('rising', 'falling', 'stable', 'volatile') else 'Not enough comparable price history')
+                trend_html = f'''<section class="card"><p class="eyebrow">Observed Market Trend</p><h3>{escape(trend_heading)}</h3><p>{_trend_observation_summary(trend)}</p>{f'<ul>{milestone_html}</ul>' if milestone_html else '<p class="muted">No supported milestone comparison is available yet.</p>'}<p class="muted">Recorded observations only; no daily prices are invented.</p></section>'''
+                trend_html += _trend_boundary_notice(trend)
+                from services.asset_explanations import market_explanation
+                from src.ui.explanations import explanation_panel
+                trend_html += explanation_panel(market_explanation(detail, trend, league_id=selected_league))
+                ownership_html = player_actions_html(ownership.resolve(str(asset["asset_id"]).split(":", 1)[1], front_office), str(asset["asset_id"]).split(":", 1)[1], front_office) if str(asset["asset_id"]).startswith("player:") else ""
+                dossier_url = asset["canonical_url"]
+                if dossier_url.startswith(("/players/", "/picks/")):
+                    origin = "/market?" + _market_query(q=q, position=position, availability=availability, sort=sort, direction=direction, front_office=front_office, selected=selected, offset=offset, limit=limit)
+                    dossier_url += "?" + urlencode({"from_market": origin, "market_league": selected_league, **({"front_office": front_office} if front_office is not None else {})})
+                expanded = f'''<section class="card" id="selected-asset" tabindex="-1"><p class="eyebrow">Expanded Asset</p><h2>{escape(asset["display_name"])}</h2><p>{escape(str(asset.get("position") or asset["asset_type"]))} · {escape(str(asset.get("nfl_team") or "No NFL team"))}</p>{ownership_html}<p><b>Canonical Market:</b> {escape(available(values.get("market_value"), reason="Unavailable"))}</p>{forward_html}<details><summary>Valuation and source evidence</summary>{value_html}{market_fact_html(asset.get("market_fact"))}<p><b>DTOS view:</b> {escape(recommendation["primary_reason"])}</p></details><p><a href="{escape(dossier_url)}">Open canonical dossier</a> · <a href="{trade_href}">Trade Intelligence</a></p><details><summary>Why?</summary><p>Decision confidence: {escape(available(recommendation.get("confidence"), reason="Unavailable"))}</p><p>Historical availability: {escape(asset["historical_availability"])}</p><p>Missing evidence: {escape(", ".join(recommendation["missing_evidence"]) or "None reported")}</p></details><details class="technical-details"><summary>Technical Details</summary><p>Asset: <code>{escape(asset["asset_id"])}</code></p><p>Brain snapshot: <code>{escape(recommendation["brain_snapshot_id"])}</code></p><p>Market generation: <code>{escape(detail["market_generation"])}</code></p><p>Valuation generation: <code>{escape(str(detail.get("valuation_generation") or "Unavailable"))}</code></p><p>Historical dataset: <code>{escape(detail["historical_dataset_version"])}</code></p><p>Historical evidence records: {len(history.get("events") or history.get("ownership_intervals") or [])}</p></details></section><details><summary>Observed trends and comparison details</summary>{trend_html}</details>'''
+            def options(values: Any, selected_value: str) -> str:
+                return "".join(
+                    f'<option value="{value}" {"selected" if selected_value == value else ""}>{label}</option>'
+                    for value, label in values
+                )
+            trend_available = any((row.get("market_trend") or {}).get("direction") in {"rising", "falling", "stable", "volatile"} for row in rows)
+            movers_html = '<div class="card"><p>Comparable dated Market prices show observed changes.</p><a href="/api/market/trending">Review observed price changes →</a></div>' if trend_available else '<div class="evidence-unavailable"><b>Not enough comparable price history yet.</b><br>At least two compatible dated prices are needed to show a change. Missing observations do not mean values stayed the same.</div>'
+            front_office_input = (
+                f'<input type="hidden" name="front_office" value="{front_office}">'
+                if front_office is not None else ""
+            )
+            previous_query = _market_query(q=q, position=position, availability=availability, sort=sort, direction=direction, front_office=front_office, offset=max(0, offset-limit), limit=limit)
+            next_query = _market_query(q=q, position=position, availability=availability, sort=sort, direction=direction, front_office=front_office, offset=offset+limit, limit=limit)
+            total = result.get("total", result.get("count", 0))
+            pagination = []
+            if offset > 0:
+                pagination.append(f'<a href="/market?{escape(previous_query)}">Previous</a>')
+            if offset + len(rows) < total:
+                pagination.append(f'<a href="/market?{escape(next_query)}">Next page →</a>')
+            if q or position or availability:
+                browse_query = _market_query(front_office=front_office, limit=limit)
+                pagination.append(f'<a href="/market?{escape(browse_query)}">Browse all assets</a>')
+            pagination_html = " · ".join(pagination)
+            empty_html = '<b>End of these results.</b>Use Previous or Browse all assets.' if total and offset >= total else '<b>No matching assets.</b>Adjust the current market filters.'
+            ownership_notice = '<p class="evidence-unavailable">Current roster evidence is incomplete; ownership and free-agent filters cannot establish complete results.</p>' if (availability or re.search(r'\b(?:free[ -]+agents?|taxi)\b', q, re.I)) and not ownership.complete else ''
+            body = f'''<nav class="market-mode" aria-label="Valuation views"><a class="ds-action" href="/market" aria-current="page">Neutral DTOS</a><a class="ds-action" href="/account/my-dtos">Custom DTOS · Personal rankings</a></nav><form class="market-filters" method="get" action="/market" aria-label="Asset Market filters"><h3>Find your next dynasty asset</h3><label for="market-search">Player or pick<input id="market-search" name="q" value="{escape(q)}" placeholder="Josh Allen or 2028 1st"></label><div class="market-filter-field"><label for="market-position">Position</label><select id="market-position" name="position"><option value="">All assets</option>{options(((item,item) for item in ("QB","RB","WR","TE","PICK")), position)}</select></div><div class="market-filter-field"><label for="market-availability">Availability</label><select id="market-availability" name="availability"><option value="">All</option>{options((("rostered","Rostered"),("day_traders_free_agent","Free Agents"),("taxi","Taxi"),("retired","Retired"),("owned_pick","Picks")), availability)}</select></div><div class="market-filter-field"><label for="market-sort">Sort</label><select id="market-sort" name="sort">{options(((item,item.title()) for item in ("market","intrinsic","contender","rebuilder","confidence","risk","liquidity")), sort)}</select></div><input type="hidden" name="direction" value="{escape(direction if direction in {'asc', 'desc'} else 'desc')}"><input type="hidden" name="limit" value="{limit}">{front_office_input}<button class="btn" type="submit">Search market</button></form><section class="market-hero"><p>Global values. League-specific ownership and fit.</p><span><b>{result.get("total", result.get("count", 0))}</b> matching assets</span></section><details class="market-view-evidence"><summary>About Neutral and Custom values</summary><p class="muted">Market prices below remain neutral. Open Custom DTOS to view or edit your personal valuations.</p></details><section class="ux-section"><div class="ux-section-head"><h2>{'Search Results' if q else 'Market Assets'}</h2><p>{'Exact compact matches' if q else 'Player identity, rank, value, and ownership at a glance'}</p></div>{ownership_notice}<div class="market-grid">{''.join(market_cards) or '<div class="ds-empty">' + empty_html + '</div>'}</div><nav aria-label="Market pagination">{pagination_html}</nav><details class="technical-details"><summary>Full market evidence table</summary><div class="ds-table-wrap" tabindex="0" role="region" aria-label="Full Market evidence"><table><caption>Filtered asset results · order is not a dynasty rank</caption><thead><tr><th>Result</th><th>Asset</th><th>Owner</th><th>Market</th><th>Intrinsic</th><th>Contender</th><th>Rebuilder</th><th>Confidence</th><th>Agreement</th><th>Evidence</th></tr></thead><tbody>{''.join(table_rows) or '<tr><td colspan="10">No canonical assets match these filters.</td></tr>'}</tbody></table></div></details></section><section class="ux-section" id="market-movers"><div class="ux-section-head"><h2>Market Movement</h2><p>Only timestamped, meaningful comparison data receives movement treatment</p></div>{movers_html}</section>{expanded}'''
+            body += (
+                '<p class="muted market-evidence-contract">'
+                "Values remain separate; unavailable evidence is never substituted."
+                "</p><details class=\"technical-details\"><summary>Market provenance</summary>"
+                f"<p>Dataset <code>{escape(market.dataset_version[:12])}</code> · "
+                "stable tie-break: canonical asset ID</p></details>"
+            )
+            return body.encode("utf-8")
+
+        def render() -> bytes:
+            return body_cache.get_or_build(
+                body_key, generation, render_body,
+            )
+
+        # Shared caches must never retain account chrome or session CSRF fields.
+        body = render_cache.get_or_build(key, generation, render).decode("utf-8")
+        selected_state, selected_league, cache = dependencies()
+        if hasattr(cache, 'preparation_status'):
+            observed = cache.preparation_status(
+                selected_state.get('data') or {}, selected_state, historical_store, selected_league,
+            )
+            if observed['state'] == 'stale' or (
+                observed['state'] not in {'ready', 'empty'} and observed.get('retained')
+                and cache.current() is market
+            ):
+                from src.core.history_context.timestamps import canonical_utc_timestamp
+                prepared_at = canonical_utc_timestamp(market.generated_at)
+                freshness = f' Market prepared: {escape(prepared_at)}.' if prepared_at else ''
+                from services.market_preparation import presentation
+                explanation = (presentation(observed)['message'] if observed['state'] == 'stale' else
+                    'These values are from an earlier prepared publication. A matching current replacement is not ready; current roster ownership is shown separately.')
+                body = (
+                    '<p class="evidence-unavailable" role="status"><b>Last successful Market available.</b> '
+                    + explanation
+                    + freshness + ' Custom ranking limitations are shown separately.</p>' + body
+                )
+        return page("Asset Market", body)
+
+    router.add_api_route("/market", market_page, methods=["GET"], response_class=HTMLResponse)
+    return router

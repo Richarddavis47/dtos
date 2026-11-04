@@ -1,0 +1,278 @@
+"""Provider-aware conversion to the canonical 0-1000 comparison scale."""
+from __future__ import annotations
+
+from bisect import bisect_left, bisect_right
+from copy import deepcopy
+from threading import RLock
+from dataclasses import replace
+from datetime import datetime, timezone
+import hashlib
+import json
+from math import isfinite
+from itertools import chain
+from typing import Any, Iterable
+
+from src.core.freshness import assess_freshness
+
+from src.core.valuation.config import CANONICAL_MAX, DEFAULT_CONFIG, NORMALIZATION_VERSION, ValuationConfig
+from src.core.valuation.models import NormalizedValuation
+from src.core.valuation.source_time import market_times
+from src.core.valuation.quote_eligibility import exclusion_reason
+
+
+def prepare_distribution(
+    provider: str,
+    distribution: Iterable[float],
+    config: ValuationConfig = DEFAULT_CONFIG,
+) -> tuple[float, ...]:
+    """Prepare provider values once for repeated percentile lookups."""
+    scale = config.provider_scales.get(provider)
+    if scale is None:
+        return ()
+    return tuple(
+        sorted(
+            float(item)
+            for item in distribution
+            if item is not None
+            and scale.minimum <= float(item) <= scale.maximum
+        )
+    )
+
+
+def _freshness(updated_at: str | None, provider: str) -> tuple[str, int]:
+    if not updated_at:
+        return "unknown", 70
+    try:
+        observed = datetime.fromisoformat(str(updated_at).replace("Z", "+00:00"))
+        observed = observed if observed.tzinfo else observed.replace(tzinfo=timezone.utc)
+        hours = max(0.0, (datetime.now(timezone.utc) - observed.astimezone(timezone.utc)).total_seconds() / 3600)
+    except ValueError:
+        return "unknown", 60
+    family = {
+        "FantasyCalc": "fantasycalc_observed_market",
+        "DynastyProcess": "fantasypros_derived_market",
+        "KTC": "ktc_crowd_market",
+        "DTOS": "dtos_intrinsic",
+        "DTOS Pick": "dtos_intrinsic",
+    }.get(provider)
+    assessment = assess_freshness(hours, family)
+    # Preserve the existing normalized-value freshness vocabulary for consumers.
+    label = {"Very Stale": "stale", "Immutable": "fresh"}.get(
+        assessment.tier, assessment.tier.lower(),
+    )
+    return label, assessment.semantic_weight
+
+
+def normalize_value(
+    provider: str,
+    raw_value: float,
+    *,
+    distribution: Iterable[float] = (),
+    prepared_distribution: tuple[float, ...] | None = None,
+    updated_at: str | None = None,
+    source_season: str | None = None,
+    provider_confidence: int = 70,
+    config: ValuationConfig = DEFAULT_CONFIG,
+) -> NormalizedValuation:
+    scale = config.provider_scales.get(provider)
+    if scale is None:
+        return NormalizedValuation(provider, float(raw_value), 0, 0, 0, updated_at, source_season, 0, "unknown", NORMALIZATION_VERSION, "unsupported_provider")
+    raw = max(scale.minimum, min(scale.maximum, float(raw_value)))
+    ratio = (raw - scale.minimum) / max(scale.maximum - scale.minimum, 1)
+    population = (
+        prepared_distribution
+        if prepared_distribution is not None
+        else prepare_distribution(provider, distribution, config)
+    )
+    if len(population) >= 10:
+        below = bisect_left(population, raw)
+        equal = bisect_right(population, raw) - below
+        percentile = (below + equal * 0.5) / len(population)
+        canonical = round(CANONICAL_MAX * (ratio * 0.70 + percentile * 0.30))
+        method = "provider_range_70_percentile_30"
+    else:
+        canonical = round(CANONICAL_MAX * ratio)
+        method = "provider_range_linear"
+    freshness, freshness_confidence = _freshness(updated_at, provider)
+    confidence = round(min(100, max(0, provider_confidence)) * scale.reliability * freshness_confidence / 100)
+    return NormalizedValuation(provider, float(raw_value), scale.minimum, scale.maximum, max(0, min(CANONICAL_MAX, canonical)), updated_at, source_season, confidence, freshness, NORMALIZATION_VERSION, method)
+
+
+def normalize_internal(value: float) -> int:
+    """Convert a legacy DTOS 0-100 score without treating it as provider market data."""
+    return max(0, min(CANONICAL_MAX, round(float(value) * 10)))
+
+
+# Shared preparation/read lock; no league state, durable copies or polling.
+_market_publication_lock = RLock()
+
+
+def _market_identity(value):
+    return hashlib.sha256(
+        json.dumps(value, sort_keys=True, default=str, separators=(",", ":")).encode()
+    ).hexdigest()
+
+
+def capture_market_publication(market_data: dict[str, Any]) -> tuple[dict, bool]:
+    """Detach one stable publication for a whole package/cache read.
+
+    Normal preparation replaces complete tables under this lock. The two bounded
+    attempts also detect legacy callers editing raw dictionaries outside it.
+    A changed read may retain qualified individual observations, never totals.
+    """
+    snapshot = {}
+    for _ in range(2):
+        with _market_publication_lock:
+            try:
+                before = _market_identity(market_data)
+                snapshot = deepcopy(market_data)
+                if (
+                    before
+                    == _market_identity(snapshot)
+                    == _market_identity(market_data)
+                ):
+                    return snapshot, True
+            except RuntimeError:
+                continue
+    return snapshot, False
+
+
+def prepare_market_normalization(market_data: dict[str, Any]) -> None:
+    """Pin comparison values before league relevance discards provider rows.
+
+    Existing cached rows retain only their normalized scalar and reference
+    identity, not a second population array. No provider or durable store reads.
+    Freshness/confidence are still evaluated at consumption time.
+    """
+    # Work off a detached publication. Failure leaves every previous reference
+    # intact, including cached-fallback tables shared with another league.
+    prepared, coherent = capture_market_publication(market_data)
+    if not coherent:
+        raise ValueError("Market source changed during normalization preparation")
+    identity = _market_identity(prepared)
+    _prepare_market_normalization(prepared)
+    with _market_publication_lock:
+        if _market_identity(market_data) != identity:
+            raise ValueError("Market source changed before normalization publication")
+        market_data.update(
+            providers=prepared.get("providers", {}),
+            pick_quotes=prepared.get("pick_quotes", {}),
+        )
+
+
+def _prepare_market_normalization(market_data: dict[str, Any]) -> None:
+    for provider, rows in (market_data.get("providers") or {}).items():
+        if provider not in {"FantasyCalc", "DynastyProcess"} or not isinstance(rows, dict):
+            continue
+        population = prepare_distribution(provider, (
+            row.get("value") for row in rows.values() if isinstance(row, dict)
+        ))
+        supported_format = 'fc:12:2qb:ppr' if provider == 'FantasyCalc' else 'dp:2qb'
+        quotes = (market_data.get('pick_quotes') or {}).get(provider, ())
+        for quote in quotes:
+            if quote.get('market_format') != supported_format:
+                quote.pop('normalization_reference', None)
+        for row in chain(rows.values(), quotes):
+            if isinstance(row, dict) and row.get('value') is None:
+                row.pop('normalization_reference', None)
+        priced = [row for row in rows.values() if isinstance(row, dict) and row.get('value') is not None]
+        priced += [quote for quote in quotes if quote.get('market_format') == supported_format
+                   and quote.get('value') is not None]
+        if not priced:
+            # An empty family supplies no price; it must not suppress another
+            # provider's independently supported evidence.
+            continue
+        references = [row.get('normalization_reference') or {} for row in priced]
+        source_count = ((market_data.get('provider_status') or {}).get(provider) or {}).get('records_retrieved')
+        partial = ((type(source_count) is int and source_count > len(rows))
+                   or any(type(ref.get('population_size')) is int
+                          and ref['population_size'] > len(population) for ref in references))
+        if partial:
+            # A cached league subset is not a new provider population. Retain
+            # its original transform, including picks on that same curve.
+            identities = set()
+            scale = DEFAULT_CONFIG.provider_scales[provider]
+            for row, reference in zip(priced, references):
+                try:
+                    raw = float(row['value'])
+                except (ValueError, TypeError):
+                    raise ValueError('Complete Market population required for normalization') from None
+                value, generation = reference.get('normalized_value'), reference.get('generation')
+                if (isinstance(row['value'], bool) or not isfinite(raw)
+                        or not scale.minimum <= raw <= scale.maximum
+                        or reference.get('provider') != provider
+                        or reference.get('raw_value') != raw
+                        or reference.get('version') != NORMALIZATION_VERSION
+                        or reference.get('method') not in {'provider_range_linear', 'provider_range_70_percentile_30'}
+                        or type(value) is not int or not 0 <= value <= CANONICAL_MAX
+                        or not isinstance(generation, str) or len(generation) != 64
+                        or any(c not in '0123456789abcdef' for c in generation)
+                        or type(reference.get('population_size')) is not int):
+                    raise ValueError('Complete Market population required for normalization')
+                identities.add((generation, reference['population_size']))
+            if len(identities) != 1 or next(iter(identities))[1] <= len(population):
+                raise ValueError('Complete Market population required for normalization')
+            continue
+        generation = hashlib.sha256(json.dumps(
+            [NORMALIZATION_VERSION, provider, population], separators=(",", ":")
+        ).encode()).hexdigest()
+        for row in rows.values():
+            if not isinstance(row, dict):
+                continue
+            row.pop("normalization_reference", None)
+            if row.get("value") is None:
+                continue
+            normalized = normalize_value(provider, float(row["value"]), prepared_distribution=population)
+            row["normalization_reference"] = {
+                "provider": provider, "raw_value": normalized.raw_value,
+                "normalized_value": normalized.normalized_value,
+                "version": NORMALIZATION_VERSION, "method": normalized.method,
+                "generation": generation, "population_size": len(population),
+            }
+        # External pick prices use the identical provider comparison transform,
+        # never a pick-only percentile distribution or legacy round adjustment.
+        for quote in quotes:
+            quote.pop('normalization_reference', None)
+            if quote.get('market_format') != supported_format:
+                continue
+            try:
+                raw = float(quote['value'])
+            except (ValueError, TypeError, KeyError):
+                continue
+            scale = DEFAULT_CONFIG.provider_scales[provider]
+            if not scale.minimum <= raw <= scale.maximum:
+                continue
+            normalized = normalize_value(provider, raw, prepared_distribution=population)
+            quote['normalization_reference'] = {
+                'provider': provider, 'raw_value': raw,
+                'normalized_value': normalized.normalized_value,
+                'version': NORMALIZATION_VERSION, 'method': normalized.method,
+                'generation': generation, 'population_size': len(population),
+            }
+
+
+def normalize_cached_value(provider: str, row: dict[str, Any], **kwargs: Any) -> NormalizedValuation:
+    """Use a matching pre-filter reference; stale/raw-changed references fail closed."""
+    rejected = exclusion_reason(provider, row)
+    if rejected:
+        return NormalizedValuation(provider, 0, 0, 0, 0, None, None, 0, 'unavailable', NORMALIZATION_VERSION, rejected)
+    clocks = market_times(row, kwargs.get('updated_at'))
+    kwargs['updated_at'] = clocks['source_updated_at']
+    normalized = normalize_value(provider, float(row["value"]), **kwargs)
+    # Keep knowledge separate from the source time used to assess freshness.
+    normalized = replace(normalized, updated_at=clocks['retrieved_at'])
+    reference = row.get("normalization_reference") or {}
+    value = reference.get("normalized_value")
+    if (reference.get("provider") == provider
+            and reference.get("raw_value") == normalized.raw_value
+            and reference.get("version") == NORMALIZATION_VERSION
+            and reference.get("generation")
+            and reference.get("method") in {"provider_range_linear", "provider_range_70_percentile_30"}
+            and isinstance(value, int) and not isinstance(value, bool) and 0 <= value <= CANONICAL_MAX):
+        return replace(normalized, normalized_value=value, method=reference["method"])
+    return normalized
+
+
+def normalize_pick(value: float, round_number: int, config: ValuationConfig = DEFAULT_CONFIG) -> int:
+    base = normalize_internal(value)
+    return max(0, min(CANONICAL_MAX, round(base * config.rookie_pick_adjustments.get(round_number, 0.70))))

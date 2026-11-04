@@ -1,0 +1,232 @@
+name: Product browser journeys
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Validation driver GC budget only; Python/Chromium and the 2 GiB gate stay intact.
+env:
+  NODE_OPTIONS: --max-old-space-size=256
+
+jobs:
+  product-browser:
+    runs-on: ubuntu-24.04
+    # The unchanged 539-test list exceeded 16 minutes after 505 cases. Keep
+    # every assertion and allow bounded runtime variance plus setup/cleanup.
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Prepare runner-owned Trade evidence directories
+        run: mkdir -p .validation/trade-resource/fixture .validation/trade-resource/evidence/browser
+      - name: Build bounded browser validation dependencies
+        run: docker build -f tools/validation/containers/browser.Dockerfile -t dtos-browser-validation .
+      - name: Authenticated product, interaction and accessibility contracts
+        timeout-minutes: 20
+        run: |
+          docker run --rm --memory=2g --memory-swap=2g --cpus=2 --network=none -e NODE_OPTIONS -e DTOS_TRADE_RESOURCE_BROWSER_EVIDENCE=.validation/trade-resource/evidence/browser -e DTOS_LINEUP_DETAIL_EVIDENCE=.validation/trade-resource/evidence/browser/lineups -v "$PWD:$PWD" -w "$PWD" -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0="$PWD" dtos-browser-validation python -m unittest -v tests.test_trade_lineup_detail tests.test_trade_lineup_detail_browser tests.test_trade_resource_admission tests.test_trade_resource_browser tests.test_multileague_projection_browser tests.test_relative_personal_values tests.test_relative_personal_browser tests.test_decision_history_continuity_browser tests.test_personal_rankings_compatibility tests.test_personal_rankings_recovery_storage tests.test_personal_rankings_recovery_trade tests.test_personal_rankings_recovery_browser tests.test_personal_rankings_recovery_trade_browser tests.test_personal_rankings_partial_browser tests.test_dossier_plain_english tests.test_plain_english_home_depth tests.test_builder_plain_english tests.test_plain_english_preservation_final tests.test_plain_english_final_browser tests.test_plain_english_decisions tests.test_plain_english_browser tests.test_personal_rankings_availability tests.test_personal_rankings_availability_browser tests.test_personal_rankings tests.test_personal_rankings_store tests.test_personal_rankings_integration tests.test_personal_trade_workflows tests.test_personal_rankings_browser tests.test_personal_rankings_accessibility_browser tests.test_personal_trade_browser tests.test_market_trend_current_browser tests.test_standings_positioning tests.test_standings_positioning_browser tests.test_matchup_portraits_browser tests.test_matchups_phone tests.test_matchups_phone_browser tests.test_trade_projection_freshness tests.test_trade_projection_freshness_browser tests.test_trade_preview_scope_browser tests.test_trade_simple_discovery tests.test_trade_simple_browser tests.test_fois_final_trust_browser tests.test_fois_evidence_integrity tests.test_fois_trust_browser tests.test_proposal_tray_browser tests.test_journey_evidence tests.test_journey_corrections_browser tests.test_dossier_status_browser tests.test_phone_visual_corrections_browser tests.test_phone_design_semantics tests.test_phone_design_browser tests.test_trade_calculator tests.test_trade_calculator_browser tests.test_calculator_balance_feedback_browser tests.test_calculator_stale_feedback_browser tests.test_trade_explicit_navigation_browser tests.test_trade_navigation_identity tests.test_trade_navigation_browser tests.test_player_actions tests.test_player_actions_browser tests.test_trade_performance tests.test_trade_construction_performance tests.test_trade_performance_browser tests.test_technical_details_browser tests.test_canonical_asset_facts tests.test_canonical_asset_facts_browser tests.test_product_browser_journey tests.test_matchup_browser_contract tests.test_trade_center_browser tests.test_trade_scout_state_browser tests.test_make_it_cheaper_browser tests.test_trade_center_accessibility tests.test_trade_workspace_browser tests.test_trade_workspace_batch1 tests.test_live_inspection tests.test_browser_fixture_images tests.test_visual_retirement tests.test_trade_decision_experience tests.test_trade_decision_browser tests.test_trade_decision_http_browser tests.test_trade_decision_standings_browser tests.test_batch6_trade_ux tests.test_trade_p2_browser tests.test_trade_final_evidence_browser tests.test_trade_endorsement_integrity tests.test_trade_missing_market_presentation tests.test_batch6_trade_explanation tests.test_league_entry_coordination
+          docker run --rm --memory=2g --memory-swap=2g --cpus=2 --network=none -e NODE_OPTIONS -v "$PWD:$PWD" -w "$PWD" -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0="$PWD" dtos-browser-validation python -m unittest -v tests.test_historical_evidence_weeks tests.test_fois_final_trust
+
+
+      - name: Actual 2 GiB Trade admission execution and recovery
+        timeout-minutes: 8
+        env:
+          DTOS_EXPECTED_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          set -o pipefail
+          mkdir -p .validation/trade-resource/fixture .validation/trade-resource/evidence
+          docker run --rm --init --memory=2g --memory-swap=2g --cpus=2 --network=none -v "$PWD:$PWD:ro" -v "$PWD/.validation/trade-resource:/proof" -w "$PWD" -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0="$PWD" dtos-browser-validation python -m tools.validation.trade_resource_recovery --prepare --fixture /proof/fixture 2>&1 | tee .validation/trade-resource/evidence/preparation.log
+          docker run --rm --init --memory=2g --memory-swap=2g --cpus=2 --network=none -v "$PWD:$PWD:ro" -v "$PWD/.validation/trade-resource:/proof" -w "$PWD" -e DTOS_EXPECTED_HEAD -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0="$PWD" dtos-browser-validation python -m tools.validation.trade_resource_recovery --fixture /proof/fixture --output /proof/evidence 2>&1 | tee .validation/trade-resource/evidence/raw.log
+          cd .validation/trade-resource/evidence
+          sha256sum result.json raw.log preparation.log > SHA256SUMS
+      - name: Preserve Trade resource evidence including incomplete attempts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: trade-resource-2g
+          path: .validation/trade-resource/evidence
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: League entry with active FOIS, pressure and explicit recovery
+        timeout-minutes: 6
+        env:
+          DTOS_EXPECTED_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          set -o pipefail
+          mkdir -p .validation/trade-resource/league-entry/evidence
+          docker run --rm --init --memory=2g --memory-swap=2g --cpus=2 --network=none -v "$PWD:$PWD:ro" -v "$PWD/.validation/trade-resource:/proof" -w "$PWD" dtos-browser-validation python -m tools.validation.league_entry_recovery --prepare --input /proof/fixture/data.json --output /proof/league-entry 2>&1 | tee .validation/trade-resource/league-entry/evidence/preparation.log
+          docker run --rm --init --memory=2g --memory-swap=2g --cpus=2 --network=none -v "$PWD:$PWD:ro" -v "$PWD/.validation/trade-resource:/proof" -w "$PWD" -e DTOS_EXPECTED_HEAD -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0="$PWD" dtos-browser-validation python -m tools.validation.league_entry_recovery --input /proof/league-entry/source-cache.json --output /proof/league-entry/evidence 2>&1 | tee .validation/trade-resource/league-entry/evidence/raw.log
+          cd .validation/trade-resource/league-entry/evidence
+          sha256sum result.json raw.log preparation.log > SHA256SUMS
+      - name: Preserve league entry evidence including incomplete attempts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: league-entry-2g
+          path: .validation/trade-resource/league-entry/evidence
+          if-no-files-found: error
+          retention-days: 14
+
+  my-team-browser:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Build bounded browser validation dependencies
+        run: docker build -f tools/validation/containers/browser.Dockerfile -t dtos-browser-validation .
+      - name: My Team evidence and authenticated session journeys
+        run: docker run --rm --init --memory=2g --memory-swap=2g --cpus=2 --network=none -e NODE_OPTIONS -v "$PWD:$PWD" -w "$PWD" -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0="$PWD" dtos-browser-validation python -m unittest tests.test_premium_hierarchy_browser tests.test_manager_activity_integrity tests.test_manager_activity_browser tests.test_my_team_outlook tests.test_my_team_outlook_http tests.test_my_team_outlook_browser tests.test_reserve_quality_admission tests.test_reserve_quality tests.test_reserve_quality_consumers tests.test_reserve_quality_browser tests.test_my_team_intelligence tests.test_my_team_intelligence_browser tests.test_my_team_final tests.test_my_team_final_browser tests.test_legacy_display_integrity tests.test_assessment_context_browser tests.test_dynamic_needs tests.test_dynamic_needs_browser tests.test_roster_diagnostic_admission tests.test_roster_diagnostic_http tests.test_roster_diagnostic_browser tests.test_roster_diagnostic_aging tests.test_roster_diagnostic_aging_browser tests.test_source_evidence_presentation tests.test_source_evidence_browser tests.test_league_gm_diagnostics tests.test_league_gm_diagnostics_browser tests.test_league_gm_integrity tests.test_league_gm_integrity_browser
+
+  projection-display-cross-version:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements-validation.txt
+      - name: Install browser dependencies and Chromium
+        run: |
+          # Keep the same signed packages; Azure transfers repeatedly exhausted setup time.
+          if [ -f /etc/apt/apt-mirrors.txt ]; then
+            sudo sed -E -i 's|https?://azure.archive.ubuntu.com/ubuntu|https://archive.ubuntu.com/ubuntu|g' /etc/apt/apt-mirrors.txt
+          fi
+          python -m playwright install --with-deps chromium
+      - name: Real prior publisher and isolated current reader
+        run: python -m tools.validation.projection_display_cross_version --browser
+
+  historical-trade-timeline:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements-validation.txt
+      - name: Install browser dependencies and Chromium
+        run: |
+          # Keep the same signed packages; Azure transfers repeatedly exhausted setup time.
+          if [ -f /etc/apt/apt-mirrors.txt ]; then
+            sudo sed -E -i 's|https?://azure.archive.ubuntu.com/ubuntu|https://archive.ubuntu.com/ubuntu|g' /etc/apt/apt-mirrors.txt
+          fi
+          python -m playwright install --with-deps chromium
+      - name: Historical evidence, source identity and phone routes
+        run: python -m unittest tests.test_trade_timeline tests.test_historical_faab_conflicts tests.test_historical_tracker_phase2 tests.test_historical_tracker_phase2_browser tests.test_history_final_source tests.test_history_final_source_browser tests.test_playoff_participant_integrity tests.test_playoff_participant_browser tests.test_championship_evidence_consistency tests.test_championship_evidence_browser tests.test_trade_timeline_browser.TradeTimelineBrowserTests tests.test_historical_trade_time tests.test_fois_evidence_integrity tests.test_historical_state_integrity tests.test_historical_state_sources tests.test_fois_decision_context tests.test_historicalstore_migration tests.test_historical_player_evidence tests.test_historical_player_evidence_browser tests.test_historical_retained_admission tests.test_historical_retained_admission_browser tests.test_historical_snapshot_integrity tests.test_market_trend_current_integration tests.test_data_normalization tests.test_batch2_history_reconciliation tests.test_player_history_batch
+      - name: Real prior quote publisher and current reader
+        run: python -m tools.validation.trade_quote_cross_version
+
+  beginner-navigation:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Build bounded browser validation dependencies
+        run: docker build -f tools/validation/containers/browser.Dockerfile -t dtos-browser-validation .
+      - name: Market pagination, visible roster and scoped fresh-start journeys
+        run: |
+          docker run --rm --memory=2g --memory-swap=2g --cpus=2 --network=none -e NODE_OPTIONS -v "$PWD:$PWD" -w "$PWD" -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0="$PWD" dtos-browser-validation python -m unittest tests.test_front_office_brief tests.test_front_office_brief_http tests.test_front_office_brief_browser tests.test_beginner_market tests.test_beginner_browser tests.test_beginner_final tests.test_beginner_final_browser tests.test_home_trade_news tests.test_home_news_corrections tests.test_home_trade_news_browser tests.test_home_opportunities tests.test_home_opportunities_browser tests.test_home_opportunity_integrity tests.test_home_read_responsiveness tests.test_public_readiness tests.test_market_warming_middleware tests.test_import_commissioner_integrity tests.test_batch6_rank_presentation tests.test_cold_league_recovery tests.test_unmatched_import_recovery tests.test_navigation_residency tests.test_sync_diagnostics
+          docker run --rm --memory=2g --memory-swap=2g --cpus=2 --network=none -e NODE_OPTIONS -v "$PWD:$PWD" -w "$PWD" -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0="$PWD" dtos-browser-validation python -m unittest tests.test_fois_navigation_reliability
+
+
+  public-welcome-browser:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Build bounded browser validation dependencies
+        run: docker build -f tools/validation/containers/browser.Dockerfile -t dtos-browser-validation .
+      - name: Verify source-pinned public routing demo security and browser controls
+        env:
+          DTOS_EXPECTED_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+          DTOS_WELCOME_EVIDENCE: .validation/public-welcome/browser
+          DTOS_TRADE_CLARITY_EVIDENCE: .validation/public-welcome/trade-clarity
+          DTOS_OPERATOR_CONTEXT_EVIDENCE: .validation/public-welcome/operator-context
+          DTOS_PICKER_EVIDENCE: .validation/public-welcome/picker
+          DTOS_PHASE2_EVIDENCE: .validation/public-welcome/source-screen
+          DTOS_PERSONAL_PARTIAL_EVIDENCE: .validation/public-welcome/custom-partial
+          DTOS_DECISION_HISTORY_EVIDENCE: .validation/public-welcome/decision-history
+          DTOS_PROJECTION_COVERAGE_EVIDENCE: .validation/public-welcome/projection-coverage
+          DTOS_LINEUP_REVIEW_EVIDENCE: .validation/public-welcome/lineup-review
+          DTOS_TRADE_WORKFLOW_EVIDENCE: .validation/public-welcome/trade-workflow
+          DTOS_MARKET_PREPARATION_EVIDENCE: .validation/public-welcome/market-preparation
+          DTOS_CONTEXTUAL_BACK_EVIDENCE: .validation/public-welcome/contextual-back
+          DTOS_CUSTOMER_CLARITY_EVIDENCE: .validation/public-welcome/customer-clarity
+          DTOS_CUSTOM_READINESS_EVIDENCE: .validation/public-welcome/custom-readiness
+          DTOS_REBUILD_DISCOVERY_EVIDENCE: .validation/public-welcome/rebuild-discovery
+          DTOS_REBUILD_SPACE_EVIDENCE: .validation/public-welcome/rebuild-space
+          DTOS_TRADE_RESPONSE_EVIDENCE: .validation/public-welcome/trade-response
+          DTOS_CONDITIONAL_EVIDENCE: .validation/public-welcome/conditional-trades
+          DTOS_STRATEGY_STATE_EVIDENCE: .validation/public-welcome/strategy-state
+        run: |
+          set -o pipefail
+          evidence_env=()
+          for name in DTOS_EXPECTED_HEAD DTOS_WELCOME_EVIDENCE DTOS_TRADE_CLARITY_EVIDENCE DTOS_OPERATOR_CONTEXT_EVIDENCE DTOS_PICKER_EVIDENCE DTOS_PHASE2_EVIDENCE DTOS_PERSONAL_PARTIAL_EVIDENCE DTOS_DECISION_HISTORY_EVIDENCE DTOS_PROJECTION_COVERAGE_EVIDENCE DTOS_LINEUP_REVIEW_EVIDENCE DTOS_TRADE_WORKFLOW_EVIDENCE DTOS_MARKET_PREPARATION_EVIDENCE DTOS_CONTEXTUAL_BACK_EVIDENCE DTOS_CUSTOMER_CLARITY_EVIDENCE DTOS_CUSTOM_READINESS_EVIDENCE DTOS_REBUILD_DISCOVERY_EVIDENCE DTOS_REBUILD_SPACE_EVIDENCE DTOS_TRADE_RESPONSE_EVIDENCE DTOS_CONDITIONAL_EVIDENCE DTOS_STRATEGY_STATE_EVIDENCE; do evidence_env+=(-e "$name"); done
+          mkdir -p .validation/public-welcome
+          docker run --rm --init --memory=2g --memory-swap=2g --cpus=2 --network=none -e NODE_OPTIONS -v "$PWD:$PWD" -w "$PWD" -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0="$PWD" "${evidence_env[@]}" -i dtos-browser-validation python - <<'PY'
+          import json, os, platform, subprocess, time
+          from pathlib import Path
+          head = subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()
+          assert head == os.environ['DTOS_EXPECTED_HEAD']
+          Path('.validation/public-welcome/source.json').write_text(json.dumps(dict(
+              head=head,tree=subprocess.check_output(['git','rev-parse','HEAD^{tree}'],text=True).strip(),
+              python=platform.python_version(),collected_at=time.time(),
+              fixture='Disposable authenticated HTTP and frozen fictional data; controlled Chromium, not physical Safari'),indent=2))
+          PY
+          docker run --rm --init --memory=2g --memory-swap=2g --cpus=2 --network=none -e NODE_OPTIONS -v "$PWD:$PWD" -w "$PWD" -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0="$PWD" "${evidence_env[@]}" dtos-browser-validation python -m unittest -v tests.test_trade_conditional_summary tests.test_trade_conditional_summary_browser tests.test_trade_response_integrity tests.test_trade_response_browser tests.test_rebuild_roster_space tests.test_rebuild_roster_space_browser tests.test_trade_strategy_state tests.test_trade_strategy_state_browser tests.test_rebuild_discovery_integrity tests.test_rebuild_discovery_browser tests.test_custom_market_readiness tests.test_customer_clarity tests.test_source_evidence_presentation tests.test_roster_diagnostic_aging_browser tests.test_history_progress_presentation tests.test_intelligence_presentation tests.test_plain_english_home_depth tests.test_plain_english_preservation_final tests.test_market_preparation tests.test_contextual_back tests.test_trade_workflow_experience tests.test_lineup_review tests.test_lineup_review_browser tests.test_projection_coverage_integrity tests.test_projection_coverage_browser tests.test_trade_recommendation_clarity tests.test_trade_recommendation_clarity_browser tests.test_trade_lineup_provenance tests.test_trade_lineup_provenance_browser tests.test_trade_point_display tests.test_decision_history_continuity tests.test_decision_history_continuity_browser tests.test_trade_picker_order tests.test_operator_context_integrity tests.test_public_demo_fixture tests.test_public_entry tests.test_public_welcome_presentation tests.test_public_welcome_security tests.test_public_welcome_browser tests.test_runtime_error_security tests.test_cached_sync_security tests.test_diagnostic_security tests.test_operational_inspection tests.test_cache_restoration_admission tests.test_restoration_preflight tests.test_restoration_preflight_http tests.test_restoration_preflight_application tests.test_personal_rankings_partial tests.test_personal_rankings_partial_browser tests.test_source_continuity_browser tests.test_market_observation_producer_identity tests.test_market_normalization_reference tests.test_provider_activation tests.test_personal_rankings_availability.CanonicalRankingAvailabilityTests.test_cached_provider_curve_survives_real_publication_and_private_http 2>&1 | tee .validation/public-welcome/raw.log
+      - name: Actual 2 GiB metadata-only restoration preflight
+        timeout-minutes: 5
+        env:
+          DTOS_EXPECTED_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          set -o pipefail
+          mkdir -p .validation/restoration-preflight
+          docker run --rm --init --memory=2g --memory-swap=2g --cpus=2 --network=none -e NODE_OPTIONS -e DTOS_EXPECTED_HEAD -v "$PWD:$PWD:ro" -v "$PWD/.validation/restoration-preflight:/proof" -w "$PWD" -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0="$PWD" dtos-browser-validation python -m tools.validation.restoration_preflight_gate --output /proof 2>&1 | tee .validation/restoration-preflight/raw.log
+          cd .validation/restoration-preflight
+          sha256sum result.json raw.log > SHA256SUMS
+      - name: Preserve restoration preflight including incomplete attempts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: restoration-preflight-2g
+          path: .validation/restoration-preflight
+          if-no-files-found: error
+          retention-days: 14
+      - name: Preserve source and public phone evidence including failed attempts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: public-welcome-security-browser
+          path: .validation/public-welcome
+          if-no-files-found: error
+          retention-days: 14

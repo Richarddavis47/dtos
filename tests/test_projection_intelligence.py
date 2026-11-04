@@ -1,0 +1,640 @@
+"""Canonical Projection Intelligence v1.10.0 regressions."""
+from __future__ import annotations
+
+import copy
+import gc
+import json
+import sqlite3
+import tempfile
+import unittest
+from pathlib import Path
+from unittest.mock import patch
+
+from fastapi import FastAPI
+from fastapi.testclient import TestClient
+
+from routes.projections import create_projections_router
+from src.core.projection_intelligence.calibration import calibrate, raw_projection
+from src.core.projection_intelligence.scoring import fantasy_points
+from src.core.projection_intelligence.service import (
+    PROJECTION_CONTRACT_VERSION, PROJECTION_MODEL_VERSION,
+    PROJECTION_SCHEMA_VERSION, PROJECTION_SEMANTIC_POLICY_VERSION,
+    ProjectionInputError, ProjectionService, provider_registry,
+    snapshot_compatibility,
+)
+from src.core.projection_intelligence.sleeper_provider import (
+    SOURCE_CLASSIFICATION, SleeperProjectionSchemaError, freshness_state,
+    parse_projection_feed,
+)
+
+
+def fixture() -> dict:
+    return {
+        "league": {"season": 2026, "scoring_settings": {"pass_yd": .04, "pass_td": 6, "pass_int": -2, "rush_yd": .1, "rush_td": 6, "rec": 1, "rec_yd": .1, "rec_td": 6, "bonus_rec_te": .5}},
+        "week": 4,
+        "teams": [{"roster_id": 1, "players": [
+            {"id": "10", "position": "QB", "season_average": 20, "status": "Active", "roster_slot": "Starter"},
+            {"id": "20", "position": "TE", "recent_points": [8, 12, 14], "status": "Questionable", "roster_slot": "Starter"},
+            {"id": "30", "position": "WR", "season_average": 15, "bye_week": 4},
+        ]}],
+    }
+
+
+class ProjectionIntelligenceTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.temporary = tempfile.TemporaryDirectory()
+        self.service = ProjectionService(Path(self.temporary.name) / "projections.sqlite3")
+
+    def tearDown(self) -> None:
+        gc.collect()
+        self.temporary.cleanup()
+
+    @staticmethod
+    def sleeper_payload() -> list[dict]:
+        return [{
+            "player_id": "10", "season": 2026, "week": 4,
+            "player": {"position": "QB"}, "stats": {"pass_yd": 300, "pass_td": 2, "pts_ppr": 18},
+        }]
+
+    def persist_legacy_snapshot(self, *, schema: str = "1.1", model: str = "dtos-forward-production-2") -> dict:
+        self.service.ingest_sleeper(
+            self.sleeper_payload(), data=fixture(), league_id="league", season=2026, week=4,
+        )
+        snapshot = copy.deepcopy(self.service.snapshot())
+        snapshot["schema_version"] = schema
+        snapshot["model_version"] = model
+        snapshot.pop("contract_version", None)
+        snapshot.pop("semantic_policy_version", None)
+        for row in (snapshot.get("players") or {}).values():
+            for field in ("raw_dtos_projection", "calibration_reason", "fallback_state", "evidence_depth"):
+                row.pop(field, None)
+        with sqlite3.connect(self.service._database_file) as connection:
+            connection.execute(
+                "UPDATE projection_snapshots SET payload=?",
+                (json.dumps(snapshot, sort_keys=True, separators=(",", ":")),),
+            )
+            connection.commit()
+        return snapshot
+
+    def test_compatibility_classifier_is_future_model_and_schema_safe(self) -> None:
+        current = {
+            "schema_version": PROJECTION_SCHEMA_VERSION,
+            "model_version": PROJECTION_MODEL_VERSION,
+            "contract_version": PROJECTION_CONTRACT_VERSION,
+            "semantic_policy_version": PROJECTION_SEMANTIC_POLICY_VERSION,
+        }
+        self.assertEqual(snapshot_compatibility(current)[0], "compatible")
+        self.assertEqual(snapshot_compatibility({**current, "schema_version": "future"})[0], "incompatible_schema")
+        self.assertEqual(snapshot_compatibility({**current, "model_version": "future"})[0], "incompatible_model")
+        self.assertEqual(snapshot_compatibility({**current, "contract_version": "future"})[0], "incompatible_contract")
+        self.assertEqual(snapshot_compatibility(None)[0], "corrupt")
+
+    def test_legacy_snapshot_upgrades_once_with_unchanged_cached_provider(self) -> None:
+        legacy = self.persist_legacy_snapshot()
+        restored = ProjectionService(self.service._database_file)
+        before = restored.health(include_accuracy=False)
+        self.assertIsNone(restored.snapshot())
+        self.assertEqual(before["status"], "warming")
+        self.assertEqual(before["compatibility"], "incompatible_schema")
+        self.assertEqual(before["restored_snapshot"]["snapshot_id"], legacy["projection_snapshot_id"])
+        data = fixture()
+        self.assertFalse(restored.ingest_sleeper(
+            self.sleeper_payload(), data=data, league_id="league", season=2026, week=4,
+        ))
+        upgraded = restored.snapshot()
+        health = restored.health(include_accuracy=False)
+        self.assertEqual(upgraded["schema_version"], PROJECTION_SCHEMA_VERSION)
+        self.assertEqual(upgraded["model_version"], PROJECTION_MODEL_VERSION)
+        self.assertEqual(upgraded["contract_version"], PROJECTION_CONTRACT_VERSION)
+        self.assertIn("raw_dtos_projection", upgraded["players"]["10"])
+        self.assertEqual(upgraded["players"]["10"]["provider"], "Sleeper")
+        self.assertIsNone(upgraded["players"]["10"]["raw_dtos_projection"])
+        self.assertEqual(health["upgrade_triggered_generations"], 1)
+        self.assertEqual(health["provider_triggered_generations"], 0)
+        self.assertEqual(health["durable_publications"], 1)
+        self.assertEqual(health["external_requests"], 0)
+        self.assertEqual(health["compatibility"], "compatible")
+        self.assertFalse(restored.ingest_sleeper(
+            self.sleeper_payload(), data=fixture(), league_id="league", season=2026, week=4,
+        ))
+        self.assertEqual(restored.health()["upgrade_triggered_generations"], 1)
+        self.assertEqual(restored.health()["generations"], 2)
+        self.assertEqual(restored.health()["durable_publications"], 1)
+
+    def test_persisted_model_mismatch_is_not_restored(self) -> None:
+        self.persist_legacy_snapshot(
+            schema=PROJECTION_SCHEMA_VERSION, model="future-model",
+        )
+        restored = ProjectionService(self.service._database_file)
+        self.assertIsNone(restored.snapshot())
+        self.assertEqual(restored.health()["compatibility"], "incompatible_model")
+
+    def test_persisted_contract_mismatch_is_not_restored(self) -> None:
+        self.persist_legacy_snapshot(
+            schema=PROJECTION_SCHEMA_VERSION, model=PROJECTION_MODEL_VERSION,
+        )
+        restored = ProjectionService(self.service._database_file)
+        self.assertIsNone(restored.snapshot())
+        self.assertEqual(restored.health()["compatibility"], "incompatible_contract")
+
+    def test_compatible_second_restart_preserves_identity_without_generation(self) -> None:
+        snapshot = self.service.generate(fixture(), "league")
+        restored = ProjectionService(self.service._database_file)
+        self.assertEqual(restored.snapshot(), snapshot)
+        health = restored.health(include_accuracy=False)
+        self.assertEqual(health["compatibility"], "compatible")
+        self.assertEqual(health["compatible_restores"], 1)
+        self.assertEqual(health["generations"], 0)
+        self.assertEqual(health["active_snapshot_schema"], PROJECTION_SCHEMA_VERSION)
+        self.assertEqual(health["active_snapshot_model"], PROJECTION_MODEL_VERSION)
+        self.assertEqual(health["snapshot_id"], snapshot["projection_snapshot_id"])
+        self.assertEqual(health["generated_at"], snapshot["generated_at"])
+        self.assertEqual(health["active_snapshot_id"], snapshot["projection_snapshot_id"])
+        self.assertEqual(health["active_snapshot_generated_at"], snapshot["generated_at"])
+
+    def test_corrupt_snapshot_fails_closed_and_cached_input_recovers(self) -> None:
+        self.service.ingest_sleeper(
+            self.sleeper_payload(), data=fixture(), league_id="league", season=2026, week=4,
+        )
+        with sqlite3.connect(self.service._database_file) as connection:
+            connection.execute("UPDATE projection_snapshots SET payload='{bad json'")
+            connection.commit()
+        restored = ProjectionService(self.service._database_file)
+        self.assertIsNone(restored.snapshot())
+        self.assertEqual(restored.health()["compatibility"], "corrupt")
+        restored.ingest_sleeper(
+            self.sleeper_payload(), data=fixture(), league_id="league", season=2026, week=4,
+        )
+        self.assertEqual(restored.health()["compatibility"], "compatible")
+
+    def test_failed_upgrade_preserves_legacy_durable_row_and_publishes_nothing(self) -> None:
+        legacy = self.persist_legacy_snapshot()
+        restored = ProjectionService(self.service._database_file)
+        with patch.object(restored, "_generate", side_effect=RuntimeError("bounded upgrade failure")):
+            with self.assertRaises(RuntimeError):
+                restored.ingest_sleeper(
+                    self.sleeper_payload(), data=fixture(), league_id="league", season=2026, week=4,
+                )
+        self.assertIsNone(restored.snapshot())
+        health = restored.health(include_accuracy=False)
+        self.assertEqual(health["failed_generations"], 1)
+        self.assertEqual(health["durable_publications"], 0)
+        with sqlite3.connect(self.service._database_file) as connection:
+            payload = json.loads(connection.execute(
+                "SELECT payload FROM projection_snapshots ORDER BY generated_at DESC LIMIT 1"
+            ).fetchone()[0])
+        self.assertEqual(payload["projection_snapshot_id"], legacy["projection_snapshot_id"])
+
+    def test_league_scoring_uses_raw_stats_and_te_premium(self) -> None:
+        stats = {"rec": 5, "rec_yd": 80, "rec_td": 1}
+        self.assertEqual(fantasy_points(stats, {"rec": 1, "rec_yd": .1, "rec_td": 6}, "TE"), 19)
+        self.assertEqual(fantasy_points(stats, {"rec": 1, "rec_yd": .1, "rec_td": 6, "bonus_rec_te": .5}, "TE"), 21.5)
+
+    def test_snapshot_is_idempotent_and_immutable(self) -> None:
+        first = self.service.generate(fixture(), "league")
+        second = self.service.generate(fixture(), "league")
+        self.assertEqual(first, second)
+        self.assertEqual(first["projection_snapshot_id"], second["projection_snapshot_id"])
+        self.assertEqual(first["players"]["10"]["projection_snapshot_id"], first["projection_snapshot_id"])
+
+    def test_production_mapping_and_sequence_normalize_identically(self) -> None:
+        sequence = fixture()
+        players = [dict(player) for player in sequence["teams"][0]["players"]]
+        sequence["players"] = players
+        mapping = fixture()
+        mapping["players"] = {player["id"]: dict(player) for player in players}
+        first = self.service.generate(sequence, "league")
+        other = ProjectionService(Path(self.temporary.name) / "mapping.sqlite3")
+        second = other.generate(mapping, "league")
+        self.assertEqual(set(first["players"]), set(second["players"]))
+        self.assertEqual(other.health()["normalization"]["container_type"], "mapping")
+
+    def test_mapping_key_supplies_id_and_payload_id_may_stand_alone(self) -> None:
+        data = fixture()
+        data["teams"] = []
+        data["players"] = {"10": {"position": "QB"}, "20": {"id": "20", "position": "TE"}}
+        snapshot = self.service.generate(data, "league")
+        self.assertEqual(set(snapshot["players"]), {"10", "20"})
+
+    def test_conflicting_mapping_identity_fails_closed_and_is_sanitized(self) -> None:
+        data = fixture()
+        data["teams"] = []
+        data["players"] = {"10": {"id": "other", "position": "QB"}}
+        with self.assertRaises(ProjectionInputError):
+            self.service.generate(data, "league")
+        health = self.service.health()
+        self.assertEqual(health["status"], "failed")
+        self.assertEqual(health["last_error_type"], "ProjectionInputError")
+        self.assertNotIn(str(self.service._database_file), health["last_error_message"])
+
+    def test_malformed_values_are_skipped_without_duplicate_roster_projection(self) -> None:
+        data = fixture()
+        data["players"] = {"10": dict(data["teams"][0]["players"][0]), "bad": "not-a-player"}
+        snapshot = self.service.generate(data, "league")
+        self.assertEqual(len(snapshot["players"]), 3)
+        health = self.service.health()
+        self.assertEqual(health["normalization"]["malformed_records"], 1)
+        self.assertGreaterEqual(health["normalization"]["duplicate_references"], 1)
+
+    def test_empty_mapping_is_valid_but_nonempty_all_malformed_is_not(self) -> None:
+        data = fixture()
+        data["teams"] = []
+        data["players"] = {}
+        self.assertEqual(self.service.generate(data, "league")["players"], {})
+        data["players"] = {"bad": "value"}
+        with self.assertRaises(ProjectionInputError):
+            self.service.generate(data, "league")
+
+    def test_relevant_universe_filters_retired_or_irrelevant_players(self) -> None:
+        data = fixture()
+        data["teams"] = []
+        data["players"] = {"10": {"position": "QB"}, "retired": {"position": "WR", "status": "Inactive"}}
+        data["relevant_player_universe"] = {"member_ids": ["10"]}
+        snapshot = self.service.generate(data, "league")
+        self.assertEqual(set(snapshot["players"]), {"10"})
+
+    def test_missing_provider_evidence_is_unavailable_not_a_fallback(self) -> None:
+        snapshot = self.service.generate(fixture(), "league")
+        self.assertIsNone(snapshot["players"]["30"]["weekly_projected_points"])
+        self.assertEqual(snapshot["players"]["30"]["status"], "unavailable")
+        self.assertEqual(snapshot["players"]["30"]["projection_confidence"], 0)
+        self.assertIn("does not fabricate", snapshot["players"]["30"]["limitations"][0])
+
+    def test_provider_provenance_never_misattributes_sleeper(self) -> None:
+        registry = {item["provider_id"]: item for item in provider_registry()}
+        self.assertEqual(registry["sleeper_projections"]["availability_state"], "canonical")
+        self.assertEqual(registry["sleeper_projections"]["source_classification"], SOURCE_CLASSIFICATION)
+        self.assertEqual(registry["dtos_forward_production"]["provider_name"], "DTOS Forward Production Model")
+
+    def test_sleeper_bulk_feed_parses_and_scores_actual_league_rules(self) -> None:
+        payload = [{
+            "player_id": "10", "season": "2026", "week": 4, "team": "WAS",
+            "player": {"position": "QB"},
+            "stats": {"pass_yd": 250, "pass_td": 2, "pass_int": 1, "rush_yd": 40, "pts_ppr": 19.5},
+            "company": "fixture",
+        }]
+        rows, fingerprint, report = parse_projection_feed(
+            payload, season=2026, week=4,
+            scoring={"pass_yd": .04, "pass_td": 6, "pass_int": -2, "rush_yd": .1},
+        )
+        self.assertEqual(rows["10"]["league_projection"], 24)
+        self.assertEqual(rows["10"]["displayed_projection"], 19.5)
+        self.assertEqual(report, {"received": 1, "accepted": 1, "malformed": 0, "duplicates": 0})
+        self.assertEqual(len(fingerprint), 64)
+
+    def test_sleeper_parser_fails_closed_on_schema_change(self) -> None:
+        with self.assertRaises(SleeperProjectionSchemaError):
+            parse_projection_feed({"players": []}, season=2026, week=4, scoring={})
+        with self.assertRaises(SleeperProjectionSchemaError):
+            parse_projection_feed([{"unexpected": True}], season=2026, week=4, scoring={})
+
+    def test_external_snapshot_is_durable_idempotent_and_consensus_is_attributed(self) -> None:
+        data = fixture()
+        payload = [{
+            "player_id": "10", "season": "2026", "week": 4,
+            "player": {"position": "QB"}, "stats": {"pass_yd": 250, "pass_td": 2, "pts_ppr": 18},
+        }]
+        self.assertTrue(self.service.ingest_sleeper(payload, data=data, league_id="league", season=2026, week=4, response_bytes=100))
+        first = self.service.snapshot()
+        self.assertFalse(self.service.ingest_sleeper(payload, data=data, league_id="league", season=2026, week=4, response_bytes=100))
+        self.assertEqual(self.service.snapshot(), first)
+        health = self.service.health()
+        self.assertEqual(health["projection_refreshes"], 2)
+        self.assertEqual(health["projection_semantic_changes"], 1)
+        self.assertEqual(health["projection_no_change_refreshes"], 1)
+        self.assertEqual(
+            health["projection_semantic_digest"], first["projection_snapshot_id"],
+        )
+        row = first["players"]["10"]
+        self.assertEqual(row["sources"], ["sleeper_projections"])
+        self.assertEqual(row["canonical_projection"], row["sleeper_projection"])
+        self.assertIsNotNone(row["sleeper_projection"])
+        restored = ProjectionService(Path(self.temporary.name) / "projections.sqlite3")
+        self.assertEqual(restored.health()["external_provider"]["semantic_fingerprint"], first["sleeper_evidence_snapshot_id"])
+
+    def test_no_change_refresh_republishes_snapshot_into_replaced_state(self) -> None:
+        original = fixture()
+        payload = [{
+            "player_id": "10", "season": 2026, "week": 4,
+            "player": {"position": "QB"}, "stats": {"pts_ppr": 18},
+        }]
+        self.assertTrue(self.service.ingest_sleeper(
+            payload, data=original, league_id="league", season=2026, week=4,
+        ))
+        snapshot = self.service.snapshot()
+        replacement = fixture()
+        self.assertNotIn("projection_intelligence", replacement)
+        self.assertFalse(self.service.ingest_sleeper(
+            payload, data=replacement, league_id="league", season=2026, week=4,
+        ))
+        self.assertEqual(
+            replacement["projection_intelligence"]["projection_snapshot_id"],
+            snapshot["projection_snapshot_id"],
+        )
+        self.assertEqual(self.service.health()["durable_publications"], 1)
+
+    def test_offline_restart_restores_canonical_snapshot_and_original_freshness(self) -> None:
+        data = fixture()
+        payload = [{
+            "player_id": "10", "season": 2026, "week": 4,
+            "player": {"position": "QB"}, "stats": {"pts_ppr": 18},
+        }]
+        self.service.ingest_sleeper(
+            payload, data=data, league_id="league", season=2026, week=4,
+        )
+        before = self.service.snapshot()
+        before_updated = self.service.health()["external_provider"]["last_success"]
+        restored = ProjectionService(Path(self.temporary.name) / "projections.sqlite3")
+        cached_data: dict = {}
+        self.assertTrue(restored.restore_into(cached_data))
+        self.assertEqual(restored.snapshot(), before)
+        self.assertEqual(cached_data["projection_intelligence"], before)
+        health = restored.health()
+        self.assertEqual(health["snapshot_restores"], 1)
+        self.assertEqual(health["restore_failures"], 0)
+        self.assertEqual(health["external_requests"], 0)
+        self.assertEqual(health["external_provider"]["last_success"], before_updated)
+
+    def test_external_failure_retains_snapshot_and_marks_stale(self) -> None:
+        data = fixture()
+        payload = [{"player_id": "10", "season": 2026, "week": 4, "player": {"position": "QB"}, "stats": {"pts_ppr": 18}}]
+        self.service.ingest_sleeper(payload, data=data, league_id="league", season=2026, week=4)
+        retained = self.service.snapshot()
+        self.service.fail_external_refresh(RuntimeError("provider unavailable"))
+        self.assertEqual(self.service.snapshot(), retained)
+        self.assertEqual(self.service.health()["external_provider"]["status"], "Stale")
+
+    def test_single_flight_refresh_and_freshness_states(self) -> None:
+        self.assertTrue(self.service.begin_external_refresh())
+        self.assertFalse(self.service.begin_external_refresh())
+        self.service.fail_external_refresh(RuntimeError("bounded failure"))
+        self.assertEqual(freshness_state(None), "Unavailable")
+
+    def test_read_routes_do_not_generate_or_call_external_providers(self) -> None:
+        self.service.ingest_sleeper(
+            self.sleeper_payload(), data=fixture(), league_id="league", season=2026, week=4,
+        )
+        snapshot = self.service.snapshot()
+        app = FastAPI()
+        app.include_router(create_projections_router(service=self.service))
+        client = TestClient(app)
+        generations = self.service.health()["generations"]
+        self.assertEqual(client.get("/api/projections/health").status_code, 200)
+        self.assertEqual(client.get("/api/projections/providers").status_code, 200)
+        player = client.get("/api/projections/players/10")
+        self.assertEqual(player.status_code, 200)
+        self.assertEqual(player.json()["projection"]["projection_snapshot_id"], snapshot["projection_snapshot_id"])
+        self.assertEqual(self.service.health()["generations"], generations)
+        self.assertEqual(self.service.health()["external_requests"], 0)
+
+    def test_provider_failure_retains_last_valid_snapshot(self) -> None:
+        snapshot = self.service.generate(fixture(), "league")
+        with self.assertRaises(ValueError):
+            self.service.generate({"season": "invalid", "teams": []}, "league")
+        self.assertEqual(self.service.snapshot(), snapshot)
+        self.assertEqual(self.service.health()["status"], "stale")
+        recovered = self.service.generate(fixture(), "league")
+        self.assertEqual(recovered, snapshot)
+        self.assertEqual(self.service.health()["status"], "ready")
+        self.assertIsNone(self.service.health()["last_error_type"])
+
+    def test_accuracy_records_actual_without_rewriting_snapshot(self) -> None:
+        self.service.ingest_sleeper(
+            self.sleeper_payload(), data=fixture(), league_id="league", season=2026, week=4,
+        )
+        snapshot = self.service.snapshot()
+        expected = snapshot["players"]["10"]["weekly_projected_points"]
+        self.service.record_actual(snapshot["projection_snapshot_id"], "10", expected + 2)
+        accuracy = self.service.accuracy()
+        self.assertEqual(accuracy["samples"], 1)
+        self.assertEqual(accuracy["mae"], 2)
+        self.assertEqual(self.service.snapshot(), snapshot)
+
+    def test_role_adjusted_priors_prevent_baseline_collapse(self) -> None:
+        scoring = {"rec": 1}
+        starter = raw_projection({"id": "1", "position": "RB", "team": "ATL", "roster_slot": "Starter"}, scoring, 2026, 1)
+        reserve = raw_projection({"id": "2", "position": "RB", "team": "ATL", "roster_slot": "Bench"}, scoring, 2026, 1)
+        free_agent = raw_projection({"id": "3", "position": "RB", "team": "FA"}, scoring, 2026, 1)
+        self.assertGreater(starter["raw_dtos_projection"], reserve["raw_dtos_projection"])
+        self.assertGreater(reserve["raw_dtos_projection"], free_agent["raw_dtos_projection"])
+        self.assertEqual(starter["fallback_state"], "role_adjusted_prior")
+
+    def test_elite_history_is_player_specific_and_preserved(self) -> None:
+        elite = raw_projection({
+            "id": "elite", "position": "WR", "team": "LAR", "roster_slot": "Starter",
+            "season_average": 20.5, "recent_points": [18, 22, 24, 19],
+        }, {"rec": 1}, 2026, 1)
+        generic = raw_projection({"id": "generic", "position": "WR", "team": "LAR", "roster_slot": "Starter"}, {"rec": 1}, 2026, 1)
+        self.assertEqual(elite["fallback_state"], "player_specific")
+        self.assertGreater(elite["raw_dtos_projection"], generic["raw_dtos_projection"] + 5)
+
+    def test_weak_evidence_uses_sleeper_more_than_strong_evidence(self) -> None:
+        weak = raw_projection({"id": "w", "position": "TE", "team": "ARI"}, {"rec": 1}, 2026, 1)
+        strong = raw_projection({
+            "id": "s", "position": "TE", "team": "ARI", "roster_slot": "Starter",
+            "season_average": 17, "recent_points": [16, 18, 17, 19],
+        }, {"rec": 1}, 2026, 1)
+        weak_result = calibrate(weak, 18, sleeper_freshness="Fresh")
+        strong_result = calibrate(strong, 12, sleeper_freshness="Fresh")
+        self.assertGreater(weak_result["calibration_weight_sleeper"], strong_result["calibration_weight_sleeper"])
+        self.assertGreater(abs(strong_result["dtos_projection"] - 12), 2)
+
+    def test_numeric_zero_is_distinct_from_missing_sleeper_evidence(self) -> None:
+        reserve = raw_projection({"id": "r", "position": "TE", "team": "NYJ", "roster_slot": "Bench"}, {"rec": 1}, 2026, 1)
+        zero = calibrate(reserve, 0, sleeper_freshness="Fresh")
+        missing = calibrate(reserve, None, sleeper_freshness="Fresh")
+        self.assertEqual(zero["sleeper_zero_state"], "verified_low_opportunity")
+        self.assertEqual(missing["sleeper_zero_state"], "missing")
+        self.assertLess(zero["dtos_projection"], missing["dtos_projection"])
+
+    def test_rookie_low_role_does_not_receive_full_position_prior(self) -> None:
+        rookie = raw_projection({
+            "id": "rookie", "position": "RB", "team": "DEN", "roster_slot": "Taxi",
+            "years_exp": 0, "depth_chart_order": 4,
+        }, {"rec": 1}, 2026, 1)
+        result = calibrate(rookie, 2.25, sleeper_freshness="Fresh")
+        self.assertLess(result["dtos_projection"], 5)
+        self.assertEqual(result["expected_role"], "Developmental reserve")
+
+    def test_large_disagreement_is_explained_and_auditable(self) -> None:
+        strong = raw_projection({
+            "id": "1", "position": "QB", "team": "BUF", "roster_slot": "Starter",
+            "season_average": 21, "recent_points": [20, 22, 24, 21],
+        }, {}, 2026, 1)
+        result = calibrate(strong, 8, sleeper_freshness="Fresh")
+        self.assertIsNotNone(result["large_disagreement"])
+        self.assertTrue(result["large_disagreement"]["supported_by"])
+        self.assertIn("Sleeper projects", result["calibration_reason"])
+        self.assertNotEqual(result["raw_dtos_projection"], result["dtos_projection"])
+
+    def test_calibration_is_deterministic(self) -> None:
+        raw = raw_projection({"id": "1", "position": "RB", "team": "ATL", "roster_slot": "Starter"}, {"rec": 1}, 2026, 1)
+        self.assertEqual(
+            calibrate(raw, 21.68, sleeper_freshness="Fresh"),
+            calibrate(raw, 21.68, sleeper_freshness="Fresh"),
+        )
+
+    def test_projection_health_reports_canonical_and_unavailable_states(self) -> None:
+        snapshot = self.service.generate(fixture(), "league")
+        health = self.service.health(include_accuracy=False)
+        quality = health["projection_quality"]
+        self.assertEqual(quality["player_specific_players"], 0)
+        self.assertEqual(quality["externally_calibrated_fallback_players"], 0)
+        self.assertEqual(quality["raw_projection_states"]["unavailable"], 3)
+        self.assertEqual(quality["raw_projection_states_by_position"]["QB"]["unavailable"], 1)
+        self.assertIsNone(quality["median_absolute_sleeper_difference"])
+        self.assertEqual(quality["unique_projection_values"], 0)
+        self.assertEqual(snapshot["model_version"], "sleeper-canonical-weekly-1")
+        self.assertEqual(self.service.health()["legacy_production_projection_consumers"], 0)
+
+    def test_canonical_sleeper_zero_and_unavailable_are_distinct(self) -> None:
+        payload = [{
+            "player_id": "10", "season": 2026, "week": 4,
+            "player": {"position": "QB"},
+            "stats": {"pass_yd": 0, "pass_td": 0, "pass_int": 0},
+        }]
+        self.service.ingest_sleeper(
+            payload, data=fixture(), league_id="league", season=2026, week=4,
+        )
+        snapshot = self.service.snapshot()
+        self.assertEqual(snapshot["players"]["10"]["canonical_projection"], 0)
+        self.assertEqual(snapshot["players"]["10"]["availability_state"], "projected_zero")
+        self.assertIsNone(snapshot["players"]["20"]["canonical_projection"])
+        self.assertEqual(snapshot["players"]["20"]["availability_state"], "unavailable")
+
+    def test_scoring_profiles_share_raw_evidence_but_isolate_derived_points(self) -> None:
+        payload = [{
+            "player_id": "20", "season": 2026, "week": 4,
+            "player": {"position": "TE"}, "stats": {"rec": 5, "rec_yd": 80},
+        }]
+        first_data = fixture()
+        self.service.ingest_sleeper(
+            payload, data=first_data, league_id="league-a", season=2026, week=4,
+        )
+        second_data = fixture()
+        second_data["league"]["scoring_settings"]["bonus_rec_te"] = 1.0
+        second = ProjectionService(
+            self.service._database_file, league_id="league-b", scoring_profile_id="te-premium",
+        )
+        second.ingest_sleeper(
+            payload, data=second_data, league_id="league-b", season=2026, week=4,
+        )
+        self.assertEqual(
+            self.service.snapshot()["sleeper_evidence_snapshot_id"],
+            second.snapshot()["sleeper_evidence_snapshot_id"],
+        )
+        self.assertNotEqual(
+            self.service.snapshot()["players"]["20"]["canonical_projection"],
+            second.snapshot()["players"]["20"]["canonical_projection"],
+        )
+
+    def test_cached_week_switch_is_provider_free_and_week_scoped(self) -> None:
+        self.service.ingest_sleeper(
+            self.sleeper_payload(), data=fixture(), league_id="league", season=2026, week=4,
+        )
+        week_five = [{
+            "player_id": "10", "season": 2026, "week": 5,
+            "player": {"position": "QB"}, "stats": {"pass_yd": 350, "pass_td": 3},
+        }]
+        self.service.cache_sleeper_week(
+            week_five, scoring=fixture()["league"]["scoring_settings"], season=2026, week=5,
+        )
+        switched = self.service.week_snapshot(5)
+        self.assertEqual(switched["week"], 5)
+        self.assertNotEqual(
+            switched["projection_snapshot_id"], self.service.snapshot()["projection_snapshot_id"],
+        )
+        self.assertEqual(self.service.cached_weeks(2026), (4, 5))
+
+    def test_retired_player_never_receives_fabricated_projection(self) -> None:
+        data = fixture()
+        data["teams"][0]["players"].append({
+            "id": "retired", "position": "RB", "status": "retired",
+        })
+        snapshot = self.service.generate(data, "league")
+        self.assertIsNone(snapshot["players"]["retired"]["canonical_projection"])
+        self.assertEqual(snapshot["players"]["retired"]["availability_state"], "unavailable")
+
+    def test_consumer_registry_has_no_legacy_production_path(self) -> None:
+        migration = self.service.health(include_accuracy=False)["consumer_migration"]
+        self.assertEqual(migration["migrated_consumers"], migration["intended_consumers"])
+        self.assertEqual(migration["legacy_production_consumers"], 0)
+
+    def test_provider_update_changes_provenance_identity_without_inventing_price_movement(self) -> None:
+        original = self.sleeper_payload()
+        original[0]["updated_at"] = "2026-08-01T00:00:00+00:00"
+        self.assertTrue(self.service.ingest_sleeper(
+            original, data=fixture(), league_id="league", season=2026, week=4,
+        ))
+        fingerprint = self.service.health()["external_provider"]["semantic_fingerprint"]
+        changed_timestamp = copy.deepcopy(original)
+        changed_timestamp[0]["updated_at"] = "2026-08-02T00:00:00+00:00"
+        self.assertTrue(self.service.ingest_sleeper(
+            changed_timestamp, data=fixture(), league_id="league", season=2026, week=4,
+        ))
+        self.assertNotEqual(
+            self.service.health()["external_provider"]["semantic_fingerprint"], fingerprint,
+        )
+        with sqlite3.connect(self.service._database_file) as connection:
+            self.assertEqual(connection.execute(
+                "SELECT COUNT(*) FROM sleeper_projection_snapshots"
+            ).fetchone()[0], 1)
+
+    def test_status_change_updates_semantics_once_without_provider_content_change(self) -> None:
+        payload = self.sleeper_payload()
+        active = fixture()
+        self.service.ingest_sleeper(
+            payload, data=active, league_id="league", season=2026, week=4,
+        )
+        first = self.service.snapshot()["projection_snapshot_id"]
+        changed = fixture()
+        changed["teams"][0]["players"][0]["status"] = "out"
+        self.assertFalse(self.service.ingest_sleeper(
+            payload, data=changed, league_id="league", season=2026, week=4,
+        ))
+        second = self.service.snapshot()["projection_snapshot_id"]
+        self.assertNotEqual(first, second)
+        self.assertEqual(self.service.player("10")["availability"], "out")
+        stable = fixture()
+        stable["teams"][0]["players"][0]["status"] = "out"
+        self.assertFalse(self.service.ingest_sleeper(
+            payload, data=stable, league_id="league", season=2026, week=4,
+        ))
+        self.assertEqual(self.service.snapshot()["projection_snapshot_id"], second)
+
+    def test_disposable_provider_cache_is_bounded_by_week_and_season(self) -> None:
+        for season in range(2020, 2027):
+            for week in (1, 2):
+                payload = [{
+                    "player_id": "10", "season": season, "week": week,
+                    "player": {"position": "QB"},
+                    "stats": {"pass_yd": 200 + season + week},
+                }]
+                self.service.cache_sleeper_week(
+                    payload, scoring={}, season=season, week=week,
+                )
+        storage = self.service.storage()
+        self.assertEqual(storage["raw_shared_provider_rows"], 12)
+        self.assertEqual(storage["provider_cache_retention"]["maximum_week_snapshots"], 108)
+        with sqlite3.connect(self.service._database_file) as connection:
+            seasons = [row[0] for row in connection.execute(
+                "SELECT DISTINCT season FROM sleeper_projection_snapshots ORDER BY season"
+            )]
+        self.assertEqual(seasons, [2021, 2022, 2023, 2024, 2025, 2026])
+
+    def test_accuracy_reports_median_position_week_and_availability_misses(self) -> None:
+        self.service.ingest_sleeper(
+            self.sleeper_payload(), data=fixture(), league_id="league", season=2026, week=4,
+        )
+        snapshot = self.service.snapshot()
+        self.service.record_actual(snapshot["projection_snapshot_id"], "10", 20)
+        metrics = self.service.accuracy()
+        self.assertEqual(metrics["samples"], 1)
+        self.assertIsNotNone(metrics["median_absolute_error"])
+        self.assertIn("QB", metrics["positional_mae"])
+        self.assertIn("4", metrics["week_mae"])
+        self.assertTrue(metrics["research_only"])
+
+
+if __name__ == "__main__":
+    unittest.main()

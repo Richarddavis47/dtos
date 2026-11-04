@@ -1,0 +1,2044 @@
+"""Indexed, append-only SQLite store for historical league evidence."""
+from __future__ import annotations
+
+import json
+import hashlib
+import sqlite3
+import os
+import shutil
+from uuid import uuid4
+from contextlib import contextmanager
+from pathlib import Path
+from threading import RLock
+from typing import Any, Iterator
+
+from src.core.historical_memory.models import DATABASE_MIGRATION_VERSION
+
+SCHEMA = """
+CREATE TABLE IF NOT EXISTS schema_migrations (
+  version INTEGER PRIMARY KEY, applied_at TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS database_metadata (
+  key TEXT PRIMARY KEY,
+  value TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS historical_records (
+  id INTEGER PRIMARY KEY,
+  record_key TEXT NOT NULL UNIQUE,
+  entity_type TEXT NOT NULL,
+  league_id TEXT NOT NULL,
+  season INTEGER,
+  week INTEGER,
+  franchise_id TEXT,
+  player_id TEXT,
+  source_record_id TEXT NOT NULL,
+  observed_at TEXT NOT NULL,
+  retrieved_at TEXT NOT NULL,
+  provider TEXT NOT NULL,
+  availability TEXT NOT NULL,
+  confidence INTEGER NOT NULL,
+  calculation_method TEXT NOT NULL,
+  derived INTEGER NOT NULL DEFAULT 0,
+  schema_version TEXT NOT NULL,
+  payload TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_history_entity ON historical_records(league_id, entity_type, season, week);
+CREATE INDEX IF NOT EXISTS idx_history_player ON historical_records(league_id, player_id, season, week);
+CREATE INDEX IF NOT EXISTS idx_history_season_player
+ON historical_records(league_id, entity_type, season, player_id);
+CREATE INDEX IF NOT EXISTS idx_history_franchise ON historical_records(league_id, franchise_id, season, week);
+CREATE TABLE IF NOT EXISTS player_identity (
+  dtos_player_id TEXT NOT NULL,
+  provider TEXT NOT NULL,
+  provider_player_id TEXT NOT NULL,
+  display_name TEXT,
+  confidence INTEGER NOT NULL,
+  valid_from TEXT NOT NULL,
+  valid_to TEXT,
+  metadata TEXT NOT NULL,
+  PRIMARY KEY(provider, provider_player_id, valid_from)
+);
+CREATE INDEX IF NOT EXISTS idx_identity_dtos ON player_identity(dtos_player_id);
+CREATE TABLE IF NOT EXISTS current_player_identity (
+  provider TEXT NOT NULL,
+  provider_player_id TEXT NOT NULL,
+  dtos_player_id TEXT NOT NULL,
+  confidence INTEGER NOT NULL,
+  gsis_id TEXT,
+  identity_generation INTEGER NOT NULL,
+  PRIMARY KEY(provider, provider_player_id)
+);
+CREATE TABLE IF NOT EXISTS import_runs (
+  run_id TEXT PRIMARY KEY,
+  league_id TEXT NOT NULL,
+  status TEXT NOT NULL,
+  started_at TEXT NOT NULL,
+  completed_at TEXT,
+  checkpoint TEXT,
+  records_written INTEGER NOT NULL DEFAULT 0,
+  records_unchanged INTEGER NOT NULL DEFAULT 0,
+  errors TEXT NOT NULL DEFAULT '[]',
+  workbook_status TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_import_runs_league_status_completed
+ON import_runs(league_id, status, completed_at);
+CREATE TABLE IF NOT EXISTS data_quality_issues (
+  issue_key TEXT PRIMARY KEY,
+  run_id TEXT NOT NULL,
+  league_id TEXT NOT NULL,
+  season INTEGER,
+  severity TEXT NOT NULL,
+  category TEXT NOT NULL,
+  detail TEXT NOT NULL,
+  resolved INTEGER NOT NULL DEFAULT 0
+);
+CREATE TABLE IF NOT EXISTS import_jobs (
+  job_id TEXT PRIMARY KEY,
+  league_id TEXT NOT NULL,
+  requested_seasons TEXT NOT NULL,
+  requested_data_types TEXT NOT NULL,
+  status TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  started_at TEXT,
+  last_progress_at TEXT,
+  completed_at TEXT,
+  failed_at TEXT,
+  current_season INTEGER,
+  current_week INTEGER,
+  current_data_type TEXT,
+  total_steps INTEGER NOT NULL DEFAULT 0,
+  completed_steps INTEGER NOT NULL DEFAULT 0,
+  inserted_records INTEGER NOT NULL DEFAULT 0,
+  updated_records INTEGER NOT NULL DEFAULT 0,
+  unchanged_records INTEGER NOT NULL DEFAULT 0,
+  skipped_records INTEGER NOT NULL DEFAULT 0,
+  failed_records INTEGER NOT NULL DEFAULT 0,
+  retry_count INTEGER NOT NULL DEFAULT 0,
+  next_retry_at TEXT,
+  last_error_type TEXT,
+  last_error_message TEXT,
+  last_error_context TEXT,
+  requested_by TEXT NOT NULL,
+  worker_identity TEXT,
+  lock_expiration TEXT,
+  eligible_seasons TEXT NOT NULL DEFAULT '[]',
+  skipped_seasons TEXT NOT NULL DEFAULT '[]',
+  pending_seasons TEXT NOT NULL DEFAULT '[]',
+  identity_generation INTEGER NOT NULL DEFAULT 0,
+  context_build_state TEXT,
+  projected_identity_count INTEGER NOT NULL DEFAULT 0,
+  context_build_duration_ms REAL,
+  schema_version TEXT NOT NULL,
+  importer_version TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_import_jobs_league_status
+ON import_jobs(league_id, status, created_at);
+CREATE TABLE IF NOT EXISTS import_checkpoints (
+  checkpoint_key TEXT PRIMARY KEY,
+  job_id TEXT NOT NULL,
+  league_id TEXT NOT NULL,
+  season INTEGER NOT NULL,
+  week INTEGER,
+  data_type TEXT NOT NULL,
+  provider TEXT NOT NULL,
+  importer_version TEXT NOT NULL,
+  status TEXT NOT NULL,
+  completed_at TEXT,
+  records_written INTEGER NOT NULL DEFAULT 0,
+  records_unchanged INTEGER NOT NULL DEFAULT 0,
+  error TEXT,
+  identity_generation INTEGER NOT NULL DEFAULT 0,
+  FOREIGN KEY(job_id) REFERENCES import_jobs(job_id)
+);
+CREATE INDEX IF NOT EXISTS idx_import_checkpoints_scope
+ON import_checkpoints(league_id, season, data_type, provider, importer_version);
+CREATE TABLE IF NOT EXISTS checkpoint_compatibility_audit (
+  audit_id INTEGER PRIMARY KEY,
+  checkpoint_key TEXT NOT NULL,
+  league_id TEXT NOT NULL,
+  season INTEGER NOT NULL,
+  old_compatibility_state TEXT,
+  new_compatibility_state TEXT NOT NULL,
+  dependency_digest TEXT,
+  verification_outcome TEXT NOT NULL,
+  reason_code TEXT NOT NULL,
+  first_mismatch TEXT,
+  verified_at TEXT NOT NULL,
+  release_version TEXT NOT NULL,
+  model_version TEXT NOT NULL,
+  UNIQUE(checkpoint_key, dependency_digest, verification_outcome, reason_code)
+);
+CREATE INDEX IF NOT EXISTS idx_checkpoint_compatibility_scope
+ON checkpoint_compatibility_audit(league_id, season, checkpoint_key);
+CREATE TABLE IF NOT EXISTS identity_mapping_audit (
+  audit_id INTEGER PRIMARY KEY,
+  canonical_player_digest TEXT NOT NULL,
+  prior_signature_digest TEXT,
+  resulting_signature_digest TEXT NOT NULL,
+  prior_generation INTEGER NOT NULL,
+  resulting_generation INTEGER NOT NULL,
+  changed_at TEXT NOT NULL,
+  workflow_run_id TEXT,
+  committed INTEGER NOT NULL DEFAULT 1
+);
+CREATE INDEX IF NOT EXISTS idx_identity_mapping_audit_generation
+ON identity_mapping_audit(resulting_generation, canonical_player_digest);
+CREATE TABLE IF NOT EXISTS import_locks (
+  lock_key TEXT PRIMARY KEY,
+  job_id TEXT NOT NULL,
+  worker_identity TEXT NOT NULL,
+  acquired_at TEXT NOT NULL,
+  expires_at TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS enrichment_batches (
+  batch_key TEXT PRIMARY KEY,
+  job_id TEXT NOT NULL,
+  lease_owner TEXT NOT NULL,
+  league_id TEXT NOT NULL,
+  season INTEGER NOT NULL,
+  week INTEGER,
+  provider TEXT NOT NULL,
+  batch_sequence INTEGER NOT NULL,
+  raw_records_received INTEGER NOT NULL,
+  raw_records_inserted INTEGER NOT NULL,
+  derived_records_inserted INTEGER NOT NULL,
+  duplicate_records_ignored INTEGER NOT NULL,
+  batch_started_at TEXT NOT NULL,
+  batch_completed_at TEXT NOT NULL,
+  last_durable_event_identity TEXT,
+  total_committed_records INTEGER NOT NULL,
+  status TEXT NOT NULL,
+  error TEXT,
+  UNIQUE(job_id, season, provider, batch_sequence)
+);
+CREATE INDEX IF NOT EXISTS idx_enrichment_batches_scope
+ON enrichment_batches(league_id, season, provider, batch_sequence);
+CREATE TABLE IF NOT EXISTS enrichment_progress_repairs (
+  job_id TEXT PRIMARY KEY,
+  repaired_at TEXT NOT NULL,
+  previous_completed_steps INTEGER NOT NULL,
+  repaired_completed_steps INTEGER NOT NULL,
+  previous_total_steps INTEGER NOT NULL,
+  repaired_total_steps INTEGER NOT NULL,
+  derivation TEXT NOT NULL,
+  details TEXT NOT NULL,
+  FOREIGN KEY(job_id) REFERENCES import_jobs(job_id)
+);
+CREATE TABLE IF NOT EXISTS relevant_player_universe (
+  league_id TEXT NOT NULL,
+  player_id TEXT NOT NULL,
+  reason_codes TEXT NOT NULL,
+  selection_rank INTEGER,
+  selection_value REAL,
+  ranking_snapshot_id TEXT,
+  generation TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  PRIMARY KEY(league_id, player_id)
+);
+CREATE INDEX IF NOT EXISTS idx_relevant_player_universe_generation
+ON relevant_player_universe(league_id, generation, player_id);
+"""
+
+
+class HistoricalStore:
+    _RECORD_GENERATION_PREFIX = "semantic_generation:records:"
+    _IDENTITY_GENERATION_KEY = "semantic_generation:identities"
+    _QUALITY_GENERATION_PREFIX = "semantic_generation:quality:"
+
+    def __init__(self, path: Path, *, initialize: bool = True) -> None:
+        from src.core.history_context.guard import legacy_access_guard
+
+        legacy_access_guard.guard_constructor(path)
+        self.path = path
+        self._lock = RLock()
+        self._dataset_versions: dict[tuple[str, str], str] = {}
+        self._dataset_version_computations = 0
+        self.initialization_error: str | None = None
+        if not initialize:
+            self.initialization_error = "Historical storage validation failed."
+            return
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        if not self.path.exists():
+            self._initialize_atomically()
+        self.migrate()
+
+    def _initialize_atomically(self) -> None:
+        temporary = self.path.with_name(f".{self.path.name}.{os.getpid()}.tmp")
+        try:
+            connection = sqlite3.connect(temporary, timeout=30)
+            try:
+                connection.executescript(SCHEMA)
+                connection.executemany(
+                    "INSERT OR IGNORE INTO schema_migrations(version, applied_at) VALUES (?, datetime('now'))",
+                    ((version,) for version in range(1, DATABASE_MIGRATION_VERSION + 1)),
+                )
+                connection.execute(
+                    "INSERT OR IGNORE INTO database_metadata(key,value) VALUES ('database_uuid',?)",
+                    (uuid4().hex,),
+                )
+                connection.commit()
+            finally:
+                connection.close()
+            if self.path.exists():
+                return
+            os.replace(temporary, self.path)
+        finally:
+            temporary.unlink(missing_ok=True)
+
+    @contextmanager
+    def connection(self) -> Iterator[sqlite3.Connection]:
+        if self.initialization_error:
+            raise RuntimeError(self.initialization_error)
+        connection = sqlite3.connect(self.path, timeout=30)
+        connection.row_factory = sqlite3.Row
+        try:
+            connection.execute("PRAGMA foreign_keys=ON")
+            connection.execute("PRAGMA journal_mode=WAL")
+            connection.execute("PRAGMA synchronous=FULL")
+            connection.execute("PRAGMA busy_timeout=30000")
+            yield connection
+            connection.commit()
+        finally:
+            connection.close()
+
+    def migrate(self) -> None:
+        with self._lock, self.connection() as connection:
+            connection.executescript(SCHEMA)
+            required_columns = [
+                ("import_checkpoints", "identity_generation"),
+                ("import_checkpoints", "identity_dependency_digest"),
+                ("import_checkpoints", "compatibility_status"),
+                ("import_checkpoints", "compatibility_reason"),
+                ("import_checkpoints", "compatibility_mismatch"),
+                ("import_jobs", "eligible_seasons"),
+                ("import_jobs", "skipped_seasons"),
+                ("import_jobs", "pending_seasons"),
+                ("import_jobs", "identity_generation"),
+                ("import_jobs", "context_build_state"),
+                ("import_jobs", "projected_identity_count"),
+                ("import_jobs", "context_build_duration_ms"),
+            ]
+            if any(
+                not self._has_column(connection, table, column)
+                for table, column in required_columns
+            ):
+                self._require_migration_capacity()
+            self._ensure_column(
+                connection, "import_checkpoints", "identity_generation",
+                "INTEGER NOT NULL DEFAULT 0",
+            )
+            for name, definition in (
+                ("identity_dependency_digest", "TEXT"),
+                ("compatibility_status", "TEXT"),
+                ("compatibility_reason", "TEXT"),
+                ("compatibility_mismatch", "TEXT"),
+            ):
+                self._ensure_column(connection, "import_checkpoints", name, definition)
+            for name, definition in (
+                ("eligible_seasons", "TEXT NOT NULL DEFAULT '[]'"),
+                ("skipped_seasons", "TEXT NOT NULL DEFAULT '[]'"),
+                ("pending_seasons", "TEXT NOT NULL DEFAULT '[]'"),
+                ("identity_generation", "INTEGER NOT NULL DEFAULT 0"),
+                ("context_build_state", "TEXT"),
+                ("projected_identity_count", "INTEGER NOT NULL DEFAULT 0"),
+                ("context_build_duration_ms", "REAL"),
+            ):
+                self._ensure_column(connection, "import_jobs", name, definition)
+            connection.executemany(
+                "INSERT OR IGNORE INTO schema_migrations(version, applied_at) VALUES (?, datetime('now'))",
+                ((version,) for version in range(1, DATABASE_MIGRATION_VERSION + 1)),
+            )
+            connection.execute(
+                "INSERT OR IGNORE INTO database_metadata(key,value) VALUES ('database_uuid',?)",
+                (uuid4().hex,),
+            )
+            connection.execute(
+                "INSERT OR IGNORE INTO database_metadata(key,value) "
+                "VALUES ('identity_generation','0')",
+            )
+            connection.execute(
+                "INSERT OR IGNORE INTO database_metadata(key,value) "
+                "VALUES ('identity_mapping_generation','0')",
+            )
+            connection.execute(
+                "INSERT OR IGNORE INTO database_metadata(key,value) "
+                "VALUES (?, '0')",
+                (self._IDENTITY_GENERATION_KEY,),
+            )
+            if connection.execute(
+                """SELECT 1 FROM player_identity LIMIT 1""",
+            ).fetchone() is not None and connection.execute(
+                """SELECT value FROM database_metadata
+                WHERE key='current_identity_projection_version'""",
+            ).fetchone() is None:
+                self._rebuild_current_identity_projection(connection)
+            self._repair_enrichment_progress(connection)
+            self._migrate_legacy_checkpoint_compatibility(connection)
+        self._invalidate_dataset_version()
+
+    @staticmethod
+    def _has_column(
+        connection: sqlite3.Connection, table: str, column: str,
+    ) -> bool:
+        return column in {
+            str(row[1]) for row in connection.execute(f"PRAGMA table_info({table})")
+        }
+
+    def _require_migration_capacity(self) -> None:
+        required = 16 * 1024 * 1024
+        available = shutil.disk_usage(self.path.parent).free
+        if available < required:
+            raise RuntimeError(
+                "Historical schema migration requires at least 16 MiB of free "
+                "space for metadata-only SQLite changes."
+            )
+
+    @classmethod
+    def _rebuild_current_identity_projection(
+        cls, connection: sqlite3.Connection,
+    ) -> int:
+        generation = cls._generation(connection, "identity_mapping_generation")
+        connection.execute("DELETE FROM current_player_identity")
+        connection.execute(
+            """WITH latest AS (
+                SELECT provider,provider_player_id,max(valid_from) AS valid_from
+                FROM player_identity GROUP BY provider,provider_player_id
+            )
+            INSERT INTO current_player_identity(
+                provider,provider_player_id,dtos_player_id,confidence,gsis_id,
+                identity_generation)
+            SELECT identity.provider,identity.provider_player_id,
+                   identity.dtos_player_id,identity.confidence,
+                   coalesce(
+                     json_extract(identity.metadata,'$.provider_ids.GSIS'),
+                     json_extract(identity.metadata,'$.provider_ids.gsis_id')
+                   ),?
+            FROM latest JOIN player_identity AS identity
+              ON identity.provider=latest.provider
+             AND identity.provider_player_id=latest.provider_player_id
+             AND identity.valid_from=latest.valid_from""",
+            (generation,),
+        )
+        count = int(connection.execute(
+            "SELECT count(*) FROM current_player_identity",
+        ).fetchone()[0])
+        connection.execute(
+            """INSERT INTO database_metadata(key,value)
+            VALUES ('current_identity_projection_version','1')
+            ON CONFLICT(key) DO UPDATE SET value=excluded.value""",
+        )
+        return count
+
+    def rebuild_current_identity_projection(self) -> int:
+        """Rebuild the compact current mapping without rewriting identity history."""
+        with self._lock, self.connection() as connection:
+            return self._rebuild_current_identity_projection(connection)
+
+    @staticmethod
+    def _ensure_column(
+        connection: sqlite3.Connection, table: str, column: str, definition: str,
+    ) -> None:
+        if not HistoricalStore._has_column(connection, table, column):
+            connection.execute(f"ALTER TABLE {table} ADD COLUMN {column} {definition}")
+
+    def _invalidate_dataset_version(self, league_id: str | None = None) -> None:
+        """Invalidate only after a durable input mutation has committed."""
+        with self._lock:
+            if league_id is None:
+                self._dataset_versions.clear()
+                return
+            self._dataset_versions = {
+                key: value
+                for key, value in self._dataset_versions.items()
+                if key[1] != league_id
+            }
+
+    def dataset_version_metrics(self) -> dict[str, int]:
+        """Return safe counters without exposing durable private identities."""
+        with self._lock:
+            return {
+                "computations": self._dataset_version_computations,
+                "cached_leagues": len(self._dataset_versions),
+            }
+
+    def database_uuid(self) -> str:
+        """Return the private durable generation identity for this database."""
+        if not self.path.exists() or not self.path.is_file():
+            raise RuntimeError("HistoricalStore backing database is unavailable.")
+        with self.connection() as connection:
+            row = connection.execute(
+                "SELECT value FROM database_metadata WHERE key='database_uuid'",
+            ).fetchone()
+        if row is None or not str(row[0]).strip():
+            raise RuntimeError("HistoricalStore database generation identity is missing.")
+        return str(row[0])
+
+    def create_job(self, job: dict[str, Any]) -> None:
+        columns = tuple(job)
+        placeholders = ",".join("?" for _ in columns)
+        with self._lock, self.connection() as connection:
+            connection.execute(
+                f"INSERT INTO import_jobs({','.join(columns)}) VALUES ({placeholders})",
+                tuple(
+                    json.dumps(value) if isinstance(value, (list, dict)) else value
+                    for value in job.values()
+                ),
+            )
+
+    def update_job(self, job_id: str, **fields: Any) -> None:
+        if not fields:
+            return
+        assignments = ",".join(f"{column}=?" for column in fields)
+        values = [
+            json.dumps(value) if isinstance(value, (list, dict)) else value
+            for value in fields.values()
+        ]
+        with self._lock, self.connection() as connection:
+            current = connection.execute(
+                """SELECT total_steps,completed_steps,requested_data_types
+                FROM import_jobs WHERE job_id=?""",
+                (job_id,),
+            ).fetchone()
+            if current is None:
+                return
+            total_steps = int(fields.get("total_steps", current["total_steps"]))
+            completed_steps = int(
+                fields.get("completed_steps", current["completed_steps"])
+            )
+            if not 0 <= completed_steps <= total_steps:
+                raise ValueError(
+                    "Historical job progress must satisfy "
+                    "0 <= completed_steps <= total_steps."
+                )
+            player_week_only = (
+                json.loads(current["requested_data_types"]) == ["player_week"]
+            )
+            if (
+                player_week_only
+                and fields.get("status") in {"complete", "completed"}
+                and completed_steps != total_steps
+            ):
+                raise ValueError(
+                    "A completed historical job must have internally "
+                    "consistent progress counters."
+                )
+            connection.execute(
+                f"UPDATE import_jobs SET {assignments} WHERE job_id=?",
+                (*values, job_id),
+            )
+
+    def jobs(self, league_id: str, limit: int = 50) -> list[dict[str, Any]]:
+        with self.connection() as connection:
+            rows = connection.execute(
+                """SELECT * FROM import_jobs WHERE league_id=?
+                ORDER BY created_at DESC LIMIT ?""",
+                (league_id, limit),
+            ).fetchall()
+        return [_decode_job(dict(row)) for row in rows]
+
+    def checkpoint(
+        self, *, checkpoint_key: str, job_id: str, league_id: str,
+        season: int, week: int | None, data_type: str, provider: str,
+        importer_version: str, status: str, completed_at: str | None = None,
+        records_written: int = 0, records_unchanged: int = 0,
+        error: str | None = None, identity_generation: int | None = None,
+    ) -> None:
+        with self._lock, self.connection() as connection:
+            checkpoint_generation = (
+                self._generation(connection, "identity_mapping_generation")
+                if identity_generation is None and data_type == "player_week"
+                else int(identity_generation or 0)
+            )
+            dependency_digest: str | None = None
+            compatibility_status: str | None = None
+            compatibility_reason: str | None = None
+            compatibility_mismatch: str | None = None
+            if data_type == "player_week" and provider == "nflverse":
+                if status == "completed":
+                    valid, compatibility_reason, compatibility_mismatch, dependency_digest = (
+                        self._verify_legacy_checkpoint(connection, league_id, season)
+                    )
+                    compatibility_status = "compatible" if valid else "invalid"
+                elif status in {"pending", "not_yet_available", "unsupported"}:
+                    compatibility_status = "pending"
+                    compatibility_reason = "pending_source_data"
+            connection.execute(
+                """INSERT INTO import_checkpoints(
+                checkpoint_key,job_id,league_id,season,week,data_type,provider,
+                importer_version,status,completed_at,records_written,
+                records_unchanged,error,identity_generation,
+                identity_dependency_digest,compatibility_status,
+                compatibility_reason,compatibility_mismatch)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                ON CONFLICT(checkpoint_key) DO UPDATE SET
+                job_id=excluded.job_id,status=excluded.status,
+                completed_at=excluded.completed_at,
+                records_written=excluded.records_written,
+                records_unchanged=excluded.records_unchanged,error=excluded.error,
+                identity_generation=excluded.identity_generation,
+                identity_dependency_digest=excluded.identity_dependency_digest,
+                compatibility_status=excluded.compatibility_status,
+                compatibility_reason=excluded.compatibility_reason,
+                compatibility_mismatch=excluded.compatibility_mismatch""",
+                (
+                    checkpoint_key, job_id, league_id, season, week, data_type,
+                    provider, importer_version, status, completed_at,
+                    records_written, records_unchanged, error,
+                    checkpoint_generation, dependency_digest,
+                    compatibility_status, compatibility_reason,
+                    compatibility_mismatch,
+                ),
+            )
+            self._synchronize_enrichment_job_progress(connection, job_id)
+
+    @staticmethod
+    def _enrichment_scope(row: sqlite3.Row) -> tuple[list[int], str] | None:
+        data_types = json.loads(row["requested_data_types"])
+        if data_types != ["player_week"]:
+            return None
+        return [int(season) for season in json.loads(row["requested_seasons"])], str(
+            row["importer_version"]
+        )
+
+    @staticmethod
+    def _enrichment_season_states(
+        connection: sqlite3.Connection, row: sqlite3.Row,
+    ) -> dict[str, list[int]]:
+        scope = HistoricalStore._enrichment_scope(row)
+        if scope is None:
+            return {"completed": [], "pending": [], "failed": []}
+        requested, importer_version = scope
+        if not requested:
+            return {"completed": [], "pending": [], "failed": []}
+        placeholders = ",".join("?" for _ in requested)
+        checkpoints = connection.execute(
+            f"""SELECT season,status FROM import_checkpoints
+            WHERE league_id=? AND data_type='player_week'
+            AND provider='nflverse' AND importer_version=? AND week IS NULL
+            AND season IN ({placeholders})""",
+            (row["league_id"], importer_version, *requested),
+        ).fetchall()
+        statuses = {int(item["season"]): str(item["status"]) for item in checkpoints}
+        pending_statuses = {"pending", "not_yet_available", "unsupported"}
+        return {
+            "completed": sorted(
+                season for season in requested if statuses.get(season) == "completed"
+            ),
+            "pending": sorted(
+                season for season in requested
+                if statuses.get(season) in pending_statuses
+            ),
+            "failed": sorted(
+                season for season in requested if statuses.get(season) == "failed"
+            ),
+        }
+
+    @classmethod
+    def _synchronize_enrichment_job_progress(
+        cls, connection: sqlite3.Connection, job_id: str,
+    ) -> int | None:
+        row = connection.execute(
+            "SELECT * FROM import_jobs WHERE job_id=?", (job_id,),
+        ).fetchone()
+        if row is None or cls._enrichment_scope(row) is None:
+            return None
+        requested, _ = cls._enrichment_scope(row) or ([], "")
+        states = cls._enrichment_season_states(connection, row)
+        completed_steps = len(states["completed"])
+        total_steps = len(requested)
+        connection.execute(
+            "UPDATE import_jobs SET total_steps=?,completed_steps=? WHERE job_id=?",
+            (total_steps, completed_steps, job_id),
+        )
+        return completed_steps
+
+    def synchronize_enrichment_job_progress(self, job_id: str) -> int | None:
+        """Derive job-level progress from durable season checkpoints."""
+        with self._lock, self.connection() as connection:
+            return self._synchronize_enrichment_job_progress(connection, job_id)
+
+    def enrichment_job_progress(self, job_id: str) -> dict[str, Any] | None:
+        with self.connection() as connection:
+            row = connection.execute(
+                "SELECT * FROM import_jobs WHERE job_id=?", (job_id,),
+            ).fetchone()
+            if row is None or self._enrichment_scope(row) is None:
+                return None
+            requested, _ = self._enrichment_scope(row) or ([], "")
+            states = self._enrichment_season_states(connection, row)
+        completed_steps = len(states["completed"])
+        return {
+            "total_steps": len(requested),
+            "completed_steps": completed_steps,
+            "completed_seasons": states["completed"],
+            "pending_seasons": states["pending"],
+            "failed_seasons": states["failed"],
+            "consistent": (
+                int(row["completed_steps"]) == completed_steps
+                and int(row["total_steps"]) == len(requested)
+                and 0 <= completed_steps <= len(requested)
+            ),
+        }
+
+    def canonical_enrichment_progress(
+        self, league_id: str, seasons: tuple[int, ...], *,
+        provider: str, importer_version: str,
+    ) -> dict[str, Any]:
+        """Derive league progress from durable season checkpoints, not jobs."""
+        requested = tuple(sorted({int(season) for season in seasons}))
+        if not requested:
+            return {
+                "completed_seasons": [], "pending_seasons": [],
+                "failed_seasons": [], "invalidated_seasons": [],
+                "missing_seasons": [], "identity_generation": 0,
+                "semantic_generations": {},
+            }
+        placeholders = ",".join("?" for _ in requested)
+        with self.connection() as connection:
+            mapping_generation = self._generation(connection, "identity_mapping_generation")
+            rows = connection.execute(
+                f"""SELECT season,status,identity_generation,error,completed_at,
+                identity_dependency_digest,compatibility_status,
+                compatibility_reason,compatibility_mismatch
+                FROM import_checkpoints WHERE league_id=?
+                AND data_type='player_week' AND provider=?
+                AND importer_version=? AND week IS NULL
+                AND season IN ({placeholders})""",
+                (league_id, provider, importer_version, *requested),
+            ).fetchall()
+            record_generation = self._generation(
+                connection, self._record_generation_key(league_id),
+            )
+            identity_generation = self._generation(
+                connection, self._IDENTITY_GENERATION_KEY,
+            )
+            quality_generation = self._generation(
+                connection, self._quality_generation_key(league_id),
+            )
+        checkpoints = {int(row["season"]): row for row in rows}
+        pending_statuses = {"pending", "not_yet_available", "unsupported"}
+        completed: list[int] = []
+        pending: list[int] = []
+        failed: list[int] = []
+        invalidated: list[int] = []
+        compatibility: dict[str, dict[str, Any]] = {}
+        missing: list[int] = []
+        for season in requested:
+            checkpoint = checkpoints.get(season)
+            if checkpoint is None:
+                missing.append(season)
+                continue
+            status = str(checkpoint["status"])
+            reason = str(checkpoint["compatibility_reason"] or "")
+            if status == "completed":
+                current_digest = self._season_identity_dependency_digest(
+                    league_id, season,
+                )
+                stored_digest = str(checkpoint["identity_dependency_digest"] or "")
+                if (
+                    checkpoint["compatibility_status"] == "compatible"
+                    and stored_digest
+                    and stored_digest == current_digest
+                ):
+                    completed.append(season)
+                else:
+                    invalidated.append(season)
+                    reason = (
+                        "referenced_identity_dependency_changed"
+                        if stored_digest else "legacy_checkpoint_requires_verification"
+                    )
+            elif status in pending_statuses:
+                pending.append(season)
+                reason = "pending_source_data"
+            elif status == "failed":
+                failed.append(season)
+            else:
+                missing.append(season)
+            compatibility[str(season)] = {
+                "status": "compatible" if season in completed else status,
+                "reason_code": reason or "compatible",
+                "first_mismatch": checkpoint["compatibility_mismatch"],
+            }
+        return {
+            "completed_seasons": completed,
+            "pending_seasons": pending,
+            "failed_seasons": failed,
+            "invalidated_seasons": invalidated,
+            "missing_seasons": missing,
+            "identity_generation": mapping_generation,
+            "semantic_generations": {
+                "historical_records": record_generation,
+                "canonical_identities": identity_generation,
+                "quality_reconciliation": quality_generation,
+            },
+            "compatibility": compatibility,
+        }
+
+    @staticmethod
+    def _digest(value: Any) -> str:
+        encoded = json.dumps(value, separators=(",", ":"), sort_keys=True).encode()
+        return hashlib.sha256(encoded).hexdigest()
+
+    @classmethod
+    def _season_dependency_digest(
+        cls, connection: sqlite3.Connection, league_id: str, season: int,
+    ) -> tuple[str, str | None]:
+        player_rows = connection.execute(
+            """SELECT DISTINCT player_id FROM historical_records
+            WHERE league_id=? AND season=? AND player_id IS NOT NULL
+            AND entity_type IN ('player_week','player_raw_week','player_fantasy_week')
+            ORDER BY player_id""",
+            (league_id, season),
+        ).fetchall()
+        players = [str(row[0]) for row in player_rows]
+        dependencies: list[tuple[str, str, str, int, str]] = []
+        first_unresolved: str | None = None
+        for offset in range(0, len(players), 500):
+            batch = players[offset:offset + 500]
+            placeholders = ",".join("?" for _ in batch)
+            if not batch:
+                continue
+            rows = connection.execute(
+                f"""SELECT provider,provider_player_id,dtos_player_id,
+                confidence,coalesce(gsis_id,'') FROM current_player_identity
+                WHERE dtos_player_id IN ({placeholders})
+                ORDER BY dtos_player_id,provider,provider_player_id""",
+                batch,
+            ).fetchall()
+            resolved = {str(row[2]) for row in rows}
+            if first_unresolved is None:
+                missing = next((player for player in batch if player not in resolved), None)
+                if missing is not None:
+                    first_unresolved = cls._digest(missing)[:16]
+            dependencies.extend(tuple(row) for row in rows)
+        return cls._digest(dependencies), first_unresolved
+
+    def _season_identity_dependency_digest(self, league_id: str, season: int) -> str:
+        with self.connection() as connection:
+            return self._season_dependency_digest(connection, league_id, season)[0]
+
+    @classmethod
+    def _verify_legacy_checkpoint(
+        cls, connection: sqlite3.Connection, league_id: str, season: int,
+    ) -> tuple[bool, str, str | None, str]:
+        evidence = int(connection.execute(
+            """SELECT count(*) FROM historical_records WHERE league_id=?
+            AND season=? AND entity_type IN
+            ('player_week','player_raw_week','player_fantasy_week')""",
+            (league_id, season),
+        ).fetchone()[0])
+        if evidence == 0:
+            return False, "evidence_incomplete", None, ""
+        duplicate = connection.execute(
+            """SELECT record_key FROM historical_records WHERE league_id=?
+            AND season=? GROUP BY record_key HAVING count(*) > 1 LIMIT 1""",
+            (league_id, season),
+        ).fetchone()
+        if duplicate is not None:
+            return False, "evidence_incomplete", cls._digest(duplicate[0])[:16], ""
+        digest, unresolved = cls._season_dependency_digest(connection, league_id, season)
+        if unresolved:
+            return False, "identity_resolution_failed", unresolved, digest
+        return True, "compatible", None, digest
+
+    @classmethod
+    def _migrate_legacy_checkpoint_compatibility(
+        cls, connection: sqlite3.Connection,
+    ) -> int:
+        rows = connection.execute(
+            """SELECT checkpoint_key,league_id,season,compatibility_status,
+            identity_dependency_digest FROM import_checkpoints
+            WHERE data_type='player_week' AND provider='nflverse'
+            AND week IS NULL AND status='completed'
+            AND (compatibility_status IS NULL OR identity_dependency_digest IS NULL)"""
+        ).fetchall()
+        migrated = 0
+        for row in rows:
+            valid, reason, mismatch, digest = cls._verify_legacy_checkpoint(
+                connection, str(row["league_id"]), int(row["season"]),
+            )
+            new_state = "compatible" if valid else "invalid"
+            connection.execute(
+                """UPDATE import_checkpoints SET identity_dependency_digest=?,
+                compatibility_status=?,compatibility_reason=?,compatibility_mismatch=?
+                WHERE checkpoint_key=?""",
+                (digest or None, new_state, reason, mismatch, row["checkpoint_key"]),
+            )
+            connection.execute(
+                """INSERT OR IGNORE INTO checkpoint_compatibility_audit(
+                checkpoint_key,league_id,season,old_compatibility_state,
+                new_compatibility_state,dependency_digest,verification_outcome,
+                reason_code,first_mismatch,verified_at,release_version,model_version)
+                VALUES (?,?,?,?,?,?,?,?,?,datetime('now'),'1.8.8','season_identity_v1')""",
+                (row["checkpoint_key"], row["league_id"], row["season"],
+                 row["compatibility_status"], new_state, digest or None,
+                 "passed" if valid else "failed", reason, mismatch),
+            )
+            migrated += 1
+        return migrated
+
+    @classmethod
+    def _repair_enrichment_progress(cls, connection: sqlite3.Connection) -> int:
+        repaired = 0
+        jobs = connection.execute("SELECT * FROM import_jobs").fetchall()
+        for row in jobs:
+            scope = cls._enrichment_scope(row)
+            if scope is None:
+                continue
+            requested, _ = scope
+            states = cls._enrichment_season_states(connection, row)
+            derived = len(states["completed"])
+            expected_total = len(requested)
+            previous = int(row["completed_steps"])
+            previous_total = int(row["total_steps"])
+            if previous == derived and previous_total == expected_total:
+                continue
+            connection.execute(
+                "UPDATE import_jobs SET total_steps=?,completed_steps=? WHERE job_id=?",
+                (expected_total, derived, row["job_id"]),
+            )
+            connection.execute(
+                """INSERT OR IGNORE INTO enrichment_progress_repairs(
+                job_id,repaired_at,previous_completed_steps,
+                repaired_completed_steps,previous_total_steps,
+                repaired_total_steps,derivation,details)
+                VALUES (?,datetime('now'),?,?,?,?,?,?)""",
+                (
+                    row["job_id"], previous, derived, previous_total,
+                    expected_total,
+                    "distinct completed requested-season checkpoints",
+                    json.dumps(
+                        {
+                            "completed_seasons": states["completed"],
+                            "pending_seasons": states["pending"],
+                            "failed_seasons": states["failed"],
+                        },
+                        separators=(",", ":"), sort_keys=True,
+                    ),
+                ),
+            )
+            repaired += 1
+        return repaired
+
+    def progress_repairs(self) -> list[dict[str, Any]]:
+        with self.connection() as connection:
+            rows = connection.execute(
+                "SELECT * FROM enrichment_progress_repairs ORDER BY repaired_at,job_id"
+            ).fetchall()
+        return [
+            {**dict(row), "details": json.loads(row["details"])} for row in rows
+        ]
+
+    def checkpoints(self, league_id: str) -> list[dict[str, Any]]:
+        with self.connection() as connection:
+            rows = connection.execute(
+                """SELECT * FROM import_checkpoints WHERE league_id=?
+                ORDER BY season,week,data_type""",
+                (league_id,),
+            ).fetchall()
+        return [dict(row) for row in rows]
+
+    def acquire_lock(
+        self, lock_key: str, job_id: str, worker_identity: str,
+        acquired_at: str, expires_at: str,
+    ) -> bool:
+        with self._lock, self.connection() as connection:
+            connection.execute(
+                "DELETE FROM import_locks WHERE expires_at <= ?", (acquired_at,),
+            )
+            cursor = connection.execute(
+                """INSERT OR IGNORE INTO import_locks(
+                lock_key,job_id,worker_identity,acquired_at,expires_at)
+                VALUES (?,?,?,?,?)""",
+                (lock_key, job_id, worker_identity, acquired_at, expires_at),
+            )
+            return cursor.rowcount == 1
+
+    def release_lock(self, lock_key: str, job_id: str) -> None:
+        with self._lock, self.connection() as connection:
+            connection.execute(
+                "DELETE FROM import_locks WHERE lock_key=? AND job_id=?",
+                (lock_key, job_id),
+            )
+
+    def renew_job_lease(self, job_id: str, expires_at: str) -> None:
+        with self._lock, self.connection() as connection:
+            connection.execute(
+                "UPDATE import_locks SET expires_at=? WHERE job_id=?",
+                (expires_at, job_id),
+            )
+            connection.execute(
+                """UPDATE import_jobs SET lock_expiration=?,
+                last_progress_at=datetime('now') WHERE job_id=?""",
+                (expires_at, job_id),
+            )
+
+    def locks(self) -> list[dict[str, Any]]:
+        with self.connection() as connection:
+            return [
+                dict(row)
+                for row in connection.execute(
+                    "SELECT * FROM import_locks ORDER BY lock_key",
+                ).fetchall()
+            ]
+
+    def append(
+        self,
+        *,
+        record_key: str,
+        entity_type: str,
+        league_id: str,
+        source_record_id: str,
+        observed_at: str,
+        retrieved_at: str,
+        provider: str,
+        availability: str,
+        confidence: int,
+        calculation_method: str,
+        schema_version: str,
+        payload: dict[str, Any],
+        season: int | None = None,
+        week: int | None = None,
+        franchise_id: str | None = None,
+        player_id: str | None = None,
+        derived: bool = False,
+    ) -> bool:
+        values = (
+            record_key, entity_type, league_id, season, week, franchise_id, player_id,
+            source_record_id, observed_at, retrieved_at, provider, availability,
+            confidence, calculation_method, int(derived), schema_version,
+            json.dumps(
+                payload, separators=(",", ":"), sort_keys=True,
+                default=lambda value: getattr(value, "value", str(value)),
+            ),
+        )
+        with self._lock, self.connection() as connection:
+            cursor = connection.execute(
+                """INSERT OR IGNORE INTO historical_records(
+                record_key, entity_type, league_id, season, week, franchise_id,
+                player_id, source_record_id, observed_at, retrieved_at, provider,
+                availability, confidence, calculation_method, derived,
+                schema_version, payload) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                values,
+            )
+            inserted = cursor.rowcount == 1
+            if inserted:
+                self._advance_generation(
+                    connection, self._record_generation_key(league_id),
+                )
+        if inserted:
+            self._invalidate_dataset_version(league_id)
+        return inserted
+
+    def append_many(self, records: list[dict[str, Any]]) -> tuple[int, int]:
+        """Append one bounded batch in one transaction on a worker thread."""
+        values = [
+            (
+                record["record_key"], record["entity_type"], record["league_id"],
+                record.get("season"), record.get("week"),
+                record.get("franchise_id"), record.get("player_id"),
+                record["source_record_id"], record["observed_at"],
+                record["retrieved_at"], record["provider"],
+                record["availability"], record["confidence"],
+                record["calculation_method"], int(record.get("derived", False)),
+                record["schema_version"],
+                json.dumps(
+                    record["payload"], separators=(",", ":"), sort_keys=True,
+                    default=lambda value: getattr(value, "value", str(value)),
+                ),
+            )
+            for record in records
+        ]
+        changed_leagues: set[str] = set()
+        with self._lock, self.connection() as connection:
+            written = 0
+            league_values: dict[str, list[tuple[Any, ...]]] = {}
+            for value in values:
+                league_values.setdefault(str(value[2]), []).append(value)
+            for league_id, scoped_values in league_values.items():
+                before = connection.total_changes
+                connection.executemany(
+                    """INSERT OR IGNORE INTO historical_records(
+                    record_key, entity_type, league_id, season, week, franchise_id,
+                    player_id, source_record_id, observed_at, retrieved_at, provider,
+                    availability, confidence, calculation_method, derived,
+                    schema_version, payload) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                    scoped_values,
+                )
+                scoped_written = connection.total_changes - before
+                written += scoped_written
+                if scoped_written:
+                    changed_leagues.add(league_id)
+                    self._advance_generation(
+                        connection, self._record_generation_key(league_id),
+                    )
+        for league_id in changed_leagues:
+            self._invalidate_dataset_version(league_id)
+        return written, len(records) - written
+
+    @staticmethod
+    def _record_values(records: list[dict[str, Any]]) -> list[tuple[Any, ...]]:
+        return [
+            (
+                record["record_key"], record["entity_type"], record["league_id"],
+                record.get("season"), record.get("week"),
+                record.get("franchise_id"), record.get("player_id"),
+                record["source_record_id"], record["observed_at"],
+                record["retrieved_at"], record["provider"],
+                record["availability"], record["confidence"],
+                record["calculation_method"], int(record.get("derived", False)),
+                record["schema_version"], json.dumps(
+                    record["payload"], separators=(",", ":"), sort_keys=True,
+                    default=lambda value: getattr(value, "value", str(value)),
+                ),
+            )
+            for record in records
+        ]
+
+    def _insert_enrichment_records(
+        self, connection: sqlite3.Connection, records: list[dict[str, Any]],
+    ) -> int:
+        before = connection.total_changes
+        connection.executemany(
+            """INSERT OR IGNORE INTO historical_records(
+            record_key, entity_type, league_id, season, week, franchise_id,
+            player_id, source_record_id, observed_at, retrieved_at, provider,
+            availability, confidence, calculation_method, derived,
+            schema_version, payload) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+            self._record_values(records),
+        )
+        return connection.total_changes - before
+
+    def commit_enrichment_batch(
+        self, *, raw_records: list[dict[str, Any]],
+        derived_records: list[dict[str, Any]], progress: dict[str, Any],
+        lease_expires_at: str,
+    ) -> dict[str, int]:
+        """Commit evidence, progress, and lease renewal in one transaction."""
+        with self._lock, self.connection() as connection:
+            connection.execute("BEGIN IMMEDIATE")
+            lease = connection.execute(
+                """SELECT 1 FROM import_locks WHERE job_id=?
+                AND worker_identity=? AND expires_at>?""",
+                (
+                    progress["job_id"], progress["lease_owner"],
+                    progress["batch_started_at"],
+                ),
+            ).fetchone()
+            if lease is None:
+                raise RuntimeError("Enrichment lease is absent, expired, or owned by another worker.")
+            existing = connection.execute(
+                "SELECT * FROM enrichment_batches WHERE batch_key=? AND status='completed'",
+                (progress["batch_key"],),
+            ).fetchone()
+            if existing is not None:
+                return {
+                    "raw_inserted": int(existing["raw_records_inserted"]),
+                    "derived_inserted": int(existing["derived_records_inserted"]),
+                    "duplicates": int(existing["duplicate_records_ignored"]),
+                }
+            raw_inserted = self._insert_enrichment_records(connection, raw_records)
+            derived_inserted = self._insert_enrichment_records(connection, derived_records)
+            duplicates = len(raw_records) + len(derived_records) - raw_inserted - derived_inserted
+            total = raw_inserted + derived_inserted
+            if total:
+                self._advance_generation(
+                    connection,
+                    self._record_generation_key(str(progress["league_id"])),
+                )
+            connection.execute(
+                """INSERT INTO enrichment_batches(
+                batch_key,job_id,lease_owner,league_id,season,week,provider,
+                batch_sequence,raw_records_received,raw_records_inserted,
+                derived_records_inserted,duplicate_records_ignored,
+                batch_started_at,batch_completed_at,last_durable_event_identity,
+                total_committed_records,status,error)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,NULL)""",
+                (
+                    progress["batch_key"], progress["job_id"],
+                    progress["lease_owner"], progress["league_id"],
+                    progress["season"], progress.get("week"),
+                    progress["provider"], progress["batch_sequence"],
+                    progress["raw_records_received"], raw_inserted,
+                    derived_inserted, duplicates, progress["batch_started_at"],
+                    progress["batch_completed_at"],
+                    progress.get("last_durable_event_identity"), total,
+                    "completed",
+                ),
+            )
+            connection.execute(
+                "UPDATE import_locks SET expires_at=? WHERE job_id=? AND worker_identity=?",
+                (lease_expires_at, progress["job_id"], progress["lease_owner"]),
+            )
+            connection.execute(
+                """UPDATE import_jobs SET current_season=?,current_week=?,
+                current_data_type='player_week',
+                inserted_records=inserted_records+?,
+                unchanged_records=unchanged_records+?,last_progress_at=?,
+                lock_expiration=? WHERE job_id=?""",
+                (
+                    progress["season"], progress.get("week"),
+                    total, duplicates,
+                    progress["batch_completed_at"], lease_expires_at,
+                    progress["job_id"],
+                ),
+            )
+        if raw_inserted or derived_inserted:
+            self._invalidate_dataset_version(str(progress["league_id"]))
+        return {
+            "raw_inserted": raw_inserted,
+            "derived_inserted": derived_inserted,
+            "duplicates": duplicates,
+        }
+
+    def enrichment_batches(
+        self, league_id: str, *, season: int | None = None,
+    ) -> list[dict[str, Any]]:
+        clauses = ["league_id=?"]
+        values: list[Any] = [league_id]
+        if season is not None:
+            clauses.append("season=?")
+            values.append(season)
+        with self.connection() as connection:
+            rows = connection.execute(
+                f"""SELECT * FROM enrichment_batches WHERE {' AND '.join(clauses)}
+                ORDER BY season,batch_sequence""",
+                values,
+            ).fetchall()
+        return [dict(row) for row in rows]
+
+    def records(
+        self,
+        league_id: str,
+        entity_type: str | None = None,
+        *,
+        season: int | None = None,
+        week: int | None = None,
+        franchise_id: str | None = None,
+        player_id: str | None = None,
+        limit: int = 100,
+        offset: int = 0,
+    ) -> tuple[int, list[dict[str, Any]]]:
+        clauses = ["league_id = ?"]
+        values: list[Any] = [league_id]
+        for column, value in (
+            ("entity_type", entity_type), ("season", season), ("week", week),
+            ("franchise_id", franchise_id), ("player_id", player_id),
+        ):
+            if value is not None:
+                clauses.append(f"{column} = ?")
+                values.append(value)
+        where = " AND ".join(clauses)
+        with self.connection() as connection:
+            count = int(connection.execute(f"SELECT count(*) FROM historical_records WHERE {where}", values).fetchone()[0])
+            rows = connection.execute(
+                f"""SELECT entity_type, league_id, season, week, franchise_id,
+                player_id, provider, source_record_id, observed_at, retrieved_at,
+                availability, confidence, calculation_method, derived,
+                schema_version, payload FROM historical_records WHERE {where}
+                ORDER BY season DESC, week DESC, id DESC LIMIT ? OFFSET ?""",
+                (*values, limit, offset),
+            ).fetchall()
+        return count, [{**dict(row), "payload": json.loads(row["payload"])} for row in rows]
+
+    def season_player_leaders(
+        self, league_id: str, season: int, *, limit: int = 40,
+    ) -> tuple[int, list[dict[str, Any]]]:
+        """Aggregate once and enrich the bounded result with one identity query."""
+        with self.connection() as connection:
+            count = int(connection.execute(
+                """SELECT count(*) FROM historical_records
+                WHERE league_id=? AND entity_type='player_week' AND season=?""",
+                (league_id, season),
+            ).fetchone()[0])
+            totals = connection.execute(
+                """SELECT player_id,
+                          SUM(CAST(json_extract(payload, '$.fantasy_points') AS REAL)) AS points
+                FROM historical_records INDEXED BY idx_history_season_player
+                WHERE league_id=? AND entity_type='player_week' AND season=?
+                  AND player_id IS NOT NULL
+                  AND json_extract(payload, '$.fantasy_points') IS NOT NULL
+                GROUP BY player_id
+                ORDER BY points DESC, player_id
+                LIMIT ?""",
+                (league_id, season, limit),
+            ).fetchall()
+            provider_ids = [str(row["player_id"]) for row in totals]
+            identities: dict[str, dict[str, Any]] = {}
+            if provider_ids:
+                placeholders = ",".join("?" for _ in provider_ids)
+                rows = connection.execute(
+                    f"""WITH requested AS (
+                        SELECT provider_player_id,dtos_player_id,confidence
+                        FROM current_player_identity
+                        WHERE provider_player_id IN ({placeholders})
+                    ), ranked AS (
+                        SELECT requested.provider_player_id,
+                               identity.display_name,
+                               json_extract(identity.metadata, '$.position') AS position,
+                               ROW_NUMBER() OVER (
+                                   PARTITION BY requested.provider_player_id
+                                   ORDER BY requested.confidence DESC,
+                                            identity.confidence DESC,
+                                            identity.valid_from DESC
+                               ) AS preference
+                        FROM requested
+                        JOIN player_identity AS identity INDEXED BY idx_identity_dtos
+                          ON identity.dtos_player_id=requested.dtos_player_id
+                    )
+                    SELECT provider_player_id,display_name,position
+                    FROM ranked WHERE preference=1""",
+                    provider_ids,
+                ).fetchall()
+                identities = {
+                    str(row["provider_player_id"]): dict(row) for row in rows
+                }
+        return count, [
+            {**dict(row), **identities.get(str(row["player_id"]), {})}
+            for row in totals
+        ]
+
+    def dataset_version(self, league_id: str) -> str:
+        """Return a deterministic identity for every stored input to graph reads."""
+        if not self.path.exists() or not self.path.is_file():
+            raise RuntimeError("HistoricalStore backing database is unavailable.")
+        record_key = self._record_generation_key(league_id)
+        quality_key = self._quality_generation_key(league_id)
+        keys = (
+            "database_uuid", record_key,
+            self._IDENTITY_GENERATION_KEY, quality_key,
+        )
+        with self._lock, self.connection() as connection:
+            connection.executemany(
+                "INSERT OR IGNORE INTO database_metadata(key,value) VALUES (?, '0')",
+                ((key,) for key in keys[1:]),
+            )
+            values = dict(connection.execute(
+                "SELECT key,value FROM database_metadata "
+                "WHERE key IN (?,?,?,?)",
+                keys,
+            ))
+        database_uuid = str(values.get("database_uuid") or "")
+        if not database_uuid:
+            raise RuntimeError("HistoricalStore database generation identity is missing.")
+        cache_key = (database_uuid, league_id)
+        with self._lock:
+            cached = self._dataset_versions.get(cache_key)
+            if cached is not None:
+                return cached
+            source = json.dumps(
+                {
+                    "database_uuid": database_uuid,
+                    "database_schema": DATABASE_MIGRATION_VERSION,
+                    "league_id": league_id,
+                    "historical_records_generation": int(values[record_key]),
+                    "canonical_identity_generation": int(
+                        values[self._IDENTITY_GENERATION_KEY]
+                    ),
+                    "quality_reconciliation_generation": int(values[quality_key]),
+                },
+                separators=(",", ":"),
+                sort_keys=True,
+            )
+            version = hashlib.sha256(source.encode()).hexdigest()
+            self._dataset_versions[cache_key] = version
+            self._dataset_version_computations += 1
+            return version
+
+    def semantic_generation_markers(self, league_id: str) -> dict[str, int]:
+        """Return bounded durable counters without reading semantic archives."""
+        self.dataset_version(league_id)
+        keys = (
+            self._record_generation_key(league_id),
+            self._IDENTITY_GENERATION_KEY,
+            self._quality_generation_key(league_id),
+        )
+        with self.connection() as connection:
+            values = dict(connection.execute(
+                "SELECT key,value FROM database_metadata WHERE key IN (?,?,?)",
+                keys,
+            ))
+        return {
+            "historical_records": int(values[keys[0]]),
+            "canonical_identities": int(values[keys[1]]),
+            "quality_reconciliation": int(values[keys[2]]),
+        }
+
+    def distinct_player_ids(self, league_id: str) -> tuple[str, ...]:
+        """Return graph player identities without materializing record payloads."""
+        with self.connection() as connection:
+            rows = connection.execute(
+                """SELECT DISTINCT player_id FROM historical_records
+                WHERE league_id=? AND player_id IS NOT NULL
+                  AND entity_type IN ('player_week', 'draft_pick')
+                ORDER BY player_id""",
+                (league_id,),
+            ).fetchall()
+        return tuple(str(row[0]) for row in rows)
+
+    def relevant_player_reasons(self, league_id: str) -> dict[str, set[str]]:
+        """Derive league-scoped relevance without hydrating the global graph."""
+        reasons: dict[str, set[str]] = {}
+
+        def retain(value: Any, reason: str) -> None:
+            player_id = str(value or "")
+            if player_id and player_id not in {"0", "None"}:
+                reasons.setdefault(player_id, set()).add(reason)
+
+        with self.connection() as connection:
+            cursor = connection.execute(
+                """SELECT entity_type,player_id,payload FROM historical_records
+                WHERE league_id=? AND entity_type IN (
+                  'player_week','draft_pick','weekly_roster','transaction','trade'
+                ) ORDER BY id""",
+                (league_id,),
+            )
+            for entity_type, player_id, raw_payload in cursor:
+                payload = json.loads(raw_payload)
+                if player_id:
+                    retain(
+                        player_id,
+                        "historical_matchup" if entity_type == "player_week"
+                        else "historical_draft" if entity_type == "draft_pick"
+                        else "historical_identity_dependency",
+                    )
+                if entity_type == "weekly_roster":
+                    for key in ("players", "starters", "bench", "taxi", "reserve"):
+                        for value in payload.get(key) or []:
+                            retain(value, "historical_matchup" if key == "starters" else "historical_roster")
+                elif entity_type in {"transaction", "trade"}:
+                    for key in ("adds", "drops"):
+                        values = payload.get(key) or {}
+                        for value in values if isinstance(values, list) else values.keys():
+                            retain(value, "historical_transaction")
+        return reasons
+
+    def persist_relevant_player_universe(
+        self, league_id: str, rows: list[dict[str, Any]], generation: str,
+        updated_at: str,
+    ) -> None:
+        """Atomically replace only derived membership metadata."""
+        with self.connection() as connection:
+            connection.execute("BEGIN IMMEDIATE")
+            connection.execute(
+                "DELETE FROM relevant_player_universe WHERE league_id=?",
+                (league_id,),
+            )
+            connection.executemany(
+                """INSERT INTO relevant_player_universe(
+                league_id,player_id,reason_codes,selection_rank,selection_value,
+                ranking_snapshot_id,generation,updated_at
+                ) VALUES (?,?,?,?,?,?,?,?)""",
+                [(
+                    league_id, row["player_id"],
+                    json.dumps(row["reason_codes"], separators=(",", ":")),
+                    row.get("selection_rank"), row.get("selection_value"),
+                    row.get("ranking_snapshot_id"), generation, updated_at,
+                ) for row in rows],
+            )
+            connection.commit()
+
+    def player_week_totals(self, league_id: str) -> dict[int, dict[str, float]]:
+        """Aggregate ranking inputs in SQLite without loading weekly payloads."""
+        with self.connection() as connection:
+            rows = connection.execute(
+                """SELECT season, player_id,
+                sum(CAST(json_extract(payload, '$.fantasy_points') AS REAL))
+                FROM historical_records
+                WHERE league_id=? AND entity_type='player_week'
+                  AND player_id IS NOT NULL
+                  AND json_extract(payload, '$.fantasy_points') IS NOT NULL
+                GROUP BY season, player_id""",
+                (league_id,),
+            ).fetchall()
+        totals: dict[int, dict[str, float]] = {}
+        for season, player_id, points in rows:
+            totals.setdefault(int(season), {})[str(player_id)] = float(points)
+        return totals
+
+    def entity_counts_by_season(
+        self, league_id: str, entity_types: tuple[str, ...],
+    ) -> tuple[list[int], dict[str, dict[str, int]]]:
+        """Return compact coverage counts with one indexed SQL aggregation."""
+        placeholders = ",".join("?" for _ in entity_types)
+        with self.connection() as connection:
+            rows = connection.execute(
+                f"""SELECT season, entity_type, count(*)
+                FROM historical_records
+                WHERE league_id=? AND entity_type IN ({placeholders})
+                GROUP BY season, entity_type ORDER BY season, entity_type""",
+                (league_id, *entity_types),
+            ).fetchall()
+        seasons = sorted({int(row[0]) for row in rows if row[0] is not None})
+        counts = {
+            str(season): {entity: 0 for entity in entity_types}
+            for season in seasons
+        }
+        for season, entity_type, count in rows:
+            if season is not None:
+                counts[str(int(season))][str(entity_type)] = int(count)
+        return seasons, counts
+
+    def compact_event_statistics(self, league_id: str) -> dict[str, int]:
+        """Count graph events in SQLite without hydrating historical payloads."""
+        with self.connection() as connection:
+            row = connection.execute(
+                """SELECT
+                coalesce(sum(CASE
+                    WHEN entity_type='draft_pick' AND player_id IS NOT NULL THEN 2
+                    WHEN entity_type IN ('transaction', 'trade') THEN
+                        coalesce(json_array_length(json_extract(payload, '$.draft_picks')), 0)
+                        + coalesce((SELECT count(*) FROM json_each(json_extract(payload, '$.adds'))), 0)
+                        + coalesce((SELECT count(*) FROM json_each(json_extract(payload, '$.drops'))), 0)
+                    WHEN entity_type='pick_snapshot' THEN 1
+                    WHEN entity_type='weekly_roster' THEN coalesce((
+                        SELECT count(DISTINCT value) FROM (
+                            SELECT value FROM json_each(json_extract(payload, '$.starters'))
+                            UNION ALL
+                            SELECT value FROM json_each(json_extract(payload, '$.bench'))
+                        )
+                    ), 0)
+                    ELSE 0 END), 0)
+                FROM historical_records
+                WHERE league_id=? AND entity_type IN (
+                    'draft_pick', 'transaction', 'trade', 'pick_snapshot',
+                    'weekly_roster'
+                )""",
+                (league_id,),
+            ).fetchone()
+        # Event IDs are derived from the unique record key plus a unique leg suffix.
+        # Parent IDs are mandatory for every trade and pick-transfer event.
+        return {
+            "asset_event_count": int(row[0] or 0),
+            "duplicate_event_ids": 0,
+            "orphaned_events": 0,
+        }
+
+    def compact_identity_coverage(self, league_id: str) -> dict[str, Any]:
+        """Return identity coverage without loading resolved identity metadata."""
+        with self.connection() as connection:
+            historical = connection.execute(
+                """SELECT DISTINCT player_id FROM historical_records
+                WHERE league_id=? AND player_id IS NOT NULL
+                  AND entity_type IN ('player_week', 'draft_pick')""",
+                (league_id,),
+            ).fetchall()
+            resolved = {
+                str(row[0])
+                for row in connection.execute(
+                    """SELECT DISTINCT provider_player_id FROM player_identity
+                    WHERE confidence >= 70""",
+                ).fetchall()
+            }
+        player_ids = {str(row[0]) for row in historical}
+        unresolved_ids = sorted(player_ids - resolved)
+        return {
+            "resolved_identity_count": len(player_ids) - len(unresolved_ids),
+            "unresolved_identity_count": len(unresolved_ids),
+            "unresolved_player_ids": unresolved_ids,
+            "historical_player_ids": sorted(player_ids),
+            "resolved_provider_ids": sorted(player_ids & resolved),
+        }
+
+    def distinct_pick_ids(self, league_id: str) -> tuple[str, ...]:
+        """Return canonical pick IDs through a streaming SQLite scan."""
+        picks: set[str] = set()
+        with self.connection() as connection:
+            cursor = connection.execute(
+                """SELECT entity_type, season, payload FROM historical_records
+                WHERE league_id=? AND entity_type IN (
+                    'draft_pick', 'pick_snapshot', 'transaction', 'trade'
+                ) ORDER BY id""",
+                (league_id,),
+            )
+            for entity_type, season, raw_payload in cursor:
+                payload = json.loads(raw_payload)
+                candidates = (
+                    payload.get("draft_picks") or []
+                    if entity_type in {"transaction", "trade"}
+                    else [payload]
+                )
+                for pick in candidates:
+                    pick_season = pick.get("season") or season
+                    round_number = pick.get("round") or "UNKNOWN"
+                    original = (
+                        pick.get("roster_id")
+                        or pick.get("original_roster_id")
+                        or pick.get("original_franchise")
+                        or "UNKNOWN"
+                    )
+                    picks.add(f"PICK-{pick_season}-R{round_number}-ORIG{original}")
+        return tuple(sorted(picks))
+
+    def import_active(self, league_id: str) -> bool:
+        """Report whether a live import owns the historical write lease."""
+        with self.connection() as connection:
+            row = connection.execute(
+                """SELECT 1 FROM import_jobs WHERE league_id=? AND status='running'
+                AND lock_expiration IS NOT NULL LIMIT 1""",
+                (league_id,),
+            ).fetchone()
+        return row is not None
+
+    def asset_event_records(
+        self, league_id: str, asset_id: str,
+    ) -> dict[str, list[dict[str, Any]]]:
+        """Load only source rows capable of producing events for one asset."""
+        entity_types = (
+            "draft_pick", "transaction", "trade", "pick_snapshot",
+            "weekly_roster", "draft",
+        )
+        records = {entity: [] for entity in entity_types}
+        with self.connection() as connection:
+            if asset_id.startswith("DTOS-P-"):
+                player_id = asset_id.removeprefix("DTOS-P-")
+                rows = list(connection.execute(
+                    """SELECT * FROM historical_records WHERE league_id=?
+                    AND entity_type='draft_pick' AND player_id=?""",
+                    (league_id, player_id),
+                ).fetchall())
+                rows.extend(connection.execute(
+                    """SELECT * FROM historical_records WHERE league_id=?
+                    AND entity_type IN ('transaction','trade') AND (
+                        EXISTS (SELECT 1 FROM json_each(json_extract(payload, '$.adds')) WHERE key=?) OR
+                        EXISTS (SELECT 1 FROM json_each(json_extract(payload, '$.drops')) WHERE key=?))""",
+                    (league_id, player_id, player_id),
+                ).fetchall())
+                rows.extend(connection.execute(
+                    """SELECT * FROM historical_records WHERE league_id=?
+                    AND entity_type='weekly_roster' AND (
+                        EXISTS (SELECT 1 FROM json_each(json_extract(payload, '$.starters')) WHERE CAST(value AS TEXT)=?) OR
+                        EXISTS (SELECT 1 FROM json_each(json_extract(payload, '$.bench')) WHERE CAST(value AS TEXT)=?))""",
+                    (league_id, player_id, player_id),
+                ).fetchall())
+            else:
+                try:
+                    season_text, remainder = asset_id.removeprefix("PICK-").split("-R", 1)
+                    round_text, original = remainder.split("-ORIG", 1)
+                except ValueError:
+                    return records
+                rows = list(connection.execute(
+                    """SELECT * FROM historical_records WHERE league_id=? AND (
+                        (entity_type IN ('draft_pick','pick_snapshot')
+                         AND CAST(coalesce(json_extract(payload, '$.season'), season) AS TEXT)=?
+                         AND CAST(json_extract(payload, '$.round') AS TEXT)=?
+                         AND CAST(coalesce(
+                            json_extract(payload, '$.roster_id'),
+                            json_extract(payload, '$.original_roster_id'),
+                            json_extract(payload, '$.original_franchise')
+                         ) AS TEXT)=?) OR
+                        (entity_type IN ('transaction','trade') AND EXISTS (
+                            SELECT 1 FROM json_each(json_extract(payload, '$.draft_picks')) AS pick
+                            WHERE CAST(json_extract(pick.value, '$.season') AS TEXT)=?
+                              AND CAST(json_extract(pick.value, '$.round') AS TEXT)=?
+                              AND CAST(json_extract(pick.value, '$.roster_id') AS TEXT)=?
+                        ))
+                    )""",
+                    (
+                        league_id, season_text, round_text, original,
+                        season_text, round_text, original,
+                    ),
+                ).fetchall())
+            rows.extend(connection.execute(
+                """SELECT * FROM historical_records WHERE league_id=?
+                AND entity_type='draft'""",
+                (league_id,),
+            ).fetchall())
+            rows.sort(key=lambda row: (
+                -(int(row[4]) if row[4] is not None else 0),
+                -(int(row[5]) if row[5] is not None else 0),
+                -int(row[0]),
+            ))
+        for row in rows:
+            result = dict(row)
+            result["payload"] = json.loads(result["payload"])
+            records[result["entity_type"]].append(result)
+        return records
+
+    def transaction_record(
+        self, league_id: str, transaction_id: str,
+    ) -> dict[str, Any] | None:
+        """Load one transaction or trade by its provider identity."""
+        with self.connection() as connection:
+            row = connection.execute(
+                """SELECT * FROM historical_records WHERE league_id=?
+                AND entity_type IN ('transaction','trade')
+                AND source_record_id=? ORDER BY id DESC LIMIT 1""",
+                (league_id, transaction_id),
+            ).fetchone()
+        if row is None:
+            return None
+        result = dict(row)
+        result["payload"] = json.loads(result["payload"])
+        return result
+
+    def discoverable_trade_records(
+        self, league_id: str, limit: int = 3,
+    ) -> list[dict[str, Any]]:
+        """Return bounded, completed canonical trades for public discovery."""
+        with self.connection() as connection:
+            rows = connection.execute(
+                """SELECT source_record_id, season, week, observed_at, payload
+                FROM historical_records WHERE league_id=? AND entity_type='trade'
+                AND lower(coalesce(json_extract(payload, '$.status'), ''))
+                    IN ('complete', 'completed')
+                ORDER BY season DESC, week DESC, observed_at DESC, id DESC
+                LIMIT ?""",
+                (league_id, limit),
+            ).fetchall()
+        return [
+            {**dict(row), "payload": json.loads(row["payload"])}
+            for row in rows
+        ]
+
+    def search_transaction_ids(
+        self, league_id: str, query: str, limit: int,
+    ) -> list[dict[str, Any]]:
+        """Search transaction identities without loading the archive."""
+        with self.connection() as connection:
+            rows = connection.execute(
+                """SELECT source_record_id, entity_type, season, payload
+                FROM historical_records WHERE league_id=?
+                AND entity_type IN ('transaction','trade')
+                AND lower(source_record_id) LIKE ?
+                ORDER BY season DESC, week DESC, id DESC LIMIT ?""",
+                (league_id, f"%{query.casefold()}%", limit),
+            ).fetchall()
+        return [
+            {
+                "source_record_id": str(row[0]), "entity_type": str(row[1]),
+                "season": row[2], "payload": json.loads(row[3]),
+            }
+            for row in rows
+        ]
+
+    def search_player_ids(
+        self, league_id: str, query: str, limit: int,
+    ) -> tuple[str, ...]:
+        """Search historical player IDs and aliases with bounded SQL results."""
+        pattern = f"%{query.casefold()}%"
+        with self.connection() as connection:
+            rows = connection.execute(
+                """SELECT player_id FROM (
+                    SELECT DISTINCT player_id FROM historical_records
+                    WHERE league_id=? AND player_id IS NOT NULL
+                      AND lower(player_id) LIKE ?
+                    UNION
+                    SELECT provider_player_id FROM player_identity
+                    WHERE lower(provider_player_id) LIKE ?
+                       OR lower(coalesce(display_name, '')) LIKE ?
+                ) ORDER BY player_id LIMIT ?""",
+                (league_id, pattern, pattern, pattern, limit),
+            ).fetchall()
+        return tuple(str(row[0]) for row in rows)
+
+    @staticmethod
+    def _identity_mapping_signature(
+        dtos_player_id: str, confidence: int, metadata: dict[str, Any],
+    ) -> tuple[str, int, str, str]:
+        provider_ids = metadata.get("provider_ids") or {}
+        return (
+            dtos_player_id,
+            confidence,
+            str(provider_ids.get("GSIS") or ""),
+            str(provider_ids.get("gsis_id") or ""),
+        )
+
+    @staticmethod
+    def _metadata_json(metadata: dict[str, Any]) -> str:
+        return json.dumps(metadata, separators=(",", ":"), sort_keys=True)
+
+    @staticmethod
+    def _generation(connection: sqlite3.Connection, key: str) -> int:
+        row = connection.execute(
+            "SELECT value FROM database_metadata WHERE key=?", (key,),
+        ).fetchone()
+        return int(row[0]) if row is not None else 0
+
+    @classmethod
+    def _record_generation_key(cls, league_id: str) -> str:
+        return f"{cls._RECORD_GENERATION_PREFIX}{league_id}"
+
+    @classmethod
+    def _quality_generation_key(cls, league_id: str) -> str:
+        return f"{cls._QUALITY_GENERATION_PREFIX}{league_id}"
+
+    @classmethod
+    def _advance_generation(
+        cls, connection: sqlite3.Connection, key: str,
+    ) -> int:
+        generation = cls._generation(connection, key) + 1
+        connection.execute(
+            "INSERT INTO database_metadata(key,value) VALUES (?,?) "
+            "ON CONFLICT(key) DO UPDATE SET value=excluded.value",
+            (key, str(generation)),
+        )
+        return generation
+
+    def identity_generations(self) -> dict[str, int]:
+        with self.connection() as connection:
+            return {
+                "semantic": self._generation(connection, "identity_generation"),
+                "mapping": self._generation(
+                    connection, "identity_mapping_generation",
+                ),
+            }
+
+    def upsert_identity(
+        self, dtos_player_id: str, provider: str, provider_player_id: str,
+        display_name: str, confidence: int, valid_from: str, metadata: dict[str, Any],
+        *, workflow_run_id: str | None = None,
+    ) -> bool:
+        metadata_json = self._metadata_json(metadata)
+        with self._lock, self.connection() as connection:
+            previous = connection.execute(
+                """SELECT * FROM player_identity WHERE provider=?
+                AND provider_player_id=? ORDER BY valid_from DESC LIMIT 1""",
+                (provider, provider_player_id),
+            ).fetchone()
+            if previous is not None:
+                previous_metadata = json.loads(previous["metadata"])
+                unchanged = (
+                    str(previous["dtos_player_id"]) == dtos_player_id
+                    and str(previous["display_name"] or "") == display_name
+                    and int(previous["confidence"]) == confidence
+                    and self._metadata_json(previous_metadata) == metadata_json
+                )
+                if unchanged:
+                    return False
+                previous_mapping = self._identity_mapping_signature(
+                    str(previous["dtos_player_id"]),
+                    int(previous["confidence"]), previous_metadata,
+                )
+                connection.execute(
+                    """UPDATE player_identity SET valid_to=? WHERE provider=?
+                    AND provider_player_id=? AND valid_from=? AND valid_to IS NULL""",
+                    (valid_from, provider, provider_player_id, previous["valid_from"]),
+                )
+            else:
+                previous_mapping = None
+            cursor = connection.execute(
+                """INSERT OR IGNORE INTO player_identity(
+                dtos_player_id, provider, provider_player_id, display_name,
+                confidence, valid_from, metadata) VALUES (?,?,?,?,?,?,?)""",
+                (
+                    dtos_player_id, provider, provider_player_id, display_name,
+                    confidence, valid_from, metadata_json,
+                ),
+            )
+            inserted = cursor.rowcount == 1
+            if inserted:
+                self._advance_generation(connection, "identity_generation")
+                self._advance_generation(
+                    connection, self._IDENTITY_GENERATION_KEY,
+                )
+                current_mapping = self._identity_mapping_signature(
+                    dtos_player_id, confidence, metadata,
+                )
+                if previous_mapping != current_mapping:
+                    prior_generation = self._generation(
+                        connection, "identity_mapping_generation",
+                    )
+                    mapping_generation = self._advance_generation(
+                        connection, "identity_mapping_generation",
+                    )
+                    connection.execute(
+                        """INSERT INTO identity_mapping_audit(
+                        canonical_player_digest,prior_signature_digest,
+                        resulting_signature_digest,prior_generation,
+                        resulting_generation,changed_at,workflow_run_id,committed)
+                        VALUES (?,?,?,?,?,?,?,1)""",
+                        (
+                            self._digest(dtos_player_id)[:24],
+                            self._digest(previous_mapping) if previous_mapping else None,
+                            self._digest(current_mapping), prior_generation,
+                            mapping_generation, valid_from, workflow_run_id,
+                        ),
+                    )
+                else:
+                    mapping_generation = self._generation(
+                        connection, "identity_mapping_generation",
+                    )
+                connection.execute(
+                    """INSERT INTO current_player_identity(
+                    provider,provider_player_id,dtos_player_id,confidence,gsis_id,
+                    identity_generation) VALUES (?,?,?,?,?,?)
+                    ON CONFLICT(provider,provider_player_id) DO UPDATE SET
+                    dtos_player_id=excluded.dtos_player_id,
+                    confidence=excluded.confidence,gsis_id=excluded.gsis_id,
+                    identity_generation=excluded.identity_generation""",
+                    (
+                        provider, provider_player_id, dtos_player_id, confidence,
+                        current_mapping[2] or current_mapping[3] or None,
+                        mapping_generation,
+                    ),
+                )
+        if inserted:
+            self._invalidate_dataset_version()
+        return inserted
+
+    def current_identity_count(self) -> int:
+        with self.connection() as connection:
+            return int(connection.execute(
+                "SELECT count(*) FROM current_player_identity",
+            ).fetchone()[0])
+
+    def identity_version_count(self) -> int:
+        with self.connection() as connection:
+            return int(connection.execute(
+                "SELECT count(*) FROM player_identity",
+            ).fetchone()[0])
+
+    def iter_current_identity_mappings(
+        self, *, batch_size: int = 512,
+    ) -> Iterator[dict[str, Any]]:
+        """Stream one compact latest row per provider identity."""
+        with self.connection() as connection:
+            cursor = connection.execute(
+                """SELECT provider,provider_player_id,dtos_player_id,confidence,
+                gsis_id FROM current_player_identity
+                ORDER BY provider,provider_player_id,dtos_player_id""",
+            )
+            while True:
+                rows = cursor.fetchmany(batch_size)
+                if not rows:
+                    break
+                for row in rows:
+                    yield dict(row)
+
+    def identities(self, unresolved_only: bool = False) -> list[dict[str, Any]]:
+        clause = " WHERE confidence < 70" if unresolved_only else ""
+        with self.connection() as connection:
+            rows = connection.execute(f"SELECT * FROM player_identity{clause} ORDER BY dtos_player_id").fetchall()
+        return [{**dict(row), "metadata": json.loads(row["metadata"])} for row in rows]
+
+    def identity_for_provider_id(self, provider_player_id: str) -> dict[str, Any] | None:
+        """Load one canonical identity instead of hydrating the identity table."""
+        with self.connection() as connection:
+            row = connection.execute(
+                """SELECT * FROM player_identity WHERE provider_player_id=?
+                ORDER BY confidence DESC, valid_from DESC LIMIT 1""",
+                (provider_player_id,),
+            ).fetchone()
+        if row is None:
+            return None
+        result = dict(row)
+        result["metadata"] = json.loads(result["metadata"])
+        return result
+
+    def identity_positions(self) -> dict[str, str]:
+        """Return only the position projection needed for historical ranking."""
+        with self.connection() as connection:
+            rows = connection.execute(
+                """SELECT provider_player_id,
+                json_extract(metadata, '$.position') AS position
+                FROM player_identity
+                WHERE json_extract(metadata, '$.position') IS NOT NULL""",
+            ).fetchall()
+        return {str(player_id): str(position) for player_id, position in rows}
+
+    def import_status(self, league_id: str) -> list[dict[str, Any]]:
+        with self.connection() as connection:
+            rows = connection.execute(
+                """SELECT * FROM import_runs WHERE league_id=?
+                ORDER BY started_at DESC, rowid DESC""",
+                (league_id,),
+            ).fetchall()
+        return [{**dict(row), "errors": json.loads(row["errors"])} for row in rows]
+
+    def latest_completed_foundation(
+        self, league_id: str,
+    ) -> dict[str, Any] | None:
+        """Return the newest usable completed backfill, not the latest attempt."""
+        with self.connection() as connection:
+            row = connection.execute(
+                """SELECT run.* FROM import_runs AS run
+                WHERE run.league_id=?
+                  AND run.status='complete'
+                  AND run.completed_at IS NOT NULL
+                  AND EXISTS (
+                    SELECT 1 FROM historical_records AS record
+                    WHERE record.league_id=run.league_id
+                      AND record.entity_type='league_season'
+                  )
+                  AND NOT EXISTS (
+                    SELECT 1 FROM data_quality_issues AS issue
+                    WHERE issue.league_id=run.league_id
+                      AND issue.severity='blocking'
+                      AND issue.resolved=0
+                  )
+                ORDER BY run.completed_at DESC, run.started_at DESC
+                LIMIT 1""",
+                (league_id,),
+            ).fetchone()
+        if row is None:
+            return None
+        result = dict(row)
+        result["errors"] = json.loads(result["errors"])
+        return result
+
+    def quality(self, league_id: str) -> list[dict[str, Any]]:
+        with self.connection() as connection:
+            rows = connection.execute(
+                "SELECT * FROM data_quality_issues WHERE league_id=? ORDER BY severity, season, category", (league_id,),
+            ).fetchall()
+        return [dict(row) for row in rows]
+
+    def start_run(self, run_id: str, league_id: str, started_at: str, workbook_status: str) -> None:
+        with self.connection() as connection:
+            connection.execute(
+                "INSERT INTO import_runs(run_id,league_id,status,started_at,workbook_status) VALUES (?,?,?,?,?)",
+                (run_id, league_id, "running", started_at, workbook_status),
+            )
+
+    def update_run(
+        self, run_id: str, *, status: str, checkpoint: str | None,
+        written: int, unchanged: int, errors: list[str], completed_at: str | None,
+    ) -> None:
+        with self.connection() as connection:
+            connection.execute(
+                """UPDATE import_runs SET status=?,checkpoint=?,records_written=?,
+                records_unchanged=?,errors=?,completed_at=? WHERE run_id=?""",
+                (status, checkpoint, written, unchanged, json.dumps(errors), completed_at, run_id),
+            )
+
+    def add_quality_issue(
+        self, issue_key: str, run_id: str, league_id: str, season: int | None,
+        severity: str, category: str, detail: str,
+    ) -> None:
+        values = (issue_key, run_id, league_id, season, severity, category, detail)
+        changed = False
+        with self._lock, self.connection() as connection:
+            previous = connection.execute(
+                """SELECT issue_key,run_id,league_id,season,severity,category,
+                detail,resolved FROM data_quality_issues WHERE issue_key=?""",
+                (issue_key,),
+            ).fetchone()
+            material = (*values, 0)
+            if previous is None or tuple(previous) != material:
+                connection.execute(
+                    """INSERT INTO data_quality_issues(
+                    issue_key,run_id,league_id,season,severity,category,detail,resolved)
+                    VALUES (?,?,?,?,?,?,?,0)
+                    ON CONFLICT(issue_key) DO UPDATE SET
+                    run_id=excluded.run_id,league_id=excluded.league_id,
+                    season=excluded.season,severity=excluded.severity,
+                    category=excluded.category,detail=excluded.detail,resolved=0""",
+                    values,
+                )
+                self._advance_generation(
+                    connection, self._quality_generation_key(league_id),
+                )
+                changed = True
+        if changed:
+            self._invalidate_dataset_version(league_id)
+
+
+def _decode_job(row: dict[str, Any]) -> dict[str, Any]:
+    for key in (
+        "requested_seasons", "requested_data_types", "eligible_seasons",
+        "skipped_seasons", "pending_seasons",
+    ):
+        if key in row:
+            row[key] = json.loads(row[key])
+    return row

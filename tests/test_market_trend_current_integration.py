@@ -1,0 +1,427 @@
+"""Canonical selected-price producer -> sparse memory -> actual Market HTTP routes."""
+from dataclasses import replace
+from pathlib import Path
+from tempfile import TemporaryDirectory
+from types import SimpleNamespace
+from unittest.mock import patch
+import unittest
+
+from fastapi import FastAPI
+from fastapi.responses import HTMLResponse
+from fastapi.testclient import TestClient
+
+from routes.market import create_market_router
+from src.core.asset_market import AssetMarketCache
+from src.core.historical_memory.store import HistoricalStore
+from src.core.intelligence_memory.pipeline import CheckpointPipeline
+from src.core.intelligence_memory.store import IntelligenceCheckpointStore
+from tests.test_market_observation_producer_identity import prepared, checkpoint
+
+
+class CurrentMarketHTTPTests(unittest.TestCase):
+    page_renderer = staticmethod(lambda title, body: HTMLResponse(f'<h1>{title}</h1>{body}'))
+
+    def setUp(self):
+        self.temp = TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        root = Path(self.temp.name)
+        self.memory = IntelligenceCheckpointStore(root / 'memory.db')
+        for n, raw in enumerate((1200, 1440), 1):
+            data, asset = prepared(raw)
+            stamp = f'2026-07-0{n}T12:00:00+00:00'
+            observations = tuple(replace(row, observed_at=stamp) for row in
+                                 CheckpointPipeline._market_observations(data, 'player:1'))
+            value = asset['layers']['market_value']['value']
+            self.assertEqual(value, (100, 120)[n - 1])
+            self.memory.put_sparse(checkpoint(f'history-{n}', value, stamp),
+                                   market_context_id='fixture', provider_evidence=observations)
+        self.data, _ = prepared(2400)
+        self.data['league'] = {'league_id': '1313066632158924800', 'name': 'Isolated Day Traders'}
+        self.data['players'] = self.data['normalized_players']
+        self.state = {'data': self.data}
+        history = HistoricalStore(root / 'history.db')
+        self.history = history
+        self.cache = AssetMarketCache()
+        self.addCleanup(self.cache.clear)
+        self.market = self.cache.get(self.data, self.state, history, self.data['league']['league_id'])
+        self.assertEqual(self.market.by_id['player:1']['values']['market_value'], 200)
+        app = FastAPI()
+        with patch('routes.market.intelligence_checkpoint_store', self.memory):
+            app.include_router(create_market_router(require_data=lambda: self.data, state=self.state,
+                league_id=self.data['league']['league_id'],
+                context_resolver=lambda: SimpleNamespace(state=self.state,
+                    league_id=self.data['league']['league_id'], market=self.cache),
+                page=self.page_renderer))
+        self.client = TestClient(app)
+        self.addCleanup(self.client.close)
+        self.patch = patch('routes.market.historical_store', history)
+        self.patch.start()
+        self.addCleanup(self.patch.stop)
+
+    def test_100_120_200_http_matches_canonical_evaluator(self):
+        response = self.client.get('/api/market/assets/player:1')
+        self.assertEqual(response.status_code, 200, response.text)
+        trend = response.json()['market_trend']
+        self.assertEqual(trend['magnitude'], 100)
+        self.assertTrue(trend['provenance']['current_endpoint_comparable'])
+        self.assertEqual(trend['milestones']['season_start']['change'], 80)
+
+    def test_directory_and_trending_share_v2_comparison(self):
+        listing = self.client.get('/api/market/assets').json()
+        asset = next(row for row in listing['assets'] if row['asset_id'] == 'player:1')
+        self.assertEqual(asset['market_trend']['magnitude'], 100)
+        trending = self.client.get('/api/market/trending').json()
+        self.assertEqual(trending['method_version'], 'sparse-event-market-trend-2')
+        result = next(row for row in trending['most_volatile'] if row['asset_id'] == 'player:1')
+        self.assertEqual(result['market_trend']['magnitude'], 100)
+
+    def test_actual_http_as_of_uses_instants_not_timezone_text_order(self):
+        from datetime import datetime, timedelta, timezone
+        data, _ = prepared(1920)
+        now = datetime.now(timezone.utc)
+        stamp = (now - timedelta(minutes=10)).isoformat()
+        observations = tuple(replace(row, observed_at=stamp) for row in
+                             CheckpointPipeline._market_observations(data, 'player:1'))
+        self.memory.put_sparse(checkpoint('today-checkpoint', 160, stamp),
+            market_context_id='fixture', provider_evidence=observations)
+        # A later instant expressed in a negative UTC offset has an earlier
+        # wall-clock hour. It must not hide the valid earlier UTC checkpoint.
+        offset = timezone(timedelta(hours=-7))
+        boundary = (now + timedelta(hours=1)).astimezone(offset).isoformat()
+        response = self.client.get('/api/market/assets/player:1', params={'as_of': boundary})
+        self.assertEqual(response.status_code, 200)
+        result = response.json()['market_trend']
+        self.assertEqual(result['checkpoint_count'], 3)
+        self.assertEqual(result['magnitude'], 60)
+        self.assertEqual(result['comparison_scope'], 'history_only')
+
+    def test_actual_sparse_boundary_preserves_submillisecond_order(self):
+        from datetime import datetime, timedelta, timezone
+        base = (datetime.now(timezone.utc) - timedelta(minutes=20)).replace(microsecond=0)
+        for name, micros, raw, price in (('zero-fraction', 0, 1920, 160), ('after-boundary', 501, 3600, 300)):
+            data, _ = prepared(raw)
+            stamp = (base + timedelta(microseconds=micros)).isoformat()
+            observations = tuple(replace(row, observed_at=stamp) for row in
+                                 CheckpointPipeline._market_observations(data, 'player:1'))
+            self.memory.put_sparse(checkpoint(name, price, stamp),
+                market_context_id='fixture', provider_evidence=observations)
+        all_rows = self.memory.market_trend_evidence(asset_ids=('player:1',), league_id=None,
+            as_of='9999-12-31T23:59:59Z')['player:1']['observations']
+        self.assertEqual(len(all_rows), 4)
+        boundary = (base + timedelta(microseconds=500)).isoformat()
+        rows = self.memory.market_trend_evidence(asset_ids=('player:1',),
+            league_id=None, as_of=boundary)['player:1']['observations']
+        stamps = {row['observed_at'] for row in rows}
+        self.assertIn(base.isoformat().replace('+00:00', 'Z'), stamps)
+        self.assertNotIn((base + timedelta(microseconds=501)).isoformat().replace('+00:00', 'Z'), stamps)
+
+    def test_actual_store_ambiguous_provider_generations_cannot_become_movement(self):
+        from src.core.market_trends import MarketTrendService
+        data, _ = prepared(2400)
+        original = CheckpointPipeline._market_observations(data, 'player:1')[0]
+        stamp = '2026-08-01T12:00:00Z'
+        copies = (replace(original, observed_at=stamp, source_identity='generation-A'),
+                  replace(original, observed_at=stamp, source_identity='generation-B'))
+        self.memory.put_sparse(checkpoint('ambiguous-generations', 200, stamp),
+            market_context_id='fixture', provider_evidence=copies)
+        result = MarketTrendService(self.memory).trend_for_asset('player:1', None)
+        self.assertEqual(result['direction'], 'not_comparable')
+        self.assertIn('CONFLICTING_SOURCE_GENERATION', result['comparison_reasons'])
+        self.assertIsNone(result['magnitude'])
+
+    def test_source_revision_refreshes_explicit_cache_without_rewriting_history(self):
+        from src.core.market_trends import MarketTrendService
+        service = MarketTrendService(self.memory)
+        args = dict(as_of='2100-01-01T00:00:00Z')
+        self.assertEqual(service.trend_for_asset('player:1', None, **args)['magnitude'], 20)
+        data, asset = prepared(1920)
+        stamp = '2026-08-01T12:00:00Z'
+        observations = tuple(replace(row, observed_at=stamp) for row in
+                             CheckpointPipeline._market_observations(data, 'player:1'))
+        self.memory.put_sparse(checkpoint('later-fixture-publication',
+            asset['layers']['market_value']['value'], stamp),
+            market_context_id='fixture', provider_evidence=observations)
+        result = service.trend_for_asset('player:1', None, **args)
+        self.assertEqual(result['magnitude'], 60)
+        self.assertEqual(result['checkpoint_count'], 3)
+
+    def test_settled_reads_no_durable_growth_or_new_provider_work(self):
+        def logical_state():
+            with self.memory._connect() as connection:
+                tables = [row[0] for row in connection.execute(
+                    "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name")]
+                return {name: [tuple(row) for row in connection.execute(f'SELECT * FROM "{name}"')]
+                        for name in tables}
+        self.client.get('/api/market/assets/player:1')
+        self.client.get('/api/market/trending')
+        before = logical_state()
+        files = {path.name: path.stat().st_size for path in Path(self.temp.name).iterdir() if path.is_file()}
+        with patch('services.sleeper.sync_sleeper') as sync, patch.object(CheckpointPipeline, 'ingest_runtime') as ingest:
+            for _ in range(3):
+                for path in ('/api/market/assets/player:1', '/api/market/assets', '/api/market/trending'):
+                    self.assertEqual(self.client.get(path).status_code, 200)
+            sync.assert_not_called()
+            ingest.assert_not_called()
+        self.assertEqual(logical_state(), before)
+        self.assertEqual({path.name: path.stat().st_size for path in Path(self.temp.name).iterdir() if path.is_file()}, files)
+
+    def test_selected_page_uses_the_same_dated_numeric_comparison(self):
+        html = self.client.get('/market?selected=player%3A1').text
+        self.assertIn('+100.00 Market points', html)
+        self.assertIn('Historical to current publication', html)
+        self.assertIn('2026-07-01', html)
+        self.assertIn('2026-08-31', html)
+        self.assertIn('Source update time/freshness is not established', html)
+
+
+
+class CurrentComparisonAdmissionTests(unittest.TestCase):
+    def test_selected_canonical_evidence_not_unselected_provider_clock(self):
+        from src.core.market_trends.current import current_comparison
+        data, _ = prepared(2400)
+        data['market_data']['providers']['DynastyProcess']['1']['updated_at'] = '2099-01-01T00:00:00Z'
+        accepted = current_comparison(data, 'player:1', 200)
+        self.assertEqual(accepted['providers'], ('FantasyCalc',))
+        self.assertEqual(accepted['observed_at'], '2026-08-31T12:00:00+00:00')
+        self.assertTrue(accepted['source_generations']['FantasyCalc'])
+        self.assertIsNone(accepted['source_times'][0]['source_updated_at'])
+
+    def test_current_admission_negative_matrix(self):
+        from copy import deepcopy
+        from src.core.market_trends.current import current_comparison
+        base, _ = prepared(2400)
+        for case in ('asset_identity', 'missing_identity', 'canonical_price', 'missing_price',
+                     'units', 'native_provider', 'method', 'format_identity', 'clock', 'future',
+                     'missing_generation', 'conflicting_generation'):
+            with self.subTest(case=case):
+                data = deepcopy(base)
+                asset = data['valuation_intelligence']['assets']['player:1']
+                selected = asset['market_observation_evidence']
+                observation = selected['observations'][0]
+                semantic = observation['metadata']['comparison_semantics']
+                if case == 'asset_identity':
+                    asset['asset_id'] = 'player:2'
+                elif case == 'missing_identity':
+                    asset.pop('asset_id')
+                elif case == 'canonical_price':
+                    selected['canonical_value'] = 10000
+                elif case == 'missing_price':
+                    asset['valuation_layers']['market_value']['value'] = None
+                elif case == 'units':
+                    semantic['value_scale'] = 'native-10000'
+                elif case == 'native_provider':
+                    semantic['value_concept'] = 'native-provider-price'
+                elif case == 'method':
+                    semantic.pop('methodology')
+                elif case == 'format_identity':
+                    import json
+                    identities = json.loads(semantic['format_key'])
+                    identities[0]['provider'] = 'DynastyProcess'
+                    semantic['format_key'] = json.dumps(identities)
+                elif case == 'clock':
+                    observation['observed_at'] = '2026-W01'
+                elif case == 'future':
+                    observation['observed_at'] = '2099-01-01T00:00:00Z'
+                elif case == 'missing_generation':
+                    observation.pop('source_identity')
+                elif case == 'conflicting_generation':
+                    second = deepcopy(observation)
+                    second['source_identity'] = 'conflict'
+                    selected['observations'].append(second)
+                self.assertEqual(current_comparison(data, 'player:1', 200), {})
+
+    def test_zero_is_supported_but_missing_and_boolean_are_not(self):
+        from src.core.market_trends.current import current_comparison
+        data, _ = prepared(0)
+        # The canonical producer can legitimately publish a numerical zero.
+        asset = data['valuation_intelligence']['assets']['player:1']
+        asset['valuation_layers']['market_value']['value'] = 0
+        asset['market_observation_evidence']['canonical_value'] = 0
+        self.assertTrue(current_comparison(data, 'player:1', 0))
+        for value in (None, False, float('nan')):
+            self.assertEqual(current_comparison(data, 'player:1', value), {})
+
+    def test_history_only_current_missing_mismatched_units_and_identity(self):
+        from copy import deepcopy
+        from src.core.market_trends import MarketTrendService
+        from tests.test_market_trends_step7 import _Reader, _row
+        rows = [_row('a', '2026-01-01T00:00:00Z', 100),
+                _row('b', '2026-02-01T00:00:00Z', 120)]
+        for case in ('compatible', 'bare', 'units', 'identity', 'future', 'missing', 'zero'):
+            with self.subTest(case=case):
+                semantic = deepcopy(rows[-1])
+                value = 0 if case == 'zero' else None if case == 'missing' else 200
+                if case == 'bare':
+                    semantic = {}
+                if case == 'units':
+                    semantic['comparison_semantics']['value_scale'] = 'native'
+                if case == 'identity':
+                    semantic['asset_id'] = 'player:2'
+                stamp = '2099-01-01T00:00:00Z' if case == 'future' else '2026-03-01T00:00:00Z'
+                result = MarketTrendService(_Reader(rows)).trend_for_asset('player:1', value,
+                    current_semantics=semantic, current_evidence_at=stamp)
+                admitted = case in {'compatible', 'zero'}
+                self.assertEqual(result['provenance']['current_endpoint_comparable'], admitted)
+                self.assertEqual(result['magnitude'], -100 if case == 'zero' else 100 if admitted else 20)
+                self.assertEqual(result['comparison_scope'], 'historical_to_current' if admitted else 'history_only')
+                self.assertIn('history-only' if not admitted and value is not None else
+                              'unavailable' if value is None else 'recorded observation time',
+                              result['current_qualification'])
+
+    def test_future_unknown_and_missing_history_are_not_stable_zeroes(self):
+        from src.core.market_trends import MarketTrendService
+        from tests.test_market_trends_step7 import _Reader, _row
+        rows = [_row('future', '2099-01-01T00:00:00Z', 9999),
+                _row('unknown', '2026-W01', 100)]
+        result = MarketTrendService(_Reader(rows)).trend_for_asset('player:1', 200)
+        self.assertIsNone(result['magnitude'])
+        self.assertEqual(result['comparison_scope'], 'unavailable')
+        self.assertEqual(result['checkpoint_count'], 0)
+        self.assertEqual(result['provenance']['excluded_evidence_count'], 2)
+
+    def test_one_checkpoint_current_zero_ordering_and_generation_conflict(self):
+        from copy import deepcopy
+        from src.core.market_trends import MarketTrendService
+        from tests.test_market_trends_step7 import _Reader, _row
+        rows = [_row('a', '2026-01-01T23:00:00-02:00', 100)]
+        current = deepcopy(rows[0])
+        service = MarketTrendService(_Reader(rows))
+        result = service.trend_for_asset('player:1', 200, current_semantics=current,
+                                         current_evidence_at='2026-01-02T00:30:00Z')
+        self.assertFalse(result['provenance']['current_endpoint_comparable'])
+        result = service.trend_for_asset('player:1', 200, current_semantics=current,
+                                         current_evidence_at='2026-01-03T00:00:00Z')
+        self.assertEqual(result['magnitude'], 100)
+        rows[0]['market_context_id'] = 'historical-context'
+        current['market_context_id'] = 'incompatible-context'
+        result = service.trend_for_asset('player:1', 200, current_semantics=current,
+                                         current_evidence_at='2026-01-03T00:00:00Z')
+        self.assertFalse(result['provenance']['current_endpoint_comparable'])
+
+    def test_stale_current_is_dated_and_qualified_not_silently_fresh(self):
+        from src.core.market_trends import MarketTrendService
+        from tests.test_market_trends_step7 import _Reader, _row
+        rows = [_row('a', '2025-01-01T00:00:00Z', 100)]
+        current = {**rows[0], 'freshness': 'stale'}
+        result = MarketTrendService(_Reader(rows)).trend_for_asset('player:1', 200,
+            current_semantics=current, current_evidence_at='2025-02-01T00:00:00Z')
+        self.assertEqual(result['magnitude'], 100)
+        self.assertEqual(result['comparison_end_at'], '2025-02-01T00:00:00Z')
+        self.assertIn('stale source evidence', result['current_qualification'])
+        self.assertGreater(result['latest_checkpoint_age_days'], 180)
+
+    def test_explicit_cache_follows_current_clock_and_source_revision(self):
+        from src.core.market_trends import MarketTrendService
+        from tests.test_market_trends_step7 import _Reader, _row
+        rows = [_row('a', '2026-01-01T00:00:00Z', 100)]
+        service = MarketTrendService(_Reader(rows), cache_limit=2)
+        current = dict(rows[0])
+        args = dict(as_of='2026-03-01T00:00:00Z', current_semantics=current)
+        missing = service.trend_for_asset('player:1', 200, **args)
+        admitted = service.trend_for_asset('player:1', 200,
+            current_evidence_at='2026-02-01T00:00:00Z', **args)
+        self.assertIsNone(missing['magnitude'])
+        self.assertEqual(admitted['magnitude'], 100)
+        self.assertLessEqual(len(service._cache), 2)
+
+    def test_missing_zero_and_conflicting_historical_generation(self):
+        from src.core.market_trends import MarketTrendService
+        from tests.test_market_trends_step7 import _Reader, _row
+        rows = [_row('a', '2026-01-01T00:00:00Z', 0),
+                _row('b', '2026-02-01T00:00:00Z', 0),
+                _row('missing', '2026-03-01T00:00:00Z', None)]
+        result = MarketTrendService(_Reader(rows)).trend_for_asset('player:1', None)
+        self.assertEqual(result['magnitude'], 0)
+        self.assertEqual(result['checkpoint_count'], 2)
+        self.assertEqual(result['observed_low'], 0)
+        rows[1]['asset_id'] = 'player:other'
+        result = MarketTrendService(_Reader(rows)).trend_for_asset('player:1', None)
+        self.assertEqual(result['checkpoint_count'], 1)
+        self.assertIsNone(result['magnitude'])
+        rows[1]['asset_id'] = 'player:1'
+        for row in rows[:2]:
+            row['source_generations'] = {'A': 'same-generation'}
+        rows[1]['value'] = 100
+        rows[1]['source_generation_conflict'] = True
+        result = MarketTrendService(_Reader(rows)).trend_for_asset('player:1', None)
+        self.assertIsNone(result['magnitude'])
+        self.assertIn('CONFLICTING_SOURCE_GENERATION', result['comparison_reasons'])
+
+    def test_unchanged_normalization_population_is_not_an_immutable_player_quote(self):
+        from copy import deepcopy
+        from src.core.valuation.normalization import prepare_market_normalization
+        from src.core.valuation.universe import ValuationUniverse
+        from src.core.valuation_intelligence.engine import _score_asset
+        from src.core.market_trends import MarketTrendService
+        from src.core.market_trends.current import current_comparison
+        from tests.test_market_trends_step7 import _Reader
+        base, _ = prepared()
+        provider = base['market_data']['providers']['FantasyCalc']
+        provider['2'] = deepcopy(provider['1'])
+        provider['2']['value'] = 3000
+        points = []
+        for day, prices in ((1, (9000, 3000)), (2, (3000, 9000))):
+            data = deepcopy(base)
+            for index, value in enumerate(prices, 1):
+                quote = data['market_data']['providers']['FantasyCalc'][str(index)]
+                quote['value'] = value
+                quote['retrieved_at'] = f'2026-08-0{day}T12:00:00Z'
+            prepare_market_normalization(data['market_data'])
+            asset = ValuationUniverse(data, {'data': data}).by_id['player:1']
+            scored = _score_asset(asset, [], {}, None)
+            data['valuation_intelligence']['assets']['player:1'] = scored
+            price = scored['valuation_layers']['market_value']['value']
+            points.append((price, current_comparison(data, 'player:1', price)))
+        self.assertNotEqual(points[0][0], points[1][0])
+        self.assertEqual(points[0][1]['source_generations'], points[1][1]['source_generations'])
+        row = {**points[0][1], 'observation_id': 'earlier-player-quote', 'value': points[0][0], 'confidence': 80}
+        result = MarketTrendService(_Reader([row])).trend_for_asset('player:1', points[1][0],
+            current_semantics=points[1][1])
+        self.assertTrue(result['provenance']['current_endpoint_comparable'])
+        self.assertEqual(result['magnitude'], points[1][0] - points[0][0])
+
+    def test_declared_canonical_units_cannot_admit_native_sized_price(self):
+        from src.core.market_trends import MarketTrendService
+        from tests.test_market_trends_step7 import _Reader, _row
+        rows = [_row('a', '2026-01-01T00:00:00Z', 100),
+                _row('b', '2026-02-01T00:00:00Z', 10000)]
+        for row in rows:
+            row['comparison_semantics'].update(value_concept='external_market_normalized_index', value_scale='0-1000')
+        result = MarketTrendService(_Reader(rows)).trend_for_asset('player:1', None)
+        self.assertIsNone(result['magnitude'])
+        self.assertEqual(result['checkpoint_count'], 1)
+        self.assertEqual(result['provenance']['excluded_evidence_count'], 1)
+        result = MarketTrendService(_Reader(rows[:1])).trend_for_asset('player:1', 10000,
+            current_semantics=rows[0], current_evidence_at='2026-03-01T00:00:00Z')
+        self.assertFalse(result['provenance']['current_endpoint_comparable'])
+        self.assertIsNone(result['magnitude'])
+
+    def test_malformed_comparison_semantics_stay_unavailable(self):
+        from src.core.market_trends import MarketTrendService
+        from src.core.market_trends.current import current_comparison
+        from tests.test_market_trends_step7 import _Reader, _row
+        from copy import deepcopy
+        for semantic in ('unsupported', [], {'methodology': ['unknown']}):
+            with self.subTest(semantic=semantic):
+                row = _row('a', '2026-01-01T00:00:00Z', 100)
+                row['comparison_semantics'] = semantic
+                result = MarketTrendService(_Reader([row])).trend_for_asset('player:1', None)
+                self.assertEqual(result['direction'], 'not_comparable')
+                self.assertIsNone(result['magnitude'])
+                data, _ = prepared(2400)
+                observation = data['valuation_intelligence']['assets']['player:1']['market_observation_evidence']['observations'][0]
+                observation['metadata']['comparison_semantics'] = deepcopy(semantic)
+                self.assertEqual(current_comparison(data, 'player:1', 200), {})
+
+    def test_supported_native_history_is_explicitly_not_canonical_units(self):
+        from src.core.market_trends import MarketTrendService
+        from tests.test_market_trends_step7 import _Reader, _row
+        rows = [_row('a', '2026-01-01T00:00:00Z', 100),
+                _row('b', '2026-02-01T00:00:00Z', 10000)]
+        for row in rows:
+            row['comparison_semantics'].update(value_concept='native_provider_quote', value_scale='native-provider-units')
+        result = MarketTrendService(_Reader(rows)).trend_for_asset('player:1', 200)
+        self.assertEqual(result['comparison_scope'], 'history_only')
+        self.assertEqual(result['comparison_units'], 'native-provider-units')
+        self.assertFalse(result['provenance']['current_endpoint_comparable'])
+        self.assertEqual(result['magnitude'], 9900)

@@ -1,0 +1,443 @@
+"""Bounded, lazy league runtime residency."""
+from __future__ import annotations
+
+import asyncio
+from collections import OrderedDict
+from dataclasses import dataclass, field
+from datetime import datetime, timezone
+from enum import StrEnum
+from threading import RLock
+from time import monotonic
+from typing import Any, Awaitable, Callable
+
+from .identity import scoring_profile_id
+from src.platform.request_diagnostics import diagnosed, activate_current_trace, scope_identity
+
+
+def _utcnow() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
+
+class RuntimeState(StrEnum):
+    COLD = "cold"
+    HYDRATING = "hydrating"
+    WARM = "warm"
+    FAILED = "failed"
+    DEFERRED = "deferred"
+    EVICTING = "evicting"
+    CLOSED = "closed"
+
+
+class LeagueRuntimeError(RuntimeError):
+    pass
+
+
+class LeagueRuntimeNotFound(LeagueRuntimeError):
+    pass
+
+
+class LeagueRuntimeDeferred(LeagueRuntimeError):
+    """No source failure: explicit retry is bounded while capacity is busy."""
+
+
+HYDRATION_RETRY_SECONDS = 60
+
+
+@dataclass(slots=True, weakref_slot=True)
+class LeagueRuntime:
+    league_id: str
+    state: dict[str, Any] = field(default_factory=lambda: {
+        "data": {}, "last_sync": None, "last_error": None, "syncing": False,
+        "transactions_syncing": False, "transactions_last_sync": None,
+        "transactions_last_error": None,
+    })
+    status: RuntimeState = RuntimeState.COLD
+    season: int | None = None
+    scoring_profile: str | None = None
+    projection_context: Any = None
+    brain_context: Any = None
+    market_context: Any = None
+    fois_context: Any = None
+    canonical_context: Any = None
+    lifecycle: dict[str, Any] = field(default_factory=dict)
+    source_generations: dict[str, str] = field(default_factory=dict)
+    cache_metadata: dict[str, Any] = field(default_factory=dict)
+    created_at: str = field(default_factory=_utcnow)
+    last_access_at: str = field(default_factory=_utcnow)
+    last_access_monotonic: float = field(default_factory=monotonic, repr=False)
+    active_requests: int = 0
+    pinned: bool = False
+    owns_state: bool = True
+    error: str | None = None
+    background_tasks: set[asyncio.Task[Any]] = field(default_factory=set, repr=False)
+    # Only qualification publication/header handoff uses this per-league lock;
+    # historical reconstruction, serialization and provider work stay outside.
+    fois_publication_lock: asyncio.Lock = field(default_factory=asyncio.Lock, repr=False)
+    fois_publication_revision: int = 0
+
+    def touch(self) -> None:
+        self.last_access_at = _utcnow()
+        self.last_access_monotonic = monotonic()
+
+    def apply_data(self, data: dict[str, Any]) -> None:
+        league = data.get("league") or {}
+        actual_id = str(league.get("league_id") or self.league_id)
+        if actual_id != self.league_id:
+            raise LeagueRuntimeError(
+                f"Hydrated league {actual_id!r} does not match requested league {self.league_id!r}."
+            )
+        self.state["data"] = data
+        self.season = int(league.get("season") or data.get("season") or datetime.now().year)
+        self.scoring_profile = scoring_profile_id(
+            data.get("scoring_settings") or league.get("scoring_settings") or {},
+            roster_positions=tuple(data.get("roster_positions") or league.get("roster_positions") or ()),
+        )
+        self.touch()
+
+    async def publish_source(self, data: dict[str, Any]) -> None:
+        """Commit a sync-thread source on its owning request loop.
+
+        Provider preparation never holds this lock. Record rollback transitions
+        too: restoring the same pointer must not erase an intervening source.
+        """
+        async with self.fois_publication_lock:
+            changed = self.state.get('data') is not data
+            self.apply_data(data)
+            if changed:
+                self.fois_publication_revision += 1
+                if self.canonical_context is not None:
+                    self.canonical_context.fois_state = 'pending'
+
+    async def publish_transactions(self, data: dict[str, Any], transactions: list, week: int) -> None:
+        """Update shared transaction containers at the same publication boundary.
+
+        Keep existing consumer aliases; never restore a stale roster captured
+        before network acquisition or mutate the source during HTTP handoff.
+        """
+        async with self.fois_publication_lock:
+            if self.state.get('data') is not data:
+                raise LeagueRuntimeError('League source advanced during preparation; retry the refresh.')
+            data['transactions'] = transactions
+            data.setdefault('season_transactions', {})[str(week)] = transactions
+            self.fois_publication_revision += 1
+            if self.canonical_context is not None:
+                self.canonical_context.fois_state = 'pending'
+
+    @diagnosed('runtime_eviction', memory=True)
+    async def close(self) -> None:
+        self.status = RuntimeState.EVICTING
+        tasks = tuple(self.background_tasks)
+        for task in tasks:
+            if not task.done():
+                task.cancel()
+        if tasks:
+            await asyncio.gather(*tasks, return_exceptions=True)
+        for context in (
+            self.market_context, self.projection_context, self.brain_context,
+            self.fois_context, self.canonical_context,
+        ):
+            closer = getattr(context, "close", None) or getattr(context, "clear", None)
+            if callable(closer):
+                result = closer()
+                if hasattr(result, "__await__"):
+                    await result
+        self.background_tasks.clear()
+        if self.owns_state:
+            self.state["data"] = {}
+        self.projection_context = None
+        self.brain_context = None
+        self.market_context = None
+        self.fois_context = None
+        self.canonical_context = None
+        self.status = RuntimeState.CLOSED
+
+    def public_health(self) -> dict[str, Any]:
+        data = self.state.get("data") or {}
+        result = {
+            "league_id": self.league_id,
+            "status": self.status.value,
+            "season": self.season,
+            "scoring_profile_id": self.scoring_profile,
+            "last_access": self.last_access_at,
+            "last_sync": self.state.get("last_sync"),
+            "last_error": self.error or self.state.get("last_error"),
+            "active_requests": self.active_requests,
+            "team_count": len(data.get("teams") or ()),
+            "source_generations": dict(self.source_generations),
+            "preparation_state": self.lifecycle.get('preparation_state', self.status.value),
+            "retry_after_seconds": max(0, int(self.lifecycle.get('hydration_retry_after', 0) - monotonic()) + 1)
+                if self.status is RuntimeState.DEFERRED else None,
+        }
+        if self.canonical_context is not None:
+            result["product"] = self.canonical_context.health()
+        return result
+
+
+Hydrator = Callable[[LeagueRuntime], Awaitable[dict[str, Any] | LeagueRuntime | None]]
+
+
+class LeagueRuntimeManager:
+    """Lazy single-flight runtime manager with bounded LRU residency."""
+
+    def __init__(self, *, max_warm: int = 2, hydrator: Hydrator | None = None) -> None:
+        if not 1 <= max_warm <= 3:
+            raise ValueError("max_warm must remain within the validated 1-3 runtime bound.")
+        self.max_warm = max_warm
+        self._hydrator = hydrator
+        self._runtimes: OrderedDict[str, LeagueRuntime] = OrderedDict()
+        self._flights: dict[str, asyncio.Task[LeagueRuntime]] = {}
+        self._lock = asyncio.Lock()
+        self._metrics_lock = RLock()
+        self.hydrations = 0
+        self.restore_hits = 0
+        self.evictions = 0
+        self.failures = 0
+        self.deferrals = 0
+
+    @staticmethod
+    def validate_league_id(league_id: str) -> str:
+        value = str(league_id).strip()
+        if not value or len(value) > 32 or not value.isdigit():
+            raise LeagueRuntimeNotFound("Sleeper league_id must contain 1-32 digits.")
+        return value
+
+    async def get(self, league_id: str, *, hydrate: bool = True) -> LeagueRuntime:
+        return await self._get(league_id, hydrate=hydrate, request_lease=False)
+
+    @diagnosed('runtime_acquire')
+    async def acquire_request(self, league_id: str, *, hydrate: bool = True) -> LeagueRuntime:
+        """Reserve reader ownership before a hydration can become evictable.
+
+        The caller must release the returned runtime after the complete response.
+        A cancelled reader never owns/cancels the shared hydration writer.
+        """
+        return await self._get(league_id, hydrate=hydrate, request_lease=True)
+
+    async def _get(self, league_id: str, *, hydrate: bool, request_lease: bool) -> LeagueRuntime:
+        key = self.validate_league_id(league_id)
+        async with self._lock:
+            runtime = self._runtimes.get(key)
+            if hydrate and runtime is not None and runtime.status is RuntimeState.DEFERRED:
+                if monotonic() < runtime.lifecycle.get('hydration_retry_after', 0):
+                    raise LeagueRuntimeDeferred('League preparation is waiting for capacity. Try again in a minute.')
+            if runtime is not None and runtime.status not in {RuntimeState.FAILED, RuntimeState.CLOSED}:
+                runtime.touch()
+                self._runtimes.move_to_end(key)
+                if runtime.status is RuntimeState.WARM or not hydrate:
+                    if request_lease:
+                        runtime.active_requests += 1
+                    with self._metrics_lock:
+                        self.restore_hits += 1
+                    return runtime
+            if not hydrate:
+                if runtime is None:
+                    runtime = LeagueRuntime(key)
+                    self._runtimes[key] = runtime
+                if request_lease:
+                    runtime.active_requests += 1
+                return runtime
+            activate_current_trace()
+            flight = self._flights.get(key)
+            if flight is None or flight.done():
+                if runtime is None or runtime.status in {RuntimeState.FAILED, RuntimeState.CLOSED}:
+                    runtime = LeagueRuntime(key)
+                    self._runtimes[key] = runtime
+                runtime.status = RuntimeState.HYDRATING
+                flight = asyncio.create_task(self._hydrate(runtime), name=f"league-runtime:{key}")
+                # A caller can leave while the manager-owned writer completes.
+                # Observe its exception without changing what remaining waiters
+                # receive, or treating a failed publication as successful.
+                flight.add_done_callback(lambda task: task.exception() if not task.cancelled() else None)
+                self._flights[key] = flight
+            if request_lease:
+                runtime.active_requests += 1
+        try:
+            return await asyncio.shield(flight)
+        except asyncio.CancelledError:
+            if request_lease:
+                # Keep ownership until this shared writer finishes. Releasing
+                # an abandoned cold lease first would make its later warm
+                # publication permanently escape the request-release trim.
+                try:
+                    while not flight.done():
+                        try:
+                            await asyncio.shield(flight)
+                        except asyncio.CancelledError:
+                            continue
+                        except Exception:
+                            break
+                finally:
+                    await self.release_request(runtime)
+            raise
+        except BaseException:
+            if request_lease:
+                await self.release_request(runtime)
+            raise
+
+    async def release_request(self, runtime: LeagueRuntime) -> None:
+        """Return a reader lease and trim temporary active-request overflow.
+
+        No await separates the counter update from cleanup ownership. Drain the
+        existing close protocol even if this request is cancelled repeatedly;
+        otherwise an evicted runtime could leave a writer or large graph alive.
+        """
+        runtime.active_requests = max(0, runtime.active_requests - 1)
+        if sum(item.status is RuntimeState.WARM for item in self._runtimes.values()) <= self.max_warm:
+            return
+        cleanup = asyncio.create_task(self._evict_if_needed(), name="league-runtime-request-release")
+        try:
+            await asyncio.shield(cleanup)
+        except asyncio.CancelledError:
+            while not cleanup.done():
+                try:
+                    await asyncio.shield(cleanup)
+                except asyncio.CancelledError:
+                    continue
+            cleanup.result()
+            raise
+
+    async def _hydrate(self, runtime: LeagueRuntime) -> LeagueRuntime:
+        try:
+            if self._hydrator is None:
+                raise LeagueRuntimeError("No league runtime hydrator is configured.")
+            result = await self._hydrator(runtime)
+            if isinstance(result, dict):
+                async with runtime.fois_publication_lock:
+                    runtime.apply_data(result)
+            elif isinstance(result, LeagueRuntime) and result is not runtime:
+                raise LeagueRuntimeError("Hydrator must update the runtime it was given.")
+            if not runtime.state.get("data"):
+                raise LeagueRuntimeNotFound(f"Sleeper league {runtime.league_id} returned no league data.")
+            runtime.status = RuntimeState.WARM
+            runtime.lifecycle.pop('hydration_retry_after', None)
+            runtime.error = None
+            runtime.touch()
+            with self._metrics_lock:
+                self.hydrations += 1
+            await self._evict_if_needed(exclude=runtime.league_id)
+            return runtime
+        except Exception as exc:
+            from src.platform.lifecycle import HeavyWorkDeferred
+            if isinstance(exc, (HeavyWorkDeferred, LeagueRuntimeDeferred)):
+                runtime.status = RuntimeState.DEFERRED
+                runtime.error = None
+                runtime.lifecycle['hydration_retry_after'] = monotonic() + HYDRATION_RETRY_SECONDS
+                runtime.lifecycle['preparation_state'] = 'waiting_for_capacity'
+                with self._metrics_lock:
+                    self.deferrals += 1
+                raise LeagueRuntimeDeferred('League preparation is waiting for capacity. Try again in a minute.') from exc
+            runtime.status = RuntimeState.FAILED
+            runtime.error = f"{type(exc).__name__}: {exc}"
+            with self._metrics_lock:
+                self.failures += 1
+            raise
+        finally:
+            async with self._lock:
+                current = self._flights.get(runtime.league_id)
+                if current is asyncio.current_task():
+                    self._flights.pop(runtime.league_id, None)
+
+    async def _evict_if_needed(self, *, exclude: str | None = None) -> None:
+        while True:
+            async with self._lock:
+                warm = [
+                    runtime for runtime in self._runtimes.values()
+                    if runtime.status is RuntimeState.WARM
+                ]
+                if len(warm) <= self.max_warm:
+                    return
+                victim = next((
+                    runtime for runtime in warm
+                    if runtime.league_id != exclude and runtime.active_requests == 0
+                    and not runtime.pinned
+                ), None)
+                if victim is None:
+                    return
+                self._runtimes.pop(victim.league_id, None)
+            await victim.close()
+            with self._metrics_lock:
+                self.evictions += 1
+
+    async def evict(self, league_id: str) -> bool:
+        key = self.validate_league_id(league_id)
+        async with self._lock:
+            runtime = self._runtimes.get(key)
+            if runtime is None or runtime.active_requests:
+                return False
+            self._runtimes.pop(key)
+        await runtime.close()
+        with self._metrics_lock:
+            self.evictions += 1
+        return True
+
+    async def shutdown(self) -> None:
+        async with self._lock:
+            runtimes = tuple(self._runtimes.values())
+            flights = tuple(self._flights.values())
+            self._runtimes.clear()
+            self._flights.clear()
+        for flight in flights:
+            if not flight.done():
+                flight.cancel()
+        if flights:
+            await asyncio.gather(*flights, return_exceptions=True)
+        await asyncio.gather(*(runtime.close() for runtime in runtimes), return_exceptions=True)
+
+    def resident(self, league_id: str) -> LeagueRuntime | None:
+        return self._runtimes.get(str(league_id))
+
+    def resident_runtimes(self) -> tuple[LeagueRuntime, ...]:
+        """Return a stable process-local snapshot for explicit diagnostics."""
+        return tuple(self._runtimes.values())
+
+    def diagnostic_residency(self) -> dict[str, Any]:
+        """Cheap counts only; never hydrate, fingerprint full graphs or expose facts."""
+        runtimes = tuple(self._runtimes.values())
+        return {
+            'resident_count': len(runtimes), 'warm_limit': self.max_warm,
+            'hydrating_count': sum(row.status is RuntimeState.HYDRATING for row in runtimes),
+            'warm_count': sum(row.status is RuntimeState.WARM for row in runtimes),
+            'runtime_samples_truncated': len(runtimes) > 8,
+            'runtimes': [{
+                'scope': scope_identity(row.league_id), 'state': row.status.value,
+                'active_requests': row.active_requests, 'pinned': row.pinned,
+                'owns_state': row.owns_state, 'background_tasks': len(row.background_tasks),
+                'source_generation_count': len(row.source_generations),
+                'source_generation_identity': scope_identity(repr(sorted(row.source_generations.items()))),
+                'market_cache_owned': row.market_context is not None,
+                'projection_cache_owned': row.projection_context is not None,
+            } for row in runtimes[:8]],
+        }
+
+    def attach_default(
+        self, league_id: str, state: dict[str, Any], *, warm: bool = False,
+    ) -> LeagueRuntime:
+        """Attach the legacy configured state to the manager during migration."""
+        key = self.validate_league_id(league_id)
+        runtime = LeagueRuntime(key, state=state, pinned=True, owns_state=False)
+        if state.get("data"):
+            runtime.apply_data(state["data"])
+            runtime.status = RuntimeState.WARM if warm else RuntimeState.COLD
+        self._runtimes[key] = runtime
+        return runtime
+
+    def health(self) -> dict[str, Any]:
+        with self._metrics_lock:
+            metrics = {
+                "hydrations": self.hydrations,
+                "restore_hits": self.restore_hits,
+                "evictions": self.evictions,
+                "failures": self.failures,
+                "deferrals": self.deferrals,
+            }
+        runtimes = tuple(self._runtimes.values())
+        return {
+            "status": "healthy" if not any(row.status is RuntimeState.FAILED for row in runtimes) else "degraded",
+            "resident_runtime_count": len(runtimes),
+            "warm_runtime_count": sum(row.status is RuntimeState.WARM for row in runtimes),
+            "warm_runtime_limit": self.max_warm,
+            "resident_league_ids": [row.league_id for row in runtimes],
+            "in_flight": sorted(self._flights),
+            **metrics,
+            "runtimes": [row.public_health() for row in runtimes],
+        }

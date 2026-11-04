@@ -1,0 +1,481 @@
+"""Consumer-facing DTOS account and Sleeper onboarding routes."""
+from __future__ import annotations
+
+import hashlib
+import sqlite3
+from html import escape
+from typing import Any
+from urllib.parse import parse_qs
+
+import httpx
+from fastapi import APIRouter, Request
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, Response
+
+from config import SESSION_COOKIE_SECURE, SESSION_TTL_HOURS
+from src.core.accounts import AccountService
+from src.core.league_runtime import LeagueRuntimeError
+from src.platform.account_context import SESSION_COOKIE, current_account
+from src.ui.design_system import DESIGN_SYSTEM_CSS, account_page_header
+
+
+def _shell(title: str, body: str, *, purpose: str = "Manage secure access to your dynasty front office.", status_code: int = 200) -> HTMLResponse:
+    css = """body{margin:0;background:var(--background);color:var(--text);font-family:system-ui,sans-serif}.auth{max-width:720px;margin:auto;padding:28px 18px}.auth .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px;margin:14px 0}.auth .grid{display:grid;gap:12px}.auth label{font-weight:650;font-size:14px}.auth input,.auth select{width:100%;min-height:44px;padding:13px;margin-top:6px;border-radius:10px;border:1px solid var(--border);background:var(--background);color:var(--text)}.auth .btn{display:inline-flex;min-height:46px;align-items:center;justify-content:center;border:0;border-radius:10px;padding:10px 16px;background:var(--accent);color:#081307;font-weight:750;cursor:pointer}.auth a{color:var(--accent)}.auth .muted{color:var(--muted)}.auth .error{color:var(--negative)}.auth .good{color:var(--positive)}@media(max-width:600px){.auth{padding:18px 13px}.auth .card{padding:18px}}"""
+    from services.contextual_navigation import navigation_markup, with_back
+    back, navigation_head = navigation_markup() if not any(word in title.casefold() for word in ("sign in", "create account", "recover", "welcome")) else ("", "")
+    header = with_back(account_page_header(title, purpose=purpose), back)
+    css += '.auth,.auth *{box-sizing:border-box}.auth input,.auth select{font-size:16px}.auth .card{overflow-wrap:anywhere}'
+    progress = r"""<script>(()=>{
+      const forms=[...document.forms].filter(f=>/\/account\/(sleeper|leagues(?:\/|$))/.test(f.getAttribute('action')||''));
+      for(const form of forms){const button=form.querySelector('button[type=submit]');if(!button)continue;
+        const label=button.textContent;form.addEventListener('submit',()=>{
+          button.disabled=true;button.setAttribute('aria-busy','true');
+          const status=document.createElement('p');status.setAttribute('role','status');status.dataset.accountProgress='true';
+          status.textContent=form.getAttribute('action')==='/account/sleeper'?'Connecting to Sleeper…':'Preparing your league…';
+          button.textContent=status.textContent;form.append(status);
+        });addEventListener('pageshow',()=>{button.disabled=false;button.removeAttribute('aria-busy');button.textContent=label;form.querySelector('[data-account-progress]')?.remove();});
+      }
+    })();</script>"""
+    return HTMLResponse(f'<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{escape(title)} · DTOS</title><style>{DESIGN_SYSTEM_CSS}{css}</style>{navigation_head}</head><body><main class="auth">{header}{body}</main>{progress}</body></html>', status_code=status_code, headers={"Cache-Control": "no-store"})
+
+
+def _source_unavailable(*, identity: bool = False) -> HTMLResponse:
+    """Known upstream failure, distinct from invalid input or an empty league list."""
+    destination = "/account/sleeper" if identity else "/account/leagues"
+    label = "Try again" if identity else "Your leagues"
+    return _shell("Sleeper temporarily unavailable", '<section class="card"><h2>Sleeper is temporarily unavailable.</h2><p>We could not complete this request. Your saved account and active league are unchanged. Try again shortly.</p>'
+                  f'<a class="btn" href="{destination}">{label}</a></section>', status_code=503)
+
+
+def _preparation_unavailable() -> HTMLResponse:
+    return _shell("League preparation unavailable", '<section class="card"><h2>League preparation did not finish.</h2><p>Your saved account and active league are unchanged. Return to your leagues and try again shortly.</p><a class="btn" href="/account/leagues">Your leagues</a></section>', status_code=503)
+
+
+def _unmatched_franchise() -> HTMLResponse:
+    return _shell("Review team mapping", '<section class="card"><h1>We found the league, but could not confidently match your team.</h1><p>DTOS did not guess or create ownership. Your saved leagues and active league are unchanged.</p><p>Return to your connected leagues, or review the linked Sleeper identity. You can retry the import after the identity or Sleeper league membership is corrected.</p><div class="grid"><a class="btn" href="/account/leagues">Your leagues</a><a class="btn" href="/account/sleeper">Review Sleeper identity</a></div></section>')
+
+
+def _rate_limited(request: Request, seconds: int, destination: str) -> Response:
+    if 'text/html' not in request.headers.get('accept', ''):
+        return JSONResponse({"status": "rate_limited"}, status_code=429, headers={"Retry-After": str(seconds)})
+    response = _shell("Please wait before trying again", '<section class="card"><h2>Too many attempts</h2>'
+                      f'<p>Please wait {seconds // 60} minutes before trying again. Your saved account is unchanged.</p>'
+                      f'<a class="btn" href="{destination}">Return to the form</a></section>', status_code=429)
+    response.headers['Retry-After'] = str(seconds)
+    return response
+
+
+async def _form(request: Request) -> dict[str, str]:
+    raw = (await request.body()).decode("utf-8", errors="replace")
+    return {key: values[-1] for key, values in parse_qs(raw, keep_blank_values=True).items()}
+
+
+def _set_session(response: Response, token: str) -> None:
+    response.set_cookie(SESSION_COOKIE, token, max_age=SESSION_TTL_HOURS * 3600, httponly=True, secure=SESSION_COOKIE_SECURE, samesite="lax", path="/")
+    response.headers["Cache-Control"] = "no-store"
+
+
+def _csrf(service: AccountService, request: Request, value: str) -> bool:
+    token = request.cookies.get(SESSION_COOKIE, "")
+    return bool(token and value and service.store.verify_csrf(token, value))
+
+
+def _auth_client(request: Request) -> str:
+    address = request.client.host if request.client else "unknown"
+    return hashlib.sha256(address.encode()).hexdigest()
+
+
+def _safe_browser_post(request: Request) -> bool:
+    content_type = request.headers.get("content-type", "").split(";", 1)[0].strip().lower()
+    if content_type != "application/x-www-form-urlencoded":
+        return False
+    origin = request.headers.get("origin")
+    if not origin:
+        return True
+    expected = f"{request.url.scheme}://{request.headers.get('host', '')}"
+    return origin.rstrip("/") == expected.rstrip("/")
+
+
+def _recovery_page(codes: list[str]) -> HTMLResponse:
+    rows = "".join(f"<li><code>{escape(code)}</code></li>" for code in codes)
+    return _shell("Recovery codes", f'<section class="card"><h1>Save your recovery codes</h1><p>Store these one-time codes somewhere safe. DTOS cannot display them again. Using one rotates every code and signs out existing sessions.</p><ol>{rows}</ol><a class="btn" href="/account/sleeper">Continue</a></section>')
+
+
+def create_accounts_router(*, service: AccountService, runtime_manager: Any) -> APIRouter:
+    router = APIRouter(tags=["accounts"])
+
+    @router.post('/account/franchise-goal')
+    async def save_franchise_goal(request: Request) -> Response:
+        from services.strategy_session import strategy_scope
+        from src.core.accounts.goal_store import GoalSaveError, save_goal
+        context = current_account()
+        if context is None:
+            return JSONResponse({'status': 'authentication_required'}, status_code=401, headers={'Cache-Control': 'no-store'})
+        if not _safe_browser_post(request) or len(await request.body()) > 4096:
+            return JSONResponse({'status': 'invalid_goal_form'}, status_code=422, headers={'Cache-Control': 'no-store'})
+        values = await _form(request)
+        if not _csrf(service, request, values.get('csrf_token', '')):
+            return JSONResponse({'status': 'csrf_rejected'}, status_code=403, headers={'Cache-Control': 'no-store'})
+        membership = context.membership
+        if (set(values) != {'strategy', 'expected_revision', 'league_id', 'roster_id', 'csrf_token', 'strategy_scope'}
+                or not membership or values['league_id'] != membership.league_id
+                or values['roster_id'] != str(membership.roster_id)
+                or values['strategy_scope'] != strategy_scope()):
+            return JSONResponse({'status': 'goal_scope_changed'}, status_code=403, headers={'Cache-Control': 'no-store'})
+        try:
+            revision = int(values['expected_revision']) if values['expected_revision'].isascii() and values['expected_revision'].isdigit() and len(values['expected_revision']) < 12 else -1
+            save_goal(service.store, context, values['strategy'], revision)
+        except GoalSaveError as error:
+            return _shell('Franchise goal unchanged', '<section class="card"><h2>Your goal was not changed</h2>'
+                f'<p>{escape(str(error))}</p><a class="btn" href="/teams/{membership.roster_id}">Reload My Team</a></section>', status_code=error.status)
+        return RedirectResponse(f'/teams/{membership.roster_id}?goal_saved=1', status_code=303, headers={'Cache-Control': 'no-store'})
+
+    def activation_revision(context: Any) -> str:
+        # Existing semantic account revision, not a source/retrieval clock or
+        # another stored intent record. Even reselecting the same league updates it.
+        return str(service.store.account_by_username(context.username)["updated_at"])
+
+    def newer_choice(*, api: bool = False) -> Response:
+        message = "A newer league choice was kept. Return Home to use your current league."
+        if api:
+            return JSONResponse({"status": "league_context_changed", "message": message}, status_code=409)
+        return _shell("Newer league choice kept", f'<section class="card"><h2>Your league choice changed</h2><p>{message}</p><a class="btn" href="/">Home</a><p><a href="/account/leagues">Your leagues · retry import</a></p></section>', status_code=409)
+
+    def activation_failure(context: Any, revision: str, *, api: bool = False) -> Response:
+        if activation_revision(context) != revision:
+            return newer_choice(api=api)
+        return JSONResponse({"status": "unauthorized_league"}, status_code=403)
+
+    def commit_prepared_import(context: Any, request: Request, revision: str, series: Any,
+                               roster_id: int, franchise: str | None) -> Response | None:
+        try:
+            committed = service.store.commit_import(
+                context.account_id, session_token=request.cookies.get(SESSION_COOKIE, ''),
+                expected_account_revision=revision, sleeper_user_id=context.sleeper_user_id,
+                league=series.current_league, series_id=series.series_id,
+                seasons=series.seasons, roster_id=roster_id, franchise_name=franchise)
+        except sqlite3.Error:
+            return _shell('League import did not finish', '<section class="card"><h2>League import did not finish.</h2><p>Your saved account and active league are unchanged. Return to your leagues and try again.</p><a class="btn" href="/account/leagues">Your leagues</a></section>', status_code=503)
+        if committed:
+            return None
+        if service.store.context_for_session(request.cookies.get(SESSION_COOKIE, '')) is None:
+            return RedirectResponse('/account/sign-in', status_code=303)
+        return activation_failure(context, revision)
+
+    async def prepare_activation(context: Any, league_id: str, *, api: bool = False) -> Response | None:
+        # Existing current-series membership remains authoritative. Preparation
+        # cannot hydrate a foreign/historical league or change the saved choice.
+        eligible = any(
+            str(row["current_league_id"]) == league_id
+            and row.get("status") == "active" and row.get("roster_id") is not None
+            for row in service.store.series(context.account_id)
+        )
+        if not eligible:
+            return JSONResponse({"status": "unauthorized_league"}, status_code=403)
+        try:
+            await runtime_manager.get(league_id)
+        except (httpx.HTTPError, LeagueRuntimeError):
+            if api:
+                return JSONResponse({"status": "league_preparation_unavailable", "message": "League preparation did not finish. Your active league is unchanged. Try again shortly."}, status_code=503)
+            return _preparation_unavailable()
+        return None
+
+    @router.get("/account")
+    async def account_home() -> HTMLResponse:
+        context = current_account()
+        if context is None:
+            return _shell("Welcome", '<section class="card"><h2>Welcome to DTOS</h2><p>Your dynasty front office. Sign in or create an account, then connect Sleeper to find your leagues and teams.</p><p><a class="btn ds-action primary" data-dtos-action="primary" data-action-id="sign-in" href="/account/sign-in">Sign in</a> &nbsp; <a href="/account/create">Create account</a></p></section>', purpose="Sign in or create an account to open your dynasty front office.")
+        if not context.sleeper_user_id:
+            return RedirectResponse("/account/sleeper", status_code=303)
+        if not context.membership:
+            return RedirectResponse("/account/leagues", status_code=303)
+        return _shell("Account", f'<section class="card"><h2>{escape(context.display_name)}</h2><p>Linked Sleeper identity: <b>{escape(context.sleeper_username or "Resolved")}</b> <span class="muted">(resolved, ownership not independently verified)</span></p><p>Active league: <b>{escape(context.membership.league_name or context.membership.league_id)}</b><br>Your team: <b>{escape(context.membership.franchise_name or "Mapped franchise")}</b></p><p><a class="btn ds-action primary" data-dtos-action="primary" data-action-id="open-front-office" href="/">Open DTOS</a> &nbsp; <a href="/account/leagues">Your leagues</a> &nbsp; <a href="/account/my-dtos">My DTOS · Custom Rankings</a></p><form method="post" action="/account/logout"><input type="hidden" name="csrf_token" value="{escape(context.csrf_token)}"><button class="btn" type="submit">Log out</button></form></section>', purpose="Review the linked identity and open the active dynasty front office.")
+
+    @router.get("/account/sign-in")
+    async def sign_in_page(error: str = "") -> HTMLResponse:
+        message = '<p class="error">Sign-in failed. Check your details and try again.</p>' if error else ""
+        return _shell("Sign in", f'<section class="card"><h2>Sign in to DTOS</h2>{message}<form class="grid" method="post" action="/account/sign-in"><label>Username<input name="username" autocomplete="username" required></label><label>Password<input type="password" name="password" autocomplete="current-password" required></label><button class="btn ds-action primary" data-dtos-action="primary" data-action-id="sign-in" type="submit">Sign in</button></form><p><a href="/account/recover">Recover your account</a></p><p class="muted">New to DTOS? <a href="/account/create">Create an account</a>.</p></section>', purpose="Use your DTOS credentials to return to your saved leagues.")
+
+    @router.post("/account/sign-in")
+    async def sign_in(request: Request) -> Response:
+        if not _safe_browser_post(request):
+            return JSONResponse({"status": "request_rejected"}, status_code=403)
+        client_digest = _auth_client(request)
+        if service.store.recent_auth_failures("sign_in", client_digest) >= 5:
+            return _rate_limited(request, 900, "/account/sign-in")
+        values = await _form(request)
+        account_id = service.authenticate(values.get("username", ""), values.get("password", ""))
+        if account_id is None:
+            service.store.record_auth_result(None, "sign_in", "failure", client_digest)
+            return RedirectResponse("/account/sign-in?error=1", status_code=303)
+        service.store.record_auth_result(account_id, "sign_in", "success", client_digest)
+        token, _ = service.new_session(account_id)
+        response = RedirectResponse("/account", status_code=303)
+        _set_session(response, token)
+        return response
+
+    @router.get("/account/create")
+    async def create_page(error: str = "") -> HTMLResponse:
+        message = f'<p class="error">{escape(error)}</p>' if error else ""
+        return _shell("Create account", f'<section class="card"><h2>Create your DTOS account</h2>{message}<form class="grid" method="post" action="/account/create"><label>Display name<input name="display_name" autocomplete="name" required></label><label>Username<input name="username" autocomplete="username" required></label><label>Password<input type="password" name="password" autocomplete="new-password" minlength="12" required></label><button class="btn ds-action primary" data-dtos-action="primary" data-action-id="create-account" type="submit">Create account</button></form><p class="muted">Your DTOS account is separate from your Sleeper identity.</p></section>', purpose="Create a secure DTOS identity before linking a public Sleeper account.")
+
+    @router.post("/account/create")
+    async def create_account(request: Request) -> Response:
+        if not _safe_browser_post(request):
+            return JSONResponse({"status": "request_rejected"}, status_code=403)
+        client_digest = _auth_client(request)
+        if service.store.recent_auth_failures("account_creation", client_digest, minutes=60) >= 3:
+            return _rate_limited(request, 3600, "/account/create")
+        values = await _form(request)
+        try:
+            account_id, recovery_codes = service.create_account(values.get("username", ""), values.get("display_name", ""), values.get("password", ""))
+        except Exception as exc:
+            service.store.record_auth_result(None, "account_creation", "failure", client_digest)
+            return _shell("Create account", f'<section class="card"><h1>We could not create that account.</h1><p class="error">{escape(str(exc) if isinstance(exc, ValueError) else "Choose a different username and try again.")}</p><p><a href="/account/create">Try again</a></p></section>')
+        service.store.record_auth_result(account_id, "account_creation", "success", client_digest)
+        token, _ = service.new_session(account_id)
+        response = _recovery_page(recovery_codes)
+        _set_session(response, token)
+        return response
+
+    @router.get("/account/recover")
+    async def recover_page(error: str = "") -> HTMLResponse:
+        message = '<p class="error">Recovery failed. Check the account name and unused code.</p>' if error else ""
+        return _shell("Recover account", f'<section class="card"><h2>Recover your DTOS account</h2>{message}<form class="grid" method="post" action="/account/recover"><label>Username<input name="username" autocomplete="username" required></label><label>One-time recovery code<input type="password" name="recovery_code" autocomplete="one-time-code" required></label><label>New password<input type="password" name="new_password" autocomplete="new-password" minlength="12" required></label><button class="btn ds-action primary" data-dtos-action="primary" data-action-id="recover-account" type="submit">Reset password</button></form></section>', purpose="Use a one-time recovery code to restore secure account access.")
+
+    @router.post("/account/recover")
+    async def recover_account(request: Request) -> Response:
+        if not _safe_browser_post(request):
+            return JSONResponse({"status": "request_rejected"}, status_code=403)
+        client_digest = _auth_client(request)
+        if service.store.recent_auth_failures("credential_recovery", client_digest) >= 5:
+            return _rate_limited(request, 900, "/account/recover")
+        values = await _form(request)
+        try:
+            recovered = service.recover(values.get("username", ""), values.get("recovery_code", ""), values.get("new_password", ""))
+        except ValueError as exc:
+            return _shell("Recover account", f'<section class="card"><h1>Recovery failed.</h1><p class="error">{escape(str(exc))}</p><a href="/account/recover">Try again</a></section>')
+        if recovered is None:
+            service.store.record_auth_result(None, "credential_recovery", "failure", client_digest)
+            return RedirectResponse("/account/recover?error=1", status_code=303)
+        account_id, replacement_codes = recovered
+        service.store.record_auth_result(account_id, "credential_recovery", "success", client_digest)
+        token, _ = service.new_session(account_id)
+        response = _recovery_page(replacement_codes)
+        _set_session(response, token)
+        return response
+
+    @router.post("/account/logout")
+    async def logout(request: Request) -> Response:
+        values = await _form(request)
+        if not _csrf(service, request, values.get("csrf_token", "")):
+            return JSONResponse({"status": "csrf_rejected"}, status_code=403)
+        token = request.cookies.get(SESSION_COOKIE, "")
+        service.store.revoke_session(token)
+        response = RedirectResponse("/account/sign-in", status_code=303)
+        response.delete_cookie(SESSION_COOKIE, path="/")
+        response.headers["Clear-Site-Data"] = '"cache", "cookies", "storage"'
+        response.headers["Cache-Control"] = "no-store"
+        return response
+
+    @router.get("/account/sleeper")
+    async def sleeper_page(error: str = "") -> HTMLResponse:
+        context = current_account()
+        if context is None:
+            return RedirectResponse("/account/sign-in", status_code=303)
+        message = f'<p class="error">{escape(error)}</p>' if error else ""
+        return _shell("Connect Sleeper", f'<section class="card"><h2>Connect your Sleeper account</h2><p>Enter your Sleeper username so DTOS can resolve your public Sleeper identity and find your leagues.</p>{message}<form class="grid" method="post" action="/account/sleeper"><input type="hidden" name="csrf_token" value="{escape(context.csrf_token)}"><label>Sleeper username<input name="sleeper_username" required></label><button class="btn ds-action primary" data-dtos-action="primary" data-action-id="connect-sleeper" type="submit">Find my Sleeper account</button></form><p class="muted">This links a resolved Sleeper identity. Sleeper does not provide DTOS with proof that you control the account.</p></section>', purpose="Resolve a public Sleeper identity and discover its eligible leagues.")
+
+    @router.post("/account/sleeper")
+    async def link_sleeper(request: Request) -> Response:
+        context = current_account()
+        values = await _form(request)
+        if context is None:
+            return RedirectResponse("/account/sign-in", status_code=303)
+        if not _csrf(service, request, values.get("csrf_token", "")):
+            return JSONResponse({"status": "csrf_rejected"}, status_code=403)
+        try:
+            user = await service.resolve_sleeper(values.get("sleeper_username", ""))
+            service.store.link_sleeper(context.account_id, sleeper_user_id=str(user["user_id"]), username=user.get("username"), display_name=user.get("display_name"))
+        except httpx.HTTPError:
+            return _source_unavailable(identity=True)
+        except (ValueError, sqlite3.IntegrityError) as exc:
+            detail = str(exc) if isinstance(exc, ValueError) else "That Sleeper identity is already linked to another DTOS account."
+            return _shell("Connect Sleeper", f'<section class="card"><h1>We could not connect that identity.</h1><p class="error">{escape(detail)}</p><a href="/account/sleeper">Try again</a></section>')
+        return RedirectResponse("/account/leagues", status_code=303)
+
+    @router.get("/account/leagues")
+    async def leagues_page() -> HTMLResponse:
+        context = current_account()
+        if context is None:
+            return RedirectResponse("/account/sign-in", status_code=303)
+        if not context.sleeper_user_id:
+            return RedirectResponse("/account/sleeper", status_code=303)
+        saved_notice = ""
+        if context.sleeper_link_state == "inspection_fixture" and context.membership is not None:
+            discovered = [{
+                "league_id": context.membership.league_id,
+                "name": context.membership.league_name,
+                "season": context.membership.season,
+                "total_rosters": 1,
+            }]
+            memberships = {context.membership.league_id: context.membership}
+        else:
+            memberships = {item.league_id: item for item in service.store.memberships(context.account_id)}
+            try:
+                discovered_series = await service.discover_series(context.sleeper_user_id)
+                discovered = [item.public() for item in discovered_series]
+            except httpx.HTTPError:
+                discovered = [{"league_id": item.league_id, "name": item.league_name,
+                               "season": item.season, "saved_connection": True}
+                              for item in memberships.values() if item.status == "active"]
+                if not discovered:
+                    return _source_unavailable()
+                saved_notice = '<p role="status">Saved connected leagues · Sleeper discovery is unavailable. You can retry discovery or select an existing connection; preparation is still checked.</p><p><a href="/account/leagues">Retry league discovery</a></p>'
+        cards = []
+        for league in discovered:
+            league_id = str(league.get("league_id"))
+            membership = memberships.get(league_id)
+            connected = bool(membership and membership.status == "active")
+            state = "Switch front office" if connected else "Add to DTOS"
+            action = f"/account/leagues/{league_id}/activate" if connected else f"/account/leagues/{league_id}"
+            history = league.get("historical_seasons") or []
+            years = ", ".join(str(row.get("season")) for row in history if row.get("season"))
+            coverage = "Saved connection · discovery not refreshed" if league.get("saved_connection") else f"Current season: {escape(str(league.get('season') or 'Unknown'))} · {int(league.get('total_rosters') or 0)} teams"
+            cards.append(f'<article class="card"><h2>{escape(str(league.get("name") or "Sleeper league"))}</h2><p>{coverage}</p>{f"<p>History: {escape(years)}</p>" if years else ""}<p>{"Your team: <b>" + escape(membership.franchise_name or "Mapped franchise") + "</b>" if membership else "DTOS will map the franchise associated with your resolved Sleeper identity."}</p><form method="post" action="{escape(action)}"><input type="hidden" name="csrf_token" value="{escape(context.csrf_token)}"><button class="btn" type="submit">{state}</button></form></article>')
+        return _shell("Your leagues", f'{saved_notice}<p class="muted">Current NFL dynasty leagues are shown first.</p>{"".join(cards) or "<section class=\"card\"><h2>No eligible leagues found</h2><p>Check the linked Sleeper username or try again later.</p></section>"}<section class="card"><h2>Add another league</h2><p>Enter a Sleeper league ID. DTOS will add it only if your resolved identity maps to exactly one franchise.</p><form class="grid" method="post" action="/account/leagues/import"><input type="hidden" name="csrf_token" value="{escape(context.csrf_token)}"><label>Sleeper league ID<input name="league_id" inputmode="numeric" required></label><button class="btn ds-action primary" data-dtos-action="primary" data-action-id="import-league" type="submit">Add to DTOS</button></form></section>', purpose="Choose an authorized league series or add another verified membership.")
+
+    @router.post("/account/leagues/import")
+    async def import_league(request: Request) -> Response:
+        context = current_account()
+        values = await _form(request)
+        if context is None or not context.sleeper_user_id:
+            return RedirectResponse("/account/sign-in", status_code=303)
+        if not _csrf(service, request, values.get("csrf_token", "")):
+            return JSONResponse({"status": "csrf_rejected"}, status_code=403)
+        revision = activation_revision(context)
+        try:
+            league = await service.league(values.get("league_id", ""))
+            roster_id, franchise, status = await service.resolve_membership(league, context.sleeper_user_id)
+        except httpx.HTTPError:
+            return _source_unavailable()
+        except ValueError:
+            return _shell("League unavailable", '<section class="card"><h1>We could not add that league.</h1><p>Confirm the Sleeper league ID and try again.</p><a class="btn" href="/account/leagues">Your leagues</a></section>')
+        if status != "active" or roster_id is None:
+            return _unmatched_franchise()
+        try:
+            series = await service.complete_series(league)
+            await runtime_manager.get(str(league["league_id"]))
+        except (httpx.HTTPError, LeagueRuntimeError):
+            return _preparation_unavailable()
+        failure = commit_prepared_import(context, request, revision, series, roster_id, franchise)
+        if failure is not None:
+            return failure
+        return RedirectResponse("/", status_code=303)
+
+    @router.post("/account/leagues/{league_id}")
+    async def add_league(league_id: str, request: Request) -> Response:
+        context = current_account()
+        values = await _form(request)
+        if context is None or not context.sleeper_user_id:
+            return RedirectResponse("/account/sign-in", status_code=303)
+        if not _csrf(service, request, values.get("csrf_token", "")):
+            return JSONResponse({"status": "csrf_rejected"}, status_code=403)
+        revision = activation_revision(context)
+        try:
+            discovered = {item.current_league_id: item for item in await service.discover_series(context.sleeper_user_id)}
+        except httpx.HTTPError:
+            return _source_unavailable()
+        series = discovered.get(league_id)
+        if series is None:
+            return _shell("League unavailable", '<section class="card"><h1>That league is not available to this Sleeper identity.</h1></section>')
+        league = series.current_league
+        try:
+            series = await service.complete_series(league)
+            roster_id, franchise, status = await service.resolve_membership(league, context.sleeper_user_id)
+        except httpx.HTTPError:
+            return _source_unavailable()
+        if status != "active" or roster_id is None:
+            return _unmatched_franchise()
+        try:
+            await runtime_manager.get(league_id)
+        except (httpx.HTTPError, LeagueRuntimeError):
+            return _preparation_unavailable()
+        failure = commit_prepared_import(context, request, revision, series, roster_id, franchise)
+        if failure is not None:
+            return failure
+        return RedirectResponse("/", status_code=303)
+
+    @router.post("/account/leagues/{league_id}/activate")
+    async def activate_league(league_id: str, request: Request) -> Response:
+        context = current_account()
+        values = await _form(request)
+        if context is None or not _csrf(service, request, values.get("csrf_token", "")):
+            return JSONResponse({"status": "csrf_rejected"}, status_code=403)
+        revision = activation_revision(context)
+        failure = await prepare_activation(context, league_id)
+        if failure is not None:
+            return failure
+        membership = service.store.activate(context.account_id, league_id, expected_account_revision=revision)
+        if membership is None:
+            return activation_failure(context, revision)
+        return RedirectResponse("/", status_code=303)
+
+    @router.get("/api/account")
+    async def account_api() -> JSONResponse:
+        context = current_account()
+        if context is None:
+            return JSONResponse({"status": "authentication_required"}, status_code=401)
+        return JSONResponse(service.public_context(context), headers={"Cache-Control": "no-store"})
+
+    @router.get("/api/account/health")
+    async def account_health_api() -> JSONResponse:
+        health = service.store.health()
+        return JSONResponse({
+            "status": health["status"], "schema_version": health["schema_version"],
+            "session_storage": "database_backed_opaque_tokens",
+        }, headers={"Cache-Control": "no-store"})
+
+    @router.get("/api/account/leagues")
+    async def account_leagues_api() -> JSONResponse:
+        context = current_account()
+        if context is None:
+            return JSONResponse({"status": "authentication_required"}, status_code=401)
+        return JSONResponse({"status": "ok", "membership_model": "one_to_many", "hardcoded_league_limit": False, "leagues": [{
+            "series_id": item["series_id"], "league_id": item["current_league_id"],
+            "league_name": item.get("league_name"), "franchise_name": item.get("franchise_name"),
+            "roster_id": item.get("roster_id"), "season": item.get("current_season"),
+            "historical_season_count": max(0, int(item.get("season_count") or 1) - 1),
+            "status": item.get("status"),
+        } for item in service.store.series(context.account_id)]}, headers={"Cache-Control": "no-store"})
+
+    @router.get("/api/account/active-league")
+    async def active_league_api() -> JSONResponse:
+        context = current_account()
+        if context is None:
+            return JSONResponse({"status": "authentication_required"}, status_code=401)
+        membership = context.membership
+        return JSONResponse({"status": "ready" if membership else "selection_required", "active_league": ({
+            "league_id": membership.league_id, "league_name": membership.league_name,
+            "franchise_name": membership.franchise_name, "roster_id": membership.roster_id,
+        } if membership else None)}, headers={"Cache-Control": "no-store"})
+
+    @router.post("/api/account/active-league")
+    async def set_active_league_api(request: Request) -> Response:
+        context = current_account()
+        if context is None:
+            return JSONResponse({"status": "authentication_required"}, status_code=401)
+        payload = await request.json()
+        league_id = str(payload.get("league_id") or "")
+        revision = activation_revision(context)
+        failure = await prepare_activation(context, league_id, api=True)
+        if failure is not None:
+            return failure
+        membership = service.store.activate(context.account_id, league_id, expected_account_revision=revision)
+        if membership is None:
+            return activation_failure(context, revision, api=True)
+        return JSONResponse({"status": "ready", "active_league": {
+            "league_id": membership.league_id, "league_name": membership.league_name,
+            "franchise_name": membership.franchise_name, "roster_id": membership.roster_id,
+        }}, headers={"Cache-Control": "no-store"})
+
+    return router

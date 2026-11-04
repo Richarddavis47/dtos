@@ -1,0 +1,92 @@
+"""League-specific conversion of projected football statistics."""
+from __future__ import annotations
+
+from typing import Any
+from decimal import Decimal, ROUND_FLOOR, ROUND_HALF_UP
+
+
+SCORING_METHOD_VERSION = "sleeper-coefficient-4dp-decimal-v2"
+DISPLAY_METHOD_VERSION = "sleeper-web-sequential-number-tofixed2-qualified-v2"
+
+
+def scoring_coefficient(value: Any) -> Decimal:
+    """Sleeper calcFn normalizes weights with Math.round(weight * 10000).
+
+    Use exact decimals and JS's ties-toward-positive-infinity rule. This is
+    coefficient normalization, NOT projection/stat rounding. Preserve source
+    coefficients in provenance; do not rewrite league settings.
+    """
+    scaled = Decimal(str(value or 0)) * 10000
+    return (scaled + Decimal('.5')).to_integral_value(rounding=ROUND_FLOOR) / 10000
+
+
+STAT_KEYS = {
+    "pass_yd": "pass_yd", "pass_td": "pass_td", "pass_int": "pass_int",
+    "pass_2pt": "pass_2pt", "rush_yd": "rush_yd", "rush_td": "rush_td",
+    "rush_2pt": "rush_2pt", "rec": "rec", "rec_yd": "rec_yd",
+    "rec_td": "rec_td", "rec_2pt": "rec_2pt", "fum_lost": "fum_lost",
+    "fgm": "fgm", "fgmiss": "fgmiss", "xpm": "xpm", "xpmiss": "xpmiss",
+}
+STAT_KEYS.update({key: key for key in (
+    'pass_att', 'pass_cmp', 'pass_inc', 'pass_cmp_40p', 'pass_fd', 'pass_sack',
+    'pass_td_40p', 'pass_td_50p', 'pass_int_td', 'rush_att', 'rush_fd', 'rush_40p',
+    'rush_td_40p', 'rush_td_50p', 'rec_fd', 'rec_40p', 'rec_td_40p', 'rec_td_50p',
+    'rec_0_4', 'rec_5_9', 'rec_10_19', 'rec_20_29', 'rec_30_39', 'fum',
+    'bonus_rec_te', 'bonus_rec_rb', 'bonus_rec_wr', 'bonus_rush_td_qb',
+    'bonus_pass_yd_300', 'bonus_pass_yd_400', 'bonus_rush_yd_100', 'bonus_rec_yd_100',
+    'fgm_0_19', 'fgm_20_29', 'fgm_30_39', 'fgm_40_49', 'fgm_50p',
+)})
+
+# Score only explicit source statistics with the league's own coefficients.
+# Never derive points/yardage buckets from a projected mean or use pts_ppr
+# as a substitute for the configured league's defensive scoring.
+STAT_KEYS.update({key: key for key in (
+    'sack', 'int', 'ff', 'fum_rec', 'fum_rec_td', 'safe', 'blk_kick',
+    'def_td', 'def_st_td', 'def_st_ff', 'def_st_fum_rec',
+    'st_td', 'st_ff', 'st_fum_rec', 'def_kr_yd', 'def_pr_yd', 'def_pr_td',
+    'pts_allow', 'pts_allow_0', 'pts_allow_1_6', 'pts_allow_7_13',
+    'pts_allow_14_20', 'pts_allow_21_27', 'pts_allow_28_34', 'pts_allow_35p',
+    'yds_allow', 'yds_allow_0_100', 'yds_allow_100_199', 'yds_allow_200_299',
+    'yds_allow_300_349', 'yds_allow_350_399', 'yds_allow_400_449',
+    'yds_allow_450_499', 'yds_allow_500_549', 'yds_allow_550p',
+)})
+
+
+def fantasy_points(stats: dict[str, Any], scoring: dict[str, Any], position: str = "") -> float:
+    """Score raw projected stats with the league's actual supported rules."""
+    total = Decimal(0)
+    for stat, scoring_key in STAT_KEYS.items():
+        total += Decimal(str(stats.get(stat) or 0)) * scoring_coefficient(scoring.get(scoring_key))
+    if position.upper() == "TE" and 'bonus_rec_te' not in stats:
+        total += Decimal(str(stats.get('rec') or 0)) * scoring_coefficient(
+            scoring.get('bonus_rec_te', scoring.get('rec_te')))
+    # A projected mean crossing a yardage threshold is not evidence that the
+    # bonus will be earned. Only an explicit source bonus statistic is scored.
+    return float(total)
+
+
+def sleeper_web_display(stats: dict[str, Any], scoring: dict[str, Any],
+                        source_stat_order: list[str] | None, position: str = "") -> str | None:
+    """Replay only the proven web display rule, never an optimization input.
+
+    Public Sleeper code iterates Object.keys(stats), adds binary64 calcFn
+    contributions sequentially, and calls Number.toFixed(2). Canonical decimal
+    totals deliberately do not inherit those binary rounding artifacts.
+    Older evidence without source order cannot prove exact web display parity.
+    """
+    if (source_stat_order is None or len(source_stat_order) != len(set(source_stat_order))
+            or set(source_stat_order) != set(stats)
+            or not any(key in STAT_KEYS for key in stats)):
+        return None
+    # The canonical league conversion supports position-based reception scoring.
+    # Raw-stat replay cannot establish Sleeper's UI bonus synthesis when the
+    # position bonus field is absent. Do not claim its unscored subtotal is exact.
+    if position.upper() == 'TE' and 'bonus_rec_te' not in stats and scoring_coefficient(scoring.get('bonus_rec_te', scoring.get('rec_te'))):
+        return None
+    total = 0.0
+    for key in source_stat_order:
+        if key in STAT_KEYS:
+            total += float(scoring_coefficient(scoring.get(STAT_KEYS[key]))) * float(stats[key])
+    # ECMA toFixed chooses the nearest decimal to the exact binary value, with
+    # ties away from zero. Decimal(str(total)) would erase the binary boundary.
+    return format(Decimal.from_float(total).quantize(Decimal('.01'), rounding=ROUND_HALF_UP), '.2f')

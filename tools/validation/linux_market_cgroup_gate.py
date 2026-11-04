@@ -1,0 +1,2468 @@
+"""Linux-only 2 GiB cgroup gate for the production-scale Asset Market lifecycle."""
+from __future__ import annotations
+
+import json
+import os
+import base64
+from collections import deque
+import hashlib
+import re
+import signal
+import sqlite3
+import statistics
+import subprocess
+import sys
+import threading
+import time
+from contextlib import closing
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from uuid import uuid4
+from pathlib import Path
+from typing import Callable
+from urllib.error import HTTPError
+from urllib.parse import quote
+from urllib.request import Request, urlopen
+
+import psutil
+
+GIB = 1024**3
+MIB = 1024**2
+MEMORY_MAX = 2 * GIB
+STARTUP_MAX = int(1.2 * GIB)
+COLD_MAX = int(1.5 * GIB)
+RAW_EMERGENCY_MAX = 1740 * MIB
+BASELINE = int(1.03 * GIB)
+BASE_URL = "http://127.0.0.1:8767"
+CGROUP = Path("/sys/fs/cgroup")
+OUTPUT = Path(os.environ.get("DTOS_BENCHMARK_OUTPUT", "/output/summary.json"))
+FIXTURE = Path(os.environ.get("DTOS_FIXTURE_ROOT", "/fixture"))
+FIXTURE_SETTINGS = {
+    "DTOS_CACHE_FILE": "dtos_cache.json",
+    "DTOS_HISTORY_DB_FILE": "dtos_history.sqlite3",
+    "DTOS_METADATA_DB_FILE": "dtos_metadata.sqlite3",
+    "DTOS_HISTORY_STORAGE_ROOT": ".",
+}
+_FIXTURE_INSPECTION_TOKEN = "dtos-linux-fixture-only-inspection-auth-v1"
+_FIXTURE_INSPECTION_ROSTER_ID = "1"
+
+
+def _fixture_inspection_environment(
+    environment: dict[str, str],
+) -> dict[str, str]:
+    """Configure the real inspection contract for only the isolated CI app."""
+    if environment.get("RENDER"):
+        raise RuntimeError(
+            "fixture inspection authentication cannot be enabled in production"
+        )
+    league_id = environment.get("SLEEPER_LEAGUE_ID", "").strip()
+    if not league_id:
+        raise RuntimeError(
+            "fixture inspection authentication requires the fixture league identity"
+        )
+    configured = environment.copy()
+    configured.update({
+        "DTOS_INSPECTION_AUTH_TOKEN": _FIXTURE_INSPECTION_TOKEN,
+        "DTOS_INSPECTION_LEAGUE_ID": league_id,
+        "DTOS_INSPECTION_ROSTER_ID": _FIXTURE_INSPECTION_ROSTER_ID,
+        "DTOS_INSPECTION_LEAGUE_NAME": "Linux Lifecycle Fixture",
+        "DTOS_INSPECTION_FRANCHISE_NAME": "Validation Franchise",
+    })
+    return configured
+
+
+class ExpansionLatencyFailure(AssertionError):
+    def __init__(self, message: str, result: dict[str, object]) -> None:
+        super().__init__(message)
+        self.result = result
+
+
+class StartupFailure(RuntimeError):
+    """Preserve the original startup failure and its bounded evidence."""
+
+    def __init__(
+        self, message: str, evidence: dict[str, object],
+        process: subprocess.Popen | None = None,
+    ) -> None:
+        super().__init__(message)
+        self.evidence = evidence
+        self.process = process
+
+
+class ColdBuildFailure(AssertionError):
+    def __init__(self, message: str, evidence: dict[str, object]) -> None:
+        super().__init__(message)
+        self.evidence = evidence
+
+
+def _sanitize_server_log(value: str, *, limit: int = 200) -> str:
+    """Return a bounded diagnostic tail without paths, identities, or secrets."""
+    lines = value.splitlines()[-limit:]
+    sanitized = "\n".join(lines).replace(
+        _FIXTURE_INSPECTION_TOKEN, "<redacted-fixture-credential>",
+    )
+    sanitized = re.sub(
+        r'(?i)(authorization|cookie|token|password|secret)([=: ]+)\S+',
+        r'\1\2<redacted>', sanitized,
+    )
+    sanitized = re.sub(
+        r'(?i)(file\s+["\'])(?:[A-Za-z]:\\|/)[^"\']*[\\/]([^\\/"\']+)(["\'])',
+        r'\1<path>/\2\3', sanitized,
+    )
+    sanitized = re.sub(
+        r'(?<![\w.-])(?:[A-Za-z]:\\[^\s"\']+|/(?:app|fixture|home|tmp|var)/[^\s"\']+)',
+        '<path>', sanitized,
+    )
+    sanitized = re.sub(
+        r'\b[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\b',
+        '<database-id>', sanitized,
+    )
+    return sanitized[-32_768:]
+
+
+def _bounded_log_tail(log) -> str:
+    try:
+        log.flush()
+        if log.readable():
+            log.seek(0)
+            value = log.read()
+            log.seek(0, os.SEEK_END)
+            return _sanitize_server_log(value)
+        return _sanitize_server_log(Path(log.name).read_text(
+            encoding="utf-8", errors="replace",
+        ))
+    except (AttributeError, OSError):
+        return ""
+
+
+def _normalized_headers(items) -> dict[str, str]:
+    """Normalize HTTP names while rejecting ambiguous retry instructions."""
+    normalized: dict[str, str] = {}
+    retry_values: list[str] = []
+    for raw_name, raw_value in items:
+        name, value = str(raw_name).casefold(), str(raw_value)
+        if name == "retry-after":
+            retry_values.append(value)
+        elif name not in normalized:
+            normalized[name] = value
+    if len(retry_values) > 1:
+        raise AssertionError(
+            f"warming response contains duplicate Retry-After headers: {retry_values}"
+        )
+    if retry_values:
+        normalized["retry-after"] = retry_values[0]
+    return normalized
+
+
+def _cgroup(name: str) -> int:
+    path = CGROUP / name
+    if not path.is_file():
+        raise RuntimeError(f"required cgroup metric unavailable: {name}")
+    value = path.read_text(encoding="ascii").strip()
+    if value == "max":
+        raise RuntimeError(f"cgroup metric is unlimited: {name}")
+    return int(value)
+
+
+def _cpu_stat() -> dict[str, int]:
+    """Read required Linux cgroup CPU scheduling evidence or fail closed."""
+    values: dict[str, int] = {}
+    try:
+        for line in Path("/sys/fs/cgroup/cpu.stat").read_text(
+            encoding="ascii",
+        ).splitlines():
+            name, raw = line.split(maxsplit=1)
+            values[name] = int(raw)
+    except (OSError, ValueError) as exc:
+        raise RuntimeError("required cgroup cpu.stat metrics are unavailable") from exc
+    required = {
+        "usage_usec", "user_usec", "system_usec", "nr_periods",
+        "nr_throttled", "throttled_usec",
+    }
+    if not required.issubset(values) or any(values[name] < 0 for name in required):
+        raise RuntimeError("required cgroup cpu.stat metrics are malformed")
+    return {name: values[name] for name in sorted(required)}
+
+
+def _cpu_delta(before: dict[str, int], after: dict[str, int]) -> dict[str, int]:
+    delta = {name: after[name] - before[name] for name in before}
+    if any(value < 0 for value in delta.values()):
+        raise RuntimeError("cgroup cpu.stat counters moved backwards")
+    return delta
+
+
+def _cgroup_cpu() -> dict[str, int | bool]:
+    path = CGROUP / "cpu.stat"
+    if not path.is_file():
+        raise RuntimeError("required cgroup metric unavailable: cpu.stat")
+    values: dict[str, int | bool] = {"available": True}
+    for line in path.read_text(encoding="ascii").splitlines():
+        name, value = line.split()
+        values[name] = int(value)
+    return values
+
+
+def _rss_high_water(pid: int) -> int:
+    status = Path(f"/proc/{pid}/status").read_text(encoding="utf-8")
+    for line in status.splitlines():
+        if line.startswith("VmHWM:"):
+            return int(line.split()[1]) * 1024
+    return 0
+
+
+def _cgroup_values(name: str) -> dict[str, int]:
+    path = CGROUP / name
+    if not path.is_file():
+        raise RuntimeError(f"required cgroup metric unavailable: {name}")
+    values: dict[str, int] = {}
+    for line in path.read_text(encoding="ascii").splitlines():
+        key, raw = line.split()
+        value = int(raw)
+        if value < 0:
+            raise RuntimeError(f"invalid cgroup metric: {name}/{key}")
+        values[key] = value
+    return values
+
+
+def _memory_state() -> dict[str, object]:
+    current = _cgroup("memory.current")
+    stats = _cgroup_values("memory.stat")
+    events = _cgroup_values("memory.events")
+    inactive = int(stats.get("inactive_file", 0))
+    if inactive > current:
+        raise RuntimeError("inactive_file exceeds memory.current")
+    return {
+        "raw_cgroup_bytes": current,
+        "inactive_file_bytes": inactive,
+        "active_file_bytes": int(stats.get("active_file", 0)),
+        "file_bytes": int(stats.get("file", 0)),
+        "effective_working_set_bytes": current - inactive,
+        "anonymous_bytes": int(stats.get("anon", 0)),
+        "memory_events": {
+            key: int(events.get(key, 0))
+            for key in ("oom", "oom_kill", "oom_group_kill")
+        },
+    }
+
+
+_RETIRED_ARCHIVE_SIZE = 0
+
+
+def _validation_archive() -> Path:
+    return Path(os.environ.get(
+        "DTOS_VALIDATION_LEGACY_ARCHIVE_FILE",
+        str(FIXTURE / "retirement-rehearsal.sqlite3"),
+    ))
+
+
+def _archive_size() -> int:
+    if _RETIRED_ARCHIVE_SIZE:
+        return _RETIRED_ARCHIVE_SIZE
+    configured = Path(os.environ.get(
+        "DTOS_VALIDATION_LEGACY_ARCHIVE_FILE",
+        str(FIXTURE / "retirement-rehearsal.sqlite3"),
+    ))
+    return configured.stat().st_size if configured.is_file() else 0
+
+
+def _warm_historical_archive() -> dict[str, object]:
+    """Read real historical payload pages without retaining decoded records."""
+    configured = _validation_archive()
+    started = time.perf_counter()
+    with closing(sqlite3.connect(
+        f"file:{configured.as_posix()}?mode=ro", uri=True,
+    )) as connection:
+        row = connection.execute(
+            "SELECT count(*), coalesce(sum(length(payload)), 0) "
+            "FROM historical_records"
+        ).fetchone()
+        hotset = connection.execute(
+            "SELECT count(*), coalesce(sum(length(payload)), 0) FROM ("
+            "SELECT payload FROM historical_records ORDER BY rowid DESC LIMIT 8192)"
+        ).fetchone()
+        pages = int(connection.execute("PRAGMA page_count").fetchone()[0])
+        page_size = int(connection.execute("PRAGMA page_size").fetchone()[0])
+    return {
+        "record_count": int(row[0]),
+        "payload_bytes_scanned": int(row[1]),
+        "hotset_records": int(hotset[0]),
+        "hotset_payload_bytes": int(hotset[1]),
+        "database_pages": pages,
+        "page_size_bytes": page_size,
+        "duration_ms": round((time.perf_counter() - started) * 1000, 3),
+    }
+
+
+def _retire_validation_archive(
+    *, warm: bool, memory_observer: Callable[[str], dict[str, object]] | None = None,
+) -> dict[str, object]:
+    """Remove the isolated legacy fixture before the application starts."""
+    global _RETIRED_ARCHIVE_SIZE
+    archive = _validation_archive().resolve()
+    configured = Path(os.environ["DTOS_HISTORY_DB_FILE"]).resolve()
+    if archive == configured:
+        raise AssertionError("retirement rehearsal targets configured application storage")
+    if not archive.is_file():
+        raise AssertionError("retirement rehearsal archive is unavailable")
+    _RETIRED_ARCHIVE_SIZE = archive.stat().st_size
+    observe = memory_observer or _memory_evidence
+    before = None
+    scan = None
+    after = None
+    threshold = _archive_material_threshold(_RETIRED_ARCHIVE_SIZE)
+    try:
+        before = observe("archive_pressure_before") if warm else None
+        scan = _warm_historical_archive() if warm else None
+        after = observe("archive_pressure_pre_unlink") if warm else None
+    finally:
+        archive.unlink(missing_ok=True)
+        for suffix in ("-wal", "-shm", "-journal"):
+            Path(f"{archive}{suffix}").unlink(missing_ok=True)
+    if configured.exists() or archive.exists():
+        raise AssertionError("legacy fixture remained after retirement rehearsal")
+    inactive = after.get("inactive_file_bytes") if isinstance(after, dict) else None
+    pressure_passed = (
+        not warm or (
+            isinstance(inactive, int)
+            and inactive >= threshold
+            and bool(scan and int(scan.get("record_count") or 0) > 0)
+        )
+    )
+    return {
+        "status": "retired_before_startup",
+        "bytes_removed": _RETIRED_ARCHIVE_SIZE,
+        "archive_scan": scan,
+        "pre_unlink_pressure": {
+            "before": before,
+            "after": after,
+            "material_threshold_bytes": threshold,
+            "passed": pressure_passed,
+        } if warm else None,
+        "configured_legacy_file_present": configured.exists(),
+        "rehearsal_archive_present": archive.exists(),
+    }
+
+
+def _memory_evidence(phase: str) -> dict[str, object]:
+    """Return a sanitized snapshot even when strict cgroup parsing fails."""
+    try:
+        state = _memory_state()
+        return {
+            **state,
+            "archive_size_bytes": _archive_size(),
+            "accounting_mode": "cgroup_working_set",
+            "timestamp": time.time(),
+            "lifecycle_phase": phase,
+        }
+    except (OSError, RuntimeError, TypeError, ValueError) as exc:
+        return {
+            "raw_cgroup_bytes": None,
+            "inactive_file_bytes": None,
+            "active_file_bytes": None,
+            "file_bytes": None,
+            "anonymous_bytes": None,
+            "effective_working_set_bytes": None,
+            "memory_events": None,
+            "archive_size_bytes": _archive_size(),
+            "accounting_mode": "conservative",
+            "metric_error": type(exc).__name__,
+            "timestamp": time.time(),
+            "lifecycle_phase": phase,
+        }
+
+
+def _archive_material_threshold(archive_size: int) -> int:
+    """Use five percent of the archive, bounded from 64 KiB to 8 MiB."""
+    return max(64 * 1024, min(8 * MIB, max(0, archive_size) // 20))
+
+
+def _archive_cache_assessment(
+    before: dict[str, object], after: dict[str, object], *,
+    coverage_status: int, coverage: dict[str, object],
+    expected_records: int = 30_726,
+) -> dict[str, object]:
+    """Classify a verified archive read as newly warmed or already resident."""
+    archive_size = int(before.get("archive_size_bytes") or 0)
+    threshold = _archive_material_threshold(archive_size)
+    before_inactive = before.get("inactive_file_bytes")
+    after_inactive = after.get("inactive_file_bytes")
+    progress = coverage.get("canonical_progress") or {}
+    counts_by_season = coverage.get("counts_by_season") or {}
+    canonical_record_count = sum(
+        int((counts or {}).get("player_week") or 0)
+        for counts in counts_by_season.values()
+        if isinstance(counts, dict)
+    ) if isinstance(counts_by_season, dict) else 0
+    canonical_event_count = int(coverage.get("asset_event_count") or 0)
+    verified_evidence_count = canonical_event_count or canonical_record_count
+    coverage_valid = (
+        coverage_status == 200
+        and verified_evidence_count == expected_records
+        and int(progress.get("completed_steps") or 0) == 5
+        and int(progress.get("total_steps") or 0) == 6
+        and progress.get("status") == "completed_with_pending"
+    )
+    metrics_valid = (
+        before.get("accounting_mode") == "cgroup_working_set"
+        and after.get("accounting_mode") == "cgroup_working_set"
+        and isinstance(before_inactive, int)
+        and isinstance(after_inactive, int)
+    )
+    growth = (
+        after_inactive - before_inactive if metrics_valid else None
+    )
+    mode = None
+    if coverage_valid and metrics_valid and growth is not None and growth >= threshold:
+        mode = "newly_warmed"
+    elif (
+        coverage_valid and metrics_valid
+        and before_inactive >= threshold and after_inactive >= threshold
+    ):
+        mode = "already_resident"
+    reason = (
+        f"archive cache established via {mode}"
+        if mode else
+        "coverage contract invalid" if not coverage_valid else
+        "cgroup metrics unavailable or malformed" if not metrics_valid else
+        "inactive_file did not meet the fixture-derived threshold"
+    )
+    return {
+        "passed": mode is not None,
+        "establishment_mode": mode,
+        "reason": reason,
+        "archive_size_bytes": archive_size,
+        "material_threshold_bytes": threshold,
+        "inactive_file_before_bytes": before_inactive,
+        "inactive_file_after_bytes": after_inactive,
+        "inactive_file_growth_bytes": growth,
+        "coverage_valid": coverage_valid,
+        "canonical_historical_record_count": canonical_record_count,
+        "canonical_asset_event_count": canonical_event_count,
+        "verified_evidence_count": verified_evidence_count,
+    }
+
+
+def _record_archive_assessment(
+    phases: dict[str, object], before: dict[str, object],
+    after: dict[str, object], *, coverage_status: int,
+    coverage: dict[str, object], duration_ms: float,
+    archive_scan: dict[str, object] | None = None,
+) -> dict[str, object]:
+    """Persist bounded evidence before enforcing the archive-cache gate."""
+    assessment = _archive_cache_assessment(
+        before, after, coverage_status=coverage_status, coverage=coverage,
+    )
+    phases["archive_warming"] = {
+        "timestamp": time.time(),
+        "duration_ms": round(duration_ms, 3),
+        "before": before,
+        "after": after,
+        "assessment": assessment,
+        "archive_scan": archive_scan,
+        "coverage": {
+            "status": coverage_status,
+            "asset_event_count": coverage.get("asset_event_count"),
+            "canonical_historical_record_count": assessment[
+                "canonical_historical_record_count"
+            ],
+            "canonical_progress": coverage.get("canonical_progress"),
+            "query_scope": coverage.get("read_model"),
+            "provider_synchronization": False,
+            "historical_mutation": False,
+        },
+    }
+    if not assessment["passed"]:
+        raise AssertionError(str(assessment["reason"]))
+    return assessment
+
+
+def _archive_cache_retained(snapshot: dict[str, object], threshold: int) -> bool:
+    return (
+        snapshot.get("accounting_mode") == "cgroup_working_set"
+        and isinstance(snapshot.get("inactive_file_bytes"), int)
+        and int(snapshot["inactive_file_bytes"]) >= threshold
+    )
+
+
+def _post_retirement_coverage_valid(
+    status: int, coverage: dict[str, object], *, expected_records: int = 30_726,
+) -> bool:
+    progress = coverage.get("canonical_progress") or {}
+    counts = coverage.get("counts_by_season") or {}
+    records = sum(
+        int((row or {}).get("player_week") or 0)
+        for row in counts.values() if isinstance(row, dict)
+    ) if isinstance(counts, dict) else 0
+    return (
+        status == 200
+        and records == expected_records
+        and progress.get("status") == "completed_with_pending"
+        and int(progress.get("completed_steps") or 0) == 5
+        and int(progress.get("total_steps") or 0) == 6
+    )
+
+
+def _startup_memory_within_limit(snapshot: dict[str, object]) -> bool:
+    """Apply the startup ceiling to the verified effective working set."""
+    return (
+        snapshot.get("accounting_mode") == "cgroup_working_set"
+        and isinstance(snapshot.get("effective_working_set_bytes"), int)
+        and int(snapshot["effective_working_set_bytes"]) < STARTUP_MAX
+    )
+
+
+def _effective_memory_margin(memory_limit: int, effective_peak: int) -> int:
+    """Return allocatable margin after verified reclaimable file cache."""
+    return memory_limit - effective_peak
+
+
+def _combined_read_audit() -> dict[str, object]:
+    """Run the observed production audit plus supported overlapping reads."""
+    sequential_paths = (
+        "/health/ready", "/api/history/coverage", "/api/market/health",
+        "/api/market/assets?limit=1", "/api/market/search?q=QB&limit=1",
+    )
+    overlapping_paths = (
+        "/api/history/coverage", "/api/market/health",
+        "/api/market/assets?limit=50",
+        "/api/market/assets/player:10213",
+        "/api/market/search?q=QB&limit=50",
+    )
+
+    def observed(path: str, phase: str) -> dict[str, object]:
+        before = _memory_evidence(f"{phase}_before")
+        status, body, duration_ms = _request(path)
+        after = _memory_evidence(f"{phase}_after")
+        return {
+            "path": path, "status": status, "duration_ms": round(duration_ms, 3),
+            "response_bytes": len(
+                body if isinstance(body, bytes) else body.encode("utf-8")
+            ),
+            "memory_before": before, "memory_after": after,
+        }
+
+    cycles = []
+    for cycle_index in range(2):
+        sequential = []
+        for index, path in enumerate(sequential_paths):
+            sample = observed(path, f"combined_{cycle_index}_sequential_{index}")
+            sequential.append(sample)
+            if sample["status"] != 200:
+                raise AssertionError(f"combined audit failed: {path}={sample['status']}")
+        overlapping = []
+        with ThreadPoolExecutor(max_workers=len(overlapping_paths)) as executor:
+            futures = {
+                executor.submit(
+                    observed, path, f"combined_{cycle_index}_overlap_{index}",
+                ): path
+                for index, path in enumerate(overlapping_paths)
+            }
+            for future in as_completed(futures):
+                sample = future.result()
+                overlapping.append(sample)
+                if sample["status"] != 200:
+                    raise AssertionError(
+                        f"combined overlap failed: {sample['path']}={sample['status']}"
+                    )
+        overlapping.sort(key=lambda sample: overlapping_paths.index(sample["path"]))
+        cycles.append({"sequential": sequential, "overlapping": overlapping})
+    events = _cgroup_values("memory.events")
+    if any(int(events.get(name) or 0) for name in ("oom", "oom_kill", "oom_group_kill")):
+        raise AssertionError(f"combined audit recorded OOM events: {events}")
+    return {"cycles": cycles, "memory_events": events}
+
+
+class Monitor:
+    def __init__(self) -> None:
+        initial = _memory_state()
+        self.peak = int(initial["raw_cgroup_bytes"])
+        self.effective_peak = int(initial["effective_working_set_bytes"])
+        self.samples = 0
+        self.stop = threading.Event()
+        self.thread = threading.Thread(target=self._run, daemon=True)
+        self._lock = threading.Lock()
+        self._phase = "initialization"
+        self._server_pid: int | None = None
+        self._previous: dict[str, object] | None = None
+        self._trigger_window: list[dict[str, object]] = []
+        self._triggered = False
+        self._recent: deque[dict[str, object]] = deque(maxlen=3)
+        self._peak_window: list[dict[str, object]] = []
+        self._peak_needs_next = False
+
+    def set_server_pid(self, pid: int) -> None:
+        with self._lock:
+            self._server_pid = pid
+
+    def set_phase(self, phase: str) -> None:
+        with self._lock:
+            self._phase = phase
+
+    @staticmethod
+    def _rss(process: psutil.Process) -> int:
+        try:
+            return int(process.memory_info().rss)
+        except (psutil.Error, OSError):
+            return 0
+
+    def _process_evidence(self) -> dict[str, object]:
+        with self._lock:
+            server_pid = self._server_pid
+        if server_pid is None:
+            return {
+                "dtos_parent_rss_bytes": 0, "fois_child_rss_bytes": 0,
+                "browser_rss_bytes": 0, "browser_process_count": 0,
+                "largest_browser_rss_bytes": 0, "other_child_rss_bytes": 0,
+                "browser_process_roles": {},
+                "validation_harness_rss_bytes": self._rss(psutil.Process()),
+                "capture_identity": None, "capture_phase": "inactive",
+            }
+        try:
+            parent = psutil.Process(server_pid)
+            children = parent.children(recursive=True)
+        except (psutil.Error, OSError):
+            children = []
+            parent = None
+        browser_rss: list[int] = []
+        browser_roles: dict[str, dict[str, int]] = {}
+        fois_rss = 0
+        other_rss = 0
+        capture_identity = None
+        capture_active = False
+        for child in children:
+            rss = self._rss(child)
+            try:
+                name = child.name().casefold()
+                command = " ".join(child.cmdline()).casefold()
+            except (psutil.Error, OSError):
+                name, command = "", ""
+            if any(value in name or value in command for value in (
+                "chromium", "chrome", "playwright",
+            )):
+                browser_rss.append(rss)
+                role_match = re.search(r"--type=([a-z0-9_-]+)", command)
+                role = role_match.group(1) if role_match else "browser"
+                role_evidence = browser_roles.setdefault(
+                    role, {"process_count": 0, "rss_bytes": 0},
+                )
+                role_evidence["process_count"] += 1
+                role_evidence["rss_bytes"] += rss
+                continue
+            if "live_capture_worker" in command:
+                capture_active = True
+                match = re.search(r"\.([a-z0-9_-]+-(?:desktop|mobile))\.capture-input", command)
+                if match:
+                    capture_identity = match.group(1)
+                other_rss += rss
+                continue
+            if (
+                "fois" in command
+                or "multiprocessing.spawn" in command
+                or "process_pool" in command
+            ):
+                fois_rss += rss
+            else:
+                other_rss += rss
+        return {
+            "dtos_parent_rss_bytes": self._rss(parent) if parent is not None else 0,
+            "validation_harness_rss_bytes": self._rss(psutil.Process()),
+            "fois_child_rss_bytes": fois_rss,
+            "browser_rss_bytes": sum(browser_rss),
+            "browser_process_count": len(browser_rss),
+            "largest_browser_rss_bytes": max(browser_rss, default=0),
+            "browser_process_roles": browser_roles,
+            "other_child_rss_bytes": other_rss,
+            "capture_identity": capture_identity,
+            "capture_phase": "capturing" if capture_active or browser_rss else "inactive",
+        }
+
+    def _sample(self) -> dict[str, object]:
+        state = _memory_state()
+        with self._lock:
+            phase = self._phase
+        return {
+            "timestamp": time.time(), "phase": phase,
+            "raw_cgroup_bytes": int(state["raw_cgroup_bytes"]),
+            "effective_working_set_bytes": int(state["effective_working_set_bytes"]),
+            "anonymous_bytes": int(state["anonymous_bytes"]),
+            "file_bytes": int(state["file_bytes"]),
+            "inactive_file_bytes": int(state["inactive_file_bytes"]),
+            **self._process_evidence(),
+        }
+
+    def evidence(self) -> dict[str, object]:
+        with self._lock:
+            return {
+                "sample_interval_ms": 10,
+                "sample_count": self.samples,
+                "raw_peak_bytes": self.peak,
+                "effective_peak_bytes": self.effective_peak,
+                "threshold_bytes": COLD_MAX,
+                "threshold_crossed": self._triggered,
+                "threshold_window": list(self._trigger_window),
+                "peak_window": list(self._peak_window),
+                "recent_samples": list(self._recent),
+            }
+
+    def _record_sample(self, sample: dict[str, object]) -> None:
+        effective = int(sample["effective_working_set_bytes"])
+        raw = int(sample["raw_cgroup_bytes"])
+        with self._lock:
+            previous_peak = self.effective_peak
+            self.peak = max(self.peak, raw)
+            self.effective_peak = max(self.effective_peak, effective)
+            self.samples += 1
+            self._recent.append(sample)
+            if not self._triggered and effective >= COLD_MAX:
+                if self._previous is not None:
+                    self._trigger_window.append(self._previous)
+                self._trigger_window.append(sample)
+                self._triggered = True
+            elif self._triggered and len(self._trigger_window) < 3:
+                self._trigger_window.append(sample)
+            if effective > previous_peak:
+                self._peak_window = (
+                    [self._previous] if self._previous is not None else []
+                ) + [sample]
+                self._peak_needs_next = True
+            elif self._peak_needs_next:
+                self._peak_window.append(sample)
+                self._peak_needs_next = False
+            self._previous = sample
+
+    def _run(self) -> None:
+        while not self.stop.wait(0.01):
+            try:
+                sample = self._sample()
+            except (OSError, RuntimeError, TypeError, ValueError):
+                continue
+            self._record_sample(sample)
+
+    def __enter__(self):
+        self.thread.start()
+        return self
+
+    def __exit__(self, *_args) -> None:
+        self.stop.set()
+        self.thread.join(timeout=2)
+        self.peak = max(self.peak, _cgroup("memory.current"))
+        self.effective_peak = max(
+            self.effective_peak,
+            int(_memory_state()["effective_working_set_bytes"]),
+        )
+
+
+def _diagnostic_request(
+    path: str, expected: tuple[int, ...] = (200,),
+) -> tuple[int, bytes, float, float]:
+    started = time.perf_counter()
+    headers = {"X-DTOS-Diagnostics": "1"}
+    if path.split("?", 1)[0].rstrip("/") in {"/api/market/health", "/api/platform/health", "/api/data/health"} or path.startswith("/api/inspect"):
+        headers["X-DTOS-Inspection-Auth"] = _FIXTURE_INSPECTION_TOKEN
+    request = Request(BASE_URL + path, headers=headers)
+    try:
+        with urlopen(request, timeout=60) as response:
+            status, body = response.status, response.read()
+            server_ms = float(response.headers.get("X-DTOS-Request-Duration", 0))
+    except HTTPError as exc:
+        status, body = exc.code, exc.read()
+        server_ms = float(exc.headers.get("X-DTOS-Request-Duration", 0))
+    elapsed = (time.perf_counter() - started) * 1000
+    if status not in expected:
+        raise AssertionError(f"{path}: HTTP {status}, expected {expected}")
+    return status, body, elapsed, server_ms
+
+
+def _request(path: str, expected: tuple[int, ...] = (200,)) -> tuple[int, bytes, float]:
+    status, body, elapsed, _server_ms = _diagnostic_request(path, expected)
+    return status, body, elapsed
+
+
+def _latency_distribution(values: list[float]) -> dict[str, float]:
+    if not values:
+        raise AssertionError("runtime responsiveness produced no samples")
+    ordered = sorted(values)
+    return {
+        "min": round(ordered[0], 3),
+        "p50": round(statistics.median(ordered), 3),
+        "p90": round(_percentile(ordered, 0.90), 3),
+        "p95": round(_percentile(ordered, 0.95), 3),
+        "max": round(ordered[-1], 3),
+    }
+
+
+def _request_provider_call_count() -> int:
+    _status, body, _elapsed, _server_ms = _diagnostic_request(
+        "/__validation__/request-provider-calls",
+    )
+    return int(json.loads(body).get("request_attributed_total") or 0)
+
+
+def _browser_process_count() -> int:
+    """No browser belongs in the application-only lifecycle container."""
+    return sum(
+        1 for process in psutil.process_iter(["name"])
+        if any(word in (process.info["name"] or "").lower()
+               for word in ("chromium", "chrome", "playwright"))
+    )
+
+
+def _post_request(path: str, expected: tuple[int, ...] = (200,)) -> tuple[int, bytes, float]:
+    started = time.perf_counter()
+    request = Request(BASE_URL + path, data=b"", method="POST")
+    try:
+        with urlopen(request, timeout=60) as response:
+            status, body = response.status, response.read()
+    except HTTPError as exc:
+        status, body = exc.code, exc.read()
+    elapsed = (time.perf_counter() - started) * 1000
+    if status not in expected:
+        raise AssertionError(f"{path}: HTTP {status}, expected {expected}")
+    return status, body, elapsed
+
+
+def _historical_resolution_responsiveness() -> dict[str, object]:
+    """Exercise the real durable replay while retained product routes remain live."""
+    _status, start_body, start_ms = _post_request(
+        "/__validation__/historical-resolution",
+    )
+    started = json.loads(start_body)
+    paths = ("/health/live", "/", "/market", "/api/market/health")
+    samples: list[dict[str, object]] = []
+    cycles = 0
+    active = True
+    deadline = time.monotonic() + 30
+    while (active or cycles == 0) and time.monotonic() < deadline:
+        with ThreadPoolExecutor(max_workers=len(paths)) as executor:
+            futures = {
+                executor.submit(_diagnostic_request, path): path for path in paths
+            }
+            for future in as_completed(futures):
+                path = futures[future]
+                status, body, client_ms, server_ms = future.result()
+                sample = {
+                    "path": path, "status": status,
+                    "client_ms": round(client_ms, 3),
+                    "server_ms": round(server_ms, 3),
+                    "response_bytes": len(body),
+                }
+                samples.append(sample)
+                if client_ms >= 500:
+                    raise AssertionError(
+                        f"historical replay responsiveness failed: {path}={client_ms:.3f}ms"
+                    )
+        cycles += 1
+        _health_status, health_body, _health_ms = _request(
+            "/__validation__/historical-resolution",
+        )
+        state = json.loads(health_body)
+        active = bool(state.get("active"))
+    if active:
+        raise AssertionError("historical resolution did not complete within 30 seconds")
+    health = state.get("health") or {}
+    counters = health.get("counters") or {}
+    if int(counters.get("historical_resolution_assets_total") or 0) != 1_578:
+        raise AssertionError(f"historical replay fixture was not exercised: {health!r}")
+    if int(counters.get("historical_resolution_assets_bulk_reused") or 0) != 1_578:
+        raise AssertionError(f"historical durable replay was not fully reused: {health!r}")
+    if int(counters.get("historical_provider_requests") or 0) != 0:
+        raise AssertionError(f"historical replay contacted a provider: {health!r}")
+    if int(counters.get("historical_resolution_sqlite_connections") or 0) != 1:
+        raise AssertionError(f"historical replay connection budget failed: {health!r}")
+    if int(counters.get("historical_resolution_sqlite_queries") or 0) != 3:
+        raise AssertionError(f"historical replay query budget failed: {health!r}")
+    return {
+        "start_ms": round(start_ms, 3), "started": started,
+        "cycles": cycles, "samples": samples, "health": health,
+    }
+
+
+def _start_server(
+    log, mode: str = "normal", *, evidence: dict[str, object] | None = None,
+    popen_factory=subprocess.Popen, request_observer=_request,
+    clock=time.monotonic, sleeper=time.sleep, memory_observer=None,
+) -> subprocess.Popen:
+    evidence = evidence if evidence is not None else {}
+    memory_observer = memory_observer or (lambda: _cgroup("memory.current"))
+    environment = _fixture_inspection_environment(os.environ.copy())
+    environment["DTOS_MARKET_PROFILE_MODE"] = mode
+    command = [
+        sys.executable, "-m", "uvicorn",
+        "tools.validation.market_profile_app:app", "--host", "127.0.0.1",
+        "--port", "8767", "--workers", "1",
+    ]
+    evidence.update({
+        "command": [Path(command[0]).name, *command[1:]],
+        "mode": mode,
+        "capture_origin": "loopback_validation_server",
+        "fixture": {
+            "cache_file": Path(environment.get("DTOS_CACHE_FILE", "")).name,
+            "history_database": Path(
+                environment.get("DTOS_HISTORY_DB_FILE", "")
+            ).name,
+            "storage_root": ".",
+        },
+        "observations": [],
+        "memory_at_launch": memory_observer(),
+        "termination": "launching",
+    })
+    try:
+        process = popen_factory(
+            command, stdout=log, stderr=subprocess.STDOUT,
+            start_new_session=True, env=environment,
+        )
+    except OSError as exc:
+        evidence.update({
+            "exit_code": None, "termination": "launch_failure",
+            "exception_type": type(exc).__name__,
+            "message": _sanitize_server_log(str(exc)),
+            "server_log_tail": _bounded_log_tail(log),
+        })
+        raise StartupFailure("application executable could not start", evidence) from exc
+    evidence["pid_recorded"] = True
+    deadline = clock() + 60
+    while clock() < deadline:
+        if process.poll() is not None:
+            returncode = process.returncode
+            evidence.update({
+                "exit_code": returncode,
+                "termination": "signal" if returncode < 0 else "natural_exit",
+                "memory_at_exit": memory_observer(),
+                "server_log_tail": _bounded_log_tail(log),
+            })
+            raise StartupFailure(
+                f"application exited during startup: {returncode}", evidence, process,
+            )
+        try:
+            status, _body, elapsed = request_observer("/health/live")
+            evidence["observations"].append({
+                "endpoint": "/health/live", "status": status,
+                "client_ms": round(elapsed, 3),
+            })
+            if status == 200:
+                evidence.update({"exit_code": None, "termination": "running"})
+                return process
+        except OSError as exc:
+            evidence["observations"].append({
+                "endpoint": "/health/live", "status": "connection_error",
+                "error": type(exc).__name__,
+            })
+        sleeper(0.25)
+    evidence.update({
+        "exit_code": process.poll(), "termination": "startup_timeout",
+        "memory_at_exit": memory_observer(),
+        "server_log_tail": _bounded_log_tail(log),
+    })
+    raise StartupFailure(
+        "application did not become live within 60 seconds", evidence, process,
+    )
+
+
+def _stop_server(process: subprocess.Popen) -> None:
+    if process.poll() is not None:
+        return
+    # Match the service's graceful shutdown: let the application drain/reap its
+    # workers before group-wide escalation. Signalling every worker first can
+    # break an active pool while the parent's lifespan is waiting for cleanup.
+    process.send_signal(signal.SIGTERM)
+    try:
+        process.wait(timeout=15)
+    except subprocess.TimeoutExpired:
+        os.killpg(process.pid, signal.SIGKILL)
+        process.wait(timeout=10)
+    if process.returncode not in (0, -signal.SIGTERM):
+        raise RuntimeError(f"application exited unexpectedly: {process.returncode}")
+
+
+def _wait_ready() -> float:
+    started = time.perf_counter()
+    deadline = time.monotonic() + 60
+    while time.monotonic() < deadline:
+        try:
+            status, _body, _elapsed = _request("/health/ready", (200, 503))
+            if status == 200:
+                return (time.perf_counter() - started) * 1000
+        except OSError:
+            pass
+        time.sleep(0.25)
+    raise AssertionError("readiness did not reach HTTP 200 within 60 seconds")
+
+
+def _market_health() -> dict:
+    return json.loads(_request("/api/market/health")[1])
+
+
+def _configured_fixture_contract() -> dict[str, object]:
+    root = FIXTURE.resolve()
+    resolved: dict[str, Path] = {}
+    for name in FIXTURE_SETTINGS:
+        raw = os.environ.get(name)
+        if not raw:
+            raise AssertionError(f"required fixture setting is missing: {name}")
+        path = Path(raw).resolve()
+        try:
+            path.relative_to(root)
+        except ValueError as exc:
+            raise AssertionError(f"fixture setting escapes configured root: {name}") from exc
+        resolved[name] = path
+    if resolved["DTOS_HISTORY_STORAGE_ROOT"] != root:
+        raise AssertionError("history storage root does not resolve to fixture root")
+    for name in ("DTOS_CACHE_FILE", "DTOS_METADATA_DB_FILE"):
+        if not resolved[name].is_file():
+            raise AssertionError(f"configured fixture file is unavailable: {name}")
+    if resolved["DTOS_HISTORY_DB_FILE"].exists():
+        raise AssertionError("retired HistoricalStore was recreated before startup")
+    league_id = os.environ.get("SLEEPER_LEAGUE_ID")
+    if league_id != "1804000000000000000":
+        raise AssertionError("configured fixture league identity is unavailable")
+    metadata_stat = resolved["DTOS_METADATA_DB_FILE"].stat()
+    metadata_connection = sqlite3.connect(resolved["DTOS_METADATA_DB_FILE"])
+    try:
+        metadata_uuid = json.loads(str(metadata_connection.execute(
+            "SELECT value FROM metadata WHERE namespace='system' AND key='database_uuid'",
+        ).fetchone()[0]))
+    finally:
+        metadata_connection.close()
+    return {
+        "storage_root": ".",
+        "cache_file": resolved["DTOS_CACHE_FILE"].relative_to(root).as_posix(),
+        "legacy_history_database": resolved["DTOS_HISTORY_DB_FILE"].relative_to(root).as_posix(),
+        "metadata_database": resolved["DTOS_METADATA_DB_FILE"].relative_to(root).as_posix(),
+        "contained": True,
+        "league_id": league_id,
+        "file_identity_digest": hashlib.sha256(
+            f"{metadata_stat.st_dev}:{metadata_stat.st_ino}".encode()
+        ).hexdigest(),
+        "database_identity_digest": hashlib.sha256(
+            json.dumps(metadata_uuid).encode()
+        ).hexdigest(),
+        "legacy_database_identity_digest": None,
+        "legacy_history_database_size": 0,
+        "historicalstore_retired": True,
+        "metadata_database_size": metadata_stat.st_size,
+    }
+
+
+def _application_fixture_contract(expected: dict[str, object]) -> dict[str, object]:
+    actual = json.loads(_request("/__validation__/fixture-contract")[1])
+    for name in (
+        "storage_root", "cache_file", "legacy_history_database",
+        "metadata_database", "league_id",
+    ):
+        if actual.get(name) != expected.get(name):
+            raise AssertionError(f"application fixture setting mismatch: {name}")
+    if actual.get("active_store_database") != expected.get("metadata_database"):
+        raise AssertionError("application canonical store does not use metadata database")
+    if actual.get("cache_league_id") != expected.get("league_id"):
+        raise AssertionError("application cache uses a different fixture league")
+    for name in (
+        "database_identity_digest", "file_identity_digest",
+        "legacy_history_database_size", "metadata_database_size",
+    ):
+        if actual.get(name) != expected.get(name):
+            raise AssertionError(f"application fixture identity mismatch: {name}")
+    for name in ("cache_exists", "metadata_database_exists", "active_store_matches", "contained"):
+        if actual.get(name) is not True:
+            raise AssertionError(f"application fixture contract failed: {name}")
+    if actual.get("legacy_history_database_exists") is not False:
+        raise AssertionError("application recreated the retired HistoricalStore")
+    legacy = actual.get("legacy_historical_store") or {}
+    if legacy.get("historicalstore_retired") is not True:
+        raise AssertionError("application retirement health is unavailable")
+    if any(int(legacy.get(name) or 0) for name in (
+        "legacy_create_attempts", "legacy_read_attempts", "legacy_write_attempts",
+    )):
+        raise AssertionError("application attempted retired HistoricalStore access")
+    return actual
+
+
+def _artifact_state() -> dict[str, object]:
+    state = json.loads(_request("/__validation__/market-artifact")[1])
+    if not state.get("active") or not state.get("exists"):
+        raise AssertionError("active market artifact is unavailable")
+    if int(state.get("final_artifacts") or 0) != 1:
+        raise AssertionError(
+            "expected one active market generation, found "
+            f"{state.get('final_artifacts')}"
+        )
+    if int(state.get("temporary_artifacts") or 0):
+        raise AssertionError("temporary market artifacts remain after publication")
+    if state.get("complete") is not True or not state.get("generation"):
+        raise AssertionError("active market artifact metadata is incomplete")
+    if int(state.get("size_bytes") or 0) <= 0:
+        raise AssertionError("active market artifact is empty")
+    return state
+
+
+def _cold_build() -> tuple[dict, float, int, dict[str, object]]:
+    started = time.perf_counter()
+    attempts = 0
+    warming_client: list[float] = []
+    warming_server: list[float] = []
+    health_latency: list[float] = []
+    liveness_latency: list[float] = []
+    browser_counts: list[int] = []
+    phases: set[str] = set()
+    deadline = time.monotonic() + 60
+    while time.monotonic() < deadline:
+        attempts += 1
+        status, _body, elapsed, server_ms = _diagnostic_request(
+            "/api/market/assets?limit=50", (200, 503),
+        )
+        if status == 200:
+            return (
+                _market_health(),
+                (time.perf_counter() - started) * 1000,
+                attempts,
+                {
+                    "warming_client_max_ms": round(max(warming_client, default=0), 3),
+                    "warming_server_max_ms": round(max(warming_server, default=0), 3),
+                    "health_max_ms": round(max(health_latency, default=0), 3),
+                    "liveness_max_ms": round(max(liveness_latency, default=0), 3),
+                    "background_phases": sorted(phases),
+                    "browser_process_counts": browser_counts,
+                },
+            )
+        warming_client.append(elapsed)
+        warming_server.append(server_ms)
+        if elapsed >= 500:
+            raise AssertionError(f"warming response exceeded 500ms: {elapsed:.3f}ms")
+        if server_ms >= 50:
+            raise AssertionError(
+                f"warming server time exceeded 50ms: {server_ms:.3f}ms"
+            )
+        _health_status, health_body, health_ms, _ = _diagnostic_request(
+            "/api/market/health",
+        )
+        health_latency.append(health_ms)
+        health = json.loads(health_body)
+        phases.add(str((health.get("cache") or {}).get("build_phase")))
+        _live_status, _live_body, live_ms, _ = _diagnostic_request("/health/live")
+        liveness_latency.append(live_ms)
+        browser_count = _browser_process_count()
+        browser_counts.append(browser_count)
+        if browser_count:
+            raise AssertionError("browser process overlapped semantic preparation")
+        if health_ms >= 500 or live_ms >= 500:
+            raise AssertionError(
+                f"background responsiveness failed: health={health_ms:.3f}ms "
+                f"liveness={live_ms:.3f}ms"
+            )
+        error = (health.get("cache") or {}).get("last_error")
+        if error:
+            raise AssertionError(f"market build failed: {error}")
+        time.sleep(0.5)
+    profile: dict[str, object] = {}
+    try:
+        status, body, _elapsed = _request("/__validation__/cold-build-profile")
+        if status == 200:
+            profile = json.loads(body)
+    except (OSError, ValueError, json.JSONDecodeError):
+        profile = {"capture": "unavailable"}
+    raise ColdBuildFailure("cold market build exceeded 60 seconds", {
+        "attempts": attempts,
+        "warming_client_max_ms": round(max(warming_client, default=0), 3),
+        "warming_server_max_ms": round(max(warming_server, default=0), 3),
+            "background_phases": sorted(phases),
+            "browser_process_counts": browser_counts,
+        "profile": profile,
+    })
+
+
+def _history_metrics() -> dict[str, object]:
+    payload = json.loads(_request("/api/history/coverage")[1])
+    return dict(payload.get("read_model") or {})
+
+
+def _percentile(values: list[float], percentile: float) -> float:
+    ordered = sorted(values)
+    index = max(
+        0,
+        min(len(ordered) - 1, int(len(ordered) * percentile + 0.999) - 1),
+    )
+    return ordered[index]
+
+
+def _public_error(exc: BaseException) -> dict[str, str]:
+    message = str(exc).replace(str(FIXTURE), "<fixture>").replace(BASE_URL, "<server>")
+    message = message.replace(
+        _FIXTURE_INSPECTION_TOKEN, "<redacted-fixture-credential>",
+    )
+    return {"type": type(exc).__name__, "message": message}
+
+
+def _profile_expansion(path: str) -> dict[str, object]:
+    # The first request intentionally hydrates the selected player's bounded
+    # historical summary. Only subsequent stable-cache reads are gated.
+    _diagnostic_request(path)
+    baseline = _history_metrics()
+    baseline_health = _market_health()
+    samples: list[dict[str, object]] = []
+    identities: list[tuple[object, object, object]] = []
+    previous = baseline
+    for sequence in range(1, 11):
+        status, body, client_ms, server_ms = _diagnostic_request(path)
+        current = _history_metrics()
+        payload = json.loads(body)
+        cache = (_market_health().get("cache") or {})
+        query_count = int(current.get("query_count") or 0) - int(
+            previous.get("query_count") or 0
+        )
+        sqlite_ms = (
+            float(current.get("query_duration_ms") or 0)
+            if query_count else 0.0
+        )
+        identity = (
+            payload.get("market_generation"),
+            payload.get("brain_snapshot_id"),
+            payload.get("historical_dataset_version"),
+        )
+        identities.append(identity)
+        samples.append({
+            "sequence": sequence,
+            "status": status,
+            "client_ms": round(client_ms, 3),
+            "server_ms": round(server_ms, 3),
+            "network_and_client_ms": round(max(0.0, client_ms - server_ms), 3),
+            "sqlite_query_count": query_count,
+            "sqlite_ms": round(sqlite_ms, 3),
+            "response_bytes": len(body),
+            "market_cache_status": cache.get("status"),
+            "market_build_count": cache.get("build_count"),
+            "player_summary_build_count": current.get("player_summary_build_count"),
+            "player_summary_cache_hits": current.get("player_summary_cache_hits"),
+            "runner_load": [round(value, 3) for value in os.getloadavg()],
+        })
+        previous = current
+    client_values = [float(sample["client_ms"]) for sample in samples]
+    server_values = [float(sample["server_ms"]) for sample in samples]
+    result = {
+        "warmup_completed": True,
+        "samples": samples,
+        "median_ms": round(statistics.median(client_values), 3),
+        "p95_ms": round(_percentile(client_values, 0.95), 3),
+        "maximum_ms": round(max(client_values), 3),
+        "server_median_ms": round(statistics.median(server_values), 3),
+        "server_maximum_ms": round(max(server_values), 3),
+        "dataset_generation_stable": len({identity[0] for identity in identities}) == 1,
+        "brain_snapshot_stable": len({identity[1] for identity in identities}) == 1,
+        "historical_dataset_stable": len({identity[2] for identity in identities}) == 1,
+        "market_build_count_stable": all(
+            sample["market_build_count"]
+            == (baseline_health.get("cache") or {}).get("build_count")
+            for sample in samples
+        ),
+        "player_summary_build_count_stable": all(
+            sample["player_summary_build_count"] == baseline.get("player_summary_build_count")
+            for sample in samples
+        ),
+        "player_summary_cache_hits_increased": int(
+            samples[-1]["player_summary_cache_hits"] or 0
+        ) >= int(baseline.get("player_summary_cache_hits") or 0) + len(samples),
+    }
+    if result["median_ms"] >= 1000 or result["maximum_ms"] >= 1000:
+        slow = [sample for sample in samples if float(sample["client_ms"]) >= 1000]
+        result["failed_samples"] = slow
+        raise ExpansionLatencyFailure(
+            "expansion latency gate failed: "
+            f"median={result['median_ms']:.3f}ms maximum={result['maximum_ms']:.3f}ms "
+            f"failed_samples={json.dumps(slow, sort_keys=True)}",
+            result,
+        )
+    for field in (
+        "dataset_generation_stable", "brain_snapshot_stable",
+        "historical_dataset_stable", "market_build_count_stable",
+        "player_summary_build_count_stable", "player_summary_cache_hits_increased",
+    ):
+        if not result[field]:
+            raise AssertionError(f"expansion identity/cache invariant failed: {field}")
+    return result
+
+
+def _historical_leader_performance() -> dict[str, object]:
+    """Gate cold/warm season leaders and event-loop responsiveness after restart."""
+    seasons: dict[str, object] = {}
+    for season in range(2021, 2027):
+        path = f"/api/history/seasons/{season}/leaders"
+        cold_status, cold_body, cold_ms = _request(path, expected=(200,))
+        warm_status, warm_body, warm_ms = _request(path, expected=(200,))
+        cold_payload = json.loads(cold_body)
+        warm_payload = json.loads(warm_body)
+        if cold_payload != warm_payload:
+            raise AssertionError(f"leader output changed after caching for {season}")
+        if cold_ms >= 15_000 or warm_ms >= 1_000:
+            raise AssertionError(
+                f"leader latency gate failed for {season}: cold={cold_ms:.3f} warm={warm_ms:.3f}"
+            )
+        seasons[str(season)] = {
+            "cold_ms": round(cold_ms, 3), "warm_ms": round(warm_ms, 3),
+            "status": cold_status, "warm_status": warm_status,
+            "leader_count": len(cold_payload.get("leaders") or []),
+            "response_bytes": len(cold_body),
+            "cache_result": "miss_then_hit",
+        }
+    if os.environ.get("DTOS_PRODUCTION_SHAPED_FIXTURE") != "1":
+        return {
+            "full_season_2021": {
+                "status": "not_applicable",
+                "reason": "compact_player_week_fixture",
+            },
+            "concurrent_health": [],
+            "cache_entries_cleared_before_full": 0,
+            "seasons": seasons,
+            "provider_synchronization": False,
+        }
+    clear_status, clear_body, _clear_ms = _request(
+        "/__validation__/history-cache/clear",
+    )
+    cleared = json.loads(clear_body).get("cleared_entries")
+    if clear_status != 200 or not isinstance(cleared, int) or cleared <= 0:
+        raise AssertionError("History cache did not enter a verified cold state")
+    health_samples: list[dict[str, object]] = []
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        full_future = executor.submit(_request, "/api/history/seasons/2021")
+        for path in ("/health/live", "/health/ready", "/api/status"):
+            status, body, elapsed_ms = _request(path)
+            health_samples.append({
+                "path": path, "status": status, "latency_ms": round(elapsed_ms, 3),
+                "response_bytes": len(body),
+            })
+        full_status, full_body, full_ms = full_future.result()
+    if full_status != 200 or full_ms >= 15_000:
+        raise AssertionError(
+            f"cold full-season gate failed: status={full_status} duration_ms={full_ms:.3f}"
+        )
+    if any(
+        sample["status"] != 200 or float(sample["latency_ms"]) >= 2_000
+        for sample in health_samples
+    ):
+        raise AssertionError("lightweight endpoint stalled during cold History read")
+    return {
+        "full_season_2021": {
+            "latency_ms": round(full_ms, 3), "status": full_status,
+            "response_bytes": len(full_body),
+        },
+        "concurrent_health": health_samples,
+        "cache_entries_cleared_before_full": cleared,
+        "seasons": seasons,
+        "provider_synchronization": False,
+    }
+
+
+def _latencies() -> dict[str, object]:
+    endpoints = {
+        "directory": "/api/market/assets?limit=50",
+        "search": "/api/market/search?q=Validation%20Player%2010213",
+        "trending": "/api/market/trending",
+        "health": "/api/market/health",
+    }
+    values = {}
+    for name, path in endpoints.items():
+        values[name] = round(_request(path)[2], 3)
+    limits = {"directory": 1000, "search": 500, "trending": 1000, "health": 500}
+    for name, value in values.items():
+        if value >= limits[name]:
+            raise AssertionError(f"{name} latency {value:.3f}ms exceeds {limits[name]}ms")
+    values["expansion"] = _profile_expansion(
+        f"/api/market/assets/{quote('player:10213', safe=':')}"
+    )
+    return values
+
+
+def _pad_to_production_baseline() -> list[bytearray]:
+    padding = []
+    while True:
+        current = _cgroup("memory.current")
+        remaining = BASELINE - current
+        if remaining <= 0:
+            break
+        padding.append(bytearray(min(16 * MIB, remaining)))
+    return padding
+
+
+def _semantic_contract() -> dict[str, object]:
+    return json.loads(_request("/__validation__/semantic-market-contract")[1])
+
+
+_NONSEMANTIC_VOLATILE_PATHS = {
+    "$.valuation_generation",
+}
+_MATERIAL_PUBLICATION_ENVELOPE_PATHS = {
+    "$.brain_generation",
+    "$.generated_at",
+    "$.market_generation",
+    "$.valuation_generation",
+}
+
+
+def _json_differences(
+    before: object, after: object, path: str = "$",
+) -> list[dict[str, object]]:
+    differences: list[dict[str, object]] = []
+    if type(before) is not type(after):
+        return [{"path": path, "before": before, "after": after}]
+    if isinstance(before, dict) and isinstance(after, dict):
+        for key in sorted(set(before) | set(after)):
+            child = f"{path}.{key}"
+            if key not in before:
+                differences.append({"path": child, "before": "<missing>", "after": after[key]})
+            elif key not in after:
+                differences.append({"path": child, "before": before[key], "after": "<missing>"})
+            else:
+                differences.extend(_json_differences(before[key], after[key], child))
+        return differences
+    if isinstance(before, list) and isinstance(after, list):
+        if len(before) != len(after):
+            differences.append({
+                "path": f"{path}.length", "before": len(before), "after": len(after),
+            })
+        for index, (left, right) in enumerate(zip(before, after)):
+            differences.extend(_json_differences(left, right, f"{path}[{index}]"))
+        return differences
+    if before != after:
+        differences.append({"path": path, "before": before, "after": after})
+    return differences
+
+
+def _canonical_digest(value: object) -> str:
+    encoded = json.dumps(
+        value, sort_keys=True, separators=(",", ":"), ensure_ascii=True,
+    ).encode()
+    return hashlib.sha256(encoded).hexdigest()
+
+
+def _nonsemantic_payload_comparison(before_body: bytes, after_body: bytes) -> dict[str, object]:
+    """Compare product content while explicitly auditing two volatile fields."""
+    before = json.loads(before_body)
+    after = json.loads(after_body)
+    differences = _json_differences(before, after)
+    unexpected = [
+        difference for difference in differences
+        if difference["path"] not in _NONSEMANTIC_VOLATILE_PATHS
+    ]
+    if unexpected:
+        raise AssertionError(
+            "non-semantic refresh changed unapproved response paths: "
+            + json.dumps(unexpected, sort_keys=True)
+        )
+    for difference in differences:
+        path = str(difference["path"])
+        before_value, after_value = difference["before"], difference["after"]
+        if path.endswith(".historical_records") and not all(
+            isinstance(value, int) and value >= 0 for value in (before_value, after_value)
+        ):
+            raise AssertionError("historical record generation is not a nonnegative integer")
+        if path == "$.valuation_generation" and not all(
+            value is None or isinstance(value, str) for value in (before_value, after_value)
+        ):
+            raise AssertionError("valuation generation is not nullable text")
+    before_stable = json.loads(before_body)
+    after_stable = json.loads(after_body)
+    before_stable.pop("valuation_generation", None)
+    after_stable.pop("valuation_generation", None)
+    for payload in (before_stable, after_stable):
+        generations = (
+            payload.get("historical_progress", {})
+            .get("canonical_history_progress", {})
+            .get("semantic_generations", {})
+        )
+        generations.pop("historical_records", None)
+    before_rows = before.get("assets") or []
+    after_rows = after.get("assets") or []
+    before_ids = [row.get("asset_id") for row in before_rows]
+    after_ids = [row.get("asset_id") for row in after_rows]
+    row_digest_before = _canonical_digest(before_rows)
+    row_digest_after = _canonical_digest(after_rows)
+    stable_digest_before = _canonical_digest(before_stable)
+    stable_digest_after = _canonical_digest(after_stable)
+    if before_ids != after_ids or row_digest_before != row_digest_after:
+        raise AssertionError("non-semantic refresh changed market rows or ordering")
+    if stable_digest_before != stable_digest_after:
+        raise AssertionError("non-semantic refresh changed stable response contract")
+    return {
+        "changed_path_count": len(differences),
+        "changed_paths": differences,
+        "asset_row_ids_changed": [],
+        "row_order_changed": False,
+        "row_digest_before": row_digest_before,
+        "row_digest_after": row_digest_after,
+        "stable_digest_before": stable_digest_before,
+        "stable_digest_after": stable_digest_after,
+        "raw_digest_before": _canonical_digest(before),
+        "raw_digest_after": _canonical_digest(after),
+    }
+
+
+def _material_target_comparison(
+    before_body: bytes, after_body: bytes,
+) -> list[dict[str, object]]:
+    before_rows = json.loads(before_body).get("results") or []
+    after_rows = json.loads(after_body).get("results") or []
+    expected_ids = ["player:10213"]
+    if [row.get("asset_id") for row in before_rows] != expected_ids:
+        raise AssertionError("material target is unavailable in compact market search")
+    if [row.get("asset_id") for row in after_rows] != expected_ids:
+        raise AssertionError("published material target is unavailable in compact search")
+    differences = _json_differences(
+        before_rows[0], after_rows[0], "$.assets[player:10213]",
+    )
+    expected_paths = {
+        "$.assets[player:10213].contender_value",
+        "$.assets[player:10213].values.contender_value",
+    }
+    if {difference["path"] for difference in differences} != expected_paths:
+        raise AssertionError(
+            "material replacement changed unexpected target fields: "
+            + json.dumps(differences, sort_keys=True)
+        )
+    return differences
+
+
+def _material_target_search_path(asset_id: str = "player:10213") -> str:
+    """Use the public canonical-ID search contract for an unambiguous target."""
+    if not asset_id.startswith("player:") or not asset_id.removeprefix("player:"):
+        raise AssertionError("material target must be a canonical player asset ID")
+    return f"/api/market/search?q={quote(asset_id, safe='')}&limit=50"
+
+
+def _material_first_page_comparison(
+    before_body: bytes, after_body: bytes, *,
+    old_market_generation: object, new_market_generation: object,
+) -> dict[str, object]:
+    """Require identical ordered rows and audit exact publication metadata changes."""
+    before = json.loads(before_body)
+    after = json.loads(after_body)
+    before_assets = before.get("assets") or []
+    after_assets = after.get("assets") or []
+    before_asset_bytes = json.dumps(
+        before_assets, sort_keys=True, separators=(",", ":"), ensure_ascii=True,
+    ).encode()
+    after_asset_bytes = json.dumps(
+        after_assets, sort_keys=True, separators=(",", ":"), ensure_ascii=True,
+    ).encode()
+    if before_asset_bytes != after_asset_bytes:
+        raise AssertionError(
+            "material replacement changed unrelated first-page assets: "
+            + json.dumps(
+                _json_differences(before_assets, after_assets, "$.assets"),
+                sort_keys=True,
+            )
+        )
+    before_envelope = dict(before)
+    after_envelope = dict(after)
+    before_envelope.pop("assets", None)
+    after_envelope.pop("assets", None)
+    envelope_differences = _json_differences(before_envelope, after_envelope)
+    unexpected = [
+        difference for difference in envelope_differences
+        if difference["path"] not in _MATERIAL_PUBLICATION_ENVELOPE_PATHS
+    ]
+    if unexpected:
+        raise AssertionError(
+            "material publication changed unexpected envelope paths: "
+            + json.dumps(unexpected, sort_keys=True)
+        )
+    if before.get("market_generation") != old_market_generation:
+        raise AssertionError("pre-publication response used an unexpected generation")
+    if after.get("market_generation") != new_market_generation:
+        raise AssertionError("post-publication response used a stale generation")
+    if old_market_generation == new_market_generation:
+        raise AssertionError("material publication did not change market generation")
+    if after.get("generated_at") != new_market_generation:
+        raise AssertionError("post-publication generated_at conflicts with generation")
+    if before.get("historical_dataset_version_scope") != "artifact_build" or (
+        after.get("historical_dataset_version_scope") != "artifact_build"
+    ):
+        raise AssertionError("directory historical identity is not artifact provenance")
+    return {
+        "asset_count": len(before_assets),
+        "asset_digest_before": hashlib.sha256(before_asset_bytes).hexdigest(),
+        "asset_digest_after": hashlib.sha256(after_asset_bytes).hexdigest(),
+        "asset_order": [row.get("asset_id") for row in before_assets],
+        "envelope_changed_paths": envelope_differences,
+        "old_market_generation": old_market_generation,
+        "new_market_generation": new_market_generation,
+    }
+
+
+def _nonsemantic_reuse(
+    first_generation: object, first_build_count: int, expected_body: bytes,
+) -> dict[str, object]:
+    before = _semantic_contract()
+    before_cache = (_market_health().get("cache") or {})
+    marker = f"validation-nonsemantic-{time.time_ns()}"
+    _profiled_request(
+        f"/__validation__/nonsemantic-refresh?marker={quote(marker)}", method="POST",
+    )
+    bodies = [_request("/api/market/assets?limit=50")[1] for _ in range(3)]
+    after = _semantic_contract()
+    health = _market_health()
+    cache = health.get("cache") or {}
+    if before.get("semantic_generation") != after.get("semantic_generation"):
+        raise AssertionError("non-semantic refresh changed semantic generation")
+    if after.get("artifact_compatibility") != "compatible":
+        raise AssertionError("non-semantic refresh rejected retained artifact")
+    comparisons = [
+        _nonsemantic_payload_comparison(expected_body, body) for body in bodies
+    ]
+    if int(cache.get("build_count") or 0) != first_build_count:
+        raise AssertionError("non-semantic refresh published a replacement")
+    if cache.get("build_active") or cache.get("market_generation") != first_generation:
+        raise AssertionError("non-semantic refresh started a replacement worker")
+    if int(cache.get("semantic_child_count") or 0) != int(
+        before_cache.get("semantic_child_count") or 0
+    ):
+        raise AssertionError("non-semantic refresh spawned a semantic child")
+    before_raw = before.get("raw_identities") or {}
+    after_raw = after.get("raw_identities") or {}
+    for field in ("last_sync", "brain_generated_at"):
+        if before_raw.get(field) == after_raw.get(field):
+            raise AssertionError(
+                f"non-semantic fixture mutation did not change raw identity: {field}"
+            )
+    if before_raw.get("historical_cache_generation") != after_raw.get(
+        "historical_cache_generation"
+    ):
+        raise AssertionError(
+            "non-semantic metadata refresh changed immutable provider-cache generation"
+        )
+    return {
+        "classification": "non_semantic_reuse",
+        "semantic_generation_stable": True,
+        "serialized_output_unchanged": True,
+        "artifact_compatibility": "compatible",
+        "replacement_workers": 0,
+        "semantic_children": 0,
+        "replacement_builds": 0,
+        "raw_before": before_raw,
+        "raw_after": after_raw,
+        "semantic_before": before.get("semantic_identities"),
+        "semantic_after": after.get("semantic_identities"),
+        "payload_comparison": comparisons[0],
+    }
+
+
+def _profiled_request(
+    path: str, *, method: str = "GET",
+) -> tuple[int, bytes, dict[str, str], float, float, dict[str, object]]:
+    started = time.perf_counter()
+    trace_id = uuid4().hex
+    request = Request(
+        BASE_URL + path,
+        headers={"X-DTOS-Diagnostics": "1", "X-DTOS-Trace-ID": trace_id},
+        method=method,
+    )
+    try:
+        response = urlopen(request, timeout=60)
+    except HTTPError as exc:
+        response = exc
+    with response:
+        body = response.read()
+        server_ms = float(response.headers.get("X-DTOS-Request-Duration", 0))
+        encoded = response.headers.get("X-DTOS-Validation-Profile", "")
+        profile = json.loads(base64.urlsafe_b64decode(encoded).decode())
+        status = response.status
+        headers = _normalized_headers(response.headers.items())
+    client_ms = (time.perf_counter() - started) * 1000
+    try:
+        trace_request = Request(BASE_URL + f"/__validation__/trace/{trace_id}")
+        with urlopen(trace_request, timeout=10) as trace_response:
+            profile["response_trace"] = json.loads(trace_response.read())
+    except OSError as exc:
+        profile["response_trace_error"] = type(exc).__name__
+    return (
+        status, body, headers,
+        client_ms, server_ms, profile,
+    )
+
+
+def _replacement_profile(
+    first_generation: object, first_build_count: int, expected_body: bytes,
+) -> tuple[dict[str, object], dict[str, object]]:
+    before_semantic = _semantic_contract()
+    before_cache = (_market_health().get("cache") or {})
+    _target_status, target_before_body, _target_elapsed = _request(
+        _material_target_search_path(),
+    )
+    marker = f"validation-material-{time.time_ns()}"
+    mutation_status, mutation_body, _headers, _client, _server, _profile = _profiled_request(
+        f"/__validation__/material-market-change?marker={quote(marker)}", method="POST",
+    )
+    mutation = json.loads(mutation_body)
+    if mutation_status != 200:
+        raise AssertionError("material fixture mutation was rejected")
+    if mutation.get("asset_id") != "player:10213" or mutation.get("attached") is not True:
+        raise AssertionError("material fixture target is missing or detached")
+    if mutation.get("consumed_attached") is not True:
+        raise AssertionError("Asset Market Brain did not consume the attached fixture object")
+    if mutation.get("field") != (
+        "valuation_intelligence.assets.player:10213.valuation_layers."
+        "contender_value.value"
+    ):
+        raise AssertionError("material fixture changed an unexpected canonical field")
+    if int(mutation.get("changed_canonical_fields") or 0) != 1:
+        raise AssertionError("material fixture did not change exactly one canonical input")
+    if not isinstance(mutation.get("before"), (int, float)) or not isinstance(
+        mutation.get("after"), (int, float),
+    ):
+        raise AssertionError("material fixture scalar evidence is unavailable")
+    if mutation["before"] == mutation["after"]:
+        raise AssertionError("material fixture scalar did not change")
+    before_history = _history_metrics()
+    samples: list[dict[str, object]] = []
+    for sequence in range(1, 11):
+        status, body, headers, client_ms, server_ms, profile = _profiled_request(
+            "/api/market/assets?limit=50",
+        )
+        payload = json.loads(body)
+        if status != 503 or payload != {
+            "detail": "Asset Market generation is building safely in the "
+            "background; retry shortly.",
+        }:
+            raise ExpansionLatencyFailure(
+                f"replacement request did not use bounded warming contract: {status}",
+                {"failed_sample": {"status": status, "client_ms": client_ms,
+                                   "server_ms": server_ms, "profile": profile},
+                 "completed_samples": samples},
+            )
+        if headers.get("retry-after") != "5":
+            raise AssertionError("replacement warming omitted Retry-After: 5")
+        health = _market_health()
+        cache = health.get("cache") or {}
+        _live_status, _live_body, live_client_ms, live_server_ms = (
+            _diagnostic_request("/health/live")
+        )
+        samples.append({
+            "sequence": sequence,
+            "status": status,
+            "client_ms": round(client_ms, 3),
+            "server_ms": round(server_ms, 3),
+            "event_loop_client_ms": round(live_client_ms, 3),
+            "event_loop_server_ms": round(live_server_ms, 3),
+            "lifecycle_lock_ms": profile.get("lifecycle_lock_ms", 0.0),
+            "cache_lookup_ms": profile.get("cache_lookup_ms", 0.0),
+            "request_marker_ms": profile.get("request_marker_ms", 0.0),
+            "response_processing_ms": round(
+                max(0.0, server_ms - float(profile.get("market_get_ms", 0.0))), 3,
+            ),
+            "request_thread_calls": {
+                name: profile.get(f"{name}_calls", 0)
+                for name in (
+                    "cache_key", "durable_generation", "dataset_version",
+                    "database_uuid", "market_construction",
+                )
+            },
+            "active_threads": profile.get("active_threads"),
+            "thread_pool_threads": profile.get("thread_pool_threads"),
+            "worker_alive": profile.get("worker_alive"),
+            "sleeper_syncing": profile.get("sleeper_syncing"),
+            "transactions_syncing": profile.get("transactions_syncing"),
+            "runner_load": [round(value, 3) for value in os.getloadavg()],
+            "cgroup_memory_current": _cgroup("memory.current"),
+            "memory_evidence": _memory_evidence(
+                f"replacement_warming_{sequence}"
+            ),
+            "response_bytes": len(body),
+            "served_generation": cache.get("market_generation"),
+            "build_count": cache.get("build_count"),
+            "build_phase": cache.get("build_phase"),
+            "build_active": cache.get("build_active"),
+            "semantic_child_count": cache.get("semantic_child_count"),
+            "semantic_preparation": cache.get("semantic_preparation"),
+            "browser_processes": _browser_process_count(),
+        })
+    after_history = _history_metrics()
+    _release_status, release_body, _release_ms = _post_request(
+        "/__validation__/replacement-release",
+    )
+    replacement_window = json.loads(release_body)
+    deadline = time.monotonic() + 60
+    final_health: dict[str, object] = {}
+    while time.monotonic() < deadline:
+        final_health = _market_health()
+        final_cache = final_health.get("cache") or {}
+        if not final_cache.get("build_active"):
+            break
+        time.sleep(0.05)
+    final_cache = final_health.get("cache") or {}
+    client_values = [float(sample["client_ms"]) for sample in samples]
+    server_values = [float(sample["server_ms"]) for sample in samples]
+    result = {
+        "samples": samples,
+        "replacement_window": replacement_window,
+        "median_client_ms": round(statistics.median(client_values), 3),
+        "p95_client_ms": round(_percentile(client_values, 0.95), 3),
+        "maximum_client_ms": round(max(client_values), 3),
+        "median_server_ms": round(statistics.median(server_values), 3),
+        "p95_server_ms": round(_percentile(server_values, 0.95), 3),
+        "maximum_server_ms": round(max(server_values), 3),
+        "sqlite_query_count": int(after_history.get("query_count") or 0)
+        - int(before_history.get("query_count") or 0),
+        "last_valid_generation_stable": all(
+            sample["served_generation"] == first_generation for sample in samples
+        ),
+        "replacement_builds": int(final_cache.get("build_count") or 0)
+        - first_build_count,
+        "semantic_children": int(final_cache.get("semantic_child_count") or 0)
+        - int(before_cache.get("semantic_child_count") or 0),
+        "new_generation_published": final_cache.get("market_generation")
+        != first_generation,
+        "request_thread_generation_work": any(
+            any(int(count or 0) for count in sample["request_thread_calls"].values())
+            for sample in samples
+        ),
+    }
+    failures = [sample for sample in samples if float(sample["server_ms"]) >= 50]
+    if failures:
+        result["failed_samples"] = failures
+        raise ExpansionLatencyFailure(
+            "replacement warming server gate failed: "
+            f"maximum={result['maximum_server_ms']:.3f}ms "
+            f"failed_samples={json.dumps(failures, sort_keys=True)}",
+            result,
+        )
+    if result["replacement_builds"] != 1:
+        raise AssertionError(
+            f"expected exactly one replacement build, got {result['replacement_builds']}"
+        )
+    if result["semantic_children"] != 1:
+        raise AssertionError(
+            f"expected exactly one semantic child, got {result['semantic_children']}"
+        )
+    if not result["last_valid_generation_stable"]:
+        raise AssertionError("last-valid generation changed during replacement warming")
+    if not result["new_generation_published"]:
+        raise AssertionError("replacement generation was not published")
+    if result["request_thread_generation_work"] or result["sqlite_query_count"]:
+        raise AssertionError("replacement warming performed request-thread generation work")
+    if any(int(sample["browser_processes"]) for sample in samples):
+        raise AssertionError("browser process overlapped replacement semantic preparation")
+    changed_semantic = _semantic_contract()
+    if (
+        before_semantic.get("semantic_generation")
+        == changed_semantic.get("semantic_generation")
+    ):
+        raise AssertionError("material fixture mutation did not change semantic digest")
+    if changed_semantic.get("artifact_compatibility") != "brain_semantic_output_changed":
+        raise AssertionError(
+            "material artifact mismatch reason was not brain_semantic_output_changed"
+        )
+    before_digests = before_semantic.get("semantic_identities") or {}
+    after_digests = changed_semantic.get("semantic_identities") or {}
+    for stable in ("asset_universe_digest", "ownership_dependency_digest"):
+        if before_digests.get(stable) != after_digests.get(stable):
+            raise AssertionError(f"material fixture changed unrelated digest: {stable}")
+    if (
+        before_digests.get("brain_semantic_output_digest")
+        == after_digests.get("brain_semantic_output_digest")
+    ):
+        raise AssertionError("material fixture did not change Brain/valuation digest")
+    published_artifact = _artifact_state()
+    if published_artifact.get("generation") != changed_semantic.get("semantic_generation"):
+        raise AssertionError("validator sampled before the new semantic generation published")
+    _status, final_body, _elapsed = _request("/api/market/assets?limit=50")
+    first_page_comparison = _material_first_page_comparison(
+        expected_body, final_body,
+        old_market_generation=first_generation,
+        new_market_generation=final_cache.get("market_generation"),
+    )
+    if (
+        published_artifact.get("historical_dataset_version")
+        != json.loads(final_body).get("historical_dataset_version")
+    ):
+        raise AssertionError("directory historical provenance conflicts with artifact manifest")
+    _target_status, target_after_body, _target_elapsed = _request(
+        _material_target_search_path(),
+    )
+    target_differences = _material_target_comparison(
+        target_before_body, target_after_body,
+    )
+    changed_assets = ["player:10213"]
+    repeat_bodies = [_request("/api/market/assets?limit=50")[1] for _ in range(3)]
+    repeated_health = _market_health()
+    repeated_cache = repeated_health.get("cache") or {}
+    if any(body != final_body for body in repeat_bodies):
+        raise AssertionError("repeated material state changed serialized output")
+    if int(repeated_cache.get("build_count") or 0) != first_build_count + 1:
+        raise AssertionError("repeated material state started another construction")
+    if repeated_cache.get("build_active"):
+        raise AssertionError("repeated material state started another worker")
+    result.update({
+        "semantic_before": before_semantic.get("semantic_identities"),
+        "semantic_after": changed_semantic.get("semantic_identities"),
+        "incompatibility_reason": changed_semantic.get("artifact_compatibility"),
+        "changed_assets": changed_assets,
+        "controlled_output_difference": True,
+        "mutation": mutation,
+        "target_row_differences": target_differences,
+        "published_semantic_generation": published_artifact.get("generation"),
+        "first_page_comparison": first_page_comparison,
+    })
+    return final_health, result
+
+
+def _identity(payload: dict[str, object]) -> dict[str, object]:
+    return {
+        name: payload.get(name)
+        for name in (
+            "application_version", "application_build", "market_schema_version",
+            "league_id", "historical_dataset_version", "market_generation",
+            "historical_dataset_version_scope", "brain_generation",
+            "valuation_generation",
+        )
+    }
+
+
+def _restart_reuse(
+    expected_identity: dict[str, object], expected_body: bytes,
+    *, request=_profiled_request, clock=time.monotonic, sleeper=time.sleep,
+    event_probe=None, load_observer=None, memory_observer=None,
+    cpu_observer=None,
+) -> dict[str, object]:
+    event_probe = event_probe or (lambda: _diagnostic_request("/health/live"))
+    load_observer = load_observer or os.getloadavg
+    memory_observer = memory_observer or (lambda: _cgroup("memory.current"))
+    cpu_observer = cpu_observer or (
+        _cgroup_cpu if sys.platform == "linux"
+        else lambda: {"available": False}
+    )
+    started = clock()
+    samples: list[dict[str, object]] = []
+    while clock() - started < 60:
+        status, body, headers, client_ms, server_ms, profile = request(
+            "/api/market/assets?limit=50",
+        )
+        if status == 200:
+            payload = json.loads(body)
+            actual_identity = _identity(payload)
+            if actual_identity != expected_identity:
+                raise AssertionError(
+                    "restart artifact identity mismatch: "
+                    f"expected={expected_identity} actual={actual_identity}"
+                )
+            if body != expected_body:
+                raise AssertionError("restart artifact output differs from published output")
+            if int(profile.get("market_construction_total") or 0) != 0:
+                raise AssertionError("restart accidentally rebuilt the market")
+            if int(profile.get("artifact_load_total") or 0) != 1:
+                raise AssertionError("restart did not load exactly one durable artifact")
+            expected_provenance = expected_identity.get(
+                "historical_dataset_version"
+            )
+            actual_provenance = actual_identity.get(
+                "historical_dataset_version"
+            )
+            if actual_provenance != expected_provenance:
+                raise AssertionError(
+                    "restart artifact-build provenance mismatch"
+                )
+            return {
+                "duration_ms": round((clock() - started) * 1000, 3),
+                "warming_attempts": len(samples), "warming_samples": samples,
+                "restore_mode": (
+                    "immediate_compatible_artifact" if not samples
+                    else "bounded_warming"
+                ),
+                "identity_match": True, "output_equivalent": True,
+                "artifact_build_provenance_match": True,
+                "artifact_build_provenance": actual_provenance,
+                "artifact_loads": profile.get("artifact_load_total"),
+                "market_constructions": profile.get("market_construction_total"),
+                "hydration_stages": profile.get("hydration_stages") or {},
+            }
+        try:
+            payload = json.loads(body)
+        except (json.JSONDecodeError, UnicodeDecodeError) as exc:
+            raise AssertionError("malformed restart warming response") from exc
+        if status != 503 or payload != {
+            "detail": "Asset Market generation is building safely in the "
+            "background; retry shortly.",
+        }:
+            raise AssertionError(
+                f"restart returned unrelated response: HTTP {status} body={body[:200]!r}"
+            )
+        if headers.get("retry-after") != "5":
+            raise AssertionError("restart warming omitted Retry-After: 5")
+        if int(profile.get("market_construction_total") or 0):
+            raise AssertionError("restart began market reconstruction")
+        if int(profile.get("market_object_build_total") or 0):
+            raise AssertionError("restart constructed a new market object")
+        if profile.get("market_last_error"):
+            raise AssertionError(
+                f"restart artifact load failed: {profile['market_last_error']}"
+            )
+        if profile.get("market_build_phase") == "building":
+            raise AssertionError("restart artifact was incompatible and triggered a rebuild")
+        _live_status, _live_body, live_client_ms, live_server_ms = event_probe()
+        samples.append({
+            "client_ms": round(client_ms, 3), "server_ms": round(server_ms, 3),
+            "response_bytes": len(body),
+            "artifact_loads": profile.get("artifact_load_total"),
+            "market_constructions": profile.get("market_construction_total"),
+            "build_phase": profile.get("market_build_phase"),
+            "event_loop_client_ms": round(live_client_ms, 3),
+            "event_loop_server_ms": round(live_server_ms, 3),
+            "lifecycle_lock_ms": profile.get("lifecycle_lock_ms", 0.0),
+            "cache_lookup_ms": profile.get("cache_lookup_ms", 0.0),
+            "active_threads": profile.get("active_threads"),
+            "thread_pool_threads": profile.get("thread_pool_threads"),
+            "runner_load": [round(value, 3) for value in load_observer()],
+            "cgroup_memory_current": memory_observer(),
+            "cgroup_cpu": cpu_observer(),
+            "preparation_active": profile.get("preparation_active") or {},
+            "preparation_events": profile.get("preparation_events") or [],
+            "hydration_stages": profile.get("hydration_stages") or {},
+            "response_trace": profile.get("response_trace") or {},
+        })
+        sleeper(0.05)
+    raise AssertionError("durable market artifact reuse exceeded 60 seconds")
+
+
+def _response_stack_experiments(
+    log, expected_identity: dict[str, object], expected_body: bytes,
+) -> dict[str, object]:
+    """Run validation-only first-response variants against one durable artifact."""
+    results: dict[str, object] = {}
+    for mode in (
+        "normal", "prestarted_idle_thread", "direct_response",
+        "post_body_worker",
+    ):
+        cycles: list[dict[str, object]] = []
+        for _sequence in range(3):
+            process = _start_server(log, mode)
+            try:
+                _wait_ready()
+                cycles.append(_restart_reuse(expected_identity, expected_body))
+            finally:
+                _stop_server(process)
+        samples = [
+            sample for cycle in cycles for sample in cycle["warming_samples"]
+        ]
+        results[mode] = {"cycles": cycles, "warming_samples": samples}
+    return results
+
+
+def main() -> int:
+    if sys.platform != "linux":
+        raise RuntimeError("Linux cgroup validation must run on Linux")
+    memory_max = _cgroup("memory.max")
+    if memory_max != MEMORY_MAX:
+        raise RuntimeError(f"Docker did not enforce 2 GiB: memory.max={memory_max}")
+    if not (CGROUP / "memory.peak").is_file():
+        raise RuntimeError("memory.peak is required for this validation")
+
+    archive_warmed = os.environ.get("DTOS_ARCHIVE_WARMED") == "1"
+    combined_read = os.environ.get("DTOS_COMBINED_READ") == "1"
+    retirement_rehearsal = _retire_validation_archive(warm=archive_warmed)
+    fixture_contract = _configured_fixture_contract()
+    summary: dict[str, object] = {
+        "schema": "dtos-linux-market-memory-v1",
+        "memory_max": memory_max,
+        "fixture": {
+            "assets": 12_322, "canonical_asset_events": 30_726,
+            "database_records": 461_166 if combined_read else 30_726,
+            "progress": "5/6",
+            "configuration": fixture_contract,
+        },
+        "scenario": (
+            "combined_read" if combined_read else
+            "archive_warmed" if archive_warmed else "ordinary"
+        ),
+        "phases": {"historicalstore_retirement": retirement_rehearsal},
+        "passed": False,
+        "completed": False,
+        "exit_code": 1,
+        "errors": [],
+        "memory_evidence": [],
+    }
+    OUTPUT.parent.mkdir(parents=True, exist_ok=True)
+    log_path = OUTPUT.parent / "server.log"
+    padding: list[bytearray] = []
+    process = None
+    monitor: Monitor | None = None
+    cpu_before = _cpu_stat()
+    failure: BaseException | None = None
+    startup_evidence: dict[str, object] = {}
+    memory_evidence = summary["memory_evidence"]
+    assert isinstance(memory_evidence, list)
+    memory_evidence.append(_memory_evidence("container_startup"))
+    try:
+        with log_path.open("w", encoding="utf-8") as log, Monitor() as monitor:
+            pressure = retirement_rehearsal.get("pre_unlink_pressure")
+            if archive_warmed and not (
+                isinstance(pressure, dict) and pressure.get("passed") is True
+            ):
+                raise AssertionError(
+                    "pre-unlink archive pressure did not meet the fixture-derived threshold"
+                )
+            process = _start_server(log, evidence=startup_evidence)
+            monitor.set_server_pid(process.pid)
+            monitor.set_phase("startup")
+            ready_ms = _wait_ready()
+            application_contract = _application_fixture_contract(fixture_contract)
+            memory_evidence.append(_memory_evidence("fixture_ready"))
+            startup_snapshot = _memory_evidence("application_startup")
+            memory_evidence.append(startup_snapshot)
+            startup_current = int(startup_snapshot["raw_cgroup_bytes"] or 0)
+            summary["phases"]["startup"] = {
+                "timestamp": time.time(), "duration_ms": round(ready_ms, 3),
+                "memory_current": startup_current,
+                "effective_working_set_bytes": startup_snapshot.get(
+                    "effective_working_set_bytes"
+                ),
+                "process_rss_high_water": _rss_high_water(process.pid),
+            }
+            if not _startup_memory_within_limit(startup_snapshot):
+                raise AssertionError(
+                    "startup effective working set exceeds 1.2 GiB"
+                )
+            cold_health = _market_health()
+            if int((cold_health.get("cache") or {}).get("build_count") or 0) != 0:
+                raise AssertionError("metadata-only health constructed the market")
+            padding = _pad_to_production_baseline()
+            if archive_warmed:
+                archive_before = _memory_evidence("before_coverage")
+                memory_evidence.append(archive_before)
+                coverage_status, coverage_body, coverage_ms = _request(
+                    "/api/history/coverage",
+                )
+                archive_after = _memory_evidence("after_coverage")
+                memory_evidence.append(archive_after)
+                try:
+                    coverage = json.loads(coverage_body)
+                except (TypeError, ValueError, json.JSONDecodeError):
+                    coverage = {}
+                coverage_valid = _post_retirement_coverage_valid(
+                    coverage_status, coverage,
+                )
+                summary["phases"]["post_unlink_product_validation"] = {
+                    "timestamp": time.time(), "duration_ms": round(coverage_ms, 3),
+                    "before": archive_before, "after": archive_after,
+                    "configured_legacy_file_present": Path(
+                        os.environ["DTOS_HISTORY_DB_FILE"]
+                    ).exists(),
+                    "validation_archive_present": _validation_archive().exists(),
+                    "legacy_historical_store": application_contract.get(
+                        "legacy_historical_store"
+                    ),
+                    "coverage_valid": coverage_valid,
+                    "canonical_progress": coverage.get("canonical_progress"),
+                }
+                if not coverage_valid:
+                    raise AssertionError("post-unlink canonical coverage contract failed")
+            before_cold = _cgroup("memory.current")
+            try:
+                monitor.set_phase("cold_market")
+                health, build_ms, attempts, responsiveness = _cold_build()
+            except ColdBuildFailure as exc:
+                summary["phases"]["cold_market"] = {
+                    "timestamp": time.time(), "failed": True,
+                    "diagnostics": exc.evidence,
+                    "memory_current": _cgroup("memory.current"),
+                    "effective_memory_current": _memory_state().get(
+                        "effective_working_set_bytes"
+                    ),
+                }
+                raise
+            cold_peak = monitor.peak
+            summary["phases"]["cold_market"] = {
+                "timestamp": time.time(), "duration_ms": round(build_ms, 3), "attempts": attempts,
+                "memory_before": before_cold, "memory_current": _cgroup("memory.current"),
+                "memory_peak": cold_peak, "build_count": (health.get("cache") or {}).get("build_count"),
+                "effective_memory_peak": monitor.effective_peak,
+                "generation": (health.get("cache") or {}).get("market_generation"),
+                "responsiveness": responsiveness,
+                "semantic_preparation": dict(
+                    (health.get("cache") or {}).get("semantic_preparation") or {}
+                ),
+            }
+            reference_semantic = _semantic_contract().get("semantic_identities") or {}
+            published_semantic = health.get("semantic_identity") or {}
+            digest_fields = (
+                "asset_universe_digest", "brain_semantic_output_digest",
+                "ownership_dependency_digest", "provider_evidence_digest",
+            )
+            digest_equivalence = {
+                field: {
+                    "reference": reference_semantic.get(field),
+                    "subprocess": published_semantic.get(field),
+                    "equal": reference_semantic.get(field) == published_semantic.get(field),
+                }
+                for field in digest_fields
+            }
+            summary["phases"]["cold_market"]["digest_equivalence"] = digest_equivalence
+            if not all(row["equal"] for row in digest_equivalence.values()):
+                raise AssertionError("spawned semantic digests differ from reference contract")
+            raw_ceiling = RAW_EMERGENCY_MAX if archive_warmed else COLD_MAX
+            if cold_peak >= raw_ceiling:
+                raise AssertionError(
+                    f"cold-build cgroup peak {cold_peak} exceeds {raw_ceiling}"
+                )
+            if monitor.effective_peak >= COLD_MAX:
+                raise AssertionError(
+                    f"effective working-set peak {monitor.effective_peak} exceeds 1.5 GiB"
+                )
+            monitor.set_phase("warm_requests")
+            try:
+                latency_result = _latencies()
+            except ExpansionLatencyFailure as exc:
+                summary["phases"]["warm_requests"] = {
+                    "timestamp": time.time(), "latency_ms": {"expansion": exc.result},
+                    "memory_current": _cgroup("memory.current"),
+                }
+                raise
+            summary["phases"]["warm_requests"] = {
+                "timestamp": time.time(), "latency_ms": latency_result,
+                "memory_current": _cgroup("memory.current"),
+            }
+            historical_before = _memory_evidence("historical_resolution_before")
+            monitor.set_phase("historical_resolution")
+            memory_evidence.append(historical_before)
+            historical_replay = _historical_resolution_responsiveness()
+            historical_after = _memory_evidence("historical_resolution_after")
+            memory_evidence.append(historical_after)
+            summary["phases"]["historical_resolution"] = {
+                "timestamp": time.time(), "before": historical_before,
+                "after": historical_after, **historical_replay,
+            }
+            if combined_read:
+                monitor.set_phase("combined_read")
+                combined_before = _memory_evidence("combined_read_before")
+                memory_evidence.append(combined_before)
+                combined_result = _combined_read_audit()
+                combined_after = _memory_evidence("combined_read_after")
+                memory_evidence.append(combined_after)
+                summary["phases"]["combined_read"] = {
+                    "timestamp": time.time(), "before": combined_before,
+                    "after": combined_after, **combined_result,
+                    "memory_monitor": monitor.evidence(),
+                }
+                if monitor.effective_peak >= COLD_MAX:
+                    raise AssertionError(
+                        "combined-read effective working set exceeded the 1.5 GiB ceiling"
+                    )
+            first_generation = (health.get("cache") or {}).get("market_generation")
+            first_build_count = int((health.get("cache") or {}).get("build_count") or 0)
+            _baseline_status, baseline_body, _baseline_ms = _request(
+                "/api/market/assets?limit=50",
+            )
+            nonsemantic = _nonsemantic_reuse(
+                first_generation, first_build_count, baseline_body,
+            )
+            summary["phases"]["nonsemantic_reuse"] = {
+                "timestamp": time.time(), **nonsemantic,
+                "memory_current": _cgroup("memory.current"),
+            }
+            replacement_started = time.perf_counter()
+            before_replacement = _memory_evidence("before_replacement")
+            memory_evidence.append(before_replacement)
+            try:
+                replacement, replacement_profile = _replacement_profile(
+                    first_generation, first_build_count, baseline_body,
+                )
+            except ExpansionLatencyFailure as exc:
+                summary["phases"]["generation_replacement"] = {
+                    "timestamp": time.time(), "profile": exc.result,
+                    "memory_current": _cgroup("memory.current"),
+                }
+                raise
+            replacement_ms = (time.perf_counter() - replacement_started) * 1000
+            second_generation = (replacement.get("cache") or {}).get("market_generation")
+            if second_generation == first_generation:
+                raise AssertionError("generation replacement did not publish a new identity")
+            artifact = _artifact_state()
+            summary["phases"]["generation_replacement"] = {
+                "timestamp": time.time(), "duration_ms": round(replacement_ms, 3),
+                "attempts": 10, "generation_changed": True,
+                "active_generations": artifact["final_artifacts"],
+                "artifact": {
+                    name: artifact.get(name) for name in (
+                        "artifact_name", "size_bytes", "complete", "generation",
+                        "generated_at", "schema_version", "asset_count",
+                        "temporary_artifacts",
+                    )
+                },
+                "memory_current": _cgroup("memory.current"),
+                "profile": replacement_profile,
+            }
+            memory_evidence.append(_memory_evidence("post_publication"))
+            _pre_status, pre_restart_body, _pre_ms = _request(
+                "/api/market/assets?limit=50",
+            )
+            expected_identity = _identity(json.loads(pre_restart_body))
+            _stop_server(process)
+            process = None
+            restart_cycles: list[dict[str, object]] = []
+            restart_samples: list[dict[str, object]] = []
+            reuse_health: dict[str, object] = {}
+            while len(restart_cycles) < 12:
+                process = _start_server(log)
+                _wait_ready()
+                cycle = _restart_reuse(expected_identity, pre_restart_body)
+                restart_cycles.append(cycle)
+                restart_samples.extend(cycle["warming_samples"])
+                reuse_health = _market_health()
+                if (reuse_health.get("cache") or {}).get("market_generation") != second_generation:
+                    raise AssertionError("restart reused a different market generation")
+                reused_artifact = _artifact_state()
+                if reused_artifact.get("artifact_name") != artifact.get("artifact_name"):
+                    raise AssertionError("restart reused a different artifact file")
+                if reused_artifact.get("generation") != artifact.get("generation"):
+                    raise AssertionError("restart reused a different artifact generation")
+                immediate_cycles = all(
+                    item.get("restore_mode") == "immediate_compatible_artifact"
+                    for item in restart_cycles
+                )
+                enough_warming = len(restart_samples) >= 10
+                if len(restart_cycles) >= 2 and (immediate_cycles or enough_warming):
+                    break
+                if len(restart_cycles) < 12:
+                    _stop_server(process)
+                    process = None
+            immediate_cycles = bool(restart_cycles) and all(
+                item.get("restore_mode") == "immediate_compatible_artifact"
+                for item in restart_cycles
+            )
+            if len(restart_samples) < 10 and not immediate_cycles:
+                raise AssertionError(
+                    f"only {len(restart_samples)} restart warming samples were captured"
+                )
+            if len(restart_cycles) < 2:
+                raise AssertionError("fewer than two controlled restart cycles completed")
+            failed_restart_samples = [
+                sample for sample in restart_samples
+                if float(sample["server_ms"]) >= 50
+                or float(sample["client_ms"]) >= 500
+            ]
+            if failed_restart_samples:
+                summary["phases"]["restart_reuse"] = {
+                    "timestamp": time.time(), "cycles": restart_cycles,
+                    "warming_samples": restart_samples,
+                    "failed_samples": failed_restart_samples,
+                    "memory_current": _cgroup("memory.current"),
+                }
+                if process is not None:
+                    _stop_server(process)
+                    process = None
+                summary["phases"]["response_stack_experiments"] = (
+                    _response_stack_experiments(
+                        log, expected_identity, pre_restart_body,
+                    )
+                )
+                raise ExpansionLatencyFailure(
+                    "restart warming latency gate failed: "
+                    f"failed_samples={json.dumps(failed_restart_samples, sort_keys=True)}",
+                    {
+                        "cycles": restart_cycles,
+                        "samples": restart_samples,
+                        "failed_samples": failed_restart_samples,
+                    },
+                )
+            restart_server_values = [
+                float(sample["server_ms"]) for sample in restart_samples
+            ]
+            summary["phases"]["restart_reuse"] = {
+                "timestamp": time.time(), "cycles": restart_cycles,
+                "warming_samples": restart_samples,
+                "restore_mode": (
+                    "immediate_compatible_artifact" if immediate_cycles
+                    else "bounded_warming"
+                ),
+                "server_median_ms": (
+                    round(statistics.median(restart_server_values), 3)
+                    if restart_server_values else None
+                ),
+                "server_p95_ms": (
+                    round(_percentile(restart_server_values, 0.95), 3)
+                    if restart_server_values else None
+                ),
+                "server_maximum_ms": (
+                    round(max(restart_server_values), 3)
+                    if restart_server_values else None
+                ),
+                "generation_match": True,
+                "artifact_build_provenance_match": all(
+                    bool(cycle.get("artifact_build_provenance_match"))
+                    for cycle in restart_cycles
+                ),
+                "memory_current": _cgroup("memory.current"),
+            }
+            summary["phases"]["historical_leaders"] = {
+                "timestamp": time.time(), "status": "running",
+            }
+            summary["phases"]["historical_leaders"].update(
+                _historical_leader_performance()
+            )
+            summary["phases"]["historical_leaders"].update({
+                "status": "completed", "memory_current": _cgroup("memory.current"),
+            })
+            raw_peak = max(monitor.peak, _cgroup("memory.peak"))
+            effective_peak = monitor.effective_peak
+            effective_margin = _effective_memory_margin(
+                memory_max, effective_peak,
+            )
+            cpu_after = _cpu_stat()
+            summary.update({
+                "memory_current": _cgroup("memory.current"),
+                "memory_peak": raw_peak,
+                "effective_memory_peak": effective_peak,
+                "raw_margin_below_limit": memory_max - raw_peak,
+                "margin_below_limit": effective_margin,
+                "container_restart_count": 0,
+                "worker_count": 1,
+                "provider_synchronization": False,
+                "parent_rss_high_water": _rss_high_water(process.pid),
+                "cpu_evidence": {
+                    "before": cpu_before,
+                    "after": cpu_after,
+                    "delta": _cpu_delta(cpu_before, cpu_after),
+                },
+            })
+            if effective_margin < 500 * MIB:
+                raise AssertionError("memory margin below 2 GiB is less than 500 MiB")
+            summary["exit_code"] = 0
+            summary["passed"] = True
+            summary["completed"] = True
+    except BaseException as exc:
+        failure = exc
+        if isinstance(exc, StartupFailure):
+            process = exc.process
+            startup_evidence = exc.evidence
+        summary["startup_evidence"] = startup_evidence
+        summary["errors"] = [{
+            **_public_error(exc),
+            "phase": next(reversed(summary["phases"]), "initialization"),
+        }]
+    finally:
+        if process is not None:
+            try:
+                _stop_server(process)
+            except BaseException as exc:
+                summary["errors"] = [
+                    *list(summary.get("errors") or []),
+                    {**_public_error(exc), "phase": "cleanup"},
+                ]
+                summary["passed"] = False
+                summary["exit_code"] = 1
+                failure = failure or exc
+        padding.clear()
+        if monitor is not None:
+            summary["memory_monitor"] = monitor.evidence()
+        memory_evidence.append(_memory_evidence("post_cleanup"))
+        if log_path.is_file():
+            sanitized_log = _sanitize_server_log(log_path.read_text(
+                encoding="utf-8", errors="replace",
+            ))
+            log_path.write_text(sanitized_log + ("\n" if sanitized_log else ""), encoding="utf-8")
+            summary["server_log"] = {
+                "artifact": "server.log", "line_count": len(sanitized_log.splitlines()),
+                "bounded": True, "sanitized": True,
+            }
+        OUTPUT.write_text(json.dumps(summary, indent=2, sort_keys=True), encoding="utf-8")
+    if failure is not None:
+        print(f"{type(failure).__name__}: {failure}", file=sys.stderr)
+        return 1
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

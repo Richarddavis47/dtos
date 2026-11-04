@@ -1,0 +1,196 @@
+"""Market Intelligence provider orchestration and opportunity discovery."""
+from __future__ import annotations
+
+from datetime import datetime, timezone
+import json
+from typing import Any
+
+from src.core.data_platform import DataPlatform, data_platform
+from src.core.market_intelligence.aggregation import build_consensus
+from src.core.market_intelligence.evidence import build_market_evidence
+from src.core.market_intelligence.history import MarketHistoryStore, MarketSnapshot
+from src.core.market_intelligence.models import AssetMarketReport, MarketIntelligenceReport, ProviderQuote, TradeMarketImpact, ValueGap, ValueGapLabel
+from src.core.market_intelligence.trends import calculate_trend
+from src.core.valuation import normalize_internal
+from src.core.valuation.normalization import normalize_cached_value, prepare_distribution
+
+
+def value_gap(intrinsic: int | None, market: int | None, confidence: int) -> ValueGap:
+    if intrinsic is None or market is None or confidence < 35:
+        return ValueGap(intrinsic, market, None, None, ValueGapLabel.UNCERTAIN, confidence)
+    difference = intrinsic - market
+    percentage = round(difference / max(abs(market), 1) * 100, 2)
+    label = ValueGapLabel.UNDERVALUED if percentage >= 12 else ValueGapLabel.OVERVALUED if percentage <= -12 else ValueGapLabel.FAIR
+    return ValueGap(intrinsic, market, difference, percentage, label, confidence)
+
+
+def _opportunity(gap: ValueGap, trend_direction: str) -> str:
+    if gap.label is ValueGapLabel.UNDERVALUED:
+        return "Buy Low" if trend_direction != "Rising" else "Acquire Before Value Rises"
+    if gap.label is ValueGapLabel.OVERVALUED:
+        return "Sell High" if trend_direction != "Falling" else "Future Depreciation"
+    if gap.label is ValueGapLabel.UNCERTAIN:
+        return "Monitor"
+    return "Hold"
+
+
+class MarketIntelligence:
+    def __init__(self, platform: DataPlatform | None = None, history: MarketHistoryStore | None = None) -> None:
+        self.platform = platform or data_platform
+        self.history = history or MarketHistoryStore()
+        self._health: dict[str, dict[str, object]] = {}
+
+    def evaluate(self, context: Any, player_reports: dict[str, Any], trades: tuple[Any, ...]) -> MarketIntelligenceReport:
+        generated_at = datetime.now(timezone.utc).isoformat()
+        market_data = context.cached_data.get("market_data") or {}
+        context_mode = str(market_data.get("context_mode") or ("online" if market_data.get("providers") else "offline")).casefold()
+        allow_cached_fallback = bool(market_data.get("allow_cached_fallback", False))
+        namespace = f"{context.league_id}:{context.active_roster_id}"
+        players = context.cached_data.get("players") or {}
+        intrinsic_by_id = {str(asset_id): normalize_internal(report.core_values.dynasty.score) if report.core_values.dynasty.score is not None else None for asset_id, report in player_reports.items()}
+        labels = {str(player_id): str(row.get("full_name") or player_id) for player_id, row in players.items()}
+        reports: dict[str, AssetMarketReport] = {}
+        providers = self.platform.registry.providers("market")
+        provider_rows = market_data.get("providers") or {}
+        provider_distributions = {
+            provider.metadata.name: prepare_distribution(
+                provider.metadata.name,
+                (
+                    row.get("value")
+                    for row in (
+                        provider_rows.get(provider.metadata.name) or {}
+                    ).values()
+                    if isinstance(row, dict) and row.get("value") is not None
+                ),
+            )
+            for provider in providers
+        }
+        health: dict[str, dict[str, object]] = {provider.metadata.name: {"status": "unavailable", "available_quotes": 0, "latency_ms": 0.0, "last_updated": None} for provider in providers}
+        from dataclasses import replace
+        from src.core.valuation.calibration import cached_market_facts
+        facts = cached_market_facts(market_data, intrinsic_by_id) if provider_rows else {}
+        for asset_id, intrinsic in intrinsic_by_id.items():
+            asset = {**(players.get(asset_id) or {}), "id": asset_id, "player_id": asset_id}
+            quotes = tuple(
+                self._quote(
+                    self.platform.fetch(
+                        provider.metadata.name,
+                        asset_id,
+                        {"asset": asset, "market_data": market_data, "namespace": namespace},
+                        mode=context_mode,
+                        allow_cached=allow_cached_fallback and not bool(provider_rows),
+                    ),
+                    market_data,
+                    provider_distributions[provider.metadata.name],
+                )
+                for provider in providers
+            )
+            asset_snapshots: list[MarketSnapshot] = []
+            for quote in quotes:
+                state = health[quote.provider]
+                state["latency_ms"] = round(float(state["latency_ms"]) + quote.latency_ms, 3)
+                if quote.available:
+                    state["status"] = "cached_snapshot" if quote.retrieval_mode == "cached_fallback" else "cache_hit" if quote.cached else "available"
+                    state["available_quotes"] = int(state["available_quotes"]) + 1
+                    state["last_updated"] = max(filter(None, (state["last_updated"], quote.observed_at)), default=None)
+                    state["retrieval_mode"] = quote.retrieval_mode
+                    state["cache_age_seconds"] = quote.cache_age_seconds
+                    state["freshness"] = quote.freshness
+                    state["confidence_impact"] = quote.confidence_impact
+                    source_row = (provider_rows.get(quote.provider) or {}).get(asset_id) or {}
+                    format_key = json.dumps([source_row.get("format"), source_row.get("format_details")], sort_keys=True) if source_row.get("format") else None
+                    if not quote.observed_at:
+                        # A cache read is not a newly observed source fact.
+                        continue
+                    asset_snapshots.append(MarketSnapshot(asset_id, quote.observed_at, quote.provider, float(quote.value), quote.confidence,
+                        "external_provider_raw_price", f"{quote.provider}:raw_price_units", format_key,
+                        "provider-price-observation-v2", source_row.get("rank"), source_row.get("tier"),
+                        source_row.get("source_updated_at"), source_row.get("published_at")))
+            consensus = build_consensus(asset_id, quotes, tuple(provider.metadata.name for provider in providers))
+            if asset_id in facts:
+                fact = facts[asset_id]
+                consensus = replace(consensus, value=fact.value, confidence=fact.confidence,
+                    agreement=fact.agreement, updated_at=fact.retrieved_at,
+                    calibration_status=fact.calibration_status, warning=fact.warning,
+                    provider_weights=tuple((p.provider, p.weight) for p in fact.providers_used))
+            self.history.append(tuple(asset_snapshots))
+            trend = calculate_trend(self.history.for_asset(asset_id))
+            gap = value_gap(intrinsic, consensus.value, consensus.confidence)
+            evidence = build_market_evidence(consensus, gap, trend)
+            reports[asset_id] = AssetMarketReport(asset_id, labels.get(asset_id, asset_id), consensus, gap, trend, _opportunity(gap, trend.direction), evidence)
+        impacts = tuple(self._trade_impact(dossier, reports) for dossier in trades)
+        opportunities = tuple(sorted((item for item in reports.values() if item.opportunity not in {"Hold", "Monitor"}), key=lambda item: (item.value_gap.confidence, abs(item.value_gap.difference or 0)), reverse=True))
+        evidence = tuple(item for report in opportunities[:5] for item in report.evidence[:4])
+        self._health = health
+        offline = context_mode == "offline"
+        return MarketIntelligenceReport(reports, opportunities, impacts, evidence, health, generated_at, offline)
+
+    @staticmethod
+    def _quote(
+        envelope: Any,
+        market_data: dict[str, Any],
+        distribution: tuple[float, ...] | None = None,
+    ) -> ProviderQuote:
+        available = envelope.value is not None and envelope.quality.status != "blocked"
+        raw = float(envelope.value) if available else None
+        provider_rows = (market_data.get("providers") or {}).get(envelope.provider) or {}
+        normalized = normalize_cached_value(
+            envelope.provider,
+            {**(provider_rows.get(envelope.key) or {}), "value": raw},
+            distribution=(
+                float(row.get("value"))
+                for row in provider_rows.values()
+                if isinstance(row, dict) and row.get("value") is not None
+            ),
+            prepared_distribution=distribution,
+            updated_at=envelope.timestamp,
+            provider_confidence=envelope.confidence,
+        ) if raw is not None else None
+        if normalized is not None and (normalized.method == "unsupported_provider" or normalized.confidence_score <= 0):
+            # A readable raw quote is not a comparable dynasty value. In
+            # particular, ADP and unsupported scales must not enter as zero.
+            return ProviderQuote(
+                envelope.provider, envelope.key, raw, 0, envelope.timestamp,
+                envelope.source, False, "No supported comparable normalization contract.",
+                cached=envelope.cache_state != "fresh", retrieval_mode=envelope.retrieval_mode,
+                retrieved_at=envelope.timestamp, freshness=envelope.freshness,
+                normalization_version=normalized.normalization_version,
+                normalization_method=normalized.method,
+            )
+        return ProviderQuote(envelope.provider, envelope.key, raw, normalized.confidence_score if normalized else 0, envelope.timestamp, envelope.source, available, "; ".join((*envelope.quality.issues, *envelope.limitations)) or "Data Platform envelope", 0.0, envelope.cache_state != "fresh", envelope.retrieval_mode, envelope.timestamp, None, normalized.freshness if normalized else envelope.freshness, 0, normalized.normalized_value if normalized else None, (normalized.raw_min, normalized.raw_max) if normalized else None, normalized.normalization_version if normalized else None, normalized.method if normalized else None)
+
+    @staticmethod
+    def _trade_impact(dossier: Any, reports: dict[str, AssetMarketReport]) -> TradeMarketImpact:
+        sent = [reports.get(str(asset.asset_id)) for asset in dossier.proposal.assets_sent]
+        received = [reports.get(str(asset.asset_id)) for asset in dossier.proposal.assets_received]
+        sent_values = [item.consensus.value for item in sent if item and item.consensus.value is not None]
+        received_values = [item.consensus.value for item in received if item and item.consensus.value is not None]
+        gain = round(sum(received_values) - sum(sent_values)) if sent_values or received_values else None
+        known = [item for item in (*sent, *received) if item]
+        consensus = ", ".join(f"{item.label}: {item.consensus.value if item.consensus.value is not None else 'unavailable'}" for item in known) or "No provider-backed asset consensus is available."
+        movement = ", ".join(f"{item.label} {item.trend.direction.lower()}" for item in known) or "No historical movement is available."
+        arbitrage = "Provider-backed value gap exists; review both teams' context." if any(item.value_gap.label not in {ValueGapLabel.FAIR, ValueGapLabel.UNCERTAIN} for item in known) else "No supported market arbitrage is currently identified."
+        evidence = tuple(item for report in known for item in report.evidence[:2])
+        return TradeMarketImpact(dossier.proposal.active_roster_id, dossier.proposal.partner_roster_id, gain, consensus, movement, arbitrage, evidence)
+
+    def health(self) -> dict[str, object]:
+        platform_health = self.platform.health()
+        return {"providers": self._health or platform_health["providers"], "cache": platform_health["cache"], "data_platform": platform_health}
+
+    def attach_trade_impacts(
+        self,
+        report: MarketIntelligenceReport,
+        trades: tuple[Any, ...],
+    ) -> MarketIntelligenceReport:
+        """Attach trade impacts without repeating provider evaluation."""
+        from dataclasses import replace
+
+        return replace(
+            report,
+            trade_impacts=tuple(
+                self._trade_impact(dossier, report.assets) for dossier in trades
+            ),
+        )
+
+
+market_intelligence = MarketIntelligence()
