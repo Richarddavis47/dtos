@@ -87,4 +87,8 @@ class AssessmentCoverageTests(unittest.TestCase):
             self.assertEqual(response.status_code, 200)
             self.assertIn(text, response.text)
             self.assertIn(MODEL_NOTE, response.text)
-            self.assertLess(response.text.index('<h2>Projected lineup comparison'), response.text.index('id="full-roster"'))
+            self.assertIn(text, response.text.split('id="my-team-outlook-lead"', 1)[1].split('</summary>', 1)[0])
+            self.assertLess(response.text.index('id="my-team-outlook-lead"'), response.text.index('id="full-roster"'))
+
+    def test_absent_card_metadata_is_a_missing_comparison(self):
+        self.assertIn('needs compatible', weekly_comparison(NS(), 9))

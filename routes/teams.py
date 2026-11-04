@@ -417,11 +417,14 @@ def create_teams_router(
         overview = view['overview']
         roster_summary = ' · '.join(f'{count} {slot.lower()}' for slot, count in overview['slots'].items())
         view["outlook"]["details"].extend(overview["statuses"])
-        comparison_html = ''
+        assessment_outlook = view['outlook']
         if view['team_intelligence'].overall.score is None:
-            comparison_html = ('<section class="thq-outlook"><h2>Projected lineup comparison</h2><p>'
-                               + escape(weekly_comparison(view['team_intelligence'], data.get('week')))
-                               + '</p><p>' + escape(MODEL_NOTE) + '</p></section>')
+            assessment_outlook = {
+                **assessment_outlook,
+                'brief': weekly_comparison(view['team_intelligence'], data.get('week'), compact=True),
+                'position': weekly_comparison(view['team_intelligence'], data.get('week')),
+                'details': [MODEL_NOTE, *assessment_outlook['details']],
+            }
         body = f"""
 {TEAM_HQ_CSS}
 <style>
@@ -434,8 +437,7 @@ def create_teams_router(
 <section class="thq-content" data-my-team-context="{context_json}">
 {scope_notice}
 <header class="thq-header"><div class="thq-identity">{avatar}<div class="thq-title"><div class="identity-kicker">Owner: {escape(team['owner'])}</div><div class="thq-name-row"><h1>{escape(team['team_name'])}{you_badge(data, roster_id)}</h1>{champion_badge(defending_champion(data), roster_id)}</div><p>{escape(performance["record"])} · {escape(performance["standing"])}</p></div></div><div class="thq-strategy">{strategy_control}<small>League evidence updated: {escape(view['last_updated'])}</small></div></header>
-{comparison_html}
-{outlook_panel(view["outlook"], editable=editable, roster_id=roster_id)}
+{outlook_panel(assessment_outlook, editable=editable, roster_id=roster_id)}
 {lineup_alert}
 <section class="thq-section" id="full-roster"><details class="thq-strength-detail" id="my-team-roster" open><summary>Full Roster</summary><div class="thq-roster">{_roster_rooms(view)}</div></details><details class="thq-strength-detail" id="my-team-key-players"><summary>Key players · canonical Market assets</summary>{_key_players(view)}</details></section>
 <section class="thq-section" id="draft-capital"><div class="thq-section-head"><h2>Draft Capital</h2><span>Exact original franchise and current ownership</span></div><div class="thq-picks">{_draft_capital(view)}</div><p class="muted">Pick outlook follows the original franchise. Unknown range means no supported interval is published; picks have no weekly projection.</p></section>

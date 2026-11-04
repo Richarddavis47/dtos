@@ -3,10 +3,11 @@ MODEL_NOTE = ('DTOS shows lineup strength, depth, Market value and future outloo
               'It does not yet calculate a validated overall team grade.')
 
 
-def weekly_comparison(card, week):
-    profile = card.competitive_window.production_profile or {}
+def weekly_comparison(card, week, *, compact=False):
+    profile = getattr(getattr(card, 'competitive_window', None), 'production_profile', None) or {}
+    league_id = getattr(card, 'league_id', None)
     comparison = profile.get('current_week_comparison') or {}
-    if (comparison.get('league_id') != card.league_id or comparison.get('week') != week
+    if (not league_id or comparison.get('league_id') != league_id or comparison.get('week') != week
             or comparison.get('projection_generation') != profile.get('projection_generation')):
         return f'Week {week} projected lineup comparison needs compatible league, week and scoring evidence.'
     weekly = profile.get('weekly') or {}
@@ -21,11 +22,17 @@ def weekly_comparison(card, week):
         slots = ', '.join(map(str, coverage.get('unsupported_slots') or []))
         reason = (f'No supported eligible projections for required slots: {slots}.' if slots else
                   'Compatible projections cannot establish a complete legal starting lineup.')
+        if compact:
+            return f'Week {week} · {covered}/{expected} slots covered; {population}. {reason}'
         return f'Week {week} projected lineup comparison: {covered}/{expected} slots covered; {population}. {reason} Missing points are not zero.'
     qualification = ((row.get('reserve_capacity') or {}).get('qualification') or {})
     qualifier = 'Provisional · ' if qualification.get('conclusion_state') != 'current' else ''
     rank = card.starting_lineup.rank
     ranking = f'#{rank} among {comparison["supported_count"]} comparable teams' if rank is not None else 'Comparison rank not available'
+    if compact:
+        ranking = f'#{rank} of ' if rank is not None else ''
+        return (f'{qualifier}Week {week} · {points:.2f} projected points · {covered}/{expected} slots · '
+                f'{ranking}{comparison["supported_count"]} comparable teams ({comparison["league_size"]} total).')
     return (f'{qualifier}Week {week} projected optimal lineup: {points:.2f} points; '
             f'{covered}/{expected} slots covered; {ranking}; {population}. '
             'This compares analytical lineups, not submitted Sleeper starters or overall franchise quality.')
