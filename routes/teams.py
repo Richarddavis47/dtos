@@ -423,7 +423,8 @@ def create_teams_router(
                 **assessment_outlook,
                 'brief': weekly_comparison(view['team_intelligence'], data.get('week'), compact=True,
                                            diagnostics=prepared_comparison(data, view['projection_snapshot'])),
-                'details': [MODEL_NOTE, *assessment_outlook['details']],
+                'details': [MODEL_NOTE, weekly_comparison(view['team_intelligence'], data.get('week'),
+                    diagnostics=prepared_comparison(data, view['projection_snapshot'])), *assessment_outlook['details']],
             }
         body = f"""
 {TEAM_HQ_CSS}

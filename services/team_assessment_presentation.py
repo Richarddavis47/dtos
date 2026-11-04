@@ -43,7 +43,7 @@ def weekly_comparison(card, week, *, compact=False, diagnostics=None):
         reason = 'Availability or source support remains qualified; this is not a freshly verified team verdict.'
     if compact:
         return (f'{qualifier}Week {week} optimal lineup · {points:.2f} projected points · {covered}/{expected} slots · '
-                f'#{rank} of {len(supported)} comparable teams ({len(teams)} total).' + (' ' + reason if reason else ''))
+                f'#{rank} of {len(supported)} comparable teams ({len(teams)} total).')
     return (f'{qualifier}Week {week} projected optimal lineup: {points:.2f} points; '
             f'{covered}/{expected} slots covered; #{rank} among {len(supported)} comparable teams; '
             f'{len(supported)} of {len(teams)} league teams comparable. '

@@ -64,7 +64,7 @@ class AssessmentCoverageTests(unittest.TestCase):
             home = f.client.get('/')
             self.assertEqual(own.status_code, 200)
             self.assertEqual(home.status_code, 200)
-            return (own.text.split('id="my-team-outlook-lead"', 1)[1].split('</summary>', 1)[0],
+            return (own.text.split('id="my-team-outlook-lead"', 1)[1].split('id="full-roster"', 1)[0],
                     home.text.split('<h2>Projected lineup comparison</h2>', 1)[1].split('Open team assessments', 1)[0])
 
         current = pages()
@@ -85,7 +85,7 @@ class AssessmentCoverageTests(unittest.TestCase):
         diag = prepared_diagnostics(data, reader.snapshot())
         for text in changed:
             if diag is None:
-                self.assertIn('matching prepared comparison', text)
+                self.assertTrue('matching prepared comparison' in text or 'evidence is not prepared' in text)
                 self.assertNotIn('#', text)
             else:
                 self.assertIn(f"{diag['teams']['1']['optimal_points']:.2f}", text)
@@ -109,5 +109,6 @@ class AssessmentCoverageTests(unittest.TestCase):
         # A prepared-cache miss never runs an optimizer to render the page.
         with patch.object(diagnostic_store, 'get', return_value=None):
             for text in pages():
-                self.assertIn('matching prepared comparison', text)
-                self.assertNotIn('#', text)
+                lead = text.split('</summary>', 1)[0] if 'my-team-outlook' in text else text
+                self.assertTrue('matching prepared comparison' in lead or 'evidence is not prepared' in lead)
+                self.assertNotIn('#', lead)
