@@ -30,7 +30,12 @@ def build_team_directory(data: dict[str, Any], *, prepared_only: bool = False) -
             # Weekly diagnostics may be prepared even when the optional full
             # headquarters snapshot is absent. This read must not prepare it.
             from types import SimpleNamespace
-            comparison = prepared_comparison(data, context.projection_snapshot)
+            snapshot = getattr(context, 'projection_snapshot', None)
+            if snapshot is None:
+                return {}
+            comparison = prepared_comparison(data, snapshot)
+            if comparison is None:
+                return {}
             return {int(team['roster_id']): {
                 'rank': None,
                 'weekly_comparison': weekly_comparison(SimpleNamespace(
@@ -40,7 +45,7 @@ def build_team_directory(data: dict[str, Any], *, prepared_only: bool = False) -
     else:
         result = intelligence_orchestrator.analyze(data, active_id, include_trade_opportunities=False)
     intelligence = result.roster.team_intelligence
-    comparison = prepared_comparison(data, result.context.projection_snapshot)
+    comparison = prepared_comparison(data, getattr(getattr(result, 'context', None), 'projection_snapshot', None))
     return {
         roster_id: {
             "preseason": card.preseason,
