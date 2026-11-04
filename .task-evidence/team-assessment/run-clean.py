@@ -7,7 +7,7 @@ runtime='/var/lib/docker/vfs/dir/'+cache
 im=json.loads(subprocess.check_output(['docker','image','inspect','dtos-canonical314-flat:2223'],text=True))[0]
 assert im['Id']=='sha256:2c9de92bf8e05a79587f6edba94052cf614c984a5cb81a62613871388cd6533e'
 assert not any(any(k in v.split('=',1)[0].upper() for k in ('TOKEN','SECRET','PASSWORD','PROXY')) for v in im['Config']['Env'])
-head=subprocess.check_output(['git','rev-parse','HEAD'],cwd=source,text=True).strip();assert head=='28b60c46c80d9394c3f16d83cd6eeb2b66ca231d'
+head=subprocess.check_output(['git','rev-parse','HEAD'],cwd=source,text=True).strip();assert head=='06f56baa3880d43d0384819aa08bfafb796c15c2'
 assert not subprocess.check_output(['git','status','--porcelain'],cwd=source,text=True).strip()
 (b/'fixture').mkdir(exist_ok=True)
 args=['docker','run','--name','dtos-team-assessment-clean','--rm','--init','--user','1000:1000','--memory=2g','--memory-swap=2g','--cpus=2','--network=none']
