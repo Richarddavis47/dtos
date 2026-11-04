@@ -4,6 +4,7 @@ Responsive Chromium, not physical Safari. Discovery/evaluation/balance engines
 execute without mocking recommendations. External provider access is forbidden.
 """
 
+import gc
 import json
 import os
 import unittest
@@ -22,6 +23,12 @@ from tools.validation.browser_runtime import launch_chromium
 class SimpleTradeJourneyBrowserTests(unittest.TestCase):
     def test_actual_build_shop_trade_for_recommended_journeys(self):
         import dtos_app
+        from src.platform.memory_reclamation import release_unused_allocator_pages
+
+        # This normal-execution fixture shares the full-suite process. Collect
+        # unreachable earlier fixtures; keep real cgroup admission in force.
+        gc.collect()
+        release_unused_allocator_pages()
 
         source = discovery.DiscoveryRepairTests()
         source.setUp()
@@ -371,6 +378,8 @@ class SimpleTradeJourneyBrowserTests(unittest.TestCase):
                                 full_page=True,
                             )
                         page.close()
+                        gc.collect()
+                        release_unused_allocator_pages()
             finally:
                 browser.close()
         if os.environ.get("DTOS_TRADE_JOURNEY_EVIDENCE"):
