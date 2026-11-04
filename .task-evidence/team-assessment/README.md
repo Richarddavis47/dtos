@@ -1,20 +1,16 @@
-# Team Assessment Coverage — validation in progress
+# Team Assessment Coverage — final validation running
 
-Baseline: `dd3366d7b3d5e713c8004ec5e34b72ac9a27a94f` (production v1.22.11/build2226).
+Baseline: `dd3366d7b3d5e713c8004ec5e34b72ac9a27a94f` (v1.22.11/build 2226).
 Original candidate: `cd400cf84ce6f80405848d43b95e7fece975c42b`.
-Current candidate: `06f56baa3880d43d0384819aa08bfafb796c15c2`.
-Current source tree: `d5a157d22fd0b2f1847e3bd07e7ce9b1f6f24604`.
+Current candidate: `a332afe8fc545320c9a74134ab56f87c66b91af4`.
+Current tree: `6b8ea104ce38338270d33ffb9ae225e6018395b6`.
 
-`candidate.patch` and `original-canonical.log` are the original, unchanged artifacts. Their hashes and the two UID0/mode0755 bytecode directories are recorded in `source-and-original-failure.json`.
+`candidate.patch` and `original-canonical.log` are unchanged original artifacts. `candidate-a332afe.patch` is the complete updated patch against the same baseline, with exact-tree application proof. `candidate-a332afe.json` explains revisions and previous failures.
 
-`candidate-06f56ba.patch` is the complete current patch against the same baseline; `candidate-06f56ba.json` explains each revision. Original earlier patches are retained alongside it. The current changes handle absent metadata, restore the existing compact phone presentation, and require canonical lineup admission before showing retained weekly points. No analytical model or threshold was changed.
+Original compilation failed in root-owned ignored bytecode directories. No permission changes or elevated testing were used. The clean exact checkout runs as UID/GID 1000, Python 3.14.3, enforced 2 GiB/no swap/two CPUs/network disabled. `run-clean.py` and `invocation-focused-a332afe.json` specify the runtime and commands.
 
-The original whole-tree compilation was blocked by root-owned ignored bytecode. No chmod/chown or broad permission changes were performed. Tests now run in `/workspace/team-assessment-candidate`, a clean exact checkout, as UID/GID1000 inside a real2GiB/no-swap/twoCPU/network-none container. The runtime is Python3.14.3 from immutable image `sha256:2c9de92bf8e05a79587f6edba94052cf614c984a5cb81a62613871388cd6533e`.
+**71 final focused checks passed. Full canonical validation is running; no final pass is claimed yet.** Application edits remain limited to Home/My Team presentation. Test changes update old wording assertions and collect unreachable browser-fixture objects without bypassing actual memory admission.
 
-Current focused result: **69 tests passed**. This includes complete/partial/missing rendered comparisons, unchanged phone roster visibility checks, and missing-scoring rejection. The full canonical entry point `python -m tools.validation.validate_release` is running; **no complete regression or ten-gate pass is claimed yet**.
+`failed-06f56ba.zip` preserves the previous completed full run: 4,071 tests, four failed viewport subtests and three errors (evidence-directory failure and two real capacity-deferred Trade browser timeouts). The per-test observer missed subtest callbacks; original unittest console totals are authoritative. Earlier interrupted archives remain separate. A deferred operation does not count as completion.
 
-Preserved attempts: `cd400cf-interrupted.zip` records the legacy-wording failure; `interrupted-ca76bf4.zip` records absent-metadata and mobile-layout failures, plus the subsequent focused qualification failures. Interrupted runs are not completion evidence. The source-replay numerical fixture is presentation-only and does not establish live Granite verification.
-
-No merge, tag, GitHub release or production deployment is authorized or performed. Only candidate/evidence branches have been pushed.
-
-`interrupted-28b60c4.zip` preserves the intentionally interrupted run before the last explicit optimal-lineup label refinement; it contains no full-suite pass claim. The latest focused log is `focused-06f56ba.log`.
+No merge, tag, GitHub release or deployment is authorized or performed. Production is unchanged. Fixture results do not establish live Granite acceptance or physical Safari behavior.

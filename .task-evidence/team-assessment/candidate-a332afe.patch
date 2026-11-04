@@ -1,0 +1,362 @@
+diff --git a/routes/home.py b/routes/home.py
+index 0b9c15c..c187ee5 100644
+--- a/routes/home.py
++++ b/routes/home.py
+@@ -10,6 +10,7 @@ from fastapi import APIRouter, Query, Request
+ from fastapi.responses import HTMLResponse
+ 
+ from services.team_headquarters import build_team_directory
++from services.team_assessment_presentation import MODEL_NOTE
+ from services.transactions import normalize_transactions
+ from services.home_trade_news import recent_candidates, news_identity, build_news, capture_news_data
+ from src.ui.home_trade_opportunities import section as opportunity_section, CSS as OPPORTUNITY_CSS
+@@ -138,7 +139,7 @@ def create_home_router(
+         preseason = league_is_preseason(data)
+         record = record_evidence(team.get("wins"), team.get("losses"), team.get("ties"), season_started=not preseason)
+         ranking_label = "preseason outlook" if preseason else "current league outlook"
+-        competitive = f'#{outlook.get("rank", "—")} in the {ranking_label}' if outlook.get("rank") else f'{ranking_label.title()} not yet available'
++        competitive = f'#{outlook.get("rank", "—")} in the {ranking_label}' if outlook.get("rank") else MODEL_NOTE
+         header = f'''<article class="ux-feature home-command"><p class="identity-kicker">Your front office · {escape(str(team.get("owner") or "Unassigned"))}</p><h2>{escape(str(team.get("team_name") or "Franchise"))}{you_badge(data, roster_id)}</h2><div class="home-record">{standing_badge(standings_order(data)["ranks"].get(roster_id), derived=True)}{champion_badge(champion, roster_id)}<b>{escape("Preseason · official record not started" if preseason else "Official record: " + record)}</b></div><div class="ux-feature-actions"><a class="ux-primary-action" href="/teams/{roster_id}">Open My Team</a><a class="ux-secondary-action" href="/trades?front_office={roster_id}">Build a trade</a></div></article>'''
+         secondary = f'''<div class="home-secondary-controls">{selector}<details class="ds-home-detail"><summary>Assessment context and roster shortcuts</summary><p>DTOS strength assessment: {escape(competitive)}. Strength assessments remain separate from official standings.</p><a class="ds-action" href="/teams/{roster_id}#full-roster">Roster · {len(team.get("players") or [])} players</a> <a class="ds-action" href="/teams/{roster_id}#draft-capital">Capital · {len(team.get("picks_owned") or [])} future picks</a><a class="ds-action" href="/league">League overview</a></details></div>'''
+ 
+@@ -161,7 +162,7 @@ def create_home_router(
+         rank_html = '<div class="podium-grid">' + "".join(
+             f'<a class="podium-card" data-rank="{int(view["rank"])}" href="/teams/{rid}"><span class="podium-rank">#{escape(str(view["rank"]))}</span><h3>{escape(str(row.get("team_name") or "Team"))}</h3><p>{escape("Canonical team assessment" if preseason else record_evidence(row.get("wins"), row.get("losses"), row.get("ties"), season_started=True))}</p></a>'
+             for index, (rid, row, view) in enumerate(rankings[:3], start=1)
+-        ) + '</div>' + ('<p>Canonical team assessment rankings unavailable.</p>' if not rankings else '') + '<p><a href="/teams">Open team assessments →</a></p>'
++        ) + '</div>' + ('<div class="card">' + ''.join(f'<p><a href="/teams/{int(row.get("roster_id") or 0)}">{escape(str(row.get("team_name") or "Team"))}</a>: {escape(directory.get(int(row.get("roster_id") or 0), {}).get("weekly_comparison") or "Compatible weekly lineup evidence is not prepared for this league.")}</p>' for row in teams) + '<p>Individual strengths are shown separately; DTOS does not yet calculate a validated overall team grade.</p></div>' if not rankings else '') + '<p><a href="/teams">Open team assessments →</a></p>'
+ 
+         matchups = []
+         for matchup_id, sides in sorted(current_matchup_groups(data).items())[:5]:
+@@ -185,7 +186,7 @@ def create_home_router(
+             header + '<!--home-opportunities-->' + secondary + '<!--home-trade-news-->' + _section('Standings', 'Official records and scoring · not DTOS power rankings', render_standings(data, champion=champion))
+             + _section("Weekly Report", report_state + " · current week evidence", f'<div class="card ux-recap"><a href="/reports/weekly?week={report_week}">Open Week {report_week} report · {report_state} →</a></div>')
+             + _section("Explore", "Useful destinations—not personalized Attention recommendations", action_html)
+-            + '<details class="ds-home-detail"><summary>DTOS team assessment · not official standings</summary>' + _section("Team Assessment Rankings", "Canonical team assessment · not standings or FOIS GM rankings", rank_html) + '</details>'
++            + '<details class="ds-home-detail"><summary>DTOS team assessment · not official standings</summary>' + _section("Team Assessment Rankings" if rankings else "Projected lineup comparison", "Canonical team assessment · not standings or FOIS GM rankings" if rankings else "Projected lineups · not standings or FOIS GM rankings or an overall grade", rank_html) + '</details>'
+             + _section("Matchups this week", "Current Sleeper matchup evidence", matchup_html)
+             + '<details class="ds-home-detail"><summary>Market and league activity</summary>' + _section("Market Movers", "Meaningful movement only", '<div class="card"><p class="muted">Market movement is shown only when timestamped comparable observations cross the established threshold.</p><a href="/market#market-movers">Review market evidence →</a></div>')
+             + _section("League Activity", "Recent cached transactions", activity_html)
+diff --git a/routes/teams.py b/routes/teams.py
+index 8d6d86c..4d643d2 100644
+--- a/routes/teams.py
++++ b/routes/teams.py
+@@ -13,6 +13,7 @@ from fastapi.responses import HTMLResponse
+ from config import LEAGUE_ID
+ from services.asset_intelligence import contextual_player_url
+ from services.team_headquarters import build_team_directory, build_team_headquarters
++from services.team_assessment_presentation import MODEL_NOTE, weekly_comparison
+ from src.core.historical_memory.read_model import historical_graph
+ from src.core.history_context import canonical_history_store
+ from src.core.request_execution import run_manager_read
+@@ -416,6 +417,13 @@ def create_teams_router(
+         overview = view['overview']
+         roster_summary = ' · '.join(f'{count} {slot.lower()}' for slot, count in overview['slots'].items())
+         view["outlook"]["details"].extend(overview["statuses"])
++        assessment_outlook = view['outlook']
++        if view['team_intelligence'].overall.score is None:
++            assessment_outlook = {
++                **assessment_outlook,
++                'brief': weekly_comparison(view['team_intelligence'], data.get('week'), compact=True),
++                'details': [MODEL_NOTE, *assessment_outlook['details']],
++            }
+         body = f"""
+ {TEAM_HQ_CSS}
+ <style>
+@@ -428,7 +436,7 @@ def create_teams_router(
+ <section class="thq-content" data-my-team-context="{context_json}">
+ {scope_notice}
+ <header class="thq-header"><div class="thq-identity">{avatar}<div class="thq-title"><div class="identity-kicker">Owner: {escape(team['owner'])}</div><div class="thq-name-row"><h1>{escape(team['team_name'])}{you_badge(data, roster_id)}</h1>{champion_badge(defending_champion(data), roster_id)}</div><p>{escape(performance["record"])} · {escape(performance["standing"])}</p></div></div><div class="thq-strategy">{strategy_control}<small>League evidence updated: {escape(view['last_updated'])}</small></div></header>
+-{outlook_panel(view["outlook"], editable=editable, roster_id=roster_id)}
++{outlook_panel(assessment_outlook, editable=editable, roster_id=roster_id)}
+ {lineup_alert}
+ <section class="thq-section" id="full-roster"><details class="thq-strength-detail" id="my-team-roster" open><summary>Full Roster</summary><div class="thq-roster">{_roster_rooms(view)}</div></details><details class="thq-strength-detail" id="my-team-key-players"><summary>Key players · canonical Market assets</summary>{_key_players(view)}</details></section>
+ <section class="thq-section" id="draft-capital"><div class="thq-section-head"><h2>Draft Capital</h2><span>Exact original franchise and current ownership</span></div><div class="thq-picks">{_draft_capital(view)}</div><p class="muted">Pick outlook follows the original franchise. Unknown range means no supported interval is published; picks have no weekly projection.</p></section>
+diff --git a/services/team_assessment_presentation.py b/services/team_assessment_presentation.py
+new file mode 100644
+index 0000000..d58d759
+--- /dev/null
++++ b/services/team_assessment_presentation.py
+@@ -0,0 +1,40 @@
++"""Presentation of already-admitted dimensions; no grading or preparation."""
++MODEL_NOTE = ('DTOS shows lineup strength, depth, Market value and future outlook separately. '
++              'It does not yet calculate a validated overall team grade.')
++
++
++def weekly_comparison(card, week, *, compact=False):
++    profile = getattr(getattr(card, 'competitive_window', None), 'production_profile', None) or {}
++    league_id = getattr(card, 'league_id', None)
++    comparison = profile.get('current_week_comparison') or {}
++    if (not league_id or comparison.get('league_id') != league_id or comparison.get('week') != week
++            or comparison.get('projection_generation') != profile.get('projection_generation')):
++        return f'Week {week} projected lineup comparison needs compatible league, week and scoring evidence.'
++    weekly = profile.get('weekly') or {}
++    row = weekly.get(week) or weekly.get(str(week)) or {}
++    coverage = row.get('coverage') or {}
++    expected = len(comparison.get('required_slots') or [])
++    covered = coverage.get('supported_slots', 0)
++    population = f"{comparison['supported_count']} of {comparison['league_size']} league teams comparable"
++    optimal = row.get('optimal') or {}
++    points = optimal.get('projected_points')
++    if row.get('available') is True and getattr(getattr(card, 'starting_lineup', None), 'score', None) is None:
++        return f'Week {week} projected lineup comparison needs compatible league, week and scoring evidence.'
++    if row.get('available') is not True or points is None:
++        slots = ', '.join(map(str, coverage.get('unsupported_slots') or []))
++        reason = (f'No supported eligible projections for required slots: {slots}.' if slots else
++                  'Compatible projections cannot establish a complete legal starting lineup.')
++        if compact:
++            return f'Week {week} · {covered}/{expected} slots covered; {population}. {reason}'
++        return f'Week {week} projected lineup comparison: {covered}/{expected} slots covered; {population}. {reason} Missing points are not zero.'
++    qualification = ((row.get('reserve_capacity') or {}).get('qualification') or {})
++    qualifier = 'Provisional · ' if qualification.get('conclusion_state') != 'current' else ''
++    rank = card.starting_lineup.rank
++    ranking = f'#{rank} among {comparison["supported_count"]} comparable teams' if rank is not None else 'Comparison rank not available'
++    if compact:
++        ranking = f'#{rank} of ' if rank is not None else ''
++        return (f'{qualifier}Week {week} optimal lineup · {points:.2f} projected points · {covered}/{expected} slots · '
++                f'{ranking}{comparison["supported_count"]} comparable teams ({comparison["league_size"]} total).')
++    return (f'{qualifier}Week {week} projected optimal lineup: {points:.2f} points; '
++            f'{covered}/{expected} slots covered; {ranking}; {population}. '
++            'This compares analytical lineups, not submitted Sleeper starters or overall franchise quality.')
+diff --git a/services/team_headquarters.py b/services/team_headquarters.py
+index 39dab75..296049a 100644
+--- a/services/team_headquarters.py
++++ b/services/team_headquarters.py
+@@ -1,6 +1,8 @@
+ """Deterministic Team Headquarters calculations and summaries."""
+ from __future__ import annotations
+ 
++from services.team_assessment_presentation import MODEL_NOTE, weekly_comparison
++
+ from collections import Counter
+ from datetime import datetime, timezone
+ from statistics import mean
+@@ -37,6 +39,7 @@ def build_team_directory(data: dict[str, Any], *, prepared_only: bool = False) -
+             "playoff_odds": card.playoff_odds,
+             "championship_odds": card.championship_odds,
+             "grade": card.overall.grade,
++            "weekly_comparison": weekly_comparison(card, data.get("week")),
+         }
+         for roster_id, card in intelligence.items()
+     }
+@@ -129,7 +132,7 @@ def generate_front_office_summary(
+     if team_card is not None:
+         if team_card.overall.score is None:
+             return {
+-                "Overall Assessment": "Overall assessment unavailable. Supported dimensions are shown separately; Market strength is not lineup strength.",
++                "Overall Assessment": MODEL_NOTE,
+                 "Current Strengths": " ".join(team_card.starting_lineup.reasons),
+                 "Current Weaknesses": " ".join(team_card.depth.reasons),
+                 "Short-Term Outlook": "Optimal projected lineup: " + team_card.starting_lineup.grade + ". " + " ".join(team_card.starting_lineup.reasons),
+diff --git a/tests/test_active_roster_grading.py b/tests/test_active_roster_grading.py
+index 54462ec..dfe7741 100644
+--- a/tests/test_active_roster_grading.py
++++ b/tests/test_active_roster_grading.py
+@@ -142,7 +142,9 @@ class ActiveRosterGradingTests(unittest.TestCase):
+         self.assertEqual(view['unified_recommendation'].competitive_window, view['competitive_window'])
+         self.assertEqual(view['team_intelligence'].overall.grade, 'Unavailable')
+         self.assertEqual(view['competitive_window'].classification.value, 'Unavailable')
+-        self.assertIn('unavailable', view['summary']['Overall Assessment'])
++        self.assertIn('does not yet calculate a validated overall team grade', view['summary']['Overall Assessment'])
++        self.assertIsNone(view['team_intelligence'].overall.score)
++        self.assertIsNone(view['team_intelligence'].overall.rank)
+         self.assertTrue(all(p.overall_grade == 'Unavailable' for p in self.engine.analyze(self.data, 1).roster.players.values()))
+ 
+     def test_real_league_switch_does_not_reuse_same_roster_or_player_ids(self):
+diff --git a/tests/test_projection_coverage_browser.py b/tests/test_projection_coverage_browser.py
+index 4161659..266fbf4 100644
+--- a/tests/test_projection_coverage_browser.py
++++ b/tests/test_projection_coverage_browser.py
+@@ -18,6 +18,8 @@ class ProjectionCoverageBrowserTests(unittest.TestCase):
+         f, data, service = prepared(self)
+         reports = []
+         output = os.environ.get('DTOS_PROJECTION_COVERAGE_EVIDENCE')
++        if output:
++            Path(output).mkdir(parents=True, exist_ok=True)
+         with sync_playwright() as pw:
+             browser = launch_chromium(pw, headless=True)
+             try:
+@@ -29,7 +31,8 @@ class ProjectionCoverageBrowserTests(unittest.TestCase):
+                             page.on('pageerror', lambda error: errors.append(str(error)))
+                             self.assertEqual(page.goto('https://dtos.test/teams/1').status, 200)
+                             root = page.locator('#my-team-outlook')
+-                            self.assertIn('/7 supported', root.inner_text())
++                            self.assertIn('7 comparable teams (10 total)', root.inner_text())
++                            self.assertIn('optimal lineup', root.inner_text())
+                             self.assertIn('10 total', root.inner_text())
+                             detail = page.locator('#my-team-outlook-evidence')
+                             summary = detail.locator('summary')
+diff --git a/tests/test_team_assessment_presentation.py b/tests/test_team_assessment_presentation.py
+new file mode 100644
+index 0000000..2b0bbf1
+--- /dev/null
++++ b/tests/test_team_assessment_presentation.py
+@@ -0,0 +1,103 @@
++from types import SimpleNamespace as NS
++import unittest
++from services.team_assessment_presentation import weekly_comparison, MODEL_NOTE
++
++
++class AssessmentCoverageTests(unittest.TestCase):
++    def card(self, available=True, qualified='provisional'):
++        return NS(league_id='fixture', starting_lineup=NS(rank=1, score=80),
++                  competitive_window=NS(production_profile={
++                      'projection_generation': 'g',
++                      'current_week_comparison': {'league_id': 'fixture', 'week': 9,
++                          'projection_generation': 'g', 'supported_count': 11, 'league_size': 12,
++                          'required_slots': ['QB'] * 10},
++                      'weekly': {9: {'available': available,
++                          'optimal': {'projected_points': 153.3408 if available else None},
++                          'coverage': {'supported_slots': 10 if available else 9,
++                                       'unsupported_slots': [] if available else ['DEF']},
++                          'reserve_capacity': {'qualification': {'conclusion_state': qualified}}}}}))
++
++    def test_complete_provisional_comparison(self):
++        text = weekly_comparison(self.card(), 9)
++        for word in ['Provisional', 'Week 9', '153.34 points', '10/10', '#1 among 11', '11 of 12']:
++            self.assertIn(word, text)
++
++    def test_partial_does_not_publish_a_rank_or_total(self):
++        text = weekly_comparison(self.card(False), 9)
++        self.assertIn('9/10', text)
++        self.assertIn('DEF', text)
++        self.assertNotIn('#1', text)
++        self.assertNotIn('153.34', text)
++
++    def test_generation_conflict(self):
++        card = self.card()
++        card.competitive_window.production_profile['projection_generation'] = 'other'
++        self.assertIn('needs compatible', weekly_comparison(card, 9))
++
++    def test_missing_and_wrong_week(self):
++        self.assertIn('needs compatible', weekly_comparison(self.card(), 10))
++        card = self.card()
++        card.competitive_window.production_profile = {}
++        self.assertIn('needs compatible', weekly_comparison(card, 9))
++
++    def test_zero_and_current(self):
++        card = self.card(qualified='current')
++        card.competitive_window.production_profile['weekly'][9]['optimal']['projected_points'] = 0
++        text = weekly_comparison(card, 9)
++        self.assertIn('0.00 points', text)
++        self.assertIn('optimal lineup', weekly_comparison(card, 9, compact=True))
++        self.assertNotIn('Provisional', text)
++        self.assertIn('validated overall team grade', MODEL_NOTE)
++
++    def test_home_rendered_complete_partial_missing_and_existing_overall(self):
++        from unittest.mock import AsyncMock, patch
++        from fastapi.responses import HTMLResponse
++        from routes.home import create_home_router
++        from tests.test_trade_workspace_batch1 import AuthenticatedTradeBoundaryTests
++        f = AuthenticatedTradeBoundaryTests()
++        f.setUp()
++        self.addCleanup(f.doCleanups)
++        app, data = f.client.app, f.data
++        state = [0]
++        app.include_router(create_home_router(ensure_fresh=AsyncMock(), require_data=lambda: data,
++            page=lambda title, body: HTMLResponse(body), generation_provider=lambda: (self.id(), state[0])))
++        for index, card in enumerate([self.card(), self.card(False), None]):
++            state[0] = index
++            text = weekly_comparison(card, 9) if card else 'Compatible weekly lineup evidence is not prepared for this league.'
++            directory = {t['roster_id']: {'rank': None, 'weekly_comparison': text} for t in data['teams']}
++            with patch('routes.home.build_team_directory', return_value=directory):
++                response = f.client.get('/')
++            self.assertEqual(response.status_code, 200)
++            self.assertIn(text, response.text)
++            self.assertNotIn('Canonical team assessment rankings unavailable', response.text)
++        state[0] = 4
++        directory = {t['roster_id']: {'rank': i + 1} for i, t in enumerate(data['teams'])}
++        with patch('routes.home.build_team_directory', return_value=directory):
++            self.assertIn('<h2>Team Assessment Rankings</h2>', f.client.get('/').text)
++
++    def test_my_team_rendered_complete_partial_and_missing(self):
++        from unittest.mock import patch
++        from tests.test_my_team_outlook_http import MyTeamOutlookHTTPTests
++        f = MyTeamOutlookHTTPTests()
++        f.setUp()
++        self.addCleanup(f.doCleanups)
++        for card in [self.card(), self.card(False), None]:
++            text = weekly_comparison(card, 9) if card else 'Week 9 comparison needs compatible projections.'
++            with patch('routes.teams.weekly_comparison', return_value=text):
++                response = f.client.get('/teams/1')
++            self.assertEqual(response.status_code, 200)
++            self.assertIn(text, response.text)
++            self.assertIn(MODEL_NOTE, response.text)
++            self.assertIn(text, response.text.split('id="my-team-outlook-lead"', 1)[1].split('</summary>', 1)[0])
++            self.assertLess(response.text.index('id="my-team-outlook-lead"'), response.text.index('id="full-roster"'))
++
++    def test_absent_card_metadata_is_a_missing_comparison(self):
++        self.assertIn('needs compatible', weekly_comparison(NS(), 9))
++
++    def test_unadmitted_dimension_does_not_publish_retained_profile_points(self):
++        card = self.card()
++        card.starting_lineup.score = None
++        text = weekly_comparison(card, 9)
++        self.assertIn('needs compatible', text)
++        self.assertNotIn('153.34', text)
++        self.assertNotIn('#1', text)
+diff --git a/tests/test_team_headquarters.py b/tests/test_team_headquarters.py
+index 0687bcd..12c089d 100644
+--- a/tests/test_team_headquarters.py
++++ b/tests/test_team_headquarters.py
+@@ -94,8 +94,10 @@ class TeamHeadquartersTests(unittest.TestCase):
+         view = build_team_headquarters(self.data, 1)
+         assert view is not None
+         combined = " ".join(view["summary"].values())
+-        self.assertIn("Overall assessment unavailable", combined)
+-        self.assertIn("Market strength is not lineup strength", combined)
++        self.assertIn("does not yet calculate a validated overall team grade", combined)
++        self.assertIn("lineup strength, depth, Market value and future outlook separately", combined)
++        self.assertIsNone(view["team_intelligence"].overall.score)
++        self.assertIsNone(view["team_intelligence"].overall.rank)
+         self.assertIn("Future capital and longevity context remain distinct", combined)
+ 
+     def test_missing_assessment_does_not_use_neutral_baseline(self) -> None:
+diff --git a/tests/test_trade_simple_browser.py b/tests/test_trade_simple_browser.py
+index c11689c..2cc8c19 100644
+--- a/tests/test_trade_simple_browser.py
++++ b/tests/test_trade_simple_browser.py
+@@ -4,6 +4,7 @@ Responsive Chromium, not physical Safari. Discovery/evaluation/balance engines
+ execute without mocking recommendations. External provider access is forbidden.
+ """
+ 
++import gc
+ import json
+ import os
+ import unittest
+@@ -22,6 +23,12 @@ from tools.validation.browser_runtime import launch_chromium
+ class SimpleTradeJourneyBrowserTests(unittest.TestCase):
+     def test_actual_build_shop_trade_for_recommended_journeys(self):
+         import dtos_app
++        from src.platform.memory_reclamation import release_unused_allocator_pages
++
++        # This normal-execution fixture shares the full-suite process. Collect
++        # unreachable earlier fixtures; keep real cgroup admission in force.
++        gc.collect()
++        release_unused_allocator_pages()
+ 
+         source = discovery.DiscoveryRepairTests()
+         source.setUp()
+@@ -371,6 +378,8 @@ class SimpleTradeJourneyBrowserTests(unittest.TestCase):
+                                 full_page=True,
+                             )
+                         page.close()
++                        gc.collect()
++                        release_unused_allocator_pages()
+             finally:
+                 browser.close()
+         if os.environ.get("DTOS_TRADE_JOURNEY_EVIDENCE"):
+diff --git a/tests/test_ux_foundation.py b/tests/test_ux_foundation.py
+index 198f1d8..48bd2a8 100644
+--- a/tests/test_ux_foundation.py
++++ b/tests/test_ux_foundation.py
+@@ -64,7 +64,8 @@ class UXFoundationTests(unittest.TestCase):
+         with patch('routes.home.build_team_directory', return_value={1: {'rank': None}, 2: {'rank': None}}):
+             response = self._client().get('/')
+         self.assertEqual(response.status_code, 200)
+-        self.assertIn('Canonical team assessment rankings unavailable', response.text)
++        self.assertIn('Compatible weekly lineup evidence is not prepared for this league.', response.text)
++        self.assertIn('does not yet calculate a validated overall team grade', response.text)
+         self.assertNotIn('data-rank="1"', response.text)
+         self.assertNotIn('data-rank="2"', response.text)
+         self.assertIn('not standings or FOIS GM rankings', response.text)

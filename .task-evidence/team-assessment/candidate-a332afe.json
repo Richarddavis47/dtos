@@ -1,0 +1,22 @@
+{
+  "baseline": "dd3366d7b3d5e713c8004ec5e34b72ac9a27a94f",
+  "original_candidate": "cd400cf84ce6f80405848d43b95e7fece975c42b",
+  "candidate": "a332afe8fc545320c9a74134ab56f87c66b91af4",
+  "tree": "6b8ea104ce38338270d33ffb9ae225e6018395b6",
+  "patch_sha256": "e26fd9e9291db0c9644cc4d0b90f82bf73f958bb1454d5d5e3d9dc38514af192",
+  "reason_for_update": "Presentation compatibility and truthful missing-scoring handling; stale wording expectations corrected; browser fixture collects unreachable earlier test objects while real memory admission stays enabled. No grading, Trade, scoring or admission policy changes.",
+  "prior_full_result": {
+    "candidate": "06f56baa3880d43d0384819aa08bfafb796c15c2",
+    "tests": 4071,
+    "failures": 4,
+    "errors": 3,
+    "gates_passed": 6,
+    "later_gates": "8\u201310 not executed after gate 7 failure",
+    "causes": [
+      "Four viewport subtests expected the superseded /7 supported wording.",
+      "Evidence directory was not created after subtest assertion failures.",
+      "Two Trade browser contexts timed out after actual capacity deferral in the long-lived full-suite process."
+    ],
+    "observer_limitation": "Per-test observer missed subtest failure/error callbacks; original unittest console records authoritative totals."
+  }
+}
