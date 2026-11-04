@@ -1,7 +1,7 @@
 """Deterministic Team Headquarters calculations and summaries."""
 from __future__ import annotations
 
-from services.team_assessment_presentation import MODEL_NOTE, weekly_comparison
+from services.team_assessment_presentation import MODEL_NOTE, weekly_comparison, prepared_comparison
 
 from collections import Counter
 from datetime import datetime, timezone
@@ -31,6 +31,7 @@ def build_team_directory(data: dict[str, Any], *, prepared_only: bool = False) -
     else:
         result = intelligence_orchestrator.analyze(data, active_id, include_trade_opportunities=False)
     intelligence = result.roster.team_intelligence
+    comparison = prepared_comparison(data, result.context.projection_snapshot)
     return {
         roster_id: {
             "preseason": card.preseason,
@@ -39,7 +40,7 @@ def build_team_directory(data: dict[str, Any], *, prepared_only: bool = False) -
             "playoff_odds": card.playoff_odds,
             "championship_odds": card.championship_odds,
             "grade": card.overall.grade,
-            "weekly_comparison": weekly_comparison(card, data.get("week")),
+            "weekly_comparison": weekly_comparison(card, data.get("week"), diagnostics=comparison),
         }
         for roster_id, card in intelligence.items()
     }

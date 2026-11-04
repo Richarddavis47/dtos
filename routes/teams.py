@@ -13,7 +13,7 @@ from fastapi.responses import HTMLResponse
 from config import LEAGUE_ID
 from services.asset_intelligence import contextual_player_url
 from services.team_headquarters import build_team_directory, build_team_headquarters
-from services.team_assessment_presentation import MODEL_NOTE, weekly_comparison
+from services.team_assessment_presentation import MODEL_NOTE, weekly_comparison, prepared_comparison
 from src.core.historical_memory.read_model import historical_graph
 from src.core.history_context import canonical_history_store
 from src.core.request_execution import run_manager_read
@@ -421,7 +421,8 @@ def create_teams_router(
         if view['team_intelligence'].overall.score is None:
             assessment_outlook = {
                 **assessment_outlook,
-                'brief': weekly_comparison(view['team_intelligence'], data.get('week'), compact=True),
+                'brief': weekly_comparison(view['team_intelligence'], data.get('week'), compact=True,
+                                           diagnostics=prepared_comparison(data, view['projection_snapshot'])),
                 'details': [MODEL_NOTE, *assessment_outlook['details']],
             }
         body = f"""

@@ -1,103 +1,113 @@
+"""Rendered evidence transitions: no saved-profile/current-rank mixing."""
+from copy import deepcopy
+from datetime import datetime, timedelta, timezone
 from types import SimpleNamespace as NS
 import unittest
+from unittest.mock import AsyncMock, patch
+
 from services.team_assessment_presentation import weekly_comparison, MODEL_NOTE
 
 
 class AssessmentCoverageTests(unittest.TestCase):
-    def card(self, available=True, qualified='provisional'):
-        return NS(league_id='fixture', starting_lineup=NS(rank=1, score=80),
-                  competitive_window=NS(production_profile={
-                      'projection_generation': 'g',
-                      'current_week_comparison': {'league_id': 'fixture', 'week': 9,
-                          'projection_generation': 'g', 'supported_count': 11, 'league_size': 12,
-                          'required_slots': ['QB'] * 10},
-                      'weekly': {9: {'available': available,
-                          'optimal': {'projected_points': 153.3408 if available else None},
-                          'coverage': {'supported_slots': 10 if available else 9,
-                                       'unsupported_slots': [] if available else ['DEF']},
-                          'reserve_capacity': {'qualification': {'conclusion_state': qualified}}}}}))
+    def diagnostic(self):
+        return dict(league_id='fixture', week=9, projection_generation='g', required_slot_count=10,
+                    teams={'1': dict(optimal_points=153.3408, optimal_ids=list(range(10)),
+                                     evidence=dict(calculation_supported=True, conclusion_state='current', limitations=[])),
+                           '2': dict(optimal_points=None, evidence={})})
 
-    def test_complete_provisional_comparison(self):
-        text = weekly_comparison(self.card(), 9)
-        for word in ['Provisional', 'Week 9', '153.34 points', '10/10', '#1 among 11', '11 of 12']:
-            self.assertIn(word, text)
-
-    def test_partial_does_not_publish_a_rank_or_total(self):
-        text = weekly_comparison(self.card(False), 9)
-        self.assertIn('9/10', text)
-        self.assertIn('DEF', text)
-        self.assertNotIn('#1', text)
-        self.assertNotIn('153.34', text)
-
-    def test_generation_conflict(self):
-        card = self.card()
-        card.competitive_window.production_profile['projection_generation'] = 'other'
-        self.assertIn('needs compatible', weekly_comparison(card, 9))
-
-    def test_missing_and_wrong_week(self):
-        self.assertIn('needs compatible', weekly_comparison(self.card(), 10))
-        card = self.card()
-        card.competitive_window.production_profile = {}
-        self.assertIn('needs compatible', weekly_comparison(card, 9))
-
-    def test_zero_and_current(self):
-        card = self.card(qualified='current')
-        card.competitive_window.production_profile['weekly'][9]['optimal']['projected_points'] = 0
-        text = weekly_comparison(card, 9)
-        self.assertIn('0.00 points', text)
-        self.assertIn('optimal lineup', weekly_comparison(card, 9, compact=True))
+    def test_coherent_current_zero_and_missing(self):
+        card = NS(league_id='fixture', roster_id=1, starting_lineup=NS(rank=99))
+        d = self.diagnostic()
+        text = weekly_comparison(card, 9, diagnostics=d)
+        for value in ['153.34 points', '10/10', '#1 among 1', '1 of 2']:
+            self.assertIn(value, text)
         self.assertNotIn('Provisional', text)
-        self.assertIn('validated overall team grade', MODEL_NOTE)
+        d['teams']['1']['optimal_points'] = 0
+        self.assertIn('0.00 points', weekly_comparison(card, 9, diagnostics=d))
+        for wrong in [None, {**d, 'week': 8}, {**d, 'league_id': 'other'}, {**d, 'projection_generation': None}]:
+            text = weekly_comparison(card, 9, diagnostics=wrong)
+            self.assertIn('matching prepared comparison', text)
+            self.assertNotIn('#', text)
 
-    def test_home_rendered_complete_partial_missing_and_existing_overall(self):
-        from unittest.mock import AsyncMock, patch
-        from fastapi.responses import HTMLResponse
-        from routes.home import create_home_router
-        from tests.test_trade_workspace_batch1 import AuthenticatedTradeBoundaryTests
-        f = AuthenticatedTradeBoundaryTests()
-        f.setUp()
-        self.addCleanup(f.doCleanups)
-        app, data = f.client.app, f.data
-        state = [0]
-        app.include_router(create_home_router(ensure_fresh=AsyncMock(), require_data=lambda: data,
-            page=lambda title, body: HTMLResponse(body), generation_provider=lambda: (self.id(), state[0])))
-        for index, card in enumerate([self.card(), self.card(False), None]):
-            state[0] = index
-            text = weekly_comparison(card, 9) if card else 'Compatible weekly lineup evidence is not prepared for this league.'
-            directory = {t['roster_id']: {'rank': None, 'weekly_comparison': text} for t in data['teams']}
-            with patch('routes.home.build_team_directory', return_value=directory):
-                response = f.client.get('/')
-            self.assertEqual(response.status_code, 200)
-            self.assertIn(text, response.text)
-            self.assertNotIn('Canonical team assessment rankings unavailable', response.text)
-        state[0] = 4
-        directory = {t['roster_id']: {'rank': i + 1} for i, t in enumerate(data['teams'])}
-        with patch('routes.home.build_team_directory', return_value=directory):
-            self.assertIn('<h2>Team Assessment Rankings</h2>', f.client.get('/').text)
+    def test_effective_qualification_and_incomplete_evidence(self):
+        card = NS(league_id='fixture', roster_id=1)
+        d = self.diagnostic()
+        e = d['teams']['1']['evidence']
+        e.update(conclusion_state='provisional', limitations=['Latest refresh did not complete.'])
+        self.assertIn('Provisional', weekly_comparison(card, 9, diagnostics=d))
+        self.assertIn('Latest refresh did not complete.', weekly_comparison(card, 9, diagnostics=d))
+        e['calculation_supported'] = False
+        self.assertNotIn('#1', weekly_comparison(card, 9, diagnostics=d))
+        self.assertNotIn('153.34', weekly_comparison(card, 9, diagnostics=d))
 
-    def test_my_team_rendered_complete_partial_and_missing(self):
-        from unittest.mock import patch
+    def test_rendered_current_availability_aging_and_failed_refresh(self):
         from tests.test_my_team_outlook_http import MyTeamOutlookHTTPTests
+        from routes.home import create_home_router
+        from fastapi.responses import HTMLResponse
+        from src.core.intelligence.roster_diagnostics import diagnostic_store
         f = MyTeamOutlookHTTPTests()
         f.setUp()
         self.addCleanup(f.doCleanups)
-        for card in [self.card(), self.card(False), None]:
-            text = weekly_comparison(card, 9) if card else 'Week 9 comparison needs compatible projections.'
-            with patch('routes.teams.weekly_comparison', return_value=text):
-                response = f.client.get('/teams/1')
-            self.assertEqual(response.status_code, 200)
-            self.assertIn(text, response.text)
-            self.assertIn(MODEL_NOTE, response.text)
-            self.assertIn(text, response.text.split('id="my-team-outlook-lead"', 1)[1].split('</summary>', 1)[0])
-            self.assertLess(response.text.index('id="my-team-outlook-lead"'), response.text.index('id="full-roster"'))
+        data = f.data
+        reader = f.f.f.source.reader
+        for team in data['teams']:
+            for p in team['players']:
+                p['status'] = 'Active'
+                data['players'][p['id']]['status'] = 'Active'
+        f.f.publish(datetime.now(timezone.utc).isoformat())
+        saved = deepcopy(data['team_strength'])
+        f.client.app.include_router(create_home_router(ensure_fresh=AsyncMock(), require_data=lambda: data,
+            page=lambda title, body: HTMLResponse(body), generation_provider=lambda: self.id()))
 
-    def test_absent_card_metadata_is_a_missing_comparison(self):
-        self.assertIn('needs compatible', weekly_comparison(NS(), 9))
+        def pages():
+            own = f.client.get('/teams/1')
+            home = f.client.get('/')
+            self.assertEqual(own.status_code, 200)
+            self.assertEqual(home.status_code, 200)
+            return (own.text.split('id="my-team-outlook-lead"', 1)[1].split('</summary>', 1)[0],
+                    home.text.split('<h2>Projected lineup comparison</h2>', 1)[1].split('Open team assessments', 1)[0])
 
-    def test_unadmitted_dimension_does_not_publish_retained_profile_points(self):
-        card = self.card()
-        card.starting_lineup.score = None
-        text = weekly_comparison(card, 9)
-        self.assertIn('needs compatible', text)
-        self.assertNotIn('153.34', text)
-        self.assertNotIn('#1', text)
+        current = pages()
+        for text in current:
+            self.assertIn('slots', text)
+            self.assertIn('#', text)
+            self.assertNotIn('Provisional', text)
+        from src.core.intelligence.roster_diagnostics import prepared_diagnostics
+        diag = prepared_diagnostics(data, reader.snapshot())
+        points = diag['teams']['1']['optimal_points']
+        for text in current:
+            self.assertIn(f'{points:.2f}', text)
+        # Do not republish the saved horizon: availability alone changes.
+        player = data['teams'][0]['players'][0]
+        player['status'] = 'Out'
+        data['players'][player['id']]['status'] = 'Out'
+        changed = pages()
+        diag = prepared_diagnostics(data, reader.snapshot())
+        for text in changed:
+            if diag is None:
+                self.assertIn('matching prepared comparison', text)
+                self.assertNotIn('#', text)
+            else:
+                self.assertIn(f"{diag['teams']['1']['optimal_points']:.2f}", text)
+        self.assertEqual(data['team_strength'], saved)
+        # Restore current availability, then requalify the very same publication.
+        player['status'] = 'Active'
+        data['players'][player['id']]['status'] = 'Active'
+        future = datetime.now(timezone.utc) + timedelta(days=10)
+        with patch('src.core.intelligence.roster_diagnostics._now', return_value=future):
+            for text in pages():
+                self.assertIn('Provisional', text)
+                self.assertIn('retained numerical evidence is provisional', text)
+                self.assertIn(f'{points:.2f}', text)
+        with patch.object(reader, 'refresh_evidence', return_value={'retained_publication': True}):
+            for text in pages():
+                self.assertIn('Provisional', text)
+                self.assertIn('latest refresh did not complete', text)
+                self.assertIn(f'{points:.2f}', text)
+        self.assertEqual(data['team_strength'], saved)
+        self.assertIn('validated overall team grade', MODEL_NOTE)
+        # A prepared-cache miss never runs an optimizer to render the page.
+        with patch.object(diagnostic_store, 'get', return_value=None):
+            for text in pages():
+                self.assertIn('matching prepared comparison', text)
+                self.assertNotIn('#', text)
