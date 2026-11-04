@@ -1,6 +1,8 @@
 """Deterministic Team Headquarters calculations and summaries."""
 from __future__ import annotations
 
+from services.team_assessment_presentation import MODEL_NOTE, weekly_comparison
+
 from collections import Counter
 from datetime import datetime, timezone
 from statistics import mean
@@ -37,6 +39,7 @@ def build_team_directory(data: dict[str, Any], *, prepared_only: bool = False) -
             "playoff_odds": card.playoff_odds,
             "championship_odds": card.championship_odds,
             "grade": card.overall.grade,
+            "weekly_comparison": weekly_comparison(card, data.get("week")),
         }
         for roster_id, card in intelligence.items()
     }
@@ -129,7 +132,7 @@ def generate_front_office_summary(
     if team_card is not None:
         if team_card.overall.score is None:
             return {
-                "Overall Assessment": "Overall assessment unavailable. Supported dimensions are shown separately; Market strength is not lineup strength.",
+                "Overall Assessment": MODEL_NOTE,
                 "Current Strengths": " ".join(team_card.starting_lineup.reasons),
                 "Current Weaknesses": " ".join(team_card.depth.reasons),
                 "Short-Term Outlook": "Optimal projected lineup: " + team_card.starting_lineup.grade + ". " + " ".join(team_card.starting_lineup.reasons),
