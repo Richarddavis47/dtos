@@ -419,12 +419,14 @@ def create_teams_router(
         view["outlook"]["details"].extend(overview["statuses"])
         assessment_outlook = view['outlook']
         if view['team_intelligence'].overall.score is None:
+            comparison = prepared_comparison(data, view['projection_snapshot'])
             assessment_outlook = {
                 **assessment_outlook,
                 'brief': weekly_comparison(view['team_intelligence'], data.get('week'), compact=True,
-                                           diagnostics=prepared_comparison(data, view['projection_snapshot'])),
-                'details': [MODEL_NOTE, weekly_comparison(view['team_intelligence'], data.get('week'),
-                    diagnostics=prepared_comparison(data, view['projection_snapshot'])), *assessment_outlook['details']],
+                                           diagnostics=comparison),
+                'position': f"Standing {overview['standing']} by Sleeper record/PF. " + weekly_comparison(
+                    view['team_intelligence'], data.get('week'), diagnostics=comparison),
+                'details': [MODEL_NOTE, *assessment_outlook['details']],
             }
         body = f"""
 {TEAM_HQ_CSS}
