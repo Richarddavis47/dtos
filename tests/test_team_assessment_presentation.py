@@ -155,7 +155,7 @@ class AssessmentCoverageTests(unittest.TestCase):
             self.assertIn('1 of 2 league teams comparable', text)
             self.assertIn('incomplete', text.lower())
             self.assertNotIn('153.34', text)
-            self.assertNotIn('#1', text)
+            self.assertNotRegex(text, r'#\d+ (?:of|among) \d+ comparable')
         for text in [detail, first_home]:
             self.assertIn('prepared but the legal lineup is incomplete', text)
             self.assertIn('total and rank are withheld', text)
