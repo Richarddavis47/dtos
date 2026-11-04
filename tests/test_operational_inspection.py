@@ -36,6 +36,9 @@ from tools.projection_reachability import InspectionLimit, analyze, unpack
 
 TOKEN = 'local-test-inspection-credential'
 HEADERS = {'X-DTOS-Inspection-Auth': TOKEN}
+# Preflight has a required league selector and an injected live-process reader;
+# its authorization, immutability and no-preparation controls live separately.
+LEGACY_OPERATIONS = OPERATIONS - {'restoration-preflight'}
 
 
 class OperationalInspectionTests(unittest.TestCase):
@@ -146,7 +149,7 @@ class OperationalInspectionTests(unittest.TestCase):
 
     def test_every_fixed_operation_succeeds_without_preparation(self):
         with patch('src.platform.storage_accounting.periodic_storage_accounting', side_effect=AssertionError('Collection')):
-            for operation in OPERATIONS:
+            for operation in LEGACY_OPERATIONS:
                 response = self.get(operation)
                 self.assertEqual(response.status_code, 200, (operation, response.text))
                 self.assertIn('no-store', response.headers['cache-control'])
@@ -169,7 +172,7 @@ class OperationalInspectionTests(unittest.TestCase):
             return entries
 
         before = capture()
-        for operation in OPERATIONS:
+        for operation in LEGACY_OPERATIONS:
             self.assertEqual(self.get(operation).status_code, 200)
         after = capture()
         self.assertEqual(before, after)
@@ -237,7 +240,7 @@ class OperationalInspectionTests(unittest.TestCase):
                 reader.db.execute("INSERT INTO projection_retention_policy VALUES('evil')")
 
     def test_sensitive_fields_omitted(self):
-        for operation in OPERATIONS:
+        for operation in LEGACY_OPERATIONS:
             text = self.get(operation).text
             for sensitive in ('PRIVATE_', TOKEN, str(self.root), 'private-player', 'csrf', 'owner_id', 'gm_id'):
                 self.assertNotIn(sensitive, text)

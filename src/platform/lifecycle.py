@@ -83,6 +83,7 @@ def memory_snapshot() -> dict[str, Any]:
         "cgroup_inactive_file_bytes": (
             stat.get("inactive_file") if stat is not None else None
         ),
+        "cgroup_anonymous_bytes": stat.get("anon") if stat is not None else None,
         "cgroup_memory_events": events,
     }
 
@@ -218,6 +219,10 @@ class LifecycleCoordinator:
             self._trade_search = False
             self._condition.notify_all()
 
+    def _immediate_phase_conflict_unlocked(self) -> bool:
+        """The existing wait=False phase rule; caller owns the condition lock."""
+        return self._phase is not None or self._history_response
+
     @contextmanager
     def phase(self, name: str, *, wait: bool = True) -> Iterator[dict[str, Any]]:
         if name not in HEAVY_PHASES:
@@ -236,7 +241,7 @@ class LifecycleCoordinator:
                     # Sync enters on the event loop. Never wait here for FOIS,
                     # whose completion also needs that loop to release its lease.
                     raise HeavyWorkDeferred('Synchronization deferred while FOIS preparation is running.')
-                if not wait and (self._phase is not None or self._history_response):
+                if not wait and self._immediate_phase_conflict_unlocked():
                     raise HeavyWorkDeferred('Preparation deferred while another preparation task is running.')
                 while (
                     (self._phase is not None and self._owner != owner)
@@ -323,6 +328,44 @@ class LifecycleCoordinator:
                 "recent_phases": list(self._history),
                 "memory": memory_snapshot(),
             }
+
+    def restoration_snapshot(self) -> dict[str, Any]:
+        """Non-mutating, nonblocking metadata from this serving process only.
+
+        The lock protects the flag copy, not a reservation.  Memory is read after
+        releasing it, so the result is explicitly advisory and non-atomic.  No
+        historical phase samples or potentially sensitive reason text is copied.
+        """
+        if not self._condition.acquire(blocking=False):
+            return {
+                'available': False, 'reason': 'coordinator_busy', 'phase': None,
+                'heavy_work': {}, 'memory': {}, 'cache_lease_conflict': None,
+                'non_atomic': True, 'coordination_scope': 'serving_process',
+            }
+        try:
+            result = {
+                'available': True, 'reason': None,
+                'phase': self._phase or 'idle',
+                'heavy_work': {
+                    'fois_generation': bool(self._fois_generation),
+                    'trade_search': bool(self._trade_search),
+                    'historical_response': bool(self._history_response),
+                    'market_critical': bool(self._market_critical),
+                    'market_build_active': bool(self._market_build_active),
+                },
+                'cache_lease_conflict': bool(
+                    self._trade_search or self._immediate_phase_conflict_unlocked()
+                ),
+                'non_atomic': True, 'coordination_scope': 'serving_process',
+            }
+        finally:
+            self._condition.release()
+        try:
+            result['memory'] = memory_snapshot()
+        except (OSError, ValueError, psutil.Error):
+            result['memory'] = {}
+            result['reason'] = 'memory_unavailable'
+        return result
 
     def reset(self) -> None:
         with self._condition:

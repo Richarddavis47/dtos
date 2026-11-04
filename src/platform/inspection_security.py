@@ -10,7 +10,10 @@ PREFIX = '/api/inspect/operations'
 PRIVATE_HEADERS = {'Cache-Control': 'no-store, private', 'Vary': 'X-DTOS-Inspection-Auth',
                    'X-Content-Type-Options': 'nosniff'}
 OPERATIONS = frozenset({'storage', 'projection-reachability', 'projection-inventory',
-                        'fois-storage', 'retention', 'identity'})
+                        'fois-storage', 'retention', 'identity', 'restoration-preflight'})
+# Existing operator authentication is necessary but not sufficient for this
+# deliberately narrow operation. A caller-supplied ID/hash never grants scope.
+RESTORATION_PREFLIGHT_LEAGUES = frozenset({'1314695233040052224'})
 
 
 def operations_path(path):

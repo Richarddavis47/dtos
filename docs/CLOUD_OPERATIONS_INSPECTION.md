@@ -4,7 +4,7 @@ DTOS exposes a small GET-only evidence interface at `/api/inspect/operations`.
 It replaces routine Render Web Shell diagnostics with ordinary HTTPS requests.
 It cannot execute commands, accept SQL, select filesystem paths, prepare data,
 refresh projections/FOIS/Market, run migrations, or restart/deploy services.
-Implementation and validation are local only; this change is not deployed.
+Deployment identity must be checked against the current release; this document is not evidence of a live diagnostic observation.
 
 ## Existing architecture and authentication
 
@@ -39,7 +39,7 @@ and must not follow redirects with credentials.
 
 ## Fixed operations
 
-All paths below follow `/api/inspect/operations/`. The base path lists the six
+All paths below follow `/api/inspect/operations/`. The base path lists the fixed
 operations after authorization. No request body or action parameter is interpreted.
 Unknown operations return 404 after authorization; non-GET methods return 405.
 Unauthorized callers always receive 401 within this namespace.
@@ -52,6 +52,7 @@ Unauthorized callers always receive 401 within this namespace.
 | `fois-storage` | Physical/file/freelist bytes, allowlisted table counts, read status, SQLite quick-check result and admitted retention policy. Semantic payload integrity is explicitly not evaluated. No GM, owner, account or assessment payloads. |
 | `retention` | Admitted Projection/FOIS policy, eight-observation operational windows, cache budget/footprint, latest stored monitoring counters, bounded baseline growth and process-local storage counters. Never initiates collection or cleanup. |
 | `identity` | Centralized application version/build, deployment commit if a valid commit identifier is configured, boolean readiness and inspection schema. Missing commit metadata is null. |
+| `restoration-preflight?league_id=1314695233040052224` | Existing operator token plus exact Granite authorization; bounded advisory resource/coordination assessment from the serving process and metadata-only cache handles. No payload compatibility claim or reservation grant. |
 
 Inventory source/provenance availability refers to a matching retained source at
 the snapshot's publication boundary, excluding superseded/explicitly expired
@@ -179,3 +180,20 @@ The recovered implementation is reconciled onto main `86bb3f2`, including the
 merged cross-platform validation tooling and authoritative Ruff gate. Detailed
 local validation results and disposable-store evidence are kept in ignored
 private task artifacts, rather than public release notes or PR descriptions.
+
+
+## Scoped restoration preflight
+
+The new operation requires the existing operator credential and the exact server-owned Granite league scope. A hash, an account cookie, another connected league, a caller-supplied path or a query credential cannot authorize it. It accepts exactly one ASCII numeric `league_id` of at most 32 digits and rejects unknown/duplicate parameters. Existing operations and their scope are unchanged.
+
+The observation distinguishes serving-process lifecycle flags from shared container memory. It includes process/deployment identity, observation times, resident cooldown, explicit telemetry validity, cache metadata, reserve components, headroom and a reason. It grants no lease, and normal restoration must reacquire its own lease, reopen its own file and recheck current capacity and compatibility. Other web workers' lifecycle activity is not established by one process's flags.
+
+On supported Linux systems the probe uses metadata-only `O_PATH` handles, rejects symlinked parents/leaf and nonregular files, and checks the pinned generation against the final directory entry. A detected replacement/change is unknown and is not retried. Before/after samples cannot prove continuous stability or exclude an intervening ABA replacement. Platforms without safe metadata handles return unknown. File age is not source freshness; payload readability and league/scoring compatibility are not checked.
+
+No raw filesystem paths, cached roster/player bodies, credentials or exception text are returned. The existing per-worker nonblocking diagnostic lock, 128-byte query budget, 3-second cooperative summary deadline and 256 KiB response ceiling remain. These deadlines cannot interrupt every possible kernel filesystem operation.
+
+### Render-local verification after an approved deployment
+
+Main Chat already observed HTTP 200 on identity using the existing configured token inside the authenticated Render Shell. Do not repeat that credential check. Reuse the same verified local application origin/port for one request to `restoration-preflight` with the approved league parameter. Read `DTOS_INSPECTION_AUTH_TOKEN` only inside Render and put it only in the existing header; disable redirects and verbose request/header logging. Do not print/export tokens, request objects or environment dumps, put secrets in shell arguments/files, or use a relay. Print only the allowlisted response metadata.
+
+Do not import `dtos_app` or instantiate/import a coordinator in the Shell as a replacement for the HTTP operation. The handler's injected providers read the actual serving web process; check its returned PID, deployment commit, process/container scopes and advisory fields. An unknown or deferred result is a valid diagnostic outcome, not a successful restoration. No Granite entry, recommendation search, sync or FOIS rebuild is part of this verification. The external Cloud binding 401 is separate and is not a prerequisite for the Render-local path.
