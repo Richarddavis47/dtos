@@ -1,0 +1,16 @@
+{
+  "baseline": "dd3366d7b3d5e713c8004ec5e34b72ac9a27a94f",
+  "candidate": "ca76bf47e9e7de140c492d43218d1a8867d31368",
+  "changed_files": [
+    "routes/home.py",
+    "routes/teams.py",
+    "services/team_assessment_presentation.py",
+    "services/team_headquarters.py",
+    "tests/test_active_roster_grading.py",
+    "tests/test_team_assessment_presentation.py",
+    "tests/test_team_headquarters.py",
+    "tests/test_ux_foundation.py"
+  ],
+  "scope_check": "PASS; no grading engine, Trade, scoring, lineup, valuation or admission files changed",
+  "evidence_branch_note": "A sparse-index setup error initially recorded missing baseline files on the evidence-only branch. A forward commit restored the baseline; current evidence-branch differences are attachments only. Candidate and production branches were unaffected; no history was rewritten."
+}
