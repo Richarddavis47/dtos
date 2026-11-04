@@ -28,15 +28,27 @@ def weekly_comparison(card, week, *, compact=False, diagnostics=None):
     # All displayed numbers, including the population and rank, belong to this
     # one diagnostic publication, never to a saved horizon or a different card.
     points = row.get('optimal_points')
-    if points is None or not qualification.get('calculation_supported'):
-        reasons = qualification.get('limitations') or row.get('lineup_limitations') or []
-        return short_gap if compact else gap + (' ' + ' '.join(reasons) if reasons else '')
     supported = [r['optimal_points'] for r in teams.values()
                  if r.get('optimal_points') is not None and (r.get('evidence') or {}).get('calculation_supported')]
-    rank = 1 + sum(value > points for value in supported)
-    covered = len(row.get('optimal_ids') or [])
-    # Required slots are supplied from the same admitted request configuration.
     expected = diagnostics['required_slot_count']
+    covered = len(row.get('optimal_ids') or [])
+    if points is None or not qualification.get('calculation_supported'):
+        reasons = list(dict.fromkeys([*(row.get('lineup_limitations') or []),
+                                      *(qualification.get('limitations') or [])]))
+        if 'optimal_ids' in row and expected > 0 and covered < expected:
+            # A solved partial assignment is evidence, not a missing publication.
+            # Never turn its supported subtotal into a complete lineup total.
+            prefix = 'Provisional · ' if (qualification.get('retained')
+                or (qualification.get('refresh') or {}).get('retained_publication')
+                or qualification.get('conclusion_state') == 'provisional') else ''
+            counts = f'{covered}/{expected} slots covered; {len(supported)} of {len(teams)} league teams comparable.'
+            if compact:
+                return f'{prefix}Week {week} · Incomplete lineup · {counts}'
+            return (f'{prefix}Week {week} projected lineup comparison is prepared but the legal lineup is incomplete: '
+                    + counts + ' A complete points total and rank are withheld because not all required starting slots have supported eligible projections.'
+                    + (' ' + ' '.join(reasons) if reasons else ''))
+        return short_gap if compact else gap + (' ' + ' '.join(reasons) if reasons else '')
+    rank = 1 + sum(value > points for value in supported)
     provisional = qualification.get('conclusion_state') != 'current'
     qualifier = 'Provisional · ' if provisional else ''
     reason = ' '.join(qualification.get('limitations') or []) if provisional else ''

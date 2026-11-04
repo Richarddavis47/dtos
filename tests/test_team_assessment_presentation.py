@@ -118,3 +118,52 @@ class AssessmentCoverageTests(unittest.TestCase):
                 lead = text.split('</summary>', 1)[0] if 'my-team-outlook' in text else text
                 self.assertTrue('matching prepared comparison' in lead or 'evidence is not prepared' in lead or 'Comparison pending' in lead)
                 self.assertNotIn('#', lead)
+
+    def test_rendered_incomplete_lineup_retains_known_coverage_on_both_surfaces(self):
+        from tests.test_my_team_outlook_http import MyTeamOutlookHTTPTests
+        from routes.home import create_home_router
+        from fastapi.responses import HTMLResponse
+        f = MyTeamOutlookHTTPTests()
+        f.setUp()
+        self.addCleanup(f.doCleanups)
+        data = f.data
+        data['league']['roster_positions'] = ['QB', 'RB', 'RB', 'WR', 'WR', 'TE', 'FLEX', 'FLEX', 'K', 'DEF']
+        diagnostic = self.diagnostic()
+        diagnostic.update(league_id=data['league']['league_id'], week=data['week'])
+        diagnostic['teams']['1'].update(optimal_points=None, optimal_ids=list(range(9)),
+            lineup_limitations=['Required starting positions lack compatible eligible projections: DEF.'])
+        diagnostic['teams']['1']['evidence'].update(conclusion_state='unavailable')
+        diagnostic['teams']['2'] = dict(optimal_points=140, optimal_ids=list(range(10)),
+            evidence=dict(calculation_supported=True, conclusion_state='current', limitations=[]))
+        f.client.app.include_router(create_home_router(ensure_fresh=AsyncMock(), require_data=lambda: data,
+            page=lambda title, body: HTMLResponse(body), generation_provider=lambda: self.id()))
+        # Inject an already-prepared diagnostic at the presentation boundary.
+        # These are disposable contracts, not a claim of live league coverage.
+        with patch('routes.teams.prepared_comparison', return_value=diagnostic), patch(
+                'services.team_headquarters.prepared_comparison', return_value=diagnostic):
+            own = f.client.get('/teams/1')
+            home = f.client.get('/')
+        self.assertEqual(own.status_code, 200)
+        self.assertEqual(home.status_code, 200)
+        lead = own.text.split('id="my-team-outlook-lead"', 1)[1].split('</summary>', 1)[0]
+        detail = own.text.split('id="my-team-outlook"', 1)[1].split('id="full-roster"', 1)[0]
+        home_comparison = home.text.split('<h2>Projected lineup comparison</h2>', 1)[1].split('Open team assessments', 1)[0]
+        # Home also has a complete second team. Isolate the incomplete first row.
+        first_home = home_comparison.split('Team 1</a>:', 1)[1].split('</p>', 1)[0]
+        for text in [lead, detail, first_home]:
+            self.assertIn('9/10 slots covered', text)
+            self.assertIn('1 of 2 league teams comparable', text)
+            self.assertIn('incomplete', text.lower())
+            self.assertNotIn('153.34', text)
+            self.assertNotIn('#1', text)
+        for text in [detail, first_home]:
+            self.assertIn('prepared but the legal lineup is incomplete', text)
+            self.assertIn('total and rank are withheld', text)
+            self.assertIn('DEF', text)
+            self.assertNotIn('matching prepared comparison is not available', text)
+        # Never invent a particular missing slot when no limitation names it.
+        diagnostic['teams']['1']['lineup_limitations'] = []
+        text = weekly_comparison(NS(league_id=data['league']['league_id'], roster_id=1),
+                                 data['week'], diagnostics=diagnostic)
+        self.assertNotIn('DEF', text)
+        self.assertIn('9/10', text)
