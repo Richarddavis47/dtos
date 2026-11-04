@@ -1,0 +1,138 @@
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index 22c0bec..4f27a5e 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -1,3 +1,7 @@
++# v1.22.12 / build 2227 — Team Assessment Coverage
++
++Home and My Team show a coherent weekly projected-lineup comparison from one prepared diagnostic publication. Partial legal lineups retain supported slot and comparable-team counts while withholding incomplete totals and ranks. Aging, failed refreshes and availability changes preserve effective evidence qualification. Overall grades, submitted lineups, Trade calculations and resource policies are unchanged.
++
+ # v1.22.11 / build 2226 — Bounded Granite restoration preflight
+ 
+ Add one operator-authenticated, explicitly Granite-scoped metadata operation at `/api/inspect/operations/restoration-preflight`. It observes the serving process's lifecycle and shared container memory, safely pins cache metadata without reading its contents, and explains a current resource/coordination assessment. Unknown inputs and unsupported safe file handling remain unknown. A positive response is advisory and non-atomic; normal entry still rechecks admission and payload compatibility.
+diff --git a/RELEASE_NOTES.md b/RELEASE_NOTES.md
+index 7601295..1da3a0a 100644
+--- a/RELEASE_NOTES.md
++++ b/RELEASE_NOTES.md
+@@ -1,3 +1,7 @@
++# v1.22.12 / build 2227 — Team Assessment Coverage
++
++Home and My Team show a coherent weekly projected-lineup comparison from one prepared diagnostic publication. Partial legal lineups retain supported slot and comparable-team counts while withholding incomplete totals and ranks. Aging, failed refreshes and availability changes preserve effective evidence qualification. Overall grades, submitted lineups, Trade calculations and resource policies are unchanged.
++
+ # v1.22.11 / build 2226 — Bounded Granite restoration preflight
+ 
+ Add one operator-authenticated, explicitly Granite-scoped metadata operation at `/api/inspect/operations/restoration-preflight`. It observes the serving process's lifecycle and shared container memory, safely pins cache metadata without reading its contents, and explains a current resource/coordination assessment. Unknown inputs and unsupported safe file handling remain unknown. A positive response is advisory and non-atomic; normal entry still rechecks admission and payload compatibility.
+diff --git a/app_metadata.py b/app_metadata.py
+index 222fdb1..8f0cd9a 100644
+--- a/app_metadata.py
++++ b/app_metadata.py
+@@ -7,10 +7,10 @@ from datetime import datetime, timezone
+ from pathlib import Path
+ 
+ APPLICATION_NAME = "DTOS"
+-VERSION = "1.22.11"
+-PRODUCT_VERSION = "1.22.11"
+-BUILD_NUMBER = 2226
+-RELEASE_CODENAME = "Bounded Restoration Preflight"
++VERSION = "1.22.12"
++PRODUCT_VERSION = "1.22.12"
++BUILD_NUMBER = 2227
++RELEASE_CODENAME = "Team Assessment Coverage"
+ APPLICATION_STARTED_AT = datetime.now(timezone.utc).isoformat()
+ 
+ _REPOSITORY_ROOT = Path(__file__).resolve().parent
+diff --git a/services/team_assessment_presentation.py b/services/team_assessment_presentation.py
+index ee87e21..1153041 100644
+--- a/services/team_assessment_presentation.py
++++ b/services/team_assessment_presentation.py
+@@ -28,15 +28,27 @@ def weekly_comparison(card, week, *, compact=False, diagnostics=None):
+     # All displayed numbers, including the population and rank, belong to this
+     # one diagnostic publication, never to a saved horizon or a different card.
+     points = row.get('optimal_points')
+-    if points is None or not qualification.get('calculation_supported'):
+-        reasons = qualification.get('limitations') or row.get('lineup_limitations') or []
+-        return short_gap if compact else gap + (' ' + ' '.join(reasons) if reasons else '')
+     supported = [r['optimal_points'] for r in teams.values()
+                  if r.get('optimal_points') is not None and (r.get('evidence') or {}).get('calculation_supported')]
+-    rank = 1 + sum(value > points for value in supported)
+-    covered = len(row.get('optimal_ids') or [])
+-    # Required slots are supplied from the same admitted request configuration.
+     expected = diagnostics['required_slot_count']
++    covered = len(row.get('optimal_ids') or [])
++    if points is None or not qualification.get('calculation_supported'):
++        reasons = list(dict.fromkeys([*(row.get('lineup_limitations') or []),
++                                      *(qualification.get('limitations') or [])]))
++        if 'optimal_ids' in row and expected > 0 and covered < expected:
++            # A solved partial assignment is evidence, not a missing publication.
++            # Never turn its supported subtotal into a complete lineup total.
++            prefix = 'Provisional · ' if (qualification.get('retained')
++                or (qualification.get('refresh') or {}).get('retained_publication')
++                or qualification.get('conclusion_state') == 'provisional') else ''
++            counts = f'{covered}/{expected} slots covered; {len(supported)} of {len(teams)} league teams comparable.'
++            if compact:
++                return f'{prefix}Week {week} · Incomplete lineup · {counts}'
++            return (f'{prefix}Week {week} projected lineup comparison is prepared but the legal lineup is incomplete: '
++                    + counts + ' A complete points total and rank are withheld because not all required starting slots have supported eligible projections.'
++                    + (' ' + ' '.join(reasons) if reasons else ''))
++        return short_gap if compact else gap + (' ' + ' '.join(reasons) if reasons else '')
++    rank = 1 + sum(value > points for value in supported)
+     provisional = qualification.get('conclusion_state') != 'current'
+     qualifier = 'Provisional · ' if provisional else ''
+     reason = ' '.join(qualification.get('limitations') or []) if provisional else ''
+diff --git a/tests/test_team_assessment_presentation.py b/tests/test_team_assessment_presentation.py
+index 708e0d3..62b3441 100644
+--- a/tests/test_team_assessment_presentation.py
++++ b/tests/test_team_assessment_presentation.py
+@@ -118,3 +118,52 @@ class AssessmentCoverageTests(unittest.TestCase):
+                 lead = text.split('</summary>', 1)[0] if 'my-team-outlook' in text else text
+                 self.assertTrue('matching prepared comparison' in lead or 'evidence is not prepared' in lead or 'Comparison pending' in lead)
+                 self.assertNotIn('#', lead)
++
++    def test_rendered_incomplete_lineup_retains_known_coverage_on_both_surfaces(self):
++        from tests.test_my_team_outlook_http import MyTeamOutlookHTTPTests
++        from routes.home import create_home_router
++        from fastapi.responses import HTMLResponse
++        f = MyTeamOutlookHTTPTests()
++        f.setUp()
++        self.addCleanup(f.doCleanups)
++        data = f.data
++        data['league']['roster_positions'] = ['QB', 'RB', 'RB', 'WR', 'WR', 'TE', 'FLEX', 'FLEX', 'K', 'DEF']
++        diagnostic = self.diagnostic()
++        diagnostic.update(league_id=data['league']['league_id'], week=data['week'])
++        diagnostic['teams']['1'].update(optimal_points=None, optimal_ids=list(range(9)),
++            lineup_limitations=['Required starting positions lack compatible eligible projections: DEF.'])
++        diagnostic['teams']['1']['evidence'].update(conclusion_state='unavailable')
++        diagnostic['teams']['2'] = dict(optimal_points=140, optimal_ids=list(range(10)),
++            evidence=dict(calculation_supported=True, conclusion_state='current', limitations=[]))
++        f.client.app.include_router(create_home_router(ensure_fresh=AsyncMock(), require_data=lambda: data,
++            page=lambda title, body: HTMLResponse(body), generation_provider=lambda: self.id()))
++        # Inject an already-prepared diagnostic at the presentation boundary.
++        # These are disposable contracts, not a claim of live league coverage.
++        with patch('routes.teams.prepared_comparison', return_value=diagnostic), patch(
++                'services.team_headquarters.prepared_comparison', return_value=diagnostic):
++            own = f.client.get('/teams/1')
++            home = f.client.get('/')
++        self.assertEqual(own.status_code, 200)
++        self.assertEqual(home.status_code, 200)
++        lead = own.text.split('id="my-team-outlook-lead"', 1)[1].split('</summary>', 1)[0]
++        detail = own.text.split('id="my-team-outlook"', 1)[1].split('id="full-roster"', 1)[0]
++        home_comparison = home.text.split('<h2>Projected lineup comparison</h2>', 1)[1].split('Open team assessments', 1)[0]
++        # Home also has a complete second team. Isolate the incomplete first row.
++        first_home = home_comparison.split('Team 1</a>:', 1)[1].split('</p>', 1)[0]
++        for text in [lead, detail, first_home]:
++            self.assertIn('9/10 slots covered', text)
++            self.assertIn('1 of 2 league teams comparable', text)
++            self.assertIn('incomplete', text.lower())
++            self.assertNotIn('153.34', text)
++            self.assertNotRegex(text, r'#\d+ (?:of|among) \d+ comparable')
++        for text in [detail, first_home]:
++            self.assertIn('prepared but the legal lineup is incomplete', text)
++            self.assertIn('total and rank are withheld', text)
++            self.assertIn('DEF', text)
++            self.assertNotIn('matching prepared comparison is not available', text)
++        # Never invent a particular missing slot when no limitation names it.
++        diagnostic['teams']['1']['lineup_limitations'] = []
++        text = weekly_comparison(NS(league_id=data['league']['league_id'], roster_id=1),
++                                 data['week'], diagnostics=diagnostic)
++        self.assertNotIn('DEF', text)
++        self.assertIn('9/10', text)
