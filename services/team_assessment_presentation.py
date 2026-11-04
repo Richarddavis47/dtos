@@ -18,6 +18,8 @@ def weekly_comparison(card, week, *, compact=False):
     population = f"{comparison['supported_count']} of {comparison['league_size']} league teams comparable"
     optimal = row.get('optimal') or {}
     points = optimal.get('projected_points')
+    if row.get('available') is True and getattr(getattr(card, 'starting_lineup', None), 'score', None) is None:
+        return f'Week {week} projected lineup comparison needs compatible league, week and scoring evidence.'
     if row.get('available') is not True or points is None:
         slots = ', '.join(map(str, coverage.get('unsupported_slots') or []))
         reason = (f'No supported eligible projections for required slots: {slots}.' if slots else

@@ -422,7 +422,6 @@ def create_teams_router(
             assessment_outlook = {
                 **assessment_outlook,
                 'brief': weekly_comparison(view['team_intelligence'], data.get('week'), compact=True),
-                'position': weekly_comparison(view['team_intelligence'], data.get('week')),
                 'details': [MODEL_NOTE, *assessment_outlook['details']],
             }
         body = f"""

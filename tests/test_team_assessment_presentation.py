@@ -5,7 +5,7 @@ from services.team_assessment_presentation import weekly_comparison, MODEL_NOTE
 
 class AssessmentCoverageTests(unittest.TestCase):
     def card(self, available=True, qualified='provisional'):
-        return NS(league_id='fixture', starting_lineup=NS(rank=1),
+        return NS(league_id='fixture', starting_lineup=NS(rank=1, score=80),
                   competitive_window=NS(production_profile={
                       'projection_generation': 'g',
                       'current_week_comparison': {'league_id': 'fixture', 'week': 9,
@@ -92,3 +92,11 @@ class AssessmentCoverageTests(unittest.TestCase):
 
     def test_absent_card_metadata_is_a_missing_comparison(self):
         self.assertIn('needs compatible', weekly_comparison(NS(), 9))
+
+    def test_unadmitted_dimension_does_not_publish_retained_profile_points(self):
+        card = self.card()
+        card.starting_lineup.score = None
+        text = weekly_comparison(card, 9)
+        self.assertIn('needs compatible', text)
+        self.assertNotIn('153.34', text)
+        self.assertNotIn('#1', text)
