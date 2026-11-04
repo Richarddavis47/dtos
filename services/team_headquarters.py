@@ -27,7 +27,16 @@ def build_team_directory(data: dict[str, Any], *, prepared_only: bool = False) -
         if result is None:
             result = intelligence_orchestrator.cache.peek(f'snapshot:{context.snapshot_key}:result')
         if result is None:
-            return {}
+            # Weekly diagnostics may be prepared even when the optional full
+            # headquarters snapshot is absent. This read must not prepare it.
+            from types import SimpleNamespace
+            comparison = prepared_comparison(data, context.projection_snapshot)
+            return {int(team['roster_id']): {
+                'rank': None,
+                'weekly_comparison': weekly_comparison(SimpleNamespace(
+                    league_id=str((data.get('league') or {}).get('league_id') or ''),
+                    roster_id=int(team['roster_id'])), data.get('week'), diagnostics=comparison),
+            } for team in teams}
     else:
         result = intelligence_orchestrator.analyze(data, active_id, include_trade_opportunities=False)
     intelligence = result.roster.team_intelligence
