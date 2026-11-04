@@ -18,6 +18,8 @@ class ProjectionCoverageBrowserTests(unittest.TestCase):
         f, data, service = prepared(self)
         reports = []
         output = os.environ.get('DTOS_PROJECTION_COVERAGE_EVIDENCE')
+        if output:
+            Path(output).mkdir(parents=True, exist_ok=True)
         with sync_playwright() as pw:
             browser = launch_chromium(pw, headless=True)
             try:
@@ -29,7 +31,8 @@ class ProjectionCoverageBrowserTests(unittest.TestCase):
                             page.on('pageerror', lambda error: errors.append(str(error)))
                             self.assertEqual(page.goto('https://dtos.test/teams/1').status, 200)
                             root = page.locator('#my-team-outlook')
-                            self.assertIn('/7 supported', root.inner_text())
+                            self.assertIn('7 comparable teams (10 total)', root.inner_text())
+                            self.assertIn('optimal lineup', root.inner_text())
                             self.assertIn('10 total', root.inner_text())
                             detail = page.locator('#my-team-outlook-evidence')
                             summary = detail.locator('summary')
