@@ -45,6 +45,7 @@ class AssessmentCoverageTests(unittest.TestCase):
         card.competitive_window.production_profile['weekly'][9]['optimal']['projected_points'] = 0
         text = weekly_comparison(card, 9)
         self.assertIn('0.00 points', text)
+        self.assertIn('optimal lineup', weekly_comparison(card, 9, compact=True))
         self.assertNotIn('Provisional', text)
         self.assertIn('validated overall team grade', MODEL_NOTE)
 

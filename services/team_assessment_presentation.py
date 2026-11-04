@@ -33,7 +33,7 @@ def weekly_comparison(card, week, *, compact=False):
     ranking = f'#{rank} among {comparison["supported_count"]} comparable teams' if rank is not None else 'Comparison rank not available'
     if compact:
         ranking = f'#{rank} of ' if rank is not None else ''
-        return (f'{qualifier}Week {week} · {points:.2f} projected points · {covered}/{expected} slots · '
+        return (f'{qualifier}Week {week} optimal lineup · {points:.2f} projected points · {covered}/{expected} slots · '
                 f'{ranking}{comparison["supported_count"]} comparable teams ({comparison["league_size"]} total).')
     return (f'{qualifier}Week {week} projected optimal lineup: {points:.2f} points; '
             f'{covered}/{expected} slots covered; {ranking}; {population}. '
