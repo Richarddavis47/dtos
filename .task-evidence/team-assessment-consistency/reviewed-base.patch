@@ -1,0 +1,422 @@
+diff --git a/routes/teams.py b/routes/teams.py
+index 4d643d2..5ba2c5e 100644
+--- a/routes/teams.py
++++ b/routes/teams.py
+@@ -13,7 +13,7 @@ from fastapi.responses import HTMLResponse
+ from config import LEAGUE_ID
+ from services.asset_intelligence import contextual_player_url
+ from services.team_headquarters import build_team_directory, build_team_headquarters
+-from services.team_assessment_presentation import MODEL_NOTE, weekly_comparison
++from services.team_assessment_presentation import MODEL_NOTE, weekly_comparison, prepared_comparison
+ from src.core.historical_memory.read_model import historical_graph
+ from src.core.history_context import canonical_history_store
+ from src.core.request_execution import run_manager_read
+@@ -419,9 +419,13 @@ def create_teams_router(
+         view["outlook"]["details"].extend(overview["statuses"])
+         assessment_outlook = view['outlook']
+         if view['team_intelligence'].overall.score is None:
++            comparison = prepared_comparison(data, view['projection_snapshot'])
+             assessment_outlook = {
+                 **assessment_outlook,
+-                'brief': weekly_comparison(view['team_intelligence'], data.get('week'), compact=True),
++                'brief': weekly_comparison(view['team_intelligence'], data.get('week'), compact=True,
++                                           diagnostics=comparison),
++                'position': f"Standing {overview['standing']} by Sleeper record/PF. " + weekly_comparison(
++                    view['team_intelligence'], data.get('week'), diagnostics=comparison),
+                 'details': [MODEL_NOTE, *assessment_outlook['details']],
+             }
+         body = f"""
+diff --git a/services/team_assessment_presentation.py b/services/team_assessment_presentation.py
+index d58d759..ee87e21 100644
+--- a/services/team_assessment_presentation.py
++++ b/services/team_assessment_presentation.py
+@@ -1,40 +1,52 @@
+-"""Presentation of already-admitted dimensions; no grading or preparation."""
++"""Present one prepared diagnostic publication; never solve or prepare on reads."""
+ MODEL_NOTE = ('DTOS shows lineup strength, depth, Market value and future outlook separately. '
+               'It does not yet calculate a validated overall team grade.')
+ 
+ 
+-def weekly_comparison(card, week, *, compact=False):
+-    profile = getattr(getattr(card, 'competitive_window', None), 'production_profile', None) or {}
+-    league_id = getattr(card, 'league_id', None)
+-    comparison = profile.get('current_week_comparison') or {}
+-    if (not league_id or comparison.get('league_id') != league_id or comparison.get('week') != week
+-            or comparison.get('projection_generation') != profile.get('projection_generation')):
+-        return f'Week {week} projected lineup comparison needs compatible league, week and scoring evidence.'
+-    weekly = profile.get('weekly') or {}
+-    row = weekly.get(week) or weekly.get(str(week)) or {}
+-    coverage = row.get('coverage') or {}
+-    expected = len(comparison.get('required_slots') or [])
+-    covered = coverage.get('supported_slots', 0)
+-    population = f"{comparison['supported_count']} of {comparison['league_size']} league teams comparable"
+-    optimal = row.get('optimal') or {}
+-    points = optimal.get('projected_points')
+-    if row.get('available') is True and getattr(getattr(card, 'starting_lineup', None), 'score', None) is None:
+-        return f'Week {week} projected lineup comparison needs compatible league, week and scoring evidence.'
+-    if row.get('available') is not True or points is None:
+-        slots = ', '.join(map(str, coverage.get('unsupported_slots') or []))
+-        reason = (f'No supported eligible projections for required slots: {slots}.' if slots else
+-                  'Compatible projections cannot establish a complete legal starting lineup.')
+-        if compact:
+-            return f'Week {week} · {covered}/{expected} slots covered; {population}. {reason}'
+-        return f'Week {week} projected lineup comparison: {covered}/{expected} slots covered; {population}. {reason} Missing points are not zero.'
+-    qualification = ((row.get('reserve_capacity') or {}).get('qualification') or {})
+-    qualifier = 'Provisional · ' if qualification.get('conclusion_state') != 'current' else ''
+-    rank = card.starting_lineup.rank
+-    ranking = f'#{rank} among {comparison["supported_count"]} comparable teams' if rank is not None else 'Comparison rank not available'
++def prepared_comparison(data, snapshot=None):
++    from src.core.intelligence.roster_diagnostics import prepared_diagnostics
++    # The existing reader keys by current eligibility, scoring and publication,
++    # and reapplies clock/failed-refresh qualification without solving a lineup.
++    diagnostic = prepared_diagnostics(data, snapshot)
++    if diagnostic is None:
++        return None
++    from src.core.intelligence.roster_diagnostics import BENCH_SLOTS
++    slots = data.get('roster_positions') or (data.get('league') or {}).get('roster_positions') or []
++    return {**diagnostic, 'required_slot_count': sum(str(slot).upper() not in BENCH_SLOTS for slot in slots)}
++
++
++def weekly_comparison(card, week, *, compact=False, diagnostics=None):
++    gap = (f'Week {week} projected lineup comparison needs compatible current availability, '
++           'league, week and scoring evidence. A matching prepared comparison is not available.')
++    short_gap = f'Week {week} · Comparison pending: current availability and source evidence need matching preparation.'
++    if (not diagnostics or diagnostics.get('league_id') != getattr(card, 'league_id', None)
++            or diagnostics.get('week') != week or not diagnostics.get('projection_generation')):
++        return short_gap if compact else gap
++    teams = diagnostics.get('teams') or {}
++    row = teams.get(str(getattr(card, 'roster_id', ''))) or {}
++    qualification = row.get('evidence') or {}
++    # All displayed numbers, including the population and rank, belong to this
++    # one diagnostic publication, never to a saved horizon or a different card.
++    points = row.get('optimal_points')
++    if points is None or not qualification.get('calculation_supported'):
++        reasons = qualification.get('limitations') or row.get('lineup_limitations') or []
++        return short_gap if compact else gap + (' ' + ' '.join(reasons) if reasons else '')
++    supported = [r['optimal_points'] for r in teams.values()
++                 if r.get('optimal_points') is not None and (r.get('evidence') or {}).get('calculation_supported')]
++    rank = 1 + sum(value > points for value in supported)
++    covered = len(row.get('optimal_ids') or [])
++    # Required slots are supplied from the same admitted request configuration.
++    expected = diagnostics['required_slot_count']
++    provisional = qualification.get('conclusion_state') != 'current'
++    qualifier = 'Provisional · ' if provisional else ''
++    reason = ' '.join(qualification.get('limitations') or []) if provisional else ''
++    if provisional and not reason:
++        reason = 'Availability or source support remains qualified; this is not a freshly verified team verdict.'
+     if compact:
+-        ranking = f'#{rank} of ' if rank is not None else ''
+         return (f'{qualifier}Week {week} optimal lineup · {points:.2f} projected points · {covered}/{expected} slots · '
+-                f'{ranking}{comparison["supported_count"]} comparable teams ({comparison["league_size"]} total).')
++                f'#{rank} of {len(supported)} comparable teams ({len(teams)} total).')
+     return (f'{qualifier}Week {week} projected optimal lineup: {points:.2f} points; '
+-            f'{covered}/{expected} slots covered; {ranking}; {population}. '
+-            'This compares analytical lineups, not submitted Sleeper starters or overall franchise quality.')
++            f'{covered}/{expected} slots covered; #{rank} among {len(supported)} comparable teams; '
++            f'{len(supported)} of {len(teams)} league teams comparable. '
++            'This compares analytical lineups, not submitted Sleeper starters or overall franchise quality.'
++            + (' ' + reason if reason else ''))
+diff --git a/services/team_headquarters.py b/services/team_headquarters.py
+index 296049a..94620a5 100644
+--- a/services/team_headquarters.py
++++ b/services/team_headquarters.py
+@@ -1,7 +1,7 @@
+ """Deterministic Team Headquarters calculations and summaries."""
+ from __future__ import annotations
+ 
+-from services.team_assessment_presentation import MODEL_NOTE, weekly_comparison
++from services.team_assessment_presentation import MODEL_NOTE, weekly_comparison, prepared_comparison
+ 
+ from collections import Counter
+ from datetime import datetime, timezone
+@@ -27,10 +27,25 @@ def build_team_directory(data: dict[str, Any], *, prepared_only: bool = False) -
+         if result is None:
+             result = intelligence_orchestrator.cache.peek(f'snapshot:{context.snapshot_key}:result')
+         if result is None:
+-            return {}
++            # Weekly diagnostics may be prepared even when the optional full
++            # headquarters snapshot is absent. This read must not prepare it.
++            from types import SimpleNamespace
++            snapshot = getattr(context, 'projection_snapshot', None)
++            if snapshot is None:
++                return {}
++            comparison = prepared_comparison(data, snapshot)
++            if comparison is None:
++                return {}
++            return {int(team['roster_id']): {
++                'rank': None,
++                'weekly_comparison': weekly_comparison(SimpleNamespace(
++                    league_id=str((data.get('league') or {}).get('league_id') or ''),
++                    roster_id=int(team['roster_id'])), data.get('week'), diagnostics=comparison),
++            } for team in teams}
+     else:
+         result = intelligence_orchestrator.analyze(data, active_id, include_trade_opportunities=False)
+     intelligence = result.roster.team_intelligence
++    comparison = prepared_comparison(data, getattr(getattr(result, 'context', None), 'projection_snapshot', None))
+     return {
+         roster_id: {
+             "preseason": card.preseason,
+@@ -39,7 +54,7 @@ def build_team_directory(data: dict[str, Any], *, prepared_only: bool = False) -
+             "playoff_odds": card.playoff_odds,
+             "championship_odds": card.championship_odds,
+             "grade": card.overall.grade,
+-            "weekly_comparison": weekly_comparison(card, data.get("week")),
++            "weekly_comparison": weekly_comparison(card, data.get("week"), diagnostics=comparison),
+         }
+         for roster_id, card in intelligence.items()
+     }
+diff --git a/tests/test_my_team_outlook_http.py b/tests/test_my_team_outlook_http.py
+index 86e005b..020f5c0 100644
+--- a/tests/test_my_team_outlook_http.py
++++ b/tests/test_my_team_outlook_http.py
+@@ -61,14 +61,14 @@ class MyTeamOutlookHTTPTests(unittest.TestCase):
+         stale = self.client.get('/teams/1')
+         primary = stale.text.split('id="my-team-outlook"', 1)[1].split('id="full-roster"', 1)[0]
+         self.assertIn('Provisional', primary)
+-        self.assertIn('not a fresh team verdict', primary)
++        self.assertIn('retained numerical evidence is provisional', primary)
+         self.data['league'].pop('scoring_settings', None)
+         self.data.pop('scoring_settings', None)
+         self.f.publish()
+         missing = self.client.get('/teams/1')
+         self.assertEqual(missing.status_code, 200)
+         primary = missing.text.split('id="my-team-outlook"', 1)[1].split('id="full-roster"', 1)[0]
+-        self.assertIn('Current optimal-lineup comparison unavailable', primary)
++        self.assertIn('needs compatible current availability', primary)
+         self.assertIn('missing or incompatible projections are not zero', primary)
+ 
+     def test_source_supported_fresh_evidence_has_normal_current_presentation(self):
+@@ -80,7 +80,7 @@ class MyTeamOutlookHTTPTests(unittest.TestCase):
+         response = self.client.get('/teams/1')
+         self.assertEqual(response.status_code, 200)
+         primary = response.text.split('id="my-team-outlook"', 1)[1].split('id="full-roster"', 1)[0]
+-        self.assertIn('Week 2 optimal projected lineup', primary)
++        self.assertIn('Week 2 projected optimal lineup', primary)
+         self.assertNotIn('Provisional:', primary)
+         self.assertIn('Supported positional strength: QB', primary)
+ 
+diff --git a/tests/test_projection_coverage_browser.py b/tests/test_projection_coverage_browser.py
+index 266fbf4..fde45b9 100644
+--- a/tests/test_projection_coverage_browser.py
++++ b/tests/test_projection_coverage_browser.py
+@@ -42,7 +42,7 @@ class ProjectionCoverageBrowserTests(unittest.TestCase):
+                             self.assertNotEqual(summary.evaluate('e=>getComputedStyle(e).outlineStyle'), 'none')
+                             summary.press('Enter')
+                             self.assertTrue(detail.evaluate('e=>e.open'))
+-                            self.assertIn('among 7 supported', detail.inner_text())
++                            self.assertIn('among 7 comparable', detail.inner_text())
+                             self.assertIn('7/10 franchises can fill', detail.inner_text())
+                             self.assertIn('Franchise 8: excluded', detail.inner_text())
+                             self.assertIn('1 QB slot', detail.inner_text())
+diff --git a/tests/test_team_assessment_presentation.py b/tests/test_team_assessment_presentation.py
+index 2b0bbf1..708e0d3 100644
+--- a/tests/test_team_assessment_presentation.py
++++ b/tests/test_team_assessment_presentation.py
+@@ -1,103 +1,120 @@
++"""Rendered evidence transitions: no saved-profile/current-rank mixing."""
++from copy import deepcopy
++from datetime import datetime, timedelta, timezone
+ from types import SimpleNamespace as NS
+ import unittest
++import re
++from unittest.mock import AsyncMock, patch
++
+ from services.team_assessment_presentation import weekly_comparison, MODEL_NOTE
+ 
+ 
+ class AssessmentCoverageTests(unittest.TestCase):
+-    def card(self, available=True, qualified='provisional'):
+-        return NS(league_id='fixture', starting_lineup=NS(rank=1, score=80),
+-                  competitive_window=NS(production_profile={
+-                      'projection_generation': 'g',
+-                      'current_week_comparison': {'league_id': 'fixture', 'week': 9,
+-                          'projection_generation': 'g', 'supported_count': 11, 'league_size': 12,
+-                          'required_slots': ['QB'] * 10},
+-                      'weekly': {9: {'available': available,
+-                          'optimal': {'projected_points': 153.3408 if available else None},
+-                          'coverage': {'supported_slots': 10 if available else 9,
+-                                       'unsupported_slots': [] if available else ['DEF']},
+-                          'reserve_capacity': {'qualification': {'conclusion_state': qualified}}}}}))
+-
+-    def test_complete_provisional_comparison(self):
+-        text = weekly_comparison(self.card(), 9)
+-        for word in ['Provisional', 'Week 9', '153.34 points', '10/10', '#1 among 11', '11 of 12']:
+-            self.assertIn(word, text)
+-
+-    def test_partial_does_not_publish_a_rank_or_total(self):
+-        text = weekly_comparison(self.card(False), 9)
+-        self.assertIn('9/10', text)
+-        self.assertIn('DEF', text)
+-        self.assertNotIn('#1', text)
+-        self.assertNotIn('153.34', text)
+-
+-    def test_generation_conflict(self):
+-        card = self.card()
+-        card.competitive_window.production_profile['projection_generation'] = 'other'
+-        self.assertIn('needs compatible', weekly_comparison(card, 9))
++    def diagnostic(self):
++        return dict(league_id='fixture', week=9, projection_generation='g', required_slot_count=10,
++                    teams={'1': dict(optimal_points=153.3408, optimal_ids=list(range(10)),
++                                     evidence=dict(calculation_supported=True, conclusion_state='current', limitations=[])),
++                           '2': dict(optimal_points=None, evidence={})})
+ 
+-    def test_missing_and_wrong_week(self):
+-        self.assertIn('needs compatible', weekly_comparison(self.card(), 10))
+-        card = self.card()
+-        card.competitive_window.production_profile = {}
+-        self.assertIn('needs compatible', weekly_comparison(card, 9))
+-
+-    def test_zero_and_current(self):
+-        card = self.card(qualified='current')
+-        card.competitive_window.production_profile['weekly'][9]['optimal']['projected_points'] = 0
+-        text = weekly_comparison(card, 9)
+-        self.assertIn('0.00 points', text)
+-        self.assertIn('optimal lineup', weekly_comparison(card, 9, compact=True))
++    def test_coherent_current_zero_and_missing(self):
++        card = NS(league_id='fixture', roster_id=1, starting_lineup=NS(rank=99))
++        d = self.diagnostic()
++        text = weekly_comparison(card, 9, diagnostics=d)
++        for value in ['153.34 points', '10/10', '#1 among 1', '1 of 2']:
++            self.assertIn(value, text)
+         self.assertNotIn('Provisional', text)
+-        self.assertIn('validated overall team grade', MODEL_NOTE)
++        d['teams']['1']['optimal_points'] = 0
++        self.assertIn('0.00 points', weekly_comparison(card, 9, diagnostics=d))
++        for wrong in [None, {**d, 'week': 8}, {**d, 'league_id': 'other'}, {**d, 'projection_generation': None}]:
++            text = weekly_comparison(card, 9, diagnostics=wrong)
++            self.assertIn('matching prepared comparison', text)
++            self.assertNotIn('#', text)
+ 
+-    def test_home_rendered_complete_partial_missing_and_existing_overall(self):
+-        from unittest.mock import AsyncMock, patch
+-        from fastapi.responses import HTMLResponse
+-        from routes.home import create_home_router
+-        from tests.test_trade_workspace_batch1 import AuthenticatedTradeBoundaryTests
+-        f = AuthenticatedTradeBoundaryTests()
+-        f.setUp()
+-        self.addCleanup(f.doCleanups)
+-        app, data = f.client.app, f.data
+-        state = [0]
+-        app.include_router(create_home_router(ensure_fresh=AsyncMock(), require_data=lambda: data,
+-            page=lambda title, body: HTMLResponse(body), generation_provider=lambda: (self.id(), state[0])))
+-        for index, card in enumerate([self.card(), self.card(False), None]):
+-            state[0] = index
+-            text = weekly_comparison(card, 9) if card else 'Compatible weekly lineup evidence is not prepared for this league.'
+-            directory = {t['roster_id']: {'rank': None, 'weekly_comparison': text} for t in data['teams']}
+-            with patch('routes.home.build_team_directory', return_value=directory):
+-                response = f.client.get('/')
+-            self.assertEqual(response.status_code, 200)
+-            self.assertIn(text, response.text)
+-            self.assertNotIn('Canonical team assessment rankings unavailable', response.text)
+-        state[0] = 4
+-        directory = {t['roster_id']: {'rank': i + 1} for i, t in enumerate(data['teams'])}
+-        with patch('routes.home.build_team_directory', return_value=directory):
+-            self.assertIn('<h2>Team Assessment Rankings</h2>', f.client.get('/').text)
++    def test_effective_qualification_and_incomplete_evidence(self):
++        card = NS(league_id='fixture', roster_id=1)
++        d = self.diagnostic()
++        e = d['teams']['1']['evidence']
++        e.update(conclusion_state='provisional', limitations=['Latest refresh did not complete.'])
++        self.assertIn('Provisional', weekly_comparison(card, 9, diagnostics=d))
++        self.assertIn('Latest refresh did not complete.', weekly_comparison(card, 9, diagnostics=d))
++        e['calculation_supported'] = False
++        self.assertNotIn('#1', weekly_comparison(card, 9, diagnostics=d))
++        self.assertNotIn('153.34', weekly_comparison(card, 9, diagnostics=d))
+ 
+-    def test_my_team_rendered_complete_partial_and_missing(self):
+-        from unittest.mock import patch
++    def test_rendered_current_availability_aging_and_failed_refresh(self):
+         from tests.test_my_team_outlook_http import MyTeamOutlookHTTPTests
++        from routes.home import create_home_router
++        from fastapi.responses import HTMLResponse
++        from src.core.intelligence.roster_diagnostics import diagnostic_store
+         f = MyTeamOutlookHTTPTests()
+         f.setUp()
+         self.addCleanup(f.doCleanups)
+-        for card in [self.card(), self.card(False), None]:
+-            text = weekly_comparison(card, 9) if card else 'Week 9 comparison needs compatible projections.'
+-            with patch('routes.teams.weekly_comparison', return_value=text):
+-                response = f.client.get('/teams/1')
+-            self.assertEqual(response.status_code, 200)
+-            self.assertIn(text, response.text)
+-            self.assertIn(MODEL_NOTE, response.text)
+-            self.assertIn(text, response.text.split('id="my-team-outlook-lead"', 1)[1].split('</summary>', 1)[0])
+-            self.assertLess(response.text.index('id="my-team-outlook-lead"'), response.text.index('id="full-roster"'))
++        data = f.data
++        reader = f.f.f.source.reader
++        for team in data['teams']:
++            for p in team['players']:
++                p['status'] = 'Active'
++                data['players'][p['id']]['status'] = 'Active'
++        f.f.publish(datetime.now(timezone.utc).isoformat())
++        saved = deepcopy(data['team_strength'])
++        f.client.app.include_router(create_home_router(ensure_fresh=AsyncMock(), require_data=lambda: data,
++            page=lambda title, body: HTMLResponse(body), generation_provider=lambda: self.id()))
+ 
+-    def test_absent_card_metadata_is_a_missing_comparison(self):
+-        self.assertIn('needs compatible', weekly_comparison(NS(), 9))
++        def pages():
++            own = f.client.get('/teams/1')
++            home = f.client.get('/')
++            self.assertEqual(own.status_code, 200)
++            self.assertEqual(home.status_code, 200)
++            return (own.text.split('id="my-team-outlook-lead"', 1)[1].split('id="full-roster"', 1)[0],
++                    home.text.split('<h2>Projected lineup comparison</h2>', 1)[1].split('Open team assessments', 1)[0])
+ 
+-    def test_unadmitted_dimension_does_not_publish_retained_profile_points(self):
+-        card = self.card()
+-        card.starting_lineup.score = None
+-        text = weekly_comparison(card, 9)
+-        self.assertIn('needs compatible', text)
+-        self.assertNotIn('153.34', text)
+-        self.assertNotIn('#1', text)
++        current = pages()
++        for text in current:
++            self.assertIn('slots', text)
++            self.assertIn('#', text)
++            self.assertNotIn('Provisional', text)
++        from src.core.intelligence.roster_diagnostics import prepared_diagnostics
++        diag = prepared_diagnostics(data, reader.snapshot())
++        points = diag['teams']['1']['optimal_points']
++        for text in current:
++            self.assertIn(f'{points:.2f}', text)
++        # Do not republish the saved horizon: availability alone changes.
++        player = data['teams'][0]['players'][0]
++        player['status'] = 'Out'
++        data['players'][player['id']]['status'] = 'Out'
++        changed = pages()
++        diag = prepared_diagnostics(data, reader.snapshot())
++        for text in changed:
++            if diag is None:
++                self.assertTrue('matching prepared comparison' in text or 'evidence is not prepared' in text)
++                self.assertNotIn('#', text)
++            else:
++                self.assertIn(f"{diag['teams']['1']['optimal_points']:.2f}", text)
++                values = [r['optimal_points'] for r in diag['teams'].values()
++                          if r.get('optimal_points') is not None and r['evidence']['calculation_supported']]
++                expected = 1 + sum(p > diag['teams']['1']['optimal_points'] for p in values)
++                self.assertEqual(tuple(map(int, re.search(r'#(\d+) (?:of|among) (\d+) comparable', text).groups())),
++                                 (expected, len(values)))
++        self.assertEqual(data['team_strength'], saved)
++        # Restore current availability, then requalify the very same publication.
++        player['status'] = 'Active'
++        data['players'][player['id']]['status'] = 'Active'
++        future = datetime.now(timezone.utc) + timedelta(days=10)
++        with patch('src.core.intelligence.roster_diagnostics._now', return_value=future):
++            for text in pages():
++                self.assertIn('Provisional', text)
++                self.assertIn('retained numerical evidence is provisional', text)
++                self.assertIn(f'{points:.2f}', text)
++        with patch.object(reader, 'refresh_evidence', return_value={'retained_publication': True}):
++            for text in pages():
++                self.assertIn('Provisional', text)
++                self.assertIn('latest refresh did not complete', text)
++                self.assertIn(f'{points:.2f}', text)
++        self.assertEqual(data['team_strength'], saved)
++        self.assertIn('validated overall team grade', MODEL_NOTE)
++        # A prepared-cache miss never runs an optimizer to render the page.
++        with patch.object(diagnostic_store, 'get', return_value=None):
++            for text in pages():
++                lead = text.split('</summary>', 1)[0] if 'my-team-outlook' in text else text
++                self.assertTrue('matching prepared comparison' in lead or 'evidence is not prepared' in lead or 'Comparison pending' in lead)
++                self.assertNotIn('#', lead)
