@@ -94,8 +94,10 @@ class TeamHeadquartersTests(unittest.TestCase):
         view = build_team_headquarters(self.data, 1)
         assert view is not None
         combined = " ".join(view["summary"].values())
-        self.assertIn("Overall assessment unavailable", combined)
-        self.assertIn("Market strength is not lineup strength", combined)
+        self.assertIn("does not yet calculate a validated overall team grade", combined)
+        self.assertIn("lineup strength, depth, Market value and future outlook separately", combined)
+        self.assertIsNone(view["team_intelligence"].overall.score)
+        self.assertIsNone(view["team_intelligence"].overall.rank)
         self.assertIn("Future capital and longevity context remain distinct", combined)
 
     def test_missing_assessment_does_not_use_neutral_baseline(self) -> None:

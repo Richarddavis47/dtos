@@ -1,3 +1,7 @@
+# v1.22.12 / build 2227 — Team Assessment Coverage
+
+Home and My Team show a coherent weekly projected-lineup comparison from one prepared diagnostic publication. Partial legal lineups retain supported slot and comparable-team counts while withholding incomplete totals and ranks. Aging, failed refreshes and availability changes preserve effective evidence qualification. Overall grades, submitted lineups, Trade calculations and resource policies are unchanged.
+
 # v1.22.11 / build 2226 — Bounded Granite restoration preflight
 
 Add one operator-authenticated, explicitly Granite-scoped metadata operation at `/api/inspect/operations/restoration-preflight`. It observes the serving process's lifecycle and shared container memory, safely pins cache metadata without reading its contents, and explains a current resource/coordination assessment. Unknown inputs and unsupported safe file handling remain unknown. A positive response is advisory and non-atomic; normal entry still rechecks admission and payload compatibility.

@@ -61,14 +61,14 @@ class MyTeamOutlookHTTPTests(unittest.TestCase):
         stale = self.client.get('/teams/1')
         primary = stale.text.split('id="my-team-outlook"', 1)[1].split('id="full-roster"', 1)[0]
         self.assertIn('Provisional', primary)
-        self.assertIn('not a fresh team verdict', primary)
+        self.assertIn('retained numerical evidence is provisional', primary)
         self.data['league'].pop('scoring_settings', None)
         self.data.pop('scoring_settings', None)
         self.f.publish()
         missing = self.client.get('/teams/1')
         self.assertEqual(missing.status_code, 200)
         primary = missing.text.split('id="my-team-outlook"', 1)[1].split('id="full-roster"', 1)[0]
-        self.assertIn('Current optimal-lineup comparison unavailable', primary)
+        self.assertIn('needs compatible current availability', primary)
         self.assertIn('missing or incompatible projections are not zero', primary)
 
     def test_source_supported_fresh_evidence_has_normal_current_presentation(self):
@@ -80,7 +80,7 @@ class MyTeamOutlookHTTPTests(unittest.TestCase):
         response = self.client.get('/teams/1')
         self.assertEqual(response.status_code, 200)
         primary = response.text.split('id="my-team-outlook"', 1)[1].split('id="full-roster"', 1)[0]
-        self.assertIn('Week 2 optimal projected lineup', primary)
+        self.assertIn('Week 2 projected optimal lineup', primary)
         self.assertNotIn('Provisional:', primary)
         self.assertIn('Supported positional strength: QB', primary)
 

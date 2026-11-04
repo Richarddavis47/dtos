@@ -142,7 +142,9 @@ class ActiveRosterGradingTests(unittest.TestCase):
         self.assertEqual(view['unified_recommendation'].competitive_window, view['competitive_window'])
         self.assertEqual(view['team_intelligence'].overall.grade, 'Unavailable')
         self.assertEqual(view['competitive_window'].classification.value, 'Unavailable')
-        self.assertIn('unavailable', view['summary']['Overall Assessment'])
+        self.assertIn('does not yet calculate a validated overall team grade', view['summary']['Overall Assessment'])
+        self.assertIsNone(view['team_intelligence'].overall.score)
+        self.assertIsNone(view['team_intelligence'].overall.rank)
         self.assertTrue(all(p.overall_grade == 'Unavailable' for p in self.engine.analyze(self.data, 1).roster.players.values()))
 
     def test_real_league_switch_does_not_reuse_same_roster_or_player_ids(self):

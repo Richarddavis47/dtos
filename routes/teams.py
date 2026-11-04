@@ -13,6 +13,7 @@ from fastapi.responses import HTMLResponse
 from config import LEAGUE_ID
 from services.asset_intelligence import contextual_player_url
 from services.team_headquarters import build_team_directory, build_team_headquarters
+from services.team_assessment_presentation import MODEL_NOTE, weekly_comparison, prepared_comparison
 from src.core.historical_memory.read_model import historical_graph
 from src.core.history_context import canonical_history_store
 from src.core.request_execution import run_manager_read
@@ -416,6 +417,17 @@ def create_teams_router(
         overview = view['overview']
         roster_summary = ' · '.join(f'{count} {slot.lower()}' for slot, count in overview['slots'].items())
         view["outlook"]["details"].extend(overview["statuses"])
+        assessment_outlook = view['outlook']
+        if view['team_intelligence'].overall.score is None:
+            comparison = prepared_comparison(data, view['projection_snapshot'])
+            assessment_outlook = {
+                **assessment_outlook,
+                'brief': weekly_comparison(view['team_intelligence'], data.get('week'), compact=True,
+                                           diagnostics=comparison),
+                'position': f"Standing {overview['standing']} by Sleeper record/PF. " + weekly_comparison(
+                    view['team_intelligence'], data.get('week'), diagnostics=comparison),
+                'details': [MODEL_NOTE, *assessment_outlook['details']],
+            }
         body = f"""
 {TEAM_HQ_CSS}
 <style>
@@ -428,7 +440,7 @@ def create_teams_router(
 <section class="thq-content" data-my-team-context="{context_json}">
 {scope_notice}
 <header class="thq-header"><div class="thq-identity">{avatar}<div class="thq-title"><div class="identity-kicker">Owner: {escape(team['owner'])}</div><div class="thq-name-row"><h1>{escape(team['team_name'])}{you_badge(data, roster_id)}</h1>{champion_badge(defending_champion(data), roster_id)}</div><p>{escape(performance["record"])} · {escape(performance["standing"])}</p></div></div><div class="thq-strategy">{strategy_control}<small>League evidence updated: {escape(view['last_updated'])}</small></div></header>
-{outlook_panel(view["outlook"], editable=editable, roster_id=roster_id)}
+{outlook_panel(assessment_outlook, editable=editable, roster_id=roster_id)}
 {lineup_alert}
 <section class="thq-section" id="full-roster"><details class="thq-strength-detail" id="my-team-roster" open><summary>Full Roster</summary><div class="thq-roster">{_roster_rooms(view)}</div></details><details class="thq-strength-detail" id="my-team-key-players"><summary>Key players · canonical Market assets</summary>{_key_players(view)}</details></section>
 <section class="thq-section" id="draft-capital"><div class="thq-section-head"><h2>Draft Capital</h2><span>Exact original franchise and current ownership</span></div><div class="thq-picks">{_draft_capital(view)}</div><p class="muted">Pick outlook follows the original franchise. Unknown range means no supported interval is published; picks have no weekly projection.</p></section>
