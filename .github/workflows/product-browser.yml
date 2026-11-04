@@ -26,8 +26,6 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-          cache: pip
-          cache-dependency-path: requirements-validation.txt
       - name: Prepare runner-owned Trade evidence directories
         run: mkdir -p .validation/trade-resource/fixture .validation/trade-resource/evidence/browser
       - name: Build bounded browser validation dependencies
@@ -90,8 +88,6 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-          cache: pip
-          cache-dependency-path: requirements-validation.txt
       - name: Build bounded browser validation dependencies
         run: docker build -f tools/validation/containers/browser.Dockerfile -t dtos-browser-validation .
       - name: My Team evidence and authenticated session journeys
@@ -149,8 +145,6 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-          cache: pip
-          cache-dependency-path: requirements-validation.txt
       - name: Build bounded browser validation dependencies
         run: docker build -f tools/validation/containers/browser.Dockerfile -t dtos-browser-validation .
       - name: Market pagination, visible roster and scoped fresh-start journeys
@@ -170,8 +164,6 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-          cache: pip
-          cache-dependency-path: requirements-validation.txt
       - name: Build bounded browser validation dependencies
         run: docker build -f tools/validation/containers/browser.Dockerfile -t dtos-browser-validation .
       - name: Verify source-pinned public routing demo security and browser controls
