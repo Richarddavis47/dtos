@@ -1,0 +1,19 @@
+PASS Committed whitespace: 0.003s - cd400cf Explain team assessment limits with supported weekly lineup coverage
+PASS Working-tree whitespace: 0.002s
+PASS Staged whitespace: 0.001s
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/workspace/dtos/tools/validation/validate_release.py", line 44, in <module>
+    raise SystemExit(main())
+                     ^^^^^^
+  File "/workspace/dtos/tools/validation/validate_release.py", line 30, in main
+    results = run_release_validation(ROOT, run_id)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/dtos/src/platform/validation/release.py", line 138, in run_release_validation
+    raise subprocess.CalledProcessError(completed.returncode, step.command)
+subprocess.CalledProcessError: Command '('/workspace/dtos/.venv/bin/python', '-m', 'compileall', '-q', '.')' returned non-zero exit status 1.
+*** Error compiling './.validation/canonical-release/observer/sitecustomize.py'...
+PermissionError: [Errno 13] Permission denied: './.validation/canonical-release/observer/__pycache__/sitecustomize.cpython-312.pyc.139777307818672'
+*** Error compiling './.validation/canonical-release/runner.py'...
+PermissionError: [Errno 13] Permission denied: './.validation/canonical-release/__pycache__/runner.cpython-312.pyc.139777307921632'
