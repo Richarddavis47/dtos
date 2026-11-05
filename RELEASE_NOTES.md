@@ -1,3 +1,11 @@
+# v1.22.15 / build 2230 — Current-season franchise history
+
+Restored league publications and cached startup now register the same owned source with canonical history as fresh synchronization. Supported current-season transactions and retrieved weekly buckets remain visible while the season is ongoing, and runtime eviction releases the history reference safely.
+
+Existing transaction requests now retain bounded per-period acquisition dates and distinguish observed-empty, unavailable, failed and unacquired evidence. Same-league/season last-valid buckets remain useful after partial refresh failure; legacy retrieval dates remain unknown. Franchise History shows retrieved weeks, coverage gaps and recorded freshness separately from transaction occurrence times. No provider requests or historical rebuilding are added to page rendering.
+
+Completed/pending status, deduplication, exact pick originals, qualified manager attribution and FOIS RETAINED / NOT REVALIDATED are preserved. Trade and valuation mathematics, scoring, saved settings, submitted lineups, the 2 GiB cap and independent FOIS/Trade admission safeguards are unchanged. See docs/audits/CURRENT_SEASON_HISTORY_2230.md.
+
 # v1.22.14 / build 2229 — Trustworthy franchise transaction history
 
 Franchise History now shows retained completed trades, waivers, adds/drops, FAAB transfers and observed draft selections, with pagination and exact source references. Completed movements are separate from pending, failed, rejected, unknown or malformed records. Exact picks retain their year, round and original franchise independently of their owner; a draft selection never invents its original franchise from the selecting team.

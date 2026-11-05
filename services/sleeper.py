@@ -225,19 +225,11 @@ async def _sync_sleeper(
                     league, matchup_week, matchups,
                     lambda path: sleeper_get(client, path), observed_at=utcnow().isoformat(),
                 )
-                previous = state.get('data') or {}
-                same_season = str((previous.get('league') or {}).get('season')) == str(league.get('season'))
-                retained_buckets = previous.get('season_transactions') or {} if same_season else {}
-                season_transactions = {str(matchup_week): transactions}
-                async def previous_transactions(transaction_week):
-                    try:
-                        return await sleeper_get(client, f'/league/{league_id}/transactions/{transaction_week}')
-                    except Exception:
-                        return None
-                for transaction_week, rows in zip(range(0, matchup_week), await asyncio.gather(*(
-                    previous_transactions(w) for w in range(0, matchup_week)
-                ))):
-                    season_transactions[str(transaction_week)] = rows if rows is not None else retained_buckets.get(str(transaction_week))
+                from src.core.history_context.transaction_periods import acquire_previous_periods
+                season_transactions, transaction_acquisition = await acquire_previous_periods(
+                    league, matchup_week, transactions, state.get('data') or {},
+                    lambda path: sleeper_get(client, path), observed_at=lambda: utcnow().isoformat(),
+                )
                 draft_picks = []
                 for index, draft in enumerate(drafts or ()):
                     draft_id = str(draft.get("draft_id") or "")
@@ -511,6 +503,7 @@ async def _sync_sleeper(
                 "draft_picks": draft_picks,
                 "transactions": transactions,
                 "season_transactions": season_transactions,
+                "transaction_acquisition": transaction_acquisition,
                 "matchups": matchup_groups,
                 "season_matchups": season_matchups,
                 "nfl_state": nfl_state,
@@ -746,13 +739,16 @@ async def sync_transactions(
                 transactions = await sleeper_get(
                     client, f"/league/{league_id}/transactions/{week}"
                 )
+            from src.core.history_context.transaction_periods import current_period_metadata
+            acquisition = current_period_metadata(data, week, transactions, utcnow().isoformat())
             if publish_data is not None:
                 # Only the bounded source mutation holds the owner lock;
                 # network, checkpoints and persistence stay outside it.
-                await publish_data(data, transactions, week)
+                await publish_data(data, transactions, week, acquisition=acquisition)
             else:
                 data['transactions'] = transactions
                 data.setdefault('season_transactions', {})[str(week)] = transactions
+                data['transaction_acquisition'] = acquisition
             from src.core.history_context import canonical_history_store
             canonical_history_store.update_current(league_id, data)
             state["transactions_last_sync"] = utcnow().isoformat()

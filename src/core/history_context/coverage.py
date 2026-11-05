@@ -91,6 +91,11 @@ def transaction_coverage_summary(coverage: dict, *, records_present=False) -> di
     periods = coverage.get('transactions') or {}
     acquired = {w for w in periods.get('acquired') or [] if type(w) is int and 0 <= w <= 18}
     gaps = {name: periods.get(name) or [] for name in ('unacquired', 'unavailable', 'malformed')}
+    observations = (coverage.get('transaction_acquisition') or {}).get('periods') or {}
+    for state in ('unavailable','malformed'):
+        gaps[state] = sorted(set(gaps[state]) | {int(w) for w,r in observations.items() if r.get('state') == state})
+    if coverage.get('failed_periods'):
+        gaps['failed'] = sorted(coverage['failed_periods'])
     if coverage.get('source_identity_compatible') is False:
         return {'state': 'unknown', 'acquired': [], 'gaps': {},
                 'reason': 'Retained source league-season metadata is incompatible with this season; coverage and an empty-history conclusion are withheld.',
@@ -103,12 +108,18 @@ def transaction_coverage_summary(coverage: dict, *, records_present=False) -> di
     reason = ('All supported source transaction buckets 0–18 were retrieved for this completed source season.' if complete else
               'Some source periods or the completed-season confirmation are missing; retained events remain useful.' if state == 'partial' else
               'DTOS has not established which source weeks were retrieved; missing history is not no activity.')
+    if state == 'partial' and coverage.get('source_status') == 'in_season':
+        reason = ('The season is ongoing. Retrieved periods support the events shown; other periods remain unverified.'
+                  if acquired else 'Retained transactions are available, but their weekly acquisition coverage has not been established.')
     problems = [f"{coverage[k]} {label}" for k, label in (
         ('unqualified_records', 'records with unverified transaction or franchise identity'), ('conflicting_identities', 'conflicting transaction identities'),
         ('unknown_status_records', 'records with unknown transaction status')) if coverage.get(k)]
     if problems:
         reason += ' Retained gaps: ' + '; '.join(problems) + '.'
     if coverage.get('last_valid_periods'):
-        reason += ' Last-valid source periods remain visible after an unavailable refresh: ' + ', '.join(map(str, coverage['last_valid_periods'])) + '.'
+        reason += ' Last-valid source periods remain visible after an unsuccessful refresh: ' + ', '.join(map(str, coverage['last_valid_periods'])) + '.'
     return {'state': state, 'acquired': sorted(acquired), 'gaps': gaps, 'reason': reason,
+            'observed_empty': periods.get('observed_empty') or [],
+            'period_observations': observations,
+            'source_week': coverage.get('source_week'),
             'scope': 'Retained Sleeper transaction buckets 0–18; draft selections have separate coverage.'}
