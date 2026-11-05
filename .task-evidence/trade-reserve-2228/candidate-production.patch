@@ -1,0 +1,630 @@
+diff --git a/.github/workflows/product-browser.yml b/.github/workflows/product-browser.yml
+index a52c755..0f30755 100644
+--- a/.github/workflows/product-browser.yml
++++ b/.github/workflows/product-browser.yml
+@@ -33,7 +33,7 @@ jobs:
+       - name: Authenticated product, interaction and accessibility contracts
+         timeout-minutes: 20
+         run: |
+-          docker run --rm --memory=2g --memory-swap=2g --cpus=2 --network=none -e NODE_OPTIONS -e DTOS_TRADE_RESOURCE_BROWSER_EVIDENCE=.validation/trade-resource/evidence/browser -e DTOS_LINEUP_DETAIL_EVIDENCE=.validation/trade-resource/evidence/browser/lineups -v "$PWD:$PWD" -w "$PWD" -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0="$PWD" dtos-browser-validation python -m unittest -v tests.test_trade_lineup_detail tests.test_trade_lineup_detail_browser tests.test_trade_resource_admission tests.test_trade_resource_browser tests.test_multileague_projection_browser tests.test_relative_personal_values tests.test_relative_personal_browser tests.test_decision_history_continuity_browser tests.test_personal_rankings_compatibility tests.test_personal_rankings_recovery_storage tests.test_personal_rankings_recovery_trade tests.test_personal_rankings_recovery_browser tests.test_personal_rankings_recovery_trade_browser tests.test_personal_rankings_partial_browser tests.test_dossier_plain_english tests.test_plain_english_home_depth tests.test_builder_plain_english tests.test_plain_english_preservation_final tests.test_plain_english_final_browser tests.test_plain_english_decisions tests.test_plain_english_browser tests.test_personal_rankings_availability tests.test_personal_rankings_availability_browser tests.test_personal_rankings tests.test_personal_rankings_store tests.test_personal_rankings_integration tests.test_personal_trade_workflows tests.test_personal_rankings_browser tests.test_personal_rankings_accessibility_browser tests.test_personal_trade_browser tests.test_market_trend_current_browser tests.test_standings_positioning tests.test_standings_positioning_browser tests.test_matchup_portraits_browser tests.test_matchups_phone tests.test_matchups_phone_browser tests.test_trade_projection_freshness tests.test_trade_projection_freshness_browser tests.test_trade_preview_scope_browser tests.test_trade_simple_discovery tests.test_trade_simple_browser tests.test_fois_final_trust_browser tests.test_fois_evidence_integrity tests.test_fois_trust_browser tests.test_proposal_tray_browser tests.test_journey_evidence tests.test_journey_corrections_browser tests.test_dossier_status_browser tests.test_phone_visual_corrections_browser tests.test_phone_design_semantics tests.test_phone_design_browser tests.test_trade_calculator tests.test_trade_calculator_browser tests.test_calculator_balance_feedback_browser tests.test_calculator_stale_feedback_browser tests.test_trade_explicit_navigation_browser tests.test_trade_navigation_identity tests.test_trade_navigation_browser tests.test_player_actions tests.test_player_actions_browser tests.test_trade_performance tests.test_trade_construction_performance tests.test_trade_performance_browser tests.test_technical_details_browser tests.test_canonical_asset_facts tests.test_canonical_asset_facts_browser tests.test_product_browser_journey tests.test_matchup_browser_contract tests.test_trade_center_browser tests.test_trade_scout_state_browser tests.test_make_it_cheaper_browser tests.test_trade_center_accessibility tests.test_trade_workspace_browser tests.test_trade_workspace_batch1 tests.test_live_inspection tests.test_browser_fixture_images tests.test_visual_retirement tests.test_trade_decision_experience tests.test_trade_decision_browser tests.test_trade_decision_http_browser tests.test_trade_decision_standings_browser tests.test_batch6_trade_ux tests.test_trade_p2_browser tests.test_trade_final_evidence_browser tests.test_trade_endorsement_integrity tests.test_trade_missing_market_presentation tests.test_batch6_trade_explanation tests.test_league_entry_coordination
++          docker run --rm --memory=2g --memory-swap=2g --cpus=2 --network=none -e NODE_OPTIONS -e DTOS_TRADE_RESOURCE_BROWSER_EVIDENCE=.validation/trade-resource/evidence/browser -e DTOS_LINEUP_DETAIL_EVIDENCE=.validation/trade-resource/evidence/browser/lineups -v "$PWD:$PWD" -w "$PWD" -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0="$PWD" dtos-browser-validation python -m unittest -v tests.test_trade_reserve_evidence tests.test_trade_lineup_detail tests.test_trade_lineup_detail_browser tests.test_trade_resource_admission tests.test_trade_resource_browser tests.test_multileague_projection_browser tests.test_relative_personal_values tests.test_relative_personal_browser tests.test_decision_history_continuity_browser tests.test_personal_rankings_compatibility tests.test_personal_rankings_recovery_storage tests.test_personal_rankings_recovery_trade tests.test_personal_rankings_recovery_browser tests.test_personal_rankings_recovery_trade_browser tests.test_personal_rankings_partial_browser tests.test_dossier_plain_english tests.test_plain_english_home_depth tests.test_builder_plain_english tests.test_plain_english_preservation_final tests.test_plain_english_final_browser tests.test_plain_english_decisions tests.test_plain_english_browser tests.test_personal_rankings_availability tests.test_personal_rankings_availability_browser tests.test_personal_rankings tests.test_personal_rankings_store tests.test_personal_rankings_integration tests.test_personal_trade_workflows tests.test_personal_rankings_browser tests.test_personal_rankings_accessibility_browser tests.test_personal_trade_browser tests.test_market_trend_current_browser tests.test_standings_positioning tests.test_standings_positioning_browser tests.test_matchup_portraits_browser tests.test_matchups_phone tests.test_matchups_phone_browser tests.test_trade_projection_freshness tests.test_trade_projection_freshness_browser tests.test_trade_preview_scope_browser tests.test_trade_simple_discovery tests.test_trade_simple_browser tests.test_fois_final_trust_browser tests.test_fois_evidence_integrity tests.test_fois_trust_browser tests.test_proposal_tray_browser tests.test_journey_evidence tests.test_journey_corrections_browser tests.test_dossier_status_browser tests.test_phone_visual_corrections_browser tests.test_phone_design_semantics tests.test_phone_design_browser tests.test_trade_calculator tests.test_trade_calculator_browser tests.test_calculator_balance_feedback_browser tests.test_calculator_stale_feedback_browser tests.test_trade_explicit_navigation_browser tests.test_trade_navigation_identity tests.test_trade_navigation_browser tests.test_player_actions tests.test_player_actions_browser tests.test_trade_performance tests.test_trade_construction_performance tests.test_trade_performance_browser tests.test_technical_details_browser tests.test_canonical_asset_facts tests.test_canonical_asset_facts_browser tests.test_product_browser_journey tests.test_matchup_browser_contract tests.test_trade_center_browser tests.test_trade_scout_state_browser tests.test_make_it_cheaper_browser tests.test_trade_center_accessibility tests.test_trade_workspace_browser tests.test_trade_workspace_batch1 tests.test_live_inspection tests.test_browser_fixture_images tests.test_visual_retirement tests.test_trade_decision_experience tests.test_trade_decision_browser tests.test_trade_decision_http_browser tests.test_trade_decision_standings_browser tests.test_batch6_trade_ux tests.test_trade_p2_browser tests.test_trade_final_evidence_browser tests.test_trade_endorsement_integrity tests.test_trade_missing_market_presentation tests.test_batch6_trade_explanation tests.test_league_entry_coordination
+           docker run --rm --memory=2g --memory-swap=2g --cpus=2 --network=none -e NODE_OPTIONS -v "$PWD:$PWD" -w "$PWD" -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0="$PWD" dtos-browser-validation python -m unittest -v tests.test_historical_evidence_weeks tests.test_fois_final_trust
+ 
+ 
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index 4f27a5e..82e4295 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -1,3 +1,11 @@
++# v1.22.13 / build 2228 — Trade reserve evidence
++
++Trade decision summaries retain independent before/after reserve facts for each franchise: supported weekly effects, verified zeros, and known partial subtotals with specific prepared-player projection or eligibility gaps. Existing expanded lineup details show candidate counts and unfilled cover slots, separately from required starters. Missing evidence is never a zero or a full replacement comparison.
++
++Canonical reserve preparation now excludes assets with proven ineligibility for every configured starting slot from its usable replacement population. For example, K/DEF assets cannot hide an established empty reserve pool in a league without those positions. Unknown eligibility remains unresolved, and leagues requiring K/DEF still require their compatible projections. Prepared profiles use a new methodology identity; stale profiles cannot be silently mixed with the corrected calculation.
++
++Neutral/Custom prices, exact picks, independent legal starting lineups, submitted Sleeper starters, bilateral thresholds and resource policies are unchanged. No customer-facing beta/prerelease wording was found; the responsive Trade control explicitly protects its absence. See docs/audits/TRADE_RESERVE_EVIDENCE_2228.md.
++
+ # v1.22.12 / build 2227 — Team Assessment Coverage
+ 
+ Home and My Team show a coherent weekly projected-lineup comparison from one prepared diagnostic publication. Partial legal lineups retain supported slot and comparable-team counts while withholding incomplete totals and ranks. Aging, failed refreshes and availability changes preserve effective evidence qualification. Overall grades, submitted lineups, Trade calculations and resource policies are unchanged.
+diff --git a/RELEASE_NOTES.md b/RELEASE_NOTES.md
+index 1da3a0a..65fb722 100644
+--- a/RELEASE_NOTES.md
++++ b/RELEASE_NOTES.md
+@@ -1,3 +1,11 @@
++# v1.22.13 / build 2228 — Trade reserve evidence
++
++Trade decision summaries retain independent before/after reserve facts for each franchise: supported weekly effects, verified zeros, and known partial subtotals with specific prepared-player projection or eligibility gaps. Existing expanded lineup details show candidate counts and unfilled cover slots, separately from required starters. Missing evidence is never a zero or a full replacement comparison.
++
++Canonical reserve preparation now excludes assets with proven ineligibility for every configured starting slot from its usable replacement population. For example, K/DEF assets cannot hide an established empty reserve pool in a league without those positions. Unknown eligibility remains unresolved, and leagues requiring K/DEF still require their compatible projections. Prepared profiles use a new methodology identity; stale profiles cannot be silently mixed with the corrected calculation.
++
++Neutral/Custom prices, exact picks, independent legal starting lineups, submitted Sleeper starters, bilateral thresholds and resource policies are unchanged. No customer-facing beta/prerelease wording was found; the responsive Trade control explicitly protects its absence. See docs/audits/TRADE_RESERVE_EVIDENCE_2228.md.
++
+ # v1.22.12 / build 2227 — Team Assessment Coverage
+ 
+ Home and My Team show a coherent weekly projected-lineup comparison from one prepared diagnostic publication. Partial legal lineups retain supported slot and comparable-team counts while withholding incomplete totals and ranks. Aging, failed refreshes and availability changes preserve effective evidence qualification. Overall grades, submitted lineups, Trade calculations and resource policies are unchanged.
+diff --git a/app_metadata.py b/app_metadata.py
+index 8f0cd9a..1ae8848 100644
+--- a/app_metadata.py
++++ b/app_metadata.py
+@@ -7,9 +7,9 @@ from datetime import datetime, timezone
+ from pathlib import Path
+ 
+ APPLICATION_NAME = "DTOS"
+-VERSION = "1.22.12"
+-PRODUCT_VERSION = "1.22.12"
+-BUILD_NUMBER = 2227
++VERSION = "1.22.13"
++PRODUCT_VERSION = "1.22.13"
++BUILD_NUMBER = 2228
+ RELEASE_CODENAME = "Team Assessment Coverage"
+ APPLICATION_STARTED_AT = datetime.now(timezone.utc).isoformat()
+ 
+diff --git a/docs/audits/TRADE_RESERVE_EVIDENCE_2228.md b/docs/audits/TRADE_RESERVE_EVIDENCE_2228.md
+new file mode 100644
+index 0000000..eea0d19
+--- /dev/null
++++ b/docs/audits/TRADE_RESERVE_EVIDENCE_2228.md
+@@ -0,0 +1,42 @@
++# Trade reserve evidence — build 2228
++
++## Scope and source identity
++
++Start from production v1.22.12/build 2227, commit 40226bb497a5b5c30047cc5f98e49c4008c67992, tree de2827e28dea58e7174c938ba4b38930e0892bea. Public readiness and origin/main agreed at investigation start. No production Trade search, synchronization, preference update, ranking change or lineup submission was performed.
++
++The supplied Granite build 2226 observation reports 128 assessed packages and zero qualified recommendations. Its complete matched per-package source diagnostics were not located in retained local evidence. Consequently, this work does not attribute counts or specific upstream causes to those 128 packages, reconstruct the historical run from current rosters, or claim a live qualified offer. Zero recommendations is not a defect.
++
++## Reproductions and confirmed causes
++
++1. A disposable twelve-team one-QB publication with QB/RB/WR/TE/FLEX/K/DEF gives the owner's reserves a verified 10-point disjoint subtotal and an active bench receiver without a numerical projection. Before and after full reserve effects remain unknown. The partner independently has supported 10-point pre-trade and 20-point post-trade reserve production. The old primary summary reduced both franchises to a generic incomplete-depth warning when later weeks lacked coverage. Individual reserve rows were already retained; the defect was failure to explain their distinct support and boundaries in the visible decision.
++2. In a Superflex control with no K/DEF slots, the remaining rostered K/DEF players were counted as usable reserve candidates despite having no legal slot. The optimizer correctly selected none, but the nonempty candidate count prevented an established empty usable pool from becoming numerical zero. Missing projections for those provably irrelevant positions could also poison reserve coverage. This is a shared reserve-population boundary issue, not a missing Sleeper forecast or a Market-price problem.
++
++## Narrow corrections
++
++Canonical reserve preparation uses the existing fantasy-position and league-slot eligibility rules to exclude only players proven unable to fill any configured slot. Unknown eligibility remains unresolved. Required Granite K/DEF projections remain necessary. A supported, genuinely empty usable replacement population is zero; an unprojected eligible player is unknown. The prepared-profile methodology identity advances to v5 so old and corrected profiles are not silently combined. Starting-lineup optimization, scoring coefficients and submitted starters are unchanged.
++
++Presentation admits each side/week/phase against the pinned league, season, scoring, generation, owner, slot, player projection and subtotal. Reserve-specific snapshot identity is checked independently. Known partial subtotals, covered slots, eligible candidate counts and missing-player explanations remain distinct from full reserve production. A subtotal does not become a delta, bound or second starting lineup. The primary card shows the first requested weekly reserve context; all other retained weeks remain independently available in the existing lineup disclosure. Source freshness is requalified with the existing rule at render time.
++
++A missing projection is described as missing from the prepared compatible publication; this does not establish upstream Sleeper absence. Unknown identity uses a safe fallback. Out/IR, byes, unsupported positions, future-week participation and unavailable starters retain their actual evidence qualifications. A defect in one phase cannot erase a valid partner/other-week comparison.
++
++## Source-to-screen chain and controls
++
++Sleeper-shaped fixture feed -> ProjectionService scoring/identity publication -> pinned prepare_team_strength profile -> evaluate_horizon_impact independently optimized pre/post legal rosters -> package_quality unchanged -> bound completed lineup details -> shared reserve presentation -> Trade primary summaries and expandable slot tables.
++
++Controls include one-QB/K/DEF, Superflex without dedicated TE, known zero, missing eligible projections, missing irrelevant K/DEF projections, unknown eligibility, missing starter, wrong owner/generation/scoring/snapshot, different week projections, aging, partial horizon, source-free rendering, and an actual fixture-qualified +8 consolidation with a -1 reserve cost under all three strategies. Existing extreme-overpay, Custom partial valuation, exact-pick, admission, cancellation and cleanup suites remain mandatory.
++
++No customer-facing beta/prerelease wording was found in production rendering sources. The four-size Trade browser control asserts its absence; open registration, welcome demos and legitimate disclaimers are unchanged.
++
++## Validation and remaining limits
++
++Original failed attempts are retained separately: initial probe import setup; Superflex assertion exposing the canonical issue; browser assertion expecting unnecessary trailing zeros; consequent missing screenshot-directory artifact. None counts as passing evidence. Clean exact-candidate canonical/hosted results and readable original consoles are published separately with source and checksums.
++
++Fixtures demonstrate compatible source-to-screen behavior, not live Granite recovery or a historically qualified offer. The 128-case historical cause denominator remains unavailable. Fixture cleanup is not a proof of indefinite leak freedom. Desktop Chromium and touch emulation do not establish physical iPhone/Safari acceptance.
++
++## Independent Scout acceptance
++
++1. Verify release identity and current safe resource admission without starting discovery automatically.
++2. On a permitted retained or newly authorized assessment, inspect both teams' primary reserve summary and expanded before/after lineups. Verify exact week/scoring/publication identity, K/DEF/FLEX assignments and point sums.
++3. Confirm a partial subtotal is labeled partial and its missing player/phase is explained; an independently valid partner/week remains visible.
++4. Confirm a zero appears only for a supported zero or proven empty usable pool, and submitted Sleeper starters remain separate.
++5. Confirm verdict, Neutral/Custom mode, exact picks and workspace remain unchanged. Any new live heavy search requires contemporaneously safe admission and separate bounded acceptance planning.
+diff --git a/services/trade_decision.py b/services/trade_decision.py
+index 28dff6b..5bf4298 100644
+--- a/services/trade_decision.py
++++ b/services/trade_decision.py
+@@ -67,7 +67,7 @@ def lineup_comparisons(result, side="active", *, _admissions=None):
+     return (_admissions[side] if _admissions is not None else completed_lineup_evidence(result, side))['horizons']
+ 
+ 
+-def decision_context(result, *, incoming=(), outgoing=(), _admissions=None):
++def decision_context(result, *, incoming=(), outgoing=(), _admissions=None, _lineup_view=None):
+     from services.trade_lineup_evidence import completed_lineup_admissions, counterparty_summary_display
+     admissions = _admissions or completed_lineup_admissions(result)
+     dimensions = result.get("dimensions") or {}
+@@ -226,7 +226,7 @@ def decision_context(result, *, incoming=(), outgoing=(), _admissions=None):
+             + "The known weekly effect remains useful, but does not fill gaps in the wider assessment."
+         )
+     from services.trade_decision_summary import decision_summary
+-    two_sided = decision_summary(result, admissions)
++    two_sided = decision_summary(result, admissions, lineup_view=_lineup_view)
+     return {
+         **two_sided,
+         "verdict": final["headline"],
+diff --git a/services/trade_decision_summary.py b/services/trade_decision_summary.py
+index d7a81ad..c0b19f1 100644
+--- a/services/trade_decision_summary.py
++++ b/services/trade_decision_summary.py
+@@ -2,13 +2,16 @@
+ from services.trade_lineup_evidence import number
+ 
+ 
+-def decision_summary(result, admissions):
++def decision_summary(result, admissions, *, lineup_view=None):
+     dims = result.get('dimensions') or {}
+     fit = dims.get('strategic_fit') or {}
+     partner = dims.get('counterparty_plausibility') or {}
+     market = result.get('market_evidence') or {}
+     missing = []
+     summaries = {}
++    if lineup_view is None and result.get('lineup_detail_context'):
++        from services.trade_lineup_detail import lineup_detail_view
++        lineup_view = lineup_detail_view(result, admissions=admissions)
+     for side, title in [('active', 'Your team'), ('partner', 'Their team')]:
+         view = admissions[side]
+         current = view['horizons'].get('current_week') or {}
+@@ -50,6 +53,9 @@ def decision_summary(result, admissions):
+         if reserve.get('complete') is not True:
+             lines.append('Useful replacement-depth coverage is incomplete; a missing reserve effect is not zero.')
+             missing.append(f"{title}'s compatible reserve-depth evidence")
++        if lineup_view is not None:
++            from services.trade_reserve_evidence import reserve_summary_lines
++            lines.extend(reserve_summary_lines(lineup_view, side))
+         capital = profile.get('future_capital') or {}
+         assessment = capital.get('assessment') or {}
+         if capital.get('sent') or capital.get('received'):
+diff --git a/services/trade_explanation.py b/services/trade_explanation.py
+index 3187d35..68c7812 100644
+--- a/services/trade_explanation.py
++++ b/services/trade_explanation.py
+@@ -239,7 +239,7 @@ def render_trade_explanation(result: dict, *, league_id: str, _slot_details=True
+     weekly = tuple(item.key for item in view.evidence if item.key.startswith('weekly.'))
+     rendered = explanation_panel(view, evidence_groups=(('Weekly optimal-lineup detail', weekly),) if weekly else ())
+     from services.trade_decision import decision_context
+-    presentation = decision_context(result, _admissions=admissions)
++    presentation = decision_context(result, _admissions=admissions, _lineup_view=slot_view)
+     admission = admissions['active']
+     # The completed DTO may include supported asset-age and incoming status
+     # context supplied by the producer. Keep it when production still verifies;
+diff --git a/services/trade_lineup_detail.py b/services/trade_lineup_detail.py
+index 09edb64..c5ea5f4 100644
+--- a/services/trade_lineup_detail.py
++++ b/services/trade_lineup_detail.py
+@@ -153,6 +153,9 @@ def lineup_detail_view(result, *, admissions=None):
+                         reason = ('Excluded from usable cover · ' + state.upper() if state in
+                                   {'out', 'ir', 'pup', 'suspended', 'inactive', 'retired'} else
+                                   'Excluded from the eligible roster pool; inspect IR/taxi or weekly participation evidence')
++                    elif eligible_positions(evidence) and not any(_eligible(position, slot)
++                            for position in eligible_positions(evidence) for slot in required):
++                        reason = 'No eligible starting slot under this league’s rules; not usable replacement cover'
+                     elif not number(evidence.get('canonical_projection')):
+                         reason = 'No compatible projection recorded; not a zero-point replacement'
+                     elif state != 'active':
+@@ -174,17 +177,28 @@ def lineup_detail_view(result, *, admissions=None):
+                             and same_number(entry.get('projected_points'), evidence.get('canonical_projection'))):
+                         reserves.append({**entry, 'name': (context.get('identities') or {}).get(pid)
+                                          or 'Player identity not resolved'})
+-                reserve_valid = (valid and len(reserves) == len(reserve.get('entries') or [])
++                reserve_scope_valid = (valid
++                    and qualification.get('projection_snapshot_id') == expected
++                    and qualification.get('scoring_profile_id') == projection.get('scoring_profile_id'))
++                reserve_valid = (reserve_scope_valid and len(reserves) == len(reserve.get('entries') or [])
+                     and len({e['asset_id'] for e in reserves}) == len(reserves)
+                     and Counter(e['slot'] for e in reserves) <= Counter(required)
+                     and same_number(total([e['projected_points'] for e in reserves]), reserve.get('known_subtotal')))
+                 if not reserve_valid:
+                     reserves = []
++                from services.trade_reserve_evidence import reserve_phase_evidence
++                # An empty, unprojected pool has no numeric subtotal, but its
++                # pinned missing-player evidence still explains the actual gap.
++                missing_only = bool(reserve_scope_valid and not reserve.get('entries')
++                    and reserve.get('known_subtotal') is None and reserve.get('missing_player_ids'))
++                reserve_evidence = reserve_phase_evidence(reserve, valid=reserve_valid or missing_only,
++                    complete_starters=complete, source=source, identities=context.get('identities') or {})
+                 phases[phase] = {'state': 'complete' if complete else 'partial' if valid else 'unavailable',
+                     'entries': displayed if valid else [], 'total': subtotal if complete else None,
+                     'known_subtotal': subtotal if valid else None, 'unsupported_slots': unsupported if valid else [],
+                     'reserves': reserves, 'reserve_complete': bool(reserve_valid and (reserve.get('qualification') or {}).get('calculation_supported') is True),
+                     'reserve_limitations': (reserve.get('qualification') or {}).get('limitations') or [],
++                    'reserve_evidence': reserve_evidence,
+                     'warnings': warnings if week_compatible else [],
+                     'missing_player_count': len(coverage.get('missing_player_ids') or []) if week_compatible else None}
+             before = {e['asset_id'] for e in phases['pre']['entries']}
+@@ -249,8 +263,13 @@ def render_lineup_details(result, *, admissions=None, view=None):
+                         html += '<p>' + str(p['missing_player_count']) + ' rostered player projections are missing; optimal among supported eligible players.</p>'
+                     if p['reserves']:
+                         html += table(p['reserves'], title + ' · disjoint projected reserve cover')
+-                    html += '<p>Reserve cover ' + ('has supported projection evidence; availability qualifications still apply.' if p['reserve_complete'] else 'is incomplete; missing replacement effects remain unknown.') + '</p>'
+-                    html += ''.join('<p class="tw-lineup-warning">' + text(x) + '</p>' for x in p['reserve_limitations'])
++                    reserve = p['reserve_evidence']
++                    if number(reserve['known_subtotal']):
++                        html += '<p>Reserve ' + ('production' if reserve['state'] == 'supported' else 'known subtotal only') + ': ' + manager_points(reserve['known_subtotal']) + ' points · ' + text(reserve['supported_slots']) + ' covered reserve slots · ' + text(reserve['candidate_count']) + ' eligible reserve candidates.</p>'
++                    html += '<p>Reserve cover ' + ('has supported projection evidence; availability qualifications still apply.' if reserve['state'] == 'supported' else 'is incomplete; missing replacement effects remain unknown.') + ' This is disjoint projected cover, not a second required starting lineup.</p>'
++                    if reserve['unfilled_cover_slots']:
++                        html += '<p>Unfilled reserve-cover slots: ' + text(', '.join(reserve['unfilled_cover_slots'])) + '. These are not empty submitted starter positions.</p>'
++                    html += ''.join('<p class="tw-lineup-warning">' + text(x) + '</p>' for x in reserve['reasons'])
+                 html += ''.join('<p class="tw-lineup-warning">' + text(w['name'] + ' · ' + w['role'] + ': ' + w['reason']) + '</p>' for w in p['warnings'])
+                 phases.append(html + '</section>')
+             changes = []
+diff --git a/services/trade_reserve_evidence.py b/services/trade_reserve_evidence.py
+new file mode 100644
+index 0000000..93a039a
+--- /dev/null
++++ b/services/trade_reserve_evidence.py
+@@ -0,0 +1,87 @@
++"""Presentation of pinned, already-solved reserve evidence; never a valuation guard."""
++from services.trade_lineup_evidence import number
++
++
++def reserve_phase_evidence(reserve, *, valid, complete_starters, source, identities):
++    """Keep a verified subtotal separate from an exact replacement comparison."""
++    qualification = reserve.get('qualification') or {}
++    state = qualification.get('conclusion_state')
++    missing = reserve.get('missing_player_ids') or []
++    reasons = []
++    if not valid:
++        reasons.append('Reserve rows cannot be verified against the owned roster and this week’s scoring publication.')
++    else:
++        for pid in missing:
++            row = (source.get('players') or {}).get(pid) or {}
++            name = identities.get(pid) or 'Player identity not resolved'
++            if not row:
++                reason = 'no compatible player-week record in the prepared publication'
++            elif row.get('compatible') is not True:
++                reason = 'player-week/scoring evidence is incompatible'
++            elif not number(row.get('canonical_projection')):
++                reason = 'no numerical projection in the compatible prepared publication'
++            elif not (row.get('fantasy_positions') or row.get('position')):
++                reason = 'fantasy-position eligibility is missing'
++            else:
++                reason = 'recorded reserve eligibility or projection coverage is incomplete'
++            reasons.append(name + ': ' + reason + '; not a zero-point replacement.')
++        if not complete_starters:
++            reasons.append('The starting lineup is incomplete; the full disjoint replacement effect cannot be established.')
++        if qualification.get('calculation_supported') is not True and not reasons:
++            reasons.append('The prepared reserve calculation is not supported; inspect its availability and eligibility qualifications.')
++        reasons.extend(qualification.get('limitations') or [])
++        # Reuse the same freshness rule as canonical reserve-quality evidence
++        # rather than retaining a once-current label after a warm DTO ages.
++        from src.core.projection_intelligence.sleeper_provider import freshness_state
++        clocks = qualification.get('source_timestamps') or []
++        if isinstance(clocks, dict):
++            clocks = list(clocks.values())
++        if clocks and any(freshness_state(clock) != 'Fresh' for clock in clocks):
++            reasons.append('Original projection observations are not confirmed Fresh; replacement production remains conditional.')
++            state = 'provisional' if state != 'unavailable' else state
++    supported = bool(valid and complete_starters and not missing
++                     and qualification.get('calculation_supported') is True
++                     and number(reserve.get('known_subtotal')))
++    return {'state': 'supported' if supported else 'partial' if valid else 'unavailable',
++            'known_subtotal': reserve.get('known_subtotal') if valid else None,
++            'points': reserve.get('known_subtotal') if supported else None,
++            'supported_slots': reserve.get('supported_slots') if valid else None,
++            'candidate_count': reserve.get('candidate_count') if valid else None,
++            'missing_player_count': len(missing) if valid else None,
++            'unfilled_cover_slots': (reserve.get('unsupported_slots') or []) if valid else [],
++            'qualification': state if valid else 'unavailable',
++            'reasons': list(dict.fromkeys(reasons))}
++
++
++def reserve_summary_lines(view, side):
++    """Visible decision facts, independently qualified for each side/week/phase."""
++    lines = []
++    weeks = sorted(view['sides'][side].items())
++    # Keep the primary phone card short. Every retained week/phase remains in
++    # the existing expanded evidence; no horizon is filled from another week.
++    for week, row in weeks[:1]:
++        phases = row['phases']
++        pre, post = (phases[p]['reserve_evidence'] for p in ('pre', 'post'))
++        prefix = f"Season {view['season']}, week {week} reserve cover: "
++        def describe(evidence):
++            value = evidence['known_subtotal']
++            if not number(value):
++                return 'unknown'
++            label = 'supported' if evidence['state'] == 'supported' else 'known subtotal only'
++            return f"{value:.2f} points ({label}, {evidence['supported_slots']} covered reserve slots)"
++        lines.append(prefix + 'before ' + describe(pre) + '; after ' + describe(post) + '.')
++        # A partial subtotal must never become a full reserve delta or bound.
++        if pre['state'] == post['state'] == 'supported':
++            from services.trade_lineup_evidence import total
++            delta = total([post['points'], -pre['points']])
++            conditional = pre['qualification'] != 'current' or post['qualification'] != 'current' or row.get('state') != 'supported'
++            lines.append(f"{'Conditional ' if conditional else ''}week {week} reserve-production change: {delta:+.2f} points; not an injury forecast or a second starting lineup.")
++        else:
++            lines.append(f'Week {week} full reserve change is unknown; partial subtotals are not a before/after replacement comparison.')
++        reasons = dict.fromkeys(pre['reasons'] + post['reasons'])
++        for reason in reasons:
++            phase = 'Before and after' if reason in pre['reasons'] and reason in post['reasons'] else 'Before trade' if reason in pre['reasons'] else 'After trade'
++            lines.append(f'Week {week} · {phase}: {reason}')
++    if len(weeks) > 1:
++        lines.append('Other weekly reserve effects and coverage gaps are listed separately in Before and after · both optimal lineups.')
++    return lines
+diff --git a/src/core/intelligence/team_strength.py b/src/core/intelligence/team_strength.py
+index 06230a2..ba4df2f 100644
+--- a/src/core/intelligence/team_strength.py
++++ b/src/core/intelligence/team_strength.py
+@@ -13,11 +13,11 @@ from decimal import Decimal
+ from typing import Any
+ from time import perf_counter
+ 
+-from src.core.trade_intelligence.lineup import optimal_legal_lineup
++from src.core.trade_intelligence.lineup import _eligible, eligible_positions, optimal_legal_lineup
+ from src.core.projection_intelligence.service import UNAVAILABLE_PLAYER_STATUSES, projection_row_compatible
+ from src.core.projection_intelligence.sleeper_provider import freshness_state
+ 
+-METHOD_VERSION = 'weekly-optimal-horizons-v4-source-eligibility'
++METHOD_VERSION = 'weekly-optimal-horizons-v5-reserve-slot-eligibility'
+ 
+ 
+ def restore_cached_week_keys(data: dict[str, Any]) -> None:
+@@ -178,9 +178,17 @@ def prepare_team_strength(service: Any, *, league_id: str, season: int, current_
+                         for player in pool if player['id'] not in selected]
+             reserve_lineup = solve(reserves, roster_positions, week=week)
+             optimization_seconds += perf_counter() - optimization_started
++            def relevant(player):
++                positions = eligible_positions(player)
++                # Unknown eligibility remains unresolved. Only a known player
++                # with no legal starting slot is irrelevant to replacement cover.
++                return not positions or any(_eligible(position, slot)
++                    for position in positions for slot in roster_positions)
++
+             usable = [player for player in reserves if player['lineup_eligible']
+-                      and player.get('bye_week') != week]
+-            missing = sorted(set(lineup.missing_player_ids) | set(reserve_lineup.missing_player_ids))
++                      and player.get('bye_week') != week and relevant(player)]
++            relevant_ids = {player['id'] for player in pool if relevant(player)}
++            missing = sorted((set(lineup.missing_player_ids) | set(reserve_lineup.missing_player_ids)) & relevant_ids)
+             unknown_positions = any(not player['position'] for player in usable)
+             unsupported_starters = any(str(rows.get(pid, {}).get('availability') or '').casefold()
+                                        in UNAVAILABLE_PLAYER_STATUSES for pid in selected)
+diff --git a/tests/test_trade_lineup_detail_browser.py b/tests/test_trade_lineup_detail_browser.py
+index 03c3c2b..262497f 100644
+--- a/tests/test_trade_lineup_detail_browser.py
++++ b/tests/test_trade_lineup_detail_browser.py
+@@ -55,6 +55,12 @@ class TradeLineupDetailBrowserTests(unittest.TestCase):
+         helper.data['market_data'] = {'providers': {'FantasyCalc': {
+             pid: {'value': 3000, 'confidence': 90} for pid, p in helper.data['players'].items()
+             if p['position'] not in {'K', 'DEF'}}}}
++        # Keep supported starter totals and the partner's reserve effect, while
++        # a genuine active bench projection gap qualifies only the owner's cover.
++        bench = {'id': '1-unknown', 'name': 'Uncovered bench receiver', 'position': 'WR',
++                 'fantasy_positions': ['WR'], 'status': 'Active'}
++        helper.data['players'][bench['id']] = bench.copy()
++        helper.data['teams'][0]['players'].append(bench.copy())
+         helper.f.reader.publish_horizon({8: source.feed}, data=helper.data,
+                                        league_id='league-1', season=2026, current_week=8)
+         with patch('services.global_evidence.retained_global_evidence', return_value=None):
+@@ -71,6 +77,11 @@ class TradeLineupDetailBrowserTests(unittest.TestCase):
+                 disclosure = page.locator('#trade-result .tw-lineup-details').first
+                 summary = disclosure.locator('summary').first
+                 summary.wait_for()
++                card = page.locator('#trade-result')
++                self.assertIn('10.00 points (known subtotal only', card.inner_text())
++                self.assertIn('Uncovered bench receiver: no numerical projection', card.inner_text())
++                self.assertIn('week 8 reserve-production change: +10.00', card.inner_text())
++                self.assertNotRegex(card.inner_text().lower(), r'\b(?:beta|prerelease|pre-release)\b')
+                 count = len(helper.requests)
+                 summary.scroll_into_view_if_needed()
+                 summary.focus()
+@@ -100,6 +111,8 @@ class TradeLineupDetailBrowserTests(unittest.TestCase):
+                     self.assertFalse(disclosure.evaluate('e=>e.open'))
+                     summary.press('Enter')
+                 self.assertIn('not your submitted Sleeper starters', disclosure.inner_text())
++                self.assertIn('Reserve known subtotal only: 10 points', disclosure.inner_text())
++                self.assertIn('not a second required starting lineup', disclosure.inner_text())
+                 record = dict(width=width, height=height, keyboard=True, touch=width < 500,
+                               no_overflow=True, extra_disclosure_requests=len(helper.requests) - count,
+                               summary_height=targets['height'], slots=first_week.inner_text())
+diff --git a/tests/test_trade_reserve_evidence.py b/tests/test_trade_reserve_evidence.py
+new file mode 100644
+index 0000000..fbc6118
+--- /dev/null
++++ b/tests/test_trade_reserve_evidence.py
+@@ -0,0 +1,218 @@
++"""Prepared publication -> independent optimized phases -> visible reserve facts."""
++from copy import deepcopy
++from datetime import datetime, timedelta, timezone
++import json
++import unittest
++from unittest.mock import patch
++
++from services.trade_decision import decision_context
++from services.trade_explanation import render_trade_explanation
++from services.trade_lineup_detail import lineup_detail_view, render_lineup_details
++from tests import test_trade_lineup_detail as fixtures
++from tests import test_reserve_quality as reserve_fixtures
++
++
++class TradeReserveEvidenceTests(unittest.TestCase):
++    def setUp(self):
++        self.f = fixtures.TradeLineupDetailTests()
++        self.f.setUp()
++        self.addCleanup(self.f.doCleanups)
++
++    def missing_bench(self):
++        p = {'id': '1-unknown', 'name': 'Uncovered bench receiver', 'position': 'WR',
++             'fantasy_positions': ['WR'], 'status': 'Active'}
++        self.f.data['players'][p['id']] = p
++        self.f.data['teams'][0]['players'].append(p.copy())
++        self.f.f.publish()
++
++    def phase(self, e, side='active', phase='pre', week=8):
++        return lineup_detail_view(e)['sides'][side][week]['phases'][phase]['reserve_evidence']
++
++    def test_partial_subtotal_and_independent_partner_effect_reach_primary_summary(self):
++        self.missing_bench()
++        e = self.f.evaluate()
++        view = decision_context(e)
++        self.assertIn('10.00 points (known subtotal only, 1 covered reserve slots)', view['your_side_summary'])
++        self.assertIn('Uncovered bench receiver: no numerical projection', view['your_side_summary'])
++        self.assertIn('full reserve change is unknown', view['your_side_summary'])
++        self.assertIn('before 10.00 points (supported', view['their_side_summary'])
++        self.assertIn('after 20.00 points (supported', view['their_side_summary'])
++        self.assertIn('week 8 reserve-production change: +10.00', view['their_side_summary'])
++        self.assertNotIn('week 8 reserve-production change:', view['your_side_summary'])
++        self.assertEqual(self.phase(e)['known_subtotal'], 10)
++        self.assertIsNone(self.phase(e)['points'])
++        self.assertIn('known subtotal only', e['explanation_html'])
++
++    def test_missing_projection_and_verified_zero_are_distinct(self):
++        self.f.f.feed = [r for r in self.f.f.feed if r['player_id'] != '1-0']
++        self.f.f.publish()
++        missing = self.f.evaluate()
++        self.assertIsNone(self.phase(missing)['points'])
++        self.assertIn('Example 1-0: no numerical projection', ' '.join(self.phase(missing)['reasons']))
++        self.assertNotIn('0.00 points (supported', decision_context(missing)['your_side_summary'])
++        self.f.f.feed.append({'player_id': '1-0', 'season': 2026, 'week': 8,
++            'player': {'position': 'QB', 'fantasy_positions': ['QB']}, 'stats': {'pass_yd': 0}})
++        self.f.f.publish()
++        zero = self.f.evaluate()
++        self.assertEqual(self.phase(zero)['points'], 0)
++        self.assertIn('0.00 points (supported', decision_context(zero)['your_side_summary'])
++
++    def test_supported_empty_pool_is_zero_without_inventing_a_second_lineup(self):
++        self.f.data['teams'][0]['players'] = [p for p in self.f.data['teams'][0]['players'] if p['id'] != '1-0']
++        self.f.f.publish()
++        e = self.f.evaluate()
++        phase = self.phase(e)
++        self.assertEqual((phase['points'], phase['candidate_count'], phase['supported_slots']), (0, 0, 0))
++        self.assertEqual(phase['state'], 'supported')
++        self.assertIn('not a second required starting lineup', render_lineup_details(e))
++
++    def test_wrong_reserve_snapshot_withholds_only_affected_phase(self):
++        e = self.f.evaluate()
++        e['multi_horizon_impact']['sides']['active']['weekly'][8]['pre']['reserve_capacity']['qualification']['projection_snapshot_id'] = 'foreign'
++        self.assertIsNone(self.phase(e)['known_subtotal'])
++        self.assertEqual(self.phase(e, phase='post')['state'], 'supported')
++        self.assertEqual(self.phase(e, side='partner')['state'], 'supported')
++        summary = decision_context(e)['your_side_summary']
++        self.assertIn('before unknown; after 10.00 points', summary)
++        self.assertNotIn('week 8 reserve-production change:', summary)
++
++    def test_wrong_generation_scoring_and_owner_never_publish_reserve_numbers(self):
++        for kind in ('projection_generation', 'scoring_profile_id', 'ownership'):
++            with self.subTest(kind=kind):
++                e = self.f.evaluate()
++                if kind == 'ownership':
++                    e['lineup_detail_context']['rosters']['active']['pre'].remove('1-0')
++                else:
++                    e['lineup_detail_context'][kind] = 'foreign'
++                self.assertIsNone(self.phase(e)['known_subtotal'])
++                self.assertEqual(self.phase(e)['state'], 'unavailable')
++
++    def test_out_and_ir_are_not_usable_missing_reserves(self):
++        for status in ('Out', 'IR'):
++            with self.subTest(status=status):
++                self.f.data['players']['1-0']['status'] = status
++                self.f.data['teams'][0]['players'][0]['status'] = status
++                self.f.f.feed = [r for r in self.f.f.feed if r['player_id'] != '1-0']
++                self.f.f.publish()
++                e = self.f.evaluate()
++                self.assertEqual(self.phase(e)['points'], 0)
++                self.assertEqual(self.phase(e)['missing_player_count'], 0)
++                self.assertIn('Excluded from usable cover', render_lineup_details(e))
++
++    def test_superflex_reserves_use_its_own_slots_and_scoring(self):
++        self.f.f.test_superflex_without_dedicated_te_preserves_legal_scoring()
++        e = self.f.evaluate()
++        view = lineup_detail_view(e)
++        for side in ('active', 'partner'):
++            for phase in ('pre', 'post'):
++                p = view['sides'][side][8]['phases'][phase]
++                self.assertEqual(p['reserve_evidence']['state'], 'supported')
++                self.assertAlmostEqual(sum(r['projected_points'] for r in p['reserves']), p['reserve_evidence']['points'])
++                self.assertIn('SUPER_FLEX', [r['slot'] for r in p['entries']])
++                self.assertNotIn('TE', [r['slot'] for r in p['entries']])
++                self.assertEqual(p['reserve_evidence']['points'], 0)
++
++    def test_missing_irrelevant_k_def_projections_do_not_hide_proven_empty_superflex_cover(self):
++        self.f.f.test_superflex_without_dedicated_te_preserves_legal_scoring()
++        self.f.f.feed = [r for r in self.f.f.feed if r['player_id'] not in {'1-8', '1-9'}]
++        self.f.f.publish()
++        e = self.f.evaluate()
++        self.assertEqual(self.phase(e)['points'], 0)
++        self.assertEqual(self.phase(e)['candidate_count'], 0)
++        self.assertEqual(self.phase(e)['missing_player_count'], 0)
++        self.assertIn('No eligible starting slot', render_lineup_details(e))
++
++    def test_unknown_eligibility_is_not_removed_to_make_cover_appear_complete(self):
++        self.missing_bench()
++        self.f.data['players']['1-unknown'].update(position=None, fantasy_positions=[])
++        self.f.data['teams'][0]['players'][-1].update(position=None, fantasy_positions=[])
++        self.f.f.publish()
++        e = self.f.evaluate()
++        self.assertIsNone(self.phase(e)['points'])
++        self.assertNotEqual(self.phase(e)['state'], 'supported')
++
++    def test_missing_starter_preserves_known_cover_but_withholds_full_effect(self):
++        self.f.f.feed = [r for r in self.f.f.feed if r['player_id'] != '1-9']
++        self.f.f.publish()
++        e = self.f.evaluate()
++        reserve = self.phase(e)
++        self.assertEqual(reserve['known_subtotal'], 10)
++        self.assertIsNone(reserve['points'])
++        self.assertIn('starting lineup is incomplete', ' '.join(reserve['reasons']))
++        self.assertIn('full reserve change is unknown', decision_context(e)['your_side_summary'])
++        self.assertEqual(self.phase(e, side='partner')['state'], 'supported')
++
++    def test_missing_identity_is_never_replaced_with_another_player(self):
++        self.missing_bench()
++        e = self.f.evaluate()
++        e['lineup_detail_context']['identities']['1-unknown'] = None
++        html = render_trade_explanation(e, league_id='one-qb')
++        self.assertIn('Player identity not resolved: no numerical projection', html)
++        self.assertNotIn('1-unknown:', html)
++
++    def test_aging_retains_conditional_qualification(self):
++        e = self.f.evaluate()
++        old = (datetime.now(timezone.utc) - timedelta(days=7)).isoformat()
++        for phase in ('pre', 'post'):
++            q = e['multi_horizon_impact']['sides']['active']['weekly'][8][phase]['reserve_capacity']['qualification']
++            q.update(source_timestamps=[old], conclusion_state='current')
++        self.assertEqual(self.phase(e)['qualification'], 'provisional')
++        self.assertIn('Conditional week 8 reserve-production change', decision_context(e)['your_side_summary'])
++        self.assertIn('Original projection observations are not confirmed Fresh', render_lineup_details(e))
++
++    def test_later_week_missing_does_not_erase_current_reserves(self):
++        e = self.f.evaluate()
++        summary = decision_context(e)['their_side_summary']
++        self.assertIn('weeks 9, 10', summary)
++        self.assertIn('week 8 reserve-production change: +10.00', summary)
++        self.assertNotIn('week 9 reserve-production change:', summary)
++
++    def test_other_supported_week_retains_its_own_reserve_projection(self):
++        from src.core.intelligence.team_strength import prepare_for_data
++        other = deepcopy(self.f.f.feed)
++        for row in other:
++            row['week'] = 9
++            if row['player_id'] == '1-0':
++                row['stats']['pass_yd'] = 350
++        self.f.f.service.publish_horizon({8: self.f.f.feed, 9: other}, data=self.f.data,
++            league_id='one-qb', season=2026, current_week=8)
++        with patch('services.global_evidence.retained_global_evidence', return_value=None):
++            prepare_for_data(self.f.f.service, self.f.data)
++        e = self.f.evaluate()
++        self.assertEqual(self.phase(e, week=8)['points'], 10)
++        self.assertEqual(self.phase(e, week=9)['points'], 14)
++        self.assertIsNone(self.phase(e, week=10)['points'])
++        html = render_lineup_details(e)
++        self.assertIn('Reserve production: 14 points', html)
++        self.assertIn('Other weekly reserve effects', decision_context(e)['your_side_summary'])
++
++    def test_rendering_does_not_solve_refresh_acquire_or_mutate(self):
++        self.missing_bench()
++        e = self.f.evaluate()
++        before = deepcopy(e)
++        with patch('src.core.trade_intelligence.lineup.optimal_legal_lineup', side_effect=AssertionError('no solve')), \
++             patch('services.sleeper.sleeper_get', side_effect=AssertionError('no source work')):
++            html = render_trade_explanation(e, league_id='one-qb')
++            self.assertEqual(self.phase(e), self.phase(json.loads(json.dumps(e))))
++        self.assertIn('not your submitted Sleeper starters', html)
++        self.assertEqual(e, before)
++        self.assertEqual(self.f.data['teams'][0]['starters'], ['0'])
++
++    def test_real_qualified_consolidation_keeps_its_reserve_cost_and_verdict(self):
++        f = reserve_fixtures.ReserveQualityTests()
++        f.setUp()
++        self.addCleanup(f.doCleanups)
++        f.fixture.points.update(a=20, b=14, e=13, c=28, d=3, f=4)
++        f.fixture.prices(a=125, b=125, c=250)
++        f.fixture.publish()
++        for strategy in ('WIN NOW', 'RETOOL', 'REBUILD'):
++            with self.subTest(strategy=strategy):
++                e = f.evaluate(sent=('a', 'b'), received=('c',), strategy=strategy)
++                self.assertEqual(e['recommendation'], 'WORTH PURSUING')
++                self.assertEqual(e['lineup_impact']['active']['delta'], 8)
++                self.assertEqual(f.quality(e)['mean_weekly_delta'], -1)
++                self.assertIn('reserve-production change: -1.00', decision_context(e)['your_side_summary'])
++
++
++if __name__ == '__main__':
++    unittest.main()
