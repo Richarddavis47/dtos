@@ -162,6 +162,7 @@ def _historical_archive_row(row: dict[str, Any]) -> str:
         f'<td>{escape(row["type"].replace("_", " ").title())}<p>{escape(row.get("franchise_summary") or "Franchise identities unavailable")}</p></td>'
         f'<td>{escape(str(row["status"]))}</td><td>{consideration}{faab}'
         + (' · No completed movement established' if row.get('malformed_consideration') or str(row['status']).casefold() not in {'complete', 'completed'} else '')
+        + (' · Exact draft-pick identity incomplete' if row.get('incomplete_pick_identity') else '')
         + f'</td><td>{detail}</td></tr>'
     )
 

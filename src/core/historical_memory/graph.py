@@ -1023,11 +1023,13 @@ class HistoricalAssetGraph:
             malformed = any(payload.get(k) is not None and not isinstance(payload[k], dict) for k in ('adds', 'drops'))
             malformed |= any(payload.get(k) is not None and (not isinstance(payload[k], list)
                 or any(not isinstance(p, dict) for p in payload[k])) for k in ('draft_picks', 'waiver_budget'))
+            incomplete_pick = not malformed and any(future_pick_id(p, p.get('season')) is None
+                for p in payload.get('draft_picks') or [])
             result.append({
                 "schema_version": HISTORICAL_ASSET_GRAPH_SCHEMA_VERSION,
                 "transaction_id": canonical_transaction_id(self._source_league(row), transaction_id),
                 "sleeper_transaction_id": transaction_id,
-                "trade_dossier_url": f"/trades/history/{transaction_id}" if transaction_type == "trade" and not malformed and str(payload.get('status') or '').casefold() in COMPLETED_STATUSES else None,
+                "trade_dossier_url": f"/trades/history/{transaction_id}" if transaction_type == "trade" and not malformed and not incomplete_pick and str(payload.get('status') or '').casefold() in COMPLETED_STATUSES else None,
                 "season": row["season"], "week": row["week"],
                 "type": transaction_type, "status": payload.get("status") or "unknown",
                 "occurred_at": row.get("occurred_at"), "roster_ids": payload.get("roster_ids") or [],
@@ -1036,6 +1038,7 @@ class HistoricalAssetGraph:
                 "draft_picks": [p for p in payload.get('draft_picks') or [] if isinstance(p, dict)] if isinstance(payload.get('draft_picks'), list) else [],
                 "waiver_budget": [p for p in payload.get('waiver_budget') or [] if isinstance(p, dict)] if isinstance(payload.get('waiver_budget'), list) else [],
                 "malformed_consideration": malformed,
+                "incomplete_pick_identity": incomplete_pick,
                 "source": self._source(row), "raw": payload,
             })
         result.sort(key=lambda item: (item["season"], item["week"] or 0, item["occurred_at"] or "", item["transaction_id"]), reverse=True)

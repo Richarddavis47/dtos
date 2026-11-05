@@ -159,6 +159,11 @@ class FranchiseTimelineCoverageTests(unittest.TestCase):
         self.assertIn('Year unknown round 1', html)
         self.assertIn('Exact draft-pick identity is incomplete', html)
         self.assertNotIn('PICK-2024-R1-ORIG3', html)
+        archive = next(r for r in self.graph().transaction_archive() if r['sleeper_transaction_id'] == 'pick-year-unknown')
+        self.assertIsNone(archive['trade_dossier_url'])
+        ledger = self.client.get('/transactions?scope=all_history&season=2024').text
+        self.assertIn('Exact draft-pick identity incomplete', ledger)
+        self.assertNotIn('/trades/history/pick-year-unknown', ledger)
 
     def test_draft_selection_preserves_original_distinct_from_selecting_roster(self):
         facts = self.past()
