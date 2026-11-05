@@ -101,7 +101,9 @@ def franchise_timeline(graph, roster_id, *, page=1, per_page=25):
                     'from': identity(r['drops'][pid], year) if pid in r['drops'] else 'Free-agent pool / source not recorded',
                     'to': identity(r['adds'][pid], year) if pid in r['adds'] else 'Released / destination not recorded'})
             for pick in r['draft_picks']:
-                exact = future_pick_id(pick, year)
+                # A traded pick's year is independent of the event season.
+                # Unlike a draft selection, a missing pick year has no fallback.
+                exact = future_pick_id(pick, pick.get('season'))
                 row['assets'].append({'kind': 'pick', 'id': exact,
                     'label': f"{pick.get('season') or 'Year unknown'} round {pick.get('round') or 'unknown'} · original franchise: "
                              + (identity(pick.get('roster_id'), year) if pick.get('roster_id') is not None else 'not established'),
@@ -112,6 +114,10 @@ def franchise_timeline(graph, roster_id, *, page=1, per_page=25):
                 if isinstance(amount, (int, float)) and not isinstance(amount, bool) and isfinite(amount) and amount >= 0:
                     row['assets'].append({'kind': 'faab', 'id': None, 'label': f'{amount:g} FAAB',
                         'from': identity(transfer.get('sender'), year), 'to': identity(transfer.get('receiver'), year)})
+            if any(a['kind'] == 'pick' and a['id'] is None for a in row['assets']):
+                row['incomplete_pick_identity'] = True
+                row['reason'] = ((row['reason'] + ' ') if row['reason'] else '') + 'Exact draft-pick identity is incomplete; known movement fields remain visible, but no missing year, round or original franchise is inferred.'
+                row['detail_url'] = None
         (events if admitted else attempts).append(row)
 
     drafts = retained('draft_pick')
@@ -152,6 +158,8 @@ def franchise_timeline(graph, roster_id, *, page=1, per_page=25):
             summary.update(state='partial', reason='Source periods are acquired, but franchise identity/continuity, conflicting records or unsupported completed-status consideration prevents a complete franchise conclusion.')
         if summary['state'] == 'complete' and graph._partial_record_families & {'trade', 'transaction'}:
             summary.update(state='partial', reason='The bounded retained transaction view is truncated; no empty or complete franchise conclusion is inferred.')
+        if summary['state'] == 'complete' and any(r.get('incomplete_pick_identity') for r in rows):
+            summary.update(state='partial', reason='Source periods are acquired, but exact draft-pick identity is incomplete for a retained movement; known asset facts remain available.')
         seasons.append({**summary, 'season': year, 'source_league_id': context.get('source_league_id'),
             'source_generation': context.get('source_generation'), 'identity_observed': observed_identity,
             'prepared_current_fingerprint': context.get('prepared_current_fingerprint'),

@@ -141,6 +141,25 @@ class FranchiseTimelineCoverageTests(unittest.TestCase):
         self.assertIn('2029 round 1 · original franchise:', self.page())
         self.assertFalse([r for r in franchise_timeline(self.graph(), '3')['events'] if r['id'] == 'third-origin'])
 
+    def test_missing_traded_pick_year_never_uses_transaction_season(self):
+        row = self.trade('pick-year-unknown')
+        row['draft_picks'] = [{'round': 1, 'roster_id': 3, 'previous_owner_id': 2, 'owner_id': 1}]
+        facts = self.past()
+        facts['transactions']['0'] = [row]
+        self.f.publish(facts, season=2024)
+        view = franchise_timeline(self.graph(), '1')
+        event = next(r for r in view['events'] if r['id'] == 'pick-year-unknown')
+        self.assertTrue(event['completed'])
+        self.assertIsNone(next(a['id'] for a in event['assets'] if a['kind'] == 'pick'))
+        self.assertIsNone(event['detail_url'])
+        self.assertTrue(any(a['kind'] == 'player' for a in event['assets']))
+        season = next(s for s in view['seasons'] if s['season'] == 2024)
+        self.assertEqual(season['state'], 'partial')
+        html = self.page()
+        self.assertIn('Year unknown round 1', html)
+        self.assertIn('Exact draft-pick identity is incomplete', html)
+        self.assertNotIn('PICK-2024-R1-ORIG3', html)
+
     def test_draft_selection_preserves_original_distinct_from_selecting_roster(self):
         facts = self.past()
         facts['drafts'] = [{'draft_id': 'fixture-draft', 'league_id': facts['league']['league_id'], 'type': 'linear', 'status': 'complete'}]
