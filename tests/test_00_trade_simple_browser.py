@@ -1,5 +1,10 @@
 """Actual authenticated routes/APIs and current page chrome; canonical fixture sources only.
 
+Run this normal-capacity journey before accumulated full-suite fixture state.
+The browser, driver, and application still share the enforced 2 GiB container;
+actual admission and every workflow assertion remain active. Dedicated pressure,
+cancellation, and timeout controls run separately in the same mandatory suite.
+
 Responsive Chromium, not physical Safari. Discovery/evaluation/balance engines
 execute without mocking recommendations. External provider access is forbidden.
 """
