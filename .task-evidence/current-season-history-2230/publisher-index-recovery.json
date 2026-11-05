@@ -1,0 +1,22 @@
+{
+  "issue": "No-checkout worktree initially had an empty index; no source modification lost",
+  "correction": "Read baseline into index and reapply existing sparse patterns; all seven existing publisher payloads hash-identical",
+  "before": {
+    ".github/workflows/canonical-release-recovery.yml": "859832a882fe7dec37b66086ce44382fffd91ec2b0ec90bf31f35b5b8f1213dd",
+    ".github/release-plans/2230.json": "a1354580f3c25bdb0ec5e56ba53afc1cee2d14690fda506b3678ea1436e8f9ab",
+    ".github/release-plans/2230-prior.zip": "4558bc492342df70666c9c29f81ebc61bbc657c8f624c5bdc7c5c33f152b98e0",
+    ".github/release-plans/README.md": "5f607d590a3d7037a04412ae8dbe391f45a0d69c49039956240da806d67ddefe",
+    "tools/release/__init__.py": "3f875daf7b353bcd42b066e9580b0e792b23c74d3e67d90d051fc623f230cfb1",
+    "tools/release/publish.py": "bd0fa1eb0c5c30915202d626add537cd5b3ec7160f098ea7f20aa2ff0d02c298",
+    "tests/test_release_publisher.py": "9ee6feb2c331aa6a1572f185d59c9f6f2ef608a4106ce9ae894db6af73549bfd"
+  },
+  "after": {
+    ".github/workflows/canonical-release-recovery.yml": "859832a882fe7dec37b66086ce44382fffd91ec2b0ec90bf31f35b5b8f1213dd",
+    ".github/release-plans/2230.json": "a1354580f3c25bdb0ec5e56ba53afc1cee2d14690fda506b3678ea1436e8f9ab",
+    ".github/release-plans/2230-prior.zip": "4558bc492342df70666c9c29f81ebc61bbc657c8f624c5bdc7c5c33f152b98e0",
+    ".github/release-plans/README.md": "5f607d590a3d7037a04412ae8dbe391f45a0d69c49039956240da806d67ddefe",
+    "tools/release/__init__.py": "3f875daf7b353bcd42b066e9580b0e792b23c74d3e67d90d051fc623f230cfb1",
+    "tools/release/publish.py": "bd0fa1eb0c5c30915202d626add537cd5b3ec7160f098ea7f20aa2ff0d02c298",
+    "tests/test_release_publisher.py": "9ee6feb2c331aa6a1572f185d59c9f6f2ef608a4106ce9ae894db6af73549bfd"
+  }
+}

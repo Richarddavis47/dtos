@@ -1,0 +1,23 @@
+E701 Multiple statements on one line (colon)
+   --> tests/test_current_season_franchise_history.py:157:43
+    |
+155 |             calls.append(path)
+156 |             value = outcomes.get(int(path.rsplit('/',1)[-1]),[])
+157 |             if isinstance(value,Exception):raise value
+    |                                           ^
+158 |             return value
+159 |         buckets,meta = await acquire_previous_periods(self.data['league'],self.data['week'],[],
+    |
+
+E702 Multiple statements on one line (semicolon)
+   --> tests/test_current_season_franchise_history.py:199:43
+    |
+197 |         for key,value in [('league_id','other-league'),('season','2031')]:
+198 |             self.data = deepcopy(original)
+199 |             previous = deepcopy(self.data);previous['league'][key]=value
+    |                                           ^
+200 |             await self.prepare({2:RuntimeError('failed')},previous)
+201 |             self.assertNotIn('observed-trade',self.page())
+    |
+
+Found 2 errors.

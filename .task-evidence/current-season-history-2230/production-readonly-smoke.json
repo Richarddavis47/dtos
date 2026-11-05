@@ -1,0 +1,55 @@
+{
+  "observed_at": "2026-11-05T20:36:02.858181+00:00",
+  "production_ready": {
+    "status": "ready",
+    "version": "1.22.15",
+    "build": 2230,
+    "deployment": {
+      "branch": "main",
+      "commit": "3639a5f51270522c9f6a73971cb52226df343bef",
+      "deployed_at": "2026-11-05T20:34:52.121516+00:00"
+    },
+    "reason": "Application ready."
+  },
+  "reads": [
+    {
+      "path": "/health/live",
+      "status": 200,
+      "guest_read_only": true
+    },
+    {
+      "path": "/welcome",
+      "status": 200,
+      "guest_read_only": true
+    },
+    {
+      "path": "/account/sign-in",
+      "status": 200,
+      "guest_read_only": true
+    },
+    {
+      "path": "/api/my-dtos",
+      "status": 401,
+      "guest_read_only": true
+    },
+    {
+      "path": "/api/inspect/live/teams",
+      "status": 401,
+      "guest_read_only": true
+    },
+    {
+      "path": "/history",
+      "status": 303,
+      "guest_read_only": true,
+      "scope": "Authentication boundary only; no private timeline content or league hydration"
+    },
+    {
+      "path": "/history/team/2300000000000000001:franchise:1",
+      "status": 303,
+      "guest_read_only": true,
+      "scope": "Authentication boundary only; no private timeline content or league hydration"
+    }
+  ],
+  "customer_prerelease_wording_matches": [],
+  "scope": "Bounded public unauthenticated reads only. No authenticated league entry, search, synchronization, FOIS rebuild, account login or saved user-data mutation."
+}

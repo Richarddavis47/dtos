@@ -1,0 +1,15 @@
+# Exact-source validation commands
+
+Candidate bd456e40fc4ab9ef1925369f82f9b72ca45589ad; tree c251edcf8a6d2a35b157deb916a8cfb7869d6344; baseline769bf99ee719f5e353822cdbd75b9259c8fd5fe1/tree752cfe006296bcaf879472183d100fa9df940fbb.
+
+`python /workspace/2230-release/run-clean.py` invokes the unchanged canonical harness and `python -m tools.validation.validate_release` in the clean detached exact-source checkout. invocation.json contains the complete Docker command, UID1000, actual2GiB/no swap/2CPU/network-none and pinned Python3.14.3 runtime image. Canonical console, ten-gate trace, memory, source manifest and result are originals. The full regression console is also split at line boundaries into readable400kB files whose concatenation equals the original bytes.
+
+Focused exact-source command: `DTOS_EXPECTED_HEAD=bd456e40fc4ab9ef1925369f82f9b72ca45589ad DTOS_CURRENT_HISTORY_EVIDENCE=/evidence/current-history-browser python /workspace/2230-release/run-constrained.py -m unittest tests.test_current_season_franchise_history tests.test_current_season_history_browser tests.test_franchise_timeline_browser tests.test_franchise_timeline_coverage tests.test_historical_reader_recovery tests.test_league_entry_coordination tests.test_league_runtime tests.test_sleeper_history_publication tests.test_sleeper_history_source_boundary -v`. Consult focused-exact.log for the actual recorded117 executions; fixture labels and synthetic IDs are not live observations.
+
+Five-case preflight: `DTOS_RESOURCE_SOURCE=/workspace/current-season-history-candidate DTOS_EXPECTED_HEAD=bd456e40fc4ab9ef1925369f82f9b72ca45589ad python /workspace/2230-release/run-constrained.py -m tools.validation.restoration_preflight_gate --output /evidence/local-preflight`. This is metadata-only disposable HTTP, not Granite restoration or proof of live capacity.
+
+Publisher checks use the separate tooling source mounted read-only: `DTOS_RESOURCE_SOURCE=/workspace/dtos-publisher-2230 python /workspace/2230-release/run-constrained.py -m unittest tests.test_release_publisher -v`, plus `-m ruff check --no-cache tools/release tests/test_release_publisher.py`. No application formula or reserve is changed in that tooling branch.
+
+Matched baseline: run-baseline-control.py uses restoration-control.py against the actual baseline source tree, not a hand-recreated application. restoration-before-matched.log contains three original failures; restoration-after.log three corresponding passes. The earlier nonnumeric-ID probe, timestamp-placement failure and Playwright-loop fixture failure are separately retained and not passing final evidence. Later focused controls include actual source sync/save/evict/restore/route behavior; provider replies alone are disposable.
+
+Hosted source and checks are pinned in the release plan. The hosted Product step for current-season history runs in its own real2GiB container, preserving the normal entry path and all browser assertions; it is not conflated with the unconstrained host historical-timeline job. Existing ordinary-entry, memory, worker cancellation/cleanup, security, Windows and lifecycle checks remain required.

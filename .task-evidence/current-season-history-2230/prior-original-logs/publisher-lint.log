@@ -1,0 +1,465 @@
+I001 [*] Import block is un-sorted or un-formatted
+  --> tests/test_release_publisher.py:2:1
+   |
+ 1 |   """Fail-closed release admission and byte integrity, without remote mutations."""
+ 2 | / import copy
+ 3 | | import hashlib
+ 4 | | import json
+ 5 | | import os
+ 6 | | from pathlib import Path
+ 7 | | import tempfile
+ 8 | | import unittest
+ 9 | | from unittest.mock import patch
+10 | | import zipfile
+11 | |
+12 | | from tools.release import publish as p
+   | |______________________________________^
+help: Organize imports
+   |
+5  | import os
+   - from pathlib import Path
+6  | import tempfile
+7  | import unittest
+8  + import zipfile
+9  + from pathlib import Path
+10 | from unittest.mock import patch
+   - import zipfile
+11 |
+   |
+
+C408 Unnecessary `dict()` call (rewrite as a literal)
+  --> tests/test_release_publisher.py:20:21
+   |
+18 | …dCleanup(self.folder.cleanup)
+19 | …ot = Path(self.folder.name)
+20 | …an = dict(candidate='a' * 40, tree='b' * 40, canonical_entries=3, local_canonical_entries=3, canonical_tests=2, python_version='3.14.3')
+   |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+21 | …= dict(head=self.plan['candidate'], tree=self.plan['tree'], passed=True, exit_code=0,
+22 | …       cgroup_limit=2147483648, cpus=2, network='none', python='3.14.3 (fixture)',
+   |
+help: Rewrite as a literal
+
+C408 Unnecessary `dict()` call (rewrite as a literal)
+  --> tests/test_release_publisher.py:21:18
+   |
+19 |   …     self.root = Path(self.folder.name)
+20 |   …     self.plan = dict(candidate='a' * 40, tree='b' * 40, canonical_entries=3, local_canonical_entries=3, canonical_tests=2, python_…
+21 |   …     result = dict(head=self.plan['candidate'], tree=self.plan['tree'], passed=True, exit_code=0,
+   |  ________________^
+22 | | …                   cgroup_limit=2147483648, cpus=2, network='none', python='3.14.3 (fixture)',
+23 | | …                   final_memory={'cgroup_memory_events': {'oom_kill': 0}})
+   | |___________________________________________________________________________^
+24 |   …     events = [{'event': x} for x in ['start', 'stop', 'start', 'stop']]
+25 |   …     trace = [{'event': 'validation_child_completed', 'return_code': 0} for _ in range(10)]
+   |
+help: Rewrite as a literal
+
+C408 Unnecessary `dict()` call (rewrite as a literal)
+  --> tests/test_release_publisher.py:46:13
+   |
+44 |         files = copy.deepcopy(self.files)
+45 |         files['manifest.json'] = json.dumps([
+46 |             dict(name=n, bytes=len(b), sha256=hashlib.sha256(b).hexdigest())
+   |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+47 |             for n, b in files.items()
+48 |         ]).encode()
+   |
+help: Rewrite as a literal
+
+C408 Unnecessary `dict()` call (rewrite as a literal)
+  --> tests/test_release_publisher.py:76:25
+   |
+74 |               with self.subTest(mutation=mutation):
+75 |                   payload = b'Original failed attempt, not a passing gate.'
+76 |                   entry = dict(name='prior-local/failed.log', bytes=len(payload),
+   |  _________________________^
+77 | |                              sha256=hashlib.sha256(payload).hexdigest())
+   | |________________________________________________________________________^
+78 |                   meta = dict(candidate=self.plan['candidate'], tree=self.plan['tree'],
+79 |                               scope='prior-attempts-only', files=[entry])
+   |
+help: Rewrite as a literal
+
+C408 Unnecessary `dict()` call (rewrite as a literal)
+  --> tests/test_release_publisher.py:78:24
+   |
+76 |                   entry = dict(name='prior-local/failed.log', bytes=len(payload),
+77 |                                sha256=hashlib.sha256(payload).hexdigest())
+78 |                   meta = dict(candidate=self.plan['candidate'], tree=self.plan['tree'],
+   |  ________________________^
+79 | |                             scope='prior-attempts-only', files=[entry])
+   | |_______________________________________________________________________^
+80 |                   files = {entry['name']: payload}
+81 |                   if mutation == 'source':
+   |
+help: Rewrite as a literal
+
+B023 Function definition does not bind loop variable `field`
+   --> tests/test_release_publisher.py:111:28
+    |
+109 |                 def alter(files):
+110 |                     result = json.loads(files['result.json'])
+111 |                     result[field] = value
+    |                            ^^^^^
+112 |                     files['result.json'] = json.dumps(result).encode()
+113 |                 with self.assertRaises(RuntimeError):
+    |
+
+B023 Function definition does not bind loop variable `value`
+   --> tests/test_release_publisher.py:111:37
+    |
+109 |                 def alter(files):
+110 |                     result = json.loads(files['result.json'])
+111 |                     result[field] = value
+    |                                     ^^^^^
+112 |                     files['result.json'] = json.dumps(result).encode()
+113 |                 with self.assertRaises(RuntimeError):
+    |
+
+B023 Function definition does not bind loop variable `events`
+   --> tests/test_release_publisher.py:119:110
+    |
+117 |         for events in [[{'event': 'start'}], [{'event': 'failure'}], [{'event': 'skip'}]]:
+118 |             with self.subTest(events=events), self.assertRaises(RuntimeError):
+119 |                 p.verify_canonical(self.archive(lambda f: f.update({'tests.jsonl': '\n'.join(map(json.dumps, events)).encode()})), se…
+    |                                                                                                              ^^^^^^
+120 |
+121 |     def test_missing_gate_completion_fails(self):
+    |
+
+C408 Unnecessary `dict()` call (rewrite as a literal)
+   --> tests/test_release_publisher.py:200:36
+    |
+198 |     def setUp(self):
+199 |         self.expected = {'proof.json': (12, 'a' * 64)}
+200 |         self.release = {'assets': [dict(name='proof.json', state='uploaded', size=12, digest='sha256:' + 'a' * 64)]}
+    |                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+201 |
+202 |     def test_exact_readback_metadata(self):
+    |
+help: Rewrite as a literal
+
+C408 Unnecessary `dict()` call (rewrite as a literal)
+   --> tests/test_release_publisher.py:228:20
+    |
+226 |   …     self.publisher = 'c' * 40
+227 |   …     self.merge = 'd' * 40
+228 |   …     self.env = dict(GITHUB_ACTIONS='true', GITHUB_REPOSITORY=self.plan['repository'],
+    |  __________________^
+229 | | …                     GITHUB_EVENT_NAME='workflow_dispatch', GITHUB_ACTOR=self.plan['actor'],
+230 | | …                     GITHUB_REF=self.plan['publisher_ref'], GITHUB_SHA=self.publisher, GITHUB_RUN_ID='99')
+    | |___________________________________________________________________________________________________________^
+231 |   …     self.pr = dict(base={'ref': 'main', 'repo': {'full_name': self.plan['repository']}},
+232 |   …                    head={'repo': {'full_name': self.plan['repository']}, 'sha': self.plan['candidate'], 'ref': self.plan['source_…
+    |
+help: Rewrite as a literal
+
+C408 Unnecessary `dict()` call (rewrite as a literal)
+   --> tests/test_release_publisher.py:231:19
+    |
+229 |   …                     GITHUB_EVENT_NAME='workflow_dispatch', GITHUB_ACTOR=self.plan['actor'],
+230 |   …                     GITHUB_REF=self.plan['publisher_ref'], GITHUB_SHA=self.publisher, GITHUB_RUN_ID='99')
+231 |   …     self.pr = dict(base={'ref': 'main', 'repo': {'full_name': self.plan['repository']}},
+    |  _________________^
+232 | | …                    head={'repo': {'full_name': self.plan['repository']}, 'sha': self.plan['candidate'], 'ref': self.plan['source_…
+233 | | …                    state='open', merged=False, merged_at=None, merge_commit_sha=None)
+    | |_______________________________________________________________________________________^
+234 |   …     self.current_main = self.plan['baseline']
+235 |   …     self.tree = self.plan['tree']
+    |
+help: Rewrite as a literal
+
+C408 Unnecessary `dict()` call (rewrite as a literal)
+   --> tests/test_release_publisher.py:321:24
+    |
+319 | …= json.loads(Path('.github/release-plans/2230.json').read_text())
+320 | …'runs'] = [run | {'id':100000+index*1000} for index,run in enumerate(self.plan['runs'])]
+321 | …s = [dict(name=name, head_sha=self.plan['candidate'], status='completed', conclusion='success', app={'slug': 'github-actions'})
+    |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+322 | …     for run in self.plan['runs'] for name in run['jobs']]
+323 | …ource = False
+    |
+help: Rewrite as a literal
+
+C408 Unnecessary `dict()` call (rewrite as a literal)
+   --> tests/test_release_publisher.py:330:30
+    |
+328 | …     run = next(x for x in self.plan['runs'] if str(x['id']) in path)
+329 | …     if '/jobs?' in path:
+330 | …         return {'jobs': [dict(name=n, status='completed', conclusion='success', id=i + run['id']) for i, n in enumerate(run['jobs']…
+    |                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+331 | …     return dict(head_sha='wrong' if self.bad_source else self.plan['candidate'], head_repository={'full_name': self.plan['repositor…
+332 | …                 event='pull_request', path=run['path'], name=run['name'], status='completed', conclusion='success')
+    |
+help: Rewrite as a literal
+
+C408 Unnecessary `dict()` call (rewrite as a literal)
+   --> tests/test_release_publisher.py:331:16
+    |
+329 |           if '/jobs?' in path:
+330 |               return {'jobs': [dict(name=n, status='completed', conclusion='success', id=i + run['id']) for i, n in enumerate(run['jo…
+331 |           return dict(head_sha='wrong' if self.bad_source else self.plan['candidate'], head_repository={'full_name': self.plan['repos…
+    |  ________________^
+332 | |                     event='pull_request', path=run['path'], name=run['name'], status='completed', conclusion='success')
+    | |_______________________________________________________________________________________________________________________^
+333 |
+334 |       def test_exact_twelve_jobs_are_required(self):
+    |
+help: Rewrite as a literal
+
+C408 Unnecessary `dict()` call (rewrite as a literal)
+   --> tests/test_release_publisher.py:369:17
+    |
+367 |       def test_exact_source_and_complete_real_work_are_required(self):
+368 |           plan = {'candidate': 'a'*40, 'tree': 'b'*40}
+369 |           valid = dict(head=plan['candidate'], tree=plan['tree'], passed=True, complete=True,
+    |  _________________^
+370 | |             kernel_peak=2_000_000_000, working_tree_clean=True, cleanup={'harness_scratch_exists_after': False, 'trade_lease_availa…
+371 | |             operations=[{'full_evaluations': 180, 'business_digest': 'same'}]*2,
+372 | |             actual_cancel={'evaluations_started': 1},
+373 | |             file_cache_recovery={'completed_evaluations': 180, 'content_still_valid': True},
+374 | |             states=[{'cgroup_limit_bytes': 2147483648, 'cgroup_memory_events': {'oom':0, 'oom_kill':0}}],
+375 | |             liveness=[{'milliseconds': 20, 'server_duration_ms': 20, 'client_elapsed_ms': 30}])
+    | |_______________________________________________________________________________________________^
+376 |           with tempfile.TemporaryDirectory() as tmp:
+377 |               path = Path(tmp)/'trade.zip'
+    |
+help: Rewrite as a literal
+
+C408 Unnecessary `dict()` call (rewrite as a literal)
+   --> tests/test_release_publisher.py:404:17
+    |
+402 |                     'unsafe_pressure','active_fois_outstanding_reserve','same_pressure_after_fois_release',
+403 |                     'pressure_relieved','recovered_restore','cleanup']
+404 |           valid = dict(head=plan['candidate'],tree=plan['tree'],passed=True,complete=True,working_tree_clean=True,
+    |  _________________^
+405 | |             warm_cold_saved_http='passed', one_qb_k_def_http_evaluation='passed',pressure_deferred=True,
+406 | |             recovery_completed=True,worker_reaped=True,cgroup_lifetime_peak=2_000_000_000,
+407 | |             active_fois_commitment_deferred=True,after_fois_release_same_pressure_completed=True,
+408 | |             samples=[dict(label=n,cgroup_limit_bytes=2147483648,cgroup_current_bytes=1_000_000_000,
+409 | |                           cgroup_memory_events={'oom':0,'oom_kill':0}) for n in labels],
+410 | |             liveness=[{'server_ms':20,'client_ms':30}]*5)
+    | |_________________________________________________________^
+411 |           with tempfile.TemporaryDirectory() as folder:
+412 |               target = Path(folder)/'entry.zip'
+    |
+help: Rewrite as a literal
+
+C408 Unnecessary `dict()` call (rewrite as a literal)
+   --> tests/test_release_publisher.py:408:22
+    |
+406 |               recovery_completed=True,worker_reaped=True,cgroup_lifetime_peak=2_000_000_000,
+407 |               active_fois_commitment_deferred=True,after_fois_release_same_pressure_completed=True,
+408 |               samples=[dict(label=n,cgroup_limit_bytes=2147483648,cgroup_current_bytes=1_000_000_000,
+    |  ______________________^
+409 | |                           cgroup_memory_events={'oom':0,'oom_kill':0}) for n in labels],
+    | |______________________________________________________________________^
+410 |               liveness=[{'server_ms':20,'client_ms':30}]*5)
+411 |           with tempfile.TemporaryDirectory() as folder:
+    |
+help: Rewrite as a literal
+
+C408 Unnecessary `dict()` call (rewrite as a literal)
+   --> tests/test_release_publisher.py:434:23
+    |
+432 |           self.target = Path(self.folder.name) / 'preflight.zip'
+433 |           self.plan = {'candidate': 'a' * 40, 'tree': 'b' * 40}
+434 |           self.result = dict(head=self.plan['candidate'], tree=self.plan['tree'], passed=True, complete=True,
+    |  _______________________^
+435 | |             enforced_limit=2147483648, swap_limit=0, kernel_peak_bytes=2000000000,
+436 | |             scratch_removed=True, children_after=[], runtime_population_unchanged=True,
+437 | |             no_private_payload_decoded=True, guarded_operation_calls=[0] * 5,
+438 | |             final_memory={'cgroup_limit_bytes':2147483648, 'cgroup_memory_events':{'oom':0,'oom_kill':0}},
+439 | |             cases=[], liveness=[])
+    | |__________________________________^
+440 |           for name, verdict, reserved, raw_mib, padding in (
+441 |               ('healthy', 'would_admit', False, 900, 0),
+    |
+help: Rewrite as a literal
+
+C408 Unnecessary `dict()` call (rewrite as a literal)
+   --> tests/test_release_publisher.py:449:24
+    |
+447 |               working = 16 * 23048708
+448 |               safety, fois = (256 * 1024**2, 512 * 1024**2) if reserved else (128 * 1024**2, 0)
+449 |               response = dict(verdict=verdict, reason='sufficient_headroom' if verdict == 'would_admit' else 'insufficient_headroom',
+    |  ________________________^
+450 | |                 advisory_only=True, non_atomic=True, recheck_required=True,
+451 | |                 assessment_scope='saved_cache_resource_and_coordination_admission_only',
+452 | |                 process={'pid':123,'lifecycle_scope':'serving_process_only','other_worker_idleness':'not_established'},
+453 | |                 cache={'size_bytes':23048708,'generation_pinned':True,'path_matches_pinned_generation_at_end':True,
+454 | |                        'payload_readability':'not_checked','content_compatibility':'not_evaluated'},
+455 | |                 lifecycle={'available':True,'cache_lease_conflict':False,'heavy_work':{'fois_generation':reserved}},
+456 | |                 memory={'scope':'shared_container','cgroup_limit_bytes':2147483648,'cgroup_current_bytes':raw_mib*1024**2,
+457 | |                         'memory_events':{'oom':0,'oom_kill':0}},
+458 | |                 capacity={'telemetry_valid':True,'working_bytes':working,'safety_bytes':safety,'fois_working_bytes':fois,
+459 | |                           'required_bytes':working+safety+fois,'effective_limit_bytes':2147483648,
+460 | |                           'headroom_bytes':2147483648-raw_mib*1024**2,'would_admit':verdict=='would_admit'})
+    | |____________________________________________________________________________________________________________^
+461 |               self.result['cases'].append({'name':name,'response':response,'harness_padding_bytes':padding})
+462 |               self.result['liveness'].append({'case':name,'server_ms':10,'client_ms':15})
+    |
+help: Rewrite as a literal
+
+C408 Unnecessary `dict()` call (rewrite as a literal)
+   --> tests/test_release_publisher.py:530:16
+    |
+528 | class CurrentHistoryArtifactTests(unittest.TestCase):
+529 |     def test_only_complete_exact_source_browser_evidence_is_accepted(self):
+530 |         plan = dict(candidate='a' * 40, tree='b' * 40)
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+531 |         rows = [dict(league_control=league, width=w, height=h,
+532 |                      retrieved=[1, 2, 3, 5, 6, 7, 8], failed=[4], keyboard=True,
+    |
+help: Rewrite as a literal
+
+C408 Unnecessary `dict()` call (rewrite as a literal)
+   --> tests/test_release_publisher.py:531:17
+    |
+529 |       def test_only_complete_exact_source_browser_evidence_is_accepted(self):
+530 |           plan = dict(candidate='a' * 40, tree='b' * 40)
+531 |           rows = [dict(league_control=league, width=w, height=h,
+    |  _________________^
+532 | |                      retrieved=[1, 2, 3, 5, 6, 7, 8], failed=[4], keyboard=True,
+533 | |                      touch_emulated=w < 1000, overflow=False, extra_disclosure_requests=0)
+    | |__________________________________________________________________________________________^
+534 |                   for league in ('Granite-shaped', 'Day-shaped', 'Arkham-shaped')
+535 |                   for w, h in ((320, 432), (375, 667), (390, 844), (1280, 900))]
+    |
+help: Rewrite as a literal
+
+C408 Unnecessary `dict()` call (rewrite as a literal)
+   --> tests/test_release_publisher.py:536:18
+    |
+534 |                 for league in ('Granite-shaped', 'Day-shaped', 'Arkham-shaped')
+535 |                 for w, h in ((320, 432), (375, 667), (390, 844), (1280, 900))]
+536 |         report = dict(head=plan['candidate'], tree=plan['tree'], working_tree_clean=True, records=rows)
+    |                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+537 |         with tempfile.TemporaryDirectory() as folder:
+538 |             path = Path(folder) / 'current-history.zip'
+    |
+help: Rewrite as a literal
+
+C408 Unnecessary `dict()` call (rewrite as a literal)
+   --> tests/test_release_publisher.py:573:24
+    |
+571 |           with self.assertRaisesRegex(RuntimeError,'not finalized'):
+572 |               p.verify_plan(plan | {'finalized':False})
+573 |           ready = plan | dict(finalized=True,draft_id=1,canonical_tests=2,canonical_entries=3,
+    |  ________________________^
+574 | |             local_canonical_entries=3,product_tests=4,recovery_sha256='a'*64,prior_evidence_sha256='b'*64,
+575 | |             runs=[run | {'id':index+1} for index,run in enumerate(plan['runs'])],
+576 | |             artifacts=[{'file':n} for n in ('canonical-original.zip','preflight-original.zip',
+577 | |                 'trade-resource-original.zip','league-entry-original.zip','current-history-original.zip','lifecycle-ordinary.zip',
+578 | |                 'lifecycle-archive-warmed.zip','lifecycle-combined-read.zip')])
+    | |_______________________________________________________________________________^
+579 |           p.verify_plan(ready)
+580 |           for field in ('draft_id','canonical_tests','canonical_entries','local_canonical_entries','product_tests'):
+    |
+help: Rewrite as a literal
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> tools/release/publish.py:2:1
+   |
+ 1 |   """Two-phase Actions publisher. Never merges PRs or updates a branch ref."""
+ 2 | / from __future__ import annotations
+ 3 | |
+ 4 | | import argparse
+ 5 | | import ast
+ 6 | | from collections import Counter
+ 7 | | import hashlib
+ 8 | | import json
+ 9 | | import os
+10 | | from pathlib import Path, PurePosixPath
+11 | | import re
+12 | | import shutil
+13 | | import subprocess
+14 | | import tempfile
+15 | | import urllib.error
+16 | | import urllib.request
+17 | | import zipfile
+   | |______________^
+18 |
+19 |   ALLOWED_PATHS = {
+   |
+help: Organize imports
+   |
+5  | import ast
+   - from collections import Counter
+6  | import hashlib
+7  | import json
+8  | import os
+   - from pathlib import Path, PurePosixPath
+9  | import re
+--------------------------------------------------------------------------------
+15 | import zipfile
+16 + from collections import Counter
+17 + from pathlib import Path, PurePosixPath
+18 |
+   |
+
+C408 Unnecessary `dict()` call (rewrite as a literal)
+   --> tools/release/publish.py:470:44
+    |
+468 |           prior.append({key: run[key] for key in ('id', 'name', 'head_sha', 'status', 'conclusion', 'html_url')})
+469 |       write_json(assets / 'prior-attempts.json', prior)
+470 |       write_json(assets / 'VALIDATION.json', dict(candidate=plan['candidate'], tree=plan['tree'], version=plan['version'], build=plan['build'],
+    |  ____________________________________________^
+471 | |         canonical=canonical, local_canonical=local_canonical, local_preflight=local_preflight_result, required_jobs=records, product_test_executions=sum(counts), original_artifacts=plan['artifacts'],
+472 | |         recovery_sha256=plan['recovery_sha256'], prior_evidence_sha256=plan['prior_evidence_sha256'], limitations='Current-season acquisition, cache restoration, owned eviction/reopening and rendered history are verified with disposable source-compatible fixtures, including Granite-shaped one-QB K/DEF and Day/Arkham-shaped Superflex controls. They do not prove which weekly payloads were retained in the earlier live Granite observation. Private authenticated live history remains unverified because this session lacks the owner browser/Render Shell path; no failed external Cloud inspection request was repeated. Legacy unknown acquisition dates and unacquired periods remain unknown. Physical Safari is untested. No production sync, FOIS rebuild, Trade search or preference mutation is performed. The existing preflight is advisory and non-atomic. All original failed attempts remain attached separately.'))
+    | |______________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________^
+473 |       files = [{'name': p.name, 'bytes': p.stat().st_size, 'sha256': digest(p)} for p in sorted(assets.iterdir()) if p.is_file()]
+474 |       require(sum(x['bytes'] for x in files) < 512 * 1024**2, 'Unexpected attachment population size')
+    |
+help: Rewrite as a literal
+
+C408 Unnecessary `dict()` call (rewrite as a literal)
+   --> tools/release/publish.py:475:51
+    |
+473 |     files = [{'name': p.name, 'bytes': p.stat().st_size, 'sha256': digest(p)} for p in sorted(assets.iterdir()) if p.is_file()]
+474 |     require(sum(x['bytes'] for x in files) < 512 * 1024**2, 'Unexpected attachment population size')
+475 |     write_json(assets / 'evidence-manifest.json', dict(candidate=plan['candidate'], tree=plan['tree'], files=files))
+    |                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+476 |     files.append({'name': 'evidence-manifest.json', 'bytes': (assets / 'evidence-manifest.json').stat().st_size, 'sha256': digest(ass…
+477 |     (assets / 'SHA256SUMS').write_text(''.join(x['sha256'] + '  ' + x['name'] + '\n' for x in files))
+    |
+help: Rewrite as a literal
+
+PLW1510 `subprocess.run` without explicit `check` argument
+   --> tools/release/publish.py:565:18
+    |
+563 |             require(release['draft'] and release['target_commitish'] == main, 'Draft target was not updated to approved merge')
+564 |         tag_ref_path = repo + '/git/ref/tags/v' + plan['version']
+565 |         lookup = subprocess.run(['gh', 'api', tag_ref_path], capture_output=True, text=True)
+    |                  ^^^^^^^^^^^^^^
+566 |         if lookup.returncode:
+567 |             require('HTTP 404' in lookup.stderr, 'Tag lookup failed; not confirmed absent')
+    |
+help: Add explicit `check=False`
+
+C408 Unnecessary `dict()` call (rewrite as a literal)
+   --> tools/release/publish.py:585:43
+    |
+583 |           verify_remote_bytes(plan, root, expected)
+584 |           verify_production(plan, main, root)
+585 |       write_json(root / 'publication.json', dict(operation=operation, publisher=os.environ['GITHUB_SHA'], candidate=plan['candidate']…
+    |  ___________________________________________^
+586 | |         main=main, release_id=release['id'], draft=release['draft'], immutable=release.get('immutable'), url=release['html_url'],
+587 | |         attachments=[{'name': n, 'bytes': s, 'sha256': h} for n, (s, h) in sorted(expected.items())]))
+    | |_____________________________________________________________________________________________________^
+help: Rewrite as a literal
+
+C408 Unnecessary `dict()` call (rewrite as a literal)
+   --> tools/release/publish.py:648:15
+    |
+646 |     plan = json.loads(args.plan.read_text())
+647 |     args.output.mkdir(parents=True, exist_ok=True)
+648 |     outcome = dict(operation=args.operation, publisher=os.environ.get('GITHUB_SHA'), candidate=plan['candidate'], passed=False)
+    |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+649 |     try:
+650 |         verify_plan(plan)
+    |
+help: Rewrite as a literal
+
+Found 30 errors.
+[*] 2 fixable with the `--fix` option (24 hidden fixes can be enabled with the `--unsafe-fixes` option).

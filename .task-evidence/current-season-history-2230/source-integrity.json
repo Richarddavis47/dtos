@@ -1,0 +1,12 @@
+{
+  "baseline": "769bf99ee719f5e353822cdbd75b9259c8fd5fe1",
+  "baseline_tree": "752cfe006296bcaf879472183d100fa9df940fbb",
+  "candidate": "bd456e40fc4ab9ef1925369f82f9b72ca45589ad",
+  "tree": "c251edcf8a6d2a35b157deb916a8cfb7869d6344",
+  "branch": "fix/current-season-franchise-history",
+  "version": "1.22.15",
+  "build": 2230,
+  "patch_sha256": "f169b1698550bfbafa84a0b65a49ebcf7e2b0c44e40280ce1689fa45cf561734",
+  "candidate_clean": true,
+  "reviewed_files": ".github/workflows/product-browser.yml           |  14 +\n CHANGELOG.md                                    |   8 +\n RELEASE_NOTES.md                                |   8 +\n app_metadata.py                                 |   8 +-\n docs/audits/CURRENT_SEASON_HISTORY_2230.md      |  25 ++\n dtos_app.py                                     |   8 +-\n services/sleeper.py                             |  24 +-\n src/core/history_context/coverage.py            |  13 +-\n src/core/history_context/store.py               |  22 +-\n src/core/history_context/transaction_periods.py | 106 +++++++\n src/core/league_runtime/manager.py              |   5 +-\n src/ui/franchise_timeline.py                    |  14 +-\n tests/test_current_season_franchise_history.py  | 405 ++++++++++++++++++++++++\n tests/test_current_season_history_browser.py    | 119 +++++++\n 14 files changed, 756 insertions(+), 23 deletions(-)"
+}

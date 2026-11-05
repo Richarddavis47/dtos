@@ -1,0 +1,981 @@
+diff --git a/.github/workflows/product-browser.yml b/.github/workflows/product-browser.yml
+index 11642152..4e1f43dc 100644
+--- a/.github/workflows/product-browser.yml
++++ b/.github/workflows/product-browser.yml
+@@ -37,6 +37,20 @@ jobs:
+           docker run --rm --memory=2g --memory-swap=2g --cpus=2 --network=none -e NODE_OPTIONS -v "$PWD:$PWD" -w "$PWD" -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0="$PWD" dtos-browser-validation python -m unittest -v tests.test_historical_evidence_weeks tests.test_fois_final_trust
+ 
+ 
++      - name: Current-season source history lifecycle and phone routes
++        timeout-minutes: 5
++        run: |
++          mkdir -p .validation/current-season-history
++          docker run --rm --init --memory=2g --memory-swap=2g --cpus=2 --network=none -e NODE_OPTIONS -e DTOS_CURRENT_HISTORY_EVIDENCE=.validation/current-season-history -v "$PWD:$PWD" -w "$PWD" -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0="$PWD" dtos-browser-validation python -m unittest -v tests.test_current_season_franchise_history tests.test_current_season_history_browser
++      - name: Preserve current-season history evidence
++        if: always()
++        uses: actions/upload-artifact@v4
++        with:
++          name: current-season-history-browser
++          path: .validation/current-season-history
++          if-no-files-found: error
++          retention-days: 14
++
+       - name: Actual 2 GiB Trade admission execution and recovery
+         timeout-minutes: 8
+         env:
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index 9a7f2a1c..63146c56 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -1,3 +1,11 @@
++# v1.22.15 / build 2230 — Current-season franchise history
++
++Restored league publications and cached startup now register the same owned source with canonical history as fresh synchronization. Supported current-season transactions and retrieved weekly buckets remain visible while the season is ongoing, and runtime eviction releases the history reference safely.
++
++Existing transaction requests now retain bounded per-period acquisition dates and distinguish observed-empty, unavailable, failed and unacquired evidence. Same-league/season last-valid buckets remain useful after partial refresh failure; legacy retrieval dates remain unknown. Franchise History shows retrieved weeks, coverage gaps and recorded freshness separately from transaction occurrence times. No provider requests or historical rebuilding are added to page rendering.
++
++Completed/pending status, deduplication, exact pick originals, qualified manager attribution and FOIS RETAINED / NOT REVALIDATED are preserved. Trade and valuation mathematics, scoring, saved settings, submitted lineups, the 2 GiB cap and independent FOIS/Trade admission safeguards are unchanged. See docs/audits/CURRENT_SEASON_HISTORY_2230.md.
++
+ # v1.22.14 / build 2229 — Trustworthy franchise transaction history
+ 
+ Franchise History now shows retained completed trades, waivers, adds/drops, FAAB transfers and observed draft selections, with pagination and exact source references. Completed movements are separate from pending, failed, rejected, unknown or malformed records. Exact picks retain their year, round and original franchise independently of their owner; a draft selection never invents its original franchise from the selecting team.
+diff --git a/RELEASE_NOTES.md b/RELEASE_NOTES.md
+index 38694ae0..4c960c29 100644
+--- a/RELEASE_NOTES.md
++++ b/RELEASE_NOTES.md
+@@ -1,3 +1,11 @@
++# v1.22.15 / build 2230 — Current-season franchise history
++
++Restored league publications and cached startup now register the same owned source with canonical history as fresh synchronization. Supported current-season transactions and retrieved weekly buckets remain visible while the season is ongoing, and runtime eviction releases the history reference safely.
++
++Existing transaction requests now retain bounded per-period acquisition dates and distinguish observed-empty, unavailable, failed and unacquired evidence. Same-league/season last-valid buckets remain useful after partial refresh failure; legacy retrieval dates remain unknown. Franchise History shows retrieved weeks, coverage gaps and recorded freshness separately from transaction occurrence times. No provider requests or historical rebuilding are added to page rendering.
++
++Completed/pending status, deduplication, exact pick originals, qualified manager attribution and FOIS RETAINED / NOT REVALIDATED are preserved. Trade and valuation mathematics, scoring, saved settings, submitted lineups, the 2 GiB cap and independent FOIS/Trade admission safeguards are unchanged. See docs/audits/CURRENT_SEASON_HISTORY_2230.md.
++
+ # v1.22.14 / build 2229 — Trustworthy franchise transaction history
+ 
+ Franchise History now shows retained completed trades, waivers, adds/drops, FAAB transfers and observed draft selections, with pagination and exact source references. Completed movements are separate from pending, failed, rejected, unknown or malformed records. Exact picks retain their year, round and original franchise independently of their owner; a draft selection never invents its original franchise from the selecting team.
+diff --git a/app_metadata.py b/app_metadata.py
+index 598a5e3d..c19e301c 100644
+--- a/app_metadata.py
++++ b/app_metadata.py
+@@ -7,10 +7,10 @@ from datetime import datetime, timezone
+ from pathlib import Path
+ 
+ APPLICATION_NAME = "DTOS"
+-VERSION = "1.22.14"
+-PRODUCT_VERSION = "1.22.14"
+-BUILD_NUMBER = 2229
+-RELEASE_CODENAME = "Team Assessment Coverage"
++VERSION = "1.22.15"
++PRODUCT_VERSION = "1.22.15"
++BUILD_NUMBER = 2230
++RELEASE_CODENAME = "Current-Season Franchise History"
+ APPLICATION_STARTED_AT = datetime.now(timezone.utc).isoformat()
+ 
+ _REPOSITORY_ROOT = Path(__file__).resolve().parent
+diff --git a/docs/audits/CURRENT_SEASON_HISTORY_2230.md b/docs/audits/CURRENT_SEASON_HISTORY_2230.md
+new file mode 100644
+index 00000000..7afa6b3b
+--- /dev/null
++++ b/docs/audits/CURRENT_SEASON_HISTORY_2230.md
+@@ -0,0 +1,25 @@
++# Current-season franchise history — source-to-screen correction
++
++Baseline: v1.22.14/build2229, commit769bf99ee719f5e353822cdbd75b9259c8fd5fe1, tree752cfe006296bcaf879472183d100fa9df940fbb. Target v1.22.15/build2230. No related unfinished implementation was found.
++
++## Confirmed lifecycle gap
++
++Fresh Sleeper synchronization calls CanonicalHistoryStore.update_current, but restored-cache hydration and cached default startup publish through _publish_runtime_context without that registration. A matched disposable cache contains eight weekly buckets and a completed trade; the original production source tree returns no current franchise observations. The same actual restore and route control passes after shared context publication registers the owned data reference. Current records are not a completed-season backfill; that pipeline still skips the ongoing season appropriately.
++
++Registration uses the existing canonical method, source object and lock. CanonicalLeagueContext.close releases the current reference by identity on owned-runtime eviction. A late close cannot remove a newer publication. No historical reconstruction, provider call, solver, new lease or permanent provider store is added. Existing restoration admission, JSON bounds and the 2GiB cap remain unchanged. Cached context history readiness is partial, not a claim of complete history.
++
++## Acquisition and coverage
++
++Existing full synchronization requests current and preceding buckets0..selectedWeek; request count is unchanged and capped by the existing supported0..18period contract. The existing cache publication now carries at most19scoped per-period observations: observed, observed-empty, unavailable, malformed or failed; retrieval/attempt time; and whether an unsuccessful refresh retained a last-valid bucket. Context is admitted only for the same league and season. New retrieval timestamps are captured after responses; legacy dates remain unknown. Transaction-only success publishes its small acquisition metadata under the existing source-publication lock. Failed transaction-only refresh preserves the source and the existing safe warning; recorded timestamps are not represented as the latest attempted refresh.
++
++The canonical coverage fingerprint includes acquisition metadata so dates and qualifications cannot remain cached behind unchanged transaction IDs. Supported source bucket rows remain useful; malformed unsupported periods are qualified. Rendering shows retrieved and observed-empty weeks, source gaps, selected source week, recorded times and last-valid status. Ongoing source seasons remain partial; empty retrieved buckets do not establish empty missing weeks. Completed seasons still require all supported periods, compatible source identity, closed-source status and no unresolved qualification before a no-activity conclusion.
++
++## Evidence scope and acceptance
++
++Controls use disposable authoritative-shaped league publications, not production caches. They cover real sync/save, cached restoration, eviction/reopening, stale owner close, identity mismatch, multiple isolated league contexts, legacy flat transactions, partial failures and unknown dates. Three independent source configurations represent Granite one-QB with K/DEF, Day Traders and Arkham Superflex; their names are fixture labels, not live recovery claims. Twelve phone/desktop controls verify320x432,375x667,390x844,1280x900, keyboard/touch, no overflow, stable facts and no provider work on disclosures. Existing account authorization, completed-season history, transaction/pick/ownership and pagination controls remain mandatory.
++
++An intermediate focused failure caught a timestamp callable incorrectly applied to matchup metadata; it was corrected and the original failed log retained. An early browser fixture attempted asyncio.run while Playwright owned a running loop; setup now completes real restorations before browser startup. No application admission, memory threshold, timeout or assertion was relaxed to pass either case. Original matched baseline failures, lint/setup failures and final passing logs remain separate in task evidence.
++
++No current private Granite cache or authenticated owner history was inspected. Supplied live observations establish that2026was shown unknown, not whether its weekly buckets were acquired. This correction therefore proves a reusable source-path defect and fixture recovery, not that it retrospectively establishes the exact cause of that live state.
++
++Trade qualification, Neutral/Custom valuation, grading/scoring, optimal/submitted lineups, pick identity, saved preferences, FOIS RETAINED / NOT REVALIDATED and independent768MiBFOIS/384MiBTrade policies are preserved. Mandatory final-source canonical/hosted results and guarded publication records establish release status separately from this design/source record.
+diff --git a/dtos_app.py b/dtos_app.py
+index db3f7c8c..6150e9fd 100644
+--- a/dtos_app.py
++++ b/dtos_app.py
+@@ -188,6 +188,12 @@ def _publish_runtime_context(
+     runtime.fois_context = fois_service
+     context.refresh_generations()
+     runtime.canonical_context = context
++    # Cached restoration and startup publish here without running a Sleeper
++    # sync. Register the same owned source reference for canonical history too;
++    # context.close() releases it by identity on eviction. No source reads or
++    # historical reconstruction are initiated by this publication.
++    if data:
++        canonical_history_store.update_current(runtime.league_id, data)
+     return context
+ 
+ 
+@@ -210,7 +216,7 @@ async def _hydrate_league_runtime(
+             )
+             projection.restore_into(selected.state['data'])
+             context = _publish_runtime_context(selected, projection)
+-            context.history_state = 'unavailable'
++            context.history_state = 'partial'
+ 
+         restored = await restore_cached_runtime_owned(
+             runtime, publish_cached, expected_season=season,
+diff --git a/services/sleeper.py b/services/sleeper.py
+index 8140654b..5d0fdab1 100644
+--- a/services/sleeper.py
++++ b/services/sleeper.py
+@@ -225,19 +225,11 @@ async def _sync_sleeper(
+                     league, matchup_week, matchups,
+                     lambda path: sleeper_get(client, path), observed_at=utcnow().isoformat(),
+                 )
+-                previous = state.get('data') or {}
+-                same_season = str((previous.get('league') or {}).get('season')) == str(league.get('season'))
+-                retained_buckets = previous.get('season_transactions') or {} if same_season else {}
+-                season_transactions = {str(matchup_week): transactions}
+-                async def previous_transactions(transaction_week):
+-                    try:
+-                        return await sleeper_get(client, f'/league/{league_id}/transactions/{transaction_week}')
+-                    except Exception:
+-                        return None
+-                for transaction_week, rows in zip(range(0, matchup_week), await asyncio.gather(*(
+-                    previous_transactions(w) for w in range(0, matchup_week)
+-                ))):
+-                    season_transactions[str(transaction_week)] = rows if rows is not None else retained_buckets.get(str(transaction_week))
++                from src.core.history_context.transaction_periods import acquire_previous_periods
++                season_transactions, transaction_acquisition = await acquire_previous_periods(
++                    league, matchup_week, transactions, state.get('data') or {},
++                    lambda path: sleeper_get(client, path), observed_at=lambda: utcnow().isoformat(),
++                )
+                 draft_picks = []
+                 for index, draft in enumerate(drafts or ()):
+                     draft_id = str(draft.get("draft_id") or "")
+@@ -511,6 +503,7 @@ async def _sync_sleeper(
+                 "draft_picks": draft_picks,
+                 "transactions": transactions,
+                 "season_transactions": season_transactions,
++                "transaction_acquisition": transaction_acquisition,
+                 "matchups": matchup_groups,
+                 "season_matchups": season_matchups,
+                 "nfl_state": nfl_state,
+@@ -746,13 +739,16 @@ async def sync_transactions(
+                 transactions = await sleeper_get(
+                     client, f"/league/{league_id}/transactions/{week}"
+                 )
++            from src.core.history_context.transaction_periods import current_period_metadata
++            acquisition = current_period_metadata(data, week, transactions, utcnow().isoformat())
+             if publish_data is not None:
+                 # Only the bounded source mutation holds the owner lock;
+                 # network, checkpoints and persistence stay outside it.
+-                await publish_data(data, transactions, week)
++                await publish_data(data, transactions, week, acquisition=acquisition)
+             else:
+                 data['transactions'] = transactions
+                 data.setdefault('season_transactions', {})[str(week)] = transactions
++                data['transaction_acquisition'] = acquisition
+             from src.core.history_context import canonical_history_store
+             canonical_history_store.update_current(league_id, data)
+             state["transactions_last_sync"] = utcnow().isoformat()
+diff --git a/src/core/history_context/coverage.py b/src/core/history_context/coverage.py
+index 7f6e3de0..1a172f69 100644
+--- a/src/core/history_context/coverage.py
++++ b/src/core/history_context/coverage.py
+@@ -91,6 +91,11 @@ def transaction_coverage_summary(coverage: dict, *, records_present=False) -> di
+     periods = coverage.get('transactions') or {}
+     acquired = {w for w in periods.get('acquired') or [] if type(w) is int and 0 <= w <= 18}
+     gaps = {name: periods.get(name) or [] for name in ('unacquired', 'unavailable', 'malformed')}
++    observations = (coverage.get('transaction_acquisition') or {}).get('periods') or {}
++    for state in ('unavailable','malformed'):
++        gaps[state] = sorted(set(gaps[state]) | {int(w) for w,r in observations.items() if r.get('state') == state})
++    if coverage.get('failed_periods'):
++        gaps['failed'] = sorted(coverage['failed_periods'])
+     if coverage.get('source_identity_compatible') is False:
+         return {'state': 'unknown', 'acquired': [], 'gaps': {},
+                 'reason': 'Retained source league-season metadata is incompatible with this season; coverage and an empty-history conclusion are withheld.',
+@@ -103,12 +108,18 @@ def transaction_coverage_summary(coverage: dict, *, records_present=False) -> di
+     reason = ('All supported source transaction buckets 0–18 were retrieved for this completed source season.' if complete else
+               'Some source periods or the completed-season confirmation are missing; retained events remain useful.' if state == 'partial' else
+               'DTOS has not established which source weeks were retrieved; missing history is not no activity.')
++    if state == 'partial' and coverage.get('source_status') == 'in_season':
++        reason = ('The season is ongoing. Retrieved periods support the events shown; other periods remain unverified.'
++                  if acquired else 'Retained transactions are available, but their weekly acquisition coverage has not been established.')
+     problems = [f"{coverage[k]} {label}" for k, label in (
+         ('unqualified_records', 'records with unverified transaction or franchise identity'), ('conflicting_identities', 'conflicting transaction identities'),
+         ('unknown_status_records', 'records with unknown transaction status')) if coverage.get(k)]
+     if problems:
+         reason += ' Retained gaps: ' + '; '.join(problems) + '.'
+     if coverage.get('last_valid_periods'):
+-        reason += ' Last-valid source periods remain visible after an unavailable refresh: ' + ', '.join(map(str, coverage['last_valid_periods'])) + '.'
++        reason += ' Last-valid source periods remain visible after an unsuccessful refresh: ' + ', '.join(map(str, coverage['last_valid_periods'])) + '.'
+     return {'state': state, 'acquired': sorted(acquired), 'gaps': gaps, 'reason': reason,
++            'observed_empty': periods.get('observed_empty') or [],
++            'period_observations': observations,
++            'source_week': coverage.get('source_week'),
+             'scope': 'Retained Sleeper transaction buckets 0–18; draft selections have separate coverage.'}
+diff --git a/src/core/history_context/store.py b/src/core/history_context/store.py
+index ccde592f..133c0f23 100644
+--- a/src/core/history_context/store.py
++++ b/src/core/history_context/store.py
+@@ -76,6 +76,7 @@ class CanonicalHistoryStore:
+             "valuation": data.get("valuation_intelligence") or {},
+             "market": data.get("market_data") or {},
+             "transactions": data.get("transactions") or [], "season_transactions": data.get("season_transactions") or {}, "drafts": data.get("drafts") or [],
++            "transaction_acquisition": data.get("transaction_acquisition") or {},
+             "draft_picks": data.get("draft_picks") or [], "traded_picks": data.get("traded_picks") or [],
+             "pick_ledger": data.get("pick_ledger"),
+             "season_matchups": {k: v for k, v in (data.get('season_matchups') or {}).items()
+@@ -316,6 +317,20 @@ class CanonicalHistoryStore:
+             unknown_statuses = {(str(row.get('transaction_id')), str(row.get('status')))
+                 for bucket in (facts.get('transactions') or {}).values() if isinstance(bucket, list)
+                 for row in bucket if isinstance(row, dict) and str(row.get('status') or '').casefold() not in known_statuses} if isinstance(facts.get('transactions'), dict) else set()
++            from .transaction_periods import admitted_metadata
++            acquisition = admitted_metadata(current, league_id, year) if used_current else {}
++            source_week = current.get('week') if str(current_year) == str(year) else None
++            if type(source_week) is int and 0 <= source_week <= 18:
++                # The selected league/source week is already season-qualified
++                # by synchronization. It defines expected periods, not proof
++                # that any bucket was acquired.
++                facts = {**facts, 'league': {**league, 'settings': {
++                    **(league.get('settings') or {}), 'leg': source_week}}}
++            else:
++                source_week = None
++            failed = [int(w) for w,r in (acquisition.get('periods') or {}).items() if r.get('state') == 'failed']
++            retained_periods = sorted(set(retained_periods) | {int(w) for w,r in
++                (acquisition.get('periods') or {}).items() if r.get('retained_last_valid')})
+             rows.append({'season': year, 'source_league_id': league.get('league_id') or reference.get('league_id'),
+                 'source_identity_compatible': source_identity_compatible, 'declared_source_season': declared_season,
+                 'previous_league_id': league.get('previous_league_id', reference.get('previous_league_id')),
+@@ -326,6 +341,9 @@ class CanonicalHistoryStore:
+                 'conflicting_identities': activity.get('conflicting_identities', 0),
+                 'unknown_status_records': len(unknown_statuses),
+                 'last_valid_periods': retained_periods,
++                'transaction_acquisition': acquisition,
++                'failed_periods': failed,
++                'source_week': source_week,
+                 'cache_state': reference.get('cache_status') or ('retained' if facts else 'unknown')})
+         return {'league_id': league_id, 'seasons': rows, 'provider_requests': 0,
+                 'scope': 'Retained transaction acquisition only; no weekly scoring reconstruction.'}
+@@ -928,7 +946,9 @@ class CanonicalHistoryStore:
+         current_transactions = data.get('transactions') or ()
+         if isinstance(current_transactions, dict):
+             current_transactions = [dict(row, leg=int(week)) for week, bucket in current_transactions.items() for row in bucket or ()]
+-        bucket_rows = [dict(row, leg=int(week)) for week, bucket in buckets.items() for row in bucket or ()]
++        bucket_rows = [dict(row, leg=int(week)) for week, bucket in
++                       readable_buckets({'transactions': buckets}, 'transactions').items()
++                       if 0 <= int(week) <= 18 for row in bucket]
+         source_periods = defaultdict(set)
+         for row in bucket_rows:
+             if row.get('transaction_id'):
+diff --git a/src/core/history_context/transaction_periods.py b/src/core/history_context/transaction_periods.py
+new file mode 100644
+index 00000000..84d187bb
+--- /dev/null
++++ b/src/core/history_context/transaction_periods.py
+@@ -0,0 +1,106 @@
++"""Bounded acquisition metadata for the existing current-season source cache.
++
++No provider store, inferred empty buckets, or projection/valuation computation.
++"""
++import asyncio
++
++SCHEMA = 'sleeper-transaction-periods-v1'
++
++
++def compatible(data, league_id, season):
++    league = data.get('league') or {}
++    return (str(league.get('league_id')) == str(league_id)
++            and str(league.get('season')) == str(season)
++            and str(data.get('season', season)) == str(season))
++
++
++def admitted_metadata(data, league_id, season):
++    meta = data.get('transaction_acquisition')
++    if (not isinstance(meta, dict) or meta.get('schema') != SCHEMA
++            or str(meta.get('league_id')) != str(league_id)
++            or str(meta.get('season')) != str(season)):
++        return {}
++    from .timestamps import canonical_utc_timestamp
++    def timestamp(value):
++        return canonical_utc_timestamp(value) if isinstance(value,str) and len(value)<=64 else None
++    source = meta.get('periods')
++    source = source if isinstance(source,dict) else {}
++    periods = {}
++    for week in range(19):
++        row = source.get(str(week))
++        if not isinstance(row,dict) or row.get('state') not in {
++                'observed','observed_empty','unavailable','failed','malformed'}:
++            continue
++        periods[str(week)] = {'state': row['state'],
++            'retrieved_at': timestamp(row.get('retrieved_at')),
++            'last_attempt_at': timestamp(row.get('last_attempt_at')),
++            'retained_last_valid': row.get('retained_last_valid') is True}
++    through = meta.get('through_week')
++    return {'schema': SCHEMA, 'league_id': str(league_id), 'season': str(season),
++            'through_week': through if type(through) is int and 0<=through<=18 else None,
++            'periods': periods}
++
++
++def record_period(metadata, week, rows, *, observed_at, state=None, retained=False):
++    """Copy at most19small observations, never the player/transaction universe."""
++    source = metadata.get('periods') or {}
++    source = source if isinstance(source,dict) else {}
++    periods = {str(w):source[str(w)] for w in range(19) if str(w) in source}
++    previous = periods.get(str(week)) or {}
++    previous = previous if isinstance(previous,dict) else {}
++    readable = isinstance(rows, list) and all(isinstance(r, dict) for r in rows)
++    observed = state is None and readable
++    periods[str(week)] = {
++        'state': ('observed' if rows else 'observed_empty') if observed else state or ('unavailable' if rows is None else 'malformed'),
++        'last_attempt_at': observed_at,
++        'retrieved_at': observed_at if observed else previous.get('retrieved_at') if retained else None,
++        'retained_last_valid': bool(retained),
++    }
++    return {**metadata, 'periods': {k:v for k,v in periods.items()
++            if str(k).isdigit() and 0 <= int(k) <= 18}}
++
++
++def current_period_metadata(data, week, rows, observed_at):
++    if type(week) is not int or not 0 <= week <= 18:
++        raise ValueError('Unsupported source transaction period')
++    league = data.get('league') or {}
++    meta = admitted_metadata(data, league.get('league_id'), league.get('season'))
++    meta = {**meta, 'schema': SCHEMA, 'league_id': str(league.get('league_id')),
++            'season': str(league.get('season')), 'through_week': int(week)}
++    return record_period(meta, week, rows, observed_at=observed_at)
++
++
++async def acquire_previous_periods(league, week, current_rows, previous, fetch, *, observed_at):
++    """Same existing0..weeksource requests; retain valid failures explicitly."""
++    if type(week) is not int or not 0 <= week <= 18:
++        raise ValueError('Unsupported source transaction period')
++    league_id, season = str(league['league_id']), str(league['season'])
++    previous = previous if compatible(previous, league_id, season) else {}
++    old_buckets = previous.get('season_transactions') or {}
++    old_buckets = old_buckets if isinstance(old_buckets, dict) else {}
++    meta = {**admitted_metadata(previous,league_id,season), 'schema': SCHEMA,
++            'league_id': league_id, 'season': season, 'through_week': week}
++    def stamp():
++        return observed_at() if callable(observed_at) else observed_at
++    buckets = {str(week): current_rows}
++    meta = record_period(meta, week, current_rows, observed_at=stamp())
++
++    async def get(period):
++        try:
++            rows = await fetch(f'/league/{league_id}/transactions/{period}')
++            if rows is None:
++                return period,None,'unavailable',stamp()
++            if not isinstance(rows,list) or any(not isinstance(row,dict) for row in rows):
++                return period,None,'malformed',stamp()
++            return period,rows,None,stamp()
++        except Exception:
++            return period,None,'failed',stamp()  # Never retain provider exception strings.
++
++    for period,rows,state,at in await asyncio.gather(*(get(w) for w in range(week))):
++        old = old_buckets.get(str(period))
++        retained = (state is not None and isinstance(old,list)
++                    and all(isinstance(row,dict) for row in old))
++        buckets[str(period)] = old if retained else rows
++        meta = record_period(meta,period,buckets[str(period)],observed_at=at,
++                             state=state,retained=retained)
++    return buckets,meta
+diff --git a/src/core/league_runtime/manager.py b/src/core/league_runtime/manager.py
+index a9c8bfa2..9240cbf1 100644
+--- a/src/core/league_runtime/manager.py
++++ b/src/core/league_runtime/manager.py
+@@ -108,7 +108,8 @@ class LeagueRuntime:
+                 if self.canonical_context is not None:
+                     self.canonical_context.fois_state = 'pending'
+ 
+-    async def publish_transactions(self, data: dict[str, Any], transactions: list, week: int) -> None:
++    async def publish_transactions(self, data: dict[str, Any], transactions: list, week: int,
++                                   *, acquisition: dict | None = None) -> None:
+         """Update shared transaction containers at the same publication boundary.
+ 
+         Keep existing consumer aliases; never restore a stale roster captured
+@@ -119,6 +120,8 @@ class LeagueRuntime:
+                 raise LeagueRuntimeError('League source advanced during preparation; retry the refresh.')
+             data['transactions'] = transactions
+             data.setdefault('season_transactions', {})[str(week)] = transactions
++            if acquisition is not None:
++                data['transaction_acquisition'] = acquisition
+             self.fois_publication_revision += 1
+             if self.canonical_context is not None:
+                 self.canonical_context.fois_state = 'pending'
+diff --git a/src/ui/franchise_timeline.py b/src/ui/franchise_timeline.py
+index a509d5c5..64022389 100644
+--- a/src/ui/franchise_timeline.py
++++ b/src/ui/franchise_timeline.py
+@@ -8,14 +8,26 @@ def render_franchise_timeline(view):
+         return escape(str(value))
+     cards = []
+     for s in view['seasons']:
+-        labels = {'unacquired': 'Not retrieved', 'unavailable': 'Source unavailable', 'malformed': 'Source data could not be read'}
++        labels = {'unacquired': 'Not retrieved', 'unavailable': 'Source unavailable', 'malformed': 'Source data could not be read', 'failed': 'Refresh failed'}
+         gaps = '; '.join(labels[name] + ': weeks ' + ', '.join(map(str, weeks))
+                          for name, weeks in s['gaps'].items() if weeks)
+         activity = (f"{s['completed_transactions']} completed transactions retained." if s['completed_transactions'] else
+                     'No completed transaction activity in the fully acquired supported source periods.' if s['no_activity_supported'] else
+                     'No completed transactions retained for this franchise; missing coverage is not no activity.')
++        observations = s.get('period_observations') or {}
++        freshness = []
++        for week in sorted(set(s['acquired']) | {int(w) for w in observations}):
++            row = observations.get(str(week)) or {}
++            freshness.append('Week ' + str(week) + (': retrieved ' + (row.get('retrieved_at') or 'at an unrecorded time') if week in s['acquired'] else ': no compatible retrieved bucket retained')
++                + ('; showing last-valid evidence' if row.get('retained_last_valid') else '')
++                + ('. Recorded attempt: ' + row['state'].replace('_',' ') + ' at ' + str(row.get('last_attempt_at') or 'an unrecorded time') if row else ''))
++        retrieved = ', '.join(map(str,s['acquired'])) or 'none established'
++        empty = ', '.join(map(str,s.get('observed_empty') or [])) or 'none established'
++        timing = ('<details><summary>Period freshness</summary><ul>' + ''.join('<li>' + text(r) + '</li>' for r in freshness) + '</ul><p>Retrieval times are DTOS source observations, not transaction occurrence times. Missing periods do not imply no activity.</p></details>') if freshness else ''
+         cards.append(f'''<article class="card fh-season"><h4>{s['season']} · {text(s['state'].title())} transaction coverage</h4>
+ <p>{text(s['reason'])}</p><p>{text(activity)}</p><p>{len(s['acquired'])} of 19 supported source weeks retrieved (0 is the offseason bucket; 1–18 are weekly buckets).</p>
++<p>Retrieved weeks: {text(retrieved)}. Observed-empty retrieved weeks: {text(empty)}.</p>
++{('<p>Selected source week: ' + text(s['source_week']) + '. Unretrieved periods remain unknown.</p>') if s.get('source_week') is not None else ''}{timing}
+ {('<p>' + text(gaps) + '.</p>') if gaps else ''}<p>{s['draft_selections']} draft selections retained. {text(s['draft_note'])}</p>
+ <p>{text(s['continuity'])}. {'Season-observed franchise identity available.' if s['identity_observed'] else 'Franchise identity for this season is not established.'}</p>
+ <details><summary>Source context</summary><p>Source league: {text(s['source_league_id'] or 'not recorded')} · retained source generation: {text(s['source_generation'] or 'not recorded')} · prepared-current fingerprint: {text(s['prepared_current_fingerprint'] or 'not used')}.</p></details></article>''')
+diff --git a/tests/test_current_season_franchise_history.py b/tests/test_current_season_franchise_history.py
+new file mode 100644
+index 00000000..c8d24388
+--- /dev/null
++++ b/tests/test_current_season_franchise_history.py
+@@ -0,0 +1,405 @@
++"""Actual cached runtime publication through canonical, rendered history.
++
++Source-compatible disposable leagues; no live owner data or source requests.
++"""
++from copy import deepcopy
++from datetime import datetime, timezone
++import json
++from pathlib import Path
++import tempfile
++import unittest
++from unittest.mock import Mock, patch
++
++from fastapi import FastAPI
++from fastapi.responses import HTMLResponse
++from fastapi.testclient import TestClient
++from routes.history import create_history_router
++from services import league_preparation
++from src.core.history_context import store as history_module
++from src.core.history_context.season_cache import SleeperSeasonCache
++from src.core.history_context.store import CanonicalHistoryStore
++from src.core.historical_memory.read_model import HistoricalReadModelCache
++from src.core.league_runtime import LeagueRuntime, LeagueRuntimeManager
++from tests.test_league_runtime import league_data
++
++
++def publication(league='2100000000000000001', season=2032, week=8):
++    data = league_data(league)
++    data['league'].update(season=str(season), status='in_season', settings={'leg': week})
++    data.update(week=week, normalized_players={}, players={}, traded_picks=[],
++                season_transactions={str(w): [] for w in range(1, week+1)}, transactions=[])
++    data['teams'] = [dict(roster_id=i, owner_id=f'owner-{league}-{i}',
++                          team_name=f'Franchise {i}', players=[]) for i in (1, 2)]
++    data['season_transactions']['2'] = [dict(transaction_id='observed-trade',
++        type='trade', status='complete', roster_ids=[1, 2], adds={'player-one': 1},
++        drops={'player-one': 2}, draft_picks=[])]
++    return data
++
++
++class CurrentSeasonRuntimeHistoryTests(unittest.IsolatedAsyncioTestCase):
++    def setUp(self):
++        import dtos_app
++        self.app_module = dtos_app
++        self.temp = tempfile.TemporaryDirectory()
++        self.addCleanup(self.temp.cleanup)
++        self.folder = Path(self.temp.name)
++        self.store = CanonicalHistoryStore()
++        self.cache = SleeperSeasonCache(self.folder/'seasons')
++        self.enterContext(patch.object(history_module, 'sleeper_season_cache', self.cache))
++        self.enterContext(patch.object(dtos_app, 'canonical_history_store', self.store))
++        self.enterContext(patch('services.history.historical_store', self.store))
++        self.enterContext(patch('src.core.historical_memory.read_model.historical_read_model_cache', HistoricalReadModelCache()))
++        self.enterContext(patch('services.league_maintenance.ensure_periodic_refresh'))
++        self.sync = self.enterContext(patch.object(dtos_app, 'sync_sleeper_league', side_effect=AssertionError('No source refresh on restore')))
++        self.projection = Mock()
++        self.projection.snapshot.return_value = None
++        self.projection.begin_external_refresh.return_value = False
++        self.enterContext(patch.object(dtos_app, 'ProjectionService', return_value=self.projection))
++        self.enterContext(patch.object(dtos_app, 'AssetMarketCache', return_value=Mock()))
++        self.data = publication()
++        self.runtime = LeagueRuntime(self.data['league']['league_id'])
++        self.path = self.folder/'cache.json'
++        self.enterContext(patch.object(league_preparation, 'league_cache_file', return_value=self.path))
++        app = FastAPI()
++        def render(title,body):
++            renderer = getattr(self,'renderer',None)
++            return renderer(title,body) if renderer else HTMLResponse(body)
++        app.include_router(create_history_router(league_id=self.runtime.league_id,
++            league_resolver=lambda:self.runtime.league_id,
++            require_data=lambda:self.runtime.state['data'],
++            page=render))
++        self.client = TestClient(app)
++        self.addCleanup(self.client.close)
++
++    async def restore(self):
++        self.path.write_text(json.dumps(dict(data=self.data,last_sync=datetime.now(timezone.utc).isoformat())))
++        await self.app_module._hydrate_league_runtime(self.runtime)
++
++    def page(self):
++        response = self.client.get('/history/team/'+self.runtime.league_id+':franchise:1')
++        self.assertEqual(response.status_code,200,response.text[:300])
++        return response.text
++
++    async def test_restored_weekly_buckets_are_registered_and_rendered(self):
++        await self.restore()
++        self.sync.assert_not_called()
++        html = self.page()
++        self.assertIn('2032 · Partial transaction coverage',html)
++        self.assertIn('8 of 19 supported source weeks retrieved',html)
++        self.assertIn('observed-trade',html)
++        self.assertIs(self.store._current[self.runtime.league_id],self.runtime.state['data'])
++        self.assertEqual(self.runtime.canonical_context.history_state,'partial')
++
++    async def test_eviction_releases_history_reference_and_reopening_registers_again(self):
++        await self.restore()
++        first = self.runtime.state['data']
++        self.assertIs(self.store._current.get(self.runtime.league_id),first)
++        await self.runtime.close()
++        self.assertNotIn(self.runtime.league_id,self.store._current)
++        self.runtime = LeagueRuntime(self.data['league']['league_id'])
++        await self.restore()
++        self.assertIn('observed-trade',self.page())
++        self.assertIsNot(self.runtime.state['data'],first)
++
++    async def test_manager_admission_eviction_and_reopening_recover_current_history(self):
++        self.path.write_text(json.dumps(dict(data=self.data,last_sync=datetime.now(timezone.utc).isoformat())))
++        manager=LeagueRuntimeManager(max_warm=1,hydrator=self.app_module._hydrate_league_runtime)
++        try:
++            self.runtime=await manager.get(self.data['league']['league_id'])
++            first=self.runtime
++            self.assertIn('observed-trade',self.page())
++            self.assertTrue(await manager.evict(self.runtime.league_id))
++            self.assertNotIn(self.runtime.league_id,self.store._current)
++            self.runtime=await manager.get(self.data['league']['league_id'])
++            self.assertIsNot(self.runtime,first)
++            self.assertIn('observed-trade',self.page())
++            self.sync.assert_not_called()
++        finally:
++            await manager.shutdown()
++        self.assertNotIn(self.runtime.league_id,self.store._current)
++
++    async def test_configured_cached_startup_publication_registers_current_history(self):
++        from services import sleeper
++        self.path.write_text(json.dumps(dict(data=self.data,last_sync=datetime.now(timezone.utc).isoformat())))
++        self.runtime.owns_state = False
++        with patch.object(sleeper,'league_cache_file',return_value=self.path):
++            sleeper.load_cache(state=self.runtime.state,league_id=self.runtime.league_id)
++        self.runtime.apply_data(self.runtime.state['data'])
++        self.app_module._publish_runtime_context(self.runtime,self.projection)
++        self.assertIs(self.store._current[self.runtime.league_id],self.runtime.state['data'])
++        self.assertIn('observed-trade',self.page())
++
++    async def test_old_flat_activity_is_retained_without_inventing_acquired_weeks(self):
++        self.data['transactions'] = self.data.pop('season_transactions')['2']
++        await self.restore()
++        html = self.page()
++        self.assertIn('observed-trade',html)
++        self.assertIn('0 of 19 supported source weeks retrieved',html)
++        self.assertNotIn('No completed transaction activity in the fully acquired',html)
++
++    async def test_ongoing_season_without_acquired_history_stays_unknown(self):
++        self.data.pop('season_transactions')
++        self.data['transactions']=[]
++        await self.restore()
++        html=self.page()
++        self.assertIn('2032 · Unknown transaction coverage',html)
++        self.assertNotIn('2032 · Partial transaction coverage',html)
++        self.assertIn('0 of 19 supported source weeks retrieved',html)
++        self.assertNotIn('No completed transaction activity in the fully acquired',html)
++
++    async def test_explicit_empty_retrieved_weeks_do_not_establish_empty_missing_weeks(self):
++        self.data['season_transactions']={str(w):[] for w in range(1,9)}
++        await self.restore()
++        html=self.page()
++        self.assertIn('2032 · Partial transaction coverage',html)
++        self.assertIn('Observed-empty retrieved weeks: 1, 2, 3, 4, 5, 6, 7, 8',html)
++        self.assertIn('Not retrieved: weeks 0',html)
++        self.assertNotIn('No completed transaction activity in the fully acquired',html)
++
++    async def test_stale_context_close_cannot_release_newer_publication(self):
++        await self.restore()
++        first = self.runtime
++        self.runtime = LeagueRuntime(self.data['league']['league_id'])
++        self.data['week'] = 9
++        await self.restore()
++        await first.close()
++        self.assertIs(self.store._current[self.runtime.league_id],self.runtime.state['data'])
++        self.assertIn('observed-trade',self.page())
++
++    async def test_foreign_league_or_season_cache_is_rejected_before_registration(self):
++        for mutate in (lambda d:d['league'].update(league_id='2100000000000000002'),
++                       lambda d:d.update(season=2031)):
++            original = deepcopy(self.data)
++            mutate(self.data)
++            self.path.write_text(json.dumps(dict(data=self.data,last_sync=datetime.now(timezone.utc).isoformat())))
++            published = Mock()
++            self.assertFalse(league_preparation.restore_cached_runtime(self.runtime,published,expected_season=2032))
++            published.assert_not_called()
++            self.assertNotIn(self.runtime.league_id,self.store._current)
++            self.data = original
++
++    async def test_two_owned_leagues_keep_season_periods_and_pages_isolated(self):
++        await self.restore()
++        first = self.runtime
++        self.data = publication('2100000000000000002',2031,5)
++        self.data['season_transactions']['2'][0]['transaction_id'] = 'second-league-trade'
++        self.runtime = LeagueRuntime(self.data['league']['league_id'])
++        await self.restore()
++        self.assertIn('second-league-trade',self.page())
++        foreign = self.client.get('/history/team/'+first.league_id+':franchise:1')
++        self.assertEqual(foreign.status_code,404)
++        self.runtime = first
++        html = self.page()
++        self.assertIn('observed-trade',html)
++        self.assertNotIn('second-league-trade',html)
++
++
++class CurrentSeasonAcquisitionTests(unittest.IsolatedAsyncioTestCase):
++    """Network responses only are controlled; acquisition and rendering are real."""
++    setUp = CurrentSeasonRuntimeHistoryTests.setUp
++    restore = CurrentSeasonRuntimeHistoryTests.restore
++    page = CurrentSeasonRuntimeHistoryTests.page
++
++    async def prepare(self, outcomes, previous=None):
++        from src.core.history_context.transaction_periods import acquire_previous_periods
++        calls = []
++        async def fetch(path):
++            calls.append(path)
++            value = outcomes.get(int(path.rsplit('/',1)[-1]),[])
++            if isinstance(value,Exception):
++                raise value
++            return value
++        buckets,meta = await acquire_previous_periods(self.data['league'],self.data['week'],[],
++            previous or {},fetch,observed_at='2032-10-20T12:00:00+00:00')
++        self.data.update(season_transactions=buckets,transactions=[],transaction_acquisition=meta)
++        if self.runtime.state.get('data'):
++            await self.runtime.close()
++            self.runtime = LeagueRuntime(self.data['league']['league_id'])
++        await self.restore()
++        return calls
++
++    async def test_empty_failed_unavailable_and_unacquired_are_distinct(self):
++        trade = self.data['season_transactions']['2']
++        calls = await self.prepare({0:RuntimeError('private provider text'),2:trade,4:None,5:RuntimeError('private failure')})
++        html = self.page()
++        self.assertEqual(len(calls),8)
++        self.assertEqual(len(set(calls)),8)
++        self.assertIn('Refresh failed: weeks 0, 5',html)
++        self.assertIn('Source unavailable: weeks 0, 4, 5',html)
++        self.assertIn('Observed-empty retrieved weeks: 1, 3, 6, 7, 8',html)
++        self.assertIn('2032-10-20T12:00:00Z',html)
++        self.assertNotIn('private provider text',html)
++        self.assertIn('observed-trade',html)
++        self.assertNotIn('Complete transaction coverage',html)
++
++    async def test_failed_refresh_retains_exact_prior_period_and_retrieval_time(self):
++        from src.core.history_context.transaction_periods import current_period_metadata
++        previous = deepcopy(self.data)
++        previous['transaction_acquisition'] = current_period_metadata(previous,2,previous['season_transactions']['2'],'2032-10-15T09:00:00+00:00')
++        await self.prepare({2:RuntimeError('failed refresh')},previous)
++        html = self.page()
++        self.assertIn('observed-trade',html)
++        self.assertIn('2032-10-15T09:00:00Z',html)
++        self.assertIn('Refresh failed: weeks 2',html)
++        self.assertIn('showing last-valid evidence',html)
++        self.assertIn('unsuccessful refresh: 2',html)
++        self.assertEqual(self.runtime.state['data']['season_transactions']['2'],previous['season_transactions']['2'])
++
++    async def test_prior_bucket_cannot_cross_league_or_season(self):
++        original = deepcopy(self.data)
++        for key,value in [('league_id','other-league'),('season','2031')]:
++            self.data = deepcopy(original)
++            previous = deepcopy(self.data)
++            previous['league'][key]=value
++            await self.prepare({2:RuntimeError('failed')},previous)
++            self.assertNotIn('observed-trade',self.page())
++            self.assertIsNone(self.runtime.state['data']['season_transactions']['2'])
++
++    async def test_legacy_retained_bucket_does_not_receive_a_guessed_retrieval_time(self):
++        previous = deepcopy(self.data)
++        await self.prepare({2:RuntimeError('failed')},previous)
++        html = self.page()
++        self.assertIn('Week 2: retrieved at an unrecorded time; showing last-valid evidence',html)
++        self.assertIsNone(self.runtime.state['data']['transaction_acquisition']['periods']['2']['retrieved_at'])
++
++    async def test_foreign_acquisition_metadata_cannot_supply_dates_or_failures(self):
++        from src.core.history_context.transaction_periods import current_period_metadata
++        self.data['transaction_acquisition'] = current_period_metadata(self.data,2,[], '2032-10-15T09:00:00+00:00')
++        self.data['transaction_acquisition']['league_id'] = 'foreign'
++        await self.restore()
++        html=self.page()
++        self.assertNotIn('2032-10-15T09:00:00Z',html)
++        self.assertIn('retrieved at an unrecorded time',html)
++        self.assertIn('observed-trade',html)
++
++    async def test_unsupported_week_is_rejected_before_fetch(self):
++        from src.core.history_context.transaction_periods import acquire_previous_periods
++        fetch = Mock()
++        for week in (-1,19,100000,True):
++            with self.assertRaises(ValueError):
++                await acquire_previous_periods(self.data['league'],week,[],{},fetch,observed_at='unrecorded')
++        fetch.assert_not_called()
++
++    async def test_acquisition_metadata_is_bounded_and_unknown_dates_stay_unknown(self):
++        from src.core.history_context.transaction_periods import SCHEMA, admitted_metadata
++        self.data['transaction_acquisition'] = dict(schema=SCHEMA,league_id=self.runtime.league_id,season=2032,
++            through_week=8,periods={str(w):dict(state='observed',retrieved_at='not a timestamp',
++                last_attempt_at='unrecorded') for w in range(1000)})
++        original = deepcopy(self.data)
++        meta = admitted_metadata(self.data,self.runtime.league_id,2032)
++        self.assertEqual(len(meta['periods']),19)
++        self.assertTrue(all(r['retrieved_at'] is None for r in meta['periods'].values()))
++        self.assertEqual(self.data,original)
++
++
++class CurrentSeasonFreshSyncTests(unittest.IsolatedAsyncioTestCase):
++    setUp = CurrentSeasonRuntimeHistoryTests.setUp
++    page = CurrentSeasonRuntimeHistoryTests.page
++
++    async def test_actual_sync_save_evict_restore_and_render_keep_current_periods(self):
++        from services import sleeper
++        from contextlib import ExitStack
++        league = deepcopy(self.data['league'])
++        league.update(total_rosters=2,settings={'leg':8,'draft_rounds':3})
++        trade = self.data['season_transactions']['2']
++        calls = []
++        async def get(_client,path):
++            calls.append(path)
++            if path == '/league/'+self.runtime.league_id:
++                return league
++            if path.endswith('/users'):
++                return [dict(user_id=f'owner-{i}',display_name=f'Owner {i}') for i in (1,2)]
++            if path.endswith('/rosters'):
++                return [dict(roster_id=i,owner_id=f'owner-{i}',players=[],starters=[],settings={}) for i in (1,2)]
++            if path == '/state/nfl':
++                return dict(season='2032',week=8,season_type='regular')
++            if '/transactions/' in path:
++                week=int(path.rsplit('/',1)[-1])
++                if week==4:
++                    raise RuntimeError('disposable source failure')
++                return trade if week==2 else []
++            return {} if path=='/players/nfl' else []
++        self.runtime.state['data'] = {}
++        with ExitStack() as stack:
++            stack.enter_context(patch.object(sleeper,'sleeper_get',side_effect=get))
++            stack.enter_context(patch.object(sleeper,'league_cache_file',return_value=self.path))
++            stack.enter_context(patch('src.core.history_context.canonical_history_store',self.store))
++            stack.enter_context(patch.object(sleeper,'refresh_public_market',return_value={'provider_status':{}}))
++            stack.enter_context(patch.object(sleeper,'player_history_evidence_batch',return_value={}))
++            for name in ('src.core.valuation.normalization.prepare_market_normalization',
++                         'src.core.intelligence.pick_context.prepare_pick_context',
++                         'src.core.relevant_players.apply_relevant_player_filter',
++                         'src.core.intelligence.team_strength.prepare_for_data',
++                         'src.core.intelligence.strength_history.record_strength_history',
++                         'services.player_evidence.prepare_player_production',
++                         'src.core.intelligence_memory.checkpoint_pipeline.ingest_runtime'):
++                stack.enter_context(patch(name,return_value={}))
++            stack.enter_context(patch('src.core.valuation.ranking.prepare_global_player_ranks',return_value={'players':{}}))
++            stack.enter_context(patch('src.core.relevant_players.build_relevant_player_universe',return_value={'member_ids':[]}))
++            for name in ('build_provider_network','build_valuation_intelligence','audit_market_calibration'):
++                stack.enter_context(patch.object(sleeper,name))
++            await sleeper.sync_sleeper_league(self.runtime.league_id,self.runtime.state,
++                projections=self.projection,publish_data=self.runtime.publish_source)
++        self.assertIsNone(self.runtime.state['last_error'])
++        self.assertEqual(self.runtime.state['preparation_state'],'ready')
++        self.app_module._publish_runtime_context(self.runtime,self.projection)
++        before = self.page()
++        self.assertIn('observed-trade',before)
++        self.assertIn('Refresh failed: weeks 4',before)
++        self.assertEqual(sorted(int(p.rsplit('/',1)[-1]) for p in calls if '/transactions/' in p),list(range(9)))
++        metadata = deepcopy(self.runtime.state['data']['transaction_acquisition'])
++        await self.runtime.close()
++        self.runtime = LeagueRuntime(league['league_id'])
++        await self.app_module._hydrate_league_runtime(self.runtime)
++        self.assertEqual(self.runtime.state['data']['transaction_acquisition'],metadata)
++        self.assertIn('observed-trade',self.page())
++        self.assertIn('Refresh failed: weeks 4',self.page())
++        self.sync.assert_not_called()
++
++    async def test_transaction_only_refresh_updates_metadata_under_existing_publication_lock(self):
++        from services import sleeper
++        await CurrentSeasonRuntimeHistoryTests.restore(self)
++        data = self.runtime.state['data']
++        state = self.runtime.state
++        with patch.object(sleeper,'sleeper_get',return_value=[]), \
++                patch('src.core.history_context.canonical_history_store',self.store), \
++                patch.object(sleeper,'league_cache_file',return_value=self.path), \
++                patch('src.core.intelligence_memory.checkpoint_pipeline.ingest_transactions'):
++            result=await sleeper.sync_transactions(state=state,league_id=self.runtime.league_id,
++                publish_data=self.runtime.publish_transactions)
++        self.assertTrue(result)
++        self.assertIs(state['data'],data)
++        self.assertEqual(data['transaction_acquisition']['periods']['8']['state'],'observed_empty')
++        self.assertEqual(data['season_transactions']['2'][0]['transaction_id'],'observed-trade')
++        self.assertIn('observed-trade',self.page())
++        self.assertEqual(self.store.transaction_coverage(self.runtime.league_id)['seasons'][0]['transaction_acquisition']['periods']['8']['state'],'observed_empty')
++
++    async def test_failed_transaction_only_refresh_preserves_source_and_safe_warning(self):
++        from services import sleeper
++        await CurrentSeasonRuntimeHistoryTests.restore(self)
++        before=deepcopy(self.runtime.state['data'])
++        with patch.object(sleeper,'sleeper_get',side_effect=RuntimeError('private exception')):
++            result=await sleeper.sync_transactions(state=self.runtime.state,league_id=self.runtime.league_id,
++                publish_data=self.runtime.publish_transactions)
++        self.assertFalse(result)
++        self.assertEqual(self.runtime.state['data'],before)
++        self.assertIn('could not be refreshed',self.runtime.state['transactions_last_error'])
++        self.assertNotIn('private exception',self.runtime.state['transactions_last_error'])
++        self.assertIn('observed-trade',self.page())
++
++    async def test_granite_day_and_arkham_shapes_retain_independent_source_rules(self):
++        configurations=[('Granite-shaped',['QB','RB','RB','WR','WR','TE','FLEX','FLEX','K','DEF'],{'rec':1}),
++            ('Day-shaped',['QB','RB','WR','TE','FLEX','SUPER_FLEX'],{'rec':0.5}),
++            ('Arkham-shaped',['QB','RB','WR','FLEX','SUPER_FLEX'],{'rec':1,'pass_td':6})]
++        for index,(name,slots,scoring) in enumerate(configurations,1):
++            self.data=publication('220000000000000000'+str(index),2030+index,8)
++            self.data['league'].update(name=name,roster_positions=slots,scoring_settings=scoring)
++            self.data.update(roster_positions=slots,scoring_settings=scoring)
++            self.runtime=LeagueRuntime(self.data['league']['league_id'])
++            await CurrentSeasonRuntimeHistoryTests.restore(self)
++            html=self.page()
++            self.assertIn('Retrieved weeks: 1, 2, 3, 4, 5, 6, 7, 8',html)
++            self.assertIn('observed-trade',html)
++            self.assertEqual(self.runtime.state['data']['roster_positions'],slots)
++            self.assertEqual(self.runtime.state['data']['scoring_settings'],scoring)
++            await self.runtime.close()
+diff --git a/tests/test_current_season_history_browser.py b/tests/test_current_season_history_browser.py
+new file mode 100644
+index 00000000..6ace9d0c
+--- /dev/null
++++ b/tests/test_current_season_history_browser.py
+@@ -0,0 +1,119 @@
++"""Current-season cached-runtime publication, real route and phone disclosures."""
++import asyncio
++from copy import deepcopy
++import json
++import os
++import subprocess
++from pathlib import Path
++import unittest
++from unittest.mock import patch
++
++from playwright.sync_api import sync_playwright
++from src.core.league_runtime import LeagueRuntime
++from tests import test_current_season_franchise_history as fixtures
++from tools.validation.browser_runtime import launch_chromium
++
++
++class CurrentSeasonHistoryBrowserTests(unittest.TestCase):
++    setUp = fixtures.CurrentSeasonRuntimeHistoryTests.setUp
++
++    def test_current_periods_and_gaps_at_four_sizes_without_source_work(self):
++        from src.core.history_context.transaction_periods import current_period_metadata
++        records=[]
++        root=os.getenv('DTOS_CURRENT_HISTORY_EVIDENCE')
++        if not root and os.getenv('DTOS_PHASE2_EVIDENCE'):
++            root=str(Path(os.environ['DTOS_PHASE2_EVIDENCE'])/'current-season-history')
++        self.renderer=self.app_module.page
++        owned=[]
++        for i,name in enumerate(('Granite-shaped','Day-shaped','Arkham-shaped'),1):
++            self.data=fixtures.publication('230000000000000000'+str(i),2030+i,8)
++            slots = (['QB','RB','RB','WR','WR','TE','FLEX','FLEX','K','DEF'] if i==1
++                     else ['QB','RB','WR','TE','FLEX','SUPER_FLEX'] if i==2
++                     else ['QB','RB','WR','FLEX','SUPER_FLEX'])
++            scoring = {'rec':0.5 if i==2 else 1,'pass_td':6 if i==3 else 4}
++            self.data['league'].update(roster_positions=slots,scoring_settings=scoring)
++            self.data.update(roster_positions=slots,scoring_settings=scoring)
++            self.data['season_transactions']['4']=None
++            meta=current_period_metadata(self.data,4,None,f'{2030+i}-10-20T12:00:00+00:00')
++            meta['periods']['4']['state']='failed'
++            self.data['transaction_acquisition']=meta
++            self.runtime=LeagueRuntime(self.data['league']['league_id'])
++            asyncio.run(fixtures.CurrentSeasonRuntimeHistoryTests.restore(self))
++            owned.append((name,self.runtime))
++        with sync_playwright() as engine:
++            browser=launch_chromium(engine,headless=True)
++            try:
++                for name,runtime in owned:
++                    self.runtime=runtime
++                    before=deepcopy(self.runtime.state['data'])
++                    for width,height in ((320,432),(375,667),(390,844),(1280,900)):
++                        page=browser.new_page(viewport={'width':width,'height':height})
++                        requests=[]
++                        def transport(route):
++                            request=route.request
++                            requests.append(request.url)
++                            from urllib.parse import urlsplit
++                            u=urlsplit(request.url)
++                            if u.netloc!='dtos.test':
++                                return route.abort()
++                            response=self.client.get(u.path+('?' + u.query if u.query else ''))
++                            route.fulfill(status=response.status_code,
++                                content_type=response.headers.get('content-type','text/html'),body=response.content)
++                        page.route('**/*',transport)
++                        try:
++                            with patch('services.sleeper.sleeper_get',side_effect=AssertionError('No provider reads on history page')):
++                                response=page.goto('http://dtos.test/history/team/'+self.runtime.league_id+':franchise:1')
++                                self.assertEqual(response.status,200)
++                                page.wait_for_load_state('networkidle')
++                                timeline=page.locator('.franchise-timeline')
++                                text=timeline.inner_text()
++                                self.assertIn('Retrieved weeks: 1, 2, 3, 5, 6, 7, 8',text)
++                                self.assertIn('Refresh failed: weeks 4',text)
++                                self.assertIn('Observed-empty retrieved weeks: 1, 3, 5, 6, 7, 8',text)
++                                self.assertIn('Partial transaction coverage',text)
++                                self.assertIn('RETAINED / NOT REVALIDATED',text)
++                                summary=timeline.locator('summary').filter(has_text='Period freshness').first
++                                summary.scroll_into_view_if_needed()
++                                summary.focus()
++                                self.assertTrue(summary.evaluate('e=>e===document.activeElement'))
++                                self.assertNotEqual(summary.evaluate('e=>getComputedStyle(e).outlineStyle'),'none')
++                                count=len(requests)
++                                summary.press('Enter')
++                                self.assertTrue(summary.locator('..').evaluate('e=>e.open'))
++                                self.assertIn('retrieved at an unrecorded time',timeline.inner_text())
++                                self.assertIn('no compatible retrieved bucket retained',timeline.inner_text())
++                                box=summary.bounding_box()
++                                self.assertGreaterEqual(box['height'],44)
++                                if width<500:
++                                    touch=page.context.new_cdp_session(page)
++                                    touch.send('Emulation.setTouchEmulationEnabled',{'enabled':True})
++                                    point={'x':box['x']+box['width']/2,'y':box['y']+box['height']/2}
++                                    touch.send('Input.dispatchTouchEvent',{'type':'touchStart','touchPoints':[point]})
++                                    touch.send('Input.dispatchTouchEvent',{'type':'touchEnd','touchPoints':[]})
++                                    self.assertFalse(summary.locator('..').evaluate('e=>e.open'))
++                                self.assertEqual(len(requests),count)
++                                self.assertLessEqual(page.evaluate('document.documentElement.scrollWidth-innerWidth'),0)
++                                self.assertEqual(self.runtime.state['data'],before)
++                                self.sync.assert_not_called()
++                                records.append(dict(league_control=name,width=width,height=height,
++                                    scope='Disposable current-season source; not authenticated live acceptance',
++                                    retrieved=[1,2,3,5,6,7,8],failed=[4],keyboard=True,
++                                    touch_emulated=width<500,overflow=False,extra_disclosure_requests=0))
++                                if root:
++                                    path=Path(root)
++                                    path.mkdir(exist_ok=True,parents=True)
++                                    timeline.scroll_into_view_if_needed()
++                                    page.screenshot(path=str(path/f'{name}-{width}.png'))
++                        finally:
++                            page.close()
++            finally:
++                browser.close()
++        for _,runtime in owned:
++            asyncio.run(runtime.close())
++        if root:
++            report={'scope':'Disposable source-compatible current-season controls; not authenticated live acceptance',
++                'head':subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),
++                'tree':subprocess.check_output(['git','rev-parse','HEAD^{tree}'],text=True).strip(),
++                'working_tree_clean':not subprocess.check_output(['git','status','--porcelain'],text=True).strip(),
++                'records':records}
++            (Path(root)/'browser.json').write_text(json.dumps(report,indent=2)+'\n')

@@ -1,0 +1,12 @@
+E702 Multiple statements on one line (semicolon)
+   --> tests/test_current_season_history_browser.py:102:52
+    |
+100 | …                         touch_emulated=width<500,overflow=False,extra_disclosure_requests=0))
+101 | …                     if root:
+102 | …                         path=Path(root);path.mkdir(exist_ok=True,parents=True)
+    |                                          ^
+103 | …                         timeline.scroll_into_view_if_needed()
+104 | …                         page.screenshot(path=str(path/f'{name}-{width}.png'))
+    |
+
+Found 1 error.

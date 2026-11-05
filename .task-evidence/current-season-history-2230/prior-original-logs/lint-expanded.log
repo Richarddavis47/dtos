@@ -1,0 +1,34 @@
+E701 Multiple statements on one line (colon)
+   --> tests/test_current_season_franchise_history.py:257:57
+    |
+255 |         async def get(_client,path):
+256 |             calls.append(path)
+257 |             if path == '/league/'+self.runtime.league_id:return league
+    |                                                         ^
+258 |             if path.endswith('/users'):
+259 |                 return [dict(user_id=f'owner-{i}',display_name=f'Owner {i}') for i in (1,2)]
+    |
+
+E701 Multiple statements on one line (colon)
+   --> tests/test_current_season_franchise_history.py:262:36
+    |
+260 |             if path.endswith('/rosters'):
+261 |                 return [dict(roster_id=i,owner_id=f'owner-{i}',players=[],starters=[],settings={}) for i in (1,2)]
+262 |             if path == '/state/nfl':return dict(season='2032',week=8,season_type='regular')
+    |                                    ^
+263 |             if '/transactions/' in path:
+264 |                 week=int(path.rsplit('/',1)[-1])
+    |
+
+E701 Multiple statements on one line (colon)
+   --> tests/test_current_season_franchise_history.py:265:27
+    |
+263 |             if '/transactions/' in path:
+264 |                 week=int(path.rsplit('/',1)[-1])
+265 |                 if week==4:raise RuntimeError('disposable source failure')
+    |                           ^
+266 |                 return trade if week==2 else []
+267 |             return {} if path=='/players/nfl' else []
+    |
+
+Found 3 errors.
