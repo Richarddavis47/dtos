@@ -153,6 +153,9 @@ def lineup_detail_view(result, *, admissions=None):
                         reason = ('Excluded from usable cover · ' + state.upper() if state in
                                   {'out', 'ir', 'pup', 'suspended', 'inactive', 'retired'} else
                                   'Excluded from the eligible roster pool; inspect IR/taxi or weekly participation evidence')
+                    elif eligible_positions(evidence) and not any(_eligible(position, slot)
+                            for position in eligible_positions(evidence) for slot in required):
+                        reason = 'No eligible starting slot under this league’s rules; not usable replacement cover'
                     elif not number(evidence.get('canonical_projection')):
                         reason = 'No compatible projection recorded; not a zero-point replacement'
                     elif state != 'active':
@@ -174,17 +177,28 @@ def lineup_detail_view(result, *, admissions=None):
                             and same_number(entry.get('projected_points'), evidence.get('canonical_projection'))):
                         reserves.append({**entry, 'name': (context.get('identities') or {}).get(pid)
                                          or 'Player identity not resolved'})
-                reserve_valid = (valid and len(reserves) == len(reserve.get('entries') or [])
+                reserve_scope_valid = (valid
+                    and qualification.get('projection_snapshot_id') == expected
+                    and qualification.get('scoring_profile_id') == projection.get('scoring_profile_id'))
+                reserve_valid = (reserve_scope_valid and len(reserves) == len(reserve.get('entries') or [])
                     and len({e['asset_id'] for e in reserves}) == len(reserves)
                     and Counter(e['slot'] for e in reserves) <= Counter(required)
                     and same_number(total([e['projected_points'] for e in reserves]), reserve.get('known_subtotal')))
                 if not reserve_valid:
                     reserves = []
+                from services.trade_reserve_evidence import reserve_phase_evidence
+                # An empty, unprojected pool has no numeric subtotal, but its
+                # pinned missing-player evidence still explains the actual gap.
+                missing_only = bool(reserve_scope_valid and not reserve.get('entries')
+                    and reserve.get('known_subtotal') is None and reserve.get('missing_player_ids'))
+                reserve_evidence = reserve_phase_evidence(reserve, valid=reserve_valid or missing_only,
+                    complete_starters=complete, source=source, identities=context.get('identities') or {})
                 phases[phase] = {'state': 'complete' if complete else 'partial' if valid else 'unavailable',
                     'entries': displayed if valid else [], 'total': subtotal if complete else None,
                     'known_subtotal': subtotal if valid else None, 'unsupported_slots': unsupported if valid else [],
                     'reserves': reserves, 'reserve_complete': bool(reserve_valid and (reserve.get('qualification') or {}).get('calculation_supported') is True),
                     'reserve_limitations': (reserve.get('qualification') or {}).get('limitations') or [],
+                    'reserve_evidence': reserve_evidence,
                     'warnings': warnings if week_compatible else [],
                     'missing_player_count': len(coverage.get('missing_player_ids') or []) if week_compatible else None}
             before = {e['asset_id'] for e in phases['pre']['entries']}
@@ -249,8 +263,13 @@ def render_lineup_details(result, *, admissions=None, view=None):
                         html += '<p>' + str(p['missing_player_count']) + ' rostered player projections are missing; optimal among supported eligible players.</p>'
                     if p['reserves']:
                         html += table(p['reserves'], title + ' · disjoint projected reserve cover')
-                    html += '<p>Reserve cover ' + ('has supported projection evidence; availability qualifications still apply.' if p['reserve_complete'] else 'is incomplete; missing replacement effects remain unknown.') + '</p>'
-                    html += ''.join('<p class="tw-lineup-warning">' + text(x) + '</p>' for x in p['reserve_limitations'])
+                    reserve = p['reserve_evidence']
+                    if number(reserve['known_subtotal']):
+                        html += '<p>Reserve ' + ('production' if reserve['state'] == 'supported' else 'known subtotal only') + ': ' + manager_points(reserve['known_subtotal']) + ' points · ' + text(reserve['supported_slots']) + ' covered reserve slots · ' + text(reserve['candidate_count']) + ' eligible reserve candidates.</p>'
+                    html += '<p>Reserve cover ' + ('has supported projection evidence; availability qualifications still apply.' if reserve['state'] == 'supported' else 'is incomplete; missing replacement effects remain unknown.') + ' This is disjoint projected cover, not a second required starting lineup.</p>'
+                    if reserve['unfilled_cover_slots']:
+                        html += '<p>Unfilled reserve-cover slots: ' + text(', '.join(reserve['unfilled_cover_slots'])) + '. These are not empty submitted starter positions.</p>'
+                    html += ''.join('<p class="tw-lineup-warning">' + text(x) + '</p>' for x in reserve['reasons'])
                 html += ''.join('<p class="tw-lineup-warning">' + text(w['name'] + ' · ' + w['role'] + ': ' + w['reason']) + '</p>' for w in p['warnings'])
                 phases.append(html + '</section>')
             changes = []

@@ -13,11 +13,11 @@ from decimal import Decimal
 from typing import Any
 from time import perf_counter
 
-from src.core.trade_intelligence.lineup import optimal_legal_lineup
+from src.core.trade_intelligence.lineup import _eligible, eligible_positions, optimal_legal_lineup
 from src.core.projection_intelligence.service import UNAVAILABLE_PLAYER_STATUSES, projection_row_compatible
 from src.core.projection_intelligence.sleeper_provider import freshness_state
 
-METHOD_VERSION = 'weekly-optimal-horizons-v4-source-eligibility'
+METHOD_VERSION = 'weekly-optimal-horizons-v5-reserve-slot-eligibility'
 
 
 def restore_cached_week_keys(data: dict[str, Any]) -> None:
@@ -178,9 +178,17 @@ def prepare_team_strength(service: Any, *, league_id: str, season: int, current_
                         for player in pool if player['id'] not in selected]
             reserve_lineup = solve(reserves, roster_positions, week=week)
             optimization_seconds += perf_counter() - optimization_started
+            def relevant(player):
+                positions = eligible_positions(player)
+                # Unknown eligibility remains unresolved. Only a known player
+                # with no legal starting slot is irrelevant to replacement cover.
+                return not positions or any(_eligible(position, slot)
+                    for position in positions for slot in roster_positions)
+
             usable = [player for player in reserves if player['lineup_eligible']
-                      and player.get('bye_week') != week]
-            missing = sorted(set(lineup.missing_player_ids) | set(reserve_lineup.missing_player_ids))
+                      and player.get('bye_week') != week and relevant(player)]
+            relevant_ids = {player['id'] for player in pool if relevant(player)}
+            missing = sorted((set(lineup.missing_player_ids) | set(reserve_lineup.missing_player_ids)) & relevant_ids)
             unknown_positions = any(not player['position'] for player in usable)
             unsupported_starters = any(str(rows.get(pid, {}).get('availability') or '').casefold()
                                        in UNAVAILABLE_PLAYER_STATUSES for pid in selected)

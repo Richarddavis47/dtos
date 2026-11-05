@@ -239,7 +239,7 @@ def render_trade_explanation(result: dict, *, league_id: str, _slot_details=True
     weekly = tuple(item.key for item in view.evidence if item.key.startswith('weekly.'))
     rendered = explanation_panel(view, evidence_groups=(('Weekly optimal-lineup detail', weekly),) if weekly else ())
     from services.trade_decision import decision_context
-    presentation = decision_context(result, _admissions=admissions)
+    presentation = decision_context(result, _admissions=admissions, _lineup_view=slot_view)
     admission = admissions['active']
     # The completed DTO may include supported asset-age and incoming status
     # context supplied by the producer. Keep it when production still verifies;
