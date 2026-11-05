@@ -11,7 +11,7 @@
   const tab = window.name.match(/\|dtos-trade-tab=([a-zA-Z0-9-]+)$/)?.[1] || uuid();
   if (!window.name.endsWith('|dtos-trade-tab=' + tab)) window.name += '|dtos-trade-tab=' + tab;
   const paths = new Set(['', 'teams', 'league', 'matchups', 'market', 'players', 'trades', 'picks', 'history', 'fois', 'front-offices', 'transactions', 'reports', 'settings', 'brain', 'valuation', 'commissioner', 'account', 'search']);
-  const queryKeys = new Set(['q','position','availability','sort','direction','front_office','selected','offset','limit','week','season','year','round','from_team','from_section','from_trade','from_market','market_league','matchup','asset_id','owner_roster_id','home_offer','partner_roster_id','shop_preference','league','league_id','view','tab','format','team','scope','owner','type','player','draft_pick','date_from','date_to','status','page','per_page','from_home','since']);
+  const queryKeys = new Set(['q','position','availability','sort','direction','front_office','selected','offset','limit','week','season','year','round','from_team','from_section','from_trade','from_market','market_league','matchup','asset_id','owner_roster_id','home_offer','partner_roster_id','shop_preference','league','league_id','view','tab','format','team','scope','owner','type','player','draft_pick','date_from','date_to','status','page','events_page','per_page','from_home','since']);
   const sections = new Set(['#full-roster','#positional-depth','#draft-capital','#my-team-advanced']);
   function safeUrl(raw) {
     if (!raw || typeof raw !== 'string' || raw.length > 2400 || /[\x00-\x1f\\]/.test(raw)) return null;
