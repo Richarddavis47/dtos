@@ -1,0 +1,43 @@
+{
+  "observed_at": "2026-11-05T01:58:46.797913+00:00",
+  "production_ready": {
+    "status": "ready",
+    "version": "1.22.13",
+    "build": 2228,
+    "deployment": {
+      "branch": "main",
+      "commit": "6b43bfa183ed9a2023ecb59247c8831da3c4b1dd",
+      "deployed_at": "2026-11-05T01:57:06.758639+00:00"
+    },
+    "reason": "Application ready."
+  },
+  "reads": [
+    {
+      "path": "/health/live",
+      "status": 200,
+      "guest_read_only": true
+    },
+    {
+      "path": "/welcome",
+      "status": 200,
+      "guest_read_only": true
+    },
+    {
+      "path": "/account/sign-in",
+      "status": 200,
+      "guest_read_only": true
+    },
+    {
+      "path": "/api/my-dtos",
+      "status": 401,
+      "guest_read_only": true
+    },
+    {
+      "path": "/api/inspect/live/teams",
+      "status": 401,
+      "guest_read_only": true
+    }
+  ],
+  "customer_prerelease_wording_matches": [],
+  "scope": "Bounded public unauthenticated reads only. No Granite entry, search, synchronization, FOIS rebuild, account login or saved user-data mutation."
+}

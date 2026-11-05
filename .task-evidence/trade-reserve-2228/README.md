@@ -1,6 +1,6 @@
 # Trade reserve evidence — build 2228
 
-Status: **HELD pending final hosted canonical validation and guarded publication**. This record does not claim a deployed release.
+Status: **RELEASED AND DEPLOYED — v1.22.13 / build 2228**. Production commit `6b43bfa183ed9a2023ecb59247c8831da3c4b1dd`; validated/merged tree `0764486d9440d39438a615ef301ddafe3a30a7fd`. [Immutable release](https://github.com/Richarddavis47/dtos/releases/tag/v1.22.13), 16 byte-verified attachments. [Final completion record](COMPLETION.json) · [Production smoke](production-readonly-smoke.json) · [Publication verification](publication-verified.json) · [Hosted records](hosted-final-records.json). All twelve mandatory hosted jobs passed; 4,082 hosted canonical tests, ten gates, 563 hosted manifest entries and 611 Product tests. Forty publisher controls also passed.
 
 Production baseline: v1.22.12/build 2227, commit `40226bb497a5b5c30047cc5f98e49c4008c67992`, tree `de2827e28dea58e7174c938ba4b38930e0892bea`. Candidate: `9d30dd2ede74c065e373841aa8fbaa20fea82f84`, tree `0764486d9440d39438a615ef301ddafe3a30a7fd`. [PR #317](https://github.com/Richarddavis47/dtos/pull/317).
 
@@ -51,4 +51,4 @@ The historical Granite 128-assessment/zero-qualified result is supplied evidence
 
 Same-projection-generation controls preserve exact starter impacts and three recorded rejection verdicts. A separate genuine +8 fixture consolidation retains its -1 reserve cost and Worth Pursuing verdict under all three strategies. Partial known cover is never zero or a full delta; supported zero is numerical only when proven. Source freshness is qualified using the existing rule. Physical iPhone/Safari and indefinite leak freedom are not claimed.
 
-Checksums: manifest.json inventories all published payloads; SHA256SUMS also includes that manifest. Existing immutable historical evidence is unchanged. Hosted workflow and release verification records are added after their actual completion.
+Checksums: manifest.json inventories all published payloads; SHA256SUMS also includes that manifest. Existing immutable historical evidence is unchanged. Hosted workflow, immutable release and independent production verification records are included. The frozen recovery archive preserves its original pre-publication record; final deployment identity is in COMPLETION.json. The original published local-review snapshot at bd6480efee31ba985722fd06dff917288944dc42 remains unchanged.

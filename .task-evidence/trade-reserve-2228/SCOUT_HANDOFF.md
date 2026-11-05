@@ -25,3 +25,11 @@ Scout checklist after validated deployment:
 6. Inspect 320×432, 375×667, 390×844 and desktop keyboard/touch-emulated browser records. Physical iPhone/Safari is not claimed.
 
 This release does not establish live Granite recovery, explain an earlier 503 or guarantee that any manager will accept a trade.
+
+## Verified publication and deployment
+
+PR #317 merged as `6b43bfa183ed9a2023ecb59247c8831da3c4b1dd`, tree `0764486d9440d39438a615ef301ddafe3a30a7fd`, exactly the validated tree. [Immutable v1.22.13 / build 2228 release](https://github.com/Richarddavis47/dtos/releases/tag/v1.22.13) has 16 verified attachments. All twelve required hosted jobs passed, including 4,082 hosted canonical tests/ten gates/563 manifest entries and 611 Product tests. Source-pinned local evidence has 559 manifest entries; the full original console has 28 readable, byte-equivalent parts. Separate publisher guard controls: 40 passed.
+
+Authorized publisher commit: `6b63608a15b6d03836c831efc5f3a20e306d6c1b`. Preparation run 41951492920 and publication run 41951845830 both passed, including source/CRC/manifest checks and attachment byte readback. Legacy hard-coded publish-2191 jobs were intentionally skipped and never dispatched. The frozen recovery archive preserves the original pre-publication validation record; COMPLETION.json and production-readonly-smoke.json give the final result.
+
+Independent public production verification reports v1.22.13/build 2228, exact deployed commit `6b43bfa183ed9a2023ecb59247c8831da3c4b1dd`, ready. Liveness, Welcome and Sign In returned 200; unauthenticated private endpoints returned 401. Welcome has no customer beta/prerelease wording. No production league entry/search or saved-state mutation was performed. Independent private Granite acceptance remains separate and must respect current resource admission.
