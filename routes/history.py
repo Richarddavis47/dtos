@@ -198,7 +198,7 @@ def create_history_router(
 <section class="card"><h3>Final Standings</h3><div class="ds-table-wrap"><table><thead><tr><th>Rank</th><th>Team</th><th>GM</th><th>Record</th><th>PF</th><th>PA</th><th>Postseason</th></tr></thead><tbody>{standings}</tbody></table></div></section>
 <section class="card"><h3>Weekly Results</h3>{weeks}</section>
 <section class="card"><h3>Season Leaders</h3><ol>{leaders}</ol></section>
-<div class="grid"><article class="card"><h3>Draft</h3><p>{archive['counts']['draft_picks']} recorded selections.</p><a class="ds-action" href="/api/history/seasons/{season}/draft">Draft evidence (JSON)</a></article><article class="card"><h3>Transactions</h3><p>{archive['counts']['transactions']} recorded moves.</p><a class="ds-action" href="/transactions?scope=all_history&season={season}&type=trade">Explore completed trades</a><details><summary>Source transaction evidence</summary><a class="ds-action" href="/api/history/seasons/{season}/transactions">Transaction evidence (JSON)</a></details></article><article class="card"><h3>Postseason</h3><p>{'Verified results available.' if archive['availability']['playoffs'] else 'Verified bracket results unavailable.'}</p><a class="ds-action" href="/api/history/seasons/{season}/playoffs">Postseason evidence (JSON)</a></article></div>
+<div class="grid"><article class="card"><h3>Draft</h3><p>{archive['counts']['draft_picks']} recorded selections.</p><a class="ds-action" href="/api/history/seasons/{season}/draft">Draft evidence (JSON)</a></article><article class="card"><h3>Transactions</h3><p>{archive['counts']['transactions']} recorded moves.</p><a class="ds-action" href="/transactions?scope=all_history&season={season}&type=trade&status=complete">Explore completed trades</a><details><summary>Source transaction evidence</summary><a class="ds-action" href="/api/history/seasons/{season}/transactions">Transaction evidence (JSON)</a></details></article><article class="card"><h3>Postseason</h3><p>{'Verified results available.' if archive['availability']['playoffs'] else 'Verified bracket results unavailable.'}</p><a class="ds-action" href="/api/history/seasons/{season}/playoffs">Postseason evidence (JSON)</a></article></div>
 """
         from src.ui.trade_timeline import render_source_coverage
         return page(f"{season} Season Archive", body + render_source_coverage({'seasons': archive.get('source_coverage', [])}))
@@ -225,8 +225,11 @@ def create_history_router(
         )
 
     @router.get("/history/team/{franchise_id:path}", response_class=HTMLResponse)
-    async def team_history_page(franchise_id: str) -> HTMLResponse:
+    async def team_history_page(franchise_id: str, events_page: int = Query(1, ge=1)) -> HTMLResponse:
         selected = selected_league()
+        prefix = str(selected) + ':franchise:'
+        if not franchise_id.startswith(prefix) or not franchise_id[len(prefix):].isdigit():
+            raise HTTPException(404, 'No historical franchise observations are available.')
         from src.core.history_context.recovery import HistoricalRecoveryUnavailable
         try:
             snapshots = history_records(selected, "team_intelligence_snapshot", franchise_id=franchise_id, limit=100)
@@ -234,8 +237,16 @@ def create_history_router(
             # Optional intelligence is not a prerequisite for displaying
             # directly observed franchise and season roster evidence.
             snapshots = {"count": 0, "records": []}
-        identities = history_records(selected, "franchise_identity", franchise_id=franchise_id, limit=100)
-        if not snapshots["count"] and not identities["count"]:
+        identities = history_records(selected, "franchise_identity", franchise_id=franchise_id, limit=100, allow_partial=True)
+        from services.franchise_timeline import franchise_timeline
+        from src.core.historical_memory.read_model import historical_graph
+        from services.history import historical_store
+        from src.ui.franchise_timeline import render_franchise_timeline
+        facts = require_data() if require_data else {'league': {'league_id': selected}}
+        model = historical_graph(historical_store, selected, facts)
+        roster_id = franchise_id.rsplit(':', 1)[-1]
+        timeline_view = franchise_timeline(model, roster_id, page=events_page)
+        if not snapshots["count"] and not identities["count"] and not timeline_view['total'] and not timeline_view['attempts_total']:
             raise HTTPException(404, "No historical franchise observations are available.")
         names = "".join(
             f'<li>{row["season"]}: {escape(str(row["payload"].get("dtos_display_name")))}</li>'
@@ -255,7 +266,8 @@ def create_history_router(
             for row in rosters["records"]
         ) or '<p class="muted">Season roster snapshot unavailable; no weekly holdings are inferred.</p>'
         roster_id = franchise_id.rsplit(':', 1)[-1]
-        trades_link = f'<a class="ds-action" href="/transactions?scope=all_history&type=trade&team={roster_id}">Explore this franchise’s completed trades</a>' if roster_id.isdigit() else ''
-        return page(f"{current_name} — Franchise History", f'<h2>Franchise History</h2>{trades_link}<p>Managers are season observations; exact takeover dates remain unavailable.</p><ul>{names}</ul><h3>Observed season roster snapshots</h3><div class="grid">{roster_cards}</div><h3>Competitive Direction Over Time</h3><div class="grid">{trajectory}</div>')
+        trades_link = f'<a class="ds-action" href="/transactions?scope=all_history&type=trade&status=complete&team={roster_id}">Explore this franchise’s completed trades</a>' if roster_id.isdigit() else ''
+        timeline = render_franchise_timeline(timeline_view)
+        return page(f"{current_name} — Franchise History", f'<h2>Franchise History</h2>{trades_link}{timeline}<p>Managers are season observations; exact takeover dates remain unavailable.</p><ul>{names}</ul><h3>Observed season roster snapshots</h3><div class="grid">{roster_cards}</div><h3>Competitive Direction Over Time</h3><p>Retained directional snapshots are not revalidated grades.</p><div class="grid">{trajectory}</div>')
 
     return router

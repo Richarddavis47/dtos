@@ -19,7 +19,7 @@ def archive_view(graph, data: dict, filters: dict) -> dict:
     rows = [r for r in rows if
             (filters.get('season') is None or r['season'] == filters['season'])
             and (filters.get('week') is None or r['week'] == filters['week'])
-            and (not filters.get('status') or r['status'] == filters['status'])]
+            and (not filters.get('status') or str(r['status']).casefold().replace('completed', 'complete') == str(filters['status']).casefold().replace('completed', 'complete'))]
     by_season = defaultdict(list)
     for row in rows:
         by_season[row['season']].append(row)
@@ -34,6 +34,10 @@ def archive_view(graph, data: dict, filters: dict) -> dict:
         presentation_rows = []
         for row in source:
             raw = dict(row['raw'])
+            if row.get('malformed_consideration'):
+                # Filtering can retain the source record without turning an
+                # invalid consideration object into assets or a completed trail.
+                raw.update(adds={}, drops={}, draft_picks=[], waiver_budget=[])
             # Canonical source time may use status_updated when created is
             # absent. This transient input never replaces the retained raw row.
             timestamp = row.get('occurred_at')

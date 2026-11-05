@@ -154,12 +154,15 @@ def _historical_archive_row(row: dict[str, Any]) -> str:
         else '<details><summary>Source event</summary>' + escape(row["sleeper_transaction_id"]) + '</details>'
     )
     asset_count = len(set(row["adds"]) | set(row["drops"])) + len(row["draft_picks"])
+    consideration = ('Consideration unavailable or malformed' if row.get('malformed_consideration') else f'{asset_count} assets recorded')
     faab = f" · {len(row.get('waiver_budget') or [])} FAAB movement(s)" if row.get('waiver_budget') else ''
     return (
         f'<tr><td>{escape(str(row["season"]))} Week {escape(str(row["week"] if row["week"] is not None else "?"))}</td>'
         f'<td>{escape(str(row["occurred_at"] or "Date unavailable"))}</td>'
         f'<td>{escape(row["type"].replace("_", " ").title())}<p>{escape(row.get("franchise_summary") or "Franchise identities unavailable")}</p></td>'
-        f'<td>{escape(str(row["status"]))}</td><td>{asset_count} assets{faab}</td><td>{detail}</td></tr>'
+        f'<td>{escape(str(row["status"]))}</td><td>{consideration}{faab}'
+        + (' · No completed movement established' if row.get('malformed_consideration') or str(row['status']).casefold() not in {'complete', 'completed'} else '')
+        + f'</td><td>{detail}</td></tr>'
     )
 
 

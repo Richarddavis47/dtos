@@ -265,6 +265,71 @@ class CanonicalHistoryStore:
         return {"league_id": league_id, "seasons": seasons, "provider_requests": 0,
                 "scope": "Retained source periods; unavailable and unacquired periods are not empty history."}
 
+    def transaction_coverage(self, league_id: str) -> dict:
+        """Borrow existing compact sections; no scoring, providers or full graph."""
+        from .coverage import periods
+        versions = self._cache_index(league_id)
+        chain = self.season_chain(league_id) or {}
+        with self._lock:
+            current = self._current.get(str(league_id)) or {}
+            current_generation = self._current_digests.get(str(league_id))
+        years = set(versions)
+        years.update(int(r['season']) for r in chain.get('seasons') or []
+                     if str(r.get('season')).isdigit())
+        current_year = (current.get('league') or {}).get('season')
+        if str(current_year).isdigit():
+            years.add(int(current_year))
+        rows = []
+        for year in sorted(years, reverse=True):
+            facts = sleeper_season_cache.sections(league_id, year, ('league', 'transactions'))
+            league = facts.get('league') or {}
+            # A current activity list is not proof that weekly buckets were acquired.
+            if not league and str(current_year) == str(year):
+                league = current.get('league') or {}
+            retained_periods = []
+            used_current = False
+            active = current.get('league') or {}
+            buckets = current.get('season_transactions')
+            if (str(current_year) == str(year) and str(active.get('league_id')) == str(league_id)
+                    and str(league.get('league_id')) == str(league_id) and isinstance(buckets, dict) and buckets):
+                merged = dict(facts.get('transactions') or {})
+                for key, value in buckets.items():
+                    if not str(key).isdigit() or not 0 <= int(key) <= 18:
+                        continue
+                    key = str(int(key))
+                    if not isinstance(value, list) and isinstance(merged.get(key), list):
+                        retained_periods.append(int(key))
+                    else:
+                        merged[key] = value
+                facts = {'league': active, 'transactions': merged}
+                league = active
+                used_current = True
+            reference = next((r for r in chain.get('seasons') or [] if r.get('season') == year), {})
+            declared_season = league.get('season', reference.get('season'))
+            source_identity_compatible = (str(declared_season) == str(year) and bool(league.get('league_id') or reference.get('league_id'))
+                if declared_season is not None else None)
+            from src.core.gm_behavioral_intelligence.activity import summarize_activity
+            activity = summarize_activity(((year, str(league.get('league_id') or ''), row)
+                for bucket in (facts.get('transactions') or {}).values() if isinstance(bucket, list)
+                for row in bucket), []) if isinstance(facts.get('transactions'), dict) else {}
+            known_statuses = {'complete', 'completed', 'failed', 'failure', 'pending', 'rejected', 'cancelled', 'canceled'}
+            unknown_statuses = {(str(row.get('transaction_id')), str(row.get('status')))
+                for bucket in (facts.get('transactions') or {}).values() if isinstance(bucket, list)
+                for row in bucket if isinstance(row, dict) and str(row.get('status') or '').casefold() not in known_statuses} if isinstance(facts.get('transactions'), dict) else set()
+            rows.append({'season': year, 'source_league_id': league.get('league_id') or reference.get('league_id'),
+                'source_identity_compatible': source_identity_compatible, 'declared_source_season': declared_season,
+                'previous_league_id': league.get('previous_league_id', reference.get('previous_league_id')),
+                'source_status': league.get('status'), 'source_generation': versions.get(year),
+                'prepared_current_fingerprint': current_generation if used_current else None,
+                'transactions': periods(facts, 'transactions') if facts else {},
+                'unqualified_records': activity.get('unqualified_records', 0),
+                'conflicting_identities': activity.get('conflicting_identities', 0),
+                'unknown_status_records': len(unknown_statuses),
+                'last_valid_periods': retained_periods,
+                'cache_state': reference.get('cache_status') or ('retained' if facts else 'unknown')})
+        return {'league_id': league_id, 'seasons': rows, 'provider_requests': 0,
+                'scope': 'Retained transaction acquisition only; no weekly scoring reconstruction.'}
+
     def historical_availability(self, league_id: str, season: int) -> dict[str, Any]:
         from .recovery import HistoricalCheckpoints
         cached = sleeper_season_cache.read(league_id, season)
