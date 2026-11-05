@@ -67,7 +67,7 @@ def lineup_comparisons(result, side="active", *, _admissions=None):
     return (_admissions[side] if _admissions is not None else completed_lineup_evidence(result, side))['horizons']
 
 
-def decision_context(result, *, incoming=(), outgoing=(), _admissions=None):
+def decision_context(result, *, incoming=(), outgoing=(), _admissions=None, _lineup_view=None):
     from services.trade_lineup_evidence import completed_lineup_admissions, counterparty_summary_display
     admissions = _admissions or completed_lineup_admissions(result)
     dimensions = result.get("dimensions") or {}
@@ -226,7 +226,7 @@ def decision_context(result, *, incoming=(), outgoing=(), _admissions=None):
             + "The known weekly effect remains useful, but does not fill gaps in the wider assessment."
         )
     from services.trade_decision_summary import decision_summary
-    two_sided = decision_summary(result, admissions)
+    two_sided = decision_summary(result, admissions, lineup_view=_lineup_view)
     return {
         **two_sided,
         "verdict": final["headline"],

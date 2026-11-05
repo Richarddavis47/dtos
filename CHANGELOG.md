@@ -1,3 +1,11 @@
+# v1.22.13 / build 2228 — Trade reserve evidence
+
+Trade decision summaries retain independent before/after reserve facts for each franchise: supported weekly effects, verified zeros, and known partial subtotals with specific prepared-player projection or eligibility gaps. Existing expanded lineup details show candidate counts and unfilled cover slots, separately from required starters. Missing evidence is never a zero or a full replacement comparison.
+
+Canonical reserve preparation now excludes assets with proven ineligibility for every configured starting slot from its usable replacement population. For example, K/DEF assets cannot hide an established empty reserve pool in a league without those positions. Unknown eligibility remains unresolved, and leagues requiring K/DEF still require their compatible projections. Prepared profiles use a new methodology identity; stale profiles cannot be silently mixed with the corrected calculation.
+
+Neutral/Custom prices, exact picks, independent legal starting lineups, submitted Sleeper starters, bilateral thresholds and resource policies are unchanged. No customer-facing beta/prerelease wording was found; the responsive Trade control explicitly protects its absence. See docs/audits/TRADE_RESERVE_EVIDENCE_2228.md.
+
 # v1.22.12 / build 2227 — Team Assessment Coverage
 
 Home and My Team show a coherent weekly projected-lineup comparison from one prepared diagnostic publication. Partial legal lineups retain supported slot and comparable-team counts while withholding incomplete totals and ranks. Aging, failed refreshes and availability changes preserve effective evidence qualification. Overall grades, submitted lineups, Trade calculations and resource policies are unchanged.

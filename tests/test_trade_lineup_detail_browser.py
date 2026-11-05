@@ -55,6 +55,12 @@ class TradeLineupDetailBrowserTests(unittest.TestCase):
         helper.data['market_data'] = {'providers': {'FantasyCalc': {
             pid: {'value': 3000, 'confidence': 90} for pid, p in helper.data['players'].items()
             if p['position'] not in {'K', 'DEF'}}}}
+        # Keep supported starter totals and the partner's reserve effect, while
+        # a genuine active bench projection gap qualifies only the owner's cover.
+        bench = {'id': '1-unknown', 'name': 'Uncovered bench receiver', 'position': 'WR',
+                 'fantasy_positions': ['WR'], 'status': 'Active'}
+        helper.data['players'][bench['id']] = bench.copy()
+        helper.data['teams'][0]['players'].append(bench.copy())
         helper.f.reader.publish_horizon({8: source.feed}, data=helper.data,
                                        league_id='league-1', season=2026, current_week=8)
         with patch('services.global_evidence.retained_global_evidence', return_value=None):
@@ -71,6 +77,11 @@ class TradeLineupDetailBrowserTests(unittest.TestCase):
                 disclosure = page.locator('#trade-result .tw-lineup-details').first
                 summary = disclosure.locator('summary').first
                 summary.wait_for()
+                card = page.locator('#trade-result')
+                self.assertIn('10.00 points (known subtotal only', card.inner_text())
+                self.assertIn('Uncovered bench receiver: no numerical projection', card.inner_text())
+                self.assertIn('week 8 reserve-production change: +10.00', card.inner_text())
+                self.assertNotRegex(card.inner_text().lower(), r'\b(?:beta|prerelease|pre-release)\b')
                 count = len(helper.requests)
                 summary.scroll_into_view_if_needed()
                 summary.focus()
@@ -100,6 +111,8 @@ class TradeLineupDetailBrowserTests(unittest.TestCase):
                     self.assertFalse(disclosure.evaluate('e=>e.open'))
                     summary.press('Enter')
                 self.assertIn('not your submitted Sleeper starters', disclosure.inner_text())
+                self.assertIn('Reserve known subtotal only: 10 points', disclosure.inner_text())
+                self.assertIn('not a second required starting lineup', disclosure.inner_text())
                 record = dict(width=width, height=height, keyboard=True, touch=width < 500,
                               no_overflow=True, extra_disclosure_requests=len(helper.requests) - count,
                               summary_height=targets['height'], slots=first_week.inner_text())

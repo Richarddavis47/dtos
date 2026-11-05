@@ -2,13 +2,16 @@
 from services.trade_lineup_evidence import number
 
 
-def decision_summary(result, admissions):
+def decision_summary(result, admissions, *, lineup_view=None):
     dims = result.get('dimensions') or {}
     fit = dims.get('strategic_fit') or {}
     partner = dims.get('counterparty_plausibility') or {}
     market = result.get('market_evidence') or {}
     missing = []
     summaries = {}
+    if lineup_view is None and result.get('lineup_detail_context'):
+        from services.trade_lineup_detail import lineup_detail_view
+        lineup_view = lineup_detail_view(result, admissions=admissions)
     for side, title in [('active', 'Your team'), ('partner', 'Their team')]:
         view = admissions[side]
         current = view['horizons'].get('current_week') or {}
@@ -50,6 +53,9 @@ def decision_summary(result, admissions):
         if reserve.get('complete') is not True:
             lines.append('Useful replacement-depth coverage is incomplete; a missing reserve effect is not zero.')
             missing.append(f"{title}'s compatible reserve-depth evidence")
+        if lineup_view is not None:
+            from services.trade_reserve_evidence import reserve_summary_lines
+            lines.extend(reserve_summary_lines(lineup_view, side))
         capital = profile.get('future_capital') or {}
         assessment = capital.get('assessment') or {}
         if capital.get('sent') or capital.get('received'):
