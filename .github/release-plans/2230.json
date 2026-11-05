@@ -1,0 +1,134 @@
+{
+  "schema": 1,
+  "repository": "Richarddavis47/dtos",
+  "actor": "Richarddavis47",
+  "publisher_ref": "refs/heads/release/2230-actions-publisher",
+  "baseline": "769bf99ee719f5e353822cdbd75b9259c8fd5fe1",
+  "candidate": "bd456e40fc4ab9ef1925369f82f9b72ca45589ad",
+  "tree": "c251edcf8a6d2a35b157deb916a8cfb7869d6344",
+  "pr": 319,
+  "source_branch": "fix/current-season-franchise-history",
+  "version": "1.22.15",
+  "build": 2230,
+  "draft_id": 435694832,
+  "prior_immutable_tag": "v1.22.14",
+  "canonical_tests": 4129,
+  "canonical_entries": 585,
+  "product_tests": 658,
+  "recovery_file": ".github/release-plans/2230-recovery.zip",
+  "recovery_sha256": "4fc99a11497b7ea5d1f8f1622ebf4d666a409e760deb83311bc73a44f58f1486",
+  "runs": [
+    {
+      "id": 42095834465,
+      "name": "Canonical release recovery",
+      "path": ".github/workflows/canonical-release-recovery.yml",
+      "jobs": [
+        "canonical-release"
+      ]
+    },
+    {
+      "id": 42095834405,
+      "name": "Product browser journeys",
+      "path": ".github/workflows/product-browser.yml",
+      "jobs": [
+        "product-browser",
+        "my-team-browser",
+        "beginner-navigation",
+        "public-welcome-browser",
+        "historical-trade-timeline",
+        "projection-display-cross-version"
+      ]
+    },
+    {
+      "id": 42095834230,
+      "name": "Validation tooling",
+      "path": ".github/workflows/validation-tooling.yml",
+      "jobs": [
+        "tooling (ubuntu-24.04)",
+        "tooling (windows-latest)"
+      ]
+    },
+    {
+      "id": 42095834381,
+      "name": "Linux Asset Market lifecycle",
+      "path": ".github/workflows/linux-market-lifecycle.yml",
+      "jobs": [
+        "cgroup-lifecycle (ordinary)",
+        "cgroup-lifecycle (archive-warmed)",
+        "cgroup-lifecycle (combined-read)"
+      ]
+    }
+  ],
+  "artifacts": [
+    {
+      "id": 13449030815,
+      "name": "current-season-history-browser",
+      "run": 42095834405,
+      "file": "current-history-original.zip",
+      "sha256": "6f52a45db84ac432c979432275a884942bd9120dcd396ea0e72964e1b321f61a"
+    },
+    {
+      "id": 13450139253,
+      "name": "canonical-release-2g-python314",
+      "run": 42095834465,
+      "file": "canonical-original.zip",
+      "sha256": "c3c260659b85c7656eefa9676103bcf4829addd8e86f5f9fd30f7111e3d5f176"
+    },
+    {
+      "id": 13446384293,
+      "name": "restoration-preflight-2g",
+      "run": 42095834405,
+      "file": "preflight-original.zip",
+      "sha256": "1a68bb2690ced30dcb3f78d740dc552d4cff86cfad7acc35f178b125e72413df"
+    },
+    {
+      "id": 13448273599,
+      "name": "trade-resource-2g",
+      "run": 42095834405,
+      "file": "trade-resource-original.zip",
+      "sha256": "eee802adcf9c2f1db8146a713604ac1641fb9a1cd3742d3043508734a6129748"
+    },
+    {
+      "id": 13447864420,
+      "name": "league-entry-2g",
+      "run": 42095834405,
+      "file": "league-entry-original.zip",
+      "sha256": "4f9ed2a0c2671eaccc2307c40c6548a41181506ed37ecd73c38b785270ab1461"
+    },
+    {
+      "id": 13447228311,
+      "name": "linux-market-lifecycle-ordinary-summary",
+      "run": 42095834381,
+      "file": "lifecycle-ordinary.zip",
+      "sha256": "a225049a60699a937b9d7cb2fcdaedcb458700b27bab954fce32359851f5d10d"
+    },
+    {
+      "id": 13447781530,
+      "name": "linux-market-lifecycle-archive-warmed-summary",
+      "run": 42095834381,
+      "file": "lifecycle-archive-warmed.zip",
+      "sha256": "7c413dae775de803786c2b857c3a349ebf1b03ea539ecfb9275977035f518133"
+    },
+    {
+      "id": 13446178670,
+      "name": "linux-market-lifecycle-combined-read-summary",
+      "run": 42095834381,
+      "file": "lifecycle-combined-read.zip",
+      "sha256": "aabf2df6f0938e0ad4778beebca90dca40df0e1bae2291f41a7d967685a8dd14"
+    },
+    {
+      "id": 13446324214,
+      "name": "public-welcome-security-browser",
+      "run": 42095834405,
+      "file": "public-welcome-security.zip",
+      "sha256": "fcf9dade8cf6b1bcab89edcd65b189acc93480cfda5fe743c25cfe4716b42dce"
+    }
+  ],
+  "prior_runs": [],
+  "prior_jobs": [],
+  "python_version": "3.14.3",
+  "prior_evidence_file": ".github/release-plans/2230-prior.zip",
+  "prior_evidence_sha256": "4558bc492342df70666c9c29f81ebc61bbc657c8f624c5bdc7c5c33f152b98e0",
+  "finalized": true,
+  "local_canonical_entries": 581
+}
