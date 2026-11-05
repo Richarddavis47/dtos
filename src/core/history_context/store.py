@@ -76,6 +76,7 @@ class CanonicalHistoryStore:
             "valuation": data.get("valuation_intelligence") or {},
             "market": data.get("market_data") or {},
             "transactions": data.get("transactions") or [], "season_transactions": data.get("season_transactions") or {}, "drafts": data.get("drafts") or [],
+            "transaction_acquisition": data.get("transaction_acquisition") or {},
             "draft_picks": data.get("draft_picks") or [], "traded_picks": data.get("traded_picks") or [],
             "pick_ledger": data.get("pick_ledger"),
             "season_matchups": {k: v for k, v in (data.get('season_matchups') or {}).items()
@@ -316,6 +317,20 @@ class CanonicalHistoryStore:
             unknown_statuses = {(str(row.get('transaction_id')), str(row.get('status')))
                 for bucket in (facts.get('transactions') or {}).values() if isinstance(bucket, list)
                 for row in bucket if isinstance(row, dict) and str(row.get('status') or '').casefold() not in known_statuses} if isinstance(facts.get('transactions'), dict) else set()
+            from .transaction_periods import admitted_metadata
+            acquisition = admitted_metadata(current, league_id, year) if used_current else {}
+            source_week = current.get('week') if str(current_year) == str(year) else None
+            if type(source_week) is int and 0 <= source_week <= 18:
+                # The selected league/source week is already season-qualified
+                # by synchronization. It defines expected periods, not proof
+                # that any bucket was acquired.
+                facts = {**facts, 'league': {**league, 'settings': {
+                    **(league.get('settings') or {}), 'leg': source_week}}}
+            else:
+                source_week = None
+            failed = [int(w) for w,r in (acquisition.get('periods') or {}).items() if r.get('state') == 'failed']
+            retained_periods = sorted(set(retained_periods) | {int(w) for w,r in
+                (acquisition.get('periods') or {}).items() if r.get('retained_last_valid')})
             rows.append({'season': year, 'source_league_id': league.get('league_id') or reference.get('league_id'),
                 'source_identity_compatible': source_identity_compatible, 'declared_source_season': declared_season,
                 'previous_league_id': league.get('previous_league_id', reference.get('previous_league_id')),
@@ -326,6 +341,9 @@ class CanonicalHistoryStore:
                 'conflicting_identities': activity.get('conflicting_identities', 0),
                 'unknown_status_records': len(unknown_statuses),
                 'last_valid_periods': retained_periods,
+                'transaction_acquisition': acquisition,
+                'failed_periods': failed,
+                'source_week': source_week,
                 'cache_state': reference.get('cache_status') or ('retained' if facts else 'unknown')})
         return {'league_id': league_id, 'seasons': rows, 'provider_requests': 0,
                 'scope': 'Retained transaction acquisition only; no weekly scoring reconstruction.'}
@@ -928,7 +946,9 @@ class CanonicalHistoryStore:
         current_transactions = data.get('transactions') or ()
         if isinstance(current_transactions, dict):
             current_transactions = [dict(row, leg=int(week)) for week, bucket in current_transactions.items() for row in bucket or ()]
-        bucket_rows = [dict(row, leg=int(week)) for week, bucket in buckets.items() for row in bucket or ()]
+        bucket_rows = [dict(row, leg=int(week)) for week, bucket in
+                       readable_buckets({'transactions': buckets}, 'transactions').items()
+                       if 0 <= int(week) <= 18 for row in bucket]
         source_periods = defaultdict(set)
         for row in bucket_rows:
             if row.get('transaction_id'):

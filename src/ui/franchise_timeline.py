@@ -8,14 +8,26 @@ def render_franchise_timeline(view):
         return escape(str(value))
     cards = []
     for s in view['seasons']:
-        labels = {'unacquired': 'Not retrieved', 'unavailable': 'Source unavailable', 'malformed': 'Source data could not be read'}
+        labels = {'unacquired': 'Not retrieved', 'unavailable': 'Source unavailable', 'malformed': 'Source data could not be read', 'failed': 'Refresh failed'}
         gaps = '; '.join(labels[name] + ': weeks ' + ', '.join(map(str, weeks))
                          for name, weeks in s['gaps'].items() if weeks)
         activity = (f"{s['completed_transactions']} completed transactions retained." if s['completed_transactions'] else
                     'No completed transaction activity in the fully acquired supported source periods.' if s['no_activity_supported'] else
                     'No completed transactions retained for this franchise; missing coverage is not no activity.')
+        observations = s.get('period_observations') or {}
+        freshness = []
+        for week in sorted(set(s['acquired']) | {int(w) for w in observations}):
+            row = observations.get(str(week)) or {}
+            freshness.append('Week ' + str(week) + (': retrieved ' + (row.get('retrieved_at') or 'at an unrecorded time') if week in s['acquired'] else ': no compatible retrieved bucket retained')
+                + ('; showing last-valid evidence' if row.get('retained_last_valid') else '')
+                + ('. Recorded attempt: ' + row['state'].replace('_',' ') + ' at ' + str(row.get('last_attempt_at') or 'an unrecorded time') if row else ''))
+        retrieved = ', '.join(map(str,s['acquired'])) or 'none established'
+        empty = ', '.join(map(str,s.get('observed_empty') or [])) or 'none established'
+        timing = ('<details><summary>Period freshness</summary><ul>' + ''.join('<li>' + text(r) + '</li>' for r in freshness) + '</ul><p>Retrieval times are DTOS source observations, not transaction occurrence times. Missing periods do not imply no activity.</p></details>') if freshness else ''
         cards.append(f'''<article class="card fh-season"><h4>{s['season']} · {text(s['state'].title())} transaction coverage</h4>
 <p>{text(s['reason'])}</p><p>{text(activity)}</p><p>{len(s['acquired'])} of 19 supported source weeks retrieved (0 is the offseason bucket; 1–18 are weekly buckets).</p>
+<p>Retrieved weeks: {text(retrieved)}. Observed-empty retrieved weeks: {text(empty)}.</p>
+{('<p>Selected source week: ' + text(s['source_week']) + '. Unretrieved periods remain unknown.</p>') if s.get('source_week') is not None else ''}{timing}
 {('<p>' + text(gaps) + '.</p>') if gaps else ''}<p>{s['draft_selections']} draft selections retained. {text(s['draft_note'])}</p>
 <p>{text(s['continuity'])}. {'Season-observed franchise identity available.' if s['identity_observed'] else 'Franchise identity for this season is not established.'}</p>
 <details><summary>Source context</summary><p>Source league: {text(s['source_league_id'] or 'not recorded')} · retained source generation: {text(s['source_generation'] or 'not recorded')} · prepared-current fingerprint: {text(s['prepared_current_fingerprint'] or 'not used')}.</p></details></article>''')

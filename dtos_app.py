@@ -188,6 +188,12 @@ def _publish_runtime_context(
     runtime.fois_context = fois_service
     context.refresh_generations()
     runtime.canonical_context = context
+    # Cached restoration and startup publish here without running a Sleeper
+    # sync. Register the same owned source reference for canonical history too;
+    # context.close() releases it by identity on eviction. No source reads or
+    # historical reconstruction are initiated by this publication.
+    if data:
+        canonical_history_store.update_current(runtime.league_id, data)
     return context
 
 
@@ -210,7 +216,7 @@ async def _hydrate_league_runtime(
             )
             projection.restore_into(selected.state['data'])
             context = _publish_runtime_context(selected, projection)
-            context.history_state = 'unavailable'
+            context.history_state = 'partial'
 
         restored = await restore_cached_runtime_owned(
             runtime, publish_cached, expected_season=season,
