@@ -1047,7 +1047,8 @@ class HistoricalAssetGraph:
         records = {}
         for entity in ("franchise_identity", "season_standing", "weekly_roster", "roster_snapshot"):
             records[entity] = [row for row in self._records(entity) if row.get('franchise_id') == target]
-        transactions = [row for row in self.transaction_archive() if str(roster_id) in {str(value) for value in row["roster_ids"]}]
+        archive = self.transaction_archive()
+        transactions = [row for row in archive if str(roster_id) in {str(value) for value in row["roster_ids"]}]
         from src.core.history_context.coverage import transaction_coverage_summary
         coverage = self.store.transaction_coverage(self.league_id) if hasattr(self.store, 'transaction_coverage') else {}
         coverage_by_season = {r['season']: r for r in coverage.get('seasons') or []}
@@ -1062,7 +1063,10 @@ class HistoricalAssetGraph:
             "transactions": transactions,
             "partial_historical_families": sorted(self._partial_record_families),
             "season_status": {str(season): transaction_coverage_summary(coverage_by_season.get(season) or {},
-                records_present=any(r['season'] == season for r in transactions))['state'] for season in sorted(years)},
+                # Retained source transactions establish partial season evidence
+                # even when their franchise attribution is incomplete. A compact
+                # checkpoint does not establish acquisition of all weekly buckets.
+                records_present=any(r['season'] == season for r in archive))['state'] for season in sorted(years)},
             "season_status_meaning": "Transaction acquisition coverage, not calendar age or an overall historical grade.",
         }
 

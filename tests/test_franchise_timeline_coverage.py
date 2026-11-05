@@ -81,6 +81,21 @@ class FranchiseTimelineCoverageTests(unittest.TestCase):
             self.assertIn('2022 · Unknown transaction coverage', html)
             self.assertIn('missing history is not no activity', html)
 
+    def test_checkpoint_retains_events_without_claiming_acquired_weeks(self):
+        self.past({'0': [self.trade()]})
+        store = self.f.fixture.store
+        store.preserve_reader_checkpoint(fixtures.DAY, 2024, current_season=2026)
+        self.f.fixture.cache.delete(fixtures.DAY, 2024)
+        view = franchise_timeline(self.graph(), '1')
+        season = next(s for s in view['seasons'] if s['season'] == 2024)
+        self.assertEqual(season['state'], 'partial')
+        self.assertEqual(season['acquired'], [])
+        self.assertFalse(season['no_activity_supported'])
+        self.assertTrue(any(r['id'] == 'controlled' for r in view['events']))
+        html = self.page()
+        self.assertIn('2024 · Partial transaction coverage', html)
+        self.assertNotIn('No completed transaction activity in the fully acquired', html)
+
     def test_missing_and_malformed_source_periods_have_specific_reasons(self):
         self.past({'0': [], '1': None, '2': 'malformed'})
         html = self.page()

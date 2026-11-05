@@ -31,6 +31,8 @@ Complete transaction coverage requires all supported buckets 0–18, no missing/
 
 Draft selections have their own observed counts. Complete transaction acquisition does not imply every draft selection, owner tenure, weekly roster or historical grade is known. Unknown and partial remain distinct; a source timestamp is not fabricated when only source identity/generation is retained.
 
+Existing historical reader recovery coverage exposed a checkpoint transition: retained transactions without attributable participants still establish partial source-season evidence after raw-cache eviction. The API now considers all retained source transactions for that season-level status, without assigning them to a franchise or claiming recovered weekly acquisition. A rendered checkpoint control independently verifies retained attributable events, absent acquired-week counts and no complete/empty claim.
+
 ## Verification and remaining limits
 
 Focused controls cover complete, partial and unknown rendered pages; actual Day/Arkham replay; completed waivers; failed/pending/rejected/unknown records; duplicate and conflicting IDs; exact traded pick original differing from owner; auction unknown original; observed manager change; missing continuation with independently retained movements; malformed consideration; missing historical identity; wrong source season; current prepared buckets versus flat activity; source-publication changes; no provider calls, full graph construction, historical pricing or regrading. Chromium covers 320×432, 375×667, 390×844 and desktop, keyboard/touch emulation, focus, no overflow and no disclosure requests.
