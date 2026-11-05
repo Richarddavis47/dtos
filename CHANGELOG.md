@@ -1,3 +1,11 @@
+# v1.22.14 / build 2229 — Trustworthy franchise transaction history
+
+Franchise History now shows retained completed trades, waivers, adds/drops, FAAB transfers and observed draft selections, with pagination and exact source references. Completed movements are separate from pending, failed, rejected, unknown or malformed records. Exact picks retain their year, round and original franchise independently of their owner; a draft selection never invents its original franchise from the selecting team.
+
+Season transaction coverage is Complete, Partial or Unknown based on retrieved source periods and compatible season identity, rather than calendar age. Discovered-but-uncached seasons, unknown statuses, conflicting records and missing identity remain explicit. A no-completed-activity statement requires compatible, fully acquired closed-season evidence and established franchise context. Individual draft coverage is separate. Missing season links retain supported source facts with unconfirmed franchise attribution; season-observed managers are not exact trade-time actors.
+
+The factual view uses existing bounded records and compact transaction sections; it does not fetch providers, build trade trees, reconstruct historical Market values or regrade FOIS. Historical grades remain RETAINED / NOT REVALIDATED. Trade/valuation/scoring mathematics, saved preferences and memory/admission policies are unchanged. See docs/audits/FRANCHISE_HISTORY_2229.md.
+
 # v1.22.13 / build 2228 — Trade reserve evidence
 
 Trade decision summaries retain independent before/after reserve facts for each franchise: supported weekly effects, verified zeros, and known partial subtotals with specific prepared-player projection or eligibility gaps. Existing expanded lineup details show candidate counts and unfilled cover slots, separately from required starters. Missing evidence is never a zero or a full replacement comparison.

@@ -1020,17 +1020,25 @@ class HistoricalAssetGraph:
             payload = row["payload"]
             transaction_type = str(payload.get("type") or row["entity_type"])
             transaction_id = str(row["source_record_id"])
+            malformed = any(payload.get(k) is not None and not isinstance(payload[k], dict) for k in ('adds', 'drops'))
+            malformed |= any(payload.get(k) is not None and (not isinstance(payload[k], list)
+                or any(not isinstance(p, dict) for p in payload[k])) for k in ('draft_picks', 'waiver_budget'))
+            incomplete_pick = not malformed and any(future_pick_id(p, p.get('season')) is None
+                for p in payload.get('draft_picks') or [])
             result.append({
                 "schema_version": HISTORICAL_ASSET_GRAPH_SCHEMA_VERSION,
                 "transaction_id": canonical_transaction_id(self._source_league(row), transaction_id),
                 "sleeper_transaction_id": transaction_id,
-                "trade_dossier_url": f"/trades/history/{transaction_id}" if transaction_type == "trade" else None,
+                "trade_dossier_url": f"/trades/history/{transaction_id}" if transaction_type == "trade" and not malformed and not incomplete_pick and str(payload.get('status') or '').casefold() in COMPLETED_STATUSES else None,
                 "season": row["season"], "week": row["week"],
                 "type": transaction_type, "status": payload.get("status") or "unknown",
                 "occurred_at": row.get("occurred_at"), "roster_ids": payload.get("roster_ids") or [],
-                "adds": payload.get("adds") or {}, "drops": payload.get("drops") or {},
-                "draft_picks": payload.get("draft_picks") or [],
-                "waiver_budget": payload.get("waiver_budget") or [],
+                "adds": payload.get("adds") if isinstance(payload.get('adds'), dict) else {},
+                "drops": payload.get("drops") if isinstance(payload.get('drops'), dict) else {},
+                "draft_picks": [p for p in payload.get('draft_picks') or [] if isinstance(p, dict)] if isinstance(payload.get('draft_picks'), list) else [],
+                "waiver_budget": [p for p in payload.get('waiver_budget') or [] if isinstance(p, dict)] if isinstance(payload.get('waiver_budget'), list) else [],
+                "malformed_consideration": malformed,
+                "incomplete_pick_identity": incomplete_pick,
                 "source": self._source(row), "raw": payload,
             })
         result.sort(key=lambda item: (item["season"], item["week"] or 0, item["occurred_at"] or "", item["transaction_id"]), reverse=True)
@@ -1042,7 +1050,12 @@ class HistoricalAssetGraph:
         records = {}
         for entity in ("franchise_identity", "season_standing", "weekly_roster", "roster_snapshot"):
             records[entity] = [row for row in self._records(entity) if row.get('franchise_id') == target]
-        transactions = [row for row in self.transaction_archive() if str(roster_id) in {str(value) for value in row["roster_ids"]}]
+        archive = self.transaction_archive()
+        transactions = [row for row in archive if str(roster_id) in {str(value) for value in row["roster_ids"]}]
+        from src.core.history_context.coverage import transaction_coverage_summary
+        coverage = self.store.transaction_coverage(self.league_id) if hasattr(self.store, 'transaction_coverage') else {}
+        coverage_by_season = {r['season']: r for r in coverage.get('seasons') or []}
+        years = {int(row['season']) for values in records.values() for row in values} | set(coverage_by_season)
         return {
             "schema_version": HISTORICAL_ASSET_GRAPH_SCHEMA_VERSION,
             "franchise_id": target, "identities": records["franchise_identity"],
@@ -1052,10 +1065,12 @@ class HistoricalAssetGraph:
             "roster_coverage_note": "Season roster snapshots are observed source holdings, not weekly historical rosters. Missing weekly rosters remain unavailable.",
             "transactions": transactions,
             "partial_historical_families": sorted(self._partial_record_families),
-            "season_status": {
-                str(season): "in_progress" if season >= datetime.now(timezone.utc).year else "complete"
-                for season in sorted({int(row["season"]) for row in records["season_standing"]})
-            },
+            "season_status": {str(season): transaction_coverage_summary(coverage_by_season.get(season) or {},
+                # Retained source transactions establish partial season evidence
+                # even when their franchise attribution is incomplete. A compact
+                # checkpoint does not establish acquisition of all weekly buckets.
+                records_present=any(r['season'] == season for r in archive))['state'] for season in sorted(years)},
+            "season_status_meaning": "Transaction acquisition coverage, not calendar age or an overall historical grade.",
         }
 
     def search(self, query: str, limit: int = 50) -> list[dict[str, Any]]:
