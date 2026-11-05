@@ -1,0 +1,1868 @@
+diff --git a/.github/workflows/product-browser.yml b/.github/workflows/product-browser.yml
+index 0f30755e..11642152 100644
+--- a/.github/workflows/product-browser.yml
++++ b/.github/workflows/product-browser.yml
+@@ -33,7 +33,7 @@ jobs:
+       - name: Authenticated product, interaction and accessibility contracts
+         timeout-minutes: 20
+         run: |
+-          docker run --rm --memory=2g --memory-swap=2g --cpus=2 --network=none -e NODE_OPTIONS -e DTOS_TRADE_RESOURCE_BROWSER_EVIDENCE=.validation/trade-resource/evidence/browser -e DTOS_LINEUP_DETAIL_EVIDENCE=.validation/trade-resource/evidence/browser/lineups -v "$PWD:$PWD" -w "$PWD" -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0="$PWD" dtos-browser-validation python -m unittest -v tests.test_trade_reserve_evidence tests.test_trade_lineup_detail tests.test_trade_lineup_detail_browser tests.test_trade_resource_admission tests.test_trade_resource_browser tests.test_multileague_projection_browser tests.test_relative_personal_values tests.test_relative_personal_browser tests.test_decision_history_continuity_browser tests.test_personal_rankings_compatibility tests.test_personal_rankings_recovery_storage tests.test_personal_rankings_recovery_trade tests.test_personal_rankings_recovery_browser tests.test_personal_rankings_recovery_trade_browser tests.test_personal_rankings_partial_browser tests.test_dossier_plain_english tests.test_plain_english_home_depth tests.test_builder_plain_english tests.test_plain_english_preservation_final tests.test_plain_english_final_browser tests.test_plain_english_decisions tests.test_plain_english_browser tests.test_personal_rankings_availability tests.test_personal_rankings_availability_browser tests.test_personal_rankings tests.test_personal_rankings_store tests.test_personal_rankings_integration tests.test_personal_trade_workflows tests.test_personal_rankings_browser tests.test_personal_rankings_accessibility_browser tests.test_personal_trade_browser tests.test_market_trend_current_browser tests.test_standings_positioning tests.test_standings_positioning_browser tests.test_matchup_portraits_browser tests.test_matchups_phone tests.test_matchups_phone_browser tests.test_trade_projection_freshness tests.test_trade_projection_freshness_browser tests.test_trade_preview_scope_browser tests.test_trade_simple_discovery tests.test_trade_simple_browser tests.test_fois_final_trust_browser tests.test_fois_evidence_integrity tests.test_fois_trust_browser tests.test_proposal_tray_browser tests.test_journey_evidence tests.test_journey_corrections_browser tests.test_dossier_status_browser tests.test_phone_visual_corrections_browser tests.test_phone_design_semantics tests.test_phone_design_browser tests.test_trade_calculator tests.test_trade_calculator_browser tests.test_calculator_balance_feedback_browser tests.test_calculator_stale_feedback_browser tests.test_trade_explicit_navigation_browser tests.test_trade_navigation_identity tests.test_trade_navigation_browser tests.test_player_actions tests.test_player_actions_browser tests.test_trade_performance tests.test_trade_construction_performance tests.test_trade_performance_browser tests.test_technical_details_browser tests.test_canonical_asset_facts tests.test_canonical_asset_facts_browser tests.test_product_browser_journey tests.test_matchup_browser_contract tests.test_trade_center_browser tests.test_trade_scout_state_browser tests.test_make_it_cheaper_browser tests.test_trade_center_accessibility tests.test_trade_workspace_browser tests.test_trade_workspace_batch1 tests.test_live_inspection tests.test_browser_fixture_images tests.test_visual_retirement tests.test_trade_decision_experience tests.test_trade_decision_browser tests.test_trade_decision_http_browser tests.test_trade_decision_standings_browser tests.test_batch6_trade_ux tests.test_trade_p2_browser tests.test_trade_final_evidence_browser tests.test_trade_endorsement_integrity tests.test_trade_missing_market_presentation tests.test_batch6_trade_explanation tests.test_league_entry_coordination
++          docker run --rm --memory=2g --memory-swap=2g --cpus=2 --network=none -e NODE_OPTIONS -e DTOS_TRADE_RESOURCE_BROWSER_EVIDENCE=.validation/trade-resource/evidence/browser -e DTOS_LINEUP_DETAIL_EVIDENCE=.validation/trade-resource/evidence/browser/lineups -v "$PWD:$PWD" -w "$PWD" -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0="$PWD" dtos-browser-validation python -m unittest -v tests.test_00_trade_simple_browser tests.test_franchise_timeline_coverage tests.test_franchise_timeline_browser tests.test_trade_reserve_evidence tests.test_trade_lineup_detail tests.test_trade_lineup_detail_browser tests.test_trade_resource_admission tests.test_trade_resource_browser tests.test_multileague_projection_browser tests.test_relative_personal_values tests.test_relative_personal_browser tests.test_decision_history_continuity_browser tests.test_personal_rankings_compatibility tests.test_personal_rankings_recovery_storage tests.test_personal_rankings_recovery_trade tests.test_personal_rankings_recovery_browser tests.test_personal_rankings_recovery_trade_browser tests.test_personal_rankings_partial_browser tests.test_dossier_plain_english tests.test_plain_english_home_depth tests.test_builder_plain_english tests.test_plain_english_preservation_final tests.test_plain_english_final_browser tests.test_plain_english_decisions tests.test_plain_english_browser tests.test_personal_rankings_availability tests.test_personal_rankings_availability_browser tests.test_personal_rankings tests.test_personal_rankings_store tests.test_personal_rankings_integration tests.test_personal_trade_workflows tests.test_personal_rankings_browser tests.test_personal_rankings_accessibility_browser tests.test_personal_trade_browser tests.test_market_trend_current_browser tests.test_standings_positioning tests.test_standings_positioning_browser tests.test_matchup_portraits_browser tests.test_matchups_phone tests.test_matchups_phone_browser tests.test_trade_projection_freshness tests.test_trade_projection_freshness_browser tests.test_trade_preview_scope_browser tests.test_trade_simple_discovery tests.test_fois_final_trust_browser tests.test_fois_evidence_integrity tests.test_fois_trust_browser tests.test_proposal_tray_browser tests.test_journey_evidence tests.test_journey_corrections_browser tests.test_dossier_status_browser tests.test_phone_visual_corrections_browser tests.test_phone_design_semantics tests.test_phone_design_browser tests.test_trade_calculator tests.test_trade_calculator_browser tests.test_calculator_balance_feedback_browser tests.test_calculator_stale_feedback_browser tests.test_trade_explicit_navigation_browser tests.test_trade_navigation_identity tests.test_trade_navigation_browser tests.test_player_actions tests.test_player_actions_browser tests.test_trade_performance tests.test_trade_construction_performance tests.test_trade_performance_browser tests.test_technical_details_browser tests.test_canonical_asset_facts tests.test_canonical_asset_facts_browser tests.test_product_browser_journey tests.test_matchup_browser_contract tests.test_trade_center_browser tests.test_trade_scout_state_browser tests.test_make_it_cheaper_browser tests.test_trade_center_accessibility tests.test_trade_workspace_browser tests.test_trade_workspace_batch1 tests.test_live_inspection tests.test_browser_fixture_images tests.test_visual_retirement tests.test_trade_decision_experience tests.test_trade_decision_browser tests.test_trade_decision_http_browser tests.test_trade_decision_standings_browser tests.test_batch6_trade_ux tests.test_trade_p2_browser tests.test_trade_final_evidence_browser tests.test_trade_endorsement_integrity tests.test_trade_missing_market_presentation tests.test_batch6_trade_explanation tests.test_league_entry_coordination
+           docker run --rm --memory=2g --memory-swap=2g --cpus=2 --network=none -e NODE_OPTIONS -v "$PWD:$PWD" -w "$PWD" -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0="$PWD" dtos-browser-validation python -m unittest -v tests.test_historical_evidence_weeks tests.test_fois_final_trust
+ 
+ 
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index 82e42951..9a7f2a1c 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -1,3 +1,11 @@
++# v1.22.14 / build 2229 — Trustworthy franchise transaction history
++
++Franchise History now shows retained completed trades, waivers, adds/drops, FAAB transfers and observed draft selections, with pagination and exact source references. Completed movements are separate from pending, failed, rejected, unknown or malformed records. Exact picks retain their year, round and original franchise independently of their owner; a draft selection never invents its original franchise from the selecting team.
++
++Season transaction coverage is Complete, Partial or Unknown based on retrieved source periods and compatible season identity, rather than calendar age. Discovered-but-uncached seasons, unknown statuses, conflicting records and missing identity remain explicit. A no-completed-activity statement requires compatible, fully acquired closed-season evidence and established franchise context. Individual draft coverage is separate. Missing season links retain supported source facts with unconfirmed franchise attribution; season-observed managers are not exact trade-time actors.
++
++The factual view uses existing bounded records and compact transaction sections; it does not fetch providers, build trade trees, reconstruct historical Market values or regrade FOIS. Historical grades remain RETAINED / NOT REVALIDATED. Trade/valuation/scoring mathematics, saved preferences and memory/admission policies are unchanged. See docs/audits/FRANCHISE_HISTORY_2229.md.
++
+ # v1.22.13 / build 2228 — Trade reserve evidence
+ 
+ Trade decision summaries retain independent before/after reserve facts for each franchise: supported weekly effects, verified zeros, and known partial subtotals with specific prepared-player projection or eligibility gaps. Existing expanded lineup details show candidate counts and unfilled cover slots, separately from required starters. Missing evidence is never a zero or a full replacement comparison.
+diff --git a/RELEASE_NOTES.md b/RELEASE_NOTES.md
+index 65fb7224..38694ae0 100644
+--- a/RELEASE_NOTES.md
++++ b/RELEASE_NOTES.md
+@@ -1,3 +1,11 @@
++# v1.22.14 / build 2229 — Trustworthy franchise transaction history
++
++Franchise History now shows retained completed trades, waivers, adds/drops, FAAB transfers and observed draft selections, with pagination and exact source references. Completed movements are separate from pending, failed, rejected, unknown or malformed records. Exact picks retain their year, round and original franchise independently of their owner; a draft selection never invents its original franchise from the selecting team.
++
++Season transaction coverage is Complete, Partial or Unknown based on retrieved source periods and compatible season identity, rather than calendar age. Discovered-but-uncached seasons, unknown statuses, conflicting records and missing identity remain explicit. A no-completed-activity statement requires compatible, fully acquired closed-season evidence and established franchise context. Individual draft coverage is separate. Missing season links retain supported source facts with unconfirmed franchise attribution; season-observed managers are not exact trade-time actors.
++
++The factual view uses existing bounded records and compact transaction sections; it does not fetch providers, build trade trees, reconstruct historical Market values or regrade FOIS. Historical grades remain RETAINED / NOT REVALIDATED. Trade/valuation/scoring mathematics, saved preferences and memory/admission policies are unchanged. See docs/audits/FRANCHISE_HISTORY_2229.md.
++
+ # v1.22.13 / build 2228 — Trade reserve evidence
+ 
+ Trade decision summaries retain independent before/after reserve facts for each franchise: supported weekly effects, verified zeros, and known partial subtotals with specific prepared-player projection or eligibility gaps. Existing expanded lineup details show candidate counts and unfilled cover slots, separately from required starters. Missing evidence is never a zero or a full replacement comparison.
+diff --git a/app_metadata.py b/app_metadata.py
+index 1ae88480..598a5e3d 100644
+--- a/app_metadata.py
++++ b/app_metadata.py
+@@ -7,9 +7,9 @@ from datetime import datetime, timezone
+ from pathlib import Path
+ 
+ APPLICATION_NAME = "DTOS"
+-VERSION = "1.22.13"
+-PRODUCT_VERSION = "1.22.13"
+-BUILD_NUMBER = 2228
++VERSION = "1.22.14"
++PRODUCT_VERSION = "1.22.14"
++BUILD_NUMBER = 2229
+ RELEASE_CODENAME = "Team Assessment Coverage"
+ APPLICATION_STARTED_AT = datetime.now(timezone.utc).isoformat()
+ 
+diff --git a/docs/audits/FRANCHISE_HISTORY_2229.md b/docs/audits/FRANCHISE_HISTORY_2229.md
+new file mode 100644
+index 00000000..21946759
+--- /dev/null
++++ b/docs/audits/FRANCHISE_HISTORY_2229.md
+@@ -0,0 +1,54 @@
++# Franchise transaction history — build 2229
++
++## Baseline and evidence scope
++
++Production readiness and origin/main both confirmed v1.22.13/build 2228, commit 6b43bfa183ed9a2023ecb59247c8831da3c4b1dd, tree 0764486d9440d39438a615ef301ddafe3a30a7fd. No authenticated production league entry, source synchronization, Trade search or saved-state mutation was performed.
++
++Controls reuse tests/fixtures/trade_timeline_sources.json: read-only Sleeper captures dated October 12, 2026, explicitly partial transaction fixtures. Day Traders (1313066632158924800) and Arkham Asylum (1319750579458686976) are replay controls, not current live completeness claims. The existing FAAB fixture supplies an independently retained 2023 event. Controlled synthetic linked seasons exercise missing, malformed, complete-empty, ownership-change and exact-pick cases; those are not reconstructed real historical seasons.
++
++The original baseline console records three retained Day transactions/40 league selections and zero Arkham transactions/260 league selections; neither original Franchise History page rendered those event records. A probe subsequently reused the baseline output directory: its original console remains intact, but original HTML/report files were overwritten. Candidate output is retained separately, and a new baseline replay uses the exact original source tree and is explicitly recreated evidence. No production evidence was overwritten.
++
++## Confirmed gaps and corrections
++
++* Franchise History showed only identity, roster and optional intelligence snapshots. The new bounded timeline exposes supported source events on that same surface, preserving existing sections and links.
++* HistoricalAssetGraph.franchise_history classified seasons as complete solely by calendar age. A shared transaction-acquisition summary now distinguishes Complete, Partial and Unknown using actual retained source periods and closed-season/identity evidence. It does not grade a franchise.
++* Transaction archive rows offered a completed trade dossier link for noncompleted trades. Links now require explicit completed status and readable consideration; completed-trade entry links explicitly apply the completed filter. Noncompleted or malformed records do not establish asset movements.
++* A source-period list with missing IDs, unknown status or conflicting identities cannot justify an empty-history claim. Known failed/rejected/pending records remain visible separately. A genuine zero FAAB transfer remains numerical zero.
++
++## Exact source path
++
++Sleeper season links/discovery manifest and retained cache -> CanonicalHistoryStore typed records and transaction_coverage -> existing status/identity admission from summarize_activity -> source- and transaction-scoped deduplication -> Franchise History view and existing Trade Ledger filters.
++
++transaction_coverage borrows only existing compact league/transaction sections and reads existing discovery metadata. It preserves prepared current bucket evidence separately from a flat activity list. Same-league/season current buckets can augment retained buckets; unavailable refresh buckets preserve last-valid source data with a qualification. Cache generation and prepared-current fingerprint are separately identified. Missing optional families never trigger a new all-family player-week/graph projection in the new view.
++
++Exact trade picks use the canonical future_pick_id contract. Draft selections use its selection=True mode, independently preserving original-roster evidence; selecting ownership never becomes original identity. Unknown originals stay unknown. Selection time is never inferred from whole-draft lifecycle bounds. No retrospective grade, trade-benefit allocation or historical price is computed.
++
++For traded picks, the new factual view supplies only the pick's recorded year to the identity helper: it never substitutes the transaction season for a missing pick year. A matched missing-year control first reproduced an invented event-year identity. The corrected view preserves known player/pick movement fields, withholds the unproven exact pick identity and dossier link, and qualifies otherwise complete franchise coverage as partial. The shared archive also withholds the dossier link and explains incomplete pick identity on the existing Trade Ledger. Existing valuation and historical identity helpers are unchanged.
++
++Existing reconcile_ownership rules use actual previous-league links and roster slots. Season-observed owner changes have no invented takeover dates. A missing intermediate link does not erase valid completed source facts: they appear as source-roster observations with unconfirmed connection to the current franchise and no current-manager credit. A changed source epoch during assembly withholds completeness and empty conclusions while retaining individually supported facts.
++
++## Coverage meanings
++
++Complete transaction coverage requires all supported buckets 0–18, no missing/unavailable/malformed periods, a completed compatible source season, and no unqualified/conflicting/unknown-status source records. A complete franchise no-activity conclusion additionally requires observed identity and established continuity. Current or older calendar year is insufficient. This is the supported source-bucket scope, not a guarantee about provider activity outside that scope or updates after the retained snapshot.
++
++Draft selections have their own observed counts. Complete transaction acquisition does not imply every draft selection, owner tenure, weekly roster or historical grade is known. Unknown and partial remain distinct; a source timestamp is not fabricated when only source identity/generation is retained.
++
++Existing historical reader recovery coverage exposed a checkpoint transition: retained transactions without attributable participants still establish partial source-season evidence after raw-cache eviction. The API now considers all retained source transactions for that season-level status, without assigning them to a franchise or claiming recovered weekly acquisition. A rendered checkpoint control independently verifies retained attributable events, absent acquired-week counts and no complete/empty claim.
++
++## Verification and remaining limits
++
++Focused controls cover complete, partial and unknown rendered pages; actual Day/Arkham replay; completed waivers; failed/pending/rejected/unknown records; duplicate and conflicting IDs; exact traded pick original differing from owner; auction unknown original; observed manager change; missing continuation with independently retained movements; malformed consideration; missing historical identity; wrong source season; current prepared buckets versus flat activity; source-publication changes; no provider calls, full graph construction, historical pricing or regrading. Chromium covers 320×432, 375×667, 390×844 and desktop, keyboard/touch emulation, focus, no overflow and no disclosure requests.
++
++Original failures and exclusions remain separate from final exact-source mandatory evidence. One pre-existing unique-asset-count test caught a changed phrase; wording now preserves the count and explicit noncompleted qualification. Development lint diagnostics and the baseline probe-output limitation are retained in the task evidence. Full canonical, hosted and constrained-memory outcomes are published only after actual completion.
++
++A superseded full run executed 4,106 tests but failed two late Trade browser subtests because real memory admission deferred work; the remaining canonical gates did not run. The unchanged observer does not record addSubTest errors, so the original full console is authoritative. The normal-execution fixture now owns a fresh account/source/browser/driver for each viewport and releases its in-process HTTP response cycles before real Trade admission. All original workflow assertions, viewports and timeouts remain. No telemetry is mocked and no deferral counts as completion. In the matched 845 MiB held-parent-RSS control (chosen from the observed post-GC unittest RSS), the old fixture reproduced two errors and the corrected fixture completed all seven journeys: peak cgroup demand was 1,893,310,464 versus 1,809,309,696 bytes, with no OOM and no live child processes afterward. This approximates prior process pressure, not its complete live-object heap. Earlier 1,040 MiB overpressure and browser-only cleanup attempts remain separate, unsuccessful completion evidence. These are fixture lifecycle corrections, not production memory-policy changes or a long-term leak-freedom claim.
++
++Private live franchise-history acceptance remains unverified. Physical iPhone/Safari is not claimed. Cleanup measurements are not indefinite leak-freedom proof. Provider absence, historical ownership continuity and missing exact selection times are not repaired by presentation.
++
++## Scout acceptance
++
++1. Verify deployed version/commit/tree and immutable evidence checksums.
++2. On retained Day Traders and a second authorized league, inspect season coverage and a completed source event. Match its source season/ID and retained completion status; do not initiate synchronization from an ordinary read.
++3. Confirm unknown/partial source periods do not become no activity, and draft coverage remains separate. Known-empty closed-period fixtures provide the complete control.
++4. Verify a moved pick's original franchise differs correctly from its owner; confirm source-roster/manager qualifications across missing links or ownership changes.
++5. Inspect pending/rejected records in the separate disclosure, no completed dossier/movement inference, retained FOIS qualification, responsive focus/touch behavior, and unchanged saved user state.
+diff --git a/routes/history.py b/routes/history.py
+index 2dac480a..19c399ef 100644
+--- a/routes/history.py
++++ b/routes/history.py
+@@ -198,7 +198,7 @@ def create_history_router(
+ <section class="card"><h3>Final Standings</h3><div class="ds-table-wrap"><table><thead><tr><th>Rank</th><th>Team</th><th>GM</th><th>Record</th><th>PF</th><th>PA</th><th>Postseason</th></tr></thead><tbody>{standings}</tbody></table></div></section>
+ <section class="card"><h3>Weekly Results</h3>{weeks}</section>
+ <section class="card"><h3>Season Leaders</h3><ol>{leaders}</ol></section>
+-<div class="grid"><article class="card"><h3>Draft</h3><p>{archive['counts']['draft_picks']} recorded selections.</p><a class="ds-action" href="/api/history/seasons/{season}/draft">Draft evidence (JSON)</a></article><article class="card"><h3>Transactions</h3><p>{archive['counts']['transactions']} recorded moves.</p><a class="ds-action" href="/transactions?scope=all_history&season={season}&type=trade">Explore completed trades</a><details><summary>Source transaction evidence</summary><a class="ds-action" href="/api/history/seasons/{season}/transactions">Transaction evidence (JSON)</a></details></article><article class="card"><h3>Postseason</h3><p>{'Verified results available.' if archive['availability']['playoffs'] else 'Verified bracket results unavailable.'}</p><a class="ds-action" href="/api/history/seasons/{season}/playoffs">Postseason evidence (JSON)</a></article></div>
++<div class="grid"><article class="card"><h3>Draft</h3><p>{archive['counts']['draft_picks']} recorded selections.</p><a class="ds-action" href="/api/history/seasons/{season}/draft">Draft evidence (JSON)</a></article><article class="card"><h3>Transactions</h3><p>{archive['counts']['transactions']} recorded moves.</p><a class="ds-action" href="/transactions?scope=all_history&season={season}&type=trade&status=complete">Explore completed trades</a><details><summary>Source transaction evidence</summary><a class="ds-action" href="/api/history/seasons/{season}/transactions">Transaction evidence (JSON)</a></details></article><article class="card"><h3>Postseason</h3><p>{'Verified results available.' if archive['availability']['playoffs'] else 'Verified bracket results unavailable.'}</p><a class="ds-action" href="/api/history/seasons/{season}/playoffs">Postseason evidence (JSON)</a></article></div>
+ """
+         from src.ui.trade_timeline import render_source_coverage
+         return page(f"{season} Season Archive", body + render_source_coverage({'seasons': archive.get('source_coverage', [])}))
+@@ -225,8 +225,11 @@ def create_history_router(
+         )
+ 
+     @router.get("/history/team/{franchise_id:path}", response_class=HTMLResponse)
+-    async def team_history_page(franchise_id: str) -> HTMLResponse:
++    async def team_history_page(franchise_id: str, events_page: int = Query(1, ge=1)) -> HTMLResponse:
+         selected = selected_league()
++        prefix = str(selected) + ':franchise:'
++        if not franchise_id.startswith(prefix) or not franchise_id[len(prefix):].isdigit():
++            raise HTTPException(404, 'No historical franchise observations are available.')
+         from src.core.history_context.recovery import HistoricalRecoveryUnavailable
+         try:
+             snapshots = history_records(selected, "team_intelligence_snapshot", franchise_id=franchise_id, limit=100)
+@@ -234,8 +237,16 @@ def create_history_router(
+             # Optional intelligence is not a prerequisite for displaying
+             # directly observed franchise and season roster evidence.
+             snapshots = {"count": 0, "records": []}
+-        identities = history_records(selected, "franchise_identity", franchise_id=franchise_id, limit=100)
+-        if not snapshots["count"] and not identities["count"]:
++        identities = history_records(selected, "franchise_identity", franchise_id=franchise_id, limit=100, allow_partial=True)
++        from services.franchise_timeline import franchise_timeline
++        from src.core.historical_memory.read_model import historical_graph
++        from services.history import historical_store
++        from src.ui.franchise_timeline import render_franchise_timeline
++        facts = require_data() if require_data else {'league': {'league_id': selected}}
++        model = historical_graph(historical_store, selected, facts)
++        roster_id = franchise_id.rsplit(':', 1)[-1]
++        timeline_view = franchise_timeline(model, roster_id, page=events_page)
++        if not snapshots["count"] and not identities["count"] and not timeline_view['total'] and not timeline_view['attempts_total']:
+             raise HTTPException(404, "No historical franchise observations are available.")
+         names = "".join(
+             f'<li>{row["season"]}: {escape(str(row["payload"].get("dtos_display_name")))}</li>'
+@@ -255,7 +266,8 @@ def create_history_router(
+             for row in rosters["records"]
+         ) or '<p class="muted">Season roster snapshot unavailable; no weekly holdings are inferred.</p>'
+         roster_id = franchise_id.rsplit(':', 1)[-1]
+-        trades_link = f'<a class="ds-action" href="/transactions?scope=all_history&type=trade&team={roster_id}">Explore this franchise’s completed trades</a>' if roster_id.isdigit() else ''
+-        return page(f"{current_name} — Franchise History", f'<h2>Franchise History</h2>{trades_link}<p>Managers are season observations; exact takeover dates remain unavailable.</p><ul>{names}</ul><h3>Observed season roster snapshots</h3><div class="grid">{roster_cards}</div><h3>Competitive Direction Over Time</h3><div class="grid">{trajectory}</div>')
++        trades_link = f'<a class="ds-action" href="/transactions?scope=all_history&type=trade&status=complete&team={roster_id}">Explore this franchise’s completed trades</a>' if roster_id.isdigit() else ''
++        timeline = render_franchise_timeline(timeline_view)
++        return page(f"{current_name} — Franchise History", f'<h2>Franchise History</h2>{trades_link}{timeline}<p>Managers are season observations; exact takeover dates remain unavailable.</p><ul>{names}</ul><h3>Observed season roster snapshots</h3><div class="grid">{roster_cards}</div><h3>Competitive Direction Over Time</h3><p>Retained directional snapshots are not revalidated grades.</p><div class="grid">{trajectory}</div>')
+ 
+     return router
+diff --git a/routes/transactions.py b/routes/transactions.py
+index c3f44904..cf0ac7e1 100644
+--- a/routes/transactions.py
++++ b/routes/transactions.py
+@@ -154,12 +154,16 @@ def _historical_archive_row(row: dict[str, Any]) -> str:
+         else '<details><summary>Source event</summary>' + escape(row["sleeper_transaction_id"]) + '</details>'
+     )
+     asset_count = len(set(row["adds"]) | set(row["drops"])) + len(row["draft_picks"])
++    consideration = ('Consideration unavailable or malformed' if row.get('malformed_consideration') else f'{asset_count} assets recorded')
+     faab = f" · {len(row.get('waiver_budget') or [])} FAAB movement(s)" if row.get('waiver_budget') else ''
+     return (
+         f'<tr><td>{escape(str(row["season"]))} Week {escape(str(row["week"] if row["week"] is not None else "?"))}</td>'
+         f'<td>{escape(str(row["occurred_at"] or "Date unavailable"))}</td>'
+         f'<td>{escape(row["type"].replace("_", " ").title())}<p>{escape(row.get("franchise_summary") or "Franchise identities unavailable")}</p></td>'
+-        f'<td>{escape(str(row["status"]))}</td><td>{asset_count} assets{faab}</td><td>{detail}</td></tr>'
++        f'<td>{escape(str(row["status"]))}</td><td>{consideration}{faab}'
++        + (' · No completed movement established' if row.get('malformed_consideration') or str(row['status']).casefold() not in {'complete', 'completed'} else '')
++        + (' · Exact draft-pick identity incomplete' if row.get('incomplete_pick_identity') else '')
++        + f'</td><td>{detail}</td></tr>'
+     )
+ 
+ 
+diff --git a/services/franchise_timeline.py b/services/franchise_timeline.py
+new file mode 100644
+index 00000000..82657e45
+--- /dev/null
++++ b/services/franchise_timeline.py
+@@ -0,0 +1,182 @@
++"""Factual retained franchise events. No graphs, grades, forecasting or providers."""
++import json
++
++from src.core.gm_behavioral_intelligence.activity import summarize_activity
++from src.core.history_context.assets import future_pick_id
++from src.core.history_context.coverage import transaction_coverage_summary
++from src.core.history_context.ownership import reconcile_ownership
++
++
++def franchise_timeline(graph, roster_id, *, page=1, per_page=25):
++    roster_id = str(roster_id)
++    target = f'{graph.league_id}:franchise:{roster_id}'
++    version = graph.store.dataset_version(graph.league_id)
++    def retained(kind):
++        # Missing optional families must not fall back to projecting every
++        # player-week/matchup family merely to display a factual ledger.
++        if kind not in graph._records_cache:
++            reader = getattr(graph.store, 'optional_records', graph.store.records)
++            count, rows = reader(graph.league_id, kind, limit=100_000)
++            graph._records_cache[kind] = rows
++            if count > len(rows):
++                graph._partial_record_families.add(kind)
++        return graph._records_cache[kind]
++
++    identities = retained('franchise_identity')
++    own = [r for r in identities if r.get('franchise_id') == target]
++    reader = getattr(graph.store, 'transaction_coverage', None)
++    coverage = reader(graph.league_id) if reader else {'seasons': []}
++    sources = {r['season']: r for r in coverage.get('seasons') or []}
++    league_rows = retained('league_season')
++    for r in league_rows:
++        p = r['payload']
++        sources.setdefault(r['season'], {'season': r['season'],
++            'source_league_id': p.get('sleeper_season_league_id'),
++            'previous_league_id': p.get('previous_league_id'), 'source_status': p.get('status')})
++
++    def identity(rid, year):
++        rows = [r['payload'] for r in identities if r['season'] == year
++                and str(r['payload'].get('sleeper_roster_id')) == str(rid)]
++        names = {r.get('dtos_display_name') for r in rows if r.get('dtos_display_name')}
++        return next(iter(names)) if len(names) == 1 else 'Franchise identity not established'
++
++    # Existing ownership rules join only actual source continuation links.
++    facts = []
++    for year, source in sources.items():
++        if source.get('source_league_id'):
++            facts.append({'league': {'league_id': source['source_league_id'], 'season': year,
++                'previous_league_id': source.get('previous_league_id')},
++                'rosters': [{'roster_id': r['payload'].get('sleeper_roster_id'),
++                    'owner_id': r['payload'].get('owner_id'), 'co_owners': r['payload'].get('co_owners') or []}
++                    for r in identities if r['season'] == year]})
++    source_ids = [r['league']['league_id'] for r in facts]
++    try:
++        ownership = (reconcile_ownership(facts) if len(set(source_ids)) == len(source_ids) else
++                     {'ownership_changes': [], 'gaps': [{'reason': 'conflicting_season_source_identity'}]})
++    except ValueError:
++        ownership = {'ownership_changes': [], 'gaps': [{'reason': 'invalid_source_continuation'}]}
++    linked, cursor = set(), str(graph.league_id)
++    by_source = {str(r['source_league_id']): r for r in sources.values() if r.get('source_league_id')}
++    while cursor in by_source and cursor not in linked:
++        linked.add(cursor)
++        cursor = str(by_source[cursor].get('previous_league_id') or '')
++
++    retained('trade')
++    retained('transaction')
++    archived = graph.transaction_archive()
++    unique, conflicts = {}, set()
++    for r in archived:
++        key = (r['source']['source_league_id'], r['sleeper_transaction_id'])
++        value = json.dumps({k: r[k] for k in ('season', 'type', 'status', 'roster_ids', 'adds', 'drops', 'draft_picks', 'waiver_budget')}, sort_keys=True)
++        if key in unique and unique[key][0] != value:
++            conflicts.add(key)
++        unique[key] = value, r
++    completed = set()
++    summarize_activity(((r['season'], r['source']['source_league_id'], r['raw']) for _, r in unique.values()), [],
++        on_completed=lambda league, tid: completed.add((league, tid)))
++    events, attempts = [], []
++    for key, (_, r) in unique.items():
++        parties = {str(x) for x in r['roster_ids']}
++        parties.update(str(x) for field in ('adds', 'drops') for x in r[field].values())
++        parties.update(str(p.get(k)) for p in r['draft_picks'] for k in ('previous_owner_id', 'owner_id'))
++        if roster_id not in parties:
++            continue
++        year = r['season']
++        incompatible = (sources.get(year) or {}).get('source_identity_compatible') is False
++        admitted = key in completed and key not in conflicts and not r.get('malformed_consideration') and not incompatible
++        row = {'id': r['sleeper_transaction_id'], 'kind': r['type'], 'season': year,
++            'week': r['week'], 'occurred_at': r['occurred_at'], 'status': r['status'],
++            'source_league_id': key[0], 'completed': admitted, 'assets': [],
++            'attribution': 'source-linked roster-slot continuity' if str(key[0]) in linked else 'franchise continuity unconfirmed',
++            'reason': 'Conflicting retained transaction versions; movements withheld.' if key in conflicts else
++                      'Retained source season is incompatible with the cache-season context; completed movement withheld.' if incompatible else
++                      'Malformed source consideration; movements withheld.' if r.get('malformed_consideration') else
++                      'Completed movement is supported in this source-season roster slot; continuity with the current franchise is unconfirmed.' if admitted and str(key[0]) not in linked else
++                      'Not an admitted completed transaction; no asset movement is inferred.' if not admitted else None,
++            'detail_url': r['trade_dossier_url'] if admitted else None}
++        if admitted:
++            for pid in sorted(set(r['adds']) | set(r['drops'])):
++                row['assets'].append({'kind': 'player', 'id': pid,
++                    'label': graph.player_identity(pid)['display_label'],
++                    'from': identity(r['drops'][pid], year) if pid in r['drops'] else 'Free-agent pool / source not recorded',
++                    'to': identity(r['adds'][pid], year) if pid in r['adds'] else 'Released / destination not recorded'})
++            for pick in r['draft_picks']:
++                # A traded pick's year is independent of the event season.
++                # Unlike a draft selection, a missing pick year has no fallback.
++                exact = future_pick_id(pick, pick.get('season'))
++                row['assets'].append({'kind': 'pick', 'id': exact,
++                    'label': f"{pick.get('season') or 'Year unknown'} round {pick.get('round') or 'unknown'} · original franchise: "
++                             + (identity(pick.get('roster_id'), year) if pick.get('roster_id') is not None else 'not established'),
++                    'from': identity(pick.get('previous_owner_id'), year), 'to': identity(pick.get('owner_id'), year)})
++            for transfer in r['waiver_budget']:
++                amount = transfer.get('amount')
++                from math import isfinite
++                if isinstance(amount, (int, float)) and not isinstance(amount, bool) and isfinite(amount) and amount >= 0:
++                    row['assets'].append({'kind': 'faab', 'id': None, 'label': f'{amount:g} FAAB',
++                        'from': identity(transfer.get('sender'), year), 'to': identity(transfer.get('receiver'), year)})
++            if any(a['kind'] == 'pick' and a['id'] is None for a in row['assets']):
++                row['incomplete_pick_identity'] = True
++                row['reason'] = ((row['reason'] + ' ') if row['reason'] else '') + 'Exact draft-pick identity is incomplete; known movement fields remain visible, but no missing year, round or original franchise is inferred.'
++                row['detail_url'] = None
++        (events if admitted else attempts).append(row)
++
++    drafts = retained('draft_pick')
++    selections = {}
++    for r in drafts:
++        p = r['payload']
++        if r.get('franchise_id') != target:
++            continue
++        if (sources.get(r['season']) or {}).get('source_identity_compatible') is False:
++            continue
++        key = (p.get('source_league_id'), p.get('selection_id'))
++        if not key[0] or not key[1] or not p.get('player_id'):
++            continue  # No invented selecting owner, selection identity or player.
++        if key in selections:
++            continue
++        exact = future_pick_id(p, r['season'], selection=True)
++        selections[key] = {'id': key[1], 'kind': 'draft selection', 'season': r['season'],
++            'week': None, 'occurred_at': r.get('occurred_at'), 'status': 'observed selection',
++            'source_league_id': key[0], 'completed': True,
++            'attribution': 'source-linked roster-slot continuity' if str(key[0]) in linked else 'franchise continuity unconfirmed',
++            'reason': 'Exact selection time is not recorded.' if not r.get('occurred_at') else None,
++            'draft_bounds': [p.get('draft_start_at'), p.get('draft_last_pick_at')],
++            'detail_url': None, 'assets': [{'kind': 'selection', 'id': exact,
++                'label': f"{r['season']} round {p.get('round') or 'unknown'} · selection {p.get('pick_no')} · " + graph.player_identity(p['player_id'])['display_label'],
++                'from': 'Original franchise: ' + (identity(p['original_roster_id'], r['season']) if p.get('original_roster_id') else 'not established'),
++                'to': identity(p.get('selecting_roster_id'), r['season'])}]}
++    events.extend(selections.values())
++    years = set(sources) | {r['season'] for r in own} | {r['season'] for r in events + attempts}
++    seasons = []
++    for year in sorted(years, reverse=True):
++        rows = [r for r in events if r['season'] == year]
++        movements = [r for r in rows if r['kind'] != 'draft selection']
++        context = sources.get(year) or {}
++        summary = transaction_coverage_summary(context, records_present=bool(movements or any(r['season'] == year for r in attempts)))
++        observed_identity = any(r['season'] == year for r in own)
++        if summary['state'] == 'complete' and (not observed_identity or str(context.get('source_league_id')) not in linked or any(r['season'] == year
++                and (r['reason'].startswith('Conflicting') or str(r['status']).casefold() in {'complete', 'completed'}) for r in attempts)):
++            summary.update(state='partial', reason='Source periods are acquired, but franchise identity/continuity, conflicting records or unsupported completed-status consideration prevents a complete franchise conclusion.')
++        if summary['state'] == 'complete' and graph._partial_record_families & {'trade', 'transaction'}:
++            summary.update(state='partial', reason='The bounded retained transaction view is truncated; no empty or complete franchise conclusion is inferred.')
++        if summary['state'] == 'complete' and any(r.get('incomplete_pick_identity') for r in rows):
++            summary.update(state='partial', reason='Source periods are acquired, but exact draft-pick identity is incomplete for a retained movement; known asset facts remain available.')
++        seasons.append({**summary, 'season': year, 'source_league_id': context.get('source_league_id'),
++            'source_generation': context.get('source_generation'), 'identity_observed': observed_identity,
++            'prepared_current_fingerprint': context.get('prepared_current_fingerprint'),
++            'completed_transactions': len(movements), 'draft_selections': len(rows) - len(movements),
++            'no_activity_supported': summary['state'] == 'complete' and observed_identity and not movements,
++            'draft_note': 'Observed individual selections; transaction-period coverage does not establish complete draft coverage.',
++            'continuity': 'source-linked roster-slot continuity' if str(context.get('source_league_id')) in linked else 'franchise continuity unconfirmed'})
++    stable = graph.store.dataset_version(graph.league_id) == version
++    if not stable:
++        for s in seasons:
++            s.update(state='unknown', no_activity_supported=False, reason='Retained source changed while this page was assembled; reload to review coherent coverage.')
++    events.sort(key=lambda r: (r['season'], r['occurred_at'] or '', r['id']), reverse=True)
++    per_page = per_page if per_page in (10, 25, 50) else 25
++    pages = max(1, (len(events) + per_page - 1) // per_page)
++    page = min(max(1, page), pages)
++    return {'franchise_id': target, 'seasons': seasons, 'events': events[(page - 1) * per_page:page * per_page],
++        'attempts': attempts[:50], 'attempts_total': len(attempts), 'total': len(events), 'page': page,
++        'pages': pages, 'per_page': per_page, 'ownership': ownership, 'stable_source': stable,
++        'earlier_link_gap': bool(cursor), 'provider_calls': 0,
++        'qualification': 'Managers are season observations, not verified trade-time actors. Ownership changes do not backdate decisions to the current manager. Undated events have no proven within-season order.'}
+diff --git a/services/historical_archive.py b/services/historical_archive.py
+index f5bd5bba..486e0417 100644
+--- a/services/historical_archive.py
++++ b/services/historical_archive.py
+@@ -19,7 +19,7 @@ def archive_view(graph, data: dict, filters: dict) -> dict:
+     rows = [r for r in rows if
+             (filters.get('season') is None or r['season'] == filters['season'])
+             and (filters.get('week') is None or r['week'] == filters['week'])
+-            and (not filters.get('status') or r['status'] == filters['status'])]
++            and (not filters.get('status') or str(r['status']).casefold().replace('completed', 'complete') == str(filters['status']).casefold().replace('completed', 'complete'))]
+     by_season = defaultdict(list)
+     for row in rows:
+         by_season[row['season']].append(row)
+@@ -34,6 +34,10 @@ def archive_view(graph, data: dict, filters: dict) -> dict:
+         presentation_rows = []
+         for row in source:
+             raw = dict(row['raw'])
++            if row.get('malformed_consideration'):
++                # Filtering can retain the source record without turning an
++                # invalid consideration object into assets or a completed trail.
++                raw.update(adds={}, drops={}, draft_picks=[], waiver_budget=[])
+             # Canonical source time may use status_updated when created is
+             # absent. This transient input never replaces the retained raw row.
+             timestamp = row.get('occurred_at')
+diff --git a/src/core/historical_memory/graph.py b/src/core/historical_memory/graph.py
+index 9c3786ff..b51967be 100644
+--- a/src/core/historical_memory/graph.py
++++ b/src/core/historical_memory/graph.py
+@@ -1020,17 +1020,25 @@ class HistoricalAssetGraph:
+             payload = row["payload"]
+             transaction_type = str(payload.get("type") or row["entity_type"])
+             transaction_id = str(row["source_record_id"])
++            malformed = any(payload.get(k) is not None and not isinstance(payload[k], dict) for k in ('adds', 'drops'))
++            malformed |= any(payload.get(k) is not None and (not isinstance(payload[k], list)
++                or any(not isinstance(p, dict) for p in payload[k])) for k in ('draft_picks', 'waiver_budget'))
++            incomplete_pick = not malformed and any(future_pick_id(p, p.get('season')) is None
++                for p in payload.get('draft_picks') or [])
+             result.append({
+                 "schema_version": HISTORICAL_ASSET_GRAPH_SCHEMA_VERSION,
+                 "transaction_id": canonical_transaction_id(self._source_league(row), transaction_id),
+                 "sleeper_transaction_id": transaction_id,
+-                "trade_dossier_url": f"/trades/history/{transaction_id}" if transaction_type == "trade" else None,
++                "trade_dossier_url": f"/trades/history/{transaction_id}" if transaction_type == "trade" and not malformed and not incomplete_pick and str(payload.get('status') or '').casefold() in COMPLETED_STATUSES else None,
+                 "season": row["season"], "week": row["week"],
+                 "type": transaction_type, "status": payload.get("status") or "unknown",
+                 "occurred_at": row.get("occurred_at"), "roster_ids": payload.get("roster_ids") or [],
+-                "adds": payload.get("adds") or {}, "drops": payload.get("drops") or {},
+-                "draft_picks": payload.get("draft_picks") or [],
+-                "waiver_budget": payload.get("waiver_budget") or [],
++                "adds": payload.get("adds") if isinstance(payload.get('adds'), dict) else {},
++                "drops": payload.get("drops") if isinstance(payload.get('drops'), dict) else {},
++                "draft_picks": [p for p in payload.get('draft_picks') or [] if isinstance(p, dict)] if isinstance(payload.get('draft_picks'), list) else [],
++                "waiver_budget": [p for p in payload.get('waiver_budget') or [] if isinstance(p, dict)] if isinstance(payload.get('waiver_budget'), list) else [],
++                "malformed_consideration": malformed,
++                "incomplete_pick_identity": incomplete_pick,
+                 "source": self._source(row), "raw": payload,
+             })
+         result.sort(key=lambda item: (item["season"], item["week"] or 0, item["occurred_at"] or "", item["transaction_id"]), reverse=True)
+@@ -1042,7 +1050,12 @@ class HistoricalAssetGraph:
+         records = {}
+         for entity in ("franchise_identity", "season_standing", "weekly_roster", "roster_snapshot"):
+             records[entity] = [row for row in self._records(entity) if row.get('franchise_id') == target]
+-        transactions = [row for row in self.transaction_archive() if str(roster_id) in {str(value) for value in row["roster_ids"]}]
++        archive = self.transaction_archive()
++        transactions = [row for row in archive if str(roster_id) in {str(value) for value in row["roster_ids"]}]
++        from src.core.history_context.coverage import transaction_coverage_summary
++        coverage = self.store.transaction_coverage(self.league_id) if hasattr(self.store, 'transaction_coverage') else {}
++        coverage_by_season = {r['season']: r for r in coverage.get('seasons') or []}
++        years = {int(row['season']) for values in records.values() for row in values} | set(coverage_by_season)
+         return {
+             "schema_version": HISTORICAL_ASSET_GRAPH_SCHEMA_VERSION,
+             "franchise_id": target, "identities": records["franchise_identity"],
+@@ -1052,10 +1065,12 @@ class HistoricalAssetGraph:
+             "roster_coverage_note": "Season roster snapshots are observed source holdings, not weekly historical rosters. Missing weekly rosters remain unavailable.",
+             "transactions": transactions,
+             "partial_historical_families": sorted(self._partial_record_families),
+-            "season_status": {
+-                str(season): "in_progress" if season >= datetime.now(timezone.utc).year else "complete"
+-                for season in sorted({int(row["season"]) for row in records["season_standing"]})
+-            },
++            "season_status": {str(season): transaction_coverage_summary(coverage_by_season.get(season) or {},
++                # Retained source transactions establish partial season evidence
++                # even when their franchise attribution is incomplete. A compact
++                # checkpoint does not establish acquisition of all weekly buckets.
++                records_present=any(r['season'] == season for r in archive))['state'] for season in sorted(years)},
++            "season_status_meaning": "Transaction acquisition coverage, not calendar age or an overall historical grade.",
+         }
+ 
+     def search(self, query: str, limit: int = 50) -> list[dict[str, Any]]:
+diff --git a/src/core/history_context/coverage.py b/src/core/history_context/coverage.py
+index 2e45312e..7f6e3de0 100644
+--- a/src/core/history_context/coverage.py
++++ b/src/core/history_context/coverage.py
+@@ -84,3 +84,31 @@ def season_coverage(facts: dict, season: int) -> dict:
+             "weekly_roster_note": "Matchup membership is week-specific; season roster snapshots are not weekly rosters.",
+             "optional_field_limitations": limitations,
+             "structural_validity_is_acquisition_completeness": False}
++
++
++def transaction_coverage_summary(coverage: dict, *, records_present=False) -> dict:
++    """Season transaction acquisition, never a conclusion from calendar age."""
++    periods = coverage.get('transactions') or {}
++    acquired = {w for w in periods.get('acquired') or [] if type(w) is int and 0 <= w <= 18}
++    gaps = {name: periods.get(name) or [] for name in ('unacquired', 'unavailable', 'malformed')}
++    if coverage.get('source_identity_compatible') is False:
++        return {'state': 'unknown', 'acquired': [], 'gaps': {},
++                'reason': 'Retained source league-season metadata is incompatible with this season; coverage and an empty-history conclusion are withheld.',
++                'scope': 'Source context incompatible; other independent seasons remain available.'}
++    complete = (periods.get('complete_acquisition') is True and acquired == set(range(19))
++                and not any(gaps.values()) and coverage.get('source_status') == 'complete'
++                and coverage.get('source_identity_compatible') is True
++                and not any(coverage.get(k) for k in ('unqualified_records', 'conflicting_identities', 'unknown_status_records', 'last_valid_periods')))
++    state = 'complete' if complete else 'partial' if acquired or records_present else 'unknown'
++    reason = ('All supported source transaction buckets 0–18 were retrieved for this completed source season.' if complete else
++              'Some source periods or the completed-season confirmation are missing; retained events remain useful.' if state == 'partial' else
++              'DTOS has not established which source weeks were retrieved; missing history is not no activity.')
++    problems = [f"{coverage[k]} {label}" for k, label in (
++        ('unqualified_records', 'records with unverified transaction or franchise identity'), ('conflicting_identities', 'conflicting transaction identities'),
++        ('unknown_status_records', 'records with unknown transaction status')) if coverage.get(k)]
++    if problems:
++        reason += ' Retained gaps: ' + '; '.join(problems) + '.'
++    if coverage.get('last_valid_periods'):
++        reason += ' Last-valid source periods remain visible after an unavailable refresh: ' + ', '.join(map(str, coverage['last_valid_periods'])) + '.'
++    return {'state': state, 'acquired': sorted(acquired), 'gaps': gaps, 'reason': reason,
++            'scope': 'Retained Sleeper transaction buckets 0–18; draft selections have separate coverage.'}
+diff --git a/src/core/history_context/store.py b/src/core/history_context/store.py
+index 609f3e57..ccde592f 100644
+--- a/src/core/history_context/store.py
++++ b/src/core/history_context/store.py
+@@ -265,6 +265,71 @@ class CanonicalHistoryStore:
+         return {"league_id": league_id, "seasons": seasons, "provider_requests": 0,
+                 "scope": "Retained source periods; unavailable and unacquired periods are not empty history."}
+ 
++    def transaction_coverage(self, league_id: str) -> dict:
++        """Borrow existing compact sections; no scoring, providers or full graph."""
++        from .coverage import periods
++        versions = self._cache_index(league_id)
++        chain = self.season_chain(league_id) or {}
++        with self._lock:
++            current = self._current.get(str(league_id)) or {}
++            current_generation = self._current_digests.get(str(league_id))
++        years = set(versions)
++        years.update(int(r['season']) for r in chain.get('seasons') or []
++                     if str(r.get('season')).isdigit())
++        current_year = (current.get('league') or {}).get('season')
++        if str(current_year).isdigit():
++            years.add(int(current_year))
++        rows = []
++        for year in sorted(years, reverse=True):
++            facts = sleeper_season_cache.sections(league_id, year, ('league', 'transactions'))
++            league = facts.get('league') or {}
++            # A current activity list is not proof that weekly buckets were acquired.
++            if not league and str(current_year) == str(year):
++                league = current.get('league') or {}
++            retained_periods = []
++            used_current = False
++            active = current.get('league') or {}
++            buckets = current.get('season_transactions')
++            if (str(current_year) == str(year) and str(active.get('league_id')) == str(league_id)
++                    and str(league.get('league_id')) == str(league_id) and isinstance(buckets, dict) and buckets):
++                merged = dict(facts.get('transactions') or {})
++                for key, value in buckets.items():
++                    if not str(key).isdigit() or not 0 <= int(key) <= 18:
++                        continue
++                    key = str(int(key))
++                    if not isinstance(value, list) and isinstance(merged.get(key), list):
++                        retained_periods.append(int(key))
++                    else:
++                        merged[key] = value
++                facts = {'league': active, 'transactions': merged}
++                league = active
++                used_current = True
++            reference = next((r for r in chain.get('seasons') or [] if r.get('season') == year), {})
++            declared_season = league.get('season', reference.get('season'))
++            source_identity_compatible = (str(declared_season) == str(year) and bool(league.get('league_id') or reference.get('league_id'))
++                if declared_season is not None else None)
++            from src.core.gm_behavioral_intelligence.activity import summarize_activity
++            activity = summarize_activity(((year, str(league.get('league_id') or ''), row)
++                for bucket in (facts.get('transactions') or {}).values() if isinstance(bucket, list)
++                for row in bucket), []) if isinstance(facts.get('transactions'), dict) else {}
++            known_statuses = {'complete', 'completed', 'failed', 'failure', 'pending', 'rejected', 'cancelled', 'canceled'}
++            unknown_statuses = {(str(row.get('transaction_id')), str(row.get('status')))
++                for bucket in (facts.get('transactions') or {}).values() if isinstance(bucket, list)
++                for row in bucket if isinstance(row, dict) and str(row.get('status') or '').casefold() not in known_statuses} if isinstance(facts.get('transactions'), dict) else set()
++            rows.append({'season': year, 'source_league_id': league.get('league_id') or reference.get('league_id'),
++                'source_identity_compatible': source_identity_compatible, 'declared_source_season': declared_season,
++                'previous_league_id': league.get('previous_league_id', reference.get('previous_league_id')),
++                'source_status': league.get('status'), 'source_generation': versions.get(year),
++                'prepared_current_fingerprint': current_generation if used_current else None,
++                'transactions': periods(facts, 'transactions') if facts else {},
++                'unqualified_records': activity.get('unqualified_records', 0),
++                'conflicting_identities': activity.get('conflicting_identities', 0),
++                'unknown_status_records': len(unknown_statuses),
++                'last_valid_periods': retained_periods,
++                'cache_state': reference.get('cache_status') or ('retained' if facts else 'unknown')})
++        return {'league_id': league_id, 'seasons': rows, 'provider_requests': 0,
++                'scope': 'Retained transaction acquisition only; no weekly scoring reconstruction.'}
++
+     def historical_availability(self, league_id: str, season: int) -> dict[str, Any]:
+         from .recovery import HistoricalCheckpoints
+         cached = sleeper_season_cache.read(league_id, season)
+diff --git a/src/ui/franchise_timeline.py b/src/ui/franchise_timeline.py
+new file mode 100644
+index 00000000..a509d5c5
+--- /dev/null
++++ b/src/ui/franchise_timeline.py
+@@ -0,0 +1,51 @@
++"""Compact factual franchise chronology over retained source evidence."""
++from html import escape
++from urllib.parse import quote
++
++
++def render_franchise_timeline(view):
++    def text(value):
++        return escape(str(value))
++    cards = []
++    for s in view['seasons']:
++        labels = {'unacquired': 'Not retrieved', 'unavailable': 'Source unavailable', 'malformed': 'Source data could not be read'}
++        gaps = '; '.join(labels[name] + ': weeks ' + ', '.join(map(str, weeks))
++                         for name, weeks in s['gaps'].items() if weeks)
++        activity = (f"{s['completed_transactions']} completed transactions retained." if s['completed_transactions'] else
++                    'No completed transaction activity in the fully acquired supported source periods.' if s['no_activity_supported'] else
++                    'No completed transactions retained for this franchise; missing coverage is not no activity.')
++        cards.append(f'''<article class="card fh-season"><h4>{s['season']} · {text(s['state'].title())} transaction coverage</h4>
++<p>{text(s['reason'])}</p><p>{text(activity)}</p><p>{len(s['acquired'])} of 19 supported source weeks retrieved (0 is the offseason bucket; 1–18 are weekly buckets).</p>
++{('<p>' + text(gaps) + '.</p>') if gaps else ''}<p>{s['draft_selections']} draft selections retained. {text(s['draft_note'])}</p>
++<p>{text(s['continuity'])}. {'Season-observed franchise identity available.' if s['identity_observed'] else 'Franchise identity for this season is not established.'}</p>
++<details><summary>Source context</summary><p>Source league: {text(s['source_league_id'] or 'not recorded')} · retained source generation: {text(s['source_generation'] or 'not recorded')} · prepared-current fingerprint: {text(s['prepared_current_fingerprint'] or 'not used')}.</p></details></article>''')
++    events = []
++    for r in view['events']:
++        assets = []
++        for a in r['assets']:
++            label = text(a['label'])
++            if a['kind'] == 'pick' and a.get('id'):
++                label = '<a href="/picks/' + quote(a['id'], safe='') + '">' + label + '</a>'
++            assets.append('<li><b>' + label + '</b><p>' + text(a['from']) + ' → ' + text(a['to']) + '</p>'
++                          + ('<small>Exact pick identity: ' + text(a['id']) + '</small>' if a['kind'] in {'pick', 'selection'} and a.get('id') else '') + '</li>')
++        date = r['occurred_at'] or ('Week ' + str(r['week']) + '; exact time unavailable' if r['week'] is not None else 'Exact event time unavailable')
++        detail = ('<a href="' + text(r['detail_url']) + '">View completed trade evidence</a>') if r['detail_url'] else ''
++        source_only = 'Source roster observation · ' if r['attribution'] == 'franchise continuity unconfirmed' else ''
++        events.append('<article class="card fh-event"><h4>' + source_only + str(r['season']) + ' · ' + text(r['kind'].replace('_', ' ').title()) + '</h4>'
++            + '<p>' + text(date) + ' · ' + text(r['status']) + '</p><ul>' + ''.join(assets) + '</ul>'
++            + ('<p>' + text(r['reason']) + '</p>' if r['reason'] else '')
++            + '<p>' + text(r['attribution']) + '.</p>' + detail
++            + '<details><summary>Event source</summary><p>Source league ' + text(r['source_league_id']) + ' · record ' + text(r['id']) + '</p></details></article>')
++    if not events:
++        events = ['<p class="fh-empty">No supported completed events are displayed. Review season coverage above; unavailable history is not an empty history.</p>']
++    attempts = ''.join('<li>' + str(r['season']) + ' · ' + text(r['kind']) + ' · ' + text(r['status']) + ': '
++                       + text(r['reason']) + ' Source record ' + text(r['id']) + '.</li>' for r in view['attempts'])
++    attempts = ('<details class="card fh-attempts"><summary>Not completed or not attributable · ' + str(view['attempts_total'])
++                + ' retained records</summary><p>These records do not establish completed asset movements. At most 50 are shown.</p><ul>' + attempts + '</ul></details>') if attempts else ''
++    changes = ''.join('<p>Observed manager changed between seasons ' + ' and '.join(map(str, c['observed_season_interval']))
++                      + '; exact takeover time is unavailable.</p>' for c in view['ownership'].get('ownership_changes') or [] if str(c['roster_id']) == view['franchise_id'].rsplit(':', 1)[-1])
++    links = []
++    for n, label in ((view['page'] - 1, 'Previous events'), (view['page'] + 1, 'Next events')):
++        if 1 <= n <= view['pages']:
++            links.append('<a class="ds-action" href="/history/team/' + quote(view['franchise_id'], safe=':') + '?events_page=' + str(n) + '">' + label + '</a>')
++    return '''<style>.franchise-timeline{min-width:0;overflow-wrap:anywhere}.franchise-timeline .grid{grid-template-columns:repeat(auto-fit,minmax(min(260px,100%),1fr))}.franchise-timeline article{min-width:0}.franchise-timeline summary,.franchise-timeline a{min-height:44px;padding:10px 0;display:block}.franchise-timeline summary{cursor:pointer}.franchise-timeline :focus-visible{outline:2px solid #86efac;outline-offset:3px}.franchise-timeline ul{padding-left:20px}</style>''' + '<section class="franchise-timeline"><h3>Franchise transaction timeline</h3><p>' + text(view['qualification']) + '</p>' + changes + ('<p>Earlier linked source-season metadata is unavailable; earlier history remains unknown.</p>' if view['earlier_link_gap'] else '') + '<p>Historical FOIS grades remain RETAINED / NOT REVALIDATED. This factual timeline does not calculate retrospective grades or historical Market values.</p><div class="grid fh-coverage">' + ''.join(cards) + '</div><h3>Completed movements and observed draft selections</h3><p>' + str(view['total']) + ' supported events · page ' + str(view['page']) + ' of ' + str(view['pages']) + '. Undated events are grouped by source identity, not a proven chronological sequence.</p><div class="fh-events">' + ''.join(events) + '</div>' + ''.join(links) + attempts + '</section>'
+diff --git a/tests/test_00_trade_simple_browser.py b/tests/test_00_trade_simple_browser.py
+new file mode 100644
+index 00000000..950db1d6
+--- /dev/null
++++ b/tests/test_00_trade_simple_browser.py
+@@ -0,0 +1,406 @@
++"""Actual authenticated routes/APIs and current page chrome; canonical fixture sources only.
++
++Run this normal-capacity journey before accumulated full-suite fixture state.
++The browser, driver, and application still share the enforced 2 GiB container;
++actual admission and every workflow assertion remain active. Dedicated pressure,
++cancellation, and timeout controls run separately in the same mandatory suite.
++
++Responsive Chromium, not physical Safari. Discovery/evaluation/balance engines
++execute without mocking recommendations. External provider access is forbidden.
++"""
++
++import gc
++from contextlib import ExitStack, contextmanager
++import json
++import os
++import unittest
++from pathlib import Path
++from time import perf_counter
++from urllib.parse import urlsplit
++from unittest.mock import AsyncMock, patch
++
++from playwright.sync_api import sync_playwright
++from routes.trades import create_trades_router
++from tests import test_trade_workspace_batch1 as boundary
++from tests import test_trade_discovery_repair as discovery
++from tools.validation.browser_runtime import launch_chromium
++
++
++@contextmanager
++def independent_journey():
++    """Dispose every source/account/browser owned by one viewport."""
++    import dtos_app
++    from src.platform.memory_reclamation import release_unused_allocator_pages
++
++    try:
++        with ExitStack() as scope:
++            source = discovery.DiscoveryRepairTests()
++            source.setUp()
++            scope.callback(source.doCleanups)
++            auth = boundary.AuthenticatedTradeBoundaryTests()
++            auth.setUp()
++            scope.callback(auth.doCleanups)
++            scope.callback(auth.client.close)
++            auth.data = source.data
++            auth.client.app.router.routes.clear()
++            auth.client.app.include_router(create_trades_router(
++                ensure_fresh=AsyncMock(), require_data=lambda: auth.data,
++                page=dtos_app.page))
++            scope.enter_context(patch.object(dtos_app, "account_store", auth.store))
++            scope.enter_context(patch("src.core.projection_intelligence.projection_service", source.fixture.reader))
++            engine = scope.enter_context(sync_playwright())
++            browser = launch_chromium(engine, headless=True)
++            scope.callback(browser.close)
++            yield auth, browser
++    finally:
++        gc.collect()
++        release_unused_allocator_pages()
++
++
++class SimpleTradeJourneyBrowserTests(unittest.TestCase):
++    def test_actual_build_shop_trade_for_recommended_journeys(self):
++        from src.platform.memory_reclamation import release_unused_allocator_pages
++
++        records = []
++        for width, height in ((320, 483), (320, 568), (375, 483), (375, 667),
++                              (390, 483), (390, 844), (1280, 900)):
++            gc.collect()
++            release_unused_allocator_pages()
++            with self.subTest(width=width, height=height):
++                records.append(self.viewport_journey(width, height))
++        if os.environ.get("DTOS_TRADE_JOURNEY_EVIDENCE"):
++            Path(os.environ["DTOS_TRADE_JOURNEY_EVIDENCE"]).write_text(
++                json.dumps(records, indent=2))
++
++    def viewport_journey(self, width, height):
++        from src.platform.memory_reclamation import release_unused_allocator_pages
++        from src.platform.trade_execution import assess_memory, observe_memory
++
++        records = []
++        with independent_journey() as (auth, browser):
++            capacity = assess_memory(observe_memory())
++            print('DTOS_NORMAL_TRADE_VIEWPORT ' + json.dumps(
++                {'width': width, 'height': height, 'admission': capacity}), flush=True)
++            self.assertTrue(capacity['admitted'],
++                f'Normal-execution viewport lacks measured capacity: {capacity}')
++            page = browser.new_page(
++                viewport={"width": width, "height": height}
++            )
++            page.set_default_timeout(10000)
++            page.add_init_script(
++                'window.__tradeAuditScrolls={page:0,regions:0}; document.addEventListener("scroll",e=>{window.__tradeAuditScrolls[e.target===document?"page":"regions"]++},true)'
++            )
++            requests = []
++            errors = []
++            page.on("pageerror", lambda e: errors.append(str(e)))
++
++            def transport(route):
++                r = route.request
++                u = urlsplit(r.url)
++                if u.netloc != "dtos.test":
++                    return route.abort()
++                if u.path.startswith('/api/trades/'):
++                    # The in-process HTTP/browser bridge owns prior response
++                    # cycles. Release those before measuring real admission;
++                    # never mock telemetry or suppress a capacity rejection.
++                    gc.collect()
++                    release_unused_allocator_pages()
++                if u.path.startswith("/api/trades/") and r.method == "POST":
++                    requests.append((u.path, r.post_data_json))
++                response = auth.client.request(
++                    r.method,
++                    u.path + ("?" + u.query if u.query else ""),
++                    content=r.post_data,
++                    headers={
++                        k: v
++                        for k, v in r.headers.items()
++                        if k in ("content-type", "x-csrf-token")
++                    },
++                )
++                route.fulfill(
++                    status=response.status_code,
++                    content_type=response.headers.get(
++                        "content-type", "text/html"
++                    ),
++                    body=response.content,
++                )
++
++            page.route("**/*", transport)
++
++            def click(selector):
++                locator = page.locator(selector)
++                locator.scroll_into_view_if_needed()
++                hit = locator.evaluate(
++                    "e=>{const r=e.getBoundingClientRect();return e.contains(document.elementFromPoint(r.x+r.width/2,r.y+r.height/2))}"
++                )
++                self.assertTrue(hit, selector)
++                locator.click()
++
++            def done():
++                page.wait_for_function(
++                    '!document.querySelector("#trade-run").disabled'
++                )
++
++            start = perf_counter()
++            page.goto("https://dtos.test/trades")
++            self.assertEqual(page.locator(".ti-workflows > a").count(), 4)
++            build_link = page.get_by_role(
++                "link", name="Build a Trade", exact=False
++            ).first
++            build_link.focus()
++            build_link.press("Enter")
++            page.select_option("#trade-partner", "2")
++            readiness = perf_counter() - start
++            click('#trade-sent-board button[data-asset-id="1qb"]')
++            self.assertIn(
++                "You send:", page.locator("#trade-balance").inner_text()
++            )
++            if width < 760:
++                click("[data-side=received]")
++            start = perf_counter()
++            click('#trade-received-board button[data-asset-id="2w"]')
++            edit = perf_counter() - start
++            self.assertTrue(
++                page.locator("#calculator-verdict").is_visible()
++            )
++            self.assertIn(
++                "you receive more",
++                page.locator("#calculator-verdict").inner_text(),
++            )
++            self.assertEqual(requests, [])
++            market_before_pick = page.locator("#trade-balance").inner_text()
++            if width < 760:
++                click("[data-side=sent]")
++            pick = '#trade-sent-board button[data-asset-id="2028-R1-21"]'
++            click(pick)
++            selected_pick = page.locator("#calculator-sent").inner_text()
++            self.assertIn("2028", selected_pick)
++            self.assertIn("Round 1", selected_pick)
++            self.assertNotEqual(
++                page.locator("#trade-balance").inner_text(),
++                market_before_pick,
++            )
++            click(pick)
++            self.assertEqual(
++                page.locator("#trade-balance").inner_text(),
++                market_before_pick,
++            )
++            self.assertEqual(requests, [])
++            self.assertIn(
++                "Not an acceptance probability",
++                page.locator(".tw-market-bar").get_attribute("aria-label"),
++            )
++            self.assertEqual(
++                page.get_by_role(
++                    "button", name="Evaluate Trade", exact=True
++                ).count(),
++                1,
++            )
++            if os.environ.get("DTOS_TRADE_JOURNEY_EVIDENCE"):
++                page.screenshot(
++                    path=str(
++                        Path(
++                            os.environ["DTOS_TRADE_JOURNEY_EVIDENCE"]
++                        ).parent
++                        / f"build-after-{width}-{height}.png"
++                    ),
++                    full_page=True,
++                )
++            market = page.locator("#trade-balance").inner_text()
++            page.select_option("#trade-strategy", "REBUILD")
++            self.assertEqual(
++                page.locator("#trade-balance").inner_text(), market
++            )
++            page.select_option("#trade-strategy", "RETOOL")
++            start = perf_counter()
++            click("#trade-run")
++            page.locator("#trade-result .dtos-explanation").wait_for()
++            done()
++            evaluate = perf_counter() - start
++            verdict = page.locator(
++                "#trade-result .dtos-explanation > p"
++            ).first.bounding_box()
++            nav = page.locator(".manager-nav").bounding_box()
++            self.assertGreaterEqual(verdict["y"], 0)
++            self.assertLessEqual(
++                verdict["y"] + verdict["height"],
++                nav["y"] if width < 760 else height,
++            )
++            self.assertEqual(
++                page.locator("#trade-balancing").evaluate(
++                    "e=>e.previousElementSibling.id"
++                ),
++                "trade-result",
++            )
++            start = perf_counter()
++            click("#trade-balance-offer")
++            page.get_by_role(
++                "button", name="Preview adjustment", exact=True
++            ).first.wait_for()
++            done()
++            balance = perf_counter() - start
++            original = page.evaluate(
++                'async () => JSON.parse(sessionStorage.getItem((await fetch("/api/trades/workspace").then(r=>r.json()).then(w=>"dtos-trade-workspace:" + w.workspace_context.binding)))).currentProposal'
++            )
++            start = perf_counter()
++            page.get_by_role(
++                "button", name="Preview adjustment", exact=True
++            ).first.click()
++            preview_time = perf_counter() - start
++            self.assertEqual(
++                page.evaluate(
++                    'async () => JSON.parse(sessionStorage.getItem((await fetch("/api/trades/workspace").then(r=>r.json()).then(w=>"dtos-trade-workspace:" + w.workspace_context.binding)))).currentProposal'
++                ),
++                original,
++            )
++            click('#trade-result button:text-is("Keep original")')
++            page.get_by_role(
++                "button", name="Preview adjustment", exact=True
++            ).first.click()
++            start = perf_counter()
++            click('#trade-result button:text-is("Adopt alternative")')
++            adoption_time = perf_counter() - start
++            adopted = page.evaluate(
++                'async () => JSON.parse(sessionStorage.getItem((await fetch("/api/trades/workspace").then(r=>r.json()).then(w=>"dtos-trade-workspace:" + w.workspace_context.binding)))).currentProposal'
++            )
++            self.assertNotEqual(adopted, original)
++            build_scrolls = page.evaluate("window.__tradeAuditScrolls")
++            page.reload()
++            page.locator("#calculator-verdict").wait_for()
++            self.assertEqual(
++                page.evaluate(
++                    'async () => JSON.parse(sessionStorage.getItem((await fetch("/api/trades/workspace").then(r=>r.json()).then(w=>"dtos-trade-workspace:" + w.workspace_context.binding)))).currentProposal'
++                ),
++                adopted,
++            )
++            # Actual target entries auto-search, no mandatory setup.
++            n = len(requests)
++            start = perf_counter()
++            page.goto("https://dtos.test/trades/shop?asset_id=1q")
++            page.locator(".tw-offer").first.wait_for()
++            shop_time = perf_counter() - start
++            self.assertEqual(len(requests), n + 1)
++            self.assertEqual(requests[-1][1]["partner_roster_id"], 0)
++            self.assertEqual(
++                requests[-1][1]["shop_preference"], "best_overall"
++            )
++            self.assertEqual(requests[-1][1]["asset_id"], "1q")
++            page.locator("#shop-refinements > summary").click()
++            start = perf_counter()
++            page.select_option("#shop-preference", "draft_capital")
++            page.wait_for_function(
++                '!document.querySelector("#shop-preference").disabled'
++            )
++            refine_time = perf_counter() - start
++            self.assertEqual(
++                requests[-1][1]["shop_preference"], "draft_capital"
++            )
++            self.assertEqual(requests[-1][1]["asset_id"], "1q")
++            n = len(requests)
++            page.goto("https://dtos.test/trades/shop?asset_id=2028-R1-21")
++            page.wait_for_function(
++                '!document.querySelector("#trade-find").disabled'
++            )
++            self.assertEqual(len(requests), n + 1)
++            self.assertEqual(requests[-1][1]["asset_id"], "2028-R1-21")
++            self.assertEqual(requests[-1][1]["partner_roster_id"], 0)
++            self.assertIn(
++                "2028", page.locator("#trade-sent-chips").inner_text()
++            )
++            n = len(requests)
++            start = perf_counter()
++            page.goto("https://dtos.test/trades/trade-for?asset_id=2w")
++            page.locator(".tw-offer").first.wait_for()
++            trade_for_time = perf_counter() - start
++            self.assertEqual(len(requests), n + 1)
++            self.assertEqual(requests[-1][1]["partner_roster_id"], 2)
++            self.assertEqual(requests[-1][1]["assets_received"], ["2w"])
++            if (width, height) == (390, 844):
++                # Actual engine exploration, not a patched label:
++                # preserve structured evidence across the process's
++                # real authenticated route transport and reload.
++                costly = page.locator('.tw-offer').filter(has_text='Exploratory only').first
++                costly.get_by_role('button', name='Open editable offer:', exact=False).click()
++                context_before = page.evaluate('async () => JSON.parse(sessionStorage.getItem((await fetch("/api/trades/workspace").then(r=>r.json()).then(w=>"dtos-trade-workspace:" + w.workspace_context.binding)))).previewProposal.preview_context')
++                self.assertEqual(context_before['evaluation']['recommendation'], 'NOT WORTH IT')
++                page.reload()
++                page.get_by_role('button', name='Adopt alternative', exact=True).wait_for()
++                self.assertIn('Exploratory only', page.locator('#trade-result').inner_text())
++                self.assertIn(context_before['evaluation']['major_drawback'], page.locator('#trade-result').inner_text())
++                click('#trade-result button:text-is("Adopt alternative")')
++                self.assertIn('NOT WORTH IT', page.locator('#trade-result').inner_text())
++                self.assertIn(context_before['evaluation']['major_drawback'], page.locator('#trade-result').inner_text())
++                self.assertIn('not revalidated', page.locator('#trade-result').inner_text().lower())
++            page.goto("https://dtos.test/trades/recommended")
++            start = perf_counter()
++            click("#trade-find")
++            page.locator(".tw-offer").first.wait_for()
++            page.wait_for_function(
++                '!document.querySelector("#trade-find").disabled'
++            )
++            recommended_time = perf_counter() - start
++            self.assertIn(
++                "Trade options ready",
++                page.locator("#recommendation-status").inner_text(),
++            )
++            self.assertIn('Qualified recommendations', page.locator('#trade-result').inner_text())
++            first = page.locator(
++                "#trade-result .tw-offer > p"
++            ).all_text_contents()
++            start = perf_counter()
++            click("#recommendation-refresh")
++            page.wait_for_function(
++                '!document.querySelector("#trade-find").disabled'
++            )
++            next_time = perf_counter() - start
++            self.assertTrue(
++                requests[-1][1]["excluded_recommendation_families"]
++            )
++            self.assertNotEqual(
++                first,
++                page.locator(
++                    "#trade-result .tw-offer > p"
++                ).all_text_contents(),
++            )
++            page.set_viewport_size({"width": width, "height": height + 100})
++            self.assertLessEqual(
++                page.evaluate("document.documentElement.scrollWidth"),
++                width + 1,
++            )
++            self.assertEqual(errors, [])
++            records.append(
++                {
++                    "width": width,
++                    "height": height,
++                    "initial_memory_admission": capacity,
++                    "readiness_seconds": readiness,
++                    "edit_seconds": edit,
++                    "evaluation_seconds": evaluate,
++                    "balance_seconds": balance,
++                    "preview_seconds": preview_time,
++                    "adoption_seconds": adoption_time,
++                    "shop_route_to_first_offer_seconds": shop_time,
++                    "shop_refinement_seconds": refine_time,
++                    "trade_for_route_to_first_offer_seconds": trade_for_time,
++                    "recommended_seconds": recommended_time,
++                    "next_five_seconds": next_time,
++                    "build_logical_actions": 13 if width < 760 else 12,
++                    "action_count_scope": "Core opening through adopt/reload; excludes diagnostic strategy and pick edits.",
++                    "automated_build_scroll_events": build_scrolls,
++                    "scroll_count_scope": "Includes diagnostic edits and automatic focus/scroll events; not human touch gestures.",
++                    "pointer_checks": True,
++                }
++            )
++            evidence = os.environ.get("DTOS_TRADE_JOURNEY_EVIDENCE")
++            if evidence:
++                page.screenshot(
++                    path=str(
++                        Path(evidence).parent
++                        / f"journey-after-{width}-{height}.png"
++                    ),
++                    full_page=True,
++                )
++            page.close()
++            gc.collect()
++            release_unused_allocator_pages()
++        return records[0]
+diff --git a/tests/test_franchise_timeline_browser.py b/tests/test_franchise_timeline_browser.py
+new file mode 100644
+index 00000000..a22a36da
+--- /dev/null
++++ b/tests/test_franchise_timeline_browser.py
+@@ -0,0 +1,90 @@
++"""Actual history route, retained-source fixtures and phone interaction checks."""
++import json
++import os
++from pathlib import Path
++import unittest
++from unittest.mock import patch
++
++from playwright.sync_api import sync_playwright
++from tools.validation.browser_runtime import launch_chromium
++from tests import test_franchise_timeline_coverage as fixtures
++from tests.test_historical_tracker_phase2 import DAY, ARK
++
++
++class FranchiseTimelineBrowserTests(unittest.TestCase):
++    def test_two_league_coverage_at_four_sizes_keyboard_touch_and_no_read_work(self):
++        import dtos_app
++        helper = fixtures.FranchiseTimelineCoverageTests()
++        helper.setUp()
++        self.addCleanup(helper.doCleanups)
++        helper.past()
++        f = helper.f
++        f.page_renderer = dtos_app.page
++        root = os.environ.get('DTOS_FRANCHISE_HISTORY_EVIDENCE')
++        if not root and os.environ.get('DTOS_PHASE2_EVIDENCE'):
++            root = str(Path(os.environ['DTOS_PHASE2_EVIDENCE']) / 'franchise-history')
++        records = []
++        with patch.object(f.fixture.store, 'season_chain', side_effect=lambda league: {'seasons': [
++                {'season': 2022, 'league_id': '9000000000000002022', 'cache_status': 'unavailable'}]} if league == DAY else {}), sync_playwright() as pw:
++            browser = launch_chromium(pw, headless=True)
++            try:
++                for league, roster in ((DAY, '3'), (ARK, '1')):
++                    f.data = f.fixture.data[league]
++                    for width, height in ((320, 432), (375, 667), (390, 844), (1280, 900)):
++                        with self.subTest(league=league, width=width), patch.dict(dtos_app.STATE, {'data': f.data}):
++                            page = browser.new_page(viewport={'width': width, 'height': height})
++                            requests = []
++                            def respond(route):
++                                path = route.request.url.replace('http://fixture', '')
++                                requests.append(path)
++                                response = helper.client.get(path)
++                                route.fulfill(status=response.status_code, content_type=response.headers.get('content-type', 'text/html'), body=response.content)
++                            page.route('http://fixture/**', respond)
++                            try:
++                                response = page.goto('http://fixture/history/team/' + league + ':franchise:' + roster)
++                                self.assertEqual(response.status, 200)
++                                page.wait_for_load_state('networkidle')
++                                timeline = page.locator('.franchise-timeline')
++                                body = timeline.inner_text()
++                                self.assertIn('Partial transaction coverage', body)
++                                self.assertIn('RETAINED / NOT REVALIDATED', body)
++                                if league == DAY:
++                                    self.assertIn('2024 · Complete transaction coverage', body)
++                                    self.assertIn('2022 · Unknown transaction coverage', body)
++                                count = len(requests)
++                                details = timeline.locator('details').first
++                                summary = details.locator('summary')
++                                summary.scroll_into_view_if_needed()
++                                summary.focus()
++                                self.assertEqual(summary.evaluate('el=>el===document.activeElement'), True)
++                                self.assertNotEqual(summary.evaluate('el=>getComputedStyle(el).outlineStyle'), 'none')
++                                summary.press('Enter')
++                                self.assertTrue(details.evaluate('el=>el.open'))
++                                box = summary.bounding_box()
++                                self.assertGreaterEqual(box['height'], 44)
++                                if width < 500:
++                                    touch = page.context.new_cdp_session(page)
++                                    touch.send('Emulation.setTouchEmulationEnabled', {'enabled': True})
++                                    touch.send('Input.dispatchTouchEvent', {'type': 'touchStart', 'touchPoints': [{'x': box['x'] + box['width']/2, 'y': box['y'] + box['height']/2}]})
++                                    touch.send('Input.dispatchTouchEvent', {'type': 'touchEnd', 'touchPoints': []})
++                                    self.assertFalse(details.evaluate('el=>el.open'))
++                                self.assertEqual(len(requests), count)
++                                self.assertLessEqual(page.evaluate('document.documentElement.scrollWidth-innerWidth'), 0)
++                                record = {'league_control': 'Day Traders retained replay' if league == DAY else 'Arkham retained replay', 'width': width, 'height': height, 'keyboard': True,
++                                    'touch_emulated': width < 500, 'overflow': False, 'extra_disclosure_requests': len(requests)-count}
++                                records.append(record)
++                                if root:
++                                    directory = Path(root)
++                                    directory.mkdir(parents=True, exist_ok=True)
++                                    timeline.scroll_into_view_if_needed()
++                                    page.screenshot(path=str(directory / f'{league}-{width}.png'))
++                            finally:
++                                page.close()
++            finally:
++                browser.close()
++        if root:
++            (Path(root) / 'browser.json').write_text(json.dumps(records, indent=2)+'\n')
++
++
++if __name__ == '__main__':
++    unittest.main()
+diff --git a/tests/test_franchise_timeline_coverage.py b/tests/test_franchise_timeline_coverage.py
+new file mode 100644
+index 00000000..82427357
+--- /dev/null
++++ b/tests/test_franchise_timeline_coverage.py
+@@ -0,0 +1,314 @@
++"""Retained Day/Arkham captures plus explicit disposable season variants."""
++from copy import deepcopy
++from pathlib import Path
++import unittest
++from unittest.mock import patch
++
++from fastapi.testclient import TestClient
++from services.franchise_timeline import franchise_timeline
++from src.core.historical_memory.graph import HistoricalAssetGraph
++from tests import test_historical_tracker_phase2 as fixtures
++
++
++class FranchiseTimelineCoverageTests(unittest.TestCase):
++    def setUp(self):
++        self.f = fixtures.TrackerPhase2Tests()
++        self.f.setUp()
++        self.addCleanup(self.f.tearDown)
++        self.client = TestClient(self.f.app)
++        self.addCleanup(self.client.close)
++
++    def page(self, roster='1'):
++        response = self.client.get('/history/team/' + self.f.data['league']['league_id'] + ':franchise:' + roster)
++        self.assertEqual(response.status_code, 200, response.text[:300])
++        return response.text
++
++    def graph(self):
++        return HistoricalAssetGraph(self.f.fixture.store, self.f.data['league']['league_id'], self.f.data)
++
++    def past(self, transactions=None, *, status='complete'):
++        facts = deepcopy(self.f.fixture.sources[0])
++        facts['league'].update(league_id='9000000000000002024', season='2024', previous_league_id=None, status=status)
++        facts['transactions'] = {str(w): [] for w in range(19)} if transactions is None else transactions
++        facts['drafts'], facts['draft_picks'] = [], []
++        current = deepcopy(self.f.fixture.sources[0])
++        current['league']['previous_league_id'] = facts['league']['league_id']
++        self.f.data['league']['previous_league_id'] = facts['league']['league_id']
++        self.f.publish(current)
++        self.f.publish(facts, season=2024)
++        return facts
++
++    def trade(self, tid='controlled', status='complete'):
++        return {'transaction_id': tid, 'type': 'trade', 'status': status, 'roster_ids': [1, 2],
++                'adds': {'fixture-player': 1}, 'drops': {'fixture-player': 2}, 'draft_picks': [],
++                'created': 1727800000000, 'status_updated': 1727800000001}
++
++    def test_partial_day_and_arkham_retained_events_reach_rendered_page(self):
++        for league, roster in ((fixtures.DAY, '3'), (fixtures.ARK, '1')):
++            with self.subTest(league=league):
++                self.f.data = self.f.fixture.data[league]
++                view = franchise_timeline(self.graph(), roster)
++                html = self.page(roster)
++                self.assertIn('Partial transaction coverage', html)
++                self.assertIn('Not retrieved: weeks', html)
++                self.assertGreater(view['total'], 0)
++                self.assertIn('Draft Selection', html)
++                self.assertIn('RETAINED / NOT REVALIDATED', html)
++                self.assertNotIn('No completed transaction activity in the fully acquired', html)
++
++    def test_complete_closed_season_can_support_no_completed_transactions(self):
++        self.past()
++        view = franchise_timeline(self.graph(), '1')
++        s = next(s for s in view['seasons'] if s['season'] == 2024)
++        self.assertEqual(s['state'], 'complete')
++        self.assertTrue(s['no_activity_supported'])
++        html = self.page()
++        self.assertIn('2024 · Complete transaction coverage', html)
++        self.assertIn('19 of 19 supported source weeks retrieved', html)
++        self.assertIn('No completed transaction activity in the fully acquired supported source periods', html)
++
++    def test_current_or_old_calendar_age_does_not_imply_complete(self):
++        self.past(status='in_season')
++        self.assertEqual(next(s for s in franchise_timeline(self.graph(), '1')['seasons'] if s['season'] == 2024)['state'], 'partial')
++        api = self.client.get('/api/history/franchises/1')
++        self.assertEqual(api.status_code, 200)
++        self.assertEqual(api.json()['season_status']['2024'], 'partial')
++
++    def test_discovered_uncached_season_is_unknown_not_empty(self):
++        with patch.object(self.f.fixture.store, 'season_chain', return_value={'seasons': [
++                {'season': 2022, 'league_id': '9000000000000002022', 'cache_status': 'unavailable'}]}):
++            html = self.page()
++            self.assertIn('2022 · Unknown transaction coverage', html)
++            self.assertIn('missing history is not no activity', html)
++
++    def test_checkpoint_retains_events_without_claiming_acquired_weeks(self):
++        self.past({'0': [self.trade()]})
++        store = self.f.fixture.store
++        store.preserve_reader_checkpoint(fixtures.DAY, 2024, current_season=2026)
++        self.f.fixture.cache.delete(fixtures.DAY, 2024)
++        view = franchise_timeline(self.graph(), '1')
++        season = next(s for s in view['seasons'] if s['season'] == 2024)
++        self.assertEqual(season['state'], 'partial')
++        self.assertEqual(season['acquired'], [])
++        self.assertFalse(season['no_activity_supported'])
++        self.assertTrue(any(r['id'] == 'controlled' for r in view['events']))
++        html = self.page()
++        self.assertIn('2024 · Partial transaction coverage', html)
++        self.assertNotIn('No completed transaction activity in the fully acquired', html)
++
++    def test_missing_and_malformed_source_periods_have_specific_reasons(self):
++        self.past({'0': [], '1': None, '2': 'malformed'})
++        html = self.page()
++        self.assertIn('Source unavailable: weeks 1', html)
++        self.assertIn('Source data could not be read: weeks 2', html)
++        self.assertIn('2024 · Partial transaction coverage', html)
++
++    def test_failed_rejected_pending_and_unknown_are_not_completed_movements(self):
++        facts = self.past({'0': [self.trade('attempt-' + state, state) for state in ('pending', 'failed', 'rejected', 'cancelled', 'unknown')]})
++        view = franchise_timeline(self.graph(), '1')
++        self.assertFalse([r for r in view['events'] if r['id'].startswith('attempt-')])
++        self.assertEqual(len([r for r in view['attempts'] if r['id'].startswith('attempt-')]), 5)
++        self.assertTrue(all(not r['assets'] for r in view['attempts']))
++        html = self.page()
++        self.assertIn('Not completed or not attributable', html)
++        self.assertIn('no asset movement is inferred', html)
++        graph = self.graph()
++        self.assertTrue(all(r['trade_dossier_url'] is None for r in graph.transaction_archive() if r['season'] == 2024))
++        self.assertEqual(facts['transactions']['0'][0]['status'], 'pending')
++
++    def test_duplicate_transactions_are_shown_once(self):
++        row = self.trade()
++        self.past({'0': [row, deepcopy(row)], '1': [deepcopy(row)]})
++        events = [r for r in franchise_timeline(self.graph(), '1')['events'] if r['id'] == 'controlled']
++        self.assertEqual(len(events), 1)
++        self.assertEqual(self.page().count('source record controlled'), 0)  # IDs appear only in the explicit source disclosure.
++
++    def test_conflicting_retained_identities_withhold_movements(self):
++        a, b = self.trade(), self.trade()
++        b['type'] = 'waiver'
++        self.past({'0': [a, b]})
++        view = franchise_timeline(self.graph(), '1')
++        self.assertFalse([r for r in view['events'] if r['id'] == 'controlled'])
++        self.assertTrue(any('Conflicting retained' in r['reason'] for r in view['attempts']))
++
++    def test_pick_original_franchise_is_not_its_owner_or_a_participant(self):
++        row = self.trade('third-origin')
++        row['draft_picks'] = [{'season': '2029', 'round': 1, 'roster_id': 3, 'previous_owner_id': 2, 'owner_id': 1}]
++        self.past({'0': [row]})
++        view = franchise_timeline(self.graph(), '1')
++        event = next(r for r in view['events'] if r['id'] == 'third-origin')
++        self.assertEqual(next(a['id'] for a in event['assets'] if a['kind'] == 'pick'), 'PICK-2029-R1-ORIG3')
++        self.assertIn('2029 round 1 · original franchise:', self.page())
++        self.assertFalse([r for r in franchise_timeline(self.graph(), '3')['events'] if r['id'] == 'third-origin'])
++
++    def test_missing_traded_pick_year_never_uses_transaction_season(self):
++        row = self.trade('pick-year-unknown')
++        row['draft_picks'] = [{'round': 1, 'roster_id': 3, 'previous_owner_id': 2, 'owner_id': 1}]
++        facts = self.past()
++        facts['transactions']['0'] = [row]
++        self.f.publish(facts, season=2024)
++        view = franchise_timeline(self.graph(), '1')
++        event = next(r for r in view['events'] if r['id'] == 'pick-year-unknown')
++        self.assertTrue(event['completed'])
++        self.assertIsNone(next(a['id'] for a in event['assets'] if a['kind'] == 'pick'))
++        self.assertIsNone(event['detail_url'])
++        self.assertTrue(any(a['kind'] == 'player' for a in event['assets']))
++        season = next(s for s in view['seasons'] if s['season'] == 2024)
++        self.assertEqual(season['state'], 'partial')
++        html = self.page()
++        self.assertIn('Year unknown round 1', html)
++        self.assertIn('Exact draft-pick identity is incomplete', html)
++        self.assertNotIn('PICK-2024-R1-ORIG3', html)
++        archive = next(r for r in self.graph().transaction_archive() if r['sleeper_transaction_id'] == 'pick-year-unknown')
++        self.assertIsNone(archive['trade_dossier_url'])
++        ledger = self.client.get('/transactions?scope=all_history&season=2024').text
++        self.assertIn('Exact draft-pick identity incomplete', ledger)
++        self.assertNotIn('/trades/history/pick-year-unknown', ledger)
++
++    def test_draft_selection_preserves_original_distinct_from_selecting_roster(self):
++        facts = self.past()
++        facts['drafts'] = [{'draft_id': 'fixture-draft', 'league_id': facts['league']['league_id'], 'type': 'linear', 'status': 'complete'}]
++        facts['draft_picks'] = [{'draft_id': 'fixture-draft', 'pick_no': 1, 'round': 2, 'roster_id': 1, 'original_roster_id': 3, 'player_id': 'fixture-selected'}]
++        self.f.publish(facts, season=2024)
++        event = next(r for r in franchise_timeline(self.graph(), '1')['events'] if r['season'] == 2024)
++        self.assertEqual(event['assets'][0]['id'], 'PICK-2024-R2-ORIG3')
++        self.assertIsNone(event['occurred_at'])
++        self.assertIn('Exact selection time is not recorded', self.page())
++        del facts['draft_picks'][0]['original_roster_id']
++        facts['drafts'][0]['type'] = 'auction'
++        self.f.publish(facts, season=2024)
++        event = next(r for r in franchise_timeline(self.graph(), '1')['events'] if r['season'] == 2024)
++        self.assertIsNone(event['assets'][0]['id'])
++        self.assertIn('Original franchise: not established', self.page())
++
++    def test_ownership_changes_are_season_observations_not_current_manager_credit(self):
++        facts = self.past({'0': [self.trade()]})
++        facts['rosters'][0]['owner_id'] = 'earlier-manager'
++        facts['users'].append({'user_id': 'earlier-manager', 'display_name': 'Earlier manager', 'metadata': {'team_name': 'Earlier franchise'}})
++        self.f.publish(facts, season=2024)
++        html = self.page()
++        self.assertIn('Observed manager changed between seasons 2024 and 2026', html)
++        self.assertIn('exact takeover time is unavailable', html)
++        self.assertIn('not verified trade-time actors', html)
++        self.assertIn('Earlier franchise', html)
++
++    def test_foreign_league_context_and_invalid_roster_never_leak(self):
++        response = self.client.get('/history/team/' + fixtures.ARK + ':franchise:1')
++        self.assertEqual(response.status_code, 404)
++        self.assertEqual(self.client.get('/history/team/' + fixtures.DAY + ':franchise:invalid').status_code, 404)
++        html = self.page()
++        self.assertNotIn(fixtures.ARK + ':franchise:', html)
++
++    def test_source_change_withholds_complete_coverage_and_empty_conclusion(self):
++        self.past()
++        graph = self.graph()
++        with patch.object(self.f.fixture.store, 'dataset_version', side_effect=['before', 'after']):
++            view = franchise_timeline(graph, '1')
++        self.assertFalse(view['stable_source'])
++        self.assertTrue(all(s['state'] == 'unknown' and not s['no_activity_supported'] for s in view['seasons']))
++
++    def test_ordinary_reads_do_not_build_asset_graph_call_provider_or_regrade(self):
++        graph = self.graph()
++        franchise_timeline(graph, '1')
++        baseline = {str(p): p.read_bytes() for p in Path(self.f.fixture.temp.name).rglob('*.json')}
++        with patch.object(graph, 'prepare_indexes', side_effect=AssertionError('no full graph')), \
++             patch.object(graph, 'events', side_effect=AssertionError('no trade tree')), \
++             patch('services.sleeper.sleeper_get', side_effect=AssertionError('no providers')), \
++             patch.object(self.f.fixture.store, '_record_page', wraps=self.f.fixture.store._record_page) as reads:
++            franchise_timeline(graph, '1')
++            self.assertFalse(any(c.args[1] is None for c in reads.call_args_list))
++        self.assertEqual(baseline, {str(p): p.read_bytes() for p in Path(self.f.fixture.temp.name).rglob('*.json')})
++
++    def test_current_activity_list_is_not_full_season_acquisition(self):
++        self.assertNotEqual(next(s for s in franchise_timeline(self.graph(), '1')['seasons'] if s['season'] == 2026)['state'], 'complete')
++
++    def test_unparsed_or_unknown_records_cannot_establish_no_activity(self):
++        for row in ({'type': 'trade', 'status': 'complete', 'roster_ids': [1, 2]}, self.trade(status='unknown')):
++            with self.subTest(row=row):
++                facts = self.past()
++                facts['transactions']['0'] = [row]
++                self.f.publish(facts, season=2024)
++                season = next(s for s in franchise_timeline(self.graph(), '1')['seasons'] if s['season'] == 2024)
++                self.assertEqual(season['state'], 'partial')
++                self.assertFalse(season['no_activity_supported'])
++                self.assertIn('Retained gaps:', self.page())
++
++    def test_malformed_consideration_does_not_crash_or_become_a_movement(self):
++        row = self.trade()
++        row['draft_picks'] = [None]
++        self.past({'0': [row]})
++        view = franchise_timeline(self.graph(), '1')
++        self.assertFalse([r for r in view['events'] if r['id'] == 'controlled'])
++        self.assertTrue(any('Malformed source consideration' in r['reason'] for r in view['attempts']))
++        self.assertIn('Malformed source consideration', self.page())
++        response = self.client.get('/transactions?scope=all_history&season=2024&team=1')
++        self.assertEqual(response.status_code, 200)
++        self.assertIn('Consideration unavailable or malformed', response.text)
++        self.assertNotIn('/trades/history/controlled', response.text)
++
++    def test_missing_historical_identity_does_not_hide_supported_transactions(self):
++        facts = self.past({'0': [self.trade()]})
++        facts['users'] = None
++        self.f.publish(facts, season=2024)
++        view = franchise_timeline(self.graph(), '1')
++        self.assertTrue(any(r['id'] == 'controlled' for r in view['events']))
++        season = next(s for s in view['seasons'] if s['season'] == 2024)
++        self.assertFalse(season['identity_observed'])
++        self.assertEqual(season['state'], 'partial')
++        self.assertIn('Franchise identity for this season is not established', self.page())
++
++    def test_prepared_current_buckets_are_admitted_but_activity_lists_are_not(self):
++        self.f.fixture.cache.delete(fixtures.DAY, 2026)
++        self.f.data['league']['status'] = 'complete'
++        self.f.data['season_transactions'] = {str(w): [] for w in range(19)}
++        self.f.fixture.store.update_current(fixtures.DAY, self.f.data)
++        period = next(s for s in franchise_timeline(self.graph(), '1')['seasons'] if s['season'] == 2026)
++        self.assertEqual(period['state'], 'complete')
++        self.assertTrue(period['no_activity_supported'])
++        self.f.data['season_transactions'] = {}
++        self.f.data['transactions'] = []
++        self.f.fixture.store.update_current(fixtures.DAY, self.f.data)
++        period = next(s for s in franchise_timeline(self.graph(), '1')['seasons'] if s['season'] == 2026)
++        self.assertEqual(period['state'], 'unknown')
++        self.assertFalse(period['no_activity_supported'])
++
++    def test_wrong_declared_source_season_is_unknown_without_hiding_other_seasons(self):
++        facts = self.past({'0': [self.trade()]})
++        facts['league']['season'] = '2025'
++        self.f.publish(facts, season=2024)
++        view = franchise_timeline(self.graph(), '1')
++        self.assertEqual(next(s for s in view['seasons'] if s['season'] == 2024)['state'], 'unknown')
++        self.assertFalse([r for r in view['events'] if r['season'] == 2024])
++        self.assertTrue(any(r['season'] == 2026 for r in view['events']))
++        self.assertIn('source league-season metadata is incompatible', self.page())
++
++    def test_completed_waiver_add_drop_and_zero_faab_transfer_remain_factual(self):
++        row = self.trade('completed-waiver')
++        row.update(type='waiver', roster_ids=[1], adds={'fixture-added': 1}, drops={'fixture-dropped': 1})
++        self.past({'0': [row]})
++        events = franchise_timeline(self.graph(), '1')['events']
++        waiver = next(r for r in events if r['id'] == 'completed-waiver')
++        self.assertEqual({a['id'] for a in waiver['assets']}, {'fixture-added', 'fixture-dropped'})
++        self.assertIn('Waiver', self.page())
++        row = self.trade('zero-faab')
++        row['waiver_budget'] = [{'sender': 1, 'receiver': 2, 'amount': 0}]
++        self.past({'0': [row]})
++        self.assertIn('0 FAAB', self.page())
++
++    def test_missing_continuation_keeps_completed_source_facts_without_attribution(self):
++        self.past({'0': [self.trade()]})
++        current = deepcopy(self.f.fixture.sources[0])
++        current['league']['previous_league_id'] = 'missing-intermediate-season'
++        self.f.data['league']['previous_league_id'] = 'missing-intermediate-season'
++        self.f.publish(current)
++        view = franchise_timeline(self.graph(), '1')
++        event = next(r for r in view['events'] if r['id'] == 'controlled')
++        self.assertTrue(event['completed'])
++        self.assertTrue(event['assets'])
++        self.assertEqual(event['attribution'], 'franchise continuity unconfirmed')
++        self.assertIn('Source roster observation · 2024', self.page())
++        self.assertEqual(next(s for s in view['seasons'] if s['season'] == 2024)['state'], 'partial')
++
++
++if __name__ == '__main__':
++    unittest.main()
+diff --git a/tests/test_trade_simple_browser.py b/tests/test_trade_simple_browser.py
+deleted file mode 100644
+index 2cc8c198..00000000
+--- a/tests/test_trade_simple_browser.py
++++ /dev/null
+@@ -1,388 +0,0 @@
+-"""Actual authenticated routes/APIs and current page chrome; canonical fixture sources only.
+-
+-Responsive Chromium, not physical Safari. Discovery/evaluation/balance engines
+-execute without mocking recommendations. External provider access is forbidden.
+-"""
+-
+-import gc
+-import json
+-import os
+-import unittest
+-from pathlib import Path
+-from time import perf_counter
+-from urllib.parse import urlsplit
+-from unittest.mock import AsyncMock, patch
+-
+-from playwright.sync_api import sync_playwright
+-from routes.trades import create_trades_router
+-from tests import test_trade_workspace_batch1 as boundary
+-from tests import test_trade_discovery_repair as discovery
+-from tools.validation.browser_runtime import launch_chromium
+-
+-
+-class SimpleTradeJourneyBrowserTests(unittest.TestCase):
+-    def test_actual_build_shop_trade_for_recommended_journeys(self):
+-        import dtos_app
+-        from src.platform.memory_reclamation import release_unused_allocator_pages
+-
+-        # This normal-execution fixture shares the full-suite process. Collect
+-        # unreachable earlier fixtures; keep real cgroup admission in force.
+-        gc.collect()
+-        release_unused_allocator_pages()
+-
+-        source = discovery.DiscoveryRepairTests()
+-        source.setUp()
+-        self.addCleanup(source.doCleanups)
+-        auth = boundary.AuthenticatedTradeBoundaryTests()
+-        auth.setUp()
+-        self.addCleanup(auth.doCleanups)
+-        auth.data = source.data
+-        auth.client.app.router.routes.clear()
+-        auth.client.app.include_router(
+-            create_trades_router(
+-                ensure_fresh=AsyncMock(),
+-                require_data=lambda: auth.data,
+-                page=dtos_app.page,
+-            )
+-        )
+-        self.addCleanup(auth.client.close)
+-        records = []
+-        with (
+-            patch.object(dtos_app, "account_store", auth.store),
+-            patch(
+-                "src.core.projection_intelligence.projection_service",
+-                source.fixture.reader,
+-            ),
+-            sync_playwright() as engine,
+-        ):
+-            browser = launch_chromium(engine, headless=True)
+-            try:
+-                for width, height in (
+-                    (320, 483),
+-                    (320, 568),
+-                    (375, 483),
+-                    (375, 667),
+-                    (390, 483),
+-                    (390, 844),
+-                    (1280, 900),
+-                ):
+-                    with self.subTest(width=width, height=height):
+-                        page = browser.new_page(
+-                            viewport={"width": width, "height": height}
+-                        )
+-                        page.set_default_timeout(10000)
+-                        page.add_init_script(
+-                            'window.__tradeAuditScrolls={page:0,regions:0}; document.addEventListener("scroll",e=>{window.__tradeAuditScrolls[e.target===document?"page":"regions"]++},true)'
+-                        )
+-                        requests = []
+-                        errors = []
+-                        page.on("pageerror", lambda e: errors.append(str(e)))
+-
+-                        def transport(route):
+-                            r = route.request
+-                            u = urlsplit(r.url)
+-                            if u.netloc != "dtos.test":
+-                                return route.abort()
+-                            if u.path.startswith("/api/trades/") and r.method == "POST":
+-                                requests.append((u.path, r.post_data_json))
+-                            response = auth.client.request(
+-                                r.method,
+-                                u.path + ("?" + u.query if u.query else ""),
+-                                content=r.post_data,
+-                                headers={
+-                                    k: v
+-                                    for k, v in r.headers.items()
+-                                    if k in ("content-type", "x-csrf-token")
+-                                },
+-                            )
+-                            route.fulfill(
+-                                status=response.status_code,
+-                                content_type=response.headers.get(
+-                                    "content-type", "text/html"
+-                                ),
+-                                body=response.content,
+-                            )
+-
+-                        page.route("**/*", transport)
+-
+-                        def click(selector):
+-                            locator = page.locator(selector)
+-                            locator.scroll_into_view_if_needed()
+-                            hit = locator.evaluate(
+-                                "e=>{const r=e.getBoundingClientRect();return e.contains(document.elementFromPoint(r.x+r.width/2,r.y+r.height/2))}"
+-                            )
+-                            self.assertTrue(hit, selector)
+-                            locator.click()
+-
+-                        def done():
+-                            page.wait_for_function(
+-                                '!document.querySelector("#trade-run").disabled'
+-                            )
+-
+-                        start = perf_counter()
+-                        page.goto("https://dtos.test/trades")
+-                        self.assertEqual(page.locator(".ti-workflows > a").count(), 4)
+-                        build_link = page.get_by_role(
+-                            "link", name="Build a Trade", exact=False
+-                        ).first
+-                        build_link.focus()
+-                        build_link.press("Enter")
+-                        page.select_option("#trade-partner", "2")
+-                        readiness = perf_counter() - start
+-                        click('#trade-sent-board button[data-asset-id="1qb"]')
+-                        self.assertIn(
+-                            "You send:", page.locator("#trade-balance").inner_text()
+-                        )
+-                        if width < 760:
+-                            click("[data-side=received]")
+-                        start = perf_counter()
+-                        click('#trade-received-board button[data-asset-id="2w"]')
+-                        edit = perf_counter() - start
+-                        self.assertTrue(
+-                            page.locator("#calculator-verdict").is_visible()
+-                        )
+-                        self.assertIn(
+-                            "you receive more",
+-                            page.locator("#calculator-verdict").inner_text(),
+-                        )
+-                        self.assertEqual(requests, [])
+-                        market_before_pick = page.locator("#trade-balance").inner_text()
+-                        if width < 760:
+-                            click("[data-side=sent]")
+-                        pick = '#trade-sent-board button[data-asset-id="2028-R1-21"]'
+-                        click(pick)
+-                        selected_pick = page.locator("#calculator-sent").inner_text()
+-                        self.assertIn("2028", selected_pick)
+-                        self.assertIn("Round 1", selected_pick)
+-                        self.assertNotEqual(
+-                            page.locator("#trade-balance").inner_text(),
+-                            market_before_pick,
+-                        )
+-                        click(pick)
+-                        self.assertEqual(
+-                            page.locator("#trade-balance").inner_text(),
+-                            market_before_pick,
+-                        )
+-                        self.assertEqual(requests, [])
+-                        self.assertIn(
+-                            "Not an acceptance probability",
+-                            page.locator(".tw-market-bar").get_attribute("aria-label"),
+-                        )
+-                        self.assertEqual(
+-                            page.get_by_role(
+-                                "button", name="Evaluate Trade", exact=True
+-                            ).count(),
+-                            1,
+-                        )
+-                        if os.environ.get("DTOS_TRADE_JOURNEY_EVIDENCE"):
+-                            page.screenshot(
+-                                path=str(
+-                                    Path(
+-                                        os.environ["DTOS_TRADE_JOURNEY_EVIDENCE"]
+-                                    ).parent
+-                                    / f"build-after-{width}-{height}.png"
+-                                ),
+-                                full_page=True,
+-                            )
+-                        market = page.locator("#trade-balance").inner_text()
+-                        page.select_option("#trade-strategy", "REBUILD")
+-                        self.assertEqual(
+-                            page.locator("#trade-balance").inner_text(), market
+-                        )
+-                        page.select_option("#trade-strategy", "RETOOL")
+-                        start = perf_counter()
+-                        click("#trade-run")
+-                        page.locator("#trade-result .dtos-explanation").wait_for()
+-                        done()
+-                        evaluate = perf_counter() - start
+-                        verdict = page.locator(
+-                            "#trade-result .dtos-explanation > p"
+-                        ).first.bounding_box()
+-                        nav = page.locator(".manager-nav").bounding_box()
+-                        self.assertGreaterEqual(verdict["y"], 0)
+-                        self.assertLessEqual(
+-                            verdict["y"] + verdict["height"],
+-                            nav["y"] if width < 760 else height,
+-                        )
+-                        self.assertEqual(
+-                            page.locator("#trade-balancing").evaluate(
+-                                "e=>e.previousElementSibling.id"
+-                            ),
+-                            "trade-result",
+-                        )
+-                        start = perf_counter()
+-                        click("#trade-balance-offer")
+-                        page.get_by_role(
+-                            "button", name="Preview adjustment", exact=True
+-                        ).first.wait_for()
+-                        done()
+-                        balance = perf_counter() - start
+-                        original = page.evaluate(
+-                            'async () => JSON.parse(sessionStorage.getItem((await fetch("/api/trades/workspace").then(r=>r.json()).then(w=>"dtos-trade-workspace:" + w.workspace_context.binding)))).currentProposal'
+-                        )
+-                        start = perf_counter()
+-                        page.get_by_role(
+-                            "button", name="Preview adjustment", exact=True
+-                        ).first.click()
+-                        preview_time = perf_counter() - start
+-                        self.assertEqual(
+-                            page.evaluate(
+-                                'async () => JSON.parse(sessionStorage.getItem((await fetch("/api/trades/workspace").then(r=>r.json()).then(w=>"dtos-trade-workspace:" + w.workspace_context.binding)))).currentProposal'
+-                            ),
+-                            original,
+-                        )
+-                        click('#trade-result button:text-is("Keep original")')
+-                        page.get_by_role(
+-                            "button", name="Preview adjustment", exact=True
+-                        ).first.click()
+-                        start = perf_counter()
+-                        click('#trade-result button:text-is("Adopt alternative")')
+-                        adoption_time = perf_counter() - start
+-                        adopted = page.evaluate(
+-                            'async () => JSON.parse(sessionStorage.getItem((await fetch("/api/trades/workspace").then(r=>r.json()).then(w=>"dtos-trade-workspace:" + w.workspace_context.binding)))).currentProposal'
+-                        )
+-                        self.assertNotEqual(adopted, original)
+-                        build_scrolls = page.evaluate("window.__tradeAuditScrolls")
+-                        page.reload()
+-                        page.locator("#calculator-verdict").wait_for()
+-                        self.assertEqual(
+-                            page.evaluate(
+-                                'async () => JSON.parse(sessionStorage.getItem((await fetch("/api/trades/workspace").then(r=>r.json()).then(w=>"dtos-trade-workspace:" + w.workspace_context.binding)))).currentProposal'
+-                            ),
+-                            adopted,
+-                        )
+-                        # Actual target entries auto-search, no mandatory setup.
+-                        n = len(requests)
+-                        start = perf_counter()
+-                        page.goto("https://dtos.test/trades/shop?asset_id=1q")
+-                        page.locator(".tw-offer").first.wait_for()
+-                        shop_time = perf_counter() - start
+-                        self.assertEqual(len(requests), n + 1)
+-                        self.assertEqual(requests[-1][1]["partner_roster_id"], 0)
+-                        self.assertEqual(
+-                            requests[-1][1]["shop_preference"], "best_overall"
+-                        )
+-                        self.assertEqual(requests[-1][1]["asset_id"], "1q")
+-                        page.locator("#shop-refinements > summary").click()
+-                        start = perf_counter()
+-                        page.select_option("#shop-preference", "draft_capital")
+-                        page.wait_for_function(
+-                            '!document.querySelector("#shop-preference").disabled'
+-                        )
+-                        refine_time = perf_counter() - start
+-                        self.assertEqual(
+-                            requests[-1][1]["shop_preference"], "draft_capital"
+-                        )
+-                        self.assertEqual(requests[-1][1]["asset_id"], "1q")
+-                        n = len(requests)
+-                        page.goto("https://dtos.test/trades/shop?asset_id=2028-R1-21")
+-                        page.wait_for_function(
+-                            '!document.querySelector("#trade-find").disabled'
+-                        )
+-                        self.assertEqual(len(requests), n + 1)
+-                        self.assertEqual(requests[-1][1]["asset_id"], "2028-R1-21")
+-                        self.assertEqual(requests[-1][1]["partner_roster_id"], 0)
+-                        self.assertIn(
+-                            "2028", page.locator("#trade-sent-chips").inner_text()
+-                        )
+-                        n = len(requests)
+-                        start = perf_counter()
+-                        page.goto("https://dtos.test/trades/trade-for?asset_id=2w")
+-                        page.locator(".tw-offer").first.wait_for()
+-                        trade_for_time = perf_counter() - start
+-                        self.assertEqual(len(requests), n + 1)
+-                        self.assertEqual(requests[-1][1]["partner_roster_id"], 2)
+-                        self.assertEqual(requests[-1][1]["assets_received"], ["2w"])
+-                        if (width, height) == (390, 844):
+-                            # Actual engine exploration, not a patched label:
+-                            # preserve structured evidence across the process's
+-                            # real authenticated route transport and reload.
+-                            costly = page.locator('.tw-offer').filter(has_text='Exploratory only').first
+-                            costly.get_by_role('button', name='Open editable offer:', exact=False).click()
+-                            context_before = page.evaluate('async () => JSON.parse(sessionStorage.getItem((await fetch("/api/trades/workspace").then(r=>r.json()).then(w=>"dtos-trade-workspace:" + w.workspace_context.binding)))).previewProposal.preview_context')
+-                            self.assertEqual(context_before['evaluation']['recommendation'], 'NOT WORTH IT')
+-                            page.reload()
+-                            page.get_by_role('button', name='Adopt alternative', exact=True).wait_for()
+-                            self.assertIn('Exploratory only', page.locator('#trade-result').inner_text())
+-                            self.assertIn(context_before['evaluation']['major_drawback'], page.locator('#trade-result').inner_text())
+-                            click('#trade-result button:text-is("Adopt alternative")')
+-                            self.assertIn('NOT WORTH IT', page.locator('#trade-result').inner_text())
+-                            self.assertIn(context_before['evaluation']['major_drawback'], page.locator('#trade-result').inner_text())
+-                            self.assertIn('not revalidated', page.locator('#trade-result').inner_text().lower())
+-                        page.goto("https://dtos.test/trades/recommended")
+-                        start = perf_counter()
+-                        click("#trade-find")
+-                        page.locator(".tw-offer").first.wait_for()
+-                        page.wait_for_function(
+-                            '!document.querySelector("#trade-find").disabled'
+-                        )
+-                        recommended_time = perf_counter() - start
+-                        self.assertIn(
+-                            "Trade options ready",
+-                            page.locator("#recommendation-status").inner_text(),
+-                        )
+-                        self.assertIn('Qualified recommendations', page.locator('#trade-result').inner_text())
+-                        first = page.locator(
+-                            "#trade-result .tw-offer > p"
+-                        ).all_text_contents()
+-                        start = perf_counter()
+-                        click("#recommendation-refresh")
+-                        page.wait_for_function(
+-                            '!document.querySelector("#trade-find").disabled'
+-                        )
+-                        next_time = perf_counter() - start
+-                        self.assertTrue(
+-                            requests[-1][1]["excluded_recommendation_families"]
+-                        )
+-                        self.assertNotEqual(
+-                            first,
+-                            page.locator(
+-                                "#trade-result .tw-offer > p"
+-                            ).all_text_contents(),
+-                        )
+-                        page.set_viewport_size({"width": width, "height": height + 100})
+-                        self.assertLessEqual(
+-                            page.evaluate("document.documentElement.scrollWidth"),
+-                            width + 1,
+-                        )
+-                        self.assertEqual(errors, [])
+-                        records.append(
+-                            {
+-                                "width": width,
+-                                "height": height,
+-                                "readiness_seconds": readiness,
+-                                "edit_seconds": edit,
+-                                "evaluation_seconds": evaluate,
+-                                "balance_seconds": balance,
+-                                "preview_seconds": preview_time,
+-                                "adoption_seconds": adoption_time,
+-                                "shop_route_to_first_offer_seconds": shop_time,
+-                                "shop_refinement_seconds": refine_time,
+-                                "trade_for_route_to_first_offer_seconds": trade_for_time,
+-                                "recommended_seconds": recommended_time,
+-                                "next_five_seconds": next_time,
+-                                "build_logical_actions": 13 if width < 760 else 12,
+-                                "action_count_scope": "Core opening through adopt/reload; excludes diagnostic strategy and pick edits.",
+-                                "automated_build_scroll_events": build_scrolls,
+-                                "scroll_count_scope": "Includes diagnostic edits and automatic focus/scroll events; not human touch gestures.",
+-                                "pointer_checks": True,
+-                            }
+-                        )
+-                        evidence = os.environ.get("DTOS_TRADE_JOURNEY_EVIDENCE")
+-                        if evidence:
+-                            page.screenshot(
+-                                path=str(
+-                                    Path(evidence).parent
+-                                    / f"journey-after-{width}-{height}.png"
+-                                ),
+-                                full_page=True,
+-                            )
+-                        page.close()
+-                        gc.collect()
+-                        release_unused_allocator_pages()
+-            finally:
+-                browser.close()
+-        if os.environ.get("DTOS_TRADE_JOURNEY_EVIDENCE"):
+-            Path(os.environ["DTOS_TRADE_JOURNEY_EVIDENCE"]).write_text(
+-                json.dumps(records, indent=2)
+-            )

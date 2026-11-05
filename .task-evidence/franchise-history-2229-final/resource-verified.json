@@ -1,0 +1,70 @@
+{
+  "candidate": "dcacecf1fee73abd981e39e8bc8c722838ddf026",
+  "tree": "752cfe006296bcaf879472183d100fa9df940fbb",
+  "source": "Original hosted artifacts13434036334/13433706487 on final exact candidate; not live Granite acceptance",
+  "trade_operations": [
+    {
+      "label": "healthy_real_180_candidate_search",
+      "seconds": 31.018310765000024,
+      "full_evaluations": 180,
+      "qualified": 0,
+      "state": "NO CREDIBLE RESULT WITHIN SEARCH BUDGET",
+      "business_digest": "21439ce38892af49fae6b165f93e22e909983a30415cf9d74c92cc64c36ac6d1",
+      "response_bytes": 10832193,
+      "peak_raw_current": 347291648
+    },
+    {
+      "label": "real_search_after_pressure_relief",
+      "seconds": 20.48549867099996,
+      "full_evaluations": 180,
+      "qualified": 0,
+      "state": "NO CREDIBLE RESULT WITHIN SEARCH BUDGET",
+      "business_digest": "21439ce38892af49fae6b165f93e22e909983a30415cf9d74c92cc64c36ac6d1",
+      "response_bytes": 10832193,
+      "peak_raw_current": 372346880
+    }
+  ],
+  "trade_cancel": {
+    "evaluations_started": 1,
+    "drained_ms": 160.22808999991867
+  },
+  "trade_cleanup": {
+    "harness_scratch_exists_after": false,
+    "trade_lease_available": true,
+    "trade_model": "in-process thread; no dedicated Trade subprocess or scratch database"
+  },
+  "one_qb_http": {
+    "passed": true,
+    "required_positions": [
+      "QB",
+      "RB",
+      "WR",
+      "TE",
+      "FLEX",
+      "K",
+      "DEF"
+    ],
+    "source": "disposable league-specific projection publication; no K/DEF Market quotes required"
+  },
+  "trade_pressure_peak": 2147483648,
+  "trade_liveness_server_ms_range": [
+    1.681,
+    194.658
+  ],
+  "league_entry": {
+    "pressure_deferred": true,
+    "active_fois_commitment_deferred": true,
+    "after_fois_release_same_pressure_completed": true,
+    "recovery_completed": true,
+    "worker_reaped": true,
+    "one_qb_k_def_http_evaluation": "passed",
+    "cgroup_lifetime_peak": 1939570688
+  },
+  "limitations": [
+    "Trade executes in an in-process thread, not a dedicated subprocess.",
+    "The lifetime peak includes deliberately constrained pressure/file-cache recovery; it is not normal search demand.",
+    "Server handler timing is distinct from external network or client wall time.",
+    "Zero qualified results do not imply failed execution.",
+    "Cleanup observations do not prove indefinite leak freedom."
+  ]
+}

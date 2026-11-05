@@ -1,0 +1,5 @@
+{
+  "scope": "Evidence packaging only, not an application gate",
+  "initial_check": "git diff --cached --check included byte-preserved original logs and a unified patch. It reported timestamped blank-log lines, raw EOF whitespace and mandatory patch context-space lines.",
+  "handling": "Original bytes remain unchanged. Whitespace validation is applied to authored handoff Markdown/manifest; application source already passed committed, staged and working-tree whitespace gates in both exact-source canonical runs. No application assertion or gate is bypassed."
+}

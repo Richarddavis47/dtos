@@ -1,0 +1,293 @@
+{
+  "historical_run": 41966683398,
+  "candidate": "63efcdde1573f9cbf2bc5b2bd02984d3d477064f",
+  "original_zip_sha256": "d8fa0d53f63f04178f11484f0b99c1f0e8b15e4e12284a8da599e5be08301508",
+  "failure_request_time": "2026-11-05T05:03:47.544UTC",
+  "nearest_original_process_sample": {
+    "time": 1793855027.5456975,
+    "monotonic": 2847.914672424,
+    "memory": {
+      "rss_bytes": 47034368,
+      "vms_bytes": 137068544,
+      "system_available_bytes": 13862223872,
+      "memory_accounting_scope": "cgroup",
+      "cgroup_current_bytes": 1915293696,
+      "cgroup_limit_bytes": 2147483648,
+      "cgroup_inactive_file_bytes": 130093056,
+      "cgroup_anonymous_bytes": 1741012992,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    "processes": [
+      {
+        "pid": 7,
+        "ppid": 1,
+        "name": "python",
+        "rss": 47034368,
+        "pss": 37953536,
+        "uss": 33546240
+      },
+      {
+        "pid": 16,
+        "ppid": 7,
+        "name": "python",
+        "rss": 36007936,
+        "pss": 29976576,
+        "uss": 28426240
+      },
+      {
+        "pid": 32,
+        "ppid": 16,
+        "name": "python",
+        "rss": 903704576,
+        "pss": 893508608,
+        "uss": 888811520
+      },
+      {
+        "pid": 33364,
+        "ppid": 32,
+        "name": "python",
+        "rss": 20348928,
+        "pss": 15021056,
+        "uss": 13705216
+      },
+      {
+        "pid": 154211,
+        "ppid": 32,
+        "name": "MainThread",
+        "rss": 373878784,
+        "pss": 370930688,
+        "uss": 370593792
+      },
+      {
+        "pid": 154223,
+        "ppid": 154211,
+        "name": "chromium",
+        "rss": 245338112,
+        "pss": 145065984,
+        "uss": 112431104
+      },
+      {
+        "pid": 154244,
+        "ppid": 154223,
+        "name": "chromium",
+        "rss": 84844544,
+        "pss": 21529600,
+        "uss": 778240
+      },
+      {
+        "pid": 154245,
+        "ppid": 154223,
+        "name": "chromium",
+        "rss": 84668416,
+        "pss": 16923648,
+        "uss": 692224
+      },
+      {
+        "pid": 154269,
+        "ppid": 154223,
+        "name": "chromium",
+        "rss": 115384320,
+        "pss": 39771136,
+        "uss": 20254720
+      },
+      {
+        "pid": 154283,
+        "ppid": 154245,
+        "name": "chromium",
+        "rss": 53657600,
+        "pss": 10620928,
+        "uss": 2129920
+      },
+      {
+        "pid": 154314,
+        "ppid": 154245,
+        "name": "chromium",
+        "rss": 178470912,
+        "pss": 78800896,
+        "uss": 41299968
+      },
+      {
+        "pid": 154325,
+        "ppid": 154245,
+        "name": "chromium",
+        "rss": 92934144,
+        "pss": 22670336,
+        "uss": 5898240
+      },
+      {
+        "pid": 154327,
+        "ppid": 154245,
+        "name": "chromium",
+        "rss": 485265408,
+        "pss": 381510656,
+        "uss": 338157568
+      },
+      {
+        "pid": 154266,
+        "ppid": 154244,
+        "name": "chromium",
+        "rss": 92540928,
+        "pss": 39884800,
+        "uss": 20254720
+      }
+    ],
+    "fixture_free_bytes": 89980784640,
+    "anon": 1741012992,
+    "file": 139902976,
+    "shmem": 9805824,
+    "inactive_file": 130093056,
+    "active_file": 4096,
+    "kernel": 33697792,
+    "kernel_peak": 1937797120,
+    "process_samples_truncated": false,
+    "zombies": 0,
+    "sampling_window_ms": 68.9839970000321
+  },
+  "suite_case_events": [
+    {
+      "event": "start",
+      "test": "test_trade_simple_browser.SimpleTradeJourneyBrowserTests.test_actual_build_shop_trade_for_recommended_journeys",
+      "time": 1793854834.322699,
+      "pid": 32,
+      "rss": 970014720,
+      "cgroup": 1157943296
+    },
+    {
+      "event": "stop",
+      "test": "test_trade_simple_browser.SimpleTradeJourneyBrowserTests.test_actual_build_shop_trade_for_recommended_journeys",
+      "time": 1793855070.4587765,
+      "pid": 32,
+      "rss": 903827456,
+      "cgroup": 1089617920
+    }
+  ],
+  "original_request_log_lines": [
+    "{\"timestamp\":\"2026-11-05T05:03:47.544675+00:00\",\"level\":\"INFO\",\"logger\":\"dtos.trade_resources\",\"message\":\"trade_admission\",\"request_id\":\"system\",\"event\":\"trade_admission\",\"diagnostic\":{\"schema\":\"trade-resource-v1\",\"observation\":{\"admitted\":false,\"reason\":\"capacity\",\"current_bytes\":1915293696,\"limit_bytes\":2147483648,\"raw_headroom_bytes\":232189952,\"clean_inactive_file_bytes\":129773568,\"conditional_file_credit_bytes\":64886784,\"admission_headroom_bytes\":297076736,\"working_bytes\":268435456,\"safety_bytes\":134217728,\"events\":{\"oom\":0,\"oom_kill\":0}},\"recovery\":{\"expired_entries\":264,\"idle_worker_retired\":false,\"allocator_trimmed\":true}}}",
+    "{\"timestamp\":\"2026-11-05T05:03:47.544829+00:00\",\"level\":\"INFO\",\"logger\":\"dtos.trade_resources\",\"message\":\"trade_execution_finished\",\"request_id\":\"system\",\"event\":\"trade_execution_finished\",\"duration_ms\":225.054,\"diagnostic\":{\"schema\":\"trade-resource-v1\",\"outcome\":\"deferred\"}}"
+  ],
+  "actual_admission": {
+    "raw_current_bytes": 1915293696,
+    "limit_bytes": 2147483648,
+    "raw_headroom_bytes": 232189952,
+    "clean_inactive_file_bytes": 129773568,
+    "conditional_credit_bytes": 64886784,
+    "usable_bytes": 297076736,
+    "required_bytes": 402653184,
+    "heavy_work_busy": false
+  },
+  "interpretation": "Real memory deferral in combined validator/test-app/driver/client-browser cgroup, no OOM or heavyweight competitor. Accumulated suite state and client/driver overhead are measured; exact retained Python objects and an application production leak are not established. RSS values cannot be summed as independent memory because shared pages are counted more than once.",
+  "comparison": {
+    "scope": "Full standard discovery imports followed by isolated normal browser journey before accumulated test execution; actual 2 GiB cgroup",
+    "collection_tests": 4107,
+    "tests": 1,
+    "errors": 0,
+    "failures": 0,
+    "success": true,
+    "initial": {
+      "rss_bytes": 31997952,
+      "vms_bytes": 37675008,
+      "system_available_bytes": 17952763904,
+      "memory_accounting_scope": "cgroup",
+      "cgroup_current_bytes": 22884352,
+      "cgroup_limit_bytes": 2147483648,
+      "cgroup_inactive_file_bytes": 0,
+      "cgroup_anonymous_bytes": 21872640,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0
+      },
+      "file_accounting": {
+        "anon": 21872640,
+        "kernel": 495616,
+        "file": 0,
+        "inactive_file": 0,
+        "file_dirty": 0,
+        "file_writeback": 0,
+        "shmem": 0,
+        "unevictable": 0
+      }
+    },
+    "collected": {
+      "memory": {
+        "rss_bytes": 129855488,
+        "vms_bytes": 303235072,
+        "system_available_bytes": 17866113024,
+        "memory_accounting_scope": "cgroup",
+        "cgroup_current_bytes": 105840640,
+        "cgroup_limit_bytes": 2147483648,
+        "cgroup_inactive_file_bytes": 339968,
+        "cgroup_anonymous_bytes": 103731200,
+        "cgroup_memory_events": {
+          "low": 0,
+          "high": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_kill": 0,
+          "oom_group_kill": 0
+        },
+        "file_accounting": {
+          "anon": 103731200,
+          "kernel": 897024,
+          "file": 344064,
+          "inactive_file": 339968,
+          "file_dirty": 4096,
+          "file_writeback": 0,
+          "shmem": 0,
+          "unevictable": 0
+        }
+      },
+      "rss": 129863680
+    },
+    "final_memory": {
+      "rss_bytes": 290164736,
+      "vms_bytes": 690954240,
+      "system_available_bytes": 15985516544,
+      "memory_accounting_scope": "cgroup",
+      "cgroup_current_bytes": 266584064,
+      "cgroup_limit_bytes": 2147483648,
+      "cgroup_inactive_file_bytes": 327680,
+      "cgroup_anonymous_bytes": 263598080,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0
+      },
+      "file_accounting": {
+        "anon": 263598080,
+        "kernel": 1458176,
+        "file": 348160,
+        "inactive_file": 327680,
+        "file_dirty": 4096,
+        "file_writeback": 0,
+        "shmem": 0,
+        "unevictable": 0
+      }
+    },
+    "final_rss": 290168832,
+    "peak_bytes": 1113944064,
+    "elapsed_seconds": 118.9457955629914,
+    "memory_events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0\n",
+    "live_children": []
+  },
+  "correction": "Run unchanged normal-capacity browser journey before accumulated suite fixture state through ordinary unittest discovery and explicit Product list. Pressure/worker/cancel/timeout controls remain mandatory.",
+  "limitations": [
+    "Isolation experiment is not canonical completion. Final full runs must pass.",
+    "A small source-compatible fixture is not a production worst-case capacity profile.",
+    "Cleanup samples do not establish long-term leak freedom."
+  ]
+}

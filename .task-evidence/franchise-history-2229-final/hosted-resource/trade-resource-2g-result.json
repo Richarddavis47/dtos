@@ -1,0 +1,5157 @@
+{
+  "scope": "Actually enforced2GiB disposable source-compatible workloads. File/anonymous ballast is test harness memory, not claimed production headroom. No production Trade invoked.",
+  "states": [
+    {
+      "rss_bytes": 126947328,
+      "vms_bytes": 302985216,
+      "system_available_bytes": 15433015296,
+      "memory_accounting_scope": "cgroup",
+      "cgroup_current_bytes": 112578560,
+      "cgroup_limit_bytes": 2147483648,
+      "cgroup_inactive_file_bytes": 348160,
+      "cgroup_anonymous_bytes": 109604864,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      },
+      "file_accounting": {
+        "anon": 109604864,
+        "kernel": 1998848,
+        "file": 348160,
+        "inactive_file": 348160,
+        "file_dirty": 8192,
+        "file_writeback": 0,
+        "shmem": 0,
+        "unevictable": 0
+      },
+      "label": "prepared_and_server_imported",
+      "at": 1209.909412402,
+      "processes": [
+        {
+          "pid": 7,
+          "ppid": 1,
+          "rss": 126947328
+        }
+      ],
+      "threads": 3,
+      "capacity": {
+        "admitted": true,
+        "reason": "ready",
+        "current_bytes": 112578560,
+        "limit_bytes": 2147483648,
+        "raw_headroom_bytes": 2034905088,
+        "clean_inactive_file_bytes": 339968,
+        "conditional_file_credit_bytes": 169984,
+        "admission_headroom_bytes": 2035075072,
+        "working_bytes": 268435456,
+        "safety_bytes": 134217728,
+        "events": {
+          "oom": 0,
+          "oom_kill": 0
+        }
+      }
+    },
+    {
+      "rss_bytes": 332681216,
+      "vms_bytes": 713367552,
+      "system_available_bytes": 15312453632,
+      "memory_accounting_scope": "cgroup",
+      "cgroup_current_bytes": 318558208,
+      "cgroup_limit_bytes": 2147483648,
+      "cgroup_inactive_file_bytes": 348160,
+      "cgroup_anonymous_bytes": 315064320,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      },
+      "file_accounting": {
+        "anon": 315064320,
+        "kernel": 2580480,
+        "file": 348160,
+        "inactive_file": 348160,
+        "file_dirty": 4096,
+        "file_writeback": 0,
+        "shmem": 0,
+        "unevictable": 0
+      },
+      "label": "healthy_after_allocator_trim",
+      "at": 1241.769898116,
+      "processes": [
+        {
+          "pid": 7,
+          "ppid": 1,
+          "rss": 332681216
+        }
+      ],
+      "threads": 5,
+      "capacity": {
+        "admitted": true,
+        "reason": "ready",
+        "current_bytes": 318558208,
+        "limit_bytes": 2147483648,
+        "raw_headroom_bytes": 1828925440,
+        "clean_inactive_file_bytes": 344064,
+        "conditional_file_credit_bytes": 172032,
+        "admission_headroom_bytes": 1829097472,
+        "working_bytes": 268435456,
+        "safety_bytes": 134217728,
+        "events": {
+          "oom": 0,
+          "oom_kill": 0
+        }
+      }
+    },
+    {
+      "rss_bytes": 1960476672,
+      "vms_bytes": 2340970496,
+      "system_available_bytes": 13649006592,
+      "memory_accounting_scope": "cgroup",
+      "cgroup_current_bytes": 1949249536,
+      "cgroup_limit_bytes": 2147483648,
+      "cgroup_inactive_file_bytes": 348160,
+      "cgroup_anonymous_bytes": 1942671360,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      },
+      "file_accounting": {
+        "anon": 1942671360,
+        "kernel": 5738496,
+        "file": 348160,
+        "inactive_file": 348160,
+        "file_dirty": 4096,
+        "file_writeback": 0,
+        "shmem": 0,
+        "unevictable": 0
+      },
+      "label": "unsafe_anonymous_pressure",
+      "at": 1242.650922451,
+      "processes": [
+        {
+          "pid": 7,
+          "ppid": 1,
+          "rss": 1960476672
+        }
+      ],
+      "threads": 5,
+      "capacity": {
+        "admitted": false,
+        "reason": "capacity",
+        "current_bytes": 1949249536,
+        "limit_bytes": 2147483648,
+        "raw_headroom_bytes": 198234112,
+        "clean_inactive_file_bytes": 344064,
+        "conditional_file_credit_bytes": 172032,
+        "admission_headroom_bytes": 198406144,
+        "working_bytes": 268435456,
+        "safety_bytes": 134217728,
+        "events": {
+          "oom": 0,
+          "oom_kill": 0
+        }
+      }
+    },
+    {
+      "rss_bytes": 1960488960,
+      "vms_bytes": 2340970496,
+      "system_available_bytes": 13649006592,
+      "memory_accounting_scope": "cgroup",
+      "cgroup_current_bytes": 1949245440,
+      "cgroup_limit_bytes": 2147483648,
+      "cgroup_inactive_file_bytes": 348160,
+      "cgroup_anonymous_bytes": 1942683648,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      },
+      "file_accounting": {
+        "anon": 1942683648,
+        "kernel": 5758976,
+        "file": 348160,
+        "inactive_file": 348160,
+        "file_dirty": 4096,
+        "file_writeback": 0,
+        "shmem": 0,
+        "unevictable": 0
+      },
+      "label": "unsafe_deferred_no_worker_started",
+      "at": 1242.660912526,
+      "processes": [
+        {
+          "pid": 7,
+          "ppid": 1,
+          "rss": 1960488960
+        }
+      ],
+      "threads": 5,
+      "capacity": {
+        "admitted": false,
+        "reason": "capacity",
+        "current_bytes": 1949245440,
+        "limit_bytes": 2147483648,
+        "raw_headroom_bytes": 198238208,
+        "clean_inactive_file_bytes": 344064,
+        "conditional_file_credit_bytes": 172032,
+        "admission_headroom_bytes": 198410240,
+        "working_bytes": 268435456,
+        "safety_bytes": 134217728,
+        "events": {
+          "oom": 0,
+          "oom_kill": 0
+        }
+      }
+    },
+    {
+      "rss_bytes": 332877824,
+      "vms_bytes": 713367552,
+      "system_available_bytes": 15209680896,
+      "memory_accounting_scope": "cgroup",
+      "cgroup_current_bytes": 321978368,
+      "cgroup_limit_bytes": 2147483648,
+      "cgroup_inactive_file_bytes": 348160,
+      "cgroup_anonymous_bytes": 315072512,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      },
+      "file_accounting": {
+        "anon": 315072512,
+        "kernel": 5742592,
+        "file": 348160,
+        "inactive_file": 348160,
+        "file_dirty": 4096,
+        "file_writeback": 0,
+        "shmem": 0,
+        "unevictable": 0
+      },
+      "label": "pressure_relieved",
+      "at": 1242.783809179,
+      "processes": [
+        {
+          "pid": 7,
+          "ppid": 1,
+          "rss": 332877824
+        }
+      ],
+      "threads": 5,
+      "capacity": {
+        "admitted": true,
+        "reason": "ready",
+        "current_bytes": 321978368,
+        "limit_bytes": 2147483648,
+        "raw_headroom_bytes": 1825505280,
+        "clean_inactive_file_bytes": 344064,
+        "conditional_file_credit_bytes": 172032,
+        "admission_headroom_bytes": 1825677312,
+        "working_bytes": 268435456,
+        "safety_bytes": 134217728,
+        "events": {
+          "oom": 0,
+          "oom_kill": 0
+        }
+      }
+    },
+    {
+      "rss_bytes": 405164032,
+      "vms_bytes": 733372416,
+      "system_available_bytes": 15235932160,
+      "memory_accounting_scope": "cgroup",
+      "cgroup_current_bytes": 391299072,
+      "cgroup_limit_bytes": 2147483648,
+      "cgroup_inactive_file_bytes": 348160,
+      "cgroup_anonymous_bytes": 387358720,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      },
+      "file_accounting": {
+        "anon": 387358720,
+        "kernel": 2629632,
+        "file": 348160,
+        "inactive_file": 348160,
+        "file_dirty": 0,
+        "file_writeback": 0,
+        "shmem": 0,
+        "unevictable": 0
+      },
+      "label": "real_cancel_drained",
+      "at": 1264.346691477,
+      "processes": [
+        {
+          "pid": 7,
+          "ppid": 1,
+          "rss": 405164032
+        }
+      ],
+      "threads": 5,
+      "capacity": {
+        "admitted": true,
+        "reason": "ready",
+        "current_bytes": 391299072,
+        "limit_bytes": 2147483648,
+        "raw_headroom_bytes": 1756184576,
+        "clean_inactive_file_bytes": 348160,
+        "conditional_file_credit_bytes": 174080,
+        "admission_headroom_bytes": 1756358656,
+        "working_bytes": 268435456,
+        "safety_bytes": 134217728,
+        "events": {
+          "oom": 0,
+          "oom_kill": 0
+        }
+      }
+    },
+    {
+      "rss_bytes": 405164032,
+      "vms_bytes": 733372416,
+      "system_available_bytes": 15235530752,
+      "memory_accounting_scope": "cgroup",
+      "cgroup_current_bytes": 391356416,
+      "cgroup_limit_bytes": 2147483648,
+      "cgroup_inactive_file_bytes": 348160,
+      "cgroup_anonymous_bytes": 387358720,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      },
+      "file_accounting": {
+        "anon": 387358720,
+        "kernel": 2633728,
+        "file": 348160,
+        "inactive_file": 348160,
+        "file_dirty": 0,
+        "file_writeback": 0,
+        "shmem": 0,
+        "unevictable": 0
+      },
+      "label": "real_timeout_drained",
+      "at": 1264.802721359,
+      "processes": [
+        {
+          "pid": 7,
+          "ppid": 1,
+          "rss": 405164032
+        }
+      ],
+      "threads": 5,
+      "capacity": {
+        "admitted": true,
+        "reason": "ready",
+        "current_bytes": 391356416,
+        "limit_bytes": 2147483648,
+        "raw_headroom_bytes": 1756127232,
+        "clean_inactive_file_bytes": 348160,
+        "conditional_file_credit_bytes": 174080,
+        "admission_headroom_bytes": 1756301312,
+        "working_bytes": 268435456,
+        "safety_bytes": 134217728,
+        "events": {
+          "oom": 0,
+          "oom_kill": 0
+        }
+      }
+    },
+    {
+      "rss_bytes": 405164032,
+      "vms_bytes": 733372416,
+      "system_available_bytes": 15235530752,
+      "memory_accounting_scope": "cgroup",
+      "cgroup_current_bytes": 391356416,
+      "cgroup_limit_bytes": 2147483648,
+      "cgroup_inactive_file_bytes": 348160,
+      "cgroup_anonymous_bytes": 387358720,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      },
+      "file_accounting": {
+        "anon": 387358720,
+        "kernel": 2633728,
+        "file": 348160,
+        "inactive_file": 348160,
+        "file_dirty": 0,
+        "file_writeback": 0,
+        "shmem": 0,
+        "unevictable": 0
+      },
+      "label": "failure_released",
+      "at": 1264.805341864,
+      "processes": [
+        {
+          "pid": 7,
+          "ppid": 1,
+          "rss": 405164032
+        }
+      ],
+      "threads": 5,
+      "capacity": {
+        "admitted": true,
+        "reason": "ready",
+        "current_bytes": 391356416,
+        "limit_bytes": 2147483648,
+        "raw_headroom_bytes": 1756127232,
+        "clean_inactive_file_bytes": 348160,
+        "conditional_file_credit_bytes": 174080,
+        "admission_headroom_bytes": 1756301312,
+        "working_bytes": 268435456,
+        "safety_bytes": 134217728,
+        "events": {
+          "oom": 0,
+          "oom_kill": 0
+        }
+      }
+    },
+    {
+      "rss_bytes": 1266958336,
+      "vms_bytes": 1629745152,
+      "system_available_bytes": 14367125504,
+      "memory_accounting_scope": "cgroup",
+      "cgroup_current_bytes": 2082156544,
+      "cgroup_limit_bytes": 2147483648,
+      "cgroup_inactive_file_bytes": 805654528,
+      "cgroup_anonymous_bytes": 1249153024,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      },
+      "file_accounting": {
+        "anon": 1249153024,
+        "kernel": 26443776,
+        "file": 805654528,
+        "inactive_file": 805654528,
+        "file_dirty": 0,
+        "file_writeback": 0,
+        "shmem": 0,
+        "unevictable": 0
+      },
+      "label": "clean_file_cache_pressure",
+      "at": 1267.343497716,
+      "processes": [
+        {
+          "pid": 7,
+          "ppid": 1,
+          "rss": 1266958336
+        }
+      ],
+      "threads": 5,
+      "capacity": {
+        "admitted": true,
+        "reason": "ready",
+        "current_bytes": 2082156544,
+        "limit_bytes": 2147483648,
+        "raw_headroom_bytes": 65327104,
+        "clean_inactive_file_bytes": 805654528,
+        "conditional_file_credit_bytes": 402653184,
+        "admission_headroom_bytes": 467980288,
+        "working_bytes": 268435456,
+        "safety_bytes": 134217728,
+        "events": {
+          "oom": 0,
+          "oom_kill": 0
+        }
+      }
+    },
+    {
+      "rss_bytes": 1319964672,
+      "vms_bytes": 1651716096,
+      "system_available_bytes": 14309957632,
+      "memory_accounting_scope": "cgroup",
+      "cgroup_current_bytes": 1999933440,
+      "cgroup_limit_bytes": 2147483648,
+      "cgroup_inactive_file_bytes": 674234368,
+      "cgroup_anonymous_bytes": 1302159360,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 126,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      },
+      "file_accounting": {
+        "anon": 1302159360,
+        "kernel": 22896640,
+        "file": 674234368,
+        "inactive_file": 674234368,
+        "file_dirty": 0,
+        "file_writeback": 0,
+        "shmem": 0,
+        "unevictable": 0
+      },
+      "label": "file_cache_search_complete",
+      "at": 1288.322173694,
+      "processes": [
+        {
+          "pid": 7,
+          "ppid": 1,
+          "rss": 1319964672
+        }
+      ],
+      "threads": 5,
+      "capacity": {
+        "admitted": true,
+        "reason": "ready",
+        "current_bytes": 1999933440,
+        "limit_bytes": 2147483648,
+        "raw_headroom_bytes": 147550208,
+        "clean_inactive_file_bytes": 674234368,
+        "conditional_file_credit_bytes": 337117184,
+        "admission_headroom_bytes": 484667392,
+        "working_bytes": 268435456,
+        "safety_bytes": 134217728,
+        "events": {
+          "oom": 0,
+          "oom_kill": 0
+        }
+      }
+    },
+    {
+      "rss_bytes": 359010304,
+      "vms_bytes": 720707584,
+      "system_available_bytes": 15278948352,
+      "memory_accounting_scope": "cgroup",
+      "cgroup_current_bytes": 344485888,
+      "cgroup_limit_bytes": 2147483648,
+      "cgroup_inactive_file_bytes": 0,
+      "cgroup_anonymous_bytes": 341204992,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 126,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      },
+      "file_accounting": {
+        "anon": 341204992,
+        "kernel": 2621440,
+        "file": 0,
+        "inactive_file": 0,
+        "file_dirty": 0,
+        "file_writeback": 0,
+        "shmem": 0,
+        "unevictable": 0
+      },
+      "label": "all_ballast_released",
+      "at": 1288.427183667,
+      "processes": [
+        {
+          "pid": 7,
+          "ppid": 1,
+          "rss": 359010304
+        }
+      ],
+      "threads": 5,
+      "capacity": {
+        "admitted": true,
+        "reason": "ready",
+        "current_bytes": 344485888,
+        "limit_bytes": 2147483648,
+        "raw_headroom_bytes": 1802997760,
+        "clean_inactive_file_bytes": 0,
+        "conditional_file_credit_bytes": 0,
+        "admission_headroom_bytes": 1802997760,
+        "working_bytes": 268435456,
+        "safety_bytes": 134217728,
+        "events": {
+          "oom": 0,
+          "oom_kill": 0
+        }
+      }
+    }
+  ],
+  "operations": [
+    {
+      "label": "healthy_real_180_candidate_search",
+      "seconds": 31.018310765000024,
+      "full_evaluations": 180,
+      "qualified": 0,
+      "state": "NO CREDIBLE RESULT WITHIN SEARCH BUDGET",
+      "business_digest": "21439ce38892af49fae6b165f93e22e909983a30415cf9d74c92cc64c36ac6d1",
+      "response_bytes": 10832193,
+      "peak_raw_current": 347291648
+    },
+    {
+      "label": "real_search_after_pressure_relief",
+      "seconds": 20.48549867099996,
+      "full_evaluations": 180,
+      "qualified": 0,
+      "state": "NO CREDIBLE RESULT WITHIN SEARCH BUDGET",
+      "business_digest": "21439ce38892af49fae6b165f93e22e909983a30415cf9d74c92cc64c36ac6d1",
+      "response_bytes": 10832193,
+      "peak_raw_current": 372346880
+    }
+  ],
+  "head": "dcacecf1fee73abd981e39e8bc8c722838ddf026",
+  "tree": "752cfe006296bcaf879472183d100fa9df940fbb",
+  "working_tree_clean": true,
+  "one_qb_http_evaluation": {
+    "passed": true,
+    "required_positions": [
+      "QB",
+      "RB",
+      "WR",
+      "TE",
+      "FLEX",
+      "K",
+      "DEF"
+    ],
+    "source": "disposable league-specific projection publication; no K/DEF Market quotes required"
+  },
+  "liveness": [
+    {
+      "label": "healthy_real_180_candidate_search_during_work",
+      "milliseconds": 2.142,
+      "server_duration_ms": 2.142,
+      "client_elapsed_ms": 5.542229999946358,
+      "measurement": "ASGI acceptance through response completion; client thread/portal waiting is separate"
+    },
+    {
+      "label": "healthy_real_180_candidate_search_during_work",
+      "milliseconds": 1.988,
+      "server_duration_ms": 1.988,
+      "client_elapsed_ms": 6.570273000079396,
+      "measurement": "ASGI acceptance through response completion; client thread/portal waiting is separate"
+    },
+    {
+      "label": "healthy_real_180_candidate_search_during_work",
+      "milliseconds": 72.068,
+      "server_duration_ms": 72.068,
+      "client_elapsed_ms": 179.12808599999153,
+      "measurement": "ASGI acceptance through response completion; client thread/portal waiting is separate"
+    },
+    {
+      "label": "healthy_real_180_candidate_search_during_work",
+      "milliseconds": 22.774,
+      "server_duration_ms": 22.774,
+      "client_elapsed_ms": 122.93688599993402,
+      "measurement": "ASGI acceptance through response completion; client thread/portal waiting is separate"
+    },
+    {
+      "label": "healthy_real_180_candidate_search_during_work",
+      "milliseconds": 2.213,
+      "server_duration_ms": 2.213,
+      "client_elapsed_ms": 124.77445300010004,
+      "measurement": "ASGI acceptance through response completion; client thread/portal waiting is separate"
+    },
+    {
+      "label": "healthy_real_180_candidate_search_during_work",
+      "milliseconds": 27.604,
+      "server_duration_ms": 27.604,
+      "client_elapsed_ms": 163.652275000004,
+      "measurement": "ASGI acceptance through response completion; client thread/portal waiting is separate"
+    },
+    {
+      "label": "healthy_real_180_candidate_search_during_work",
+      "milliseconds": 2.548,
+      "server_duration_ms": 2.548,
+      "client_elapsed_ms": 81.08211399985521,
+      "measurement": "ASGI acceptance through response completion; client thread/portal waiting is separate"
+    },
+    {
+      "label": "healthy_real_180_candidate_search_during_work",
+      "milliseconds": 1.781,
+      "server_duration_ms": 1.781,
+      "client_elapsed_ms": 15.159779999976308,
+      "measurement": "ASGI acceptance through response completion; client thread/portal waiting is separate"
+    },
+    {
+      "label": "healthy_real_180_candidate_search_during_work",
+      "milliseconds": 2.532,
+      "server_duration_ms": 2.532,
+      "client_elapsed_ms": 7.070258000112517,
+      "measurement": "ASGI acceptance through response completion; client thread/portal waiting is separate"
+    },
+    {
+      "label": "healthy_real_180_candidate_search_during_work",
+      "milliseconds": 11.772,
+      "server_duration_ms": 11.772,
+      "client_elapsed_ms": 248.52943499990943,
+      "measurement": "ASGI acceptance through response completion; client thread/portal waiting is separate"
+    },
+    {
+      "label": "healthy_real_180_candidate_search_during_work",
+      "milliseconds": 2.539,
+      "server_duration_ms": 2.539,
+      "client_elapsed_ms": 88.45312299990837,
+      "measurement": "ASGI acceptance through response completion; client thread/portal waiting is separate"
+    },
+    {
+      "label": "healthy_real_180_candidate_search_during_work",
+      "milliseconds": 36.796,
+      "server_duration_ms": 36.796,
+      "client_elapsed_ms": 105.54748999993535,
+      "measurement": "ASGI acceptance through response completion; client thread/portal waiting is separate"
+    },
+    {
+      "label": "healthy_real_180_candidate_search_during_work",
+      "milliseconds": 3.022,
+      "server_duration_ms": 3.022,
+      "client_elapsed_ms": 103.19189100005133,
+      "measurement": "ASGI acceptance through response completion; client thread/portal waiting is separate"
+    },
+    {
+      "label": "healthy_real_180_candidate_search_during_work",
+      "milliseconds": 9.273,
+      "server_duration_ms": 9.273,
+      "client_elapsed_ms": 182.82476800004588,
+      "measurement": "ASGI acceptance through response completion; client thread/portal waiting is separate"
+    },
+    {
+      "label": "healthy_real_180_candidate_search_during_work",
+      "milliseconds": 2.233,
+      "server_duration_ms": 2.233,
+      "client_elapsed_ms": 31.518238999979076,
+      "measurement": "ASGI acceptance through response completion; client thread/portal waiting is separate"
+    },
+    {
+      "label": "healthy_real_180_candidate_search_during_work",
+      "milliseconds": 2.613,
+      "server_duration_ms": 2.613,
+      "client_elapsed_ms": 154.44522300003882,
+      "measurement": "ASGI acceptance through response completion; client thread/portal waiting is separate"
+    },
+    {
+      "label": "healthy_real_180_candidate_search_during_work",
+      "milliseconds": 141.897,
+      "server_duration_ms": 141.897,
+      "client_elapsed_ms": 228.25337199992646,
+      "measurement": "ASGI acceptance through response completion; client thread/portal waiting is separate"
+    },
+    {
+      "label": "healthy_real_180_candidate_search_during_work",
+      "milliseconds": 2.474,
+      "server_duration_ms": 2.474,
+      "client_elapsed_ms": 12.57085699990057,
+      "measurement": "ASGI acceptance through response completion; client thread/portal waiting is separate"
+    },
+    {
+      "label": "healthy_real_180_candidate_search_during_work",
+      "milliseconds": 14.63,
+      "server_duration_ms": 14.63,
+      "client_elapsed_ms": 81.87469300014527,
+      "measurement": "ASGI acceptance through response completion; client thread/portal waiting is separate"
+    },
+    {
+      "label": "healthy_real_180_candidate_search_during_work",
+      "milliseconds": 58.634,
+      "server_duration_ms": 58.634,
+      "client_elapsed_ms": 139.3418440000005,
+      "measurement": "ASGI acceptance through response completion; client thread/portal waiting is separate"
+    },
+    {
+      "label": "healthy_real_180_candidate_search_during_work",
+      "milliseconds": 2.848,
+      "server_duration_ms": 2.848,
+      "client_elapsed_ms": 7.762429999957021,
+      "measurement": "ASGI acceptance through response completion; client thread/portal waiting is separate"
+    },
+    {
+      "label": "healthy_real_180_candidate_search_during_work",
+      "milliseconds": 2.688,
+      "server_duration_ms": 2.688,
+      "client_elapsed_ms": 52.87971000007019,
+      "measurement": "ASGI acceptance through response completion; client thread/portal waiting is separate"
+    },
+    {
+      "label": "healthy_real_180_candidate_search_during_work",
+      "milliseconds": 12.879,
+      "server_duration_ms": 12.879,
+      "client_elapsed_ms": 122.22776599992358,
+      "measurement": "ASGI acceptance through response completion; client thread/portal waiting is separate"
+    },
+    {
+      "label": "healthy_real_180_candidate_search_during_work",
+      "milliseconds": 24.175,
+      "server_duration_ms": 24.175,
+      "client_elapsed_ms": 101.81707600008849,
+      "measurement": "ASGI acceptance through response completion; client thread/portal waiting is separate"
+    },
+    {
+      "label": "healthy_real_180_candidate_search_during_work",
+      "milliseconds": 2.5,
+      "server_duration_ms": 2.5,
+      "client_elapsed_ms": 37.4587920000522,
+      "measurement": "ASGI acceptance through response completion; client thread/portal waiting is separate"
+    },
+    {
+      "label": "healthy_real_180_candidate_search_during_work",
+      "milliseconds": 9.292,
+      "server_duration_ms": 9.292,
+      "client_elapsed_ms": 113.90859899984207,
+      "measurement": "ASGI acceptance through response completion; client thread/portal waiting is separate"
+    },
+    {
+      "label": "healthy_real_180_candidate_search_during_work",
+      "milliseconds": 27.86,
+      "server_duration_ms": 27.86,
+      "client_elapsed_ms": 187.6161510001566,
+      "measurement": "ASGI acceptance through response completion; client thread/portal waiting is separate"
+    },
+    {
+      "label": "healthy_real_180_candidate_search_during_work",
+      "milliseconds": 2.463,
+      "server_duration_ms": 2.463,
+      "client_elapsed_ms": 47.398714000109976,
+      "measurement": "ASGI acceptance through response completion; client thread/portal waiting is separate"
+    },
+    {
+      "label": "healthy_real_180_candidate_search_during_work",
+      "milliseconds": 2.077,
+      "server_duration_ms": 2.077,
+      "client_elapsed_ms": 23.309565999852566,
+      "measurement": "ASGI acceptance through response completion; client thread/portal waiting is separate"
+    },
+    {
+      "label": "healthy_real_180_candidate_search_during_work",
+      "milliseconds": 33.825,
+      "server_duration_ms": 33.825,
+      "client_elapsed_ms": 159.90840899985415,
+      "measurement": "ASGI acceptance through response completion; client thread/portal waiting is separate"
+    },
+    {
+      "label": "healthy_real_180_candidate_search_during_work",
+      "milliseconds": 2.06,
+      "server_duration_ms": 2.06,
+      "client_elapsed_ms": 75.36689099993055,
+      "measurement": "ASGI acceptance through response completion; client thread/portal waiting is separate"
+    },
+    {
+      "label": "healthy_real_180_candidate_search_during_work",
+      "milliseconds": 2.363,
+      "server_duration_ms": 2.363,
+      "client_elapsed_ms": 43.44252700002471,
+      "measurement": "ASGI acceptance through response completion; client thread/portal waiting is separate"
+    },
+    {
+      "label": "healthy_real_180_candidate_search_during_work",
+      "milliseconds": 2.041,
+      "server_duration_ms": 2.041,
+      "client_elapsed_ms": 106.91028599990204,
+      "measurement": "ASGI acceptance through response completion; client thread/portal waiting is separate"
+    },
+    {
+      "label": "healthy_real_180_candidate_search_during_work",
+      "milliseconds": 2.096,
+      "server_duration_ms": 2.096,
+      "client_elapsed_ms": 74.4404790000317,
+      "measurement": "ASGI acceptance through response completion; client thread/portal waiting is separate"
+    },
+    {
+      "label": "healthy_real_180_candidate_search_during_work",
+      "milliseconds": 2.481,
+      "server_duration_ms": 2.481,
+      "client_elapsed_ms": 70.56102199999259,
+      "measurement": "ASGI acceptance through response completion; client thread/portal waiting is separate"
+    },
+    {
+      "label": "healthy_real_180_candidate_search_during_work",
+      "milliseconds": 15.566,
+      "server_duration_ms": 15.566,
+      "client_elapsed_ms": 253.64051099995777,
+      "measurement": "ASGI acceptance through response completion; client thread/portal waiting is separate"
+    },
+    {
+      "label": "healthy_real_180_candidate_search_during_work",
+      "milliseconds": 17.965,
+      "server_duration_ms": 17.965,
+      "client_elapsed_ms": 318.49194300002637,
+      "measurement": "ASGI acceptance through response completion; client thread/portal waiting is separate"
+    },
+    {
+      "label": "healthy_real_180_candidate_search_during_work",
+      "milliseconds": 42.109,
+      "server_duration_ms": 42.109,
+      "client_elapsed_ms": 129.44000599986794,
+      "measurement": "ASGI acceptance through response completion; client thread/portal waiting is separate"
+    },
+    {
+      "label": "healthy_real_180_candidate_search_during_work",
+      "milliseconds": 1.96,
+      "server_duration_ms": 1.96,
+      "client_elapsed_ms": 11.737620999838327,
+      "measurement": "ASGI acceptance through response completion; client thread/portal waiting is separate"
+    },
+    {
+      "label": "healthy_real_180_candidate_search_during_work",
+      "milliseconds": 39.83,
+      "server_duration_ms": 39.83,
+      "client_elapsed_ms": 146.5283500001533,
+      "measurement": "ASGI acceptance through response completion; client thread/portal waiting is separate"
+    },
+    {
+      "label": "healthy_real_180_candidate_search_during_work",
+      "milliseconds": 2.925,
+      "server_duration_ms": 2.925,
+      "client_elapsed_ms": 26.688427999943087,
+      "measurement": "ASGI acceptance through response completion; client thread/portal waiting is separate"
+    },
+    {
+      "label": "healthy_real_180_candidate_search_during_work",
+      "milliseconds": 9.714,
+      "server_duration_ms": 9.714,
+      "client_elapsed_ms": 132.64898499983246,
+      "measurement": "ASGI acceptance through response completion; client thread/portal waiting is separate"
+    },
+    {
+      "label": "healthy_real_180_candidate_search_during_work",
+      "milliseconds": 2.172,
+      "server_duration_ms": 2.172,
+      "client_elapsed_ms": 15.396549999877607,
+      "measurement": "ASGI acceptance through response completion; client thread/portal waiting is separate"
+    },
+    {
+      "label": "healthy_real_180_candidate_search_during_work",
+      "milliseconds": 1.896,
+      "server_duration_ms": 1.896,
+      "client_elapsed_ms": 252.14899799993873,
+      "measurement": "ASGI acceptance through response completion; client thread/portal waiting is separate"
+    },
+    {
+      "label": "healthy_real_180_candidate_search_during_work",
+      "milliseconds": 2.259,
+      "server_duration_ms": 2.259,
+      "client_elapsed_ms": 44.75249100005385,
+      "measurement": "ASGI acceptance through response completion; client thread/portal waiting is separate"
+    },
+    {
+      "label": "healthy_real_180_candidate_search_during_work",
+      "milliseconds": 18.969,
+      "server_duration_ms": 18.969,
+      "client_elapsed_ms": 137.93218500018156,
+      "measurement": "ASGI acceptance through response completion; client thread/portal waiting is separate"
+    },
+    {
+      "label": "healthy_real_180_candidate_search_during_work",
+      "milliseconds": 2.428,
+      "server_duration_ms": 2.428,
+      "client_elapsed_ms": 85.94943399998556,
+      "measurement": "ASGI acceptance through response completion; client thread/portal waiting is separate"
+    },
+    {
+      "label": "healthy_real_180_candidate_search_during_work",
+      "milliseconds": 1.982,
+      "server_duration_ms": 1.982,
+      "client_elapsed_ms": 18.370167000057336,
+      "measurement": "ASGI acceptance through response completion; client thread/portal waiting is separate"
+    },
+    {
+      "label": "healthy_real_180_candidate_search_during_work",
+      "milliseconds": 2.358,
+      "server_duration_ms": 2.358,
+      "client_elapsed_ms": 49.68098100016505,
+      "measurement": "ASGI acceptance through response completion; client thread/portal waiting is separate"
+    },
+    {
+      "label": "healthy_real_180_candidate_search_during_work",
+      "milliseconds": 2.847,
+      "server_duration_ms": 2.847,
+      "client_elapsed_ms": 25.165188999835664,
+      "measurement": "ASGI acceptance through response completion; client thread/portal waiting is separate"
+    },
+    {
+      "label": "healthy_real_180_candidate_search_during_work",
+      "milliseconds": 123.071,
+      "server_duration_ms": 123.071,
+      "client_elapsed_ms": 269.02766199987127,
+      "measurement": "ASGI acceptance through response completion; client thread/portal waiting is separate"
+    },
+    {
+      "label": "unsafe_pressure",
+      "milliseconds": 1.72,
+      "server_duration_ms": 1.72,
+      "client_elapsed_ms": 4.874122000046555,
+      "measurement": "ASGI acceptance through response completion; client thread/portal waiting is separate"
+    },
+    {
+      "label": "real_search_after_pressure_relief_during_work",
+      "milliseconds": 1.964,
+      "server_duration_ms": 1.964,
+      "client_elapsed_ms": 5.776018999995358,
+      "measurement": "ASGI acceptance through response completion; client thread/portal waiting is separate"
+    },
+    {
+      "label": "real_search_after_pressure_relief_during_work",
+      "milliseconds": 4.44,
+      "server_duration_ms": 4.44,
+      "client_elapsed_ms": 8.282540999971388,
+      "measurement": "ASGI acceptance through response completion; client thread/portal waiting is separate"
+    },
+    {
+      "label": "real_search_after_pressure_relief_during_work",
+      "milliseconds": 28.987,
+      "server_duration_ms": 28.987,
+      "client_elapsed_ms": 117.65529500007688,
+      "measurement": "ASGI acceptance through response completion; client thread/portal waiting is separate"
+    },
+    {
+      "label": "real_search_after_pressure_relief_during_work",
+      "milliseconds": 2.181,
+      "server_duration_ms": 2.181,
+      "client_elapsed_ms": 24.918030999970142,
+      "measurement": "ASGI acceptance through response completion; client thread/portal waiting is separate"
+    },
+    {
+      "label": "real_search_after_pressure_relief_during_work",
+      "milliseconds": 2.461,
+      "server_duration_ms": 2.461,
+      "client_elapsed_ms": 20.88492000007136,
+      "measurement": "ASGI acceptance through response completion; client thread/portal waiting is separate"
+    },
+    {
+      "label": "real_search_after_pressure_relief_during_work",
+      "milliseconds": 1.948,
+      "server_duration_ms": 1.948,
+      "client_elapsed_ms": 42.74466900005791,
+      "measurement": "ASGI acceptance through response completion; client thread/portal waiting is separate"
+    },
+    {
+      "label": "real_search_after_pressure_relief_during_work",
+      "milliseconds": 2.886,
+      "server_duration_ms": 2.886,
+      "client_elapsed_ms": 16.327394999962053,
+      "measurement": "ASGI acceptance through response completion; client thread/portal waiting is separate"
+    },
+    {
+      "label": "real_search_after_pressure_relief_during_work",
+      "milliseconds": 2.169,
+      "server_duration_ms": 2.169,
+      "client_elapsed_ms": 19.835704000115584,
+      "measurement": "ASGI acceptance through response completion; client thread/portal waiting is separate"
+    },
+    {
+      "label": "real_search_after_pressure_relief_during_work",
+      "milliseconds": 2.117,
+      "server_duration_ms": 2.117,
+      "client_elapsed_ms": 72.74859700009983,
+      "measurement": "ASGI acceptance through response completion; client thread/portal waiting is separate"
+    },
+    {
+      "label": "real_search_after_pressure_relief_during_work",
+      "milliseconds": 3.021,
+      "server_duration_ms": 3.021,
+      "client_elapsed_ms": 69.605896999974,
+      "measurement": "ASGI acceptance through response completion; client thread/portal waiting is separate"
+    },
+    {
+      "label": "real_search_after_pressure_relief_during_work",
+      "milliseconds": 2.573,
+      "server_duration_ms": 2.573,
+      "client_elapsed_ms": 18.50826700001562,
+      "measurement": "ASGI acceptance through response completion; client thread/portal waiting is separate"
+    },
+    {
+      "label": "real_search_after_pressure_relief_during_work",
+      "milliseconds": 2.311,
+      "server_duration_ms": 2.311,
+      "client_elapsed_ms": 177.29854800018074,
+      "measurement": "ASGI acceptance through response completion; client thread/portal waiting is separate"
+    },
+    {
+      "label": "real_search_after_pressure_relief_during_work",
+      "milliseconds": 1.821,
+      "server_duration_ms": 1.821,
+      "client_elapsed_ms": 193.47009900002377,
+      "measurement": "ASGI acceptance through response completion; client thread/portal waiting is separate"
+    },
+    {
+      "label": "real_search_after_pressure_relief_during_work",
+      "milliseconds": 7.798,
+      "server_duration_ms": 7.798,
+      "client_elapsed_ms": 240.728554000043,
+      "measurement": "ASGI acceptance through response completion; client thread/portal waiting is separate"
+    },
+    {
+      "label": "real_search_after_pressure_relief_during_work",
+      "milliseconds": 6.411,
+      "server_duration_ms": 6.411,
+      "client_elapsed_ms": 235.0436950000585,
+      "measurement": "ASGI acceptance through response completion; client thread/portal waiting is separate"
+    },
+    {
+      "label": "real_search_after_pressure_relief_during_work",
+      "milliseconds": 194.658,
+      "server_duration_ms": 194.658,
+      "client_elapsed_ms": 263.6617020000358,
+      "measurement": "ASGI acceptance through response completion; client thread/portal waiting is separate"
+    },
+    {
+      "label": "real_search_after_pressure_relief_during_work",
+      "milliseconds": 50.096,
+      "server_duration_ms": 50.096,
+      "client_elapsed_ms": 302.18022000008204,
+      "measurement": "ASGI acceptance through response completion; client thread/portal waiting is separate"
+    },
+    {
+      "label": "real_search_after_pressure_relief_during_work",
+      "milliseconds": 82.642,
+      "server_duration_ms": 82.642,
+      "client_elapsed_ms": 135.7056859999375,
+      "measurement": "ASGI acceptance through response completion; client thread/portal waiting is separate"
+    },
+    {
+      "label": "real_search_after_pressure_relief_during_work",
+      "milliseconds": 34.185,
+      "server_duration_ms": 34.185,
+      "client_elapsed_ms": 81.13521099994614,
+      "measurement": "ASGI acceptance through response completion; client thread/portal waiting is separate"
+    },
+    {
+      "label": "real_search_after_pressure_relief_during_work",
+      "milliseconds": 30.36,
+      "server_duration_ms": 30.36,
+      "client_elapsed_ms": 270.6682829998499,
+      "measurement": "ASGI acceptance through response completion; client thread/portal waiting is separate"
+    },
+    {
+      "label": "real_search_after_pressure_relief_during_work",
+      "milliseconds": 2.607,
+      "server_duration_ms": 2.607,
+      "client_elapsed_ms": 15.289086999928259,
+      "measurement": "ASGI acceptance through response completion; client thread/portal waiting is separate"
+    },
+    {
+      "label": "real_search_after_pressure_relief_during_work",
+      "milliseconds": 16.588,
+      "server_duration_ms": 16.588,
+      "client_elapsed_ms": 101.07875400012745,
+      "measurement": "ASGI acceptance through response completion; client thread/portal waiting is separate"
+    },
+    {
+      "label": "real_search_after_pressure_relief_during_work",
+      "milliseconds": 2.605,
+      "server_duration_ms": 2.605,
+      "client_elapsed_ms": 84.35008800006472,
+      "measurement": "ASGI acceptance through response completion; client thread/portal waiting is separate"
+    },
+    {
+      "label": "real_search_after_pressure_relief_during_work",
+      "milliseconds": 1.681,
+      "server_duration_ms": 1.681,
+      "client_elapsed_ms": 56.46241399995233,
+      "measurement": "ASGI acceptance through response completion; client thread/portal waiting is separate"
+    },
+    {
+      "label": "real_search_after_pressure_relief_during_work",
+      "milliseconds": 17.328,
+      "server_duration_ms": 17.328,
+      "client_elapsed_ms": 309.01532799998677,
+      "measurement": "ASGI acceptance through response completion; client thread/portal waiting is separate"
+    },
+    {
+      "label": "real_search_after_pressure_relief_during_work",
+      "milliseconds": 2.047,
+      "server_duration_ms": 2.047,
+      "client_elapsed_ms": 38.52696100011599,
+      "measurement": "ASGI acceptance through response completion; client thread/portal waiting is separate"
+    },
+    {
+      "label": "real_search_after_pressure_relief_during_work",
+      "milliseconds": 2.386,
+      "server_duration_ms": 2.386,
+      "client_elapsed_ms": 14.59678400010489,
+      "measurement": "ASGI acceptance through response completion; client thread/portal waiting is separate"
+    },
+    {
+      "label": "real_search_after_pressure_relief_during_work",
+      "milliseconds": 9.614,
+      "server_duration_ms": 9.614,
+      "client_elapsed_ms": 65.03716199995324,
+      "measurement": "ASGI acceptance through response completion; client thread/portal waiting is separate"
+    },
+    {
+      "label": "real_search_after_pressure_relief_during_work",
+      "milliseconds": 24.979,
+      "server_duration_ms": 24.979,
+      "client_elapsed_ms": 117.3150220001844,
+      "measurement": "ASGI acceptance through response completion; client thread/portal waiting is separate"
+    },
+    {
+      "label": "real_search_after_pressure_relief_during_work",
+      "milliseconds": 45.851,
+      "server_duration_ms": 45.851,
+      "client_elapsed_ms": 109.13639199998215,
+      "measurement": "ASGI acceptance through response completion; client thread/portal waiting is separate"
+    },
+    {
+      "label": "real_search_after_pressure_relief_during_work",
+      "milliseconds": 32.591,
+      "server_duration_ms": 32.591,
+      "client_elapsed_ms": 74.4960770000489,
+      "measurement": "ASGI acceptance through response completion; client thread/portal waiting is separate"
+    },
+    {
+      "label": "real_search_after_pressure_relief_during_work",
+      "milliseconds": 2.712,
+      "server_duration_ms": 2.712,
+      "client_elapsed_ms": 16.444776000071215,
+      "measurement": "ASGI acceptance through response completion; client thread/portal waiting is separate"
+    },
+    {
+      "label": "real_search_after_pressure_relief_during_work",
+      "milliseconds": 27.746,
+      "server_duration_ms": 27.746,
+      "client_elapsed_ms": 93.10983799991845,
+      "measurement": "ASGI acceptance through response completion; client thread/portal waiting is separate"
+    },
+    {
+      "label": "file_cache_pressure",
+      "milliseconds": 2.191,
+      "server_duration_ms": 2.191,
+      "client_elapsed_ms": 5.803959000104442,
+      "measurement": "ASGI acceptance through response completion; client thread/portal waiting is separate"
+    }
+  ],
+  "actual_cancel": {
+    "evaluations_started": 1,
+    "drained_ms": 160.22808999991867
+  },
+  "file_cache_recovery": {
+    "model_harness_ballast_bytes": 146800640,
+    "other_harness_ballast_bytes": 913096704,
+    "file_before": 805654528,
+    "minimum_file_during": 674234368,
+    "raw_peak": 2147483648,
+    "completed_evaluations": 180,
+    "content_still_valid": true
+  },
+  "cleanup": {
+    "harness_scratch_exists_after": false,
+    "trade_lease_available": true,
+    "trade_model": "in-process thread; no dedicated Trade subprocess or scratch database"
+  },
+  "kernel_peak": 2147483648,
+  "samples": [
+    {
+      "at": 1209.9401943,
+      "current": 113307648,
+      "anon": 110243840,
+      "file": 438272
+    },
+    {
+      "at": 1209.966959697,
+      "current": 113569792,
+      "anon": 110657536,
+      "file": 479232
+    },
+    {
+      "at": 1210.077594505,
+      "current": 115093504,
+      "anon": 111792128,
+      "file": 675840
+    },
+    {
+      "at": 1210.162905787,
+      "current": 116654080,
+      "anon": 113561600,
+      "file": 675840
+    },
+    {
+      "at": 1210.196073573,
+      "current": 117440512,
+      "anon": 114225152,
+      "file": 675840
+    },
+    {
+      "at": 1210.330486226,
+      "current": 118980608,
+      "anon": 115945472,
+      "file": 675840
+    },
+    {
+      "at": 1210.519272121,
+      "current": 119504896,
+      "anon": 116699136,
+      "file": 675840
+    },
+    {
+      "at": 1210.546759577,
+      "current": 120795136,
+      "anon": 117628928,
+      "file": 675840
+    },
+    {
+      "at": 1210.670976113,
+      "current": 157384704,
+      "anon": 154370048,
+      "file": 348160
+    },
+    {
+      "at": 1210.751838419,
+      "current": 158265344,
+      "anon": 155168768,
+      "file": 348160
+    },
+    {
+      "at": 1210.853665134,
+      "current": 158138368,
+      "anon": 156536832,
+      "file": 348160
+    },
+    {
+      "at": 1210.978688471,
+      "current": 159449088,
+      "anon": 157483008,
+      "file": 348160
+    },
+    {
+      "at": 1211.005487782,
+      "current": 161021952,
+      "anon": 158126080,
+      "file": 348160
+    },
+    {
+      "at": 1211.032398762,
+      "current": 163119104,
+      "anon": 160342016,
+      "file": 348160
+    },
+    {
+      "at": 1211.060552226,
+      "current": 165478400,
+      "anon": 162516992,
+      "file": 348160
+    },
+    {
+      "at": 1211.087191067,
+      "current": 167309312,
+      "anon": 164155392,
+      "file": 348160
+    },
+    {
+      "at": 1211.113682211,
+      "current": 169406464,
+      "anon": 166330368,
+      "file": 348160
+    },
+    {
+      "at": 1211.140222578,
+      "current": 171761664,
+      "anon": 168570880,
+      "file": 348160
+    },
+    {
+      "at": 1211.166851761,
+      "current": 173858816,
+      "anon": 170631168,
+      "file": 348160
+    },
+    {
+      "at": 1211.193488758,
+      "current": 176218112,
+      "anon": 172961792,
+      "file": 348160
+    },
+    {
+      "at": 1211.251129052,
+      "current": 177004544,
+      "anon": 173662208,
+      "file": 348160
+    },
+    {
+      "at": 1211.496670345,
+      "current": 178311168,
+      "anon": 175136768,
+      "file": 348160
+    },
+    {
+      "at": 1211.747622472,
+      "current": 178573312,
+      "anon": 175611904,
+      "file": 348160
+    },
+    {
+      "at": 1212.031703071,
+      "current": 178831360,
+      "anon": 175935488,
+      "file": 348160
+    },
+    {
+      "at": 1212.249408459,
+      "current": 179089408,
+      "anon": 176185344,
+      "file": 348160
+    },
+    {
+      "at": 1212.49915516,
+      "current": 179613696,
+      "anon": 176435200,
+      "file": 348160
+    },
+    {
+      "at": 1212.750992297,
+      "current": 180133888,
+      "anon": 176680960,
+      "file": 348160
+    },
+    {
+      "at": 1213.006178743,
+      "current": 180133888,
+      "anon": 176693248,
+      "file": 348160
+    },
+    {
+      "at": 1213.255980457,
+      "current": 180129792,
+      "anon": 177123328,
+      "file": 348160
+    },
+    {
+      "at": 1213.506734418,
+      "current": 180404224,
+      "anon": 177377280,
+      "file": 348160
+    },
+    {
+      "at": 1213.685409875,
+      "current": 180400128,
+      "anon": 177377280,
+      "file": 348160
+    },
+    {
+      "at": 1213.830932968,
+      "current": 181092352,
+      "anon": 177631232,
+      "file": 348160
+    },
+    {
+      "at": 1214.096162641,
+      "current": 181354496,
+      "anon": 177881088,
+      "file": 348160
+    },
+    {
+      "at": 1214.266298663,
+      "current": 181616640,
+      "anon": 178155520,
+      "file": 348160
+    },
+    {
+      "at": 1214.488822652,
+      "current": 182398976,
+      "anon": 179138560,
+      "file": 348160
+    },
+    {
+      "at": 1214.533473966,
+      "current": 182661120,
+      "anon": 179138560,
+      "file": 348160
+    },
+    {
+      "at": 1214.780671659,
+      "current": 182923264,
+      "anon": 180465664,
+      "file": 348160
+    },
+    {
+      "at": 1215.038875325,
+      "current": 183971840,
+      "anon": 180482048,
+      "file": 348160
+    },
+    {
+      "at": 1215.298785913,
+      "current": 184758272,
+      "anon": 181415936,
+      "file": 348160
+    },
+    {
+      "at": 1215.54843728,
+      "current": 185016320,
+      "anon": 182054912,
+      "file": 348160
+    },
+    {
+      "at": 1215.694617399,
+      "current": 185016320,
+      "anon": 183140352,
+      "file": 348160
+    },
+    {
+      "at": 1215.802236899,
+      "current": 186064896,
+      "anon": 183140352,
+      "file": 348160
+    },
+    {
+      "at": 1216.059785064,
+      "current": 186064896,
+      "anon": 183963648,
+      "file": 348160
+    },
+    {
+      "at": 1216.148313792,
+      "current": 187375616,
+      "anon": 184451072,
+      "file": 348160
+    },
+    {
+      "at": 1216.311117756,
+      "current": 188157952,
+      "anon": 185331712,
+      "file": 348160
+    },
+    {
+      "at": 1216.39992778,
+      "current": 188944384,
+      "anon": 185958400,
+      "file": 348160
+    },
+    {
+      "at": 1216.577250946,
+      "current": 190255104,
+      "anon": 187260928,
+      "file": 348160
+    },
+    {
+      "at": 1216.76738799,
+      "current": 190255104,
+      "anon": 187592704,
+      "file": 348160
+    },
+    {
+      "at": 1216.831517332,
+      "current": 191549440,
+      "anon": 188432384,
+      "file": 348160
+    },
+    {
+      "at": 1216.96456218,
+      "current": 192073728,
+      "anon": 188932096,
+      "file": 348160
+    },
+    {
+      "at": 1217.05348161,
+      "current": 192598016,
+      "anon": 190238720,
+      "file": 348160
+    },
+    {
+      "at": 1217.190987545,
+      "current": 193384448,
+      "anon": 190894080,
+      "file": 348160
+    },
+    {
+      "at": 1217.297611944,
+      "current": 194691072,
+      "anon": 191647744,
+      "file": 348160
+    },
+    {
+      "at": 1217.519747505,
+      "current": 194682880,
+      "anon": 191647744,
+      "file": 348160
+    },
+    {
+      "at": 1217.637858366,
+      "current": 195993600,
+      "anon": 192880640,
+      "file": 348160
+    },
+    {
+      "at": 1217.894631022,
+      "current": 195993600,
+      "anon": 192880640,
+      "file": 348160
+    },
+    {
+      "at": 1218.145198419,
+      "current": 197292032,
+      "anon": 194002944,
+      "file": 348160
+    },
+    {
+      "at": 1218.321836144,
+      "current": 198078464,
+      "anon": 194801664,
+      "file": 348160
+    },
+    {
+      "at": 1218.411317257,
+      "current": 198340608,
+      "anon": 195723264,
+      "file": 348160
+    },
+    {
+      "at": 1218.632086903,
+      "current": 199385088,
+      "anon": 196825088,
+      "file": 348160
+    },
+    {
+      "at": 1218.665416881,
+      "current": 199909376,
+      "anon": 196825088,
+      "file": 348160
+    },
+    {
+      "at": 1218.749952394,
+      "current": 200695808,
+      "anon": 198164480,
+      "file": 348160
+    },
+    {
+      "at": 1218.916195389,
+      "current": 201220096,
+      "anon": 198766592,
+      "file": 348160
+    },
+    {
+      "at": 1219.019232934,
+      "current": 202530816,
+      "anon": 199426048,
+      "file": 348160
+    },
+    {
+      "at": 1219.193706687,
+      "current": 203317248,
+      "anon": 200097792,
+      "file": 348160
+    },
+    {
+      "at": 1219.411132395,
+      "current": 203304960,
+      "anon": 201502720,
+      "file": 348160
+    },
+    {
+      "at": 1219.675179615,
+      "current": 204873728,
+      "anon": 202465280,
+      "file": 348160
+    },
+    {
+      "at": 1219.931843661,
+      "current": 205660160,
+      "anon": 202465280,
+      "file": 348160
+    },
+    {
+      "at": 1220.076869238,
+      "current": 205660160,
+      "anon": 203284480,
+      "file": 348160
+    },
+    {
+      "at": 1220.273551161,
+      "current": 207228928,
+      "anon": 204439552,
+      "file": 348160
+    },
+    {
+      "at": 1220.383882917,
+      "current": 208273408,
+      "anon": 204943360,
+      "file": 348160
+    },
+    {
+      "at": 1220.57280151,
+      "current": 209317888,
+      "anon": 205987840,
+      "file": 348160
+    },
+    {
+      "at": 1220.672861915,
+      "current": 209842176,
+      "anon": 207249408,
+      "file": 348160
+    },
+    {
+      "at": 1220.866261325,
+      "current": 211152896,
+      "anon": 207908864,
+      "file": 348160
+    },
+    {
+      "at": 1220.963604957,
+      "current": 211939328,
+      "anon": 209166336,
+      "file": 348160
+    },
+    {
+      "at": 1221.155640224,
+      "current": 212987904,
+      "anon": 209809408,
+      "file": 348160
+    },
+    {
+      "at": 1221.254618746,
+      "current": 213774336,
+      "anon": 210513920,
+      "file": 348160
+    },
+    {
+      "at": 1221.410453211,
+      "current": 213774336,
+      "anon": 210874368,
+      "file": 348160
+    },
+    {
+      "at": 1221.77517723,
+      "current": 215085056,
+      "anon": 212602880,
+      "file": 348160
+    },
+    {
+      "at": 1222.000671685,
+      "current": 215859200,
+      "anon": 213499904,
+      "file": 348160
+    },
+    {
+      "at": 1222.12752435,
+      "current": 216645632,
+      "anon": 213499904,
+      "file": 348160
+    },
+    {
+      "at": 1222.27624757,
+      "current": 216645632,
+      "anon": 214441984,
+      "file": 348160
+    },
+    {
+      "at": 1222.519741798,
+      "current": 217690112,
+      "anon": 214441984,
+      "file": 348160
+    },
+    {
+      "at": 1222.681395946,
+      "current": 218468352,
+      "anon": 215207936,
+      "file": 348160
+    },
+    {
+      "at": 1222.783218307,
+      "current": 218464256,
+      "anon": 215207936,
+      "file": 348160
+    },
+    {
+      "at": 1223.003746071,
+      "current": 219324416,
+      "anon": 216215552,
+      "file": 348160
+    },
+    {
+      "at": 1223.040324019,
+      "current": 219586560,
+      "anon": 216215552,
+      "file": 348160
+    },
+    {
+      "at": 1223.343109146,
+      "current": 219586560,
+      "anon": 216240128,
+      "file": 348160
+    },
+    {
+      "at": 1223.595960061,
+      "current": 220368896,
+      "anon": 216940544,
+      "file": 348160
+    },
+    {
+      "at": 1223.706524679,
+      "current": 221151232,
+      "anon": 217796608,
+      "file": 348160
+    },
+    {
+      "at": 1223.845058917,
+      "current": 221151232,
+      "anon": 217796608,
+      "file": 348160
+    },
+    {
+      "at": 1224.061257885,
+      "current": 221937664,
+      "anon": 218562560,
+      "file": 348160
+    },
+    {
+      "at": 1224.114828612,
+      "current": 221937664,
+      "anon": 218562560,
+      "file": 348160
+    },
+    {
+      "at": 1224.317214211,
+      "current": 221937664,
+      "anon": 218562560,
+      "file": 348160
+    },
+    {
+      "at": 1224.37021095,
+      "current": 222720000,
+      "anon": 219512832,
+      "file": 348160
+    },
+    {
+      "at": 1224.60331618,
+      "current": 222720000,
+      "anon": 220459008,
+      "file": 348160
+    },
+    {
+      "at": 1224.862003271,
+      "current": 223768576,
+      "anon": 220459008,
+      "file": 348160
+    },
+    {
+      "at": 1225.029273669,
+      "current": 224546816,
+      "anon": 221208576,
+      "file": 348160
+    },
+    {
+      "at": 1225.11051255,
+      "current": 225071104,
+      "anon": 222490624,
+      "file": 348160
+    },
+    {
+      "at": 1225.308939838,
+      "current": 225857536,
+      "anon": 222838784,
+      "file": 348160
+    },
+    {
+      "at": 1225.374097402,
+      "current": 226643968,
+      "anon": 223285248,
+      "file": 348160
+    },
+    {
+      "at": 1225.587561002,
+      "current": 227164160,
+      "anon": 223899648,
+      "file": 348160
+    },
+    {
+      "at": 1225.633216373,
+      "current": 227688448,
+      "anon": 224518144,
+      "file": 348160
+    },
+    {
+      "at": 1225.727627773,
+      "current": 228474880,
+      "anon": 225828864,
+      "file": 348160
+    },
+    {
+      "at": 1225.946490062,
+      "current": 229785600,
+      "anon": 226488320,
+      "file": 348160
+    },
+    {
+      "at": 1226.065748978,
+      "current": 230563840,
+      "anon": 227827712,
+      "file": 348160
+    },
+    {
+      "at": 1226.264291475,
+      "current": 231874560,
+      "anon": 228466688,
+      "file": 348160
+    },
+    {
+      "at": 1226.529653412,
+      "current": 231870464,
+      "anon": 229900288,
+      "file": 348160
+    },
+    {
+      "at": 1226.78745439,
+      "current": 233181184,
+      "anon": 229900288,
+      "file": 348160
+    },
+    {
+      "at": 1226.85764116,
+      "current": 234221568,
+      "anon": 230887424,
+      "file": 348160
+    },
+    {
+      "at": 1227.03992296,
+      "current": 234221568,
+      "anon": 230887424,
+      "file": 348160
+    },
+    {
+      "at": 1227.294457473,
+      "current": 235003904,
+      "anon": 231600128,
+      "file": 348160
+    },
+    {
+      "at": 1227.553562809,
+      "current": 234995712,
+      "anon": 232480768,
+      "file": 348160
+    },
+    {
+      "at": 1227.810760788,
+      "current": 236044288,
+      "anon": 232480768,
+      "file": 348160
+    },
+    {
+      "at": 1228.056309788,
+      "current": 236810240,
+      "anon": 233480192,
+      "file": 348160
+    },
+    {
+      "at": 1228.30663456,
+      "current": 237330432,
+      "anon": 234147840,
+      "file": 348160
+    },
+    {
+      "at": 1228.502154607,
+      "current": 237592576,
+      "anon": 234147840,
+      "file": 348160
+    },
+    {
+      "at": 1228.561688922,
+      "current": 238366720,
+      "anon": 235069440,
+      "file": 348160
+    },
+    {
+      "at": 1228.829936118,
+      "current": 238366720,
+      "anon": 236015616,
+      "file": 348160
+    },
+    {
+      "at": 1229.080354206,
+      "current": 239415296,
+      "anon": 236015616,
+      "file": 348160
+    },
+    {
+      "at": 1229.323438038,
+      "current": 239935488,
+      "anon": 237195264,
+      "file": 348160
+    },
+    {
+      "at": 1229.435876331,
+      "current": 240984064,
+      "anon": 237662208,
+      "file": 348160
+    },
+    {
+      "at": 1229.643247952,
+      "current": 241508352,
+      "anon": 238202880,
+      "file": 348160
+    },
+    {
+      "at": 1229.716894709,
+      "current": 242290688,
+      "anon": 239497216,
+      "file": 348160
+    },
+    {
+      "at": 1229.783704997,
+      "current": 243339264,
+      "anon": 240164864,
+      "file": 348160
+    },
+    {
+      "at": 1230.004485231,
+      "current": 244125696,
+      "anon": 240726016,
+      "file": 348160
+    },
+    {
+      "at": 1230.080879962,
+      "current": 244649984,
+      "anon": 241393664,
+      "file": 348160
+    },
+    {
+      "at": 1230.248644525,
+      "current": 245436416,
+      "anon": 242044928,
+      "file": 348160
+    },
+    {
+      "at": 1230.38596035,
+      "current": 245956608,
+      "anon": 243486720,
+      "file": 348160
+    },
+    {
+      "at": 1230.564633659,
+      "current": 247005184,
+      "anon": 243486720,
+      "file": 348160
+    },
+    {
+      "at": 1230.830151561,
+      "current": 247005184,
+      "anon": 244428800,
+      "file": 348160
+    },
+    {
+      "at": 1231.079592992,
+      "current": 247783424,
+      "anon": 244428800,
+      "file": 348160
+    },
+    {
+      "at": 1231.15763383,
+      "current": 248832000,
+      "anon": 246038528,
+      "file": 348160
+    },
+    {
+      "at": 1231.391980293,
+      "current": 249880576,
+      "anon": 246530048,
+      "file": 348160
+    },
+    {
+      "at": 1231.501395679,
+      "current": 250134528,
+      "anon": 247480320,
+      "file": 348160
+    },
+    {
+      "at": 1231.568083197,
+      "current": 250916864,
+      "anon": 247988224,
+      "file": 348160
+    },
+    {
+      "at": 1231.784662703,
+      "current": 251703296,
+      "anon": 248590336,
+      "file": 348160
+    },
+    {
+      "at": 1231.848471092,
+      "current": 252227584,
+      "anon": 249225216,
+      "file": 348160
+    },
+    {
+      "at": 1231.924766777,
+      "current": 253014016,
+      "anon": 249884672,
+      "file": 348160
+    },
+    {
+      "at": 1232.200087128,
+      "current": 253538304,
+      "anon": 251158528,
+      "file": 348160
+    },
+    {
+      "at": 1232.302186431,
+      "current": 254840832,
+      "anon": 251826176,
+      "file": 348160
+    },
+    {
+      "at": 1232.381259013,
+      "current": 256282624,
+      "anon": 253140992,
+      "file": 348160
+    },
+    {
+      "at": 1232.614082413,
+      "current": 257069056,
+      "anon": 253771776,
+      "file": 348160
+    },
+    {
+      "at": 1232.678473815,
+      "current": 257593344,
+      "anon": 254431232,
+      "file": 348160
+    },
+    {
+      "at": 1233.031380674,
+      "current": 258379776,
+      "anon": 256385024,
+      "file": 348160
+    },
+    {
+      "at": 1233.099509073,
+      "current": 260165632,
+      "anon": 257032192,
+      "file": 348160
+    },
+    {
+      "at": 1233.155895002,
+      "current": 260689920,
+      "anon": 257675264,
+      "file": 348160
+    },
+    {
+      "at": 1233.211782046,
+      "current": 261476352,
+      "anon": 258363392,
+      "file": 348160
+    },
+    {
+      "at": 1233.441329421,
+      "current": 262000640,
+      "anon": 258928640,
+      "file": 348160
+    },
+    {
+      "at": 1233.505255271,
+      "current": 262787072,
+      "anon": 259629056,
+      "file": 348160
+    },
+    {
+      "at": 1233.845039731,
+      "current": 263573504,
+      "anon": 261660672,
+      "file": 348160
+    },
+    {
+      "at": 1233.954594296,
+      "current": 265400320,
+      "anon": 262303744,
+      "file": 348160
+    },
+    {
+      "at": 1234.032948482,
+      "current": 266711040,
+      "anon": 263602176,
+      "file": 348160
+    },
+    {
+      "at": 1234.283729125,
+      "current": 267497472,
+      "anon": 264261632,
+      "file": 348160
+    },
+    {
+      "at": 1234.367180729,
+      "current": 268230656,
+      "anon": 264888320,
+      "file": 348160
+    },
+    {
+      "at": 1234.447058673,
+      "current": 269017088,
+      "anon": 266223616,
+      "file": 348160
+    },
+    {
+      "at": 1234.516810647,
+      "current": 270065664,
+      "anon": 266829824,
+      "file": 348160
+    },
+    {
+      "at": 1234.783601203,
+      "current": 270848000,
+      "anon": 267509760,
+      "file": 348160
+    },
+    {
+      "at": 1234.938828575,
+      "current": 271364096,
+      "anon": 269475840,
+      "file": 348160
+    },
+    {
+      "at": 1235.20836133,
+      "current": 273457152,
+      "anon": 270114816,
+      "file": 348160
+    },
+    {
+      "at": 1235.280881969,
+      "current": 273981440,
+      "anon": 270688256,
+      "file": 348160
+    },
+    {
+      "at": 1235.36031097,
+      "current": 274759680,
+      "anon": 271400960,
+      "file": 348160
+    },
+    {
+      "at": 1235.466924978,
+      "current": 275283968,
+      "anon": 272084992,
+      "file": 348160
+    },
+    {
+      "at": 1235.853950378,
+      "current": 275279872,
+      "anon": 272080896,
+      "file": 348160
+    },
+    {
+      "at": 1236.098682859,
+      "current": 275279872,
+      "anon": 272773120,
+      "file": 348160
+    },
+    {
+      "at": 1236.377879259,
+      "current": 277630976,
+      "anon": 274251776,
+      "file": 348160
+    },
+    {
+      "at": 1236.456430304,
+      "current": 278151168,
+      "anon": 274776064,
+      "file": 348160
+    },
+    {
+      "at": 1236.547294028,
+      "current": 278675456,
+      "anon": 276029440,
+      "file": 348160
+    },
+    {
+      "at": 1236.641636729,
+      "current": 279986176,
+      "anon": 276692992,
+      "file": 348160
+    },
+    {
+      "at": 1236.890729836,
+      "current": 280506368,
+      "anon": 277291008,
+      "file": 348160
+    },
+    {
+      "at": 1236.977126885,
+      "current": 281030656,
+      "anon": 277958656,
+      "file": 348160
+    },
+    {
+      "at": 1237.096697713,
+      "current": 282341376,
+      "anon": 279240704,
+      "file": 348160
+    },
+    {
+      "at": 1237.149524327,
+      "current": 283127808,
+      "anon": 279945216,
+      "file": 348160
+    },
+    {
+      "at": 1237.402240436,
+      "current": 283652096,
+      "anon": 280584192,
+      "file": 348160
+    },
+    {
+      "at": 1237.485495314,
+      "current": 284426240,
+      "anon": 281182208,
+      "file": 348160
+    },
+    {
+      "at": 1237.566367223,
+      "current": 285736960,
+      "anon": 282550272,
+      "file": 348160
+    },
+    {
+      "at": 1237.658055376,
+      "current": 286261248,
+      "anon": 283189248,
+      "file": 348160
+    },
+    {
+      "at": 1237.910162138,
+      "current": 287047680,
+      "anon": 283848704,
+      "file": 348160
+    },
+    {
+      "at": 1238.01378056,
+      "current": 287567872,
+      "anon": 285122560,
+      "file": 348160
+    },
+    {
+      "at": 1238.08307796,
+      "current": 289140736,
+      "anon": 285806592,
+      "file": 348160
+    },
+    {
+      "at": 1238.158754397,
+      "current": 289665024,
+      "anon": 286425088,
+      "file": 348160
+    },
+    {
+      "at": 1238.409657644,
+      "current": 290189312,
+      "anon": 287035392,
+      "file": 348160
+    },
+    {
+      "at": 1238.580152931,
+      "current": 290975744,
+      "anon": 288419840,
+      "file": 348160
+    },
+    {
+      "at": 1238.659450594,
+      "current": 293072896,
+      "anon": 289681408,
+      "file": 348160
+    },
+    {
+      "at": 1238.933677391,
+      "current": 293588992,
+      "anon": 290324480,
+      "file": 348160
+    },
+    {
+      "at": 1239.036493799,
+      "current": 294375424,
+      "anon": 290992128,
+      "file": 348160
+    },
+    {
+      "at": 1239.187555503,
+      "current": 295686144,
+      "anon": 292970496,
+      "file": 348160
+    },
+    {
+      "at": 1239.457441767,
+      "current": 296718336,
+      "anon": 293588992,
+      "file": 348160
+    },
+    {
+      "at": 1239.546802975,
+      "current": 297504768,
+      "anon": 294252544,
+      "file": 348160
+    },
+    {
+      "at": 1239.637387957,
+      "current": 298029056,
+      "anon": 295575552,
+      "file": 348160
+    },
+    {
+      "at": 1239.707277796,
+      "current": 299339776,
+      "anon": 296173568,
+      "file": 348160
+    },
+    {
+      "at": 1239.979145185,
+      "current": 299864064,
+      "anon": 296804352,
+      "file": 348160
+    },
+    {
+      "at": 1240.064328459,
+      "current": 300650496,
+      "anon": 297488384,
+      "file": 348160
+    },
+    {
+      "at": 1240.14759635,
+      "current": 301174784,
+      "anon": 298774528,
+      "file": 348160
+    },
+    {
+      "at": 1240.229854228,
+      "current": 302485504,
+      "anon": 299429888,
+      "file": 348160
+    },
+    {
+      "at": 1240.509899599,
+      "current": 303263744,
+      "anon": 300105728,
+      "file": 348160
+    },
+    {
+      "at": 1240.567821312,
+      "current": 303788032,
+      "anon": 300695552,
+      "file": 348160
+    },
+    {
+      "at": 1240.642997912,
+      "current": 304574464,
+      "anon": 301387776,
+      "file": 348160
+    },
+    {
+      "at": 1240.72425359,
+      "current": 305360896,
+      "anon": 302702592,
+      "file": 348160
+    },
+    {
+      "at": 1240.774234927,
+      "current": 305885184,
+      "anon": 302702592,
+      "file": 348160
+    },
+    {
+      "at": 1241.193503844,
+      "current": 306667520,
+      "anon": 334749696,
+      "file": 348160
+    },
+    {
+      "at": 1241.416092088,
+      "current": 338120704,
+      "anon": 335953920,
+      "file": 348160
+    },
+    {
+      "at": 1241.569921806,
+      "current": 347291648,
+      "anon": 344027136,
+      "file": 348160
+    },
+    {
+      "at": 1241.751416931,
+      "current": 347291648,
+      "anon": 354856960,
+      "file": 348160
+    },
+    {
+      "at": 1242.65085691,
+      "current": 1949249536,
+      "anon": 1942671360,
+      "file": 348160
+    },
+    {
+      "at": 1242.783537587,
+      "current": 321978368,
+      "anon": 315072512,
+      "file": 348160
+    },
+    {
+      "at": 1242.894386057,
+      "current": 338915328,
+      "anon": 335298560,
+      "file": 348160
+    },
+    {
+      "at": 1242.920058057,
+      "current": 340750336,
+      "anon": 337195008,
+      "file": 348160
+    },
+    {
+      "at": 1243.034621774,
+      "current": 341295104,
+      "anon": 337973248,
+      "file": 348160
+    },
+    {
+      "at": 1243.14175085,
+      "current": 342081536,
+      "anon": 338386944,
+      "file": 348160
+    },
+    {
+      "at": 1243.168497665,
+      "current": 343130112,
+      "anon": 339312640,
+      "file": 348160
+    },
+    {
+      "at": 1243.195069291,
+      "current": 343392256,
+      "anon": 339542016,
+      "file": 348160
+    },
+    {
+      "at": 1243.221499773,
+      "current": 343654400,
+      "anon": 339542016,
+      "file": 348160
+    },
+    {
+      "at": 1243.247905438,
+      "current": 343654400,
+      "anon": 340000768,
+      "file": 348160
+    },
+    {
+      "at": 1243.274577092,
+      "current": 343916544,
+      "anon": 340283392,
+      "file": 348160
+    },
+    {
+      "at": 1243.300975133,
+      "current": 344178688,
+      "anon": 340283392,
+      "file": 348160
+    },
+    {
+      "at": 1243.327285359,
+      "current": 344096768,
+      "anon": 340656128,
+      "file": 348160
+    },
+    {
+      "at": 1243.35365132,
+      "current": 344096768,
+      "anon": 340656128,
+      "file": 348160
+    },
+    {
+      "at": 1243.420248531,
+      "current": 344096768,
+      "anon": 340656128,
+      "file": 348160
+    },
+    {
+      "at": 1243.581366436,
+      "current": 344358912,
+      "anon": 341274624,
+      "file": 348160
+    },
+    {
+      "at": 1243.639668342,
+      "current": 345145344,
+      "anon": 341741568,
+      "file": 348160
+    },
+    {
+      "at": 1243.683186209,
+      "current": 345407488,
+      "anon": 341741568,
+      "file": 348160
+    },
+    {
+      "at": 1243.92456074,
+      "current": 345407488,
+      "anon": 341917696,
+      "file": 348160
+    },
+    {
+      "at": 1244.096061492,
+      "current": 345915392,
+      "anon": 342421504,
+      "file": 348160
+    },
+    {
+      "at": 1244.184896673,
+      "current": 346177536,
+      "anon": 342421504,
+      "file": 348160
+    },
+    {
+      "at": 1244.2512244,
+      "current": 346177536,
+      "anon": 342421504,
+      "file": 348160
+    },
+    {
+      "at": 1244.439080121,
+      "current": 346177536,
+      "anon": 342421504,
+      "file": 348160
+    },
+    {
+      "at": 1244.517161848,
+      "current": 346173440,
+      "anon": 342482944,
+      "file": 348160
+    },
+    {
+      "at": 1244.764700076,
+      "current": 346144768,
+      "anon": 342482944,
+      "file": 348160
+    },
+    {
+      "at": 1244.82940546,
+      "current": 346144768,
+      "anon": 342482944,
+      "file": 348160
+    },
+    {
+      "at": 1244.899847601,
+      "current": 346144768,
+      "anon": 342482944,
+      "file": 348160
+    },
+    {
+      "at": 1245.079554124,
+      "current": 346144768,
+      "anon": 342482944,
+      "file": 348160
+    },
+    {
+      "at": 1245.158524437,
+      "current": 346140672,
+      "anon": 342482944,
+      "file": 348160
+    },
+    {
+      "at": 1245.239073295,
+      "current": 346140672,
+      "anon": 342482944,
+      "file": 348160
+    },
+    {
+      "at": 1245.380005854,
+      "current": 346140672,
+      "anon": 342482944,
+      "file": 348160
+    },
+    {
+      "at": 1245.462680265,
+      "current": 346140672,
+      "anon": 342482944,
+      "file": 348160
+    },
+    {
+      "at": 1245.661139529,
+      "current": 346140672,
+      "anon": 342482944,
+      "file": 348160
+    },
+    {
+      "at": 1245.758594254,
+      "current": 346140672,
+      "anon": 342482944,
+      "file": 348160
+    },
+    {
+      "at": 1245.968303266,
+      "current": 346140672,
+      "anon": 342765568,
+      "file": 348160
+    },
+    {
+      "at": 1246.049226352,
+      "current": 346398720,
+      "anon": 342765568,
+      "file": 348160
+    },
+    {
+      "at": 1246.265127276,
+      "current": 346398720,
+      "anon": 343199744,
+      "file": 348160
+    },
+    {
+      "at": 1246.351501893,
+      "current": 346660864,
+      "anon": 343199744,
+      "file": 348160
+    },
+    {
+      "at": 1246.43167878,
+      "current": 346660864,
+      "anon": 343199744,
+      "file": 348160
+    },
+    {
+      "at": 1246.579829004,
+      "current": 346923008,
+      "anon": 343314432,
+      "file": 348160
+    },
+    {
+      "at": 1246.660509756,
+      "current": 346923008,
+      "anon": 343314432,
+      "file": 348160
+    },
+    {
+      "at": 1246.732080938,
+      "current": 347185152,
+      "anon": 343695360,
+      "file": 348160
+    },
+    {
+      "at": 1246.885090064,
+      "current": 347439104,
+      "anon": 343695360,
+      "file": 348160
+    },
+    {
+      "at": 1246.993686806,
+      "current": 347168768,
+      "anon": 343695360,
+      "file": 348160
+    },
+    {
+      "at": 1247.200046196,
+      "current": 347160576,
+      "anon": 343805952,
+      "file": 348160
+    },
+    {
+      "at": 1247.25287861,
+      "current": 347156480,
+      "anon": 343805952,
+      "file": 348160
+    },
+    {
+      "at": 1247.32065712,
+      "current": 347152384,
+      "anon": 343805952,
+      "file": 348160
+    },
+    {
+      "at": 1247.555144027,
+      "current": 347414528,
+      "anon": 343805952,
+      "file": 348160
+    },
+    {
+      "at": 1247.625259489,
+      "current": 347406336,
+      "anon": 343805952,
+      "file": 348160
+    },
+    {
+      "at": 1247.815407541,
+      "current": 347406336,
+      "anon": 343805952,
+      "file": 348160
+    },
+    {
+      "at": 1247.881321455,
+      "current": 347406336,
+      "anon": 343805952,
+      "file": 348160
+    },
+    {
+      "at": 1247.96487277,
+      "current": 347406336,
+      "anon": 343805952,
+      "file": 348160
+    },
+    {
+      "at": 1248.137181169,
+      "current": 347406336,
+      "anon": 343805952,
+      "file": 348160
+    },
+    {
+      "at": 1248.224099344,
+      "current": 347660288,
+      "anon": 344137728,
+      "file": 348160
+    },
+    {
+      "at": 1248.436382522,
+      "current": 347922432,
+      "anon": 344489984,
+      "file": 348160
+    },
+    {
+      "at": 1248.541435991,
+      "current": 347918336,
+      "anon": 344489984,
+      "file": 348160
+    },
+    {
+      "at": 1248.622218284,
+      "current": 347918336,
+      "anon": 344489984,
+      "file": 348160
+    },
+    {
+      "at": 1248.780415729,
+      "current": 348180480,
+      "anon": 344621056,
+      "file": 348160
+    },
+    {
+      "at": 1248.832893529,
+      "current": 348180480,
+      "anon": 344621056,
+      "file": 348160
+    },
+    {
+      "at": 1248.889291711,
+      "current": 348438528,
+      "anon": 344985600,
+      "file": 348160
+    },
+    {
+      "at": 1249.09289315,
+      "current": 348438528,
+      "anon": 344985600,
+      "file": 348160
+    },
+    {
+      "at": 1249.165904702,
+      "current": 348696576,
+      "anon": 345231360,
+      "file": 348160
+    },
+    {
+      "at": 1249.243673169,
+      "current": 348958720,
+      "anon": 345231360,
+      "file": 348160
+    },
+    {
+      "at": 1249.458781078,
+      "current": 348958720,
+      "anon": 345231360,
+      "file": 348160
+    },
+    {
+      "at": 1249.52336087,
+      "current": 348954624,
+      "anon": 345231360,
+      "file": 348160
+    },
+    {
+      "at": 1249.579591227,
+      "current": 348954624,
+      "anon": 345231360,
+      "file": 348160
+    },
+    {
+      "at": 1249.783327938,
+      "current": 348954624,
+      "anon": 345231360,
+      "file": 348160
+    },
+    {
+      "at": 1249.83606238,
+      "current": 348954624,
+      "anon": 345321472,
+      "file": 348160
+    },
+    {
+      "at": 1249.912068738,
+      "current": 348954624,
+      "anon": 345321472,
+      "file": 348160
+    },
+    {
+      "at": 1250.158024895,
+      "current": 348954624,
+      "anon": 345481216,
+      "file": 348160
+    },
+    {
+      "at": 1250.22920191,
+      "current": 348950528,
+      "anon": 345481216,
+      "file": 348160
+    },
+    {
+      "at": 1250.306111831,
+      "current": 348950528,
+      "anon": 345481216,
+      "file": 348160
+    },
+    {
+      "at": 1250.504890767,
+      "current": 348950528,
+      "anon": 345481216,
+      "file": 348160
+    },
+    {
+      "at": 1250.577061714,
+      "current": 348950528,
+      "anon": 345481216,
+      "file": 348160
+    },
+    {
+      "at": 1250.629645121,
+      "current": 348950528,
+      "anon": 345481216,
+      "file": 348160
+    },
+    {
+      "at": 1250.903620644,
+      "current": 348950528,
+      "anon": 345518080,
+      "file": 348160
+    },
+    {
+      "at": 1250.969232752,
+      "current": 348946432,
+      "anon": 345518080,
+      "file": 348160
+    },
+    {
+      "at": 1251.049272275,
+      "current": 348946432,
+      "anon": 345518080,
+      "file": 348160
+    },
+    {
+      "at": 1251.275937958,
+      "current": 348946432,
+      "anon": 345518080,
+      "file": 348160
+    },
+    {
+      "at": 1251.35577564,
+      "current": 348946432,
+      "anon": 345518080,
+      "file": 348160
+    },
+    {
+      "at": 1251.648259435,
+      "current": 348946432,
+      "anon": 345518080,
+      "file": 348160
+    },
+    {
+      "at": 1251.722390671,
+      "current": 348934144,
+      "anon": 345513984,
+      "file": 348160
+    },
+    {
+      "at": 1251.81018069,
+      "current": 348934144,
+      "anon": 345513984,
+      "file": 348160
+    },
+    {
+      "at": 1252.054932027,
+      "current": 349458432,
+      "anon": 345952256,
+      "file": 348160
+    },
+    {
+      "at": 1252.118692914,
+      "current": 349720576,
+      "anon": 346320896,
+      "file": 348160
+    },
+    {
+      "at": 1252.416184171,
+      "current": 349720576,
+      "anon": 346320896,
+      "file": 348160
+    },
+    {
+      "at": 1252.488904537,
+      "current": 349712384,
+      "anon": 346566656,
+      "file": 348160
+    },
+    {
+      "at": 1252.567896293,
+      "current": 350236672,
+      "anon": 346816512,
+      "file": 348160
+    },
+    {
+      "at": 1252.802817268,
+      "current": 350236672,
+      "anon": 346816512,
+      "file": 348160
+    },
+    {
+      "at": 1252.866212431,
+      "current": 350756864,
+      "anon": 347201536,
+      "file": 348160
+    },
+    {
+      "at": 1252.960298509,
+      "current": 350752768,
+      "anon": 347201536,
+      "file": 348160
+    },
+    {
+      "at": 1253.225952041,
+      "current": 351014912,
+      "anon": 347574272,
+      "file": 348160
+    },
+    {
+      "at": 1253.304229103,
+      "current": 351272960,
+      "anon": 347574272,
+      "file": 348160
+    },
+    {
+      "at": 1253.382507852,
+      "current": 351272960,
+      "anon": 347824128,
+      "file": 348160
+    },
+    {
+      "at": 1253.438971681,
+      "current": 351535104,
+      "anon": 348073984,
+      "file": 348160
+    },
+    {
+      "at": 1253.639626441,
+      "current": 351535104,
+      "anon": 348073984,
+      "file": 348160
+    },
+    {
+      "at": 1253.717291208,
+      "current": 351535104,
+      "anon": 348073984,
+      "file": 348160
+    },
+    {
+      "at": 1254.060048958,
+      "current": 351797248,
+      "anon": 348442624,
+      "file": 348160
+    },
+    {
+      "at": 1254.144523362,
+      "current": 351789056,
+      "anon": 348442624,
+      "file": 348160
+    },
+    {
+      "at": 1254.236311808,
+      "current": 351789056,
+      "anon": 348442624,
+      "file": 348160
+    },
+    {
+      "at": 1254.484519922,
+      "current": 351789056,
+      "anon": 348512256,
+      "file": 348160
+    },
+    {
+      "at": 1254.604984319,
+      "current": 351784960,
+      "anon": 348512256,
+      "file": 348160
+    },
+    {
+      "at": 1254.663553806,
+      "current": 351784960,
+      "anon": 348512256,
+      "file": 348160
+    },
+    {
+      "at": 1254.902868488,
+      "current": 351784960,
+      "anon": 348512256,
+      "file": 348160
+    },
+    {
+      "at": 1254.961482609,
+      "current": 351784960,
+      "anon": 348512256,
+      "file": 348160
+    },
+    {
+      "at": 1255.017851811,
+      "current": 351784960,
+      "anon": 348508160,
+      "file": 348160
+    },
+    {
+      "at": 1255.336265726,
+      "current": 351797248,
+      "anon": 348508160,
+      "file": 348160
+    },
+    {
+      "at": 1255.413343862,
+      "current": 352055296,
+      "anon": 348508160,
+      "file": 348160
+    },
+    {
+      "at": 1255.491677283,
+      "current": 352055296,
+      "anon": 348508160,
+      "file": 348160
+    },
+    {
+      "at": 1255.55944755,
+      "current": 352055296,
+      "anon": 348508160,
+      "file": 348160
+    },
+    {
+      "at": 1255.808071805,
+      "current": 352055296,
+      "anon": 348508160,
+      "file": 348160
+    },
+    {
+      "at": 1255.87535635,
+      "current": 352055296,
+      "anon": 348508160,
+      "file": 348160
+    },
+    {
+      "at": 1255.924692937,
+      "current": 352038912,
+      "anon": 348508160,
+      "file": 348160
+    },
+    {
+      "at": 1256.006037804,
+      "current": 352038912,
+      "anon": 348508160,
+      "file": 348160
+    },
+    {
+      "at": 1256.281844481,
+      "current": 352038912,
+      "anon": 348508160,
+      "file": 348160
+    },
+    {
+      "at": 1256.373700353,
+      "current": 352301056,
+      "anon": 348508160,
+      "file": 348160
+    },
+    {
+      "at": 1256.510249329,
+      "current": 352301056,
+      "anon": 348712960,
+      "file": 348160
+    },
+    {
+      "at": 1256.789793793,
+      "current": 352301056,
+      "anon": 348848128,
+      "file": 348160
+    },
+    {
+      "at": 1256.880056078,
+      "current": 352563200,
+      "anon": 348848128,
+      "file": 348160
+    },
+    {
+      "at": 1256.963542219,
+      "current": 352563200,
+      "anon": 348848128,
+      "file": 348160
+    },
+    {
+      "at": 1257.053781972,
+      "current": 352563200,
+      "anon": 348848128,
+      "file": 348160
+    },
+    {
+      "at": 1257.358653409,
+      "current": 352292864,
+      "anon": 348852224,
+      "file": 348160
+    },
+    {
+      "at": 1257.55867029,
+      "current": 352292864,
+      "anon": 348852224,
+      "file": 348160
+    },
+    {
+      "at": 1257.614226436,
+      "current": 352538624,
+      "anon": 348852224,
+      "file": 348160
+    },
+    {
+      "at": 1257.701309083,
+      "current": 352260096,
+      "anon": 348852224,
+      "file": 348160
+    },
+    {
+      "at": 1257.968705442,
+      "current": 352260096,
+      "anon": 348852224,
+      "file": 348160
+    },
+    {
+      "at": 1258.06805818,
+      "current": 352260096,
+      "anon": 348852224,
+      "file": 348160
+    },
+    {
+      "at": 1258.428272457,
+      "current": 352260096,
+      "anon": 348856320,
+      "file": 348160
+    },
+    {
+      "at": 1258.506317757,
+      "current": 352509952,
+      "anon": 348856320,
+      "file": 348160
+    },
+    {
+      "at": 1258.585669431,
+      "current": 352509952,
+      "anon": 348856320,
+      "file": 348160
+    },
+    {
+      "at": 1258.652874419,
+      "current": 352509952,
+      "anon": 348856320,
+      "file": 348160
+    },
+    {
+      "at": 1258.916817803,
+      "current": 352509952,
+      "anon": 348852224,
+      "file": 348160
+    },
+    {
+      "at": 1258.99780785,
+      "current": 352505856,
+      "anon": 348852224,
+      "file": 348160
+    },
+    {
+      "at": 1259.057442263,
+      "current": 352505856,
+      "anon": 348852224,
+      "file": 348160
+    },
+    {
+      "at": 1259.142606911,
+      "current": 352505856,
+      "anon": 348852224,
+      "file": 348160
+    },
+    {
+      "at": 1259.202828025,
+      "current": 352505856,
+      "anon": 348856320,
+      "file": 348160
+    },
+    {
+      "at": 1259.479971197,
+      "current": 352501760,
+      "anon": 348856320,
+      "file": 348160
+    },
+    {
+      "at": 1259.575923991,
+      "current": 352231424,
+      "anon": 348856320,
+      "file": 348160
+    },
+    {
+      "at": 1259.668680762,
+      "current": 352231424,
+      "anon": 348856320,
+      "file": 348160
+    },
+    {
+      "at": 1259.732336836,
+      "current": 352231424,
+      "anon": 348856320,
+      "file": 348160
+    },
+    {
+      "at": 1260.0041166,
+      "current": 352493568,
+      "anon": 348856320,
+      "file": 348160
+    },
+    {
+      "at": 1260.114056457,
+      "current": 352493568,
+      "anon": 348856320,
+      "file": 348160
+    },
+    {
+      "at": 1260.186160558,
+      "current": 352493568,
+      "anon": 348856320,
+      "file": 348160
+    },
+    {
+      "at": 1260.251358996,
+      "current": 352493568,
+      "anon": 348856320,
+      "file": 348160
+    },
+    {
+      "at": 1260.525082955,
+      "current": 352493568,
+      "anon": 348856320,
+      "file": 348160
+    },
+    {
+      "at": 1260.626934771,
+      "current": 352493568,
+      "anon": 348856320,
+      "file": 348160
+    },
+    {
+      "at": 1260.709718064,
+      "current": 352493568,
+      "anon": 348856320,
+      "file": 348160
+    },
+    {
+      "at": 1260.76652689,
+      "current": 352493568,
+      "anon": 348856320,
+      "file": 348160
+    },
+    {
+      "at": 1261.043944414,
+      "current": 352493568,
+      "anon": 348872704,
+      "file": 348160
+    },
+    {
+      "at": 1261.107912913,
+      "current": 352493568,
+      "anon": 348872704,
+      "file": 348160
+    },
+    {
+      "at": 1261.203127565,
+      "current": 352493568,
+      "anon": 348872704,
+      "file": 348160
+    },
+    {
+      "at": 1261.312058466,
+      "current": 352493568,
+      "anon": 348872704,
+      "file": 348160
+    },
+    {
+      "at": 1261.583822256,
+      "current": 352493568,
+      "anon": 348872704,
+      "file": 348160
+    },
+    {
+      "at": 1261.648291315,
+      "current": 352493568,
+      "anon": 348872704,
+      "file": 348160
+    },
+    {
+      "at": 1261.706090021,
+      "current": 352493568,
+      "anon": 348872704,
+      "file": 348160
+    },
+    {
+      "at": 1261.76259473,
+      "current": 352493568,
+      "anon": 348872704,
+      "file": 348160
+    },
+    {
+      "at": 1262.126515939,
+      "current": 352493568,
+      "anon": 348872704,
+      "file": 348160
+    },
+    {
+      "at": 1262.205370124,
+      "current": 352223232,
+      "anon": 348872704,
+      "file": 348160
+    },
+    {
+      "at": 1262.28373955,
+      "current": 352223232,
+      "anon": 348872704,
+      "file": 348160
+    },
+    {
+      "at": 1262.352408853,
+      "current": 352223232,
+      "anon": 348872704,
+      "file": 348160
+    },
+    {
+      "at": 1262.392232283,
+      "current": 352223232,
+      "anon": 348872704,
+      "file": 348160
+    },
+    {
+      "at": 1262.724268635,
+      "current": 352215040,
+      "anon": 348872704,
+      "file": 348160
+    },
+    {
+      "at": 1262.885423044,
+      "current": 352993280,
+      "anon": 367321088,
+      "file": 348160
+    },
+    {
+      "at": 1262.987605919,
+      "current": 370794496,
+      "anon": 367321088,
+      "file": 348160
+    },
+    {
+      "at": 1263.269043462,
+      "current": 371843072,
+      "anon": 368709632,
+      "file": 348160
+    },
+    {
+      "at": 1263.449293206,
+      "current": 372346880,
+      "anon": 369528832,
+      "file": 348160
+    },
+    {
+      "at": 1263.566149707,
+      "current": 390959104,
+      "anon": 387309568,
+      "file": 348160
+    },
+    {
+      "at": 1263.591771606,
+      "current": 391483392,
+      "anon": 387567616,
+      "file": 348160
+    },
+    {
+      "at": 1263.68232425,
+      "current": 391299072,
+      "anon": 387346432,
+      "file": 348160
+    },
+    {
+      "at": 1263.772028193,
+      "current": 391299072,
+      "anon": 387346432,
+      "file": 348160
+    },
+    {
+      "at": 1263.913151132,
+      "current": 391299072,
+      "anon": 387346432,
+      "file": 348160
+    },
+    {
+      "at": 1263.939538165,
+      "current": 391299072,
+      "anon": 387346432,
+      "file": 348160
+    },
+    {
+      "at": 1263.965934697,
+      "current": 391299072,
+      "anon": 387358720,
+      "file": 348160
+    },
+    {
+      "at": 1263.992298125,
+      "current": 391299072,
+      "anon": 387358720,
+      "file": 348160
+    },
+    {
+      "at": 1264.01889912,
+      "current": 391299072,
+      "anon": 387358720,
+      "file": 348160
+    },
+    {
+      "at": 1264.045370912,
+      "current": 391299072,
+      "anon": 387358720,
+      "file": 348160
+    },
+    {
+      "at": 1264.072309179,
+      "current": 391299072,
+      "anon": 387358720,
+      "file": 348160
+    },
+    {
+      "at": 1264.09908468,
+      "current": 391299072,
+      "anon": 387358720,
+      "file": 348160
+    },
+    {
+      "at": 1264.168605198,
+      "current": 391299072,
+      "anon": 387358720,
+      "file": 348160
+    },
+    {
+      "at": 1264.196521749,
+      "current": 391299072,
+      "anon": 387358720,
+      "file": 348160
+    },
+    {
+      "at": 1264.222314278,
+      "current": 391299072,
+      "anon": 387358720,
+      "file": 348160
+    },
+    {
+      "at": 1264.247977975,
+      "current": 391299072,
+      "anon": 387358720,
+      "file": 348160
+    },
+    {
+      "at": 1264.273680374,
+      "current": 391299072,
+      "anon": 387358720,
+      "file": 348160
+    },
+    {
+      "at": 1264.299523799,
+      "current": 391299072,
+      "anon": 387358720,
+      "file": 348160
+    },
+    {
+      "at": 1264.325341796,
+      "current": 391299072,
+      "anon": 387358720,
+      "file": 348160
+    },
+    {
+      "at": 1264.444037575,
+      "current": 391299072,
+      "anon": 387358720,
+      "file": 348160
+    },
+    {
+      "at": 1264.470077638,
+      "current": 391561216,
+      "anon": 387461120,
+      "file": 348160
+    },
+    {
+      "at": 1264.568049449,
+      "current": 391356416,
+      "anon": 387358720,
+      "file": 348160
+    },
+    {
+      "at": 1264.792988765,
+      "current": 391356416,
+      "anon": 387358720,
+      "file": 348160
+    },
+    {
+      "at": 1264.81872049,
+      "current": 366690304,
+      "anon": 336044032,
+      "file": 28659712
+    },
+    {
+      "at": 1264.844607275,
+      "current": 477839360,
+      "anon": 336044032,
+      "file": 136663040
+    },
+    {
+      "at": 1264.870486487,
+      "current": 585318400,
+      "anon": 336044032,
+      "file": 240472064
+    },
+    {
+      "at": 1264.896306798,
+      "current": 699613184,
+      "anon": 336044032,
+      "file": 351621120
+    },
+    {
+      "at": 1264.921986745,
+      "current": 700661760,
+      "anon": 336044032,
+      "file": 351621120
+    },
+    {
+      "at": 1264.947618473,
+      "current": 700661760,
+      "anon": 336044032,
+      "file": 351621120
+    },
+    {
+      "at": 1264.973371323,
+      "current": 700661760,
+      "anon": 336044032,
+      "file": 351621120
+    },
+    {
+      "at": 1264.999337928,
+      "current": 782450688,
+      "anon": 336044032,
+      "file": 433410048
+    },
+    {
+      "at": 1265.025140055,
+      "current": 791101440,
+      "anon": 336048128,
+      "file": 439701504
+    },
+    {
+      "at": 1265.050869916,
+      "current": 791101440,
+      "anon": 336048128,
+      "file": 439701504
+    },
+    {
+      "at": 1265.076623001,
+      "current": 791101440,
+      "anon": 336048128,
+      "file": 439701504
+    },
+    {
+      "at": 1265.10239974,
+      "current": 791101440,
+      "anon": 336048128,
+      "file": 439701504
+    },
+    {
+      "at": 1265.128143308,
+      "current": 791101440,
+      "anon": 336048128,
+      "file": 439701504
+    },
+    {
+      "at": 1265.153760156,
+      "current": 791101440,
+      "anon": 336048128,
+      "file": 439701504
+    },
+    {
+      "at": 1265.179766015,
+      "current": 857948160,
+      "anon": 336048128,
+      "file": 505761792
+    },
+    {
+      "at": 1265.205543847,
+      "current": 891502592,
+      "anon": 336048128,
+      "file": 537219072
+    },
+    {
+      "at": 1265.231293305,
+      "current": 891502592,
+      "anon": 336048128,
+      "file": 537219072
+    },
+    {
+      "at": 1265.256997177,
+      "current": 891502592,
+      "anon": 336048128,
+      "file": 537219072
+    },
+    {
+      "at": 1265.282730756,
+      "current": 891502592,
+      "anon": 336048128,
+      "file": 537219072
+    },
+    {
+      "at": 1265.308662206,
+      "current": 891502592,
+      "anon": 336048128,
+      "file": 537219072
+    },
+    {
+      "at": 1265.334453783,
+      "current": 891502592,
+      "anon": 336048128,
+      "file": 537219072
+    },
+    {
+      "at": 1265.360205315,
+      "current": 891502592,
+      "anon": 336048128,
+      "file": 537219072
+    },
+    {
+      "at": 1265.385910079,
+      "current": 891502592,
+      "anon": 336048128,
+      "file": 537219072
+    },
+    {
+      "at": 1265.411848552,
+      "current": 957038592,
+      "anon": 336048128,
+      "file": 602230784
+    },
+    {
+      "at": 1265.437733503,
+      "current": 964640768,
+      "anon": 336048128,
+      "file": 608522240
+    },
+    {
+      "at": 1265.463565337,
+      "current": 968835072,
+      "anon": 336048128,
+      "file": 614813696
+    },
+    {
+      "at": 1265.489388954,
+      "current": 975388672,
+      "anon": 336048128,
+      "file": 619008000
+    },
+    {
+      "at": 1265.515177666,
+      "current": 979845120,
+      "anon": 336048128,
+      "file": 623202304
+    },
+    {
+      "at": 1265.540923768,
+      "current": 1050886144,
+      "anon": 336048128,
+      "file": 692408320
+    },
+    {
+      "at": 1265.566806045,
+      "current": 1052983296,
+      "anon": 336048128,
+      "file": 694505472
+    },
+    {
+      "at": 1265.592601689,
+      "current": 1056129024,
+      "anon": 336048128,
+      "file": 697651200
+    },
+    {
+      "at": 1265.618470892,
+      "current": 1059536896,
+      "anon": 336048128,
+      "file": 700796928
+    },
+    {
+      "at": 1265.64433732,
+      "current": 1061634048,
+      "anon": 336048128,
+      "file": 703942656
+    },
+    {
+      "at": 1265.670276984,
+      "current": 1065828352,
+      "anon": 336048128,
+      "file": 707088384
+    },
+    {
+      "at": 1265.696221037,
+      "current": 1070284800,
+      "anon": 336048128,
+      "file": 711282688
+    },
+    {
+      "at": 1265.722160031,
+      "current": 1074479104,
+      "anon": 336048128,
+      "file": 715476992
+    },
+    {
+      "at": 1265.74813954,
+      "current": 1092829184,
+      "anon": 336048128,
+      "file": 733302784
+    },
+    {
+      "at": 1265.773979658,
+      "current": 1097023488,
+      "anon": 336048128,
+      "file": 737497088
+    },
+    {
+      "at": 1265.799754835,
+      "current": 1101479936,
+      "anon": 336048128,
+      "file": 741691392
+    },
+    {
+      "at": 1265.825673299,
+      "current": 1106722816,
+      "anon": 336048128,
+      "file": 746934272
+    },
+    {
+      "at": 1265.851585212,
+      "current": 1160724480,
+      "anon": 336048128,
+      "file": 799363072
+    },
+    {
+      "at": 1265.877498177,
+      "current": 1163870208,
+      "anon": 336048128,
+      "file": 802508800
+    },
+    {
+      "at": 1265.903342563,
+      "current": 1165967360,
+      "anon": 336048128,
+      "file": 804605952
+    },
+    {
+      "at": 1265.929184565,
+      "current": 1167278080,
+      "anon": 336048128,
+      "file": 805654528
+    },
+    {
+      "at": 1265.955086208,
+      "current": 1167278080,
+      "anon": 336048128,
+      "file": 805654528
+    },
+    {
+      "at": 1265.980942637,
+      "current": 1167278080,
+      "anon": 336048128,
+      "file": 805654528
+    },
+    {
+      "at": 1266.006800899,
+      "current": 1167278080,
+      "anon": 336048128,
+      "file": 805654528
+    },
+    {
+      "at": 1266.032507527,
+      "current": 1167278080,
+      "anon": 336048128,
+      "file": 805654528
+    },
+    {
+      "at": 1266.05824992,
+      "current": 1167278080,
+      "anon": 336048128,
+      "file": 805654528
+    },
+    {
+      "at": 1266.083974292,
+      "current": 1167278080,
+      "anon": 336048128,
+      "file": 805654528
+    },
+    {
+      "at": 1266.109685639,
+      "current": 1167278080,
+      "anon": 336048128,
+      "file": 805654528
+    },
+    {
+      "at": 1266.13531917,
+      "current": 1167278080,
+      "anon": 336048128,
+      "file": 805654528
+    },
+    {
+      "at": 1266.161033081,
+      "current": 1167278080,
+      "anon": 336048128,
+      "file": 805654528
+    },
+    {
+      "at": 1266.186802337,
+      "current": 1167278080,
+      "anon": 336048128,
+      "file": 805654528
+    },
+    {
+      "at": 1266.212579247,
+      "current": 1167278080,
+      "anon": 336048128,
+      "file": 805654528
+    },
+    {
+      "at": 1266.238445763,
+      "current": 1167278080,
+      "anon": 336048128,
+      "file": 805654528
+    },
+    {
+      "at": 1266.264185814,
+      "current": 1167278080,
+      "anon": 336048128,
+      "file": 805654528
+    },
+    {
+      "at": 1266.28993339,
+      "current": 1167278080,
+      "anon": 336048128,
+      "file": 805654528
+    },
+    {
+      "at": 1266.315670995,
+      "current": 1167278080,
+      "anon": 336048128,
+      "file": 805654528
+    },
+    {
+      "at": 1266.341417969,
+      "current": 1167278080,
+      "anon": 336048128,
+      "file": 805654528
+    },
+    {
+      "at": 1266.367228081,
+      "current": 1167278080,
+      "anon": 336048128,
+      "file": 805654528
+    },
+    {
+      "at": 1266.39292482,
+      "current": 1167278080,
+      "anon": 336048128,
+      "file": 805654528
+    },
+    {
+      "at": 1266.418651756,
+      "current": 1167278080,
+      "anon": 336048128,
+      "file": 805654528
+    },
+    {
+      "at": 1266.444524536,
+      "current": 1167278080,
+      "anon": 336048128,
+      "file": 805654528
+    },
+    {
+      "at": 1266.470284343,
+      "current": 1167278080,
+      "anon": 336048128,
+      "file": 805654528
+    },
+    {
+      "at": 1266.496030605,
+      "current": 1167278080,
+      "anon": 336048128,
+      "file": 805654528
+    },
+    {
+      "at": 1266.521793438,
+      "current": 1167278080,
+      "anon": 336048128,
+      "file": 805654528
+    },
+    {
+      "at": 1266.547577732,
+      "current": 1167278080,
+      "anon": 336048128,
+      "file": 805654528
+    },
+    {
+      "at": 1266.573366222,
+      "current": 1167278080,
+      "anon": 336048128,
+      "file": 805654528
+    },
+    {
+      "at": 1266.598978794,
+      "current": 1167278080,
+      "anon": 336048128,
+      "file": 805654528
+    },
+    {
+      "at": 1266.624670645,
+      "current": 1167278080,
+      "anon": 336048128,
+      "file": 805654528
+    },
+    {
+      "at": 1266.650243942,
+      "current": 1167278080,
+      "anon": 336048128,
+      "file": 805654528
+    },
+    {
+      "at": 1266.675877664,
+      "current": 1167278080,
+      "anon": 336048128,
+      "file": 805654528
+    },
+    {
+      "at": 1266.701549867,
+      "current": 1167278080,
+      "anon": 336048128,
+      "file": 805654528
+    },
+    {
+      "at": 1266.727154884,
+      "current": 1167278080,
+      "anon": 336048128,
+      "file": 805654528
+    },
+    {
+      "at": 1266.752728463,
+      "current": 1167278080,
+      "anon": 336048128,
+      "file": 805654528
+    },
+    {
+      "at": 1266.778400356,
+      "current": 1167278080,
+      "anon": 336048128,
+      "file": 805654528
+    },
+    {
+      "at": 1266.803968684,
+      "current": 1167278080,
+      "anon": 336048128,
+      "file": 805654528
+    },
+    {
+      "at": 1266.829503069,
+      "current": 1167278080,
+      "anon": 336048128,
+      "file": 805654528
+    },
+    {
+      "at": 1266.855401618,
+      "current": 1167278080,
+      "anon": 336048128,
+      "file": 805654528
+    },
+    {
+      "at": 1267.3435946,
+      "current": 2082156544,
+      "anon": 1249153024,
+      "file": 805654528
+    },
+    {
+      "at": 1267.534625133,
+      "current": 2146697216,
+      "anon": 1426939904,
+      "file": 695205888
+    },
+    {
+      "at": 1267.560303027,
+      "current": 2146697216,
+      "anon": 1428307968,
+      "file": 694157312
+    },
+    {
+      "at": 1267.677650107,
+      "current": 2146709504,
+      "anon": 1428205568,
+      "file": 694157312
+    },
+    {
+      "at": 1267.855986464,
+      "current": 2146971648,
+      "anon": 1428549632,
+      "file": 694157312
+    },
+    {
+      "at": 1267.882551501,
+      "current": 2146693120,
+      "anon": 1429200896,
+      "file": 693108736
+    },
+    {
+      "at": 1267.909078016,
+      "current": 2146955264,
+      "anon": 1429487616,
+      "file": 693108736
+    },
+    {
+      "at": 1267.935872453,
+      "current": 2147217408,
+      "anon": 1429487616,
+      "file": 693108736
+    },
+    {
+      "at": 1267.962572373,
+      "current": 2147479552,
+      "anon": 1429950464,
+      "file": 693108736
+    },
+    {
+      "at": 1267.98924402,
+      "current": 2146693120,
+      "anon": 1430134784,
+      "file": 692060160
+    },
+    {
+      "at": 1268.01583727,
+      "current": 2146693120,
+      "anon": 1430134784,
+      "file": 692060160
+    },
+    {
+      "at": 1268.04245207,
+      "current": 2146955264,
+      "anon": 1430478848,
+      "file": 692060160
+    },
+    {
+      "at": 1268.069104921,
+      "current": 2146955264,
+      "anon": 1430478848,
+      "file": 692060160
+    },
+    {
+      "at": 1268.130941767,
+      "current": 2146955264,
+      "anon": 1430597632,
+      "file": 692060160
+    },
+    {
+      "at": 1268.317928609,
+      "current": 2147217408,
+      "anon": 1431031808,
+      "file": 692060160
+    },
+    {
+      "at": 1268.382206039,
+      "current": 2146697216,
+      "anon": 1431392256,
+      "file": 691011584
+    },
+    {
+      "at": 1268.585319842,
+      "current": 2146959360,
+      "anon": 1431781376,
+      "file": 691011584
+    },
+    {
+      "at": 1268.638591502,
+      "current": 2147483648,
+      "anon": 1432162304,
+      "file": 691011584
+    },
+    {
+      "at": 1268.830229353,
+      "current": 2147483648,
+      "anon": 1432162304,
+      "file": 691011584
+    },
+    {
+      "at": 1268.899513488,
+      "current": 2147479552,
+      "anon": 1432481792,
+      "file": 689963008
+    },
+    {
+      "at": 1268.982809399,
+      "current": 2146693120,
+      "anon": 1432481792,
+      "file": 689963008
+    },
+    {
+      "at": 1269.150666221,
+      "current": 2146693120,
+      "anon": 1432481792,
+      "file": 689963008
+    },
+    {
+      "at": 1269.216270933,
+      "current": 2146955264,
+      "anon": 1432580096,
+      "file": 689963008
+    },
+    {
+      "at": 1269.276202539,
+      "current": 2146955264,
+      "anon": 1432580096,
+      "file": 689963008
+    },
+    {
+      "at": 1269.40012543,
+      "current": 2146955264,
+      "anon": 1432580096,
+      "file": 689963008
+    },
+    {
+      "at": 1269.628891666,
+      "current": 2146951168,
+      "anon": 1432580096,
+      "file": 689963008
+    },
+    {
+      "at": 1269.70323441,
+      "current": 2146951168,
+      "anon": 1432592384,
+      "file": 689963008
+    },
+    {
+      "at": 1269.900135469,
+      "current": 2146951168,
+      "anon": 1432592384,
+      "file": 689963008
+    },
+    {
+      "at": 1269.972829152,
+      "current": 2146951168,
+      "anon": 1432592384,
+      "file": 689963008
+    },
+    {
+      "at": 1270.185373327,
+      "current": 2146951168,
+      "anon": 1432592384,
+      "file": 689963008
+    },
+    {
+      "at": 1270.303465906,
+      "current": 2146910208,
+      "anon": 1432625152,
+      "file": 689963008
+    },
+    {
+      "at": 1270.506129484,
+      "current": 2146910208,
+      "anon": 1432625152,
+      "file": 689963008
+    },
+    {
+      "at": 1270.601655127,
+      "current": 2146910208,
+      "anon": 1432625152,
+      "file": 689963008
+    },
+    {
+      "at": 1270.824162042,
+      "current": 2147172352,
+      "anon": 1432989696,
+      "file": 689963008
+    },
+    {
+      "at": 1270.926208265,
+      "current": 2147172352,
+      "anon": 1432989696,
+      "file": 689963008
+    },
+    {
+      "at": 1271.14975031,
+      "current": 2147172352,
+      "anon": 1432989696,
+      "file": 689963008
+    },
+    {
+      "at": 1271.262224175,
+      "current": 2146697216,
+      "anon": 1433546752,
+      "file": 688914432
+    },
+    {
+      "at": 1271.483464687,
+      "current": 2146697216,
+      "anon": 1433546752,
+      "file": 688914432
+    },
+    {
+      "at": 1271.56447151,
+      "current": 2146959360,
+      "anon": 1433546752,
+      "file": 688914432
+    },
+    {
+      "at": 1271.654057025,
+      "current": 2146959360,
+      "anon": 1434066944,
+      "file": 688914432
+    },
+    {
+      "at": 1271.800374571,
+      "current": 2147221504,
+      "anon": 1434066944,
+      "file": 688914432
+    },
+    {
+      "at": 1271.879683993,
+      "current": 2147221504,
+      "anon": 1434066944,
+      "file": 688914432
+    },
+    {
+      "at": 1271.971676033,
+      "current": 2147221504,
+      "anon": 1434447872,
+      "file": 688914432
+    },
+    {
+      "at": 1272.128445221,
+      "current": 2147483648,
+      "anon": 1434447872,
+      "file": 688914432
+    },
+    {
+      "at": 1272.2092605,
+      "current": 2147483648,
+      "anon": 1434447872,
+      "file": 688914432
+    },
+    {
+      "at": 1272.271355751,
+      "current": 2146697216,
+      "anon": 1434624000,
+      "file": 687865856
+    },
+    {
+      "at": 1272.45224652,
+      "current": 2146959360,
+      "anon": 1434624000,
+      "file": 687865856
+    },
+    {
+      "at": 1272.541224161,
+      "current": 2146959360,
+      "anon": 1434824704,
+      "file": 687865856
+    },
+    {
+      "at": 1272.636992649,
+      "current": 2146959360,
+      "anon": 1434824704,
+      "file": 687865856
+    },
+    {
+      "at": 1272.796793398,
+      "current": 2146959360,
+      "anon": 1434824704,
+      "file": 687865856
+    },
+    {
+      "at": 1272.861284184,
+      "current": 2146959360,
+      "anon": 1434824704,
+      "file": 687865856
+    },
+    {
+      "at": 1272.93807698,
+      "current": 2146959360,
+      "anon": 1434824704,
+      "file": 687865856
+    },
+    {
+      "at": 1273.124806706,
+      "current": 2146959360,
+      "anon": 1434857472,
+      "file": 687865856
+    },
+    {
+      "at": 1273.177180368,
+      "current": 2147483648,
+      "anon": 1435463680,
+      "file": 687865856
+    },
+    {
+      "at": 1273.234548521,
+      "current": 2147483648,
+      "anon": 1435463680,
+      "file": 687865856
+    },
+    {
+      "at": 1273.446532465,
+      "current": 2147483648,
+      "anon": 1435840512,
+      "file": 686817280
+    },
+    {
+      "at": 1273.499114017,
+      "current": 2146955264,
+      "anon": 1435840512,
+      "file": 686817280
+    },
+    {
+      "at": 1273.577701166,
+      "current": 2146955264,
+      "anon": 1435840512,
+      "file": 686817280
+    },
+    {
+      "at": 1273.651042683,
+      "current": 2147479552,
+      "anon": 1436368896,
+      "file": 686817280
+    },
+    {
+      "at": 1273.816893411,
+      "current": 2147479552,
+      "anon": 1436368896,
+      "file": 686817280
+    },
+    {
+      "at": 1273.88143705,
+      "current": 2147479552,
+      "anon": 1436549120,
+      "file": 686817280
+    },
+    {
+      "at": 1273.94080965,
+      "current": 2147479552,
+      "anon": 1436549120,
+      "file": 686817280
+    },
+    {
+      "at": 1274.158107613,
+      "current": 2147479552,
+      "anon": 1436549120,
+      "file": 686817280
+    },
+    {
+      "at": 1274.23860959,
+      "current": 2147479552,
+      "anon": 1436549120,
+      "file": 686817280
+    },
+    {
+      "at": 1274.320054765,
+      "current": 2146430976,
+      "anon": 1436626944,
+      "file": 685768704
+    },
+    {
+      "at": 1274.549962215,
+      "current": 2146430976,
+      "anon": 1436626944,
+      "file": 685768704
+    },
+    {
+      "at": 1274.617233947,
+      "current": 2146430976,
+      "anon": 1436626944,
+      "file": 685768704
+    },
+    {
+      "at": 1274.701315783,
+      "current": 2146430976,
+      "anon": 1436626944,
+      "file": 685768704
+    },
+    {
+      "at": 1274.916189703,
+      "current": 2146430976,
+      "anon": 1436626944,
+      "file": 685768704
+    },
+    {
+      "at": 1274.995508854,
+      "current": 2146430976,
+      "anon": 1436995584,
+      "file": 685768704
+    },
+    {
+      "at": 1275.08938921,
+      "current": 2146955264,
+      "anon": 1436995584,
+      "file": 685768704
+    },
+    {
+      "at": 1275.313472433,
+      "current": 2146955264,
+      "anon": 1436995584,
+      "file": 685768704
+    },
+    {
+      "at": 1275.405730051,
+      "current": 2147217408,
+      "anon": 1437446144,
+      "file": 685768704
+    },
+    {
+      "at": 1275.483792306,
+      "current": 2147479552,
+      "anon": 1437446144,
+      "file": 685768704
+    },
+    {
+      "at": 1275.721704494,
+      "current": 2147479552,
+      "anon": 1437577216,
+      "file": 685768704
+    },
+    {
+      "at": 1275.787182685,
+      "current": 2147479552,
+      "anon": 1437577216,
+      "file": 685768704
+    },
+    {
+      "at": 1275.870765176,
+      "current": 2147479552,
+      "anon": 1437577216,
+      "file": 685768704
+    },
+    {
+      "at": 1276.098987893,
+      "current": 2146693120,
+      "anon": 1437741056,
+      "file": 684720128
+    },
+    {
+      "at": 1276.179154131,
+      "current": 2146693120,
+      "anon": 1437741056,
+      "file": 684720128
+    },
+    {
+      "at": 1276.252070956,
+      "current": 2146955264,
+      "anon": 1438060544,
+      "file": 684720128
+    },
+    {
+      "at": 1276.486560418,
+      "current": 2146955264,
+      "anon": 1438060544,
+      "file": 684720128
+    },
+    {
+      "at": 1276.538645709,
+      "current": 2146955264,
+      "anon": 1438060544,
+      "file": 684720128
+    },
+    {
+      "at": 1276.630233015,
+      "current": 2146955264,
+      "anon": 1438113792,
+      "file": 684720128
+    },
+    {
+      "at": 1276.701269729,
+      "current": 2146955264,
+      "anon": 1438113792,
+      "file": 684720128
+    },
+    {
+      "at": 1276.897300631,
+      "current": 2146951168,
+      "anon": 1438113792,
+      "file": 684720128
+    },
+    {
+      "at": 1276.971981028,
+      "current": 2146951168,
+      "anon": 1438113792,
+      "file": 684720128
+    },
+    {
+      "at": 1277.054655717,
+      "current": 2146951168,
+      "anon": 1438113792,
+      "file": 684720128
+    },
+    {
+      "at": 1277.315263839,
+      "current": 2146951168,
+      "anon": 1438154752,
+      "file": 684720128
+    },
+    {
+      "at": 1277.392288562,
+      "current": 2146951168,
+      "anon": 1438523392,
+      "file": 684720128
+    },
+    {
+      "at": 1277.484335006,
+      "current": 2147475456,
+      "anon": 1438883840,
+      "file": 683671552
+    },
+    {
+      "at": 1277.739315015,
+      "current": 2146697216,
+      "anon": 1438883840,
+      "file": 683671552
+    },
+    {
+      "at": 1277.817965087,
+      "current": 2146697216,
+      "anon": 1438883840,
+      "file": 683671552
+    },
+    {
+      "at": 1277.910049793,
+      "current": 2146697216,
+      "anon": 1439145984,
+      "file": 683671552
+    },
+    {
+      "at": 1278.169171805,
+      "current": 2146959360,
+      "anon": 1439145984,
+      "file": 683671552
+    },
+    {
+      "at": 1278.246743396,
+      "current": 2147221504,
+      "anon": 1439395840,
+      "file": 683671552
+    },
+    {
+      "at": 1278.326909711,
+      "current": 2147221504,
+      "anon": 1439395840,
+      "file": 683671552
+    },
+    {
+      "at": 1278.591662489,
+      "current": 2147483648,
+      "anon": 1439694848,
+      "file": 683671552
+    },
+    {
+      "at": 1278.675448067,
+      "current": 2147483648,
+      "anon": 1439694848,
+      "file": 683671552
+    },
+    {
+      "at": 1278.766083907,
+      "current": 2147483648,
+      "anon": 1439694848,
+      "file": 683671552
+    },
+    {
+      "at": 1278.848205296,
+      "current": 2147483648,
+      "anon": 1439694848,
+      "file": 683671552
+    },
+    {
+      "at": 1279.123071122,
+      "current": 2147483648,
+      "anon": 1439694848,
+      "file": 683671552
+    },
+    {
+      "at": 1279.255297044,
+      "current": 2147483648,
+      "anon": 1439694848,
+      "file": 683671552
+    },
+    {
+      "at": 1279.539389625,
+      "current": 2147483648,
+      "anon": 1439735808,
+      "file": 683671552
+    },
+    {
+      "at": 1279.619892119,
+      "current": 2147483648,
+      "anon": 1439735808,
+      "file": 683671552
+    },
+    {
+      "at": 1279.698654109,
+      "current": 2147483648,
+      "anon": 1439735808,
+      "file": 683671552
+    },
+    {
+      "at": 1279.787053657,
+      "current": 2147483648,
+      "anon": 1440137216,
+      "file": 682622976
+    },
+    {
+      "at": 1280.052101172,
+      "current": 2147217408,
+      "anon": 1440509952,
+      "file": 682622976
+    },
+    {
+      "at": 1280.14206732,
+      "current": 2147217408,
+      "anon": 1440509952,
+      "file": 682622976
+    },
+    {
+      "at": 1280.19867246,
+      "current": 2147217408,
+      "anon": 1440509952,
+      "file": 682622976
+    },
+    {
+      "at": 1280.470441299,
+      "current": 2147217408,
+      "anon": 1440636928,
+      "file": 682622976
+    },
+    {
+      "at": 1280.523115983,
+      "current": 2147123200,
+      "anon": 1440636928,
+      "file": 682622976
+    },
+    {
+      "at": 1280.600448562,
+      "current": 2147385344,
+      "anon": 1440636928,
+      "file": 682622976
+    },
+    {
+      "at": 1280.679297009,
+      "current": 2147471360,
+      "anon": 1441009664,
+      "file": 682622976
+    },
+    {
+      "at": 1280.728763365,
+      "current": 2146693120,
+      "anon": 1441136640,
+      "file": 681574400
+    },
+    {
+      "at": 1280.97791582,
+      "current": 2146693120,
+      "anon": 1441136640,
+      "file": 681574400
+    },
+    {
+      "at": 1281.058996649,
+      "current": 2146955264,
+      "anon": 1441382400,
+      "file": 681574400
+    },
+    {
+      "at": 1281.13923619,
+      "current": 2146955264,
+      "anon": 1441669120,
+      "file": 681574400
+    },
+    {
+      "at": 1281.418723499,
+      "current": 2147217408,
+      "anon": 1441669120,
+      "file": 681574400
+    },
+    {
+      "at": 1281.517391776,
+      "current": 2147479552,
+      "anon": 1441869824,
+      "file": 681574400
+    },
+    {
+      "at": 1281.592889849,
+      "current": 2147479552,
+      "anon": 1441869824,
+      "file": 681574400
+    },
+    {
+      "at": 1281.651031939,
+      "current": 2147479552,
+      "anon": 1441869824,
+      "file": 681574400
+    },
+    {
+      "at": 1281.933472012,
+      "current": 2147479552,
+      "anon": 1441869824,
+      "file": 681574400
+    },
+    {
+      "at": 1281.984830796,
+      "current": 2147479552,
+      "anon": 1441923072,
+      "file": 681574400
+    },
+    {
+      "at": 1282.085930531,
+      "current": 2147479552,
+      "anon": 1441923072,
+      "file": 681574400
+    },
+    {
+      "at": 1282.188179427,
+      "current": 2147479552,
+      "anon": 1441923072,
+      "file": 681574400
+    },
+    {
+      "at": 1282.613648613,
+      "current": 2146426880,
+      "anon": 1441923072,
+      "file": 680525824
+    },
+    {
+      "at": 1282.766477856,
+      "current": 2146426880,
+      "anon": 1441923072,
+      "file": 680525824
+    },
+    {
+      "at": 1282.839318018,
+      "current": 2146426880,
+      "anon": 1441923072,
+      "file": 680525824
+    },
+    {
+      "at": 1282.881572295,
+      "current": 2146426880,
+      "anon": 1441923072,
+      "file": 680525824
+    },
+    {
+      "at": 1283.132586522,
+      "current": 2146426880,
+      "anon": 1441923072,
+      "file": 680525824
+    },
+    {
+      "at": 1283.184126065,
+      "current": 2146426880,
+      "anon": 1441923072,
+      "file": 680525824
+    },
+    {
+      "at": 1283.260924105,
+      "current": 2146426880,
+      "anon": 1441923072,
+      "file": 680525824
+    },
+    {
+      "at": 1283.339916459,
+      "current": 2146426880,
+      "anon": 1441923072,
+      "file": 680525824
+    },
+    {
+      "at": 1283.39054836,
+      "current": 2146426880,
+      "anon": 1441923072,
+      "file": 680525824
+    },
+    {
+      "at": 1283.665673158,
+      "current": 2146426880,
+      "anon": 1441923072,
+      "file": 680525824
+    },
+    {
+      "at": 1283.752588657,
+      "current": 2146426880,
+      "anon": 1441931264,
+      "file": 680525824
+    },
+    {
+      "at": 1283.823499905,
+      "current": 2146689024,
+      "anon": 1441931264,
+      "file": 680525824
+    },
+    {
+      "at": 1283.899367662,
+      "current": 2146689024,
+      "anon": 1441931264,
+      "file": 680525824
+    },
+    {
+      "at": 1284.181587547,
+      "current": 2146689024,
+      "anon": 1442197504,
+      "file": 680525824
+    },
+    {
+      "at": 1284.233557206,
+      "current": 2146689024,
+      "anon": 1442197504,
+      "file": 680525824
+    },
+    {
+      "at": 1284.310573373,
+      "current": 2146689024,
+      "anon": 1442197504,
+      "file": 680525824
+    },
+    {
+      "at": 1284.394131147,
+      "current": 2146684928,
+      "anon": 1442197504,
+      "file": 680525824
+    },
+    {
+      "at": 1284.438355983,
+      "current": 2146684928,
+      "anon": 1442254848,
+      "file": 680525824
+    },
+    {
+      "at": 1284.701937666,
+      "current": 2146684928,
+      "anon": 1442254848,
+      "file": 680525824
+    },
+    {
+      "at": 1284.752979626,
+      "current": 2146684928,
+      "anon": 1442254848,
+      "file": 680525824
+    },
+    {
+      "at": 1284.810461948,
+      "current": 2146684928,
+      "anon": 1442254848,
+      "file": 680525824
+    },
+    {
+      "at": 1284.88710574,
+      "current": 2146684928,
+      "anon": 1442254848,
+      "file": 680525824
+    },
+    {
+      "at": 1284.959622865,
+      "current": 2146684928,
+      "anon": 1442254848,
+      "file": 680525824
+    },
+    {
+      "at": 1285.253729234,
+      "current": 2146684928,
+      "anon": 1442254848,
+      "file": 680525824
+    },
+    {
+      "at": 1285.335177674,
+      "current": 2146684928,
+      "anon": 1442254848,
+      "file": 680525824
+    },
+    {
+      "at": 1285.404862078,
+      "current": 2146684928,
+      "anon": 1442254848,
+      "file": 680525824
+    },
+    {
+      "at": 1285.482285621,
+      "current": 2146684928,
+      "anon": 1442254848,
+      "file": 680525824
+    },
+    {
+      "at": 1285.817203086,
+      "current": 2146684928,
+      "anon": 1442254848,
+      "file": 680525824
+    },
+    {
+      "at": 1285.888204299,
+      "current": 2146684928,
+      "anon": 1442254848,
+      "file": 680525824
+    },
+    {
+      "at": 1285.971873065,
+      "current": 2146684928,
+      "anon": 1442254848,
+      "file": 680525824
+    },
+    {
+      "at": 1286.066864094,
+      "current": 2146684928,
+      "anon": 1442254848,
+      "file": 680525824
+    },
+    {
+      "at": 1286.387076618,
+      "current": 2146684928,
+      "anon": 1442340864,
+      "file": 680525824
+    },
+    {
+      "at": 1286.464557365,
+      "current": 2146942976,
+      "anon": 1442590720,
+      "file": 680525824
+    },
+    {
+      "at": 1286.549086103,
+      "current": 2147205120,
+      "anon": 1442590720,
+      "file": 680525824
+    },
+    {
+      "at": 1286.632484132,
+      "current": 2147205120,
+      "anon": 1443250176,
+      "file": 679477248
+    },
+    {
+      "at": 1286.964317632,
+      "current": 2146693120,
+      "anon": 1443250176,
+      "file": 679477248
+    },
+    {
+      "at": 1287.02792402,
+      "current": 2146693120,
+      "anon": 1443250176,
+      "file": 679477248
+    },
+    {
+      "at": 1287.115963454,
+      "current": 2146955264,
+      "anon": 1443663872,
+      "file": 679477248
+    },
+    {
+      "at": 1287.194336193,
+      "current": 2146430976,
+      "anon": 1444986880,
+      "file": 678428672
+    },
+    {
+      "at": 1287.230679532,
+      "current": 2147217408,
+      "anon": 1444986880,
+      "file": 678428672
+    },
+    {
+      "at": 1287.535507748,
+      "current": 2146955264,
+      "anon": 1445642240,
+      "file": 677380096
+    },
+    {
+      "at": 1287.60908689,
+      "current": 2147479552,
+      "anon": 1446252544,
+      "file": 677380096
+    },
+    {
+      "at": 1287.682518246,
+      "current": 2146955264,
+      "anon": 1446916096,
+      "file": 676331520
+    },
+    {
+      "at": 1287.79272443,
+      "current": 2146689024,
+      "anon": 1447583744,
+      "file": 675282944
+    },
+    {
+      "at": 1287.967150361,
+      "current": 2146689024,
+      "anon": 1448407040,
+      "file": 675282944
+    },
+    {
+      "at": 1288.291270843,
+      "current": 2146955264,
+      "anon": 1448964096,
+      "file": 674234368
+    },
+    {
+      "at": 1288.320067095,
+      "current": 1999884288,
+      "anon": 1302159360,
+      "file": 674234368
+    },
+    {
+      "at": 1288.393839894,
+      "current": 1086828544,
+      "anon": 371277824,
+      "file": 674250752
+    },
+    {
+      "at": 1288.419571381,
+      "current": 508129280,
+      "anon": 341204992,
+      "file": 159383552
+    }
+  ],
+  "complete": true,
+  "passed": true
+}
