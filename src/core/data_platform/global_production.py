@@ -35,7 +35,7 @@ class GlobalProduction:
             ('bonus_rec_wr', 'WR', 'rec'), ('bonus_rush_td_qb', 'QB', 'rush_td'),
         ):
             result[key] = (values.get(stat) if position == required_position else 0
-                           if position in {'QB', 'RB', 'WR', 'TE', 'FB', 'K', 'P'} else None)
+                           if position in {'QB', 'RB', 'WR', 'TE', 'K', 'P'} else None)
         # The published passing_40/receiving_40 columns count big plays, NOT
         # long touchdowns. They cannot fill the *_td_40p scoring evidence gap.
         return result

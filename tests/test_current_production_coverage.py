@@ -301,6 +301,8 @@ class ProductionPeriodControls(unittest.TestCase):
             self.assertEqual(result['fantasy_points'],points)
         self.assertIsNone(GlobalProduction.score_game({'position':'RB'},{'bonus_rec_rb':.5})['fantasy_points'])
         self.assertIsNone(GlobalProduction.score_game({'rec':5},{'bonus_rec_rb':.5})['fantasy_points'])
+        # NFL FB alone does not prove Sleeper's RB-bonus classification.
+        self.assertIsNone(GlobalProduction.score_game({'position':'FB','rec':5},{'bonus_rec_rb':.5})['fantasy_points'])
 
     def test_required_kicking_values_score_only_exact_counts(self):
         values=normalize_nflverse_row(raw(position='K',fg_made='2',fg_att='2',
