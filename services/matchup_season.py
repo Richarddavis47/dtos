@@ -30,17 +30,13 @@ def number(value: Any) -> float | None:
 
 
 def source_player_actual(row: dict, player_id: str, starter_index: int | None = None) -> float | None:
-    """Read an exact player's actual score from one admitted matchup row.
-
-    Missing starter-list entries may use the same source row's player map.
-    Genuine zero wins over the fallback. Never borrow another week or roster.
-    """
-    actuals = row.get('starters_points') or []
-    if starter_index is not None and starter_index < len(actuals):
-        value = number(actuals[starter_index])
-        if value is not None:
-            return value
-    return number((row.get('players_points') or {}).get(str(player_id)))
+    """Shared conflict-aware resolver; an index never overrides player identity."""
+    from src.core.player_value_projection.sleeper_actuals import resolve_score
+    if starter_index is not None:
+        starters = row.get('starters') or []
+        if type(starter_index) is not int or not 0 <= starter_index < len(starters) or str(starters[starter_index]) != str(player_id):
+            return None
+    return resolve_score(row, player_id)['points']
 
 
 def compact_week(rows: Any) -> list[dict] | None:
@@ -70,12 +66,18 @@ def compact_week(rows: Any) -> list[dict] | None:
 
 
 async def prepare_season_matchups(league: dict, current_week: int, current_rows: list,
-                                  fetch, *, observed_at: str) -> dict:
+                                  fetch, *, observed_at: str, previous: dict | None = None) -> dict:
     """Normal synchronization only. At most 18 week and two bracket source reads.
 
     A failed/withdrawn week is explicit; prior current availability is not revived.
     Observation time is provenance, excluded from semantic generation identity.
     """
+    from src.core.player_value_projection.sleeper_actuals import scoring_identity, resolve_score
+    fingerprint = scoring_identity(league.get('scoring_settings') or {})
+    previous = previous or {}
+    compatible_previous = (str(previous.get('league_id')) == str(league.get('league_id'))
+        and str(previous.get('season')) == str(league.get('season'))
+        and previous.get('methodology') == METHOD and previous.get('scoring_fingerprint') == fingerprint)
     calendar = season_calendar(league)
     weeks = sorted(set(calendar.get("regular_season_weeks") or []) | {
         week for group in calendar.get("playoff_rounds") or [] for week in group
@@ -90,6 +92,24 @@ async def prepare_season_matchups(league: dict, current_week: int, current_rows:
                                    "rows": rows or [], "reason": None if rows is not None else "INVALID_SOURCE_WEEK"}
         except Exception:
             evidence[str(week)] = {"availability": "unavailable", "rows": [], "reason": "SOURCE_WEEK_UNAVAILABLE"}
+    for key, week in evidence.items():
+        prior = ((previous.get('weeks') or {}).get(key) or {}) if compatible_previous else {}
+        week.update(observed_at=observed_at if week['availability'] == 'available' else None,
+                    last_attempt_at=observed_at, freshness='current' if week['availability'] == 'available' else 'unavailable')
+        old_rows = prior.get('rows') if prior.get('availability') == 'available' else prior.get('retained_rows')
+        if week['availability'] != 'available' and old_rows:
+            # Preserve usable prior evidence explicitly, without turning a
+            # failed source read into successful current acquisition.
+            week.update(retained_rows=old_rows, observed_at=prior.get('observed_at'), freshness='last_valid')
+        elif week['availability'] == 'available' and old_rows:
+            def scores(rows):
+                values = {}
+                for row in rows:
+                    for pid in set(map(str, row.get('players') or [])) | set(map(str, row.get('starters') or [])) | set(map(str, row.get('players_points') or {})):
+                        values.setdefault(pid, set()).add(resolve_score(row, pid)['points'])
+                return values
+            old, new = scores(old_rows), scores(week['rows'])
+            week['corrected_players'] = sorted(pid for pid in old.keys() & new.keys() if old[pid] != new[pid])
     brackets = {}
     # Read bracket facts only after the regular season; early placeholders must
     # not become postseason qualification. This adds at most two source reads.
@@ -106,9 +126,10 @@ async def prepare_season_matchups(league: dict, current_week: int, current_rows:
             except Exception:
                 pass  # Missing bracket is unavailable, never a projected lock.
     result = {"league_id": str(league.get("league_id") or ""), "season": str(league.get("season") or ""),
-              "methodology": METHOD, "calendar_reference": calendar["reference"], "weeks": evidence,
+              "methodology": METHOD, "scoring_fingerprint": fingerprint, "calendar_reference": calendar["reference"], "weeks": evidence,
               "brackets": brackets}
-    result["semantic_generation"] = hashlib.sha256(json.dumps(result, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+    semantic = {**result, 'weeks': {key: {k: v for k, v in row.items() if k not in {'observed_at', 'last_attempt_at'}} for key, row in evidence.items()}}
+    result["semantic_generation"] = hashlib.sha256(json.dumps(semantic, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
     result["observed_at"] = observed_at
     return result
 
@@ -245,7 +266,7 @@ def season_week_view(data: dict, week: int, projection_service, *, evidence_thro
         for index, pid in enumerate(starter_ids):
             actual = source_player_actual(row, pid, index)
             lineup.append(player_row(pid, slots[index] if index < len(slots) else "Source starter", actual))
-        bench = [player_row(str(pid), "Non-starter", number((row.get("players_points") or {}).get(str(pid))))
+        bench = [player_row(str(pid), "Non-starter", source_player_actual(row, str(pid)))
                  for pid in row.get("players") or [] if str(pid) not in starter_ids]
         # Weekly sources do not retain historical IR/taxi assignments. Current
         # roster facts may classify only the current selected week, never history.
@@ -256,7 +277,7 @@ def season_week_view(data: dict, week: int, projection_service, *, evidence_thro
             weekly_ids = {p['player_id'] for p in lineup + bench}
             for pid, section in classifications.items():
                 if pid not in weekly_ids:
-                    bench.append(player_row(pid, 'Non-starter', number((row.get('players_points') or {}).get(pid))))
+                    bench.append(player_row(pid, 'Non-starter', source_player_actual(row, pid)))
             reserve = [p for p in bench if classifications.get(p['player_id']) == 'IR']
             taxi = [p for p in bench if classifications.get(p['player_id']) == 'Taxi']
             bench = [p for p in bench if classifications.get(p['player_id']) not in {'IR', 'Taxi'}]

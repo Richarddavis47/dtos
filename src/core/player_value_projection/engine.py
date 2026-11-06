@@ -61,7 +61,7 @@ def evaluate_player_values(context: Any, decision: Any, reports: dict[str, Any],
         prepared = context.cached_data.get("canonical_player_production")
         production = prepared_production_context(
             prepared if prepared is not None else {"league_id": context.league_id},
-            league_id=context.league_id, player_id=key)
+            league_id=context.league_id, player_id=key, data=context.cached_data)
         positional = PositionalContext(None, None, weekly_ranks[key]["position"].rank,
             "Intrinsic tier unavailable", None, above,
             sum(pos == positions[key] for pos in positions.values()), None,

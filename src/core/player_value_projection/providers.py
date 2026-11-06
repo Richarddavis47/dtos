@@ -2,10 +2,9 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from statistics import mean, pstdev
 from typing import Any
 
-from src.core.player_value_projection.models import DataStatus, ProductionContext, ProductionWindow, Projection
+from src.core.player_value_projection.models import DataStatus, ProductionContext, Projection
 from src.core.projection_intelligence import projection_service
 
 
@@ -82,24 +81,15 @@ InternalProjectionProvider = SleeperCanonicalProjectionProvider
 
 
 class CachedProductionProvider(ProductionProvider):
+    name = "sleeper_explicit_actuals_only"
+    version = "2"
+
     def production(self, player: dict[str, Any]) -> ProductionContext:
-        history = player.get("fantasy_points_history") or player.get("recent_points") or []
-        values = [float(value) for value in history if value is not None]
-        season = player.get("season_average")
-        if season is None:
-            season = player.get("fantasy_points_per_game")
-        windows = []
-        for label, size in (("Last Game", 1), ("Last 3 Games", 3), ("Last 5 Games", 5)):
-            sample = values[-size:]
-            windows.append(ProductionWindow(label, round(mean(sample), 2) if sample else None, None, None, None, None, None))
-        windows.extend((ProductionWindow("Season Average", float(season) if season is not None else None, None, None, None, None, None), ProductionWindow("Previous Season Average", float(player["previous_season_average"]) if player.get("previous_season_average") is not None else None, None, None, None, None, None)))
-        available = bool(values or season is not None)
-        volatility = round(pstdev(values), 2) if len(values) > 1 else None
-        consistency = round(max(0, 100 - volatility * 5)) if volatility is not None else None
-        trend = "Unavailable"
-        if len(values) >= 3:
-            trend = "Rising" if mean(values[-2:]) > mean(values[:-2]) + 1 else "Falling" if mean(values[-2:]) < mean(values[:-2]) - 1 else "Stable"
-        return ProductionContext(tuple(windows), volatility, consistency, trend, "Cached Sleeper/player statistics" if available else "No production provider", DataStatus.CACHED if available else DataStatus.UNAVAILABLE, player.get("stats_updated_at"), () if available else ("Recent and historical production data are unavailable.",))
+        # Unscoped extension fields have no league/week/source identity. Even
+        # a plausible number cannot be relabeled as an authoritative result.
+        return ProductionContext((), None, None, "Unavailable", "Sleeper league matchup results",
+            DataStatus.UNAVAILABLE, None,
+            ("League-scoped prepared Sleeper actual results are required; unscoped cached statistics are not a fallback.",))
 
 
 class PlayerDataRegistry:

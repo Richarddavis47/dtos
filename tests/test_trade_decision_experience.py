@@ -117,6 +117,13 @@ class TradeDecisionExperienceTests(unittest.TestCase):
             ],
             retrieved_at="2026-09-02T00:00:00Z",
         )
+        from services.matchup_season import prepare_season_matchups
+        import asyncio
+        source=[dict(roster_id=1,matchup_id=1,players=['a'],starters=['a'],
+                     players_points={'a':18.26},starters_points=[18.26],points=18.26)]
+        async def fetch(_): return copy.deepcopy(source)
+        self.data['season_matchups']=asyncio.run(prepare_season_matchups(
+            self.data['league'],2,source,fetch,observed_at='2026-10-15T00:00:00Z'))
         self.data["canonical_player_production"] = prepare_player_production(
             self.data,
             expected_league_id="league-1",
@@ -125,14 +132,21 @@ class TradeDecisionExperienceTests(unittest.TestCase):
         )
         row = self.evaluate(strategy="WIN NOW")
         facts = row["evaluation"]["player_facts"]["a"]
-        self.assertEqual(facts["production"]["points_per_game"], 18.26)
-        self.assertEqual(facts["production"]["sample_games"], 1)
+        self.assertIsNone(facts["production"]["points_per_game"])
+        self.assertEqual(facts["production"]["points_per_observation"], 18.26)
+        self.assertIsNone(facts["production"]["sample_games"])
+        self.assertEqual(facts["production"]["sample_observations"], 1)
         self.assertIsNone(facts["season_fantasy_points_rank"])
         self.assertNotEqual(
-            facts["production"]["points_per_game"],
+            facts["production"]["points_per_observation"],
             row["evaluation"]["decision_context"]["lineup"]["delta"],
         )
-        self.assertIn("Actual production:", row["evaluation"]["explanation_html"])
+        self.assertIn("Sleeper actual production:", row["evaluation"]["explanation_html"])
+        from services.trade_explanation import render_trade_explanation
+        html=render_trade_explanation(row['evaluation'],league_id='league-1')
+        self.assertIn('points per completed-week score observation',html)
+        self.assertNotIn('points/game ·',html)
+
         from services.trade_decision import selected_player_facts
         from services.trade_intelligence import build_trade_workspace
 
@@ -147,7 +161,7 @@ class TradeDecisionExperienceTests(unittest.TestCase):
             facts = selected_player_facts(
                 self.data, workspace["pools"][1], self.f.reader
             )
-            self.assertIsNone(facts["a"]["production"]["points_per_game"])
+            self.assertIsNone(facts["a"]["production"].get("points_per_observation"))
             self.data["canonical_player_production"][field] = original
 
     def test_valid_zero_projection_and_missing_scoring_are_distinct(self):

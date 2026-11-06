@@ -50,8 +50,9 @@ def _asset_context(context: IntelligenceContext, decision: Any) -> AssetContext:
         if decision.competitive_window is not None
         else "Pending canonical window"
     )
+    from src.core.player_value_projection.canonical_production import bound_production_snapshot
     return AssetContext(context.league_id, context.active_roster_id, context.settings, window, decision.profile.strategy, needs, depths, decision.profile.market_context.get("position_counts") or {},
-                        context.cached_data.get("canonical_player_production"), context.projection_snapshot)
+                        bound_production_snapshot(context.cached_data), context.projection_snapshot)
 
 
 def _asset_provider(context: IntelligenceContext, decision: Any) -> tuple[Any, Any, dict[str, Any]]:

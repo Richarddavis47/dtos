@@ -34,8 +34,8 @@ def _player_season_card(season: str, summary: dict) -> str:
             value = summary.get(name)
             return escape(str(value)) if value is not None else 'Unavailable'
         production = (
-            f'<p><b>{metric("season_total")}</b> points · {metric("points_per_game")} PPG</p>'
-            f'<p>Floor {metric("floor")} · Ceiling {metric("ceiling")} · Consistency {metric("consistency_score")}</p>'
+            f'<p><b>{metric("season_total")}</b> observed points · {metric("points_per_game")} points per score observation</p>'
+            f'<p>Retained historical analysis: floor {metric("floor")} · ceiling {metric("ceiling")} · Consistency {metric("consistency_score")}. Score observations do not establish games played or complete season acquisition; historical grades are not revalidated here.</p>'
         )
     return f'<article class="card"><h3>{escape(str(season))}</h3>{production}</article>'
 

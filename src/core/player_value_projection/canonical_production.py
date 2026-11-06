@@ -108,13 +108,13 @@ def canonical_production_context(
     )
 
 
-def prepared_production_context(snapshot: dict[str, Any], *, league_id: str,
+def prepared_analysis_context(snapshot: dict[str, Any], *, league_id: str,
                                 player_id: str) -> ProductionContext:
     """Consume a serialized, pinned preparation without re-querying evidence."""
     if str(snapshot.get('league_id') or '') != str(league_id):
         raise ValueError('Prepared production belongs to another league.')
     row = (snapshot.get('players') or {}).get(str(player_id)) or {}
-    value = row.get('production')
+    value = row.get('non_sleeper_analysis') or row.get('production')
     if not value:
         return ProductionContext((), None, None, 'Unavailable', 'Canonical production',
                                  DataStatus.UNAVAILABLE, None, ('Canonical player production is not prepared.',))
@@ -137,3 +137,54 @@ def prepared_production_context(snapshot: dict[str, Any], *, league_id: str,
         value['volatility'], value['consistency'], value['trend'], value['source'],
         DataStatus(value['status']), value['updated_at'], tuple(value.get('limitations') or ()),
     )
+
+
+def prepared_production_context(snapshot: dict[str, Any], *, league_id: str,
+                                player_id: str, data: dict | None = None) -> ProductionContext:
+    """Only explicitly admitted Sleeper scores are actual fantasy production.
+
+    Legacy reconstructed values remain separate analysis; never relabel them.
+    """
+    from .sleeper_actuals import METHOD, player_context
+    if str(snapshot.get('league_id') or '') != str(league_id):
+        raise ValueError('Prepared production belongs to another league.')
+    actuals = snapshot.get('sleeper_actuals') or {}
+    if data is not None:
+        from .sleeper_actuals import scoring_identity
+        league = data.get('league') or {}
+        scoring = data.get('scoring_settings') or league.get('scoring_settings') or {}
+        source = data.get('season_matchups') or {}
+        if (str(league.get('league_id')) != str(league_id)
+                or str(league.get('season')) != str(snapshot.get('season'))
+                or not scoring or scoring_identity(scoring) != actuals.get('scoring_fingerprint')
+                or source.get('semantic_generation') != actuals.get('source_generation')):
+            actuals = {}
+    if (actuals.get('method_version') != METHOD or actuals.get('league_id') != str(league_id)
+            or str(actuals.get('season')) != str(snapshot.get('season'))
+            or actuals.get('scoring_fingerprint') != snapshot.get('scoring_fingerprint')):
+        return ProductionContext((), None, None, 'Unavailable', 'Sleeper league matchup results',
+            DataStatus.UNAVAILABLE, None, ('Compatible Sleeper actual results are not prepared. Retained non-Sleeper calculations are separate analysis, not authoritative fantasy results.',))
+    from dataclasses import replace
+    context = player_context(actuals, player_id)
+    analysis = ((snapshot.get('players') or {}).get(str(player_id)) or {}).get('non_sleeper_analysis') or {}
+    usage = tuple({key: window.get(key) for key in ('label', 'season', 'observation_count', 'weeks',
+                        'opportunities', 'targets', 'carries', 'receptions', 'touchdowns')}
+                  for window in analysis.get('windows') or ())
+    return replace(context, usage_analysis=usage)
+
+
+def bound_production_snapshot(data: dict) -> dict | None:
+    """Retain reference analysis but suppress results from another source context."""
+    snapshot = data.get('canonical_player_production')
+    if not snapshot:
+        return snapshot
+    from .sleeper_actuals import scoring_identity
+    actuals = snapshot.get('sleeper_actuals') or {}
+    league = data.get('league') or {}
+    settings = data.get('scoring_settings') or league.get('scoring_settings') or {}
+    if (str(snapshot.get('league_id')) != str(league.get('league_id'))
+            or str(snapshot.get('season')) != str(league.get('season'))
+            or not settings or actuals.get('scoring_fingerprint') != scoring_identity(settings)
+            or actuals.get('source_generation') != (data.get('season_matchups') or {}).get('semantic_generation')):
+        return {**snapshot, 'sleeper_actuals': {}}
+    return snapshot

@@ -4,6 +4,7 @@ from src.core.explanations import (
     Explanation, Statement,
 )
 from src.ui.intelligence_presentation import manager_points
+from src.core.player_value_projection.sleeper_actuals import actual_display
 from html import escape
 from services.trade_decision import final_decision, lineup_comparisons
 from services.trade_lineup_evidence import completed_lineup_admissions, weekly_total_display, diagnostic_summary_display
@@ -359,7 +360,7 @@ def _decision_primary(result, decision, admissions=None):
             if (projection.get('refresh_evidence') or {}).get('retained_publication'):
                 brief += paragraph('Using retained projection evidence; latest refresh did not complete.')
             brief += paragraph(projection.get('reason') or projection.get('display_reason'))
-            brief += paragraph(f"Actual production: {manager_points(production['points_per_game'])} points/game · {production['sample_games'] if production['sample_games'] is not None else 'Unknown'} observed games · Season {production['season']} · Selected league scoring.")
+            brief += paragraph(f"Sleeper actual production: {actual_display(production.get('points_per_observation'))} points per completed-week score observation · {production.get('sample_observations') if production.get('sample_observations') is not None else 'Unknown'} observations · Season {production['season']} · Selected league. This is not a games-played average.")
             brief += paragraph('Season fantasy-points rank / points-per-game rank: unavailable; no complete compatible cohort is prepared.')
             brief += '<details><summary>Player fact sources and coverage</summary>'
             brief += paragraph(f"Projection source observation: {projection.get('source_observed_at') or 'Unknown'}; source generation: {projection.get('generation') or 'Unavailable'}.")

@@ -359,7 +359,7 @@ def selected_player_facts(data, assets, projections, *, scoring_supported=None):
         }
         if compatible:
             context = prepared_production_context(
-                prepared, league_id=league_id, player_id=pid
+                prepared, league_id=league_id, player_id=pid, data=data
             )
             average = next(
                 (
@@ -369,10 +369,12 @@ def selected_player_facts(data, assets, projections, *, scoring_supported=None):
                 ),
                 None,
             )
-            sample = (prepared.get("players") or {}).get(pid) or {}
             production.update(
-                points_per_game=average,
-                sample_games=sample.get("current_sample_count"),
+                points_per_game=None,
+                points_per_observation=average,
+                sample_games=None,
+                sample_observations=next((w.observation_count for w in context.windows if w.label == "Season Average"), None),
+                denominator="completed_week_score_observations_not_games_played",
                 source=context.source,
                 generation=prepared["generation"],
                 observed_at=context.updated_at,

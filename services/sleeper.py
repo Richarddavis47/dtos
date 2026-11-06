@@ -100,7 +100,20 @@ def load_cache(
         if cached_league != str(league_id):
             raise ValueError("Cached Sleeper league identity does not match the requested runtime.")
         from src.core.intelligence.team_strength import restore_cached_week_keys
-        restore_cached_week_keys(payload.get('data') or {})
+        restored_data = payload.get('data') or {}
+        restore_cached_week_keys(restored_data)
+        # Restore derived actuals from retained source rows only, within the
+        # already admitted cache lifecycle. No acquisition or global store read.
+        prepared = restored_data.get('canonical_player_production')
+        if not isinstance(prepared, dict) and restored_data.get('season_matchups'):
+            from src.core.player_value_projection.sleeper_actuals import scoring_identity
+            league = restored_data.get('league') or {}
+            prepared = {'league_id': str(league_id), 'season': league.get('season'), 'players': {},
+                        'scoring_fingerprint': scoring_identity(restored_data.get('scoring_settings') or league.get('scoring_settings') or {})}
+            restored_data['canonical_player_production'] = prepared
+        if isinstance(prepared, dict) and str(prepared.get('league_id')) == str(league_id):
+            from services.player_evidence import attach_sleeper_actuals
+            attach_sleeper_actuals(restored_data, prepared)
         state.update(safe_sync_state(payload))
         state["syncing"] = False
         state["transactions_syncing"] = False
@@ -224,6 +237,7 @@ async def _sync_sleeper(
                 season_matchups = await prepare_season_matchups(
                     league, matchup_week, matchups,
                     lambda path: sleeper_get(client, path), observed_at=utcnow().isoformat(),
+                    previous=(state.get("data") or {}).get("season_matchups"),
                 )
                 from src.core.history_context.transaction_periods import acquire_previous_periods
                 season_transactions, transaction_acquisition = await acquire_previous_periods(
@@ -429,7 +443,7 @@ async def _sync_sleeper(
                         "slot": player.get("starter_slot") or (
                             lineup_slots[index] if index < len(lineup_slots) else "START"
                         ),
-                        "points": round(starter_points[player_id], 2) if starter_points[player_id] is not None else None,
+                        "points": starter_points[player_id],
                     })
                 bench = []
                 for player_id in (m.get("players") or []):
@@ -444,7 +458,7 @@ async def _sync_sleeper(
                         "name": player.get("name") or pid,
                         "position": player.get("position") or "—",
                         "nfl_team": player.get("team") or "Vacant",
-                        "points": round(number(players_points.get(pid)), 2) if number(players_points.get(pid)) is not None else None,
+                        "points": source_player_actual(m, pid),
                     })
                 matchup_groups.setdefault(matchup_id, []).append({
                     "team": team["team_name"],

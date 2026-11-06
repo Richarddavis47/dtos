@@ -62,6 +62,7 @@ class ProductionWindow:
     scored_count: int | None = None
     weeks: tuple[int, ...] = ()
     missing_components: tuple[str, ...] = ()
+    observed_total: float | None = None
 
 
 @dataclass(frozen=True)
@@ -74,6 +75,13 @@ class ProductionContext:
     status: DataStatus
     updated_at: str | None
     limitations: tuple[str, ...] = ()
+    authority: str | None = None
+    source_generation: str | None = None
+    league_id: str | None = None
+    scoring_fingerprint: str | None = None
+    observations: tuple[dict[str, Any], ...] = ()
+    periods: dict[str, Any] = field(default_factory=dict)
+    usage_analysis: tuple[dict[str, Any], ...] = ()
 
 
 @dataclass(frozen=True)

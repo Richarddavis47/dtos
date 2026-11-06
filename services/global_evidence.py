@@ -45,7 +45,8 @@ def canonical_player_evidence(player_id: str, data: dict, *, expected_league_id:
         return {'availability': 'unavailable', 'reason': 'league_scoring_unknown', 'league_id': league_id}
     store = retained_global_evidence(path)
     if store is None:
-        return {'availability': 'not_connected', 'reason': 'global_evidence_not_retained', 'league_id': league_id}
+        return {'availability': 'not_connected', 'reason': 'global_analysis_not_retained', 'league_id': league_id,
+                'production': _sleeper_production(data, player_id, as_of or datetime.now(timezone.utc).isoformat()), 'provider_calls': 0}
     boundary = as_of or datetime.now(timezone.utc).isoformat()
     production = GlobalProduction(store).league_scored(player_id, league_id=league_id,
         scoring_settings=scoring, as_of=boundary, season=season,
@@ -76,12 +77,30 @@ def canonical_player_evidence(player_id: str, data: dict, *, expected_league_id:
     assessment = assess_availability(connected=True, applicable=True,
         value_present=bool(production['games']), checked_at=checked,
         as_of=boundary, evidence_family='performance', completed_period=completed_period)
+    actual = _sleeper_production(data, player_id, boundary)
     return {'league_id': league_id, 'player_id': player_id, 'season': season,
-            'availability': assessment.state.value, 'availability_detail': asdict(assessment),
-            'production': production, 'usage': player_usage(store, player_id, season=season, as_of=boundary,
+            'availability': actual['availability'], 'analysis_availability_detail': asdict(assessment),
+            'production': actual,
+            'non_sleeper_analysis': {**production, 'source': 'NFLverse statistics under selected scoring: analysis only, not Sleeper actual results'}, 'usage': player_usage(store, player_id, season=season, as_of=boundary,
                 through_week=production.get('completed_week_boundary')),
             'schedule': schedule,
             'scoring_fingerprint': hashlib.sha256(json.dumps(scoring, sort_keys=True, separators=(',', ':')).encode()).hexdigest(),
-            'source_check': receipt, 'provider_calls': 0,
+            'analysis_source_check': receipt, 'provider_calls': 0,
             'limitations': ['historical_publication_time_not_inferred', 'no_current_or_prior_season_substitution']
                 + (['latest_source_check_' + receipt['status']] if receipt and receipt['status'] != 'complete' else [])}
+
+
+def _sleeper_production(data, player_id, as_of):
+    from src.core.player_value_projection.canonical_production import prepared_production_context
+    league_id = str((data.get('league') or {}).get('league_id') or '')
+    snapshot = data.get('canonical_player_production') or {'league_id': league_id}
+    context = prepared_production_context(snapshot, league_id=league_id, player_id=player_id, data=data)
+    rows = [row for row in context.observations
+            if row.get('retrieved_at') and utc(row['retrieved_at']) <= utc(as_of)]
+    # A later admitted correction cannot be reconstructed as an earlier score.
+    window = next((w for w in context.windows if w.label == 'Season Average'), None)
+    current = bool(context.updated_at and utc(context.updated_at) <= utc(as_of))
+    return {'source': 'Sleeper league matchup results', 'games': rows,
+            'ppg': None, 'points_per_observation': window.fantasy_points if current and window else None,
+            'denominator': 'completed-week score observations, not games played',
+            'availability': context.status.value if current else 'unavailable'}

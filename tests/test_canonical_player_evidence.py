@@ -25,21 +25,23 @@ class CanonicalPlayerEvidenceTests(unittest.TestCase):
                         'scoring_settings': {'rec': multiplier}}
                 result = canonical_player_evidence('1', data, expected_league_id=league_id,
                     path=path, as_of='2026-02-01T00:00:00Z')
-                self.assertEqual(result['production']['ppg'], 5 * multiplier)
+                self.assertEqual(result['non_sleeper_analysis']['ppg'], 5 * multiplier)
                 self.assertEqual(result['provider_calls'], 0)
+                self.assertIsNone(result['production']['ppg'])
+                self.assertEqual(result['production']['source'], 'Sleeper league matchup results')
                 data['league']['season'] = '2026'
                 result = canonical_player_evidence('1', data, expected_league_id=league_id,
                     path=path, as_of='2026-02-01T00:00:00Z')
-                self.assertIsNone(result['production']['ppg'])
+                self.assertIsNone(result['non_sleeper_analysis']['ppg'])
             self.assertEqual(store.counts(), {'production': 1})
             store.record_source_check('nflverse/production/2025', source_identity='later',
                 checked_at='2026-03-01T00:00:00Z', status='complete', details={})
             data = {'league': {'league_id': 'A', 'season': '2025'}, 'scoring_settings': {'rec': 1}}
             historical = canonical_player_evidence('1', data, expected_league_id='A',
                 path=path, as_of='2026-02-01T00:00:00Z')
-            self.assertIsNone(historical['source_check'])
-            self.assertEqual(historical['production']['ppg'], 5)
-            self.assertNotEqual(historical['availability_detail']['reason'], 'observation_after_as_of')
+            self.assertIsNone(historical['analysis_source_check'])
+            self.assertEqual(historical['non_sleeper_analysis']['ppg'], 5)
+            self.assertNotEqual(historical['analysis_availability_detail']['reason'], 'observation_after_as_of')
             data['players'] = {'1': {'team': 'FUTURE'}}
             historical = canonical_player_evidence('1', data, expected_league_id='A',
                 path=path, as_of='2026-02-01T00:00:00Z')

@@ -46,10 +46,10 @@ class CurrentProductionBrowserTests(unittest.TestCase):
                             panel=page.locator('.canonical-production')
                             panel.evaluate("e=>{for(let p=e.parentElement;p;p=p.parentElement)if(p.tagName==='DETAILS')p.open=true}")
                             self.assertIn(expected,panel.inner_text())
-                            table=panel.locator('table')
+                            table=panel.locator('table').first
                             self.assertGreaterEqual(table.evaluate('e=>e.getBoundingClientRect().width'),672)
                             self.assertEqual(table.evaluate('e=>getComputedStyle(e).overflowWrap'),'normal')
-                            region=panel.get_by_role('region',name='Canonical production observations')
+                            region=panel.get_by_role('region',name='Sleeper result windows')
                             region.focus()
                             self.assertNotEqual(region.evaluate('e=>getComputedStyle(e).outlineStyle'),'none')
                             self.assertLessEqual(page.evaluate('document.documentElement.scrollWidth-innerWidth'),0)
@@ -58,32 +58,37 @@ class CurrentProductionBrowserTests(unittest.TestCase):
                             with patch.dict(dtos_app.STATE,{'data':f.f.data}):
                                 response=page.goto('http://fixture/market?selected=player%3A1')
                                 self.assertEqual(response.status,200)
-                                inspect('8 of 8 observations')
+                                inspect('8 of 8 completed-week score observations')
                                 self.assertIn('18.00 fantasy points',page.locator('.canonical-production').inner_text())
                                 canonical=f.api()['windows'][3]
                                 if dest:
                                     page.screenshot(path=str(dest/f'complete-market-{league}-{w}.png'))
                                 response=page.goto('http://fixture/players/1?front_office=4')
                                 self.assertEqual(response.status,200)
-                                inspect('8 of 8 observations')
+                                inspect('8 of 8 completed-week score observations')
                                 self.assertNotIn('This player context does not include a season production summary',page.locator('body').inner_text())
                                 if dest:
                                     page.screenshot(path=str(dest/f'complete-dossier-{league}-{w}.png'))
-                                f.set_scoring({'pass_yd':.04,'st_ff':1,'sack':1})
+                                # A real source-field conflict, not missing NFLverse
+                                # statistics, blocks dependent Sleeper windows.
+                                f.f.data['season_matchups']['weeks']['1']['rows'][0]['starters_points']=[999]
+                                f.republish_actuals()
                                 page.reload()
-                                panel=inspect('0 of 8 observations')
-                                self.assertIn('st_ff',panel.inner_text())
-                                self.assertIn('average is withheld',panel.inner_text())
+                                panel=inspect('7 of 8 completed-week score observations')
+                                self.assertIn('missing or contradictory',panel.inner_text())
+                                self.assertIn('are withheld',panel.inner_text())
                                 self.assertIsNone(f.api()['windows'][3]['fantasy_points'])
                                 response=page.goto('http://fixture/market?selected=player%3A1')
                                 self.assertEqual(response.status,200)
-                                inspect('0 of 8 observations')
+                                inspect('7 of 8 completed-week score observations')
                                 f.f.state['last_error']='Disposable league refresh failure'
                                 page.reload()
                                 panel=inspect('league refresh did not complete')
-                                self.assertIn('0 of 8 observations',panel.inner_text())
+                                self.assertIn('7 of 8 completed-week score observations',panel.inner_text())
                                 if dest:
                                     page.screenshot(path=str(dest/f'partial-retained-{league}-{w}.png'))
+                                panel.get_by_text('Weekly Sleeper scores and coverage',exact=True).click()
+                                self.assertIn('Sleeper score records disagree',panel.inner_text())
                                 count=len(requests)
                                 for details in page.locator('details').all():
                                     details.evaluate('e=>e.open=!e.open')
