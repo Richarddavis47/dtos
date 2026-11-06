@@ -1,0 +1,10 @@
+{
+  "scope": "Guarded publication tooling only; no application source changes or full-suite reruns",
+  "runtime": "Python3.14.3 in pinned existing offline2GiB/no-swap/twoCPU container",
+  "tests": 49,
+  "tests_command": "DTOS_RESOURCE_SOURCE=/workspace/dtos-publisher-2237 python run-constrained.py -m unittest tests.test_release_publisher -v",
+  "lint_command": "DTOS_RESOURCE_SOURCE=/workspace/dtos-publisher-2237 python run-constrained.py -m ruff check --no-cache tools/release tests/test_release_publisher.py",
+  "lint": "PASS",
+  "earlier_invocation": "Host ruff executable unavailable (exit127); original log preserved. Same lint rules then passed in the established validation runtime.",
+  "offline_native_guards": "PASS: recovery archive, prior archive,14original artifacts,12mandatory jobs; record recovery-offline-verified.json"
+}

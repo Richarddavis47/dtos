@@ -1,8 +1,8 @@
 {
   "candidate": "4fb702964b34d84a593fb917b5e654b9b8ff0adf",
   "tree": "4051883efb1f225dcd71e07f1998e45c9d96fb39",
-  "merge": null,
-  "status": "HELD \u2014 hosted canonical attempt2 pending; not released",
+  "merge": "1e1234fbcf7ca18f3862e5cdeac1451780e51b49",
+  "status": "DEPLOYED / live Granite acceptance HELD",
   "files": [
     {
       "name": ".gitattributes",
@@ -15,9 +15,24 @@
       "sha256": "f3b82f8f1d2238c85f4bd68028dfec0ca21c6ad0a3dfc2004f847959062abf60"
     },
     {
+      "name": "2237-recovery.zip",
+      "bytes": 94091078,
+      "sha256": "f550ef481e99c7b20dfed2d347778228fe6063de27a7767d2e8f9e8b3e542538"
+    },
+    {
       "name": "BASELINE.json",
       "bytes": 517,
       "sha256": "8a8fbf1a995171fb4ecd91c4d2a56d6731e4329ea311dfd30150612db9566cef"
+    },
+    {
+      "name": "FINAL_STATUS.json",
+      "bytes": 1030,
+      "sha256": "33668f3b3acb2ba22f91efe13776e0fc11887a9bc996d44470db36fe4f41bf00"
+    },
+    {
+      "name": "LIVE_ACCEPTANCE_FINAL.json",
+      "bytes": 1209,
+      "sha256": "5d0b11f66e428d5d63517c14ace7c99d327b271ff2ab657237b71349a0aa0143"
     },
     {
       "name": "LIVE_ACCEPTANCE_STATUS.json",
@@ -26,13 +41,18 @@
     },
     {
       "name": "LOG_INDEX.md",
-      "bytes": 33252,
-      "sha256": "0c746daf572859e13b01db965947c12b5e910574fc517334a69fc7045b99667f"
+      "bytes": 62310,
+      "sha256": "fced1f8533f8a47a2294e19980efddca13e06af751bb07cb52bb04854768f81b"
     },
     {
       "name": "README.md",
-      "bytes": 2802,
-      "sha256": "fda5eaefdf6843395e26a50854986d0701f459c7c3b3e23aad7c397be4190cf7"
+      "bytes": 3159,
+      "sha256": "e0601f92be4666ad0e596d4825a9080882764016d335e768c4adb4f80266bc2f"
+    },
+    {
+      "name": "REPORT.md",
+      "bytes": 12296,
+      "sha256": "ada97973f7b7695dcf20549c59deec2a4d68b4bc756a2e2a7fc5fc4fd48e3e8a"
     },
     {
       "name": "SCOUT_HANDOFF.md",
@@ -65,9 +85,19 @@
       "sha256": "32dbf71d1756d3987574cdc9670a836a596e031b75f5e43db4498c07a77e53f5"
     },
     {
+      "name": "canonical-artifact-metadata.json",
+      "bytes": 914,
+      "sha256": "45fc949276b94985a01d7af43e2deb1cac05b894c63a4bf08d7067d591581aa0"
+    },
+    {
       "name": "canonical-final-console.log",
       "bytes": 1716,
       "sha256": "cb15f43c8b9dac1757f459e49f853287acad7293b7b4b5b308f939ff6ffd0aaa"
+    },
+    {
+      "name": "checkpoint-readable-verification.json",
+      "bytes": 1365,
+      "sha256": "1fb100a9eb1687b9407e0323124145975085013306d58cb7b43fe80b61122fad"
     },
     {
       "name": "checkpoint-status.json",
@@ -76,8 +106,8 @@
     },
     {
       "name": "commands.md",
-      "bytes": 6680,
-      "sha256": "277bed9c4ccb1768143f264d6392ae40bcc120d0f14789de00f315e960869209"
+      "bytes": 6829,
+      "sha256": "b990d63bf5cc789d41bae56e89b863d8cd17ecdbd5bca5e7e108dec9dfb47b47"
     },
     {
       "name": "complete-payload-verification.log",
@@ -100,6 +130,21 @@
       "sha256": "16a60148db5da1e0b5865b25ec3c9e4d21f2565d035c53fa80fed99471966faf"
     },
     {
+      "name": "draft-creation.log",
+      "bytes": 65,
+      "sha256": "1d970803e7492a24bcbab5f50e46f36f35745e5333af30e2d097b9046914489b"
+    },
+    {
+      "name": "finalize-plan.py",
+      "bytes": 4699,
+      "sha256": "59c273ee3ce13f47a563560c3e43331f00c7e66acb6fb83a79f8840fadf68c0d"
+    },
+    {
+      "name": "fixture-locations.json",
+      "bytes": 1988,
+      "sha256": "5b57c39b2db63aab1e30e19de3fa0da062fe017aa7c30dd8c4dfbe02a1e01ea3"
+    },
+    {
       "name": "fixture-metadata.json",
       "bytes": 2299,
       "sha256": "501732f384a75489db206a62bf7947afcecd47ab8cb1b5ac07c99ca5ac201830"
@@ -108,6 +153,1111 @@
       "name": "focused-final-exact.log",
       "bytes": 501811,
       "sha256": "41ea97a16280b61f8d2b34df169f244e6477deb9942ee364414949a06ca35983"
+    },
+    {
+      "name": "host-canonical/SHA256SUMS",
+      "bytes": 69891,
+      "sha256": "d9bc71d74b114c38efe368d97c6a7a1bbb0d7cc22ae56b1b28fcb1e3ab25b965"
+    },
+    {
+      "name": "host-canonical/canonical-trace.jsonl",
+      "bytes": 6653,
+      "sha256": "068391e024defe62dfe338f26d02e79ce5789b794da4c8721b27868e15f2fa2a"
+    },
+    {
+      "name": "host-canonical/canonical.log",
+      "bytes": 803,
+      "sha256": "390aacab3f8233e2bbd23fe867b823e24a89cb388e4302cfcfe0758051cdd079"
+    },
+    {
+      "name": "host-canonical/console-001.log",
+      "bytes": 59925,
+      "sha256": "d455a4006ae81618bc191ac82d0f355f39a8c983f43c1c66e084878971abce81"
+    },
+    {
+      "name": "host-canonical/console-002.log",
+      "bytes": 59769,
+      "sha256": "3b55c6d4bf0bca8f9aa6024cfeed5045f2269cc8424b073eba1a1a7c9f62b229"
+    },
+    {
+      "name": "host-canonical/console-003.log",
+      "bytes": 59912,
+      "sha256": "c9ab35d6c026ce2e9a43d99a45048c0996f91d5453032c9fe8731bcf19ad953a"
+    },
+    {
+      "name": "host-canonical/console-004.log",
+      "bytes": 58373,
+      "sha256": "da81375a275750be94320182f52ffced20557acda8847046bdd97cb61ce7390e"
+    },
+    {
+      "name": "host-canonical/console-005.log",
+      "bytes": 58282,
+      "sha256": "419a6733580c753e7436cbab7348269830b51ce8f1b5bbafd319e1d4933f30fd"
+    },
+    {
+      "name": "host-canonical/console-006.log",
+      "bytes": 59147,
+      "sha256": "b7d2a921e615fa34e686394b91e4fd780bcefefac4716be6f41c72ce1ce8021c"
+    },
+    {
+      "name": "host-canonical/console-007.log",
+      "bytes": 59149,
+      "sha256": "0938ecbe6c9618a846c23949fe662e8faae30db7c496cffacaf0f7699868542c"
+    },
+    {
+      "name": "host-canonical/console-008.log",
+      "bytes": 59154,
+      "sha256": "0e95ff68d9455cfca8229a5addd456a505c33ca8ddb6117c3e58e6668c4f2331"
+    },
+    {
+      "name": "host-canonical/console-009.log",
+      "bytes": 57978,
+      "sha256": "e804a4003a235f521a40b2b0736d4f0d5b350216c5ab2eb38c7614ecca176b8a"
+    },
+    {
+      "name": "host-canonical/console-010.log",
+      "bytes": 59152,
+      "sha256": "f75d4b281b8c210445f41acf0271c2b3d720db8e3e78f9c0ec2af7e2816515bb"
+    },
+    {
+      "name": "host-canonical/console-011.log",
+      "bytes": 59167,
+      "sha256": "f949e7605addd6e9ec79d9b6b50b6e8e36d6551ab38214c10c5260c4185de887"
+    },
+    {
+      "name": "host-canonical/console-012.log",
+      "bytes": 59766,
+      "sha256": "d8acc8a18b8ada81caf39ad0628e8b1c880a4ad77b1b6e462183c897e2f4f16d"
+    },
+    {
+      "name": "host-canonical/console-013.log",
+      "bytes": 59738,
+      "sha256": "34e19794259e1dbff5675f9c16f1e8ccee1a8c9394ccb25a43d49cb236f4ac65"
+    },
+    {
+      "name": "host-canonical/console-014.log",
+      "bytes": 59876,
+      "sha256": "4df81898f48bf9a278eaa74d7ef6fc771e75d19c792c8433a685f5da4a4ec97c"
+    },
+    {
+      "name": "host-canonical/console-015.log",
+      "bytes": 59815,
+      "sha256": "9abf158090f97dc31e161c40547cfbc8027479f3b928839b7a4890449365443d"
+    },
+    {
+      "name": "host-canonical/console-016.log",
+      "bytes": 59619,
+      "sha256": "f4bf9ee82baa7a776cb46e27a6bdeef459f451dbeb93c1d3bf268bd36a79246a"
+    },
+    {
+      "name": "host-canonical/console-017.log",
+      "bytes": 59960,
+      "sha256": "5ab759da86b4066155647651c725b64dd52ffb61bc5f7c32f1a8da54ad47ca5c"
+    },
+    {
+      "name": "host-canonical/console-018.log",
+      "bytes": 59785,
+      "sha256": "3b5350a656efa6f3c20718d89dd2e7101fc5dfd86994677f11d1f148f9697228"
+    },
+    {
+      "name": "host-canonical/console-019.log",
+      "bytes": 59731,
+      "sha256": "16f2baeb11fc4701c17efe4a2d2f07dbfde2e8256c97125ad52e583878a493ef"
+    },
+    {
+      "name": "host-canonical/console-020.log",
+      "bytes": 59960,
+      "sha256": "b47616a10d8f2578c82226ae05c17ff63874b225738fe511e87f6886e038dfd8"
+    },
+    {
+      "name": "host-canonical/console-021.log",
+      "bytes": 59922,
+      "sha256": "b68698b0bd646b7a2e41259c7b395225a51af9dcb976d0328c144e3193402871"
+    },
+    {
+      "name": "host-canonical/console-022.log",
+      "bytes": 59977,
+      "sha256": "43dbb24a1d6189ac6b596665faa929db6dfa0eafb485c6c57e1a7426b02c5c57"
+    },
+    {
+      "name": "host-canonical/console-023.log",
+      "bytes": 59907,
+      "sha256": "2ee4b3135132ea0d56df8f2a322fdc62c97d46a539af9dc03439fba10170fbf6"
+    },
+    {
+      "name": "host-canonical/console-024.log",
+      "bytes": 59871,
+      "sha256": "e7776217aa3dc279327a74d458652cdf72bbeca2bc1adb93326a2f75e00c5692"
+    },
+    {
+      "name": "host-canonical/console-025.log",
+      "bytes": 59882,
+      "sha256": "b0fea57f9736ed4997d1d6027e8d9f02f51e80f17d49ab76d86770ba5314e01d"
+    },
+    {
+      "name": "host-canonical/console-026.log",
+      "bytes": 59790,
+      "sha256": "f7328c16cf8130648d62572639eefe2e75a7ff75d325dbfff604457edccafa2b"
+    },
+    {
+      "name": "host-canonical/console-027.log",
+      "bytes": 59756,
+      "sha256": "dd648dea7f3490d3b31cbdd4075da8c29f1afc9245dd6fed0d0573f614a7294f"
+    },
+    {
+      "name": "host-canonical/console-028.log",
+      "bytes": 58219,
+      "sha256": "bcd60d1f3ae173a6f293c0bd3de0852403b4b52f5b246c28c8c471837847db32"
+    },
+    {
+      "name": "host-canonical/console-029.log",
+      "bytes": 59778,
+      "sha256": "9ae547d26cda4e889e85c9fa3bc855b299bd162304166ca92d60d3977f73591f"
+    },
+    {
+      "name": "host-canonical/console-030.log",
+      "bytes": 59940,
+      "sha256": "e9c3121249e670c004cf6a11b8fb6fc9eb387240289387b027d26763ed097d84"
+    },
+    {
+      "name": "host-canonical/console-031.log",
+      "bytes": 59700,
+      "sha256": "b70b8c4c38aa54b4ed0a39443146a21515cb34009778bd5dd98fa08038a67368"
+    },
+    {
+      "name": "host-canonical/console-032.log",
+      "bytes": 59698,
+      "sha256": "09d5db91043ffd0795c0d835aa9279b9300c4197e3d68829a372cbda2e3dd6b5"
+    },
+    {
+      "name": "host-canonical/console-033.log",
+      "bytes": 59764,
+      "sha256": "aa4bd8c92bd974a31c844fd39789c499c1f756f063e7d1d18a41e56c65d5af6a"
+    },
+    {
+      "name": "host-canonical/console-034.log",
+      "bytes": 59811,
+      "sha256": "ab155553c5b9537a8c89659876b1ae6a53334904a91407c40fb80361b69dd4c9"
+    },
+    {
+      "name": "host-canonical/console-035.log",
+      "bytes": 59685,
+      "sha256": "2732f860fd81e4ed71461e063d53f046dc7760792adc707c712d547791aa602c"
+    },
+    {
+      "name": "host-canonical/console-036.log",
+      "bytes": 59593,
+      "sha256": "0ff81c4b62b937bf54abb53761686c24b49c2355b936ef1c12baed4c13811ac5"
+    },
+    {
+      "name": "host-canonical/console-037.log",
+      "bytes": 59704,
+      "sha256": "7a673b16a6ab2b0b26ad1ebc468e2fb2ea145040b58950e1455ae70b80a8c92a"
+    },
+    {
+      "name": "host-canonical/console-038.log",
+      "bytes": 59881,
+      "sha256": "bb6ff5fb9602d46002af82b6603230975b276f673cb189ce479c5adb52bb4578"
+    },
+    {
+      "name": "host-canonical/console-039.log",
+      "bytes": 56805,
+      "sha256": "a1e91f665236af11ab55100b5197fbf71e35353a67a6f7150dccd6b9d595fe89"
+    },
+    {
+      "name": "host-canonical/console-040.log",
+      "bytes": 59918,
+      "sha256": "453aff5b350ee3f51947cd7811b3f2a971d488cd4a6fa379a70208eb6924d20a"
+    },
+    {
+      "name": "host-canonical/console-041.log",
+      "bytes": 59944,
+      "sha256": "91d8327b6c1af0771eaa4db97877335080f8debfa33af9498d9945a3244813d2"
+    },
+    {
+      "name": "host-canonical/console-042.log",
+      "bytes": 59960,
+      "sha256": "0d95b3e351174446298daabff29cb4358b96f0a72a61ef92df7f9113d6b95977"
+    },
+    {
+      "name": "host-canonical/console-043.log",
+      "bytes": 58159,
+      "sha256": "78921799beac87a1cd21e2aca5f3ae772bdeb868f8205ed921fb87299c89be0e"
+    },
+    {
+      "name": "host-canonical/console-044.log",
+      "bytes": 59800,
+      "sha256": "8067c02458633b6304717e7ad996a7b2e8846ce441753443be537b54a5827e85"
+    },
+    {
+      "name": "host-canonical/console-045.log",
+      "bytes": 59726,
+      "sha256": "cb08c76b09410b30053ee13311aefbb63307efb9a51a530a60d5f5685057fe2d"
+    },
+    {
+      "name": "host-canonical/console-046.log",
+      "bytes": 59936,
+      "sha256": "55c2f27da24e8d06ad3aa8ae9196fce07e0ecf5da0cee6c0e4e4c8eba1caa90d"
+    },
+    {
+      "name": "host-canonical/console-047.log",
+      "bytes": 59875,
+      "sha256": "ea6fd75607c830d719b0b91bd4ab98d659b0557b5c9b009939483e5bdd08b45d"
+    },
+    {
+      "name": "host-canonical/console-048.log",
+      "bytes": 58772,
+      "sha256": "58457c76a60518e44a7b2cfd8cf6d96a4ef036e1fe26cf7b1e54a19e9cfd5eb2"
+    },
+    {
+      "name": "host-canonical/console-049.log",
+      "bytes": 59593,
+      "sha256": "d2700649b8c5adf2ae09731d04c4dfe717b5cd75c4d8cfe747cf820fab348ce3"
+    },
+    {
+      "name": "host-canonical/console-050.log",
+      "bytes": 59033,
+      "sha256": "52cd5489fd243f6803858e0830be13ce8f14359a8d1bf234f841e3aa32a3dd41"
+    },
+    {
+      "name": "host-canonical/console-051.log",
+      "bytes": 59993,
+      "sha256": "ea3ee1b1e3ecc234bf4df6fdf9d228248af459943c824cf03e7a1717086a668f"
+    },
+    {
+      "name": "host-canonical/console-052.log",
+      "bytes": 59637,
+      "sha256": "6b9f1765de7e9bfad477e67f39f7d718a1805433ccdd3e1a2df371ddfadc03b3"
+    },
+    {
+      "name": "host-canonical/console-053.log",
+      "bytes": 59485,
+      "sha256": "3816e23e1224a3a7478be85c1fbb933e9bd66f13a00dc7d569ccbfb55cb79d84"
+    },
+    {
+      "name": "host-canonical/console-054.log",
+      "bytes": 59566,
+      "sha256": "85604b34481cc8ae368b1c2418c79e5de57da525fbbc7233472f48c901647283"
+    },
+    {
+      "name": "host-canonical/console-055.log",
+      "bytes": 59949,
+      "sha256": "bd4e360d7af65a3068589f0f01d08affd25c4be2d42618f16e65c91f668da1f4"
+    },
+    {
+      "name": "host-canonical/console-056.log",
+      "bytes": 59663,
+      "sha256": "1207906c1a0f9cc6b118df09cb2ae9f9ad1f092d35c1948db4bf014270ad733c"
+    },
+    {
+      "name": "host-canonical/console-057.log",
+      "bytes": 59038,
+      "sha256": "e0c3f8d0d56306f805515623769c0729d0bc911bddd855a47fe48acbd854e63e"
+    },
+    {
+      "name": "host-canonical/console-058.log",
+      "bytes": 59937,
+      "sha256": "472117f889ae5a13658e829ac02daf416f001745f63d7b5fa37edb4e3b02980b"
+    },
+    {
+      "name": "host-canonical/console-059.log",
+      "bytes": 59588,
+      "sha256": "c424a53b7c43778da82342e27d35b9c5512728616436e23c084c468dcd5fe72a"
+    },
+    {
+      "name": "host-canonical/console-060.log",
+      "bytes": 59915,
+      "sha256": "03d3044bf025cc77ba1d9b9ca3dbee5d13788b4eb5bd30b9b5fc16cd10ab00f0"
+    },
+    {
+      "name": "host-canonical/console-061.log",
+      "bytes": 59886,
+      "sha256": "c4a6818fcd01e4a29f75b016ddd57a9cb85595019bb4f8b7d389d744f4c99fbc"
+    },
+    {
+      "name": "host-canonical/console-062.log",
+      "bytes": 59877,
+      "sha256": "137eb9c883a352ad2e239c53e38179a4a88c1066deb020ecbffd9f8759da85cd"
+    },
+    {
+      "name": "host-canonical/console-063.log",
+      "bytes": 59817,
+      "sha256": "37cc6cd02a7558a7ccc89b62e1333268bc80b89e69823c7d1ae970e1d2283789"
+    },
+    {
+      "name": "host-canonical/console-064.log",
+      "bytes": 59771,
+      "sha256": "a2a826fbe6c39ee4f6c8f2ea35e53022abcb6d5ee80654f36abc0df540c8a54b"
+    },
+    {
+      "name": "host-canonical/console-065.log",
+      "bytes": 59881,
+      "sha256": "6de3e68c42b8213e07a7e562493a9e7cce4e5a15262a554435b8a149e9e94b53"
+    },
+    {
+      "name": "host-canonical/console-066.log",
+      "bytes": 59171,
+      "sha256": "01e5bdd9448c38d8a3ee3eaba9f0fe07e830d466494e365fc7937497f88de006"
+    },
+    {
+      "name": "host-canonical/console-067.log",
+      "bytes": 59597,
+      "sha256": "d5d967762ba49a1aa44139d98eedf5772770c892f8dd525c5b07d69874e4bbec"
+    },
+    {
+      "name": "host-canonical/console-068.log",
+      "bytes": 58459,
+      "sha256": "50762deaad0056d644fdcb49585c2925153a2359ce425507427a7e382b3fc10f"
+    },
+    {
+      "name": "host-canonical/console-069.log",
+      "bytes": 59365,
+      "sha256": "f483a5a55a6181afe6fe9d9a140cde05df79e50b7940dafcfa3a8cf9ef16ac37"
+    },
+    {
+      "name": "host-canonical/console-070.log",
+      "bytes": 59008,
+      "sha256": "ff067863c0997fa6272d9c5ce2c6512296cbe4fd8963211a610f2b4298f180e1"
+    },
+    {
+      "name": "host-canonical/console-071.log",
+      "bytes": 59657,
+      "sha256": "76ecca28fe60f3825e5fcc0c74233b5c7ea1ebbbe1a9e964f7874df596cf6d77"
+    },
+    {
+      "name": "host-canonical/console-072.log",
+      "bytes": 59670,
+      "sha256": "b2bc74eb8812e0577e7f1cc90b17716b01bf52a4d3c9b3c17522f4eb4dbe5b70"
+    },
+    {
+      "name": "host-canonical/console-073.log",
+      "bytes": 59101,
+      "sha256": "e86fdb6604e9248fcaac406f723a71233b2e8b06580ad2b05a7218dbaa32bce4"
+    },
+    {
+      "name": "host-canonical/console-074.log",
+      "bytes": 59692,
+      "sha256": "5241446a3cf6962194b36591c091d51302de407d394a2b77b8a09b1ddf696c65"
+    },
+    {
+      "name": "host-canonical/console-075.log",
+      "bytes": 59969,
+      "sha256": "0f620db9f6ae0a8722e3b955756c2a35d62a2dece62dafe4b305ff1ad0db28a9"
+    },
+    {
+      "name": "host-canonical/console-076.log",
+      "bytes": 59769,
+      "sha256": "cd497d584c51ca565e953285791cc8e908d3c42665dca75dbe6355975313e31f"
+    },
+    {
+      "name": "host-canonical/console-077.log",
+      "bytes": 59681,
+      "sha256": "48238ae6d81283336a9e37d53e2c33a4e4db64330b5203febd5755b591b13a74"
+    },
+    {
+      "name": "host-canonical/console-078.log",
+      "bytes": 59790,
+      "sha256": "34111d610ec584be303fa7d53b1ebfe35d67cc2709c4d0a6132951cfba8a9dc0"
+    },
+    {
+      "name": "host-canonical/console-079.log",
+      "bytes": 59865,
+      "sha256": "eff88337cbb412674452297c77c55bf2b172f380cece568564daeb5c1349c0d6"
+    },
+    {
+      "name": "host-canonical/console-080.log",
+      "bytes": 59871,
+      "sha256": "3dbdf2ad40e01aa110c05c31e17e319b3be8c6452bc7fd5b0610afbce5fd656d"
+    },
+    {
+      "name": "host-canonical/console-081.log",
+      "bytes": 59566,
+      "sha256": "8b4d60767cd96a809f6b25c2716aca8f59fb04042ca24984ca533d5f4529b0c0"
+    },
+    {
+      "name": "host-canonical/console-082.log",
+      "bytes": 59479,
+      "sha256": "bc3386b8b97535d63d3200841136abe390f276ec66b8050c5e97e6ba22427270"
+    },
+    {
+      "name": "host-canonical/console-083.log",
+      "bytes": 59723,
+      "sha256": "a49d94836d89dedc228f9ca9ccb41a4c69f4186f190156d275f3f325bd672b8d"
+    },
+    {
+      "name": "host-canonical/console-084.log",
+      "bytes": 59216,
+      "sha256": "e2253d3250e3b4eb8bb0a3e3956070d554e4d9cad4bc20679c18235d35a706a3"
+    },
+    {
+      "name": "host-canonical/console-085.log",
+      "bytes": 59738,
+      "sha256": "e44e1c0254e85bd7ae0c34ac6ddabdb34042791e51126d9025014953b5bb99b4"
+    },
+    {
+      "name": "host-canonical/console-086.log",
+      "bytes": 59472,
+      "sha256": "e032c08ebc148269d731d880657cba079c87d19928eaaaab3e401457e0df454b"
+    },
+    {
+      "name": "host-canonical/console-087.log",
+      "bytes": 59621,
+      "sha256": "071a4fd5f9958f1c39089539eb9deb4a550a0e5429091d33cde12e190f55c107"
+    },
+    {
+      "name": "host-canonical/console-088.log",
+      "bytes": 59767,
+      "sha256": "c23b61b278c88073d7f579d65db79cadca7550cdae82ad6a05e2390e11450a2d"
+    },
+    {
+      "name": "host-canonical/console-089.log",
+      "bytes": 59471,
+      "sha256": "912c27877d91b1278f9527b2deed1d685363c63daf895b287c3821fc990b8b42"
+    },
+    {
+      "name": "host-canonical/console-090.log",
+      "bytes": 59954,
+      "sha256": "741b5fb53f653cae503b4442056eaeae4d90bd451fecb2460838627ec3a35653"
+    },
+    {
+      "name": "host-canonical/console-091.log",
+      "bytes": 59766,
+      "sha256": "a8c67fdc458ad93239eb9fc8a0a6e64d5dba4deba00b3e96e880920a0e972d2f"
+    },
+    {
+      "name": "host-canonical/console-092.log",
+      "bytes": 59751,
+      "sha256": "99eb43b85d0e0cfc313cdf35736c5fc4d35becb59d7b12f4f8862d69fa379eed"
+    },
+    {
+      "name": "host-canonical/console-093.log",
+      "bytes": 58193,
+      "sha256": "10a87f07d05d6971e3264062b5398d4c867071eeef1039432f190884024d6d24"
+    },
+    {
+      "name": "host-canonical/console-094.log",
+      "bytes": 57176,
+      "sha256": "b1fe7fe5a97e247240d9ff8295e48ca8c805129b045ac3c724cd1ba012590682"
+    },
+    {
+      "name": "host-canonical/console-095.log",
+      "bytes": 58785,
+      "sha256": "7463882e960df20cb5d18ee01e58f7239cd3b09be04c5f37431120875e3e06bf"
+    },
+    {
+      "name": "host-canonical/console-096.log",
+      "bytes": 59763,
+      "sha256": "633e705414101bced0c0980893248eb231c6acd3e546a750942564c75f948011"
+    },
+    {
+      "name": "host-canonical/console-097.log",
+      "bytes": 59878,
+      "sha256": "c8259155b1e65f94e5f1aa87b83e308fc50cccdc2c646cbfabc0cf6a067b427d"
+    },
+    {
+      "name": "host-canonical/console-098.log",
+      "bytes": 58264,
+      "sha256": "33dc74eee95a1176fa6df83c88815aa5ce767ebc1ed17568f9aacd0c95bd324d"
+    },
+    {
+      "name": "host-canonical/console-099.log",
+      "bytes": 59877,
+      "sha256": "e19130d59d44654b8f01aa431b78ed008338056f9fbb3447efdd905b17dabce0"
+    },
+    {
+      "name": "host-canonical/console-100.log",
+      "bytes": 59860,
+      "sha256": "aff35e6fba293c79867f81619363259d6d7b5305a3ea09143358f5a9a7fbd486"
+    },
+    {
+      "name": "host-canonical/console-101.log",
+      "bytes": 59997,
+      "sha256": "e43c52078a6fc49d9b7b90dfa9ea7e5a1ce0bb3a0beb94c70500fc0b2f82bd14"
+    },
+    {
+      "name": "host-canonical/console-102.log",
+      "bytes": 59933,
+      "sha256": "401bf062c29b44d9a367c8945b67f5eb6f4d6337fb22020b6c430eb18555cc5b"
+    },
+    {
+      "name": "host-canonical/console-103.log",
+      "bytes": 59477,
+      "sha256": "00c4706bd59ed761bc9c2470db60a045a277369061befbb566178ccae4b34f5a"
+    },
+    {
+      "name": "host-canonical/console-104.log",
+      "bytes": 59879,
+      "sha256": "cb75594e3969ec1cd3c30d882207f22665bab54088960fe005c756db4edfba1a"
+    },
+    {
+      "name": "host-canonical/console-105.log",
+      "bytes": 59953,
+      "sha256": "20a3184f666e0c9d508a538eae35125bf2cc74698975658981eadb5f3dc7314d"
+    },
+    {
+      "name": "host-canonical/console-106.log",
+      "bytes": 59775,
+      "sha256": "6bb235a64be43e9db545acb8961263835884bede4cfb07c59648128e89b59f3e"
+    },
+    {
+      "name": "host-canonical/console-107.log",
+      "bytes": 59839,
+      "sha256": "a896f6d00070765452c243053ee5c3d5c4dff655820648ba915f6f7027b7643e"
+    },
+    {
+      "name": "host-canonical/console-108.log",
+      "bytes": 59892,
+      "sha256": "efff966bd1338c8daded611f9356cc14cff47ffaf805a5c2e241c352f0b3a803"
+    },
+    {
+      "name": "host-canonical/console-109.log",
+      "bytes": 59851,
+      "sha256": "5b85c5fd640da2ae21217e8eb3f692004bc6f5479797e4788594372c449070d8"
+    },
+    {
+      "name": "host-canonical/console-110.log",
+      "bytes": 59974,
+      "sha256": "6fc2d018d816822eb59d35c8f77cb0add1397e30e58b40b1789339022f4783d1"
+    },
+    {
+      "name": "host-canonical/console-111.log",
+      "bytes": 59672,
+      "sha256": "5f15f53fa480ab5b707810b5193d83013d759ea7904d6938be0f999447078851"
+    },
+    {
+      "name": "host-canonical/console-112.log",
+      "bytes": 59794,
+      "sha256": "ff24804eed45154bd7822cc7c2556f1a3010d84d7040cd45560e2b3febc3264e"
+    },
+    {
+      "name": "host-canonical/console-113.log",
+      "bytes": 59821,
+      "sha256": "321378d128a9dd005754590c7ee01c7c39f79b991c3f8b9a3200628ef8b9c1ba"
+    },
+    {
+      "name": "host-canonical/console-114.log",
+      "bytes": 59914,
+      "sha256": "aa557ce11961bfa0c2ba3c357e1c60e21c56c9e6a0ceea79a60266d00a5f6967"
+    },
+    {
+      "name": "host-canonical/console-115.log",
+      "bytes": 59889,
+      "sha256": "9f57916ca65530589f1816f23cfd86deffc1083fc89e26963f80a179c7cbe4d3"
+    },
+    {
+      "name": "host-canonical/console-116.log",
+      "bytes": 59073,
+      "sha256": "09b2d0c7bc4863b3122fc3215136ecb219b1d57be6e89d88fe934b7b532171ec"
+    },
+    {
+      "name": "host-canonical/console-117.log",
+      "bytes": 59958,
+      "sha256": "2a536c5d70deefed8b2e90b30dca410461eb5ca2a166da39bb333b6ed8d90c60"
+    },
+    {
+      "name": "host-canonical/console-118.log",
+      "bytes": 58095,
+      "sha256": "c771096b56979a3467da25a19a1166a72d83463c34635a6745cd5b46a377e613"
+    },
+    {
+      "name": "host-canonical/console-119.log",
+      "bytes": 59828,
+      "sha256": "4d296ac14d8d24eb3048faafc169ac16eb9064a11fbde7856b53fc19895b8abb"
+    },
+    {
+      "name": "host-canonical/console-120.log",
+      "bytes": 59548,
+      "sha256": "9849a548728ba15b4d4260c6d3f2b27fd3a487d61d9a04a5f44baf39c28778a5"
+    },
+    {
+      "name": "host-canonical/console-121.log",
+      "bytes": 59545,
+      "sha256": "241e9db8bc37adb28eea3b5169301d96604fc89ee9fc596574f26bea775dc3e1"
+    },
+    {
+      "name": "host-canonical/console-122.log",
+      "bytes": 59604,
+      "sha256": "dbdd60ba08da64e593d1c4de88f6a92b48f2b0a627b905a087829563ed17df68"
+    },
+    {
+      "name": "host-canonical/console-123.log",
+      "bytes": 59453,
+      "sha256": "d453417628e40256c03317cce746dcef0056f987c31e2cf6ed82411123549f18"
+    },
+    {
+      "name": "host-canonical/console-124.log",
+      "bytes": 59692,
+      "sha256": "ded9f4048d75982e7a0247a99a957b182c88f0fe37d64ce5fbc8b71931544dae"
+    },
+    {
+      "name": "host-canonical/console-125.log",
+      "bytes": 59744,
+      "sha256": "85b4db73225f7b4cc1bcc68f6d1cbec80d66932245c5b259f48148c92de9ceb2"
+    },
+    {
+      "name": "host-canonical/console-126.log",
+      "bytes": 59873,
+      "sha256": "d9ea7137211ad7e5b6d4a21fd10b8c4f7a55c135dddcf64975780feb0f02d880"
+    },
+    {
+      "name": "host-canonical/console-127.log",
+      "bytes": 59945,
+      "sha256": "7e2ba63c8cef9eba04fe2cb4f537937c378b21bf1796cdf4c9f30c27048a2fe7"
+    },
+    {
+      "name": "host-canonical/console-128.log",
+      "bytes": 59833,
+      "sha256": "113ba0560643bad4297683a257f8fbd0c0a4fb3409149c82c92139ab88bc3f2c"
+    },
+    {
+      "name": "host-canonical/console-129.log",
+      "bytes": 59986,
+      "sha256": "44d8ff3fb7f6f5a731e4135c282e2a501d4b1d7cfb3fdeeaca21c03fbddab262"
+    },
+    {
+      "name": "host-canonical/console-130.log",
+      "bytes": 59943,
+      "sha256": "003efbec7a179766e6e84dc499e9ef8e602de4bb0cbe1e6df47bf6f4d346ebaf"
+    },
+    {
+      "name": "host-canonical/console-131.log",
+      "bytes": 58668,
+      "sha256": "93d2d84785f165e41c5cd9b2ed278ac763caf32425618ca89f2d9863577e486e"
+    },
+    {
+      "name": "host-canonical/console-132.log",
+      "bytes": 58297,
+      "sha256": "7081082c3d713f0d99e4fc5375d2a6e961d8a5a10a9a10812e4c11934c35e3ac"
+    },
+    {
+      "name": "host-canonical/console-133.log",
+      "bytes": 59811,
+      "sha256": "95d2157776015b566beceb8307515fef360e90c7ad5695583d94407f8f7de263"
+    },
+    {
+      "name": "host-canonical/console-134.log",
+      "bytes": 59665,
+      "sha256": "af255dbd788c52eebc3a01d2ca125884887f077fdc4b543a19bb08d14bcc3a87"
+    },
+    {
+      "name": "host-canonical/console-135.log",
+      "bytes": 59881,
+      "sha256": "cc84a7643cdc6247287f6641d8835f622407b3221d068dfc680d43ba750dc23b"
+    },
+    {
+      "name": "host-canonical/console-136.log",
+      "bytes": 59919,
+      "sha256": "ccb608b9d43f8bcce1b49347b344a6d030ec38a537a6996a6c3926c1886c460a"
+    },
+    {
+      "name": "host-canonical/console-137.log",
+      "bytes": 59863,
+      "sha256": "8ea5486e631a5e23bf5161febc1378200ac25dc45baad32b60470f77d9a16b8f"
+    },
+    {
+      "name": "host-canonical/console-138.log",
+      "bytes": 59871,
+      "sha256": "3db952e2247bf5be4d12b1cfdad97675cd44d3d7c1fa9e5cbdfcc809e5575b2b"
+    },
+    {
+      "name": "host-canonical/console-139.log",
+      "bytes": 59882,
+      "sha256": "aa1367c6a16ce827c8e169be0fbe64655469bd76278b8add446f89614f2fd7aa"
+    },
+    {
+      "name": "host-canonical/console-140.log",
+      "bytes": 59727,
+      "sha256": "b9337e3cc0b888a416c010f5f6e6f1f2205b4345f826d46cf9d12f6d15109d75"
+    },
+    {
+      "name": "host-canonical/console-141.log",
+      "bytes": 59711,
+      "sha256": "8965239fe0dcd33559d9c1bc945c2400508a088150eb2d96052f3c6507cf5b82"
+    },
+    {
+      "name": "host-canonical/console-142.log",
+      "bytes": 59981,
+      "sha256": "0ac0d6c07db240100df19c360e5dd5bfc931ce8ecd0b29f2bd51791678cb179c"
+    },
+    {
+      "name": "host-canonical/console-143.log",
+      "bytes": 59960,
+      "sha256": "cd11d358a8affa4922afd55373abc1d75b327c00f7a273dcf3d491899fa2dc23"
+    },
+    {
+      "name": "host-canonical/console-144.log",
+      "bytes": 59933,
+      "sha256": "5633f5cd3d844150fb195731b31a7d7a10f675f8d62bb516ee7483a5807aa568"
+    },
+    {
+      "name": "host-canonical/console-145.log",
+      "bytes": 59660,
+      "sha256": "656159b7775f736ea3f22e98344bcb8d3ce987c86bcbc28846bb36717117e523"
+    },
+    {
+      "name": "host-canonical/console-146.log",
+      "bytes": 58753,
+      "sha256": "de388da42c20dea7bd1ac323a7158feb25519082cb95a70a875c1c94ce5b3048"
+    },
+    {
+      "name": "host-canonical/console-147.log",
+      "bytes": 59804,
+      "sha256": "9c6527e6c67475fa1873fed38f899cff414cebb91a078d26c136373955bb5954"
+    },
+    {
+      "name": "host-canonical/console-148.log",
+      "bytes": 58296,
+      "sha256": "2dd9fb951017cf0c6263006ea0eb1ffd213351551bba73ce33f654ca3c9f9ea5"
+    },
+    {
+      "name": "host-canonical/console-149.log",
+      "bytes": 56945,
+      "sha256": "6bd01508276c00127d7a61e20ff35f9c9c20cd6383a0fd0f18f774d93f2aea45"
+    },
+    {
+      "name": "host-canonical/console-150.log",
+      "bytes": 59404,
+      "sha256": "ff2b9996a9bf280e06ed0fb6cd6a5180f91d9a22cf68a5e56ecdaf76522a5e1a"
+    },
+    {
+      "name": "host-canonical/console-151.log",
+      "bytes": 59633,
+      "sha256": "557a9ad810b8540b8dd3da3fe79c527fc7185277a951800c00db625b7cbefd05"
+    },
+    {
+      "name": "host-canonical/console-152.log",
+      "bytes": 59601,
+      "sha256": "7e3fe7fb47295664c4c87503b0feec470b13380c37d19daa5bcd75993ffbbd14"
+    },
+    {
+      "name": "host-canonical/console-153.log",
+      "bytes": 59999,
+      "sha256": "5c9573b8912178cd7b7558ca2f31a6d921e9f7427d9bff8ce4b22efdb7ca9e72"
+    },
+    {
+      "name": "host-canonical/console-154.log",
+      "bytes": 59975,
+      "sha256": "2f564e65ad4a39a16d32e1f51877c4a6bb33c3572078e7f1dfc8a2a3aef7efe6"
+    },
+    {
+      "name": "host-canonical/console-155.log",
+      "bytes": 59815,
+      "sha256": "6502ce7a6d0e23fb9367c181218d387e62d690ce5fb9dff9ce67e650f46a73dd"
+    },
+    {
+      "name": "host-canonical/console-156.log",
+      "bytes": 59960,
+      "sha256": "158ded1727431c4798739f0fac56ef12b96de2e7d15a61d58cdece0c9dab5f4f"
+    },
+    {
+      "name": "host-canonical/console-157.log",
+      "bytes": 59449,
+      "sha256": "e44abce1b0ebe5ea660a9662e0c861f8f4d78257446aa0f6e15127f39098a76c"
+    },
+    {
+      "name": "host-canonical/console-158.log",
+      "bytes": 59752,
+      "sha256": "422cf8d0312667f1e4bea8e904c03bc82a69cfa4fe5bebccc6f0c1d62280da10"
+    },
+    {
+      "name": "host-canonical/console-159.log",
+      "bytes": 59821,
+      "sha256": "b470516c476892a813810efcb1f52c894fe7b44d8bc90fdae89ffbc0a3fa9dcf"
+    },
+    {
+      "name": "host-canonical/console-160.log",
+      "bytes": 59869,
+      "sha256": "0d63f34517b1f8b75492be15362560dd881aca60d8253152f155a68cc530bd28"
+    },
+    {
+      "name": "host-canonical/console-161.log",
+      "bytes": 59980,
+      "sha256": "b10a6da231617089b0d84a39c1b2b3a22118f486d725be75023099f2ab3f3c7e"
+    },
+    {
+      "name": "host-canonical/console-162.log",
+      "bytes": 59933,
+      "sha256": "e1107c59d8afb3ab0e8c74b2698259fa23c731c4c9d275882af61220f06482fa"
+    },
+    {
+      "name": "host-canonical/console-163.log",
+      "bytes": 59719,
+      "sha256": "7e9904e7bc46ce25b5de25674f6f0bede17d2ea111f6eb458c48a71db3355cfe"
+    },
+    {
+      "name": "host-canonical/console-164.log",
+      "bytes": 59775,
+      "sha256": "9a000ce29c8bc7e5c74d3fe0ab782b8e0aaa6cfacdfbbe66308177e613d0ba06"
+    },
+    {
+      "name": "host-canonical/console-165.log",
+      "bytes": 59929,
+      "sha256": "4072df2d98935806bfddfddb443cd6b44c34b32c565f687cb5d7a2e488d813b8"
+    },
+    {
+      "name": "host-canonical/console-166.log",
+      "bytes": 59959,
+      "sha256": "b3f1c991b62ba799ce934f48df0dd38328a84a021a32e6ef590cf8b3c5436891"
+    },
+    {
+      "name": "host-canonical/console-167.log",
+      "bytes": 59979,
+      "sha256": "1bb3615d03ae3859a9deeda7786691bd1c3a6cafe7d19b425c7c169bec9c3fdb"
+    },
+    {
+      "name": "host-canonical/console-168.log",
+      "bytes": 59811,
+      "sha256": "3c0b23f40c6bb5d638591e3a10bda233838619c017f0c6e3bc235124b0be3765"
+    },
+    {
+      "name": "host-canonical/console-169.log",
+      "bytes": 59960,
+      "sha256": "9938e4418680a0de087e1070b474bbd0738b3d3d173be4a08c5fd180d01b16ea"
+    },
+    {
+      "name": "host-canonical/console-170.log",
+      "bytes": 59832,
+      "sha256": "c4766ddbcbbc99262506feb579cc52f39b7487cbb50572f979160de73dbd5f9c"
+    },
+    {
+      "name": "host-canonical/console-171.log",
+      "bytes": 59886,
+      "sha256": "733bfa22806a07c436ceacccafd7f42c56984b3bf36774fe0e14b434589d392f"
+    },
+    {
+      "name": "host-canonical/console-172.log",
+      "bytes": 59964,
+      "sha256": "3b5ed09e8d6702c2277486d67f1ac22452239ffda0c59526f0d942bfc8c4cd29"
+    },
+    {
+      "name": "host-canonical/console-173.log",
+      "bytes": 59977,
+      "sha256": "07b9c40d90e707c8c1d2636bcda1d04c068477f1219c8026bc675c68b0ac0336"
+    },
+    {
+      "name": "host-canonical/console-174.log",
+      "bytes": 59814,
+      "sha256": "0118c5332834034b0107ea538eeecd93460f2bb737c7041131a99fcfb21c21d6"
+    },
+    {
+      "name": "host-canonical/console-175.log",
+      "bytes": 59934,
+      "sha256": "1d399f3df168e965f302dd729981e4b60723acdd1c36d667049275f6fd62cd87"
+    },
+    {
+      "name": "host-canonical/console-176.log",
+      "bytes": 59870,
+      "sha256": "99755c0935cd7aa97036ba21a259eeb067ec550641016d0c367dd007708e3c48"
+    },
+    {
+      "name": "host-canonical/console-177.log",
+      "bytes": 59840,
+      "sha256": "44bd72cdd30d90791c844db784682b491f56dfaa2e5cc2234f1369cd3760324f"
+    },
+    {
+      "name": "host-canonical/console-178.log",
+      "bytes": 59871,
+      "sha256": "4bdd1b58df8b7127f3644de835eb943c428f4bc11397a7ec35ea2a50ba4cc27e"
+    },
+    {
+      "name": "host-canonical/console-179.log",
+      "bytes": 58463,
+      "sha256": "b74d754af875a0c7ff455e4bfd8ebb3790af3b8a72783d0aaea104bd472a65b3"
+    },
+    {
+      "name": "host-canonical/console-180.log",
+      "bytes": 59515,
+      "sha256": "3d8c6b38a9b1dff0fa5013991f49901d3b248bc4f7ff7da111783720bcff80b3"
+    },
+    {
+      "name": "host-canonical/console-181.log",
+      "bytes": 59053,
+      "sha256": "f360651f4c0e3f63d8b36c4373bd66f273b83677c4b9228e32791e4886237b6d"
+    },
+    {
+      "name": "host-canonical/console-182.log",
+      "bytes": 57921,
+      "sha256": "9ac7af22899b7a927fa74faeaaa8c31855f1751f9732fae0d5ba375592282f95"
+    },
+    {
+      "name": "host-canonical/console-183.log",
+      "bytes": 58510,
+      "sha256": "d176d55ffbfc722ede049736e20f01d9a076811c90398001e77d72e4b0578291"
+    },
+    {
+      "name": "host-canonical/console-184.log",
+      "bytes": 57926,
+      "sha256": "1a6f7b384e8a634af6dfb9c1bb5acf49352b9ed0dafcceb22d0133b1ee3898da"
+    },
+    {
+      "name": "host-canonical/console-185.log",
+      "bytes": 57904,
+      "sha256": "6f6134974e19d228f0f9e5fa758ef3c31e219c2ea36405f4633f9deed1780119"
+    },
+    {
+      "name": "host-canonical/console-186.log",
+      "bytes": 57921,
+      "sha256": "53305c7bc9a58c741c7acc6babc29169af7d7797bdb350130ce2e6c0c1ee75e2"
+    },
+    {
+      "name": "host-canonical/console-187.log",
+      "bytes": 57931,
+      "sha256": "d5ef8266d2f31b258c6b9088e8a3726422474aaf10fa67fe11481af17bebbd2e"
+    },
+    {
+      "name": "host-canonical/console-188.log",
+      "bytes": 57926,
+      "sha256": "e69cb97dcc1a6571333ffbe1d7cb75309bf73bb02bd7211887d7de79536ffa91"
+    },
+    {
+      "name": "host-canonical/console-189.log",
+      "bytes": 58528,
+      "sha256": "eedfd78e0cf8f1b5a21c95ec0b778ad5903c5b5d4986be5c4d5ac4b2e8036d99"
+    },
+    {
+      "name": "host-canonical/console-190.log",
+      "bytes": 58358,
+      "sha256": "717db4cc9385c5a15b1eb6f512ddccf3145d4506f0606406f4cf5ebe30fcebb8"
+    },
+    {
+      "name": "host-canonical/console-191.log",
+      "bytes": 59357,
+      "sha256": "9fb55bcbe71d15d5e3c1e12d13f96f02cc6a35dcaf8f4ea17b06a7f95f2b8a0e"
+    },
+    {
+      "name": "host-canonical/console-192.log",
+      "bytes": 59988,
+      "sha256": "2f99617f613d6c4fd421e3c7fb46df8748026439010fd184fafa37f77e34e963"
+    },
+    {
+      "name": "host-canonical/console-193.log",
+      "bytes": 59803,
+      "sha256": "0d839962d249c560fb131f0644349f12d5070d46f265476966e1c680fdeed61c"
+    },
+    {
+      "name": "host-canonical/console-194.log",
+      "bytes": 59879,
+      "sha256": "a868c74f4585a7f8d83377dad78bfbf12bbdab178efd397f3d7c29fc72770f50"
+    },
+    {
+      "name": "host-canonical/console-195.log",
+      "bytes": 59988,
+      "sha256": "0149d0e4a3acf2b03662ac231c5bd0ccb782c2d7a7187e87dfda9b7294d1b315"
+    },
+    {
+      "name": "host-canonical/console-196.log",
+      "bytes": 59952,
+      "sha256": "cda282ee9824dfd8628c30282b22141040a1ed7fca4d0a856a934ef71d906ef0"
+    },
+    {
+      "name": "host-canonical/console-197.log",
+      "bytes": 59567,
+      "sha256": "cf5f03d433c5af6f0354852babce022cb1261ec3da712cbd7f0c8f6c46533dee"
+    },
+    {
+      "name": "host-canonical/console-198.log",
+      "bytes": 59861,
+      "sha256": "6ec18877f55d1b0ba246d814f5fbb035a7ee0d3105158de88d279c4ca8b4c089"
+    },
+    {
+      "name": "host-canonical/console-199.log",
+      "bytes": 59964,
+      "sha256": "cee6d4d5b1e997a786df083b5569ee183d7ff9b74369d9e39c068d811e270005"
+    },
+    {
+      "name": "host-canonical/console-200.log",
+      "bytes": 59823,
+      "sha256": "f4413e0ae41f7f19e304f75db5e90136c42b2e28e4c1794cb5bd3a2698e434a4"
+    },
+    {
+      "name": "host-canonical/console-201.log",
+      "bytes": 59897,
+      "sha256": "661a9374d3861ed26afb005093e11c603b9a938fc13ee913d35794c3f659a946"
+    },
+    {
+      "name": "host-canonical/console-202.log",
+      "bytes": 59859,
+      "sha256": "3acd9d49a9be481ab4c27a19a3c7c67cfaaa573955e9ff4cd343b96a30fb682f"
+    },
+    {
+      "name": "host-canonical/console-203.log",
+      "bytes": 59081,
+      "sha256": "222a753cbd71af80f1f2b91f48e5f778c15b4c2d1dda17244cc1cb538fd7e9b5"
+    },
+    {
+      "name": "host-canonical/console-204.log",
+      "bytes": 59930,
+      "sha256": "5680e448151a04d162a44c6fb92f78e39469d5f57a8dba8f236a2d4eff0e00b6"
+    },
+    {
+      "name": "host-canonical/console-205.log",
+      "bytes": 59693,
+      "sha256": "28e5b7a4f1cb7de81044b77f1412e844110a20f727039557d11d83c1d1497431"
+    },
+    {
+      "name": "host-canonical/console-206.log",
+      "bytes": 59845,
+      "sha256": "1a01008a74621f77283896b3dd54f79683d13fd030cfdb4450ffe12dba9d142f"
+    },
+    {
+      "name": "host-canonical/console-207.log",
+      "bytes": 59873,
+      "sha256": "dacc9d70af15b375bb834058f8c06ccab3b7b013813f50e5e342365fd5b1e8f8"
+    },
+    {
+      "name": "host-canonical/console-208.log",
+      "bytes": 59865,
+      "sha256": "78fcd1cd617e0d845c63765aa06e96e2faec0e065b0dcfb1a390db82c45e46aa"
+    },
+    {
+      "name": "host-canonical/console-209.log",
+      "bytes": 59851,
+      "sha256": "19d82fbd833f807c386b20ffe50fc0d519a92951300c8b6304961f4d3d6d2621"
+    },
+    {
+      "name": "host-canonical/console-210.log",
+      "bytes": 59950,
+      "sha256": "6c630e85b7dbb2e69e592705877b7f9e1482f9527d1c476e5d85505b53cf2f1a"
+    },
+    {
+      "name": "host-canonical/console-211.log",
+      "bytes": 521,
+      "sha256": "fcd220608d9f0ee27634060cd0a8c5ea4959641dfb2f9b027892b4bce460b6d8"
+    },
+    {
+      "name": "host-canonical/manifest.json",
+      "bytes": 107789,
+      "sha256": "a83109342db6270c513f3714400b21e345ed3690547128925aba3b5abd3072d7"
+    },
+    {
+      "name": "host-canonical/memory.jsonl",
+      "bytes": 8548130,
+      "sha256": "5f3161dd5c81803885b147485cc94acc4525e36288ea7fd470810d0a8f6f6962"
+    },
+    {
+      "name": "host-canonical/result.json",
+      "bytes": 1033,
+      "sha256": "3f0986086ca68323d2467385b5de677d06767dacfe29b2d2f87f444468c95e58"
+    },
+    {
+      "name": "host-canonical/tests.jsonl",
+      "bytes": 1867050,
+      "sha256": "27f7175464bc7904acb702d6b56cf22f309c3614a8c8974e7f5146c83d2ad922"
+    },
+    {
+      "name": "host-canonical/unittest-console.log",
+      "bytes": 12502866,
+      "sha256": "c051c7725592fa618adb77223652c13ec9365802499af1545cb3be38f70af2c9"
+    },
+    {
+      "name": "host-canonical-integrity.log",
+      "bytes": 533,
+      "sha256": "87a9a960833a971713714c191e8ae480296c481fc73861c47d0b1d9d2cfc1ab6"
+    },
+    {
+      "name": "host-canonical-verified.json",
+      "bytes": 555,
+      "sha256": "de40eef2cae2dd54e63c24f0e6f1ae884ed0bcbd952bc99d1e83c16c6caa6076"
     },
     {
       "name": "host-failed-attempt1/canonical-trace.jsonl",
@@ -158,6 +1308,91 @@
       "name": "host-timeout-prior-run-comparison.json",
       "bytes": 251937,
       "sha256": "b84ddb65cf1f486c113a20ca8fd9c89809706950b7b6edaeaebeab7ae227ddf3"
+    },
+    {
+      "name": "host-watch-attempt2.log",
+      "bytes": 11113,
+      "sha256": "2d6af4ee21ec90841ae8ad3bbdf0634f922801ea631f29236414f8e4eab5b0c5"
+    },
+    {
+      "name": "hosted-final-records.json",
+      "bytes": 129125,
+      "sha256": "c0c4acdf50a70cc3ab946a011bc2bc5eb8ef13ea9fcce6b662f066e8787424ee"
+    },
+    {
+      "name": "hosted-originals/actuals-restoration-2g.zip",
+      "bytes": 7340898,
+      "sha256": "a7c22e0df9768cd6416fb35fdc48b44b72d1b9f84bc5a27ba9fe316e39a475c5"
+    },
+    {
+      "name": "hosted-originals/canonical-release-2g-python314.zip",
+      "bytes": 78181472,
+      "sha256": "1e3ee12258b7d8d4074771715cf50fea415713bd2f29a2f5e4f3089a0959a55b"
+    },
+    {
+      "name": "hosted-originals/current-production-coverage-browser.zip",
+      "bytes": 2095303,
+      "sha256": "485cc5236ec4e6adc8fb94aefaa9b7f602036fd883f6597ccf087145755348e0"
+    },
+    {
+      "name": "hosted-originals/current-season-history-browser.zip",
+      "bytes": 895224,
+      "sha256": "c30f0f7dd8d98cb79a3bb38a0ebdcd2b7819ad2c0f675d7c10d48736b3e3837b"
+    },
+    {
+      "name": "hosted-originals/history-followthrough-browser.zip",
+      "bytes": 477100,
+      "sha256": "dbae3834deeafbbc323d5f3ce9d436f839adad1ba8853633c24e85c5609eb6cf"
+    },
+    {
+      "name": "hosted-originals/league-entry-2g.zip",
+      "bytes": 11343,
+      "sha256": "04a066b78837e6f1ecc4ad1f81a599cae4d425243448c4df558659a007bea4f1"
+    },
+    {
+      "name": "hosted-originals/linux-market-lifecycle-archive-warmed-summary.zip",
+      "bytes": 13512,
+      "sha256": "3584c5cb06d1ceb29bff006b81ed70b81ca94fc892c9eef80d5cf76f909a3d29"
+    },
+    {
+      "name": "hosted-originals/linux-market-lifecycle-combined-read-summary.zip",
+      "bytes": 15416,
+      "sha256": "36b95fdd96942f680ad6270ec60477809a66abc72fd6131a374e0ce0400869a9"
+    },
+    {
+      "name": "hosted-originals/linux-market-lifecycle-ordinary-summary.zip",
+      "bytes": 13312,
+      "sha256": "5a83dd725cef131af815689582193ee4113d17e2034595695314081a4bbd6327"
+    },
+    {
+      "name": "hosted-originals/market-history-coverage-browser.zip",
+      "bytes": 1429622,
+      "sha256": "8913fc212b5547dfa78280bd4f4abecff49a80c12f02a484e67c73c334bd807b"
+    },
+    {
+      "name": "hosted-originals/public-welcome-security-browser.zip",
+      "bytes": 63896257,
+      "sha256": "8a55a0bdc4cfae44f8d61e28f9634e6b5b33310cb11f61c3ed094efaca4a24e3"
+    },
+    {
+      "name": "hosted-originals/restoration-preflight-2g.zip",
+      "bytes": 3731,
+      "sha256": "405ecd6bc0412b17893bd0f0c2ce2eb7bc309a42b2bddf9cb4fb4f4fa517c84f"
+    },
+    {
+      "name": "hosted-originals/restoration-unused-2g.zip",
+      "bytes": 7340584,
+      "sha256": "2c0293ba48f443054e269f6b1b0bd500a9fad0eeddbfe4f7bd75588fb4832c3d"
+    },
+    {
+      "name": "hosted-originals/trade-resource-2g.zip",
+      "bytes": 761990,
+      "sha256": "f5dd3918063e4d17776e51f8c2e70069e8b7ed9254781bf9754d127064aa80f5"
+    },
+    {
+      "name": "hosted-records-capture.log",
+      "bytes": 84,
+      "sha256": "aeaa95abb7f59ff3e41ace517d5505657471a20a1df18df0c1e211cd0b3514de"
     },
     {
       "name": "invocation-final.json",
@@ -3440,6 +4675,36 @@
       "sha256": "572f0c241ba2d36d674620519524fdf92514bb9c6ddc16cc3b73e951c10dd6f7"
     },
     {
+      "name": "make-report.py",
+      "bytes": 13277,
+      "sha256": "61d483fa18eca9e2b5a4df87a635cb8a411861cc9086ca9b2626f3693d314f02"
+    },
+    {
+      "name": "merge-approved.log",
+      "bytes": 309,
+      "sha256": "3af9ae92d499b1fd7f39afb09f84d8eb29eadafa94696e77acf8ab80df7776e0"
+    },
+    {
+      "name": "merge-approved.py",
+      "bytes": 3405,
+      "sha256": "544c2a07884948ba51e9e4e7d85042c556440780fdc5f3a6b1ea040b6fbe57d4"
+    },
+    {
+      "name": "merged-source.json",
+      "bytes": 325,
+      "sha256": "5083f4c3e2e5c2e6847b88f485ff10480a54bcd25f7b2b9cb8ab7c2528afe831"
+    },
+    {
+      "name": "package-final-report.json",
+      "bytes": 234,
+      "sha256": "7a16acffff1d0e5832604b41a31768ee63f7f52458aa9b388c7ae43214a763b7"
+    },
+    {
+      "name": "package-final.py",
+      "bytes": 4457,
+      "sha256": "7138975a96115ddaa1397499ce3586a3b6abf556f9ce569bebd15f0f5f5f79ae"
+    },
+    {
       "name": "package-prior-report.json",
       "bytes": 121,
       "sha256": "60305c2b59f40b66ed8e58bc93cf26f2083013c090a3a5ecf79efb52ac5e0928"
@@ -3450,9 +4715,59 @@
       "sha256": "82cb13696d783f5675d1b7041d266cbe48571aee83512acd3099e5a3239e9b3a"
     },
     {
+      "name": "packaging-precondition-note.json",
+      "bytes": 470,
+      "sha256": "0d0a9a7347d923487d2857fa3b0d265a43db0263f3f3bb8f4357d1592cbddd25"
+    },
+    {
+      "name": "plan-finalization.log",
+      "bytes": 96,
+      "sha256": "8b7828c89a7e5a8bfbed7a4d88c1352e9f542a3235431884095f7a3cbfc68e5c"
+    },
+    {
       "name": "pre-release-baseline-check.json",
       "bytes": 451,
       "sha256": "f8119b2f4dd0e6813a73646cb53a2a0b070995d7347a11c9ca8df225d5598336"
+    },
+    {
+      "name": "preparation-certificate-metadata.json",
+      "bytes": 814,
+      "sha256": "f882660330dcceecbedc4e0a1b28941568e65081bd20342828516c70d31cb2f3"
+    },
+    {
+      "name": "preparation-certificate-verification.log",
+      "bytes": 93,
+      "sha256": "bafd4bb566d4bfd88a7672d0da39806bb6a88febcb01c7ea29b90e5d99c1defd"
+    },
+    {
+      "name": "preparation-certificate.zip",
+      "bytes": 11953,
+      "sha256": "2a1c4ebc4a50dfaeb4ad8fd72db53bfeb5342c32c6ef1af06ac16dbe81f91471"
+    },
+    {
+      "name": "preparation-run.json",
+      "bytes": 13689,
+      "sha256": "957b333427c2af8e9746c691c670287c72a5dae78d8f465dc8b7e8a610caf79f"
+    },
+    {
+      "name": "preparation-watch.log",
+      "bytes": 3128,
+      "sha256": "bec13213b269df64ad33ffe2dae267c8bc20b00d7b38c28a6617e1186c36c042"
+    },
+    {
+      "name": "prepared-attachment-verification.json",
+      "bytes": 4213,
+      "sha256": "0b746a76258527bab8156e2229da5abed6d94b23f70fa4fed20d734cb041bdeb"
+    },
+    {
+      "name": "prepared-publication.json",
+      "bytes": 4011,
+      "sha256": "c3e74f4390385b2cc14b430fdc5df497b8c03e489d91c1bfebe52a97332af14d"
+    },
+    {
+      "name": "prior-readable-publication-verification.json",
+      "bytes": 34330,
+      "sha256": "9831d9930163b6c86262a21dcd799c514798ead0c8bf899c5edc4a10700d745b"
     },
     {
       "name": "product-artifact-integrity.log",
@@ -3480,6 +4795,61 @@
       "sha256": "7a4b3b8489c0efb6633e91b1e1f71b2ecfaf1561e10b521273a818f699a9965a"
     },
     {
+      "name": "production-readonly-smoke.json",
+      "bytes": 1555,
+      "sha256": "2ff9a195233403178d8f2799d86bf240bed9a1664457d8377fb7bb59131fd8b0"
+    },
+    {
+      "name": "production-readonly-smoke.log",
+      "bytes": 123,
+      "sha256": "c8cd354b70a03f7d5be4760cc3ab28c0da798fe9121b06d6ae62bcef8b657a48"
+    },
+    {
+      "name": "publication-certificate-metadata.json",
+      "bytes": 814,
+      "sha256": "33c4b546aba2b0fa9cc00e5fa8ba25f163ba3320f98c462f3e369b3902976981"
+    },
+    {
+      "name": "publication-certificate-verification.log",
+      "bytes": 93,
+      "sha256": "014759857b57bc4187c275e2f850b3ccd6e250f369af2b159e861c899dc65d61"
+    },
+    {
+      "name": "publication-certificate.zip",
+      "bytes": 12758,
+      "sha256": "659e5a44043bc53475d3a273f1b4ac71b5a4df66b87f8b57323ff7c2240e450c"
+    },
+    {
+      "name": "publication-run.json",
+      "bytes": 13689,
+      "sha256": "ebc185702fb9e4ec57df339ef0b5ed0f30e9ff7d9787c957b3ff6c61a4fd7fc0"
+    },
+    {
+      "name": "publication-verified.json",
+      "bytes": 63187,
+      "sha256": "6dd6dd71926d866dd7164c55e4319de3e0570402bb533e7091b4604fc68dfbe2"
+    },
+    {
+      "name": "publication-watch.log",
+      "bytes": 1850,
+      "sha256": "af34af252c12b72fd7982426f50f121d5d1511f0cfacf83851e4ab7a281e37e4"
+    },
+    {
+      "name": "publish-final-evidence.py",
+      "bytes": 9728,
+      "sha256": "012960d76c68b802b86ea9f79d4d2c4100db7f5533e20ddc8a8a6ec6b80f98db"
+    },
+    {
+      "name": "published-attachment-verification.json",
+      "bytes": 4213,
+      "sha256": "709a7e99d25fa98f642649d21f310bef87587a50d271453cfac42323bb83eb0a"
+    },
+    {
+      "name": "published-publication.json",
+      "bytes": 3990,
+      "sha256": "49d03853bbf93d55a1099370ba8139d1640866acd90c747ecc3913c9d5318668"
+    },
+    {
       "name": "publisher-compilation.json",
       "bytes": 306,
       "sha256": "9ccdd738714efc5b4af1811be123bc00a4095e220910ea6a496d73caeb48b821"
@@ -3490,6 +4860,11 @@
       "sha256": "174d5bc4d4accea158e8ac2c44d592c552c94fe0b72129fb741ae4bd4cc51541"
     },
     {
+      "name": "publisher-focused-sealed-plan.log",
+      "bytes": 8252,
+      "sha256": "6911615826e2a20d4935664677f6504b81156d8c89a4b13ba603d78ab49419d2"
+    },
+    {
       "name": "publisher-lint-attempt-records-first.log",
       "bytes": 558,
       "sha256": "210d07b1053d2ab7a5e5db07a57074a08bc57ab07537bdb67df0e0213d5217a9"
@@ -3498,6 +4873,31 @@
       "name": "publisher-lint-final.log",
       "bytes": 19,
       "sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+    },
+    {
+      "name": "publisher-lint-sealed-host-unavailable.log",
+      "bytes": 43,
+      "sha256": "2ef2b5552d5e5a74fd8eb9b109a86879d5c47ac0e60cc0efe35fbadba2f7e33b"
+    },
+    {
+      "name": "publisher-lint-sealed-plan.log",
+      "bytes": 19,
+      "sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+    },
+    {
+      "name": "publisher-production-smoke.json",
+      "bytes": 747,
+      "sha256": "5f8e2ecc1bab26da9b728d1022b6d70ff78441491cc1a82781d159353a0ae5d4"
+    },
+    {
+      "name": "publisher-sealed-validation.json",
+      "bytes": 841,
+      "sha256": "51a51758d3449ecb54eefee88c60379b5e72c994cac5e288f6d90153c952296e"
+    },
+    {
+      "name": "publisher-source.json",
+      "bytes": 709,
+      "sha256": "5b21a748920a0e62a2ef195ed2ce0cd20452d40ac6be2700a40bc8a3569a831f"
     },
     {
       "name": "readable-console/SHA256SUMS",
@@ -4555,6 +5955,41 @@
       "sha256": "b55416d17412125f0b882598a4342a3e8198fbd4795588037dea13c6f9994227"
     },
     {
+      "name": "readiness-during-host-retry.json",
+      "bytes": 461,
+      "sha256": "759a005adf112ad70507ac267a17a4be25cba19f9c8a6b6e15ce4b1e853a7913"
+    },
+    {
+      "name": "recovery-offline-verification.log",
+      "bytes": 428,
+      "sha256": "ae699559898cb2353259a5535379d62ea53349cb87c2bbfffb462c2b260e9565"
+    },
+    {
+      "name": "recovery-offline-verified.json",
+      "bytes": 448,
+      "sha256": "3e0b70bce41f3d39d3ff640d6490b9b9b53a170a04953a9286c3fbc6ba0ac583"
+    },
+    {
+      "name": "release-plan.json",
+      "bytes": 5675,
+      "sha256": "dded293fdcf3fb3385837a36f9734fc30172b50541b1f4bcba581a5eecc17636"
+    },
+    {
+      "name": "render-baseline-metadata.json",
+      "bytes": 416,
+      "sha256": "153c2b6ea170b81282a911b4e30d983b1556fe7e858d51b236a13e5c1fd5365d"
+    },
+    {
+      "name": "render-deployed-metadata.json",
+      "bytes": 416,
+      "sha256": "f331375c01d1c6440e45198842c3908535f26573fe21676b8d5dec847afbb786"
+    },
+    {
+      "name": "repository-final-sync.json",
+      "bytes": 462,
+      "sha256": "1d5eedd510abcf571293006a44cb5e6f4812e6b6d642508b4ff8a7d3acbbc87f"
+    },
+    {
       "name": "resource-verified.json",
       "bytes": 38936,
       "sha256": "dcca22888d2acef46cc496c09c4a687c6d216b70b64f0877bbeca534bd1efd73"
@@ -4578,6 +6013,11 @@
       "name": "source.json",
       "bytes": 327,
       "sha256": "7114192afdda2ab9e8b1be6968aa16dbdb4df2832f2fd2b4399ce2a477f1b0c1"
+    },
+    {
+      "name": "staging-public-readback.json",
+      "bytes": 2633,
+      "sha256": "04f8222d7787d300cf79006a420239c3dcc1b6f2a7b6d74c4a89405815d915b5"
     },
     {
       "name": "studies/baseline-original-profile-oneqb-plain.json",
@@ -4970,6 +6410,11 @@
       "sha256": "0748736cca4c842829b6566f659755bdee5c2e3ee343525560fa6c193933cfbc"
     },
     {
+      "name": "verify-certificate.py",
+      "bytes": 4653,
+      "sha256": "6caa577f6f284ee49505755387afbae427bd7b446fbb93e2b2e2899406d94493"
+    },
+    {
       "name": "verify-complete-payload.py",
       "bytes": 2245,
       "sha256": "37aedb81da311ea020e7295d063632adb70d46121f46bb31ec57423a80d69792"
@@ -4998,6 +6443,16 @@
       "name": "verify-product-artifacts.py",
       "bytes": 1839,
       "sha256": "dfb2ab53d58e0bb14cc5a22100a7d33f2836032069e57488f6df9e558c521438"
+    },
+    {
+      "name": "verify-production.py",
+      "bytes": 4797,
+      "sha256": "05299267eb0e1e13400c34fe37002d261aba5801cce68f862d7711c6f83dffcb"
+    },
+    {
+      "name": "verify-recovery-offline.py",
+      "bytes": 1774,
+      "sha256": "90fabc474d00961aaf05db243f5bebec29fef85125762c375a39a17f6f338087"
     },
     {
       "name": "version-availability.json",

@@ -1,0 +1,2752 @@
+[
+  {
+    "run": {
+      "id": 42293956827,
+      "name": "Canonical release recovery",
+      "node_id": "WFR_kwLOTaziFc8AAAAJ2OqQ2w",
+      "head_branch": "fix/bounded-cache-string-sharing",
+      "head_sha": "4fb702964b34d84a593fb917b5e654b9b8ff0adf",
+      "path": ".github/workflows/canonical-release-recovery.yml",
+      "display_title": "Reduce league cache restoration memory through bounded string sharing",
+      "run_number": 235,
+      "event": "pull_request",
+      "status": "completed",
+      "conclusion": "success",
+      "workflow_id": 394862998,
+      "check_suite_id": 114597446146,
+      "check_suite_node_id": "CS_kwDOTaziFc8AAAAaropCAg",
+      "url": "https://api.github.com/repos/Richarddavis47/dtos/actions/runs/42293956827",
+      "html_url": "https://github.com/Richarddavis47/dtos/actions/runs/42293956827",
+      "pull_requests": [
+        {
+          "url": "https://api.github.com/repos/Richarddavis47/dtos/pulls/326",
+          "id": 5194485900,
+          "number": 326,
+          "head": {
+            "ref": "fix/bounded-cache-string-sharing",
+            "sha": "4fb702964b34d84a593fb917b5e654b9b8ff0adf",
+            "repo": {
+              "id": 1303175701,
+              "url": "https://api.github.com/repos/Richarddavis47/dtos",
+              "name": "dtos"
+            }
+          },
+          "base": {
+            "ref": "main",
+            "sha": "8af490880bb59b357b0e5fa82575cfa164401b07",
+            "repo": {
+              "id": 1303175701,
+              "url": "https://api.github.com/repos/Richarddavis47/dtos",
+              "name": "dtos"
+            }
+          }
+        }
+      ],
+      "created_at": "2026-11-06T21:06:28Z",
+      "updated_at": "2026-11-06T23:14:44Z",
+      "actor": {
+        "login": "Richarddavis47",
+        "id": 305973940,
+        "node_id": "U_kgDOEjzKtA",
+        "avatar_url": "https://avatars.githubusercontent.com/u/305973940?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/Richarddavis47",
+        "html_url": "https://github.com/Richarddavis47",
+        "followers_url": "https://api.github.com/users/Richarddavis47/followers",
+        "following_url": "https://api.github.com/users/Richarddavis47/following{/other_user}",
+        "gists_url": "https://api.github.com/users/Richarddavis47/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/Richarddavis47/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/Richarddavis47/subscriptions",
+        "organizations_url": "https://api.github.com/users/Richarddavis47/orgs",
+        "repos_url": "https://api.github.com/users/Richarddavis47/repos",
+        "events_url": "https://api.github.com/users/Richarddavis47/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/Richarddavis47/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "run_attempt": 2,
+      "referenced_workflows": [],
+      "run_started_at": "2026-11-06T22:23:10Z",
+      "triggering_actor": {
+        "login": "Richarddavis47",
+        "id": 305973940,
+        "node_id": "U_kgDOEjzKtA",
+        "avatar_url": "https://avatars.githubusercontent.com/u/305973940?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/Richarddavis47",
+        "html_url": "https://github.com/Richarddavis47",
+        "followers_url": "https://api.github.com/users/Richarddavis47/followers",
+        "following_url": "https://api.github.com/users/Richarddavis47/following{/other_user}",
+        "gists_url": "https://api.github.com/users/Richarddavis47/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/Richarddavis47/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/Richarddavis47/subscriptions",
+        "organizations_url": "https://api.github.com/users/Richarddavis47/orgs",
+        "repos_url": "https://api.github.com/users/Richarddavis47/repos",
+        "events_url": "https://api.github.com/users/Richarddavis47/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/Richarddavis47/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "jobs_url": "https://api.github.com/repos/Richarddavis47/dtos/actions/runs/42293956827/jobs",
+      "logs_url": "https://api.github.com/repos/Richarddavis47/dtos/actions/runs/42293956827/logs",
+      "check_suite_url": "https://api.github.com/repos/Richarddavis47/dtos/check-suites/114597446146",
+      "artifacts_url": "https://api.github.com/repos/Richarddavis47/dtos/actions/runs/42293956827/artifacts",
+      "cancel_url": "https://api.github.com/repos/Richarddavis47/dtos/actions/runs/42293956827/cancel",
+      "rerun_url": "https://api.github.com/repos/Richarddavis47/dtos/actions/runs/42293956827/rerun",
+      "previous_attempt_url": "https://api.github.com/repos/Richarddavis47/dtos/actions/runs/42293956827/attempts/1",
+      "workflow_url": "https://api.github.com/repos/Richarddavis47/dtos/actions/workflows/394862998",
+      "head_commit": {
+        "id": "4fb702964b34d84a593fb917b5e654b9b8ff0adf",
+        "tree_id": "4051883efb1f225dcd71e07f1998e45c9d96fb39",
+        "message": "Keep admission and preflight sentinels on the shared cache decoder",
+        "timestamp": "2026-11-06T21:06:21Z",
+        "author": {
+          "name": "Richard Davis",
+          "email": "ricdav398@gmail.com"
+        },
+        "committer": {
+          "name": "Richard Davis",
+          "email": "ricdav398@gmail.com"
+        }
+      },
+      "repository": {
+        "id": 1303175701,
+        "node_id": "R_kgDOTaziFQ",
+        "name": "dtos",
+        "full_name": "Richarddavis47/dtos",
+        "private": false,
+        "owner": {
+          "login": "Richarddavis47",
+          "id": 305973940,
+          "node_id": "U_kgDOEjzKtA",
+          "avatar_url": "https://avatars.githubusercontent.com/u/305973940?v=4",
+          "gravatar_id": "",
+          "url": "https://api.github.com/users/Richarddavis47",
+          "html_url": "https://github.com/Richarddavis47",
+          "followers_url": "https://api.github.com/users/Richarddavis47/followers",
+          "following_url": "https://api.github.com/users/Richarddavis47/following{/other_user}",
+          "gists_url": "https://api.github.com/users/Richarddavis47/gists{/gist_id}",
+          "starred_url": "https://api.github.com/users/Richarddavis47/starred{/owner}{/repo}",
+          "subscriptions_url": "https://api.github.com/users/Richarddavis47/subscriptions",
+          "organizations_url": "https://api.github.com/users/Richarddavis47/orgs",
+          "repos_url": "https://api.github.com/users/Richarddavis47/repos",
+          "events_url": "https://api.github.com/users/Richarddavis47/events{/privacy}",
+          "received_events_url": "https://api.github.com/users/Richarddavis47/received_events",
+          "type": "User",
+          "user_view_type": "public",
+          "site_admin": false
+        },
+        "html_url": "https://github.com/Richarddavis47/dtos",
+        "description": "Day traders front office ",
+        "fork": false,
+        "url": "https://api.github.com/repos/Richarddavis47/dtos",
+        "forks_url": "https://api.github.com/repos/Richarddavis47/dtos/forks",
+        "keys_url": "https://api.github.com/repos/Richarddavis47/dtos/keys{/key_id}",
+        "collaborators_url": "https://api.github.com/repos/Richarddavis47/dtos/collaborators{/collaborator}",
+        "teams_url": "https://api.github.com/repos/Richarddavis47/dtos/teams",
+        "hooks_url": "https://api.github.com/repos/Richarddavis47/dtos/hooks",
+        "issue_events_url": "https://api.github.com/repos/Richarddavis47/dtos/issues/events{/number}",
+        "events_url": "https://api.github.com/repos/Richarddavis47/dtos/events",
+        "assignees_url": "https://api.github.com/repos/Richarddavis47/dtos/assignees{/user}",
+        "branches_url": "https://api.github.com/repos/Richarddavis47/dtos/branches{/branch}",
+        "tags_url": "https://api.github.com/repos/Richarddavis47/dtos/tags",
+        "blobs_url": "https://api.github.com/repos/Richarddavis47/dtos/git/blobs{/sha}",
+        "git_tags_url": "https://api.github.com/repos/Richarddavis47/dtos/git/tags{/sha}",
+        "git_refs_url": "https://api.github.com/repos/Richarddavis47/dtos/git/refs{/sha}",
+        "trees_url": "https://api.github.com/repos/Richarddavis47/dtos/git/trees{/sha}",
+        "statuses_url": "https://api.github.com/repos/Richarddavis47/dtos/statuses/{sha}",
+        "languages_url": "https://api.github.com/repos/Richarddavis47/dtos/languages",
+        "stargazers_url": "https://api.github.com/repos/Richarddavis47/dtos/stargazers",
+        "contributors_url": "https://api.github.com/repos/Richarddavis47/dtos/contributors",
+        "subscribers_url": "https://api.github.com/repos/Richarddavis47/dtos/subscribers",
+        "subscription_url": "https://api.github.com/repos/Richarddavis47/dtos/subscription",
+        "commits_url": "https://api.github.com/repos/Richarddavis47/dtos/commits{/sha}",
+        "git_commits_url": "https://api.github.com/repos/Richarddavis47/dtos/git/commits{/sha}",
+        "comments_url": "https://api.github.com/repos/Richarddavis47/dtos/comments{/number}",
+        "issue_comment_url": "https://api.github.com/repos/Richarddavis47/dtos/issues/comments{/number}",
+        "contents_url": "https://api.github.com/repos/Richarddavis47/dtos/contents/{+path}",
+        "compare_url": "https://api.github.com/repos/Richarddavis47/dtos/compare/{base}...{head}",
+        "merges_url": "https://api.github.com/repos/Richarddavis47/dtos/merges",
+        "archive_url": "https://api.github.com/repos/Richarddavis47/dtos/{archive_format}{/ref}",
+        "downloads_url": "https://api.github.com/repos/Richarddavis47/dtos/downloads",
+        "issues_url": "https://api.github.com/repos/Richarddavis47/dtos/issues{/number}",
+        "pulls_url": "https://api.github.com/repos/Richarddavis47/dtos/pulls{/number}",
+        "milestones_url": "https://api.github.com/repos/Richarddavis47/dtos/milestones{/number}",
+        "notifications_url": "https://api.github.com/repos/Richarddavis47/dtos/notifications{?since,all,participating}",
+        "labels_url": "https://api.github.com/repos/Richarddavis47/dtos/labels{/name}",
+        "releases_url": "https://api.github.com/repos/Richarddavis47/dtos/releases{/id}",
+        "deployments_url": "https://api.github.com/repos/Richarddavis47/dtos/deployments"
+      },
+      "head_repository": {
+        "id": 1303175701,
+        "node_id": "R_kgDOTaziFQ",
+        "name": "dtos",
+        "full_name": "Richarddavis47/dtos",
+        "private": false,
+        "owner": {
+          "login": "Richarddavis47",
+          "id": 305973940,
+          "node_id": "U_kgDOEjzKtA",
+          "avatar_url": "https://avatars.githubusercontent.com/u/305973940?v=4",
+          "gravatar_id": "",
+          "url": "https://api.github.com/users/Richarddavis47",
+          "html_url": "https://github.com/Richarddavis47",
+          "followers_url": "https://api.github.com/users/Richarddavis47/followers",
+          "following_url": "https://api.github.com/users/Richarddavis47/following{/other_user}",
+          "gists_url": "https://api.github.com/users/Richarddavis47/gists{/gist_id}",
+          "starred_url": "https://api.github.com/users/Richarddavis47/starred{/owner}{/repo}",
+          "subscriptions_url": "https://api.github.com/users/Richarddavis47/subscriptions",
+          "organizations_url": "https://api.github.com/users/Richarddavis47/orgs",
+          "repos_url": "https://api.github.com/users/Richarddavis47/repos",
+          "events_url": "https://api.github.com/users/Richarddavis47/events{/privacy}",
+          "received_events_url": "https://api.github.com/users/Richarddavis47/received_events",
+          "type": "User",
+          "user_view_type": "public",
+          "site_admin": false
+        },
+        "html_url": "https://github.com/Richarddavis47/dtos",
+        "description": "Day traders front office ",
+        "fork": false,
+        "url": "https://api.github.com/repos/Richarddavis47/dtos",
+        "forks_url": "https://api.github.com/repos/Richarddavis47/dtos/forks",
+        "keys_url": "https://api.github.com/repos/Richarddavis47/dtos/keys{/key_id}",
+        "collaborators_url": "https://api.github.com/repos/Richarddavis47/dtos/collaborators{/collaborator}",
+        "teams_url": "https://api.github.com/repos/Richarddavis47/dtos/teams",
+        "hooks_url": "https://api.github.com/repos/Richarddavis47/dtos/hooks",
+        "issue_events_url": "https://api.github.com/repos/Richarddavis47/dtos/issues/events{/number}",
+        "events_url": "https://api.github.com/repos/Richarddavis47/dtos/events",
+        "assignees_url": "https://api.github.com/repos/Richarddavis47/dtos/assignees{/user}",
+        "branches_url": "https://api.github.com/repos/Richarddavis47/dtos/branches{/branch}",
+        "tags_url": "https://api.github.com/repos/Richarddavis47/dtos/tags",
+        "blobs_url": "https://api.github.com/repos/Richarddavis47/dtos/git/blobs{/sha}",
+        "git_tags_url": "https://api.github.com/repos/Richarddavis47/dtos/git/tags{/sha}",
+        "git_refs_url": "https://api.github.com/repos/Richarddavis47/dtos/git/refs{/sha}",
+        "trees_url": "https://api.github.com/repos/Richarddavis47/dtos/git/trees{/sha}",
+        "statuses_url": "https://api.github.com/repos/Richarddavis47/dtos/statuses/{sha}",
+        "languages_url": "https://api.github.com/repos/Richarddavis47/dtos/languages",
+        "stargazers_url": "https://api.github.com/repos/Richarddavis47/dtos/stargazers",
+        "contributors_url": "https://api.github.com/repos/Richarddavis47/dtos/contributors",
+        "subscribers_url": "https://api.github.com/repos/Richarddavis47/dtos/subscribers",
+        "subscription_url": "https://api.github.com/repos/Richarddavis47/dtos/subscription",
+        "commits_url": "https://api.github.com/repos/Richarddavis47/dtos/commits{/sha}",
+        "git_commits_url": "https://api.github.com/repos/Richarddavis47/dtos/git/commits{/sha}",
+        "comments_url": "https://api.github.com/repos/Richarddavis47/dtos/comments{/number}",
+        "issue_comment_url": "https://api.github.com/repos/Richarddavis47/dtos/issues/comments{/number}",
+        "contents_url": "https://api.github.com/repos/Richarddavis47/dtos/contents/{+path}",
+        "compare_url": "https://api.github.com/repos/Richarddavis47/dtos/compare/{base}...{head}",
+        "merges_url": "https://api.github.com/repos/Richarddavis47/dtos/merges",
+        "archive_url": "https://api.github.com/repos/Richarddavis47/dtos/{archive_format}{/ref}",
+        "downloads_url": "https://api.github.com/repos/Richarddavis47/dtos/downloads",
+        "issues_url": "https://api.github.com/repos/Richarddavis47/dtos/issues{/number}",
+        "pulls_url": "https://api.github.com/repos/Richarddavis47/dtos/pulls{/number}",
+        "milestones_url": "https://api.github.com/repos/Richarddavis47/dtos/milestones{/number}",
+        "notifications_url": "https://api.github.com/repos/Richarddavis47/dtos/notifications{?since,all,participating}",
+        "labels_url": "https://api.github.com/repos/Richarddavis47/dtos/labels{/name}",
+        "releases_url": "https://api.github.com/repos/Richarddavis47/dtos/releases{/id}",
+        "deployments_url": "https://api.github.com/repos/Richarddavis47/dtos/deployments"
+      }
+    },
+    "jobs": [
+      {
+        "id": 128189652002,
+        "run_id": 42293956827,
+        "workflow_name": "Canonical release recovery",
+        "head_branch": "fix/bounded-cache-string-sharing",
+        "run_url": "https://api.github.com/repos/Richarddavis47/dtos/actions/runs/42293956827",
+        "run_attempt": 2,
+        "node_id": "CR_kwDOTaziFc8AAAAd2LLcIg",
+        "head_sha": "4fb702964b34d84a593fb917b5e654b9b8ff0adf",
+        "url": "https://api.github.com/repos/Richarddavis47/dtos/actions/jobs/128189652002",
+        "html_url": "https://github.com/Richarddavis47/dtos/actions/runs/42293956827/job/128189652002",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-11-06T22:23:11Z",
+        "started_at": "2026-11-06T22:23:14Z",
+        "completed_at": "2026-11-06T23:14:43Z",
+        "name": "canonical-release",
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-11-06T22:23:15Z",
+            "completed_at": "2026-11-06T22:23:15Z"
+          },
+          {
+            "name": "Run actions/checkout@v4",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2,
+            "started_at": "2026-11-06T22:23:15Z",
+            "completed_at": "2026-11-06T22:23:37Z"
+          },
+          {
+            "name": "Prepare disposable validation harness",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3,
+            "started_at": "2026-11-06T22:23:37Z",
+            "completed_at": "2026-11-06T22:23:37Z"
+          },
+          {
+            "name": "Build production Python and browser validation image",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4,
+            "started_at": "2026-11-06T22:23:37Z",
+            "completed_at": "2026-11-06T22:24:17Z"
+          },
+          {
+            "name": "Run unchanged ten-gate validator under actual 2 GiB",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5,
+            "started_at": "2026-11-06T22:24:17Z",
+            "completed_at": "2026-11-06T23:14:37Z"
+          },
+          {
+            "name": "Preserve container outcome",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 6,
+            "started_at": "2026-11-06T23:14:37Z",
+            "completed_at": "2026-11-06T23:14:37Z"
+          },
+          {
+            "name": "Upload source-pinned raw validation and phone evidence",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 7,
+            "started_at": "2026-11-06T23:14:37Z",
+            "completed_at": "2026-11-06T23:14:41Z"
+          },
+          {
+            "name": "Retire owned container",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 8,
+            "started_at": "2026-11-06T23:14:41Z",
+            "completed_at": "2026-11-06T23:14:41Z"
+          },
+          {
+            "name": "Post Run actions/checkout@v4",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 16,
+            "started_at": "2026-11-06T23:14:41Z",
+            "completed_at": "2026-11-06T23:14:41Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 17,
+            "started_at": "2026-11-06T23:14:41Z",
+            "completed_at": "2026-11-06T23:14:41Z"
+          }
+        ],
+        "check_run_url": "https://api.github.com/repos/Richarddavis47/dtos/check-runs/128189652002",
+        "labels": [
+          "ubuntu-24.04"
+        ],
+        "runner_id": 1000005534,
+        "runner_name": "GitHub Actions 1000005534",
+        "runner_group_id": 0,
+        "runner_group_name": "GitHub Actions"
+      },
+      {
+        "id": 128189654082,
+        "run_id": 42293956827,
+        "workflow_name": "Canonical release recovery",
+        "head_branch": "fix/bounded-cache-string-sharing",
+        "run_url": "https://api.github.com/repos/Richarddavis47/dtos/actions/runs/42293956827",
+        "run_attempt": 2,
+        "node_id": "CR_kwDOTaziFc8AAAAd2LLkQg",
+        "head_sha": "4fb702964b34d84a593fb917b5e654b9b8ff0adf",
+        "url": "https://api.github.com/repos/Richarddavis47/dtos/actions/jobs/128189654082",
+        "html_url": "https://github.com/Richarddavis47/dtos/actions/runs/42293956827/job/128189654082",
+        "status": "completed",
+        "conclusion": "skipped",
+        "created_at": "2026-11-06T22:23:11Z",
+        "started_at": "2026-11-06T22:23:11Z",
+        "completed_at": "2026-11-06T21:06:29Z",
+        "name": "publish-2191",
+        "steps": [],
+        "check_run_url": "https://api.github.com/repos/Richarddavis47/dtos/check-runs/128189654082",
+        "labels": [
+          "ubuntu-24.04"
+        ],
+        "runner_id": null,
+        "runner_name": null,
+        "runner_group_id": null,
+        "runner_group_name": null
+      }
+    ],
+    "artifacts": [
+      {
+        "id": 13547298816,
+        "node_id": "MDg6QXJ0aWZhY3QxMzU0NzI5ODgxNg==",
+        "name": "canonical-release-2g-python314",
+        "size_in_bytes": 78181472,
+        "url": "https://api.github.com/repos/Richarddavis47/dtos/actions/artifacts/13547298816",
+        "archive_download_url": "https://api.github.com/repos/Richarddavis47/dtos/actions/artifacts/13547298816/zip",
+        "expired": false,
+        "digest": "sha256:1e3ee12258b7d8d4074771715cf50fea415713bd2f29a2f5e4f3089a0959a55b",
+        "created_at": "2026-11-06T23:14:41Z",
+        "updated_at": "2026-11-06T23:14:41Z",
+        "expires_at": "2026-11-20T23:14:38Z",
+        "workflow_run": {
+          "id": 42293956827,
+          "repository_id": 1303175701,
+          "head_repository_id": 1303175701,
+          "head_branch": "fix/bounded-cache-string-sharing",
+          "head_sha": "4fb702964b34d84a593fb917b5e654b9b8ff0adf"
+        }
+      },
+      {
+        "id": 13545965035,
+        "node_id": "MDg6QXJ0aWZhY3QxMzU0NTk2NTAzNQ==",
+        "name": "canonical-release-2g-python314",
+        "size_in_bytes": 60892114,
+        "url": "https://api.github.com/repos/Richarddavis47/dtos/actions/artifacts/13545965035",
+        "archive_download_url": "https://api.github.com/repos/Richarddavis47/dtos/actions/artifacts/13545965035/zip",
+        "expired": false,
+        "digest": "sha256:e8e6d8b537ad02ca358aada1451778b663e500abe8dc524b887262150c83dbb8",
+        "created_at": "2026-11-06T22:18:35Z",
+        "updated_at": "2026-11-06T22:18:35Z",
+        "expires_at": "2026-11-20T22:18:31Z",
+        "workflow_run": {
+          "id": 42293956827,
+          "repository_id": 1303175701,
+          "head_repository_id": 1303175701,
+          "head_branch": "fix/bounded-cache-string-sharing",
+          "head_sha": "4fb702964b34d84a593fb917b5e654b9b8ff0adf"
+        }
+      }
+    ]
+  },
+  {
+    "run": {
+      "id": 42293956858,
+      "name": "Product browser journeys",
+      "node_id": "WFR_kwLOTaziFc8AAAAJ2OqQ-g",
+      "head_branch": "fix/bounded-cache-string-sharing",
+      "head_sha": "4fb702964b34d84a593fb917b5e654b9b8ff0adf",
+      "path": ".github/workflows/product-browser.yml",
+      "display_title": "Reduce league cache restoration memory through bounded string sharing",
+      "run_number": 390,
+      "event": "pull_request",
+      "status": "completed",
+      "conclusion": "success",
+      "workflow_id": 351712238,
+      "check_suite_id": 114597446248,
+      "check_suite_node_id": "CS_kwDOTaziFc8AAAAaropCaA",
+      "url": "https://api.github.com/repos/Richarddavis47/dtos/actions/runs/42293956858",
+      "html_url": "https://github.com/Richarddavis47/dtos/actions/runs/42293956858",
+      "pull_requests": [
+        {
+          "url": "https://api.github.com/repos/Richarddavis47/dtos/pulls/326",
+          "id": 5194485900,
+          "number": 326,
+          "head": {
+            "ref": "fix/bounded-cache-string-sharing",
+            "sha": "4fb702964b34d84a593fb917b5e654b9b8ff0adf",
+            "repo": {
+              "id": 1303175701,
+              "url": "https://api.github.com/repos/Richarddavis47/dtos",
+              "name": "dtos"
+            }
+          },
+          "base": {
+            "ref": "main",
+            "sha": "8af490880bb59b357b0e5fa82575cfa164401b07",
+            "repo": {
+              "id": 1303175701,
+              "url": "https://api.github.com/repos/Richarddavis47/dtos",
+              "name": "dtos"
+            }
+          }
+        }
+      ],
+      "created_at": "2026-11-06T21:06:28Z",
+      "updated_at": "2026-11-06T21:28:56Z",
+      "actor": {
+        "login": "Richarddavis47",
+        "id": 305973940,
+        "node_id": "U_kgDOEjzKtA",
+        "avatar_url": "https://avatars.githubusercontent.com/u/305973940?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/Richarddavis47",
+        "html_url": "https://github.com/Richarddavis47",
+        "followers_url": "https://api.github.com/users/Richarddavis47/followers",
+        "following_url": "https://api.github.com/users/Richarddavis47/following{/other_user}",
+        "gists_url": "https://api.github.com/users/Richarddavis47/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/Richarddavis47/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/Richarddavis47/subscriptions",
+        "organizations_url": "https://api.github.com/users/Richarddavis47/orgs",
+        "repos_url": "https://api.github.com/users/Richarddavis47/repos",
+        "events_url": "https://api.github.com/users/Richarddavis47/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/Richarddavis47/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "run_attempt": 1,
+      "referenced_workflows": [],
+      "run_started_at": "2026-11-06T21:06:28Z",
+      "triggering_actor": {
+        "login": "Richarddavis47",
+        "id": 305973940,
+        "node_id": "U_kgDOEjzKtA",
+        "avatar_url": "https://avatars.githubusercontent.com/u/305973940?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/Richarddavis47",
+        "html_url": "https://github.com/Richarddavis47",
+        "followers_url": "https://api.github.com/users/Richarddavis47/followers",
+        "following_url": "https://api.github.com/users/Richarddavis47/following{/other_user}",
+        "gists_url": "https://api.github.com/users/Richarddavis47/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/Richarddavis47/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/Richarddavis47/subscriptions",
+        "organizations_url": "https://api.github.com/users/Richarddavis47/orgs",
+        "repos_url": "https://api.github.com/users/Richarddavis47/repos",
+        "events_url": "https://api.github.com/users/Richarddavis47/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/Richarddavis47/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "jobs_url": "https://api.github.com/repos/Richarddavis47/dtos/actions/runs/42293956858/jobs",
+      "logs_url": "https://api.github.com/repos/Richarddavis47/dtos/actions/runs/42293956858/logs",
+      "check_suite_url": "https://api.github.com/repos/Richarddavis47/dtos/check-suites/114597446248",
+      "artifacts_url": "https://api.github.com/repos/Richarddavis47/dtos/actions/runs/42293956858/artifacts",
+      "cancel_url": "https://api.github.com/repos/Richarddavis47/dtos/actions/runs/42293956858/cancel",
+      "rerun_url": "https://api.github.com/repos/Richarddavis47/dtos/actions/runs/42293956858/rerun",
+      "previous_attempt_url": null,
+      "workflow_url": "https://api.github.com/repos/Richarddavis47/dtos/actions/workflows/351712238",
+      "head_commit": {
+        "id": "4fb702964b34d84a593fb917b5e654b9b8ff0adf",
+        "tree_id": "4051883efb1f225dcd71e07f1998e45c9d96fb39",
+        "message": "Keep admission and preflight sentinels on the shared cache decoder",
+        "timestamp": "2026-11-06T21:06:21Z",
+        "author": {
+          "name": "Richard Davis",
+          "email": "ricdav398@gmail.com"
+        },
+        "committer": {
+          "name": "Richard Davis",
+          "email": "ricdav398@gmail.com"
+        }
+      },
+      "repository": {
+        "id": 1303175701,
+        "node_id": "R_kgDOTaziFQ",
+        "name": "dtos",
+        "full_name": "Richarddavis47/dtos",
+        "private": false,
+        "owner": {
+          "login": "Richarddavis47",
+          "id": 305973940,
+          "node_id": "U_kgDOEjzKtA",
+          "avatar_url": "https://avatars.githubusercontent.com/u/305973940?v=4",
+          "gravatar_id": "",
+          "url": "https://api.github.com/users/Richarddavis47",
+          "html_url": "https://github.com/Richarddavis47",
+          "followers_url": "https://api.github.com/users/Richarddavis47/followers",
+          "following_url": "https://api.github.com/users/Richarddavis47/following{/other_user}",
+          "gists_url": "https://api.github.com/users/Richarddavis47/gists{/gist_id}",
+          "starred_url": "https://api.github.com/users/Richarddavis47/starred{/owner}{/repo}",
+          "subscriptions_url": "https://api.github.com/users/Richarddavis47/subscriptions",
+          "organizations_url": "https://api.github.com/users/Richarddavis47/orgs",
+          "repos_url": "https://api.github.com/users/Richarddavis47/repos",
+          "events_url": "https://api.github.com/users/Richarddavis47/events{/privacy}",
+          "received_events_url": "https://api.github.com/users/Richarddavis47/received_events",
+          "type": "User",
+          "user_view_type": "public",
+          "site_admin": false
+        },
+        "html_url": "https://github.com/Richarddavis47/dtos",
+        "description": "Day traders front office ",
+        "fork": false,
+        "url": "https://api.github.com/repos/Richarddavis47/dtos",
+        "forks_url": "https://api.github.com/repos/Richarddavis47/dtos/forks",
+        "keys_url": "https://api.github.com/repos/Richarddavis47/dtos/keys{/key_id}",
+        "collaborators_url": "https://api.github.com/repos/Richarddavis47/dtos/collaborators{/collaborator}",
+        "teams_url": "https://api.github.com/repos/Richarddavis47/dtos/teams",
+        "hooks_url": "https://api.github.com/repos/Richarddavis47/dtos/hooks",
+        "issue_events_url": "https://api.github.com/repos/Richarddavis47/dtos/issues/events{/number}",
+        "events_url": "https://api.github.com/repos/Richarddavis47/dtos/events",
+        "assignees_url": "https://api.github.com/repos/Richarddavis47/dtos/assignees{/user}",
+        "branches_url": "https://api.github.com/repos/Richarddavis47/dtos/branches{/branch}",
+        "tags_url": "https://api.github.com/repos/Richarddavis47/dtos/tags",
+        "blobs_url": "https://api.github.com/repos/Richarddavis47/dtos/git/blobs{/sha}",
+        "git_tags_url": "https://api.github.com/repos/Richarddavis47/dtos/git/tags{/sha}",
+        "git_refs_url": "https://api.github.com/repos/Richarddavis47/dtos/git/refs{/sha}",
+        "trees_url": "https://api.github.com/repos/Richarddavis47/dtos/git/trees{/sha}",
+        "statuses_url": "https://api.github.com/repos/Richarddavis47/dtos/statuses/{sha}",
+        "languages_url": "https://api.github.com/repos/Richarddavis47/dtos/languages",
+        "stargazers_url": "https://api.github.com/repos/Richarddavis47/dtos/stargazers",
+        "contributors_url": "https://api.github.com/repos/Richarddavis47/dtos/contributors",
+        "subscribers_url": "https://api.github.com/repos/Richarddavis47/dtos/subscribers",
+        "subscription_url": "https://api.github.com/repos/Richarddavis47/dtos/subscription",
+        "commits_url": "https://api.github.com/repos/Richarddavis47/dtos/commits{/sha}",
+        "git_commits_url": "https://api.github.com/repos/Richarddavis47/dtos/git/commits{/sha}",
+        "comments_url": "https://api.github.com/repos/Richarddavis47/dtos/comments{/number}",
+        "issue_comment_url": "https://api.github.com/repos/Richarddavis47/dtos/issues/comments{/number}",
+        "contents_url": "https://api.github.com/repos/Richarddavis47/dtos/contents/{+path}",
+        "compare_url": "https://api.github.com/repos/Richarddavis47/dtos/compare/{base}...{head}",
+        "merges_url": "https://api.github.com/repos/Richarddavis47/dtos/merges",
+        "archive_url": "https://api.github.com/repos/Richarddavis47/dtos/{archive_format}{/ref}",
+        "downloads_url": "https://api.github.com/repos/Richarddavis47/dtos/downloads",
+        "issues_url": "https://api.github.com/repos/Richarddavis47/dtos/issues{/number}",
+        "pulls_url": "https://api.github.com/repos/Richarddavis47/dtos/pulls{/number}",
+        "milestones_url": "https://api.github.com/repos/Richarddavis47/dtos/milestones{/number}",
+        "notifications_url": "https://api.github.com/repos/Richarddavis47/dtos/notifications{?since,all,participating}",
+        "labels_url": "https://api.github.com/repos/Richarddavis47/dtos/labels{/name}",
+        "releases_url": "https://api.github.com/repos/Richarddavis47/dtos/releases{/id}",
+        "deployments_url": "https://api.github.com/repos/Richarddavis47/dtos/deployments"
+      },
+      "head_repository": {
+        "id": 1303175701,
+        "node_id": "R_kgDOTaziFQ",
+        "name": "dtos",
+        "full_name": "Richarddavis47/dtos",
+        "private": false,
+        "owner": {
+          "login": "Richarddavis47",
+          "id": 305973940,
+          "node_id": "U_kgDOEjzKtA",
+          "avatar_url": "https://avatars.githubusercontent.com/u/305973940?v=4",
+          "gravatar_id": "",
+          "url": "https://api.github.com/users/Richarddavis47",
+          "html_url": "https://github.com/Richarddavis47",
+          "followers_url": "https://api.github.com/users/Richarddavis47/followers",
+          "following_url": "https://api.github.com/users/Richarddavis47/following{/other_user}",
+          "gists_url": "https://api.github.com/users/Richarddavis47/gists{/gist_id}",
+          "starred_url": "https://api.github.com/users/Richarddavis47/starred{/owner}{/repo}",
+          "subscriptions_url": "https://api.github.com/users/Richarddavis47/subscriptions",
+          "organizations_url": "https://api.github.com/users/Richarddavis47/orgs",
+          "repos_url": "https://api.github.com/users/Richarddavis47/repos",
+          "events_url": "https://api.github.com/users/Richarddavis47/events{/privacy}",
+          "received_events_url": "https://api.github.com/users/Richarddavis47/received_events",
+          "type": "User",
+          "user_view_type": "public",
+          "site_admin": false
+        },
+        "html_url": "https://github.com/Richarddavis47/dtos",
+        "description": "Day traders front office ",
+        "fork": false,
+        "url": "https://api.github.com/repos/Richarddavis47/dtos",
+        "forks_url": "https://api.github.com/repos/Richarddavis47/dtos/forks",
+        "keys_url": "https://api.github.com/repos/Richarddavis47/dtos/keys{/key_id}",
+        "collaborators_url": "https://api.github.com/repos/Richarddavis47/dtos/collaborators{/collaborator}",
+        "teams_url": "https://api.github.com/repos/Richarddavis47/dtos/teams",
+        "hooks_url": "https://api.github.com/repos/Richarddavis47/dtos/hooks",
+        "issue_events_url": "https://api.github.com/repos/Richarddavis47/dtos/issues/events{/number}",
+        "events_url": "https://api.github.com/repos/Richarddavis47/dtos/events",
+        "assignees_url": "https://api.github.com/repos/Richarddavis47/dtos/assignees{/user}",
+        "branches_url": "https://api.github.com/repos/Richarddavis47/dtos/branches{/branch}",
+        "tags_url": "https://api.github.com/repos/Richarddavis47/dtos/tags",
+        "blobs_url": "https://api.github.com/repos/Richarddavis47/dtos/git/blobs{/sha}",
+        "git_tags_url": "https://api.github.com/repos/Richarddavis47/dtos/git/tags{/sha}",
+        "git_refs_url": "https://api.github.com/repos/Richarddavis47/dtos/git/refs{/sha}",
+        "trees_url": "https://api.github.com/repos/Richarddavis47/dtos/git/trees{/sha}",
+        "statuses_url": "https://api.github.com/repos/Richarddavis47/dtos/statuses/{sha}",
+        "languages_url": "https://api.github.com/repos/Richarddavis47/dtos/languages",
+        "stargazers_url": "https://api.github.com/repos/Richarddavis47/dtos/stargazers",
+        "contributors_url": "https://api.github.com/repos/Richarddavis47/dtos/contributors",
+        "subscribers_url": "https://api.github.com/repos/Richarddavis47/dtos/subscribers",
+        "subscription_url": "https://api.github.com/repos/Richarddavis47/dtos/subscription",
+        "commits_url": "https://api.github.com/repos/Richarddavis47/dtos/commits{/sha}",
+        "git_commits_url": "https://api.github.com/repos/Richarddavis47/dtos/git/commits{/sha}",
+        "comments_url": "https://api.github.com/repos/Richarddavis47/dtos/comments{/number}",
+        "issue_comment_url": "https://api.github.com/repos/Richarddavis47/dtos/issues/comments{/number}",
+        "contents_url": "https://api.github.com/repos/Richarddavis47/dtos/contents/{+path}",
+        "compare_url": "https://api.github.com/repos/Richarddavis47/dtos/compare/{base}...{head}",
+        "merges_url": "https://api.github.com/repos/Richarddavis47/dtos/merges",
+        "archive_url": "https://api.github.com/repos/Richarddavis47/dtos/{archive_format}{/ref}",
+        "downloads_url": "https://api.github.com/repos/Richarddavis47/dtos/downloads",
+        "issues_url": "https://api.github.com/repos/Richarddavis47/dtos/issues{/number}",
+        "pulls_url": "https://api.github.com/repos/Richarddavis47/dtos/pulls{/number}",
+        "milestones_url": "https://api.github.com/repos/Richarddavis47/dtos/milestones{/number}",
+        "notifications_url": "https://api.github.com/repos/Richarddavis47/dtos/notifications{?since,all,participating}",
+        "labels_url": "https://api.github.com/repos/Richarddavis47/dtos/labels{/name}",
+        "releases_url": "https://api.github.com/repos/Richarddavis47/dtos/releases{/id}",
+        "deployments_url": "https://api.github.com/repos/Richarddavis47/dtos/deployments"
+      }
+    },
+    "jobs": [
+      {
+        "id": 128154249170,
+        "run_id": 42293956858,
+        "workflow_name": "Product browser journeys",
+        "head_branch": "fix/bounded-cache-string-sharing",
+        "run_url": "https://api.github.com/repos/Richarddavis47/dtos/actions/runs/42293956858",
+        "run_attempt": 1,
+        "node_id": "CR_kwDOTaziFc8AAAAd1pan0g",
+        "head_sha": "4fb702964b34d84a593fb917b5e654b9b8ff0adf",
+        "url": "https://api.github.com/repos/Richarddavis47/dtos/actions/jobs/128154249170",
+        "html_url": "https://github.com/Richarddavis47/dtos/actions/runs/42293956858/job/128154249170",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-11-06T21:06:29Z",
+        "started_at": "2026-11-06T21:06:32Z",
+        "completed_at": "2026-11-06T21:07:49Z",
+        "name": "projection-display-cross-version",
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-11-06T21:06:33Z",
+            "completed_at": "2026-11-06T21:06:34Z"
+          },
+          {
+            "name": "Run actions/checkout@v4",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2,
+            "started_at": "2026-11-06T21:06:34Z",
+            "completed_at": "2026-11-06T21:07:00Z"
+          },
+          {
+            "name": "Run actions/setup-python@v5",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3,
+            "started_at": "2026-11-06T21:07:00Z",
+            "completed_at": "2026-11-06T21:07:00Z"
+          },
+          {
+            "name": "Run python -m pip install -r requirements-validation.txt",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4,
+            "started_at": "2026-11-06T21:07:00Z",
+            "completed_at": "2026-11-06T21:07:08Z"
+          },
+          {
+            "name": "Install browser dependencies and Chromium",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5,
+            "started_at": "2026-11-06T21:07:08Z",
+            "completed_at": "2026-11-06T21:07:33Z"
+          },
+          {
+            "name": "Real prior publisher and isolated current reader",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 6,
+            "started_at": "2026-11-06T21:07:33Z",
+            "completed_at": "2026-11-06T21:07:45Z"
+          },
+          {
+            "name": "Post Run actions/setup-python@v5",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 11,
+            "started_at": "2026-11-06T21:07:45Z",
+            "completed_at": "2026-11-06T21:07:46Z"
+          },
+          {
+            "name": "Post Run actions/checkout@v4",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 12,
+            "started_at": "2026-11-06T21:07:46Z",
+            "completed_at": "2026-11-06T21:07:46Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 13,
+            "started_at": "2026-11-06T21:07:46Z",
+            "completed_at": "2026-11-06T21:07:46Z"
+          }
+        ],
+        "check_run_url": "https://api.github.com/repos/Richarddavis47/dtos/check-runs/128154249170",
+        "labels": [
+          "ubuntu-24.04"
+        ],
+        "runner_id": 1000005525,
+        "runner_name": "GitHub Actions 1000005525",
+        "runner_group_id": 0,
+        "runner_group_name": "GitHub Actions"
+      },
+      {
+        "id": 128154249613,
+        "run_id": 42293956858,
+        "workflow_name": "Product browser journeys",
+        "head_branch": "fix/bounded-cache-string-sharing",
+        "run_url": "https://api.github.com/repos/Richarddavis47/dtos/actions/runs/42293956858",
+        "run_attempt": 1,
+        "node_id": "CR_kwDOTaziFc8AAAAd1papjQ",
+        "head_sha": "4fb702964b34d84a593fb917b5e654b9b8ff0adf",
+        "url": "https://api.github.com/repos/Richarddavis47/dtos/actions/jobs/128154249613",
+        "html_url": "https://github.com/Richarddavis47/dtos/actions/runs/42293956858/job/128154249613",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-11-06T21:06:29Z",
+        "started_at": "2026-11-06T21:06:32Z",
+        "completed_at": "2026-11-06T21:16:39Z",
+        "name": "public-welcome-browser",
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-11-06T21:06:33Z",
+            "completed_at": "2026-11-06T21:06:34Z"
+          },
+          {
+            "name": "Run actions/checkout@v4",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2,
+            "started_at": "2026-11-06T21:06:34Z",
+            "completed_at": "2026-11-06T21:07:10Z"
+          },
+          {
+            "name": "Run actions/setup-python@v5",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3,
+            "started_at": "2026-11-06T21:07:10Z",
+            "completed_at": "2026-11-06T21:07:10Z"
+          },
+          {
+            "name": "Build bounded browser validation dependencies",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4,
+            "started_at": "2026-11-06T21:07:10Z",
+            "completed_at": "2026-11-06T21:09:56Z"
+          },
+          {
+            "name": "Verify source-pinned public routing demo security and browser controls",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5,
+            "started_at": "2026-11-06T21:09:56Z",
+            "completed_at": "2026-11-06T21:16:27Z"
+          },
+          {
+            "name": "Actual 2 GiB metadata-only restoration preflight",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 6,
+            "started_at": "2026-11-06T21:16:27Z",
+            "completed_at": "2026-11-06T21:16:30Z"
+          },
+          {
+            "name": "Preserve restoration preflight including incomplete attempts",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 7,
+            "started_at": "2026-11-06T21:16:30Z",
+            "completed_at": "2026-11-06T21:16:31Z"
+          },
+          {
+            "name": "Preserve source and public phone evidence including failed attempts",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 8,
+            "started_at": "2026-11-06T21:16:31Z",
+            "completed_at": "2026-11-06T21:16:35Z"
+          },
+          {
+            "name": "Post Run actions/setup-python@v5",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 15,
+            "started_at": "2026-11-06T21:16:35Z",
+            "completed_at": "2026-11-06T21:16:35Z"
+          },
+          {
+            "name": "Post Run actions/checkout@v4",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 16,
+            "started_at": "2026-11-06T21:16:35Z",
+            "completed_at": "2026-11-06T21:16:35Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 17,
+            "started_at": "2026-11-06T21:16:35Z",
+            "completed_at": "2026-11-06T21:16:35Z"
+          }
+        ],
+        "check_run_url": "https://api.github.com/repos/Richarddavis47/dtos/check-runs/128154249613",
+        "labels": [
+          "ubuntu-24.04"
+        ],
+        "runner_id": 1000005530,
+        "runner_name": "GitHub Actions 1000005530",
+        "runner_group_id": 0,
+        "runner_group_name": "GitHub Actions"
+      },
+      {
+        "id": 128154249647,
+        "run_id": 42293956858,
+        "workflow_name": "Product browser journeys",
+        "head_branch": "fix/bounded-cache-string-sharing",
+        "run_url": "https://api.github.com/repos/Richarddavis47/dtos/actions/runs/42293956858",
+        "run_attempt": 1,
+        "node_id": "CR_kwDOTaziFc8AAAAd1paprw",
+        "head_sha": "4fb702964b34d84a593fb917b5e654b9b8ff0adf",
+        "url": "https://api.github.com/repos/Richarddavis47/dtos/actions/jobs/128154249647",
+        "html_url": "https://github.com/Richarddavis47/dtos/actions/runs/42293956858/job/128154249647",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-11-06T21:06:29Z",
+        "started_at": "2026-11-06T21:06:32Z",
+        "completed_at": "2026-11-06T21:15:57Z",
+        "name": "my-team-browser",
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-11-06T21:06:33Z",
+            "completed_at": "2026-11-06T21:06:34Z"
+          },
+          {
+            "name": "Run actions/checkout@v4",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2,
+            "started_at": "2026-11-06T21:06:34Z",
+            "completed_at": "2026-11-06T21:07:06Z"
+          },
+          {
+            "name": "Run actions/setup-python@v5",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3,
+            "started_at": "2026-11-06T21:07:06Z",
+            "completed_at": "2026-11-06T21:07:06Z"
+          },
+          {
+            "name": "Build bounded browser validation dependencies",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4,
+            "started_at": "2026-11-06T21:07:06Z",
+            "completed_at": "2026-11-06T21:09:56Z"
+          },
+          {
+            "name": "My Team evidence and authenticated session journeys",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5,
+            "started_at": "2026-11-06T21:09:56Z",
+            "completed_at": "2026-11-06T21:15:53Z"
+          },
+          {
+            "name": "Post Run actions/setup-python@v5",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 9,
+            "started_at": "2026-11-06T21:15:53Z",
+            "completed_at": "2026-11-06T21:15:53Z"
+          },
+          {
+            "name": "Post Run actions/checkout@v4",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 10,
+            "started_at": "2026-11-06T21:15:53Z",
+            "completed_at": "2026-11-06T21:15:53Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 11,
+            "started_at": "2026-11-06T21:15:53Z",
+            "completed_at": "2026-11-06T21:15:53Z"
+          }
+        ],
+        "check_run_url": "https://api.github.com/repos/Richarddavis47/dtos/check-runs/128154249647",
+        "labels": [
+          "ubuntu-24.04"
+        ],
+        "runner_id": 1000005531,
+        "runner_name": "GitHub Actions 1000005531",
+        "runner_group_id": 0,
+        "runner_group_name": "GitHub Actions"
+      },
+      {
+        "id": 128154249677,
+        "run_id": 42293956858,
+        "workflow_name": "Product browser journeys",
+        "head_branch": "fix/bounded-cache-string-sharing",
+        "run_url": "https://api.github.com/repos/Richarddavis47/dtos/actions/runs/42293956858",
+        "run_attempt": 1,
+        "node_id": "CR_kwDOTaziFc8AAAAd1papzQ",
+        "head_sha": "4fb702964b34d84a593fb917b5e654b9b8ff0adf",
+        "url": "https://api.github.com/repos/Richarddavis47/dtos/actions/jobs/128154249677",
+        "html_url": "https://github.com/Richarddavis47/dtos/actions/runs/42293956858/job/128154249677",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-11-06T21:06:29Z",
+        "started_at": "2026-11-06T21:06:33Z",
+        "completed_at": "2026-11-06T21:09:50Z",
+        "name": "historical-trade-timeline",
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-11-06T21:06:34Z",
+            "completed_at": "2026-11-06T21:06:34Z"
+          },
+          {
+            "name": "Run actions/checkout@v4",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2,
+            "started_at": "2026-11-06T21:06:35Z",
+            "completed_at": "2026-11-06T21:07:13Z"
+          },
+          {
+            "name": "Run actions/setup-python@v5",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3,
+            "started_at": "2026-11-06T21:07:13Z",
+            "completed_at": "2026-11-06T21:07:13Z"
+          },
+          {
+            "name": "Run python -m pip install -r requirements-validation.txt",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4,
+            "started_at": "2026-11-06T21:07:13Z",
+            "completed_at": "2026-11-06T21:07:22Z"
+          },
+          {
+            "name": "Install browser dependencies and Chromium",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5,
+            "started_at": "2026-11-06T21:07:22Z",
+            "completed_at": "2026-11-06T21:07:45Z"
+          },
+          {
+            "name": "Historical evidence, source identity and phone routes",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 6,
+            "started_at": "2026-11-06T21:07:45Z",
+            "completed_at": "2026-11-06T21:09:44Z"
+          },
+          {
+            "name": "Real prior quote publisher and current reader",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 7,
+            "started_at": "2026-11-06T21:09:44Z",
+            "completed_at": "2026-11-06T21:09:47Z"
+          },
+          {
+            "name": "Post Run actions/setup-python@v5",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 13,
+            "started_at": "2026-11-06T21:09:47Z",
+            "completed_at": "2026-11-06T21:09:47Z"
+          },
+          {
+            "name": "Post Run actions/checkout@v4",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 14,
+            "started_at": "2026-11-06T21:09:47Z",
+            "completed_at": "2026-11-06T21:09:47Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 15,
+            "started_at": "2026-11-06T21:09:47Z",
+            "completed_at": "2026-11-06T21:09:47Z"
+          }
+        ],
+        "check_run_url": "https://api.github.com/repos/Richarddavis47/dtos/check-runs/128154249677",
+        "labels": [
+          "ubuntu-24.04"
+        ],
+        "runner_id": 1000005533,
+        "runner_name": "GitHub Actions 1000005533",
+        "runner_group_id": 0,
+        "runner_group_name": "GitHub Actions"
+      },
+      {
+        "id": 128154249716,
+        "run_id": 42293956858,
+        "workflow_name": "Product browser journeys",
+        "head_branch": "fix/bounded-cache-string-sharing",
+        "run_url": "https://api.github.com/repos/Richarddavis47/dtos/actions/runs/42293956858",
+        "run_attempt": 1,
+        "node_id": "CR_kwDOTaziFc8AAAAd1pap9A",
+        "head_sha": "4fb702964b34d84a593fb917b5e654b9b8ff0adf",
+        "url": "https://api.github.com/repos/Richarddavis47/dtos/actions/jobs/128154249716",
+        "html_url": "https://github.com/Richarddavis47/dtos/actions/runs/42293956858/job/128154249716",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-11-06T21:06:29Z",
+        "started_at": "2026-11-06T21:06:32Z",
+        "completed_at": "2026-11-06T21:10:25Z",
+        "name": "beginner-navigation",
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-11-06T21:06:33Z",
+            "completed_at": "2026-11-06T21:06:33Z"
+          },
+          {
+            "name": "Run actions/checkout@v4",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2,
+            "started_at": "2026-11-06T21:06:33Z",
+            "completed_at": "2026-11-06T21:06:36Z"
+          },
+          {
+            "name": "Run actions/setup-python@v5",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3,
+            "started_at": "2026-11-06T21:06:36Z",
+            "completed_at": "2026-11-06T21:06:36Z"
+          },
+          {
+            "name": "Build bounded browser validation dependencies",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4,
+            "started_at": "2026-11-06T21:06:36Z",
+            "completed_at": "2026-11-06T21:07:21Z"
+          },
+          {
+            "name": "Market pagination, visible roster and scoped fresh-start journeys",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5,
+            "started_at": "2026-11-06T21:07:21Z",
+            "completed_at": "2026-11-06T21:10:23Z"
+          },
+          {
+            "name": "Post Run actions/setup-python@v5",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 9,
+            "started_at": "2026-11-06T21:10:23Z",
+            "completed_at": "2026-11-06T21:10:23Z"
+          },
+          {
+            "name": "Post Run actions/checkout@v4",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 10,
+            "started_at": "2026-11-06T21:10:23Z",
+            "completed_at": "2026-11-06T21:10:23Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 11,
+            "started_at": "2026-11-06T21:10:23Z",
+            "completed_at": "2026-11-06T21:10:23Z"
+          }
+        ],
+        "check_run_url": "https://api.github.com/repos/Richarddavis47/dtos/check-runs/128154249716",
+        "labels": [
+          "ubuntu-24.04"
+        ],
+        "runner_id": 1000005532,
+        "runner_name": "GitHub Actions 1000005532",
+        "runner_group_id": 0,
+        "runner_group_name": "GitHub Actions"
+      },
+      {
+        "id": 128154249801,
+        "run_id": 42293956858,
+        "workflow_name": "Product browser journeys",
+        "head_branch": "fix/bounded-cache-string-sharing",
+        "run_url": "https://api.github.com/repos/Richarddavis47/dtos/actions/runs/42293956858",
+        "run_attempt": 1,
+        "node_id": "CR_kwDOTaziFc8AAAAd1paqSQ",
+        "head_sha": "4fb702964b34d84a593fb917b5e654b9b8ff0adf",
+        "url": "https://api.github.com/repos/Richarddavis47/dtos/actions/jobs/128154249801",
+        "html_url": "https://github.com/Richarddavis47/dtos/actions/runs/42293956858/job/128154249801",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-11-06T21:06:29Z",
+        "started_at": "2026-11-06T21:06:32Z",
+        "completed_at": "2026-11-06T21:28:55Z",
+        "name": "product-browser",
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-11-06T21:06:32Z",
+            "completed_at": "2026-11-06T21:06:33Z"
+          },
+          {
+            "name": "Run actions/checkout@v4",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2,
+            "started_at": "2026-11-06T21:06:33Z",
+            "completed_at": "2026-11-06T21:06:55Z"
+          },
+          {
+            "name": "Run actions/setup-python@v5",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3,
+            "started_at": "2026-11-06T21:06:55Z",
+            "completed_at": "2026-11-06T21:06:56Z"
+          },
+          {
+            "name": "Prepare runner-owned Trade evidence directories",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4,
+            "started_at": "2026-11-06T21:06:56Z",
+            "completed_at": "2026-11-06T21:06:56Z"
+          },
+          {
+            "name": "Build bounded browser validation dependencies",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5,
+            "started_at": "2026-11-06T21:06:56Z",
+            "completed_at": "2026-11-06T21:08:12Z"
+          },
+          {
+            "name": "Authenticated product, interaction and accessibility contracts",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 6,
+            "started_at": "2026-11-06T21:08:12Z",
+            "completed_at": "2026-11-06T21:24:21Z"
+          },
+          {
+            "name": "Retained history lifecycle and phone routes",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 7,
+            "started_at": "2026-11-06T21:24:21Z",
+            "completed_at": "2026-11-06T21:27:02Z"
+          },
+          {
+            "name": "Preserve current-season history evidence",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 8,
+            "started_at": "2026-11-06T21:27:02Z",
+            "completed_at": "2026-11-06T21:27:03Z"
+          },
+          {
+            "name": "Preserve history follow-through evidence",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 9,
+            "started_at": "2026-11-06T21:27:03Z",
+            "completed_at": "2026-11-06T21:27:04Z"
+          },
+          {
+            "name": "Preserve Market history coverage evidence",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 10,
+            "started_at": "2026-11-06T21:27:04Z",
+            "completed_at": "2026-11-06T21:27:05Z"
+          },
+          {
+            "name": "Preserve current-production coverage evidence",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 11,
+            "started_at": "2026-11-06T21:27:05Z",
+            "completed_at": "2026-11-06T21:27:06Z"
+          },
+          {
+            "name": "Actual 2 GiB Trade admission execution and recovery",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 12,
+            "started_at": "2026-11-06T21:27:06Z",
+            "completed_at": "2026-11-06T21:28:22Z"
+          },
+          {
+            "name": "Preserve Trade resource evidence including incomplete attempts",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 13,
+            "started_at": "2026-11-06T21:28:22Z",
+            "completed_at": "2026-11-06T21:28:22Z"
+          },
+          {
+            "name": "League entry with active FOIS, pressure and explicit recovery",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 14,
+            "started_at": "2026-11-06T21:28:22Z",
+            "completed_at": "2026-11-06T21:28:36Z"
+          },
+          {
+            "name": "Preserve league entry evidence including incomplete attempts",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 15,
+            "started_at": "2026-11-06T21:28:36Z",
+            "completed_at": "2026-11-06T21:28:37Z"
+          },
+          {
+            "name": "Cached restoration unused-memory recovery under 2 GiB",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 16,
+            "started_at": "2026-11-06T21:28:37Z",
+            "completed_at": "2026-11-06T21:28:44Z"
+          },
+          {
+            "name": "Preserve restoration recovery including incomplete attempts",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 17,
+            "started_at": "2026-11-06T21:28:44Z",
+            "completed_at": "2026-11-06T21:28:45Z"
+          },
+          {
+            "name": "Native actuals through constrained connected-runtime restoration",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 18,
+            "started_at": "2026-11-06T21:28:45Z",
+            "completed_at": "2026-11-06T21:28:52Z"
+          },
+          {
+            "name": "Preserve native actuals restoration including incomplete attempts",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 19,
+            "started_at": "2026-11-06T21:28:52Z",
+            "completed_at": "2026-11-06T21:28:53Z"
+          },
+          {
+            "name": "Post Run actions/setup-python@v5",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 37,
+            "started_at": "2026-11-06T21:28:53Z",
+            "completed_at": "2026-11-06T21:28:53Z"
+          },
+          {
+            "name": "Post Run actions/checkout@v4",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 38,
+            "started_at": "2026-11-06T21:28:53Z",
+            "completed_at": "2026-11-06T21:28:54Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 39,
+            "started_at": "2026-11-06T21:28:54Z",
+            "completed_at": "2026-11-06T21:28:54Z"
+          }
+        ],
+        "check_run_url": "https://api.github.com/repos/Richarddavis47/dtos/check-runs/128154249801",
+        "labels": [
+          "ubuntu-24.04"
+        ],
+        "runner_id": 1000005529,
+        "runner_name": "GitHub Actions 1000005529",
+        "runner_group_id": 0,
+        "runner_group_name": "GitHub Actions"
+      }
+    ],
+    "artifacts": [
+      {
+        "id": 13543005605,
+        "node_id": "MDg6QXJ0aWZhY3QxMzU0MzAwNTYwNQ==",
+        "name": "current-production-coverage-browser",
+        "size_in_bytes": 2095303,
+        "url": "https://api.github.com/repos/Richarddavis47/dtos/actions/artifacts/13543005605",
+        "archive_download_url": "https://api.github.com/repos/Richarddavis47/dtos/actions/artifacts/13543005605/zip",
+        "expired": false,
+        "digest": "sha256:485cc5236ec4e6adc8fb94aefaa9b7f602036fd883f6597ccf087145755348e0",
+        "created_at": "2026-11-06T21:27:06Z",
+        "updated_at": "2026-11-06T21:27:06Z",
+        "expires_at": "2026-11-20T21:27:05Z",
+        "workflow_run": {
+          "id": 42293956858,
+          "repository_id": 1303175701,
+          "head_repository_id": 1303175701,
+          "head_branch": "fix/bounded-cache-string-sharing",
+          "head_sha": "4fb702964b34d84a593fb917b5e654b9b8ff0adf"
+        }
+      },
+      {
+        "id": 13542980667,
+        "node_id": "MDg6QXJ0aWZhY3QxMzU0Mjk4MDY2Nw==",
+        "name": "market-history-coverage-browser",
+        "size_in_bytes": 1429622,
+        "url": "https://api.github.com/repos/Richarddavis47/dtos/actions/artifacts/13542980667",
+        "archive_download_url": "https://api.github.com/repos/Richarddavis47/dtos/actions/artifacts/13542980667/zip",
+        "expired": false,
+        "digest": "sha256:8913fc212b5547dfa78280bd4f4abecff49a80c12f02a484e67c73c334bd807b",
+        "created_at": "2026-11-06T21:27:04Z",
+        "updated_at": "2026-11-06T21:27:04Z",
+        "expires_at": "2026-11-20T21:27:04Z",
+        "workflow_run": {
+          "id": 42293956858,
+          "repository_id": 1303175701,
+          "head_repository_id": 1303175701,
+          "head_branch": "fix/bounded-cache-string-sharing",
+          "head_sha": "4fb702964b34d84a593fb917b5e654b9b8ff0adf"
+        }
+      },
+      {
+        "id": 13542746110,
+        "node_id": "MDg6QXJ0aWZhY3QxMzU0Mjc0NjExMA==",
+        "name": "history-followthrough-browser",
+        "size_in_bytes": 477100,
+        "url": "https://api.github.com/repos/Richarddavis47/dtos/actions/artifacts/13542746110",
+        "archive_download_url": "https://api.github.com/repos/Richarddavis47/dtos/actions/artifacts/13542746110/zip",
+        "expired": false,
+        "digest": "sha256:dbae3834deeafbbc323d5f3ce9d436f839adad1ba8853633c24e85c5609eb6cf",
+        "created_at": "2026-11-06T21:27:04Z",
+        "updated_at": "2026-11-06T21:27:04Z",
+        "expires_at": "2026-11-20T21:27:03Z",
+        "workflow_run": {
+          "id": 42293956858,
+          "repository_id": 1303175701,
+          "head_repository_id": 1303175701,
+          "head_branch": "fix/bounded-cache-string-sharing",
+          "head_sha": "4fb702964b34d84a593fb917b5e654b9b8ff0adf"
+        }
+      },
+      {
+        "id": 13542265957,
+        "node_id": "MDg6QXJ0aWZhY3QxMzU0MjI2NTk1Nw==",
+        "name": "public-welcome-security-browser",
+        "size_in_bytes": 63896257,
+        "url": "https://api.github.com/repos/Richarddavis47/dtos/actions/artifacts/13542265957",
+        "archive_download_url": "https://api.github.com/repos/Richarddavis47/dtos/actions/artifacts/13542265957/zip",
+        "expired": false,
+        "digest": "sha256:8a55a0bdc4cfae44f8d61e28f9634e6b5b33310cb11f61c3ed094efaca4a24e3",
+        "created_at": "2026-11-06T21:16:35Z",
+        "updated_at": "2026-11-06T21:16:35Z",
+        "expires_at": "2026-11-20T21:16:32Z",
+        "workflow_run": {
+          "id": 42293956858,
+          "repository_id": 1303175701,
+          "head_repository_id": 1303175701,
+          "head_branch": "fix/bounded-cache-string-sharing",
+          "head_sha": "4fb702964b34d84a593fb917b5e654b9b8ff0adf"
+        }
+      },
+      {
+        "id": 13542127777,
+        "node_id": "MDg6QXJ0aWZhY3QxMzU0MjEyNzc3Nw==",
+        "name": "current-season-history-browser",
+        "size_in_bytes": 895224,
+        "url": "https://api.github.com/repos/Richarddavis47/dtos/actions/artifacts/13542127777",
+        "archive_download_url": "https://api.github.com/repos/Richarddavis47/dtos/actions/artifacts/13542127777/zip",
+        "expired": false,
+        "digest": "sha256:c30f0f7dd8d98cb79a3bb38a0ebdcd2b7819ad2c0f675d7c10d48736b3e3837b",
+        "created_at": "2026-11-06T21:27:03Z",
+        "updated_at": "2026-11-06T21:27:03Z",
+        "expires_at": "2026-11-20T21:27:02Z",
+        "workflow_run": {
+          "id": 42293956858,
+          "repository_id": 1303175701,
+          "head_repository_id": 1303175701,
+          "head_branch": "fix/bounded-cache-string-sharing",
+          "head_sha": "4fb702964b34d84a593fb917b5e654b9b8ff0adf"
+        }
+      },
+      {
+        "id": 13541993153,
+        "node_id": "MDg6QXJ0aWZhY3QxMzU0MTk5MzE1Mw==",
+        "name": "restoration-unused-2g",
+        "size_in_bytes": 7340584,
+        "url": "https://api.github.com/repos/Richarddavis47/dtos/actions/artifacts/13541993153",
+        "archive_download_url": "https://api.github.com/repos/Richarddavis47/dtos/actions/artifacts/13541993153/zip",
+        "expired": false,
+        "digest": "sha256:2c0293ba48f443054e269f6b1b0bd500a9fad0eeddbfe4f7bd75588fb4832c3d",
+        "created_at": "2026-11-06T21:28:45Z",
+        "updated_at": "2026-11-06T21:28:45Z",
+        "expires_at": "2026-11-20T21:28:44Z",
+        "workflow_run": {
+          "id": 42293956858,
+          "repository_id": 1303175701,
+          "head_repository_id": 1303175701,
+          "head_branch": "fix/bounded-cache-string-sharing",
+          "head_sha": "4fb702964b34d84a593fb917b5e654b9b8ff0adf"
+        }
+      },
+      {
+        "id": 13541778576,
+        "node_id": "MDg6QXJ0aWZhY3QxMzU0MTc3ODU3Ng==",
+        "name": "league-entry-2g",
+        "size_in_bytes": 11343,
+        "url": "https://api.github.com/repos/Richarddavis47/dtos/actions/artifacts/13541778576",
+        "archive_download_url": "https://api.github.com/repos/Richarddavis47/dtos/actions/artifacts/13541778576/zip",
+        "expired": false,
+        "digest": "sha256:04a066b78837e6f1ecc4ad1f81a599cae4d425243448c4df558659a007bea4f1",
+        "created_at": "2026-11-06T21:28:36Z",
+        "updated_at": "2026-11-06T21:28:36Z",
+        "expires_at": "2026-11-20T21:28:36Z",
+        "workflow_run": {
+          "id": 42293956858,
+          "repository_id": 1303175701,
+          "head_repository_id": 1303175701,
+          "head_branch": "fix/bounded-cache-string-sharing",
+          "head_sha": "4fb702964b34d84a593fb917b5e654b9b8ff0adf"
+        }
+      },
+      {
+        "id": 13541527928,
+        "node_id": "MDg6QXJ0aWZhY3QxMzU0MTUyNzkyOA==",
+        "name": "trade-resource-2g",
+        "size_in_bytes": 761990,
+        "url": "https://api.github.com/repos/Richarddavis47/dtos/actions/artifacts/13541527928",
+        "archive_download_url": "https://api.github.com/repos/Richarddavis47/dtos/actions/artifacts/13541527928/zip",
+        "expired": false,
+        "digest": "sha256:f5dd3918063e4d17776e51f8c2e70069e8b7ed9254781bf9754d127064aa80f5",
+        "created_at": "2026-11-06T21:28:22Z",
+        "updated_at": "2026-11-06T21:28:22Z",
+        "expires_at": "2026-11-20T21:28:22Z",
+        "workflow_run": {
+          "id": 42293956858,
+          "repository_id": 1303175701,
+          "head_repository_id": 1303175701,
+          "head_branch": "fix/bounded-cache-string-sharing",
+          "head_sha": "4fb702964b34d84a593fb917b5e654b9b8ff0adf"
+        }
+      },
+      {
+        "id": 13541498716,
+        "node_id": "MDg6QXJ0aWZhY3QxMzU0MTQ5ODcxNg==",
+        "name": "actuals-restoration-2g",
+        "size_in_bytes": 7340898,
+        "url": "https://api.github.com/repos/Richarddavis47/dtos/actions/artifacts/13541498716",
+        "archive_download_url": "https://api.github.com/repos/Richarddavis47/dtos/actions/artifacts/13541498716/zip",
+        "expired": false,
+        "digest": "sha256:a7c22e0df9768cd6416fb35fdc48b44b72d1b9f84bc5a27ba9fe316e39a475c5",
+        "created_at": "2026-11-06T21:28:53Z",
+        "updated_at": "2026-11-06T21:28:53Z",
+        "expires_at": "2026-11-20T21:28:52Z",
+        "workflow_run": {
+          "id": 42293956858,
+          "repository_id": 1303175701,
+          "head_repository_id": 1303175701,
+          "head_branch": "fix/bounded-cache-string-sharing",
+          "head_sha": "4fb702964b34d84a593fb917b5e654b9b8ff0adf"
+        }
+      },
+      {
+        "id": 13540899141,
+        "node_id": "MDg6QXJ0aWZhY3QxMzU0MDg5OTE0MQ==",
+        "name": "restoration-preflight-2g",
+        "size_in_bytes": 3731,
+        "url": "https://api.github.com/repos/Richarddavis47/dtos/actions/artifacts/13540899141",
+        "archive_download_url": "https://api.github.com/repos/Richarddavis47/dtos/actions/artifacts/13540899141/zip",
+        "expired": false,
+        "digest": "sha256:405ecd6bc0412b17893bd0f0c2ce2eb7bc309a42b2bddf9cb4fb4f4fa517c84f",
+        "created_at": "2026-11-06T21:16:31Z",
+        "updated_at": "2026-11-06T21:16:31Z",
+        "expires_at": "2026-11-20T21:16:30Z",
+        "workflow_run": {
+          "id": 42293956858,
+          "repository_id": 1303175701,
+          "head_repository_id": 1303175701,
+          "head_branch": "fix/bounded-cache-string-sharing",
+          "head_sha": "4fb702964b34d84a593fb917b5e654b9b8ff0adf"
+        }
+      }
+    ]
+  },
+  {
+    "run": {
+      "id": 42293956820,
+      "name": "Validation tooling",
+      "node_id": "WFR_kwLOTaziFc8AAAAJ2OqQ1A",
+      "head_branch": "fix/bounded-cache-string-sharing",
+      "head_sha": "4fb702964b34d84a593fb917b5e654b9b8ff0adf",
+      "path": ".github/workflows/validation-tooling.yml",
+      "display_title": "Reduce league cache restoration memory through bounded string sharing",
+      "run_number": 359,
+      "event": "pull_request",
+      "status": "completed",
+      "conclusion": "success",
+      "workflow_id": 371941030,
+      "check_suite_id": 114597446115,
+      "check_suite_node_id": "CS_kwDOTaziFc8AAAAaropB4w",
+      "url": "https://api.github.com/repos/Richarddavis47/dtos/actions/runs/42293956820",
+      "html_url": "https://github.com/Richarddavis47/dtos/actions/runs/42293956820",
+      "pull_requests": [
+        {
+          "url": "https://api.github.com/repos/Richarddavis47/dtos/pulls/326",
+          "id": 5194485900,
+          "number": 326,
+          "head": {
+            "ref": "fix/bounded-cache-string-sharing",
+            "sha": "4fb702964b34d84a593fb917b5e654b9b8ff0adf",
+            "repo": {
+              "id": 1303175701,
+              "url": "https://api.github.com/repos/Richarddavis47/dtos",
+              "name": "dtos"
+            }
+          },
+          "base": {
+            "ref": "main",
+            "sha": "8af490880bb59b357b0e5fa82575cfa164401b07",
+            "repo": {
+              "id": 1303175701,
+              "url": "https://api.github.com/repos/Richarddavis47/dtos",
+              "name": "dtos"
+            }
+          }
+        }
+      ],
+      "created_at": "2026-11-06T21:06:28Z",
+      "updated_at": "2026-11-06T21:08:48Z",
+      "actor": {
+        "login": "Richarddavis47",
+        "id": 305973940,
+        "node_id": "U_kgDOEjzKtA",
+        "avatar_url": "https://avatars.githubusercontent.com/u/305973940?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/Richarddavis47",
+        "html_url": "https://github.com/Richarddavis47",
+        "followers_url": "https://api.github.com/users/Richarddavis47/followers",
+        "following_url": "https://api.github.com/users/Richarddavis47/following{/other_user}",
+        "gists_url": "https://api.github.com/users/Richarddavis47/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/Richarddavis47/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/Richarddavis47/subscriptions",
+        "organizations_url": "https://api.github.com/users/Richarddavis47/orgs",
+        "repos_url": "https://api.github.com/users/Richarddavis47/repos",
+        "events_url": "https://api.github.com/users/Richarddavis47/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/Richarddavis47/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "run_attempt": 1,
+      "referenced_workflows": [],
+      "run_started_at": "2026-11-06T21:06:28Z",
+      "triggering_actor": {
+        "login": "Richarddavis47",
+        "id": 305973940,
+        "node_id": "U_kgDOEjzKtA",
+        "avatar_url": "https://avatars.githubusercontent.com/u/305973940?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/Richarddavis47",
+        "html_url": "https://github.com/Richarddavis47",
+        "followers_url": "https://api.github.com/users/Richarddavis47/followers",
+        "following_url": "https://api.github.com/users/Richarddavis47/following{/other_user}",
+        "gists_url": "https://api.github.com/users/Richarddavis47/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/Richarddavis47/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/Richarddavis47/subscriptions",
+        "organizations_url": "https://api.github.com/users/Richarddavis47/orgs",
+        "repos_url": "https://api.github.com/users/Richarddavis47/repos",
+        "events_url": "https://api.github.com/users/Richarddavis47/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/Richarddavis47/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "jobs_url": "https://api.github.com/repos/Richarddavis47/dtos/actions/runs/42293956820/jobs",
+      "logs_url": "https://api.github.com/repos/Richarddavis47/dtos/actions/runs/42293956820/logs",
+      "check_suite_url": "https://api.github.com/repos/Richarddavis47/dtos/check-suites/114597446115",
+      "artifacts_url": "https://api.github.com/repos/Richarddavis47/dtos/actions/runs/42293956820/artifacts",
+      "cancel_url": "https://api.github.com/repos/Richarddavis47/dtos/actions/runs/42293956820/cancel",
+      "rerun_url": "https://api.github.com/repos/Richarddavis47/dtos/actions/runs/42293956820/rerun",
+      "previous_attempt_url": null,
+      "workflow_url": "https://api.github.com/repos/Richarddavis47/dtos/actions/workflows/371941030",
+      "head_commit": {
+        "id": "4fb702964b34d84a593fb917b5e654b9b8ff0adf",
+        "tree_id": "4051883efb1f225dcd71e07f1998e45c9d96fb39",
+        "message": "Keep admission and preflight sentinels on the shared cache decoder",
+        "timestamp": "2026-11-06T21:06:21Z",
+        "author": {
+          "name": "Richard Davis",
+          "email": "ricdav398@gmail.com"
+        },
+        "committer": {
+          "name": "Richard Davis",
+          "email": "ricdav398@gmail.com"
+        }
+      },
+      "repository": {
+        "id": 1303175701,
+        "node_id": "R_kgDOTaziFQ",
+        "name": "dtos",
+        "full_name": "Richarddavis47/dtos",
+        "private": false,
+        "owner": {
+          "login": "Richarddavis47",
+          "id": 305973940,
+          "node_id": "U_kgDOEjzKtA",
+          "avatar_url": "https://avatars.githubusercontent.com/u/305973940?v=4",
+          "gravatar_id": "",
+          "url": "https://api.github.com/users/Richarddavis47",
+          "html_url": "https://github.com/Richarddavis47",
+          "followers_url": "https://api.github.com/users/Richarddavis47/followers",
+          "following_url": "https://api.github.com/users/Richarddavis47/following{/other_user}",
+          "gists_url": "https://api.github.com/users/Richarddavis47/gists{/gist_id}",
+          "starred_url": "https://api.github.com/users/Richarddavis47/starred{/owner}{/repo}",
+          "subscriptions_url": "https://api.github.com/users/Richarddavis47/subscriptions",
+          "organizations_url": "https://api.github.com/users/Richarddavis47/orgs",
+          "repos_url": "https://api.github.com/users/Richarddavis47/repos",
+          "events_url": "https://api.github.com/users/Richarddavis47/events{/privacy}",
+          "received_events_url": "https://api.github.com/users/Richarddavis47/received_events",
+          "type": "User",
+          "user_view_type": "public",
+          "site_admin": false
+        },
+        "html_url": "https://github.com/Richarddavis47/dtos",
+        "description": "Day traders front office ",
+        "fork": false,
+        "url": "https://api.github.com/repos/Richarddavis47/dtos",
+        "forks_url": "https://api.github.com/repos/Richarddavis47/dtos/forks",
+        "keys_url": "https://api.github.com/repos/Richarddavis47/dtos/keys{/key_id}",
+        "collaborators_url": "https://api.github.com/repos/Richarddavis47/dtos/collaborators{/collaborator}",
+        "teams_url": "https://api.github.com/repos/Richarddavis47/dtos/teams",
+        "hooks_url": "https://api.github.com/repos/Richarddavis47/dtos/hooks",
+        "issue_events_url": "https://api.github.com/repos/Richarddavis47/dtos/issues/events{/number}",
+        "events_url": "https://api.github.com/repos/Richarddavis47/dtos/events",
+        "assignees_url": "https://api.github.com/repos/Richarddavis47/dtos/assignees{/user}",
+        "branches_url": "https://api.github.com/repos/Richarddavis47/dtos/branches{/branch}",
+        "tags_url": "https://api.github.com/repos/Richarddavis47/dtos/tags",
+        "blobs_url": "https://api.github.com/repos/Richarddavis47/dtos/git/blobs{/sha}",
+        "git_tags_url": "https://api.github.com/repos/Richarddavis47/dtos/git/tags{/sha}",
+        "git_refs_url": "https://api.github.com/repos/Richarddavis47/dtos/git/refs{/sha}",
+        "trees_url": "https://api.github.com/repos/Richarddavis47/dtos/git/trees{/sha}",
+        "statuses_url": "https://api.github.com/repos/Richarddavis47/dtos/statuses/{sha}",
+        "languages_url": "https://api.github.com/repos/Richarddavis47/dtos/languages",
+        "stargazers_url": "https://api.github.com/repos/Richarddavis47/dtos/stargazers",
+        "contributors_url": "https://api.github.com/repos/Richarddavis47/dtos/contributors",
+        "subscribers_url": "https://api.github.com/repos/Richarddavis47/dtos/subscribers",
+        "subscription_url": "https://api.github.com/repos/Richarddavis47/dtos/subscription",
+        "commits_url": "https://api.github.com/repos/Richarddavis47/dtos/commits{/sha}",
+        "git_commits_url": "https://api.github.com/repos/Richarddavis47/dtos/git/commits{/sha}",
+        "comments_url": "https://api.github.com/repos/Richarddavis47/dtos/comments{/number}",
+        "issue_comment_url": "https://api.github.com/repos/Richarddavis47/dtos/issues/comments{/number}",
+        "contents_url": "https://api.github.com/repos/Richarddavis47/dtos/contents/{+path}",
+        "compare_url": "https://api.github.com/repos/Richarddavis47/dtos/compare/{base}...{head}",
+        "merges_url": "https://api.github.com/repos/Richarddavis47/dtos/merges",
+        "archive_url": "https://api.github.com/repos/Richarddavis47/dtos/{archive_format}{/ref}",
+        "downloads_url": "https://api.github.com/repos/Richarddavis47/dtos/downloads",
+        "issues_url": "https://api.github.com/repos/Richarddavis47/dtos/issues{/number}",
+        "pulls_url": "https://api.github.com/repos/Richarddavis47/dtos/pulls{/number}",
+        "milestones_url": "https://api.github.com/repos/Richarddavis47/dtos/milestones{/number}",
+        "notifications_url": "https://api.github.com/repos/Richarddavis47/dtos/notifications{?since,all,participating}",
+        "labels_url": "https://api.github.com/repos/Richarddavis47/dtos/labels{/name}",
+        "releases_url": "https://api.github.com/repos/Richarddavis47/dtos/releases{/id}",
+        "deployments_url": "https://api.github.com/repos/Richarddavis47/dtos/deployments"
+      },
+      "head_repository": {
+        "id": 1303175701,
+        "node_id": "R_kgDOTaziFQ",
+        "name": "dtos",
+        "full_name": "Richarddavis47/dtos",
+        "private": false,
+        "owner": {
+          "login": "Richarddavis47",
+          "id": 305973940,
+          "node_id": "U_kgDOEjzKtA",
+          "avatar_url": "https://avatars.githubusercontent.com/u/305973940?v=4",
+          "gravatar_id": "",
+          "url": "https://api.github.com/users/Richarddavis47",
+          "html_url": "https://github.com/Richarddavis47",
+          "followers_url": "https://api.github.com/users/Richarddavis47/followers",
+          "following_url": "https://api.github.com/users/Richarddavis47/following{/other_user}",
+          "gists_url": "https://api.github.com/users/Richarddavis47/gists{/gist_id}",
+          "starred_url": "https://api.github.com/users/Richarddavis47/starred{/owner}{/repo}",
+          "subscriptions_url": "https://api.github.com/users/Richarddavis47/subscriptions",
+          "organizations_url": "https://api.github.com/users/Richarddavis47/orgs",
+          "repos_url": "https://api.github.com/users/Richarddavis47/repos",
+          "events_url": "https://api.github.com/users/Richarddavis47/events{/privacy}",
+          "received_events_url": "https://api.github.com/users/Richarddavis47/received_events",
+          "type": "User",
+          "user_view_type": "public",
+          "site_admin": false
+        },
+        "html_url": "https://github.com/Richarddavis47/dtos",
+        "description": "Day traders front office ",
+        "fork": false,
+        "url": "https://api.github.com/repos/Richarddavis47/dtos",
+        "forks_url": "https://api.github.com/repos/Richarddavis47/dtos/forks",
+        "keys_url": "https://api.github.com/repos/Richarddavis47/dtos/keys{/key_id}",
+        "collaborators_url": "https://api.github.com/repos/Richarddavis47/dtos/collaborators{/collaborator}",
+        "teams_url": "https://api.github.com/repos/Richarddavis47/dtos/teams",
+        "hooks_url": "https://api.github.com/repos/Richarddavis47/dtos/hooks",
+        "issue_events_url": "https://api.github.com/repos/Richarddavis47/dtos/issues/events{/number}",
+        "events_url": "https://api.github.com/repos/Richarddavis47/dtos/events",
+        "assignees_url": "https://api.github.com/repos/Richarddavis47/dtos/assignees{/user}",
+        "branches_url": "https://api.github.com/repos/Richarddavis47/dtos/branches{/branch}",
+        "tags_url": "https://api.github.com/repos/Richarddavis47/dtos/tags",
+        "blobs_url": "https://api.github.com/repos/Richarddavis47/dtos/git/blobs{/sha}",
+        "git_tags_url": "https://api.github.com/repos/Richarddavis47/dtos/git/tags{/sha}",
+        "git_refs_url": "https://api.github.com/repos/Richarddavis47/dtos/git/refs{/sha}",
+        "trees_url": "https://api.github.com/repos/Richarddavis47/dtos/git/trees{/sha}",
+        "statuses_url": "https://api.github.com/repos/Richarddavis47/dtos/statuses/{sha}",
+        "languages_url": "https://api.github.com/repos/Richarddavis47/dtos/languages",
+        "stargazers_url": "https://api.github.com/repos/Richarddavis47/dtos/stargazers",
+        "contributors_url": "https://api.github.com/repos/Richarddavis47/dtos/contributors",
+        "subscribers_url": "https://api.github.com/repos/Richarddavis47/dtos/subscribers",
+        "subscription_url": "https://api.github.com/repos/Richarddavis47/dtos/subscription",
+        "commits_url": "https://api.github.com/repos/Richarddavis47/dtos/commits{/sha}",
+        "git_commits_url": "https://api.github.com/repos/Richarddavis47/dtos/git/commits{/sha}",
+        "comments_url": "https://api.github.com/repos/Richarddavis47/dtos/comments{/number}",
+        "issue_comment_url": "https://api.github.com/repos/Richarddavis47/dtos/issues/comments{/number}",
+        "contents_url": "https://api.github.com/repos/Richarddavis47/dtos/contents/{+path}",
+        "compare_url": "https://api.github.com/repos/Richarddavis47/dtos/compare/{base}...{head}",
+        "merges_url": "https://api.github.com/repos/Richarddavis47/dtos/merges",
+        "archive_url": "https://api.github.com/repos/Richarddavis47/dtos/{archive_format}{/ref}",
+        "downloads_url": "https://api.github.com/repos/Richarddavis47/dtos/downloads",
+        "issues_url": "https://api.github.com/repos/Richarddavis47/dtos/issues{/number}",
+        "pulls_url": "https://api.github.com/repos/Richarddavis47/dtos/pulls{/number}",
+        "milestones_url": "https://api.github.com/repos/Richarddavis47/dtos/milestones{/number}",
+        "notifications_url": "https://api.github.com/repos/Richarddavis47/dtos/notifications{?since,all,participating}",
+        "labels_url": "https://api.github.com/repos/Richarddavis47/dtos/labels{/name}",
+        "releases_url": "https://api.github.com/repos/Richarddavis47/dtos/releases{/id}",
+        "deployments_url": "https://api.github.com/repos/Richarddavis47/dtos/deployments"
+      }
+    },
+    "jobs": [
+      {
+        "id": 128154248911,
+        "run_id": 42293956820,
+        "workflow_name": "Validation tooling",
+        "head_branch": "fix/bounded-cache-string-sharing",
+        "run_url": "https://api.github.com/repos/Richarddavis47/dtos/actions/runs/42293956820",
+        "run_attempt": 1,
+        "node_id": "CR_kwDOTaziFc8AAAAd1pamzw",
+        "head_sha": "4fb702964b34d84a593fb917b5e654b9b8ff0adf",
+        "url": "https://api.github.com/repos/Richarddavis47/dtos/actions/jobs/128154248911",
+        "html_url": "https://github.com/Richarddavis47/dtos/actions/runs/42293956820/job/128154248911",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-11-06T21:06:29Z",
+        "started_at": "2026-11-06T21:06:32Z",
+        "completed_at": "2026-11-06T21:08:48Z",
+        "name": "tooling (windows-latest)",
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-11-06T21:06:32Z",
+            "completed_at": "2026-11-06T21:06:33Z"
+          },
+          {
+            "name": "Run actions/checkout@v4",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2,
+            "started_at": "2026-11-06T21:06:33Z",
+            "completed_at": "2026-11-06T21:06:40Z"
+          },
+          {
+            "name": "Run actions/setup-python@v5",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3,
+            "started_at": "2026-11-06T21:06:40Z",
+            "completed_at": "2026-11-06T21:06:50Z"
+          },
+          {
+            "name": "Install validation dependencies",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4,
+            "started_at": "2026-11-06T21:06:50Z",
+            "completed_at": "2026-11-06T21:07:21Z"
+          },
+          {
+            "name": "Platform ownership and validation tooling contracts",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5,
+            "started_at": "2026-11-06T21:07:21Z",
+            "completed_at": "2026-11-06T21:07:34Z"
+          },
+          {
+            "name": "Build bounded Linux worker validation image",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 6,
+            "started_at": "2026-11-06T21:07:34Z",
+            "completed_at": "2026-11-06T21:07:34Z"
+          },
+          {
+            "name": "Scratch preparation cancellation controls",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 7,
+            "started_at": "2026-11-06T21:07:34Z",
+            "completed_at": "2026-11-06T21:07:48Z"
+          },
+          {
+            "name": "Authoritative repository lint gate",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 8,
+            "started_at": "2026-11-06T21:07:48Z",
+            "completed_at": "2026-11-06T21:07:48Z"
+          },
+          {
+            "name": "Owned full-history execution and retained evidence controls",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 9,
+            "started_at": "2026-11-06T21:07:48Z",
+            "completed_at": "2026-11-06T21:08:43Z"
+          },
+          {
+            "name": "Tooling compilation and whitespace",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 10,
+            "started_at": "2026-11-06T21:08:43Z",
+            "completed_at": "2026-11-06T21:08:44Z"
+          },
+          {
+            "name": "Post Run actions/setup-python@v5",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 19,
+            "started_at": "2026-11-06T21:08:44Z",
+            "completed_at": "2026-11-06T21:08:44Z"
+          },
+          {
+            "name": "Post Run actions/checkout@v4",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 20,
+            "started_at": "2026-11-06T21:08:44Z",
+            "completed_at": "2026-11-06T21:08:46Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 21,
+            "started_at": "2026-11-06T21:08:46Z",
+            "completed_at": "2026-11-06T21:08:46Z"
+          }
+        ],
+        "check_run_url": "https://api.github.com/repos/Richarddavis47/dtos/check-runs/128154248911",
+        "labels": [
+          "windows-latest"
+        ],
+        "runner_id": 1000005528,
+        "runner_name": "GitHub Actions 1000005528",
+        "runner_group_id": 0,
+        "runner_group_name": "GitHub Actions"
+      },
+      {
+        "id": 128154249146,
+        "run_id": 42293956820,
+        "workflow_name": "Validation tooling",
+        "head_branch": "fix/bounded-cache-string-sharing",
+        "run_url": "https://api.github.com/repos/Richarddavis47/dtos/actions/runs/42293956820",
+        "run_attempt": 1,
+        "node_id": "CR_kwDOTaziFc8AAAAd1panug",
+        "head_sha": "4fb702964b34d84a593fb917b5e654b9b8ff0adf",
+        "url": "https://api.github.com/repos/Richarddavis47/dtos/actions/jobs/128154249146",
+        "html_url": "https://github.com/Richarddavis47/dtos/actions/runs/42293956820/job/128154249146",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-11-06T21:06:29Z",
+        "started_at": "2026-11-06T21:06:32Z",
+        "completed_at": "2026-11-06T21:07:34Z",
+        "name": "tooling (ubuntu-24.04)",
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-11-06T21:06:33Z",
+            "completed_at": "2026-11-06T21:06:33Z"
+          },
+          {
+            "name": "Run actions/checkout@v4",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2,
+            "started_at": "2026-11-06T21:06:33Z",
+            "completed_at": "2026-11-06T21:06:36Z"
+          },
+          {
+            "name": "Run actions/setup-python@v5",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3,
+            "started_at": "2026-11-06T21:06:36Z",
+            "completed_at": "2026-11-06T21:06:39Z"
+          },
+          {
+            "name": "Install validation dependencies",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4,
+            "started_at": "2026-11-06T21:06:39Z",
+            "completed_at": "2026-11-06T21:06:44Z"
+          },
+          {
+            "name": "Platform ownership and validation tooling contracts",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5,
+            "started_at": "2026-11-06T21:06:44Z",
+            "completed_at": "2026-11-06T21:06:46Z"
+          },
+          {
+            "name": "Build bounded Linux worker validation image",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 6,
+            "started_at": "2026-11-06T21:06:46Z",
+            "completed_at": "2026-11-06T21:07:01Z"
+          },
+          {
+            "name": "Scratch preparation cancellation controls",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 7,
+            "started_at": "2026-11-06T21:07:01Z",
+            "completed_at": "2026-11-06T21:07:05Z"
+          },
+          {
+            "name": "Authoritative repository lint gate",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 8,
+            "started_at": "2026-11-06T21:07:05Z",
+            "completed_at": "2026-11-06T21:07:05Z"
+          },
+          {
+            "name": "Owned full-history execution and retained evidence controls",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 9,
+            "started_at": "2026-11-06T21:07:05Z",
+            "completed_at": "2026-11-06T21:07:30Z"
+          },
+          {
+            "name": "Tooling compilation and whitespace",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 10,
+            "started_at": "2026-11-06T21:07:30Z",
+            "completed_at": "2026-11-06T21:07:32Z"
+          },
+          {
+            "name": "Post Run actions/setup-python@v5",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 19,
+            "started_at": "2026-11-06T21:07:32Z",
+            "completed_at": "2026-11-06T21:07:32Z"
+          },
+          {
+            "name": "Post Run actions/checkout@v4",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 20,
+            "started_at": "2026-11-06T21:07:32Z",
+            "completed_at": "2026-11-06T21:07:32Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 21,
+            "started_at": "2026-11-06T21:07:32Z",
+            "completed_at": "2026-11-06T21:07:32Z"
+          }
+        ],
+        "check_run_url": "https://api.github.com/repos/Richarddavis47/dtos/check-runs/128154249146",
+        "labels": [
+          "ubuntu-24.04"
+        ],
+        "runner_id": 1000005527,
+        "runner_name": "GitHub Actions 1000005527",
+        "runner_group_id": 0,
+        "runner_group_name": "GitHub Actions"
+      }
+    ],
+    "artifacts": []
+  },
+  {
+    "run": {
+      "id": 42293956792,
+      "name": "Linux Asset Market lifecycle",
+      "node_id": "WFR_kwLOTaziFc8AAAAJ2OqQuA",
+      "head_branch": "fix/bounded-cache-string-sharing",
+      "head_sha": "4fb702964b34d84a593fb917b5e654b9b8ff0adf",
+      "path": ".github/workflows/linux-market-lifecycle.yml",
+      "display_title": "Reduce league cache restoration memory through bounded string sharing",
+      "run_number": 737,
+      "event": "pull_request",
+      "status": "completed",
+      "conclusion": "success",
+      "workflow_id": 330245514,
+      "check_suite_id": 114597446118,
+      "check_suite_node_id": "CS_kwDOTaziFc8AAAAaropB5g",
+      "url": "https://api.github.com/repos/Richarddavis47/dtos/actions/runs/42293956792",
+      "html_url": "https://github.com/Richarddavis47/dtos/actions/runs/42293956792",
+      "pull_requests": [
+        {
+          "url": "https://api.github.com/repos/Richarddavis47/dtos/pulls/326",
+          "id": 5194485900,
+          "number": 326,
+          "head": {
+            "ref": "fix/bounded-cache-string-sharing",
+            "sha": "4fb702964b34d84a593fb917b5e654b9b8ff0adf",
+            "repo": {
+              "id": 1303175701,
+              "url": "https://api.github.com/repos/Richarddavis47/dtos",
+              "name": "dtos"
+            }
+          },
+          "base": {
+            "ref": "main",
+            "sha": "8af490880bb59b357b0e5fa82575cfa164401b07",
+            "repo": {
+              "id": 1303175701,
+              "url": "https://api.github.com/repos/Richarddavis47/dtos",
+              "name": "dtos"
+            }
+          }
+        }
+      ],
+      "created_at": "2026-11-06T21:06:28Z",
+      "updated_at": "2026-11-06T21:09:18Z",
+      "actor": {
+        "login": "Richarddavis47",
+        "id": 305973940,
+        "node_id": "U_kgDOEjzKtA",
+        "avatar_url": "https://avatars.githubusercontent.com/u/305973940?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/Richarddavis47",
+        "html_url": "https://github.com/Richarddavis47",
+        "followers_url": "https://api.github.com/users/Richarddavis47/followers",
+        "following_url": "https://api.github.com/users/Richarddavis47/following{/other_user}",
+        "gists_url": "https://api.github.com/users/Richarddavis47/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/Richarddavis47/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/Richarddavis47/subscriptions",
+        "organizations_url": "https://api.github.com/users/Richarddavis47/orgs",
+        "repos_url": "https://api.github.com/users/Richarddavis47/repos",
+        "events_url": "https://api.github.com/users/Richarddavis47/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/Richarddavis47/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "run_attempt": 1,
+      "referenced_workflows": [],
+      "run_started_at": "2026-11-06T21:06:28Z",
+      "triggering_actor": {
+        "login": "Richarddavis47",
+        "id": 305973940,
+        "node_id": "U_kgDOEjzKtA",
+        "avatar_url": "https://avatars.githubusercontent.com/u/305973940?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/Richarddavis47",
+        "html_url": "https://github.com/Richarddavis47",
+        "followers_url": "https://api.github.com/users/Richarddavis47/followers",
+        "following_url": "https://api.github.com/users/Richarddavis47/following{/other_user}",
+        "gists_url": "https://api.github.com/users/Richarddavis47/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/Richarddavis47/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/Richarddavis47/subscriptions",
+        "organizations_url": "https://api.github.com/users/Richarddavis47/orgs",
+        "repos_url": "https://api.github.com/users/Richarddavis47/repos",
+        "events_url": "https://api.github.com/users/Richarddavis47/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/Richarddavis47/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "jobs_url": "https://api.github.com/repos/Richarddavis47/dtos/actions/runs/42293956792/jobs",
+      "logs_url": "https://api.github.com/repos/Richarddavis47/dtos/actions/runs/42293956792/logs",
+      "check_suite_url": "https://api.github.com/repos/Richarddavis47/dtos/check-suites/114597446118",
+      "artifacts_url": "https://api.github.com/repos/Richarddavis47/dtos/actions/runs/42293956792/artifacts",
+      "cancel_url": "https://api.github.com/repos/Richarddavis47/dtos/actions/runs/42293956792/cancel",
+      "rerun_url": "https://api.github.com/repos/Richarddavis47/dtos/actions/runs/42293956792/rerun",
+      "previous_attempt_url": null,
+      "workflow_url": "https://api.github.com/repos/Richarddavis47/dtos/actions/workflows/330245514",
+      "head_commit": {
+        "id": "4fb702964b34d84a593fb917b5e654b9b8ff0adf",
+        "tree_id": "4051883efb1f225dcd71e07f1998e45c9d96fb39",
+        "message": "Keep admission and preflight sentinels on the shared cache decoder",
+        "timestamp": "2026-11-06T21:06:21Z",
+        "author": {
+          "name": "Richard Davis",
+          "email": "ricdav398@gmail.com"
+        },
+        "committer": {
+          "name": "Richard Davis",
+          "email": "ricdav398@gmail.com"
+        }
+      },
+      "repository": {
+        "id": 1303175701,
+        "node_id": "R_kgDOTaziFQ",
+        "name": "dtos",
+        "full_name": "Richarddavis47/dtos",
+        "private": false,
+        "owner": {
+          "login": "Richarddavis47",
+          "id": 305973940,
+          "node_id": "U_kgDOEjzKtA",
+          "avatar_url": "https://avatars.githubusercontent.com/u/305973940?v=4",
+          "gravatar_id": "",
+          "url": "https://api.github.com/users/Richarddavis47",
+          "html_url": "https://github.com/Richarddavis47",
+          "followers_url": "https://api.github.com/users/Richarddavis47/followers",
+          "following_url": "https://api.github.com/users/Richarddavis47/following{/other_user}",
+          "gists_url": "https://api.github.com/users/Richarddavis47/gists{/gist_id}",
+          "starred_url": "https://api.github.com/users/Richarddavis47/starred{/owner}{/repo}",
+          "subscriptions_url": "https://api.github.com/users/Richarddavis47/subscriptions",
+          "organizations_url": "https://api.github.com/users/Richarddavis47/orgs",
+          "repos_url": "https://api.github.com/users/Richarddavis47/repos",
+          "events_url": "https://api.github.com/users/Richarddavis47/events{/privacy}",
+          "received_events_url": "https://api.github.com/users/Richarddavis47/received_events",
+          "type": "User",
+          "user_view_type": "public",
+          "site_admin": false
+        },
+        "html_url": "https://github.com/Richarddavis47/dtos",
+        "description": "Day traders front office ",
+        "fork": false,
+        "url": "https://api.github.com/repos/Richarddavis47/dtos",
+        "forks_url": "https://api.github.com/repos/Richarddavis47/dtos/forks",
+        "keys_url": "https://api.github.com/repos/Richarddavis47/dtos/keys{/key_id}",
+        "collaborators_url": "https://api.github.com/repos/Richarddavis47/dtos/collaborators{/collaborator}",
+        "teams_url": "https://api.github.com/repos/Richarddavis47/dtos/teams",
+        "hooks_url": "https://api.github.com/repos/Richarddavis47/dtos/hooks",
+        "issue_events_url": "https://api.github.com/repos/Richarddavis47/dtos/issues/events{/number}",
+        "events_url": "https://api.github.com/repos/Richarddavis47/dtos/events",
+        "assignees_url": "https://api.github.com/repos/Richarddavis47/dtos/assignees{/user}",
+        "branches_url": "https://api.github.com/repos/Richarddavis47/dtos/branches{/branch}",
+        "tags_url": "https://api.github.com/repos/Richarddavis47/dtos/tags",
+        "blobs_url": "https://api.github.com/repos/Richarddavis47/dtos/git/blobs{/sha}",
+        "git_tags_url": "https://api.github.com/repos/Richarddavis47/dtos/git/tags{/sha}",
+        "git_refs_url": "https://api.github.com/repos/Richarddavis47/dtos/git/refs{/sha}",
+        "trees_url": "https://api.github.com/repos/Richarddavis47/dtos/git/trees{/sha}",
+        "statuses_url": "https://api.github.com/repos/Richarddavis47/dtos/statuses/{sha}",
+        "languages_url": "https://api.github.com/repos/Richarddavis47/dtos/languages",
+        "stargazers_url": "https://api.github.com/repos/Richarddavis47/dtos/stargazers",
+        "contributors_url": "https://api.github.com/repos/Richarddavis47/dtos/contributors",
+        "subscribers_url": "https://api.github.com/repos/Richarddavis47/dtos/subscribers",
+        "subscription_url": "https://api.github.com/repos/Richarddavis47/dtos/subscription",
+        "commits_url": "https://api.github.com/repos/Richarddavis47/dtos/commits{/sha}",
+        "git_commits_url": "https://api.github.com/repos/Richarddavis47/dtos/git/commits{/sha}",
+        "comments_url": "https://api.github.com/repos/Richarddavis47/dtos/comments{/number}",
+        "issue_comment_url": "https://api.github.com/repos/Richarddavis47/dtos/issues/comments{/number}",
+        "contents_url": "https://api.github.com/repos/Richarddavis47/dtos/contents/{+path}",
+        "compare_url": "https://api.github.com/repos/Richarddavis47/dtos/compare/{base}...{head}",
+        "merges_url": "https://api.github.com/repos/Richarddavis47/dtos/merges",
+        "archive_url": "https://api.github.com/repos/Richarddavis47/dtos/{archive_format}{/ref}",
+        "downloads_url": "https://api.github.com/repos/Richarddavis47/dtos/downloads",
+        "issues_url": "https://api.github.com/repos/Richarddavis47/dtos/issues{/number}",
+        "pulls_url": "https://api.github.com/repos/Richarddavis47/dtos/pulls{/number}",
+        "milestones_url": "https://api.github.com/repos/Richarddavis47/dtos/milestones{/number}",
+        "notifications_url": "https://api.github.com/repos/Richarddavis47/dtos/notifications{?since,all,participating}",
+        "labels_url": "https://api.github.com/repos/Richarddavis47/dtos/labels{/name}",
+        "releases_url": "https://api.github.com/repos/Richarddavis47/dtos/releases{/id}",
+        "deployments_url": "https://api.github.com/repos/Richarddavis47/dtos/deployments"
+      },
+      "head_repository": {
+        "id": 1303175701,
+        "node_id": "R_kgDOTaziFQ",
+        "name": "dtos",
+        "full_name": "Richarddavis47/dtos",
+        "private": false,
+        "owner": {
+          "login": "Richarddavis47",
+          "id": 305973940,
+          "node_id": "U_kgDOEjzKtA",
+          "avatar_url": "https://avatars.githubusercontent.com/u/305973940?v=4",
+          "gravatar_id": "",
+          "url": "https://api.github.com/users/Richarddavis47",
+          "html_url": "https://github.com/Richarddavis47",
+          "followers_url": "https://api.github.com/users/Richarddavis47/followers",
+          "following_url": "https://api.github.com/users/Richarddavis47/following{/other_user}",
+          "gists_url": "https://api.github.com/users/Richarddavis47/gists{/gist_id}",
+          "starred_url": "https://api.github.com/users/Richarddavis47/starred{/owner}{/repo}",
+          "subscriptions_url": "https://api.github.com/users/Richarddavis47/subscriptions",
+          "organizations_url": "https://api.github.com/users/Richarddavis47/orgs",
+          "repos_url": "https://api.github.com/users/Richarddavis47/repos",
+          "events_url": "https://api.github.com/users/Richarddavis47/events{/privacy}",
+          "received_events_url": "https://api.github.com/users/Richarddavis47/received_events",
+          "type": "User",
+          "user_view_type": "public",
+          "site_admin": false
+        },
+        "html_url": "https://github.com/Richarddavis47/dtos",
+        "description": "Day traders front office ",
+        "fork": false,
+        "url": "https://api.github.com/repos/Richarddavis47/dtos",
+        "forks_url": "https://api.github.com/repos/Richarddavis47/dtos/forks",
+        "keys_url": "https://api.github.com/repos/Richarddavis47/dtos/keys{/key_id}",
+        "collaborators_url": "https://api.github.com/repos/Richarddavis47/dtos/collaborators{/collaborator}",
+        "teams_url": "https://api.github.com/repos/Richarddavis47/dtos/teams",
+        "hooks_url": "https://api.github.com/repos/Richarddavis47/dtos/hooks",
+        "issue_events_url": "https://api.github.com/repos/Richarddavis47/dtos/issues/events{/number}",
+        "events_url": "https://api.github.com/repos/Richarddavis47/dtos/events",
+        "assignees_url": "https://api.github.com/repos/Richarddavis47/dtos/assignees{/user}",
+        "branches_url": "https://api.github.com/repos/Richarddavis47/dtos/branches{/branch}",
+        "tags_url": "https://api.github.com/repos/Richarddavis47/dtos/tags",
+        "blobs_url": "https://api.github.com/repos/Richarddavis47/dtos/git/blobs{/sha}",
+        "git_tags_url": "https://api.github.com/repos/Richarddavis47/dtos/git/tags{/sha}",
+        "git_refs_url": "https://api.github.com/repos/Richarddavis47/dtos/git/refs{/sha}",
+        "trees_url": "https://api.github.com/repos/Richarddavis47/dtos/git/trees{/sha}",
+        "statuses_url": "https://api.github.com/repos/Richarddavis47/dtos/statuses/{sha}",
+        "languages_url": "https://api.github.com/repos/Richarddavis47/dtos/languages",
+        "stargazers_url": "https://api.github.com/repos/Richarddavis47/dtos/stargazers",
+        "contributors_url": "https://api.github.com/repos/Richarddavis47/dtos/contributors",
+        "subscribers_url": "https://api.github.com/repos/Richarddavis47/dtos/subscribers",
+        "subscription_url": "https://api.github.com/repos/Richarddavis47/dtos/subscription",
+        "commits_url": "https://api.github.com/repos/Richarddavis47/dtos/commits{/sha}",
+        "git_commits_url": "https://api.github.com/repos/Richarddavis47/dtos/git/commits{/sha}",
+        "comments_url": "https://api.github.com/repos/Richarddavis47/dtos/comments{/number}",
+        "issue_comment_url": "https://api.github.com/repos/Richarddavis47/dtos/issues/comments{/number}",
+        "contents_url": "https://api.github.com/repos/Richarddavis47/dtos/contents/{+path}",
+        "compare_url": "https://api.github.com/repos/Richarddavis47/dtos/compare/{base}...{head}",
+        "merges_url": "https://api.github.com/repos/Richarddavis47/dtos/merges",
+        "archive_url": "https://api.github.com/repos/Richarddavis47/dtos/{archive_format}{/ref}",
+        "downloads_url": "https://api.github.com/repos/Richarddavis47/dtos/downloads",
+        "issues_url": "https://api.github.com/repos/Richarddavis47/dtos/issues{/number}",
+        "pulls_url": "https://api.github.com/repos/Richarddavis47/dtos/pulls{/number}",
+        "milestones_url": "https://api.github.com/repos/Richarddavis47/dtos/milestones{/number}",
+        "notifications_url": "https://api.github.com/repos/Richarddavis47/dtos/notifications{?since,all,participating}",
+        "labels_url": "https://api.github.com/repos/Richarddavis47/dtos/labels{/name}",
+        "releases_url": "https://api.github.com/repos/Richarddavis47/dtos/releases{/id}",
+        "deployments_url": "https://api.github.com/repos/Richarddavis47/dtos/deployments"
+      }
+    },
+    "jobs": [
+      {
+        "id": 128154248876,
+        "run_id": 42293956792,
+        "workflow_name": "Linux Asset Market lifecycle",
+        "head_branch": "fix/bounded-cache-string-sharing",
+        "run_url": "https://api.github.com/repos/Richarddavis47/dtos/actions/runs/42293956792",
+        "run_attempt": 1,
+        "node_id": "CR_kwDOTaziFc8AAAAd1pamrA",
+        "head_sha": "4fb702964b34d84a593fb917b5e654b9b8ff0adf",
+        "url": "https://api.github.com/repos/Richarddavis47/dtos/actions/jobs/128154248876",
+        "html_url": "https://github.com/Richarddavis47/dtos/actions/runs/42293956792/job/128154248876",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-11-06T21:06:29Z",
+        "started_at": "2026-11-06T21:06:31Z",
+        "completed_at": "2026-11-06T21:08:58Z",
+        "name": "cgroup-lifecycle (archive-warmed)",
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-11-06T21:06:32Z",
+            "completed_at": "2026-11-06T21:06:33Z"
+          },
+          {
+            "name": "Run actions/checkout@v4",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2,
+            "started_at": "2026-11-06T21:06:33Z",
+            "completed_at": "2026-11-06T21:06:35Z"
+          },
+          {
+            "name": "Build production-equivalent image",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3,
+            "started_at": "2026-11-06T21:06:35Z",
+            "completed_at": "2026-11-06T21:06:51Z"
+          },
+          {
+            "name": "Guarded recovery lifecycle on Linux",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 4,
+            "started_at": "2026-11-06T21:06:51Z",
+            "completed_at": "2026-11-06T21:06:51Z"
+          },
+          {
+            "name": "Run 2 GiB cgroup lifecycle",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5,
+            "started_at": "2026-11-06T21:06:51Z",
+            "completed_at": "2026-11-06T21:08:55Z"
+          },
+          {
+            "name": "Authenticated navigation residency under 2 GiB",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 6,
+            "started_at": "2026-11-06T21:08:55Z",
+            "completed_at": "2026-11-06T21:08:55Z"
+          },
+          {
+            "name": "Verify sanitized result",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 7,
+            "started_at": "2026-11-06T21:08:55Z",
+            "completed_at": "2026-11-06T21:08:55Z"
+          },
+          {
+            "name": "Upload sanitized benchmark summary",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 8,
+            "started_at": "2026-11-06T21:08:55Z",
+            "completed_at": "2026-11-06T21:08:56Z"
+          },
+          {
+            "name": "Post Run actions/checkout@v4",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 16,
+            "started_at": "2026-11-06T21:08:56Z",
+            "completed_at": "2026-11-06T21:08:56Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 17,
+            "started_at": "2026-11-06T21:08:56Z",
+            "completed_at": "2026-11-06T21:08:56Z"
+          }
+        ],
+        "check_run_url": "https://api.github.com/repos/Richarddavis47/dtos/check-runs/128154248876",
+        "labels": [
+          "ubuntu-24.04"
+        ],
+        "runner_id": 1000005523,
+        "runner_name": "GitHub Actions 1000005523",
+        "runner_group_id": 0,
+        "runner_group_name": "GitHub Actions"
+      },
+      {
+        "id": 128154249086,
+        "run_id": 42293956792,
+        "workflow_name": "Linux Asset Market lifecycle",
+        "head_branch": "fix/bounded-cache-string-sharing",
+        "run_url": "https://api.github.com/repos/Richarddavis47/dtos/actions/runs/42293956792",
+        "run_attempt": 1,
+        "node_id": "CR_kwDOTaziFc8AAAAd1panfg",
+        "head_sha": "4fb702964b34d84a593fb917b5e654b9b8ff0adf",
+        "url": "https://api.github.com/repos/Richarddavis47/dtos/actions/jobs/128154249086",
+        "html_url": "https://github.com/Richarddavis47/dtos/actions/runs/42293956792/job/128154249086",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-11-06T21:06:29Z",
+        "started_at": "2026-11-06T21:06:32Z",
+        "completed_at": "2026-11-06T21:09:18Z",
+        "name": "cgroup-lifecycle (combined-read)",
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-11-06T21:06:33Z",
+            "completed_at": "2026-11-06T21:06:33Z"
+          },
+          {
+            "name": "Run actions/checkout@v4",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2,
+            "started_at": "2026-11-06T21:06:33Z",
+            "completed_at": "2026-11-06T21:06:37Z"
+          },
+          {
+            "name": "Build production-equivalent image",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3,
+            "started_at": "2026-11-06T21:06:37Z",
+            "completed_at": "2026-11-06T21:06:51Z"
+          },
+          {
+            "name": "Guarded recovery lifecycle on Linux",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 4,
+            "started_at": "2026-11-06T21:06:51Z",
+            "completed_at": "2026-11-06T21:06:51Z"
+          },
+          {
+            "name": "Run 2 GiB cgroup lifecycle",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5,
+            "started_at": "2026-11-06T21:06:51Z",
+            "completed_at": "2026-11-06T21:09:14Z"
+          },
+          {
+            "name": "Authenticated navigation residency under 2 GiB",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 6,
+            "started_at": "2026-11-06T21:09:14Z",
+            "completed_at": "2026-11-06T21:09:14Z"
+          },
+          {
+            "name": "Verify sanitized result",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 7,
+            "started_at": "2026-11-06T21:09:14Z",
+            "completed_at": "2026-11-06T21:09:14Z"
+          },
+          {
+            "name": "Upload sanitized benchmark summary",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 8,
+            "started_at": "2026-11-06T21:09:14Z",
+            "completed_at": "2026-11-06T21:09:15Z"
+          },
+          {
+            "name": "Post Run actions/checkout@v4",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 16,
+            "started_at": "2026-11-06T21:09:15Z",
+            "completed_at": "2026-11-06T21:09:15Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 17,
+            "started_at": "2026-11-06T21:09:15Z",
+            "completed_at": "2026-11-06T21:09:15Z"
+          }
+        ],
+        "check_run_url": "https://api.github.com/repos/Richarddavis47/dtos/check-runs/128154249086",
+        "labels": [
+          "ubuntu-24.04"
+        ],
+        "runner_id": 1000005522,
+        "runner_name": "GitHub Actions 1000005522",
+        "runner_group_id": 0,
+        "runner_group_name": "GitHub Actions"
+      },
+      {
+        "id": 128154249208,
+        "run_id": 42293956792,
+        "workflow_name": "Linux Asset Market lifecycle",
+        "head_branch": "fix/bounded-cache-string-sharing",
+        "run_url": "https://api.github.com/repos/Richarddavis47/dtos/actions/runs/42293956792",
+        "run_attempt": 1,
+        "node_id": "CR_kwDOTaziFc8AAAAd1pan-A",
+        "head_sha": "4fb702964b34d84a593fb917b5e654b9b8ff0adf",
+        "url": "https://api.github.com/repos/Richarddavis47/dtos/actions/jobs/128154249208",
+        "html_url": "https://github.com/Richarddavis47/dtos/actions/runs/42293956792/job/128154249208",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-11-06T21:06:29Z",
+        "started_at": "2026-11-06T21:06:32Z",
+        "completed_at": "2026-11-06T21:09:03Z",
+        "name": "cgroup-lifecycle (ordinary)",
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-11-06T21:06:32Z",
+            "completed_at": "2026-11-06T21:06:33Z"
+          },
+          {
+            "name": "Run actions/checkout@v4",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2,
+            "started_at": "2026-11-06T21:06:33Z",
+            "completed_at": "2026-11-06T21:06:37Z"
+          },
+          {
+            "name": "Build production-equivalent image",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3,
+            "started_at": "2026-11-06T21:06:37Z",
+            "completed_at": "2026-11-06T21:06:53Z"
+          },
+          {
+            "name": "Guarded recovery lifecycle on Linux",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4,
+            "started_at": "2026-11-06T21:06:53Z",
+            "completed_at": "2026-11-06T21:07:30Z"
+          },
+          {
+            "name": "Run 2 GiB cgroup lifecycle",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5,
+            "started_at": "2026-11-06T21:07:30Z",
+            "completed_at": "2026-11-06T21:08:58Z"
+          },
+          {
+            "name": "Authenticated navigation residency under 2 GiB",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 6,
+            "started_at": "2026-11-06T21:08:58Z",
+            "completed_at": "2026-11-06T21:09:00Z"
+          },
+          {
+            "name": "Verify sanitized result",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 7,
+            "started_at": "2026-11-06T21:09:00Z",
+            "completed_at": "2026-11-06T21:09:00Z"
+          },
+          {
+            "name": "Upload sanitized benchmark summary",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 8,
+            "started_at": "2026-11-06T21:09:00Z",
+            "completed_at": "2026-11-06T21:09:01Z"
+          },
+          {
+            "name": "Post Run actions/checkout@v4",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 16,
+            "started_at": "2026-11-06T21:09:01Z",
+            "completed_at": "2026-11-06T21:09:01Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 17,
+            "started_at": "2026-11-06T21:09:01Z",
+            "completed_at": "2026-11-06T21:09:02Z"
+          }
+        ],
+        "check_run_url": "https://api.github.com/repos/Richarddavis47/dtos/check-runs/128154249208",
+        "labels": [
+          "ubuntu-24.04"
+        ],
+        "runner_id": 1000005524,
+        "runner_name": "GitHub Actions 1000005524",
+        "runner_group_id": 0,
+        "runner_group_name": "GitHub Actions"
+      }
+    ],
+    "artifacts": [
+      {
+        "id": 13541945156,
+        "node_id": "MDg6QXJ0aWZhY3QxMzU0MTk0NTE1Ng==",
+        "name": "linux-market-lifecycle-archive-warmed-summary",
+        "size_in_bytes": 13512,
+        "url": "https://api.github.com/repos/Richarddavis47/dtos/actions/artifacts/13541945156",
+        "archive_download_url": "https://api.github.com/repos/Richarddavis47/dtos/actions/artifacts/13541945156/zip",
+        "expired": false,
+        "digest": "sha256:3584c5cb06d1ceb29bff006b81ed70b81ca94fc892c9eef80d5cf76f909a3d29",
+        "created_at": "2026-11-06T21:08:56Z",
+        "updated_at": "2026-11-06T21:08:56Z",
+        "expires_at": "2026-11-20T21:08:56Z",
+        "workflow_run": {
+          "id": 42293956792,
+          "repository_id": 1303175701,
+          "head_repository_id": 1303175701,
+          "head_branch": "fix/bounded-cache-string-sharing",
+          "head_sha": "4fb702964b34d84a593fb917b5e654b9b8ff0adf"
+        }
+      },
+      {
+        "id": 13541830329,
+        "node_id": "MDg6QXJ0aWZhY3QxMzU0MTgzMDMyOQ==",
+        "name": "linux-market-lifecycle-ordinary-summary",
+        "size_in_bytes": 13312,
+        "url": "https://api.github.com/repos/Richarddavis47/dtos/actions/artifacts/13541830329",
+        "archive_download_url": "https://api.github.com/repos/Richarddavis47/dtos/actions/artifacts/13541830329/zip",
+        "expired": false,
+        "digest": "sha256:5a83dd725cef131af815689582193ee4113d17e2034595695314081a4bbd6327",
+        "created_at": "2026-11-06T21:09:01Z",
+        "updated_at": "2026-11-06T21:09:01Z",
+        "expires_at": "2026-11-20T21:09:00Z",
+        "workflow_run": {
+          "id": 42293956792,
+          "repository_id": 1303175701,
+          "head_repository_id": 1303175701,
+          "head_branch": "fix/bounded-cache-string-sharing",
+          "head_sha": "4fb702964b34d84a593fb917b5e654b9b8ff0adf"
+        }
+      },
+      {
+        "id": 13541370936,
+        "node_id": "MDg6QXJ0aWZhY3QxMzU0MTM3MDkzNg==",
+        "name": "linux-market-lifecycle-combined-read-summary",
+        "size_in_bytes": 15416,
+        "url": "https://api.github.com/repos/Richarddavis47/dtos/actions/artifacts/13541370936",
+        "archive_download_url": "https://api.github.com/repos/Richarddavis47/dtos/actions/artifacts/13541370936/zip",
+        "expired": false,
+        "digest": "sha256:36b95fdd96942f680ad6270ec60477809a66abc72fd6131a374e0ce0400869a9",
+        "created_at": "2026-11-06T21:09:15Z",
+        "updated_at": "2026-11-06T21:09:15Z",
+        "expires_at": "2026-11-20T21:09:14Z",
+        "workflow_run": {
+          "id": 42293956792,
+          "repository_id": 1303175701,
+          "head_repository_id": 1303175701,
+          "head_branch": "fix/bounded-cache-string-sharing",
+          "head_sha": "4fb702964b34d84a593fb917b5e654b9b8ff0adf"
+        }
+      }
+    ]
+  }
+]
