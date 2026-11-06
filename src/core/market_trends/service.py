@@ -71,6 +71,15 @@ class MarketTrendService:
         self._cache: OrderedDict[tuple[Any, ...], MarketTrend] = OrderedDict()
         self._lock = RLock()
 
+    def render_revision(self) -> tuple[Any, ...]:
+        """Invalidate HTML for retained evidence and the existing daily age rule.
+
+        This is an internal cache dependency, never comparison eligibility,
+        a new observation, or an assertion of source freshness.
+        """
+        return (id(self.reader), self.reader.market_trend_generation(),
+                datetime.now(timezone.utc).date().isoformat())
+
     @staticmethod
     def _direction(values: list[float]) -> tuple[TrendDirection, float | None, float | None]:
         if len(values) < 2:

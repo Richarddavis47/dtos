@@ -4,6 +4,7 @@ from __future__ import annotations
 from src.ui.market_facts import market_fact_html
 
 import re
+from math import isfinite
 from datetime import datetime
 from html import escape
 from typing import Any, Callable
@@ -79,24 +80,74 @@ def _trend_boundary_notice(trend: dict[str, Any]) -> str:
 def _trend_observation_summary(trend: dict[str, Any]) -> str:
     """Only comparable evidence gets numerical movement presentation."""
     count = trend.get('checkpoint_count', 0)
+    checkpoint_word = 'checkpoint' if count == 1 else 'checkpoints'
     if (not trend.get('comparison_reasons') and trend.get('magnitude') is None
             and trend.get('direction') in ('rising', 'falling', 'stable', 'volatile')
             and trend.get('observed_low') is not None and trend.get('observed_high') is not None):
         # Preserve the available range on older prepared summary DTOs without
         # inventing an endpoint difference from that range.
-        return (f'{count} retained checkpoints · observed range '
+        return (f'{count} retained {checkpoint_word} · observed range '
                 f'{escape(available(trend["observed_low"]))}–{escape(available(trend["observed_high"]))}')
     if trend.get('comparison_reasons') or trend.get('magnitude') is None:
-        return f'{count} recorded prices. There is not enough compatible dated evidence to show a numerical change; missing history does not mean the value stayed the same.'
+        excluded = (trend.get('provenance') or {}).get('excluded_evidence_count')
+        record_word = 'record' if excluded == 1 else 'records'
+        qualification = (f' {excluded} retained {record_word} could not be used as eligible dated prices in this comparison.'
+                         if isinstance(excluded, int) and excluded > 0 else '')
+        return (f'{count} dated {checkpoint_word} available to this comparison. '
+                'There is not enough compatible dated evidence to show a numerical change; '
+                'missing history does not mean the value stayed the same.' + qualification)
     scope = ('Historical to current publication' if trend.get('comparison_scope') == 'historical_to_current'
              else 'Historical observations only')
     magnitude = trend.get('magnitude')
     units = 'Market points' if trend.get('comparison_units') == '0-1000' else str(trend.get('comparison_units') or 'observed units')
     movement = f'{magnitude:+,.2f} {escape(units)}' if magnitude is not None else 'Movement unavailable'
-    return (f'{scope} · {movement} · {count} retained checkpoints. '
+    return (f'{scope} · {movement} · {count} retained {checkpoint_word}. '
             f'{escape(str(trend.get("comparison_start_at") or "Date unavailable"))} → '
             f'{escape(str(trend.get("comparison_end_at") or "Date unavailable"))}. '
             f'{escape(str(trend.get("current_qualification") or ""))}')
+
+
+def _trend_checkpoint_details(trend: dict[str, Any]) -> str:
+    """Render already-admitted sparse evidence; never calculate another trend."""
+    points = trend.get('checkpoints') or ()
+    if not points:
+        return ('<p>No eligible checkpoint details are available for this comparison.</p>'
+                if not trend.get('checkpoint_count') else
+                '<p>Individual checkpoint details are not included in this prepared comparison.</p>')
+    # Keep the start and most recent evidence without an unbounded HTML table.
+    preview = points if len(points) <= 12 else (points[0], *points[-11:])
+    canonical_units = not trend.get('comparison_reasons') and trend.get('comparison_units') == '0-1000'
+    rows = []
+    for point in preview:
+        value = point.get('value')
+        supported = (canonical_units and isinstance(value, (int, float))
+                     and not isinstance(value, bool) and isfinite(value) and 0 <= value <= 1000)
+        price = f'{value:,.2f}' if supported else 'Not compared across this evidence boundary'
+        stamp = escape(str(point.get('observed_at') or 'Observation time unavailable'))
+        providers = point.get('provider_count')
+        provider_count = 'Unknown' if providers is None else str(providers)
+        rows.append(f'<tr data-observation-id="{escape(str(point.get("observation_id") or ""), quote=True)}">'
+                    f'<td><time datetime="{stamp}">{stamp}</time></td><td>{price}</td>'
+                    f'<td>{escape(provider_count)}</td></tr>')
+    omitted = (f'<p>Showing the first and latest {len(preview)-1} of {len(points)} retained checkpoints. '
+               'Intermediate checkpoints are omitted from this preview; the comparison uses all admitted evidence.</p>'
+               if len(points) > len(preview) else '')
+    current = trend.get('current_value')
+    endpoint = ''
+    if (canonical_units and (trend.get('provenance') or {}).get('current_endpoint_comparable')
+            and isinstance(current, (int, float)) and not isinstance(current, bool)
+            and isfinite(current) and 0 <= current <= 1000):
+        endpoint = (f'<p>Current published endpoint: <b>{current:,.2f} Market points</b> · observed '
+                    f'{escape(str(trend.get("comparison_end_at")))}. This is separate from the retained checkpoint count.</p>')
+    return ('<section class="market-trend-checkpoints" style="min-width:0;overflow-wrap:anywhere">'
+            '<h4>Retained Market observations</h4>'
+            '<p>These are sparse checkpoints, not daily prices. Gaps are not filled. '
+            'Observation times are separate from provider publication and retrieval times. '
+            'A price change alone is not a buy recommendation, a forecast or a grade of a past decision.</p>'
+            + omitted + '<div class="ds-table-wrap" tabindex="0" role="region" '
+            'aria-label="Retained Market observations"><table><caption>Recorded sparse comparison evidence</caption>'
+            '<thead><tr><th>Observed at</th><th>Market points (0–1000)</th><th>Provider count</th></tr></thead>'
+            '<tbody>' + ''.join(rows) + '</tbody></table></div>' + endpoint + '</section>')
 
 
 def create_market_router(
@@ -335,6 +386,11 @@ def create_market_router(
             (row for row in comparable if row["market_trend"]["direction"] == "falling"),
             key=lambda row: (row["market_trend"].get("magnitude") or 0, str(row["asset_id"])),
         )[:limit]
+        observed_comparison = any(
+            (row.get('market_trend') or {}).get('magnitude') is not None
+            and not (row.get('market_trend') or {}).get('comparison_reasons')
+            for row in candidates
+        )
         return jsonable_encoder({
             **market.identity(), "method_version": TREND_METHOD_VERSION,
             "historical_source": "step_2_global_market_memory",
@@ -342,7 +398,10 @@ def create_market_router(
             "most_stable": [row for row in comparable if row["market_trend"]["direction"] == "stable"][:limit],
             "most_volatile": [row for row in comparable if row["market_trend"]["direction"] == "volatile"][:limit],
             "availability": "available" if comparable else "unavailable",
-            "unavailable_reason": None if comparable else "At least two compatible dated prices are required; missing history is not unchanged value.",
+            "unavailable_reason": (None if comparable else
+                "Dated price comparisons are available, but the retained sample is too limited to classify a trend. Review an asset's observations; no daily history is invented."
+                if observed_comparison else
+                "At least two compatible dated prices are required; missing history is not unchanged value."),
             "provider_calls": 0, "raw_history_scans": 0,
         })
 
@@ -375,12 +434,13 @@ def create_market_router(
         pinned_reader = SimpleNamespace(snapshot=lambda: pinned_projection, week_snapshot=projection_reader.week_snapshot)
         projection_key = ((pinned_projection or {}).get('horizon_generation'), data.get('week'),
                           repr(data.get('scoring_settings') or (data.get('league') or {}).get('scoring_settings') or {}))
+        trend_revision = trend_service.render_revision()
         route_variant = "market"
         key = (
             route_variant, selected_league, generation, market.dataset_version,
             VERSION, BUILD_NUMBER, league_name, selected_state.get("last_sync"),
             selected_state.get("last_error"), q, position, availability, sort,
-            direction, front_office, selected, offset, limit, projection_key, ownership.generation,
+            direction, front_office, selected, offset, limit, projection_key, ownership.generation, trend_revision,
         )
         render_cache = home_render_cache if route_variant == "home" else market_render_cache
         body_cache = (
@@ -390,7 +450,7 @@ def create_market_router(
         body_key = (
             route_variant, selected_league, generation, market.dataset_version,
             VERSION, BUILD_NUMBER, q, position, availability, sort,
-            direction, front_office, selected, offset, limit, projection_key, ownership.generation,
+            direction, front_office, selected, offset, limit, projection_key, ownership.generation, trend_revision,
         )
 
         def render_body() -> bytes:
@@ -491,7 +551,13 @@ def create_market_router(
                 )
                 trend_heading = (str(trend['direction']).replace('_', ' ').upper() + ' · ' + trend['confidence'].upper() + ' CONFIDENCE'
                                  if trend['direction'] in ('rising', 'falling', 'stable', 'volatile') else 'Not enough comparable price history')
+                supported_difference = not trend.get('comparison_reasons') and trend.get('magnitude') is not None
+                trend_classification_note = ''
+                if supported_difference and trend['direction'] == 'insufficient_evidence':
+                    trend_heading = 'Observed price comparison'
+                    trend_classification_note = '<p>More evidence is needed to classify the trend. A supported price difference is shown separately.</p>'
                 trend_html = f'''<section class="card"><p class="eyebrow">Observed Market Trend</p><h3>{escape(trend_heading)}</h3><p>{_trend_observation_summary(trend)}</p>{f'<ul>{milestone_html}</ul>' if milestone_html else '<p class="muted">No supported milestone comparison is available yet.</p>'}<p class="muted">Recorded observations only; no daily prices are invented.</p></section>'''
+                trend_html += trend_classification_note + _trend_checkpoint_details(trend)
                 trend_html += _trend_boundary_notice(trend)
                 from services.asset_explanations import market_explanation
                 from src.ui.explanations import explanation_panel
@@ -508,7 +574,18 @@ def create_market_router(
                     for value, label in values
                 )
             trend_available = any((row.get("market_trend") or {}).get("direction") in {"rising", "falling", "stable", "volatile"} for row in rows)
-            movers_html = '<div class="card"><p>Comparable dated Market prices show observed changes.</p><a href="/api/market/trending">Review observed price changes →</a></div>' if trend_available else '<div class="evidence-unavailable"><b>Not enough comparable price history yet.</b><br>At least two compatible dated prices are needed to show a change. Missing observations do not mean values stayed the same.</div>'
+            observed_comparison = any(
+                (row.get('market_trend') or {}).get('magnitude') is not None
+                and not (row.get('market_trend') or {}).get('comparison_reasons')
+                for row in rows
+            )
+            if trend_available:
+                movers_html = '<div class="card"><p>Comparable dated Market prices show observed changes.</p><a href="/api/market/trending">Review observed price changes →</a></div>'
+            elif observed_comparison:
+                movers_html = ('<div class="card"><b>Dated price comparisons are available.</b>'
+                               '<p>More observations are needed to classify a trend. Open an asset to review its retained evidence.</p></div>')
+            else:
+                movers_html = '<div class="evidence-unavailable"><b>Not enough comparable price history yet.</b><br>At least two compatible dated prices are needed to show a change. Missing observations do not mean values stayed the same.</div>'
             front_office_input = (
                 f'<input type="hidden" name="front_office" value="{front_office}">'
                 if front_office is not None else ""
