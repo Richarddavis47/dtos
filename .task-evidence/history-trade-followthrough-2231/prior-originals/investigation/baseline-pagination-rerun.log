@@ -1,0 +1,74 @@
+/usr/local/lib/python3.14/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+  from starlette.testclient import TestClient as TestClient  # noqa
+test_pagination_return (__main__.FollowThroughProbe.test_pagination_return) ... Validation Chromium: /usr/bin/chromium
+Validation Chromium version: 156.0.8078.73
+{"timestamp":"2026-11-05T22:52:38.176180+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:4 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-05T22:52:38.201335+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-05T22:52:38.201684+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-05T22:52:38.296854+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-05T22:52:38.298159+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-05T22:52:38.298774+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"f6436b4179ba4b14a3d7fd05ca7b66f0","event":"request_complete","duration_ms":93.691,"status_code":200,"method":"GET","path":"/static/css/contextual_navigation.css"}
+{"timestamp":"2026-11-05T22:52:38.300014+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"32d3d7dbb7c1441eabb5f63af6a2189f","event":"request_complete","duration_ms":78.354,"status_code":200,"method":"GET","path":"/static/js/contextual_navigation.js"}
+{"timestamp":"2026-11-05T22:52:38.345216+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/favicon.ico \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-05T22:52:38.905687+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:4?events_page=2 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-05T22:52:38.925364+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-05T22:52:38.929777+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-05T22:52:38.934340+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-05T22:52:38.935700+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-05T22:52:38.935982+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"27948de47617435d82dd5fdd9d1dbfcc","event":"request_complete","duration_ms":3.004,"status_code":200,"method":"GET","path":"/static/js/contextual_navigation.js"}
+{"timestamp":"2026-11-05T22:52:38.936630+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"a6b00b805338433b999e7810ab2ded8f","event":"request_complete","duration_ms":1.918,"status_code":200,"method":"GET","path":"/static/css/contextual_navigation.css"}
+{"timestamp":"2026-11-05T22:52:39.532206+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/history/1333655835015942144 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-05T22:52:39.549227+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-05T22:52:39.551059+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-05T22:52:39.556756+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/history-production.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-05T22:52:39.557831+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-05T22:52:39.558018+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-05T22:52:39.558716+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"4c849005b9064ef69204c0a13d07adef","event":"request_complete","duration_ms":3.876,"status_code":200,"method":"GET","path":"/static/js/contextual_navigation.js"}
+{"timestamp":"2026-11-05T22:52:39.558983+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"c24cf887ee0e4437a75466ab9ac4305d","event":"request_complete","duration_ms":2.716,"status_code":200,"method":"GET","path":"/static/css/contextual_navigation.css"}
+{"timestamp":"2026-11-05T22:52:39.614470+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/account/navigation-context \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+ERROR
+
+======================================================================
+ERROR: test_pagination_return (__main__.FollowThroughProbe.test_pagination_return)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/evidence/probe.py", line 58, in test_pagination_return
+    p.locator('#dtos-back').click();p.wait_for_url('**?events_page=2');p.wait_for_load_state('networkidle')
+                                    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/playwright/sync_api/_generated.py", line 10057, in wait_for_url
+    self._sync(
+    ~~~~~~~~~~^
+        self._impl_obj.wait_for_url(
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+        )
+        ^
+    )
+    ^
+  File "/usr/local/lib/python3.14/site-packages/playwright/_impl/_sync_base.py", line 115, in _sync
+    return task.result()
+           ~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/site-packages/playwright/_impl/_page.py", line 590, in wait_for_url
+    return await self._main_frame.wait_for_url(**locals_to_params(locals()))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/playwright/_impl/_frame.py", line 289, in wait_for_url
+    async with self.expect_navigation(
+               ~~~~~~~~~~~~~~~~~~~~~~^
+        url=url, waitUntil=waitUntil, timeout=timeout
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ):
+    ^
+  File "/usr/local/lib/python3.14/site-packages/playwright/_impl/_event_context_manager.py", line 33, in __aexit__
+    await self._future
+  File "/usr/local/lib/python3.14/site-packages/playwright/_impl/_frame.py", line 265, in continuation
+    event = await waiter.result()
+            ^^^^^^^^^^^^^^^^^^^^^
+playwright._impl._errors.TimeoutError: Timeout 5000ms exceeded.
+=========================== logs ===========================
+waiting for navigation to "**?events_page=2" until 'load'
+============================================================
+
+----------------------------------------------------------------------
+Ran 1 test in 8.243s
+
+FAILED (errors=1)

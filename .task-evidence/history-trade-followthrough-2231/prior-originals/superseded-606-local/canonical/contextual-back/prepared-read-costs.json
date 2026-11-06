@@ -1,0 +1,68 @@
+{
+  "guarded_calls": {
+    "src.core.data_platform.provider_activation.refresh_public_market": 0,
+    "src.core.data_platform.platform.DataPlatform.refresh": 0,
+    "src.core.projection_intelligence.service.ProjectionService.generate": 0,
+    "src.core.projection_intelligence.service.ProjectionService.publish_horizon": 0,
+    "services.global_evidence.retained_global_evidence": 0,
+    "services.sleeper.sleeper_get": 0,
+    "services.trade_intelligence.generate_trade_workflow": 0,
+    "src.core.fois.service.FOISService._generate_sync": 0,
+    "src.core.historical_franchise_state.service.HistoricalFranchiseStateService.reconstruct": 0
+  },
+  "solver_before": {
+    "src.core.trade_intelligence.lineup_memo": 0,
+    "src.core.intelligence.roster_evidence": 0,
+    "src.core.roster_intelligence.engine": 0,
+    "src.core.intelligence.team_strength": 0
+  },
+  "solver_after": {
+    "src.core.trade_intelligence.lineup_memo": 0,
+    "src.core.intelligence.roster_evidence": 0,
+    "src.core.roster_intelligence.engine": 0,
+    "src.core.intelligence.team_strength": 0
+  },
+  "return_requests": [
+    [
+      "GET",
+      "/api/account/navigation-context",
+      200
+    ],
+    [
+      "GET",
+      "/trades/create",
+      200
+    ],
+    [
+      "GET",
+      "/static/js/contextual_navigation.js",
+      200
+    ],
+    [
+      "GET",
+      "/static/js/trade_workspace.js",
+      200
+    ],
+    [
+      "GET",
+      "/static/js/strategy_session.js",
+      200
+    ],
+    [
+      "GET",
+      "/static/css/contextual_navigation.css",
+      200
+    ],
+    [
+      "GET",
+      "/static/css/trade_workspace.css",
+      200
+    ],
+    [
+      "GET",
+      "/api/trades/workspace",
+      200
+    ]
+  ],
+  "scope": "Prepared disposable HTTP, preparation excluded; not production capacity"
+}

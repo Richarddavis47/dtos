@@ -1,0 +1,17 @@
+# Original validation commands and scope
+
+Candidate606d45851990697194863facc2fa263245a91d4e/tree56ad13c33eee00c86b37d20ce6d18c4d76a325cf. Baseline3639a5f51270522c9f6a73971cb52226df343bef/treec251edcf8a6d2a35b157deb916a8cfb7869d6344.
+
+Original investigation and fixture failures are under investigation/. Baseline pagination probe uses actual account/session middleware, released history/player/pick/trade routers, navigation verification and real loopback HTTP/Chromium. baseline-pagination-matched.log is the original application failure. pagination-after.log is the matched corrected-source pass. The initial JSON snapshot loss and separately labelled baseline-source replay are disclosed in probe-evidence-note.json. Early import/navigation-route, future-clock, store-binding and canonical API type errors remain original logs.
+
+Broad focused command: `DTOS_FOLLOWTHROUGH_EVIDENCE=/evidence/browser-focused python /workspace/history-followthrough/run-constrained.py -m unittest -v tests.test_history_followthrough tests.test_history_followthrough_browser tests.test_trade_timeline tests.test_historical_tracker_phase2 tests.test_franchise_timeline_coverage tests.test_current_season_franchise_history tests.test_contextual_back tests.test_trade_timeline_browser tests.test_franchise_timeline_browser`;123passed122.179s. Repository Ruff used `-m ruff check --no-cache .` and passed.
+
+Exact committed candidate: `DTOS_EXPECTED_HEAD=606d45851990697194863facc2fa263245a91d4e DTOS_FOLLOWTHROUGH_EVIDENCE=/evidence/browser-final python /workspace/2231-release/run-constrained.py -m unittest -v tests.test_history_followthrough tests.test_history_followthrough_browser`;7passed44.430s,8viewport/league records and8screenshots, clean source identity recorded.
+
+`python /workspace/2231-release/run-clean.py` invokes the unchanged canonical harness and `python -m tools.validation.validate_release`. invocation.json contains the full Docker command: pinned Python3.14.3 runtime, UID1000, actual2GiB/no swap/two CPUs/network none, writable clean exact-source checkout, unchanged8GiB scratch prerequisite. The prior completed disposable checkout was clean before reuse; checkout-reuse.json records both identities and removal of regenerable bytecode only. scratch-reclamation.json records removal of an obsolete unused Python3.12 dependency-image backup, without deleting authoritative source or any original validation evidence.
+
+Five-case preflight: `DTOS_RESOURCE_SOURCE=/workspace/current-season-history-candidate DTOS_EXPECTED_HEAD=606d45851990697194863facc2fa263245a91d4e python /workspace/2231-release/run-constrained.py -m tools.validation.restoration_preflight_gate --output /evidence/local-preflight`. This metadata-only disposable control does not establish actual Granite restoration or current production headroom.
+
+The main Product job retains620+16existing executions and extends the existing separate2GiB current-history step from22to29tests, including the new7. The existing memory, lifecycle, security, navigation and Windows jobs remain mandatory. Source and artifact run identities are pinned in the final release plan; no older-source success substitutes for the candidate.
+
+The isolated Actions publisher runs scoped integrity/security tests and Ruff. It never merges application code or updates main itself; it verifies the exact approved PR/source/tree, checksums, successful preparation and unchanged merge before immutable publication. No Codex Cloud direct asset upload is attempted.

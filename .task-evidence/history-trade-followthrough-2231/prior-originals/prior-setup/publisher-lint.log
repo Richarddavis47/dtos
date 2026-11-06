@@ -1,0 +1,163 @@
+E701 Multiple statements on one line (colon)
+   --> tests/test_release_publisher.py:594:40
+    |
+592 |                 with self.subTest(change=change):
+593 |                     data=copy.deepcopy(report)
+594 |                     if change=='source':data['tree']='c'*40
+    |                                        ^
+595 |                     if change=='dirty':data['working_tree_clean']=False
+596 |                     if change=='missing':data['records'].pop()
+    |
+
+E701 Multiple statements on one line (colon)
+   --> tests/test_release_publisher.py:595:39
+    |
+593 |                     data=copy.deepcopy(report)
+594 |                     if change=='source':data['tree']='c'*40
+595 |                     if change=='dirty':data['working_tree_clean']=False
+    |                                       ^
+596 |                     if change=='missing':data['records'].pop()
+597 |                     if change=='duplicate':data['records'][-1]=data['records'][0]
+    |
+
+E701 Multiple statements on one line (colon)
+   --> tests/test_release_publisher.py:596:41
+    |
+594 |                     if change=='source':data['tree']='c'*40
+595 |                     if change=='dirty':data['working_tree_clean']=False
+596 |                     if change=='missing':data['records'].pop()
+    |                                         ^
+597 |                     if change=='duplicate':data['records'][-1]=data['records'][0]
+598 |                     if change=='chain':data['records'][0]['chain'][11]='/league'
+    |
+
+E701 Multiple statements on one line (colon)
+   --> tests/test_release_publisher.py:597:43
+    |
+595 |                     if change=='dirty':data['working_tree_clean']=False
+596 |                     if change=='missing':data['records'].pop()
+597 |                     if change=='duplicate':data['records'][-1]=data['records'][0]
+    |                                           ^
+598 |                     if change=='chain':data['records'][0]['chain'][11]='/league'
+599 |                     if change=='origin':data['records'][0]['original']='9999'
+    |
+
+E701 Multiple statements on one line (colon)
+   --> tests/test_release_publisher.py:598:39
+    |
+596 |                     if change=='missing':data['records'].pop()
+597 |                     if change=='duplicate':data['records'][-1]=data['records'][0]
+598 |                     if change=='chain':data['records'][0]['chain'][11]='/league'
+    |                                       ^
+599 |                     if change=='origin':data['records'][0]['original']='9999'
+600 |                     if change=='pagination':data['records'][0]['pagination_return']=False
+    |
+
+E701 Multiple statements on one line (colon)
+   --> tests/test_release_publisher.py:599:40
+    |
+597 |                     if change=='duplicate':data['records'][-1]=data['records'][0]
+598 |                     if change=='chain':data['records'][0]['chain'][11]='/league'
+599 |                     if change=='origin':data['records'][0]['original']='9999'
+    |                                        ^
+600 |                     if change=='pagination':data['records'][0]['pagination_return']=False
+601 |                     if change=='reload':data['records'][0]['forward_reload']=False
+    |
+
+E701 Multiple statements on one line (colon)
+   --> tests/test_release_publisher.py:600:44
+    |
+598 |                     if change=='chain':data['records'][0]['chain'][11]='/league'
+599 |                     if change=='origin':data['records'][0]['original']='9999'
+600 |                     if change=='pagination':data['records'][0]['pagination_return']=False
+    |                                            ^
+601 |                     if change=='reload':data['records'][0]['forward_reload']=False
+602 |                     if change=='scope':data['records'][1]['old_league_replay']=True
+    |
+
+E701 Multiple statements on one line (colon)
+   --> tests/test_release_publisher.py:601:40
+    |
+599 |                     if change=='origin':data['records'][0]['original']='9999'
+600 |                     if change=='pagination':data['records'][0]['pagination_return']=False
+601 |                     if change=='reload':data['records'][0]['forward_reload']=False
+    |                                        ^
+602 |                     if change=='scope':data['records'][1]['old_league_replay']=True
+603 |                     if change=='browser-error':data['errors']=['failed']
+    |
+
+E701 Multiple statements on one line (colon)
+   --> tests/test_release_publisher.py:602:39
+    |
+600 |                     if change=='pagination':data['records'][0]['pagination_return']=False
+601 |                     if change=='reload':data['records'][0]['forward_reload']=False
+602 |                     if change=='scope':data['records'][1]['old_league_replay']=True
+    |                                       ^
+603 |                     if change=='browser-error':data['errors']=['failed']
+604 |                     if change=='cleanup':data['server_thread_reaped']=False
+    |
+
+E701 Multiple statements on one line (colon)
+   --> tests/test_release_publisher.py:603:47
+    |
+601 |                     if change=='reload':data['records'][0]['forward_reload']=False
+602 |                     if change=='scope':data['records'][1]['old_league_replay']=True
+603 |                     if change=='browser-error':data['errors']=['failed']
+    |                                               ^
+604 |                     if change=='cleanup':data['server_thread_reaped']=False
+605 |                     if change=='heavy-request':data['requests'].append(dict(path='/sync',status=200))
+    |
+
+E701 Multiple statements on one line (colon)
+   --> tests/test_release_publisher.py:604:41
+    |
+602 |                     if change=='scope':data['records'][1]['old_league_replay']=True
+603 |                     if change=='browser-error':data['errors']=['failed']
+604 |                     if change=='cleanup':data['server_thread_reaped']=False
+    |                                         ^
+605 |                     if change=='heavy-request':data['requests'].append(dict(path='/sync',status=200))
+606 |                     if change=='context':data['requests']=[]
+    |
+
+E701 Multiple statements on one line (colon)
+   --> tests/test_release_publisher.py:605:47
+    |
+603 |                     if change=='browser-error':data['errors']=['failed']
+604 |                     if change=='cleanup':data['server_thread_reaped']=False
+605 |                     if change=='heavy-request':data['requests'].append(dict(path='/sync',status=200))
+    |                                               ^
+606 |                     if change=='context':data['requests']=[]
+607 |                     files={'browser.json':json.dumps(data).encode()}
+    |
+
+E701 Multiple statements on one line (colon)
+   --> tests/test_release_publisher.py:606:41
+    |
+604 |                     if change=='cleanup':data['server_thread_reaped']=False
+605 |                     if change=='heavy-request':data['requests'].append(dict(path='/sync',status=200))
+606 |                     if change=='context':data['requests']=[]
+    |                                         ^
+607 |                     files={'browser.json':json.dumps(data).encode()}
+608 |                     files.update({str(i)+'.png':b'\x89PNG\r\n\x1a\n' for i in range(8)})
+    |
+
+E701 Multiple statements on one line (colon)
+   --> tests/test_release_publisher.py:609:45
+    |
+607 |                     files={'browser.json':json.dumps(data).encode()}
+608 |                     files.update({str(i)+'.png':b'\x89PNG\r\n\x1a\n' for i in range(8)})
+609 |                     if change=='screenshots':del files['0.png']
+    |                                             ^
+610 |                     p.make_zip(path,files)
+611 |                     if change=='control':
+    |
+
+E701 Multiple statements on one line (colon)
+   --> tests/test_release_publisher.py:614:61
+    |
+612 |                         self.assertEqual(p.verify_history_followthrough(path,plan),report)
+613 |                     else:
+614 |                         with self.assertRaises(RuntimeError):p.verify_history_followthrough(path,plan)
+    |                                                             ^
+
+Found 15 errors.
