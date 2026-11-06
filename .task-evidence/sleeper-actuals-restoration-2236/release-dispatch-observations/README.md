@@ -1,0 +1,1 @@
+Original API observations at dispatch; in-progress status is retained history, not current release status. Top-level preparation-run.json and publication-run.json are separately fetched final completed/success records. No original test log or immutable attachment was replaced.

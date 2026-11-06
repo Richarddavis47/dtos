@@ -1,0 +1,177 @@
+{
+  "schema": 1,
+  "repository": "Richarddavis47/dtos",
+  "actor": "Richarddavis47",
+  "publisher_ref": "refs/heads/release/2236-actions-publisher",
+  "baseline": "4e63bfbf605c7a1cdd5ce1dc039424e862ab7efd",
+  "candidate": "8a7f3365316c52c09ca342f02871f03a0fe658c6",
+  "tree": "81e9a223be2f05aa7dbe556b99eaabcbb492b5c9",
+  "pr": 325,
+  "source_branch": "fix/sleeper-actuals-restoration",
+  "version": "1.22.21",
+  "build": 2236,
+  "draft_id": 436913156,
+  "prior_immutable_tag": "v1.22.20",
+  "canonical_tests": 4241,
+  "canonical_entries": 644,
+  "product_tests": 757,
+  "recovery_file": ".github/release-plans/2236-recovery.zip",
+  "recovery_sha256": "b780d8e7194daf993401996d70863dc074c85a51fac827944539cc72c520c882",
+  "runs": [
+    {
+      "id": 42271904207,
+      "name": "Canonical release recovery",
+      "path": ".github/workflows/canonical-release-recovery.yml",
+      "jobs": [
+        "canonical-release"
+      ]
+    },
+    {
+      "id": 42271904062,
+      "name": "Product browser journeys",
+      "path": ".github/workflows/product-browser.yml",
+      "jobs": [
+        "product-browser",
+        "my-team-browser",
+        "beginner-navigation",
+        "public-welcome-browser",
+        "historical-trade-timeline",
+        "projection-display-cross-version"
+      ]
+    },
+    {
+      "id": 42271904314,
+      "name": "Validation tooling",
+      "path": ".github/workflows/validation-tooling.yml",
+      "jobs": [
+        "tooling (ubuntu-24.04)",
+        "tooling (windows-latest)"
+      ]
+    },
+    {
+      "id": 42271904149,
+      "name": "Linux Asset Market lifecycle",
+      "path": ".github/workflows/linux-market-lifecycle.yml",
+      "jobs": [
+        "cgroup-lifecycle (ordinary)",
+        "cgroup-lifecycle (archive-warmed)",
+        "cgroup-lifecycle (combined-read)"
+      ]
+    }
+  ],
+  "artifacts": [
+    {
+      "id": 13533675394,
+      "name": "actuals-restoration-2g",
+      "run": 42271904062,
+      "file": "actuals-restoration-original.zip",
+      "sha256": "8bf6534c1a68a782ceaa985d83eec53393d75a22dea8336d4f7b97118d80716c"
+    },
+    {
+      "id": 13531569920,
+      "name": "restoration-unused-2g",
+      "run": 42271904062,
+      "file": "restoration-unused-original.zip",
+      "sha256": "21885fded29fb9f5ea989cefd93315cbf55187242a19bd8b42ea1df2fa640507"
+    },
+    {
+      "id": 13533495096,
+      "name": "current-production-coverage-browser",
+      "run": 42271904062,
+      "file": "current-production-coverage-original.zip",
+      "sha256": "0d38c13079c83df5c7766ef1ce23f900de94f051393a7da1a249b20d013a1de8"
+    },
+    {
+      "id": 13531424919,
+      "name": "market-history-coverage-browser",
+      "run": 42271904062,
+      "file": "market-history-coverage-original.zip",
+      "sha256": "4aa0d4281ec97b47883a1ca523abf14f5924da04c7b3c29ab158086353b97011"
+    },
+    {
+      "id": 13533370257,
+      "name": "history-followthrough-browser",
+      "run": 42271904062,
+      "file": "history-followthrough-original.zip",
+      "sha256": "14d42498e89b539ecdcd56867a6db76fc47ab00970741220432c23c6033be972"
+    },
+    {
+      "id": 13531389776,
+      "name": "current-season-history-browser",
+      "run": 42271904062,
+      "file": "current-history-original.zip",
+      "sha256": "558307e78eefcf97e19b04bf0b10a21a93d6c357902e27c62d58c3685ab3e7be"
+    },
+    {
+      "id": 13534553488,
+      "name": "canonical-release-2g-python314",
+      "run": 42271904207,
+      "file": "canonical-original.zip",
+      "sha256": "59aaa673ac9377cc2326ee9256a2bf061734a4cfbf8cec2d13eaeaaeb0014a53"
+    },
+    {
+      "id": 13531212304,
+      "name": "restoration-preflight-2g",
+      "run": 42271904062,
+      "file": "preflight-original.zip",
+      "sha256": "5379820d50dfb236b506635efebb4e40bede4023b115cb412111dbce6e6f0b68"
+    },
+    {
+      "id": 13532267900,
+      "name": "trade-resource-2g",
+      "run": 42271904062,
+      "file": "trade-resource-original.zip",
+      "sha256": "ddf480ad487202c4d86cde5118ca910083b582328a598ffbdb8716603248fc47"
+    },
+    {
+      "id": 13531559860,
+      "name": "league-entry-2g",
+      "run": 42271904062,
+      "file": "league-entry-original.zip",
+      "sha256": "9a538f9efee1f1d24c9b0a70c9784312cf404937d6e2807e7c9e0278b0a6a6e1"
+    },
+    {
+      "id": 13528889766,
+      "name": "linux-market-lifecycle-ordinary-summary",
+      "run": 42271904149,
+      "file": "lifecycle-ordinary.zip",
+      "sha256": "3ddbb27919a6dae37d41cd389dd8c4f8293b18aafd74778d2c88b7fc34189cd2"
+    },
+    {
+      "id": 13529661818,
+      "name": "linux-market-lifecycle-archive-warmed-summary",
+      "run": 42271904149,
+      "file": "lifecycle-archive-warmed.zip",
+      "sha256": "e7ad7e61d04862517519d5cdbe26da885b4564cca600db7cf8a276823824083a"
+    },
+    {
+      "id": 13531306006,
+      "name": "linux-market-lifecycle-combined-read-summary",
+      "run": 42271904149,
+      "file": "lifecycle-combined-read.zip",
+      "sha256": "f5a901e5816d757f32f05a9b6999cdff077b381d089961610091454eb72654ea"
+    },
+    {
+      "id": 13531212311,
+      "name": "public-welcome-security-browser",
+      "run": 42271904062,
+      "file": "public-welcome-security.zip",
+      "sha256": "c55045d25fdc155658854548e6554985c6a10ef6a1b6658a645e7f76e8b58f62"
+    }
+  ],
+  "prior_runs": [
+    42266576938,
+    42266576953,
+    42266577042,
+    42266576962
+  ],
+  "prior_jobs": [
+    128059968279,
+    128059968698
+  ],
+  "python_version": "3.14.3",
+  "prior_evidence_file": ".github/release-plans/2236-prior.zip",
+  "prior_evidence_sha256": "5d60822179fec42ce4831b706558983e95ea8c29909e3d85f90e210353f79e8c",
+  "finalized": true,
+  "local_canonical_entries": 640
+}

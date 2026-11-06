@@ -1,0 +1,334 @@
+er%3A1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-06T18:21:20.5793793Z {"timestamp":"2026-11-06T18:21:20.578854+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/market/assets/player:1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-06T18:21:20.6753462Z ok
+2026-11-06T18:21:20.6753748Z 
+2026-11-06T18:21:20.6754058Z ----------------------------------------------------------------------
+2026-11-06T18:21:20.6754433Z Ran 121 tests in 166.771s
+2026-11-06T18:21:20.6754593Z 
+2026-11-06T18:21:20.6754685Z OK
+2026-11-06T18:21:21.9868341Z ##[group]Run actions/upload-artifact@v4
+2026-11-06T18:21:21.9868632Z with:
+2026-11-06T18:21:21.9868869Z   name: current-season-history-browser
+2026-11-06T18:21:21.9869172Z   path: .validation/current-season-history
+2026-11-06T18:21:21.9869451Z   if-no-files-found: error
+2026-11-06T18:21:21.9869684Z   retention-days: 14
+2026-11-06T18:21:21.9869901Z   compression-level: 6
+2026-11-06T18:21:21.9870117Z   overwrite: false
+2026-11-06T18:21:21.9870334Z   include-hidden-files: false
+2026-11-06T18:21:21.9870660Z env:
+2026-11-06T18:21:21.9870884Z   NODE_OPTIONS: --max-old-space-size=256
+2026-11-06T18:21:21.9871223Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-06T18:21:21.9871629Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib/pkgconfig
+2026-11-06T18:21:21.9872042Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-06T18:21:21.9872410Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-06T18:21:21.9872817Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-06T18:21:21.9873181Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib
+2026-11-06T18:21:21.9873493Z ##[endgroup]
+2026-11-06T18:21:22.1539766Z (node:52351) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-11-06T18:21:22.1540836Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-11-06T18:21:22.1618914Z With the provided path, there will be 13 files uploaded
+2026-11-06T18:21:22.1626114Z Artifact name is valid!
+2026-11-06T18:21:22.1626481Z Root directory input is valid!
+2026-11-06T18:21:22.4419768Z Beginning upload of artifact content to blob storage
+2026-11-06T18:21:22.5131291Z (node:52351) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+2026-11-06T18:21:22.7743029Z Uploaded bytes 895271
+2026-11-06T18:21:22.8127788Z Finished uploading artifact content to blob storage!
+2026-11-06T18:21:22.8128600Z SHA256 digest of uploaded artifact zip is 4c0fa781e2f2f9a69aae7f027c586ddd4391a6bd2a1b9e1210328a5490302b2d
+2026-11-06T18:21:22.8130178Z Finalizing artifact upload
+2026-11-06T18:21:23.2111634Z Artifact current-season-history-browser.zip successfully finalized. Artifact ID 13527588656
+2026-11-06T18:21:23.2112888Z Artifact current-season-history-browser has been successfully uploaded! Final size is 895271 bytes. Artifact ID is 13527588656
+2026-11-06T18:21:23.2119143Z Artifact download URL: https://github.com/Richarddavis47/dtos/actions/runs/42266576953/artifacts/13527588656
+2026-11-06T18:21:23.2297029Z ##[group]Run actions/upload-artifact@v4
+2026-11-06T18:21:23.2297337Z with:
+2026-11-06T18:21:23.2297583Z   name: history-followthrough-browser
+2026-11-06T18:21:23.2297892Z   path: .validation/history-followthrough
+2026-11-06T18:21:23.2298192Z   if-no-files-found: error
+2026-11-06T18:21:23.2298444Z   retention-days: 14
+2026-11-06T18:21:23.2298684Z   compression-level: 6
+2026-11-06T18:21:23.2298910Z   overwrite: false
+2026-11-06T18:21:23.2299138Z   include-hidden-files: false
+2026-11-06T18:21:23.2299376Z env:
+2026-11-06T18:21:23.2299601Z   NODE_OPTIONS: --max-old-space-size=256
+2026-11-06T18:21:23.2299953Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-06T18:21:23.2300369Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib/pkgconfig
+2026-11-06T18:21:23.2300797Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-06T18:21:23.2301178Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-06T18:21:23.2301733Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-06T18:21:23.2302117Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib
+2026-11-06T18:21:23.2302442Z ##[endgroup]
+2026-11-06T18:21:23.4020850Z (node:52364) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-11-06T18:21:23.4021546Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-11-06T18:21:23.4104526Z With the provided path, there will be 9 files uploaded
+2026-11-06T18:21:23.4111662Z Artifact name is valid!
+2026-11-06T18:21:23.4112628Z Root directory input is valid!
+2026-11-06T18:21:23.7058387Z Beginning upload of artifact content to blob storage
+2026-11-06T18:21:23.7552107Z (node:52364) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+2026-11-06T18:21:24.1518802Z Uploaded bytes 477141
+2026-11-06T18:21:24.2002169Z Finished uploading artifact content to blob storage!
+2026-11-06T18:21:24.2003125Z SHA256 digest of uploaded artifact zip is ca07f75ddd2acdf697fc69679d2bfc14aa5b9e5c2c4ff837a34ef0c63aa3d4c9
+2026-11-06T18:21:24.2004013Z Finalizing artifact upload
+2026-11-06T18:21:24.5976497Z Artifact history-followthrough-browser.zip successfully finalized. Artifact ID 13527658343
+2026-11-06T18:21:24.5977399Z Artifact history-followthrough-browser has been successfully uploaded! Final size is 477141 bytes. Artifact ID is 13527658343
+2026-11-06T18:21:24.5983790Z Artifact download URL: https://github.com/Richarddavis47/dtos/actions/runs/42266576953/artifacts/13527658343
+2026-11-06T18:21:24.6153767Z ##[group]Run actions/upload-artifact@v4
+2026-11-06T18:21:24.6154226Z with:
+2026-11-06T18:21:24.6154583Z   name: market-history-coverage-browser
+2026-11-06T18:21:24.6155306Z   path: .validation/market-history-coverage
+2026-11-06T18:21:24.6155772Z   if-no-files-found: error
+2026-11-06T18:21:24.6156151Z   retention-days: 14
+2026-11-06T18:21:24.6156492Z   compression-level: 6
+2026-11-06T18:21:24.6156825Z   overwrite: false
+2026-11-06T18:21:24.6157134Z   include-hidden-files: false
+2026-11-06T18:21:24.6157579Z env:
+2026-11-06T18:21:24.6157903Z   NODE_OPTIONS: --max-old-space-size=256
+2026-11-06T18:21:24.6158399Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-06T18:21:24.6159050Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib/pkgconfig
+2026-11-06T18:21:24.6159708Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-06T18:21:24.6160281Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-06T18:21:24.6160918Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-06T18:21:24.6161513Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib
+2026-11-06T18:21:24.6162001Z ##[endgroup]
+2026-11-06T18:21:24.7857488Z (node:52376) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-11-06T18:21:24.7858654Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-11-06T18:21:24.7961508Z With the provided path, there will be 25 files uploaded
+2026-11-06T18:21:24.7968825Z Artifact name is valid!
+2026-11-06T18:21:24.7969404Z Root directory input is valid!
+2026-11-06T18:21:25.0975467Z Beginning upload of artifact content to blob storage
+2026-11-06T18:21:25.1980697Z (node:52376) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+2026-11-06T18:21:25.5018236Z Uploaded bytes 1429622
+2026-11-06T18:21:25.5387863Z Finished uploading artifact content to blob storage!
+2026-11-06T18:21:25.5388891Z SHA256 digest of uploaded artifact zip is 7e2b118fd970eb1922aefe8fae89b0beb7fa8d20ba165a9807415d6997d1306e
+2026-11-06T18:21:25.5389723Z Finalizing artifact upload
+2026-11-06T18:21:25.9105540Z Artifact market-history-coverage-browser.zip successfully finalized. Artifact ID 13527928205
+2026-11-06T18:21:25.9106548Z Artifact market-history-coverage-browser has been successfully uploaded! Final size is 1429622 bytes. Artifact ID is 13527928205
+2026-11-06T18:21:25.9112781Z Artifact download URL: https://github.com/Richarddavis47/dtos/actions/runs/42266576953/artifacts/13527928205
+2026-11-06T18:21:25.9271688Z ##[group]Run actions/upload-artifact@v4
+2026-11-06T18:21:25.9272032Z with:
+2026-11-06T18:21:25.9272312Z   name: current-production-coverage-browser
+2026-11-06T18:21:25.9272699Z   path: .validation/current-production-coverage
+2026-11-06T18:21:25.9273045Z   if-no-files-found: error
+2026-11-06T18:21:25.9273329Z   retention-days: 14
+2026-11-06T18:21:25.9273587Z   compression-level: 6
+2026-11-06T18:21:25.9273849Z   overwrite: false
+2026-11-06T18:21:25.9274191Z   include-hidden-files: false
+2026-11-06T18:21:25.9274473Z env:
+2026-11-06T18:21:25.9274819Z   NODE_OPTIONS: --max-old-space-size=256
+2026-11-06T18:21:25.9275474Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-06T18:21:25.9275946Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib/pkgconfig
+2026-11-06T18:21:25.9276408Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-06T18:21:25.9276871Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-06T18:21:25.9277326Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-06T18:21:25.9277750Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib
+2026-11-06T18:21:25.9278112Z ##[endgroup]
+2026-11-06T18:21:26.1054101Z (node:52388) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-11-06T18:21:26.1054797Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-11-06T18:21:26.1159132Z With the provided path, there will be 25 files uploaded
+2026-11-06T18:21:26.1164506Z Artifact name is valid!
+2026-11-06T18:21:26.1165223Z Root directory input is valid!
+2026-11-06T18:21:26.4516327Z Beginning upload of artifact content to blob storage
+2026-11-06T18:21:26.5692477Z (node:52388) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+2026-11-06T18:21:26.9312638Z Uploaded bytes 2095305
+2026-11-06T18:21:26.9732410Z Finished uploading artifact content to blob storage!
+2026-11-06T18:21:26.9733962Z SHA256 digest of uploaded artifact zip is fcb03f5286a0fc0d018ba254bbf3c87bbe00168ef131508fac9f696db72bf923
+2026-11-06T18:21:26.9735205Z Finalizing artifact upload
+2026-11-06T18:21:27.3629726Z Artifact current-production-coverage-browser.zip successfully finalized. Artifact ID 13527613396
+2026-11-06T18:21:27.3630626Z Artifact current-production-coverage-browser has been successfully uploaded! Final size is 2095305 bytes. Artifact ID is 13527613396
+2026-11-06T18:21:27.3636295Z Artifact download URL: https://github.com/Richarddavis47/dtos/actions/runs/42266576953/artifacts/13527613396
+2026-11-06T18:21:27.3770642Z ##[group]Run set -o pipefail
+2026-11-06T18:21:27.3771004Z [36;1mset -o pipefail[0m
+2026-11-06T18:21:27.3771441Z [36;1mmkdir -p .validation/trade-resource/fixture .validation/trade-resource/evidence[0m
+2026-11-06T18:21:27.3772922Z [36;1mdocker run --rm --init --memory=2g --memory-swap=2g --cpus=2 --network=none -v "$PWD:$PWD:ro" -v "$PWD/.validation/trade-resource:/proof" -w "$PWD" -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0="$PWD" dtos-browser-validation python -m tools.validation.trade_resource_recovery --prepare --fixture /proof/fixture 2>&1 | tee .validation/trade-resource/evidence/preparation.log[0m
+2026-11-06T18:21:27.3775657Z [36;1mdocker run --rm --init --memory=2g --memory-swap=2g --cpus=2 --network=none -v "$PWD:$PWD:ro" -v "$PWD/.validation/trade-resource:/proof" -w "$PWD" -e DTOS_EXPECTED_HEAD -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0="$PWD" dtos-browser-validation python -m tools.validation.trade_resource_recovery --fixture /proof/fixture --output /proof/evidence 2>&1 | tee .validation/trade-resource/evidence/raw.log[0m
+2026-11-06T18:21:27.3777195Z [36;1mcd .validation/trade-resource/evidence[0m
+2026-11-06T18:21:27.3777608Z [36;1msha256sum result.json raw.log preparation.log > SHA256SUMS[0m
+2026-11-06T18:21:27.3792177Z shell: /usr/bin/bash -e {0}
+2026-11-06T18:21:27.3792465Z env:
+2026-11-06T18:21:27.3792741Z   NODE_OPTIONS: --max-old-space-size=256
+2026-11-06T18:21:27.3793141Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-06T18:21:27.3793588Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib/pkgconfig
+2026-11-06T18:21:27.3794039Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-06T18:21:27.3794449Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-06T18:21:27.3794927Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-06T18:21:27.3795731Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib
+2026-11-06T18:21:27.3796176Z   DTOS_EXPECTED_HEAD: e10f6a041da1bbe87f2a1615cbe6b41edfd30494
+2026-11-06T18:21:27.3796519Z ##[endgroup]
+2026-11-06T18:21:27.7829627Z /usr/local/lib/python3.12/dist-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+2026-11-06T18:21:27.7831169Z   from starlette.testclient import TestClient as TestClient  # noqa
+2026-11-06T18:21:29.0797627Z WARNING:dtos.storage:storage_review {'kind': 'projection', 'database_bytes': 7618560, 'rows': {'projection_snapshots': 19, 'projection_source_history': 17, 'projection_player_states': 8368}, 'free_bytes': 87885025280, 'row_delta': {'projection_snapshots': 14, 'projection_source_history': 13, 'projection_player_states': 8320}, 'reasons': ['ROW_GROWTH_ACCELERATION_REVIEW']}
+2026-11-06T18:21:30.3132152Z {"phase": "fixture preparation before application observation", "identities": 12229, "json_bytes": 18725307}
+2026-11-06T18:21:30.8349105Z /usr/local/lib/python3.12/dist-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+2026-11-06T18:21:30.8350455Z   from starlette.testclient import TestClient as TestClient  # noqa
+2026-11-06T18:21:31.5166798Z {"timestamp":"2026-11-06T18:21:31.510848+00:00","level":"INFO","logger":"dtos.request","message":"request_accepted","request_id":"b39bc55ced3941bd82484d5b9576fd64","event":"request_accepted","method":"GET","path":"/health/live"}
+2026-11-06T18:21:31.5169099Z {"timestamp":"2026-11-06T18:21:31.510953+00:00","level":"INFO","logger":"dtos.request","message":"handler_scheduled","request_id":"b39bc55ced3941bd82484d5b9576fd64","event":"handler_scheduled","method":"GET","path":"/health/live"}
+2026-11-06T18:21:31.5211708Z {"timestamp":"2026-11-06T18:21:31.520706+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/health/live \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-06T18:21:31.5221126Z {"timestamp":"2026-11-06T18:21:31.521444+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"b39bc55ced3941bd82484d5b9576fd64","event":"request_complete","duration_ms":10.616,"status_code":200,"method":"GET","path":"/health/live"}
+2026-11-06T18:21:31.6830074Z {"timestamp":"2026-11-06T18:21:31.682195+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_admission","request_id":"system","event":"trade_admission","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":115621888,"limit_bytes":2147483648,"raw_headroom_bytes":2031861760,"clean_inactive_file_bytes":663552,"conditional_file_credit_bytes":331776,"admission_headroom_bytes":2032193536,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"recovery":null}}
+2026-11-06T18:21:32.0872567Z {"timestamp":"2026-11-06T18:21:32.086550+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_execution_finished","request_id":"system","event":"trade_execution_finished","duration_ms":405.122,"diagnostic":{"schema":"trade-resource-v1","outcome":"complete"}}
+2026-11-06T18:21:32.0896050Z {"timestamp":"2026-11-06T18:21:32.089179+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/trades/evaluate \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-06T18:21:32.1006303Z {"timestamp":"2026-11-06T18:21:32.100113+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/health/live \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-06T18:21:32.1009211Z {"timestamp":"2026-11-06T18:21:32.099304+00:00","level":"INFO","logger":"dtos.request","message":"request_accepted","request_id":"359302b722804a3da64a8781df5b8c2b","event":"request_accepted","method":"GET","path":"/health/live"}
+2026-11-06T18:21:32.1011018Z {"timestamp":"2026-11-06T18:21:32.099393+00:00","level":"INFO","logger":"dtos.request","message":"handler_scheduled","request_id":"359302b722804a3da64a8781df5b8c2b","event":"handler_scheduled","method":"GET","path":"/health/live"}
+2026-11-06T18:21:32.1018762Z {"timestamp":"2026-11-06T18:21:32.101175+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"359302b722804a3da64a8781df5b8c2b","event":"request_complete","duration_ms":1.881,"status_code":200,"method":"GET","path":"/health/live"}
+2026-11-06T18:21:32.1022721Z {"timestamp":"2026-11-06T18:21:32.101742+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_admission","request_id":"system","event":"trade_admission","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":121466880,"limit_bytes":2147483648,"raw_headroom_bytes":2026016768,"clean_inactive_file_bytes":339968,"conditional_file_credit_bytes":169984,"admission_headroom_bytes":2026186752,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"recovery":null}}
+2026-11-06T18:21:32.6078429Z {"timestamp":"2026-11-06T18:21:32.607234+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/health/live \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-06T18:21:32.6080312Z {"timestamp":"2026-11-06T18:21:32.606418+00:00","level":"INFO","logger":"dtos.request","message":"request_accepted","request_id":"e18150e260094eaf85a893a515b1e494","event":"request_accepted","method":"GET","path":"/health/live"}
+2026-11-06T18:21:32.6082275Z {"timestamp":"2026-11-06T18:21:32.606538+00:00","level":"INFO","logger":"dtos.request","message":"handler_scheduled","request_id":"e18150e260094eaf85a893a515b1e494","event":"handler_scheduled","method":"GET","path":"/health/live"}
+2026-11-06T18:21:32.6090878Z {"timestamp":"2026-11-06T18:21:32.608345+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"e18150e260094eaf85a893a515b1e494","event":"request_complete","duration_ms":1.938,"status_code":200,"method":"GET","path":"/health/live"}
+2026-11-06T18:21:33.2379971Z {"timestamp":"2026-11-06T18:21:33.226669+00:00","level":"INFO","logger":"dtos.request","message":"request_accepted","request_id":"dc07834dda084331bc3482ecaffcb5f0","event":"request_accepted","method":"GET","path":"/health/live"}
+2026-11-06T18:21:33.2417010Z {"timestamp":"2026-11-06T18:21:33.241016+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/health/live \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-06T18:21:33.2419184Z {"timestamp":"2026-11-06T18:21:33.226756+00:00","level":"INFO","logger":"dtos.request","message":"handler_scheduled","request_id":"dc07834dda084331bc3482ecaffcb5f0","event":"handler_scheduled","method":"GET","path":"/health/live"}
+2026-11-06T18:21:33.2435898Z {"timestamp":"2026-11-06T18:21:33.242741+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"dc07834dda084331bc3482ecaffcb5f0","event":"request_complete","duration_ms":16.086,"status_code":200,"method":"GET","path":"/health/live"}
+2026-11-06T18:21:33.9273639Z {"timestamp":"2026-11-06T18:21:33.920616+00:00","level":"INFO","logger":"dtos.request","message":"request_accepted","request_id":"af21d828162249bcaf7dbc1d9a95b3f2","event":"request_accepted","method":"GET","path":"/health/live"}
+2026-11-06T18:21:33.9279098Z {"timestamp":"2026-11-06T18:21:33.920703+00:00","level":"INFO","logger":"dtos.request","message":"handler_scheduled","request_id":"af21d828162249bcaf7dbc1d9a95b3f2","event":"handler_scheduled","method":"GET","path":"/health/live"}
+2026-11-06T18:21:33.9280603Z {"timestamp":"2026-11-06T18:21:33.927406+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/health/live \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-06T18:21:33.9391640Z {"timestamp":"2026-11-06T18:21:33.933363+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"af21d828162249bcaf7dbc1d9a95b3f2","event":"request_complete","duration_ms":12.761,"status_code":200,"method":"GET","path":"/health/live"}
+2026-11-06T18:21:34.6079898Z {"timestamp":"2026-11-06T18:21:34.596709+00:00","level":"INFO","logger":"dtos.request","message":"request_accepted","request_id":"5415ae1116cd42439a0e3d058b914f17","event":"request_accepted","method":"GET","path":"/health/live"}
+2026-11-06T18:21:34.6184127Z {"timestamp":"2026-11-06T18:21:34.596794+00:00","level":"INFO","logger":"dtos.request","message":"handler_scheduled","request_id":"5415ae1116cd42439a0e3d058b914f17","event":"handler_scheduled","method":"GET","path":"/health/live"}
+2026-11-06T18:21:34.6294268Z {"timestamp":"2026-11-06T18:21:34.618302+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/health/live \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-06T18:21:34.6513296Z {"timestamp":"2026-11-06T18:21:34.650389+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"5415ae1116cd42439a0e3d058b914f17","event":"request_complete","duration_ms":53.689,"status_code":200,"method":"GET","path":"/health/live"}
+2026-11-06T18:21:35.2986874Z {"timestamp":"2026-11-06T18:21:35.298087+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/health/live \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-06T18:21:35.2989098Z {"timestamp":"2026-11-06T18:21:35.286352+00:00","level":"INFO","logger":"dtos.request","message":"request_accepted","request_id":"89926e8670b04a978d79694708c81e4d","event":"request_accepted","method":"GET","path":"/health/live"}
+2026-11-06T18:21:35.2991147Z {"timestamp":"2026-11-06T18:21:35.286435+00:00","level":"INFO","logger":"dtos.request","message":"handler_scheduled","request_id":"89926e8670b04a978d79694708c81e4d","event":"handler_scheduled","method":"GET","path":"/health/live"}
+2026-11-06T18:21:35.3227187Z {"timestamp":"2026-11-06T18:21:35.321920+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"89926e8670b04a978d79694708c81e4d","event":"request_complete","duration_ms":35.577,"status_code":200,"method":"GET","path":"/health/live"}
+2026-11-06T18:21:35.9964464Z {"timestamp":"2026-11-06T18:21:35.988565+00:00","level":"INFO","logger":"dtos.request","message":"request_accepted","request_id":"e7478133b4124fd98a9febd1d5175cfa","event":"request_accepted","method":"GET","path":"/health/live"}
+2026-11-06T18:21:36.0097199Z {"timestamp":"2026-11-06T18:21:35.996109+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/health/live \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-06T18:21:36.0152893Z {"timestamp":"2026-11-06T18:21:35.988649+00:00","level":"INFO","logger":"dtos.request","message":"handler_scheduled","request_id":"e7478133b4124fd98a9febd1d5175cfa","event":"handler_scheduled","method":"GET","path":"/health/live"}
+2026-11-06T18:21:36.0282407Z {"timestamp":"2026-11-06T18:21:36.027591+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"e7478133b4124fd98a9febd1d5175cfa","event":"request_complete","duration_ms":39.041,"status_code":200,"method":"GET","path":"/health/live"}
+2026-11-06T18:21:36.5432471Z {"timestamp":"2026-11-06T18:21:36.541953+00:00","level":"INFO","logger":"dtos.request","message":"request_accepted","request_id":"d8a1471e9dba4c6cbb245e9104350942","event":"request_accepted","method":"GET","path":"/health/live"}
+2026-11-06T18:21:36.5435694Z {"timestamp":"2026-11-06T18:21:36.542034+00:00","level":"INFO","logger":"dtos.request","message":"handler_scheduled","request_id":"d8a1471e9dba4c6cbb245e9104350942","event":"handler_scheduled","method":"GET","path":"/health/live"}
+2026-11-06T18:21:36.5442673Z {"timestamp":"2026-11-06T18:21:36.543896+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/health/live \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-06T18:21:36.5455444Z {"timestamp":"2026-11-06T18:21:36.544896+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"d8a1471e9dba4c6cbb245e9104350942","event":"request_complete","duration_ms":2.958,"status_code":200,"method":"GET","path":"/health/live"}
+2026-11-06T18:21:37.1261020Z {"timestamp":"2026-11-06T18:21:37.124819+00:00","level":"INFO","logger":"dtos.request","message":"request_accepted","request_id":"b92f9bfef3d4420c9d5dad3fa5edc5fa","event":"request_accepted","method":"GET","path":"/health/live"}
+2026-11-06T18:21:37.1263508Z {"timestamp":"2026-11-06T18:21:37.124898+00:00","level":"INFO","logger":"dtos.request","message":"handler_scheduled","request_id":"b92f9bfef3d4420c9d5dad3fa5edc5fa","event":"handler_scheduled","method":"GET","path":"/health/live"}
+2026-11-06T18:21:37.1265385Z {"timestamp":"2026-11-06T18:21:37.125729+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/health/live \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-06T18:21:37.1277640Z {"timestamp":"2026-11-06T18:21:37.127126+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"b92f9bfef3d4420c9d5dad3fa5edc5fa","event":"request_complete","duration_ms":2.318,"status_code":200,"method":"GET","path":"/health/live"}
+2026-11-06T18:21:37.6991012Z {"timestamp":"2026-11-06T18:21:37.697818+00:00","level":"INFO","logger":"dtos.request","message":"request_accepted","request_id":"e7f06d63649446b38a5ab7f70a3d7716","event":"request_accepted","method":"GET","path":"/health/live"}
+2026-11-06T18:21:37.6992720Z {"timestamp":"2026-11-06T18:21:37.697902+00:00","level":"INFO","logger":"dtos.request","message":"handler_scheduled","request_id":"e7f06d63649446b38a5ab7f70a3d7716","event":"handler_scheduled","method":"GET","path":"/health/live"}
+2026-11-06T18:21:37.6994876Z {"timestamp":"2026-11-06T18:21:37.698860+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/health/live \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-06T18:21:37.7158311Z {"timestamp":"2026-11-06T18:21:37.715066+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"e7f06d63649446b38a5ab7f70a3d7716","event":"request_complete","duration_ms":17.254,"status_code":200,"method":"GET","path":"/health/live"}
+2026-11-06T18:21:38.2795458Z {"timestamp":"2026-11-06T18:21:38.278889+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/health/live \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-06T18:21:38.2796988Z {"timestamp":"2026-11-06T18:21:38.272424+00:00","level":"INFO","logger":"dtos.request","message":"request_accepted","request_id":"3fd1b4d48c2f4267aecd9a32099a4234","event":"request_accepted","method":"GET","path":"/health/live"}
+2026-11-06T18:21:38.2798284Z {"timestamp":"2026-11-06T18:21:38.272523+00:00","level":"INFO","logger":"dtos.request","message":"handler_scheduled","request_id":"3fd1b4d48c2f4267aecd9a32099a4234","event":"handler_scheduled","method":"GET","path":"/health/live"}
+2026-11-06T18:21:38.2837307Z {"timestamp":"2026-11-06T18:21:38.283036+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"3fd1b4d48c2f4267aecd9a32099a4234","event":"request_complete","duration_ms":10.622,"status_code":200,"method":"GET","path":"/health/live"}
+2026-11-06T18:21:38.8892662Z {"timestamp":"2026-11-06T18:21:38.880913+00:00","level":"INFO","logger":"dtos.request","message":"request_accepted","request_id":"935874a0835b4274b5fe52877508d855","event":"request_accepted","method":"GET","path":"/health/live"}
+2026-11-06T18:21:38.8894536Z {"timestamp":"2026-11-06T18:21:38.881001+00:00","level":"INFO","logger":"dtos.request","message":"handler_scheduled","request_id":"935874a0835b4274b5fe52877508d855","event":"handler_scheduled","method":"GET","path":"/health/live"}
+2026-11-06T18:21:38.8896879Z {"timestamp":"2026-11-06T18:21:38.889139+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/health/live \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-06T18:21:38.9055977Z {"timestamp":"2026-11-06T18:21:38.899364+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"935874a0835b4274b5fe52877508d855","event":"request_complete","duration_ms":18.46,"status_code":200,"method":"GET","path":"/health/live"}
+2026-11-06T18:21:39.5556938Z {"timestamp":"2026-11-06T18:21:39.538840+00:00","level":"INFO","logger":"dtos.request","message":"request_accepted","request_id":"2d3cf3818cbb4a5fa44a639f13878b6a","event":"request_accepted","method":"GET","path":"/health/live"}
+2026-11-06T18:21:39.5559231Z {"timestamp":"2026-11-06T18:21:39.538928+00:00","level":"INFO","logger":"dtos.request","message":"handler_scheduled","request_id":"2d3cf3818cbb4a5fa44a639f13878b6a","event":"handler_scheduled","method":"GET","path":"/health/live"}
+2026-11-06T18:21:39.5567193Z {"timestamp":"2026-11-06T18:21:39.555537+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/health/live \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-06T18:21:39.5859097Z {"timestamp":"2026-11-06T18:21:39.585131+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"2d3cf3818cbb4a5fa44a639f13878b6a","event":"request_complete","duration_ms":46.3,"status_code":200,"method":"GET","path":"/health/live"}
+2026-11-06T18:21:40.1592601Z {"timestamp":"2026-11-06T18:21:40.158679+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/health/live \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-06T18:21:40.1672801Z {"timestamp":"2026-11-06T18:21:40.157839+00:00","level":"INFO","logger":"dtos.request","message":"request_accepted","request_id":"79d148df27ca4c08a443f5468ae67c08","event":"request_accepted","method":"GET","path":"/health/live"}
+2026-11-06T18:21:40.1675252Z {"timestamp":"2026-11-06T18:21:40.157922+00:00","level":"INFO","logger":"dtos.request","message":"handler_scheduled","request_id":"79d148df27ca4c08a443f5468ae67c08","event":"handler_scheduled","method":"GET","path":"/health/live"}
+2026-11-06T18:21:40.1768773Z {"timestamp":"2026-11-06T18:21:40.171594+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"79d148df27ca4c08a443f5468ae67c08","event":"request_complete","duration_ms":13.764,"status_code":200,"method":"GET","path":"/health/live"}
+2026-11-06T18:21:40.8628188Z {"timestamp":"2026-11-06T18:21:40.862256+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/health/live \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-06T18:21:40.8672274Z {"timestamp":"2026-11-06T18:21:40.861348+00:00","level":"INFO","logger":"dtos.request","message":"request_accepted","request_id":"29713b5ee9da45d7b7ad67cf533121f3","event":"request_accepted","method":"GET","path":"/health/live"}
+2026-11-06T18:21:40.8724815Z {"timestamp":"2026-11-06T18:21:40.861432+00:00","level":"INFO","logger":"dtos.request","message":"handler_scheduled","request_id":"29713b5ee9da45d7b7ad67cf533121f3","event":"handler_scheduled","method":"GET","path":"/health/live"}
+2026-11-06T18:21:40.8731934Z {"timestamp":"2026-11-06T18:21:40.872546+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"29713b5ee9da45d7b7ad67cf533121f3","event":"request_complete","duration_ms":11.203,"status_code":200,"method":"GET","path":"/health/live"}
+2026-11-06T18:21:41.3946703Z {"timestamp":"2026-11-06T18:21:41.393267+00:00","level":"INFO","logger":"dtos.request","message":"request_accepted","request_id":"353ad4d8b78e4c338a550236924cae7b","event":"request_accepted","method":"GET","path":"/health/live"}
+2026-11-06T18:21:41.3948235Z {"timestamp":"2026-11-06T18:21:41.393352+00:00","level":"INFO","logger":"dtos.request","message":"handler_scheduled","request_id":"353ad4d8b78e4c338a550236924cae7b","event":"handler_scheduled","method":"GET","path":"/health/live"}
+2026-11-06T18:21:41.3972809Z {"timestamp":"2026-11-06T18:21:41.394839+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/health/live \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-06T18:21:41.4117065Z {"timestamp":"2026-11-06T18:21:41.411014+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"353ad4d8b78e4c338a550236924cae7b","event":"request_complete","duration_ms":17.755,"status_code":200,"method":"GET","path":"/health/live"}
+2026-11-06T18:21:42.1076288Z {"timestamp":"2026-11-06T18:21:42.096264+00:00","level":"INFO","logger":"dtos.request","message":"request_accepted","request_id":"a8c1eb5c2f14499cbdde9cb671f13f26","event":"request_accepted","method":"GET","path":"/health/live"}
+2026-11-06T18:21:42.1236656Z {"timestamp":"2026-11-06T18:21:42.107346+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/health/live \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-06T18:21:42.1312269Z {"timestamp":"2026-11-06T18:21:42.096369+00:00","level":"INFO","logger":"dtos.request","message":"handler_scheduled","request_id":"a8c1eb5c2f14499cbdde9cb671f13f26","event":"handler_scheduled","method":"GET","path":"/health/live"}
+2026-11-06T18:21:42.1470561Z {"timestamp":"2026-11-06T18:21:42.146383+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"a8c1eb5c2f14499cbdde9cb671f13f26","event":"request_complete","duration_ms":50.13,"status_code":200,"method":"GET","path":"/health/live"}
+2026-11-06T18:21:42.6625309Z {"timestamp":"2026-11-06T18:21:42.661943+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/health/live \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-06T18:21:42.6660384Z {"timestamp":"2026-11-06T18:21:42.661004+00:00","level":"INFO","logger":"dtos.request","message":"request_accepted","request_id":"f97000a0817b4fdb81ba394bf26d791e","event":"request_accepted","method":"GET","path":"/health/live"}
+2026-11-06T18:21:42.6711888Z {"timestamp":"2026-11-06T18:21:42.661090+00:00","level":"INFO","logger":"dtos.request","message":"handler_scheduled","request_id":"f97000a0817b4fdb81ba394bf26d791e","event":"handler_scheduled","method":"GET","path":"/health/live"}
+2026-11-06T18:21:42.7133797Z {"timestamp":"2026-11-06T18:21:42.712662+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"f97000a0817b4fdb81ba394bf26d791e","event":"request_complete","duration_ms":51.662,"status_code":200,"method":"GET","path":"/health/live"}
+2026-11-06T18:21:43.4614881Z {"timestamp":"2026-11-06T18:21:43.460097+00:00","level":"INFO","logger":"dtos.request","message":"request_accepted","request_id":"c9b8c8f031f34932adc1d8c0a490c968","event":"request_accepted","method":"GET","path":"/health/live"}
+2026-11-06T18:21:43.4617278Z {"timestamp":"2026-11-06T18:21:43.460182+00:00","level":"INFO","logger":"dtos.request","message":"handler_scheduled","request_id":"c9b8c8f031f34932adc1d8c0a490c968","event":"handler_scheduled","method":"GET","path":"/health/live"}
+2026-11-06T18:21:43.4621314Z {"timestamp":"2026-11-06T18:21:43.461241+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/health/live \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-06T18:21:43.4627682Z {"timestamp":"2026-11-06T18:21:43.462217+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"c9b8c8f031f34932adc1d8c0a490c968","event":"request_complete","duration_ms":2.136,"status_code":200,"method":"GET","path":"/health/live"}
+2026-11-06T18:21:44.0755180Z {"timestamp":"2026-11-06T18:21:44.074297+00:00","level":"INFO","logger":"dtos.request","message":"request_accepted","request_id":"951c9575a8034b968e363747c5ec62ed","event":"request_accepted","method":"GET","path":"/health/live"}
+2026-11-06T18:21:44.0858833Z {"timestamp":"2026-11-06T18:21:44.075357+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/health/live \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-06T18:21:44.0981292Z {"timestamp":"2026-11-06T18:21:44.074392+00:00","level":"INFO","logger":"dtos.request","message":"handler_scheduled","request_id":"951c9575a8034b968e363747c5ec62ed","event":"handler_scheduled","method":"GET","path":"/health/live"}
+2026-11-06T18:21:44.1613811Z {"timestamp":"2026-11-06T18:21:44.160558+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"951c9575a8034b968e363747c5ec62ed","event":"request_complete","duration_ms":86.267,"status_code":200,"method":"GET","path":"/health/live"}
+2026-11-06T18:21:44.7594198Z {"timestamp":"2026-11-06T18:21:44.758150+00:00","level":"INFO","logger":"dtos.request","message":"request_accepted","request_id":"72280f613fc648e8ac17e8986875f088","event":"request_accepted","method":"GET","path":"/health/live"}
+2026-11-06T18:21:44.7774358Z {"timestamp":"2026-11-06T18:21:44.758235+00:00","level":"INFO","logger":"dtos.request","message":"handler_scheduled","request_id":"72280f613fc648e8ac17e8986875f088","event":"handler_scheduled","method":"GET","path":"/health/live"}
+2026-11-06T18:21:44.7822256Z {"timestamp":"2026-11-06T18:21:44.777288+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/health/live \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-06T18:21:44.8130849Z {"timestamp":"2026-11-06T18:21:44.802343+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"72280f613fc648e8ac17e8986875f088","event":"request_complete","duration_ms":44.202,"status_code":200,"method":"GET","path":"/health/live"}
+2026-11-06T18:21:45.6553579Z {"timestamp":"2026-11-06T18:21:45.654811+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/health/live \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-06T18:21:45.6559287Z {"timestamp":"2026-11-06T18:21:45.654060+00:00","level":"INFO","logger":"dtos.request","message":"request_accepted","request_id":"f211f2cfd2aa4a6c913d80caf66705e5","event":"request_accepted","method":"GET","path":"/health/live"}
+2026-11-06T18:21:45.6560963Z {"timestamp":"2026-11-06T18:21:45.654138+00:00","level":"INFO","logger":"dtos.request","message":"handler_scheduled","request_id":"f211f2cfd2aa4a6c913d80caf66705e5","event":"handler_scheduled","method":"GET","path":"/health/live"}
+2026-11-06T18:21:45.6570370Z {"timestamp":"2026-11-06T18:21:45.656135+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"f211f2cfd2aa4a6c913d80caf66705e5","event":"request_complete","duration_ms":2.089,"status_code":200,"method":"GET","path":"/health/live"}
+2026-11-06T18:21:46.3217790Z {"timestamp":"2026-11-06T18:21:46.319918+00:00","level":"INFO","logger":"dtos.request","message":"request_accepted","request_id":"97e11085503c483981ce61dbcd2f60ff","event":"request_accepted","method":"GET","path":"/health/live"}
+2026-11-06T18:21:46.3219633Z {"timestamp":"2026-11-06T18:21:46.320002+00:00","level":"INFO","logger":"dtos.request","message":"handler_scheduled","request_id":"97e11085503c483981ce61dbcd2f60ff","event":"handler_scheduled","method":"GET","path":"/health/live"}
+2026-11-06T18:21:46.3456482Z {"timestamp":"2026-11-06T18:21:46.345102+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/health/live \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-06T18:21:46.3695193Z {"timestamp":"2026-11-06T18:21:46.368710+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"97e11085503c483981ce61dbcd2f60ff","event":"request_complete","duration_ms":48.798,"status_code":200,"method":"GET","path":"/health/live"}
+2026-11-06T18:21:47.1646648Z {"timestamp":"2026-11-06T18:21:47.159022+00:00","level":"INFO","logger":"dtos.request","message":"request_accepted","request_id":"698ff99708134e678f8f2a08a86c4008","event":"request_accepted","method":"GET","path":"/health/live"}
+2026-11-06T18:21:47.1648811Z {"timestamp":"2026-11-06T18:21:47.159108+00:00","level":"INFO","logger":"dtos.request","message":"handler_scheduled","request_id":"698ff99708134e678f8f2a08a86c4008","event":"handler_scheduled","method":"GET","path":"/health/live"}
+2026-11-06T18:21:47.1651766Z {"timestamp":"2026-11-06T18:21:47.164842+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/health/live \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-06T18:21:47.1662697Z {"timestamp":"2026-11-06T18:21:47.165685+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"698ff99708134e678f8f2a08a86c4008","event":"request_complete","duration_ms":6.677,"status_code":200,"method":"GET","path":"/health/live"}
+2026-11-06T18:21:47.6852448Z {"timestamp":"2026-11-06T18:21:47.678815+00:00","level":"INFO","logger":"dtos.request","message":"request_accepted","request_id":"90dab396490c40e08af1c2cbe22fd7c5","event":"request_accepted","method":"GET","path":"/health/live"}
+2026-11-06T18:21:47.6857417Z {"timestamp":"2026-11-06T18:21:47.678905+00:00","level":"INFO","logger":"dtos.request","message":"handler_scheduled","request_id":"90dab396490c40e08af1c2cbe22fd7c5","event":"handler_scheduled","method":"GET","path":"/health/live"}
+2026-11-06T18:21:47.6909701Z {"timestamp":"2026-11-06T18:21:47.690480+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/health/live \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-06T18:21:47.7090604Z {"timestamp":"2026-11-06T18:21:47.708298+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"90dab396490c40e08af1c2cbe22fd7c5","event":"request_complete","duration_ms":29.492,"status_code":200,"method":"GET","path":"/health/live"}
+2026-11-06T18:21:48.5303194Z {"timestamp":"2026-11-06T18:21:48.514872+00:00","level":"INFO","logger":"dtos.request","message":"request_accepted","request_id":"2660cbdaf6724a00a0ba83ac681be59d","event":"request_accepted","method":"GET","path":"/health/live"}
+2026-11-06T18:21:48.5305115Z {"timestamp":"2026-11-06T18:21:48.514959+00:00","level":"INFO","logger":"dtos.request","message":"handler_scheduled","request_id":"2660cbdaf6724a00a0ba83ac681be59d","event":"handler_scheduled","method":"GET","path":"/health/live"}
+2026-11-06T18:21:48.5309660Z {"timestamp":"2026-11-06T18:21:48.530577+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/health/live \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-06T18:21:48.5322941Z {"timestamp":"2026-11-06T18:21:48.531716+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"2660cbdaf6724a00a0ba83ac681be59d","event":"request_complete","duration_ms":16.859,"status_code":200,"method":"GET","path":"/health/live"}
+2026-11-06T18:21:49.2718640Z {"timestamp":"2026-11-06T18:21:49.260465+00:00","level":"INFO","logger":"dtos.request","message":"request_accepted","request_id":"9a439837c1a84f4f8286fbb2d9d92962","event":"request_accepted","method":"GET","path":"/health/live"}
+2026-11-06T18:21:49.2719979Z {"timestamp":"2026-11-06T18:21:49.260570+00:00","level":"INFO","logger":"dtos.request","message":"handler_scheduled","request_id":"9a439837c1a84f4f8286fbb2d9d92962","event":"handler_scheduled","method":"GET","path":"/health/live"}
+2026-11-06T18:21:49.2773863Z {"timestamp":"2026-11-06T18:21:49.276821+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/health/live \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-06T18:21:49.3048290Z {"timestamp":"2026-11-06T18:21:49.304017+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"9a439837c1a84f4f8286fbb2d9d92962","event":"request_complete","duration_ms":43.561,"status_code":200,"method":"GET","path":"/health/live"}
+2026-11-06T18:21:50.0678846Z {"timestamp":"2026-11-06T18:21:50.066524+00:00","level":"INFO","logger":"dtos.request","message":"request_accepted","request_id":"d709f66f6a8240b59125506f1de967c7","event":"request_accepted","method":"GET","path":"/health/live"}
+2026-11-06T18:21:50.0680929Z {"timestamp":"2026-11-06T18:21:50.066612+00:00","level":"INFO","logger":"dtos.request","message":"handler_scheduled","request_id":"d709f66f6a8240b59125506f1de967c7","event":"handler_scheduled","method":"GET","path":"/health/live"}
+2026-11-06T18:21:50.0684135Z {"timestamp":"2026-11-06T18:21:50.067860+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/health/live \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-06T18:21:50.0884227Z {"timestamp":"2026-11-06T18:21:50.087711+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"d709f66f6a8240b59125506f1de967c7","event":"request_complete","duration_ms":21.213,"status_code":200,"method":"GET","path":"/health/live"}
+2026-11-06T18:21:50.8353489Z {"timestamp":"2026-11-06T18:21:50.834657+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/health/live \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-06T18:21:50.8355395Z {"timestamp":"2026-11-06T18:21:50.833888+00:00","level":"INFO","logger":"dtos.request","message":"request_accepted","request_id":"78fe742e2156439f8d89a10c7f5c2fc3","event":"request_accepted","method":"GET","path":"/health/live"}
+2026-11-06T18:21:50.8356895Z {"timestamp":"2026-11-06T18:21:50.833972+00:00","level":"INFO","logger":"dtos.request","message":"handler_scheduled","request_id":"78fe742e2156439f8d89a10c7f5c2fc3","event":"handler_scheduled","method":"GET","path":"/health/live"}
+2026-11-06T18:21:50.8613443Z {"timestamp":"2026-11-06T18:21:50.860718+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"78fe742e2156439f8d89a10c7f5c2fc3","event":"request_complete","duration_ms":26.838,"status_code":200,"method":"GET","path":"/health/live"}
+2026-11-06T18:21:51.6254437Z {"timestamp":"2026-11-06T18:21:51.624855+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/health/live \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-06T18:21:51.6348790Z {"timestamp":"2026-11-06T18:21:51.624029+00:00","level":"INFO","logger":"dtos.request","message":"request_accepted","request_id":"d58bd36a153d4b36a94cd6631a876531","event":"request_accepted","method":"GET","path":"/health/live"}
+2026-11-06T18:21:51.6356674Z {"timestamp":"2026-11-06T18:21:51.624118+00:00","level":"INFO","logger":"dtos.request","message":"handler_scheduled","request_id":"d58bd36a153d4b36a94cd6631a876531","event":"handler_scheduled","method":"GET","path":"/health/live"}
+2026-11-06T18:21:51.6358650Z {"timestamp":"2026-11-06T18:21:51.635100+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"d58bd36a153d4b36a94cd6631a876531","event":"request_complete","duration_ms":11.085,"status_code":200,"method":"GET","path":"/health/live"}
+2026-11-06T18:21:52.1883052Z {"timestamp":"2026-11-06T18:21:52.187647+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/health/live \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-06T18:21:52.1886499Z {"timestamp":"2026-11-06T18:21:52.186881+00:00","level":"INFO","logger":"dtos.request","message":"request_accepted","request_id":"47247db75dd64c4f9aa4fc586cad78d9","event":"request_accepted","method":"GET","path":"/health/live"}
+2026-11-06T18:21:52.1950062Z {"timestamp":"2026-11-06T18:21:52.186961+00:00","level":"INFO","logger":"dtos.request","message":"handler_scheduled","request_id":"47247db75dd64c4f9aa4fc586cad78d9","event":"handler_scheduled","method":"GET","path":"/health/live"}
+2026-11-06T18:21:52.1956946Z {"timestamp":"2026-11-06T18:21:52.195107+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"47247db75dd64c4f9aa4fc586cad78d9","event":"request_complete","duration_ms":8.236,"status_code":200,"method":"GET","path":"/health/live"}
+2026-11-06T18:21:52.9965646Z {"timestamp":"2026-11-06T18:21:52.995964+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/health/live \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-06T18:21:52.9968743Z {"timestamp":"2026-11-06T18:21:52.995108+00:00","level":"INFO","logger":"dtos.request","message":"request_accepted","request_id":"67da14f4abf6488b803b065f7f58b699","event":"request_accepted","method":"GET","path":"/health/live"}
+2026-11-06T18:21:52.9971009Z {"timestamp":"2026-11-06T18:21:52.995191+00:00","level":"INFO","logger":"dtos.request","message":"handler_scheduled","request_id":"67da14f4abf6488b803b065f7f58b699","event":"handler_scheduled","method":"GET","path":"/health/live"}
+2026-11-06T18:21:53.0298143Z {"timestamp":"2026-11-06T18:21:53.019331+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"67da14f4abf6488b803b065f7f58b699","event":"request_complete","duration_ms":24.23,"status_code":200,"method":"GET","path":"/health/live"}
+2026-11-06T18:21:53.7119222Z {"timestamp":"2026-11-06T18:21:53.710627+00:00","level":"INFO","logger":"dtos.request","message":"request_accepted","request_id":"cf3cb6f4801c4acdb7512b72be5426f8","event":"request_accepted","method":"GET","path":"/health/live"}
+2026-11-06T18:21:53.7121835Z {"timestamp":"2026-11-06T18:21:53.710711+00:00","level":"INFO","logger":"dtos.request","message":"handler_scheduled","request_id":"cf3cb6f4801c4acdb7512b72be5426f8","event":"handler_scheduled","method":"GET","path":"/health/live"}
+2026-11-06T18:21:53.7124136Z {"timestamp":"2026-11-06T18:21:53.712020+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/health/live \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-06T18:21:53.7138701Z {"timestamp":"2026-11-06T18:21:53.713219+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"cf3cb6f4801c4acdb7512b72be5426f8","event":"request_complete","duration_ms":2.606,"status_code":200,"method":"GET","path":"/health/live"}
+2026-11-06T18:21:54.3098254Z {"timestamp":"2026-11-06T18:21:54.298237+00:00","level":"INFO","logger":"dtos.request","message":"request_accepted","request_id":"9fa8e980eb924629b380d7f6a2b0c7dc","event":"request_accepted","method":"GET","path":"/health/live"}
+2026-11-06T18:21:54.3302026Z {"timestamp":"2026-11-06T18:21:54.314697+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/health/live \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-06T18:21:54.3456447Z {"timestamp":"2026-11-06T18:21:54.298321+00:00","level":"INFO","logger":"dtos.request","message":"handler_scheduled","request_id":"9fa8e980eb924629b380d7f6a2b0c7dc","event":"handler_scheduled","method":"GET","path":"/health/live"}
+2026-11-06T18:21:54.3836373Z {"timestamp":"2026-11-06T18:21:54.382806+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"9fa8e980eb924629b380d7f6a2b0c7dc","event":"request_complete","duration_ms":84.581,"status_code":200,"method":"GET","path":"/health/live"}
+2026-11-06T18:21:54.9613143Z {"timestamp":"2026-11-06T18:21:54.942740+00:00","level":"INFO","logger":"dtos.request","message":"request_accepted","request_id":"4f461c7b71a4483e9c9d005dabc0b29b","event":"request_accepted","method":"GET","path":"/health/live"}
+2026-11-06T18:21:54.9655195Z {"timestamp":"2026-11-06T18:21:54.942820+00:00","level":"INFO","logger":"dtos.request","message":"handler_scheduled","request_id":"4f461c7b71a4483e9c9d005dabc0b29b","event":"handler_scheduled","method":"GET","path":"/health/live"}
+2026-11-06T18:21:54.9741359Z {"timestamp":"2026-11-06T18:21:54.970378+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/health/live \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-06T18:21:54.9755436Z {"timestamp":"2026-11-06T18:21:54.974941+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"4f461c7b71a4483e9c9d005dabc0b29b","event":"request_complete","duration_ms":32.215,"status_code":200,"method":"GET","path":"/health/live"}
+2026-11-06T18:21:55.7718664Z {"timestamp":"2026-11-06T18:21:55.770458+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/health/live \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-06T18:21:55.7920705Z {"timestamp":"2026-11-06T18:21:55.769579+00:00","level":"INFO","logger":"dtos.request","message":"request_accepted","request_id":"f5fa887154984536b4166a412bbaea19","event":"request_accepted","method":"GET","path":"/health/live"}
+2026-11-06T18:21:55.7922655Z {"timestamp":"2026-11-06T18:21:55.769670+00:00","level":"INFO","logger":"dtos.request","message":"handler_scheduled","request_id":"f5fa887154984536b4166a412bbaea19","event":"handler_scheduled","method":"GET","path":"/health/live"}
+2026-11-06T18:21:55.7927251Z {"timestamp":"2026-11-06T18:21:55.792017+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"f5fa887154984536b4166a412bbaea19","event":"request_complete","duration_ms":22.448,"status_code":200,"method":"GET","path":"/health/live"}
+2026-11-06T18:21:56.4023968Z {"timestamp":"2026-11-06T18:21:56.397007+00:00","level":"INFO","logger":"dtos.request","message":"request_accepted","request_id":"4cd51ef0dab84398b9b7a1d0713cb80d","event":"request_accepted","method":"GET","path":"/health/live"}
+2026-11-06T18:21:56.4025931Z {"timestamp":"2026-11-06T18:21:56.397096+00:00","level":"INFO","logger":"dtos.request","message":"handler_scheduled","request_id":"4cd51ef0dab84398b9b7a1d0713cb80d","event":"handler_scheduled","method":"GET","path":"/health/live"}
+2026-11-06T18:21:56.4090736Z {"timestamp":"2026-11-06T18:21:56.408636+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/health/live \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-06T18:21:56.6769853Z {"timestamp":"2026-11-06T18:21:56.672074+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"4cd51ef0dab84398b9b7a1d0713cb80d","event":"request_complete","duration_ms":275.068,"status_code":200,"method":"GET","path":"/health/live"}
+2026-11-06T18:21:57.2736900Z {"timestamp":"2026-11-06T18:21:57.263005+00:00","level":"INFO","logger":"dtos.request","message":"request_accepted","request_id":"817af59aa02d428cb536797420cf8a8b","event":"request_accepted","method":"GET","path":"/health/live"}
+2026-11-06T18:21:57.2738290Z {"timestamp":"2026-11-06T18:21:57.263089+00:00","level":"INFO","logger":"dtos.request","message":"handler_scheduled","request_id":"817af59aa02d428cb536797420cf8a8b","event":"handler_scheduled","method":"GET","path":"/health/live"}
+2026-11-06T18:21:57.2747634Z {"timestamp":"2026-11-06T18:21:57.273851+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/health/live \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-06T18:21:57.2968834Z {"timestamp":"2026-11-06T18:21:57.285595+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"817af59aa02d428cb536797420cf8a8b","event":"request_complete","duration_ms":22.597,"status_code":200,"method":"GET","path":"/health/live"}
+2026-11-06T18:21:57.8937627Z {"timestamp":"2026-11-06T18:21:57.888414+00:00","level":"INFO","logger":"dtos.request","message":"request_accepted","request_id":"6f071353192b424a993abc1de5bcb237","event":"request_accepted","method":"GET","path":"/health/live"}
+2026-11-06T18:21:57.8939074Z {"timestamp":"2026-11-06T18:21:57.888503+00:00","level":"INFO","logger":"dtos.request","message":"handler_scheduled","request_id":"6f071353192b424a993abc1de5bcb237","event":"handler_scheduled","method":"GET","path":"/health/live"}
+2026-11-06T18:21:57.8940860Z {"timestamp":"2026-11-06T18:21:57.893797+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/health/live \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-06T18:21:57.9238630Z {"timestamp":"2026-11-06T18:21:57.905462+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"6f071353192b424a993abc1de5bcb237","event":"request_complete","duration_ms":17.053,"status_code":200,"method":"GET","path":"/health/live"}
+2026-11-06T18:21:58.7006795Z {"timestamp":"2026-11-06T18:21:58.700067+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/health/live \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-06T18:21:58.7008496Z {"timestamp":"2026-11-06T18:21:58.699163+00:00","level":"INFO","logger":"dtos.request","message":"request_accepted","request_id":"2e46453166cb4d88a2e5594aad3944d5","event":"request_accepted","method":"GET","path":"/health/live"}
+2026-11-06T18:21:58.7009784Z {"timestamp":"2026-11-06T18:21:58.699245+00:00","level":"INFO","logger":"dtos.request","message":"handler_scheduled","request_id":"2e46453166cb4d88a2e5594aad3944d5","event":"handler_scheduled","method":"GET","path":"/health/live"}
+2026-11-06T18:21:58.7020458Z {"timestamp":"2026-11-06T18:21:58.701443+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"2e46453166cb4d88a2e5594aad3944d5","event":"request_complete","duration_ms":2.298,"status_code":200,"method":"GET","path":"/health/live"}
+2026-11-06T18:21:59.2523493Z {"timestamp":"2026-11-06T18:21:59.251848+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/health/live \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-06T18:21:59.2637794Z {"timestamp":"2026-11-06T18:21:59.251097+00:00","level":"INFO","logger":"dtos.request","message":"request_accepted","request_id":"47f63a3486674b9796e28c8ff6a6f56b","event":"request_accepted","method":"GET","path":"/health/live"}
+2026-11-06T18:21:59.2685422Z {"timestamp":"2026-11-06T18:21:59.251176+00:00","level":"INFO","logger":"dtos.request","message":"handler_scheduled","request_id":"47f63a3486674b9796e28c8ff6a6f56b","event":"handler_scheduled","method":"GET","path":"/health/live"}
+2026-11-06T18:21:59.2686889Z {"timestamp":"2026-11-06T18:21:59.252622+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"47f63a3486674b9796e28c8ff6a6f56b","event":"request_complete","duration_ms":1.54,"status_code":200,"method":"GET","path":"/health/live"}
+2026-11-06T18:21:59.8319331Z {"timestamp":"2026-11-06T18:21:59.831259+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/health/live \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-06T18:21:59.8321286Z {"timestamp":"2026-11-06T18:21:59.830515+00:00","level":"INFO","logger":"dtos.request","message":"req

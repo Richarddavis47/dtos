@@ -1,0 +1,609 @@
+36;1mimport sys[0m
+2026-11-06T17:59:38.3954783Z [36;1mimport threading[0m
+2026-11-06T17:59:38.3955002Z [36;1mimport time[0m
+2026-11-06T17:59:38.3955205Z [36;1mimport unittest[0m
+2026-11-06T17:59:38.3955413Z [36;1m[0m
+2026-11-06T17:59:38.3955727Z [36;1mif os.environ.get("DTOS_ATTRIBUTION_TEST_LOG") and "discover" in sys.argv:[0m
+2026-11-06T17:59:38.3956228Z [36;1m    _console = open("/output/unittest-console.log", "a", buffering=1)[0m
+2026-11-06T17:59:38.3956613Z [36;1m    _lock = threading.RLock()[0m
+2026-11-06T17:59:38.3956865Z [36;1m[0m
+2026-11-06T17:59:38.3957042Z [36;1m    class _Tee:[0m
+2026-11-06T17:59:38.3957292Z [36;1m        def __init__(self, original):[0m
+2026-11-06T17:59:38.3957597Z [36;1m            self.original = original[0m
+2026-11-06T17:59:38.3957863Z [36;1m[0m
+2026-11-06T17:59:38.3958052Z [36;1m        def write(self, value):[0m
+2026-11-06T17:59:38.3958323Z [36;1m            with _lock:[0m
+2026-11-06T17:59:38.3958580Z [36;1m                _console.write(value)[0m
+2026-11-06T17:59:38.3958862Z [36;1m                _console.flush()[0m
+2026-11-06T17:59:38.3959161Z [36;1m            return self.original.write(value)[0m
+2026-11-06T17:59:38.3959438Z [36;1m[0m
+2026-11-06T17:59:38.3959626Z [36;1m        def flush(self):[0m
+2026-11-06T17:59:38.3959866Z [36;1m            _console.flush()[0m
+2026-11-06T17:59:38.3960139Z [36;1m            return self.original.flush()[0m
+2026-11-06T17:59:38.3960406Z [36;1m[0m
+2026-11-06T17:59:38.3960728Z [36;1m        def __getattr__(self, name):[0m
+2026-11-06T17:59:38.3961160Z [36;1m            return getattr(self.original, name)[0m
+2026-11-06T17:59:38.3961441Z [36;1m[0m
+2026-11-06T17:59:38.3961633Z [36;1m    sys.stdout = _Tee(sys.stdout)[0m
+2026-11-06T17:59:38.3961912Z [36;1m    sys.stderr = _Tee(sys.stderr)[0m
+2026-11-06T17:59:38.3962161Z [36;1m[0m
+2026-11-06T17:59:38.3962493Z [36;1m    def record(event, test, error=None):[0m
+2026-11-06T17:59:38.3962852Z [36;1m        pages = Path("/proc/self/statm").read_text().split()[0m
+2026-11-06T17:59:38.3963321Z [36;1m        row = dict(event=event, test=test.id(), time=time.time(), pid=os.getpid(),[0m
+2026-11-06T17:59:38.3963781Z [36;1m                   rss=int(pages[1]) * os.sysconf("SC_PAGE_SIZE"),[0m
+2026-11-06T17:59:38.3964226Z [36;1m                   cgroup=int(Path("/sys/fs/cgroup/memory.current").read_text()))[0m
+2026-11-06T17:59:38.3964604Z [36;1m        if error:[0m
+2026-11-06T17:59:38.3964977Z [36;1m            row["error_type"] = error[0].__name__ if isinstance(error, tuple) else "skip"[0m
+2026-11-06T17:59:38.3965545Z [36;1m            row["error_text"] = str(error[1])[:2000] if isinstance(error, tuple) else str(error)[0m
+2026-11-06T17:59:38.3966078Z [36;1m        with open(os.environ["DTOS_ATTRIBUTION_TEST_LOG"], "a") as stream:[0m
+2026-11-06T17:59:38.3966494Z [36;1m            stream.write(json.dumps(row) + "\n")[0m
+2026-11-06T17:59:38.3966777Z [36;1m[0m
+2026-11-06T17:59:38.3967062Z [36;1m    for name, event in [("startTest", "start"), ("stopTest", "stop"),[0m
+2026-11-06T17:59:38.3967493Z [36;1m                        ("addError", "error"), ("addFailure", "failure"),[0m
+2026-11-06T17:59:38.3967856Z [36;1m                        ("addSkip", "skip")]:[0m
+2026-11-06T17:59:38.3968197Z [36;1m        original = getattr(unittest.TestResult, name)[0m
+2026-11-06T17:59:38.3968501Z [36;1m[0m
+2026-11-06T17:59:38.3968787Z [36;1m        def observed(self, test, *args, _original=original, _event=event):[0m
+2026-11-06T17:59:38.3969219Z [36;1m            record(_event, test, args[0] if args else None)[0m
+2026-11-06T17:59:38.3969572Z [36;1m            return _original(self, test, *args)[0m
+2026-11-06T17:59:38.3969846Z [36;1m[0m
+2026-11-06T17:59:38.3970079Z [36;1m        setattr(unittest.TestResult, name, observed)[0m
+2026-11-06T17:59:38.3970387Z [36;1mPY[0m
+2026-11-06T17:59:38.3996145Z shell: /usr/bin/bash -e {0}
+2026-11-06T17:59:38.3996420Z env:
+2026-11-06T17:59:38.3996657Z   NODE_OPTIONS: --max-old-space-size=256
+2026-11-06T17:59:38.3996950Z ##[endgroup]
+2026-11-06T17:59:38.4191543Z ##[group]Run set -euo pipefail
+2026-11-06T17:59:38.4191930Z [36;1mset -euo pipefail[0m
+2026-11-06T17:59:38.4192221Z [36;1mdocker pull python:3.14.3-slim-bookworm[0m
+2026-11-06T17:59:38.4192748Z [36;1mimage_ref="$(docker image inspect python:3.14.3-slim-bookworm --format '{{index .RepoDigests 0}}')"[0m
+2026-11-06T17:59:38.4193292Z [36;1mecho "Resolved Python image: $image_ref"[0m
+2026-11-06T17:59:38.4193726Z [36;1mprintf 'FROM %s\n' "$image_ref" > .validation/canonical-build/Dockerfile[0m
+2026-11-06T17:59:38.4194188Z [36;1mcat >> .validation/canonical-build/Dockerfile <<'DOCKER'[0m
+2026-11-06T17:59:38.4194847Z [36;1mENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 PIP_DISABLE_PIP_VERSION_CHECK=1 DTOS_CHROMIUM_EXECUTABLE=/usr/bin/chromium[0m
+2026-11-06T17:59:38.4195698Z [36;1mRUN apt-get update && apt-get install -y --no-install-recommends chromium git && rm -rf /var/lib/apt/lists/*[0m
+2026-11-06T17:59:38.4196347Z [36;1mCOPY requirements.txt requirements-validation.txt /build/[0m
+2026-11-06T17:59:38.4196860Z [36;1mRUN python -m pip install --no-cache-dir -r /build/requirements-validation.txt[0m
+2026-11-06T17:59:38.4197281Z [36;1mWORKDIR /app[0m
+2026-11-06T17:59:38.4197491Z [36;1mDOCKER[0m
+2026-11-06T17:59:38.4198232Z [36;1mdocker build --file .validation/canonical-build/Dockerfile --tag dtos-canonical-release:validation .validation/canonical-build 2>&1 | tee .validation/canonical-release/image-build.log[0m
+2026-11-06T17:59:38.4199671Z [36;1mdocker run --rm dtos-canonical-release:validation sh -c 'python --version && chromium --version && python -m pip check' | tee .validation/canonical-release/environment.txt[0m
+2026-11-06T17:59:38.4221926Z shell: /usr/bin/bash -e {0}
+2026-11-06T17:59:38.4222372Z env:
+2026-11-06T17:59:38.4222734Z   NODE_OPTIONS: --max-old-space-size=256
+2026-11-06T17:59:38.4223185Z ##[endgroup]
+2026-11-06T17:59:38.7458661Z 3.14.3-slim-bookworm: Pulling from library/python
+2026-11-06T17:59:38.8210489Z da539b676105: Pulling fs layer
+2026-11-06T17:59:38.8210998Z 12d2dc4a52d2: Pulling fs layer
+2026-11-06T17:59:38.8211433Z 82f0d19dc3f6: Pulling fs layer
+2026-11-06T17:59:38.8211854Z 5564d3ddac26: Pulling fs layer
+2026-11-06T17:59:38.8212267Z 5564d3ddac26: Waiting
+2026-11-06T17:59:38.8665252Z 12d2dc4a52d2: Download complete
+2026-11-06T17:59:38.8968004Z 82f0d19dc3f6: Verifying Checksum
+2026-11-06T17:59:38.8968870Z 82f0d19dc3f6: Download complete
+2026-11-06T17:59:38.8969238Z 5564d3ddac26: Download complete
+2026-11-06T17:59:38.9434085Z da539b676105: Verifying Checksum
+2026-11-06T17:59:38.9434633Z da539b676105: Download complete
+2026-11-06T17:59:40.0638673Z da539b676105: Pull complete
+2026-11-06T17:59:40.2222309Z 12d2dc4a52d2: Pull complete
+2026-11-06T17:59:40.8709877Z 82f0d19dc3f6: Pull complete
+2026-11-06T17:59:40.8806227Z 5564d3ddac26: Pull complete
+2026-11-06T17:59:40.8845088Z Digest: sha256:f21c0d5a44c56805654c15abccc1b2fd576c8d93aca0a3f74b4aba2dc92510e2
+2026-11-06T17:59:40.8860740Z Status: Downloaded newer image for python:3.14.3-slim-bookworm
+2026-11-06T17:59:40.8869867Z docker.io/library/python:3.14.3-slim-bookworm
+2026-11-06T17:59:40.9053397Z Resolved Python image: python@sha256:f21c0d5a44c56805654c15abccc1b2fd576c8d93aca0a3f74b4aba2dc92510e2
+2026-11-06T17:59:43.3344853Z #0 building with "default" instance using docker driver
+2026-11-06T17:59:43.3345358Z 
+2026-11-06T17:59:43.3345553Z #1 [internal] load build definition from Dockerfile
+2026-11-06T17:59:43.3346178Z #1 transferring dockerfile: 506B 0.0s done
+2026-11-06T17:59:43.3346814Z #1 DONE 0.0s
+2026-11-06T17:59:43.3347089Z 
+2026-11-06T17:59:43.3348197Z #2 [internal] load metadata for docker.io/library/python@sha256:f21c0d5a44c56805654c15abccc1b2fd576c8d93aca0a3f74b4aba2dc92510e2
+2026-11-06T17:59:43.3349218Z #2 DONE 0.0s
+2026-11-06T17:59:43.3349410Z 
+2026-11-06T17:59:43.3349567Z #3 [internal] load .dockerignore
+2026-11-06T17:59:43.3349884Z #3 transferring context: 2B done
+2026-11-06T17:59:43.3350136Z #3 DONE 0.0s
+2026-11-06T17:59:43.3350256Z 
+2026-11-06T17:59:43.3350628Z #4 [internal] load build context
+2026-11-06T17:59:43.3351229Z #4 transferring context: 316B done
+2026-11-06T17:59:43.3351569Z #4 DONE 0.0s
+2026-11-06T17:59:43.3351679Z 
+2026-11-06T17:59:43.3352024Z #5 [1/5] FROM docker.io/library/python@sha256:f21c0d5a44c56805654c15abccc1b2fd576c8d93aca0a3f74b4aba2dc92510e2
+2026-11-06T17:59:43.3352533Z #5 DONE 0.0s
+2026-11-06T17:59:43.3352640Z 
+2026-11-06T17:59:43.3352987Z #6 [2/5] RUN apt-get update && apt-get install -y --no-install-recommends chromium git && rm -rf /var/lib/apt/lists/*
+2026-11-06T17:59:43.3538631Z #6 0.170 Get:1 http://deb.debian.org/debian bookworm InRelease [151 kB]
+2026-11-06T17:59:43.4684157Z #6 0.180 Get:2 http://deb.debian.org/debian bookworm-updates InRelease [55.4 kB]
+2026-11-06T17:59:43.4685471Z #6 0.180 Get:3 http://deb.debian.org/debian-security bookworm-security InRelease [34.8 kB]
+2026-11-06T17:59:43.4686687Z #6 0.236 Get:4 http://deb.debian.org/debian bookworm/main amd64 Packages [8790 kB]
+2026-11-06T17:59:43.4687972Z #6 0.284 Get:5 http://deb.debian.org/debian bookworm-updates/main amd64 Packages [6924 B]
+2026-11-06T17:59:43.6656905Z #6 0.331 Get:6 http://deb.debian.org/debian-security bookworm-security/main amd64 Packages [361 kB]
+2026-11-06T17:59:44.2462800Z #6 1.062 Fetched 9400 kB in 1s (10.4 MB/s)
+2026-11-06T17:59:44.6884154Z #6 1.062 Reading package lists...
+2026-11-06T17:59:45.1562399Z #6 1.524 Reading package lists...
+2026-11-06T17:59:45.2893701Z #6 1.985 Building dependency tree...
+2026-11-06T17:59:45.2894572Z #6 2.105 Reading state information...
+2026-11-06T17:59:45.4015526Z #6 2.217 The following additional packages will be installed:
+2026-11-06T17:59:45.4016598Z #6 2.217   adwaita-icon-theme at-spi2-common chromium-common dbus dbus-bin dbus-daemon
+2026-11-06T17:59:45.4017656Z #6 2.217   dbus-session-bus-common dbus-system-bus-common dbus-user-session
+2026-11-06T17:59:45.4018896Z #6 2.217   dconf-gsettings-backend dconf-service dmsetup fontconfig fontconfig-config
+2026-11-06T17:59:45.5537558Z #6 2.217   fonts-dejavu-core git-man gtk-update-icon-cache hicolor-icon-theme
+2026-11-06T17:59:45.5538377Z #6 2.217   libapparmor1 libargon2-1 libasound2 libasound2-data libasyncns0
+2026-11-06T17:59:45.5539120Z #6 2.217   libatk-bridge2.0-0 libatk1.0-0 libatspi2.0-0 libavahi-client3
+2026-11-06T17:59:45.5539884Z #6 2.217   libavahi-common-data libavahi-common3 libbrotli1 libbsd0 libcairo-gobject2
+2026-11-06T17:59:45.5540729Z #6 2.217   libcairo2 libcolord2 libcryptsetup12 libcups2 libcurl3-gnutls libdatrie1
+2026-11-06T17:59:45.5541858Z #6 2.217   libdav1d6 libdbus-1-3 libdconf1 libdeflate0 libdevmapper1.02.1
+2026-11-06T17:59:45.5542370Z #6 2.217   libdouble-conversion3 libdrm-amdgpu1 libdrm-common libdrm-intel1
+2026-11-06T17:59:45.5542897Z #6 2.217   libdrm-nouveau2 libdrm-radeon1 libdrm2 libedit2 libelf1 libepoxy0
+2026-11-06T17:59:45.5543435Z #6 2.217   liberror-perl libexpat1 libfdisk1 libflac12 libfontconfig1 libfontenc1
+2026-11-06T17:59:45.5543994Z #6 2.217   libfreetype6 libfribidi0 libgbm1 libgdbm-compat4 libgdk-pixbuf-2.0-0
+2026-11-06T17:59:45.5544557Z #6 2.218   libgdk-pixbuf2.0-common libgl1 libgl1-mesa-dri libglapi-mesa libglib2.0-0
+2026-11-06T17:59:45.5545126Z #6 2.218   libglvnd0 libglx-mesa0 libglx0 libgraphite2-3 libgssapi-krb5-2 libgtk-3-0
+2026-11-06T17:59:45.5545708Z #6 2.218   libgtk-3-common libharfbuzz-subset0 libharfbuzz0b libice6 libicu72 libip4tc2
+2026-11-06T17:59:45.5546276Z #6 2.218   libjbig0 libjpeg62-turbo libjson-c5 libk5crypto3 libkeyutils1 libkmod2
+2026-11-06T17:59:45.5546842Z #6 2.218   libkrb5-3 libkrb5support0 liblcms2-2 libldap-2.5-0 liblerc4 libllvm15
+2026-11-06T17:59:45.5547398Z #6 2.218   libminizip1 libmp3lame0 libmpg123-0 libnghttp2-14 libnspr4 libnss3 libogg0
+2026-11-06T17:59:45.5547936Z #6 2.218   libopenh264-7 libopenjp2-7 libopus0 libpam-systemd libpango-1.0-0
+2026-11-06T17:59:45.5548436Z #6 2.218   libpangocairo-1.0-0 libpangoft2-1.0-0 libpciaccess0 libperl5.36
+2026-11-06T17:59:45.5548959Z #6 2.218   libpixman-1-0 libpng16-16 libproc2-0 libpsl5 libpulse0 librtmp1 libsasl2-2
+2026-11-06T17:59:45.5549812Z #6 2.218   libsasl2-modules-db libsensors-config libsensors5 libsm6 libsndfile1
+2026-11-06T17:59:45.5550357Z #6 2.218   libssh2-1 libsystemd-shared libsystemd0 libthai-data libthai0 libtiff6
+2026-11-06T17:59:45.5551123Z #6 2.218   libudev1 libvorbis0a libvorbisenc2 libwayland-client0 libwayland-cursor0
+2026-11-06T17:59:45.5551768Z #6 2.218   libwayland-egl1 libwayland-server0 libwebp7 libx11-6 libx11-data libx11-xcb1
+2026-11-06T17:59:45.5552342Z #6 2.218   libxau6 libxaw7 libxcb-dri2-0 libxcb-dri3-0 libxcb-glx0 libxcb-present0
+2026-11-06T17:59:45.5552884Z #6 2.218   libxcb-randr0 libxcb-render0 libxcb-shape0 libxcb-shm0 libxcb-sync1
+2026-11-06T17:59:45.5553417Z #6 2.218   libxcb-xfixes0 libxcb1 libxcomposite1 libxcursor1 libxdamage1 libxdmcp6
+2026-11-06T17:59:45.5553965Z #6 2.218   libxext6 libxfixes3 libxft2 libxi6 libxinerama1 libxkbcommon0 libxkbfile1
+2026-11-06T17:59:45.5554493Z #6 2.218   libxml2 libxmu6 libxmuu1 libxnvctrl0 libxpm4 libxrandr2 libxrender1
+2026-11-06T17:59:45.5555029Z #6 2.218   libxshmfence1 libxt6 libxtst6 libxv1 libxxf86dga1 libxxf86vm1 libz3-4 perl
+2026-11-06T17:59:45.5555606Z #6 2.218   perl-base perl-modules-5.36 procps shared-mime-info systemd systemd-sysv
+2026-11-06T17:59:45.5556060Z #6 2.218   x11-common x11-utils xdg-utils xkb-data
+2026-11-06T17:59:45.5556371Z #6 2.219 Suggested packages:
+2026-11-06T17:59:45.5556760Z #6 2.219   chromium-l10n chromium-shell chromium-driver gettext-base git-daemon-run
+2026-11-06T17:59:45.5557293Z #6 2.219   | git-daemon-sysvinit git-doc git-email git-gui gitk gitweb git-cvs
+2026-11-06T17:59:45.5557986Z #6 2.219   git-mediawiki git-svn libasound2-plugins alsa-utils colord cups-common
+2026-11-06T17:59:45.5558505Z #6 2.219   low-memory-monitor krb5-doc krb5-user gvfs liblcms2-utils opus-tools
+2026-11-06T17:59:45.5558984Z #6 2.219   pciutils sensible-utils pulseaudio lm-sensors perl-doc
+2026-11-06T17:59:45.5559433Z #6 2.219   libterm-readline-gnu-perl | libterm-readline-perl-perl make
+2026-11-06T17:59:45.5559964Z #6 2.219   libtap-harness-archive-perl systemd-container systemd-homed systemd-userdbd
+2026-11-06T17:59:45.5560526Z #6 2.219   systemd-boot systemd-resolved libfido2-1 libqrencode4 libtss2-esys-3.0.2-0
+2026-11-06T17:59:45.5561546Z #6 2.219   libtss2-mu0 libtss2-rc0 polkitd | policykit-1 mesa-utils
+2026-11-06T17:59:45.5561930Z #6 2.219 Recommended packages:
+2026-11-06T17:59:45.5562299Z #6 2.219   librsvg2-common upower udev fonts-liberation notification-daemon
+2026-11-06T17:59:45.5562831Z #6 2.219   system-config-printer patch less ssh-client alsa-ucm-conf alsa-topology-conf
+2026-11-06T17:59:45.5563404Z #6 2.219   at-spi2-core libgdk-pixbuf2.0-bin libglib2.0-data xdg-user-dirs libgtk-3-bin
+2026-11-06T17:59:45.5563916Z #6 2.219   krb5-locales libldap-common publicsuffix libsasl2-modules psmisc
+2026-11-06T17:59:45.5564419Z #6 2.219   systemd-timesyncd | time-daemon libnss-systemd libfile-mimeinfo-perl
+2026-11-06T17:59:45.5564890Z #6 2.219   libnet-dbus-perl libx11-protocol-perl x11-xserver-utils
+2026-11-06T17:59:46.0726843Z #6 2.888 The following NEW packages will be installed:
+2026-11-06T17:59:46.0727884Z #6 2.888   adwaita-icon-theme at-spi2-common chromium chromium-common dbus dbus-bin
+2026-11-06T17:59:46.0728964Z #6 2.888   dbus-daemon dbus-session-bus-common dbus-system-bus-common dbus-user-session
+2026-11-06T17:59:46.1752567Z #6 2.889   dconf-gsettings-backend dconf-service dmsetup fontconfig fontconfig-config
+2026-11-06T17:59:46.1754460Z #6 2.889   fonts-dejavu-core git git-man gtk-update-icon-cache hicolor-icon-theme
+2026-11-06T17:59:46.1755552Z #6 2.889   libapparmor1 libargon2-1 libasound2 libasound2-data libasyncns0
+2026-11-06T17:59:46.1756592Z #6 2.889   libatk-bridge2.0-0 libatk1.0-0 libatspi2.0-0 libavahi-client3
+2026-11-06T17:59:46.1757490Z #6 2.889   libavahi-common-data libavahi-common3 libbrotli1 libbsd0 libcairo-gobject2
+2026-11-06T17:59:46.1758698Z #6 2.889   libcairo2 libcolord2 libcryptsetup12 libcups2 libcurl3-gnutls libdatrie1
+2026-11-06T17:59:46.1759690Z #6 2.889   libdav1d6 libdbus-1-3 libdconf1 libdeflate0 libdevmapper1.02.1
+2026-11-06T17:59:46.1760761Z #6 2.889   libdouble-conversion3 libdrm-amdgpu1 libdrm-common libdrm-intel1
+2026-11-06T17:59:46.1761967Z #6 2.889   libdrm-nouveau2 libdrm-radeon1 libdrm2 libedit2 libelf1 libepoxy0
+2026-11-06T17:59:46.1762902Z #6 2.889   liberror-perl libexpat1 libfdisk1 libflac12 libfontconfig1 libfontenc1
+2026-11-06T17:59:46.1763772Z #6 2.889   libfreetype6 libfribidi0 libgbm1 libgdbm-compat4 libgdk-pixbuf-2.0-0
+2026-11-06T17:59:46.1764702Z #6 2.889   libgdk-pixbuf2.0-common libgl1 libgl1-mesa-dri libglapi-mesa libglib2.0-0
+2026-11-06T17:59:46.1765670Z #6 2.889   libglvnd0 libglx-mesa0 libglx0 libgraphite2-3 libgssapi-krb5-2 libgtk-3-0
+2026-11-06T17:59:46.1766607Z #6 2.889   libgtk-3-common libharfbuzz-subset0 libharfbuzz0b libice6 libicu72 libip4tc2
+2026-11-06T17:59:46.1767590Z #6 2.889   libjbig0 libjpeg62-turbo libjson-c5 libk5crypto3 libkeyutils1 libkmod2
+2026-11-06T17:59:46.1768447Z #6 2.889   libkrb5-3 libkrb5support0 liblcms2-2 libldap-2.5-0 liblerc4 libllvm15
+2026-11-06T17:59:46.1769350Z #6 2.889   libminizip1 libmp3lame0 libmpg123-0 libnghttp2-14 libnspr4 libnss3 libogg0
+2026-11-06T17:59:46.1770255Z #6 2.889   libopenh264-7 libopenjp2-7 libopus0 libpam-systemd libpango-1.0-0
+2026-11-06T17:59:46.1771406Z #6 2.889   libpangocairo-1.0-0 libpangoft2-1.0-0 libpciaccess0 libperl5.36
+2026-11-06T17:59:46.1772313Z #6 2.889   libpixman-1-0 libpng16-16 libproc2-0 libpsl5 libpulse0 librtmp1 libsasl2-2
+2026-11-06T17:59:46.1773246Z #6 2.889   libsasl2-modules-db libsensors-config libsensors5 libsm6 libsndfile1
+2026-11-06T17:59:46.1774630Z #6 2.890   libssh2-1 libsystemd-shared libthai-data libthai0 libtiff6 libvorbis0a
+2026-11-06T17:59:46.1777295Z #6 2.890   libvorbisenc2 libwayland-client0 libwayland-cursor0 libwayland-egl1
+2026-11-06T17:59:46.1778223Z #6 2.890   libwayland-server0 libwebp7 libx11-6 libx11-data libx11-xcb1 libxau6 libxaw7
+2026-11-06T17:59:46.1779162Z #6 2.890   libxcb-dri2-0 libxcb-dri3-0 libxcb-glx0 libxcb-present0 libxcb-randr0
+2026-11-06T17:59:46.1780043Z #6 2.890   libxcb-render0 libxcb-shape0 libxcb-shm0 libxcb-sync1 libxcb-xfixes0 libxcb1
+2026-11-06T17:59:46.1782448Z #6 2.890   libxcomposite1 libxcursor1 libxdamage1 libxdmcp6 libxext6 libxfixes3 libxft2
+2026-11-06T17:59:46.1783624Z #6 2.890   libxi6 libxinerama1 libxkbcommon0 libxkbfile1 libxml2 libxmu6 libxmuu1
+2026-11-06T17:59:46.1784508Z #6 2.890   libxnvctrl0 libxpm4 libxrandr2 libxrender1 libxshmfence1 libxt6 libxtst6
+2026-11-06T17:59:46.1785489Z #6 2.890   libxv1 libxxf86dga1 libxxf86vm1 libz3-4 perl perl-modules-5.36 procps
+2026-11-06T17:59:46.1786313Z #6 2.890   shared-mime-info systemd systemd-sysv x11-common x11-utils xdg-utils
+2026-11-06T17:59:46.1786937Z #6 2.890   xkb-data
+2026-11-06T17:59:46.1787354Z #6 2.891 The following packages will be upgraded:
+2026-11-06T17:59:46.1787853Z #6 2.891   libsystemd0 libudev1 perl-base
+2026-11-06T17:59:46.1788439Z #6 2.932 3 upgraded, 186 newly installed, 0 to remove and 17 not upgraded.
+2026-11-06T17:59:46.1789115Z #6 2.932 Need to get 225 MB of archives.
+2026-11-06T17:59:46.1789799Z #6 2.932 After this operation, 829 MB of additional disk space will be used.
+2026-11-06T17:59:46.1790866Z #6 2.932 Get:1 http://deb.debian.org/debian-security bookworm-security/main amd64 perl-base amd64 5.36.0-7+deb12u4 [1610 kB]
+2026-11-06T17:59:46.1792499Z #6 2.944 Get:2 http://deb.debian.org/debian bookworm/main amd64 libargon2-1 amd64 0~20171227-0.3+deb12u1 [19.4 kB]
+2026-11-06T17:59:46.1793652Z #6 2.944 Get:3 http://deb.debian.org/debian bookworm/main amd64 libudev1 amd64 252.39-1~deb12u2 [109 kB]
+2026-11-06T17:59:46.1794744Z #6 2.945 Get:4 http://deb.debian.org/debian bookworm/main amd64 dmsetup amd64 2:1.02.185-2 [82.0 kB]
+2026-11-06T17:59:46.1795886Z #6 2.946 Get:5 http://deb.debian.org/debian bookworm/main amd64 libdevmapper1.02.1 amd64 2:1.02.185-2 [133 kB]
+2026-11-06T17:59:46.1796960Z #6 2.946 Get:6 http://deb.debian.org/debian bookworm/main amd64 libjson-c5 amd64 0.16-2 [44.1 kB]
+2026-11-06T17:59:46.1798089Z #6 2.947 Get:7 http://deb.debian.org/debian bookworm/main amd64 libcryptsetup12 amd64 2:2.6.1-4~deb12u2 [223 kB]
+2026-11-06T17:59:46.1799476Z #6 2.949 Get:8 http://deb.debian.org/debian bookworm/main amd64 libfdisk1 amd64 2.38.1-5+deb12u3 [194 kB]
+2026-11-06T17:59:46.1800552Z #6 2.949 Get:9 http://deb.debian.org/debian bookworm/main amd64 libkmod2 amd64 30+20221128-1 [57.9 kB]
+2026-11-06T17:59:46.1801832Z #6 2.950 Get:10 http://deb.debian.org/debian bookworm/main amd64 libapparmor1 amd64 3.0.8-3 [41.2 kB]
+2026-11-06T17:59:46.1802846Z #6 2.950 Get:11 http://deb.debian.org/debian bookworm/main amd64 libip4tc2 amd64 1.8.9-2 [19.0 kB]
+2026-11-06T17:59:46.1803950Z #6 2.950 Get:12 http://deb.debian.org/debian bookworm/main amd64 libsystemd-shared amd64 252.39-1~deb12u2 [1696 kB]
+2026-11-06T17:59:46.1805115Z #6 2.957 Get:13 http://deb.debian.org/debian bookworm/main amd64 libsystemd0 amd64 252.39-1~deb12u2 [332 kB]
+2026-11-06T17:59:46.1806205Z #6 2.958 Get:14 http://deb.debian.org/debian bookworm/main amd64 systemd amd64 252.39-1~deb12u2 [3044 kB]
+2026-11-06T17:59:46.1807316Z #6 2.969 Get:15 http://deb.debian.org/debian bookworm/main amd64 systemd-sysv amd64 252.39-1~deb12u2 [42.9 kB]
+2026-11-06T17:59:46.1808437Z #6 2.969 Get:16 http://deb.debian.org/debian bookworm/main amd64 libdbus-1-3 amd64 1.14.10-1~deb12u1 [201 kB]
+2026-11-06T17:59:46.1809555Z #6 2.970 Get:17 http://deb.debian.org/debian bookworm/main amd64 dbus-bin amd64 1.14.10-1~deb12u1 [105 kB]
+2026-11-06T17:59:46.1810719Z #6 2.971 Get:18 http://deb.debian.org/debian bookworm/main amd64 dbus-session-bus-common all 1.14.10-1~deb12u1 [78.2 kB]
+2026-11-06T17:59:46.1812417Z #6 2.971 Get:19 http://deb.debian.org/debian-security bookworm-security/main amd64 libexpat1 amd64 2.5.0-1+deb12u5 [108 kB]
+2026-11-06T17:59:46.1813639Z #6 2.973 Get:20 http://deb.debian.org/debian bookworm/main amd64 dbus-daemon amd64 1.14.10-1~deb12u1 [184 kB]
+2026-11-06T17:59:46.1814822Z #6 2.973 Get:21 http://deb.debian.org/debian bookworm/main amd64 dbus-system-bus-common all 1.14.10-1~deb12u1 [79.3 kB]
+2026-11-06T17:59:46.1815993Z #6 2.973 Get:22 http://deb.debian.org/debian bookworm/main amd64 dbus amd64 1.14.10-1~deb12u1 [97.4 kB]
+2026-11-06T17:59:46.1817238Z #6 2.974 Get:23 http://deb.debian.org/debian-security bookworm-security/main amd64 perl-modules-5.36 all 5.36.0-7+deb12u4 [2817 kB]
+2026-11-06T17:59:46.1818529Z #6 2.980 Get:24 http://deb.debian.org/debian bookworm/main amd64 libgdbm-compat4 amd64 1.23-3 [48.2 kB]
+2026-11-06T17:59:46.1819721Z #6 2.980 Get:25 http://deb.debian.org/debian-security bookworm-security/main amd64 libperl5.36 amd64 5.36.0-7+deb12u4 [4208 kB]
+2026-11-06T17:59:46.1821330Z #6 2.987 Get:26 http://deb.debian.org/debian-security bookworm-security/main amd64 perl amd64 5.36.0-7+deb12u4 [239 kB]
+2026-11-06T17:59:46.1822492Z #6 2.988 Get:27 http://deb.debian.org/debian bookworm/main amd64 libproc2-0 amd64 2:4.0.2-3 [62.8 kB]
+2026-11-06T17:59:46.1823526Z #6 2.988 Get:28 http://deb.debian.org/debian bookworm/main amd64 procps amd64 2:4.0.2-3 [709 kB]
+2026-11-06T17:59:46.1824700Z #6 2.991 Get:29 http://deb.debian.org/debian bookworm/main amd64 libpam-systemd amd64 252.39-1~deb12u2 [226 kB]
+2026-11-06T17:59:46.2755162Z #6 2.994 Get:30 http://deb.debian.org/debian bookworm/main amd64 hicolor-icon-theme all 0.17-2 [11.4 kB]
+2026-11-06T17:59:46.2759890Z #6 2.994 Get:31 http://deb.debian.org/debian bookworm/main amd64 libgdk-pixbuf2.0-common all 2.42.10+dfsg-1+deb12u4 [307 kB]
+2026-11-06T17:59:46.2762383Z #6 2.994 Get:32 http://deb.debian.org/debian bookworm/main amd64 libglib2.0-0 amd64 2.74.6-2+deb12u9 [1403 kB]
+2026-11-06T17:59:46.2763167Z #6 2.999 Get:33 http://deb.debian.org/debian bookworm/main amd64 libicu72 amd64 72.1-3+deb12u1 [9376 kB]
+2026-11-06T17:59:46.2763859Z #6 3.030 Get:34 http://deb.debian.org/debian bookworm/main amd64 libxml2 amd64 2.9.14+dfsg-1.3~deb12u6 [689 kB]
+2026-11-06T17:59:46.2764901Z #6 3.033 Get:35 http://deb.debian.org/debian bookworm/main amd64 shared-mime-info amd64 2.2-1 [729 kB]
+2026-11-06T17:59:46.2765753Z #6 3.035 Get:36 http://deb.debian.org/debian bookworm/main amd64 libjpeg62-turbo amd64 1:2.1.5-2 [166 kB]
+2026-11-06T17:59:46.2767318Z #6 3.036 Get:37 http://deb.debian.org/debian-security bookworm-security/main amd64 libpng16-16 amd64 1.6.39-2+deb12u6 [277 kB]
+2026-11-06T17:59:46.2768071Z #6 3.037 Get:38 http://deb.debian.org/debian bookworm/main amd64 libdeflate0 amd64 1.14-1 [61.4 kB]
+2026-11-06T17:59:46.2770488Z #6 3.039 Get:39 http://deb.debian.org/debian bookworm/main amd64 libjbig0 amd64 2.1-6.1 [31.7 kB]
+2026-11-06T17:59:46.2771880Z #6 3.040 Get:40 http://deb.debian.org/debian bookworm/main amd64 liblerc4 amd64 4.0.0+ds-2 [170 kB]
+2026-11-06T17:59:46.2773650Z #6 3.040 Get:41 http://deb.debian.org/debian bookworm/main amd64 libwebp7 amd64 1.2.4-0.2+deb12u1 [286 kB]
+2026-11-06T17:59:46.2774781Z #6 3.040 Get:42 http://deb.debian.org/debian bookworm/main amd64 libtiff6 amd64 4.5.0-6+deb12u4 [316 kB]
+2026-11-06T17:59:46.2775522Z #6 3.041 Get:43 http://deb.debian.org/debian bookworm/main amd64 libgdk-pixbuf-2.0-0 amd64 2.42.10+dfsg-1+deb12u4 [139 kB]
+2026-11-06T17:59:46.2776848Z #6 3.043 Get:44 http://deb.debian.org/debian bookworm/main amd64 gtk-update-icon-cache amd64 3.24.38-2~deb12u3 [44.2 kB]
+2026-11-06T17:59:46.2778244Z #6 3.043 Get:45 http://deb.debian.org/debian bookworm/main amd64 adwaita-icon-theme all 43-1 [5124 kB]
+2026-11-06T17:59:46.2778930Z #6 3.060 Get:46 http://deb.debian.org/debian bookworm/main amd64 at-spi2-common all 2.46.0-5 [162 kB]
+2026-11-06T17:59:46.2779687Z #6 3.061 Get:47 http://deb.debian.org/debian bookworm/main amd64 libasound2-data all 1.2.8-1 [20.5 kB]
+2026-11-06T17:59:46.2781409Z #6 3.061 Get:48 http://deb.debian.org/debian bookworm/main amd64 libasound2 amd64 1.2.8-1+b1 [362 kB]
+2026-11-06T17:59:46.2782067Z #6 3.064 Get:49 http://deb.debian.org/debian bookworm/main amd64 libatk1.0-0 amd64 2.46.0-5 [49.6 kB]
+2026-11-06T17:59:46.2782666Z #6 3.064 Get:50 http://deb.debian.org/debian bookworm/main amd64 libxau6 amd64 1:1.0.9-1 [19.7 kB]
+2026-11-06T17:59:46.2783250Z #6 3.064 Get:51 http://deb.debian.org/debian bookworm/main amd64 libbsd0 amd64 0.11.7-2 [117 kB]
+2026-11-06T17:59:46.2783847Z #6 3.064 Get:52 http://deb.debian.org/debian bookworm/main amd64 libxdmcp6 amd64 1:1.1.2-3 [26.3 kB]
+2026-11-06T17:59:46.2784433Z #6 3.064 Get:53 http://deb.debian.org/debian bookworm/main amd64 libxcb1 amd64 1.15-1 [144 kB]
+2026-11-06T17:59:46.2785056Z #6 3.065 Get:54 http://deb.debian.org/debian bookworm/main amd64 libx11-data all 2:1.8.4-2+deb12u2 [292 kB]
+2026-11-06T17:59:46.2785715Z #6 3.067 Get:55 http://deb.debian.org/debian bookworm/main amd64 libx11-6 amd64 2:1.8.4-2+deb12u2 [760 kB]
+2026-11-06T17:59:46.2786353Z #6 3.070 Get:56 http://deb.debian.org/debian bookworm/main amd64 libxext6 amd64 2:1.3.4-1+b1 [52.9 kB]
+2026-11-06T17:59:46.2786968Z #6 3.070 Get:57 http://deb.debian.org/debian bookworm/main amd64 libxi6 amd64 2:1.8-1+b1 [84.2 kB]
+2026-11-06T17:59:46.2787866Z #6 3.071 Get:58 http://deb.debian.org/debian bookworm/main amd64 libatspi2.0-0 amd64 2.46.0-5 [75.4 kB]
+2026-11-06T17:59:46.2788526Z #6 3.071 Get:59 http://deb.debian.org/debian bookworm/main amd64 libatk-bridge2.0-0 amd64 2.46.0-5 [64.6 kB]
+2026-11-06T17:59:46.2789274Z #6 3.072 Get:60 http://deb.debian.org/debian-security bookworm-security/main amd64 libbrotli1 amd64 1.0.9-2+deb12u1 [275 kB]
+2026-11-06T17:59:46.2792011Z #6 3.073 Get:61 http://deb.debian.org/debian bookworm/main amd64 libfreetype6 amd64 2.12.1+dfsg-5+deb12u4 [398 kB]
+2026-11-06T17:59:46.2794323Z #6 3.074 Get:62 http://deb.debian.org/debian bookworm/main amd64 fonts-dejavu-core all 2.37-6 [1068 kB]
+2026-11-06T17:59:46.2796070Z #6 3.078 Get:63 http://deb.debian.org/debian bookworm/main amd64 fontconfig-config amd64 2.14.1-4 [315 kB]
+2026-11-06T17:59:46.2797760Z #6 3.080 Get:64 http://deb.debian.org/debian bookworm/main amd64 libfontconfig1 amd64 2.14.1-4 [386 kB]
+2026-11-06T17:59:46.2798945Z #6 3.081 Get:65 http://deb.debian.org/debian bookworm/main amd64 libpixman-1-0 amd64 0.42.2-1 [546 kB]
+2026-11-06T17:59:46.2800075Z #6 3.083 Get:66 http://deb.debian.org/debian bookworm/main amd64 libxcb-render0 amd64 1.15-1 [115 kB]
+2026-11-06T17:59:46.2801708Z #6 3.084 Get:67 http://deb.debian.org/debian bookworm/main amd64 libxcb-shm0 amd64 1.15-1 [105 kB]
+2026-11-06T17:59:46.2802930Z #6 3.085 Get:68 http://deb.debian.org/debian bookworm/main amd64 libxrender1 amd64 1:0.9.10-1.1 [33.2 kB]
+2026-11-06T17:59:46.2804224Z #6 3.085 Get:69 http://deb.debian.org/debian bookworm/main amd64 libcairo2 amd64 1.16.0-7 [575 kB]
+2026-11-06T17:59:46.2804944Z #6 3.087 Get:70 http://deb.debian.org/debian bookworm/main amd64 libavahi-common-data amd64 0.8-10+deb12u1 [107 kB]
+2026-11-06T17:59:46.2805689Z #6 3.088 Get:71 http://deb.debian.org/debian bookworm/main amd64 libavahi-common3 amd64 0.8-10+deb12u1 [42.1 kB]
+2026-11-06T17:59:46.2806473Z #6 3.088 Get:72 http://deb.debian.org/debian bookworm/main amd64 libavahi-client3 amd64 0.8-10+deb12u1 [45.8 kB]
+2026-11-06T17:59:46.2809429Z #6 3.089 Get:73 http://deb.debian.org/debian bookworm/main amd64 libkrb5support0 amd64 1.20.1-2+deb12u5 [33.2 kB]
+2026-11-06T17:59:46.2810712Z #6 3.089 Get:74 http://deb.debian.org/debian bookworm/main amd64 libk5crypto3 amd64 1.20.1-2+deb12u5 [79.7 kB]
+2026-11-06T17:59:46.2820241Z #6 3.090 Get:75 http://deb.debian.org/debian bookworm/main amd64 libkeyutils1 amd64 1.6.3-2 [8808 B]
+2026-11-06T17:59:46.2824006Z #6 3.090 Get:76 http://deb.debian.org/debian bookworm/main amd64 libkrb5-3 amd64 1.20.1-2+deb12u5 [332 kB]
+2026-11-06T17:59:46.2831868Z #6 3.091 Get:77 http://deb.debian.org/debian bookworm/main amd64 libgssapi-krb5-2 amd64 1.20.1-2+deb12u5 [135 kB]
+2026-11-06T17:59:46.3867903Z #6 3.094 Get:78 http://deb.debian.org/debian bookworm/main amd64 libcups2 amd64 2.4.2-3+deb12u9 [245 kB]
+2026-11-06T17:59:46.3869703Z #6 3.094 Get:79 http://deb.debian.org/debian bookworm/main amd64 libdav1d6 amd64 1.0.0-2+deb12u1 [513 kB]
+2026-11-06T17:59:46.3870655Z #6 3.095 Get:80 http://deb.debian.org/debian bookworm/main amd64 libdouble-conversion3 amd64 3.2.1-1 [41.5 kB]
+2026-11-06T17:59:46.3872004Z #6 3.096 Get:81 http://deb.debian.org/debian bookworm/main amd64 libogg0 amd64 1.3.5-3 [23.4 kB]
+2026-11-06T17:59:46.3874097Z #6 3.096 Get:82 http://deb.debian.org/debian bookworm/main amd64 libflac12 amd64 1.4.2+ds-2 [198 kB]
+2026-11-06T17:59:46.3874857Z #6 3.098 Get:83 http://deb.debian.org/debian bookworm/main amd64 libdrm-common all 2.4.114-1 [7112 B]
+2026-11-06T17:59:46.3875611Z #6 3.098 Get:84 http://deb.debian.org/debian bookworm/main amd64 libdrm2 amd64 2.4.114-1+b1 [37.5 kB]
+2026-11-06T17:59:46.3876260Z #6 3.099 Get:85 http://deb.debian.org/debian bookworm/main amd64 libwayland-server0 amd64 1.21.0-1 [35.9 kB]
+2026-11-06T17:59:46.3876942Z #6 3.099 Get:86 http://deb.debian.org/debian bookworm/main amd64 libgbm1 amd64 22.3.6-1+deb12u2 [38.1 kB]
+2026-11-06T17:59:46.3878312Z #6 3.099 Get:87 http://deb.debian.org/debian bookworm/main amd64 libgraphite2-3 amd64 1.3.14-1+deb12u1 [74.6 kB]
+2026-11-06T17:59:46.3878993Z #6 3.100 Get:88 http://deb.debian.org/debian bookworm/main amd64 libharfbuzz0b amd64 6.0.0+dfsg-3 [1945 kB]
+2026-11-06T17:59:46.3879711Z #6 3.106 Get:89 http://deb.debian.org/debian bookworm/main amd64 libharfbuzz-subset0 amd64 6.0.0+dfsg-3 [1931 kB]
+2026-11-06T17:59:46.3880420Z #6 3.113 Get:90 http://deb.debian.org/debian bookworm/main amd64 liblcms2-2 amd64 2.14-2+deb12u1 [154 kB]
+2026-11-06T17:59:46.3881442Z #6 3.113 Get:91 http://deb.debian.org/debian bookworm/main amd64 libminizip1 amd64 1.1-8+deb12u1 [20.1 kB]
+2026-11-06T17:59:46.3882515Z #6 3.114 Get:92 http://deb.debian.org/debian bookworm/main amd64 libnspr4 amd64 2:4.35-1 [113 kB]
+2026-11-06T17:59:46.3883737Z #6 3.114 Get:93 http://deb.debian.org/debian-security bookworm-security/main amd64 libnss3 amd64 2:3.87.1-1+deb12u4 [1331 kB]
+2026-11-06T17:59:46.3884555Z #6 3.117 Get:94 http://deb.debian.org/debian bookworm/main amd64 libopenh264-7 amd64 2.3.1+dfsg-3+deb12u2 [393 kB]
+2026-11-06T17:59:46.3885249Z #6 3.118 Get:95 http://deb.debian.org/debian bookworm/main amd64 libopenjp2-7 amd64 2.5.0-2+deb12u3 [189 kB]
+2026-11-06T17:59:46.3885878Z #6 3.119 Get:96 http://deb.debian.org/debian bookworm/main amd64 libopus0 amd64 1.3.1-3 [195 kB]
+2026-11-06T17:59:46.3886675Z #6 3.120 Get:97 http://deb.debian.org/debian bookworm/main amd64 fontconfig amd64 2.14.1-4 [449 kB]
+2026-11-06T17:59:46.3887309Z #6 3.122 Get:98 http://deb.debian.org/debian bookworm/main amd64 libfribidi0 amd64 1.0.8-2.1 [65.0 kB]
+2026-11-06T17:59:46.3887929Z #6 3.122 Get:99 http://deb.debian.org/debian bookworm/main amd64 libthai-data all 0.1.29-1 [176 kB]
+2026-11-06T17:59:46.3888550Z #6 3.123 Get:100 http://deb.debian.org/debian bookworm/main amd64 libdatrie1 amd64 0.2.13-2+b1 [43.3 kB]
+2026-11-06T17:59:46.3889164Z #6 3.125 Get:101 http://deb.debian.org/debian bookworm/main amd64 libthai0 amd64 0.1.29-1 [57.5 kB]
+2026-11-06T17:59:46.3889794Z #6 3.125 Get:102 http://deb.debian.org/debian bookworm/main amd64 libpango-1.0-0 amd64 1.50.12+ds-1 [212 kB]
+2026-11-06T17:59:46.3890444Z #6 3.126 Get:103 http://deb.debian.org/debian bookworm/main amd64 libasyncns0 amd64 0.8-6+b3 [12.9 kB]
+2026-11-06T17:59:46.3891469Z #6 3.126 Get:104 http://deb.debian.org/debian bookworm/main amd64 libmp3lame0 amd64 3.100-6 [365 kB]
+2026-11-06T17:59:46.3892137Z #6 3.128 Get:105 http://deb.debian.org/debian bookworm/main amd64 libmpg123-0 amd64 1.31.2-1+deb12u1 [147 kB]
+2026-11-06T17:59:46.3892792Z #6 3.128 Get:106 http://deb.debian.org/debian bookworm/main amd64 libvorbis0a amd64 1.3.7-1 [93.0 kB]
+2026-11-06T17:59:46.3893422Z #6 3.129 Get:107 http://deb.debian.org/debian bookworm/main amd64 libvorbisenc2 amd64 1.3.7-1 [80.6 kB]
+2026-11-06T17:59:46.3894074Z #6 3.129 Get:108 http://deb.debian.org/debian bookworm/main amd64 libsndfile1 amd64 1.2.0-1+deb12u1 [197 kB]
+2026-11-06T17:59:46.3894906Z #6 3.131 Get:109 http://deb.debian.org/debian bookworm/main amd64 libx11-xcb1 amd64 2:1.8.4-2+deb12u2 [192 kB]
+2026-11-06T17:59:46.3895574Z #6 3.132 Get:110 http://deb.debian.org/debian bookworm/main amd64 libpulse0 amd64 16.1+dfsg1-2+b1 [274 kB]
+2026-11-06T17:59:46.3897101Z #6 3.133 Get:111 http://deb.debian.org/debian bookworm/main amd64 libxcomposite1 amd64 1:0.4.5-1 [16.6 kB]
+2026-11-06T17:59:46.3898976Z #6 3.133 Get:112 http://deb.debian.org/debian bookworm/main amd64 libxdamage1 amd64 1:1.1.6-1 [15.1 kB]
+2026-11-06T17:59:46.3899619Z #6 3.133 Get:113 http://deb.debian.org/debian bookworm/main amd64 libxfixes3 amd64 1:6.0.0-2 [22.7 kB]
+2026-11-06T17:59:46.3900406Z #6 3.134 Get:114 http://deb.debian.org/debian bookworm/main amd64 xkb-data all 2.35.1-1 [764 kB]
+2026-11-06T17:59:46.3902432Z #6 3.136 Get:115 http://deb.debian.org/debian bookworm/main amd64 libxkbcommon0 amd64 1.5.0-1 [106 kB]
+2026-11-06T17:59:46.3904681Z #6 3.137 Get:116 http://deb.debian.org/debian bookworm/main amd64 libxnvctrl0 amd64 525.85.05-3~deb12u1 [13.5 kB]
+2026-11-06T17:59:46.3905368Z #6 3.138 Get:117 http://deb.debian.org/debian bookworm/main amd64 libxrandr2 amd64 2:1.5.2-2+b1 [39.2 kB]
+2026-11-06T17:59:46.3906024Z #6 3.139 Get:118 http://deb.debian.org/debian bookworm/main amd64 libcairo-gobject2 amd64 1.16.0-7 [112 kB]
+2026-11-06T17:59:46.3906667Z #6 3.139 Get:119 http://deb.debian.org/debian bookworm/main amd64 libcolord2 amd64 1.4.6-2.2 [137 kB]
+2026-11-06T17:59:46.3907287Z #6 3.139 Get:120 http://deb.debian.org/debian bookworm/main amd64 libepoxy0 amd64 1.5.10-1 [189 kB]
+2026-11-06T17:59:46.3907933Z #6 3.140 Get:121 http://deb.debian.org/debian bookworm/main amd64 libpangoft2-1.0-0 amd64 1.50.12+ds-1 [47.4 kB]
+2026-11-06T17:59:46.3908625Z #6 3.141 Get:122 http://deb.debian.org/debian bookworm/main amd64 libpangocairo-1.0-0 amd64 1.50.12+ds-1 [34.2 kB]
+2026-11-06T17:59:46.3909312Z #6 3.141 Get:123 http://deb.debian.org/debian bookworm/main amd64 libwayland-client0 amd64 1.21.0-1 [28.3 kB]
+2026-11-06T17:59:46.3909991Z #6 3.142 Get:124 http://deb.debian.org/debian bookworm/main amd64 libwayland-cursor0 amd64 1.21.0-1 [14.4 kB]
+2026-11-06T17:59:46.3910646Z #6 3.142 Get:125 http://deb.debian.org/debian bookworm/main amd64 libwayland-egl1 amd64 1.21.0-1 [8640 B]
+2026-11-06T17:59:46.3911575Z #6 3.142 Get:126 http://deb.debian.org/debian bookworm/main amd64 libxcursor1 amd64 1:1.2.1-1 [40.9 kB]
+2026-11-06T17:59:46.3912206Z #6 3.143 Get:127 http://deb.debian.org/debian bookworm/main amd64 libxinerama1 amd64 2:1.1.4-3 [17.8 kB]
+2026-11-06T17:59:46.3913087Z #6 3.143 Get:128 http://deb.debian.org/debian bookworm/main amd64 dbus-user-session amd64 1.14.10-1~deb12u1 [78.1 kB]
+2026-11-06T17:59:46.3915045Z #6 3.143 Get:129 http://deb.debian.org/debian bookworm/main amd64 libdconf1 amd64 0.40.0-4 [40.9 kB]
+2026-11-06T17:59:46.3918724Z #6 3.144 Get:130 http://deb.debian.org/debian bookworm/main amd64 dconf-service amd64 0.40.0-4 [31.6 kB]
+2026-11-06T17:59:46.3919707Z #6 3.145 Get:131 http://deb.debian.org/debian bookworm/main amd64 dconf-gsettings-backend amd64 0.40.0-4 [27.8 kB]
+2026-11-06T17:59:46.3920814Z #6 3.145 Get:132 http://deb.debian.org/debian bookworm/main amd64 libgtk-3-common all 3.24.38-2~deb12u3 [3895 kB]
+2026-11-06T17:59:46.3922186Z #6 3.158 Get:133 http://deb.debian.org/debian bookworm/main amd64 libgtk-3-0 amd64 3.24.38-2~deb12u3 [2847 kB]
+2026-11-06T17:59:46.3922844Z #6 3.167 Get:134 http://deb.debian.org/debian bookworm/main amd64 libfontenc1 amd64 1:1.1.4-1 [24.3 kB]
+2026-11-06T17:59:46.3923465Z #6 3.168 Get:135 http://deb.debian.org/debian bookworm/main amd64 libglvnd0 amd64 1.6.0-1 [51.8 kB]
+2026-11-06T17:59:46.3924116Z #6 3.169 Get:136 http://deb.debian.org/debian bookworm/main amd64 libglapi-mesa amd64 22.3.6-1+deb12u2 [35.9 kB]
+2026-11-06T17:59:46.3924771Z #6 3.169 Get:137 http://deb.debian.org/debian bookworm/main amd64 libxcb-dri2-0 amd64 1.15-1 [107 kB]
+2026-11-06T17:59:46.3925382Z #6 3.169 Get:138 http://deb.debian.org/debian bookworm/main amd64 libxcb-dri3-0 amd64 1.15-1 [107 kB]
+2026-11-06T17:59:46.3926137Z #6 3.170 Get:139 http://deb.debian.org/debian bookworm/main amd64 libxcb-glx0 amd64 1.15-1 [122 kB]
+2026-11-06T17:59:46.3926758Z #6 3.171 Get:140 http://deb.debian.org/debian bookworm/main amd64 libxcb-present0 amd64 1.15-1 [105 kB]
+2026-11-06T17:59:46.3927380Z #6 3.171 Get:141 http://deb.debian.org/debian bookworm/main amd64 libxcb-randr0 amd64 1.15-1 [117 kB]
+2026-11-06T17:59:46.3927983Z #6 3.172 Get:142 http://deb.debian.org/debian bookworm/main amd64 libxcb-sync1 amd64 1.15-1 [109 kB]
+2026-11-06T17:59:46.3928598Z #6 3.173 Get:143 http://deb.debian.org/debian bookworm/main amd64 libxcb-xfixes0 amd64 1.15-1 [109 kB]
+2026-11-06T17:59:46.3929216Z #6 3.173 Get:144 http://deb.debian.org/debian bookworm/main amd64 libxshmfence1 amd64 1.3-1 [8820 B]
+2026-11-06T17:59:46.3930325Z #6 3.174 Get:145 http://deb.debian.org/debian bookworm/main amd64 libxxf86vm1 amd64 1:1.1.4-1+b2 [20.8 kB]
+2026-11-06T17:59:46.3931418Z #6 3.174 Get:146 http://deb.debian.org/debian bookworm/main amd64 libdrm-amdgpu1 amd64 2.4.114-1+b1 [20.9 kB]
+2026-11-06T17:59:46.3932085Z #6 3.175 Get:147 http://deb.debian.org/debian bookworm/main amd64 libpciaccess0 amd64 0.17-2 [51.4 kB]
+2026-11-06T17:59:46.3932730Z #6 3.175 Get:148 http://deb.debian.org/debian bookworm/main amd64 libdrm-intel1 amd64 2.4.114-1+b1 [64.0 kB]
+2026-11-06T17:59:46.3933405Z #6 3.175 Get:149 http://deb.debian.org/debian bookworm/main amd64 libdrm-nouveau2 amd64 2.4.114-1+b1 [19.1 kB]
+2026-11-06T17:59:46.3934081Z #6 3.176 Get:150 http://deb.debian.org/debian bookworm/main amd64 libdrm-radeon1 amd64 2.4.114-1+b1 [21.8 kB]
+2026-11-06T17:59:46.3934711Z #6 3.176 Get:151 http://deb.debian.org/debian bookworm/main amd64 libelf1 amd64 0.188-2.1 [174 kB]
+2026-11-06T17:59:46.3938091Z #6 3.177 Get:152 http://deb.debian.org/debian bookworm/main amd64 libedit2 amd64 3.1-20221030-2 [93.0 kB]
+2026-11-06T17:59:46.3939312Z #6 3.178 Get:153 http://deb.debian.org/debian bookworm/main amd64 libz3-4 amd64 4.8.12-3.1 [7216 kB]
+2026-11-06T17:59:46.3940195Z #6 3.203 Get:154 http://deb.debian.org/debian bookworm/main amd64 libllvm15 amd64 1:15.0.6-4+b1 [23.1 MB]
+2026-11-06T17:59:46.4895188Z #6 3.282 Get:155 http://deb.debian.org/debian bookworm/main amd64 libsensors-config all 1:3.6.0-7.1 [14.3 kB]
+2026-11-06T17:59:46.4896813Z #6 3.282 Get:156 http://deb.debian.org/debian bookworm/main amd64 libsensors5 amd64 1:3.6.0-7.1 [34.2 kB]
+2026-11-06T17:59:46.4898120Z #6 3.284 Get:157 http://deb.debian.org/debian bookworm/main amd64 libgl1-mesa-dri amd64 22.3.6-1+deb12u2 [7240 kB]
+2026-11-06T17:59:46.4899917Z #6 3.305 Get:158 http://deb.debian.org/debian bookworm/main amd64 libglx-mesa0 amd64 22.3.6-1+deb12u2 [148 kB]
+2026-11-06T17:59:46.7158733Z #6 3.306 Get:159 http://deb.debian.org/debian bookworm/main amd64 libglx0 amd64 1.6.0-1 [34.4 kB]
+2026-11-06T17:59:46.7159884Z #6 3.307 Get:160 http://deb.debian.org/debian bookworm/main amd64 libgl1 amd64 1.6.0-1 [88.4 kB]
+2026-11-06T17:59:46.7161337Z #6 3.307 Get:161 http://deb.debian.org/debian bookworm/main amd64 x11-common all 1:7.7+23 [252 kB]
+2026-11-06T17:59:46.7162432Z #6 3.308 Get:162 http://deb.debian.org/debian bookworm/main amd64 libice6 amd64 2:1.0.10-1 [58.5 kB]
+2026-11-06T17:59:46.7163490Z #6 3.309 Get:163 http://deb.debian.org/debian bookworm/main amd64 libsm6 amd64 2:1.2.3-1 [35.1 kB]
+2026-11-06T17:59:46.7164537Z #6 3.309 Get:164 http://deb.debian.org/debian bookworm/main amd64 libxt6 amd64 1:1.2.1-1.1 [186 kB]
+2026-11-06T17:59:46.7165583Z #6 3.310 Get:165 http://deb.debian.org/debian bookworm/main amd64 libxmu6 amd64 2:1.1.3-3 [60.1 kB]
+2026-11-06T17:59:46.7166706Z #6 3.310 Get:166 http://deb.debian.org/debian bookworm/main amd64 libxpm4 amd64 1:3.5.12-1.1+deb12u1 [48.6 kB]
+2026-11-06T17:59:46.7167827Z #6 3.311 Get:167 http://deb.debian.org/debian bookworm/main amd64 libxaw7 amd64 2:1.0.14-1 [201 kB]
+2026-11-06T17:59:46.7168685Z #6 3.312 Get:168 http://deb.debian.org/debian bookworm/main amd64 libxcb-shape0 amd64 1.15-1 [106 kB]
+2026-11-06T17:59:46.7169327Z #6 3.313 Get:169 http://deb.debian.org/debian bookworm/main amd64 libxft2 amd64 2.3.6-1 [61.8 kB]
+2026-11-06T17:59:46.7170213Z #6 3.314 Get:170 http://deb.debian.org/debian bookworm/main amd64 libxkbfile1 amd64 1:1.1.0-1 [75.2 kB]
+2026-11-06T17:59:46.7171327Z #6 3.314 Get:171 http://deb.debian.org/debian bookworm/main amd64 libxmuu1 amd64 2:1.1.3-3 [23.9 kB]
+2026-11-06T17:59:46.7172435Z #6 3.314 Get:172 http://deb.debian.org/debian bookworm/main amd64 libxtst6 amd64 2:1.2.3-1.1 [28.0 kB]
+2026-11-06T17:59:46.7173534Z #6 3.315 Get:173 http://deb.debian.org/debian bookworm/main amd64 libxv1 amd64 2:1.0.11-1.1 [24.8 kB]
+2026-11-06T17:59:46.7174614Z #6 3.315 Get:174 http://deb.debian.org/debian bookworm/main amd64 libxxf86dga1 amd64 2:1.1.5-1 [22.1 kB]
+2026-11-06T17:59:46.7175651Z #6 3.316 Get:175 http://deb.debian.org/debian bookworm/main amd64 x11-utils amd64 7.7+5 [202 kB]
+2026-11-06T17:59:46.7176679Z #6 3.317 Get:176 http://deb.debian.org/debian bookworm/main amd64 xdg-utils all 1.1.3-4.1 [75.5 kB]
+2026-11-06T17:59:46.7177813Z #6 3.317 Get:177 http://deb.debian.org/debian-security bookworm-security/main amd64 chromium-common amd64 156.0.8078.79-1~deb12u1 [31.6 MB]
+2026-11-06T17:59:46.7179266Z #6 3.381 Get:178 http://deb.debian.org/debian-security bookworm-security/main amd64 chromium amd64 156.0.8078.79-1~deb12u1 [81.2 MB]
+2026-11-06T17:59:46.8346736Z #6 3.650 Get:179 http://deb.debian.org/debian-security bookworm-security/main amd64 libsasl2-modules-db amd64 2.1.28+dfsg-10+deb12u1 [20.5 kB]
+2026-11-06T17:59:46.9912684Z #6 3.651 Get:180 http://deb.debian.org/debian-security bookworm-security/main amd64 libsasl2-2 amd64 2.1.28+dfsg-10+deb12u1 [59.9 kB]
+2026-11-06T17:59:46.9914195Z #6 3.652 Get:181 http://deb.debian.org/debian bookworm/main amd64 libldap-2.5-0 amd64 2.5.13+dfsg-5 [183 kB]
+2026-11-06T17:59:46.9915379Z #6 3.652 Get:182 http://deb.debian.org/debian bookworm/main amd64 libnghttp2-14 amd64 1.52.0-1+deb12u3 [72.4 kB]
+2026-11-06T17:59:46.9916488Z #6 3.652 Get:183 http://deb.debian.org/debian bookworm/main amd64 libpsl5 amd64 0.21.2-1 [58.7 kB]
+2026-11-06T17:59:46.9917641Z #6 3.653 Get:184 http://deb.debian.org/debian bookworm/main amd64 librtmp1 amd64 2.4+20151223.gitfa8646d.1-2+b2 [60.8 kB]
+2026-11-06T17:59:46.9918979Z #6 3.654 Get:185 http://deb.debian.org/debian-security bookworm-security/main amd64 libssh2-1 amd64 1.10.0-3+deb12u1 [176 kB]
+2026-11-06T17:59:46.9920231Z #6 3.654 Get:186 http://deb.debian.org/debian bookworm/main amd64 libcurl3-gnutls amd64 7.88.1-10+deb12u15 [386 kB]
+2026-11-06T17:59:46.9921626Z #6 3.656 Get:187 http://deb.debian.org/debian bookworm/main amd64 liberror-perl all 0.17029-2 [29.0 kB]
+2026-11-06T17:59:46.9923020Z #6 3.657 Get:188 http://deb.debian.org/debian bookworm/main amd64 git-man all 1:2.39.5-0+deb12u3 [2053 kB]
+2026-11-06T17:59:46.9924135Z #6 3.664 Get:189 http://deb.debian.org/debian bookworm/main amd64 git amd64 1:2.39.5-0+deb12u3 [7264 kB]
+2026-11-06T17:59:46.9925138Z #6 3.807 debconf: delaying package configuration, since apt-utils is not installed
+2026-11-06T17:59:47.1972451Z #6 3.830 Fetched 225 MB in 1s (287 MB/s)
+2026-11-06T17:59:47.1973068Z #6 3.844 (Reading database ... 
+2026-11-06T17:59:47.1973520Z (Reading database ... 5%
+2026-11-06T17:59:47.1973948Z (Reading database ... 10%
+2026-11-06T17:59:47.1974373Z (Reading database ... 15%
+2026-11-06T17:59:47.1974777Z (Reading database ... 20%
+2026-11-06T17:59:47.1975140Z (Reading database ... 25%
+2026-11-06T17:59:47.1975376Z (Reading database ... 30%
+2026-11-06T17:59:47.1975607Z (Reading database ... 35%
+2026-11-06T17:59:47.1975827Z (Reading database ... 40%
+2026-11-06T17:59:47.1976192Z (Reading database ... 45%
+2026-11-06T17:59:47.1976419Z (Reading database ... 50%
+2026-11-06T17:59:47.1976648Z (Reading database ... 55%
+2026-11-06T17:59:47.1976872Z (Reading database ... 60%
+2026-11-06T17:59:47.1977085Z (Reading database ... 65%
+2026-11-06T17:59:47.1977298Z (Reading database ... 70%
+2026-11-06T17:59:47.1977513Z (Reading database ... 75%
+2026-11-06T17:59:47.1977729Z (Reading database ... 80%
+2026-11-06T17:59:47.1978070Z (Reading database ... 85%
+2026-11-06T17:59:47.1978482Z (Reading database ... 90%
+2026-11-06T17:59:47.1979188Z (Reading database ... 95%
+2026-11-06T17:59:47.1979589Z (Reading database ... 100%
+2026-11-06T17:59:47.1980189Z (Reading database ... 6639 files and directories currently installed.)
+2026-11-06T17:59:47.1981311Z #6 3.851 Preparing to unpack .../perl-base_5.36.0-7+deb12u4_amd64.deb ...
+2026-11-06T17:59:47.1981828Z #6 3.863 Unpacking perl-base (5.36.0-7+deb12u4) over (5.36.0-7+deb12u3) ...
+2026-11-06T17:59:47.6158011Z #6 4.430 Setting up perl-base (5.36.0-7+deb12u4) ...
+2026-11-06T17:59:47.7259920Z #6 4.451 Selecting previously unselected package libargon2-1:amd64.
+2026-11-06T17:59:47.7260602Z #6 4.451 (Reading database ... 
+2026-11-06T17:59:47.7261201Z (Reading database ... 5%
+2026-11-06T17:59:47.7261566Z (Reading database ... 10%
+2026-11-06T17:59:47.7261922Z (Reading database ... 15%
+2026-11-06T17:59:47.7262270Z (Reading database ... 20%
+2026-11-06T17:59:47.7262618Z (Reading database ... 25%
+2026-11-06T17:59:47.7262965Z (Reading database ... 30%
+2026-11-06T17:59:47.7263302Z (Reading database ... 35%
+2026-11-06T17:59:47.7263659Z (Reading database ... 40%
+2026-11-06T17:59:47.7264002Z (Reading database ... 45%
+2026-11-06T17:59:47.7264339Z (Reading database ... 50%
+2026-11-06T17:59:47.7264678Z (Reading database ... 55%
+2026-11-06T17:59:47.7265019Z (Reading database ... 60%
+2026-11-06T17:59:47.7265363Z (Reading database ... 65%
+2026-11-06T17:59:47.7265703Z (Reading database ... 70%
+2026-11-06T17:59:47.7266044Z (Reading database ... 75%
+2026-11-06T17:59:47.7266383Z (Reading database ... 80%
+2026-11-06T17:59:47.7266724Z (Reading database ... 85%
+2026-11-06T17:59:47.7267073Z (Reading database ... 90%
+2026-11-06T17:59:47.7267408Z (Reading database ... 95%
+2026-11-06T17:59:47.7267790Z (Reading database ... 100%
+2026-11-06T17:59:47.7268378Z (Reading database ... 6640 files and directories currently installed.)
+2026-11-06T17:59:47.7269234Z #6 4.457 Preparing to unpack .../libargon2-1_0~20171227-0.3+deb12u1_amd64.deb ...
+2026-11-06T17:59:47.7269927Z #6 4.459 Unpacking libargon2-1:amd64 (0~20171227-0.3+deb12u1) ...
+2026-11-06T17:59:47.7270719Z #6 4.474 Preparing to unpack .../libudev1_252.39-1~deb12u2_amd64.deb ...
+2026-11-06T17:59:47.7271720Z #6 4.477 Unpacking libudev1:amd64 (252.39-1~deb12u2) over (252.39-1~deb12u1) ...
+2026-11-06T17:59:47.7272171Z #6 4.500 Setting up libudev1:amd64 (252.39-1~deb12u2) ...
+2026-11-06T17:59:47.7272659Z #6 4.517 Selecting previously unselected package dmsetup.
+2026-11-06T17:59:47.7272977Z #6 4.517 (Reading database ... 
+2026-11-06T17:59:47.7273227Z (Reading database ... 5%
+2026-11-06T17:59:47.7273453Z (Reading database ... 10%
+2026-11-06T17:59:47.7274153Z (Reading database ... 15%
+2026-11-06T17:59:47.7274486Z (Reading database ... 20%
+2026-11-06T17:59:47.7274724Z (Reading database ... 25%
+2026-11-06T17:59:47.7274954Z (Reading database ... 30%
+2026-11-06T17:59:47.7275173Z (Reading database ... 35%
+2026-11-06T17:59:47.7275385Z (Reading database ... 40%
+2026-11-06T17:59:47.7275596Z (Reading database ... 45%
+2026-11-06T17:59:47.7275811Z (Reading database ... 50%
+2026-11-06T17:59:47.7276216Z (Reading database ... 55%
+2026-11-06T17:59:47.7276610Z (Reading database ... 60%
+2026-11-06T17:59:47.7277019Z (Reading database ... 65%
+2026-11-06T17:59:47.7277427Z (Reading database ... 70%
+2026-11-06T17:59:47.7277803Z (Reading database ... 75%
+2026-11-06T17:59:47.7278172Z (Reading database ... 80%
+2026-11-06T17:59:47.7278544Z (Reading database ... 85%
+2026-11-06T17:59:47.7278926Z (Reading database ... 90%
+2026-11-06T17:59:47.7279382Z (Reading database ... 95%
+2026-11-06T17:59:47.7279919Z (Reading database ... 100%
+2026-11-06T17:59:47.7280304Z (Reading database ... 6645 files and directories currently installed.)
+2026-11-06T17:59:47.7281410Z #6 4.522 Preparing to unpack .../0-dmsetup_2%3a1.02.185-2_amd64.deb ...
+2026-11-06T17:59:47.7281811Z #6 4.523 Unpacking dmsetup (2:1.02.185-2) ...
+2026-11-06T17:59:47.7282198Z #6 4.542 Selecting previously unselected package libdevmapper1.02.1:amd64.
+2026-11-06T17:59:47.8267183Z #6 4.543 Preparing to unpack .../1-libdevmapper1.02.1_2%3a1.02.185-2_amd64.deb ...
+2026-11-06T17:59:47.8268664Z #6 4.544 Unpacking libdevmapper1.02.1:amd64 (2:1.02.185-2) ...
+2026-11-06T17:59:47.8269696Z #6 4.566 Selecting previously unselected package libjson-c5:amd64.
+2026-11-06T17:59:47.8271304Z #6 4.567 Preparing to unpack .../2-libjson-c5_0.16-2_amd64.deb ...
+2026-11-06T17:59:47.8272288Z #6 4.568 Unpacking libjson-c5:amd64 (0.16-2) ...
+2026-11-06T17:59:47.8273246Z #6 4.584 Selecting previously unselected package libcryptsetup12:amd64.
+2026-11-06T17:59:47.8273814Z #6 4.585 Preparing to unpack .../3-libcryptsetup12_2%3a2.6.1-4~deb12u2_amd64.deb ...
+2026-11-06T17:59:47.8274322Z #6 4.586 Unpacking libcryptsetup12:amd64 (2:2.6.1-4~deb12u2) ...
+2026-11-06T17:59:47.8274757Z #6 4.614 Selecting previously unselected package libfdisk1:amd64.
+2026-11-06T17:59:47.8275231Z #6 4.615 Preparing to unpack .../4-libfdisk1_2.38.1-5+deb12u3_amd64.deb ...
+2026-11-06T17:59:47.8275653Z #6 4.616 Unpacking libfdisk1:amd64 (2.38.1-5+deb12u3) ...
+2026-11-06T17:59:47.8276036Z #6 4.641 Selecting previously unselected package libkmod2:amd64.
+2026-11-06T17:59:47.8276475Z #6 4.642 Preparing to unpack .../5-libkmod2_30+20221128-1_amd64.deb ...
+2026-11-06T17:59:47.8276869Z #6 4.643 Unpacking libkmod2:amd64 (30+20221128-1) ...
+2026-11-06T17:59:47.9977386Z #6 4.659 Selecting previously unselected package libapparmor1:amd64.
+2026-11-06T17:59:47.9978270Z #6 4.660 Preparing to unpack .../6-libapparmor1_3.0.8-3_amd64.deb ...
+2026-11-06T17:59:47.9978778Z #6 4.661 Unpacking libapparmor1:amd64 (3.0.8-3) ...
+2026-11-06T17:59:47.9979282Z #6 4.677 Selecting previously unselected package libip4tc2:amd64.
+2026-11-06T17:59:47.9979705Z #6 4.678 Preparing to unpack .../7-libip4tc2_1.8.9-2_amd64.deb ...
+2026-11-06T17:59:47.9980082Z #6 4.679 Unpacking libip4tc2:amd64 (1.8.9-2) ...
+2026-11-06T17:59:47.9980510Z #6 4.692 Selecting previously unselected package libsystemd-shared:amd64.
+2026-11-06T17:59:47.9981312Z #6 4.693 Preparing to unpack .../8-libsystemd-shared_252.39-1~deb12u2_amd64.deb ...
+2026-11-06T17:59:47.9981889Z #6 4.694 Unpacking libsystemd-shared:amd64 (252.39-1~deb12u2) ...
+2026-11-06T17:59:47.9982339Z #6 4.814 Preparing to unpack .../9-libsystemd0_252.39-1~deb12u2_amd64.deb ...
+2026-11-06T17:59:48.2303118Z #6 4.816 Unpacking libsystemd0:amd64 (252.39-1~deb12u2) over (252.39-1~deb12u1) ...
+2026-11-06T17:59:48.2303674Z #6 4.857 Setting up libsystemd0:amd64 (252.39-1~deb12u2) ...
+2026-11-06T17:59:48.2304359Z #6 4.876 Selecting previously unselected package systemd.
+2026-11-06T17:59:48.2304766Z #6 4.876 (Reading database ... 
+2026-11-06T17:59:48.2305026Z (Reading database ... 5%
+2026-11-06T17:59:48.2305521Z (Reading database ... 10%
+2026-11-06T17:59:48.2305759Z (Reading database ... 15%
+2026-11-06T17:59:48.2306197Z (Reading database ... 20%
+2026-11-06T17:59:48.2306728Z (Reading database ... 25%
+2026-11-06T17:59:48.2307201Z (Reading database ... 30%
+2026-11-06T17:59:48.2307690Z (Reading database ... 35%
+2026-11-06T17:59:48.2308156Z (Reading database ... 40%
+2026-11-06T17:59:48.2308632Z (Reading database ... 45%
+2026-11-06T17:59:48.2309114Z (Reading database ... 50%
+2026-11-06T17:59:48.2309593Z (Reading database ... 55%
+2026-11-06T17:59:48.2310151Z (Reading database ... 60%
+2026-11-06T17:59:48.2310618Z (Reading database ... 65%
+2026-11-06T17:59:48.2311329Z (Reading database ... 70%
+2026-11-06T17:59:48.2311764Z (Reading database ... 75%
+2026-11-06T17:59:48.2312227Z (Reading database ... 80%
+2026-11-06T17:59:48.2312707Z (Reading database ... 85%
+2026-11-06T17:59:48.2313169Z (Reading database ... 90%
+2026-11-06T17:59:48.2313633Z (Reading database ... 95%
+2026-11-06T17:59:48.2314133Z (Reading database ... 100%
+2026-11-06T17:59:48.2314776Z (Reading database ... 6714 files and directories currently installed.)
+2026-11-06T17:59:48.2315490Z #6 4.882 Preparing to unpack .../systemd_252.39-1~deb12u2_amd64.deb ...
+2026-11-06T17:59:48.2316122Z #6 4.896 Unpacking systemd (252.39-1~deb12u2) ...
+2026-11-06T17:59:48.2942879Z #6 5.110 Setting up libargon2-1:amd64 (0~20171227-0.3+deb12u1) ...
+2026-11-06T17:59:48.4101772Z #6 5.112 Setting up libjson-c5:amd64 (0.16-2) ...
+2026-11-06T17:59:48.4103313Z #6 5.114 Setting up libfdisk1:amd64 (2.38.1-5+deb12u3) ...
+2026-11-06T17:59:48.4103902Z #6 5.116 Setting up libkmod2:amd64 (30+20221128-1) ...
+2026-11-06T17:59:48.4104453Z #6 5.118 Setting up libapparmor1:amd64 (3.0.8-3) ...
+2026-11-06T17:59:48.4104990Z #6 5.119 Setting up libip4tc2:amd64 (1.8.9-2) ...
+2026-11-06T17:59:48.4105594Z #6 5.121 Setting up libsystemd-shared:amd64 (252.39-1~deb12u2) ...
+2026-11-06T17:59:48.4106269Z #6 5.123 Setting up libdevmapper1.02.1:amd64 (2:1.02.185-2) ...
+2026-11-06T17:59:48.4106927Z #6 5.125 Setting up libcryptsetup12:amd64 (2:2.6.1-4~deb12u2) ...
+2026-11-06T17:59:48.4107549Z #6 5.127 Setting up systemd (252.39-1~deb12u2) ...
+2026-11-06T17:59:48.4108875Z #6 5.138 Created symlink /etc/systemd/system/getty.target.wants/getty@tty1.service → /lib/systemd/system/getty@.service.
+2026-11-06T17:59:48.4109673Z 
+2026-11-06T17:59:48.4110586Z #6 5.142 Created symlink /etc/systemd/system/multi-user.target.wants/remote-fs.target → /lib/systemd/system/remote-fs.target.
+2026-11-06T17:59:48.4111640Z 
+2026-11-06T17:59:48.4112550Z #6 5.147 Created symlink /etc/systemd/system/sysinit.target.wants/systemd-pstore.service → /lib/systemd/system/systemd-pstore.service.
+2026-11-06T17:59:48.4113448Z 
+2026-11-06T17:59:48.4113690Z #6 5.151 Initializing machine ID from random generator.
+2026-11-06T17:59:48.4114061Z 
+2026-11-06T17:59:48.4114296Z #6 5.170 Creating group 'systemd-journal' with GID 999.
+2026-11-06T17:59:48.4114731Z 
+2026-11-06T17:59:48.4114953Z #6 5.170 Creating group 'systemd-network' with GID 998.
+2026-11-06T17:59:48.4115336Z 
+2026-11-06T17:59:48.4115778Z #6 5.171 Creating user 'systemd-network' (systemd Network Management) with UID 998 and GID 998.
+2026-11-06T17:59:48.4116378Z 
+2026-11-06T17:59:48.4116556Z #6 5.197 Setting up dmsetup (2:1.02.185-2) ...
+2026-11-06T17:59:48.4117151Z #6 5.226 Selecting previously unselected package systemd-sysv.
+2026-11-06T17:59:48.5225730Z #6 5.226 (Reading database ... 
+2026-11-06T17:59:48.5226228Z (Reading database ... 5%
+2026-11-06T17:59:48.5226620Z (Reading database ... 10%
+2026-11-06T17:59:48.5226973Z (Reading database ... 15%
+2026-11-06T17:59:48.5227307Z (Reading database ... 20%
+2026-11-06T17:59:48.5227647Z (Reading database ... 25%
+2026-11-06T17:59:48.5227981Z (Reading database ... 30%
+2026-11-06T17:59:48.5228307Z (Reading database ... 35%
+2026-11-06T17:59:48.5228632Z (Reading database ... 40%
+2026-11-06T17:59:48.5228962Z (Reading database ... 45%
+2026-11-06T17:59:48.5229289Z (Reading database ... 50%
+2026-11-06T17:59:48.5229610Z (Reading database ... 55%
+2026-11-06T17:59:48.5230321Z (Reading database ... 60%
+2026-11-06T17:59:48.5230672Z (Reading database ... 65%
+2026-11-06T17:59:48.5231205Z (Reading database ... 70%
+2026-11-06T17:59:48.5231534Z (Reading database ... 75%
+2026-11-06T17:59:48.5231863Z (Reading database ... 80%
+2026-11-06T17:59:48.5232190Z (Reading database ... 85%
+2026-11-06T17:59:48.5232515Z (Reading database ... 90%
+2026-11-06T17:59:48.5232841Z (Reading database ... 95%
+2026-11-06T17:59:48.5233186Z (Reading database ... 100%
+2026-11-06T17:59:48.5233670Z (Reading database ... 7563 files and directories currently installed.)
+2026-11-06T17:59:48.5234387Z #6 5.233 Preparing to unpack .../000-systemd-sysv_252.39-1~deb12u2_amd64.deb ...
+2026-11-06T17:59:48.5235014Z #6 5.234 Unpacking systemd-sysv (252.39-1~deb12u2) ...
+2026-11-06T17:59:48.5235587Z #6 5.251 Selecting previously unselected package libdbus-1-3:amd64.
+2026-11-06T17:59:48.5236271Z #6 5.252 Preparing to unpack .../001-libdbus-1-3_1.14.10-1~deb12u1_amd64.deb ...
+2026-11-06T17:59:48.5236922Z #6 5.253 Unpacking libdbus-1-3:amd64 (1.14.10-1~deb12u1) ...
+2026-11-06T17:59:48.5237530Z #6 5.277 Selecting previously unselected package dbus-bin.
+2026-11-06T17:59:48.5238254Z #6 5.279 Preparing to unpack .../002-dbus-bin_1.14.10-1~deb12u1_amd64.deb ...
+2026-11-06T17:59:48.5238967Z #6 5.280 Unpacking dbus-bin (1.14.10-1~deb12u1) ...
+2026-11-06T17:59:48.5239655Z #6 5.298 Selecting previously unselected package dbus-session-bus-common.
+2026-11-06T17:59:48.5241818Z #6 5.299 Preparing to unpack .../003-dbus-session-bus-common_1.14.10-1~deb12u1_all.deb ...
+2026-11-06T17:59:48.5242873Z #6 5.300 Unpacking dbus-session-bus-common (1.14.10-1~deb12u1) ...
+2026-11-06T17:59:48.5243908Z #6 5.317 Selecting previously unselected package libexpat1:amd64.
+2026-11-06T17:59:48.5305885Z #6 5.318 Preparing to unpack .../004-libexpat1_2.5.0-1+deb12u5_amd64.deb ...
+2026-11-06T17:59:48.5306613Z #6 5.319 Unpacking libexpat1:amd64 (2.5.0-1+deb12u5) ...
+2026-11-06T17:59:48.5307310Z #6 5.339 Selecting previously unselected package dbus-daemon.
+2026-11-06T17:59:48.7493496Z #6 5.340 Preparing to unpack .../005-dbus-daemon_1.14.10-1~deb12u1_amd64.deb ...
+2026-11-06T17:59:48.7494358Z #6 5.341 Unpacking dbus-daemon (1.14.10-1~deb12u1) ...
+2026-11-06T17:59:48.7495075Z #6 5.364 Selecting previously unselected package dbus-system-bus-common.
+2026-11-06T17:59:48.7496008Z #6 5.366 Preparing to unpack .../006-dbus-system-bus-common_1.14.10-1~deb12u1_all.deb ...
+2026-11-06T17:59:48.7496871Z #6 5.367 Unpacking dbus-system-bus-common (1.14.10-1~deb12u1) ...
+2026-11-06T17:59:48.7497573Z #6 5.387 Selecting previously unselected package dbus.
+2026-11

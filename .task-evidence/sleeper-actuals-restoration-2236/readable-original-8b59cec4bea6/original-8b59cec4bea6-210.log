@@ -1,0 +1,42 @@
+und\"","request_id":"system"}
+.............{"timestamp":"2026-11-06T18:51:53.622860+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/valuation \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T18:51:53.632310+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/valuation/assets?limit=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T18:51:53.647536+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/valuation/assets/player:1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T18:51:53.655850+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/valuation/assets/missing \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-06T18:51:53.664867+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/valuation/status \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T18:51:53.671893+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/valuation/export.json \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T18:51:53.681077+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/valuation/export.csv \"HTTP/1.1 200 OK\"","request_id":"system"}
+..........Validation Chromium: /usr/bin/chromium
+Validation Chromium version: 156.0.8078.73
+.Validation Chromium: /usr/bin/chromium
+Validation Chromium version: 156.0.8078.73
+........{"timestamp":"2026-11-06T18:51:56.380675+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/pages/missing \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-06T18:51:56.387944+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/visual/pages/home/watch \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+.{"timestamp":"2026-11-06T18:51:56.406524+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/schema \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T18:51:56.410105+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/site-map \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T18:51:56.415700+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/health \"HTTP/1.1 200 OK\"","request_id":"system"}
+...{"timestamp":"2026-11-06T18:51:57.477215+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/health \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T18:51:57.480589+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/visual \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-06T18:51:57.482993+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/releases/current \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-06T18:51:57.486774+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/current-visual/manifest \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-06T18:51:57.488171+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/live/visual \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+.
+======================================================================
+FAIL: test_cancellation_during_submission_drains_handle_then_stops_writer (test_fois_navigation_reliability.WorkerTimeoutReliabilityTests.test_cancellation_during_submission_drains_handle_then_stops_writer)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.14/asyncio/runners.py", line 127, in run
+    return self._loop.run_until_complete(task)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "/usr/local/lib/python3.14/asyncio/base_events.py", line 719, in run_until_complete
+    return future.result()
+           ~~~~~~~~~~~~~^^
+  File "/app/tests/test_fois_navigation_reliability.py", line 337, in test_cancellation_during_submission_drains_handle_then_stops_writer
+    self.assertFalse(psutil.pid_exists(worker))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: True is not false
+
+----------------------------------------------------------------------
+Ran 4241 tests in 2886.206s
+
+FAILED (failures=1)

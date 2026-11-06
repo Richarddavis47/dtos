@@ -1,0 +1,82 @@
+{
+  "status": "Confirmed failed assertion, corrected test precondition; final full acceptance still pending",
+  "before_source": "e10f6a041da1bbe87f2a1615cbe6b41edfd30494",
+  "before_tree": "f499db72adb149d4f36e636b111d8d83cde825a2",
+  "original_full_counts": {
+    "start": 4241,
+    "stop": 4241,
+    "failure": 1
+  },
+  "before_case": [
+    {
+      "event": "start",
+      "test": "test_fois_navigation_reliability.WorkerTimeoutReliabilityTests.test_cancellation_during_submission_drains_handle_then_stops_writer",
+      "time": 1793988875.67328,
+      "pid": 32,
+      "rss": 578211840,
+      "cgroup": 674693120
+    },
+    {
+      "event": "failure",
+      "test": "test_fois_navigation_reliability.WorkerTimeoutReliabilityTests.test_cancellation_during_submission_drains_handle_then_stops_writer",
+      "time": 1793988876.28311,
+      "pid": 32,
+      "rss": 578265088,
+      "cgroup": 709386240,
+      "error_type": "AssertionError",
+      "error_text": "True is not false"
+    },
+    {
+      "event": "stop",
+      "test": "test_fois_navigation_reliability.WorkerTimeoutReliabilityTests.test_cancellation_during_submission_drains_handle_then_stops_writer",
+      "time": 1793988876.324648,
+      "pid": 32,
+      "rss": 578244608,
+      "cgroup": 674701312
+    }
+  ],
+  "original_traceback": "tests/test_fois_navigation_reliability.py:337: self.assertFalse(psutil.pid_exists(worker)); AssertionError True is not false",
+  "source_interpretation": "The original submission event did not establish actual worker execution. The implementation legitimately cancels a queued future without retiring an idle pool. The failed live PID assertion and subsecond duration are consistent with that path; the original future.cancel return was not captured and is not claimed as a direct measurement.",
+  "unchanged_diagnostic_trials": "Five instrumented unchanged trials all passed with running futures; they do not reconstruct the original scheduling race.",
+  "correction": "Wait for an explicit marker written by the real spawned worker before cancellation. Existing drain, worker exit, scratch and in-flight assertions plus deadlines preserved. No production lifecycle source changed.",
+  "final_candidate": {
+    "candidate": "8a7f3365316c52c09ca342f02871f03a0fe658c6",
+    "tree": "81e9a223be2f05aa7dbe556b99eaabcbb492b5c9",
+    "baseline": "4e63bfbf605c7a1cdd5ce1dc039424e862ab7efd",
+    "baseline_tree": "7b2dd610add3a536ba1112f92943ae5ccff5999c",
+    "version": "v1.22.21",
+    "build": 2236,
+    "branch": "fix/sleeper-actuals-restoration"
+  },
+  "final_focused_worker_controls": "5 passed in cancellation-started-exact.log",
+  "final_full_case": [
+    {
+      "event": "start",
+      "test": "test_fois_navigation_reliability.WorkerTimeoutReliabilityTests.test_cancellation_during_submission_drains_handle_then_stops_writer",
+      "time": 1793991012.9731834,
+      "pid": 32,
+      "rss": 599420928,
+      "cgroup": 694996992
+    },
+    {
+      "event": "stop",
+      "test": "test_fois_navigation_reliability.WorkerTimeoutReliabilityTests.test_cancellation_during_submission_drains_handle_then_stops_writer",
+      "time": 1793991014.0279639,
+      "pid": 32,
+      "rss": 599457792,
+      "cgroup": 695230464
+    }
+  ],
+  "gate_status": "Original6passed, unittestgate failed,3later gates unexecuted. Revised full mandatory run still pending.",
+  "original_manifest_entries": 640,
+  "original_manifest_all_payload_hashes_verified": true,
+  "original_completed_gate_exit_codes": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1
+  ]
+}

@@ -1,0 +1,10 @@
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/app/tools/validation/restoration_unused_memory.py", line 314, in <module>
+    main()
+    ~~~~^^
+  File "/app/tools/validation/restoration_unused_memory.py", line 81, in main
+    season=league['season'], scoring_fingerprint=scoring_identity(data['scoring_settings']),
+                                                                  ~~~~^^^^^^^^^^^^^^^^^^^^
+KeyError: 'scoring_settings'

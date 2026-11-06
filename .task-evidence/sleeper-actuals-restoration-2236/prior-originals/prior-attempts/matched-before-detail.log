@@ -1,0 +1,55 @@
+test_matched_default_and_connected_restoration_reach_rendered_consumers (tests.test_sleeper_actual_restoration.ActualRestorationTests.test_matched_default_and_connected_restoration_reach_rendered_consumers) ... /usr/local/lib/python3.14/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+  from starlette.testclient import TestClient as TestClient  # noqa
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:httpx:HTTP Request: GET http://testserver/players/1?front_office=4 "HTTP/1.1 200 OK"
+INFO:dtos.attribution:diagnostic_boundary
+INFO:httpx:HTTP Request: GET http://testserver/market?selected=player%3A1 "HTTP/1.1 503 Service Unavailable"
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:httpx:HTTP Request: GET http://testserver/api/market/assets/player:1 "HTTP/1.1 503 Service Unavailable"
+
+  test_matched_default_and_connected_restoration_reach_rendered_consumers (tests.test_sleeper_actual_restoration.ActualRestorationTests.test_matched_default_and_connected_restoration_reach_rendered_consumers) (default=True) ... FAIL
+  test_matched_default_and_connected_restoration_reach_rendered_consumers (tests.test_sleeper_actual_restoration.ActualRestorationTests.test_matched_default_and_connected_restoration_reach_rendered_consumers) (default=False) ... ERROR
+
+======================================================================
+ERROR: test_matched_default_and_connected_restoration_reach_rendered_consumers (tests.test_sleeper_actual_restoration.ActualRestorationTests.test_matched_default_and_connected_restoration_reach_rendered_consumers) (default=False)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_sleeper_actual_restoration.py", line 66, in test_matched_default_and_connected_restoration_reach_rendered_consumers
+    restored = self.restore(data, default=default)
+  File "/app/tests/test_sleeper_actual_restoration.py", line 45, in restore
+    self.assertTrue(league_preparation.restore_cached_runtime(runtime, publish or Mock(),
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        expected_season=int(data['league']['season'])))
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/services/league_preparation.py", line 62, in restore_cached_runtime
+    with lifecycle_coordinator.phase('cache_persistence', wait=False):
+         ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/contextlib.py", line 141, in __enter__
+    return next(self.gen)
+  File "/app/src/platform/lifecycle.py", line 245, in phase
+    raise HeavyWorkDeferred('Preparation deferred while another preparation task is running.')
+src.platform.lifecycle.HeavyWorkDeferred: Preparation deferred while another preparation task is running.
+
+======================================================================
+FAIL: test_matched_default_and_connected_restoration_reach_rendered_consumers (tests.test_sleeper_actual_restoration.ActualRestorationTests.test_matched_default_and_connected_restoration_reach_rendered_consumers) (default=True)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_sleeper_actual_restoration.py", line 73, in test_matched_default_and_connected_restoration_reach_rendered_consumers
+    self.assertEqual(response.status_code, 200, response.text[:800])
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 503 != 200 : {"detail":"Asset Market generation is building safely in the background; retry shortly."}
+
+----------------------------------------------------------------------
+Ran 1 test in 1.177s
+
+FAILED (failures=1, errors=1)

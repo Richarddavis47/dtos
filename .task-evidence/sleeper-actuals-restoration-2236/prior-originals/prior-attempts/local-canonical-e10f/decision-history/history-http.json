@@ -1,0 +1,1090 @@
+{
+  "scope": "Two fictional source seasons through canonical cache, graph, authorized HTTP and HTML",
+  "week_zero_response": {
+    "schema_version": "1.1",
+    "contract": "historical_transactions",
+    "count": 6,
+    "records": [
+      {
+        "schema_version": "1.1",
+        "transaction_id": "TX-league-1-now-trade",
+        "sleeper_transaction_id": "now-trade",
+        "trade_dossier_url": "/trades/history/now-trade",
+        "season": 2026,
+        "week": 0,
+        "type": "trade",
+        "status": "complete",
+        "occurred_at": "2026-08-31T12:00:00Z",
+        "roster_ids": [
+          1,
+          2
+        ],
+        "adds": {
+          "1": 1
+        },
+        "drops": {
+          "1": 2
+        },
+        "draft_picks": [
+          {
+            "season": "2028",
+            "round": 1,
+            "roster_id": 1,
+            "previous_owner_id": 1,
+            "owner_id": 2
+          }
+        ],
+        "waiver_budget": [],
+        "malformed_consideration": false,
+        "incomplete_pick_identity": false,
+        "source": {
+          "provider": "Sleeper",
+          "source_league_id": "league-1",
+          "source_record_id": "now-trade",
+          "retrieved_at": null,
+          "observed_at": null,
+          "schema_version": "provider-cache-1",
+          "timestamp_provenance": {
+            "provider": "Sleeper",
+            "field": "created",
+            "raw_value": 1788177600000,
+            "normalized_utc": "2026-08-31T12:00:00Z"
+          },
+          "importer_version": "1.2",
+          "source_hash": "4395d50c70a96a05c547ebc2b480dc5b59e38c068cbeee8e35067eb03d4102e3",
+          "availability": "observed"
+        },
+        "raw": {
+          "transaction_id": "now-trade",
+          "type": "trade",
+          "status": "complete",
+          "roster_ids": [
+            1,
+            2
+          ],
+          "adds": {
+            "1": 1
+          },
+          "drops": {
+            "1": 2
+          },
+          "created": 1788177600000,
+          "status_updated": 1788177601000,
+          "draft_picks": [
+            {
+              "season": "2028",
+              "round": 1,
+              "roster_id": 1,
+              "previous_owner_id": 1,
+              "owner_id": 2
+            }
+          ],
+          "leg": 0
+        }
+      },
+      {
+        "schema_version": "1.1",
+        "transaction_id": "TX-league-1-unknown-drop",
+        "sleeper_transaction_id": "unknown-drop",
+        "trade_dossier_url": null,
+        "season": 2026,
+        "week": 0,
+        "type": "drop",
+        "status": "unknown",
+        "occurred_at": null,
+        "roster_ids": [
+          2
+        ],
+        "adds": {},
+        "drops": {
+          "5": 2
+        },
+        "draft_picks": [],
+        "waiver_budget": [],
+        "malformed_consideration": false,
+        "incomplete_pick_identity": false,
+        "source": {
+          "provider": "Sleeper",
+          "source_league_id": "league-1",
+          "source_record_id": "unknown-drop",
+          "retrieved_at": null,
+          "observed_at": null,
+          "schema_version": "provider-cache-1",
+          "timestamp_provenance": {
+            "provider": "Sleeper",
+            "field": null,
+            "raw_value": null,
+            "normalized_utc": null,
+            "reason": "provider_timestamp_unavailable_or_invalid"
+          },
+          "importer_version": "1.2",
+          "source_hash": "9c7cd385a9711dd25f95387f7781a5037fd283537669607254dce4fb8df81392",
+          "availability": "observed"
+        },
+        "raw": {
+          "transaction_id": "unknown-drop",
+          "type": "drop",
+          "roster_ids": [
+            2
+          ],
+          "drops": {
+            "5": 2
+          },
+          "leg": 0
+        }
+      },
+      {
+        "schema_version": "1.1",
+        "transaction_id": "TX-league-1-pending-drop",
+        "sleeper_transaction_id": "pending-drop",
+        "trade_dossier_url": null,
+        "season": 2026,
+        "week": 0,
+        "type": "drop",
+        "status": "pending",
+        "occurred_at": null,
+        "roster_ids": [
+          2
+        ],
+        "adds": {},
+        "drops": {
+          "4": 2
+        },
+        "draft_picks": [],
+        "waiver_budget": [],
+        "malformed_consideration": false,
+        "incomplete_pick_identity": false,
+        "source": {
+          "provider": "Sleeper",
+          "source_league_id": "league-1",
+          "source_record_id": "pending-drop",
+          "retrieved_at": null,
+          "observed_at": null,
+          "schema_version": "provider-cache-1",
+          "timestamp_provenance": {
+            "provider": "Sleeper",
+            "field": null,
+            "raw_value": null,
+            "normalized_utc": null,
+            "reason": "provider_timestamp_unavailable_or_invalid"
+          },
+          "importer_version": "1.2",
+          "source_hash": "629370e7bdddac631e2a5f8f7f03f014895bfaeec2987a74eb3bd251ea5ddab1",
+          "availability": "observed"
+        },
+        "raw": {
+          "transaction_id": "pending-drop",
+          "type": "drop",
+          "status": "pending",
+          "roster_ids": [
+            2
+          ],
+          "drops": {
+            "4": 2
+          },
+          "leg": 0
+        }
+      },
+      {
+        "schema_version": "1.1",
+        "transaction_id": "TX-league-1-failed-1",
+        "sleeper_transaction_id": "failed-1",
+        "trade_dossier_url": null,
+        "season": 2026,
+        "week": 0,
+        "type": "waiver",
+        "status": "failed",
+        "occurred_at": null,
+        "roster_ids": [
+          2
+        ],
+        "adds": {
+          "3": 2
+        },
+        "drops": {},
+        "draft_picks": [],
+        "waiver_budget": [],
+        "malformed_consideration": false,
+        "incomplete_pick_identity": false,
+        "source": {
+          "provider": "Sleeper",
+          "source_league_id": "league-1",
+          "source_record_id": "failed-1",
+          "retrieved_at": null,
+          "observed_at": null,
+          "schema_version": "provider-cache-1",
+          "timestamp_provenance": {
+            "provider": "Sleeper",
+            "field": null,
+            "raw_value": null,
+            "normalized_utc": null,
+            "reason": "provider_timestamp_unavailable_or_invalid"
+          },
+          "importer_version": "1.2",
+          "source_hash": "b09f235b9df78ae25ce6c8cb46ff5e4af143d823cd78572a7d8d37869e070904",
+          "availability": "observed"
+        },
+        "raw": {
+          "transaction_id": "failed-1",
+          "type": "waiver",
+          "status": "failed",
+          "roster_ids": [
+            2
+          ],
+          "adds": {
+            "3": 2
+          },
+          "settings": {
+            "waiver_bid": 7
+          },
+          "leg": 0
+        }
+      },
+      {
+        "schema_version": "1.1",
+        "transaction_id": "TX-league-1-failed-0",
+        "sleeper_transaction_id": "failed-0",
+        "trade_dossier_url": null,
+        "season": 2026,
+        "week": 0,
+        "type": "waiver",
+        "status": "failed",
+        "occurred_at": null,
+        "roster_ids": [
+          2
+        ],
+        "adds": {
+          "3": 2
+        },
+        "drops": {},
+        "draft_picks": [],
+        "waiver_budget": [],
+        "malformed_consideration": false,
+        "incomplete_pick_identity": false,
+        "source": {
+          "provider": "Sleeper",
+          "source_league_id": "league-1",
+          "source_record_id": "failed-0",
+          "retrieved_at": null,
+          "observed_at": null,
+          "schema_version": "provider-cache-1",
+          "timestamp_provenance": {
+            "provider": "Sleeper",
+            "field": null,
+            "raw_value": null,
+            "normalized_utc": null,
+            "reason": "provider_timestamp_unavailable_or_invalid"
+          },
+          "importer_version": "1.2",
+          "source_hash": "eb37fbb363436cb06a58e5223b3a7bbd11a932d87411c7c647d2dff05fbe3e6c",
+          "availability": "observed"
+        },
+        "raw": {
+          "transaction_id": "failed-0",
+          "type": "waiver",
+          "status": "failed",
+          "roster_ids": [
+            2
+          ],
+          "adds": {
+            "3": 2
+          },
+          "settings": {
+            "waiver_bid": 7
+          },
+          "leg": 0
+        }
+      },
+      {
+        "schema_version": "1.1",
+        "transaction_id": "TX-league-1-claim",
+        "sleeper_transaction_id": "claim",
+        "trade_dossier_url": null,
+        "season": 2026,
+        "week": 0,
+        "type": "waiver",
+        "status": "complete",
+        "occurred_at": null,
+        "roster_ids": [
+          2
+        ],
+        "adds": {
+          "5": 2
+        },
+        "drops": {},
+        "draft_picks": [],
+        "waiver_budget": [],
+        "malformed_consideration": false,
+        "incomplete_pick_identity": false,
+        "source": {
+          "provider": "Sleeper",
+          "source_league_id": "league-1",
+          "source_record_id": "claim",
+          "retrieved_at": null,
+          "observed_at": null,
+          "schema_version": "provider-cache-1",
+          "timestamp_provenance": {
+            "provider": "Sleeper",
+            "field": null,
+            "raw_value": null,
+            "normalized_utc": null,
+            "reason": "provider_timestamp_unavailable_or_invalid"
+          },
+          "importer_version": "1.2",
+          "source_hash": "d65a1742f34a5a6d9269749e1f63050830f628a81aee6ec2e75e849e4c0b3816",
+          "availability": "observed"
+        },
+        "raw": {
+          "transaction_id": "claim",
+          "type": "waiver",
+          "status": "complete",
+          "roster_ids": [
+            2
+          ],
+          "adds": {
+            "5": 2
+          },
+          "settings": {
+            "waiver_bid": 0
+          },
+          "leg": 0
+        }
+      }
+    ],
+    "limit": 100,
+    "offset": 0
+  },
+  "historical_records": [
+    {
+      "schema_version": "1.1",
+      "transaction_id": "TX-league-1-now-trade",
+      "sleeper_transaction_id": "now-trade",
+      "trade_dossier_url": "/trades/history/now-trade",
+      "season": 2026,
+      "week": 0,
+      "type": "trade",
+      "status": "complete",
+      "occurred_at": "2026-08-31T12:00:00Z",
+      "roster_ids": [
+        1,
+        2
+      ],
+      "adds": {
+        "1": 1
+      },
+      "drops": {
+        "1": 2
+      },
+      "draft_picks": [
+        {
+          "season": "2028",
+          "round": 1,
+          "roster_id": 1,
+          "previous_owner_id": 1,
+          "owner_id": 2
+        }
+      ],
+      "waiver_budget": [],
+      "malformed_consideration": false,
+      "incomplete_pick_identity": false,
+      "source": {
+        "provider": "Sleeper",
+        "source_league_id": "league-1",
+        "source_record_id": "now-trade",
+        "retrieved_at": null,
+        "observed_at": null,
+        "schema_version": "provider-cache-1",
+        "timestamp_provenance": {
+          "provider": "Sleeper",
+          "field": "created",
+          "raw_value": 1788177600000,
+          "normalized_utc": "2026-08-31T12:00:00Z"
+        },
+        "importer_version": "1.2",
+        "source_hash": "4395d50c70a96a05c547ebc2b480dc5b59e38c068cbeee8e35067eb03d4102e3",
+        "availability": "observed"
+      },
+      "raw": {
+        "transaction_id": "now-trade",
+        "type": "trade",
+        "status": "complete",
+        "roster_ids": [
+          1,
+          2
+        ],
+        "adds": {
+          "1": 1
+        },
+        "drops": {
+          "1": 2
+        },
+        "created": 1788177600000,
+        "status_updated": 1788177601000,
+        "draft_picks": [
+          {
+            "season": "2028",
+            "round": 1,
+            "roster_id": 1,
+            "previous_owner_id": 1,
+            "owner_id": 2
+          }
+        ],
+        "leg": 0
+      }
+    },
+    {
+      "schema_version": "1.1",
+      "transaction_id": "TX-league-1-unknown-drop",
+      "sleeper_transaction_id": "unknown-drop",
+      "trade_dossier_url": null,
+      "season": 2026,
+      "week": 0,
+      "type": "drop",
+      "status": "unknown",
+      "occurred_at": null,
+      "roster_ids": [
+        2
+      ],
+      "adds": {},
+      "drops": {
+        "5": 2
+      },
+      "draft_picks": [],
+      "waiver_budget": [],
+      "malformed_consideration": false,
+      "incomplete_pick_identity": false,
+      "source": {
+        "provider": "Sleeper",
+        "source_league_id": "league-1",
+        "source_record_id": "unknown-drop",
+        "retrieved_at": null,
+        "observed_at": null,
+        "schema_version": "provider-cache-1",
+        "timestamp_provenance": {
+          "provider": "Sleeper",
+          "field": null,
+          "raw_value": null,
+          "normalized_utc": null,
+          "reason": "provider_timestamp_unavailable_or_invalid"
+        },
+        "importer_version": "1.2",
+        "source_hash": "9c7cd385a9711dd25f95387f7781a5037fd283537669607254dce4fb8df81392",
+        "availability": "observed"
+      },
+      "raw": {
+        "transaction_id": "unknown-drop",
+        "type": "drop",
+        "roster_ids": [
+          2
+        ],
+        "drops": {
+          "5": 2
+        },
+        "leg": 0
+      }
+    },
+    {
+      "schema_version": "1.1",
+      "transaction_id": "TX-league-1-pending-drop",
+      "sleeper_transaction_id": "pending-drop",
+      "trade_dossier_url": null,
+      "season": 2026,
+      "week": 0,
+      "type": "drop",
+      "status": "pending",
+      "occurred_at": null,
+      "roster_ids": [
+        2
+      ],
+      "adds": {},
+      "drops": {
+        "4": 2
+      },
+      "draft_picks": [],
+      "waiver_budget": [],
+      "malformed_consideration": false,
+      "incomplete_pick_identity": false,
+      "source": {
+        "provider": "Sleeper",
+        "source_league_id": "league-1",
+        "source_record_id": "pending-drop",
+        "retrieved_at": null,
+        "observed_at": null,
+        "schema_version": "provider-cache-1",
+        "timestamp_provenance": {
+          "provider": "Sleeper",
+          "field": null,
+          "raw_value": null,
+          "normalized_utc": null,
+          "reason": "provider_timestamp_unavailable_or_invalid"
+        },
+        "importer_version": "1.2",
+        "source_hash": "629370e7bdddac631e2a5f8f7f03f014895bfaeec2987a74eb3bd251ea5ddab1",
+        "availability": "observed"
+      },
+      "raw": {
+        "transaction_id": "pending-drop",
+        "type": "drop",
+        "status": "pending",
+        "roster_ids": [
+          2
+        ],
+        "drops": {
+          "4": 2
+        },
+        "leg": 0
+      }
+    },
+    {
+      "schema_version": "1.1",
+      "transaction_id": "TX-league-1-failed-1",
+      "sleeper_transaction_id": "failed-1",
+      "trade_dossier_url": null,
+      "season": 2026,
+      "week": 0,
+      "type": "waiver",
+      "status": "failed",
+      "occurred_at": null,
+      "roster_ids": [
+        2
+      ],
+      "adds": {
+        "3": 2
+      },
+      "drops": {},
+      "draft_picks": [],
+      "waiver_budget": [],
+      "malformed_consideration": false,
+      "incomplete_pick_identity": false,
+      "source": {
+        "provider": "Sleeper",
+        "source_league_id": "league-1",
+        "source_record_id": "failed-1",
+        "retrieved_at": null,
+        "observed_at": null,
+        "schema_version": "provider-cache-1",
+        "timestamp_provenance": {
+          "provider": "Sleeper",
+          "field": null,
+          "raw_value": null,
+          "normalized_utc": null,
+          "reason": "provider_timestamp_unavailable_or_invalid"
+        },
+        "importer_version": "1.2",
+        "source_hash": "b09f235b9df78ae25ce6c8cb46ff5e4af143d823cd78572a7d8d37869e070904",
+        "availability": "observed"
+      },
+      "raw": {
+        "transaction_id": "failed-1",
+        "type": "waiver",
+        "status": "failed",
+        "roster_ids": [
+          2
+        ],
+        "adds": {
+          "3": 2
+        },
+        "settings": {
+          "waiver_bid": 7
+        },
+        "leg": 0
+      }
+    },
+    {
+      "schema_version": "1.1",
+      "transaction_id": "TX-league-1-failed-0",
+      "sleeper_transaction_id": "failed-0",
+      "trade_dossier_url": null,
+      "season": 2026,
+      "week": 0,
+      "type": "waiver",
+      "status": "failed",
+      "occurred_at": null,
+      "roster_ids": [
+        2
+      ],
+      "adds": {
+        "3": 2
+      },
+      "drops": {},
+      "draft_picks": [],
+      "waiver_budget": [],
+      "malformed_consideration": false,
+      "incomplete_pick_identity": false,
+      "source": {
+        "provider": "Sleeper",
+        "source_league_id": "league-1",
+        "source_record_id": "failed-0",
+        "retrieved_at": null,
+        "observed_at": null,
+        "schema_version": "provider-cache-1",
+        "timestamp_provenance": {
+          "provider": "Sleeper",
+          "field": null,
+          "raw_value": null,
+          "normalized_utc": null,
+          "reason": "provider_timestamp_unavailable_or_invalid"
+        },
+        "importer_version": "1.2",
+        "source_hash": "eb37fbb363436cb06a58e5223b3a7bbd11a932d87411c7c647d2dff05fbe3e6c",
+        "availability": "observed"
+      },
+      "raw": {
+        "transaction_id": "failed-0",
+        "type": "waiver",
+        "status": "failed",
+        "roster_ids": [
+          2
+        ],
+        "adds": {
+          "3": 2
+        },
+        "settings": {
+          "waiver_bid": 7
+        },
+        "leg": 0
+      }
+    },
+    {
+      "schema_version": "1.1",
+      "transaction_id": "TX-league-1-claim",
+      "sleeper_transaction_id": "claim",
+      "trade_dossier_url": null,
+      "season": 2026,
+      "week": 0,
+      "type": "waiver",
+      "status": "complete",
+      "occurred_at": null,
+      "roster_ids": [
+        2
+      ],
+      "adds": {
+        "5": 2
+      },
+      "drops": {},
+      "draft_picks": [],
+      "waiver_budget": [],
+      "malformed_consideration": false,
+      "incomplete_pick_identity": false,
+      "source": {
+        "provider": "Sleeper",
+        "source_league_id": "league-1",
+        "source_record_id": "claim",
+        "retrieved_at": null,
+        "observed_at": null,
+        "schema_version": "provider-cache-1",
+        "timestamp_provenance": {
+          "provider": "Sleeper",
+          "field": null,
+          "raw_value": null,
+          "normalized_utc": null,
+          "reason": "provider_timestamp_unavailable_or_invalid"
+        },
+        "importer_version": "1.2",
+        "source_hash": "d65a1742f34a5a6d9269749e1f63050830f628a81aee6ec2e75e849e4c0b3816",
+        "availability": "observed"
+      },
+      "raw": {
+        "transaction_id": "claim",
+        "type": "waiver",
+        "status": "complete",
+        "roster_ids": [
+          2
+        ],
+        "adds": {
+          "5": 2
+        },
+        "settings": {
+          "waiver_bid": 0
+        },
+        "leg": 0
+      }
+    },
+    {
+      "schema_version": "1.1",
+      "transaction_id": "TX-prior-L-past-4",
+      "sleeper_transaction_id": "past-4",
+      "trade_dossier_url": "/trades/history/past-4",
+      "season": 2025,
+      "week": 1,
+      "type": "trade",
+      "status": "complete",
+      "occurred_at": "2025-09-05T12:00:00Z",
+      "roster_ids": [
+        1,
+        2
+      ],
+      "adds": {
+        "2": 2
+      },
+      "drops": {
+        "2": 1
+      },
+      "draft_picks": [
+        {
+          "owner_id": 1,
+          "previous_owner_id": 2,
+          "roster_id": 1,
+          "round": 1,
+          "season": "2028"
+        }
+      ],
+      "waiver_budget": [],
+      "malformed_consideration": false,
+      "incomplete_pick_identity": false,
+      "source": {
+        "provider": "Sleeper",
+        "source_league_id": "prior-L",
+        "source_record_id": "past-4",
+        "retrieved_at": null,
+        "observed_at": null,
+        "schema_version": "provider-cache-1",
+        "timestamp_provenance": {
+          "provider": "Sleeper",
+          "field": "created",
+          "raw_value": 1757073600000,
+          "normalized_utc": "2025-09-05T12:00:00Z"
+        },
+        "importer_version": "1.2",
+        "source_hash": "3f947867c0b7acd6ed79d7c607e63a0cb8cf26b31ed141cb64f992dbe558a78d",
+        "availability": "observed"
+      },
+      "raw": {
+        "adds": {
+          "2": 2
+        },
+        "created": 1757073600000,
+        "draft_picks": [
+          {
+            "owner_id": 1,
+            "previous_owner_id": 2,
+            "roster_id": 1,
+            "round": 1,
+            "season": "2028"
+          }
+        ],
+        "drops": {
+          "2": 1
+        },
+        "roster_ids": [
+          1,
+          2
+        ],
+        "status": "complete",
+        "status_updated": 1757073601000,
+        "transaction_id": "past-4",
+        "type": "trade",
+        "source_league_id": "prior-L"
+      }
+    },
+    {
+      "schema_version": "1.1",
+      "transaction_id": "TX-prior-L-past-3",
+      "sleeper_transaction_id": "past-3",
+      "trade_dossier_url": "/trades/history/past-3",
+      "season": 2025,
+      "week": 1,
+      "type": "trade",
+      "status": "complete",
+      "occurred_at": "2025-09-04T12:00:00Z",
+      "roster_ids": [
+        1,
+        2
+      ],
+      "adds": {
+        "2": 1
+      },
+      "drops": {
+        "2": 2
+      },
+      "draft_picks": [
+        {
+          "owner_id": 2,
+          "previous_owner_id": 1,
+          "roster_id": 1,
+          "round": 1,
+          "season": "2028"
+        }
+      ],
+      "waiver_budget": [],
+      "malformed_consideration": false,
+      "incomplete_pick_identity": false,
+      "source": {
+        "provider": "Sleeper",
+        "source_league_id": "prior-L",
+        "source_record_id": "past-3",
+        "retrieved_at": null,
+        "observed_at": null,
+        "schema_version": "provider-cache-1",
+        "timestamp_provenance": {
+          "provider": "Sleeper",
+          "field": "created",
+          "raw_value": 1756987200000,
+          "normalized_utc": "2025-09-04T12:00:00Z"
+        },
+        "importer_version": "1.2",
+        "source_hash": "6ecd5194498ac429b04cf7e00e60acc1bbcc52ffc5f076507fcec7bde9e219f6",
+        "availability": "observed"
+      },
+      "raw": {
+        "adds": {
+          "2": 1
+        },
+        "created": 1756987200000,
+        "draft_picks": [
+          {
+            "owner_id": 2,
+            "previous_owner_id": 1,
+            "roster_id": 1,
+            "round": 1,
+            "season": "2028"
+          }
+        ],
+        "drops": {
+          "2": 2
+        },
+        "roster_ids": [
+          1,
+          2
+        ],
+        "status": "complete",
+        "status_updated": 1756987201000,
+        "transaction_id": "past-3",
+        "type": "trade",
+        "source_league_id": "prior-L"
+      }
+    },
+    {
+      "schema_version": "1.1",
+      "transaction_id": "TX-prior-L-past-2",
+      "sleeper_transaction_id": "past-2",
+      "trade_dossier_url": "/trades/history/past-2",
+      "season": 2025,
+      "week": 1,
+      "type": "trade",
+      "status": "complete",
+      "occurred_at": "2025-09-03T12:00:00Z",
+      "roster_ids": [
+        1,
+        2
+      ],
+      "adds": {
+        "2": 2
+      },
+      "drops": {
+        "2": 1
+      },
+      "draft_picks": [
+        {
+          "owner_id": 1,
+          "previous_owner_id": 2,
+          "roster_id": 1,
+          "round": 1,
+          "season": "2028"
+        }
+      ],
+      "waiver_budget": [],
+      "malformed_consideration": false,
+      "incomplete_pick_identity": false,
+      "source": {
+        "provider": "Sleeper",
+        "source_league_id": "prior-L",
+        "source_record_id": "past-2",
+        "retrieved_at": null,
+        "observed_at": null,
+        "schema_version": "provider-cache-1",
+        "timestamp_provenance": {
+          "provider": "Sleeper",
+          "field": "created",
+          "raw_value": 1756900800000,
+          "normalized_utc": "2025-09-03T12:00:00Z"
+        },
+        "importer_version": "1.2",
+        "source_hash": "0a567a061b4474c444a1f95743f751ea2eda3a109406249898d242de410a564d",
+        "availability": "observed"
+      },
+      "raw": {
+        "adds": {
+          "2": 2
+        },
+        "created": 1756900800000,
+        "draft_picks": [
+          {
+            "owner_id": 1,
+            "previous_owner_id": 2,
+            "roster_id": 1,
+            "round": 1,
+            "season": "2028"
+          }
+        ],
+        "drops": {
+          "2": 1
+        },
+        "roster_ids": [
+          1,
+          2
+        ],
+        "status": "complete",
+        "status_updated": 1756900801000,
+        "transaction_id": "past-2",
+        "type": "trade",
+        "source_league_id": "prior-L"
+      }
+    },
+    {
+      "schema_version": "1.1",
+      "transaction_id": "TX-prior-L-past-1",
+      "sleeper_transaction_id": "past-1",
+      "trade_dossier_url": "/trades/history/past-1",
+      "season": 2025,
+      "week": 1,
+      "type": "trade",
+      "status": "complete",
+      "occurred_at": "2025-09-02T12:00:00Z",
+      "roster_ids": [
+        1,
+        2
+      ],
+      "adds": {
+        "2": 1
+      },
+      "drops": {
+        "2": 2
+      },
+      "draft_picks": [
+        {
+          "owner_id": 2,
+          "previous_owner_id": 1,
+          "roster_id": 1,
+          "round": 1,
+          "season": "2028"
+        }
+      ],
+      "waiver_budget": [],
+      "malformed_consideration": false,
+      "incomplete_pick_identity": false,
+      "source": {
+        "provider": "Sleeper",
+        "source_league_id": "prior-L",
+        "source_record_id": "past-1",
+        "retrieved_at": null,
+        "observed_at": null,
+        "schema_version": "provider-cache-1",
+        "timestamp_provenance": {
+          "provider": "Sleeper",
+          "field": "created",
+          "raw_value": 1756814400000,
+          "normalized_utc": "2025-09-02T12:00:00Z"
+        },
+        "importer_version": "1.2",
+        "source_hash": "1dd68744010c0a219f49758076b8e783398e91e42f2f30372b47e1b991e2ae58",
+        "availability": "observed"
+      },
+      "raw": {
+        "adds": {
+          "2": 1
+        },
+        "created": 1756814400000,
+        "draft_picks": [
+          {
+            "owner_id": 2,
+            "previous_owner_id": 1,
+            "roster_id": 1,
+            "round": 1,
+            "season": "2028"
+          }
+        ],
+        "drops": {
+          "2": 2
+        },
+        "roster_ids": [
+          1,
+          2
+        ],
+        "status": "complete",
+        "status_updated": 1756814401000,
+        "transaction_id": "past-1",
+        "type": "trade",
+        "source_league_id": "prior-L"
+      }
+    },
+    {
+      "schema_version": "1.1",
+      "transaction_id": "TX-prior-L-past-0",
+      "sleeper_transaction_id": "past-0",
+      "trade_dossier_url": "/trades/history/past-0",
+      "season": 2025,
+      "week": 1,
+      "type": "trade",
+      "status": "complete",
+      "occurred_at": "2025-09-01T12:00:00Z",
+      "roster_ids": [
+        1,
+        2
+      ],
+      "adds": {
+        "2": 2
+      },
+      "drops": {
+        "2": 1
+      },
+      "draft_picks": [
+        {
+          "owner_id": 1,
+          "previous_owner_id": 2,
+          "roster_id": 1,
+          "round": 1,
+          "season": "2028"
+        }
+      ],
+      "waiver_budget": [],
+      "malformed_consideration": false,
+      "incomplete_pick_identity": false,
+      "source": {
+        "provider": "Sleeper",
+        "source_league_id": "prior-L",
+        "source_record_id": "past-0",
+        "retrieved_at": null,
+        "observed_at": null,
+        "schema_version": "provider-cache-1",
+        "timestamp_provenance": {
+          "provider": "Sleeper",
+          "field": "created",
+          "raw_value": 1756728000000,
+          "normalized_utc": "2025-09-01T12:00:00Z"
+        },
+        "importer_version": "1.2",
+        "source_hash": "e8d81f715e46058d54707d7a5a023f3860241d2162418d5bffa22a1bd8b39752",
+        "availability": "observed"
+      },
+      "raw": {
+        "adds": {
+          "2": 2
+        },
+        "created": 1756728000000,
+        "draft_picks": [
+          {
+            "owner_id": 1,
+            "previous_owner_id": 2,
+            "roster_id": 1,
+            "round": 1,
+            "season": "2028"
+          }
+        ],
+        "drops": {
+          "2": 1
+        },
+        "roster_ids": [
+          1,
+          2
+        ],
+        "status": "complete",
+        "status_updated": 1756728001000,
+        "transaction_id": "past-0",
+        "type": "trade",
+        "source_league_id": "prior-L"
+      }
+    }
+  ],
+  "html_contains_recovered_transaction": true
+}
