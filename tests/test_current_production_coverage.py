@@ -1,4 +1,4 @@
-"""Current-season production uses canonical facts, never roster-history totals."""
+"""Non-Sleeper analysis remains separate from authoritative Sleeper results."""
 from pathlib import Path
 import tempfile
 import unittest
@@ -69,7 +69,7 @@ class CurrentProductionCoverageTests(unittest.TestCase):
     def test_ongoing_season_preserves_eight_observations_and_exact_denominator(self):
         with tempfile.TemporaryDirectory() as folder:
             result = prepared(Path(folder)/'facts.sqlite3')
-            row = result['players']['4984']['production']['windows'][3]
+            row = result['players']['4984']['non_sleeper_analysis']['windows'][3]
             self.assertEqual(row['fantasy_points'], 18)
             self.assertEqual((row['observation_count'], row['scored_count']), (8, 8))
             self.assertEqual(list(row['weeks']), list(range(1, 9)))
@@ -79,11 +79,11 @@ class CurrentProductionCoverageTests(unittest.TestCase):
     def test_partial_scoring_retains_coverage_and_names_the_actual_gap(self):
         with tempfile.TemporaryDirectory() as folder:
             result = prepared(Path(folder)/'facts.sqlite3', scoring={'pass_yd': .04, 'st_ff': 1})
-            row = result['players']['4984']['production']['windows'][3]
+            row = result['players']['4984']['non_sleeper_analysis']['windows'][3]
             self.assertIsNone(row['fantasy_points'])
             self.assertEqual((row['observation_count'], row['scored_count']), (8, 0))
             self.assertEqual(tuple(row['missing_components']), ('st_ff',))
-            self.assertIn('st_ff', ' '.join(result['players']['4984']['production']['limitations']))
+            self.assertIn('st_ff', ' '.join(result['players']['4984']['non_sleeper_analysis']['limitations']))
 
     def test_no_fake_bye_dnp_or_missing_week_zero_and_no_ownership_double_count(self):
         with tempfile.TemporaryDirectory() as folder:
@@ -91,30 +91,30 @@ class CurrentProductionCoverageTests(unittest.TestCase):
             a=prepared(path, weeks=(1, 3, 8))
             b=prepared(path, weeks=(1, 3, 8))
             self.assertEqual(a, b)
-            row=a['players']['4984']['production']['windows'][3]
+            row=a['players']['4984']['non_sleeper_analysis']['windows'][3]
             self.assertEqual(row['observation_count'], 3)
             self.assertEqual(tuple(row['weeks']), (1, 3, 8))
             self.assertEqual(row['fantasy_points'], 18)
 
     def test_window_adapter_old_cache_keeps_unknown_counts_and_new_cache_roundtrips(self):
-        from src.core.player_value_projection.canonical_production import prepared_production_context
+        from src.core.player_value_projection.canonical_production import prepared_analysis_context
         with tempfile.TemporaryDirectory() as folder:
             result=prepared(Path(folder)/'facts.sqlite3')
             import json
             restored=json.loads(json.dumps(result))
-            context=prepared_production_context(restored, league_id='A', player_id='4984')
+            context=prepared_analysis_context(restored, league_id='A', player_id='4984')
             self.assertEqual(context.windows[3].observation_count, 8)
             legacy=json.loads(json.dumps(result))
-            for row in legacy['players']['4984']['production']['windows']:
+            for row in legacy['players']['4984']['non_sleeper_analysis']['windows']:
                 for key in ('season','weeks','observation_count','scored_count','missing_components'):
                     row.pop(key,None)
             legacy['players']['4984'].pop('current_sample_count')
             legacy['players']['4984'].pop('previous_sample_count')
-            old=prepared_production_context(legacy, league_id='A', player_id='4984')
+            old=prepared_analysis_context(legacy, league_id='A', player_id='4984')
             self.assertIsNone(old.windows[3].observation_count)
             self.assertEqual(old.windows[3].fantasy_points, 18)
             with self.assertRaises(ValueError):
-                prepared_production_context(restored, league_id='other', player_id='4984')
+                prepared_analysis_context(restored, league_id='other', player_id='4984')
 
     def test_new_fields_do_not_change_reference_values_or_input_facts(self):
         with tempfile.TemporaryDirectory() as folder:
@@ -124,25 +124,25 @@ class CurrentProductionCoverageTests(unittest.TestCase):
             other=prepared(path, league='B', scoring={'pass_yd': .1})
             self.assertEqual(first['reference_generation'], other['reference_generation'])
             self.assertEqual(counts, GlobalEvidenceStore(path,readonly=True).counts())
-            self.assertEqual(other['players']['4984']['production']['windows'][3]['fantasy_points'],25)
+            self.assertEqual(other['players']['4984']['non_sleeper_analysis']['windows'][3]['fantasy_points'],25)
 
     def test_current_week_is_excluded_when_authoritative_context_supplies_the_boundary(self):
         with tempfile.TemporaryDirectory() as folder:
             value=prepared(Path(folder)/'facts.sqlite3', weeks=range(1, 10))
-            row=value['players']['4984']['production']['windows'][3]
+            row=value['players']['4984']['non_sleeper_analysis']['windows'][3]
             self.assertEqual(value['completed_week_boundary'], 8)
             self.assertEqual(row['observation_count'], 8)
             self.assertNotIn(9, row['weeks'])
-            self.assertIn('Current-week', ' '.join(value['players']['4984']['production']['limitations']))
+            self.assertIn('Current-week', ' '.join(value['players']['4984']['non_sleeper_analysis']['limitations']))
 
     def test_legacy_same_generation_sample_count_is_preserved_without_inventing_scored_count(self):
-        from src.core.player_value_projection.canonical_production import prepared_production_context
+        from src.core.player_value_projection.canonical_production import prepared_analysis_context
         with tempfile.TemporaryDirectory() as folder:
             value=prepared(Path(folder)/'facts.sqlite3', scoring={'pass_yd': .04, 'st_ff': 1})
-            for row in value['players']['4984']['production']['windows']:
+            for row in value['players']['4984']['non_sleeper_analysis']['windows']:
                 for key in ('observation_count','scored_count','weeks','missing_components'):
                     row.pop(key,None)
-            row=prepared_production_context(value,league_id='A',player_id='4984').windows[3]
+            row=prepared_analysis_context(value,league_id='A',player_id='4984').windows[3]
             self.assertEqual(row.observation_count,8)
             self.assertIsNone(row.scored_count)
             self.assertIsNone(row.fantasy_points)
@@ -197,6 +197,13 @@ class ProductionViewFixture:
         from src.core.valuation_intelligence.engine import _score_asset
         self.f.data['scoring_settings']=scoring
         value=prepared(self.path,league=self.f.data['league']['league_id'],scoring=scoring,player='1')
+        from tests.test_sleeper_actual_results import actual_data
+        from services.player_evidence import attach_sleeper_actuals
+        actual=actual_data(self.f.data['league']['league_id'],player='1',scoring=scoring,scores=(18,)*8)
+        self.f.data['league'].update(actual['league'])
+        self.f.data['week']=actual['week']
+        self.f.data['season_matchups']=actual['season_matchups']
+        attach_sleeper_actuals(self.f.data,value)
         self.f.data['canonical_player_production']=value
         universe=ValuationUniverse(self.f.data, self.f.state)
         self.f.data['valuation_intelligence']['assets']['player:1']=_score_asset(universe.by_id['player:1'],[],{},None)
@@ -204,6 +211,22 @@ class ProductionViewFixture:
         self.f.cache.clear()
         self.f.market=self.f.cache.get(self.f.data,self.f.state,self.f.history,self.f.data['league']['league_id'])
         return value
+
+    def republish_actuals(self):
+        from services.player_evidence import attach_sleeper_actuals
+        from src.core.valuation.universe import ValuationUniverse
+        from src.core.valuation_intelligence.engine import _score_asset
+        import hashlib
+        import json
+        source=self.f.data['season_matchups']
+        source['semantic_generation']=hashlib.sha256(json.dumps(source['weeks'],sort_keys=True).encode()).hexdigest()
+        value=self.f.data['canonical_player_production']
+        attach_sleeper_actuals(self.f.data,value)
+        universe=ValuationUniverse(self.f.data,self.f.state)
+        self.f.data['valuation_intelligence']['assets']['player:1']=_score_asset(universe.by_id['player:1'],[],{},None)
+        self.f.data['valuation_intelligence']['generated_at']=value['generation']
+        self.f.cache.clear()
+        self.f.market=self.f.cache.get(self.f.data,self.f.state,self.f.history,self.f.data['league']['league_id'])
 
     def api(self):
         return self.f.client.get('/api/market/assets/player:1').json()['valuation']['canonical_production']
@@ -215,18 +238,18 @@ class ProductionRenderedCoverageTests(unittest.TestCase):
         for path in ('/market?selected=player%3A1','/players/1?front_office=4'):
             response=f.f.client.get(path)
             self.assertEqual(response.status_code,200)
-            self.assertIn('8 of 8 observations',response.text)
-            self.assertIn('18.00 fantasy points per observed game',response.text)
+            self.assertIn('8 of 8 completed-week score observations',response.text)
+            self.assertIn('18.00 fantasy points per score observation',response.text)
             self.assertNotIn('This player context does not include a season production summary',response.text)
         self.assertEqual(f.api()['windows'][3]['fantasy_points'],18)
         f.set_scoring({'pass_yd':.04,'st_ff':1,'sack':1})
-        self.assertIsNone(f.api()['windows'][3]['fantasy_points'])
+        self.assertEqual(f.api()['windows'][3]['fantasy_points'],18)
         for path in ('/market?selected=player%3A1','/players/1?front_office=4'):
             response=f.f.client.get(path)
             self.assertEqual(response.status_code,200)
-            self.assertIn('0 of 8 observations',response.text)
-            self.assertIn('st_ff',response.text)
-            self.assertIn('average is withheld',response.text)
+            self.assertIn('8 of 8 completed-week score observations',response.text)
+            self.assertIn('18.00 fantasy points per score observation',response.text)
+            self.assertIn('Sleeper actual fantasy results',response.text)
 
     def test_failed_refresh_preserves_the_same_facts_and_changes_both_cached_explanations(self):
         f=ProductionViewFixture(self)
@@ -236,7 +259,7 @@ class ProductionRenderedCoverageTests(unittest.TestCase):
         for path in ('/market?selected=player%3A1','/players/1?front_office=4'):
             response=f.f.client.get(path)
             self.assertIn('league refresh did not complete',response.text)
-            self.assertIn('8 of 8 observations',response.text)
+            self.assertIn('8 of 8 completed-week score observations',response.text)
         self.assertEqual(f.api(),before)
 
     def test_actual_saved_cache_restoration_preserves_production_publication(self):
@@ -255,7 +278,7 @@ class ProductionRenderedCoverageTests(unittest.TestCase):
         f.f.cache.clear()
         f.f.market=f.f.cache.get(f.f.data,f.f.state,f.f.history,f.f.data['league']['league_id'])
         self.assertEqual(f.api(),original)
-        self.assertIn('8 of 8 observations',f.f.client.get('/players/1?front_office=4').text)
+        self.assertIn('8 of 8 completed-week score observations',f.f.client.get('/players/1?front_office=4').text)
 
     def test_scored_roster_history_never_substitutes_for_missing_canonical_points(self):
         from unittest.mock import patch
@@ -263,6 +286,11 @@ class ProductionRenderedCoverageTests(unittest.TestCase):
         # A synthetic roster-history total deliberately differs from canonical
         # production. It is presentation evidence, not the original Granite run.
         f=ProductionViewFixture(self,scoring={'pass_yd':.04,'st_ff':1})
+        from services.player_evidence import attach_sleeper_actuals
+        source=f.f.data['season_matchups']['weeks']['1']['rows'][0]
+        source['starters_points']=[999]
+        attach_sleeper_actuals(f.f.data,f.f.data['canonical_player_production'])
+        f.republish_actuals()
         from routes.transactions import historical_graph
         history=historical_graph(f.history,f.f.data['league']['league_id'],f.f.data).player_dossier('1')
         history['season_summaries']=[dict(season=2026,status='in_progress',games_observed=8,starts=8,
@@ -272,7 +300,7 @@ class ProductionRenderedCoverageTests(unittest.TestCase):
             response=f.f.client.get('/players/1?front_office=4')
         self.assertEqual(response.status_code,200)
         self.assertIn('183.82',response.text)
-        self.assertIn('average is withheld',response.text)
+        self.assertIn('are withheld because Sleeper score evidence',response.text)
         self.assertIsNone(f.api()['windows'][3]['fantasy_points'])
 
 
@@ -282,7 +310,7 @@ class ProductionPeriodControls(unittest.TestCase):
             value=prepared(Path(folder)/'facts.sqlite3',season=2025,
                 source_rows=[raw(w,season='2025') for w in range(1,9)])
             self.assertIsNone(value['completed_week_boundary'])
-            row=value['players']['4984']['production']['windows'][3]
+            row=value['players']['4984']['non_sleeper_analysis']['windows'][3]
             self.assertEqual(row['fantasy_points'],18)
             self.assertEqual(row['season'],2025)
             self.assertEqual(row['observation_count'],8)
@@ -290,7 +318,7 @@ class ProductionPeriodControls(unittest.TestCase):
     def test_current_absence_keeps_previous_production_separate(self):
         with tempfile.TemporaryDirectory() as folder:
             value=prepared(Path(folder)/'facts.sqlite3',source_rows=[raw(1,season='2025')])
-            rows=value['players']['4984']['production']['windows']
+            rows=value['players']['4984']['non_sleeper_analysis']['windows']
             self.assertIsNone(rows[3]['fantasy_points'])
             self.assertEqual(rows[3]['observation_count'],0)
             self.assertEqual(rows[4]['fantasy_points'],18)
@@ -340,10 +368,13 @@ class ProductionFreshSyncTests(unittest.IsolatedAsyncioTestCase):
             scoring={'pass_yd':.04,'pass_td':4,'pass_int':-2,'rush_yd':.1,'pts_allow_0':10,'sack':1,'unused':0}
             league=dict(league_id='2100000000000000999',name='Disposable source league',season='2026',
                 status='in_season',total_rosters=1,roster_positions=['QB','K','DEF','BN'],
-                settings={'leg':9,'draft_rounds':3},scoring_settings=scoring)
+                sport='nfl',settings={'leg':9,'last_scored_leg':8,'start_week':1,'playoff_week_start':15,'playoff_teams':6,'playoff_round_type':0,'playoff_type':0,'draft_rounds':3},scoring_settings=scoring)
             async def get(client,route):
                 if route=='/league/'+league['league_id']:
                     return league
+                if '/matchups/' in route:
+                    return [dict(roster_id=1,matchup_id=1,players=['1'],starters=['1'],
+                        players_points={'1':15.4321},starters_points=[15.4321],points=15.4321)]
                 if route.endswith('/users'):
                     return [dict(user_id='fixture-owner',display_name='Fixture')]
                 if route.endswith('/rosters'):
@@ -377,8 +408,12 @@ class ProductionFreshSyncTests(unittest.IsolatedAsyncioTestCase):
                 await sleeper.sync_sleeper_league(league['league_id'],state,projections=projection)
                 self.assertIsNone(state['last_error'])
                 prepare_call.assert_called_once()
-                row=state['data']['canonical_player_production']['players']['1']['production']['windows'][3]
+                row=state['data']['canonical_player_production']['players']['1']['non_sleeper_analysis']['windows'][3]
                 self.assertEqual((row['fantasy_points'],row['observation_count']),(18,8))
+                from src.core.player_value_projection.canonical_production import prepared_production_context
+                actual=prepared_production_context(state['data']['canonical_player_production'],league_id=league['league_id'],player_id='1',data=state['data'])
+                self.assertEqual(actual.windows[3].fantasy_points,15.4321)
+                self.assertEqual(actual.windows[3].observation_count,8)
                 self.assertEqual(state['preparation_state'],'ready')
                 self.assertTrue((Path(folder)/'cache.json').exists())
                 restored={}
@@ -393,7 +428,7 @@ class ProductionPublishedConfigurationTests(unittest.TestCase):
         for league in configs:
             with self.subTest(league=league['name']),tempfile.TemporaryDirectory() as folder:
                 value=prepared(Path(folder)/'facts.sqlite3',league=league['league_id'],scoring=league['scoring_settings'])
-                window=value['players']['4984']['production']['windows'][3]
+                window=value['players']['4984']['non_sleeper_analysis']['windows'][3]
                 self.assertEqual(window['observation_count'],8)
                 self.assertIsNone(window['fantasy_points'])
                 missing=set(window['missing_components'])
@@ -426,9 +461,9 @@ class ProductionFreshnessControls(unittest.TestCase):
             data={'league':{'league_id':'A','season':2026},'nfl_state':{'season':'2026','week':9},
                   'players':{'4984':{}},'scoring_settings':{'pass_yd':.04}}
             report=canonical_player_evidence('4984',data,expected_league_id='A',path=path,as_of='2026-11-06T00:00:00Z')
-            self.assertEqual(report['availability_detail']['reason'],'retained_evidence_not_current')
+            self.assertEqual(report['analysis_availability_detail']['reason'],'retained_evidence_not_current')
             self.assertIn('latest_source_check_failed',report['limitations'])
-            self.assertEqual(report['production']['ppg'],10)
+            self.assertEqual(report['non_sleeper_analysis']['ppg'],10)
 
     def test_source_failure_qualification_reaches_both_views_without_erasing_values(self):
         f=ProductionViewFixture(self)
@@ -440,5 +475,6 @@ class ProductionFreshnessControls(unittest.TestCase):
         self.assertEqual(f.api()['windows'][3],before)
         for path in ('/market?selected=player%3A1','/players/1?front_office=4'):
             text=f.f.client.get(path).text
-            self.assertIn('Latest canonical production source check is partial',text)
-            self.assertIn('8 of 8 observations',text)
+            self.assertNotIn('Latest canonical production source check is partial',text)
+            self.assertIn('Sleeper actual fantasy results',text)
+            self.assertIn('8 of 8 completed-week score observations',text)

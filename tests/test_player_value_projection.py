@@ -48,13 +48,14 @@ class PlayerValueProjectionTests(unittest.TestCase):
         self.assertIsNone(projection.floor)
         self.assertIsNone(projection.ceiling)
 
-    def test_production_cached_and_unavailable_states_are_distinct(self) -> None:
+    def test_unscoped_cached_stats_cannot_claim_sleeper_authority(self) -> None:
         provider = CachedProductionProvider()
         cached = provider.production({"recent_points": [10, 12, 18], "season_average": 13})
         unavailable = provider.production({})
-        self.assertEqual(cached.status, DataStatus.CACHED)
+        self.assertEqual(cached.status, DataStatus.UNAVAILABLE)
         self.assertEqual(unavailable.status, DataStatus.UNAVAILABLE)
-        self.assertIsNotNone(cached.volatility)
+        self.assertIsNone(cached.volatility)
+        self.assertFalse(cached.windows)
         self.assertTrue(unavailable.limitations)
 
     def test_unified_profiles_keep_internal_and_market_values_separate(self) -> None:

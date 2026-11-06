@@ -251,11 +251,12 @@ class ValuationUniverse:
         }
         report = None
         if active:
+            from src.core.player_value_projection.canonical_production import bound_production_snapshot
             context = AssetContext(
                 str((self.data.get("league") or {}).get("league_id") or "unknown"),
                 int((owner or {}).get("roster_id") or 0),
                 {},  # Global intrinsic quality does not depend on the selected league.
-                canonical_production=self.data.get("canonical_player_production"),
+                canonical_production=bound_production_snapshot(self.data),
                 canonical_projection=self.data.get("projection_intelligence"),
             )
             report = evaluate_player(player, context)
@@ -305,7 +306,7 @@ class ValuationUniverse:
             from dataclasses import asdict
             production = prepared_production_context(
                 prepared, league_id=str((self.data.get("league") or {}).get("league_id") or ""),
-                player_id=player_id,
+                player_id=player_id, data=self.data,
             )
             production_context = asdict(production)
             from src.core.valuation.player_methodology import assess_prepared_intrinsic
@@ -328,10 +329,10 @@ class ValuationUniverse:
             season_window = next((window for window in production.windows if window.label == "Season Average"), None)
             points = season_window.fantasy_points if season_window is not None else None
             layers["current_production_value"] = _layer(
-                points, "Canonical current-season PPG · selected league scoring", self.generated_at,
-                reason=('Missing applicable scoring components: ' + ', '.join(season_window.missing_components)
+                points, "Sleeper actual points per completed-week score observation", self.generated_at,
+                reason=('Unresolved Sleeper score evidence: ' + ', '.join(season_window.missing_components)
                         if season_window is not None and season_window.missing_components else
-                        'Current-season complete scoring evidence is unavailable; previous seasons are not substituted.'),
+                        'Compatible completed-week Sleeper score observations are unavailable; previous seasons are not substituted.'),
             )
         name = player.get("name") or player.get("full_name") or " ".join(filter(None, (player.get("first_name"), player.get("last_name")))) or player_id
         return {

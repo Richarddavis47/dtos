@@ -88,6 +88,8 @@ class PregameDeskTests(unittest.TestCase):
         rows[0]['points'], rows[1]['points'] = 10, 20
         rows[0]['starters_points'] = [10]
         rows[1]['starters_points'] = [20]
+        rows[0]['players_points']['1'] = 10
+        rows[1]['players_points']['2'] = 20
         result = postgame_desk(data, 1, 1)
         self.assertEqual(result['weekly_winner'], 2)
         self.assertEqual(result['contributors'][0]['actual'], 10)

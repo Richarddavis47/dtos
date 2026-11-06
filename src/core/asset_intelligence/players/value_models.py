@@ -16,14 +16,14 @@ def canonical_evidence(profile: PlayerProfile, context: AssetContext | None) -> 
             window = next((row for row in production.windows if row.label == label), None)
             value = window.fantasy_points if window is not None else None
             rows.append(Evidence(label, str(value) if value is not None else "Unavailable", 0,
-                "Canonical NFL game evidence scored under the selected league rules; previous seasons are not current production.",
+                "Sleeper actual score observations in the selected league; not games played or a full-season total. Previous seasons are separate.",
                 production.source, value is not None))
-        window = next((row for row in production.windows if row.label == "Season Average"), None)
-        for label, value in (("Targets per game", window.targets if window else None),
-                             ("Carries per game", window.carries if window else None)):
+        window = next((row for row in production.usage_analysis if row["label"] == "Season Average"), {})
+        for label, value in (("NFLverse targets per observed game", window.get("targets")),
+                             ("NFLverse carries per observed game", window.get("carries"))):
             rows.append(Evidence(label, str(value) if value is not None else "Unavailable", 0,
-                "Derived from the same canonical production records; missing usage is not zero.",
-                production.source, value is not None))
+                "Non-Sleeper usage analysis is separate from Sleeper fantasy results; missing usage is not zero.",
+                "NFLverse usage analysis", value is not None))
     else:
         rows.append(Evidence("Canonical production", "Not prepared", 0,
             "Canonical production has not been prepared for this context.", "Canonical evidence", False))

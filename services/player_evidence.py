@@ -19,7 +19,7 @@ from src.core.data_platform.global_evidence import utc
 from src.core.data_platform.global_production import GlobalProduction
 from src.core.player_value_projection.canonical_production import canonical_production_context
 
-PRODUCTION_ADAPTER_VERSION = "canonical-production-v4"
+PRODUCTION_ADAPTER_VERSION = "canonical-production-v5-sleeper-actuals"
 REFERENCE_SCORING_SETTINGS = {"pass_yd": .04, "pass_td": 4, "pass_int": -2,
     "rush_yd": .1, "rush_td": 6, "rec": 1, "rec_yd": .1, "rec_td": 6, "fum_lost": -2}
 
@@ -109,7 +109,7 @@ def prepare_player_production(data: dict[str, Any], *, expected_league_id: str,
                     {**game, **GlobalProduction.score_game(game['raw_stats'], REFERENCE_SCORING_SETTINGS)}
                     for game in periods[year]['production']['games']]}} for year in periods}
             result['players'][player_id] = {
-                'production': asdict(profile),
+                'non_sleeper_analysis': asdict(profile),
                 'reference_production': asdict(canonical_production_context(reference_periods[season], reference_periods[season - 1])),
                 'current_sample_count': len(periods[season]['production']['games']),
                 'previous_sample_count': len(periods[season - 1]['production']['games']),
@@ -119,16 +119,49 @@ def prepare_player_production(data: dict[str, Any], *, expected_league_id: str,
     # Empty players use one immutable-by-contract template in memory. No legacy
     # player dictionary can silently fill a missing canonical season.
     empty = context('unavailable')
-    missing = {'production': asdict(canonical_production_context(empty[season], empty[season - 1])),
+    missing = {'non_sleeper_analysis': asdict(canonical_production_context(empty[season], empty[season - 1])),
                'current_sample_count': 0, 'previous_sample_count': 0, 'reference_seasons': []}
-    missing['reference_production'] = missing['production']
+    missing['reference_production'] = missing['non_sleeper_analysis']
     for player_id in ids:
         result['players'].setdefault(player_id, missing)
     digest.update(result['availability'].encode())
     result['generation'] = digest.hexdigest()
     reference_digest.update(result['availability'].encode())
     result['reference_generation'] = reference_digest.hexdigest()
+    attach_sleeper_actuals(data, result)
     return result
+
+
+def attach_sleeper_actuals(data: dict, result: dict) -> None:
+    """Existing atomic publication/restoration only; no provider IO or scoring."""
+    from src.core.player_value_projection.sleeper_actuals import prepare_actual_results
+    actuals = prepare_actual_results(data, expected_league_id=result['league_id'])
+    result['sleeper_actuals'] = actuals
+    result.setdefault('non_sleeper_analysis_availability', result.get('availability', 'unavailable'))
+    result['availability'] = actuals['availability']
+    result['scoring_basis'] = 'explicit_sleeper_league_matchup_results_not_reconstructed'
+    result['generation'] = hashlib.sha256(json.dumps([
+        result.get('reference_generation'), actuals['generation']], separators=(',', ':')).encode()).hexdigest()
+    # Rebind only the actual-results disclosure in an existing cached Brain
+    # report. Do not recompute prices, advice, confidence or historical grades.
+    # This runs at publication/restoration, never in a page handler.
+    report = data.get('valuation_intelligence') or {}
+    assets = report.get('assets') or {}
+    if assets:
+        from src.core.player_value_projection.canonical_production import prepared_production_context
+        from src.core.valuation_intelligence.engine import asset_market_input_revision, _semantic_digest
+        for asset_id, asset in assets.items():
+            if str(asset_id).startswith('player:') and isinstance(asset, dict):
+                asset['canonical_production'] = asdict(prepared_production_context(result,
+                    league_id=result['league_id'], player_id=str(asset_id).removeprefix('player:'), data=data))
+        report['actual_results_binding'] = {'method': actuals['method_version'],
+            'generation': actuals['generation'], 'source_generation': actuals['source_generation'],
+            'qualification': 'Result disclosure rebound from retained Sleeper rows; other cached model assessments are not revalidated.'}
+        manifest = report.setdefault('input_manifest', {})
+        manifest['canonical_production'] = {'semantic_digest': _semantic_digest({'generation': result['generation']}),
+            'record_count': 0, 'input_keys': ['canonical_player_production']}
+        data['asset_market_semantic_revision'] = asset_market_input_revision(report.get('semantic_generation'), manifest)
+
 
 
 def _reference_summary(year: int, games: list[dict[str, Any]]) -> dict[str, Any]:

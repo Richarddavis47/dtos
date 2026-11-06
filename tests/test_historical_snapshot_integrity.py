@@ -28,6 +28,8 @@ class HistoricalSnapshotIntegrityTests(unittest.TestCase):
             for side in facts['matchups']['5']:
                 if '11563' in side['players_points']:
                     side['players_points']['11563'] = score
+                    if '11563' in side.get('starters', []):
+                        side['starters_points'][side['starters'].index('11563')] = score
         return data, self.cache.normalize(data['league']['league_id'], 2026, facts)
 
     def test_repeated_actual_publication_replacement_never_mixes_facts_and_checksum(self):
@@ -135,7 +137,7 @@ class HistoricalSnapshotIntegrityTests(unittest.TestCase):
                 with self.http(data) as client:
                     response = client.get('/history/player/11563')
                 self.assertEqual(response.status_code, 200)
-                self.assertIn(f'{float(score)} points', response.text.replace('</b>', ''))
+                self.assertIn(f'{float(score)} observed points', response.text.replace('</b>', ''))
                 self.assertNotIn('None', response.text)
                 self.assertNotIn('Historical scoring unavailable for this season', response.text)
                 if score == 0:

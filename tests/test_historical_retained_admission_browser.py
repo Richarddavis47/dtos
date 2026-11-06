@@ -43,6 +43,10 @@ class HistoricalRetainedAdmissionBrowserTests(unittest.TestCase):
                             for side in current_source['week5']:
                                 if '11563' in side['players_points']:
                                     side['players_points']['11563'] = 0
+                                    # This is a coherent explicit-zero control;
+                                    # ordered source evidence must agree too.
+                                    if '11563' in side.get('starters', []):
+                                        side['starters_points'][side['starters'].index('11563')] = 0
                         fixture.retained(data, current_source, future=case != 'zero_scoring')
                         if case == 'missing_scoring':
                             data['league']['scoring_settings'] = data['scoring_settings'] = {}
@@ -73,7 +77,7 @@ class HistoricalRetainedAdmissionBrowserTests(unittest.TestCase):
                             if case == 'supported':
                                 self.assertIn(f'{expected} points', text)
                             elif case == 'zero_scoring':
-                                self.assertIn('0.0 points · 0.0 PPG', text)
+                                self.assertIn('0.0 observed points · 0.0 points per score observation', text)
                                 self.assertIn('Consistency Unavailable', text)
                             else:
                                 self.assertNotIn(f'{expected} points', text)

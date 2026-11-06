@@ -1,3 +1,9 @@
+# DTOS v1.22.19 / build 2234
+
+- Use explicit league-scoped Sleeper matchup scores for actual fantasy-result summaries, dossier/Market production and Trade facts; keep NFLverse usage and fixed-reference valuation analysis separate.
+- Preserve exact zero, negative and source-precision results; disclose conflicting fields, missing coverage, live weeks, last-valid reads and corrected scores without inventing games played.
+- Reuse admitted atomic publications and cache restoration; preserve Sleeper projections, submitted lineups, Trade qualification, pricing and memory reserves.
+
 # v1.22.18 / build 2233 — Current-season canonical production coverage
 
 Canonical player production now excludes zero-weight and individual-inapplicable team-defense scoring requirements, retains supported kicking/return source fields, and preserves genuinely missing applicable statistics. Completed-week windows use the selected league scoring and authoritative NFL week; unsupported totals remain withheld. Existing historical scoring, reference valuation mathematics, forward projections and Trade qualification are unchanged.

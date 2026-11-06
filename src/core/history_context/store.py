@@ -556,15 +556,16 @@ class CanonicalHistoryStore:
         starters = set(map(str, raw_starters)) if known_roles else set()
         roster_id = int(row.get("roster_id") or 0)
         for player_id in sorted(membership - {"0", "", "None"}):
-            from .results import number
-            score = number(points.get(player_id))
+            from src.core.player_value_projection.sleeper_actuals import resolve_score
+            resolved = resolve_score(row, player_id)
+            score = resolved["points"]
             source_score = score
             if context is not None and not context.get('scoring_settings'):
                 score = None
             rows.append(self._record(
                 league_id, season, "player_week",
                 f"{week}:{roster_id}:{player_id}",
-                {"fantasy_points": score, "points": score,
+                {"fantasy_points": score, "points": score, "score_reason": resolved["reason"],
                  "starter": str(player_id) in starters if known_roles else None,
                  "lineup_role_source": "Sleeper explicit starters" if known_roles else "unavailable",
                  "roster_id": roster_id,

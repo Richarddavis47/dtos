@@ -474,7 +474,7 @@ def create_transactions_router(
         from src.core.player_value_projection.canonical_production import prepared_production_context
         from src.ui.canonical_production import production_panel, production_summary
         canonical = data.get('canonical_player_production')
-        production = (asdict(prepared_production_context(canonical, league_id=selected_league, player_id=player_id))
+        production = (asdict(prepared_production_context(canonical, league_id=selected_league, player_id=player_id, data=data))
                       if canonical else None)
         if production_summary(production):
             reasons['production'] = production_summary(production)

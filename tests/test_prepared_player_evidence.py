@@ -6,7 +6,7 @@ from pathlib import Path
 from services.player_evidence import prepare_player_production
 from src.core.data_platform.global_evidence import GlobalEvidenceStore
 from tests.test_player_production_stream import fact
-from src.core.player_value_projection.canonical_production import prepared_production_context
+from src.core.player_value_projection.canonical_production import prepared_analysis_context
 
 
 class PreparedPlayerEvidenceTests(unittest.TestCase):
@@ -22,18 +22,19 @@ class PreparedPlayerEvidenceTests(unittest.TestCase):
         self.assertTrue(next(item for item in supported['categories'] if item['name'] == 'Projection')['available'])
 
     def test_universe_and_brain_read_same_prepared_production(self):
-        from dataclasses import asdict
-        from src.core.player_value_projection.canonical_production import canonical_production_context
         from src.core.valuation.universe import ValuationUniverse
         from src.core.valuation_intelligence import build_valuation_intelligence
-        from tests.test_canonical_production_context import evidence
         from tests.test_trade_intelligence import fixture_data
+        from tests.test_sleeper_actual_results import actual_data, publish
         data = fixture_data()
         player_id = next(iter(data['players']))
-        data['players'][player_id]['fantasy_points'] = 999  # Legacy field must not win.
-        data['canonical_player_production'] = {'league_id': data['league']['league_id'],
-            'generation': 'production-v1', 'players': {player_id: {'production': asdict(
-                canonical_production_context(evidence([12, 14])) )}}}
+        data['players'][player_id]['fantasy_points'] = 999  # Unscoped value cannot win.
+        source=actual_data(data['league']['league_id'],player=player_id,scores=(12,14))
+        data['league'].update(source['league'])
+        data['week']=source['week']
+        data['scoring_settings']=source['scoring_settings']
+        data['season_matchups']=source['season_matchups']
+        publish(data)
         universe = ValuationUniverse(data, {})
         asset = universe.by_id[player_id]
         self.assertEqual(asset['layers']['current_production_value']['value'], 13)
@@ -44,22 +45,27 @@ class PreparedPlayerEvidenceTests(unittest.TestCase):
 
     def test_orchestrator_consumes_prepared_evidence_and_invalidates_generation(self):
         from copy import deepcopy
-        from dataclasses import asdict
         from src.core.intelligence import IntelligenceCache, IntelligenceOrchestrator, IntelligenceRegistry
-        from src.core.player_value_projection.canonical_production import canonical_production_context
-        from tests.test_canonical_production_context import evidence
         from tests.test_trade_intelligence import fixture_data
+        from tests.test_sleeper_actual_results import actual_data, publish
         data = fixture_data()
         player_id = data['teams'][0]['players'][0]['id']
-        snapshot = {'league_id': data['league']['league_id'], 'generation': 'first',
-                    'players': {player_id: {'production': asdict(canonical_production_context(evidence([13])))}}}
-        data['canonical_player_production'] = snapshot
+        source=actual_data(data['league']['league_id'],player=player_id,scores=(13,))
+        data['league'].update(source['league'])
+        data['week']=source['week']
+        data['scoring_settings']=source['scoring_settings']
+        data['season_matchups']=source['season_matchups']
+        snapshot=publish(data)
         engine = IntelligenceOrchestrator(IntelligenceRegistry(), IntelligenceCache())
         first = engine.analyze(data, 1)
         self.assertEqual(first.player_values[player_id].production.windows[3].fantasy_points, 13)
         data['canonical_player_production'] = deepcopy(snapshot)
         data['canonical_player_production']['generation'] = 'second'
-        data['canonical_player_production']['players'][player_id]['production'] = asdict(canonical_production_context(evidence([14])))
+        raw=data['season_matchups']['weeks']['1']['rows'][0]
+        raw['players_points'][player_id]=14
+        raw['starters_points']=[14]
+        data['season_matchups']['semantic_generation']='second'
+        publish(data)
         second = engine.analyze(data, 1)
         self.assertEqual(second.player_values[player_id].production.windows[3].fantasy_points, 14)
         self.assertNotEqual(first.context.evidence_generation, second.context.evidence_generation)
@@ -76,17 +82,17 @@ class PreparedPlayerEvidenceTests(unittest.TestCase):
             before = path.stat().st_size
             second = prepare_player_production(data, expected_league_id='A', as_of='2025-09-04T00:00:00Z', path=path)
             self.assertEqual(first, second)
-            self.assertEqual(first['players']['1']['production']['windows'][3]['fantasy_points'], 5)
-            consumed = prepared_production_context(first, league_id='A', player_id='1')
+            self.assertEqual(first['players']['1']['non_sleeper_analysis']['windows'][3]['fantasy_points'], 5)
+            consumed = prepared_analysis_context(first, league_id='A', player_id='1')
             self.assertEqual(consumed.windows[3].fantasy_points, 5)
             with self.assertRaises(ValueError):
-                prepared_production_context(first, league_id='B', player_id='1')
-            self.assertIsNone(first['players']['2']['production']['windows'][3]['fantasy_points'])
+                prepared_analysis_context(first, league_id='B', player_id='1')
+            self.assertIsNone(first['players']['2']['non_sleeper_analysis']['windows'][3]['fantasy_points'])
             self.assertEqual(path.stat().st_size, before)
             data['league']['league_id'] = 'B'
             data['scoring_settings'] = {'rec': .5}
             other = prepare_player_production(data, expected_league_id='B', as_of='2025-09-04T00:00:00Z', path=path)
-            self.assertEqual(other['players']['1']['production']['windows'][3]['fantasy_points'], 2.5)
+            self.assertEqual(other['players']['1']['non_sleeper_analysis']['windows'][3]['fantasy_points'], 2.5)
             self.assertNotEqual(other['generation'], first['generation'])
             self.assertEqual(store.counts(), {'production': 1})
             store.publish([fact('1', 6)], retrieved_at='2025-09-05T00:00:00Z')
@@ -102,7 +108,8 @@ class PreparedPlayerEvidenceTests(unittest.TestCase):
                     'scoring_settings': {'rec': 1}}
             result = prepare_player_production(data, expected_league_id='A', as_of='2026-09-01T00:00:00Z', path=path)
             self.assertFalse(path.exists())
-            self.assertEqual(result['availability'], 'not_connected')
+            self.assertEqual(result['non_sleeper_analysis_availability'], 'not_connected')
+            self.assertEqual(result['availability'], 'unavailable')
             self.assertEqual(result['provider_calls'], 0)
 
     def test_context_mismatch_rejected(self):

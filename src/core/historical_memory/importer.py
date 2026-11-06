@@ -451,7 +451,8 @@ class HistoricalImporter:
                     "outcome": "requires opponent pairing",
                 }, week=week, franchise_id=franchise_id)
                 for player_id in players:
-                    points = player_points.get(player_id)
+                    from src.core.player_value_projection.sleeper_actuals import resolve_score
+                    points = resolve_score(matchup, player_id)["points"]
                     append("player_week", f"{week}:{roster_id}:{player_id}", {
                         "fantasy_points": float(points) if points is not None else None,
                         "actual_league_scored_points": float(points) if points is not None else None,

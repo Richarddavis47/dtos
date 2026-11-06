@@ -1,5 +1,6 @@
 """Season navigation and disclosure over prepared matchup evidence."""
 from html import escape
+from src.core.player_value_projection.sleeper_actuals import actual_display
 from urllib.parse import urlencode
 
 
@@ -23,7 +24,7 @@ def render_desk(desk):
     else:
         for row in desk.get('contributors', []):
             players = ', '.join(escape(pid) for pid in row['player_ids'])
-            content += f'<p>Roster {row["roster_id"]}: leading submitted-player score {_points(row["actual"])} · player IDs {players}.</p>'
+            content += f'<p>Roster {row["roster_id"]}: leading submitted-player score {actual_display(row["actual"])} · player IDs {players}.</p>'
         content += '<p>Historical legal bench alternatives and pregame expectations are unavailable here; no lineup-mistake or projected-upset claim is made.</p>'
     banter = desk.get('smack_talk')
     if banter:
@@ -84,7 +85,7 @@ def _player_cell(player, week, identity, state, *, starter=False, team_label='')
     qualification = f'<small>{escape(player["projection_display_reason"])}</small>' if player.get('projection_display_reason') else ''
     if player.get('participation_note'):
         qualification += f'<small>{escape(player["participation_note"])}</small>'
-    actual = '' if state == 'pregame' else f'<span><small>Actual</small><b>{_points(player["actual"])}</b></span>'
+    actual = '' if state == 'pregame' else f'<span><small>Actual</small><b>{actual_display(player["actual"])}</b></span>'
     label = 'Pregame projection · Sleeper' if player['projection'] is not None else 'Projection unavailable'
     side_label = f'<small class="matchup-side-label">{escape(team_label)}</small>' if team_label else ''
     return (f'<div class="matchup-player{" battle-side" if starter else ""}">{side_label}{content}<div class="matchup-player-points">'
@@ -158,7 +159,7 @@ def render_season_week(view: dict, *, matchup_id: str | None = None) -> str:
                     comparison = leader + (' wins the round' if view['round_complete'] and view['round_weeks'] else ' leads this component week' if view['round_weeks'] and state == 'final' else ' has the projected edge' if state == 'pregame' else ' wins' if state == 'final' else ' leads')
         blocks = []
         for side in sides:
-            actual = f'<span class="matchup-score"><small>{"Final score" if state == "final" else "Actual score"}</small><b>{_points(side["actual"])}</b></span>' if state != 'pregame' else ''
+            actual = f'<span class="matchup-score"><small>{"Final score" if state == "final" else "Actual score"}</small><b>{actual_display(side["actual"])}</b></span>' if state != 'pregame' else ''
             projected = '<span class="matchup-projected"><small>Pregame projection · Sleeper submitted</small><b>' + _points(side['projection']) + '</b></span>'
             if view['period'] == 'historical':
                 projected = '<small>Historical pregame projection: Unavailable</small>'
