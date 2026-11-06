@@ -1,0 +1,33 @@
+# Commands and method index
+
+This is a new index of actual retained commands/logs, not reconstructed console output. Application candidate:4fb702964b34d84a593fb917b5e654b9b8ff0adf/tree4051883efb1f225dcd71e07f1998e45c9d96fb39; baseline8af490880bb59b357b0e5fa82575cfa164401b07/tree81e9a223be2f05aa7dbe556b99eaabcbb492b5c9. The original b743 source and patch remain separate.
+
+All constrained invocations use run-constrained.py: pinned Python3.14.3 image sha256:2c9de92bf8e05a79587f6edba94052cf614c984a5cb81a62613871388cd6533e,UID1000,actual --memory=2g,--memory-swap=2g,--cpus=2,--network=none. Existing runtime-layer location is a session-specific implementation detail; this is not a portable image bundle. Full source, pinned Dockerfiles/requirements and exact harness/method scripts are available for review.
+
+## Final focused and resource controls
+
+- python run-constrained.py -m unittest -v tests.test_cache_json tests.test_cache_restoration_admission tests.test_restoration_unused_memory tests.test_sleeper_actual_restoration tests.test_fois_navigation_reliability.WorkerTimeoutReliabilityTests tests.test_league_entry_coordination → focused-final-exact.log,63tests.
+- python run-constrained.py -m tools.validation.restoration_preflight_gate --output /evidence/local-preflight,with DTOS_EXPECTED_HEAD set to the exact candidate → local-preflight.log,5cases.
+- python run-constrained.py -m tools.validation.restoration_unused_memory --archive /prior/Granite-cache-restoration-memory-profile.zip --output /evidence/native-resource-final --native-actuals,with exact expected head → native-resource-final.log. Original archive SHA df5c88eda13a0671104c76a943b05032d7adfa089d11e738785b11e35a932439.
+- python run-constrained.py /evidence/build-fixture.py → fixture-build.log and fixture-metadata.json. Reuses sealed synthetic inputs, real normalization/native preparation/binding; no size padding or production source acquisition.
+- python run-constrained.py /evidence/diverse-fixture.py and unicode-fixture.py → explicit sensitivity fixtures, exact metadata/SHA files.
+- python run-constrained.py /evidence/profile-combined.py --mode candidate --fixture oneqb --output-label kernel-final --owned-cache; matched --mode plain --output-label kernel-standard. Repeat for superflex; oneqb-diverse and oneqb-unicode additionally use --league-id oneqb-rich. Candidate uses its real shared decoder; the standard control substitutes only json.load in the same admitted path. No policy/telemetry/lease mocking. profile-*-kernel-*.log/JSON are primary.
+- profile-combined.py captures the kernel high-water counter immediately before/after the complete restore/binding/projection/consumer-publication operation, before separate graph/digest work. A new peak must exceed the prior kernel counter. The --owned-cache case streams/fsyncs an exact fixture copy inside the container before its baseline sample, keeping charged file pages visible. No cache clearing occurs. Initial bind-mounted and5ms sampled captures remain separate and have explicit limitations; the Unicode case shows why sampling alone can miss C-decoder transients.
+- python run-constrained.py /evidence/warm-cycles.py → warm-cycles-final.log and warm-cycles-candidate.json,threeclose/reopen cycles with a second warm league. Original old-tree capture retained separately.
+- python run-constrained.py /evidence/verify-memory.py → cache-memory-verification.log and cache-memory-verified.json. Reads existing captures and replays supplied historical inputs with the real unchanged pure guard; it does not create a fresh production snapshot.
+- python run-constrained.py /evidence/verify-complete-payload.py → complete-payload-verification.log,complete-payload-verified.json. Separate all-field JSON equivalence, not part of the lifecycle peak.
+- Ruff --no-cache on the changed application/test/tool files → lint-final-exact.log. All lint rules remain enabled.
+
+## Mandatory canonical validation
+
+python run-clean-final.py runs the unchanged canonical runner/observer and python -m tools.validation.validate_release in the exact clean writable source checkout under the same2GiB/no-swap/two-CPU/offline limits, asUID1000. The8GiB initial scratch guard and4200s child budget remain unchanged. Actual command/image/source are in invocation-final.json. canonical-final-console.log is the wrapper log; local-canonical/unittest-console.log is the complete original regression console; readable-console parts reconstruct it byte-for-byte. result.json,ten-gate trace,per-test JSONL,memory samples,manifest and SHA256SUMS are original evidence. Earlier compile/setup/cancelled attempts are separately indexed in the prior archive.
+
+Hosted final runs:canonical42293956827,Product42293956858,tooling42293956820,Linux lifecycle42293956792. Original ZIPs are downloaded through standard authorized GitHub artifact access and checked against API digest/size plus CRC. verify-product-artifacts.py and verify-lifecycle.py reuse the existing native semantic verifiers. Full hosted/local canonical verification additionally checks4250start/stop events,console success,all ten completed gates and every manifest byte. Product757count corroboration comes from the connector-decoded job; original raw Product/prior job bytes are retained by the authorized Actions publisher.
+
+## Release tooling
+
+The tooling-only publisher branch is based on unchanged production8af4908. It contains only the established eight allowed workflow/plan/archive/README/publisher/test paths and is never merged into application main. Scoped49publisher tests run under the production Python runtime; Ruff is unchanged. Separate host Python compilation checks portability. The existing native Actions GITHUB_TOKEN performs preparation/upload/readback, normal expected-head PR merge happens only after all final gates pass, and publication rechecks the same frozen publisher source,merged tree and all attachment hashes. No direct Cloud asset upload is attempted. The exact publisher commit/run IDs and deployment receipt are recorded after execution.
+
+## Production access boundary
+
+Initial baseline readiness/guest smoke summary is in production-baseline.log. pre-release-baseline-check.json is a separate new public readiness observation. This session has no Render Shell/SSH executor or associated authenticated browser runtime. Main Chat's Render-local token200 and historical Granite preflight remain supplied evidence. No external401retry,private cache decoding,production entry,provider sync,FOIS rebuild,Trade search,manual restart or user-setting mutation occurs. Complete Render-local conditional verification instructions are in SCOUT_HANDOFF.md.

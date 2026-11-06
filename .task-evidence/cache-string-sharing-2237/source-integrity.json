@@ -1,0 +1,81 @@
+{
+  "candidate": "4fb702964b34d84a593fb917b5e654b9b8ff0adf",
+  "tree": "4051883efb1f225dcd71e07f1998e45c9d96fb39",
+  "baseline": "8af490880bb59b357b0e5fa82575cfa164401b07",
+  "baseline_tree": "81e9a223be2f05aa7dbe556b99eaabcbb492b5c9",
+  "version": "v1.22.22",
+  "build": 2237,
+  "branch": "fix/bounded-cache-string-sharing",
+  "changed_files": [
+    "CHANGELOG.md",
+    "RELEASE_NOTES.md",
+    "app_metadata.py",
+    "docs/audits/CACHE_STRING_SHARING_2237.md",
+    "services/league_preparation.py",
+    "services/sleeper.py",
+    "src/platform/cache_json.py",
+    "tests/test_cache_json.py",
+    "tests/test_cache_restoration_admission.py",
+    "tests/test_league_entry_coordination.py",
+    "tests/test_restoration_unused_memory.py",
+    "tools/validation/restoration_preflight_gate.py"
+  ],
+  "protected_modules": [
+    {
+      "name": "src/platform/cache_restoration_admission.py",
+      "sha256": "eab12d1ebc43200bb170f79e7bb5cda26d6ea8a189f4554cfff7d09b31eeaa8c",
+      "unchanged": true
+    },
+    {
+      "name": "src/platform/fois_admission.py",
+      "sha256": "6a0423b28d3d6fbc06a8e81743c1716bfc7faa882a991ee7062c0e41fdc6153c",
+      "unchanged": true
+    },
+    {
+      "name": "src/platform/trade_execution.py",
+      "sha256": "33770da271074e687bece29735db28b9e565d85205ec5981443b9d6db8a7f38c",
+      "unchanged": true
+    },
+    {
+      "name": "src/platform/lifecycle.py",
+      "sha256": "0f0802d3cc802a91432bee0af2753d26c21ec655414cab230398720c1a1dcd36",
+      "unchanged": true
+    },
+    {
+      "name": "src/platform/memory_reclamation.py",
+      "sha256": "76aaf66289c6b8bfadbf0ca85d423cf386737c5b9ddae664ad72e4600d3b7c4c",
+      "unchanged": true
+    },
+    {
+      "name": "src/core/league_runtime/manager.py",
+      "sha256": "3c091bb3f699a99413545964bc3c6a8abf5e015ff204df7f03c8e625915353b6",
+      "unchanged": true
+    },
+    {
+      "name": "src/core/player_value_projection/sleeper_actuals.py",
+      "sha256": "553c291fbaa05b06d16e2b68e91d6e5d033dac45678f6187b7364c0017cafe4e",
+      "unchanged": true
+    },
+    {
+      "name": "src/core/player_value_projection/canonical_production.py",
+      "sha256": "f186cf75d5b41c930437e60c33708dba66db940b0250a914ae1152273fefb096",
+      "unchanged": true
+    },
+    {
+      "name": "services/player_evidence.py",
+      "sha256": "cb923f637c145dd6cd8a94330527aa11a681bd7615943e1f569af874278cd1ea",
+      "unchanged": true
+    },
+    {
+      "name": "src/core/valuation/universe.py",
+      "sha256": "de9171c066f45cb875bbaeb4774481e0d04db039ea1c8e154663666fc1037152",
+      "unchanged": true
+    },
+    {
+      "name": "src/core/intelligence/team_strength.py",
+      "sha256": "5964191a6ecca9407856641870947ef193869558d252ae86366d8a6b8fe46e7e",
+      "unchanged": true
+    }
+  ],
+  "working_tree_clean": true
+}

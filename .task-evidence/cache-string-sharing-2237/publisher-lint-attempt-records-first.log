@@ -1,0 +1,11 @@
+E701 Multiple statements on one line (colon)
+   --> tests/test_release_publisher.py:841:53
+    |
+839 |         for value in (dict(id=True,attempt=1),dict(id=1,attempt=0),dict(id='1',attempt=1),dict(id=1,attempt=1,path='untrusted'),123):
+840 |             with self.subTest(value=value),patch.object(p,'api') as reader:
+841 |                 with self.assertRaises(RuntimeError):p.prior_attempt_record('repos/owner/repo',value)
+    |                                                     ^
+842 |                 reader.assert_not_called()
+    |
+
+Found 1 error.

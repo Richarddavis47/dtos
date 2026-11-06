@@ -1,0 +1,440 @@
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index 0aa3dee..84c5e67 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -1,3 +1,11 @@
++# v1.22.22 / build 2237 — Bounded league-cache string sharing
++
++Default startup and connected-league restoration now share equal short immutable strings within each individual JSON decode. Repeated source identities, provenance and disclosure text need fewer separate Python string objects. Mutable containers stay independent; the temporary bounded pool is discarded before publication. No global interning or cross-account cache is introduced.
++
++The persisted JSON, derived evidence and full serialized-file admission basis remain unchanged. The 2 GiB cap, 16× restoration allowance, FOIS and Trade reserves, bounded cleanup, source compatibility, native Sleeper actual-results binding, scoring and Trade qualification remain intact. No page-render work, provider call, preference mutation or automatic retry is added.
++
++Matched producer-derived synthetic one-QB and Superflex controls measure the entire decode/binding/projection-restoration/publication path and repeated two-league residency. These measurements establish a fixture memory improvement, not the private Granite payload’s demand or guaranteed live recovery. Safe entry still requires fresh normal admission. See docs/audits/CACHE_STRING_SHARING_2237.md.
++
+ # v1.22.21 / build 2236 — Sleeper actuals across cache restoration
+ 
+ Default startup, connected-league cache restoration and fresh production preparation now share one bounded native-results binding before Brain, Market, dossier and Trade-fact consumers capture the publication. Compatible retained Sleeper matchup rows can establish actuals even when the cache predates the adapter or production preparation is absent. No provider acquisition, reconstructed scores or NFLverse fantasy-point fallback is added.
+diff --git a/RELEASE_NOTES.md b/RELEASE_NOTES.md
+index c881da9..22f2ba6 100644
+--- a/RELEASE_NOTES.md
++++ b/RELEASE_NOTES.md
+@@ -1,3 +1,11 @@
++# v1.22.22 / build 2237 — Bounded league-cache string sharing
++
++Default startup and connected-league restoration now share equal short immutable strings within each individual JSON decode. Repeated source identities, provenance and disclosure text need fewer separate Python string objects. Mutable containers stay independent; the temporary bounded pool is discarded before publication. No global interning or cross-account cache is introduced.
++
++The persisted JSON, derived evidence and full serialized-file admission basis remain unchanged. The 2 GiB cap, 16× restoration allowance, FOIS and Trade reserves, bounded cleanup, source compatibility, native Sleeper actual-results binding, scoring and Trade qualification remain intact. No page-render work, provider call, preference mutation or automatic retry is added.
++
++Matched producer-derived synthetic one-QB and Superflex controls measure the entire decode/binding/projection-restoration/publication path and repeated two-league residency. These measurements establish a fixture memory improvement, not the private Granite payload’s demand or guaranteed live recovery. Safe entry still requires fresh normal admission. See docs/audits/CACHE_STRING_SHARING_2237.md.
++
+ # v1.22.21 / build 2236 — Sleeper actuals across cache restoration
+ 
+ Default startup, connected-league cache restoration and fresh production preparation now share one bounded native-results binding before Brain, Market, dossier and Trade-fact consumers capture the publication. Compatible retained Sleeper matchup rows can establish actuals even when the cache predates the adapter or production preparation is absent. No provider acquisition, reconstructed scores or NFLverse fantasy-point fallback is added.
+diff --git a/app_metadata.py b/app_metadata.py
+index e3b0e73..15d6b01 100644
+--- a/app_metadata.py
++++ b/app_metadata.py
+@@ -7,10 +7,10 @@ from datetime import datetime, timezone
+ from pathlib import Path
+ 
+ APPLICATION_NAME = "DTOS"
+-VERSION = "1.22.21"
+-PRODUCT_VERSION = "1.22.21"
+-BUILD_NUMBER = 2236
+-RELEASE_CODENAME = "Sleeper Fantasy Results"
++VERSION = "1.22.22"
++PRODUCT_VERSION = "1.22.22"
++BUILD_NUMBER = 2237
++RELEASE_CODENAME = "Bounded League Cache Memory"
+ APPLICATION_STARTED_AT = datetime.now(timezone.utc).isoformat()
+ 
+ _REPOSITORY_ROOT = Path(__file__).resolve().parent
+diff --git a/docs/audits/CACHE_STRING_SHARING_2237.md b/docs/audits/CACHE_STRING_SHARING_2237.md
+new file mode 100644
+index 0000000..75f88a7
+--- /dev/null
++++ b/docs/audits/CACHE_STRING_SHARING_2237.md
+@@ -0,0 +1,42 @@
++# Bounded sharing during league-cache decoding
++
++## Verified baseline and incident boundary
++
++Production/main was v1.22.21/build2236,8af490880bb59b357b0e5fa82575cfa164401b07/tree81e9a223be2f05aa7dbe556b99eaabcbb492b5c9. Public readiness and guest navigation were checked. The supplied November6 15:21Eastern Granite preflight reports35,531,769cache bytes,670,416,896headroom and702,726,032required bytes:32,309,136bytes short. This is a historical supplied sample, not a fresh measurement or a demonstrated leak. This session has no Render Shell/SSH executor or associated authenticated browser-control runtime. The unchanged external inspection binding401 is not retried. Main Chat's Render-local token200 remains supplied evidence.
++
++## Confirmed duplication and measured scope
++
++Native season_matchups, prepared sleeper_actuals and cached per-asset canonical_production disclosures deliberately retain different interpretations/consumer envelopes. JSON also expands shared fresh-preparation templates and repeats equal strings. Their existence does not establish their contribution to a private production cache. The completed PARTIAL study and build2235 recovery evidence are retained rather than rerun as proof of Granite demand.
++
++A new modeled structural cohort reuses the sealed synthetic identities and projection publication, rebuilds normalized identities with the real resolver, prepares nine native weeks through the actual matchup producer, and binds991 modeled player consumers through the actual production/binding functions. It has10,788catalog identities,2,592native observations and991prepared/disclosure rows. The new files are45,671,736bytes(one-QB) and45,679,653bytes(Superflex); they are not byte-sized replicas of Granite. The raw synthetic catalog is deliberately field-dense, and the cohort has missing reference-analysis templates. Neither its private population distribution nor its field density is verified. No private payload was exported or decoded. No filler was added to match a target size.
++
++Serialized contributions in the one-QB model include269,636native matchup bytes,603,568derived actuals bytes,4,033,965total production-envelope bytes and7,380,049disclosure bytes inside an8,896,693byte valuation report. The catalog is19,219,632bytes and normalized identities11,088,800bytes. Nested figures overlap and must not be added. All these bytes remain persisted and counted for admission.
++
++Initial actual2GiB/no-swap/offline matched full-path measurements show:
++
++| Synthetic path | Existing decoder peak increment | Sharing decoder peak increment | Existing retained increment | Sharing retained increment |
++| --- | ---: | ---: | ---: | ---: |
++| One-QB | 172,621,824B | 152,690,688B | 140,820,480B | 120,848,384B |
++| Superflex | 172,163,072B | 151,973,888B | 140,656,640B | 120,180,736B |
++
++These are sampled cgroup deltas, not universal bounds or policy inputs. A separate unique-object graph walk confirms fewer strings; it runs after peak capture and is not RSS. Five-ms samples may miss brief peaks; kernel lifetime peaks also include imports/instrumentation. Restore latency in these initial controls increased from about0.71s to0.97s. Two owned league publications with three close/reopen cycles reduced sampled total incremental peak from304,435,200B to268,775,424B. Closed runtime weak references disappear and no children remain, but allocator/cache retention remains above the initial sample. Three cycles do not prove long-term leak freedom. Original logs and final-source repeats are separate evidence.
++
++A prototype sharing nested mutable disclosure structures saved less and was not selected. A streaming semantic-digest prototype did not materially improve cached restoration and is not shipped. The correction only coalesces immutable strings; it does not change asdict, missing templates or mutable-container ownership.
++
++## Narrow shared boundary and accounting
++
++src/platform/cache_json.py uses the standard JSON decoder with a per-read object hook. Equal string values of2–128characters share references while the pool holds at most65,536entries and16MiB of conservative character accounting. Those are pool bounds, not a claim about complete Python object overhead. The temporary dictionary references already decoded strings; it is released on success/error. There is no sys.intern, permanent source warehouse or cross-account pool. Dicts/lists remain independent, numbers and Unicode retain standard parser semantics, and later source/disclosure mutation cannot alias through shared mutable containers.
++
++Both default services.sleeper.load_cache and connected services.league_preparation.restore_cached_runtime use this helper. Existing retention checks, pinned-file size/generation admission, owned-reader cancellation, exact scope checks, actual-results rebinding and canonical publication remain with their original owners. The writer and persisted JSON are unchanged. Legacy files need no migration. No evidence is omitted and regenerated after a discounted admission: the same full file size still enters the unchanged16× guard. No reserve, telemetry deduction, file-cache credit, heavyweight lease or cleanup policy changes.
++
++The improvement can leave more real headroom when a compatible runtime is resident, but does not reduce the required reservation for a given cache. A cold cache with insufficient capacity still defers, including with unknown telemetry or protected FOIS/Trade/sync work. This does not guarantee Granite admission or establish the cause of the earlier503.
++
++## Validation and acceptance boundary
++
++Focused tests cover parser equivalence, zero/negative/nonfinite handling, immutable sharing, mutable isolation, Unicode and duplicate keys, pool limits/lifetime/account separation, unchanged atomic writer bytes and admission basis. Existing rendered dossier/Market/native actuals, incompatible source, default/fresh/connected paths, eviction/reopening, atomic replacement, admission, cancellation and cleanup controls remain required. Existing league-entry tests and the metadata-only preflight sentinel also need to observe the new shared decoder boundary; the first hosted public/security job exposed that outdated reference. This is validation wiring, not a production admission defect. Their negative no-decode assertions remain required. Updated decode spies follow the shared helper rather than the old direct json.load call; all guard assertions stay intact.
++
++The first focused attempt had one new test's argument-index assertion wrong for json_admission(target,base,incoming_bytes); production behavior was correct. It is corrected and the original failing log retained. The first lint invocation encountered the read-only mount's cache directory; --no-cache preserves all lint rules and avoids that filesystem write. Neither is described as a passing initial attempt.
++
++Mandatory full local, ten canonical and twelve hosted gates, enforced2GiB native recovery/FOIS controls, exact source/tree manifests and guarded Actions publication remain required before deployment. Final-source counts and measurements are recorded in the evidence handoff, separately from exploratory prototypes. No production sync, cache clearing, active eviction, restart, FOIS rebuild, Trade search or settings mutation is authorized by this work.
++
++After deployment, Main Chat/Scout can use the existing Render-local inspection preflight with its configured token entirely inside Render. Pin observation/deployment/process identity, actual cache size, raw cgroup inputs, outstanding reservations and would-admit reason. A snapshot grants no lease. Only if fresh evidence permits, make one normal guarded Granite entry and stop on deferral. Then compare a genuinely retained completed player-week source score with dossier and prepared Market/API generation, scope and qualification. The old26.56capture is a candidate sample, not an assumed live answer. Fixture parity or entry alone establishes neither live score parity nor cleanup causality.
+diff --git a/services/league_preparation.py b/services/league_preparation.py
+index d9e6ba9..8d0397b 100644
+--- a/services/league_preparation.py
++++ b/services/league_preparation.py
+@@ -7,7 +7,6 @@ from __future__ import annotations
+ 
+ from datetime import datetime, timezone
+ import asyncio
+-import json
+ import os
+ import time
+ from typing import Callable
+@@ -16,6 +15,7 @@ from services.sleeper import league_cache_file
+ from src.core.league_runtime import LeagueRuntime
+ from src.core.sync_status import safe_sync_state
+ from src.platform.cache_budget import JSON_BUDGET, reusable
++from src.platform.cache_json import load_cache_json
+ from src.platform.lifecycle import HeavyWorkDeferred, lifecycle_coordinator, memory_snapshot
+ from src.platform.memory_reclamation import reclaim_unused_analytical_memory
+ from src.platform.fois_admission import (
+@@ -111,7 +111,7 @@ def restore_cached_runtime(runtime: LeagueRuntime, publish: Callable[[LeagueRunt
+                     runtime.lifecycle['cache_restore_memory_recovery'] = recovery
+                 if plan['would_admit'] is not True:
+                     raise HeavyWorkDeferred('Saved league preparation is waiting for safe memory headroom.')
+-                payload = json.load(handle)
++                payload = load_cache_json(handle)
+             data = payload['data']
+             league = data['league']
+             observed = datetime.fromisoformat(payload['last_sync'])
+diff --git a/services/sleeper.py b/services/sleeper.py
+index 1873dc0..b13f1e5 100644
+--- a/services/sleeper.py
++++ b/services/sleeper.py
+@@ -95,7 +95,9 @@ def load_cache(
+         logger.warning("Cached league state requires source refresh under cache retention policy")
+         return
+     try:
+-        payload = json.loads(cache_file.read_text(encoding="utf-8"))
++        from src.platform.cache_json import load_cache_json
++        with cache_file.open(encoding="utf-8") as handle:
++            payload = load_cache_json(handle)
+         cached_league = str(((payload.get("data") or {}).get("league") or {}).get("league_id") or league_id)
+         if cached_league != str(league_id):
+             raise ValueError("Cached Sleeper league identity does not match the requested runtime.")
+diff --git a/src/platform/cache_json.py b/src/platform/cache_json.py
+new file mode 100644
+index 0000000..54b33de
+--- /dev/null
++++ b/src/platform/cache_json.py
+@@ -0,0 +1,63 @@
++"""Bounded, per-read sharing of equal immutable strings in league caches.
++
++The JSON format, values and mutable containers are unchanged. In particular,
++derived evidence remains in the file and in the full restoration-admission
++basis. No reconstruction or provider work is hidden behind a smaller file.
++"""
++from __future__ import annotations
++
++import json
++from typing import Any, TextIO
++
++
++class _Strings:
++    # Pool references are temporary and local to one decode, never sys.intern or
++    # an account-crossing cache. Longer strings are usually unique source text.
++    MAX_LENGTH = 128
++    MAX_ENTRIES = 65_536
++    MAX_CHARACTER_BYTES = 16 * 1024 * 1024
++
++    def __init__(self) -> None:
++        self.values: dict[str, str] = {}
++        self.character_bytes = 0
++
++    def share(self, value: str) -> str:
++        if not 1 < len(value) <= self.MAX_LENGTH:
++            return value
++        existing = self.values.get(value)
++        if existing is not None:
++            return existing
++        cost = 4 * len(value)
++        if (len(self.values) < self.MAX_ENTRIES
++                and self.character_bytes + cost <= self.MAX_CHARACTER_BYTES):
++            self.values[value] = value
++            self.character_bytes += cost
++        return value
++
++    def value(self, value: Any) -> Any:
++        if isinstance(value, str):
++            return self.share(value)
++        if isinstance(value, list):
++            for index, child in enumerate(value):
++                # Nested objects were already visited by JSON's object_hook.
++                if isinstance(child, (str, list)):
++                    value[index] = self.value(child)
++        return value
++
++    def object(self, value: dict) -> dict:
++        for key, child in value.items():
++            value[key] = self.value(child)
++        return value
++
++
++def load_cache_json(handle: TextIO) -> Any:
++    """Decode once, sharing strings only; discard the pool before publication.
++
++    JSON's normal number, duplicate-key, invalid-input and Unicode behavior is
++    retained. Lists and dictionaries always remain independent mutable objects.
++    Existing callers own retention, pinned-file admission, scope validation,
++    cancellation, actual-results binding and atomic publication.
++    """
++    strings = _Strings()
++    value = json.load(handle, object_hook=strings.object)
++    return strings.value(value)
+diff --git a/tests/test_cache_json.py b/tests/test_cache_json.py
+new file mode 100644
+index 0000000..06c5324
+--- /dev/null
++++ b/tests/test_cache_json.py
+@@ -0,0 +1,116 @@
++"""Sharing immutable text must not change retained evidence or its ownership."""
++from __future__ import annotations
++
++import gc
++from io import StringIO
++import json
++import math
++import unittest
++from unittest.mock import patch
++import weakref
++
++from src.platform import cache_json
++
++
++class CacheJSONTests(unittest.TestCase):
++    def load(self, text):
++        return cache_json.load_cache_json(StringIO(text))
++
++    def test_identical_short_values_share_across_nested_source_and_disclosure(self):
++        text = '{"source":{"league":"fixture-league-long"},"disclosure":[["fixture-league-long"],{"league":"fixture-league-long"}]}'
++        value = self.load(text)
++        self.assertEqual(value, json.loads(text))
++        self.assertIs(value['source']['league'], value['disclosure'][0][0])
++        self.assertIs(value['source']['league'], value['disclosure'][1]['league'])
++
++    def test_equal_mutable_containers_do_not_share_and_scores_remain_exact(self):
++        row = {'points': [0, -2.125, 23.4738, None], 'provenance': {'source': 'Sleeper fixture'}}
++        value = self.load(json.dumps({'before': row, 'after': row}))
++        self.assertEqual(value, {'before': row, 'after': row})
++        self.assertIsNot(value['before'], value['after'])
++        self.assertIsNot(value['before']['points'], value['after']['points'])
++        value['before']['points'][0] = 99
++        value['before']['provenance']['source'] = 'changed disclosure'
++        self.assertEqual(value['after'], row)
++
++    def test_unicode_escaping_duplicate_keys_and_numeric_types_match_stdlib(self):
++        text = '{"text":"\\u00e9\\ud83c\\udfc8","other":["é🏈"],"dup":1,"dup":2,"int":9007199254740993,"negative_zero":-0.0,"bool":false,"null":null}'
++        value = self.load(text)
++        self.assertEqual(value, json.loads(text))
++        self.assertIs(value['text'], value['other'][0])
++        self.assertIs(type(value['int']), int)
++        self.assertEqual(math.copysign(1, value['negative_zero']), -1)
++
++    def test_invalid_input_has_the_same_decode_error(self):
++        for text in ('{"unfinished":', '[1,]', '{"bad":"\\x"}'):
++            with self.subTest(text=text), self.assertRaises(json.JSONDecodeError):
++                self.load(text)
++
++    def test_existing_nonfinite_json_behavior_is_not_changed_into_a_score(self):
++        value = self.load('[NaN, Infinity, -Infinity]')
++        self.assertTrue(math.isnan(value[0]))
++        self.assertEqual(value[1:], [math.inf, -math.inf])
++        from src.core.player_value_projection.sleeper_actuals import score_number
++        self.assertTrue(all(score_number(item) is None for item in value))
++
++    def test_length_entry_and_character_limits_are_bounded(self):
++        strings = cache_json._Strings()
++        strings.MAX_ENTRIES = 2
++        strings.MAX_CHARACTER_BYTES = 40
++        for value in ('', 'x', 'x' * 129):
++            self.assertIs(strings.share(value), value)
++        strings.share('ab')
++        strings.share('cdefghij')
++        self.assertEqual(len(strings.values), 2)
++        self.assertEqual(strings.character_bytes, 40)
++        strings.share('not admitted')
++        self.assertEqual(len(strings.values), 2)
++        strings = cache_json._Strings()
++        strings.MAX_CHARACTER_BYTES = 4
++        strings.share('too long')
++        self.assertFalse(strings.values)
++
++    def test_pool_is_released_on_success_and_failure_without_global_interning(self):
++        references = []
++        real = cache_json._Strings
++        def make():
++            value = real()
++            references.append(weakref.ref(value))
++            return value
++        with patch.object(cache_json, '_Strings', side_effect=make):
++            first = self.load('{"scope":"distinct-fixture-league-scope"}')
++            second = self.load('{"scope":"distinct-fixture-league-scope"}')
++            with self.assertRaises(json.JSONDecodeError):
++                self.load('{"broken":')
++        gc.collect()
++        self.assertTrue(all(ref() is None for ref in references))
++        self.assertEqual(first, second)
++        self.assertIsNot(first['scope'], second['scope'])
++
++    def test_root_arrays_primitives_and_long_unique_text_keep_stdlib_values(self):
++        for source in ([['repeat-scope', 'repeat-scope']], 'a' * 1000, 0, None, True):
++            text = json.dumps(source)
++            self.assertEqual(self.load(text), json.loads(text))
++
++    def test_fresh_atomic_writer_keeps_full_expanded_admission_basis(self):
++        from datetime import datetime, timezone
++        from pathlib import Path
++        import tempfile
++        from services import sleeper
++        from src.platform import cache_budget
++        child = {'scope': 'same immutable scoped source', 'points': [0, -2.125, 23.4738]}
++        state = {'data': {'league': {'league_id': 'fixture-cache'}, 'a': child, 'b': child},
++                 'last_sync': datetime.now(timezone.utc).isoformat()}
++        expected = json.dumps(state, separators=(',', ':'), ensure_ascii=False).encode()
++        with tempfile.TemporaryDirectory() as directory:
++            path = Path(directory)/'cache.json'
++            with patch.object(sleeper, 'league_cache_file', return_value=path), \
++                    patch.object(cache_budget, 'json_admission', wraps=cache_budget.json_admission) as admission:
++                sleeper.save_cache(state=state, league_id='fixture-cache')
++            self.assertEqual(path.read_bytes(), expected)
++            self.assertEqual(admission.call_args.args[2], len(expected))
++            restored = {}
++            with patch.object(sleeper, 'league_cache_file', return_value=path):
++                sleeper.load_cache(state=restored, league_id='fixture-cache')
++            self.assertEqual(restored['data'], state['data'])
++            self.assertIsNot(restored['data']['a'], restored['data']['b'])
+diff --git a/tests/test_cache_restoration_admission.py b/tests/test_cache_restoration_admission.py
+index 7871349..078f5a1 100644
+--- a/tests/test_cache_restoration_admission.py
++++ b/tests/test_cache_restoration_admission.py
+@@ -96,7 +96,7 @@ class RestorationDelegationTests(unittest.TestCase):
+             with patch.object(preparation, 'league_cache_file', return_value=path), \
+                     patch.object(preparation, 'memory_snapshot', return_value=sample), \
+                     patch.object(preparation, 'restoration_admission', wraps=real) as shared, \
+-                    patch.object(preparation.json, 'load') as decoder:
++                    patch.object(preparation, 'load_cache_json') as decoder:
+                 with self.assertRaises(HeavyWorkDeferred):
+                     preparation.restore_cached_runtime(LeagueRuntime('200'), Mock())
+                 decoder.assert_not_called()
+diff --git a/tests/test_league_entry_coordination.py b/tests/test_league_entry_coordination.py
+index bc98dd2..ecf702f 100644
+--- a/tests/test_league_entry_coordination.py
++++ b/tests/test_league_entry_coordination.py
+@@ -64,7 +64,7 @@ class CachedPublicationTests(unittest.TestCase):
+ 
+     def test_unknown_or_insufficient_memory_defers_before_decode(self):
+         for sample in ({}, {'cgroup_current_bytes': 2 * 1024**3 - 1, 'cgroup_limit_bytes': 2 * 1024**3}):
+-            with patch.object(preparation, 'memory_snapshot', return_value=sample), patch.object(preparation.json, 'load') as decode:
++            with patch.object(preparation, 'memory_snapshot', return_value=sample), patch.object(preparation, 'load_cache_json') as decode:
+                 with self.assertRaises(HeavyWorkDeferred):
+                     preparation.restore_cached_runtime(LeagueRuntime('200'), Mock())
+                 decode.assert_not_called()
+@@ -74,7 +74,7 @@ class CachedPublicationTests(unittest.TestCase):
+         with patch.object(preparation, 'memory_snapshot', return_value=sample):
+             lifecycle_coordinator.reserve_fois_generation()
+             try:
+-                with patch.object(preparation.json, 'load') as decode:
++                with patch.object(preparation, 'load_cache_json') as decode:
+                     with self.assertRaises(HeavyWorkDeferred):
+                         preparation.restore_cached_runtime(LeagueRuntime('200'), Mock())
+                     decode.assert_not_called()
+diff --git a/tests/test_restoration_unused_memory.py b/tests/test_restoration_unused_memory.py
+index c440691..f8d9c3b 100644
+--- a/tests/test_restoration_unused_memory.py
++++ b/tests/test_restoration_unused_memory.py
+@@ -56,7 +56,7 @@ class RestorationRecoveryTests(unittest.TestCase):
+         runtime = LeagueRuntime('200')
+         with patch.object(preparation, 'memory_snapshot', side_effect=[memory(200), memory(200)]), \
+              patch.object(preparation, 'reclaim_unused_analytical_memory', return_value={'expired_entries':512, 'idle_worker_retired':True, 'allocator_trimmed':True}) as cleanup, \
+-             patch.object(preparation.json, 'load') as decode:
++             patch.object(preparation, 'load_cache_json') as decode:
+             with self.assertRaises(HeavyWorkDeferred):
+                 preparation.restore_cached_runtime(runtime, Mock())
+         cleanup.assert_called_once()
+@@ -69,7 +69,7 @@ class RestorationRecoveryTests(unittest.TestCase):
+             with self.subTest(sample=sample), \
+                  patch.object(preparation, 'memory_snapshot', return_value=sample), \
+                  patch.object(preparation, 'reclaim_unused_analytical_memory', return_value={}) as cleanup, \
+-                 patch.object(preparation.json, 'load') as decode:
++                 patch.object(preparation, 'load_cache_json') as decode:
+                 with self.assertRaises(HeavyWorkDeferred):
+                     preparation.restore_cached_runtime(LeagueRuntime('200'), Mock())
+                 cleanup.assert_not_called()
+@@ -79,7 +79,7 @@ class RestorationRecoveryTests(unittest.TestCase):
+         runtime = LeagueRuntime('200')
+         with patch.object(preparation, 'memory_snapshot', side_effect=[memory(200), {}]), \
+              patch.object(preparation, 'reclaim_unused_analytical_memory', return_value={}), \
+-             patch.object(preparation.json, 'load') as decode:
++             patch.object(preparation, 'load_cache_json') as decode:
+             with self.assertRaises(HeavyWorkDeferred):
+                 preparation.restore_cached_runtime(runtime, Mock())
+         decode.assert_not_called()
+@@ -91,7 +91,7 @@ class RestorationRecoveryTests(unittest.TestCase):
+         runtime = LeagueRuntime('200')
+         with patch.object(preparation, 'memory_snapshot', side_effect=[memory(800), memory(850)]), \
+              patch.object(preparation, 'reclaim_unused_analytical_memory', return_value={}) as cleanup, \
+-             patch.object(preparation.json, 'load') as decode:
++             patch.object(preparation, 'load_cache_json') as decode:
+             with self.assertRaises(HeavyWorkDeferred):
+                 preparation.restore_cached_runtime(runtime, Mock())
+         cleanup.assert_called_once()
+@@ -101,7 +101,7 @@ class RestorationRecoveryTests(unittest.TestCase):
+     def test_competing_sync_phase_defers_before_recovery(self):
+         with lifecycle_coordinator.phase('sleeper_sync'), \
+              patch.object(preparation, 'reclaim_unused_analytical_memory', return_value={}) as cleanup, \
+-             patch.object(preparation.json, 'load') as decode:
++             patch.object(preparation, 'load_cache_json') as decode:
+             with self.assertRaises(HeavyWorkDeferred):
+                 preparation.restore_cached_runtime(LeagueRuntime('200'), Mock())
+         cleanup.assert_not_called()
+@@ -111,7 +111,7 @@ class RestorationRecoveryTests(unittest.TestCase):
+         runtime = LeagueRuntime('200')
+         with patch.object(preparation, 'memory_snapshot', side_effect=[memory(200), memory(200)]), \
+              patch.object(preparation, 'reclaim_unused_analytical_memory', side_effect=OSError('private diagnostic text')), \
+-             patch.object(preparation.json, 'load') as decode:
++             patch.object(preparation, 'load_cache_json') as decode:
+             with self.assertRaises(HeavyWorkDeferred):
+                 preparation.restore_cached_runtime(runtime, Mock())
+         decode.assert_not_called()
+diff --git a/tools/validation/restoration_preflight_gate.py b/tools/validation/restoration_preflight_gate.py
+index 2702f99..37e1668 100644
+--- a/tools/validation/restoration_preflight_gate.py
++++ b/tools/validation/restoration_preflight_gate.py
+@@ -121,7 +121,7 @@ def main() -> None:
+                 guards.enter_context(patch.object(dtos_app.league_runtime_manager, 'acquire_request', side_effect=AssertionError('No hydration'))),
+                 guards.enter_context(patch.object(league_preparation, 'restore_cached_runtime', side_effect=AssertionError('No restoration'))),
+                 guards.enter_context(patch.object(lifecycle_coordinator, 'phase', side_effect=AssertionError('No heavyweight lease'))),
+-                guards.enter_context(patch.object(league_preparation.json, 'load', side_effect=AssertionError('No JSON decode'))),
++                guards.enter_context(patch.object(league_preparation, 'load_cache_json', side_effect=AssertionError('No JSON decode'))),
+             ]
+             observe('healthy', 'would_admit', 'sufficient_headroom')
+             pressure(350 * 1024**2)
