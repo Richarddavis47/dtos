@@ -662,3 +662,49 @@ class ResultUnitConsistencyTests(unittest.TestCase):
             if item.label == "NFLverse targets per observed game"
         )
         self.assertEqual(usage.unit, "targets per observed NFLverse game")
+
+
+class HistoricalActualObservationContractTests(unittest.TestCase):
+    def test_public_history_does_not_claim_game_counts_or_partial_game_averages(self):
+        from services.history import player_career
+        from types import SimpleNamespace
+        from routes.history import _player_season_card
+
+        # Native-shaped retained records, not fantasy scores reconstructed from
+        # NFLverse. Provider identity and absent scores remain independent.
+        rows = [
+            dict(provider="Sleeper", season=2026, payload={"fantasy_points": value})
+            for value in (0, -2.125, None)
+        ]
+        store = SimpleNamespace(
+            optional_records=lambda *a, **k: (len(rows), rows),
+            records=lambda *a, **k: (len(rows), rows),
+        )
+        with patch("services.history.historical_store", store):
+            result = player_career("A", "4984")["seasons"]["2026"]
+        self.assertIsNone(result["games_played"])
+        self.assertIsNone(result["points_per_game"])
+        self.assertEqual(result["observation_count"], 3)
+        self.assertEqual(result["scored_observation_count"], 2)
+        self.assertEqual(result["observed_total"], -2.125)
+        self.assertIsNone(result["points_per_observation"])
+        self.assertEqual(result["availability"], "partial")
+        html = _player_season_card("2026", result)
+        self.assertIn("Supported scores 2 / 3", html)
+        self.assertIn("not a complete season total", html)
+        self.assertNotIn(" PPG", html)
+
+    def test_old_non_sleeper_calculation_cannot_fill_retained_actual_results(self):
+        from services.history import player_career
+        from types import SimpleNamespace
+
+        rows = [dict(provider="DTOS", season=2026, payload={"fantasy_points": 999})]
+        store = SimpleNamespace(
+            optional_records=lambda *a, **k: (1, rows),
+            records=lambda *a, **k: (1, rows),
+        )
+        with patch("services.history.historical_store", store):
+            value = player_career("A", "4984")["seasons"]["2026"]
+        self.assertIsNone(value["observed_total"])
+        self.assertIsNone(value["points_per_observation"])
+        self.assertIsNone(value["games_played"])

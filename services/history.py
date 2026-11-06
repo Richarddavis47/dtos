@@ -824,12 +824,16 @@ def player_career(league_id: str, player_id: str) -> dict[str, Any]:
     count, rows = reader(league_id, "player_week", player_id=player_id, limit=1000)
     by_season: dict[int, list[dict[str, Any]]] = {}
     for row in rows:
-        by_season.setdefault(int(row["season"]), []).append(row["payload"])
+        payload = dict(row["payload"])
+        # Older derived analyses must not become Sleeper actual results.
+        if str(row.get('provider') or '').casefold() != 'sleeper':
+            payload['fantasy_points'] = None
+        by_season.setdefault(int(row["season"]), []).append(payload)
     return {
         "schema_version": PLAYER_HISTORY_SCHEMA_VERSION, "player_id": player_id,
         "weekly_record_count": count,
         "seasons": {
-            str(season): aggregate_production(payloads)
+            str(season): _score_observation_summary(payloads)
             for season, payloads in sorted(by_season.items())
         },
         "usage": {
@@ -837,6 +841,28 @@ def player_career(league_id: str, player_id: str) -> dict[str, Any]:
             "reason": "Sleeper historical league endpoints do not supply advanced snap, route, target, or carry usage.",
         },
     }
+
+
+def _score_observation_summary(payloads: list[dict]) -> dict:
+    """Public historical results use observations; legacy grade inputs stay intact."""
+    from decimal import Decimal
+    from src.core.player_value_projection.sleeper_actuals import score_number
+    values = [score_number(row.get('fantasy_points')) for row in payloads]
+    known = [value for value in values if value is not None]
+    total = float(sum((Decimal(str(value)) for value in known), Decimal(0))) if known else None
+    complete_sample = bool(known) and len(known) == len(values)
+    # Keep retained statistical analysis separate; this does not change the
+    # aggregate function used by existing historical grading/valuation models.
+    legacy = aggregate_production([{'fantasy_points': value} for value in values])
+    return {**legacy, 'source': 'Sleeper retained historical matchup observations',
+            'games_played': None, 'points_per_game': None, 'active_game_average': None,
+            'observation_count': len(values), 'scored_observation_count': len(known),
+            'observed_total': total, 'season_total': total,
+            'points_per_observation': total / len(values) if complete_sample else None,
+            'availability': 'calculated' if complete_sample else 'partial' if known else 'unavailable',
+            'total_scope': 'retained score observations only; not complete season acquisition',
+            'participation': 'unknown; a zero does not establish a game played',
+            'qualification': 'Missing observations are not zero; an incomplete sample withholds its average. Retained historical grades are not revalidated.'}
 
 
 def player_history_evidence(league_id: str, player_id: str) -> dict[str, Any]:
