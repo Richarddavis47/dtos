@@ -64,7 +64,7 @@ class CachedPublicationTests(unittest.TestCase):
 
     def test_unknown_or_insufficient_memory_defers_before_decode(self):
         for sample in ({}, {'cgroup_current_bytes': 2 * 1024**3 - 1, 'cgroup_limit_bytes': 2 * 1024**3}):
-            with patch.object(preparation, 'memory_snapshot', return_value=sample), patch.object(preparation.json, 'load') as decode:
+            with patch.object(preparation, 'memory_snapshot', return_value=sample), patch.object(preparation, 'load_cache_json') as decode:
                 with self.assertRaises(HeavyWorkDeferred):
                     preparation.restore_cached_runtime(LeagueRuntime('200'), Mock())
                 decode.assert_not_called()
@@ -74,7 +74,7 @@ class CachedPublicationTests(unittest.TestCase):
         with patch.object(preparation, 'memory_snapshot', return_value=sample):
             lifecycle_coordinator.reserve_fois_generation()
             try:
-                with patch.object(preparation.json, 'load') as decode:
+                with patch.object(preparation, 'load_cache_json') as decode:
                     with self.assertRaises(HeavyWorkDeferred):
                         preparation.restore_cached_runtime(LeagueRuntime('200'), Mock())
                     decode.assert_not_called()

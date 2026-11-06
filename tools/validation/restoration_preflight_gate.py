@@ -121,7 +121,7 @@ def main() -> None:
                 guards.enter_context(patch.object(dtos_app.league_runtime_manager, 'acquire_request', side_effect=AssertionError('No hydration'))),
                 guards.enter_context(patch.object(league_preparation, 'restore_cached_runtime', side_effect=AssertionError('No restoration'))),
                 guards.enter_context(patch.object(lifecycle_coordinator, 'phase', side_effect=AssertionError('No heavyweight lease'))),
-                guards.enter_context(patch.object(league_preparation.json, 'load', side_effect=AssertionError('No JSON decode'))),
+                guards.enter_context(patch.object(league_preparation, 'load_cache_json', side_effect=AssertionError('No JSON decode'))),
             ]
             observe('healthy', 'would_admit', 'sufficient_headroom')
             pressure(350 * 1024**2)

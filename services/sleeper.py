@@ -95,7 +95,9 @@ def load_cache(
         logger.warning("Cached league state requires source refresh under cache retention policy")
         return
     try:
-        payload = json.loads(cache_file.read_text(encoding="utf-8"))
+        from src.platform.cache_json import load_cache_json
+        with cache_file.open(encoding="utf-8") as handle:
+            payload = load_cache_json(handle)
         cached_league = str(((payload.get("data") or {}).get("league") or {}).get("league_id") or league_id)
         if cached_league != str(league_id):
             raise ValueError("Cached Sleeper league identity does not match the requested runtime.")

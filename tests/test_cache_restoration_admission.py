@@ -96,7 +96,7 @@ class RestorationDelegationTests(unittest.TestCase):
             with patch.object(preparation, 'league_cache_file', return_value=path), \
                     patch.object(preparation, 'memory_snapshot', return_value=sample), \
                     patch.object(preparation, 'restoration_admission', wraps=real) as shared, \
-                    patch.object(preparation.json, 'load') as decoder:
+                    patch.object(preparation, 'load_cache_json') as decoder:
                 with self.assertRaises(HeavyWorkDeferred):
                     preparation.restore_cached_runtime(LeagueRuntime('200'), Mock())
                 decoder.assert_not_called()
