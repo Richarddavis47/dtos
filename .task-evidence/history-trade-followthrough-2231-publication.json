@@ -1,0 +1,148 @@
+{
+  "status": "RELEASED; published evidence bytes verified by Codex, independent Scout acceptance pending",
+  "observed_at": "2026-11-06T00:53:17.111582+00:00",
+  "version": "1.22.16",
+  "build": 2231,
+  "source": {
+    "candidate": "0c37dfd70bdcca68ddea2a3bf75cbd3a47e60f0f",
+    "tree": "4e0351fa02f2a3890f1ea15b97e73274d5f56808",
+    "baseline": "3639a5f51270522c9f6a73971cb52226df343bef",
+    "baseline_tree": "c251edcf8a6d2a35b157deb916a8cfb7869d6344",
+    "pr": 320,
+    "version": "1.22.16",
+    "build": 2231
+  },
+  "merged_source": {
+    "merge_commit": "bb71de7faa4ff112500d01f2e3547dbc4652715e",
+    "candidate": "0c37dfd70bdcca68ddea2a3bf75cbd3a47e60f0f",
+    "tree": "4e0351fa02f2a3890f1ea15b97e73274d5f56808",
+    "publisher": "a25dc916e362eee56fe53a82bc7b317b4f6fec9d",
+    "pr": 320,
+    "preparation_run": 42138663697
+  },
+  "release_url": "https://github.com/Richarddavis47/dtos/releases/tag/v1.22.16",
+  "immutable": true,
+  "release_attachments": 18,
+  "application_gates": {
+    "local_tests": 4136,
+    "local_gates": 10,
+    "hosted_tests": 4136,
+    "hosted_gates": 10,
+    "hosted_required_jobs": 12,
+    "main_Product_executions": 665,
+    "publisher_guard_tests": 42
+  },
+  "download_verification": {
+    "observed_at": "2026-11-06T00:52:28.180084+00:00",
+    "evidence_commit": "2b9a1c6f5d236bcc33d474130b2710675e27d004",
+    "candidate": "0c37dfd70bdcca68ddea2a3bf75cbd3a47e60f0f",
+    "tree": "4e0351fa02f2a3890f1ea15b97e73274d5f56808",
+    "merge": "bb71de7faa4ff112500d01f2e3547dbc4652715e",
+    "archive_url": "https://codeload.github.com/Richarddavis47/dtos/zip/2b9a1c6f5d236bcc33d474130b2710675e27d004",
+    "archive_bytes": 321534425,
+    "archive_sha256": "f798f255140ac7e2767ebf7512923a8ce7eb18b49e2b1a38bf7e2076d6f52867",
+    "all_published_payload_bytes_matched": true,
+    "verified_files": 820,
+    "verified_payload_bytes": 329618053,
+    "manifest_sha256": "d0524b3fe03b36600ebff47d78cc8639b4460f1be372ea7417fedfaf95379c05",
+    "readable_raw_checks": [
+      {
+        "name": "README.md",
+        "bytes": 7469,
+        "sha256": "8cc102668e048f4f421d015055d57bf3ec02960e870491af389c3f2406616b72"
+      },
+      {
+        "name": "LOG_INDEX.md",
+        "bytes": 16386,
+        "sha256": "ce86b4b190b5429fb8328e526de4aae09c6afd980f2cb47cb33c6bacaceb535b"
+      },
+      {
+        "name": "SCOUT_HANDOFF.md",
+        "bytes": 7635,
+        "sha256": "d787d675bfe9b9caeca6ff22779b0703646a6df45e280bc059cde37cd30ee250"
+      }
+    ],
+    "scope": "Actual GitHub public download; every manifest payload plus manifest/checksum list verified. Separate raw readable report/index/Scout files verified. No private account or production operations."
+  },
+  "branch_cleanup": {
+    "main": "bb71de7faa4ff112500d01f2e3547dbc4652715e",
+    "tree": "4e0351fa02f2a3890f1ea15b97e73274d5f56808",
+    "tag": "v1.22.16",
+    "tag_target": "bb71de7faa4ff112500d01f2e3547dbc4652715e",
+    "clean": true,
+    "closed_merged_pr": 320,
+    "deleted_unchanged_feature_branch": "fix/history-trade-followthrough",
+    "candidate_preserved": "Validated detached checkout, PR refs, source evidence and frozen publisher plan",
+    "owned_containers_remaining": []
+  },
+  "public_smoke": {
+    "observed_at": "2026-11-06T00:46:36.998413+00:00",
+    "production_ready": {
+      "status": "ready",
+      "version": "1.22.16",
+      "build": 2231,
+      "deployment": {
+        "branch": "main",
+        "commit": "bb71de7faa4ff112500d01f2e3547dbc4652715e",
+        "deployed_at": "2026-11-06T00:45:09.690665+00:00"
+      },
+      "reason": "Application ready."
+    },
+    "reads": [
+      {
+        "path": "/health/live",
+        "status": 200,
+        "guest_read_only": true
+      },
+      {
+        "path": "/static/js/contextual_navigation.js",
+        "status": 200,
+        "guest_read_only": true,
+        "sha256": "33045ef51fa780c4e0519a71c92ad0104ec8d4ccfb067c28216f83737ce6ae82",
+        "bytes": 19933
+      },
+      {
+        "path": "/welcome",
+        "status": 200,
+        "guest_read_only": true
+      },
+      {
+        "path": "/account/sign-in",
+        "status": 200,
+        "guest_read_only": true
+      },
+      {
+        "path": "/api/my-dtos",
+        "status": 401,
+        "guest_read_only": true
+      },
+      {
+        "path": "/api/inspect/live/teams",
+        "status": 401,
+        "guest_read_only": true
+      },
+      {
+        "path": "/history",
+        "status": 303,
+        "guest_read_only": true,
+        "scope": "Authentication boundary only; no private timeline content or league hydration"
+      },
+      {
+        "path": "/history/team/2300000000000000001:franchise:1",
+        "status": 303,
+        "guest_read_only": true,
+        "scope": "Authentication boundary only; no private timeline content or league hydration"
+      }
+    ],
+    "customer_prerelease_wording_matches": [],
+    "scope": "Bounded public unauthenticated reads only. No authenticated league entry, search, synchronization, FOIS rebuild, account login or saved user-data mutation."
+  },
+  "validation_qualifications": {
+    "failed_source_attempts": "Original aggregate CI deadline failure and superseded/cancelled runs retained separately. Never counted as passing.",
+    "failed_preparation": "Original publisher cd89 run42138239270 refused an incomplete evidence path. Corrected by copying the existing original preflight console bytes and creating its checksum sidecar; no application tests rerun. Successful preparation42138663697 and publication42139024943 use publishera25.",
+    "evidence_whitespace": "An evidence-wide diff check emitted whitespace warnings from untouched original console logs and unified-patch context. Those bytes were intentionally preserved. Mandatory application/source whitespace gates passed; this is not an application gate failure or normalization of original logs.",
+    "private_live_history": "Unverified: this session lacked associated owner-browser control and Render Shell/SSH execution. Retained replay/disposable fixtures are distinct from public production smoke.",
+    "physical_iPhone_Safari": "Not tested",
+    "source_gaps": "Missing periods/chronology remain qualified. This navigation fix does not acquire history or establish private Granite recovery."
+  }
+}
