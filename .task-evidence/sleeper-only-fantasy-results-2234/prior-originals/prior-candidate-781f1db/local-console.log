@@ -1,0 +1,35 @@
+Validation UID 1000
+{"head": "781f1db310ff9480024a316dd9ff75fb896b9839", "tree": "8456cb33b4ac56252365c3bddfadfc463cb2225e", "python": "3.14.3 (main, Apr  7 2026, 02:23:36) [GCC 12.2.0]", "started_at": 1793952607.9485612, "finished_at": 1793952815.849336, "elapsed_seconds": 207.9007749557495, "exit_code": 1, "passed": false, "error": "KeyboardInterrupt: ", "cgroup_limit": 2147483648, "cpus": 2, "network": "none", "final_memory": {"rss_bytes": 44912640, "vms_bytes": 126853120, "system_available_bytes": 17613258752, "memory_accounting_scope": "cgroup", "cgroup_current_bytes": 324419584, "cgroup_limit_bytes": 2147483648, "cgroup_inactive_file_bytes": 2994176, "cgroup_anonymous_bytes": 313122816, "cgroup_memory_events": {"low": 0, "high": 0, "max": 0, "oom": 0, "oom_kill": 0, "oom_group_kill": 0}}, "kernel_peak": 1159348224, "fixture": "250 asset prepared sanitized foundation; disposable authenticated test transports"}
+PASS Committed whitespace: 0.012s - 781f1db v1.22.19 / build 2234 — Sleeper-only fantasy results
+PASS Working-tree whitespace: 0.003s
+PASS Staged whitespace: 0.001s
+PASS Python compilation: 0.332s
+PASS Ruff: 0.187s - All checks passed!
+PASS Dependency integrity: 0.717s - No broken requirements found.
+
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    import os,runpy; assert os.geteuid()==1000; print('Validation UID',os.geteuid(),flush=True); runpy.run_path('/output/runner.py',run_name='__main__')
+                                                                                                 ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen runpy>", line 287, in run_path
+  File "<frozen runpy>", line 98, in _run_module_code
+  File "<frozen runpy>", line 88, in _run_code
+  File "/output/runner.py", line 117, in <module>
+    result = subprocess.run([sys.executable, "-m", "tools.validation.validate_release"],
+                            stdout=stream, stderr=subprocess.STDOUT, timeout=4200)
+  File "/usr/local/lib/python3.14/subprocess.py", line 556, in run
+    stdout, stderr = process.communicate(input, timeout=timeout)
+                     ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/subprocess.py", line 1220, in communicate
+    stdout, stderr = self._communicate(input, endtime, timeout)
+                     ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/subprocess.py", line 2178, in _communicate
+    self.wait(timeout=self._remaining_time(endtime))
+    ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/subprocess.py", line 1278, in wait
+    return self._wait(timeout=timeout)
+           ~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/subprocess.py", line 2077, in _wait
+    time.sleep(delay)
+    ~~~~~~~~~~^^^^^^^
+KeyboardInterrupt

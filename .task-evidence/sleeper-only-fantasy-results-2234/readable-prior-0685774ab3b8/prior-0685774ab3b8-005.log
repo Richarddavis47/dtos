@@ -1,0 +1,71 @@
+st_matchups_phone.MatchupsPhoneTests.test_standings_missing_rank_and_scoring_never_fabricated) ... ok
+test_standings_source_ranks_boundary_and_missing_rules (tests.test_matchups_phone.MatchupsPhoneTests.test_standings_source_ranks_boundary_and_missing_rules) ... ok
+test_streak_requires_completed_pair_and_no_cross_league_borrowing (tests.test_matchups_phone.MatchupsPhoneTests.test_streak_requires_completed_pair_and_no_cross_league_borrowing) ... ok
+test_submitted_vs_optimal_and_all_roster_sections_exclude_bench (tests.test_matchups_phone.MatchupsPhoneTests.test_submitted_vs_optimal_and_all_roster_sections_exclude_bench) ... ok
+test_unknown_identity_does_not_link_and_history_does_not_borrow_ir (tests.test_matchups_phone.MatchupsPhoneTests.test_unknown_identity_does_not_link_and_history_does_not_borrow_ir) ... ok
+test_active_route_round_trip_restores_exact_league_view (tests.test_batch6_matchup_season.SeasonMatchupTests.test_active_route_round_trip_restores_exact_league_view) ... {"timestamp":"2026-11-06T08:06:56.592781+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups/1?week=2 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T08:06:56.594802+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups/1?week=2 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T08:06:56.596763+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups/1?week=2 \"HTTP/1.1 200 OK\"","request_id":"system"}
+ok
+test_active_routes_do_not_run_intelligence_or_mutate_active_week (tests.test_batch6_matchup_season.SeasonMatchupTests.test_active_routes_do_not_run_intelligence_or_mutate_active_week) ... {"timestamp":"2026-11-06T08:06:56.604602+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T08:06:56.607206+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups?week=3 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T08:06:56.610243+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups/1?week=3 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T08:06:56.612867+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups?week=99 \"HTTP/1.1 422 Unprocessable Entity\"","request_id":"system"}
+ok
+test_bracket_evidence_required_for_locks_and_bye_is_qualified (tests.test_batch6_matchup_season.SeasonMatchupTests.test_bracket_evidence_required_for_locks_and_bye_is_qualified) ... ok
+test_confirmed_bye_survives_missing_weekly_scores (tests.test_batch6_matchup_season.SeasonMatchupTests.test_confirmed_bye_survives_missing_weekly_scores) ... ok
+test_duplicate_roster_source_is_not_accepted (tests.test_batch6_matchup_season.SeasonMatchupTests.test_duplicate_roster_source_is_not_accepted) ... ok
+test_failed_source_does_not_retain_stale_current_availability (tests.test_batch6_matchup_season.SeasonMatchupTests.test_failed_source_does_not_retain_stale_current_availability) ... ok
+test_final_week_navigation_is_local_and_canonical_projection_is_unchanged (tests.test_batch6_matchup_season.SeasonMatchupTests.test_final_week_navigation_is_local_and_canonical_projection_is_unchanged) ... ok
+test_future_week_uses_pinned_exact_values_and_true_zero (tests.test_batch6_matchup_season.SeasonMatchupTests.test_future_week_uses_pinned_exact_values_and_true_zero) ... ok
+test_historical_bench_is_source_week_not_current_roster (tests.test_batch6_matchup_season.SeasonMatchupTests.test_historical_bench_is_source_week_not_current_roster) ... ok
+test_history_never_reads_current_projections_or_current_roster (tests.test_batch6_matchup_season.SeasonMatchupTests.test_history_never_reads_current_projections_or_current_roster) ... ok
+test_invalid_source_collections_fail_closed (tests.test_batch6_matchup_season.SeasonMatchupTests.test_invalid_source_collections_fail_closed) ... ok
+test_mid_read_projection_publication_cannot_mix_generations (tests.test_batch6_matchup_season.SeasonMatchupTests.test_mid_read_projection_publication_cannot_mix_generations) ... ok
+test_missing_remains_unavailable_partial_not_complete (tests.test_batch6_matchup_season.SeasonMatchupTests.test_missing_remains_unavailable_partial_not_complete) ... ok
+test_multiweek_final_preserves_components_until_complete (tests.test_batch6_matchup_season.SeasonMatchupTests.test_multiweek_final_preserves_components_until_complete) ... ok
+test_multweek_parent_cannot_lock_from_one_component_result (tests.test_batch6_matchup_season.SeasonMatchupTests.test_multweek_parent_cannot_lock_from_one_component_result) ... ok
+test_playoff_source_placeholders_do_not_lock_opponent (tests.test_batch6_matchup_season.SeasonMatchupTests.test_playoff_source_placeholders_do_not_lock_opponent) ... ok
+test_pregame_live_and_final_comparisons_do_not_conflate_scores (tests.test_batch6_matchup_season.SeasonMatchupTests.test_pregame_live_and_final_comparisons_do_not_conflate_scores) ... ok
+test_preparation_bounded_and_unchanged_semantics_deduplicate (tests.test_batch6_matchup_season.SeasonMatchupTests.test_preparation_bounded_and_unchanged_semantics_deduplicate) ... ok
+test_prepared_optimal_is_separate_and_never_calculated_on_read (tests.test_batch6_matchup_season.SeasonMatchupTests.test_prepared_optimal_is_separate_and_never_calculated_on_read) ... ok
+test_read_rejects_week_snapshot_from_different_generation (tests.test_batch6_matchup_season.SeasonMatchupTests.test_read_rejects_week_snapshot_from_different_generation) ... ok
+test_scoring_change_never_reuses_old_projection (tests.test_batch6_matchup_season.SeasonMatchupTests.test_scoring_change_never_reuses_old_projection) ... ok
+test_unprepared_cache_cannot_enter_legacy_analysis (tests.test_batch6_matchup_season.SeasonMatchupTests.test_unprepared_cache_cannot_enter_legacy_analysis) ... {"timestamp":"2026-11-06T08:06:56.632159+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups \"HTTP/1.1 200 OK\"","request_id":"system"}
+ok
+test_wrong_league_calendar_and_generation_fail_closed (tests.test_batch6_matchup_season.SeasonMatchupTests.test_wrong_league_calendar_and_generation_fail_closed) ... ok
+test_absent_store_does_not_create_database (tests.test_prepared_player_evidence.PreparedPlayerEvidenceTests.test_absent_store_does_not_create_database) ... ok
+test_context_mismatch_rejected (tests.test_prepared_player_evidence.PreparedPlayerEvidenceTests.test_context_mismatch_rejected) ... ok
+test_modeled_intrinsic_and_future_value_are_not_historical_or_projection_evidence (tests.test_prepared_player_evidence.PreparedPlayerEvidenceTests.test_modeled_intrinsic_and_future_value_are_not_historical_or_projection_evidence) ... ok
+test_orchestrator_consumes_prepared_evidence_and_invalidates_generation (tests.test_prepared_player_evidence.PreparedPlayerEvidenceTests.test_orchestrator_consumes_prepared_evidence_and_invalidates_generation) ... ok
+test_replay_league_scoring_and_material_change (tests.test_prepared_player_evidence.PreparedPlayerEvidenceTests.test_replay_league_scoring_and_material_change) ... ok
+test_universe_and_brain_read_same_prepared_production (tests.test_prepared_player_evidence.PreparedPlayerEvidenceTests.test_universe_and_brain_read_same_prepared_production) ... ok
+test_balance_primary_options_keep_original_incoming_target (tests.test_trade_decision_experience.TradeDecisionExperienceTests.test_balance_primary_options_keep_original_incoming_target) ... ok
+test_display_is_read_only_and_unfavorable_verdict_stays_unfavorable (tests.test_trade_decision_experience.TradeDecisionExperienceTests.test_display_is_read_only_and_unfavorable_verdict_stays_unfavorable) ... ok
+test_explicit_strategy_changes_interpretation_never_prices_or_lineup (tests.test_trade_decision_experience.TradeDecisionExperienceTests.test_explicit_strategy_changes_interpretation_never_prices_or_lineup) ... ok
+test_incoming_questionable_qualification_is_visible_in_primary_summary (tests.test_trade_decision_experience.TradeDecisionExperienceTests.test_incoming_questionable_qualification_is_visible_in_primary_summary) ... ok
+test_independent_parity_and_severe_loss_do_not_require_a_strategy_to_get_a_verdict (tests.test_trade_decision_experience.TradeDecisionExperienceTests.test_independent_parity_and_severe_loss_do_not_require_a_strategy_to_get_a_verdict) ... /app/src/core/intelligence/team_strength.py:61: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f76e06abf10>
+  return float(sum((Decimal(str(value)) for value in values), Decimal(0)))
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/app/src/core/intelligence/team_strength.py:61: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f76d3581d50>
+  return float(sum((Decimal(str(value)) for value in values), Decimal(0)))
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+ok
+test_player_facts_age_and_failed_refresh_retain_original_numbers (tests.test_trade_decision_experience.TradeDecisionExperienceTests.test_player_facts_age_and_failed_refresh_retain_original_numbers) ... ok
+test_prepared_actual_production_keeps_sample_and_scoring_not_full_season_rank (tests.test_trade_decision_experience.TradeDecisionExperienceTests.test_prepared_actual_production_keeps_sample_and_scoring_not_full_season_rank) ... ok
+test_prepared_home_identity_tracks_production_generation_not_retrieval (tests.test_trade_decision_experience.TradeDecisionExperienceTests.test_prepared_home_identity_tracks_production_generation_not_retrieval) ... ok
+test_production_source_identity_uses_facts_not_retrieval_only_clock (tests.test_trade_decision_experience.TradeDecisionExperienceTests.test_production_source_identity_uses_facts_not_retrieval_only_clock) ... ok
+test_projection_fact_uses_canonical_source_display_without_screen_rounding (tests.test_trade_decision_experience.TradeDecisionExperienceTests.test_projection_fact_uses_canonical_source_display_without_screen_rounding) ... ok
+test_public_day_arkham_scoring_and_generation_are_distinct (tests.test_trade_decision_experience.TradeDecisionExperienceTests.test_public_day_arkham_scoring_and_generation_are_distinct) ... ok
+test_search_opportunity_filter_is_not_an_analysis_strategy (tests.test_trade_decision_experience.TradeDecisionExperienceTests.test_search_opportunity_filter_is_not_an_analysis_strategy) ... ok
+test_selected_player_facts_reuse_compatible_published_sleeper_projection (tests.test_trade_decision_experience.TradeDecisionExperienceTests.test_selected_player_facts_reuse_compatible_published_sleeper_projection) ... ok
+test_unresolved_strategy_names_only_actual_blocker_and_keeps_numeric_facts (tests.test_trade_decision_experience.TradeDecisionExperienceTests.test_unresolved_strategy_names_only_actual_blocker_and_keeps_numeric_facts) ... ok
+test_unresolved_strategy_with_other_missing_evidence_lists_both (tests.test_trade_decision_experience.TradeDecisionExperienceTests.test_unresolved_strategy_with_other_missing_evidence_lists_both) ... ok
+test_unsupported_scoring_does_not_publish_zero_as_a_supported_player_fact (tests.test_trade_decision_experience.TradeDecisionExperienceTests.test_unsupported_scoring_does_not_publish_zero_as_a_supported_player_fact) ... ok
+test_valid_zero_projection_and_missing_scoring_are_distinct (tests.test_trade_decision_experience.TradeDecisionExperienceTests.test_valid_zero_projection_and_missing_scoring_are_distinct) ... ok
+test_young_bench_for_older_starter_uses_legal_impact_not_past_ppg_difference (tests.test_trade_decision_experience.TradeDecisionExperienceTests.test_young_bench_for_older_starter_uses_legal_impact_not_past_ppg_difference) ... ok
+
+----------------------------------------------------------------------
+Ran 109 tests in 42.614s
+
+OK

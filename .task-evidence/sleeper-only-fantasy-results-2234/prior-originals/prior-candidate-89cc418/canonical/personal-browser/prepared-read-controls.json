@@ -1,0 +1,27 @@
+{
+  "fixture": "Actual canonical Market reader; disposable authenticated account; six eligible assets",
+  "http_read_count": 10,
+  "response_ms": [
+    9.31,
+    3.88,
+    3.619,
+    3.483,
+    3.674,
+    3.542,
+    3.447,
+    3.506,
+    3.546,
+    3.784
+  ],
+  "expensive_entry_point_calls": {
+    "src.core.asset_market.engine.AssetMarketCache.get": 0,
+    "services.sleeper.sleeper_get": 0,
+    "services.trade_intelligence.generate_trade_workflow": 0,
+    "src.core.trade_intelligence.lineup.optimal_legal_lineup": 0,
+    "src.core.fois.service.FOISService._generate_sync": 0,
+    "src.core.historical_franchise_state.service.HistoricalFranchiseStateService.reconstruct": 0
+  },
+  "logical_database_sha256_before": "39337db6f7a48c6b5a35f06f9d380d4e1e4a7d68f0713ef64830390b5a44ef71",
+  "logical_database_sha256_after": "39337db6f7a48c6b5a35f06f9d380d4e1e4a7d68f0713ef64830390b5a44ef71",
+  "preference_rows_created": 0
+}

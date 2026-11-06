@@ -1,0 +1,2508 @@
+diff --git a/.github/workflows/product-browser.yml b/.github/workflows/product-browser.yml
+index d4d9693..1e2d15c 100644
+--- a/.github/workflows/product-browser.yml
++++ b/.github/workflows/product-browser.yml
+@@ -43,7 +43,7 @@ jobs:
+         timeout-minutes: 5
+         run: |
+           mkdir -p .validation/current-season-history .validation/history-followthrough .validation/market-history-coverage .validation/current-production-coverage
+-          docker run --rm --init --memory=2g --memory-swap=2g --cpus=2 --network=none -e NODE_OPTIONS -e DTOS_CURRENT_HISTORY_EVIDENCE=.validation/current-season-history -e DTOS_FOLLOWTHROUGH_EVIDENCE=.validation/history-followthrough -e DTOS_MARKET_HISTORY_EVIDENCE=.validation/market-history-coverage -e DTOS_PRODUCTION_COVERAGE_EVIDENCE=.validation/current-production-coverage -v "$PWD:$PWD" -w "$PWD" -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0="$PWD" dtos-browser-validation python -m unittest -v tests.test_current_season_franchise_history tests.test_current_season_history_browser tests.test_history_followthrough tests.test_history_followthrough_browser tests.test_market_history_coverage tests.test_market_history_coverage_browser tests.test_current_production_coverage tests.test_current_production_browser
++          docker run --rm --init --memory=2g --memory-swap=2g --cpus=2 --network=none -e NODE_OPTIONS -e DTOS_CURRENT_HISTORY_EVIDENCE=.validation/current-season-history -e DTOS_FOLLOWTHROUGH_EVIDENCE=.validation/history-followthrough -e DTOS_MARKET_HISTORY_EVIDENCE=.validation/market-history-coverage -e DTOS_PRODUCTION_COVERAGE_EVIDENCE=.validation/current-production-coverage -v "$PWD:$PWD" -w "$PWD" -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0="$PWD" dtos-browser-validation python -m unittest -v tests.test_current_season_franchise_history tests.test_current_season_history_browser tests.test_history_followthrough tests.test_history_followthrough_browser tests.test_market_history_coverage tests.test_market_history_coverage_browser tests.test_sleeper_actual_results tests.test_current_production_coverage tests.test_current_production_browser
+       - name: Preserve current-season history evidence
+         if: always()
+         uses: actions/upload-artifact@v4
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index b9bf0e8..1a6dafd 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -1,3 +1,9 @@
++## v1.22.19 / build 2234 — Sleeper fantasy results
++
++- Use explicit league-scoped Sleeper matchup scores for actual fantasy-result summaries, dossier/Market production and Trade facts; keep NFLverse usage and fixed-reference valuation analysis separate.
++- Preserve exact zero, negative and source-precision results; disclose conflicting fields, missing coverage, live weeks, last-valid reads and corrected scores without inventing games played.
++- Reuse admitted atomic publications and cache restoration; preserve Sleeper projections, submitted lineups, Trade qualification, pricing and memory reserves.
++
+ # v1.22.18 / build 2233 — Current-season canonical production coverage
+ 
+ Canonical player production now excludes zero-weight and individual-inapplicable team-defense scoring requirements, retains supported kicking/return source fields, and preserves genuinely missing applicable statistics. Completed-week windows use the selected league scoring and authoritative NFL week; unsupported totals remain withheld. Existing historical scoring, reference valuation mathematics, forward projections and Trade qualification are unchanged.
+diff --git a/RELEASE_NOTES.md b/RELEASE_NOTES.md
+index 8bc2ad0..478b964 100644
+--- a/RELEASE_NOTES.md
++++ b/RELEASE_NOTES.md
+@@ -1,3 +1,9 @@
++# DTOS v1.22.19 / build 2234
++
++- Use explicit league-scoped Sleeper matchup scores for actual fantasy-result summaries, dossier/Market production and Trade facts; keep NFLverse usage and fixed-reference valuation analysis separate.
++- Preserve exact zero, negative and source-precision results; disclose conflicting fields, missing coverage, live weeks, last-valid reads and corrected scores without inventing games played.
++- Reuse admitted atomic publications and cache restoration; preserve Sleeper projections, submitted lineups, Trade qualification, pricing and memory reserves.
++
+ # v1.22.18 / build 2233 — Current-season canonical production coverage
+ 
+ Canonical player production now excludes zero-weight and individual-inapplicable team-defense scoring requirements, retains supported kicking/return source fields, and preserves genuinely missing applicable statistics. Completed-week windows use the selected league scoring and authoritative NFL week; unsupported totals remain withheld. Existing historical scoring, reference valuation mathematics, forward projections and Trade qualification are unchanged.
+diff --git a/app_metadata.py b/app_metadata.py
+index 2db0655..b1557f8 100644
+--- a/app_metadata.py
++++ b/app_metadata.py
+@@ -7,10 +7,10 @@ from datetime import datetime, timezone
+ from pathlib import Path
+ 
+ APPLICATION_NAME = "DTOS"
+-VERSION = "1.22.18"
+-PRODUCT_VERSION = "1.22.18"
+-BUILD_NUMBER = 2233
+-RELEASE_CODENAME = "Market History Evidence Coverage"
++VERSION = "1.22.19"
++PRODUCT_VERSION = "1.22.19"
++BUILD_NUMBER = 2234
++RELEASE_CODENAME = "Sleeper Fantasy Results"
+ APPLICATION_STARTED_AT = datetime.now(timezone.utc).isoformat()
+ 
+ _REPOSITORY_ROOT = Path(__file__).resolve().parent
+diff --git a/docs/SLEEPER_ACTUAL_RESULTS_CONTRACT.md b/docs/SLEEPER_ACTUAL_RESULTS_CONTRACT.md
+new file mode 100644
+index 0000000..b3997bc
+--- /dev/null
++++ b/docs/SLEEPER_ACTUAL_RESULTS_CONTRACT.md
+@@ -0,0 +1,29 @@
++# Sleeper fantasy results (build 2234)
++
++Fantasy-point projections and actual results exclusively use Sleeper. This changes the actual-results source contract; it does not change league scoring, Market formulas, optimizer policy or Trade qualification.
++
++## Confirmed source-to-screen defects
++
++The prior player-production adapter reconstructed fantasy scores from NFLverse game statistics. Applicable missing special-teams statistics could therefore withhold a fantasy average even when the retained Sleeper league matchup payload explicitly supplied the player's score. Its dossier, selected Market asset, current-production layer, asset evidence and Trade fact consumers inherited this restriction. The old unused CachedProductionProvider also labeled arbitrary, unscoped cached numbers as Sleeper statistics. Matchup reads silently preferred ordered starter scores over contradictory player-map scores, and synchronization rounded player results before retaining them in its display groups.
++
++The canonical forward-projection publication already uses Sleeper projected statistics, the selected league's actual scoring coefficients, exact season/week/generation guards and Sleeper web display compatibility. Those paths, legal-lineup calculations and source-order display formatting are preserved. Dormant calibration utilities are not part of the authoritative projection publication. No new provider fallback is admitted.
++
++## Shared actual contract
++
++`src/core/player_value_projection/sleeper_actuals.py` interprets existing `season_matchups` rows. `players_points` and correctly indexed `starters_points` are explicit Sleeper score observations; neither has silent precedence. Finite JSON numbers, including zero and negative values, remain at source precision. Null, invalid, absent and placeholder records do not supply a score. A valid alternate may supply a score when the other field is null/invalid, with that qualification disclosed. Different valid scores, repeated starter identities or conflicting ownership observations withhold the dependent value. Identical duplicate roster observations count once per league/season/player/week. Team `custom_points` never becomes individual production.
++
++No current roster, taxi/IR membership, free-agent identity, bye, DNP or missing week implies a player score or game played. A map explicitly supplying a score is evidence even when roster-role classification is absent. Windows average completed-week score observations, not games played, and display observed totals rather than claiming complete season acquisition. A dependent window containing a missing/conflicting observed score is withheld; independent supported windows and individual weekly scores remain visible. Live/unconfirmed weeks are separate. Future placeholder rows are excluded. Calendar labels distinguish league regular-season/playoff weeks, not NFL postseason acquisition. An earlier league-season's results require their own admitted Sleeper publication and are not substituted from NFLverse.
++
++Each publication carries league, season, selected scoring identity, source generation and retrieval clocks. New native weekly acquisition retains per-week observation/attempt times, explicit failed acquisition, compatible last-valid rows, and detected score corrections. A failed week is never relabeled successful. Known matching old atomic caches can be interpreted from native Sleeper rows only when league/season, saved league scoring, calendar reference, source generation and observation clock agree. This is explicitly qualified as retained cache recovery, not new upstream verification. Missing/incompatible provenance remains unavailable. This never relabels an older NFLverse calculation.
++
++Actuals are derived during existing admitted synchronization or saved-runtime restoration. Rendering performs no provider call, historical import, deep sizing, synchronization or new worker work. The existing atomic runtime cache owns bounded retention; no separate provider database is introduced.
++
++## Consumers and independent analysis
++
++Dossier and selected Market panels show windows, per-week scores, observed coverage, completion state, acquisition gaps, retrieval time and limitations. The Market current-production layer and Trade facts use the same admitted actual contract. Trade facts explicitly label their observation denominator and leave games-played/PPG fields unset. Existing current-context guards withhold results after league/scoring/source-generation mismatch.
++
++NFLverse targets/carries and other usage remain separately labeled analysis with their own samples. The fixed-reference valuation analysis, reference generation and formulas remain unchanged; they are not authoritative fantasy results. `canonical_player_evidence` explicitly separates Sleeper production from `non_sleeper_analysis` and analysis source-check metadata. Retained historical grades remain RETAINED / NOT REVALIDATED; no existing historical record is rewritten or represented as newly Sleeper-validated. New native history ingestion uses the same conflict-aware player-score resolver.
++
++## Evidence limits
++
++The controls use disposable native-shaped Sleeper fixtures and actual preparation, sync, restoration and rendered routes. Their expected individual scores are the retained fixture values, not scores reconstructed by the new implementation. Fixture values are not historical Granite parity observations. No owner-authenticated live score parity is claimed without an independently authorized, compatible live observation. No production sync, Trade search, FOIS rebuild, cache clearing, restart or preference mutation is authorized or performed by these controls.
+diff --git a/routes/history.py b/routes/history.py
+index 19c399e..43fdddb 100644
+--- a/routes/history.py
++++ b/routes/history.py
+@@ -34,8 +34,8 @@ def _player_season_card(season: str, summary: dict) -> str:
+             value = summary.get(name)
+             return escape(str(value)) if value is not None else 'Unavailable'
+         production = (
+-            f'<p><b>{metric("season_total")}</b> points · {metric("points_per_game")} PPG</p>'
+-            f'<p>Floor {metric("floor")} · Ceiling {metric("ceiling")} · Consistency {metric("consistency_score")}</p>'
++            f'<p><b>{metric("season_total")}</b> observed points · {metric("points_per_game")} points per score observation</p>'
++            f'<p>Retained historical analysis: floor {metric("floor")} · ceiling {metric("ceiling")} · Consistency {metric("consistency_score")}. Score observations do not establish games played or complete season acquisition; historical grades are not revalidated here.</p>'
+         )
+     return f'<article class="card"><h3>{escape(str(season))}</h3>{production}</article>'
+ 
+diff --git a/routes/transactions.py b/routes/transactions.py
+index f14790c..4512782 100644
+--- a/routes/transactions.py
++++ b/routes/transactions.py
+@@ -474,7 +474,7 @@ def create_transactions_router(
+         from src.core.player_value_projection.canonical_production import prepared_production_context
+         from src.ui.canonical_production import production_panel, production_summary
+         canonical = data.get('canonical_player_production')
+-        production = (asdict(prepared_production_context(canonical, league_id=selected_league, player_id=player_id))
++        production = (asdict(prepared_production_context(canonical, league_id=selected_league, player_id=player_id, data=data))
+                       if canonical else None)
+         if production_summary(production):
+             reasons['production'] = production_summary(production)
+diff --git a/services/global_evidence.py b/services/global_evidence.py
+index 451eb0d..bf29253 100644
+--- a/services/global_evidence.py
++++ b/services/global_evidence.py
+@@ -45,7 +45,8 @@ def canonical_player_evidence(player_id: str, data: dict, *, expected_league_id:
+         return {'availability': 'unavailable', 'reason': 'league_scoring_unknown', 'league_id': league_id}
+     store = retained_global_evidence(path)
+     if store is None:
+-        return {'availability': 'not_connected', 'reason': 'global_evidence_not_retained', 'league_id': league_id}
++        return {'availability': 'not_connected', 'reason': 'global_analysis_not_retained', 'league_id': league_id,
++                'production': _sleeper_production(data, player_id, as_of or datetime.now(timezone.utc).isoformat()), 'provider_calls': 0}
+     boundary = as_of or datetime.now(timezone.utc).isoformat()
+     production = GlobalProduction(store).league_scored(player_id, league_id=league_id,
+         scoring_settings=scoring, as_of=boundary, season=season,
+@@ -76,12 +77,30 @@ def canonical_player_evidence(player_id: str, data: dict, *, expected_league_id:
+     assessment = assess_availability(connected=True, applicable=True,
+         value_present=bool(production['games']), checked_at=checked,
+         as_of=boundary, evidence_family='performance', completed_period=completed_period)
++    actual = _sleeper_production(data, player_id, boundary)
+     return {'league_id': league_id, 'player_id': player_id, 'season': season,
+-            'availability': assessment.state.value, 'availability_detail': asdict(assessment),
+-            'production': production, 'usage': player_usage(store, player_id, season=season, as_of=boundary,
++            'availability': actual['availability'], 'analysis_availability_detail': asdict(assessment),
++            'production': actual,
++            'non_sleeper_analysis': {**production, 'source': 'NFLverse statistics under selected scoring: analysis only, not Sleeper actual results'}, 'usage': player_usage(store, player_id, season=season, as_of=boundary,
+                 through_week=production.get('completed_week_boundary')),
+             'schedule': schedule,
+             'scoring_fingerprint': hashlib.sha256(json.dumps(scoring, sort_keys=True, separators=(',', ':')).encode()).hexdigest(),
+-            'source_check': receipt, 'provider_calls': 0,
++            'analysis_source_check': receipt, 'provider_calls': 0,
+             'limitations': ['historical_publication_time_not_inferred', 'no_current_or_prior_season_substitution']
+                 + (['latest_source_check_' + receipt['status']] if receipt and receipt['status'] != 'complete' else [])}
++
++
++def _sleeper_production(data, player_id, as_of):
++    from src.core.player_value_projection.canonical_production import prepared_production_context
++    league_id = str((data.get('league') or {}).get('league_id') or '')
++    snapshot = data.get('canonical_player_production') or {'league_id': league_id}
++    context = prepared_production_context(snapshot, league_id=league_id, player_id=player_id, data=data)
++    rows = [row for row in context.observations
++            if row.get('retrieved_at') and utc(row['retrieved_at']) <= utc(as_of)]
++    # A later admitted correction cannot be reconstructed as an earlier score.
++    window = next((w for w in context.windows if w.label == 'Season Average'), None)
++    current = bool(context.updated_at and utc(context.updated_at) <= utc(as_of))
++    return {'source': 'Sleeper league matchup results', 'games': rows,
++            'ppg': None, 'points_per_observation': window.fantasy_points if current and window else None,
++            'denominator': 'completed-week score observations, not games played',
++            'availability': context.status.value if current else 'unavailable'}
+diff --git a/services/matchup_season.py b/services/matchup_season.py
+index f271d7d..5a9a650 100644
+--- a/services/matchup_season.py
++++ b/services/matchup_season.py
+@@ -30,17 +30,13 @@ def number(value: Any) -> float | None:
+ 
+ 
+ def source_player_actual(row: dict, player_id: str, starter_index: int | None = None) -> float | None:
+-    """Read an exact player's actual score from one admitted matchup row.
+-
+-    Missing starter-list entries may use the same source row's player map.
+-    Genuine zero wins over the fallback. Never borrow another week or roster.
+-    """
+-    actuals = row.get('starters_points') or []
+-    if starter_index is not None and starter_index < len(actuals):
+-        value = number(actuals[starter_index])
+-        if value is not None:
+-            return value
+-    return number((row.get('players_points') or {}).get(str(player_id)))
++    """Shared conflict-aware resolver; an index never overrides player identity."""
++    from src.core.player_value_projection.sleeper_actuals import resolve_score
++    if starter_index is not None:
++        starters = row.get('starters') or []
++        if type(starter_index) is not int or not 0 <= starter_index < len(starters) or str(starters[starter_index]) != str(player_id):
++            return None
++    return resolve_score(row, player_id)['points']
+ 
+ 
+ def compact_week(rows: Any) -> list[dict] | None:
+@@ -70,12 +66,18 @@ def compact_week(rows: Any) -> list[dict] | None:
+ 
+ 
+ async def prepare_season_matchups(league: dict, current_week: int, current_rows: list,
+-                                  fetch, *, observed_at: str) -> dict:
++                                  fetch, *, observed_at: str, previous: dict | None = None) -> dict:
+     """Normal synchronization only. At most 18 week and two bracket source reads.
+ 
+     A failed/withdrawn week is explicit; prior current availability is not revived.
+     Observation time is provenance, excluded from semantic generation identity.
+     """
++    from src.core.player_value_projection.sleeper_actuals import scoring_identity, resolve_score
++    fingerprint = scoring_identity(league.get('scoring_settings') or {})
++    previous = previous or {}
++    compatible_previous = (str(previous.get('league_id')) == str(league.get('league_id'))
++        and str(previous.get('season')) == str(league.get('season'))
++        and previous.get('methodology') == METHOD and previous.get('scoring_fingerprint') == fingerprint)
+     calendar = season_calendar(league)
+     weeks = sorted(set(calendar.get("regular_season_weeks") or []) | {
+         week for group in calendar.get("playoff_rounds") or [] for week in group
+@@ -90,6 +92,24 @@ async def prepare_season_matchups(league: dict, current_week: int, current_rows:
+                                    "rows": rows or [], "reason": None if rows is not None else "INVALID_SOURCE_WEEK"}
+         except Exception:
+             evidence[str(week)] = {"availability": "unavailable", "rows": [], "reason": "SOURCE_WEEK_UNAVAILABLE"}
++    for key, week in evidence.items():
++        prior = ((previous.get('weeks') or {}).get(key) or {}) if compatible_previous else {}
++        week.update(observed_at=observed_at if week['availability'] == 'available' else None,
++                    last_attempt_at=observed_at, freshness='current' if week['availability'] == 'available' else 'unavailable')
++        old_rows = prior.get('rows') if prior.get('availability') == 'available' else prior.get('retained_rows')
++        if week['availability'] != 'available' and old_rows:
++            # Preserve usable prior evidence explicitly, without turning a
++            # failed source read into successful current acquisition.
++            week.update(retained_rows=old_rows, observed_at=prior.get('observed_at'), freshness='last_valid')
++        elif week['availability'] == 'available' and old_rows:
++            def scores(rows):
++                values = {}
++                for row in rows:
++                    for pid in set(map(str, row.get('players') or [])) | set(map(str, row.get('starters') or [])) | set(map(str, row.get('players_points') or {})):
++                        values.setdefault(pid, set()).add(resolve_score(row, pid)['points'])
++                return values
++            old, new = scores(old_rows), scores(week['rows'])
++            week['corrected_players'] = sorted(pid for pid in old.keys() & new.keys() if old[pid] != new[pid])
+     brackets = {}
+     # Read bracket facts only after the regular season; early placeholders must
+     # not become postseason qualification. This adds at most two source reads.
+@@ -106,9 +126,10 @@ async def prepare_season_matchups(league: dict, current_week: int, current_rows:
+             except Exception:
+                 pass  # Missing bracket is unavailable, never a projected lock.
+     result = {"league_id": str(league.get("league_id") or ""), "season": str(league.get("season") or ""),
+-              "methodology": METHOD, "calendar_reference": calendar["reference"], "weeks": evidence,
++              "methodology": METHOD, "scoring_fingerprint": fingerprint, "calendar_reference": calendar["reference"], "weeks": evidence,
+               "brackets": brackets}
+-    result["semantic_generation"] = hashlib.sha256(json.dumps(result, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
++    semantic = {**result, 'weeks': {key: {k: v for k, v in row.items() if k not in {'observed_at', 'last_attempt_at'}} for key, row in evidence.items()}}
++    result["semantic_generation"] = hashlib.sha256(json.dumps(semantic, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+     result["observed_at"] = observed_at
+     return result
+ 
+@@ -245,7 +266,7 @@ def season_week_view(data: dict, week: int, projection_service, *, evidence_thro
+         for index, pid in enumerate(starter_ids):
+             actual = source_player_actual(row, pid, index)
+             lineup.append(player_row(pid, slots[index] if index < len(slots) else "Source starter", actual))
+-        bench = [player_row(str(pid), "Non-starter", number((row.get("players_points") or {}).get(str(pid))))
++        bench = [player_row(str(pid), "Non-starter", source_player_actual(row, str(pid)))
+                  for pid in row.get("players") or [] if str(pid) not in starter_ids]
+         # Weekly sources do not retain historical IR/taxi assignments. Current
+         # roster facts may classify only the current selected week, never history.
+@@ -256,7 +277,7 @@ def season_week_view(data: dict, week: int, projection_service, *, evidence_thro
+             weekly_ids = {p['player_id'] for p in lineup + bench}
+             for pid, section in classifications.items():
+                 if pid not in weekly_ids:
+-                    bench.append(player_row(pid, 'Non-starter', number((row.get('players_points') or {}).get(pid))))
++                    bench.append(player_row(pid, 'Non-starter', source_player_actual(row, pid)))
+             reserve = [p for p in bench if classifications.get(p['player_id']) == 'IR']
+             taxi = [p for p in bench if classifications.get(p['player_id']) == 'Taxi']
+             bench = [p for p in bench if classifications.get(p['player_id']) not in {'IR', 'Taxi'}]
+diff --git a/services/player_evidence.py b/services/player_evidence.py
+index decebbb..df19f80 100644
+--- a/services/player_evidence.py
++++ b/services/player_evidence.py
+@@ -19,7 +19,7 @@ from src.core.data_platform.global_evidence import utc
+ from src.core.data_platform.global_production import GlobalProduction
+ from src.core.player_value_projection.canonical_production import canonical_production_context
+ 
+-PRODUCTION_ADAPTER_VERSION = "canonical-production-v4"
++PRODUCTION_ADAPTER_VERSION = "canonical-production-v5-sleeper-actuals"
+ REFERENCE_SCORING_SETTINGS = {"pass_yd": .04, "pass_td": 4, "pass_int": -2,
+     "rush_yd": .1, "rush_td": 6, "rec": 1, "rec_yd": .1, "rec_td": 6, "fum_lost": -2}
+ 
+@@ -109,7 +109,7 @@ def prepare_player_production(data: dict[str, Any], *, expected_league_id: str,
+                     {**game, **GlobalProduction.score_game(game['raw_stats'], REFERENCE_SCORING_SETTINGS)}
+                     for game in periods[year]['production']['games']]}} for year in periods}
+             result['players'][player_id] = {
+-                'production': asdict(profile),
++                'non_sleeper_analysis': asdict(profile),
+                 'reference_production': asdict(canonical_production_context(reference_periods[season], reference_periods[season - 1])),
+                 'current_sample_count': len(periods[season]['production']['games']),
+                 'previous_sample_count': len(periods[season - 1]['production']['games']),
+@@ -119,18 +119,48 @@ def prepare_player_production(data: dict[str, Any], *, expected_league_id: str,
+     # Empty players use one immutable-by-contract template in memory. No legacy
+     # player dictionary can silently fill a missing canonical season.
+     empty = context('unavailable')
+-    missing = {'production': asdict(canonical_production_context(empty[season], empty[season - 1])),
++    missing = {'non_sleeper_analysis': asdict(canonical_production_context(empty[season], empty[season - 1])),
+                'current_sample_count': 0, 'previous_sample_count': 0, 'reference_seasons': []}
+-    missing['reference_production'] = missing['production']
++    missing['reference_production'] = missing['non_sleeper_analysis']
+     for player_id in ids:
+         result['players'].setdefault(player_id, missing)
+     digest.update(result['availability'].encode())
+     result['generation'] = digest.hexdigest()
+     reference_digest.update(result['availability'].encode())
+     result['reference_generation'] = reference_digest.hexdigest()
++    attach_sleeper_actuals(data, result)
+     return result
+ 
+ 
++def attach_sleeper_actuals(data: dict, result: dict) -> None:
++    """Existing atomic publication/restoration only; no provider IO or scoring."""
++    from src.core.player_value_projection.sleeper_actuals import prepare_actual_results
++    actuals = prepare_actual_results(data, expected_league_id=result['league_id'])
++    result['sleeper_actuals'] = actuals
++    result['generation'] = hashlib.sha256(json.dumps([
++        result.get('reference_generation'), actuals['generation']], separators=(',', ':')).encode()).hexdigest()
++    # Rebind only the actual-results disclosure in an existing cached Brain
++    # report. Do not recompute prices, advice, confidence or historical grades.
++    # This runs at publication/restoration, never in a page handler.
++    report = data.get('valuation_intelligence') or {}
++    assets = report.get('assets') or {}
++    if assets:
++        from src.core.player_value_projection.canonical_production import prepared_production_context
++        from src.core.valuation_intelligence.engine import asset_market_input_revision, _semantic_digest
++        for asset_id, asset in assets.items():
++            if str(asset_id).startswith('player:') and isinstance(asset, dict):
++                asset['canonical_production'] = asdict(prepared_production_context(result,
++                    league_id=result['league_id'], player_id=str(asset_id).removeprefix('player:'), data=data))
++        report['actual_results_binding'] = {'method': actuals['method_version'],
++            'generation': actuals['generation'], 'source_generation': actuals['source_generation'],
++            'qualification': 'Result disclosure rebound from retained Sleeper rows; other cached model assessments are not revalidated.'}
++        manifest = report.setdefault('input_manifest', {})
++        manifest['canonical_production'] = {'semantic_digest': _semantic_digest({'generation': result['generation']}),
++            'record_count': 0, 'input_keys': ['canonical_player_production']}
++        data['asset_market_semantic_revision'] = asset_market_input_revision(report.get('semantic_generation'), manifest)
++
++
++
+ def _reference_summary(year: int, games: list[dict[str, Any]]) -> dict[str, Any]:
+     """No partial averages, absent-year zero filling, or durable raw duplication."""
+     if len(games) > 26:
+diff --git a/services/sleeper.py b/services/sleeper.py
+index 5d0fdab..cf9e607 100644
+--- a/services/sleeper.py
++++ b/services/sleeper.py
+@@ -100,7 +100,20 @@ def load_cache(
+         if cached_league != str(league_id):
+             raise ValueError("Cached Sleeper league identity does not match the requested runtime.")
+         from src.core.intelligence.team_strength import restore_cached_week_keys
+-        restore_cached_week_keys(payload.get('data') or {})
++        restored_data = payload.get('data') or {}
++        restore_cached_week_keys(restored_data)
++        # Restore derived actuals from retained source rows only, within the
++        # already admitted cache lifecycle. No acquisition or global store read.
++        prepared = restored_data.get('canonical_player_production')
++        if not isinstance(prepared, dict) and restored_data.get('season_matchups'):
++            from src.core.player_value_projection.sleeper_actuals import scoring_identity
++            league = restored_data.get('league') or {}
++            prepared = {'league_id': str(league_id), 'season': league.get('season'), 'players': {},
++                        'scoring_fingerprint': scoring_identity(restored_data.get('scoring_settings') or league.get('scoring_settings') or {})}
++            restored_data['canonical_player_production'] = prepared
++        if isinstance(prepared, dict) and str(prepared.get('league_id')) == str(league_id):
++            from services.player_evidence import attach_sleeper_actuals
++            attach_sleeper_actuals(restored_data, prepared)
+         state.update(safe_sync_state(payload))
+         state["syncing"] = False
+         state["transactions_syncing"] = False
+@@ -224,6 +237,7 @@ async def _sync_sleeper(
+                 season_matchups = await prepare_season_matchups(
+                     league, matchup_week, matchups,
+                     lambda path: sleeper_get(client, path), observed_at=utcnow().isoformat(),
++                    previous=(state.get("data") or {}).get("season_matchups"),
+                 )
+                 from src.core.history_context.transaction_periods import acquire_previous_periods
+                 season_transactions, transaction_acquisition = await acquire_previous_periods(
+@@ -429,7 +443,7 @@ async def _sync_sleeper(
+                         "slot": player.get("starter_slot") or (
+                             lineup_slots[index] if index < len(lineup_slots) else "START"
+                         ),
+-                        "points": round(starter_points[player_id], 2) if starter_points[player_id] is not None else None,
++                        "points": starter_points[player_id],
+                     })
+                 bench = []
+                 for player_id in (m.get("players") or []):
+@@ -444,7 +458,7 @@ async def _sync_sleeper(
+                         "name": player.get("name") or pid,
+                         "position": player.get("position") or "—",
+                         "nfl_team": player.get("team") or "Vacant",
+-                        "points": round(number(players_points.get(pid)), 2) if number(players_points.get(pid)) is not None else None,
++                        "points": source_player_actual(m, pid),
+                     })
+                 matchup_groups.setdefault(matchup_id, []).append({
+                     "team": team["team_name"],
+diff --git a/services/trade_decision.py b/services/trade_decision.py
+index 5bf4298..87af201 100644
+--- a/services/trade_decision.py
++++ b/services/trade_decision.py
+@@ -359,7 +359,7 @@ def selected_player_facts(data, assets, projections, *, scoring_supported=None):
+         }
+         if compatible:
+             context = prepared_production_context(
+-                prepared, league_id=league_id, player_id=pid
++                prepared, league_id=league_id, player_id=pid, data=data
+             )
+             average = next(
+                 (
+@@ -369,10 +369,12 @@ def selected_player_facts(data, assets, projections, *, scoring_supported=None):
+                 ),
+                 None,
+             )
+-            sample = (prepared.get("players") or {}).get(pid) or {}
+             production.update(
+-                points_per_game=average,
+-                sample_games=sample.get("current_sample_count"),
++                points_per_game=None,
++                points_per_observation=average,
++                sample_games=None,
++                sample_observations=next((w.observation_count for w in context.windows if w.label == "Season Average"), None),
++                denominator="completed_week_score_observations_not_games_played",
+                 source=context.source,
+                 generation=prepared["generation"],
+                 observed_at=context.updated_at,
+diff --git a/services/trade_explanation.py b/services/trade_explanation.py
+index 68c7812..f56d97f 100644
+--- a/services/trade_explanation.py
++++ b/services/trade_explanation.py
+@@ -4,6 +4,7 @@ from src.core.explanations import (
+     Explanation, Statement,
+ )
+ from src.ui.intelligence_presentation import manager_points
++from src.core.player_value_projection.sleeper_actuals import actual_display
+ from html import escape
+ from services.trade_decision import final_decision, lineup_comparisons
+ from services.trade_lineup_evidence import completed_lineup_admissions, weekly_total_display, diagnostic_summary_display
+@@ -359,7 +360,7 @@ def _decision_primary(result, decision, admissions=None):
+             if (projection.get('refresh_evidence') or {}).get('retained_publication'):
+                 brief += paragraph('Using retained projection evidence; latest refresh did not complete.')
+             brief += paragraph(projection.get('reason') or projection.get('display_reason'))
+-            brief += paragraph(f"Actual production: {manager_points(production['points_per_game'])} points/game · {production['sample_games'] if production['sample_games'] is not None else 'Unknown'} observed games · Season {production['season']} · Selected league scoring.")
++            brief += paragraph(f"Sleeper actual production: {actual_display(production.get('points_per_observation'))} points per completed-week score observation · {production.get('sample_observations') if production.get('sample_observations') is not None else 'Unknown'} observations · Season {production['season']} · Selected league. This is not a games-played average.")
+             brief += paragraph('Season fantasy-points rank / points-per-game rank: unavailable; no complete compatible cohort is prepared.')
+             brief += '<details><summary>Player fact sources and coverage</summary>'
+             brief += paragraph(f"Projection source observation: {projection.get('source_observed_at') or 'Unknown'}; source generation: {projection.get('generation') or 'Unavailable'}.")
+diff --git a/src/core/asset_intelligence/players/value_models.py b/src/core/asset_intelligence/players/value_models.py
+index d3bd33b..0cd2844 100644
+--- a/src/core/asset_intelligence/players/value_models.py
++++ b/src/core/asset_intelligence/players/value_models.py
+@@ -16,14 +16,14 @@ def canonical_evidence(profile: PlayerProfile, context: AssetContext | None) ->
+             window = next((row for row in production.windows if row.label == label), None)
+             value = window.fantasy_points if window is not None else None
+             rows.append(Evidence(label, str(value) if value is not None else "Unavailable", 0,
+-                "Canonical NFL game evidence scored under the selected league rules; previous seasons are not current production.",
++                "Sleeper actual score observations in the selected league; not games played or a full-season total. Previous seasons are separate.",
+                 production.source, value is not None))
+-        window = next((row for row in production.windows if row.label == "Season Average"), None)
+-        for label, value in (("Targets per game", window.targets if window else None),
+-                             ("Carries per game", window.carries if window else None)):
++        window = next((row for row in production.usage_analysis if row["label"] == "Season Average"), {})
++        for label, value in (("NFLverse targets per observed game", window.get("targets")),
++                             ("NFLverse carries per observed game", window.get("carries"))):
+             rows.append(Evidence(label, str(value) if value is not None else "Unavailable", 0,
+-                "Derived from the same canonical production records; missing usage is not zero.",
+-                production.source, value is not None))
++                "Non-Sleeper usage analysis is separate from Sleeper fantasy results; missing usage is not zero.",
++                "NFLverse usage analysis", value is not None))
+     else:
+         rows.append(Evidence("Canonical production", "Not prepared", 0,
+             "Canonical production has not been prepared for this context.", "Canonical evidence", False))
+diff --git a/src/core/historical_memory/importer.py b/src/core/historical_memory/importer.py
+index 5399e43..6bfbf6d 100644
+--- a/src/core/historical_memory/importer.py
++++ b/src/core/historical_memory/importer.py
+@@ -451,7 +451,8 @@ class HistoricalImporter:
+                     "outcome": "requires opponent pairing",
+                 }, week=week, franchise_id=franchise_id)
+                 for player_id in players:
+-                    points = player_points.get(player_id)
++                    from src.core.player_value_projection.sleeper_actuals import resolve_score
++                    points = resolve_score(matchup, player_id)["points"]
+                     append("player_week", f"{week}:{roster_id}:{player_id}", {
+                         "fantasy_points": float(points) if points is not None else None,
+                         "actual_league_scored_points": float(points) if points is not None else None,
+diff --git a/src/core/history_context/store.py b/src/core/history_context/store.py
+index 133c0f2..321f8b5 100644
+--- a/src/core/history_context/store.py
++++ b/src/core/history_context/store.py
+@@ -556,15 +556,16 @@ class CanonicalHistoryStore:
+         starters = set(map(str, raw_starters)) if known_roles else set()
+         roster_id = int(row.get("roster_id") or 0)
+         for player_id in sorted(membership - {"0", "", "None"}):
+-            from .results import number
+-            score = number(points.get(player_id))
++            from src.core.player_value_projection.sleeper_actuals import resolve_score
++            resolved = resolve_score(row, player_id)
++            score = resolved["points"]
+             source_score = score
+             if context is not None and not context.get('scoring_settings'):
+                 score = None
+             rows.append(self._record(
+                 league_id, season, "player_week",
+                 f"{week}:{roster_id}:{player_id}",
+-                {"fantasy_points": score, "points": score,
++                {"fantasy_points": score, "points": score, "score_reason": resolved["reason"],
+                  "starter": str(player_id) in starters if known_roles else None,
+                  "lineup_role_source": "Sleeper explicit starters" if known_roles else "unavailable",
+                  "roster_id": roster_id,
+diff --git a/src/core/intelligence/orchestrator.py b/src/core/intelligence/orchestrator.py
+index 8798ac9..276261a 100644
+--- a/src/core/intelligence/orchestrator.py
++++ b/src/core/intelligence/orchestrator.py
+@@ -50,8 +50,9 @@ def _asset_context(context: IntelligenceContext, decision: Any) -> AssetContext:
+         if decision.competitive_window is not None
+         else "Pending canonical window"
+     )
++    from src.core.player_value_projection.canonical_production import bound_production_snapshot
+     return AssetContext(context.league_id, context.active_roster_id, context.settings, window, decision.profile.strategy, needs, depths, decision.profile.market_context.get("position_counts") or {},
+-                        context.cached_data.get("canonical_player_production"), context.projection_snapshot)
++                        bound_production_snapshot(context.cached_data), context.projection_snapshot)
+ 
+ 
+ def _asset_provider(context: IntelligenceContext, decision: Any) -> tuple[Any, Any, dict[str, Any]]:
+diff --git a/src/core/player_value_projection/canonical_production.py b/src/core/player_value_projection/canonical_production.py
+index b942657..3442d95 100644
+--- a/src/core/player_value_projection/canonical_production.py
++++ b/src/core/player_value_projection/canonical_production.py
+@@ -108,13 +108,13 @@ def canonical_production_context(
+     )
+ 
+ 
+-def prepared_production_context(snapshot: dict[str, Any], *, league_id: str,
++def prepared_analysis_context(snapshot: dict[str, Any], *, league_id: str,
+                                 player_id: str) -> ProductionContext:
+     """Consume a serialized, pinned preparation without re-querying evidence."""
+     if str(snapshot.get('league_id') or '') != str(league_id):
+         raise ValueError('Prepared production belongs to another league.')
+     row = (snapshot.get('players') or {}).get(str(player_id)) or {}
+-    value = row.get('production')
++    value = row.get('non_sleeper_analysis') or row.get('production')
+     if not value:
+         return ProductionContext((), None, None, 'Unavailable', 'Canonical production',
+                                  DataStatus.UNAVAILABLE, None, ('Canonical player production is not prepared.',))
+@@ -137,3 +137,54 @@ def prepared_production_context(snapshot: dict[str, Any], *, league_id: str,
+         value['volatility'], value['consistency'], value['trend'], value['source'],
+         DataStatus(value['status']), value['updated_at'], tuple(value.get('limitations') or ()),
+     )
++
++
++def prepared_production_context(snapshot: dict[str, Any], *, league_id: str,
++                                player_id: str, data: dict | None = None) -> ProductionContext:
++    """Only explicitly admitted Sleeper scores are actual fantasy production.
++
++    Legacy reconstructed values remain separate analysis; never relabel them.
++    """
++    from .sleeper_actuals import METHOD, player_context
++    if str(snapshot.get('league_id') or '') != str(league_id):
++        raise ValueError('Prepared production belongs to another league.')
++    actuals = snapshot.get('sleeper_actuals') or {}
++    if data is not None:
++        from .sleeper_actuals import scoring_identity
++        league = data.get('league') or {}
++        scoring = data.get('scoring_settings') or league.get('scoring_settings') or {}
++        source = data.get('season_matchups') or {}
++        if (str(league.get('league_id')) != str(league_id)
++                or str(league.get('season')) != str(snapshot.get('season'))
++                or not scoring or scoring_identity(scoring) != actuals.get('scoring_fingerprint')
++                or source.get('semantic_generation') != actuals.get('source_generation')):
++            actuals = {}
++    if (actuals.get('method_version') != METHOD or actuals.get('league_id') != str(league_id)
++            or str(actuals.get('season')) != str(snapshot.get('season'))
++            or actuals.get('scoring_fingerprint') != snapshot.get('scoring_fingerprint')):
++        return ProductionContext((), None, None, 'Unavailable', 'Sleeper league matchup results',
++            DataStatus.UNAVAILABLE, None, ('Compatible Sleeper actual results are not prepared. Retained non-Sleeper calculations are separate analysis, not authoritative fantasy results.',))
++    from dataclasses import replace
++    context = player_context(actuals, player_id)
++    analysis = ((snapshot.get('players') or {}).get(str(player_id)) or {}).get('non_sleeper_analysis') or {}
++    usage = tuple({key: window.get(key) for key in ('label', 'season', 'observation_count', 'weeks',
++                        'opportunities', 'targets', 'carries', 'receptions', 'touchdowns')}
++                  for window in analysis.get('windows') or ())
++    return replace(context, usage_analysis=usage)
++
++
++def bound_production_snapshot(data: dict) -> dict | None:
++    """Retain reference analysis but suppress results from another source context."""
++    snapshot = data.get('canonical_player_production')
++    if not snapshot:
++        return snapshot
++    from .sleeper_actuals import scoring_identity
++    actuals = snapshot.get('sleeper_actuals') or {}
++    league = data.get('league') or {}
++    settings = data.get('scoring_settings') or league.get('scoring_settings') or {}
++    if (str(snapshot.get('league_id')) != str(league.get('league_id'))
++            or str(snapshot.get('season')) != str(league.get('season'))
++            or not settings or actuals.get('scoring_fingerprint') != scoring_identity(settings)
++            or actuals.get('source_generation') != (data.get('season_matchups') or {}).get('semantic_generation')):
++        return {**snapshot, 'sleeper_actuals': {}}
++    return snapshot
+diff --git a/src/core/player_value_projection/engine.py b/src/core/player_value_projection/engine.py
+index 388a3b4..84e3c7c 100644
+--- a/src/core/player_value_projection/engine.py
++++ b/src/core/player_value_projection/engine.py
+@@ -61,7 +61,7 @@ def evaluate_player_values(context: Any, decision: Any, reports: dict[str, Any],
+         prepared = context.cached_data.get("canonical_player_production")
+         production = prepared_production_context(
+             prepared if prepared is not None else {"league_id": context.league_id},
+-            league_id=context.league_id, player_id=key)
++            league_id=context.league_id, player_id=key, data=context.cached_data)
+         positional = PositionalContext(None, None, weekly_ranks[key]["position"].rank,
+             "Intrinsic tier unavailable", None, above,
+             sum(pos == positions[key] for pos in positions.values()), None,
+diff --git a/src/core/player_value_projection/models.py b/src/core/player_value_projection/models.py
+index 4455b65..a5524f5 100644
+--- a/src/core/player_value_projection/models.py
++++ b/src/core/player_value_projection/models.py
+@@ -62,6 +62,7 @@ class ProductionWindow:
+     scored_count: int | None = None
+     weeks: tuple[int, ...] = ()
+     missing_components: tuple[str, ...] = ()
++    observed_total: float | None = None
+ 
+ 
+ @dataclass(frozen=True)
+@@ -74,6 +75,13 @@ class ProductionContext:
+     status: DataStatus
+     updated_at: str | None
+     limitations: tuple[str, ...] = ()
++    authority: str | None = None
++    source_generation: str | None = None
++    league_id: str | None = None
++    scoring_fingerprint: str | None = None
++    observations: tuple[dict[str, Any], ...] = ()
++    periods: dict[str, Any] = field(default_factory=dict)
++    usage_analysis: tuple[dict[str, Any], ...] = ()
+ 
+ 
+ @dataclass(frozen=True)
+diff --git a/src/core/player_value_projection/providers.py b/src/core/player_value_projection/providers.py
+index 927fead..3187aee 100644
+--- a/src/core/player_value_projection/providers.py
++++ b/src/core/player_value_projection/providers.py
+@@ -2,10 +2,9 @@
+ from __future__ import annotations
+ 
+ from abc import ABC, abstractmethod
+-from statistics import mean, pstdev
+ from typing import Any
+ 
+-from src.core.player_value_projection.models import DataStatus, ProductionContext, ProductionWindow, Projection
++from src.core.player_value_projection.models import DataStatus, ProductionContext, Projection
+ from src.core.projection_intelligence import projection_service
+ 
+ 
+@@ -82,24 +81,15 @@ InternalProjectionProvider = SleeperCanonicalProjectionProvider
+ 
+ 
+ class CachedProductionProvider(ProductionProvider):
++    name = "sleeper_explicit_actuals_only"
++    version = "2"
++
+     def production(self, player: dict[str, Any]) -> ProductionContext:
+-        history = player.get("fantasy_points_history") or player.get("recent_points") or []
+-        values = [float(value) for value in history if value is not None]
+-        season = player.get("season_average")
+-        if season is None:
+-            season = player.get("fantasy_points_per_game")
+-        windows = []
+-        for label, size in (("Last Game", 1), ("Last 3 Games", 3), ("Last 5 Games", 5)):
+-            sample = values[-size:]
+-            windows.append(ProductionWindow(label, round(mean(sample), 2) if sample else None, None, None, None, None, None))
+-        windows.extend((ProductionWindow("Season Average", float(season) if season is not None else None, None, None, None, None, None), ProductionWindow("Previous Season Average", float(player["previous_season_average"]) if player.get("previous_season_average") is not None else None, None, None, None, None, None)))
+-        available = bool(values or season is not None)
+-        volatility = round(pstdev(values), 2) if len(values) > 1 else None
+-        consistency = round(max(0, 100 - volatility * 5)) if volatility is not None else None
+-        trend = "Unavailable"
+-        if len(values) >= 3:
+-            trend = "Rising" if mean(values[-2:]) > mean(values[:-2]) + 1 else "Falling" if mean(values[-2:]) < mean(values[:-2]) - 1 else "Stable"
+-        return ProductionContext(tuple(windows), volatility, consistency, trend, "Cached Sleeper/player statistics" if available else "No production provider", DataStatus.CACHED if available else DataStatus.UNAVAILABLE, player.get("stats_updated_at"), () if available else ("Recent and historical production data are unavailable.",))
++        # Unscoped extension fields have no league/week/source identity. Even
++        # a plausible number cannot be relabeled as an authoritative result.
++        return ProductionContext((), None, None, "Unavailable", "Sleeper league matchup results",
++            DataStatus.UNAVAILABLE, None,
++            ("League-scoped prepared Sleeper actual results are required; unscoped cached statistics are not a fallback.",))
+ 
+ 
+ class PlayerDataRegistry:
+diff --git a/src/core/player_value_projection/sleeper_actuals.py b/src/core/player_value_projection/sleeper_actuals.py
+new file mode 100644
+index 0000000..bd8e20d
+--- /dev/null
++++ b/src/core/player_value_projection/sleeper_actuals.py
+@@ -0,0 +1,375 @@
++"""Pure, bounded interpretation of retained Sleeper league matchup results.
++
++No scoring reconstruction, provider IO, current-roster inference or game-count
++inference. The owning league publication supplies identity and retrieval clocks.
++"""
++
++from __future__ import annotations
++
++import hashlib
++import json
++import math
++from decimal import Decimal, ROUND_HALF_UP
++from typing import Any
++
++METHOD = "sleeper-matchup-actuals-v1"
++SOURCE = "Sleeper league matchup results"
++
++
++def score_number(value: Any) -> float | None:
++    # JSON numbers only: booleans, strings, nulls and non-finite values are not scores.
++    return (
++        float(value) if type(value) in (int, float) and math.isfinite(value) else None
++    )
++
++
++def actual_display(value: Any) -> str:
++    """Sleeper web Number.toFixed(2) presentation; never an arithmetic input."""
++    score = score_number(value)
++    if score is None:
++        return "Unavailable"
++    if score == 0:
++        return "0.00"
++    # Preserve the binary64 boundary, as in the existing Sleeper projection
++    # display contract; Decimal(str(score)) would change midpoint behavior.
++    from decimal import localcontext
++
++    with localcontext() as context:
++        context.prec = 340
++        return format(
++            Decimal.from_float(score).quantize(Decimal(".01"), rounding=ROUND_HALF_UP),
++            ".2f",
++        )
++
++
++def scoring_identity(settings: dict) -> str:
++    return hashlib.sha256(
++        json.dumps(
++            settings, sort_keys=True, separators=(",", ":"), allow_nan=False
++        ).encode()
++    ).hexdigest()
++
++
++def resolve_score(row: dict, player_id: str) -> dict:
++    """Resolve a player map and correctly indexed starter score without precedence.
++
++    An explicit map key proves source coverage even if the player's roster role
++    is absent. No score is inferred for another current roster member.
++    """
++    pid = str(player_id)
++    if not pid or pid == "0":
++        return {"points": None, "reason": "placeholder_player", "sources": []}
++    starters = [str(p) for p in row.get("starters") or []]
++    mapped = row.get("players_points") or {}
++    ordered = row.get("starters_points") or []
++    values, sources, invalid = [], [], []
++    if pid in mapped:
++        value = score_number(mapped[pid])
++        if value is None:
++            invalid.append("players_points")
++        else:
++            values.append(value)
++            sources.append("players_points")
++    indices = [i for i, item in enumerate(starters) if item == pid]
++    if len(indices) > 1:
++        return {
++            "points": None,
++            "reason": "duplicate_starter_identity",
++            "sources": sources,
++        }
++    if indices and indices[0] < len(ordered):
++        value = score_number(ordered[indices[0]])
++        if value is None:
++            invalid.append("starters_points")
++        else:
++            values.append(value)
++            sources.append("starters_points")
++    if len({Decimal(str(v)) for v in values}) > 1:
++        return {
++            "points": None,
++            "reason": "conflicting_sleeper_scores",
++            "sources": sources,
++        }
++    return {
++        "points": values[0] if values else None,
++        "reason": ("invalid_alternate_score" if invalid else None)
++        if values
++        else "invalid_sleeper_score"
++        if invalid
++        else "score_not_observed",
++        "sources": sources,
++    }
++
++
++def prepare_actual_results(data: dict, *, expected_league_id: str) -> dict:
++    """Interpret at most 18 retained weeks, once per publication/restoration.
++
++    Old caches without scoring provenance remain unverified. Calendar completion
++    comes from Sleeper's last-scored leg, never from a nonzero score or wall clock.
++    """
++    league = data.get("league") or {}
++    lid, season = str(league.get("league_id") or ""), str(league.get("season") or "")
++    if lid != str(expected_league_id) or not lid:
++        raise ValueError("Sleeper actual results require the selected league.")
++    settings = data.get("scoring_settings") or league.get("scoring_settings") or {}
++    fingerprint = scoring_identity(settings)
++    prepared = data.get("season_matchups") or {}
++    result = {
++        "method_version": METHOD,
++        "source": SOURCE,
++        "league_id": lid,
++        "season": season,
++        "scoring_fingerprint": fingerprint,
++        "source_generation": prepared.get("semantic_generation"),
++        "retrieved_at": prepared.get("observed_at"),
++        "players": {},
++        "periods": {},
++        "availability": "unavailable",
++        "reason": None,
++        "scoring_provenance": "explicit_publication_fingerprint",
++    }
++    if (
++        not season.isdigit()
++        or not settings
++        or prepared.get("methodology") != "matchup-season-presentation-v1"
++        or str(prepared.get("league_id") or "") != lid
++        or str(prepared.get("season") or "") != season
++    ):
++        result["reason"] = "compatible_sleeper_matchup_publication_unavailable"
++    elif prepared.get("scoring_fingerprint") != fingerprint:
++        # Legacy atomic runtime caches retained native Sleeper matchup rows
++        # alongside the exact league settings/calendar. Reinterpret those rows,
++        # never old NFLverse calculated totals. Missing context stays unknown.
++        from src.core.intelligence.season_calendar import season_calendar
++
++        legacy_atomic = (
++            prepared.get("scoring_fingerprint") is None
++            and bool(league.get("scoring_settings"))
++            and league["scoring_settings"] == settings
++            and prepared.get("calendar_reference")
++            == season_calendar(league)["reference"]
++            and bool(prepared.get("observed_at"))
++            and bool(prepared.get("semantic_generation"))
++        )
++        if legacy_atomic:
++            result["scoring_provenance"] = "retained_atomic_league_context"
++        else:
++            result["reason"] = "sleeper_scoring_provenance_unverified"
++    if not result["reason"] and len(prepared.get("weeks") or {}) > 18:
++        result["reason"] = "unsupported_week_population"
++    if not result["reason"]:
++        completed = (league.get("settings") or {}).get("last_scored_leg")
++        completed = (
++            completed if type(completed) is int and 0 <= completed <= 18 else None
++        )
++        start = (league.get("settings") or {}).get("start_week")
++        playoff_start = (league.get("settings") or {}).get("playoff_week_start")
++        result["completed_through_week"] = completed
++        for key, week in sorted(
++            (prepared.get("weeks") or {}).items(),
++            key=lambda item: str(item[0]).zfill(2),
++        ):
++            if not str(key).isdigit() or not 1 <= int(key) <= 18:
++                continue
++            w = int(key)
++            phase = (
++                ("postseason" if w >= playoff_start else "regular")
++                if type(playoff_start) is int
++                else "unknown"
++            )
++            state = (
++                "completed"
++                if completed is not None and w <= completed
++                else "provisional"
++                if completed is not None
++                else "unknown"
++            )
++            # Future Sleeper rows can be zero-filled placeholders. They cannot
++            # enter actual windows before the selected league reaches that week.
++            current = data.get("week")
++            if type(current) is int and w > current:
++                state = "future"
++            if type(start) is int and w < start:
++                state = "outside_league_season"
++            result["periods"][str(w)] = {
++                "availability": week.get("availability"),
++                "reason": week.get("reason"),
++                "state": state,
++                "scope": phase,
++                "retrieved_at": week.get("observed_at"),
++                "last_attempt_at": week.get("last_attempt_at"),
++                "freshness": week.get("freshness", "retained"),
++            }
++            if (
++                week.get("availability") != "available"
++                and not week.get("retained_rows")
++            ) or state in {"future", "outside_league_season"}:
++                continue
++            observations: dict[str, list[dict]] = {}
++            rows = (
++                week.get("rows")
++                if week.get("availability") == "available"
++                else week.get("retained_rows")
++            )
++            rows = rows or []
++            if len(rows) > 64:
++                result["periods"][str(w)].update(
++                    availability="unavailable", reason="unsupported_roster_population"
++                )
++                continue
++            for row in rows:
++                if (
++                    not isinstance(row, dict)
++                    or type(row.get("roster_id")) is not int
++                    or any(
++                        row.get(k) is not None and not isinstance(row[k], list)
++                        for k in ("players", "starters", "starters_points")
++                    )
++                    or row.get("players_points") is not None
++                    and not isinstance(row["players_points"], dict)
++                ):
++                    result["periods"][str(w)].update(
++                        availability="unavailable",
++                        reason="invalid_retained_matchup_row",
++                    )
++                    observations = {}
++                    break
++                players = (
++                    set(map(str, row.get("players") or []))
++                    | set(map(str, row.get("starters") or []))
++                    | set(map(str, row.get("players_points") or {}))
++                )
++                if len(players) > 256:
++                    result["periods"][str(w)].update(
++                        availability="unavailable",
++                        reason="unsupported_player_population",
++                    )
++                    observations = {}
++                    break
++                for pid in sorted(players - {"0", ""}):
++                    observations.setdefault(pid, []).append(resolve_score(row, pid))
++            for pid, candidates in observations.items():
++                observed = [v["points"] for v in candidates if v["points"] is not None]
++                conflict = (
++                    any(
++                        v["reason"]
++                        in {"conflicting_sleeper_scores", "duplicate_starter_identity"}
++                        for v in candidates
++                    )
++                    or len({Decimal(str(v)) for v in observed}) > 1
++                )
++                points = None if conflict else observed[0] if observed else None
++                reasons = sorted({v["reason"] for v in candidates if v["reason"]})
++                if conflict:
++                    reasons.append("conflicting_sleeper_scores")
++                entry = {
++                    "week": w,
++                    "season": int(season),
++                    "points": points,
++                    "state": state,
++                    "scope": phase,
++                    "reasons": sorted(set(reasons)),
++                    "sources": sorted({s for v in candidates for s in v["sources"]}),
++                    "retrieved_at": week.get("observed_at"),
++                    "freshness": week.get("freshness", "retained"),
++                    "corrected": pid in (week.get("corrected_players") or []),
++                }
++                result["players"].setdefault(pid, []).append(entry)
++        result["availability"] = "cached"
++    result["generation"] = hashlib.sha256(
++        json.dumps(
++            result, sort_keys=True, separators=(",", ":"), allow_nan=False
++        ).encode()
++    ).hexdigest()
++    return result
++
++
++def player_context(snapshot: dict, player_id: str):
++    from .models import DataStatus, ProductionContext, ProductionWindow
++
++    rows = (snapshot.get("players") or {}).get(str(player_id)) or []
++    completed = [row for row in rows if row["state"] == "completed"]
++    windows = []
++    groups = [
++        (label, completed[-size:])
++        for label, size in (
++            ("Last Observation", 1),
++            ("Last 3 Observations", 3),
++            ("Last 5 Observations", 5),
++        )
++    ]
++    groups += [("Season Average", completed), ("Previous Season Average", [])]
++    for label, sample in groups:
++        values = [row["points"] for row in sample]
++        exact = bool(values) and all(v is not None for v in values)
++        total = (
++            float(sum((Decimal(str(v)) for v in values), Decimal(0))) if exact else None
++        )
++        windows.append(
++            ProductionWindow(
++                label,
++                total / len(values) if exact else None,
++                None,
++                None,
++                None,
++                None,
++                None,
++                season=int(snapshot["season"])
++                if label != "Previous Season Average"
++                and str(snapshot.get("season")).isdigit()
++                else None,
++                observation_count=len(sample),
++                scored_count=sum(v is not None for v in values),
++                weeks=tuple(row["week"] for row in sample),
++                missing_components=tuple(
++                    sorted({r for row in sample for r in row["reasons"]})
++                ),
++                observed_total=total,
++            )
++        )
++    notes = [
++        "Averages and totals describe retained completed-week score observations, not games played or full-season acquisition.",
++        "An explicit zero does not prove participation. Byes, DNPs, absent matchup records and taxi/IR membership do not supply scores.",
++        "Live or unconfirmed weeks are separate from completed-week windows. Team custom-point adjustments are never allocated to players.",
++        "Previous-season results require their own admitted Sleeper league-season publication; another season is never substituted.",
++    ]
++    if snapshot.get("reason"):
++        notes.append(
++            {
++                "compatible_sleeper_matchup_publication_unavailable": "A compatible Sleeper league-season matchup publication is not prepared.",
++                "sleeper_scoring_provenance_unverified": "The retained matchup rows cannot be tied to the selected league scoring context.",
++            }.get(
++                snapshot["reason"],
++                "The retained Sleeper publication exceeds supported evidence bounds.",
++            )
++        )
++    if snapshot.get("scoring_provenance") == "retained_atomic_league_context":
++        notes.append(
++            "Sleeper scores were recovered from native matchup rows in the same retained league cache and calendar, not recalculated or newly verified against Sleeper."
++        )
++    if any(row["freshness"] != "current" for row in rows):
++        notes.append(
++            "Some scores are retained observations, not newly revalidated results; review each week’s retrieval time."
++        )
++    if any(row["points"] is None for row in completed):
++        notes.append(
++            "Missing or contradictory Sleeper scores withhold the dependent window; supported other windows remain available."
++        )
++    return ProductionContext(
++        tuple(windows),
++        None,
++        None,
++        "Unavailable",
++        SOURCE,
++        DataStatus.CACHED
++        if any(w.fantasy_points is not None for w in windows)
++        else DataStatus.UNAVAILABLE,
++        snapshot.get("retrieved_at"),
++        tuple(notes),
++        authority=METHOD,
++        source_generation=snapshot.get("source_generation"),
++        league_id=snapshot.get("league_id"),
++        scoring_fingerprint=snapshot.get("scoring_fingerprint"),
++        observations=tuple(rows),
++        periods=snapshot.get("periods") or {},
++    )
+diff --git a/src/core/valuation/universe.py b/src/core/valuation/universe.py
+index 2604b0d..0c8caa9 100644
+--- a/src/core/valuation/universe.py
++++ b/src/core/valuation/universe.py
+@@ -251,11 +251,12 @@ class ValuationUniverse:
+         }
+         report = None
+         if active:
++            from src.core.player_value_projection.canonical_production import bound_production_snapshot
+             context = AssetContext(
+                 str((self.data.get("league") or {}).get("league_id") or "unknown"),
+                 int((owner or {}).get("roster_id") or 0),
+                 {},  # Global intrinsic quality does not depend on the selected league.
+-                canonical_production=self.data.get("canonical_player_production"),
++                canonical_production=bound_production_snapshot(self.data),
+                 canonical_projection=self.data.get("projection_intelligence"),
+             )
+             report = evaluate_player(player, context)
+@@ -305,7 +306,7 @@ class ValuationUniverse:
+             from dataclasses import asdict
+             production = prepared_production_context(
+                 prepared, league_id=str((self.data.get("league") or {}).get("league_id") or ""),
+-                player_id=player_id,
++                player_id=player_id, data=self.data,
+             )
+             production_context = asdict(production)
+             from src.core.valuation.player_methodology import assess_prepared_intrinsic
+@@ -328,10 +329,10 @@ class ValuationUniverse:
+             season_window = next((window for window in production.windows if window.label == "Season Average"), None)
+             points = season_window.fantasy_points if season_window is not None else None
+             layers["current_production_value"] = _layer(
+-                points, "Canonical current-season PPG · selected league scoring", self.generated_at,
+-                reason=('Missing applicable scoring components: ' + ', '.join(season_window.missing_components)
++                points, "Sleeper actual points per completed-week score observation", self.generated_at,
++                reason=('Unresolved Sleeper score evidence: ' + ', '.join(season_window.missing_components)
+                         if season_window is not None and season_window.missing_components else
+-                        'Current-season complete scoring evidence is unavailable; previous seasons are not substituted.'),
++                        'Compatible completed-week Sleeper score observations are unavailable; previous seasons are not substituted.'),
+             )
+         name = player.get("name") or player.get("full_name") or " ".join(filter(None, (player.get("first_name"), player.get("last_name")))) or player_id
+         return {
+diff --git a/src/ui/canonical_production.py b/src/ui/canonical_production.py
+index 7b13306..5818253 100644
+--- a/src/ui/canonical_production.py
++++ b/src/ui/canonical_production.py
+@@ -1,67 +1,93 @@
+-"""Render pinned canonical production facts without source or scoring work."""
++"""Render admitted Sleeper observations; no acquisition or scoring work."""
+ from html import escape
++from src.core.player_value_projection.sleeper_actuals import actual_display
+ 
++_REASONS = {
++    'conflicting_sleeper_scores': 'Sleeper score records disagree; no value selected',
++    'duplicate_starter_identity': 'Sleeper repeats this starter identity',
++    'invalid_sleeper_score': 'Sleeper score is null or invalid',
++    'invalid_alternate_score': 'An alternate Sleeper field is null or invalid; the explicit valid score is shown',
++    'score_not_observed': 'No individual Sleeper score was supplied',
++    'SOURCE_WEEK_UNAVAILABLE': 'The weekly source request failed',
++    'INVALID_SOURCE_WEEK': 'The weekly source response could not be admitted',
++    'compatible_sleeper_matchup_publication_unavailable': 'A compatible Sleeper league-season matchup publication is not prepared',
++    'sleeper_scoring_provenance_unverified': 'The retained matchup publication does not verify the selected scoring context',
++}
+ 
+-def _stat_name(key: str) -> str:
+-    return {'st_ff': 'player special-teams forced fumbles (st_ff)',
+-            'st_fum_rec': 'player special-teams fumble recoveries (st_fum_rec)'}.get(key, key)
++
++def _reason(value):
++    return _REASONS.get(value, 'This observation cannot be verified from the retained Sleeper evidence')
+ 
+ 
+ def production_summary(production: dict | None) -> str | None:
+     if not production:
+         return None
++    if production.get('authority') != 'sleeper-matchup-actuals-v1':
++        return 'Compatible Sleeper actual results are not prepared. Non-Sleeper analysis and separate Career History observations do not replace authoritative fantasy results. A normal league refresh can prepare supported results when capacity permits.'
+     row = next((w for w in production.get('windows') or [] if w['label'] == 'Season Average'), None)
+     if not row:
+         return None
+-    count, scored = row.get('observation_count'), row.get('scored_count')
+-    value = row.get('fantasy_points')
+-    if count is None and value is None:
+-        return 'The saved canonical production summary lacks observation coverage metadata. A normal league refresh can prepare current evidence when capacity and source evidence permit. Missing production is not zero.'
+-    if count == 0:
+-        return 'No canonical current-season NFL game observations are retained in this prepared context. Separate Career History roster observations do not fill this gap.'
+-    season = str(row.get('season') or 'selected season')
+-    coverage = (f'{scored} of {count} observations have complete league scoring.'
+-                if count is not None and scored is not None else
+-                f'{count} canonical game observations; the fully scored count was not retained.' if count is not None else
+-                'Observation coverage was not retained in this older preparation.')
++    count, scored, value = row.get('observation_count'), row.get('scored_count'), row.get('fantasy_points')
++    coverage = f'{scored} of {count} completed-week score observations have explicit, consistent Sleeper scores.'
++    if not count:
++        return 'No compatible completed-week Sleeper scores are retained for this player. Live weeks and absent matchup records do not supply completed results.'
+     if value is not None:
+-        return f'{season}: {value:,.2f} fantasy points per observed game. {coverage} This is an observed sample, not a full-season total.'
+-    missing = row.get('missing_components') or ()
+-    why = (' Missing applicable scoring statistics: ' + ', '.join(_stat_name(key) for key in missing) + '.' if missing else
+-           ' The saved diagnostic does not identify individual missing statistics.')
+-    return f'{season}: {coverage} The fantasy-point average is withheld because scoring is incomplete.' + why
++        return f'{row.get("season")}: {actual_display(value)} fantasy points per score observation. {coverage} Observed total: {actual_display(row["observed_total"])}. This is not a games-played average or a full-season total.'
++    return coverage + ' The dependent fantasy-point average and total are withheld because Sleeper score evidence is missing or contradictory.'
+ 
+ 
+ def production_panel(production: dict | None, *, refresh_failed: bool = False) -> str:
+     summary = production_summary(production)
+     if not summary:
+         return ''
+-    retained = ('<p class="evidence-unavailable">The league refresh did not complete. These are retained observations, not newly revalidated production.</p>' if refresh_failed else '')
++    retained = ('<p class="evidence-unavailable">The league refresh did not complete. These are retained observations, not newly revalidated results.</p>' if refresh_failed else '')
+     rows = []
+     for window in production.get('windows') or []:
+-        value = window.get('fantasy_points')
+-        points = f'{value:,.2f}' if value is not None else 'Withheld: incomplete or missing scoring'
+-        count, scored = window.get('observation_count'), window.get('scored_count')
+-        coverage = (f'{scored}/{count}' if count is not None and scored is not None else
+-                    f'Unknown/{count}' if count is not None else 'Unknown')
+-        weeks = ', '.join(str(w) for w in window.get('weeks') or ()) or 'Not retained'
+-        missing = ', '.join(window.get('missing_components') or ())
++        points = actual_display(window["fantasy_points"]) if window.get('fantasy_points') is not None else 'Withheld: incomplete or missing evidence'
++        total = actual_display(window["observed_total"]) if window.get('observed_total') is not None else 'Withheld'
+         rows.append('<tr><th scope="row">' + escape(window['label']) + '</th><td>'
+-                    + escape(str(window.get('season') or 'Unknown')) + '</td><td>' + escape(weeks)
+-                    + '</td><td>' + escape(coverage) + '</td><td>' + points + '</td><td>'
+-                    + escape(missing or ('None' if value is not None else 'Specific fields not retained')) + '</td></tr>')
++                    + escape(str(window.get('season') or 'Unknown')) + '</td><td>'
++                    + escape(', '.join(str(w) for w in window.get('weeks') or ()) or 'None retained')
++                    + '</td><td>' + escape(f'{window.get("scored_count")}/{window.get("observation_count")}')
++                    + '</td><td>' + points + '</td><td>' + total + '</td></tr>')
++    observations = []
++    for row in production.get('observations') or ():
++        value = actual_display(row["points"]) if row.get('points') is not None else 'Not available'
++        qualifications = [_reason(r) for r in row.get('reasons') or ()]
++        if row.get('corrected'):
++            qualifications.append('Sleeper score changed since the preceding retained publication')
++        observations.append('<tr><th scope="row">' + str(int(row['week'])) + '</th><td>' + value
++            + '</td><td>' + escape(str(row['state']) + ' · ' + str(row['scope']))
++            + '</td><td>' + escape(str(row.get('retrieved_at') or 'Unknown') + ' · ' + ('current at retrieval' if row.get('freshness') == 'current' else str(row.get('freshness') or 'Unknown')))
++            + '</td><td>' + escape('; '.join(qualifications) or 'Explicit Sleeper score; participation not established') + '</td></tr>')
++    periods = '; '.join('Week ' + str(key) + ': ' + str(row.get('availability') or 'unknown')
++        + (' — ' + _reason(row['reason']) if row.get('reason') else '')
++        for key, row in (production.get('periods') or {}).items())
++    usage = ''.join('<li>' + escape(str(row.get('season') or 'Unknown') + ' · ' + str(row['label'])
++        + ' · ' + str(row.get('observation_count')) + ' NFLverse game observations · Targets: '
++        + str(row.get('targets') if row.get('targets') is not None else 'Unknown')
++        + ' · Carries: ' + str(row.get('carries') if row.get('carries') is not None else 'Unknown'))
++        + '</li>' for row in production.get('usage_analysis') or () if row['label'] in {'Season Average','Previous Season Average'})
++    usage = ('<details><summary>Separate NFLverse usage analysis</summary><p>These observed-game usage averages '
++        'are not Sleeper fantasy results. They have their own sample; no missing scoring component is reconstructed.</p><ul>'
++        + usage + '</ul></details>') if usage else ''
+     notes = ''.join('<li>' + escape(str(note)) + '</li>' for note in production.get('limitations') or ())
+     return ('<section class="card canonical-production" style="min-width:0;overflow-wrap:anywhere">'
+-            '<h3>Observed NFL production · selected league scoring</h3><p>' + escape(summary) + '</p>' + retained
+-            + '<p>Windows average retained game observations, not calendar weeks. Byes, DNPs and missing '
+-            'weeks are not inserted as zero. Complete scoring means all applicable scoring components '
+-            'are supported for that sample; it does not establish full-season acquisition or final game status.</p>'
+-            '<p>Source: ' + escape(str(production.get('source') or 'Canonical production'))
+-            + ' · Latest knowledge boundary across these windows: ' + escape(str(production.get('updated_at') or 'Unknown')) + '</p>'
+-            '<div class="ds-table-wrap" tabindex="0" role="region" aria-label="Canonical production observations">'
+-            '<table style="min-width:42rem;overflow-wrap:normal;word-break:normal"><caption>Prepared observation coverage and per-game averages</caption><thead><tr>'
+-            '<th>Window</th><th>Season</th><th>Observed weeks</th><th>Fully scored / observed</th>'
+-            '<th>Fantasy points per observation</th><th>Missing statistics</th></tr></thead><tbody>'
+-            + ''.join(rows) + '</tbody></table></div><ul>' + notes + '</ul>'
+-            '<p>Career History contains separate Sleeper roster-week observations. Those points are not '
+-            'substituted here. Forward Sleeper projections are also separate. The knowledge timestamp is not a provider publication date or a new source check.</p></section>')
++            '<h3>Sleeper actual fantasy results · selected league</h3><p>' + escape(summary) + '</p>' + retained
++            + '<p>Source: ' + escape(str(production.get('source') or 'Sleeper league matchup results'))
++            + ' · League: ' + escape(str(production.get('league_id') or 'Unknown'))
++            + ' · Preparation observed: ' + escape(str(production.get('updated_at') or 'Unknown')) + '</p>'
++            '<p>Each window averages only its retained completed-week score observations. Missing periods are not zero. '
++            'Live or unconfirmed results are shown separately below; they are not completed-week production. '
++            'League regular-season and playoff observations are identified by the league’s own calendar; these labels do not claim NFL postseason coverage.</p>'
++            '<div class="ds-table-wrap" tabindex="0" role="region" aria-label="Sleeper result windows">'
++            '<table style="min-width:42rem;overflow-wrap:normal;word-break:normal"><caption>Completed-week observations: averages and observed totals</caption><thead><tr>'
++            '<th>Window</th><th>Season</th><th>Observed weeks</th><th>Scored / observed</th>'
++            '<th>Points per observation</th><th>Observed total</th></tr></thead><tbody>' + ''.join(rows) + '</tbody></table></div>'
++            '<details><summary>Weekly Sleeper scores and coverage</summary><p>' + escape(periods or 'Weekly acquisition coverage is not retained.') + '</p>'
++            '<div class="ds-table-wrap" tabindex="0" role="region" aria-label="Weekly Sleeper results">'
++            '<table style="min-width:42rem;overflow-wrap:normal;word-break:normal"><caption>Retained individual scores; team custom-point adjustments excluded</caption>'
++            '<thead><tr><th>Week</th><th>Points</th><th>Result / period</th><th>Retrieval / freshness</th><th>Qualification</th></tr></thead><tbody>'
++            + ''.join(observations) + '</tbody></table></div></details>' + usage + '<ul>' + notes + '</ul>'
++            '<p>Non-Sleeper usage, fixed-reference valuation analysis, historical roster observations and forward Sleeper '
++            'projections remain separate. No absent score, bye or DNP is reconstructed. Retained historical grades are not revalidated here.</p></section>')
+diff --git a/src/ui/matchup_season.py b/src/ui/matchup_season.py
+index df1b11a..e5c7023 100644
+--- a/src/ui/matchup_season.py
++++ b/src/ui/matchup_season.py
+@@ -1,5 +1,6 @@
+ """Season navigation and disclosure over prepared matchup evidence."""
+ from html import escape
++from src.core.player_value_projection.sleeper_actuals import actual_display
+ from urllib.parse import urlencode
+ 
+ 
+@@ -23,7 +24,7 @@ def render_desk(desk):
+     else:
+         for row in desk.get('contributors', []):
+             players = ', '.join(escape(pid) for pid in row['player_ids'])
+-            content += f'<p>Roster {row["roster_id"]}: leading submitted-player score {_points(row["actual"])} · player IDs {players}.</p>'
++            content += f'<p>Roster {row["roster_id"]}: leading submitted-player score {actual_display(row["actual"])} · player IDs {players}.</p>'
+         content += '<p>Historical legal bench alternatives and pregame expectations are unavailable here; no lineup-mistake or projected-upset claim is made.</p>'
+     banter = desk.get('smack_talk')
+     if banter:
+@@ -84,7 +85,7 @@ def _player_cell(player, week, identity, state, *, starter=False, team_label='')
+     qualification = f'<small>{escape(player["projection_display_reason"])}</small>' if player.get('projection_display_reason') else ''
+     if player.get('participation_note'):
+         qualification += f'<small>{escape(player["participation_note"])}</small>'
+-    actual = '' if state == 'pregame' else f'<span><small>Actual</small><b>{_points(player["actual"])}</b></span>'
++    actual = '' if state == 'pregame' else f'<span><small>Actual</small><b>{actual_display(player["actual"])}</b></span>'
+     label = 'Pregame projection · Sleeper' if player['projection'] is not None else 'Projection unavailable'
+     side_label = f'<small class="matchup-side-label">{escape(team_label)}</small>' if team_label else ''
+     return (f'<div class="matchup-player{" battle-side" if starter else ""}">{side_label}{content}<div class="matchup-player-points">'
+@@ -158,7 +159,7 @@ def render_season_week(view: dict, *, matchup_id: str | None = None) -> str:
+                     comparison = leader + (' wins the round' if view['round_complete'] and view['round_weeks'] else ' leads this component week' if view['round_weeks'] and state == 'final' else ' has the projected edge' if state == 'pregame' else ' wins' if state == 'final' else ' leads')
+         blocks = []
+         for side in sides:
+-            actual = f'<span class="matchup-score"><small>{"Final score" if state == "final" else "Actual score"}</small><b>{_points(side["actual"])}</b></span>' if state != 'pregame' else ''
++            actual = f'<span class="matchup-score"><small>{"Final score" if state == "final" else "Actual score"}</small><b>{actual_display(side["actual"])}</b></span>' if state != 'pregame' else ''
+             projected = '<span class="matchup-projected"><small>Pregame projection · Sleeper submitted</small><b>' + _points(side['projection']) + '</b></span>'
+             if view['period'] == 'historical':
+                 projected = '<small>Historical pregame projection: Unavailable</small>'
+diff --git a/tests/test_batch6_matchup_desk.py b/tests/test_batch6_matchup_desk.py
+index 678211c..ecb4599 100644
+--- a/tests/test_batch6_matchup_desk.py
++++ b/tests/test_batch6_matchup_desk.py
+@@ -88,6 +88,8 @@ class PregameDeskTests(unittest.TestCase):
+         rows[0]['points'], rows[1]['points'] = 10, 20
+         rows[0]['starters_points'] = [10]
+         rows[1]['starters_points'] = [20]
++        rows[0]['players_points']['1'] = 10
++        rows[1]['players_points']['2'] = 20
+         result = postgame_desk(data, 1, 1)
+         self.assertEqual(result['weekly_winner'], 2)
+         self.assertEqual(result['contributors'][0]['actual'], 10)
+diff --git a/tests/test_canonical_player_evidence.py b/tests/test_canonical_player_evidence.py
+index fc4a48e..96916f2 100644
+--- a/tests/test_canonical_player_evidence.py
++++ b/tests/test_canonical_player_evidence.py
+@@ -25,21 +25,23 @@ class CanonicalPlayerEvidenceTests(unittest.TestCase):
+                         'scoring_settings': {'rec': multiplier}}
+                 result = canonical_player_evidence('1', data, expected_league_id=league_id,
+                     path=path, as_of='2026-02-01T00:00:00Z')
+-                self.assertEqual(result['production']['ppg'], 5 * multiplier)
++                self.assertEqual(result['non_sleeper_analysis']['ppg'], 5 * multiplier)
+                 self.assertEqual(result['provider_calls'], 0)
++                self.assertIsNone(result['production']['ppg'])
++                self.assertEqual(result['production']['source'], 'Sleeper league matchup results')
+                 data['league']['season'] = '2026'
+                 result = canonical_player_evidence('1', data, expected_league_id=league_id,
+                     path=path, as_of='2026-02-01T00:00:00Z')
+-                self.assertIsNone(result['production']['ppg'])
++                self.assertIsNone(result['non_sleeper_analysis']['ppg'])
+             self.assertEqual(store.counts(), {'production': 1})
+             store.record_source_check('nflverse/production/2025', source_identity='later',
+                 checked_at='2026-03-01T00:00:00Z', status='complete', details={})
+             data = {'league': {'league_id': 'A', 'season': '2025'}, 'scoring_settings': {'rec': 1}}
+             historical = canonical_player_evidence('1', data, expected_league_id='A',
+                 path=path, as_of='2026-02-01T00:00:00Z')
+-            self.assertIsNone(historical['source_check'])
+-            self.assertEqual(historical['production']['ppg'], 5)
+-            self.assertNotEqual(historical['availability_detail']['reason'], 'observation_after_as_of')
++            self.assertIsNone(historical['analysis_source_check'])
++            self.assertEqual(historical['non_sleeper_analysis']['ppg'], 5)
++            self.assertNotEqual(historical['analysis_availability_detail']['reason'], 'observation_after_as_of')
+             data['players'] = {'1': {'team': 'FUTURE'}}
+             historical = canonical_player_evidence('1', data, expected_league_id='A',
+                 path=path, as_of='2026-02-01T00:00:00Z')
+diff --git a/tests/test_current_production_browser.py b/tests/test_current_production_browser.py
+index 30ac95c..faa9a06 100644
+--- a/tests/test_current_production_browser.py
++++ b/tests/test_current_production_browser.py
+@@ -46,10 +46,10 @@ class CurrentProductionBrowserTests(unittest.TestCase):
+                             panel=page.locator('.canonical-production')
+                             panel.evaluate("e=>{for(let p=e.parentElement;p;p=p.parentElement)if(p.tagName==='DETAILS')p.open=true}")
+                             self.assertIn(expected,panel.inner_text())
+-                            table=panel.locator('table')
++                            table=panel.locator('table').first
+                             self.assertGreaterEqual(table.evaluate('e=>e.getBoundingClientRect().width'),672)
+                             self.assertEqual(table.evaluate('e=>getComputedStyle(e).overflowWrap'),'normal')
+-                            region=panel.get_by_role('region',name='Canonical production observations')
++                            region=panel.get_by_role('region',name='Sleeper result windows')
+                             region.focus()
+                             self.assertNotEqual(region.evaluate('e=>getComputedStyle(e).outlineStyle'),'none')
+                             self.assertLessEqual(page.evaluate('document.documentElement.scrollWidth-innerWidth'),0)
+@@ -58,32 +58,37 @@ class CurrentProductionBrowserTests(unittest.TestCase):
+                             with patch.dict(dtos_app.STATE,{'data':f.f.data}):
+                                 response=page.goto('http://fixture/market?selected=player%3A1')
+                                 self.assertEqual(response.status,200)
+-                                inspect('8 of 8 observations')
++                                inspect('8 of 8 completed-week score observations')
+                                 self.assertIn('18.00 fantasy points',page.locator('.canonical-production').inner_text())
+                                 canonical=f.api()['windows'][3]
+                                 if dest:
+                                     page.screenshot(path=str(dest/f'complete-market-{league}-{w}.png'))
+                                 response=page.goto('http://fixture/players/1?front_office=4')
+                                 self.assertEqual(response.status,200)
+-                                inspect('8 of 8 observations')
++                                inspect('8 of 8 completed-week score observations')
+                                 self.assertNotIn('This player context does not include a season production summary',page.locator('body').inner_text())
+                                 if dest:
+                                     page.screenshot(path=str(dest/f'complete-dossier-{league}-{w}.png'))
+-                                f.set_scoring({'pass_yd':.04,'st_ff':1,'sack':1})
++                                # A real source-field conflict, not missing NFLverse
++                                # statistics, blocks dependent Sleeper windows.
++                                f.f.data['season_matchups']['weeks']['1']['rows'][0]['starters_points']=[999]
++                                f.republish_actuals()
+                                 page.reload()
+-                                panel=inspect('0 of 8 observations')
+-                                self.assertIn('st_ff',panel.inner_text())
+-                                self.assertIn('average is withheld',panel.inner_text())
++                                panel=inspect('7 of 8 completed-week score observations')
++                                self.assertIn('missing or contradictory',panel.inner_text())
++                                self.assertIn('are withheld',panel.inner_text())
+                                 self.assertIsNone(f.api()['windows'][3]['fantasy_points'])
+                                 response=page.goto('http://fixture/market?selected=player%3A1')
+                                 self.assertEqual(response.status,200)
+-                                inspect('0 of 8 observations')
++                                inspect('7 of 8 completed-week score observations')
+                                 f.f.state['last_error']='Disposable league refresh failure'
+                                 page.reload()
+                                 panel=inspect('league refresh did not complete')
+-                                self.assertIn('0 of 8 observations',panel.inner_text())
++                                self.assertIn('7 of 8 completed-week score observations',panel.inner_text())
+                                 if dest:
+                                     page.screenshot(path=str(dest/f'partial-retained-{league}-{w}.png'))
++                                panel.get_by_text('Weekly Sleeper scores and coverage',exact=True).click()
++                                self.assertIn('Sleeper score records disagree',panel.inner_text())
+                                 count=len(requests)
+                                 for details in page.locator('details').all():
+                                     details.evaluate('e=>e.open=!e.open')
+diff --git a/tests/test_current_production_coverage.py b/tests/test_current_production_coverage.py
+index e035168..d0967de 100644
+--- a/tests/test_current_production_coverage.py
++++ b/tests/test_current_production_coverage.py
+@@ -1,4 +1,4 @@
+-"""Current-season production uses canonical facts, never roster-history totals."""
++"""Non-Sleeper analysis remains separate from authoritative Sleeper results."""
+ from pathlib import Path
+ import tempfile
+ import unittest
+@@ -69,7 +69,7 @@ class CurrentProductionCoverageTests(unittest.TestCase):
+     def test_ongoing_season_preserves_eight_observations_and_exact_denominator(self):
+         with tempfile.TemporaryDirectory() as folder:
+             result = prepared(Path(folder)/'facts.sqlite3')
+-            row = result['players']['4984']['production']['windows'][3]
++            row = result['players']['4984']['non_sleeper_analysis']['windows'][3]
+             self.assertEqual(row['fantasy_points'], 18)
+             self.assertEqual((row['observation_count'], row['scored_count']), (8, 8))
+             self.assertEqual(list(row['weeks']), list(range(1, 9)))
+@@ -79,11 +79,11 @@ class CurrentProductionCoverageTests(unittest.TestCase):
+     def test_partial_scoring_retains_coverage_and_names_the_actual_gap(self):
+         with tempfile.TemporaryDirectory() as folder:
+             result = prepared(Path(folder)/'facts.sqlite3', scoring={'pass_yd': .04, 'st_ff': 1})
+-            row = result['players']['4984']['production']['windows'][3]
++            row = result['players']['4984']['non_sleeper_analysis']['windows'][3]
+             self.assertIsNone(row['fantasy_points'])
+             self.assertEqual((row['observation_count'], row['scored_count']), (8, 0))
+             self.assertEqual(tuple(row['missing_components']), ('st_ff',))
+-            self.assertIn('st_ff', ' '.join(result['players']['4984']['production']['limitations']))
++            self.assertIn('st_ff', ' '.join(result['players']['4984']['non_sleeper_analysis']['limitations']))
+ 
+     def test_no_fake_bye_dnp_or_missing_week_zero_and_no_ownership_double_count(self):
+         with tempfile.TemporaryDirectory() as folder:
+@@ -91,30 +91,30 @@ class CurrentProductionCoverageTests(unittest.TestCase):
+             a=prepared(path, weeks=(1, 3, 8))
+             b=prepared(path, weeks=(1, 3, 8))
+             self.assertEqual(a, b)
+-            row=a['players']['4984']['production']['windows'][3]
++            row=a['players']['4984']['non_sleeper_analysis']['windows'][3]
+             self.assertEqual(row['observation_count'], 3)
+             self.assertEqual(tuple(row['weeks']), (1, 3, 8))
+             self.assertEqual(row['fantasy_points'], 18)
+ 
+     def test_window_adapter_old_cache_keeps_unknown_counts_and_new_cache_roundtrips(self):
+-        from src.core.player_value_projection.canonical_production import prepared_production_context
++        from src.core.player_value_projection.canonical_production import prepared_analysis_context
+         with tempfile.TemporaryDirectory() as folder:
+             result=prepared(Path(folder)/'facts.sqlite3')
+             import json
+             restored=json.loads(json.dumps(result))
+-            context=prepared_production_context(restored, league_id='A', player_id='4984')
++            context=prepared_analysis_context(restored, league_id='A', player_id='4984')
+             self.assertEqual(context.windows[3].observation_count, 8)
+             legacy=json.loads(json.dumps(result))
+-            for row in legacy['players']['4984']['production']['windows']:
++            for row in legacy['players']['4984']['non_sleeper_analysis']['windows']:
+                 for key in ('season','weeks','observation_count','scored_count','missing_components'):
+                     row.pop(key,None)
+             legacy['players']['4984'].pop('current_sample_count')
+             legacy['players']['4984'].pop('previous_sample_count')
+-            old=prepared_production_context(legacy, league_id='A', player_id='4984')
++            old=prepared_analysis_context(legacy, league_id='A', player_id='4984')
+             self.assertIsNone(old.windows[3].observation_count)
+             self.assertEqual(old.windows[3].fantasy_points, 18)
+             with self.assertRaises(ValueError):
+-                prepared_production_context(restored, league_id='other', player_id='4984')
++                prepared_analysis_context(restored, league_id='other', player_id='4984')
+ 
+     def test_new_fields_do_not_change_reference_values_or_input_facts(self):
+         with tempfile.TemporaryDirectory() as folder:
+@@ -124,25 +124,25 @@ class CurrentProductionCoverageTests(unittest.TestCase):
+             other=prepared(path, league='B', scoring={'pass_yd': .1})
+             self.assertEqual(first['reference_generation'], other['reference_generation'])
+             self.assertEqual(counts, GlobalEvidenceStore(path,readonly=True).counts())
+-            self.assertEqual(other['players']['4984']['production']['windows'][3]['fantasy_points'],25)
++            self.assertEqual(other['players']['4984']['non_sleeper_analysis']['windows'][3]['fantasy_points'],25)
+ 
+     def test_current_week_is_excluded_when_authoritative_context_supplies_the_boundary(self):
+         with tempfile.TemporaryDirectory() as folder:
+             value=prepared(Path(folder)/'facts.sqlite3', weeks=range(1, 10))
+-            row=value['players']['4984']['production']['windows'][3]
++            row=value['players']['4984']['non_sleeper_analysis']['windows'][3]
+             self.assertEqual(value['completed_week_boundary'], 8)
+             self.assertEqual(row['observation_count'], 8)
+             self.assertNotIn(9, row['weeks'])
+-            self.assertIn('Current-week', ' '.join(value['players']['4984']['production']['limitations']))
++            self.assertIn('Current-week', ' '.join(value['players']['4984']['non_sleeper_analysis']['limitations']))
+ 
+     def test_legacy_same_generation_sample_count_is_preserved_without_inventing_scored_count(self):
+-        from src.core.player_value_projection.canonical_production import prepared_production_context
++        from src.core.player_value_projection.canonical_production import prepared_analysis_context
+         with tempfile.TemporaryDirectory() as folder:
+             value=prepared(Path(folder)/'facts.sqlite3', scoring={'pass_yd': .04, 'st_ff': 1})
+-            for row in value['players']['4984']['production']['windows']:
++            for row in value['players']['4984']['non_sleeper_analysis']['windows']:
+                 for key in ('observation_count','scored_count','weeks','missing_components'):
+                     row.pop(key,None)
+-            row=prepared_production_context(value,league_id='A',player_id='4984').windows[3]
++            row=prepared_analysis_context(value,league_id='A',player_id='4984').windows[3]
+             self.assertEqual(row.observation_count,8)
+             self.assertIsNone(row.scored_count)
+             self.assertIsNone(row.fantasy_points)
+@@ -197,6 +197,13 @@ class ProductionViewFixture:
+         from src.core.valuation_intelligence.engine import _score_asset
+         self.f.data['scoring_settings']=scoring
+         value=prepared(self.path,league=self.f.data['league']['league_id'],scoring=scoring,player='1')
++        from tests.test_sleeper_actual_results import actual_data
++        from services.player_evidence import attach_sleeper_actuals
++        actual=actual_data(self.f.data['league']['league_id'],player='1',scoring=scoring,scores=(18,)*8)
++        self.f.data['league'].update(actual['league'])
++        self.f.data['week']=actual['week']
++        self.f.data['season_matchups']=actual['season_matchups']
++        attach_sleeper_actuals(self.f.data,value)
+         self.f.data['canonical_player_production']=value
+         universe=ValuationUniverse(self.f.data, self.f.state)
+         self.f.data['valuation_intelligence']['assets']['player:1']=_score_asset(universe.by_id['player:1'],[],{},None)
+@@ -205,6 +212,22 @@ class ProductionViewFixture:
+         self.f.market=self.f.cache.get(self.f.data,self.f.state,self.f.history,self.f.data['league']['league_id'])
+         return value
+ 
++    def republish_actuals(self):
++        from services.player_evidence import attach_sleeper_actuals
++        from src.core.valuation.universe import ValuationUniverse
++        from src.core.valuation_intelligence.engine import _score_asset
++        import hashlib
++        import json
++        source=self.f.data['season_matchups']
++        source['semantic_generation']=hashlib.sha256(json.dumps(source['weeks'],sort_keys=True).encode()).hexdigest()
++        value=self.f.data['canonical_player_production']
++        attach_sleeper_actuals(self.f.data,value)
++        universe=ValuationUniverse(self.f.data,self.f.state)
++        self.f.data['valuation_intelligence']['assets']['player:1']=_score_asset(universe.by_id['player:1'],[],{},None)
++        self.f.data['valuation_intelligence']['generated_at']=value['generation']
++        self.f.cache.clear()
++        self.f.market=self.f.cache.get(self.f.data,self.f.state,self.f.history,self.f.data['league']['league_id'])
++
+     def api(self):
+         return self.f.client.get('/api/market/assets/player:1').json()['valuation']['canonical_production']
+ 
+@@ -215,18 +238,18 @@ class ProductionRenderedCoverageTests(unittest.TestCase):
+         for path in ('/market?selected=player%3A1','/players/1?front_office=4'):
+             response=f.f.client.get(path)
+             self.assertEqual(response.status_code,200)
+-            self.assertIn('8 of 8 observations',response.text)
+-            self.assertIn('18.00 fantasy points per observed game',response.text)
++            self.assertIn('8 of 8 completed-week score observations',response.text)
++            self.assertIn('18.00 fantasy points per score observation',response.text)
+             self.assertNotIn('This player context does not include a season production summary',response.text)
+         self.assertEqual(f.api()['windows'][3]['fantasy_points'],18)
+         f.set_scoring({'pass_yd':.04,'st_ff':1,'sack':1})
+-        self.assertIsNone(f.api()['windows'][3]['fantasy_points'])
++        self.assertEqual(f.api()['windows'][3]['fantasy_points'],18)
+         for path in ('/market?selected=player%3A1','/players/1?front_office=4'):
+             response=f.f.client.get(path)
+             self.assertEqual(response.status_code,200)
+-            self.assertIn('0 of 8 observations',response.text)
+-            self.assertIn('st_ff',response.text)
+-            self.assertIn('average is withheld',response.text)
++            self.assertIn('8 of 8 completed-week score observations',response.text)
++            self.assertIn('18.00 fantasy points per score observation',response.text)
++            self.assertIn('Sleeper actual fantasy results',response.text)
+ 
+     def test_failed_refresh_preserves_the_same_facts_and_changes_both_cached_explanations(self):
+         f=ProductionViewFixture(self)
+@@ -236,7 +259,7 @@ class ProductionRenderedCoverageTests(unittest.TestCase):
+         for path in ('/market?selected=player%3A1','/players/1?front_office=4'):
+             response=f.f.client.get(path)
+             self.assertIn('league refresh did not complete',response.text)
+-            self.assertIn('8 of 8 observations',response.text)
++            self.assertIn('8 of 8 completed-week score observations',response.text)
+         self.assertEqual(f.api(),before)
+ 
+     def test_actual_saved_cache_restoration_preserves_production_publication(self):
+@@ -255,7 +278,7 @@ class ProductionRenderedCoverageTests(unittest.TestCase):
+         f.f.cache.clear()
+         f.f.market=f.f.cache.get(f.f.data,f.f.state,f.f.history,f.f.data['league']['league_id'])
+         self.assertEqual(f.api(),original)
+-        self.assertIn('8 of 8 observations',f.f.client.get('/players/1?front_office=4').text)
++        self.assertIn('8 of 8 completed-week score observations',f.f.client.get('/players/1?front_office=4').text)
+ 
+     def test_scored_roster_history_never_substitutes_for_missing_canonical_points(self):
+         from unittest.mock import patch
+@@ -263,6 +286,11 @@ class ProductionRenderedCoverageTests(unittest.TestCase):
+         # A synthetic roster-history total deliberately differs from canonical
+         # production. It is presentation evidence, not the original Granite run.
+         f=ProductionViewFixture(self,scoring={'pass_yd':.04,'st_ff':1})
++        from services.player_evidence import attach_sleeper_actuals
++        source=f.f.data['season_matchups']['weeks']['1']['rows'][0]
++        source['starters_points']=[999]
++        attach_sleeper_actuals(f.f.data,f.f.data['canonical_player_production'])
++        f.republish_actuals()
+         from routes.transactions import historical_graph
+         history=historical_graph(f.history,f.f.data['league']['league_id'],f.f.data).player_dossier('1')
+         history['season_summaries']=[dict(season=2026,status='in_progress',games_observed=8,starts=8,
+@@ -272,7 +300,7 @@ class ProductionRenderedCoverageTests(unittest.TestCase):
+             response=f.f.client.get('/players/1?front_office=4')
+         self.assertEqual(response.status_code,200)
+         self.assertIn('183.82',response.text)
+-        self.assertIn('average is withheld',response.text)
++        self.assertIn('are withheld because Sleeper score evidence',response.text)
+         self.assertIsNone(f.api()['windows'][3]['fantasy_points'])
+ 
+ 
+@@ -282,7 +310,7 @@ class ProductionPeriodControls(unittest.TestCase):
+             value=prepared(Path(folder)/'facts.sqlite3',season=2025,
+                 source_rows=[raw(w,season='2025') for w in range(1,9)])
+             self.assertIsNone(value['completed_week_boundary'])
+-            row=value['players']['4984']['production']['windows'][3]
++            row=value['players']['4984']['non_sleeper_analysis']['windows'][3]
+             self.assertEqual(row['fantasy_points'],18)
+             self.assertEqual(row['season'],2025)
+             self.assertEqual(row['observation_count'],8)
+@@ -290,7 +318,7 @@ class ProductionPeriodControls(unittest.TestCase):
+     def test_current_absence_keeps_previous_production_separate(self):
+         with tempfile.TemporaryDirectory() as folder:
+             value=prepared(Path(folder)/'facts.sqlite3',source_rows=[raw(1,season='2025')])
+-            rows=value['players']['4984']['production']['windows']
++            rows=value['players']['4984']['non_sleeper_analysis']['windows']
+             self.assertIsNone(rows[3]['fantasy_points'])
+             self.assertEqual(rows[3]['observation_count'],0)
+             self.assertEqual(rows[4]['fantasy_points'],18)
+@@ -340,10 +368,13 @@ class ProductionFreshSyncTests(unittest.IsolatedAsyncioTestCase):
+             scoring={'pass_yd':.04,'pass_td':4,'pass_int':-2,'rush_yd':.1,'pts_allow_0':10,'sack':1,'unused':0}
+             league=dict(league_id='2100000000000000999',name='Disposable source league',season='2026',
+                 status='in_season',total_rosters=1,roster_positions=['QB','K','DEF','BN'],
+-                settings={'leg':9,'draft_rounds':3},scoring_settings=scoring)
++                sport='nfl',settings={'leg':9,'last_scored_leg':8,'start_week':1,'playoff_week_start':15,'playoff_teams':6,'playoff_round_type':0,'playoff_type':0,'draft_rounds':3},scoring_settings=scoring)
+             async def get(client,route):
+                 if route=='/league/'+league['league_id']:
+                     return league
++                if '/matchups/' in route:
++                    return [dict(roster_id=1,matchup_id=1,players=['1'],starters=['1'],
++                        players_points={'1':15.4321},starters_points=[15.4321],points=15.4321)]
+                 if route.endswith('/users'):
+                     return [dict(user_id='fixture-owner',display_name='Fixture')]
+                 if route.endswith('/rosters'):
+@@ -377,8 +408,12 @@ class ProductionFreshSyncTests(unittest.IsolatedAsyncioTestCase):
+                 await sleeper.sync_sleeper_league(league['league_id'],state,projections=projection)
+                 self.assertIsNone(state['last_error'])
+                 prepare_call.assert_called_once()
+-                row=state['data']['canonical_player_production']['players']['1']['production']['windows'][3]
++                row=state['data']['canonical_player_production']['players']['1']['non_sleeper_analysis']['windows'][3]
+                 self.assertEqual((row['fantasy_points'],row['observation_count']),(18,8))
++                from src.core.player_value_projection.canonical_production import prepared_production_context
++                actual=prepared_production_context(state['data']['canonical_player_production'],league_id=league['league_id'],player_id='1',data=state['data'])
++                self.assertEqual(actual.windows[3].fantasy_points,15.4321)
++                self.assertEqual(actual.windows[3].observation_count,8)
+                 self.assertEqual(state['preparation_state'],'ready')
+                 self.assertTrue((Path(folder)/'cache.json').exists())
+                 restored={}
+@@ -393,7 +428,7 @@ class ProductionPublishedConfigurationTests(unittest.TestCase):
+         for league in configs:
+             with self.subTest(league=league['name']),tempfile.TemporaryDirectory() as folder:
+                 value=prepared(Path(folder)/'facts.sqlite3',league=league['league_id'],scoring=league['scoring_settings'])
+-                window=value['players']['4984']['production']['windows'][3]
++                window=value['players']['4984']['non_sleeper_analysis']['windows'][3]
+                 self.assertEqual(window['observation_count'],8)
+                 self.assertIsNone(window['fantasy_points'])
+                 missing=set(window['missing_components'])
+@@ -426,9 +461,9 @@ class ProductionFreshnessControls(unittest.TestCase):
+             data={'league':{'league_id':'A','season':2026},'nfl_state':{'season':'2026','week':9},
+                   'players':{'4984':{}},'scoring_settings':{'pass_yd':.04}}
+             report=canonical_player_evidence('4984',data,expected_league_id='A',path=path,as_of='2026-11-06T00:00:00Z')
+-            self.assertEqual(report['availability_detail']['reason'],'retained_evidence_not_current')
++            self.assertEqual(report['analysis_availability_detail']['reason'],'retained_evidence_not_current')
+             self.assertIn('latest_source_check_failed',report['limitations'])
+-            self.assertEqual(report['production']['ppg'],10)
++            self.assertEqual(report['non_sleeper_analysis']['ppg'],10)
+ 
+     def test_source_failure_qualification_reaches_both_views_without_erasing_values(self):
+         f=ProductionViewFixture(self)
+@@ -440,5 +475,6 @@ class ProductionFreshnessControls(unittest.TestCase):
+         self.assertEqual(f.api()['windows'][3],before)
+         for path in ('/market?selected=player%3A1','/players/1?front_office=4'):
+             text=f.f.client.get(path).text
+-            self.assertIn('Latest canonical production source check is partial',text)
+-            self.assertIn('8 of 8 observations',text)
++            self.assertNotIn('Latest canonical production source check is partial',text)
++            self.assertIn('Sleeper actual fantasy results',text)
++            self.assertIn('8 of 8 completed-week score observations',text)
+diff --git a/tests/test_historical_retained_admission_browser.py b/tests/test_historical_retained_admission_browser.py
+index 3a842b3..f324123 100644
+--- a/tests/test_historical_retained_admission_browser.py
++++ b/tests/test_historical_retained_admission_browser.py
+@@ -43,6 +43,10 @@ class HistoricalRetainedAdmissionBrowserTests(unittest.TestCase):
+                             for side in current_source['week5']:
+                                 if '11563' in side['players_points']:
+                                     side['players_points']['11563'] = 0
++                                    # This is a coherent explicit-zero control;
++                                    # ordered source evidence must agree too.
++                                    if '11563' in side.get('starters', []):
++                                        side['starters_points'][side['starters'].index('11563')] = 0
+                         fixture.retained(data, current_source, future=case != 'zero_scoring')
+                         if case == 'missing_scoring':
+                             data['league']['scoring_settings'] = data['scoring_settings'] = {}
+@@ -73,7 +77,7 @@ class HistoricalRetainedAdmissionBrowserTests(unittest.TestCase):
+                             if case == 'supported':
+                                 self.assertIn(f'{expected} points', text)
+                             elif case == 'zero_scoring':
+-                                self.assertIn('0.0 points · 0.0 PPG', text)
++                                self.assertIn('0.0 observed points · 0.0 points per score observation', text)
+                                 self.assertIn('Consistency Unavailable', text)
+                             else:
+                                 self.assertNotIn(f'{expected} points', text)
+diff --git a/tests/test_player_value_projection.py b/tests/test_player_value_projection.py
+index 3760c5d..4160621 100644
+--- a/tests/test_player_value_projection.py
++++ b/tests/test_player_value_projection.py
+@@ -48,13 +48,14 @@ class PlayerValueProjectionTests(unittest.TestCase):
+         self.assertIsNone(projection.floor)
+         self.assertIsNone(projection.ceiling)
+ 
+-    def test_production_cached_and_unavailable_states_are_distinct(self) -> None:
++    def test_unscoped_cached_stats_cannot_claim_sleeper_authority(self) -> None:
+         provider = CachedProductionProvider()
+         cached = provider.production({"recent_points": [10, 12, 18], "season_average": 13})
+         unavailable = provider.production({})
+-        self.assertEqual(cached.status, DataStatus.CACHED)
++        self.assertEqual(cached.status, DataStatus.UNAVAILABLE)
+         self.assertEqual(unavailable.status, DataStatus.UNAVAILABLE)
+-        self.assertIsNotNone(cached.volatility)
++        self.assertIsNone(cached.volatility)
++        self.assertFalse(cached.windows)
+         self.assertTrue(unavailable.limitations)
+ 
+     def test_unified_profiles_keep_internal_and_market_values_separate(self) -> None:
+diff --git a/tests/test_prepared_player_evidence.py b/tests/test_prepared_player_evidence.py
+index fb2c64c..75c383b 100644
+--- a/tests/test_prepared_player_evidence.py
++++ b/tests/test_prepared_player_evidence.py
+@@ -6,7 +6,7 @@ from pathlib import Path
+ from services.player_evidence import prepare_player_production
+ from src.core.data_platform.global_evidence import GlobalEvidenceStore
+ from tests.test_player_production_stream import fact
+-from src.core.player_value_projection.canonical_production import prepared_production_context
++from src.core.player_value_projection.canonical_production import prepared_analysis_context
+ 
+ 
+ class PreparedPlayerEvidenceTests(unittest.TestCase):
+@@ -22,18 +22,19 @@ class PreparedPlayerEvidenceTests(unittest.TestCase):
+         self.assertTrue(next(item for item in supported['categories'] if item['name'] == 'Projection')['available'])
+ 
+     def test_universe_and_brain_read_same_prepared_production(self):
+-        from dataclasses import asdict
+-        from src.core.player_value_projection.canonical_production import canonical_production_context
+         from src.core.valuation.universe import ValuationUniverse
+         from src.core.valuation_intelligence import build_valuation_intelligence
+-        from tests.test_canonical_production_context import evidence
+         from tests.test_trade_intelligence import fixture_data
++        from tests.test_sleeper_actual_results import actual_data, publish
+         data = fixture_data()
+         player_id = next(iter(data['players']))
+-        data['players'][player_id]['fantasy_points'] = 999  # Legacy field must not win.
+-        data['canonical_player_production'] = {'league_id': data['league']['league_id'],
+-            'generation': 'production-v1', 'players': {player_id: {'production': asdict(
+-                canonical_production_context(evidence([12, 14])) )}}}
++        data['players'][player_id]['fantasy_points'] = 999  # Unscoped value cannot win.
++        source=actual_data(data['league']['league_id'],player=player_id,scores=(12,14))
++        data['league'].update(source['league'])
++        data['week']=source['week']
++        data['scoring_settings']=source['scoring_settings']
++        data['season_matchups']=source['season_matchups']
++        publish(data)
+         universe = ValuationUniverse(data, {})
+         asset = universe.by_id[player_id]
+         self.assertEqual(asset['layers']['current_production_value']['value'], 13)
+@@ -44,22 +45,27 @@ class PreparedPlayerEvidenceTests(unittest.TestCase):
+ 
+     def test_orchestrator_consumes_prepared_evidence_and_invalidates_generation(self):
+         from copy import deepcopy
+-        from dataclasses import asdict
+         from src.core.intelligence import IntelligenceCache, IntelligenceOrchestrator, IntelligenceRegistry
+-        from src.core.player_value_projection.canonical_production import canonical_production_context
+-        from tests.test_canonical_production_context import evidence
+         from tests.test_trade_intelligence import fixture_data
++        from tests.test_sleeper_actual_results import actual_data, publish
+         data = fixture_data()
+         player_id = data['teams'][0]['players'][0]['id']
+-        snapshot = {'league_id': data['league']['league_id'], 'generation': 'first',
+-                    'players': {player_id: {'production': asdict(canonical_production_context(evidence([13])))}}}
+-        data['canonical_player_production'] = snapshot
++        source=actual_data(data['league']['league_id'],player=player_id,scores=(13,))
++        data['league'].update(source['league'])
++        data['week']=source['week']
++        data['scoring_settings']=source['scoring_settings']
++        data['season_matchups']=source['season_matchups']
++        snapshot=publish(data)
+         engine = IntelligenceOrchestrator(IntelligenceRegistry(), IntelligenceCache())
+         first = engine.analyze(data, 1)
+         self.assertEqual(first.player_values[player_id].production.windows[3].fantasy_points, 13)
+         data['canonical_player_production'] = deepcopy(snapshot)
+         data['canonical_player_production']['generation'] = 'second'
+-        data['canonical_player_production']['players'][player_id]['production'] = asdict(canonical_production_context(evidence([14])))
++        raw=data['season_matchups']['weeks']['1']['rows'][0]
++        raw['players_points'][player_id]=14
++        raw['starters_points']=[14]
++        data['season_matchups']['semantic_generation']='second'
++        publish(data)
+         second = engine.analyze(data, 1)
+         self.assertEqual(second.player_values[player_id].production.windows[3].fantasy_points, 14)
+         self.assertNotEqual(first.context.evidence_generation, second.context.evidence_generation)
+@@ -76,17 +82,17 @@ class PreparedPlayerEvidenceTests(unittest.TestCase):
+             before = path.stat().st_size
+             second = prepare_player_production(data, expected_league_id='A', as_of='2025-09-04T00:00:00Z', path=path)
+             self.assertEqual(first, second)
+-            self.assertEqual(first['players']['1']['production']['windows'][3]['fantasy_points'], 5)
+-            consumed = prepared_production_context(first, league_id='A', player_id='1')
++            self.assertEqual(first['players']['1']['non_sleeper_analysis']['windows'][3]['fantasy_points'], 5)
++            consumed = prepared_analysis_context(first, league_id='A', player_id='1')
+             self.assertEqual(consumed.windows[3].fantasy_points, 5)
+             with self.assertRaises(ValueError):
+-                prepared_production_context(first, league_id='B', player_id='1')
+-            self.assertIsNone(first['players']['2']['production']['windows'][3]['fantasy_points'])
++                prepared_analysis_context(first, league_id='B', player_id='1')
++            self.assertIsNone(first['players']['2']['non_sleeper_analysis']['windows'][3]['fantasy_points'])
+             self.assertEqual(path.stat().st_size, before)
+             data['league']['league_id'] = 'B'
+             data['scoring_settings'] = {'rec': .5}
+             other = prepare_player_production(data, expected_league_id='B', as_of='2025-09-04T00:00:00Z', path=path)
+-            self.assertEqual(other['players']['1']['production']['windows'][3]['fantasy_points'], 2.5)
++            self.assertEqual(other['players']['1']['non_sleeper_analysis']['windows'][3]['fantasy_points'], 2.5)
+             self.assertNotEqual(other['generation'], first['generation'])
+             self.assertEqual(store.counts(), {'production': 1})
+             store.publish([fact('1', 6)], retrieved_at='2025-09-05T00:00:00Z')
+diff --git a/tests/test_sleeper_actual_results.py b/tests/test_sleeper_actual_results.py
+new file mode 100644
+index 0000000..a90dc93
+--- /dev/null
++++ b/tests/test_sleeper_actual_results.py
+@@ -0,0 +1,622 @@
++"""Direct retained-Sleeper parity, no fantasy scoring reconstruction in expectations."""
++
++import asyncio
++import copy
++from dataclasses import asdict
++import json
++from pathlib import Path
++import tempfile
++import unittest
++from unittest.mock import patch
++
++from services.matchup_season import prepare_season_matchups, source_player_actual
++from services.player_evidence import attach_sleeper_actuals
++from src.core.player_value_projection.canonical_production import (
++    prepared_production_context,
++)
++from src.core.player_value_projection.sleeper_actuals import (
++    prepare_actual_results,
++    resolve_score,
++    scoring_identity,
++)
++
++STAMP = "2026-11-01T00:00:00Z"
++
++
++def actual_data(
++    league_id="A",
++    *,
++    scores=(23.4738, 0, -2.125, 19.31, 28.219, 12.2, 18.111, 21.4),
++    player="4984",
++    scoring=None,
++    season=2026,
++):
++    """Disposable source rows; expected scores below are copied from these rows.
++
++    Not the owner's roster, historical live scores, or an upstream API capture.
++    """
++    scoring = scoring or {"pass_yd": 0.04, "st_ff": 1, "sack": 1, "rec": 1}
++    league = dict(
++        league_id=league_id,
++        season=str(season),
++        sport="nfl",
++        status="in_season",
++        scoring_settings=scoring,
++        roster_positions=[
++            "QB",
++            "RB",
++            "RB",
++            "WR",
++            "WR",
++            "TE",
++            "FLEX",
++            "FLEX",
++            "K",
++            "DEF",
++            "BN",
++        ],
++        settings=dict(
++            leg=9,
++            last_scored_leg=8,
++            start_week=1,
++            playoff_week_start=15,
++            playoff_teams=6,
++            playoff_round_type=0,
++            playoff_type=0,
++        ),
++    )
++    buckets = {
++        str(w): [
++            dict(
++                roster_id=1,
++                matchup_id=1,
++                players=[player, "bench"],
++                starters=[player],
++                starters_points=[v],
++                players_points={player: v, "bench": -1.24},
++                points=200,
++                custom_points=300,
++            )
++        ]
++        for w, v in enumerate(scores, 1)
++    }
++
++    async def fetch(path):
++        return copy.deepcopy(buckets.get(path.rsplit("/", 1)[-1], []))
++
++    def acquire():
++        return asyncio.run(
++            prepare_season_matchups(league, 9, [], fetch, observed_at=STAMP)
++        )
++
++    try:
++        asyncio.get_running_loop()
++    except RuntimeError:
++        publication = acquire()
++    else:
++        # Playwright owns a running loop; exercise the real async preparation
++        # in a bounded fixture thread, never nesting event loops.
++        from concurrent.futures import ThreadPoolExecutor
++
++        with ThreadPoolExecutor(max_workers=1) as executor:
++            publication = executor.submit(acquire).result(timeout=10)
++    return dict(
++        league=league,
++        scoring_settings=scoring,
++        week=9,
++        players={player: {}},
++        season_matchups=publication,
++        nfl_state=dict(season=str(season), week=9),
++    )
++
++
++def publish(data):
++    lid = data["league"]["league_id"]
++    snapshot = {
++        "league_id": lid,
++        "season": int(data["league"]["season"]),
++        "scoring_fingerprint": scoring_identity(data["scoring_settings"]),
++        "reference_generation": "unchanged-analysis",
++        "players": {},
++    }
++    attach_sleeper_actuals(data, snapshot)
++    data["canonical_player_production"] = snapshot
++    return snapshot
++
++
++def profile(data, player="4984"):
++    return prepared_production_context(
++        data.get("canonical_player_production") or publish(data),
++        league_id=data["league"]["league_id"],
++        player_id=player,
++        data=data,
++    )
++
++
++class ActualScoreResolutionTests(unittest.TestCase):
++    def test_zero_negative_and_precision_match_source_not_reconstruction(self):
++        for score in (0, -2.125, 23.4738, 49.6638):
++            row = dict(
++                starters=["p"], starters_points=[score], players_points={"p": score}
++            )
++            self.assertEqual(
++                resolve_score(row, "p")["points"], row["players_points"]["p"]
++            )
++            self.assertEqual(
++                source_player_actual(row, "p", 0), row["starters_points"][0]
++            )
++
++    def test_web_display_midpoints_do_not_change_source_numbers(self):
++        from src.core.player_value_projection.sleeper_actuals import actual_display
++
++        for raw, display in [
++            (0, "0.00"),
++            (-0.0, "0.00"),
++            (-2.125, "-2.13"),
++            (2.125, "2.13"),
++            (23.4738, "23.47"),
++        ]:
++            self.assertEqual(actual_display(raw), display)
++            self.assertEqual(
++                resolve_score({"players_points": {"p": raw}}, "p")["points"], raw
++            )
++
++    def test_conflict_has_no_precedence(self):
++        row = dict(starters=["p"], starters_points=[0], players_points={"p": 9})
++        self.assertIsNone(source_player_actual(row, "p", 0))
++        self.assertEqual(
++            resolve_score(row, "p")["reason"], "conflicting_sleeper_scores"
++        )
++
++    def test_index_cannot_read_another_player_or_negative_offset(self):
++        row = dict(
++            starters=["q", "p"], starters_points=[99, 8], players_points={"p": 8}
++        )
++        self.assertIsNone(source_player_actual(row, "p", 0))
++        self.assertIsNone(source_player_actual(row, "p", -1))
++        self.assertEqual(source_player_actual(row, "p", 1), 8)
++
++    def test_null_invalid_missing_and_strings_are_not_zero(self):
++        for value in (None, True, "0", "bad", float("nan"), float("inf")):
++            self.assertIsNone(
++                resolve_score({"players_points": {"p": value}}, "p")["points"]
++            )
++        self.assertIsNone(resolve_score({}, "p")["points"])
++        self.assertIsNone(resolve_score({"players_points": {"0": 0}}, "0")["points"])
++
++    def test_valid_explicit_score_is_not_blocked_by_null_alternate(self):
++        for row in (
++            dict(starters=["p"], starters_points=[None], players_points={"p": 0}),
++            dict(starters=["p"], starters_points=[-3], players_points={"p": None}),
++        ):
++            result = resolve_score(row, "p")
++            self.assertIsNotNone(result["points"])
++            self.assertEqual(result["reason"], "invalid_alternate_score")
++
++    def test_duplicate_starter_is_unresolved(self):
++        self.assertIsNone(
++            resolve_score(dict(starters=["p", "p"], starters_points=[1, 1]), "p")[
++                "points"
++            ]
++        )
++
++
++class SleeperPublicationTests(unittest.TestCase):
++    def test_direct_weekly_source_parity_and_observation_denominator(self):
++        data = actual_data()
++        context = profile(data)
++        for row in context.observations:
++            retained = data["season_matchups"]["weeks"][str(row["week"])]["rows"][0][
++                "players_points"
++            ]["4984"]
++            self.assertEqual(row["points"], retained)
++        season = context.windows[3]
++        self.assertEqual((season.observation_count, season.scored_count), (8, 8))
++        self.assertEqual(season.weeks, tuple(range(1, 9)))
++        self.assertAlmostEqual(season.observed_total, 120.5888)
++        self.assertIn("not games played", " ".join(context.limitations))
++        self.assertTrue(all(w.targets is None for w in context.windows))
++
++    def test_bench_explicit_scores_but_absent_ir_taxi_and_free_agents_unknown(self):
++        data = actual_data()
++        data["teams"] = [dict(players=[dict(id="taxi"), dict(id="ir")])]
++        self.assertEqual(profile(data, "bench").windows[3].fantasy_points, -1.24)
++        for pid in ("ir", "taxi", "free-agent"):
++            self.assertIsNone(profile(data, pid).windows[3].fantasy_points)
++        self.assertNotEqual(profile(data).windows[3].observed_total, 300)
++
++    def test_explicit_ir_or_unrostered_map_entry_is_source_evidence_not_inference(self):
++        data = actual_data()
++        data["season_matchups"]["weeks"]["1"]["rows"][0]["players_points"]["ir"] = 0
++        self.assertEqual(profile(data, "ir").windows[3].fantasy_points, 0)
++        self.assertEqual(profile(data, "ir").windows[3].observation_count, 1)
++
++    def test_ownership_duplicates_are_deduplicated_and_conflicts_withheld(self):
++        data = actual_data()
++        row = data["season_matchups"]["weeks"]["1"]["rows"][0]
++        duplicate = {**copy.deepcopy(row), "roster_id": 2}
++        data["season_matchups"]["weeks"]["1"]["rows"].append(duplicate)
++        self.assertEqual(profile(data).windows[3].observation_count, 8)
++        duplicate["players_points"]["4984"] = 999
++        publish(data)
++        context = profile(data)
++        self.assertIsNone(context.windows[3].fantasy_points)
++        self.assertEqual(context.windows[3].scored_count, 7)
++        self.assertIsNotNone(context.windows[1].fantasy_points)
++
++    def test_completed_live_future_and_league_playoff_scope_are_distinct(self):
++        data = actual_data()
++        data["league"]["settings"].update(last_scored_leg=2, playoff_week_start=3)
++        data["week"] = 4
++        publish(data)
++        c = profile(data)
++        self.assertEqual(c.windows[3].observation_count, 2)
++        self.assertEqual(c.observations[-1]["week"], 4)
++        self.assertEqual(c.observations[-1]["state"], "provisional")
++        self.assertEqual(c.observations[-1]["scope"], "postseason")
++        self.assertEqual(c.periods["5"]["state"], "future")
++
++    def test_unknown_completion_does_not_make_live_scores_final(self):
++        data = actual_data()
++        data["league"]["settings"].pop("last_scored_leg")
++        self.assertEqual(profile(data).windows[3].observation_count, 0)
++        self.assertTrue(profile(data).observations)
++
++    def test_older_atomic_cache_reuses_native_sleeper_rows_not_calculated_totals(self):
++        data = actual_data()
++        data["season_matchups"].pop("scoring_fingerprint")
++        c = profile(data)
++        self.assertEqual(
++            c.observations[0]["points"],
++            data["season_matchups"]["weeks"]["1"]["rows"][0]["players_points"]["4984"],
++        )
++        self.assertIn("same retained league cache", " ".join(c.limitations))
++        data["season_matchups"]["calendar_reference"] = "incompatible"
++        publish(data)
++        self.assertIsNone(profile(data).windows[3].fantasy_points)
++
++    def test_publication_identity_scoring_and_season_are_not_interchangeable(self):
++        for key, value in (
++            ("league_id", "other"),
++            ("season", "2025"),
++            ("scoring_fingerprint", "wrong"),
++        ):
++            data = actual_data()
++            data["season_matchups"][key] = value
++            self.assertIsNone(profile(data).windows[3].fantasy_points)
++        data = actual_data()
++        publish(data)
++        data["scoring_settings"] = {"rec": 0.5}
++        self.assertFalse(profile(data).windows)
++        with self.assertRaises(ValueError):
++            prepare_actual_results(data, expected_league_id="other")
++
++    def test_non_sleeper_analysis_cannot_supply_authoritative_points(self):
++        data = actual_data()
++        data["canonical_player_production"] = {
++            "league_id": "A",
++            "season": 2026,
++            "players": {
++                "4984": {
++                    "production": {
++                        "windows": [{"label": "Season Average", "fantasy_points": 999}]
++                    }
++                }
++            },
++        }
++        self.assertFalse(profile(data).windows)
++
++    def test_market_reference_analysis_is_not_repriced_by_actuals(self):
++        from tests.test_current_production_coverage import prepared
++
++        with tempfile.TemporaryDirectory() as folder:
++            analysis = prepared(Path(folder) / "facts.sqlite3")
++            original = copy.deepcopy(analysis)
++            data = actual_data()
++            attach_sleeper_actuals(data, analysis)
++            self.assertEqual(
++                analysis["reference_generation"], original["reference_generation"]
++            )
++            self.assertEqual(analysis["players"], original["players"])
++            self.assertNotEqual(analysis["generation"], original["generation"])
++
++    def test_completed_season_does_not_substitute_other_season_or_league(self):
++        data = actual_data(season=2025)
++        data["league"].update(status="complete")
++        data["league"]["settings"].update(leg=8, last_scored_leg=8)
++        data["week"] = 8
++        c = profile(data)
++        self.assertEqual(c.windows[3].season, 2025)
++        self.assertEqual(c.windows[3].observation_count, 8)
++        self.assertIsNone(c.windows[4].fantasy_points)
++
++    def test_restored_source_reproduces_exact_profile_without_io(self):
++        data = actual_data()
++        before = asdict(profile(data))
++        restored = json.loads(json.dumps(data))
++        with patch(
++            "httpx.AsyncClient.get", side_effect=AssertionError("no acquisition")
++        ):
++            publish(restored)
++        self.assertEqual(asdict(profile(restored)), before)
++
++    def test_each_league_retains_its_own_source_values_including_k_defense(self):
++        for lid, score, position in [
++            ("one-qb", 23.4738, "QB"),
++            ("superflex", 49.6638, "QB"),
++            ("kicker", -1.5, "K"),
++            ("defense", 0, "DEF"),
++        ]:
++            data = actual_data(
++                lid, scores=(score,), player="BUF" if position == "DEF" else "4984"
++            )
++            if lid == "superflex":
++                data["league"]["roster_positions"] = ["QB", "SUPER_FLEX", "FLEX"]
++            pid = "BUF" if position == "DEF" else "4984"
++            self.assertEqual(
++                profile(data, pid).observations[0]["points"],
++                data["season_matchups"]["weeks"]["1"]["rows"][0]["players_points"][pid],
++            )
++
++
++class RefreshTests(unittest.IsolatedAsyncioTestCase):
++    def setUp(self):
++        self.data = actual_data()
++
++    async def test_failed_week_retains_explicit_last_valid_score_not_successful_acquisition(
++        self,
++    ):
++        data = copy.deepcopy(self.data)
++        old = data["season_matchups"]
++
++        async def fail(_):
++            raise RuntimeError("disposable source failure")
++
++        new = await prepare_season_matchups(
++            data["league"],
++            9,
++            [],
++            fail,
++            observed_at="2026-11-02T00:00:00Z",
++            previous=old,
++        )
++        data["season_matchups"] = new
++        self.assertEqual(new["weeks"]["1"]["availability"], "unavailable")
++        c = profile(data)
++        self.assertEqual(
++            c.observations[0]["points"],
++            old["weeks"]["1"]["rows"][0]["players_points"]["4984"],
++        )
++        self.assertEqual(c.observations[0]["retrieved_at"], STAMP)
++        self.assertEqual(c.observations[0]["freshness"], "last_valid")
++        self.assertIn("not newly revalidated", " ".join(c.limitations))
++
++    async def test_correction_replaces_old_score_and_is_qualified(self):
++        data = copy.deepcopy(self.data)
++        old = data["season_matchups"]
++
++        async def changed(path):
++            rows = copy.deepcopy(
++                old["weeks"].get(path.rsplit("/", 1)[-1], {}).get("rows", [])
++            )
++            for row in rows:
++                row["players_points"]["4984"] = 7.1234
++                row["starters_points"] = [7.1234]
++            return rows
++
++        data["season_matchups"] = await prepare_season_matchups(
++            data["league"],
++            9,
++            [],
++            changed,
++            observed_at="2026-11-02T00:00:00Z",
++            previous=old,
++        )
++        c = profile(data)
++        self.assertEqual(c.observations[0]["points"], 7.1234)
++        self.assertTrue(c.observations[0]["corrected"])
++        self.assertNotEqual(
++            data["season_matchups"]["semantic_generation"], old["semantic_generation"]
++        )
++
++    async def test_failed_refresh_cannot_borrow_a_different_scoring_publication(self):
++        data = copy.deepcopy(self.data)
++        old = data["season_matchups"]
++        data["league"]["scoring_settings"] = {"rec": 0.5}
++        data["scoring_settings"] = {"rec": 0.5}
++
++        async def fail(_):
++            raise RuntimeError("source failure")
++
++        data["season_matchups"] = await prepare_season_matchups(
++            data["league"], 9, [], fail, observed_at=STAMP, previous=old
++        )
++        self.assertFalse(profile(data).observations)
++
++
++class ActualRenderedContractTests(unittest.TestCase):
++    def fixture(self):
++        from tests.test_current_production_coverage import ProductionViewFixture
++
++        return ProductionViewFixture(self)
++
++    def test_zero_negative_and_conflicting_source_scores_reach_both_routes_and_api(
++        self,
++    ):
++        for value in (0, -2.125):
++            f = self.fixture()
++            for week in f.f.data["season_matchups"]["weeks"].values():
++                for row in week["rows"]:
++                    row["players_points"]["1"] = value
++                    row["starters_points"] = [value]
++            f.republish_actuals()
++            for path in ("/market?selected=player%3A1", "/players/1?front_office=4"):
++                text = f.f.client.get(path).text
++                self.assertIn(
++                    f"{({0: '0.00', -2.125: '-2.13'})[value]} fantasy points per score observation",
++                    text,
++                )
++                self.assertIn("not a games-played average", text)
++            actual = f.api()
++            self.assertEqual(actual["windows"][3]["fantasy_points"], value)
++            self.assertEqual(actual["observations"][0]["points"], value)
++            f.f.data["season_matchups"]["weeks"]["1"]["rows"][0]["starters_points"] = [
++                999
++            ]
++            f.republish_actuals()
++            for path in ("/market?selected=player%3A1", "/players/1?front_office=4"):
++                text = f.f.client.get(path).text
++                self.assertIn("7 of 8 completed-week score observations", text)
++                self.assertIn("Sleeper score records disagree", text)
++                self.assertIn("are withheld", text)
++            self.assertIsNone(f.api()["windows"][3]["fantasy_points"])
++
++    def test_missing_nflverse_special_teams_does_not_block_sleeper_actual(self):
++        f = self.fixture()
++        f.set_scoring({"st_ff": 1, "pass_yd": 0.04})
++        self.assertIsNone(
++            f.f.data["canonical_player_production"]["players"]["1"][
++                "non_sleeper_analysis"
++            ]["windows"][3]["fantasy_points"]
++        )
++        self.assertEqual(f.api()["windows"][3]["fantasy_points"], 18)
++        self.assertIn(
++            "18.00 fantasy points per score observation",
++            f.f.client.get("/players/1?front_office=4").text,
++        )
++
++    def test_ordinary_disclosures_and_reads_perform_no_acquisition(self):
++        f = self.fixture()
++        with (
++            patch(
++                "services.sleeper.sleeper_get",
++                side_effect=AssertionError("no provider work"),
++            ),
++            patch(
++                "services.player_evidence.prepare_player_production",
++                side_effect=AssertionError("no preparation"),
++            ),
++        ):
++            for path in (
++                "/market?selected=player%3A1",
++                "/players/1?front_office=4",
++                "/api/market/assets/player:1",
++            ):
++                self.assertEqual(f.f.client.get(path).status_code, 200)
++
++    def test_current_scoring_change_cannot_reuse_old_prepared_actuals(self):
++        f = self.fixture()
++        f.f.data["scoring_settings"] = {"rec": 99}
++        # Bypass presentation caches only in this disposable fixture, retaining
++        # the original preparation, to exercise the consumer's own boundary.
++        f.f.cache.clear()
++        response = f.f.client.get("/players/1?front_office=4")
++        self.assertIn(
++            "Compatible Sleeper actual results are not prepared", response.text
++        )
++        self.assertNotIn("18.00 fantasy points per score observation", response.text)
++
++
++class RetainedScopeControls(unittest.TestCase):
++    def test_cache_restoration_without_prior_analysis_still_admits_supported_scores(
++        self,
++    ):
++        from services import sleeper
++        from src.core.sync_status import safe_sync_state
++
++        with tempfile.TemporaryDirectory() as directory:
++            data = actual_data()
++            cache = Path(directory) / "source.json"
++            cache.write_text(json.dumps(safe_sync_state({"data": data})))
++            with patch.object(sleeper, "league_cache_file", return_value=cache):
++                restored = {}
++                sleeper.load_cache(state=restored, league_id="A")
++            self.assertEqual(
++                profile(restored["data"]).observations[0]["points"], 23.4738
++            )
++
++    def test_account_scoped_data_does_not_share_actual_score_maps(self):
++        first = actual_data("first", scores=(0,))
++        second = actual_data("second", scores=(-5,))
++        a, b = publish(first), publish(second)
++        self.assertEqual(profile(first).observations[0]["points"], 0)
++        self.assertEqual(profile(second).observations[0]["points"], -5)
++        with self.assertRaises(ValueError):
++            prepared_production_context(a, league_id="second", player_id="4984")
++        self.assertNotEqual(
++            a["sleeper_actuals"]["generation"], b["sleeper_actuals"]["generation"]
++        )
++
++    def test_unknown_week_and_invalid_retained_row_are_not_invented_scores(self):
++        data = actual_data()
++        data["season_matchups"]["weeks"]["1"]["rows"][0]["players_points"] = []
++        c = profile(data)
++        self.assertEqual(c.periods["1"]["reason"], "invalid_retained_matchup_row")
++        self.assertEqual(c.windows[3].observation_count, 7)
++
++    def test_global_analysis_storage_is_not_required_for_explicit_sleeper_results(self):
++        from services.global_evidence import canonical_player_evidence
++
++        data = actual_data()
++        publish(data)
++        with tempfile.TemporaryDirectory() as directory:
++            result = canonical_player_evidence(
++                "4984",
++                data,
++                expected_league_id="A",
++                path=Path(directory) / "missing.sqlite",
++                as_of="2026-11-02T00:00:00Z",
++            )
++            self.assertEqual(
++                result["production"]["points_per_observation"],
++                profile(data).windows[3].fantasy_points,
++            )
++            self.assertIsNone(result["production"]["ppg"])
++            self.assertEqual(result["provider_calls"], 0)
++
++
++class LegacyConsumerRestorationTests(unittest.TestCase):
++    def test_native_scores_replace_only_the_old_cached_result_disclosure(self):
++        from services import sleeper
++        from tests.test_current_production_coverage import ProductionViewFixture
++
++        f = ProductionViewFixture(self)
++        cached = f.f.data["valuation_intelligence"]["assets"]["player:1"]
++        prices = copy.deepcopy(cached["valuation_layers"])
++        scores = copy.deepcopy(cached["scores"])
++        cached["canonical_production"] = {
++            "source": "Canonical nflverse production",
++            "windows": [{"label": "Season Average", "fantasy_points": 999}],
++        }
++        f.f.data["canonical_player_production"].pop("sleeper_actuals")
++        f.f.data["season_matchups"].pop("scoring_fingerprint")
++        with patch.object(
++            sleeper, "league_cache_file", return_value=f.f.root / "native-cache.json"
++        ):
++            sleeper.save_cache(
++                state=f.f.state, league_id=f.f.data["league"]["league_id"]
++            )
++            restored = {}
++            sleeper.load_cache(
++                state=restored, league_id=f.f.data["league"]["league_id"]
++            )
++        new = restored["data"]["valuation_intelligence"]["assets"]["player:1"]
++        self.assertEqual(
++            new["canonical_production"]["windows"][3]["fantasy_points"], 18
++        )
++        self.assertEqual(
++            new["canonical_production"]["source"], "Sleeper league matchup results"
++        )
++        self.assertEqual(new["valuation_layers"], prices)
++        self.assertEqual(new["scores"], scores)
++        f.f.data = restored["data"]
++        f.f.state.update(restored)
++        f.f.cache.clear()
++        f.f.market = f.f.cache.get(
++            f.f.data, f.f.state, f.f.history, f.f.data["league"]["league_id"]
++        )
++        self.assertEqual(f.api()["windows"][3]["fantasy_points"], 18)
++        self.assertIn(
++            "18.00 fantasy points per score observation",
++            f.f.client.get("/players/1?front_office=4").text,
++        )
+diff --git a/tests/test_trade_decision_experience.py b/tests/test_trade_decision_experience.py
+index a953c5d..ed93d70 100644
+--- a/tests/test_trade_decision_experience.py
++++ b/tests/test_trade_decision_experience.py
+@@ -117,6 +117,13 @@ class TradeDecisionExperienceTests(unittest.TestCase):
+             ],
+             retrieved_at="2026-09-02T00:00:00Z",
+         )
++        from services.matchup_season import prepare_season_matchups
++        import asyncio
++        source=[dict(roster_id=1,matchup_id=1,players=['a'],starters=['a'],
++                     players_points={'a':18.26},starters_points=[18.26],points=18.26)]
++        async def fetch(_): return copy.deepcopy(source)
++        self.data['season_matchups']=asyncio.run(prepare_season_matchups(
++            self.data['league'],2,source,fetch,observed_at='2026-10-15T00:00:00Z'))
+         self.data["canonical_player_production"] = prepare_player_production(
+             self.data,
+             expected_league_id="league-1",
+@@ -125,14 +132,21 @@ class TradeDecisionExperienceTests(unittest.TestCase):
+         )
+         row = self.evaluate(strategy="WIN NOW")
+         facts = row["evaluation"]["player_facts"]["a"]
+-        self.assertEqual(facts["production"]["points_per_game"], 18.26)
+-        self.assertEqual(facts["production"]["sample_games"], 1)
++        self.assertIsNone(facts["production"]["points_per_game"])
++        self.assertEqual(facts["production"]["points_per_observation"], 18.26)
++        self.assertIsNone(facts["production"]["sample_games"])
++        self.assertEqual(facts["production"]["sample_observations"], 1)
+         self.assertIsNone(facts["season_fantasy_points_rank"])
+         self.assertNotEqual(
+-            facts["production"]["points_per_game"],
++            facts["production"]["points_per_observation"],
+             row["evaluation"]["decision_context"]["lineup"]["delta"],
+         )
+-        self.assertIn("Actual production:", row["evaluation"]["explanation_html"])
++        self.assertIn("Sleeper actual production:", row["evaluation"]["explanation_html"])
++        from services.trade_explanation import render_trade_explanation
++        html=render_trade_explanation(row['evaluation'],league_id='league-1')
++        self.assertIn('points per completed-week score observation',html)
++        self.assertNotIn('points/game ·',html)
++
+         from services.trade_decision import selected_player_facts
+         from services.trade_intelligence import build_trade_workspace
+ 
+@@ -147,7 +161,7 @@ class TradeDecisionExperienceTests(unittest.TestCase):
+             facts = selected_player_facts(
+                 self.data, workspace["pools"][1], self.f.reader
+             )
+-            self.assertIsNone(facts["a"]["production"]["points_per_game"])
++            self.assertIsNone(facts["a"]["production"].get("points_per_observation"))
+             self.data["canonical_player_production"][field] = original
+ 
+     def test_valid_zero_projection_and_missing_scoring_are_distinct(self):

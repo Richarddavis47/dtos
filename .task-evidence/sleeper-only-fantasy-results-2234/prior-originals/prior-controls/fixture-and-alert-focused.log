@@ -1,0 +1,148 @@
+/usr/local/lib/python3.14/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+  from starlette.testclient import TestClient as TestClient  # noqa
+test_concurrent_publisher_can_finish_while_captured_reader_is_paused (tests.test_historical_snapshot_integrity.HistoricalSnapshotIntegrityTests.test_concurrent_publisher_can_finish_while_captured_reader_is_paused) ... ok
+test_normal_reads_keep_exact_published_generation_without_rechecking_mutable_index (tests.test_historical_snapshot_integrity.HistoricalSnapshotIntegrityTests.test_normal_reads_keep_exact_published_generation_without_rechecking_mutable_index) ... ok
+test_repeated_actual_publication_replacement_never_mixes_facts_and_checksum (tests.test_historical_snapshot_integrity.HistoricalSnapshotIntegrityTests.test_repeated_actual_publication_replacement_never_mixes_facts_and_checksum) ... ok
+test_unavailable_scoring_route_never_interpolates_null_metrics (tests.test_historical_snapshot_integrity.HistoricalSnapshotIntegrityTests.test_unavailable_scoring_route_never_interpolates_null_metrics) ... INFO:httpx:HTTP Request: GET http://testserver/history/player/11563 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/history/player/11563 "HTTP/1.1 200 OK"
+ok
+test_zero_and_supported_metrics_remain_numeric_without_null_consistency (tests.test_historical_snapshot_integrity.HistoricalSnapshotIntegrityTests.test_zero_and_supported_metrics_remain_numeric_without_null_consistency) ... INFO:httpx:HTTP Request: GET http://testserver/history/player/11563 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/history/player/11563 "HTTP/1.1 200 OK"
+ok
+test_actual_starter_total_excludes_bench_and_uses_legal_league_slots (tests.test_historical_player_evidence.HistoricalPlayerEvidenceTests.test_actual_starter_total_excludes_bench_and_uses_legal_league_slots) ... ok
+test_age_uses_decision_date_with_timezone_and_never_current_age (tests.test_historical_player_evidence.HistoricalPlayerEvidenceTests.test_age_uses_decision_date_with_timezone_and_never_current_age) ... ok
+test_birthdate_survives_actual_normalization_and_missing_refresh (tests.test_historical_player_evidence.HistoricalPlayerEvidenceTests.test_birthdate_survives_actual_normalization_and_missing_refresh) ... ok
+test_captured_week5_counts_exact_scores_roles_and_league_identity (tests.test_historical_player_evidence.HistoricalPlayerEvidenceTests.test_captured_week5_counts_exact_scores_roles_and_league_identity) ... ok
+test_compact_and_real_spawn_preserve_active_production_and_birth_evidence (tests.test_historical_player_evidence.HistoricalPlayerEvidenceTests.test_compact_and_real_spawn_preserve_active_production_and_birth_evidence) ... /usr/local/lib/python3.14/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+  from starlette.testclient import TestClient as TestClient  # noqa
+{'active_week_spawn_seconds': 1.1, 'records': 285, 'birth_date_preserved': True, 'worker_reaped': True, 'fois_regeneration': False}
+ok
+test_generation_and_completed_week_boundary (tests.test_historical_player_evidence.HistoricalPlayerEvidenceTests.test_generation_and_completed_week_boundary) ... ok
+test_http_career_and_historical_decision_cutoff (tests.test_historical_player_evidence.HistoricalPlayerEvidenceTests.test_http_career_and_historical_decision_cutoff) ... INFO:httpx:HTTP Request: GET http://testserver/history/player/11563 "HTTP/1.1 200 OK"
+ok
+test_invalid_or_mismatched_scoring_preserves_source_but_withholds_numeric_admission (tests.test_historical_player_evidence.HistoricalPlayerEvidenceTests.test_invalid_or_mismatched_scoring_preserves_source_but_withholds_numeric_admission) ... ok
+test_iso_datetime_birthdate_and_provider_resolution (tests.test_historical_player_evidence.HistoricalPlayerEvidenceTests.test_iso_datetime_birthdate_and_provider_resolution) ... ok
+test_missing_invalid_conflicting_and_identity_mismatched_birth_dates (tests.test_historical_player_evidence.HistoricalPlayerEvidenceTests.test_missing_invalid_conflicting_and_identity_mismatched_birth_dates) ... ok
+test_missing_score_and_unknown_role_are_not_zero_or_starter (tests.test_historical_player_evidence.HistoricalPlayerEvidenceTests.test_missing_score_and_unknown_role_are_not_zero_or_starter) ... ok
+test_partial_retained_family_cannot_hide_valid_active_week (tests.test_historical_player_evidence.HistoricalPlayerEvidenceTests.test_partial_retained_family_cannot_hide_valid_active_week) ... ok
+test_partial_week_coverage_is_not_complete_and_early_boundary_has_no_future_knowledge (tests.test_historical_player_evidence.HistoricalPlayerEvidenceTests.test_partial_week_coverage_is_not_complete_and_early_boundary_has_no_future_knowledge) ... ok
+test_prepared_rows_not_materialized_for_ordinary_identity_or_trade_reads (tests.test_historical_player_evidence.HistoricalPlayerEvidenceTests.test_prepared_rows_not_materialized_for_ordinary_identity_or_trade_reads) ... ok
+test_raw_existing_identity_recovers_without_new_provider_request (tests.test_historical_player_evidence.HistoricalPlayerEvidenceTests.test_raw_existing_identity_recovers_without_new_provider_request) ... ok
+test_retained_and_active_consumer_counts_are_reconciled_once (tests.test_historical_player_evidence.HistoricalPlayerEvidenceTests.test_retained_and_active_consumer_counts_are_reconciled_once) ... ok
+test_retained_future_placeholders_cannot_restore_excluded_actuals (tests.test_historical_player_evidence.HistoricalPlayerEvidenceTests.test_retained_future_placeholders_cannot_restore_excluded_actuals) ... ok
+test_settled_reads_do_not_persist_sources_or_solve_lineups (tests.test_historical_player_evidence.HistoricalPlayerEvidenceTests.test_settled_reads_do_not_persist_sources_or_solve_lineups) ... {'settled_reads': 15, 'files_before_after': 0, 'metadata_rows_before_after': {'metadata': 1, 'lifecycle_audit': 0}, 'all_hashes_unchanged': True, 'elapsed_ms': 96.988}
+ok
+test_source_identity_mismatch_and_uncompleted_periods_are_withheld (tests.test_historical_player_evidence.HistoricalPlayerEvidenceTests.test_source_identity_mismatch_and_uncompleted_periods_are_withheld) ... ok
+test_source_revision_recovers_warm_player_index_and_league_isolation (tests.test_historical_player_evidence.HistoricalPlayerEvidenceTests.test_source_revision_recovers_warm_player_index_and_league_isolation) ... ok
+test_actual_history_http_omits_unverified_future_total (tests.test_historical_retained_admission.HistoricalRetainedAdmissionTests.test_actual_history_http_omits_unverified_future_total) ... INFO:httpx:HTTP Request: GET http://testserver/history/player/11563 "HTTP/1.1 200 OK"
+ok
+test_checkpoint_record_cannot_disagree_with_its_retained_context (tests.test_historical_retained_admission.HistoricalRetainedAdmissionTests.test_checkpoint_record_cannot_disagree_with_its_retained_context) ... ok
+test_completed_historical_season_uses_its_own_supported_scoring (tests.test_historical_retained_admission.HistoricalRetainedAdmissionTests.test_completed_historical_season_uses_its_own_supported_scoring) ... ok
+test_conflict_survives_rejected_identity_then_single_date_and_restart (tests.test_historical_retained_admission.HistoricalRetainedAdmissionTests.test_conflict_survives_rejected_identity_then_single_date_and_restart) ... ok
+test_correct_identity_without_conflict_retains_historical_age (tests.test_historical_retained_admission.HistoricalRetainedAdmissionTests.test_correct_identity_without_conflict_retains_historical_age) ... ok
+test_legacy_checkpoint_cannot_bypass_completion_or_scoring (tests.test_historical_retained_admission.HistoricalRetainedAdmissionTests.test_legacy_checkpoint_cannot_bypass_completion_or_scoring) ... ok
+test_missing_malformed_noninteger_completion_cannot_admit_retained_future_actuals (tests.test_historical_retained_admission.HistoricalRetainedAdmissionTests.test_missing_malformed_noninteger_completion_cannot_admit_retained_future_actuals) ... ok
+test_missing_or_incompatible_active_scoring_cannot_be_restored_from_retained_numbers (tests.test_historical_retained_admission.HistoricalRetainedAdmissionTests.test_missing_or_incompatible_active_scoring_cannot_be_restored_from_retained_numbers) ... ok
+test_reconciliation_keeps_unavailable_scoring_qualification (tests.test_historical_retained_admission.HistoricalRetainedAdmissionTests.test_reconciliation_keeps_unavailable_scoring_qualification) ... ok
+test_recovered_weekly_source_cannot_bypass_checkpoint_admission (tests.test_historical_retained_admission.HistoricalRetainedAdmissionTests.test_recovered_weekly_source_cannot_bypass_checkpoint_admission) ... ok
+test_retained_only_scoring_and_source_identity_are_required (tests.test_historical_retained_admission.HistoricalRetainedAdmissionTests.test_retained_only_scoring_and_source_identity_are_required) ... /usr/local/lib/python3.14/dataclasses.py:1499: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f3a5c2db2e0>
+  def _asdict_inner(obj, dict_factory):
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/usr/local/lib/python3.14/dataclasses.py:1499: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f3a5c2db100>
+  def _asdict_inner(obj, dict_factory):
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+ok
+test_retained_scoring_conflict_with_same_season_cannot_select_one_context (tests.test_historical_retained_admission.HistoricalRetainedAdmissionTests.test_retained_scoring_conflict_with_same_season_cannot_select_one_context) ... ok
+test_source_replacement_recovers_warm_cache_without_read_writes (tests.test_historical_retained_admission.HistoricalRetainedAdmissionTests.test_source_replacement_recovers_warm_cache_without_read_writes) ... /usr/local/lib/python3.14/json/encoder.py:263: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f3a5b1ef790>
+  return _iterencode(o, 0)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+{'retained_settled_reads': 40, 'source_files_before_after': 2, 'source_bytes_before_after': 4901, 'database_rows_before_after': {'metadata': 1, 'lifecycle_audit': 0}, 'all_hashes_unchanged': True, 'elapsed_ms': 326.748}
+ok
+test_supported_completion_preserves_exact_actuals_but_not_future_999 (tests.test_historical_retained_admission.HistoricalRetainedAdmissionTests.test_supported_completion_preserves_exact_actuals_but_not_future_999) ... ok
+test_retained_recovery_and_qualified_history_at_phone_widths (tests.test_historical_retained_admission_browser.HistoricalRetainedAdmissionBrowserTests.test_retained_recovery_and_qualified_history_at_phone_widths) ... Validation Chromium: /usr/bin/chromium
+Validation Chromium version: 156.0.8078.73
+{"timestamp":"2026-11-06T08:15:00.124802+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/player/11563 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T08:15:00.482458+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/player/11563 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T08:15:00.749992+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/player/11563 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T08:15:01.105031+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/player/11563 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T08:15:01.431093+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/player/11563 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T08:15:01.733136+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/player/11563 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T08:15:02.082587+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/player/11563 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T08:15:02.399228+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/player/11563 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T08:15:02.735972+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/player/11563 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T08:15:03.029481+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/player/11563 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T08:15:03.391086+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/player/11563 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T08:15:03.698254+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/player/11563 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T08:15:04.023064+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/player/11563 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T08:15:04.337986+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/player/11563 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T08:15:04.701265+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/player/11563 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T08:15:05.006834+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/player/11563 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T08:15:05.395384+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/player/11563 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T08:15:05.712255+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/player/11563 \"HTTP/1.1 200 OK\"","request_id":"system"}
+/usr/local/lib/python3.14/functools.py:52: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f3a5b1ef100>
+  value = getattr(wrapped, attr)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+{"timestamp":"2026-11-06T08:15:06.088175+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/player/11563 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T08:15:06.398570+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/player/11563 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T08:15:06.786321+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/player/11563 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T08:15:07.021935+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/player/11563 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T08:15:07.415408+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/player/11563 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T08:15:07.713970+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/player/11563 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T08:15:08.100237+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/player/11563 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T08:15:08.347995+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/player/11563 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T08:15:08.686979+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/player/11563 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T08:15:08.943778+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/player/11563 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T08:15:09.319033+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/player/11563 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T08:15:09.632131+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/player/11563 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T08:15:09.990158+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/player/11563 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T08:15:10.305332+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/player/11563 \"HTTP/1.1 200 OK\"","request_id":"system"}
+ok
+test_same_row_valid_scores_and_conflicts_preserve_identity (tests.test_data_completeness.SourceCompletenessTests.test_same_row_valid_scores_and_conflicts_preserve_identity) ... ok
+test_source_to_preparation_to_http_and_render (tests.test_data_completeness.SourceCompletenessTests.test_source_to_preparation_to_http_and_render) ... {"timestamp":"2026-11-06T08:15:10.581541+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups/1?week=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+ok
+test_bad_leaf_generation_and_future_row_provenance_cannot_display (tests.test_lineup_review.LineupReviewTests.test_bad_leaf_generation_and_future_row_provenance_cannot_display) ... ok
+test_canonical_nfl_team_aliases_preserve_game_lock_evidence (tests.test_lineup_review.LineupReviewTests.test_canonical_nfl_team_aliases_preserve_game_lock_evidence) ... {"timestamp":"2026-11-06T08:15:10.710777+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups/1?week=8 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T08:15:10.731810+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups/1?week=8 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T08:15:10.752345+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups/1?week=8 \"HTTP/1.1 200 OK\"","request_id":"system"}
+ok
+test_conflicting_schedule_and_identity_never_substitute (tests.test_lineup_review.LineupReviewTests.test_conflicting_schedule_and_identity_never_substitute) ... ok
+test_current_membership_only_alert_and_league_isolation (tests.test_lineup_review.LineupReviewTests.test_current_membership_only_alert_and_league_isolation) ... {"timestamp":"2026-11-06T08:15:10.780202+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups?week=8 \"HTTP/1.1 200 OK\"","request_id":"system"}
+ok
+test_current_nfl_team_and_eligibility_transitions_suppress_alert (tests.test_lineup_review.LineupReviewTests.test_current_nfl_team_and_eligibility_transitions_suppress_alert) ... ok
+test_current_week_points_override_a_conflicting_future_game_time (tests.test_lineup_review.LineupReviewTests.test_current_week_points_override_a_conflicting_future_game_time) ... ok
+test_failed_refresh_keeps_last_valid_numbers_but_no_actionable_alert (tests.test_lineup_review.LineupReviewTests.test_failed_refresh_keeps_last_valid_numbers_but_no_actionable_alert) ... ok
+test_flex_superflex_and_repeated_slots_remain_legal (tests.test_lineup_review.LineupReviewTests.test_flex_superflex_and_repeated_slots_remain_legal) ... ok
+test_future_uses_future_points_and_does_not_claim_actionability (tests.test_lineup_review.LineupReviewTests.test_future_uses_future_points_and_does_not_claim_actionability) ... ok
+test_lock_only_affects_changed_players (tests.test_lineup_review.LineupReviewTests.test_lock_only_affects_changed_players) ... ok
+test_names_exact_slots_and_no_raw_ids_in_optimal_disclosure (tests.test_lineup_review.LineupReviewTests.test_names_exact_slots_and_no_raw_ids_in_optimal_disclosure) ... {"timestamp":"2026-11-06T08:15:10.953004+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups/1?week=8 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T08:15:10.955029+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/lineup-review.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T08:15:10.957668+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups/1?week=8 \"HTTP/1.1 200 OK\"","request_id":"system"}
+ok
+test_non_regular_schedule_cannot_verify_regular_week_locks (tests.test_lineup_review.LineupReviewTests.test_non_regular_schedule_cannot_verify_regular_week_locks) ... ok
+test_outgoing_position_transition_is_not_a_compatible_points_baseline (tests.test_lineup_review.LineupReviewTests.test_outgoing_position_transition_is_not_a_compatible_points_baseline) ... ok
+test_positive_and_true_zero_not_missing (tests.test_lineup_review.LineupReviewTests.test_positive_and_true_zero_not_missing) ... ok
+test_reads_add_no_optimizer_provider_storage_or_discovery (tests.test_lineup_review.LineupReviewTests.test_reads_add_no_optimizer_provider_storage_or_discovery) ... ok
+test_real_account_http_my_team_positive_and_other_franchise_suppression (tests.test_lineup_review.LineupReviewTests.test_real_account_http_my_team_positive_and_other_franchise_suppression) ... {"timestamp":"2026-11-06T08:15:11.186947+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":110993408,"limit_bytes":2147483648,"raw_headroom_bytes":2036490240,"clean_inactive_file_bytes":548864,"conditional_file_credit_bytes":274432,"admission_headroom_bytes":2036764672,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-06T08:15:11.188141+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/workspace?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T08:15:11.192019+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_admission","request_id":"system","event":"trade_admission","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":110972928,"limit_bytes":2147483648,"raw_headroom_bytes":2036510720,"clean_inactive_file_bytes":548864,"conditional_file_credit_bytes":274432,"admission_headroom_bytes":2036785152,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"recovery":null}}
+{"timestamp":"2026-11-06T08:15:11.239956+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_execution_finished","request_id":"system","event":"trade_execution_finished","duration_ms":48.259,"diagnostic":{"schema":"trade-resource-v1","outcome":"complete"}}
+{"timestamp":"2026-11-06T08:15:11.248762+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/trades/evaluate \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T08:15:11.260096+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T08:15:11.271006+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T08:15:11.339746+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/teams/1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T08:15:11.354498+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/teams/2 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T08:15:11.359685+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups?week=8 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T08:15:11.363668+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups/1?week=8 \"HTTP/1.1 200 OK\"","request_id":"system"}
+ok
+test_row_conflict_withheld_in_actual_rendered_http (tests.test_lineup_review.LineupReviewTests.test_row_conflict_withheld_in_actual_rendered_http) ... {"timestamp":"2026-11-06T08:15:11.386782+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups/1?week=8 \"HTTP/1.1 200 OK\"","request_id":"system"}
+ok
+test_schedule_scope_and_manual_rules_fail_closed (tests.test_lineup_review.LineupReviewTests.test_schedule_scope_and_manual_rules_fail_closed) ... ok
+test_stale_future_and_unsupported_settings_remain_informational (tests.test_lineup_review.LineupReviewTests.test_stale_future_and_unsupported_settings_remain_informational) ... ok
+test_started_and_unknown_games_suppress_without_mutating_optimum (tests.test_lineup_review.LineupReviewTests.test_started_and_unknown_games_suppress_without_mutating_optimum) ... ok
+test_submitted_stays_actual_while_legal_optimum_includes_bench_qb (tests.test_lineup_review.LineupReviewTests.test_submitted_stays_actual_while_legal_optimum_includes_bench_qb) ... ok
+test_unknown_name_starter_transition_and_ir_suppress (tests.test_lineup_review.LineupReviewTests.test_unknown_name_starter_transition_and_ir_suppress) ... ok
+
+----------------------------------------------------------------------
+Ran 64 tests in 15.346s
+
+OK

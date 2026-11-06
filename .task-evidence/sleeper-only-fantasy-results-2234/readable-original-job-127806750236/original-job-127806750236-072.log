@@ -1,0 +1,61 @@
+77859Z {"timestamp":"2026-11-06T09:27:24.696072+00:00","level":"INFO","logger":"dtos.request","message":"request_accepted","request_id":"f18cde88ff0f45358109ba8004d03245","event":"request_accepted","method":"GET","path":"/health/live"}
+2026-11-06T09:27:24.6979647Z {"timestamp":"2026-11-06T09:27:24.696160+00:00","level":"INFO","logger":"dtos.request","message":"handler_scheduled","request_id":"f18cde88ff0f45358109ba8004d03245","event":"handler_scheduled","method":"GET","path":"/health/live"}
+2026-11-06T09:27:24.6987007Z {"timestamp":"2026-11-06T09:27:24.698059+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"f18cde88ff0f45358109ba8004d03245","event":"request_complete","duration_ms":1.999,"status_code":200,"method":"GET","path":"/health/live"}
+2026-11-06T09:27:25.0815361Z {"timestamp":"2026-11-06T09:27:25.080261+00:00","level":"INFO","logger":"dtos.request","message":"request_accepted","request_id":"55f700d187ec4142a30a0cc65fb10ed8","event":"request_accepted","method":"GET","path":"/health/live"}
+2026-11-06T09:27:25.0818098Z {"timestamp":"2026-11-06T09:27:25.081339+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/health/live \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-06T09:27:25.0819756Z {"timestamp":"2026-11-06T09:27:25.080342+00:00","level":"INFO","logger":"dtos.request","message":"handler_scheduled","request_id":"55f700d187ec4142a30a0cc65fb10ed8","event":"handler_scheduled","method":"GET","path":"/health/live"}
+2026-11-06T09:27:25.0828046Z {"timestamp":"2026-11-06T09:27:25.082196+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"55f700d187ec4142a30a0cc65fb10ed8","event":"request_complete","duration_ms":1.944,"status_code":200,"method":"GET","path":"/health/live"}
+2026-11-06T09:27:25.2163472Z {"timestamp":"2026-11-06T09:27:25.215571+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_admission","request_id":"system","event":"trade_admission","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":168271872,"limit_bytes":2147483648,"raw_headroom_bytes":1979211776,"clean_inactive_file_bytes":757760,"conditional_file_credit_bytes":378880,"admission_headroom_bytes":1979590656,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"recovery":null}}
+2026-11-06T09:27:25.6352885Z {"timestamp":"2026-11-06T09:27:25.634661+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_execution_finished","request_id":"system","event":"trade_execution_finished","duration_ms":419.754,"diagnostic":{"schema":"trade-resource-v1","outcome":"complete"}}
+2026-11-06T09:27:25.6373398Z {"timestamp":"2026-11-06T09:27:25.636877+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/trades/evaluate \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-06T09:27:26.0024723Z ##[group]Run actions/upload-artifact@v4
+2026-11-06T09:27:26.0025136Z with:
+2026-11-06T09:27:26.0025401Z   name: league-entry-2g
+2026-11-06T09:27:26.0025734Z   path: .validation/trade-resource/league-entry/evidence
+2026-11-06T09:27:26.0026086Z   if-no-files-found: error
+2026-11-06T09:27:26.0026362Z   retention-days: 14
+2026-11-06T09:27:26.0026625Z   compression-level: 6
+2026-11-06T09:27:26.0026880Z   overwrite: false
+2026-11-06T09:27:26.0027138Z   include-hidden-files: false
+2026-11-06T09:27:26.0027407Z env:
+2026-11-06T09:27:26.0027823Z   NODE_OPTIONS: --max-old-space-size=256
+2026-11-06T09:27:26.0028330Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-06T09:27:26.0028786Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib/pkgconfig
+2026-11-06T09:27:26.0029247Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-06T09:27:26.0029655Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-06T09:27:26.0030110Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-06T09:27:26.0030524Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib
+2026-11-06T09:27:26.0030955Z ##[endgroup]
+2026-11-06T09:27:26.1678582Z (node:52196) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-11-06T09:27:26.1679354Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-11-06T09:27:26.1741656Z With the provided path, there will be 4 files uploaded
+2026-11-06T09:27:26.1746638Z Artifact name is valid!
+2026-11-06T09:27:26.1747139Z Root directory input is valid!
+2026-11-06T09:27:26.6156826Z Beginning upload of artifact content to blob storage
+2026-11-06T09:27:26.6407867Z (node:52196) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+2026-11-06T09:27:26.8581774Z Uploaded bytes 11641
+2026-11-06T09:27:26.9217431Z Finished uploading artifact content to blob storage!
+2026-11-06T09:27:26.9218377Z SHA256 digest of uploaded artifact zip is 7c3e12035babf0aec290d152b7abeef9eff2e817a2ca73259842554d8f4be746
+2026-11-06T09:27:26.9219518Z Finalizing artifact upload
+2026-11-06T09:27:27.4079137Z Artifact league-entry-2g.zip successfully finalized. Artifact ID 13491413921
+2026-11-06T09:27:27.4080296Z Artifact league-entry-2g has been successfully uploaded! Final size is 11641 bytes. Artifact ID is 13491413921
+2026-11-06T09:27:27.4085557Z Artifact download URL: https://github.com/Richarddavis47/dtos/actions/runs/42192220594/artifacts/13491413921
+2026-11-06T09:27:27.4255057Z Post job cleanup.
+2026-11-06T09:27:27.5447922Z (node:52208) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-11-06T09:27:27.5448769Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-11-06T09:27:27.5570456Z Post job cleanup.
+2026-11-06T09:27:27.6499274Z [command]/usr/bin/git version
+2026-11-06T09:27:27.6542146Z git version 2.56.0
+2026-11-06T09:27:27.6580602Z Temporarily overriding HOME='/home/runner/work/_temp/c42d9602-98b2-493a-a111-4fa0f7bd57ad' before making global git config changes
+2026-11-06T09:27:27.6583809Z Adding repository directory to the temporary git global config as a safe directory
+2026-11-06T09:27:27.6587391Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/dtos/dtos
+2026-11-06T09:27:27.6631422Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-11-06T09:27:27.6676327Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-11-06T09:27:27.6995710Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-11-06T09:27:27.7014152Z http.https://github.com/.extraheader
+2026-11-06T09:27:27.7062131Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+2026-11-06T09:27:27.7089078Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-11-06T09:27:27.7366195Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-11-06T09:27:27.7395416Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-11-06T09:27:27.7738564Z Cleaning up orphan processes
+2026-11-06T09:27:27.8048038Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5, actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

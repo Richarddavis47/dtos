@@ -1,0 +1,57 @@
+p":"2026-11-06T08:55:25.813949+00:00","level":"INFO","logger":"dtos.request","message":"handler_scheduled","request_id":"685927615cf04f0680e5cf0505d18e6b","event":"handler_scheduled","method":"GET","path":"/health/live"}
+2026-11-06T08:55:25.8157777Z {"timestamp":"2026-11-06T08:55:25.815165+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/health/live \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-06T08:55:25.8163324Z {"timestamp":"2026-11-06T08:55:25.815772+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"685927615cf04f0680e5cf0505d18e6b","event":"request_complete","duration_ms":1.914,"status_code":200,"method":"GET","path":"/health/live"}
+2026-11-06T08:55:25.9543886Z {"timestamp":"2026-11-06T08:55:25.953714+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_admission","request_id":"system","event":"trade_admission","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":167206912,"limit_bytes":2147483648,"raw_headroom_bytes":1980276736,"clean_inactive_file_bytes":757760,"conditional_file_credit_bytes":378880,"admission_headroom_bytes":1980655616,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"recovery":null}}
+2026-11-06T08:55:26.4320291Z {"timestamp":"2026-11-06T08:55:26.431320+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_execution_finished","request_id":"system","event":"trade_execution_finished","duration_ms":478.396,"diagnostic":{"schema":"trade-resource-v1","outcome":"complete"}}
+2026-11-06T08:55:26.4341416Z {"timestamp":"2026-11-06T08:55:26.433727+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/trades/evaluate \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-06T08:55:26.7572155Z ##[group]Run actions/upload-artifact@v4
+2026-11-06T08:55:26.7572782Z with:
+2026-11-06T08:55:26.7573193Z   name: league-entry-2g
+2026-11-06T08:55:26.7573788Z   path: .validation/trade-resource/league-entry/evidence
+2026-11-06T08:55:26.7574446Z   if-no-files-found: error
+2026-11-06T08:55:26.7574926Z   retention-days: 14
+2026-11-06T08:55:26.7575377Z   compression-level: 6
+2026-11-06T08:55:26.7575824Z   overwrite: false
+2026-11-06T08:55:26.7576303Z   include-hidden-files: false
+2026-11-06T08:55:26.7576756Z env:
+2026-11-06T08:55:26.7577178Z   NODE_OPTIONS: --max-old-space-size=256
+2026-11-06T08:55:26.7577874Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-06T08:55:26.7578714Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib/pkgconfig
+2026-11-06T08:55:26.7579589Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-06T08:55:26.7580451Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-06T08:55:26.7580911Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-06T08:55:26.7581357Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib
+2026-11-06T08:55:26.7581751Z ##[endgroup]
+2026-11-06T08:55:26.9426758Z (node:52195) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-11-06T08:55:26.9428161Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-11-06T08:55:26.9531542Z With the provided path, there will be 4 files uploaded
+2026-11-06T08:55:26.9532399Z Artifact name is valid!
+2026-11-06T08:55:26.9532983Z Root directory input is valid!
+2026-11-06T08:55:27.1463382Z Beginning upload of artifact content to blob storage
+2026-11-06T08:55:27.1749072Z (node:52195) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+2026-11-06T08:55:27.2027408Z Uploaded bytes 11528
+2026-11-06T08:55:27.2190730Z Finished uploading artifact content to blob storage!
+2026-11-06T08:55:27.2192127Z SHA256 digest of uploaded artifact zip is 08066acf7c771725e0c33fb97e27fa050c6c5f1c497313d10188dd54d6c841ba
+2026-11-06T08:55:27.2193900Z Finalizing artifact upload
+2026-11-06T08:55:27.6299069Z Artifact league-entry-2g.zip successfully finalized. Artifact ID 13490191147
+2026-11-06T08:55:27.6300998Z Artifact league-entry-2g has been successfully uploaded! Final size is 11528 bytes. Artifact ID is 13490191147
+2026-11-06T08:55:27.6307171Z Artifact download URL: https://github.com/Richarddavis47/dtos/actions/runs/42188277417/artifacts/13490191147
+2026-11-06T08:55:27.6506219Z Post job cleanup.
+2026-11-06T08:55:27.7783903Z (node:52208) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-11-06T08:55:27.7898045Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-11-06T08:55:27.8009528Z Post job cleanup.
+2026-11-06T08:55:27.9130572Z [command]/usr/bin/git version
+2026-11-06T08:55:27.9206014Z git version 2.56.0
+2026-11-06T08:55:27.9258961Z Temporarily overriding HOME='/home/runner/work/_temp/a643e9b7-4236-4714-9410-ae3c2f9069d9' before making global git config changes
+2026-11-06T08:55:27.9262964Z Adding repository directory to the temporary git global config as a safe directory
+2026-11-06T08:55:27.9282543Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/dtos/dtos
+2026-11-06T08:55:27.9347427Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-11-06T08:55:27.9402359Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-11-06T08:55:27.9693946Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-11-06T08:55:27.9723642Z http.https://github.com/.extraheader
+2026-11-06T08:55:27.9736380Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+2026-11-06T08:55:27.9781702Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-11-06T08:55:28.0098803Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-11-06T08:55:28.0154693Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-11-06T08:55:28.0573286Z Cleaning up orphan processes
+2026-11-06T08:55:28.1075037Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5, actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

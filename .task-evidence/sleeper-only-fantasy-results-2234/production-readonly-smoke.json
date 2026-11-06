@@ -1,0 +1,62 @@
+{
+  "observed_at": "2026-11-06T11:03:10.682069+00:00",
+  "production_ready": {
+    "status": "ready",
+    "version": "1.22.19",
+    "build": 2234,
+    "deployment": {
+      "branch": "main",
+      "commit": "9c1886c40c9697da0be3b5f06ede0bf9f45f4682",
+      "deployed_at": "2026-11-06T11:00:52.314259+00:00"
+    },
+    "reason": "Application ready."
+  },
+  "reads": [
+    {
+      "path": "/health/live",
+      "status": 200,
+      "guest_read_only": true
+    },
+    {
+      "path": "/static/js/contextual_navigation.js",
+      "status": 200,
+      "guest_read_only": true,
+      "sha256": "33045ef51fa780c4e0519a71c92ad0104ec8d4ccfb067c28216f83737ce6ae82",
+      "bytes": 19933
+    },
+    {
+      "path": "/welcome",
+      "status": 200,
+      "guest_read_only": true
+    },
+    {
+      "path": "/account/sign-in",
+      "status": 200,
+      "guest_read_only": true
+    },
+    {
+      "path": "/api/my-dtos",
+      "status": 401,
+      "guest_read_only": true
+    },
+    {
+      "path": "/api/inspect/live/teams",
+      "status": 401,
+      "guest_read_only": true
+    },
+    {
+      "path": "/market",
+      "status": 303,
+      "guest_read_only": true,
+      "scope": "Authentication boundary only; no private Market content or league hydration"
+    },
+    {
+      "path": "/players/1",
+      "status": 303,
+      "guest_read_only": true,
+      "scope": "Authentication boundary only; no private Market content or league hydration"
+    }
+  ],
+  "customer_prerelease_wording_matches": [],
+  "scope": "Bounded public unauthenticated reads only. No authenticated league entry, search, synchronization, FOIS rebuild, account login or saved user-data mutation."
+}

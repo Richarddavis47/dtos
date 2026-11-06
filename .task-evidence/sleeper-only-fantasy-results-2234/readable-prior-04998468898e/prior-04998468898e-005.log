@@ -1,0 +1,99 @@
+"c9adb23a3e8be7a1","state":"cold","active_requests":0,"pinned":true,"owns_state":false,"background_tasks":0,"source_generation_count":0,"source_generation_identity":"4f53cda18c2baa0c","market_cache_owned":true,"projection_cache_owned":false}]},"sample_total_duration_ms":20.682},"queue_dropped_record_count":0}}
+{"timestamp":"2026-11-06T08:09:44.892737+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-06T08:09:44.896488+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/player-projections.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T08:09:44.965363+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/market/assets/player:1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T08:09:44.978497+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/market?selected=player%3A1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T08:09:45.066162+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/market?selected=player%3A1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T08:09:45.331812+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/market/assets/player:1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+ok
+test_balance_primary_options_keep_original_incoming_target (tests.test_trade_decision_experience.TradeDecisionExperienceTests.test_balance_primary_options_keep_original_incoming_target) ... ok
+test_display_is_read_only_and_unfavorable_verdict_stays_unfavorable (tests.test_trade_decision_experience.TradeDecisionExperienceTests.test_display_is_read_only_and_unfavorable_verdict_stays_unfavorable) ... ok
+test_explicit_strategy_changes_interpretation_never_prices_or_lineup (tests.test_trade_decision_experience.TradeDecisionExperienceTests.test_explicit_strategy_changes_interpretation_never_prices_or_lineup) ... ok
+test_incoming_questionable_qualification_is_visible_in_primary_summary (tests.test_trade_decision_experience.TradeDecisionExperienceTests.test_incoming_questionable_qualification_is_visible_in_primary_summary) ... ok
+test_independent_parity_and_severe_loss_do_not_require_a_strategy_to_get_a_verdict (tests.test_trade_decision_experience.TradeDecisionExperienceTests.test_independent_parity_and_severe_loss_do_not_require_a_strategy_to_get_a_verdict) ... ok
+test_player_facts_age_and_failed_refresh_retain_original_numbers (tests.test_trade_decision_experience.TradeDecisionExperienceTests.test_player_facts_age_and_failed_refresh_retain_original_numbers) ... ok
+test_prepared_actual_production_keeps_sample_and_scoring_not_full_season_rank (tests.test_trade_decision_experience.TradeDecisionExperienceTests.test_prepared_actual_production_keeps_sample_and_scoring_not_full_season_rank) ... ok
+test_prepared_home_identity_tracks_production_generation_not_retrieval (tests.test_trade_decision_experience.TradeDecisionExperienceTests.test_prepared_home_identity_tracks_production_generation_not_retrieval) ... ok
+test_production_source_identity_uses_facts_not_retrieval_only_clock (tests.test_trade_decision_experience.TradeDecisionExperienceTests.test_production_source_identity_uses_facts_not_retrieval_only_clock) ... ok
+test_projection_fact_uses_canonical_source_display_without_screen_rounding (tests.test_trade_decision_experience.TradeDecisionExperienceTests.test_projection_fact_uses_canonical_source_display_without_screen_rounding) ... ok
+test_public_day_arkham_scoring_and_generation_are_distinct (tests.test_trade_decision_experience.TradeDecisionExperienceTests.test_public_day_arkham_scoring_and_generation_are_distinct) ... ok
+test_search_opportunity_filter_is_not_an_analysis_strategy (tests.test_trade_decision_experience.TradeDecisionExperienceTests.test_search_opportunity_filter_is_not_an_analysis_strategy) ... ok
+test_selected_player_facts_reuse_compatible_published_sleeper_projection (tests.test_trade_decision_experience.TradeDecisionExperienceTests.test_selected_player_facts_reuse_compatible_published_sleeper_projection) ... ok
+test_unresolved_strategy_names_only_actual_blocker_and_keeps_numeric_facts (tests.test_trade_decision_experience.TradeDecisionExperienceTests.test_unresolved_strategy_names_only_actual_blocker_and_keeps_numeric_facts) ... ok
+test_unresolved_strategy_with_other_missing_evidence_lists_both (tests.test_trade_decision_experience.TradeDecisionExperienceTests.test_unresolved_strategy_with_other_missing_evidence_lists_both) ... ok
+test_unsupported_scoring_does_not_publish_zero_as_a_supported_player_fact (tests.test_trade_decision_experience.TradeDecisionExperienceTests.test_unsupported_scoring_does_not_publish_zero_as_a_supported_player_fact) ... ok
+test_valid_zero_projection_and_missing_scoring_are_distinct (tests.test_trade_decision_experience.TradeDecisionExperienceTests.test_valid_zero_projection_and_missing_scoring_are_distinct) ... ok
+test_young_bench_for_older_starter_uses_legal_impact_not_past_ppg_difference (tests.test_trade_decision_experience.TradeDecisionExperienceTests.test_young_bench_for_older_starter_uses_legal_impact_not_past_ppg_difference) ... ok
+test_absent_store_does_not_create_database (tests.test_prepared_player_evidence.PreparedPlayerEvidenceTests.test_absent_store_does_not_create_database) ... ok
+test_context_mismatch_rejected (tests.test_prepared_player_evidence.PreparedPlayerEvidenceTests.test_context_mismatch_rejected) ... ok
+test_modeled_intrinsic_and_future_value_are_not_historical_or_projection_evidence (tests.test_prepared_player_evidence.PreparedPlayerEvidenceTests.test_modeled_intrinsic_and_future_value_are_not_historical_or_projection_evidence) ... ok
+test_orchestrator_consumes_prepared_evidence_and_invalidates_generation (tests.test_prepared_player_evidence.PreparedPlayerEvidenceTests.test_orchestrator_consumes_prepared_evidence_and_invalidates_generation) ... ok
+test_replay_league_scoring_and_material_change (tests.test_prepared_player_evidence.PreparedPlayerEvidenceTests.test_replay_league_scoring_and_material_change) ... ok
+test_universe_and_brain_read_same_prepared_production (tests.test_prepared_player_evidence.PreparedPlayerEvidenceTests.test_universe_and_brain_read_same_prepared_production) ... ok
+test_eight_season_summaries_are_bounded_temporal_and_replay_stable (tests.test_reference_production_methodology.ReferenceProductionMethodologyTests.test_eight_season_summaries_are_bounded_temporal_and_replay_stable) ... ok
+test_league_scoring_changes_do_not_change_reference_model (tests.test_reference_production_methodology.ReferenceProductionMethodologyTests.test_league_scoring_changes_do_not_change_reference_model) ... ok
+test_unknown_or_postseason_does_not_silently_enter_reference_cohort (tests.test_reference_production_methodology.ReferenceProductionMethodologyTests.test_unknown_or_postseason_does_not_silently_enter_reference_cohort) ... ok
+test_200_without_redirect (tests.test_sleeper_projection_transport.SleeperProjectionTransportTests.test_200_without_redirect) ... {"timestamp":"2026-11-06T08:09:46.429359+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://api.sleeper.app/projections/nfl/2026/1?season_type=regular&position%5B%5D=QB&position%5B%5D=RB&position%5B%5D=WR&position%5B%5D=TE&position%5B%5D=FLEX&position%5B%5D=K&position%5B%5D=DEF \"HTTP/1.1 200 OK\"","request_id":"system"}
+ok
+test_301_same_sleeper_host_redirects_once_to_valid_payload (tests.test_sleeper_projection_transport.SleeperProjectionTransportTests.test_301_same_sleeper_host_redirects_once_to_valid_payload) ... {"timestamp":"2026-11-06T08:09:46.430867+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://api.sleeper.app/projections/nfl/2026/1?season_type=regular&position%5B%5D=QB&position%5B%5D=RB&position%5B%5D=WR&position%5B%5D=TE&position%5B%5D=FLEX&position%5B%5D=K&position%5B%5D=DEF \"HTTP/1.1 301 Moved Permanently\"","request_id":"system"}
+{"timestamp":"2026-11-06T08:09:46.431214+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://api.sleeper.app/canonical/projections \"HTTP/1.1 200 OK\"","request_id":"system"}
+ok
+test_302_is_supported (tests.test_sleeper_projection_transport.SleeperProjectionTransportTests.test_302_is_supported) ... {"timestamp":"2026-11-06T08:09:46.432348+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://api.sleeper.app/projections/nfl/2026/1?season_type=regular&position%5B%5D=QB&position%5B%5D=RB&position%5B%5D=WR&position%5B%5D=TE&position%5B%5D=FLEX&position%5B%5D=K&position%5B%5D=DEF \"HTTP/1.1 302 Found\"","request_id":"system"}
+{"timestamp":"2026-11-06T08:09:46.432673+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://api.sleeper.app/final \"HTTP/1.1 200 OK\"","request_id":"system"}
+ok
+test_excessive_redirects_fail_closed (tests.test_sleeper_projection_transport.SleeperProjectionTransportTests.test_excessive_redirects_fail_closed) ... {"timestamp":"2026-11-06T08:09:46.433886+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://api.sleeper.app/projections/nfl/2026/1?season_type=regular&position%5B%5D=QB&position%5B%5D=RB&position%5B%5D=WR&position%5B%5D=TE&position%5B%5D=FLEX&position%5B%5D=K&position%5B%5D=DEF \"HTTP/1.1 301 Moved Permanently\"","request_id":"system"}
+{"timestamp":"2026-11-06T08:09:46.434155+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://api.sleeper.app/redirect/1 \"HTTP/1.1 301 Moved Permanently\"","request_id":"system"}
+{"timestamp":"2026-11-06T08:09:46.434373+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://api.sleeper.app/redirect/2 \"HTTP/1.1 301 Moved Permanently\"","request_id":"system"}
+{"timestamp":"2026-11-06T08:09:46.434646+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://api.sleeper.app/redirect/3 \"HTTP/1.1 301 Moved Permanently\"","request_id":"system"}
+ok
+test_https_downgrade_is_rejected (tests.test_sleeper_projection_transport.SleeperProjectionTransportTests.test_https_downgrade_is_rejected) ... {"timestamp":"2026-11-06T08:09:46.435830+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://api.sleeper.app/projections/nfl/2026/1?season_type=regular&position%5B%5D=QB&position%5B%5D=RB&position%5B%5D=WR&position%5B%5D=TE&position%5B%5D=FLEX&position%5B%5D=K&position%5B%5D=DEF \"HTTP/1.1 301 Moved Permanently\"","request_id":"system"}
+ok
+test_missing_location_is_rejected (tests.test_sleeper_projection_transport.SleeperProjectionTransportTests.test_missing_location_is_rejected) ... {"timestamp":"2026-11-06T08:09:46.437011+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://api.sleeper.app/projections/nfl/2026/1?season_type=regular&position%5B%5D=QB&position%5B%5D=RB&position%5B%5D=WR&position%5B%5D=TE&position%5B%5D=FLEX&position%5B%5D=K&position%5B%5D=DEF \"HTTP/1.1 301 Moved Permanently\"","request_id":"system"}
+ok
+test_redirect_loop_fails_closed (tests.test_sleeper_projection_transport.SleeperProjectionTransportTests.test_redirect_loop_fails_closed) ... {"timestamp":"2026-11-06T08:09:46.438196+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://api.sleeper.app/projections/nfl/2026/1?season_type=regular&position%5B%5D=QB&position%5B%5D=RB&position%5B%5D=WR&position%5B%5D=TE&position%5B%5D=FLEX&position%5B%5D=K&position%5B%5D=DEF \"HTTP/1.1 301 Moved Permanently\"","request_id":"system"}
+ok
+test_redirected_non_200_final_response_is_preserved_as_failure (tests.test_sleeper_projection_transport.SleeperProjectionTransportTests.test_redirected_non_200_final_response_is_preserved_as_failure) ... {"timestamp":"2026-11-06T08:09:46.439394+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://api.sleeper.app/projections/nfl/2026/1?season_type=regular&position%5B%5D=QB&position%5B%5D=RB&position%5B%5D=WR&position%5B%5D=TE&position%5B%5D=FLEX&position%5B%5D=K&position%5B%5D=DEF \"HTTP/1.1 301 Moved Permanently\"","request_id":"system"}
+{"timestamp":"2026-11-06T08:09:46.439681+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://api.sleeper.app/final \"HTTP/1.1 503 Service Unavailable\"","request_id":"system"}
+ok
+test_unexpected_host_is_rejected_before_second_request (tests.test_sleeper_projection_transport.SleeperProjectionTransportTests.test_unexpected_host_is_rejected_before_second_request) ... {"timestamp":"2026-11-06T08:09:46.440817+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://api.sleeper.app/projections/nfl/2026/1?season_type=regular&position%5B%5D=QB&position%5B%5D=RB&position%5B%5D=WR&position%5B%5D=TE&position%5B%5D=FLEX&position%5B%5D=K&position%5B%5D=DEF \"HTTP/1.1 301 Moved Permanently\"","request_id":"system"}
+ok
+test_retained_recovery_and_qualified_history_at_phone_widths (tests.test_historical_retained_admission_browser.HistoricalRetainedAdmissionBrowserTests.test_retained_recovery_and_qualified_history_at_phone_widths) ... Validation Chromium: /usr/bin/chromium
+Validation Chromium version: 156.0.8078.73
+{"timestamp":"2026-11-06T08:09:46.916124+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/player/11563 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T08:09:47.299537+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/player/11563 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T08:09:47.612518+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/player/11563 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T08:09:47.943156+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/player/11563 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T08:09:48.334269+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/player/11563 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T08:09:48.702052+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/player/11563 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T08:09:49.032426+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/player/11563 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T08:09:49.408432+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/player/11563 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T08:09:49.784737+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/player/11563 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T08:09:50.117655+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/player/11563 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T08:09:50.426157+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/player/11563 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T08:09:50.730530+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/player/11563 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T08:09:51.108274+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/player/11563 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T08:09:51.410119+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/player/11563 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T08:09:51.732459+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/player/11563 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T08:09:52.049480+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/player/11563 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T08:09:52.496861+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/player/11563 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T08:09:52.732664+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/player/11563 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T08:09:53.114063+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/player/11563 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T08:09:53.431214+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/player/11563 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T08:09:53.808361+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/player/11563 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T08:09:54.117598+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/player/11563 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T08:09:54.489409+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/player/11563 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T08:09:54.733429+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/player/11563 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T08:09:55.114755+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/player/11563 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T08:09:55.415598+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/player/11563 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T08:09:55.723323+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/player/11563 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T08:09:56.036940+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/player/11563 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T08:09:56.394180+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/player/11563 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T08:09:56.700292+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/player/11563 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T08:09:57.025700+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/player/11563 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T08:09:57.403702+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/player/11563 \"HTTP/1.1 200 OK\"","request_id":"system"}
+ok
+
+----------------------------------------------------------------------
+Ran 97 tests in 49.575s
+
+OK

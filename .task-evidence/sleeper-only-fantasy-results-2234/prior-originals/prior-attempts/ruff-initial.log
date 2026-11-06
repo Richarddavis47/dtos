@@ -1,0 +1,269 @@
+F841 Local variable `sample` is assigned to but never used
+   --> services/trade_decision.py:372:13
+    |
+370 |                 None,
+371 |             )
+372 |             sample = (prepared.get("players") or {}).get(pid) or {}
+    |             ^^^^^^
+373 |             production.update(
+374 |                 points_per_game=None,
+    |
+help: Remove assignment to unused variable `sample`
+
+F401 [*] `src.core.player_value_projection.models.ProductionWindow` imported but unused
+ --> src/core/player_value_projection/providers.py:7:84
+  |
+5 | from typing import Any
+6 |
+7 | from src.core.player_value_projection.models import DataStatus, ProductionContext, ProductionWindow, Projection
+  |                                                                                    ^^^^^^^^^^^^^^^^
+8 | from src.core.projection_intelligence import projection_service
+  |
+help: Remove unused import: `src.core.player_value_projection.models.ProductionWindow`
+  |
+6 |
+  - from src.core.player_value_projection.models import DataStatus, ProductionContext, ProductionWindow, Projection
+7 + from src.core.player_value_projection.models import DataStatus, ProductionContext, Projection
+8 | from src.core.projection_intelligence import projection_service
+  |
+
+E401 [*] Multiple imports on one line
+   --> tests/test_current_production_coverage.py:219:9
+    |
+217 |         from src.core.valuation.universe import ValuationUniverse
+218 |         from src.core.valuation_intelligence.engine import _score_asset
+219 |         import hashlib,json
+    |         ^^^^^^^^^^^^^^^^^^^
+220 |         source=self.f.data['season_matchups']
+221 |         source['semantic_generation']=hashlib.sha256(json.dumps(source['weeks'],sort_keys=True).encode()).hexdigest()
+    |
+help: Split imports
+    |
+218 |         from src.core.valuation_intelligence.engine import _score_asset
+    -         import hashlib,json
+219 +         import hashlib
+220 +         import json
+221 |         source=self.f.data['season_matchups']
+    |
+
+E702 Multiple statements on one line (semicolon)
+  --> tests/test_sleeper_actual_results.py:97:27
+   |
+95 | class SleeperPublicationTests(unittest.TestCase):
+96 |     def test_direct_weekly_source_parity_and_observation_denominator(self):
+97 |         data=actual_data(); context=profile(data)
+   |                           ^
+98 |         for row in context.observations:
+99 |             retained=data['season_matchups']['weeks'][str(row['week'])]['rows'][0]['players_points']['4984']
+   |
+
+E702 Multiple statements on one line (semicolon)
+   --> tests/test_sleeper_actual_results.py:108:27
+    |
+106 |         self.assertTrue(all(w.targets is None for w in context.windows))
+107 |     def test_bench_explicit_scores_but_absent_ir_taxi_and_free_agents_unknown(self):
+108 |         data=actual_data(); data['teams']=[dict(players=[dict(id='taxi'),dict(id='ir')])]
+    |                           ^
+109 |         self.assertEqual(profile(data,'bench').windows[3].fantasy_points,-1.24)
+110 |         for pid in ('ir','taxi','free-agent'):
+    |
+
+E702 Multiple statements on one line (semicolon)
+   --> tests/test_sleeper_actual_results.py:119:27
+    |
+117 |         self.assertEqual(profile(data,'ir').windows[3].observation_count,1)
+118 |     def test_ownership_duplicates_are_deduplicated_and_conflicts_withheld(self):
+119 |         data=actual_data(); row=data['season_matchups']['weeks']['1']['rows'][0]
+    |                           ^
+120 |         duplicate={**copy.deepcopy(row),'roster_id':2}
+121 |         data['season_matchups']['weeks']['1']['rows'].append(duplicate)
+    |
+
+E702 Multiple statements on one line (semicolon)
+   --> tests/test_sleeper_actual_results.py:133:22
+    |
+131 |         data['league']['settings'].update(last_scored_leg=2,playoff_week_start=3)
+132 |         data['week']=4
+133 |         publish(data); c=profile(data)
+    |                      ^
+134 |         self.assertEqual(c.windows[3].observation_count,2)
+135 |         self.assertEqual(c.observations[-1]['week'],4)
+    |
+
+E702 Multiple statements on one line (semicolon)
+   --> tests/test_sleeper_actual_results.py:140:27
+    |
+138 |         self.assertEqual(c.periods['5']['state'],'future')
+139 |     def test_unknown_completion_does_not_make_live_scores_final(self):
+140 |         data=actual_data(); data['league']['settings'].pop('last_scored_leg')
+    |                           ^
+141 |         self.assertEqual(profile(data).windows[3].observation_count,0)
+142 |         self.assertTrue(profile(data).observations)
+    |
+
+E702 Multiple statements on one line (semicolon)
+   --> tests/test_sleeper_actual_results.py:144:27
+    |
+142 |         self.assertTrue(profile(data).observations)
+143 |     def test_older_atomic_cache_reuses_native_sleeper_rows_not_calculated_totals(self):
+144 |         data=actual_data(); data['season_matchups'].pop('scoring_fingerprint')
+    |                           ^
+145 |         c=profile(data)
+146 |         self.assertEqual(c.observations[0]['points'],data['season_matchups']['weeks']['1']['rows'][0]['players_points']['4984'])
+    |
+
+E702 Multiple statements on one line (semicolon)
+   --> tests/test_sleeper_actual_results.py:153:31
+    |
+151 |     def test_publication_identity_scoring_and_season_are_not_interchangeable(self):
+152 |         for key,value in (('league_id','other'),('season','2025'),('scoring_fingerprint','wrong')):
+153 |             data=actual_data(); data['season_matchups'][key]=value
+    |                               ^
+154 |             self.assertIsNone(profile(data).windows[3].fantasy_points)
+155 |         data=actual_data(); publish(data); data['scoring_settings']={'rec':.5}
+    |
+
+E702 Multiple statements on one line (semicolon)
+   --> tests/test_sleeper_actual_results.py:155:27
+    |
+153 |             data=actual_data(); data['season_matchups'][key]=value
+154 |             self.assertIsNone(profile(data).windows[3].fantasy_points)
+155 |         data=actual_data(); publish(data); data['scoring_settings']={'rec':.5}
+    |                           ^
+156 |         self.assertFalse(profile(data).windows)
+157 |         with self.assertRaises(ValueError):
+    |
+
+E702 Multiple statements on one line (semicolon)
+   --> tests/test_sleeper_actual_results.py:155:42
+    |
+153 |             data=actual_data(); data['season_matchups'][key]=value
+154 |             self.assertIsNone(profile(data).windows[3].fantasy_points)
+155 |         data=actual_data(); publish(data); data['scoring_settings']={'rec':.5}
+    |                                          ^
+156 |         self.assertFalse(profile(data).windows)
+157 |         with self.assertRaises(ValueError):
+    |
+
+E702 Multiple statements on one line (semicolon)
+   --> tests/test_sleeper_actual_results.py:160:27
+    |
+158 |             prepare_actual_results(data,expected_league_id='other')
+159 |     def test_non_sleeper_analysis_cannot_supply_authoritative_points(self):
+160 |         data=actual_data(); data['canonical_player_production']={'league_id':'A','season':2026,'players':{
+    |                           ^
+161 |             '4984':{'production':{'windows':[{'label':'Season Average','fantasy_points':999}]}}}}
+162 |         self.assertFalse(profile(data).windows)
+    |
+
+E702 Multiple statements on one line (semicolon)
+   --> tests/test_sleeper_actual_results.py:168:31
+    |
+166 |             analysis=prepared(Path(folder)/'facts.sqlite3')
+167 |             original=copy.deepcopy(analysis)
+168 |             data=actual_data(); attach_sleeper_actuals(data,analysis)
+    |                               ^
+169 |             self.assertEqual(analysis['reference_generation'],original['reference_generation'])
+170 |             self.assertEqual(analysis['players'],original['players'])
+    |
+
+E702 Multiple statements on one line (semicolon)
+   --> tests/test_sleeper_actual_results.py:182:27
+    |
+180 |         self.assertIsNone(c.windows[4].fantasy_points)
+181 |     def test_restored_source_reproduces_exact_profile_without_io(self):
+182 |         data=actual_data(); before=asdict(profile(data))
+    |                           ^
+183 |         restored=json.loads(json.dumps(data))
+184 |         with patch('httpx.AsyncClient.get',side_effect=AssertionError('no acquisition')):
+    |
+
+E702 Multiple statements on one line (semicolon)
+   --> tests/test_sleeper_actual_results.py:202:38
+    |
+201 |     async def test_failed_week_retains_explicit_last_valid_score_not_successful_acquisition(self):
+202 |         data=copy.deepcopy(self.data); old=data['season_matchups']
+    |                                      ^
+203 |         async def fail(_): raise RuntimeError('disposable source failure')
+204 |         new=await prepare_season_matchups(data['league'],9,[],fail,observed_at='2026-11-02T00:00:00Z',previous=old)
+    |
+
+E702 Multiple statements on one line (semicolon)
+   --> tests/test_sleeper_actual_results.py:213:38
+    |
+211 |         self.assertIn('not newly revalidated',' '.join(c.limitations))
+212 |     async def test_correction_replaces_old_score_and_is_qualified(self):
+213 |         data=copy.deepcopy(self.data); old=data['season_matchups']
+    |                                      ^
+214 |         async def changed(path):
+215 |             rows=copy.deepcopy(old['weeks'].get(path.rsplit('/',1)[-1],{}).get('rows',[]))
+    |
+
+E702 Multiple statements on one line (semicolon)
+   --> tests/test_sleeper_actual_results.py:227:38
+    |
+225 |         self.assertNotEqual(data['season_matchups']['semantic_generation'],old['semantic_generation'])
+226 |     async def test_failed_refresh_cannot_borrow_a_different_scoring_publication(self):
+227 |         data=copy.deepcopy(self.data); old=data['season_matchups']; data['league']['scoring_settings']={'rec':.5}
+    |                                      ^
+228 |         data['scoring_settings']={'rec':.5}
+229 |         async def fail(_): raise RuntimeError('source failure')
+    |
+
+E702 Multiple statements on one line (semicolon)
+   --> tests/test_sleeper_actual_results.py:227:67
+    |
+225 |         self.assertNotEqual(data['season_matchups']['semantic_generation'],old['semantic_generation'])
+226 |     async def test_failed_refresh_cannot_borrow_a_different_scoring_publication(self):
+227 |         data=copy.deepcopy(self.data); old=data['season_matchups']; data['league']['scoring_settings']={'rec':.5}
+    |                                                                   ^
+228 |         data['scoring_settings']={'rec':.5}
+229 |         async def fail(_): raise RuntimeError('source failure')
+    |
+
+E702 Multiple statements on one line (semicolon)
+   --> tests/test_sleeper_actual_results.py:263:25
+    |
+261 |             self.assertIsNone(f.api()['windows'][3]['fantasy_points'])
+262 |     def test_missing_nflverse_special_teams_does_not_block_sleeper_actual(self):
+263 |         f=self.fixture(); f.set_scoring({'st_ff':1,'pass_yd':.04})
+    |                         ^
+264 |         self.assertIsNone(f.f.data['canonical_player_production']['players']['1']['non_sleeper_analysis']['windows'][3]['fantasy_poin…
+265 |         self.assertEqual(f.api()['windows'][3]['fantasy_points'],18)
+    |
+
+E702 Multiple statements on one line (semicolon)
+   --> tests/test_sleeper_actual_results.py:293:28
+    |
+291 |             cache.write_text(json.dumps(safe_sync_state({'data':data})))
+292 |             with patch.object(sleeper,'league_cache_file',return_value=cache):
+293 |                 restored={}; sleeper.load_cache(state=restored,league_id='A')
+    |                            ^
+294 |             self.assertEqual(profile(restored['data']).observations[0]['points'],23.4738)
+295 |     def test_account_scoped_data_does_not_share_actual_score_maps(self):
+    |
+
+E702 Multiple statements on one line (semicolon)
+   --> tests/test_sleeper_actual_results.py:296:47
+    |
+294 |             self.assertEqual(profile(restored['data']).observations[0]['points'],23.4738)
+295 |     def test_account_scoped_data_does_not_share_actual_score_maps(self):
+296 |         first=actual_data('first',scores=(0,)); second=actual_data('second',scores=(-5,))
+    |                                               ^
+297 |         a,b=publish(first),publish(second)
+298 |         self.assertEqual(profile(first).observations[0]['points'],0)
+    |
+
+E702 Multiple statements on one line (semicolon)
+   --> tests/test_sleeper_actual_results.py:311:27
+    |
+309 |     def test_global_analysis_storage_is_not_required_for_explicit_sleeper_results(self):
+310 |         from services.global_evidence import canonical_player_evidence
+311 |         data=actual_data(); publish(data)
+    |                           ^
+312 |         with tempfile.TemporaryDirectory() as directory:
+313 |             result=canonical_player_evidence('4984',data,expected_league_id='A',path=Path(directory)/'missing.sqlite',as_of='2026-11-…
+    |
+
+Found 23 errors.
+[*] 2 fixable with the `--fix` option (1 hidden fix can be enabled with the `--unsafe-fixes` option).

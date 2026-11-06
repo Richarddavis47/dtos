@@ -1,0 +1,135 @@
+vel":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/players/1?front_office=4 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T07:57:44.453169+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-06T07:57:44.461159+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/player-projections.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T07:57:44.525765+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/market/assets/player:1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T07:57:44.538242+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/market?selected=player%3A1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T07:57:44.624000+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/market?selected=player%3A1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T07:57:44.873295+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/market/assets/player:1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+ok
+test_context_mismatch_fails_closed_and_missing_settings_are_not_zero (tests.test_canonical_player_evidence.CanonicalPlayerEvidenceTests.test_context_mismatch_fails_closed_and_missing_settings_are_not_zero) ... ok
+test_read_does_not_create_storage (tests.test_canonical_player_evidence.CanonicalPlayerEvidenceTests.test_read_does_not_create_storage) ... ok
+test_scoring_is_league_scoped_and_seasons_do_not_fall_back (tests.test_canonical_player_evidence.CanonicalPlayerEvidenceTests.test_scoring_is_league_scoped_and_seasons_do_not_fall_back) ... ok
+test_active_route_round_trip_restores_exact_league_view (tests.test_batch6_matchup_season.SeasonMatchupTests.test_active_route_round_trip_restores_exact_league_view) ... {"timestamp":"2026-11-06T07:57:44.999365+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups/1?week=2 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T07:57:45.001352+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups/1?week=2 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T07:57:45.003194+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups/1?week=2 \"HTTP/1.1 200 OK\"","request_id":"system"}
+ok
+test_active_routes_do_not_run_intelligence_or_mutate_active_week (tests.test_batch6_matchup_season.SeasonMatchupTests.test_active_routes_do_not_run_intelligence_or_mutate_active_week) ... {"timestamp":"2026-11-06T07:57:45.009367+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T07:57:45.012118+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups?week=3 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T07:57:45.015084+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups/1?week=3 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T07:57:45.017241+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups?week=99 \"HTTP/1.1 422 Unprocessable Entity\"","request_id":"system"}
+ok
+test_bracket_evidence_required_for_locks_and_bye_is_qualified (tests.test_batch6_matchup_season.SeasonMatchupTests.test_bracket_evidence_required_for_locks_and_bye_is_qualified) ... ok
+test_confirmed_bye_survives_missing_weekly_scores (tests.test_batch6_matchup_season.SeasonMatchupTests.test_confirmed_bye_survives_missing_weekly_scores) ... ok
+test_duplicate_roster_source_is_not_accepted (tests.test_batch6_matchup_season.SeasonMatchupTests.test_duplicate_roster_source_is_not_accepted) ... ok
+test_failed_source_does_not_retain_stale_current_availability (tests.test_batch6_matchup_season.SeasonMatchupTests.test_failed_source_does_not_retain_stale_current_availability) ... ok
+test_final_week_navigation_is_local_and_canonical_projection_is_unchanged (tests.test_batch6_matchup_season.SeasonMatchupTests.test_final_week_navigation_is_local_and_canonical_projection_is_unchanged) ... ok
+test_future_week_uses_pinned_exact_values_and_true_zero (tests.test_batch6_matchup_season.SeasonMatchupTests.test_future_week_uses_pinned_exact_values_and_true_zero) ... ok
+test_historical_bench_is_source_week_not_current_roster (tests.test_batch6_matchup_season.SeasonMatchupTests.test_historical_bench_is_source_week_not_current_roster) ... ok
+test_history_never_reads_current_projections_or_current_roster (tests.test_batch6_matchup_season.SeasonMatchupTests.test_history_never_reads_current_projections_or_current_roster) ... ok
+test_invalid_source_collections_fail_closed (tests.test_batch6_matchup_season.SeasonMatchupTests.test_invalid_source_collections_fail_closed) ... ok
+test_mid_read_projection_publication_cannot_mix_generations (tests.test_batch6_matchup_season.SeasonMatchupTests.test_mid_read_projection_publication_cannot_mix_generations) ... ok
+test_missing_remains_unavailable_partial_not_complete (tests.test_batch6_matchup_season.SeasonMatchupTests.test_missing_remains_unavailable_partial_not_complete) ... ok
+test_multiweek_final_preserves_components_until_complete (tests.test_batch6_matchup_season.SeasonMatchupTests.test_multiweek_final_preserves_components_until_complete) ... ok
+test_multweek_parent_cannot_lock_from_one_component_result (tests.test_batch6_matchup_season.SeasonMatchupTests.test_multweek_parent_cannot_lock_from_one_component_result) ... ok
+test_playoff_source_placeholders_do_not_lock_opponent (tests.test_batch6_matchup_season.SeasonMatchupTests.test_playoff_source_placeholders_do_not_lock_opponent) ... ok
+test_pregame_live_and_final_comparisons_do_not_conflate_scores (tests.test_batch6_matchup_season.SeasonMatchupTests.test_pregame_live_and_final_comparisons_do_not_conflate_scores) ... ok
+test_preparation_bounded_and_unchanged_semantics_deduplicate (tests.test_batch6_matchup_season.SeasonMatchupTests.test_preparation_bounded_and_unchanged_semantics_deduplicate) ... ok
+test_prepared_optimal_is_separate_and_never_calculated_on_read (tests.test_batch6_matchup_season.SeasonMatchupTests.test_prepared_optimal_is_separate_and_never_calculated_on_read) ... ok
+test_read_rejects_week_snapshot_from_different_generation (tests.test_batch6_matchup_season.SeasonMatchupTests.test_read_rejects_week_snapshot_from_different_generation) ... ok
+test_scoring_change_never_reuses_old_projection (tests.test_batch6_matchup_season.SeasonMatchupTests.test_scoring_change_never_reuses_old_projection) ... ok
+test_unprepared_cache_cannot_enter_legacy_analysis (tests.test_batch6_matchup_season.SeasonMatchupTests.test_unprepared_cache_cannot_enter_legacy_analysis) ... {"timestamp":"2026-11-06T07:57:45.032321+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups \"HTTP/1.1 200 OK\"","request_id":"system"}
+ok
+test_wrong_league_calendar_and_generation_fail_closed (tests.test_batch6_matchup_season.SeasonMatchupTests.test_wrong_league_calendar_and_generation_fail_closed) ... ok
+test_configured_submitted_slots_flex_empty_and_non_scoring_totals (tests.test_matchups_phone.MatchupsPhoneTests.test_configured_submitted_slots_flex_empty_and_non_scoring_totals) ... ok
+test_exact_publication_matches_dossier_and_trade_under_two_scorings (tests.test_matchups_phone.MatchupsPhoneTests.test_exact_publication_matches_dossier_and_trade_under_two_scorings) ... ok
+test_full_card_has_no_nested_control (tests.test_matchups_phone.MatchupsPhoneTests.test_full_card_has_no_nested_control) ... ok
+test_missing_predecessor_does_not_establish_full_streak (tests.test_matchups_phone.MatchupsPhoneTests.test_missing_predecessor_does_not_establish_full_streak) ... ok
+test_missing_scores_and_partial_projection_never_zero_or_leader (tests.test_matchups_phone.MatchupsPhoneTests.test_missing_scores_and_partial_projection_never_zero_or_leader) ... ok
+test_missing_standings_points_do_not_break_team_links_or_become_zero (tests.test_matchups_phone.MatchupsPhoneTests.test_missing_standings_points_do_not_break_team_links_or_become_zero) ... {"timestamp":"2026-11-06T07:57:45.226235+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/teams \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T07:57:45.234099+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/teams/1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+ok
+test_no_matchup_bye_and_viewer_in_other_league_are_honest (tests.test_matchups_phone.MatchupsPhoneTests.test_no_matchup_bye_and_viewer_in_other_league_are_honest) ... {"timestamp":"2026-11-06T07:57:45.255422+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups \"HTTP/1.1 200 OK\"","request_id":"system"}
+ok
+test_publication_changes_view_and_wrong_scoring_is_unavailable (tests.test_matchups_phone.MatchupsPhoneTests.test_publication_changes_view_and_wrong_scoring_is_unavailable) ... ok
+test_routes_default_order_and_week_validation (tests.test_matchups_phone.MatchupsPhoneTests.test_routes_default_order_and_week_validation) ... {"timestamp":"2026-11-06T07:57:45.302478+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T07:57:45.304421+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups?week=19 \"HTTP/1.1 422 Unprocessable Entity\"","request_id":"system"}
+{"timestamp":"2026-11-06T07:57:45.307398+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups/2?week=3 \"HTTP/1.1 200 OK\"","request_id":"system"}
+ok
+test_standings_missing_rank_and_scoring_never_fabricated (tests.test_matchups_phone.MatchupsPhoneTests.test_standings_missing_rank_and_scoring_never_fabricated) ... ok
+test_standings_source_ranks_boundary_and_missing_rules (tests.test_matchups_phone.MatchupsPhoneTests.test_standings_source_ranks_boundary_and_missing_rules) ... ok
+test_streak_requires_completed_pair_and_no_cross_league_borrowing (tests.test_matchups_phone.MatchupsPhoneTests.test_streak_requires_completed_pair_and_no_cross_league_borrowing) ... ok
+test_submitted_vs_optimal_and_all_roster_sections_exclude_bench (tests.test_matchups_phone.MatchupsPhoneTests.test_submitted_vs_optimal_and_all_roster_sections_exclude_bench) ... ok
+test_unknown_identity_does_not_link_and_history_does_not_borrow_ir (tests.test_matchups_phone.MatchupsPhoneTests.test_unknown_identity_does_not_link_and_history_does_not_borrow_ir) ... ok
+test_application_services_respect_orchestrator_boundary (tests.test_player_value_projection.PlayerValueProjectionTests.test_application_services_respect_orchestrator_boundary) ... ok
+test_concurrent_matchup_fast_paths_are_isolated_and_deterministic (tests.test_player_value_projection.PlayerValueProjectionTests.test_concurrent_matchup_fast_paths_are_isolated_and_deterministic) ... ok
+test_contender_and_rebuilder_values_remain_independent (tests.test_player_value_projection.PlayerValueProjectionTests.test_contender_and_rebuilder_values_remain_independent) ... ok
+test_matchup_aggregation_reports_ranges_without_probabilities (tests.test_player_value_projection.PlayerValueProjectionTests.test_matchup_aggregation_reports_ranges_without_probabilities) ... ok
+test_matchup_aggregation_uses_nested_projection_snapshot_contract (tests.test_player_value_projection.PlayerValueProjectionTests.test_matchup_aggregation_uses_nested_projection_snapshot_contract) ... ok
+test_matchup_fast_path_matches_full_orchestrator_projection (tests.test_player_value_projection.PlayerValueProjectionTests.test_matchup_fast_path_matches_full_orchestrator_projection) ... ok
+test_matchup_page_builds_all_roster_values_once (tests.test_player_value_projection.PlayerValueProjectionTests.test_matchup_page_builds_all_roster_values_once) ... ok
+test_matchup_projection_skips_unrelated_trade_intelligence (tests.test_player_value_projection.PlayerValueProjectionTests.test_matchup_projection_skips_unrelated_trade_intelligence) ... ok
+test_matchup_request_deduplicates_rosters_and_rebuilds_next_request (tests.test_player_value_projection.PlayerValueProjectionTests.test_matchup_request_deduplicates_rosters_and_rebuilds_next_request) ... ok
+test_missing_projection_is_unavailable_without_fabricated_fallback (tests.test_player_value_projection.PlayerValueProjectionTests.test_missing_projection_is_unavailable_without_fabricated_fallback) ... ok
+test_points_above_replacement_and_roster_marginal_value_are_exposed (tests.test_player_value_projection.PlayerValueProjectionTests.test_points_above_replacement_and_roster_marginal_value_are_exposed) ... ok
+test_portrait_fallback_and_determinism (tests.test_player_value_projection.PlayerValueProjectionTests.test_portrait_fallback_and_determinism) ... ok
+test_provider_consumes_pre_scored_canonical_value_without_recalculation (tests.test_player_value_projection.PlayerValueProjectionTests.test_provider_consumes_pre_scored_canonical_value_without_recalculation) ... ok
+test_trade_view_exposes_separate_value_horizons (tests.test_player_value_projection.PlayerValueProjectionTests.test_trade_view_exposes_separate_value_horizons) ... ok
+test_unified_profiles_keep_internal_and_market_values_separate (tests.test_player_value_projection.PlayerValueProjectionTests.test_unified_profiles_keep_internal_and_market_values_separate) ... ok
+test_unscoped_cached_stats_cannot_claim_sleeper_authority (tests.test_player_value_projection.PlayerValueProjectionTests.test_unscoped_cached_stats_cannot_claim_sleeper_authority) ... ok
+test_weekly_changes_do_not_manufacture_dynasty_or_horizon_scalars (tests.test_player_value_projection.PlayerValueProjectionTests.test_weekly_changes_do_not_manufacture_dynasty_or_horizon_scalars) ... ok
+test_balance_primary_options_keep_original_incoming_target (tests.test_trade_decision_experience.TradeDecisionExperienceTests.test_balance_primary_options_keep_original_incoming_target) ... ok
+test_display_is_read_only_and_unfavorable_verdict_stays_unfavorable (tests.test_trade_decision_experience.TradeDecisionExperienceTests.test_display_is_read_only_and_unfavorable_verdict_stays_unfavorable) ... ok
+test_explicit_strategy_changes_interpretation_never_prices_or_lineup (tests.test_trade_decision_experience.TradeDecisionExperienceTests.test_explicit_strategy_changes_interpretation_never_prices_or_lineup) ... ok
+test_incoming_questionable_qualification_is_visible_in_primary_summary (tests.test_trade_decision_experience.TradeDecisionExperienceTests.test_incoming_questionable_qualification_is_visible_in_primary_summary) ... ok
+test_independent_parity_and_severe_loss_do_not_require_a_strategy_to_get_a_verdict (tests.test_trade_decision_experience.TradeDecisionExperienceTests.test_independent_parity_and_severe_loss_do_not_require_a_strategy_to_get_a_verdict) ... ok
+test_player_facts_age_and_failed_refresh_retain_original_numbers (tests.test_trade_decision_experience.TradeDecisionExperienceTests.test_player_facts_age_and_failed_refresh_retain_original_numbers) ... ok
+test_prepared_actual_production_keeps_sample_and_scoring_not_full_season_rank (tests.test_trade_decision_experience.TradeDecisionExperienceTests.test_prepared_actual_production_keeps_sample_and_scoring_not_full_season_rank) ... ok
+test_prepared_home_identity_tracks_production_generation_not_retrieval (tests.test_trade_decision_experience.TradeDecisionExperienceTests.test_prepared_home_identity_tracks_production_generation_not_retrieval) ... ok
+test_production_source_identity_uses_facts_not_retrieval_only_clock (tests.test_trade_decision_experience.TradeDecisionExperienceTests.test_production_source_identity_uses_facts_not_retrieval_only_clock) ... ok
+test_projection_fact_uses_canonical_source_display_without_screen_rounding (tests.test_trade_decision_experience.TradeDecisionExperienceTests.test_projection_fact_uses_canonical_source_display_without_screen_rounding) ... ok
+test_public_day_arkham_scoring_and_generation_are_distinct (tests.test_trade_decision_experience.TradeDecisionExperienceTests.test_public_day_arkham_scoring_and_generation_are_distinct) ... ok
+test_search_opportunity_filter_is_not_an_analysis_strategy (tests.test_trade_decision_experience.TradeDecisionExperienceTests.test_search_opportunity_filter_is_not_an_analysis_strategy) ... ok
+test_selected_player_facts_reuse_compatible_published_sleeper_projection (tests.test_trade_decision_experience.TradeDecisionExperienceTests.test_selected_player_facts_reuse_compatible_published_sleeper_projection) ... ok
+test_unresolved_strategy_names_only_actual_blocker_and_keeps_numeric_facts (tests.test_trade_decision_experience.TradeDecisionExperienceTests.test_unresolved_strategy_names_only_actual_blocker_and_keeps_numeric_facts) ... ok
+test_unresolved_strategy_with_other_missing_evidence_lists_both (tests.test_trade_decision_experience.TradeDecisionExperienceTests.test_unresolved_strategy_with_other_missing_evidence_lists_both) ... ok
+test_unsupported_scoring_does_not_publish_zero_as_a_supported_player_fact (tests.test_trade_decision_experience.TradeDecisionExperienceTests.test_unsupported_scoring_does_not_publish_zero_as_a_supported_player_fact) ... ok
+test_valid_zero_projection_and_missing_scoring_are_distinct (tests.test_trade_decision_experience.TradeDecisionExperienceTests.test_valid_zero_projection_and_missing_scoring_are_distinct) ... ok
+test_young_bench_for_older_starter_uses_legal_impact_not_past_ppg_difference (tests.test_trade_decision_experience.TradeDecisionExperienceTests.test_young_bench_for_older_starter_uses_legal_impact_not_past_ppg_difference) ... ok
+test_absent_store_does_not_create_database (tests.test_prepared_player_evidence.PreparedPlayerEvidenceTests.test_absent_store_does_not_create_database) ... ok
+test_context_mismatch_rejected (tests.test_prepared_player_evidence.PreparedPlayerEvidenceTests.test_context_mismatch_rejected) ... ok
+test_modeled_intrinsic_and_future_value_are_not_historical_or_projection_evidence (tests.test_prepared_player_evidence.PreparedPlayerEvidenceTests.test_modeled_intrinsic_and_future_value_are_not_historical_or_projection_evidence) ... ok
+test_orchestrator_consumes_prepared_evidence_and_invalidates_generation (tests.test_prepared_player_evidence.PreparedPlayerEvidenceTests.test_orchestrator_consumes_prepared_evidence_and_invalidates_generation) ... ok
+test_replay_league_scoring_and_material_change (tests.test_prepared_player_evidence.PreparedPlayerEvidenceTests.test_replay_league_scoring_and_material_change) ... ok
+test_universe_and_brain_read_same_prepared_production (tests.test_prepared_player_evidence.PreparedPlayerEvidenceTests.test_universe_and_brain_read_same_prepared_production) ... ok
+test_eight_season_summaries_are_bounded_temporal_and_replay_stable (tests.test_reference_production_methodology.ReferenceProductionMethodologyTests.test_eight_season_summaries_are_bounded_temporal_and_replay_stable) ... ok
+test_league_scoring_changes_do_not_change_reference_model (tests.test_reference_production_methodology.ReferenceProductionMethodologyTests.test_league_scoring_changes_do_not_change_reference_model) ... ok
+test_unknown_or_postseason_does_not_silently_enter_reference_cohort (tests.test_reference_production_methodology.ReferenceProductionMethodologyTests.test_unknown_or_postseason_does_not_silently_enter_reference_cohort) ... ok
+test_200_without_redirect (tests.test_sleeper_projection_transport.SleeperProjectionTransportTests.test_200_without_redirect) ... {"timestamp":"2026-11-06T07:57:46.619370+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://api.sleeper.app/projections/nfl/2026/1?season_type=regular&position%5B%5D=QB&position%5B%5D=RB&position%5B%5D=WR&position%5B%5D=TE&position%5B%5D=FLEX&position%5B%5D=K&position%5B%5D=DEF \"HTTP/1.1 200 OK\"","request_id":"system"}
+ok
+test_301_same_sleeper_host_redirects_once_to_valid_payload (tests.test_sleeper_projection_transport.SleeperProjectionTransportTests.test_301_same_sleeper_host_redirects_once_to_valid_payload) ... {"timestamp":"2026-11-06T07:57:46.620618+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://api.sleeper.app/projections/nfl/2026/1?season_type=regular&position%5B%5D=QB&position%5B%5D=RB&position%5B%5D=WR&position%5B%5D=TE&position%5B%5D=FLEX&position%5B%5D=K&position%5B%5D=DEF \"HTTP/1.1 301 Moved Permanently\"","request_id":"system"}
+{"timestamp":"2026-11-06T07:57:46.620888+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://api.sleeper.app/canonical/projections \"HTTP/1.1 200 OK\"","request_id":"system"}
+ok
+test_302_is_supported (tests.test_sleeper_projection_transport.SleeperProjectionTransportTests.test_302_is_supported) ... {"timestamp":"2026-11-06T07:57:46.621883+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://api.sleeper.app/projections/nfl/2026/1?season_type=regular&position%5B%5D=QB&position%5B%5D=RB&position%5B%5D=WR&position%5B%5D=TE&position%5B%5D=FLEX&position%5B%5D=K&position%5B%5D=DEF \"HTTP/1.1 302 Found\"","request_id":"system"}
+{"timestamp":"2026-11-06T07:57:46.622107+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://api.sleeper.app/final \"HTTP/1.1 200 OK\"","request_id":"system"}
+ok
+test_excessive_redirects_fail_closed (tests.test_sleeper_projection_transport.SleeperProjectionTransportTests.test_excessive_redirects_fail_closed) ... {"timestamp":"2026-11-06T07:57:46.623091+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://api.sleeper.app/projections/nfl/2026/1?season_type=regular&position%5B%5D=QB&position%5B%5D=RB&position%5B%5D=WR&position%5B%5D=TE&position%5B%5D=FLEX&position%5B%5D=K&position%5B%5D=DEF \"HTTP/1.1 301 Moved Permanently\"","request_id":"system"}
+{"timestamp":"2026-11-06T07:57:46.623291+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://api.sleeper.app/redirect/1 \"HTTP/1.1 301 Moved Permanently\"","request_id":"system"}
+{"timestamp":"2026-11-06T07:57:46.623457+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://api.sleeper.app/redirect/2 \"HTTP/1.1 301 Moved Permanently\"","request_id":"system"}
+{"timestamp":"2026-11-06T07:57:46.623634+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://api.sleeper.app/redirect/3 \"HTTP/1.1 301 Moved Permanently\"","request_id":"system"}
+ok
+test_https_downgrade_is_rejected (tests.test_sleeper_projection_transport.SleeperProjectionTransportTests.test_https_downgrade_is_rejected) ... {"timestamp":"2026-11-06T07:57:46.624720+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://api.sleeper.app/projections/nfl/2026/1?season_type=regular&position%5B%5D=QB&position%5B%5D=RB&position%5B%5D=WR&position%5B%5D=TE&position%5B%5D=FLEX&position%5B%5D=K&position%5B%5D=DEF \"HTTP/1.1 301 Moved Permanently\"","request_id":"system"}
+ok
+test_missing_location_is_rejected (tests.test_sleeper_projection_transport.SleeperProjectionTransportTests.test_missing_location_is_rejected) ... {"timestamp":"2026-11-06T07:57:46.625741+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://api.sleeper.app/projections/nfl/2026/1?season_type=regular&position%5B%5D=QB&position%5B%5D=RB&position%5B%5D=WR&position%5B%5D=TE&position%5B%5D=FLEX&position%5B%5D=K&position%5B%5D=DEF \"HTTP/1.1 301 Moved Permanently\"","request_id":"system"}
+ok
+test_redirect_loop_fails_closed (tests.test_sleeper_projection_transport.SleeperProjectionTransportTests.test_redirect_loop_fails_closed) ... {"timestamp":"2026-11-06T07:57:46.626689+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://api.sleeper.app/projections/nfl/2026/1?season_type=regular&position%5B%5D=QB&position%5B%5D=RB&position%5B%5D=WR&position%5B%5D=TE&position%5B%5D=FLEX&position%5B%5D=K&position%5B%5D=DEF \"HTTP/1.1 301 Moved Permanently\"","request_id":"system"}
+ok
+test_redirected_non_200_final_response_is_preserved_as_failure (tests.test_sleeper_projection_transport.SleeperProjectionTransportTests.test_redirected_non_200_final_response_is_preserved_as_failure) ... {"timestamp":"2026-11-06T07:57:46.627792+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://api.sleeper.app/projections/nfl/2026/1?season_type=regular&position%5B%5D=QB&position%5B%5D=RB&position%5B%5D=WR&position%5B%5D=TE&position%5B%5D=FLEX&position%5B%5D=K&position%5B%5D=DEF \"HTTP/1.1 301 Moved Permanently\"","request_id":"system"}
+{"timestamp":"2026-11-06T07:57:46.627990+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://api.sleeper.app/final \"HTTP/1.1 503 Service Unavailable\"","request_id":"system"}
+ok
+test_unexpected_host_is_rejected_before_second_request (tests.test_sleeper_projection_transport.SleeperProjectionTransportTests.test_unexpected_host_is_rejected_before_second_request) ... {"timestamp":"2026-11-06T07:57:46.628962+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://api.sleeper.app/projections/nfl/2026/1?season_type=regular&position%5B%5D=QB&position%5B%5D=RB&position%5B%5D=WR&position%5B%5D=TE&position%5B%5D=FLEX&position%5B%5D=K&position%5B%5D=DEF \"HTTP/1.1 301 Moved Permanently\"","request_id":"system"}
+ok
+
+----------------------------------------------------------------------
+Ran 152 tests in 38.526s
+
+OK

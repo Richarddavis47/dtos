@@ -1,0 +1,153 @@
+test_conflict_has_no_precedence (tests.test_sleeper_actual_results.ActualScoreResolutionTests.test_conflict_has_no_precedence) ... ok
+test_duplicate_starter_is_unresolved (tests.test_sleeper_actual_results.ActualScoreResolutionTests.test_duplicate_starter_is_unresolved) ... ok
+test_index_cannot_read_another_player_or_negative_offset (tests.test_sleeper_actual_results.ActualScoreResolutionTests.test_index_cannot_read_another_player_or_negative_offset) ... ok
+test_null_invalid_missing_and_strings_are_not_zero (tests.test_sleeper_actual_results.ActualScoreResolutionTests.test_null_invalid_missing_and_strings_are_not_zero) ... ok
+test_valid_explicit_score_is_not_blocked_by_null_alternate (tests.test_sleeper_actual_results.ActualScoreResolutionTests.test_valid_explicit_score_is_not_blocked_by_null_alternate) ... ok
+test_zero_negative_and_precision_match_source_not_reconstruction (tests.test_sleeper_actual_results.ActualScoreResolutionTests.test_zero_negative_and_precision_match_source_not_reconstruction) ... ok
+test_correction_replaces_old_score_and_is_qualified (tests.test_sleeper_actual_results.RefreshTests.test_correction_replaces_old_score_and_is_qualified) ... ERROR
+test_failed_refresh_cannot_borrow_a_different_scoring_publication (tests.test_sleeper_actual_results.RefreshTests.test_failed_refresh_cannot_borrow_a_different_scoring_publication) ... ERROR
+test_failed_week_retains_explicit_last_valid_score_not_successful_acquisition (tests.test_sleeper_actual_results.RefreshTests.test_failed_week_retains_explicit_last_valid_score_not_successful_acquisition) ... ERROR
+test_bench_explicit_scores_but_absent_ir_taxi_and_free_agents_unknown (tests.test_sleeper_actual_results.SleeperPublicationTests.test_bench_explicit_scores_but_absent_ir_taxi_and_free_agents_unknown) ... ok
+test_completed_live_future_and_league_playoff_scope_are_distinct (tests.test_sleeper_actual_results.SleeperPublicationTests.test_completed_live_future_and_league_playoff_scope_are_distinct) ... ok
+test_completed_season_does_not_substitute_other_season_or_league (tests.test_sleeper_actual_results.SleeperPublicationTests.test_completed_season_does_not_substitute_other_season_or_league) ... ok
+test_direct_weekly_source_parity_and_observation_denominator (tests.test_sleeper_actual_results.SleeperPublicationTests.test_direct_weekly_source_parity_and_observation_denominator) ... ok
+test_each_league_retains_its_own_source_values_including_k_defense (tests.test_sleeper_actual_results.SleeperPublicationTests.test_each_league_retains_its_own_source_values_including_k_defense) ... ok
+test_explicit_ir_or_unrostered_map_entry_is_source_evidence_not_inference (tests.test_sleeper_actual_results.SleeperPublicationTests.test_explicit_ir_or_unrostered_map_entry_is_source_evidence_not_inference) ... ok
+test_market_reference_analysis_is_not_repriced_by_actuals (tests.test_sleeper_actual_results.SleeperPublicationTests.test_market_reference_analysis_is_not_repriced_by_actuals) ... ok
+test_non_sleeper_analysis_cannot_supply_authoritative_points (tests.test_sleeper_actual_results.SleeperPublicationTests.test_non_sleeper_analysis_cannot_supply_authoritative_points) ... ok
+test_older_cache_without_scoring_provenance_does_not_get_relabeled (tests.test_sleeper_actual_results.SleeperPublicationTests.test_older_cache_without_scoring_provenance_does_not_get_relabeled) ... ok
+test_ownership_duplicates_are_deduplicated_and_conflicts_withheld (tests.test_sleeper_actual_results.SleeperPublicationTests.test_ownership_duplicates_are_deduplicated_and_conflicts_withheld) ... ok
+test_publication_identity_scoring_and_season_are_not_interchangeable (tests.test_sleeper_actual_results.SleeperPublicationTests.test_publication_identity_scoring_and_season_are_not_interchangeable) ... ok
+test_restored_source_reproduces_exact_profile_without_io (tests.test_sleeper_actual_results.SleeperPublicationTests.test_restored_source_reproduces_exact_profile_without_io) ... ok
+test_unknown_completion_does_not_make_live_scores_final (tests.test_sleeper_actual_results.SleeperPublicationTests.test_unknown_completion_does_not_make_live_scores_final) ... ok
+
+======================================================================
+ERROR: test_correction_replaces_old_score_and_is_qualified (tests.test_sleeper_actual_results.RefreshTests.test_correction_replaces_old_score_and_is_qualified)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.14/asyncio/runners.py", line 127, in run
+    return self._loop.run_until_complete(task)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "/usr/local/lib/python3.14/asyncio/base_events.py", line 719, in run_until_complete
+    return future.result()
+           ~~~~~~~~~~~~~^^
+  File "/app/tests/test_sleeper_actual_results.py", line 196, in test_correction_replaces_old_score_and_is_qualified
+    data=actual_data(); old=data['season_matchups']
+  File "/app/tests/test_sleeper_actual_results.py", line 34, in actual_data
+    publication = asyncio.run(prepare_season_matchups(league, 9, [], fetch, observed_at=STAMP))
+  File "/usr/local/lib/python3.14/asyncio/runners.py", line 200, in run
+    raise RuntimeError(
+        "asyncio.run() cannot be called from a running event loop")
+RuntimeError: asyncio.run() cannot be called from a running event loop
+
+======================================================================
+ERROR: test_failed_refresh_cannot_borrow_a_different_scoring_publication (tests.test_sleeper_actual_results.RefreshTests.test_failed_refresh_cannot_borrow_a_different_scoring_publication)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.14/asyncio/runners.py", line 127, in run
+    return self._loop.run_until_complete(task)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "/usr/local/lib/python3.14/asyncio/base_events.py", line 719, in run_until_complete
+    return future.result()
+           ~~~~~~~~~~~~~^^
+  File "/app/tests/test_sleeper_actual_results.py", line 210, in test_failed_refresh_cannot_borrow_a_different_scoring_publication
+    data=actual_data(); old=data['season_matchups']; data['league']['scoring_settings']={'rec':.5}
+  File "/app/tests/test_sleeper_actual_results.py", line 34, in actual_data
+    publication = asyncio.run(prepare_season_matchups(league, 9, [], fetch, observed_at=STAMP))
+  File "/usr/local/lib/python3.14/asyncio/runners.py", line 200, in run
+    raise RuntimeError(
+        "asyncio.run() cannot be called from a running event loop")
+RuntimeError: asyncio.run() cannot be called from a running event loop
+
+======================================================================
+ERROR: test_failed_week_retains_explicit_last_valid_score_not_successful_acquisition (tests.test_sleeper_actual_results.RefreshTests.test_failed_week_retains_explicit_last_valid_score_not_successful_acquisition)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.14/asyncio/runners.py", line 127, in run
+    return self._loop.run_until_complete(task)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "/usr/local/lib/python3.14/asyncio/base_events.py", line 719, in run_until_complete
+    return future.result()
+           ~~~~~~~~~~~~~^^
+  File "/app/tests/test_sleeper_actual_results.py", line 185, in test_failed_week_retains_explicit_last_valid_score_not_successful_acquisition
+    data=actual_data(); old=data['season_matchups']
+  File "/app/tests/test_sleeper_actual_results.py", line 34, in actual_data
+    publication = asyncio.run(prepare_season_matchups(league, 9, [], fetch, observed_at=STAMP))
+  File "/usr/local/lib/python3.14/asyncio/runners.py", line 200, in run
+    raise RuntimeError(
+        "asyncio.run() cannot be called from a running event loop")
+RuntimeError: asyncio.run() cannot be called from a running event loop
+
+----------------------------------------------------------------------
+Ran 22 tests in 0.050s
+
+FAILED (errors=3)
+<sys>:0: RuntimeWarning: coroutine 'prepare_season_matchups' was never awaited
+Coroutine created at (most recent call last)
+  File "/usr/local/lib/python3.14/unittest/case.py", line 669, in run
+    self._callTestMethod(testMethod)
+  File "/usr/local/lib/python3.14/unittest/async_case.py", line 102, in _callTestMethod
+    result = self._callMaybeAsync(method)
+  File "/usr/local/lib/python3.14/unittest/async_case.py", line 128, in _callMaybeAsync
+    return self._asyncioRunner.run(
+  File "/usr/local/lib/python3.14/asyncio/runners.py", line 127, in run
+    return self._loop.run_until_complete(task)
+  File "/usr/local/lib/python3.14/asyncio/base_events.py", line 706, in run_until_complete
+    self.run_forever()
+  File "/usr/local/lib/python3.14/asyncio/base_events.py", line 677, in run_forever
+    self._run_once()
+  File "/usr/local/lib/python3.14/asyncio/base_events.py", line 2038, in _run_once
+    handle._run()
+  File "/usr/local/lib/python3.14/asyncio/events.py", line 94, in _run
+    self._context.run(self._callback, *self._args)
+  File "/app/tests/test_sleeper_actual_results.py", line 196, in test_correction_replaces_old_score_and_is_qualified
+    data=actual_data(); old=data['season_matchups']
+  File "/app/tests/test_sleeper_actual_results.py", line 34, in actual_data
+    publication = asyncio.run(prepare_season_matchups(league, 9, [], fetch, observed_at=STAMP))
+RuntimeWarning: Enable tracemalloc to get the object allocation traceback
+<sys>:0: RuntimeWarning: coroutine 'prepare_season_matchups' was never awaited
+Coroutine created at (most recent call last)
+  File "/usr/local/lib/python3.14/unittest/case.py", line 669, in run
+    self._callTestMethod(testMethod)
+  File "/usr/local/lib/python3.14/unittest/async_case.py", line 102, in _callTestMethod
+    result = self._callMaybeAsync(method)
+  File "/usr/local/lib/python3.14/unittest/async_case.py", line 128, in _callMaybeAsync
+    return self._asyncioRunner.run(
+  File "/usr/local/lib/python3.14/asyncio/runners.py", line 127, in run
+    return self._loop.run_until_complete(task)
+  File "/usr/local/lib/python3.14/asyncio/base_events.py", line 706, in run_until_complete
+    self.run_forever()
+  File "/usr/local/lib/python3.14/asyncio/base_events.py", line 677, in run_forever
+    self._run_once()
+  File "/usr/local/lib/python3.14/asyncio/base_events.py", line 2038, in _run_once
+    handle._run()
+  File "/usr/local/lib/python3.14/asyncio/events.py", line 94, in _run
+    self._context.run(self._callback, *self._args)
+  File "/app/tests/test_sleeper_actual_results.py", line 210, in test_failed_refresh_cannot_borrow_a_different_scoring_publication
+    data=actual_data(); old=data['season_matchups']; data['league']['scoring_settings']={'rec':.5}
+  File "/app/tests/test_sleeper_actual_results.py", line 34, in actual_data
+    publication = asyncio.run(prepare_season_matchups(league, 9, [], fetch, observed_at=STAMP))
+RuntimeWarning: Enable tracemalloc to get the object allocation traceback
+<sys>:0: RuntimeWarning: coroutine 'prepare_season_matchups' was never awaited
+Coroutine created at (most recent call last)
+  File "/usr/local/lib/python3.14/unittest/case.py", line 669, in run
+    self._callTestMethod(testMethod)
+  File "/usr/local/lib/python3.14/unittest/async_case.py", line 102, in _callTestMethod
+    result = self._callMaybeAsync(method)
+  File "/usr/local/lib/python3.14/unittest/async_case.py", line 128, in _callMaybeAsync
+    return self._asyncioRunner.run(
+  File "/usr/local/lib/python3.14/asyncio/runners.py", line 127, in run
+    return self._loop.run_until_complete(task)
+  File "/usr/local/lib/python3.14/asyncio/base_events.py", line 706, in run_until_complete
+    self.run_forever()
+  File "/usr/local/lib/python3.14/asyncio/base_events.py", line 677, in run_forever
+    self._run_once()
+  File "/usr/local/lib/python3.14/asyncio/base_events.py", line 2038, in _run_once
+    handle._run()
+  File "/usr/local/lib/python3.14/asyncio/events.py", line 94, in _run
+    self._context.run(self._callback, *self._args)
+  File "/app/tests/test_sleeper_actual_results.py", line 185, in test_failed_week_retains_explicit_last_valid_score_not_successful_acquisition
+    data=actual_data(); old=data['season_matchups']
+  File "/app/tests/test_sleeper_actual_results.py", line 34, in actual_data
+    publication = asyncio.run(prepare_season_matchups(league, 9, [], fetch, observed_at=STAMP))
+RuntimeWarning: Enable tracemalloc to get the object allocation traceback

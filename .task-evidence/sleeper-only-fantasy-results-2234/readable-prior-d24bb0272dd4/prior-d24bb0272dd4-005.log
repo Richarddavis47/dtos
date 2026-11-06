@@ -1,0 +1,43 @@
+ed) ... ok
+test_configured_submitted_slots_flex_empty_and_non_scoring_totals (tests.test_matchups_phone.MatchupsPhoneTests.test_configured_submitted_slots_flex_empty_and_non_scoring_totals) ... ok
+test_exact_publication_matches_dossier_and_trade_under_two_scorings (tests.test_matchups_phone.MatchupsPhoneTests.test_exact_publication_matches_dossier_and_trade_under_two_scorings) ... ok
+test_full_card_has_no_nested_control (tests.test_matchups_phone.MatchupsPhoneTests.test_full_card_has_no_nested_control) ... ok
+test_missing_predecessor_does_not_establish_full_streak (tests.test_matchups_phone.MatchupsPhoneTests.test_missing_predecessor_does_not_establish_full_streak) ... ok
+test_missing_scores_and_partial_projection_never_zero_or_leader (tests.test_matchups_phone.MatchupsPhoneTests.test_missing_scores_and_partial_projection_never_zero_or_leader) ... ok
+test_missing_standings_points_do_not_break_team_links_or_become_zero (tests.test_matchups_phone.MatchupsPhoneTests.test_missing_standings_points_do_not_break_team_links_or_become_zero) ... {"timestamp":"2026-11-06T07:44:27.395622+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/teams \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T07:44:27.403005+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/teams/1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+ok
+test_no_matchup_bye_and_viewer_in_other_league_are_honest (tests.test_matchups_phone.MatchupsPhoneTests.test_no_matchup_bye_and_viewer_in_other_league_are_honest) ... {"timestamp":"2026-11-06T07:44:27.423660+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups \"HTTP/1.1 200 OK\"","request_id":"system"}
+ok
+test_publication_changes_view_and_wrong_scoring_is_unavailable (tests.test_matchups_phone.MatchupsPhoneTests.test_publication_changes_view_and_wrong_scoring_is_unavailable) ... ok
+test_routes_default_order_and_week_validation (tests.test_matchups_phone.MatchupsPhoneTests.test_routes_default_order_and_week_validation) ... {"timestamp":"2026-11-06T07:44:27.468426+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T07:44:27.470299+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups?week=19 \"HTTP/1.1 422 Unprocessable Entity\"","request_id":"system"}
+{"timestamp":"2026-11-06T07:44:27.473290+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups/2?week=3 \"HTTP/1.1 200 OK\"","request_id":"system"}
+ok
+test_standings_missing_rank_and_scoring_never_fabricated (tests.test_matchups_phone.MatchupsPhoneTests.test_standings_missing_rank_and_scoring_never_fabricated) ... ok
+test_standings_source_ranks_boundary_and_missing_rules (tests.test_matchups_phone.MatchupsPhoneTests.test_standings_source_ranks_boundary_and_missing_rules) ... ok
+test_streak_requires_completed_pair_and_no_cross_league_borrowing (tests.test_matchups_phone.MatchupsPhoneTests.test_streak_requires_completed_pair_and_no_cross_league_borrowing) ... ok
+test_submitted_vs_optimal_and_all_roster_sections_exclude_bench (tests.test_matchups_phone.MatchupsPhoneTests.test_submitted_vs_optimal_and_all_roster_sections_exclude_bench) ... ok
+test_unknown_identity_does_not_link_and_history_does_not_borrow_ir (tests.test_matchups_phone.MatchupsPhoneTests.test_unknown_identity_does_not_link_and_history_does_not_borrow_ir) ... ok
+test_application_services_respect_orchestrator_boundary (tests.test_player_value_projection.PlayerValueProjectionTests.test_application_services_respect_orchestrator_boundary) ... ok
+test_concurrent_matchup_fast_paths_are_isolated_and_deterministic (tests.test_player_value_projection.PlayerValueProjectionTests.test_concurrent_matchup_fast_paths_are_isolated_and_deterministic) ... ok
+test_contender_and_rebuilder_values_remain_independent (tests.test_player_value_projection.PlayerValueProjectionTests.test_contender_and_rebuilder_values_remain_independent) ... ok
+test_matchup_aggregation_reports_ranges_without_probabilities (tests.test_player_value_projection.PlayerValueProjectionTests.test_matchup_aggregation_reports_ranges_without_probabilities) ... ok
+test_matchup_aggregation_uses_nested_projection_snapshot_contract (tests.test_player_value_projection.PlayerValueProjectionTests.test_matchup_aggregation_uses_nested_projection_snapshot_contract) ... ok
+test_matchup_fast_path_matches_full_orchestrator_projection (tests.test_player_value_projection.PlayerValueProjectionTests.test_matchup_fast_path_matches_full_orchestrator_projection) ... ok
+test_matchup_page_builds_all_roster_values_once (tests.test_player_value_projection.PlayerValueProjectionTests.test_matchup_page_builds_all_roster_values_once) ... ok
+test_matchup_projection_skips_unrelated_trade_intelligence (tests.test_player_value_projection.PlayerValueProjectionTests.test_matchup_projection_skips_unrelated_trade_intelligence) ... ok
+test_matchup_request_deduplicates_rosters_and_rebuilds_next_request (tests.test_player_value_projection.PlayerValueProjectionTests.test_matchup_request_deduplicates_rosters_and_rebuilds_next_request) ... ok
+test_missing_projection_is_unavailable_without_fabricated_fallback (tests.test_player_value_projection.PlayerValueProjectionTests.test_missing_projection_is_unavailable_without_fabricated_fallback) ... ok
+test_points_above_replacement_and_roster_marginal_value_are_exposed (tests.test_player_value_projection.PlayerValueProjectionTests.test_points_above_replacement_and_roster_marginal_value_are_exposed) ... ok
+test_portrait_fallback_and_determinism (tests.test_player_value_projection.PlayerValueProjectionTests.test_portrait_fallback_and_determinism) ... ok
+test_provider_consumes_pre_scored_canonical_value_without_recalculation (tests.test_player_value_projection.PlayerValueProjectionTests.test_provider_consumes_pre_scored_canonical_value_without_recalculation) ... ok
+test_trade_view_exposes_separate_value_horizons (tests.test_player_value_projection.PlayerValueProjectionTests.test_trade_view_exposes_separate_value_horizons) ... ok
+test_unified_profiles_keep_internal_and_market_values_separate (tests.test_player_value_projection.PlayerValueProjectionTests.test_unified_profiles_keep_internal_and_market_values_separate) ... ok
+test_unscoped_cached_stats_cannot_claim_sleeper_authority (tests.test_player_value_projection.PlayerValueProjectionTests.test_unscoped_cached_stats_cannot_claim_sleeper_authority) ... ok
+test_weekly_changes_do_not_manufacture_dynasty_or_horizon_scalars (tests.test_player_value_projection.PlayerValueProjectionTests.test_weekly_changes_do_not_manufacture_dynasty_or_horizon_scalars) ... ok
+
+----------------------------------------------------------------------
+Ran 107 tests in 28.171s
+
+OK

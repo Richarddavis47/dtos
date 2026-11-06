@@ -1,0 +1,80 @@
+[
+  {
+    "log": "local-canonical-integrity.log",
+    "command": [
+      "python",
+      "/workspace/2234-release/verify-local-canonical.py"
+    ],
+    "exit_code": 0
+  },
+  {
+    "log": "focused-exact.log",
+    "command": [
+      "python",
+      "/workspace/2234-release/run-constrained.py",
+      "-m",
+      "unittest",
+      "-v",
+      "tests.test_sleeper_actual_results",
+      "tests.test_current_production_coverage",
+      "tests.test_current_production_browser",
+      "tests.test_historical_retained_admission",
+      "tests.test_historical_retained_admission_browser",
+      "tests.test_historical_snapshot_integrity",
+      "tests.test_trade_decision_experience",
+      "tests.test_sleeper_projection_transport",
+      "tests.test_prepared_player_evidence",
+      "tests.test_reference_production_methodology",
+      "tests.test_historical_player_evidence",
+      "tests.test_batch6_asset_explanations",
+      "tests.test_batch6_asset_explanation_browser",
+      "tests.test_data_completeness",
+      "tests.test_lineup_review",
+      "tests.test_trade_lineup_provenance_browser"
+    ],
+    "exit_code": 0
+  },
+  {
+    "log": "local-preflight-console.log",
+    "command": [
+      "python",
+      "/workspace/2234-release/run-constrained.py",
+      "-m",
+      "tools.validation.restoration_preflight_gate",
+      "--output",
+      "/evidence/local-preflight"
+    ],
+    "exit_code": 0
+  },
+  {
+    "log": "before-after.log",
+    "command": [
+      "python",
+      "/workspace/2234-release/run-constrained.py",
+      "/evidence/before-after.py"
+    ],
+    "exit_code": 0
+  },
+  {
+    "log": "native-sleeper-replay.log",
+    "command": [
+      "python",
+      "/workspace/2234-release/run-constrained.py",
+      "/evidence/native-sleeper-replay.py"
+    ],
+    "exit_code": 0
+  },
+  {
+    "log": "ruff-final.log",
+    "command": [
+      "python",
+      "/workspace/2234-release/run-constrained.py",
+      "-m",
+      "ruff",
+      "check",
+      "--no-cache",
+      "."
+    ],
+    "exit_code": 0
+  }
+]

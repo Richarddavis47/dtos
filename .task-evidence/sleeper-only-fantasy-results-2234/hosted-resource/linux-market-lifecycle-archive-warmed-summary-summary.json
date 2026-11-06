@@ -1,0 +1,2614 @@
+{
+  "completed": true,
+  "container_restart_count": 0,
+  "cpu_evidence": {
+    "after": {
+      "nr_periods": 1396,
+      "nr_throttled": 82,
+      "system_usec": 25731711,
+      "throttled_usec": 1111170,
+      "usage_usec": 149259176,
+      "user_usec": 123527465
+    },
+    "before": {
+      "nr_periods": 519,
+      "nr_throttled": 0,
+      "system_usec": 15961687,
+      "throttled_usec": 0,
+      "usage_usec": 46569945,
+      "user_usec": 30608258
+    },
+    "delta": {
+      "nr_periods": 877,
+      "nr_throttled": 82,
+      "system_usec": 9770024,
+      "throttled_usec": 1111170,
+      "usage_usec": 102689231,
+      "user_usec": 92919207
+    }
+  },
+  "effective_memory_peak": 1402814464,
+  "errors": [],
+  "exit_code": 0,
+  "fixture": {
+    "assets": 12322,
+    "canonical_asset_events": 30726,
+    "configuration": {
+      "cache_file": "dtos_cache.json",
+      "contained": true,
+      "database_identity_digest": "cdb26b01ac2a60cb00831bd5d16e6e5c6b1e0eb3ef4a4396e0983e1aae06c985",
+      "file_identity_digest": "658bb69780b7cf2c434ce2707236fc2d58768d0f4549fd0b9ceef24c56527384",
+      "historicalstore_retired": true,
+      "league_id": "1804000000000000000",
+      "legacy_database_identity_digest": null,
+      "legacy_history_database": "dtos_history.sqlite3",
+      "legacy_history_database_size": 0,
+      "metadata_database": "dtos_metadata.sqlite3",
+      "metadata_database_size": 20480,
+      "storage_root": "."
+    },
+    "database_records": 30726,
+    "progress": "5/6"
+  },
+  "margin_below_limit": 744669184,
+  "memory_current": 1263185920,
+  "memory_evidence": [
+    {
+      "accounting_mode": "cgroup_working_set",
+      "active_file_bytes": 0,
+      "anonymous_bytes": 16691200,
+      "archive_size_bytes": 1189437440,
+      "effective_working_set_bytes": 18411520,
+      "file_bytes": 3063808,
+      "inactive_file_bytes": 3063808,
+      "lifecycle_phase": "container_startup",
+      "memory_events": {
+        "oom": 0,
+        "oom_group_kill": 0,
+        "oom_kill": 0
+      },
+      "raw_cgroup_bytes": 21475328,
+      "timestamp": 1793958922.66904
+    },
+    {
+      "accounting_mode": "cgroup_working_set",
+      "active_file_bytes": 0,
+      "anonymous_bytes": 206274560,
+      "archive_size_bytes": 1189437440,
+      "effective_working_set_bytes": 211341312,
+      "file_bytes": 23056384,
+      "inactive_file_bytes": 23023616,
+      "lifecycle_phase": "fixture_ready",
+      "memory_events": {
+        "oom": 0,
+        "oom_group_kill": 0,
+        "oom_kill": 0
+      },
+      "raw_cgroup_bytes": 234364928,
+      "timestamp": 1793958931.3913267
+    },
+    {
+      "accounting_mode": "cgroup_working_set",
+      "active_file_bytes": 0,
+      "anonymous_bytes": 206274560,
+      "archive_size_bytes": 1189437440,
+      "effective_working_set_bytes": 211341312,
+      "file_bytes": 23056384,
+      "inactive_file_bytes": 23023616,
+      "lifecycle_phase": "application_startup",
+      "memory_events": {
+        "oom": 0,
+        "oom_group_kill": 0,
+        "oom_kill": 0
+      },
+      "raw_cgroup_bytes": 234364928,
+      "timestamp": 1793958931.391691
+    },
+    {
+      "accounting_mode": "cgroup_working_set",
+      "active_file_bytes": 0,
+      "anonymous_bytes": 1077964800,
+      "archive_size_bytes": 1189437440,
+      "effective_working_set_bytes": 1084796928,
+      "file_bytes": 23232512,
+      "inactive_file_bytes": 23207936,
+      "lifecycle_phase": "before_coverage",
+      "memory_events": {
+        "oom": 0,
+        "oom_group_kill": 0,
+        "oom_kill": 0
+      },
+      "raw_cgroup_bytes": 1108004864,
+      "timestamp": 1793958931.8134315
+    },
+    {
+      "accounting_mode": "cgroup_working_set",
+      "active_file_bytes": 0,
+      "anonymous_bytes": 1167527936,
+      "archive_size_bytes": 1189437440,
+      "effective_working_set_bytes": 1174605824,
+      "file_bytes": 23240704,
+      "inactive_file_bytes": 23220224,
+      "lifecycle_phase": "after_coverage",
+      "memory_events": {
+        "oom": 0,
+        "oom_group_kill": 0,
+        "oom_kill": 0
+      },
+      "raw_cgroup_bytes": 1197826048,
+      "timestamp": 1793958933.0343235
+    },
+    {
+      "accounting_mode": "cgroup_working_set",
+      "active_file_bytes": 0,
+      "anonymous_bytes": 1288527872,
+      "archive_size_bytes": 1189437440,
+      "effective_working_set_bytes": 1299283968,
+      "file_bytes": 142192640,
+      "inactive_file_bytes": 142135296,
+      "lifecycle_phase": "historical_resolution_before",
+      "memory_events": {
+        "oom": 0,
+        "oom_group_kill": 0,
+        "oom_kill": 0
+      },
+      "raw_cgroup_bytes": 1441419264,
+      "timestamp": 1793958972.967783
+    },
+    {
+      "accounting_mode": "cgroup_working_set",
+      "active_file_bytes": 0,
+      "anonymous_bytes": 1286299648,
+      "archive_size_bytes": 1189437440,
+      "effective_working_set_bytes": 1297522688,
+      "file_bytes": 142278656,
+      "inactive_file_bytes": 142213120,
+      "lifecycle_phase": "historical_resolution_after",
+      "memory_events": {
+        "oom": 0,
+        "oom_group_kill": 0,
+        "oom_kill": 0
+      },
+      "raw_cgroup_bytes": 1439735808,
+      "timestamp": 1793958973.3824914
+    },
+    {
+      "accounting_mode": "cgroup_working_set",
+      "active_file_bytes": 0,
+      "anonymous_bytes": 1289977856,
+      "archive_size_bytes": 1189437440,
+      "effective_working_set_bytes": 1301102592,
+      "file_bytes": 142331904,
+      "inactive_file_bytes": 142286848,
+      "lifecycle_phase": "before_replacement",
+      "memory_events": {
+        "oom": 0,
+        "oom_group_kill": 0,
+        "oom_kill": 0
+      },
+      "raw_cgroup_bytes": 1443389440,
+      "timestamp": 1793958973.7972484
+    },
+    {
+      "accounting_mode": "cgroup_working_set",
+      "active_file_bytes": 0,
+      "anonymous_bytes": 1370910720,
+      "archive_size_bytes": 1189437440,
+      "effective_working_set_bytes": 1382789120,
+      "file_bytes": 161128448,
+      "inactive_file_bytes": 161071104,
+      "lifecycle_phase": "post_publication",
+      "memory_events": {
+        "oom": 0,
+        "oom_group_kill": 0,
+        "oom_kill": 0
+      },
+      "raw_cgroup_bytes": 1543860224,
+      "timestamp": 1793958990.316284
+    },
+    {
+      "accounting_mode": "cgroup_working_set",
+      "active_file_bytes": 0,
+      "anonymous_bytes": 19755008,
+      "archive_size_bytes": 1189437440,
+      "effective_working_set_bytes": 27869184,
+      "file_bytes": 161341440,
+      "inactive_file_bytes": 161337344,
+      "lifecycle_phase": "post_cleanup",
+      "memory_events": {
+        "oom": 0,
+        "oom_group_kill": 0,
+        "oom_kill": 0
+      },
+      "raw_cgroup_bytes": 189206528,
+      "timestamp": 1793959010.5318935
+    }
+  ],
+  "memory_max": 2147483648,
+  "memory_monitor": {
+    "effective_peak_bytes": 1402814464,
+    "peak_window": [
+      {
+        "anonymous_bytes": 1391374336,
+        "browser_process_count": 0,
+        "browser_process_roles": {},
+        "browser_rss_bytes": 0,
+        "capture_identity": null,
+        "capture_phase": "inactive",
+        "dtos_parent_rss_bytes": 361603072,
+        "effective_working_set_bytes": 1402552320,
+        "file_bytes": 142348288,
+        "fois_child_rss_bytes": 181399552,
+        "inactive_file_bytes": 142286848,
+        "largest_browser_rss_bytes": 0,
+        "other_child_rss_bytes": 17661952,
+        "phase": "historical_resolution",
+        "raw_cgroup_bytes": 1544839168,
+        "timestamp": 1793958974.3927782,
+        "validation_harness_rss_bytes": 887427072
+      },
+      {
+        "anonymous_bytes": 1391628288,
+        "browser_process_count": 0,
+        "browser_process_roles": {},
+        "browser_rss_bytes": 0,
+        "capture_identity": null,
+        "capture_phase": "inactive",
+        "dtos_parent_rss_bytes": 361603072,
+        "effective_working_set_bytes": 1402814464,
+        "file_bytes": 142348288,
+        "fois_child_rss_bytes": 181399552,
+        "inactive_file_bytes": 142286848,
+        "largest_browser_rss_bytes": 0,
+        "other_child_rss_bytes": 17661952,
+        "phase": "historical_resolution",
+        "raw_cgroup_bytes": 1545101312,
+        "timestamp": 1793958974.4041727,
+        "validation_harness_rss_bytes": 887427072
+      },
+      {
+        "anonymous_bytes": 1391628288,
+        "browser_process_count": 0,
+        "browser_process_roles": {},
+        "browser_rss_bytes": 0,
+        "capture_identity": null,
+        "capture_phase": "inactive",
+        "dtos_parent_rss_bytes": 361603072,
+        "effective_working_set_bytes": 1402814464,
+        "file_bytes": 142348288,
+        "fois_child_rss_bytes": 181399552,
+        "inactive_file_bytes": 142286848,
+        "largest_browser_rss_bytes": 0,
+        "other_child_rss_bytes": 17661952,
+        "phase": "historical_resolution",
+        "raw_cgroup_bytes": 1545101312,
+        "timestamp": 1793958974.4155097,
+        "validation_harness_rss_bytes": 887427072
+      }
+    ],
+    "raw_peak_bytes": 1655910400,
+    "recent_samples": [
+      {
+        "anonymous_bytes": 1087791104,
+        "browser_process_count": 0,
+        "browser_process_roles": {},
+        "browser_rss_bytes": 0,
+        "capture_identity": null,
+        "capture_phase": "inactive",
+        "dtos_parent_rss_bytes": 0,
+        "effective_working_set_bytes": 1099169792,
+        "file_bytes": 163831808,
+        "fois_child_rss_bytes": 0,
+        "inactive_file_bytes": 163782656,
+        "largest_browser_rss_bytes": 0,
+        "other_child_rss_bytes": 0,
+        "phase": "historical_resolution",
+        "raw_cgroup_bytes": 1262952448,
+        "timestamp": 1793959010.2768323,
+        "validation_harness_rss_bytes": 887459840
+      },
+      {
+        "anonymous_bytes": 1087791104,
+        "browser_process_count": 0,
+        "browser_process_roles": {},
+        "browser_rss_bytes": 0,
+        "capture_identity": null,
+        "capture_phase": "inactive",
+        "dtos_parent_rss_bytes": 0,
+        "effective_working_set_bytes": 1099169792,
+        "file_bytes": 163831808,
+        "fois_child_rss_bytes": 0,
+        "inactive_file_bytes": 163782656,
+        "largest_browser_rss_bytes": 0,
+        "other_child_rss_bytes": 0,
+        "phase": "historical_resolution",
+        "raw_cgroup_bytes": 1262952448,
+        "timestamp": 1793959010.2875676,
+        "validation_harness_rss_bytes": 887459840
+      },
+      {
+        "anonymous_bytes": 1087954944,
+        "browser_process_count": 0,
+        "browser_process_roles": {},
+        "browser_rss_bytes": 0,
+        "capture_identity": null,
+        "capture_phase": "inactive",
+        "dtos_parent_rss_bytes": 0,
+        "effective_working_set_bytes": 1099145216,
+        "file_bytes": 163831808,
+        "fois_child_rss_bytes": 0,
+        "inactive_file_bytes": 163807232,
+        "largest_browser_rss_bytes": 0,
+        "other_child_rss_bytes": 0,
+        "phase": "historical_resolution",
+        "raw_cgroup_bytes": 1262952448,
+        "timestamp": 1793959010.2982237,
+        "validation_harness_rss_bytes": 887459840
+      }
+    ],
+    "sample_count": 7815,
+    "sample_interval_ms": 10,
+    "threshold_bytes": 1610612736,
+    "threshold_crossed": false,
+    "threshold_window": []
+  },
+  "memory_peak": 2147483648,
+  "parent_rss_high_water": 230027264,
+  "passed": true,
+  "phases": {
+    "cold_market": {
+      "attempts": 73,
+      "build_count": 1,
+      "digest_equivalence": {
+        "asset_universe_digest": {
+          "equal": true,
+          "reference": "faf2e4bacf2c70535a330ca4243a97e97572abb57f7fd423230ac702a366ea15",
+          "subprocess": "faf2e4bacf2c70535a330ca4243a97e97572abb57f7fd423230ac702a366ea15"
+        },
+        "brain_semantic_output_digest": {
+          "equal": true,
+          "reference": "5f10077f09d95a9fb60c56c8d41fa7d98cf922a0cc1e31ec12c4c8e9229ff1d7",
+          "subprocess": "5f10077f09d95a9fb60c56c8d41fa7d98cf922a0cc1e31ec12c4c8e9229ff1d7"
+        },
+        "ownership_dependency_digest": {
+          "equal": true,
+          "reference": "17e09e6689d00277f535748c25ee7b515aed5610554799ba1a0d833d66e43fa3",
+          "subprocess": "17e09e6689d00277f535748c25ee7b515aed5610554799ba1a0d833d66e43fa3"
+        },
+        "provider_evidence_digest": {
+          "equal": true,
+          "reference": "24dbc39541bad6a918836918cbac9b1b3af37604602db13ce8bed10a262c8b93",
+          "subprocess": "24dbc39541bad6a918836918cbac9b1b3af37604602db13ce8bed10a262c8b93"
+        }
+      },
+      "duration_ms": 37240.957,
+      "effective_memory_peak": 1251516416,
+      "generation": "2026-11-06T09:56:01.377879+00:00",
+      "memory_before": 1197826048,
+      "memory_current": 1375531008,
+      "memory_peak": 1375535104,
+      "responsiveness": {
+        "background_phases": [
+          "building",
+          "idle"
+        ],
+        "browser_process_counts": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "health_max_ms": 15.59,
+        "liveness_max_ms": 16.855,
+        "warming_client_max_ms": 44.8,
+        "warming_server_max_ms": 0.706
+      },
+      "semantic_preparation": {
+        "child_cpu_ms": 2500.732,
+        "child_duration_ms": 2507.209,
+        "execution": "spawned_subprocess",
+        "exit_status": 0,
+        "failure": null,
+        "input_bytes": 39260982,
+        "memory_admission": {
+          "accounting_mode": "cgroup_working_set",
+          "admitted": true,
+          "effective_headroom_bytes": 1304977408,
+          "effective_working_set_bytes": 305635328,
+          "hard_pressure_ceiling_bytes": 1879048192,
+          "hard_pressure_margin_bytes": 268435456,
+          "inactive_file_bytes": 19673088,
+          "memory_event_deltas": {},
+          "predicted_effective_bytes": 406298624,
+          "predicted_hard_pressure_bytes": 411216896,
+          "raw_cgroup_bytes": 325308416,
+          "raw_headroom_bytes": 1822175232,
+          "reason": "admitted",
+          "reclaimable_allowance_bytes": 14754816,
+          "stage_estimate_bytes": 100663296,
+          "target_ceiling_bytes": 1610612736
+        },
+        "output_bytes": 676,
+        "parent_cpu_ms": 2624.568,
+        "parent_duration_ms": 3024.375,
+        "peak_child_rss_bytes": 33173504,
+        "reaped": true,
+        "records": 12442,
+        "request_generation": "27d5a9f7fd189c0017ed0cdb548b970cd4fa645a71142f3b454b9866ea0bee10",
+        "semantic_identities": {
+          "asset_universe_digest": "faf2e4bacf2c70535a330ca4243a97e97572abb57f7fd423230ac702a366ea15",
+          "brain_semantic_output_digest": "5f10077f09d95a9fb60c56c8d41fa7d98cf922a0cc1e31ec12c4c8e9229ff1d7",
+          "ownership_dependency_digest": "17e09e6689d00277f535748c25ee7b515aed5610554799ba1a0d833d66e43fa3",
+          "provider_evidence_digest": "24dbc39541bad6a918836918cbac9b1b3af37604602db13ce8bed10a262c8b93"
+        },
+        "worker_pid": 18
+      },
+      "timestamp": 1793958970.2757046
+    },
+    "generation_replacement": {
+      "active_generations": 1,
+      "artifact": {
+        "artifact_name": ".dtos_metadata.asset-market-b777c71bcfca8b025423.sqlite3",
+        "asset_count": 12442,
+        "complete": true,
+        "generated_at": "2026-11-06T09:56:20.513037+00:00",
+        "generation": "b777c71bcfca8b02542399eb919f3b72662734255a170518bd2f876101aee88b",
+        "schema_version": "2.0",
+        "size_bytes": 110915584,
+        "temporary_artifacts": 0
+      },
+      "attempts": 10,
+      "duration_ms": 16514.604,
+      "generation_changed": true,
+      "memory_current": 1543860224,
+      "profile": {
+        "changed_assets": [
+          "player:10213"
+        ],
+        "controlled_output_difference": true,
+        "first_page_comparison": {
+          "asset_count": 50,
+          "asset_digest_after": "c60660844dfc18c58e76f7b851fe46045fd36134ece7c24e176c0d74ce409c62",
+          "asset_digest_before": "c60660844dfc18c58e76f7b851fe46045fd36134ece7c24e176c0d74ce409c62",
+          "asset_order": [
+            "player:v12322",
+            "player:v12321",
+            "player:v12320",
+            "player:v12319",
+            "player:v12318",
+            "player:v12317",
+            "player:v12316",
+            "player:v12315",
+            "player:v12314",
+            "player:v12313",
+            "player:v12312",
+            "player:v12311",
+            "player:v12310",
+            "player:v12309",
+            "player:v12308",
+            "player:v12307",
+            "player:v12306",
+            "player:v12305",
+            "player:v12304",
+            "player:v12303",
+            "player:v12302",
+            "player:v12301",
+            "player:v12300",
+            "player:v12299",
+            "player:v12298",
+            "player:v12297",
+            "player:v12296",
+            "player:v12295",
+            "player:v12294",
+            "player:v12293",
+            "player:v12292",
+            "player:v12291",
+            "player:v12290",
+            "player:v12289",
+            "player:v12288",
+            "player:v12287",
+            "player:v12286",
+            "player:v12285",
+            "player:v12284",
+            "player:v12283",
+            "player:v12282",
+            "player:v12281",
+            "player:v12280",
+            "player:v12279",
+            "player:v12278",
+            "player:v12277",
+            "player:v12276",
+            "player:v12275",
+            "player:v12274",
+            "player:v12273"
+          ],
+          "envelope_changed_paths": [
+            {
+              "after": "validation-nonsemantic-1793958973480114420",
+              "before": "2026-08-07T00:00:00+00:00",
+              "path": "$.brain_generation"
+            },
+            {
+              "after": "2026-11-06T09:56:20.513037+00:00",
+              "before": "2026-11-06T09:56:01.377879+00:00",
+              "path": "$.generated_at"
+            },
+            {
+              "after": "2026-11-06T09:56:20.513037+00:00",
+              "before": "2026-11-06T09:56:01.377879+00:00",
+              "path": "$.market_generation"
+            },
+            {
+              "after": "validation-nonsemantic-1793958973480114420",
+              "before": "2026-08-07T00:00:00+00:00",
+              "path": "$.valuation_generation"
+            }
+          ],
+          "new_market_generation": "2026-11-06T09:56:20.513037+00:00",
+          "old_market_generation": "2026-11-06T09:56:01.377879+00:00"
+        },
+        "incompatibility_reason": "brain_semantic_output_changed",
+        "last_valid_generation_stable": true,
+        "maximum_client_ms": 97.997,
+        "maximum_server_ms": 10.816,
+        "median_client_ms": 51.438,
+        "median_server_ms": 0.593,
+        "mutation": {
+          "after": 550,
+          "asset_id": "player:10213",
+          "asset_market_semantic_revision_after": "30adc53622a189aadbd6ff734cc8276bc06d919af0fa1821e8b005fb21b23172",
+          "asset_market_semantic_revision_before": "465212154f57b50b4fee38eb6791bd8638275e7eb9ca188e7e43bb9e85305e3e",
+          "attached": true,
+          "before": 450,
+          "brain_semantic_digest_after": "53a430c5aa0f88c2b9f6ec07618af2faf8c7f4a6937b115a9618b3f29ee52d68",
+          "brain_semantic_digest_before": "94ce644655fd66b1e99a9a6d2b90bb41e3d3fff959354b0a36ef073e1bda3cdd",
+          "canonical_path": "valuation_intelligence.assets.player:10213.valuation_layers.contender_value.value",
+          "changed_canonical_fields": 1,
+          "consumed_attached": true,
+          "field": "valuation_intelligence.assets.player:10213.valuation_layers.contender_value.value",
+          "marker": "validation-material-1793958973816359533",
+          "replacement_window": [
+            {
+              "event": "admission_requested",
+              "timestamp_ns": 1793958973819088560
+            },
+            {
+              "event": "preparation_lock_acquired",
+              "timestamp_ns": 1793958973819122303
+            },
+            {
+              "event": "admitted",
+              "timestamp_ns": 1793958973819144684
+            },
+            {
+              "event": "material_input_published",
+              "timestamp_ns": 1793958976643997209
+            },
+            {
+              "event": "replacement_started",
+              "timestamp_ns": 1793958976644703535
+            }
+          ]
+        },
+        "new_generation_published": true,
+        "p95_client_ms": 97.997,
+        "p95_server_ms": 10.816,
+        "published_semantic_generation": "b777c71bcfca8b02542399eb919f3b72662734255a170518bd2f876101aee88b",
+        "replacement_builds": 1,
+        "replacement_window": {
+          "events": [
+            {
+              "event": "admission_requested",
+              "timestamp_ns": 1793958973819088560
+            },
+            {
+              "event": "preparation_lock_acquired",
+              "timestamp_ns": 1793958973819122303
+            },
+            {
+              "event": "admitted",
+              "timestamp_ns": 1793958973819144684
+            },
+            {
+              "event": "material_input_published",
+              "timestamp_ns": 1793958976643997209
+            },
+            {
+              "event": "replacement_started",
+              "timestamp_ns": 1793958976644703535
+            },
+            {
+              "event": "probe_complete",
+              "timestamp_ns": 1793958979568414776
+            }
+          ]
+        },
+        "request_thread_generation_work": false,
+        "samples": [
+          {
+            "active_threads": 9,
+            "browser_processes": 0,
+            "build_active": true,
+            "build_count": 1,
+            "build_phase": "preparing_generation",
+            "cache_lookup_ms": 0.0,
+            "cgroup_memory_current": 1552670720,
+            "client_ms": 53.829,
+            "event_loop_client_ms": 41.941,
+            "event_loop_server_ms": 0.52,
+            "lifecycle_lock_ms": 0.02,
+            "memory_evidence": {
+              "accounting_mode": "cgroup_working_set",
+              "active_file_bytes": 0,
+              "anonymous_bytes": 1380380672,
+              "archive_size_bytes": 1189437440,
+              "effective_working_set_bytes": 1392615424,
+              "file_bytes": 160124928,
+              "inactive_file_bytes": 160047104,
+              "lifecycle_phase": "replacement_warming_1",
+              "memory_events": {
+                "oom": 0,
+                "oom_group_kill": 0,
+                "oom_kill": 0
+              },
+              "raw_cgroup_bytes": 1552662528,
+              "timestamp": 1793958977.2527971
+            },
+            "request_marker_ms": 0.017,
+            "request_thread_calls": {
+              "cache_key": 0,
+              "database_uuid": 0,
+              "dataset_version": 0,
+              "durable_generation": 0,
+              "market_construction": 0
+            },
+            "response_bytes": 89,
+            "response_processing_ms": 0.631,
+            "runner_load": [
+              1.007,
+              0.493,
+              0.193
+            ],
+            "semantic_child_count": 2,
+            "semantic_preparation": {
+              "child_cpu_ms": 2500.732,
+              "child_duration_ms": 2507.209,
+              "execution": "spawned_subprocess",
+              "exit_status": 0,
+              "failure": null,
+              "input_bytes": 39260982,
+              "memory_admission": {
+                "accounting_mode": "cgroup_working_set",
+                "admitted": true,
+                "effective_headroom_bytes": 1304977408,
+                "effective_working_set_bytes": 305635328,
+                "hard_pressure_ceiling_bytes": 1879048192,
+                "hard_pressure_margin_bytes": 268435456,
+                "inactive_file_bytes": 19673088,
+                "memory_event_deltas": {},
+                "predicted_effective_bytes": 406298624,
+                "predicted_hard_pressure_bytes": 411216896,
+                "raw_cgroup_bytes": 325308416,
+                "raw_headroom_bytes": 1822175232,
+                "reason": "admitted",
+                "reclaimable_allowance_bytes": 14754816,
+                "stage_estimate_bytes": 100663296,
+                "target_ceiling_bytes": 1610612736
+              },
+              "output_bytes": 676,
+              "parent_cpu_ms": 2624.568,
+              "parent_duration_ms": 3024.375,
+              "peak_child_rss_bytes": 33173504,
+              "reaped": true,
+              "records": 12442,
+              "request_generation": "27d5a9f7fd189c0017ed0cdb548b970cd4fa645a71142f3b454b9866ea0bee10",
+              "semantic_identities": {
+                "asset_universe_digest": "faf2e4bacf2c70535a330ca4243a97e97572abb57f7fd423230ac702a366ea15",
+                "brain_semantic_output_digest": "5f10077f09d95a9fb60c56c8d41fa7d98cf922a0cc1e31ec12c4c8e9229ff1d7",
+                "ownership_dependency_digest": "17e09e6689d00277f535748c25ee7b515aed5610554799ba1a0d833d66e43fa3",
+                "provider_evidence_digest": "24dbc39541bad6a918836918cbac9b1b3af37604602db13ce8bed10a262c8b93"
+              },
+              "worker_pid": 18
+            },
+            "sequence": 1,
+            "served_generation": "2026-11-06T09:56:01.377879+00:00",
+            "server_ms": 0.631,
+            "sleeper_syncing": false,
+            "status": 503,
+            "thread_pool_threads": 1,
+            "transactions_syncing": false,
+            "worker_alive": true
+          },
+          {
+            "active_threads": 9,
+            "browser_processes": 0,
+            "build_active": true,
+            "build_count": 1,
+            "build_phase": "preparing_generation",
+            "cache_lookup_ms": 0.0,
+            "cgroup_memory_current": 1552437248,
+            "client_ms": 49.047,
+            "event_loop_client_ms": 45.063,
+            "event_loop_server_ms": 0.488,
+            "lifecycle_lock_ms": 0.02,
+            "memory_evidence": {
+              "accounting_mode": "cgroup_working_set",
+              "active_file_bytes": 0,
+              "anonymous_bytes": 1380384768,
+              "archive_size_bytes": 1189437440,
+              "effective_working_set_bytes": 1392336896,
+              "file_bytes": 160133120,
+              "inactive_file_bytes": 160100352,
+              "lifecycle_phase": "replacement_warming_2",
+              "memory_events": {
+                "oom": 0,
+                "oom_group_kill": 0,
+                "oom_kill": 0
+              },
+              "raw_cgroup_bytes": 1552437248,
+              "timestamp": 1793958977.4631884
+            },
+            "request_marker_ms": 0.016,
+            "request_thread_calls": {
+              "cache_key": 0,
+              "database_uuid": 0,
+              "dataset_version": 0,
+              "durable_generation": 0,
+              "market_construction": 0
+            },
+            "response_bytes": 89,
+            "response_processing_ms": 0.561,
+            "runner_load": [
+              1.007,
+              0.493,
+              0.193
+            ],
+            "semantic_child_count": 2,
+            "semantic_preparation": {
+              "child_cpu_ms": 2500.732,
+              "child_duration_ms": 2507.209,
+              "execution": "spawned_subprocess",
+              "exit_status": 0,
+              "failure": null,
+              "input_bytes": 39260982,
+              "memory_admission": {
+                "accounting_mode": "cgroup_working_set",
+                "admitted": true,
+                "effective_headroom_bytes": 1304977408,
+                "effective_working_set_bytes": 305635328,
+                "hard_pressure_ceiling_bytes": 1879048192,
+                "hard_pressure_margin_bytes": 268435456,
+                "inactive_file_bytes": 19673088,
+                "memory_event_deltas": {},
+                "predicted_effective_bytes": 406298624,
+                "predicted_hard_pressure_bytes": 411216896,
+                "raw_cgroup_bytes": 325308416,
+                "raw_headroom_bytes": 1822175232,
+                "reason": "admitted",
+                "reclaimable_allowance_bytes": 14754816,
+                "stage_estimate_bytes": 100663296,
+                "target_ceiling_bytes": 1610612736
+              },
+              "output_bytes": 676,
+              "parent_cpu_ms": 2624.568,
+              "parent_duration_ms": 3024.375,
+              "peak_child_rss_bytes": 33173504,
+              "reaped": true,
+              "records": 12442,
+              "request_generation": "27d5a9f7fd189c0017ed0cdb548b970cd4fa645a71142f3b454b9866ea0bee10",
+              "semantic_identities": {
+                "asset_universe_digest": "faf2e4bacf2c70535a330ca4243a97e97572abb57f7fd423230ac702a366ea15",
+                "brain_semantic_output_digest": "5f10077f09d95a9fb60c56c8d41fa7d98cf922a0cc1e31ec12c4c8e9229ff1d7",
+                "ownership_dependency_digest": "17e09e6689d00277f535748c25ee7b515aed5610554799ba1a0d833d66e43fa3",
+                "provider_evidence_digest": "24dbc39541bad6a918836918cbac9b1b3af37604602db13ce8bed10a262c8b93"
+              },
+              "worker_pid": 18
+            },
+            "sequence": 2,
+            "served_generation": "2026-11-06T09:56:01.377879+00:00",
+            "server_ms": 0.561,
+            "sleeper_syncing": false,
+            "status": 503,
+            "thread_pool_threads": 1,
+            "transactions_syncing": false,
+            "worker_alive": true
+          },
+          {
+            "active_threads": 9,
+            "browser_processes": 0,
+            "build_active": true,
+            "build_count": 1,
+            "build_phase": "preparing_generation",
+            "cache_lookup_ms": 0.0,
+            "cgroup_memory_current": 1552764928,
+            "client_ms": 71.977,
+            "event_loop_client_ms": 47.45,
+            "event_loop_server_ms": 0.374,
+            "lifecycle_lock_ms": 0.013,
+            "memory_evidence": {
+              "accounting_mode": "cgroup_working_set",
+              "active_file_bytes": 0,
+              "anonymous_bytes": 1380388864,
+              "archive_size_bytes": 1189437440,
+              "effective_working_set_bytes": 1392652288,
+              "file_bytes": 160145408,
+              "inactive_file_bytes": 160108544,
+              "lifecycle_phase": "replacement_warming_3",
+              "memory_events": {
+                "oom": 0,
+                "oom_group_kill": 0,
+                "oom_kill": 0
+              },
+              "raw_cgroup_bytes": 1552760832,
+              "timestamp": 1793958977.7258093
+            },
+            "request_marker_ms": 0.011,
+            "request_thread_calls": {
+              "cache_key": 0,
+              "database_uuid": 0,
+              "dataset_version": 0,
+              "durable_generation": 0,
+              "market_construction": 0
+            },
+            "response_bytes": 89,
+            "response_processing_ms": 0.414,
+            "runner_load": [
+              1.007,
+              0.493,
+              0.193
+            ],
+            "semantic_child_count": 2,
+            "semantic_preparation": {
+              "child_cpu_ms": 2500.732,
+              "child_duration_ms": 2507.209,
+              "execution": "spawned_subprocess",
+              "exit_status": 0,
+              "failure": null,
+              "input_bytes": 39260982,
+              "memory_admission": {
+                "accounting_mode": "cgroup_working_set",
+                "admitted": true,
+                "effective_headroom_bytes": 1304977408,
+                "effective_working_set_bytes": 305635328,
+                "hard_pressure_ceiling_bytes": 1879048192,
+                "hard_pressure_margin_bytes": 268435456,
+                "inactive_file_bytes": 19673088,
+                "memory_event_deltas": {},
+                "predicted_effective_bytes": 406298624,
+                "predicted_hard_pressure_bytes": 411216896,
+                "raw_cgroup_bytes": 325308416,
+                "raw_headroom_bytes": 1822175232,
+                "reason": "admitted",
+                "reclaimable_allowance_bytes": 14754816,
+                "stage_estimate_bytes": 100663296,
+                "target_ceiling_bytes": 1610612736
+              },
+              "output_bytes": 676,
+              "parent_cpu_ms": 2624.568,
+              "parent_duration_ms": 3024.375,
+              "peak_child_rss_bytes": 33173504,
+              "reaped": true,
+              "records": 12442,
+              "request_generation": "27d5a9f7fd189c0017ed0cdb548b970cd4fa645a71142f3b454b9866ea0bee10",
+              "semantic_identities": {
+                "asset_universe_digest": "faf2e4bacf2c70535a330ca4243a97e97572abb57f7fd423230ac702a366ea15",
+                "brain_semantic_output_digest": "5f10077f09d95a9fb60c56c8d41fa7d98cf922a0cc1e31ec12c4c8e9229ff1d7",
+                "ownership_dependency_digest": "17e09e6689d00277f535748c25ee7b515aed5610554799ba1a0d833d66e43fa3",
+                "provider_evidence_digest": "24dbc39541bad6a918836918cbac9b1b3af37604602db13ce8bed10a262c8b93"
+              },
+              "worker_pid": 18
+            },
+            "sequence": 3,
+            "served_generation": "2026-11-06T09:56:01.377879+00:00",
+            "server_ms": 0.414,
+            "sleeper_syncing": false,
+            "status": 503,
+            "thread_pool_threads": 1,
+            "transactions_syncing": false,
+            "worker_alive": true
+          },
+          {
+            "active_threads": 9,
+            "browser_processes": 0,
+            "build_active": true,
+            "build_count": 1,
+            "build_phase": "preparing_generation",
+            "cache_lookup_ms": 0.0,
+            "cgroup_memory_current": 1548955648,
+            "client_ms": 37.752,
+            "event_loop_client_ms": 79.449,
+            "event_loop_server_ms": 0.593,
+            "lifecycle_lock_ms": 0.02,
+            "memory_evidence": {
+              "accounting_mode": "cgroup_working_set",
+              "active_file_bytes": 0,
+              "anonymous_bytes": 1377083392,
+              "archive_size_bytes": 1189437440,
+              "effective_working_set_bytes": 1388838912,
+              "file_bytes": 160157696,
+              "inactive_file_bytes": 160116736,
+              "lifecycle_phase": "replacement_warming_4",
+              "memory_events": {
+                "oom": 0,
+                "oom_group_kill": 0,
+                "oom_kill": 0
+              },
+              "raw_cgroup_bytes": 1548955648,
+              "timestamp": 1793958977.9776938
+            },
+            "request_marker_ms": 0.017,
+            "request_thread_calls": {
+              "cache_key": 0,
+              "database_uuid": 0,
+              "dataset_version": 0,
+              "durable_generation": 0,
+              "market_construction": 0
+            },
+            "response_bytes": 89,
+            "response_processing_ms": 0.625,
+            "runner_load": [
+              1.007,
+              0.493,
+              0.193
+            ],
+            "semantic_child_count": 2,
+            "semantic_preparation": {
+              "child_cpu_ms": 2500.732,
+              "child_duration_ms": 2507.209,
+              "execution": "spawned_subprocess",
+              "exit_status": 0,
+              "failure": null,
+              "input_bytes": 39260982,
+              "memory_admission": {
+                "accounting_mode": "cgroup_working_set",
+                "admitted": true,
+                "effective_headroom_bytes": 1304977408,
+                "effective_working_set_bytes": 305635328,
+                "hard_pressure_ceiling_bytes": 1879048192,
+                "hard_pressure_margin_bytes": 268435456,
+                "inactive_file_bytes": 19673088,
+                "memory_event_deltas": {},
+                "predicted_effective_bytes": 406298624,
+                "predicted_hard_pressure_bytes": 411216896,
+                "raw_cgroup_bytes": 325308416,
+                "raw_headroom_bytes": 1822175232,
+                "reason": "admitted",
+                "reclaimable_allowance_bytes": 14754816,
+                "stage_estimate_bytes": 100663296,
+                "target_ceiling_bytes": 1610612736
+              },
+              "output_bytes": 676,
+              "parent_cpu_ms": 2624.568,
+              "parent_duration_ms": 3024.375,
+              "peak_child_rss_bytes": 33173504,
+              "reaped": true,
+              "records": 12442,
+              "request_generation": "27d5a9f7fd189c0017ed0cdb548b970cd4fa645a71142f3b454b9866ea0bee10",
+              "semantic_identities": {
+                "asset_universe_digest": "faf2e4bacf2c70535a330ca4243a97e97572abb57f7fd423230ac702a366ea15",
+                "brain_semantic_output_digest": "5f10077f09d95a9fb60c56c8d41fa7d98cf922a0cc1e31ec12c4c8e9229ff1d7",
+                "ownership_dependency_digest": "17e09e6689d00277f535748c25ee7b515aed5610554799ba1a0d833d66e43fa3",
+                "provider_evidence_digest": "24dbc39541bad6a918836918cbac9b1b3af37604602db13ce8bed10a262c8b93"
+              },
+              "worker_pid": 18
+            },
+            "sequence": 4,
+            "served_generation": "2026-11-06T09:56:01.377879+00:00",
+            "server_ms": 0.625,
+            "sleeper_syncing": false,
+            "status": 503,
+            "thread_pool_threads": 1,
+            "transactions_syncing": false,
+            "worker_alive": true
+          },
+          {
+            "active_threads": 9,
+            "browser_processes": 0,
+            "build_active": true,
+            "build_count": 1,
+            "build_phase": "preparing_generation",
+            "cache_lookup_ms": 0.0,
+            "cgroup_memory_current": 1549389824,
+            "client_ms": 66.774,
+            "event_loop_client_ms": 59.711,
+            "event_loop_server_ms": 0.411,
+            "lifecycle_lock_ms": 0.014,
+            "memory_evidence": {
+              "accounting_mode": "cgroup_working_set",
+              "active_file_bytes": 0,
+              "anonymous_bytes": 1377083392,
+              "archive_size_bytes": 1189437440,
+              "effective_working_set_bytes": 1389264896,
+              "file_bytes": 160165888,
+              "inactive_file_bytes": 160124928,
+              "lifecycle_phase": "replacement_warming_5",
+              "memory_events": {
+                "oom": 0,
+                "oom_group_kill": 0,
+                "oom_kill": 0
+              },
+              "raw_cgroup_bytes": 1549389824,
+              "timestamp": 1793958978.297971
+            },
+            "request_marker_ms": 0.012,
+            "request_thread_calls": {
+              "cache_key": 0,
+              "database_uuid": 0,
+              "dataset_version": 0,
+              "durable_generation": 0,
+              "market_construction": 0
+            },
+            "response_bytes": 89,
+            "response_processing_ms": 0.71,
+            "runner_load": [
+              1.007,
+              0.493,
+              0.193
+            ],
+            "semantic_child_count": 2,
+            "semantic_preparation": {
+              "child_cpu_ms": 2500.732,
+              "child_duration_ms": 2507.209,
+              "execution": "spawned_subprocess",
+              "exit_status": 0,
+              "failure": null,
+              "input_bytes": 39260982,
+              "memory_admission": {
+                "accounting_mode": "cgroup_working_set",
+                "admitted": true,
+                "effective_headroom_bytes": 1304977408,
+                "effective_working_set_bytes": 305635328,
+                "hard_pressure_ceiling_bytes": 1879048192,
+                "hard_pressure_margin_bytes": 268435456,
+                "inactive_file_bytes": 19673088,
+                "memory_event_deltas": {},
+                "predicted_effective_bytes": 406298624,
+                "predicted_hard_pressure_bytes": 411216896,
+                "raw_cgroup_bytes": 325308416,
+                "raw_headroom_bytes": 1822175232,
+                "reason": "admitted",
+                "reclaimable_allowance_bytes": 14754816,
+                "stage_estimate_bytes": 100663296,
+                "target_ceiling_bytes": 1610612736
+              },
+              "output_bytes": 676,
+              "parent_cpu_ms": 2624.568,
+              "parent_duration_ms": 3024.375,
+              "peak_child_rss_bytes": 33173504,
+              "reaped": true,
+              "records": 12442,
+              "request_generation": "27d5a9f7fd189c0017ed0cdb548b970cd4fa645a71142f3b454b9866ea0bee10",
+              "semantic_identities": {
+                "asset_universe_digest": "faf2e4bacf2c70535a330ca4243a97e97572abb57f7fd423230ac702a366ea15",
+                "brain_semantic_output_digest": "5f10077f09d95a9fb60c56c8d41fa7d98cf922a0cc1e31ec12c4c8e9229ff1d7",
+                "ownership_dependency_digest": "17e09e6689d00277f535748c25ee7b515aed5610554799ba1a0d833d66e43fa3",
+                "provider_evidence_digest": "24dbc39541bad6a918836918cbac9b1b3af37604602db13ce8bed10a262c8b93"
+              },
+              "worker_pid": 18
+            },
+            "sequence": 5,
+            "served_generation": "2026-11-06T09:56:01.377879+00:00",
+            "server_ms": 0.71,
+            "sleeper_syncing": false,
+            "status": 503,
+            "thread_pool_threads": 1,
+            "transactions_syncing": false,
+            "worker_alive": true
+          },
+          {
+            "active_threads": 9,
+            "browser_processes": 0,
+            "build_active": true,
+            "build_count": 1,
+            "build_phase": "preparing_generation",
+            "cache_lookup_ms": 0.0,
+            "cgroup_memory_current": 1549418496,
+            "client_ms": 48.239,
+            "event_loop_client_ms": 35.514,
+            "event_loop_server_ms": 0.455,
+            "lifecycle_lock_ms": 0.013,
+            "memory_evidence": {
+              "accounting_mode": "cgroup_working_set",
+              "active_file_bytes": 0,
+              "anonymous_bytes": 1377083392,
+              "archive_size_bytes": 1189437440,
+              "effective_working_set_bytes": 1389285376,
+              "file_bytes": 160178176,
+              "inactive_file_bytes": 160133120,
+              "lifecycle_phase": "replacement_warming_6",
+              "memory_events": {
+                "oom": 0,
+                "oom_group_kill": 0,
+                "oom_kill": 0
+              },
+              "raw_cgroup_bytes": 1549418496,
+              "timestamp": 1793958978.504156
+            },
+            "request_marker_ms": 0.011,
+            "request_thread_calls": {
+              "cache_key": 0,
+              "database_uuid": 0,
+              "dataset_version": 0,
+              "durable_generation": 0,
+              "market_construction": 0
+            },
+            "response_bytes": 89,
+            "response_processing_ms": 0.498,
+            "runner_load": [
+              1.007,
+              0.493,
+              0.193
+            ],
+            "semantic_child_count": 2,
+            "semantic_preparation": {
+              "child_cpu_ms": 2500.732,
+              "child_duration_ms": 2507.209,
+              "execution": "spawned_subprocess",
+              "exit_status": 0,
+              "failure": null,
+              "input_bytes": 39260982,
+              "memory_admission": {
+                "accounting_mode": "cgroup_working_set",
+                "admitted": true,
+                "effective_headroom_bytes": 1304977408,
+                "effective_working_set_bytes": 305635328,
+                "hard_pressure_ceiling_bytes": 1879048192,
+                "hard_pressure_margin_bytes": 268435456,
+                "inactive_file_bytes": 19673088,
+                "memory_event_deltas": {},
+                "predicted_effective_bytes": 406298624,
+                "predicted_hard_pressure_bytes": 411216896,
+                "raw_cgroup_bytes": 325308416,
+                "raw_headroom_bytes": 1822175232,
+                "reason": "admitted",
+                "reclaimable_allowance_bytes": 14754816,
+                "stage_estimate_bytes": 100663296,
+                "target_ceiling_bytes": 1610612736
+              },
+              "output_bytes": 676,
+              "parent_cpu_ms": 2624.568,
+              "parent_duration_ms": 3024.375,
+              "peak_child_rss_bytes": 33173504,
+              "reaped": true,
+              "records": 12442,
+              "request_generation": "27d5a9f7fd189c0017ed0cdb548b970cd4fa645a71142f3b454b9866ea0bee10",
+              "semantic_identities": {
+                "asset_universe_digest": "faf2e4bacf2c70535a330ca4243a97e97572abb57f7fd423230ac702a366ea15",
+                "brain_semantic_output_digest": "5f10077f09d95a9fb60c56c8d41fa7d98cf922a0cc1e31ec12c4c8e9229ff1d7",
+                "ownership_dependency_digest": "17e09e6689d00277f535748c25ee7b515aed5610554799ba1a0d833d66e43fa3",
+                "provider_evidence_digest": "24dbc39541bad6a918836918cbac9b1b3af37604602db13ce8bed10a262c8b93"
+              },
+              "worker_pid": 18
+            },
+            "sequence": 6,
+            "served_generation": "2026-11-06T09:56:01.377879+00:00",
+            "server_ms": 0.498,
+            "sleeper_syncing": false,
+            "status": 503,
+            "thread_pool_threads": 1,
+            "transactions_syncing": false,
+            "worker_alive": true
+          },
+          {
+            "active_threads": 9,
+            "browser_processes": 0,
+            "build_active": true,
+            "build_count": 1,
+            "build_phase": "preparing_generation",
+            "cache_lookup_ms": 0.0,
+            "cgroup_memory_current": 1549668352,
+            "client_ms": 35.207,
+            "event_loop_client_ms": 70.581,
+            "event_loop_server_ms": 0.376,
+            "lifecycle_lock_ms": 0.013,
+            "memory_evidence": {
+              "accounting_mode": "cgroup_working_set",
+              "active_file_bytes": 0,
+              "anonymous_bytes": 1377091584,
+              "archive_size_bytes": 1189437440,
+              "effective_working_set_bytes": 1389535232,
+              "file_bytes": 160190464,
+              "inactive_file_bytes": 160133120,
+              "lifecycle_phase": "replacement_warming_7",
+              "memory_events": {
+                "oom": 0,
+                "oom_group_kill": 0,
+                "oom_kill": 0
+              },
+              "raw_cgroup_bytes": 1549668352,
+              "timestamp": 1793958978.760351
+            },
+            "request_marker_ms": 0.011,
+            "request_thread_calls": {
+              "cache_key": 0,
+              "database_uuid": 0,
+              "dataset_version": 0,
+              "durable_generation": 0,
+              "market_construction": 0
+            },
+            "response_bytes": 89,
+            "response_processing_ms": 0.432,
+            "runner_load": [
+              1.007,
+              0.493,
+              0.193
+            ],
+            "semantic_child_count": 2,
+            "semantic_preparation": {
+              "child_cpu_ms": 2500.732,
+              "child_duration_ms": 2507.209,
+              "execution": "spawned_subprocess",
+              "exit_status": 0,
+              "failure": null,
+              "input_bytes": 39260982,
+              "memory_admission": {
+                "accounting_mode": "cgroup_working_set",
+                "admitted": true,
+                "effective_headroom_bytes": 1304977408,
+                "effective_working_set_bytes": 305635328,
+                "hard_pressure_ceiling_bytes": 1879048192,
+                "hard_pressure_margin_bytes": 268435456,
+                "inactive_file_bytes": 19673088,
+                "memory_event_deltas": {},
+                "predicted_effective_bytes": 406298624,
+                "predicted_hard_pressure_bytes": 411216896,
+                "raw_cgroup_bytes": 325308416,
+                "raw_headroom_bytes": 1822175232,
+                "reason": "admitted",
+                "reclaimable_allowance_bytes": 14754816,
+                "stage_estimate_bytes": 100663296,
+                "target_ceiling_bytes": 1610612736
+              },
+              "output_bytes": 676,
+              "parent_cpu_ms": 2624.568,
+              "parent_duration_ms": 3024.375,
+              "peak_child_rss_bytes": 33173504,
+              "reaped": true,
+              "records": 12442,
+              "request_generation": "27d5a9f7fd189c0017ed0cdb548b970cd4fa645a71142f3b454b9866ea0bee10",
+              "semantic_identities": {
+                "asset_universe_digest": "faf2e4bacf2c70535a330ca4243a97e97572abb57f7fd423230ac702a366ea15",
+                "brain_semantic_output_digest": "5f10077f09d95a9fb60c56c8d41fa7d98cf922a0cc1e31ec12c4c8e9229ff1d7",
+                "ownership_dependency_digest": "17e09e6689d00277f535748c25ee7b515aed5610554799ba1a0d833d66e43fa3",
+                "provider_evidence_digest": "24dbc39541bad6a918836918cbac9b1b3af37604602db13ce8bed10a262c8b93"
+              },
+              "worker_pid": 18
+            },
+            "sequence": 7,
+            "served_generation": "2026-11-06T09:56:01.377879+00:00",
+            "server_ms": 0.432,
+            "sleeper_syncing": false,
+            "status": 503,
+            "thread_pool_threads": 1,
+            "transactions_syncing": false,
+            "worker_alive": true
+          },
+          {
+            "active_threads": 9,
+            "browser_processes": 0,
+            "build_active": true,
+            "build_count": 1,
+            "build_phase": "preparing_generation",
+            "cache_lookup_ms": 0.0,
+            "cgroup_memory_current": 1549488128,
+            "client_ms": 75.817,
+            "event_loop_client_ms": 34.274,
+            "event_loop_server_ms": 0.523,
+            "lifecycle_lock_ms": 0.013,
+            "memory_evidence": {
+              "accounting_mode": "cgroup_working_set",
+              "active_file_bytes": 0,
+              "anonymous_bytes": 1377087488,
+              "archive_size_bytes": 1189437440,
+              "effective_working_set_bytes": 1389326336,
+              "file_bytes": 160202752,
+              "inactive_file_bytes": 160161792,
+              "lifecycle_phase": "replacement_warming_8",
+              "memory_events": {
+                "oom": 0,
+                "oom_group_kill": 0,
+                "oom_kill": 0
+              },
+              "raw_cgroup_bytes": 1549488128,
+              "timestamp": 1793958978.9604087
+            },
+            "request_marker_ms": 0.012,
+            "request_thread_calls": {
+              "cache_key": 0,
+              "database_uuid": 0,
+              "dataset_version": 0,
+              "durable_generation": 0,
+              "market_construction": 0
+            },
+            "response_bytes": 89,
+            "response_processing_ms": 0.501,
+            "runner_load": [
+              1.007,
+              0.493,
+              0.193
+            ],
+            "semantic_child_count": 2,
+            "semantic_preparation": {
+              "child_cpu_ms": 2500.732,
+              "child_duration_ms": 2507.209,
+              "execution": "spawned_subprocess",
+              "exit_status": 0,
+              "failure": null,
+              "input_bytes": 39260982,
+              "memory_admission": {
+                "accounting_mode": "cgroup_working_set",
+                "admitted": true,
+                "effective_headroom_bytes": 1304977408,
+                "effective_working_set_bytes": 305635328,
+                "hard_pressure_ceiling_bytes": 1879048192,
+                "hard_pressure_margin_bytes": 268435456,
+                "inactive_file_bytes": 19673088,
+                "memory_event_deltas": {},
+                "predicted_effective_bytes": 406298624,
+                "predicted_hard_pressure_bytes": 411216896,
+                "raw_cgroup_bytes": 325308416,
+                "raw_headroom_bytes": 1822175232,
+                "reason": "admitted",
+                "reclaimable_allowance_bytes": 14754816,
+                "stage_estimate_bytes": 100663296,
+                "target_ceiling_bytes": 1610612736
+              },
+              "output_bytes": 676,
+              "parent_cpu_ms": 2624.568,
+              "parent_duration_ms": 3024.375,
+              "peak_child_rss_bytes": 33173504,
+              "reaped": true,
+              "records": 12442,
+              "request_generation": "27d5a9f7fd189c0017ed0cdb548b970cd4fa645a71142f3b454b9866ea0bee10",
+              "semantic_identities": {
+                "asset_universe_digest": "faf2e4bacf2c70535a330ca4243a97e97572abb57f7fd423230ac702a366ea15",
+                "brain_semantic_output_digest": "5f10077f09d95a9fb60c56c8d41fa7d98cf922a0cc1e31ec12c4c8e9229ff1d7",
+                "ownership_dependency_digest": "17e09e6689d00277f535748c25ee7b515aed5610554799ba1a0d833d66e43fa3",
+                "provider_evidence_digest": "24dbc39541bad6a918836918cbac9b1b3af37604602db13ce8bed10a262c8b93"
+              },
+              "worker_pid": 18
+            },
+            "sequence": 8,
+            "served_generation": "2026-11-06T09:56:01.377879+00:00",
+            "server_ms": 0.501,
+            "sleeper_syncing": false,
+            "status": 503,
+            "thread_pool_threads": 1,
+            "transactions_syncing": false,
+            "worker_alive": true
+          },
+          {
+            "active_threads": 9,
+            "browser_processes": 0,
+            "build_active": true,
+            "build_count": 1,
+            "build_phase": "preparing_generation",
+            "cache_lookup_ms": 0.0,
+            "cgroup_memory_current": 1549508608,
+            "client_ms": 97.997,
+            "event_loop_client_ms": 59.954,
+            "event_loop_server_ms": 0.629,
+            "lifecycle_lock_ms": 0.029,
+            "memory_evidence": {
+              "accounting_mode": "cgroup_working_set",
+              "active_file_bytes": 0,
+              "anonymous_bytes": 1377087488,
+              "archive_size_bytes": 1189437440,
+              "effective_working_set_bytes": 1389346816,
+              "file_bytes": 160215040,
+              "inactive_file_bytes": 160161792,
+              "lifecycle_phase": "replacement_warming_9",
+              "memory_events": {
+                "oom": 0,
+                "oom_group_kill": 0,
+                "oom_kill": 0
+              },
+              "raw_cgroup_bytes": 1549508608,
+              "timestamp": 1793958979.2491572
+            },
+            "request_marker_ms": 0.022,
+            "request_thread_calls": {
+              "cache_key": 0,
+              "database_uuid": 0,
+              "dataset_version": 0,
+              "durable_generation": 0,
+              "market_construction": 0
+            },
+            "response_bytes": 89,
+            "response_processing_ms": 10.816,
+            "runner_load": [
+              1.007,
+              0.493,
+              0.193
+            ],
+            "semantic_child_count": 2,
+            "semantic_preparation": {
+              "child_cpu_ms": 2500.732,
+              "child_duration_ms": 2507.209,
+              "execution": "spawned_subprocess",
+              "exit_status": 0,
+              "failure": null,
+              "input_bytes": 39260982,
+              "memory_admission": {
+                "accounting_mode": "cgroup_working_set",
+                "admitted": true,
+                "effective_headroom_bytes": 1304977408,
+                "effective_working_set_bytes": 305635328,
+                "hard_pressure_ceiling_bytes": 1879048192,
+                "hard_pressure_margin_bytes": 268435456,
+                "inactive_file_bytes": 19673088,
+                "memory_event_deltas": {},
+                "predicted_effective_bytes": 406298624,
+                "predicted_hard_pressure_bytes": 411216896,
+                "raw_cgroup_bytes": 325308416,
+                "raw_headroom_bytes": 1822175232,
+                "reason": "admitted",
+                "reclaimable_allowance_bytes": 14754816,
+                "stage_estimate_bytes": 100663296,
+                "target_ceiling_bytes": 1610612736
+              },
+              "output_bytes": 676,
+              "parent_cpu_ms": 2624.568,
+              "parent_duration_ms": 3024.375,
+              "peak_child_rss_bytes": 33173504,
+              "reaped": true,
+              "records": 12442,
+              "request_generation": "27d5a9f7fd189c0017ed0cdb548b970cd4fa645a71142f3b454b9866ea0bee10",
+              "semantic_identities": {
+                "asset_universe_digest": "faf2e4bacf2c70535a330ca4243a97e97572abb57f7fd423230ac702a366ea15",
+                "brain_semantic_output_digest": "5f10077f09d95a9fb60c56c8d41fa7d98cf922a0cc1e31ec12c4c8e9229ff1d7",
+                "ownership_dependency_digest": "17e09e6689d00277f535748c25ee7b515aed5610554799ba1a0d833d66e43fa3",
+                "provider_evidence_digest": "24dbc39541bad6a918836918cbac9b1b3af37604602db13ce8bed10a262c8b93"
+              },
+              "worker_pid": 18
+            },
+            "sequence": 9,
+            "served_generation": "2026-11-06T09:56:01.377879+00:00",
+            "server_ms": 10.816,
+            "sleeper_syncing": false,
+            "status": 503,
+            "thread_pool_threads": 1,
+            "transactions_syncing": false,
+            "worker_alive": true
+          },
+          {
+            "active_threads": 9,
+            "browser_processes": 0,
+            "build_active": true,
+            "build_count": 1,
+            "build_phase": "preparing_generation",
+            "cache_lookup_ms": 0.0,
+            "cgroup_memory_current": 1549402112,
+            "client_ms": 28.002,
+            "event_loop_client_ms": 25.01,
+            "event_loop_server_ms": 0.411,
+            "lifecycle_lock_ms": 0.021,
+            "memory_evidence": {
+              "accounting_mode": "cgroup_working_set",
+              "active_file_bytes": 0,
+              "anonymous_bytes": 1377087488,
+              "archive_size_bytes": 1189437440,
+              "effective_working_set_bytes": 1389240320,
+              "file_bytes": 160223232,
+              "inactive_file_bytes": 160161792,
+              "lifecycle_phase": "replacement_warming_10",
+              "memory_events": {
+                "oom": 0,
+                "oom_group_kill": 0,
+                "oom_kill": 0
+              },
+              "raw_cgroup_bytes": 1549402112,
+              "timestamp": 1793958979.4034836
+            },
+            "request_marker_ms": 0.018,
+            "request_thread_calls": {
+              "cache_key": 0,
+              "database_uuid": 0,
+              "dataset_version": 0,
+              "durable_generation": 0,
+              "market_construction": 0
+            },
+            "response_bytes": 89,
+            "response_processing_ms": 0.633,
+            "runner_load": [
+              1.007,
+              0.493,
+              0.193
+            ],
+            "semantic_child_count": 2,
+            "semantic_preparation": {
+              "child_cpu_ms": 2500.732,
+              "child_duration_ms": 2507.209,
+              "execution": "spawned_subprocess",
+              "exit_status": 0,
+              "failure": null,
+              "input_bytes": 39260982,
+              "memory_admission": {
+                "accounting_mode": "cgroup_working_set",
+                "admitted": true,
+                "effective_headroom_bytes": 1304977408,
+                "effective_working_set_bytes": 305635328,
+                "hard_pressure_ceiling_bytes": 1879048192,
+                "hard_pressure_margin_bytes": 268435456,
+                "inactive_file_bytes": 19673088,
+                "memory_event_deltas": {},
+                "predicted_effective_bytes": 406298624,
+                "predicted_hard_pressure_bytes": 411216896,
+                "raw_cgroup_bytes": 325308416,
+                "raw_headroom_bytes": 1822175232,
+                "reason": "admitted",
+                "reclaimable_allowance_bytes": 14754816,
+                "stage_estimate_bytes": 100663296,
+                "target_ceiling_bytes": 1610612736
+              },
+              "output_bytes": 676,
+              "parent_cpu_ms": 2624.568,
+              "parent_duration_ms": 3024.375,
+              "peak_child_rss_bytes": 33173504,
+              "reaped": true,
+              "records": 12442,
+              "request_generation": "27d5a9f7fd189c0017ed0cdb548b970cd4fa645a71142f3b454b9866ea0bee10",
+              "semantic_identities": {
+                "asset_universe_digest": "faf2e4bacf2c70535a330ca4243a97e97572abb57f7fd423230ac702a366ea15",
+                "brain_semantic_output_digest": "5f10077f09d95a9fb60c56c8d41fa7d98cf922a0cc1e31ec12c4c8e9229ff1d7",
+                "ownership_dependency_digest": "17e09e6689d00277f535748c25ee7b515aed5610554799ba1a0d833d66e43fa3",
+                "provider_evidence_digest": "24dbc39541bad6a918836918cbac9b1b3af37604602db13ce8bed10a262c8b93"
+              },
+              "worker_pid": 18
+            },
+            "sequence": 10,
+            "served_generation": "2026-11-06T09:56:01.377879+00:00",
+            "server_ms": 0.633,
+            "sleeper_syncing": false,
+            "status": 503,
+            "thread_pool_threads": 1,
+            "transactions_syncing": false,
+            "worker_alive": true
+          }
+        ],
+        "semantic_after": {
+          "asset_universe_digest": "faf2e4bacf2c70535a330ca4243a97e97572abb57f7fd423230ac702a366ea15",
+          "brain_semantic_output_digest": "0a1c02e66f8d6fdc5195c081f2037aec93bb632755c7462ebb4d9bbb9365f632",
+          "ownership_dependency_digest": "17e09e6689d00277f535748c25ee7b515aed5610554799ba1a0d833d66e43fa3",
+          "provider_evidence_digest": "24dbc39541bad6a918836918cbac9b1b3af37604602db13ce8bed10a262c8b93"
+        },
+        "semantic_before": {
+          "asset_universe_digest": "faf2e4bacf2c70535a330ca4243a97e97572abb57f7fd423230ac702a366ea15",
+          "brain_semantic_output_digest": "5f10077f09d95a9fb60c56c8d41fa7d98cf922a0cc1e31ec12c4c8e9229ff1d7",
+          "ownership_dependency_digest": "17e09e6689d00277f535748c25ee7b515aed5610554799ba1a0d833d66e43fa3",
+          "provider_evidence_digest": "24dbc39541bad6a918836918cbac9b1b3af37604602db13ce8bed10a262c8b93"
+        },
+        "semantic_children": 1,
+        "sqlite_query_count": 0,
+        "target_row_differences": [
+          {
+            "after": 550.0,
+            "before": 450.0,
+            "path": "$.assets[player:10213].contender_value"
+          },
+          {
+            "after": 550.0,
+            "before": 450.0,
+            "path": "$.assets[player:10213].values.contender_value"
+          }
+        ]
+      },
+      "timestamp": 1793958990.3158422
+    },
+    "historical_leaders": {
+      "cache_entries_cleared_before_full": 6,
+      "concurrent_health": [
+        {
+          "latency_ms": 23.472,
+          "path": "/health/live",
+          "response_bytes": 38,
+          "status": 200
+        },
+        {
+          "latency_ms": 33.971,
+          "path": "/health/ready",
+          "response_bytes": 187,
+          "status": 200
+        },
+        {
+          "latency_ms": 50.124,
+          "path": "/api/status",
+          "response_bytes": 157,
+          "status": 200
+        }
+      ],
+      "full_season_2021": {
+        "latency_ms": 528.588,
+        "response_bytes": 77962,
+        "status": 200
+      },
+      "memory_current": 1263185920,
+      "provider_synchronization": false,
+      "seasons": {
+        "2021": {
+          "cache_result": "miss_then_hit",
+          "cold_ms": 225.91,
+          "leader_count": 40,
+          "response_bytes": 3980,
+          "status": 200,
+          "warm_ms": 6.401,
+          "warm_status": 200
+        },
+        "2022": {
+          "cache_result": "miss_then_hit",
+          "cold_ms": 145.135,
+          "leader_count": 40,
+          "response_bytes": 3980,
+          "status": 200,
+          "warm_ms": 102.628,
+          "warm_status": 200
+        },
+        "2023": {
+          "cache_result": "miss_then_hit",
+          "cold_ms": 131.081,
+          "leader_count": 40,
+          "response_bytes": 3980,
+          "status": 200,
+          "warm_ms": 8.783,
+          "warm_status": 200
+        },
+        "2024": {
+          "cache_result": "miss_then_hit",
+          "cold_ms": 250.338,
+          "leader_count": 40,
+          "response_bytes": 3980,
+          "status": 200,
+          "warm_ms": 6.918,
+          "warm_status": 200
+        },
+        "2025": {
+          "cache_result": "miss_then_hit",
+          "cold_ms": 249.454,
+          "leader_count": 40,
+          "response_bytes": 3981,
+          "status": 200,
+          "warm_ms": 6.373,
+          "warm_status": 200
+        },
+        "2026": {
+          "cache_result": "miss_then_hit",
+          "cold_ms": 6.81,
+          "leader_count": 0,
+          "response_bytes": 28,
+          "status": 200,
+          "warm_ms": 5.472,
+          "warm_status": 200
+        }
+      },
+      "status": "completed",
+      "timestamp": 1793959008.6214194
+    },
+    "historical_resolution": {
+      "after": {
+        "accounting_mode": "cgroup_working_set",
+        "active_file_bytes": 0,
+        "anonymous_bytes": 1286299648,
+        "archive_size_bytes": 1189437440,
+        "effective_working_set_bytes": 1297522688,
+        "file_bytes": 142278656,
+        "inactive_file_bytes": 142213120,
+        "lifecycle_phase": "historical_resolution_after",
+        "memory_events": {
+          "oom": 0,
+          "oom_group_kill": 0,
+          "oom_kill": 0
+        },
+        "raw_cgroup_bytes": 1439735808,
+        "timestamp": 1793958973.3824914
+      },
+      "before": {
+        "accounting_mode": "cgroup_working_set",
+        "active_file_bytes": 0,
+        "anonymous_bytes": 1288527872,
+        "archive_size_bytes": 1189437440,
+        "effective_working_set_bytes": 1299283968,
+        "file_bytes": 142192640,
+        "inactive_file_bytes": 142135296,
+        "lifecycle_phase": "historical_resolution_before",
+        "memory_events": {
+          "oom": 0,
+          "oom_group_kill": 0,
+          "oom_kill": 0
+        },
+        "raw_cgroup_bytes": 1441419264,
+        "timestamp": 1793958972.967783
+      },
+      "cycles": 3,
+      "health": {
+        "assets_total": 1578,
+        "assets_valued": 1362,
+        "bounded_event_limit": null,
+        "completed_trades": 231,
+        "counters": {
+          "assets_total": 1578,
+          "assets_valued": 1362,
+          "fully_valued": 95,
+          "historical_provider_rate_limited": 0,
+          "historical_provider_requests": 0,
+          "historical_resolution_assets_bulk_reused": 1578,
+          "historical_resolution_assets_new": 0,
+          "historical_resolution_assets_provider_resolved": 0,
+          "historical_resolution_assets_reused": 1578,
+          "historical_resolution_assets_total": 1578,
+          "historical_resolution_assets_unavailable": 216,
+          "historical_resolution_batches": 52,
+          "historical_resolution_elapsed_ms": 391,
+          "historical_resolution_objects_decoded": 1628,
+          "historical_resolution_replay_skipped": 1578,
+          "historical_resolution_rows_loaded": 3206,
+          "historical_resolution_sqlite_connections": 1,
+          "historical_resolution_sqlite_queries": 3,
+          "partially_valued": 130,
+          "persistence_already_preserved": 1362,
+          "persistence_unavailable": 216,
+          "process_gradable": 95,
+          "process_not_gradable": 136,
+          "unavailable_trades": 6
+        },
+        "events_evaluated": 231,
+        "fully_valued": 95,
+        "historical_provider_rate_limited": 0,
+        "historical_provider_requests": 0,
+        "historical_resolution_assets_bulk_reused": 1578,
+        "historical_resolution_assets_new": 0,
+        "historical_resolution_assets_provider_resolved": 0,
+        "historical_resolution_assets_reused": 1578,
+        "historical_resolution_assets_total": 1578,
+        "historical_resolution_assets_unavailable": 216,
+        "historical_resolution_batches": 52,
+        "historical_resolution_elapsed_ms": 391,
+        "historical_resolution_objects_decoded": 1628,
+        "historical_resolution_replay_skipped": 1578,
+        "historical_resolution_rows_loaded": 3206,
+        "historical_resolution_sqlite_connections": 1,
+        "historical_resolution_sqlite_queries": 3,
+        "historical_resolution_status": "complete_with_unavailable",
+        "last_error": null,
+        "partially_valued": 130,
+        "phase_started_at": "2026-11-06T09:56:12.971999+00:00",
+        "process_gradable": 95,
+        "process_not_gradable": 136,
+        "source_trade_count": 231,
+        "status": "complete_with_unavailable",
+        "unavailable": 6,
+        "unclassified_process_trades": 0
+      },
+      "samples": [
+        {
+          "client_ms": 205.212,
+          "path": "/health/live",
+          "response_bytes": 38,
+          "server_ms": 0.444,
+          "status": 200
+        },
+        {
+          "client_ms": 207.999,
+          "path": "/api/market/health",
+          "response_bytes": 11274,
+          "server_ms": 10.849,
+          "status": 200
+        },
+        {
+          "client_ms": 215.517,
+          "path": "/",
+          "response_bytes": 51941,
+          "server_ms": 1.57,
+          "status": 200
+        },
+        {
+          "client_ms": 282.208,
+          "path": "/market",
+          "response_bytes": 76840,
+          "server_ms": 261.856,
+          "status": 200
+        },
+        {
+          "client_ms": 20.649,
+          "path": "/health/live",
+          "response_bytes": 38,
+          "server_ms": 0.379,
+          "status": 200
+        },
+        {
+          "client_ms": 22.996,
+          "path": "/api/market/health",
+          "response_bytes": 11409,
+          "server_ms": 3.737,
+          "status": 200
+        },
+        {
+          "client_ms": 28.05,
+          "path": "/market",
+          "response_bytes": 76840,
+          "server_ms": 16.175,
+          "status": 200
+        },
+        {
+          "client_ms": 32.502,
+          "path": "/",
+          "response_bytes": 51941,
+          "server_ms": 0.562,
+          "status": 200
+        },
+        {
+          "client_ms": 25.063,
+          "path": "/health/live",
+          "response_bytes": 38,
+          "server_ms": 0.367,
+          "status": 200
+        },
+        {
+          "client_ms": 33.799,
+          "path": "/api/market/health",
+          "response_bytes": 11409,
+          "server_ms": 4.981,
+          "status": 200
+        },
+        {
+          "client_ms": 38.498,
+          "path": "/market",
+          "response_bytes": 76840,
+          "server_ms": 20.593,
+          "status": 200
+        },
+        {
+          "client_ms": 42.706,
+          "path": "/",
+          "response_bytes": 51941,
+          "server_ms": 0.626,
+          "status": 200
+        }
+      ],
+      "start_ms": 23.905,
+      "started": {
+        "health": {
+          "assets_total": 1578,
+          "assets_valued": 1362,
+          "bounded_event_limit": null,
+          "completed_trades": 231,
+          "counters": {
+            "assets_total": 1578,
+            "assets_valued": 1362,
+            "fully_valued": 95,
+            "historical_provider_rate_limited": 0,
+            "historical_provider_requests": 0,
+            "historical_resolution_assets_bulk_reused": 1578,
+            "historical_resolution_assets_new": 0,
+            "historical_resolution_assets_provider_resolved": 0,
+            "historical_resolution_assets_reused": 1578,
+            "historical_resolution_assets_total": 1578,
+            "historical_resolution_assets_unavailable": 216,
+            "historical_resolution_batches": 52,
+            "historical_resolution_elapsed_ms": 1738,
+            "historical_resolution_objects_decoded": 1628,
+            "historical_resolution_replay_skipped": 1578,
+            "historical_resolution_rows_loaded": 3206,
+            "historical_resolution_sqlite_connections": 1,
+            "historical_resolution_sqlite_queries": 3,
+            "partially_valued": 130,
+            "persistence_already_preserved": 1362,
+            "persistence_unavailable": 216,
+            "process_gradable": 95,
+            "process_not_gradable": 136,
+            "unavailable_trades": 6
+          },
+          "events_evaluated": 231,
+          "fully_valued": 95,
+          "historical_provider_rate_limited": 0,
+          "historical_provider_requests": 0,
+          "historical_resolution_assets_bulk_reused": 1578,
+          "historical_resolution_assets_new": 0,
+          "historical_resolution_assets_provider_resolved": 0,
+          "historical_resolution_assets_reused": 1578,
+          "historical_resolution_assets_total": 1578,
+          "historical_resolution_assets_unavailable": 216,
+          "historical_resolution_batches": 52,
+          "historical_resolution_elapsed_ms": 1738,
+          "historical_resolution_objects_decoded": 1628,
+          "historical_resolution_replay_skipped": 1578,
+          "historical_resolution_rows_loaded": 3206,
+          "historical_resolution_sqlite_connections": 1,
+          "historical_resolution_sqlite_queries": 3,
+          "historical_resolution_status": "complete_with_unavailable",
+          "last_error": null,
+          "partially_valued": 130,
+          "phase_started_at": "2026-11-06T09:56:10.461134+00:00",
+          "process_gradable": 95,
+          "process_not_gradable": 136,
+          "source_trade_count": 231,
+          "status": "complete_with_unavailable",
+          "unavailable": 6,
+          "unclassified_process_trades": 0
+        },
+        "single_flight": true,
+        "started": true
+      },
+      "timestamp": 1793958973.3824947
+    },
+    "historicalstore_retirement": {
+      "archive_scan": {
+        "database_pages": 290390,
+        "duration_ms": 485.767,
+        "hotset_payload_bytes": 7360590,
+        "hotset_records": 8192,
+        "page_size_bytes": 4096,
+        "payload_bytes_scanned": 591907433,
+        "record_count": 461166
+      },
+      "bytes_removed": 1189437440,
+      "configured_legacy_file_present": false,
+      "pre_unlink_pressure": {
+        "after": {
+          "accounting_mode": "cgroup_working_set",
+          "active_file_bytes": 0,
+          "anonymous_bytes": 16691200,
+          "archive_size_bytes": 1189437440,
+          "effective_working_set_bytes": 53587968,
+          "file_bytes": 1192443904,
+          "inactive_file_bytes": 1192443904,
+          "lifecycle_phase": "archive_pressure_pre_unlink",
+          "memory_events": {
+            "oom": 0,
+            "oom_group_kill": 0,
+            "oom_kill": 0
+          },
+          "raw_cgroup_bytes": 1246031872,
+          "timestamp": 1793958922.4654593
+        },
+        "before": {
+          "accounting_mode": "cgroup_working_set",
+          "active_file_bytes": 0,
+          "anonymous_bytes": 16691200,
+          "archive_size_bytes": 1189437440,
+          "effective_working_set_bytes": 53587968,
+          "file_bytes": 1192443904,
+          "inactive_file_bytes": 1192443904,
+          "lifecycle_phase": "archive_pressure_before",
+          "memory_events": {
+            "oom": 0,
+            "oom_group_kill": 0,
+            "oom_kill": 0
+          },
+          "raw_cgroup_bytes": 1246031872,
+          "timestamp": 1793958921.9792795
+        },
+        "material_threshold_bytes": 8388608,
+        "passed": true
+      },
+      "rehearsal_archive_present": false,
+      "status": "retired_before_startup"
+    },
+    "nonsemantic_reuse": {
+      "artifact_compatibility": "compatible",
+      "classification": "non_semantic_reuse",
+      "memory_current": 1443389440,
+      "payload_comparison": {
+        "asset_row_ids_changed": [],
+        "changed_path_count": 1,
+        "changed_paths": [
+          {
+            "after": "validation-nonsemantic-1793958973480114420",
+            "before": "2026-08-07T00:00:00+00:00",
+            "path": "$.valuation_generation"
+          }
+        ],
+        "raw_digest_after": "b49c07fc2aedb8db6429f00903711ef4cda1f509453275c31f786609c5389585",
+        "raw_digest_before": "4bcab154600dcee924a85ec8f06e07570f372ce6372eaa41a3688c43ba42a362",
+        "row_digest_after": "c60660844dfc18c58e76f7b851fe46045fd36134ece7c24e176c0d74ce409c62",
+        "row_digest_before": "c60660844dfc18c58e76f7b851fe46045fd36134ece7c24e176c0d74ce409c62",
+        "row_order_changed": false,
+        "stable_digest_after": "00b018e7004f54d3d31b38a81f9a87eab2053a0284e34db2652284869346d89a",
+        "stable_digest_before": "00b018e7004f54d3d31b38a81f9a87eab2053a0284e34db2652284869346d89a"
+      },
+      "raw_after": {
+        "brain_generated_at": "validation-nonsemantic-1793958973480114420",
+        "historical_cache_generation": 5,
+        "last_sync": "validation-nonsemantic-1793958973480114420"
+      },
+      "raw_before": {
+        "brain_generated_at": "2026-08-07T00:00:00+00:00",
+        "historical_cache_generation": 5,
+        "last_sync": "2026-08-07T00:00:00+00:00"
+      },
+      "replacement_builds": 0,
+      "replacement_workers": 0,
+      "semantic_after": {
+        "asset_universe_digest": "faf2e4bacf2c70535a330ca4243a97e97572abb57f7fd423230ac702a366ea15",
+        "brain_semantic_output_digest": "5f10077f09d95a9fb60c56c8d41fa7d98cf922a0cc1e31ec12c4c8e9229ff1d7",
+        "ownership_dependency_digest": "17e09e6689d00277f535748c25ee7b515aed5610554799ba1a0d833d66e43fa3",
+        "provider_evidence_digest": "24dbc39541bad6a918836918cbac9b1b3af37604602db13ce8bed10a262c8b93"
+      },
+      "semantic_before": {
+        "asset_universe_digest": "faf2e4bacf2c70535a330ca4243a97e97572abb57f7fd423230ac702a366ea15",
+        "brain_semantic_output_digest": "5f10077f09d95a9fb60c56c8d41fa7d98cf922a0cc1e31ec12c4c8e9229ff1d7",
+        "ownership_dependency_digest": "17e09e6689d00277f535748c25ee7b515aed5610554799ba1a0d833d66e43fa3",
+        "provider_evidence_digest": "24dbc39541bad6a918836918cbac9b1b3af37604602db13ce8bed10a262c8b93"
+      },
+      "semantic_children": 0,
+      "semantic_generation_stable": true,
+      "serialized_output_unchanged": true,
+      "timestamp": 1793958973.7962167
+    },
+    "post_unlink_product_validation": {
+      "after": {
+        "accounting_mode": "cgroup_working_set",
+        "active_file_bytes": 0,
+        "anonymous_bytes": 1167527936,
+        "archive_size_bytes": 1189437440,
+        "effective_working_set_bytes": 1174605824,
+        "file_bytes": 23240704,
+        "inactive_file_bytes": 23220224,
+        "lifecycle_phase": "after_coverage",
+        "memory_events": {
+          "oom": 0,
+          "oom_group_kill": 0,
+          "oom_kill": 0
+        },
+        "raw_cgroup_bytes": 1197826048,
+        "timestamp": 1793958933.0343235
+      },
+      "before": {
+        "accounting_mode": "cgroup_working_set",
+        "active_file_bytes": 0,
+        "anonymous_bytes": 1077964800,
+        "archive_size_bytes": 1189437440,
+        "effective_working_set_bytes": 1084796928,
+        "file_bytes": 23232512,
+        "inactive_file_bytes": 23207936,
+        "lifecycle_phase": "before_coverage",
+        "memory_events": {
+          "oom": 0,
+          "oom_group_kill": 0,
+          "oom_kill": 0
+        },
+        "raw_cgroup_bytes": 1108004864,
+        "timestamp": 1793958931.8134315
+      },
+      "canonical_progress": {
+        "completed_seasons": [
+          2021,
+          2022,
+          2023,
+          2024,
+          2025
+        ],
+        "completed_steps": 5,
+        "configured_seasons": [
+          2021,
+          2022,
+          2023,
+          2024,
+          2025,
+          2026
+        ],
+        "consistent": true,
+        "current_data_type": "player_week",
+        "current_season": 2026,
+        "display_status": "Completed with pending season",
+        "failed_seasons": [],
+        "identity_generation": 1,
+        "invalidated_seasons": [],
+        "missing_seasons": [],
+        "pending_reason": "Active/current-season player-week evidence is not yet complete or available.",
+        "pending_seasons": [
+          2026
+        ],
+        "percentage": 83,
+        "semantic_generations": {
+          "operational_context": 1,
+          "provider_cache": 5,
+          "quality_reconciliation": 0
+        },
+        "status": "completed_with_pending",
+        "terminal": true,
+        "total_steps": 6
+      },
+      "configured_legacy_file_present": false,
+      "coverage_valid": true,
+      "duration_ms": 1220.411,
+      "legacy_historical_store": {
+        "callers": {},
+        "historicalstore_retired": true,
+        "last_attempt_caller": null,
+        "legacy_create_attempts": 0,
+        "legacy_file_present": false,
+        "legacy_read_attempts": 0,
+        "legacy_write_attempts": 0,
+        "mode": "retired",
+        "retirement_timestamp": null,
+        "retirement_version": "1.22.19",
+        "status": "healthy"
+      },
+      "timestamp": 1793958933.0345078,
+      "validation_archive_present": false
+    },
+    "restart_reuse": {
+      "artifact_build_provenance_match": true,
+      "cycles": [
+        {
+          "artifact_build_provenance": "f986c341578aa512a660e28fbddffdd2eae2bb184aec82de7bd66160ed4c5d27",
+          "artifact_build_provenance_match": true,
+          "artifact_loads": 1,
+          "duration_ms": 253.869,
+          "hydration_stages": {
+            "artifact_compatibility_and_open": {
+              "calls": 4,
+              "duration_ms": 1.566,
+              "rows": 0
+            },
+            "artifact_compatibility_lookup": {
+              "calls": 1,
+              "duration_ms": 80.371,
+              "rows": 0
+            },
+            "artifact_hydration_total": {
+              "calls": 1,
+              "duration_ms": 333.138,
+              "rows": 0
+            },
+            "brain_snapshot_lookup": {
+              "calls": 2,
+              "duration_ms": 0.015,
+              "rows": 0
+            },
+            "compact_summary_reconstruction": {
+              "calls": 1,
+              "duration_ms": 0.025,
+              "rows": 0
+            },
+            "database_generation_read": {
+              "calls": 2,
+              "duration_ms": 0.478,
+              "rows": 0
+            },
+            "generation_metadata_read": {
+              "calls": 5,
+              "duration_ms": 1.686,
+              "rows": 0
+            },
+            "market_row_loading_and_decoding": {
+              "calls": 0,
+              "duration_ms": 0.0,
+              "rows": 0
+            },
+            "object_publication": {
+              "calls": 1,
+              "duration_ms": 81.162,
+              "rows": 0
+            },
+            "ranking_index_reconstruction": {
+              "calls": 0,
+              "duration_ms": 0.0,
+              "rows": 0
+            },
+            "row_decoding": {
+              "calls": 12492,
+              "duration_ms": 141.02,
+              "rows": 0
+            },
+            "search_index_reconstruction": {
+              "calls": 0,
+              "duration_ms": 0.0,
+              "rows": 0
+            },
+            "sqlite_connection_and_cleanup": {
+              "calls": 206,
+              "duration_ms": 198.53,
+              "rows": 0
+            },
+            "trending_metadata_loading": {
+              "calls": 0,
+              "duration_ms": 0.0,
+              "rows": 0
+            }
+          },
+          "identity_match": true,
+          "market_constructions": 0,
+          "output_equivalent": true,
+          "restore_mode": "immediate_compatible_artifact",
+          "warming_attempts": 0,
+          "warming_samples": []
+        },
+        {
+          "artifact_build_provenance": "f986c341578aa512a660e28fbddffdd2eae2bb184aec82de7bd66160ed4c5d27",
+          "artifact_build_provenance_match": true,
+          "artifact_loads": 1,
+          "duration_ms": 238.774,
+          "hydration_stages": {
+            "artifact_compatibility_and_open": {
+              "calls": 4,
+              "duration_ms": 1.562,
+              "rows": 0
+            },
+            "artifact_compatibility_lookup": {
+              "calls": 1,
+              "duration_ms": 80.471,
+              "rows": 0
+            },
+            "artifact_hydration_total": {
+              "calls": 1,
+              "duration_ms": 347.965,
+              "rows": 0
+            },
+            "brain_snapshot_lookup": {
+              "calls": 2,
+              "duration_ms": 0.016,
+              "rows": 0
+            },
+            "compact_summary_reconstruction": {
+              "calls": 1,
+              "duration_ms": 0.024,
+              "rows": 0
+            },
+            "database_generation_read": {
+              "calls": 2,
+              "duration_ms": 0.448,
+              "rows": 0
+            },
+            "generation_metadata_read": {
+              "calls": 5,
+              "duration_ms": 1.81,
+              "rows": 0
+            },
+            "market_row_loading_and_decoding": {
+              "calls": 0,
+              "duration_ms": 0.0,
+              "rows": 0
+            },
+            "object_publication": {
+              "calls": 1,
+              "duration_ms": 81.157,
+              "rows": 0
+            },
+            "ranking_index_reconstruction": {
+              "calls": 0,
+              "duration_ms": 0.0,
+              "rows": 0
+            },
+            "row_decoding": {
+              "calls": 12492,
+              "duration_ms": 144.711,
+              "rows": 0
+            },
+            "search_index_reconstruction": {
+              "calls": 0,
+              "duration_ms": 0.0,
+              "rows": 0
+            },
+            "sqlite_connection_and_cleanup": {
+              "calls": 206,
+              "duration_ms": 211.083,
+              "rows": 0
+            },
+            "trending_metadata_loading": {
+              "calls": 0,
+              "duration_ms": 0.0,
+              "rows": 0
+            }
+          },
+          "identity_match": true,
+          "market_constructions": 0,
+          "output_equivalent": true,
+          "restore_mode": "immediate_compatible_artifact",
+          "warming_attempts": 0,
+          "warming_samples": []
+        }
+      ],
+      "generation_match": true,
+      "memory_current": 1213378560,
+      "restore_mode": "immediate_compatible_artifact",
+      "server_maximum_ms": null,
+      "server_median_ms": null,
+      "server_p95_ms": null,
+      "timestamp": 1793959008.6213095,
+      "warming_samples": []
+    },
+    "startup": {
+      "duration_ms": 3.863,
+      "effective_working_set_bytes": 211341312,
+      "memory_current": 234364928,
+      "process_rss_high_water": 211652608,
+      "timestamp": 1793958931.3916945
+    },
+    "warm_requests": {
+      "latency_ms": {
+        "directory": 82.508,
+        "expansion": {
+          "brain_snapshot_stable": true,
+          "dataset_generation_stable": true,
+          "historical_dataset_stable": true,
+          "market_build_count_stable": true,
+          "maximum_ms": 185.443,
+          "median_ms": 29.355,
+          "p95_ms": 185.443,
+          "player_summary_build_count_stable": true,
+          "player_summary_cache_hits_increased": true,
+          "samples": [
+            {
+              "client_ms": 44.865,
+              "market_build_count": 1,
+              "market_cache_status": "ready",
+              "network_and_client_ms": 13.064,
+              "player_summary_build_count": 1,
+              "player_summary_cache_hits": 1,
+              "response_bytes": 20177,
+              "runner_load": [
+                1.008,
+                0.484,
+                0.188
+              ],
+              "sequence": 1,
+              "server_ms": 31.801,
+              "sqlite_ms": 0.0,
+              "sqlite_query_count": 0,
+              "status": 200
+            },
+            {
+              "client_ms": 35.214,
+              "market_build_count": 1,
+              "market_cache_status": "ready",
+              "network_and_client_ms": 5.868,
+              "player_summary_build_count": 1,
+              "player_summary_cache_hits": 2,
+              "response_bytes": 20177,
+              "runner_load": [
+                1.008,
+                0.484,
+                0.188
+              ],
+              "sequence": 2,
+              "server_ms": 29.346,
+              "sqlite_ms": 0.0,
+              "sqlite_query_count": 0,
+              "status": 200
+            },
+            {
+              "client_ms": 185.443,
+              "market_build_count": 1,
+              "market_cache_status": "ready",
+              "network_and_client_ms": 4.734,
+              "player_summary_build_count": 1,
+              "player_summary_cache_hits": 3,
+              "response_bytes": 20177,
+              "runner_load": [
+                1.008,
+                0.484,
+                0.188
+              ],
+              "sequence": 3,
+              "server_ms": 180.709,
+              "sqlite_ms": 0.0,
+              "sqlite_query_count": 0,
+              "status": 200
+            },
+            {
+              "client_ms": 29.412,
+              "market_build_count": 1,
+              "market_cache_status": "ready",
+              "network_and_client_ms": 2.757,
+              "player_summary_build_count": 1,
+              "player_summary_cache_hits": 4,
+              "response_bytes": 20177,
+              "runner_load": [
+                1.008,
+                0.484,
+                0.188
+              ],
+              "sequence": 4,
+              "server_ms": 26.655,
+              "sqlite_ms": 0.0,
+              "sqlite_query_count": 0,
+              "status": 200
+            },
+            {
+              "client_ms": 29.725,
+              "market_build_count": 1,
+              "market_cache_status": "ready",
+              "network_and_client_ms": 2.951,
+              "player_summary_build_count": 1,
+              "player_summary_cache_hits": 5,
+              "response_bytes": 20177,
+              "runner_load": [
+                1.008,
+                0.484,
+                0.188
+              ],
+              "sequence": 5,
+              "server_ms": 26.774,
+              "sqlite_ms": 0.0,
+              "sqlite_query_count": 0,
+              "status": 200
+            },
+            {
+              "client_ms": 29.297,
+              "market_build_count": 1,
+              "market_cache_status": "ready",
+              "network_and_client_ms": 2.826,
+              "player_summary_build_count": 1,
+              "player_summary_cache_hits": 6,
+              "response_bytes": 20177,
+              "runner_load": [
+                1.008,
+                0.484,
+                0.188
+              ],
+              "sequence": 6,
+              "server_ms": 26.471,
+              "sqlite_ms": 0.0,
+              "sqlite_query_count": 0,
+              "status": 200
+            },
+            {
+              "client_ms": 29.114,
+              "market_build_count": 1,
+              "market_cache_status": "ready",
+              "network_and_client_ms": 2.997,
+              "player_summary_build_count": 1,
+              "player_summary_cache_hits": 7,
+              "response_bytes": 20177,
+              "runner_load": [
+                1.008,
+                0.484,
+                0.188
+              ],
+              "sequence": 7,
+              "server_ms": 26.117,
+              "sqlite_ms": 0.0,
+              "sqlite_query_count": 0,
+              "status": 200
+            },
+            {
+              "client_ms": 28.354,
+              "market_build_count": 1,
+              "market_cache_status": "ready",
+              "network_and_client_ms": 2.904,
+              "player_summary_build_count": 1,
+              "player_summary_cache_hits": 8,
+              "response_bytes": 20177,
+              "runner_load": [
+                1.008,
+                0.484,
+                0.188
+              ],
+              "sequence": 8,
+              "server_ms": 25.45,
+              "sqlite_ms": 0.0,
+              "sqlite_query_count": 0,
+              "status": 200
+            },
+            {
+              "client_ms": 28.441,
+              "market_build_count": 1,
+              "market_cache_status": "ready",
+              "network_and_client_ms": 2.977,
+              "player_summary_build_count": 1,
+              "player_summary_cache_hits": 9,
+              "response_bytes": 20177,
+              "runner_load": [
+                1.008,
+                0.484,
+                0.188
+              ],
+              "sequence": 9,
+              "server_ms": 25.464,
+              "sqlite_ms": 0.0,
+              "sqlite_query_count": 0,
+              "status": 200
+            },
+            {
+              "client_ms": 28.681,
+              "market_build_count": 1,
+              "market_cache_status": "ready",
+              "network_and_client_ms": 3.043,
+              "player_summary_build_count": 1,
+              "player_summary_cache_hits": 10,
+              "response_bytes": 20177,
+              "runner_load": [
+                1.008,
+                0.484,
+                0.188
+              ],
+              "sequence": 10,
+              "server_ms": 25.638,
+              "sqlite_ms": 0.0,
+              "sqlite_query_count": 0,
+              "status": 200
+            }
+          ],
+          "server_maximum_ms": 180.709,
+          "server_median_ms": 26.563,
+          "warmup_completed": true
+        },
+        "health": 33.586,
+        "search": 22.962,
+        "trending": 112.811
+      },
+      "memory_current": 1441419264,
+      "timestamp": 1793958972.9674478
+    }
+  },
+  "provider_synchronization": false,
+  "raw_margin_below_limit": 0,
+  "scenario": "archive_warmed",
+  "schema": "dtos-linux-market-memory-v1",
+  "server_log": {
+    "artifact": "server.log",
+    "bounded": true,
+    "line_count": 81,
+    "sanitized": true
+  },
+  "worker_count": 1
+}

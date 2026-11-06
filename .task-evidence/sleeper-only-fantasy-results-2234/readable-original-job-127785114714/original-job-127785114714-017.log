@@ -1,0 +1,180 @@
+st: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-06T08:16:47.1941940Z {"timestamp":"2026-11-06T08:16:47.193782+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"b09dc23cdc854499a3af89a442ada882","event":"request_complete","duration_ms":1.525,"status_code":200,"method":"GET","path":"/static/js/contextual_navigation.js"}
+2026-11-06T08:16:47.1989927Z {"timestamp":"2026-11-06T08:16:47.198696+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/trade_workspace.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-06T08:16:47.2027481Z {"timestamp":"2026-11-06T08:16:47.202424+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/strategy_session.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-06T08:16:47.2061515Z {"timestamp":"2026-11-06T08:16:47.205752+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/trade_workspace.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-06T08:16:47.2348501Z {"timestamp":"2026-11-06T08:16:47.234238+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":679149568,"limit_bytes":2147483648,"raw_headroom_bytes":1468334080,"clean_inactive_file_bytes":3158016,"conditional_file_credit_bytes":1579008,"admission_headroom_bytes":1469913088,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+2026-11-06T08:16:47.2365902Z {"timestamp":"2026-11-06T08:16:47.236271+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/workspace?front_office=1&mode=calculator \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-06T08:16:47.8770018Z ok
+2026-11-06T08:16:47.9023476Z test_depth_evidence_status_explains_missing_and_provisional (tests.test_plain_english_decisions.PlainEnglishDecisionTests.test_depth_evidence_status_explains_missing_and_provisional) ... ok
+2026-11-06T08:16:47.9024617Z test_exact_pick_uses_known_team_label_and_keeps_source_identity_in_disclosure (tests.test_plain_english_decisions.PlainEnglishDecisionTests.test_exact_pick_uses_known_team_label_and_keeps_source_identity_in_disclosure) ... ok
+2026-11-06T08:16:47.9242716Z test_incompatible_summary_explains_next_step_without_diagnosing_weakness (tests.test_plain_english_decisions.PlainEnglishDecisionTests.test_incompatible_summary_explains_next_step_without_diagnosing_weakness) ... ok
+2026-11-06T08:16:47.9687458Z test_missing_price_preserves_conditional_heading_and_supported_zero (tests.test_plain_english_decisions.PlainEnglishDecisionTests.test_missing_price_preserves_conditional_heading_and_supported_zero) ... {"timestamp":"2026-11-06T08:16:47.968246+00:00","level":"WARNING","logger":"dtos.storage","message":"storage_review {'kind': 'projection', 'database_bytes': 364544, 'rows': {'projection_snapshots': 10, 'projection_source_history': 8, 'projection_player_states': 272}, 'free_bytes': 88005062656, 'row_delta': {'projection_snapshots': 5, 'projection_source_history': 4, 'projection_player_states': 224}, 'reasons': ['ROW_GROWTH_ACCELERATION_REVIEW']}","request_id":"system"}
+2026-11-06T08:16:48.2431241Z ok
+2026-11-06T08:16:48.2431919Z test_reassuring_goal_information_is_not_labeled_a_tradeoff (tests.test_plain_english_decisions.PlainEnglishDecisionTests.test_reassuring_goal_information_is_not_labeled_a_tradeoff) ... ok
+2026-11-06T08:16:48.2443087Z test_unavailable_trend_is_not_flat_and_supported_zero_remains_numeric (tests.test_plain_english_decisions.PlainEnglishDecisionTests.test_unavailable_trend_is_not_flat_and_supported_zero_remains_numeric) ... ok
+2026-11-06T08:16:48.2652212Z test_unknown_depth_is_not_a_proven_risk_in_compact_takeaway (tests.test_plain_english_decisions.PlainEnglishDecisionTests.test_unknown_depth_is_not_a_proven_risk_in_compact_takeaway) ... ok
+2026-11-06T08:16:48.3098875Z test_weekly_gain_and_incomplete_recommendation_explain_coverage (tests.test_plain_english_decisions.PlainEnglishDecisionTests.test_weekly_gain_and_incomplete_recommendation_explain_coverage) ... {"timestamp":"2026-11-06T08:16:48.309434+00:00","level":"WARNING","logger":"dtos.storage","message":"storage_review {'kind': 'projection', 'database_bytes': 364544, 'rows': {'projection_snapshots': 10, 'projection_source_history': 8, 'projection_player_states': 272}, 'free_bytes': 88005050368, 'row_delta': {'projection_snapshots': 5, 'projection_source_history': 4, 'projection_player_states': 224}, 'reasons': ['ROW_GROWTH_ACCELERATION_REVIEW']}","request_id":"system"}
+2026-11-06T08:16:48.4651913Z ok
+2026-11-06T08:16:48.6187383Z test_my_team_depth_and_partial_weekly_trade_explanation (tests.test_plain_english_browser.PlainEnglishBrowserTests.test_my_team_depth_and_partial_weekly_trade_explanation) ... {"timestamp":"2026-11-06T08:16:48.617988+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":467136512,"limit_bytes":2147483648,"raw_headroom_bytes":1680347136,"clean_inactive_file_bytes":11919360,"conditional_file_credit_bytes":5959680,"admission_headroom_bytes":1686306816,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+2026-11-06T08:16:48.6200846Z {"timestamp":"2026-11-06T08:16:48.619775+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/workspace?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-06T08:16:48.6242739Z {"timestamp":"2026-11-06T08:16:48.623927+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_admission","request_id":"system","event":"trade_admission","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":466989056,"limit_bytes":2147483648,"raw_headroom_bytes":1680494592,"clean_inactive_file_bytes":11919360,"conditional_file_credit_bytes":5959680,"admission_headroom_bytes":1686454272,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"recovery":null}}
+2026-11-06T08:16:48.6599249Z {"timestamp":"2026-11-06T08:16:48.659535+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_execution_finished","request_id":"system","event":"trade_execution_finished","duration_ms":36.06,"diagnostic":{"schema":"trade-resource-v1","outcome":"complete"}}
+2026-11-06T08:16:48.6605021Z {"timestamp":"2026-11-06T08:16:48.660260+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/trades/evaluate \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-06T08:16:48.6693505Z {"timestamp":"2026-11-06T08:16:48.669036+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-06T08:16:48.6797698Z {"timestamp":"2026-11-06T08:16:48.679439+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-06T08:16:48.9058805Z ##[error]The operation was canceled.
+2026-11-06T08:16:48.9125942Z ##[group]Run actions/upload-artifact@v4
+2026-11-06T08:16:48.9126177Z with:
+2026-11-06T08:16:48.9126364Z   name: current-season-history-browser
+2026-11-06T08:16:48.9126603Z   path: .validation/current-season-history
+2026-11-06T08:16:48.9126828Z   if-no-files-found: error
+2026-11-06T08:16:48.9127013Z   retention-days: 14
+2026-11-06T08:16:48.9127189Z   compression-level: 6
+2026-11-06T08:16:48.9127374Z   overwrite: false
+2026-11-06T08:16:48.9127550Z   include-hidden-files: false
+2026-11-06T08:16:48.9127743Z env:
+2026-11-06T08:16:48.9127923Z   NODE_OPTIONS: --max-old-space-size=256
+2026-11-06T08:16:48.9128198Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-06T08:16:48.9128536Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib/pkgconfig
+2026-11-06T08:16:48.9128859Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-06T08:16:48.9129173Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-06T08:16:48.9129495Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-06T08:16:48.9129789Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib
+2026-11-06T08:16:48.9130041Z ##[endgroup]
+2026-11-06T08:16:49.1189745Z (node:13075) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-11-06T08:16:49.1190909Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-11-06T08:16:49.1219899Z ##[error]No files were found with the provided path: .validation/current-season-history. No artifacts will be uploaded.
+2026-11-06T08:16:49.1522042Z ##[group]Run actions/upload-artifact@v4
+2026-11-06T08:16:49.1522306Z with:
+2026-11-06T08:16:49.1522486Z   name: history-followthrough-browser
+2026-11-06T08:16:49.1522727Z   path: .validation/history-followthrough
+2026-11-06T08:16:49.1522961Z   if-no-files-found: error
+2026-11-06T08:16:49.1523189Z   retention-days: 14
+2026-11-06T08:16:49.1523369Z   compression-level: 6
+2026-11-06T08:16:49.1523552Z   overwrite: false
+2026-11-06T08:16:49.1523728Z   include-hidden-files: false
+2026-11-06T08:16:49.1523917Z env:
+2026-11-06T08:16:49.1524094Z   NODE_OPTIONS: --max-old-space-size=256
+2026-11-06T08:16:49.1524366Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-06T08:16:49.1524702Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib/pkgconfig
+2026-11-06T08:16:49.1525028Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-06T08:16:49.1525352Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-06T08:16:49.1525669Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-06T08:16:49.1525963Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib
+2026-11-06T08:16:49.1526208Z ##[endgroup]
+2026-11-06T08:16:49.3414398Z (node:13153) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-11-06T08:16:49.3415660Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-11-06T08:16:49.3447728Z ##[error]No files were found with the provided path: .validation/history-followthrough. No artifacts will be uploaded.
+2026-11-06T08:16:49.3651172Z ##[group]Run actions/upload-artifact@v4
+2026-11-06T08:16:49.3651567Z with:
+2026-11-06T08:16:49.3651841Z   name: market-history-coverage-browser
+2026-11-06T08:16:49.3652091Z   path: .validation/market-history-coverage
+2026-11-06T08:16:49.3652401Z   if-no-files-found: error
+2026-11-06T08:16:49.3652693Z   retention-days: 14
+2026-11-06T08:16:49.3652870Z   compression-level: 6
+2026-11-06T08:16:49.3653127Z   overwrite: false
+2026-11-06T08:16:49.3653353Z   include-hidden-files: false
+2026-11-06T08:16:49.3653663Z env:
+2026-11-06T08:16:49.3653907Z   NODE_OPTIONS: --max-old-space-size=256
+2026-11-06T08:16:49.3676084Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-06T08:16:49.3676717Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib/pkgconfig
+2026-11-06T08:16:49.3677550Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-06T08:16:49.3678045Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-06T08:16:49.3678560Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-06T08:16:49.3679051Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib
+2026-11-06T08:16:49.3679461Z ##[endgroup]
+2026-11-06T08:16:49.5068774Z (node:13172) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-11-06T08:16:49.5069455Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-11-06T08:16:49.5083415Z ##[error]No files were found with the provided path: .validation/market-history-coverage. No artifacts will be uploaded.
+2026-11-06T08:16:49.5257582Z ##[group]Run actions/upload-artifact@v4
+2026-11-06T08:16:49.5257819Z with:
+2026-11-06T08:16:49.5258012Z   name: current-production-coverage-browser
+2026-11-06T08:16:49.5258299Z   path: .validation/current-production-coverage
+2026-11-06T08:16:49.5258550Z   if-no-files-found: error
+2026-11-06T08:16:49.5258741Z   retention-days: 14
+2026-11-06T08:16:49.5258918Z   compression-level: 6
+2026-11-06T08:16:49.5259096Z   overwrite: false
+2026-11-06T08:16:49.5259272Z   include-hidden-files: false
+2026-11-06T08:16:49.5259473Z env:
+2026-11-06T08:16:49.5259652Z   NODE_OPTIONS: --max-old-space-size=256
+2026-11-06T08:16:49.5259922Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-06T08:16:49.5260251Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib/pkgconfig
+2026-11-06T08:16:49.5260620Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-06T08:16:49.5261172Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-06T08:16:49.5261478Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-06T08:16:49.5261765Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib
+2026-11-06T08:16:49.5262019Z ##[endgroup]
+2026-11-06T08:16:49.6674481Z (node:13184) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-11-06T08:16:49.6695630Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-11-06T08:16:49.6697413Z ##[error]No files were found with the provided path: .validation/current-production-coverage. No artifacts will be uploaded.
+2026-11-06T08:16:49.6859426Z ##[group]Run actions/upload-artifact@v4
+2026-11-06T08:16:49.6859663Z with:
+2026-11-06T08:16:49.6859832Z   name: trade-resource-2g
+2026-11-06T08:16:49.6860042Z   path: .validation/trade-resource/evidence
+2026-11-06T08:16:49.6860272Z   if-no-files-found: error
+2026-11-06T08:16:49.6860458Z   retention-days: 14
+2026-11-06T08:16:49.6860637Z   compression-level: 6
+2026-11-06T08:16:49.6861044Z   overwrite: false
+2026-11-06T08:16:49.6861224Z   include-hidden-files: false
+2026-11-06T08:16:49.6861423Z env:
+2026-11-06T08:16:49.6861599Z   NODE_OPTIONS: --max-old-space-size=256
+2026-11-06T08:16:49.6861882Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-06T08:16:49.6862212Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib/pkgconfig
+2026-11-06T08:16:49.6862537Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-06T08:16:49.6862825Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-06T08:16:49.6863142Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-06T08:16:49.6863437Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib
+2026-11-06T08:16:49.6863687Z ##[endgroup]
+2026-11-06T08:16:49.8339014Z (node:13196) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-11-06T08:16:49.8339910Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-11-06T08:16:49.8408420Z With the provided path, there will be 14 files uploaded
+2026-11-06T08:16:49.8413153Z Artifact name is valid!
+2026-11-06T08:16:49.8414360Z Root directory input is valid!
+2026-11-06T08:16:50.3759116Z Beginning upload of artifact content to blob storage
+2026-11-06T08:16:50.4650487Z (node:13196) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+2026-11-06T08:16:51.1159069Z Uploaded bytes 739584
+2026-11-06T08:16:51.1946238Z Finished uploading artifact content to blob storage!
+2026-11-06T08:16:51.1947177Z SHA256 digest of uploaded artifact zip is f7d326c78fe2659cc42f008cae7b8f2461c77ef3f3fe0839e24aee2ebe76b885
+2026-11-06T08:16:51.1948340Z Finalizing artifact upload
+2026-11-06T08:16:51.7215286Z Artifact trade-resource-2g.zip successfully finalized. Artifact ID 13488105891
+2026-11-06T08:16:51.7215991Z Artifact trade-resource-2g has been successfully uploaded! Final size is 739584 bytes. Artifact ID is 13488105891
+2026-11-06T08:16:51.7221734Z Artifact download URL: https://github.com/Richarddavis47/dtos/actions/runs/42185617230/artifacts/13488105891
+2026-11-06T08:16:51.7375825Z ##[group]Run actions/upload-artifact@v4
+2026-11-06T08:16:51.7376070Z with:
+2026-11-06T08:16:51.7376244Z   name: league-entry-2g
+2026-11-06T08:16:51.7376484Z   path: .validation/trade-resource/league-entry/evidence
+2026-11-06T08:16:51.7376747Z   if-no-files-found: error
+2026-11-06T08:16:51.7376948Z   retention-days: 14
+2026-11-06T08:16:51.7377127Z   compression-level: 6
+2026-11-06T08:16:51.7377309Z   overwrite: false
+2026-11-06T08:16:51.7377484Z   include-hidden-files: false
+2026-11-06T08:16:51.7377766Z env:
+2026-11-06T08:16:51.7377955Z   NODE_OPTIONS: --max-old-space-size=256
+2026-11-06T08:16:51.7378231Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-06T08:16:51.7378562Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib/pkgconfig
+2026-11-06T08:16:51.7378891Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-06T08:16:51.7379197Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-06T08:16:51.7379536Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-06T08:16:51.7379830Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib
+2026-11-06T08:16:51.7380085Z ##[endgroup]
+2026-11-06T08:16:51.8905505Z (node:13255) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-11-06T08:16:51.8907258Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-11-06T08:16:51.8943116Z ##[error]No files were found with the provided path: .validation/trade-resource/league-entry/evidence. No artifacts will be uploaded.
+2026-11-06T08:16:51.9228930Z Post job cleanup.
+2026-11-06T08:16:52.0148212Z [command]/usr/bin/git version
+2026-11-06T08:16:52.0229653Z git version 2.56.0
+2026-11-06T08:16:52.0281541Z Temporarily overriding HOME='/home/runner/work/_temp/a7da2cf4-5902-4b80-8e01-23ccfdded3d7' before making global git config changes
+2026-11-06T08:16:52.0295719Z Adding repository directory to the temporary git global config as a safe directory
+2026-11-06T08:16:52.0296652Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/dtos/dtos
+2026-11-06T08:16:52.0396278Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-11-06T08:16:52.0629450Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-11-06T08:16:52.0904092Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-11-06T08:16:52.1003657Z http.https://github.com/.extraheader
+2026-11-06T08:16:52.1006908Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+2026-11-06T08:16:52.1113012Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-11-06T08:16:52.1569095Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-11-06T08:16:52.1578314Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-11-06T08:16:52.2033138Z Cleaning up orphan processes
+2026-11-06T08:16:52.2306092Z Terminate orphan process: pid (2682) (docker)
+2026-11-06T08:16:52.2865706Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5, actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
