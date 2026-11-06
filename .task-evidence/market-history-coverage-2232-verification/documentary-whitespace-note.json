@@ -1,0 +1,11 @@
+{
+  "evidence_commit": "5a7ede4206502f3e3e85ec2a337643505bef0660",
+  "scope": "Documentation artifacts only; not application source or a mandatory application test gate",
+  "initial_check": "A whitespace check across the evidence commit reported original log trailing spaces and Git-patch context lines. The tool output was truncated; this separately labelled real recheck preserves its full output. No original application validation log is missing.",
+  "recheck_exit_code": 2,
+  "recheck_log": "documentary-whitespace-recheck.log",
+  "application_source_diff_check_exit_code": 0,
+  "application_source_unchanged": true,
+  "archival_bytes_preserved": true,
+  "explanation": "The user requires original logs and complete patches to stay byte-identical. Those archival data files were not whitespace-normalized. All mandatory source/regression/canonical/hosted gates passed before merge/publication."
+}
