@@ -131,6 +131,12 @@ def restore_cached_runtime(runtime: LeagueRuntime, publish: Callable[[LeagueRunt
                 raise ValueError('Incompatible saved publication')
             from src.core.intelligence.team_strength import restore_cached_week_keys
             restore_cached_week_keys(data)
+            # Bind native scores before apply_data/publish lets Brain, Market
+            # and dossier consumers capture this admitted source generation.
+            # Same bounded path as default-cache and fresh-source preparation;
+            # no global evidence read, provider work or second publisher pass.
+            from services.player_evidence import bind_retained_actuals
+            bind_retained_actuals(data, expected_league_id=runtime.league_id)
         except (OSError, ValueError, KeyError, TypeError, OverflowError):
             runtime.lifecycle['cache_restore'] = 'incompatible'
             return False

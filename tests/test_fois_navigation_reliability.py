@@ -30,6 +30,19 @@ from tests import test_cold_league_recovery as cold
 from tests.test_import_commissioner_integrity import snapshot
 
 
+def _record_worker_start_then_sleep(marker: str):
+    """Prove the disposable writer actually started before cancellation."""
+    Path(marker).write_text('started', encoding='ascii')
+    time.sleep(30)
+
+
+def _wait_for_worker_start(marker: Path) -> bool:
+    deadline = time.monotonic() + 1
+    while not marker.is_file() and time.monotonic() < deadline:
+        time.sleep(.001)
+    return marker.is_file()
+
+
 class NavigationReliabilityTests(unittest.TestCase):
     def setUp(self):
         self.f = cold.ColdLeagueRecoveryTests()
@@ -314,8 +327,10 @@ class WorkerTimeoutReliabilityTests(unittest.IsolatedAsyncioTestCase):
             original = execution._submit
             entered, release = threading.Event(), threading.Event()
 
+            worker_started = root / 'worker-started'
+
             def held(_function, *_args):
-                future = original(time.sleep, 30)
+                future = original(_record_worker_start_then_sleep, str(worker_started))
                 entered.set()
                 if not release.wait(4):
                     raise AssertionError('Submission barrier was not released')
@@ -325,6 +340,9 @@ class WorkerTimeoutReliabilityTests(unittest.IsolatedAsyncioTestCase):
                 task = asyncio.create_task(execution.generate_fois_isolated(fixture(), repository, cache_file=cache))
                 try:
                     self.assertTrue(await asyncio.to_thread(entered.wait, 3))
+                    # A submitted future may still be queued. Establish real
+                    # execution before requiring cancellation to stop its worker.
+                    self.assertTrue(await asyncio.to_thread(_wait_for_worker_start, worker_started))
                     for _ in range(3):
                         task.cancel()
                         await self.checkpoint()

@@ -112,6 +112,9 @@ def prepare_actual_results(data: dict, *, expected_league_id: str) -> dict:
     if lid != str(expected_league_id) or not lid:
         raise ValueError("Sleeper actual results require the selected league.")
     settings = data.get("scoring_settings") or league.get("scoring_settings") or {}
+    from src.core.intelligence.season_calendar import season_calendar
+    calendar = season_calendar(league)
+
     fingerprint = scoring_identity(settings)
     prepared = data.get("season_matchups") or {}
     result = {
@@ -135,14 +138,16 @@ def prepare_actual_results(data: dict, *, expected_league_id: str) -> dict:
         or prepared.get("methodology") != "matchup-season-presentation-v1"
         or str(prepared.get("league_id") or "") != lid
         or str(prepared.get("season") or "") != season
+        or (calendar['availability'] == 'supported'
+            and prepared.get("calendar_reference") != calendar["reference"])
+        or not isinstance(prepared.get("semantic_generation"), str)
+        or not prepared["semantic_generation"]
     ):
         result["reason"] = "compatible_sleeper_matchup_publication_unavailable"
     elif prepared.get("scoring_fingerprint") != fingerprint:
         # Legacy atomic runtime caches retained native Sleeper matchup rows
         # alongside the exact league settings/calendar. Reinterpret those rows,
         # never old NFLverse calculated totals. Missing context stays unknown.
-        from src.core.intelligence.season_calendar import season_calendar
-
         legacy_atomic = (
             prepared.get("scoring_fingerprint") is None
             and bool(league.get("scoring_settings"))

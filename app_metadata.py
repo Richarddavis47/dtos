@@ -7,9 +7,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 APPLICATION_NAME = "DTOS"
-VERSION = "1.22.20"
-PRODUCT_VERSION = "1.22.20"
-BUILD_NUMBER = 2235
+VERSION = "1.22.21"
+PRODUCT_VERSION = "1.22.21"
+BUILD_NUMBER = 2236
 RELEASE_CODENAME = "Sleeper Fantasy Results"
 APPLICATION_STARTED_AT = datetime.now(timezone.utc).isoformat()
 

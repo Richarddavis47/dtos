@@ -29,6 +29,8 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--archive', type=Path, required=True)
     parser.add_argument('--output', type=Path, required=True)
+    parser.add_argument('--native-actuals', action='store_true',
+                        help='Add explicit fictional native matchup rows to copies of the sealed inputs.')
     args = parser.parse_args()
     args.output.mkdir(parents=True, exist_ok=True)
     assert args.archive.stat().st_size == 9072793
@@ -52,6 +54,36 @@ def main():
                       DTOS_DURABLE_HISTORY_REQUIRED='0', DTOS_HISTORY_STORAGE_ROOT=str(root),
                       DTOS_SLEEPER_SEASON_CACHE_ROOT=str(root/'seasons'),
                       SLEEPER_BASE_URL='http://127.0.0.1:9/v1')
+    if args.native_actuals:
+        from services.matchup_season import prepare_season_matchups
+        from src.core.player_value_projection.sleeper_actuals import scoring_identity
+        native_expected = {}
+        for name in ('oneqb.json', 'superflex.json'):
+            path = root/name
+            payload = json.loads(path.read_bytes())
+            data = payload['data']
+            league = data['league']
+            league.update(sport='nfl', status='in_season')
+            league['settings'].update(leg=9, last_scored_leg=8, start_week=1,
+                playoff_week_start=15, playoff_teams=6, playoff_round_type=0, playoff_type=0)
+            data['week'] = 9
+            rows = []
+            for team in data['teams']:
+                ids = [str(p['id']) for p in team['players']]
+                scores = {pid:(0 if i == 0 else -2.125 if i == 1 else 23.4738) for i,pid in enumerate(ids)}
+                rows.append(dict(roster_id=team['roster_id'], players=ids, starters=ids[:1],
+                    players_points=scores, starters_points=[scores[ids[0]]]))
+            async def fetch(_):
+                return rows
+            data['season_matchups'] = asyncio.run(prepare_season_matchups(league,9,rows,fetch,
+                observed_at='2026-11-06T00:00:00Z'))
+            data['canonical_player_production'] = dict(league_id=str(league['league_id']),
+                season=league['season'], scoring_fingerprint=scoring_identity(data.get('scoring_settings') or league['scoring_settings']),
+                reference_generation='frozen-disposable-reference', players={})
+            path.write_text(json.dumps(payload,separators=(',',':')))
+            native_expected[name] = rows[0]['players_points']
+        result['native_fixture_scope'] = 'New explicit fictional matchup rows added to copies only; original archive unchanged. Not live scores or a private Granite profile.'
+        del data, payload, rows, scores
     import dtos_app
     import psutil
     from fastapi.testclient import TestClient
@@ -166,6 +198,20 @@ def main():
         assert not psutil.pid_exists(worker['pid'])
         assert all(r.state['data'] is d and r.active_requests == 1 for r,d in zip(active,warm_values))
         assert target.state['data']['league'] == warm_values[0]['league']
+        if args.native_actuals:
+            actuals = target.state['data']['canonical_player_production']['sleeper_actuals']
+            source = target.state['data']['season_matchups']
+            expected = native_expected['oneqb.json']
+            for pid, value in expected.items():
+                assert actuals['players'][pid][0]['points'] == value
+            assert actuals['source_generation'] == source['semantic_generation']
+            result['native_actuals'] = dict(passed=True, source_generation=actuals['source_generation'],
+                admitted_generation=source['semantic_generation'], method=actuals['method_version'],
+                expected_first_scores=list(expected.values())[:2],
+                admitted_first_scores=[actuals['players'][pid][0]['points'] for pid in list(expected)[:2]],
+                league_id=actuals['league_id'],season=actuals['season'],
+                scoring_fingerprint=actuals['scoring_fingerprint'],
+                observations=sum(len(v) for v in actuals['players'].values()))
         result['expired_released_active_and_fresh_preserved'] = True
         sample('restored')
         live('restored_with_warm_resources')

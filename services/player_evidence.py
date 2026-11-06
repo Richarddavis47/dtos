@@ -128,7 +128,39 @@ def prepare_player_production(data: dict[str, Any], *, expected_league_id: str,
     result['generation'] = digest.hexdigest()
     reference_digest.update(result['availability'].encode())
     result['reference_generation'] = reference_digest.hexdigest()
+    bind_retained_actuals(data, expected_league_id=league_id, production=result)
+    return result
+
+
+def bind_retained_actuals(data: dict, *, expected_league_id: str,
+                         production: dict | None = None) -> dict | None:
+    """One bounded binding before publication; never acquire or reconstruct scores.
+
+    Fresh preparation supplies its unpublished analysis envelope. Both cache
+    readers reuse the retained envelope, or create only a native-results shell
+    when analysis was never prepared. Foreign analysis is not relabeled. The
+    existing adapter owns native source compatibility and score interpretation.
+    """
+    from src.core.player_value_projection.sleeper_actuals import scoring_identity
+
+    result = production if production is not None else data.get('canonical_player_production')
+    if (not isinstance(result, dict) or not result) and not data.get('season_matchups'):
+        return None
+    league = data.get('league') or {}
+    lid = str(league.get('league_id') or '')
+    if not lid or lid != str(expected_league_id):
+        raise ValueError('Actual-results binding requires the selected league.')
+    scoring = data.get('scoring_settings') or league.get('scoring_settings') or {}
+    if not isinstance(result, dict) or not result:
+        result = {'league_id': lid, 'season': league.get('season'), 'players': {},
+                  'scoring_fingerprint': scoring_identity(scoring)}
+    if (str(result.get('league_id') or '') != lid
+            or str(result.get('season')) != str(league.get('season'))
+            or result.get('scoring_fingerprint') != scoring_identity(scoring)):
+        return result
     attach_sleeper_actuals(data, result)
+    if production is None:
+        data['canonical_player_production'] = result
     return result
 
 
