@@ -56,7 +56,7 @@ class RestorationRecoveryTests(unittest.TestCase):
         runtime = LeagueRuntime('200')
         with patch.object(preparation, 'memory_snapshot', side_effect=[memory(200), memory(200)]), \
              patch.object(preparation, 'reclaim_unused_analytical_memory', return_value={'expired_entries':512, 'idle_worker_retired':True, 'allocator_trimmed':True}) as cleanup, \
-             patch.object(preparation.json, 'load') as decode:
+             patch.object(preparation, 'load_cache_json') as decode:
             with self.assertRaises(HeavyWorkDeferred):
                 preparation.restore_cached_runtime(runtime, Mock())
         cleanup.assert_called_once()
@@ -69,7 +69,7 @@ class RestorationRecoveryTests(unittest.TestCase):
             with self.subTest(sample=sample), \
                  patch.object(preparation, 'memory_snapshot', return_value=sample), \
                  patch.object(preparation, 'reclaim_unused_analytical_memory', return_value={}) as cleanup, \
-                 patch.object(preparation.json, 'load') as decode:
+                 patch.object(preparation, 'load_cache_json') as decode:
                 with self.assertRaises(HeavyWorkDeferred):
                     preparation.restore_cached_runtime(LeagueRuntime('200'), Mock())
                 cleanup.assert_not_called()
@@ -79,7 +79,7 @@ class RestorationRecoveryTests(unittest.TestCase):
         runtime = LeagueRuntime('200')
         with patch.object(preparation, 'memory_snapshot', side_effect=[memory(200), {}]), \
              patch.object(preparation, 'reclaim_unused_analytical_memory', return_value={}), \
-             patch.object(preparation.json, 'load') as decode:
+             patch.object(preparation, 'load_cache_json') as decode:
             with self.assertRaises(HeavyWorkDeferred):
                 preparation.restore_cached_runtime(runtime, Mock())
         decode.assert_not_called()
@@ -91,7 +91,7 @@ class RestorationRecoveryTests(unittest.TestCase):
         runtime = LeagueRuntime('200')
         with patch.object(preparation, 'memory_snapshot', side_effect=[memory(800), memory(850)]), \
              patch.object(preparation, 'reclaim_unused_analytical_memory', return_value={}) as cleanup, \
-             patch.object(preparation.json, 'load') as decode:
+             patch.object(preparation, 'load_cache_json') as decode:
             with self.assertRaises(HeavyWorkDeferred):
                 preparation.restore_cached_runtime(runtime, Mock())
         cleanup.assert_called_once()
@@ -101,7 +101,7 @@ class RestorationRecoveryTests(unittest.TestCase):
     def test_competing_sync_phase_defers_before_recovery(self):
         with lifecycle_coordinator.phase('sleeper_sync'), \
              patch.object(preparation, 'reclaim_unused_analytical_memory', return_value={}) as cleanup, \
-             patch.object(preparation.json, 'load') as decode:
+             patch.object(preparation, 'load_cache_json') as decode:
             with self.assertRaises(HeavyWorkDeferred):
                 preparation.restore_cached_runtime(LeagueRuntime('200'), Mock())
         cleanup.assert_not_called()
@@ -111,7 +111,7 @@ class RestorationRecoveryTests(unittest.TestCase):
         runtime = LeagueRuntime('200')
         with patch.object(preparation, 'memory_snapshot', side_effect=[memory(200), memory(200)]), \
              patch.object(preparation, 'reclaim_unused_analytical_memory', side_effect=OSError('private diagnostic text')), \
-             patch.object(preparation.json, 'load') as decode:
+             patch.object(preparation, 'load_cache_json') as decode:
             with self.assertRaises(HeavyWorkDeferred):
                 preparation.restore_cached_runtime(runtime, Mock())
         decode.assert_not_called()

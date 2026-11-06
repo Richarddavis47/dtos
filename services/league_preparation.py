@@ -7,7 +7,6 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 import asyncio
-import json
 import os
 import time
 from typing import Callable
@@ -16,6 +15,7 @@ from services.sleeper import league_cache_file
 from src.core.league_runtime import LeagueRuntime
 from src.core.sync_status import safe_sync_state
 from src.platform.cache_budget import JSON_BUDGET, reusable
+from src.platform.cache_json import load_cache_json
 from src.platform.lifecycle import HeavyWorkDeferred, lifecycle_coordinator, memory_snapshot
 from src.platform.memory_reclamation import reclaim_unused_analytical_memory
 from src.platform.fois_admission import (
@@ -111,7 +111,7 @@ def restore_cached_runtime(runtime: LeagueRuntime, publish: Callable[[LeagueRunt
                     runtime.lifecycle['cache_restore_memory_recovery'] = recovery
                 if plan['would_admit'] is not True:
                     raise HeavyWorkDeferred('Saved league preparation is waiting for safe memory headroom.')
-                payload = json.load(handle)
+                payload = load_cache_json(handle)
             data = payload['data']
             league = data['league']
             observed = datetime.fromisoformat(payload['last_sync'])

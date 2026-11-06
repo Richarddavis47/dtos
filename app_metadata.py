@@ -7,10 +7,10 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 APPLICATION_NAME = "DTOS"
-VERSION = "1.22.21"
-PRODUCT_VERSION = "1.22.21"
-BUILD_NUMBER = 2236
-RELEASE_CODENAME = "Sleeper Fantasy Results"
+VERSION = "1.22.22"
+PRODUCT_VERSION = "1.22.22"
+BUILD_NUMBER = 2237
+RELEASE_CODENAME = "Bounded League Cache Memory"
 APPLICATION_STARTED_AT = datetime.now(timezone.utc).isoformat()
 
 _REPOSITORY_ROOT = Path(__file__).resolve().parent

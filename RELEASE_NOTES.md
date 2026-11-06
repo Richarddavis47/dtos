@@ -1,3 +1,11 @@
+# v1.22.22 / build 2237 — Bounded league-cache string sharing
+
+Default startup and connected-league restoration now share equal short immutable strings within each individual JSON decode. Repeated source identities, provenance and disclosure text need fewer separate Python string objects. Mutable containers stay independent; the temporary bounded pool is discarded before publication. No global interning or cross-account cache is introduced.
+
+The persisted JSON, derived evidence and full serialized-file admission basis remain unchanged. The 2 GiB cap, 16× restoration allowance, FOIS and Trade reserves, bounded cleanup, source compatibility, native Sleeper actual-results binding, scoring and Trade qualification remain intact. No page-render work, provider call, preference mutation or automatic retry is added.
+
+Matched producer-derived synthetic one-QB and Superflex controls measure the entire decode/binding/projection-restoration/publication path and repeated two-league residency. These measurements establish a fixture memory improvement, not the private Granite payload’s demand or guaranteed live recovery. Safe entry still requires fresh normal admission. See docs/audits/CACHE_STRING_SHARING_2237.md.
+
 # v1.22.21 / build 2236 — Sleeper actuals across cache restoration
 
 Default startup, connected-league cache restoration and fresh production preparation now share one bounded native-results binding before Brain, Market, dossier and Trade-fact consumers capture the publication. Compatible retained Sleeper matchup rows can establish actuals even when the cache predates the adapter or production preparation is absent. No provider acquisition, reconstructed scores or NFLverse fantasy-point fallback is added.
