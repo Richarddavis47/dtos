@@ -59,7 +59,7 @@ def production_panel(production: dict | None, *, refresh_failed: bool = False) -
             '<p>Source: ' + escape(str(production.get('source') or 'Canonical production'))
             + ' · Latest knowledge boundary across these windows: ' + escape(str(production.get('updated_at') or 'Unknown')) + '</p>'
             '<div class="ds-table-wrap" tabindex="0" role="region" aria-label="Canonical production observations">'
-            '<table><caption>Prepared observation coverage and per-game averages</caption><thead><tr>'
+            '<table style="min-width:42rem;overflow-wrap:normal;word-break:normal"><caption>Prepared observation coverage and per-game averages</caption><thead><tr>'
             '<th>Window</th><th>Season</th><th>Observed weeks</th><th>Fully scored / observed</th>'
             '<th>Fantasy points per observation</th><th>Missing statistics</th></tr></thead><tbody>'
             + ''.join(rows) + '</tbody></table></div><ul>' + notes + '</ul>'
