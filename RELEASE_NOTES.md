@@ -1,3 +1,9 @@
+# v1.22.21 / build 2236 — Sleeper actuals across cache restoration
+
+Default startup, connected-league cache restoration and fresh production preparation now share one bounded native-results binding before Brain, Market, dossier and Trade-fact consumers capture the publication. Compatible retained Sleeper matchup rows can establish actuals even when the cache predates the adapter or production preparation is absent. No provider acquisition, reconstructed scores or NFLverse fantasy-point fallback is added.
+
+Explicit zero, negative scores and native precision remain intact. Foreign league/season/scoring analysis is not relabeled; known calendar mismatch and missing source generation remain unavailable. Unknown completion retains qualified observations without completed windows. Clocks and last-valid qualification are preserved. All memory allowances, lifecycle ownership, pricing, projections and Trade thresholds remain unchanged. Fixture acceptance is distinct from conditional authenticated live parity. See docs/audits/SLEEPER_ACTUALS_RESTORATION_2236.md.
+
 # v1.22.20 / build 2235 — Bounded cached-league memory recovery
 
 A cold cached-league read that lacks measured capacity can now perform one bounded cleanup of already expired analytical results and safely idle execution resources, then recheck the unchanged restoration guard using fresh raw container memory. Active runtimes, caller-held and unexpired results, last-valid publications, source/scoring identities and account scope remain intact. No background restoration, provider acquisition or automatic retry is added.

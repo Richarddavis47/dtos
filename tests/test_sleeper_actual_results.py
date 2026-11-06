@@ -129,6 +129,21 @@ def publish(data):
     return snapshot
 
 
+def republish_calendar_fixture(data):
+    """Retain identical native rows under the test's deliberately changed calendar.
+
+    These positive controls describe a coherent source publication, not an old
+    publication borrowed after changing its league's completion/playoff rules.
+    Mismatched retained calendars have separate negative restoration coverage.
+    """
+    previous = data['season_matchups']
+    async def fetch(path):
+        return copy.deepcopy((previous['weeks'].get(path.rsplit('/', 1)[-1]) or {}).get('rows', []))
+    data['season_matchups'] = asyncio.run(prepare_season_matchups(
+        data['league'], data['week'], (previous['weeks'].get(str(data['week'])) or {}).get('rows', []),
+        fetch, observed_at=previous['observed_at']))
+
+
 def profile(data, player="4984"):
     return prepared_production_context(
         data.get("canonical_player_production") or publish(data),
@@ -253,6 +268,7 @@ class SleeperPublicationTests(unittest.TestCase):
         data = actual_data()
         data["league"]["settings"].update(last_scored_leg=2, playoff_week_start=3)
         data["week"] = 4
+        republish_calendar_fixture(data)
         publish(data)
         c = profile(data)
         self.assertEqual(c.windows[3].observation_count, 2)
@@ -333,6 +349,7 @@ class SleeperPublicationTests(unittest.TestCase):
         data["league"].update(status="complete")
         data["league"]["settings"].update(leg=8, last_scored_leg=8)
         data["week"] = 8
+        republish_calendar_fixture(data)
         c = profile(data)
         self.assertEqual(c.windows[3].season, 2025)
         self.assertEqual(c.windows[3].observation_count, 8)

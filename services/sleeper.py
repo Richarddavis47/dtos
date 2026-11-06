@@ -102,18 +102,8 @@ def load_cache(
         from src.core.intelligence.team_strength import restore_cached_week_keys
         restored_data = payload.get('data') or {}
         restore_cached_week_keys(restored_data)
-        # Restore derived actuals from retained source rows only, within the
-        # already admitted cache lifecycle. No acquisition or global store read.
-        prepared = restored_data.get('canonical_player_production')
-        if not isinstance(prepared, dict) and restored_data.get('season_matchups'):
-            from src.core.player_value_projection.sleeper_actuals import scoring_identity
-            league = restored_data.get('league') or {}
-            prepared = {'league_id': str(league_id), 'season': league.get('season'), 'players': {},
-                        'scoring_fingerprint': scoring_identity(restored_data.get('scoring_settings') or league.get('scoring_settings') or {})}
-            restored_data['canonical_player_production'] = prepared
-        if isinstance(prepared, dict) and str(prepared.get('league_id')) == str(league_id):
-            from services.player_evidence import attach_sleeper_actuals
-            attach_sleeper_actuals(restored_data, prepared)
+        from services.player_evidence import bind_retained_actuals
+        bind_retained_actuals(restored_data, expected_league_id=str(league_id))
         state.update(safe_sync_state(payload))
         state["syncing"] = False
         state["transactions_syncing"] = False

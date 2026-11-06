@@ -43,7 +43,7 @@ jobs:
         timeout-minutes: 5
         run: |
           mkdir -p .validation/current-season-history .validation/history-followthrough .validation/market-history-coverage .validation/current-production-coverage
-          docker run --rm --init --memory=2g --memory-swap=2g --cpus=2 --network=none -e NODE_OPTIONS -e DTOS_CURRENT_HISTORY_EVIDENCE=.validation/current-season-history -e DTOS_FOLLOWTHROUGH_EVIDENCE=.validation/history-followthrough -e DTOS_MARKET_HISTORY_EVIDENCE=.validation/market-history-coverage -e DTOS_PRODUCTION_COVERAGE_EVIDENCE=.validation/current-production-coverage -v "$PWD:$PWD" -w "$PWD" -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0="$PWD" dtos-browser-validation python -m unittest -v tests.test_current_season_franchise_history tests.test_current_season_history_browser tests.test_history_followthrough tests.test_history_followthrough_browser tests.test_market_history_coverage tests.test_market_history_coverage_browser tests.test_sleeper_actual_results tests.test_current_production_coverage tests.test_current_production_browser
+          docker run --rm --init --memory=2g --memory-swap=2g --cpus=2 --network=none -e NODE_OPTIONS -e DTOS_CURRENT_HISTORY_EVIDENCE=.validation/current-season-history -e DTOS_FOLLOWTHROUGH_EVIDENCE=.validation/history-followthrough -e DTOS_MARKET_HISTORY_EVIDENCE=.validation/market-history-coverage -e DTOS_PRODUCTION_COVERAGE_EVIDENCE=.validation/current-production-coverage -v "$PWD:$PWD" -w "$PWD" -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0="$PWD" dtos-browser-validation python -m unittest -v tests.test_current_season_franchise_history tests.test_current_season_history_browser tests.test_history_followthrough tests.test_history_followthrough_browser tests.test_market_history_coverage tests.test_market_history_coverage_browser tests.test_sleeper_actual_results tests.test_sleeper_actual_restoration tests.test_current_production_coverage tests.test_current_production_browser
       - name: Preserve current-season history evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -137,6 +137,26 @@ jobs:
         with:
           name: restoration-unused-2g
           path: .validation/restoration-unused
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Native actuals through constrained connected-runtime restoration
+        timeout-minutes: 5
+        env:
+          DTOS_EXPECTED_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          set -o pipefail
+          mkdir -p .validation/actuals-restoration
+          cp .validation/restoration-unused/prior-study.zip .validation/actuals-restoration/prior-study.zip
+          docker run --rm --init --memory=2g --memory-swap=2g --cpus=2 --network=none -v "$PWD:$PWD:ro" -v "$PWD/.validation/actuals-restoration:/proof" -w "$PWD" -e DTOS_EXPECTED_HEAD -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0="$PWD" dtos-browser-validation python -m tools.validation.restoration_unused_memory --native-actuals --archive /proof/prior-study.zip --output /proof/evidence 2>&1 | tee .validation/actuals-restoration/raw.log
+          cd .validation/actuals-restoration
+          sha256sum evidence/result.json raw.log prior-study.zip > SHA256SUMS
+      - name: Preserve native actuals restoration including incomplete attempts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: actuals-restoration-2g
+          path: .validation/actuals-restoration
           if-no-files-found: error
           retention-days: 14
 
