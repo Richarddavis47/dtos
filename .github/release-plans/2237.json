@@ -4,8 +4,8 @@
   "actor": "Richarddavis47",
   "publisher_ref": "refs/heads/release/2237-actions-publisher",
   "baseline": "8af490880bb59b357b0e5fa82575cfa164401b07",
-  "candidate": "b743edcace45baced6293c0a7758582f008a049f",
-  "tree": "edc3cdbeceb2e8949cf9a88db83a8be9765518bb",
+  "candidate": "4fb702964b34d84a593fb917b5e654b9b8ff0adf",
+  "tree": "4051883efb1f225dcd71e07f1998e45c9d96fb39",
   "pr": 326,
   "source_branch": "fix/bounded-cache-string-sharing",
   "version": "1.22.22",
@@ -19,7 +19,7 @@
   "recovery_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
   "runs": [
     {
-      "id": 42292231953,
+      "id": 42293956827,
       "name": "Canonical release recovery",
       "path": ".github/workflows/canonical-release-recovery.yml",
       "jobs": [
@@ -27,7 +27,7 @@
       ]
     },
     {
-      "id": 42292232024,
+      "id": 42293956858,
       "name": "Product browser journeys",
       "path": ".github/workflows/product-browser.yml",
       "jobs": [
@@ -40,7 +40,7 @@
       ]
     },
     {
-      "id": 42292231910,
+      "id": 42293956820,
       "name": "Validation tooling",
       "path": ".github/workflows/validation-tooling.yml",
       "jobs": [
@@ -49,7 +49,7 @@
       ]
     },
     {
-      "id": 42292232026,
+      "id": 42293956792,
       "name": "Linux Asset Market lifecycle",
       "path": ".github/workflows/linux-market-lifecycle.yml",
       "jobs": [
@@ -60,11 +60,24 @@
     }
   ],
   "artifacts": [],
-  "prior_runs": [],
-  "prior_jobs": [],
+  "prior_runs": [
+    42292231953,
+    42292232024
+  ],
+  "prior_jobs": [
+    128148312234,
+    128148312171,
+    128154249058
+  ],
   "python_version": "3.14.3",
   "prior_evidence_file": ".github/release-plans/2237-prior.zip",
   "prior_evidence_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
   "finalized": false,
-  "local_canonical_entries": 0
+  "local_canonical_entries": 0,
+  "prior_attempts": [
+    {
+      "id": 42293956827,
+      "attempt": 1
+    }
+  ]
 }

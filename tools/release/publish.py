@@ -516,6 +516,18 @@ def verify_league_entry(path, plan):
         return result
 
 
+def prior_attempt_record(repo, reference):
+    """Keep a failed historical attempt distinct from a later successful rerun."""
+    require(isinstance(reference, dict) and set(reference) == {'id', 'attempt'}, 'Invalid prior attempt reference')
+    run_id, attempt = reference['id'], reference['attempt']
+    require(type(run_id) is int and run_id > 0 and type(attempt) is int and attempt > 0,
+            'Invalid prior attempt identity')
+    run = api(repo + '/actions/runs/' + str(run_id) + '/attempts/' + str(attempt))
+    require(run['id'] == run_id and run['run_attempt'] == attempt,
+            'Prior attempt API identity mismatch')
+    return {key: run[key] for key in ('id', 'name', 'head_sha', 'status', 'conclusion', 'html_url', 'run_attempt')}
+
+
 def verify_handoff(data, plan):
     require(len(data) <= 128 * 1024 and not TOKEN.search(data), 'Unsafe handoff attachment')
     require(plan['candidate'].encode() in data and plan['tree'].encode() in data,
@@ -671,6 +683,7 @@ def collect(plan, root):
     for run_id in plan['prior_runs']:
         run = api(repo + '/actions/runs/' + str(run_id))
         prior.append({key: run[key] for key in ('id', 'name', 'head_sha', 'status', 'conclusion', 'html_url')})
+    prior.extend(prior_attempt_record(repo, reference) for reference in plan.get('prior_attempts', []))
     write_json(assets / 'prior-attempts.json', prior)
     write_json(assets / 'VALIDATION.json', dict(candidate=plan['candidate'], tree=plan['tree'], version=plan['version'], build=plan['build'],
         canonical=canonical, local_canonical=local_canonical, local_preflight=local_preflight_result, local_restoration_unused=local_unused_result, required_jobs=records, product_test_executions=sum(counts), original_artifacts=plan['artifacts'],

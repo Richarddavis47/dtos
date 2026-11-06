@@ -821,3 +821,23 @@ class CurrentProductionIntegrityTests(unittest.TestCase):
                     else:
                         with self.assertRaises(RuntimeError):
                             p.verify_current_production(target,plan)
+
+
+class PriorAttemptIdentityTests(unittest.TestCase):
+    def test_history_uses_attempt_specific_endpoint_and_preserves_failure(self):
+        record=dict(id=123,run_attempt=1,name='canonical',head_sha='a'*40,status='completed',conclusion='failure',html_url='https://github.com/owner/repo/actions/runs/123/attempts/1')
+        with patch.object(p,'api',return_value=record) as reader:
+            self.assertEqual(p.prior_attempt_record('repos/owner/repo',dict(id=123,attempt=1)),record)
+        reader.assert_called_once_with('repos/owner/repo/actions/runs/123/attempts/1')
+
+    def test_history_cannot_substitute_latest_success_for_failed_attempt(self):
+        with patch.object(p,'api',return_value=dict(id=123,run_attempt=2,conclusion='success')):
+            with self.assertRaisesRegex(RuntimeError,'identity mismatch'):
+                p.prior_attempt_record('repos/owner/repo',dict(id=123,attempt=1))
+
+    def test_invalid_history_reference_does_not_issue_a_request(self):
+        for value in (dict(id=True,attempt=1),dict(id=1,attempt=0),dict(id='1',attempt=1),dict(id=1,attempt=1,path='untrusted'),123):
+            with self.subTest(value=value),patch.object(p,'api') as reader:
+                with self.assertRaises(RuntimeError):
+                    p.prior_attempt_record('repos/owner/repo',value)
+                reader.assert_not_called()
