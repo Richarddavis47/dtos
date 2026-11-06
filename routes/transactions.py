@@ -478,7 +478,7 @@ def create_transactions_router(
                       if canonical else None)
         if production_summary(production):
             reasons['production'] = production_summary(production)
-        canonical_panel = production_panel(production, refresh_failed=bool((active.state if active else state).get('last_error')))
+        canonical_panel = production_panel(production, refresh_failed=bool(state.get('last_error')))
         fantasycalc = live["provider_details"].get("FantasyCalc") or {}
         trend_value = fantasycalc.get("trend_30_day")
         trend_label = f"{trend_value:+}" if isinstance(trend_value, (int, float)) else "No historical provider trend is available."
