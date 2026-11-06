@@ -1,0 +1,71 @@
+"""Finalize factual handoff only after exact-source mandatory verification."""
+from pathlib import Path
+import json,hashlib,subprocess
+b=Path('/workspace/2237-cache-duplication');m=json.loads((b/'source.json').read_text());local=json.loads((b/'local-verified.json').read_text());host=json.loads((b/'host-canonical-verified.json').read_text());mem=json.loads((b/'cache-memory-verified.json').read_text());prod=json.loads((b/'product-test-counts.json').read_text());resource=json.loads((b/'resource-verified.json').read_text())
+assert local['all_local_gates_passed'] and host['all_gates_passed'] and local['tests']==host['tests']==4250
+assert local['candidate']==host['candidate']==mem['candidate']==m['candidate'] and local['tree']==host['tree']==mem['tree']==m['tree']
+assert mem['passed'] and prod['total']==757 and not prod['failed'] and resource['all_native_guards_passed']
+assert 'Ran 63 tests' in (b/'focused-final-exact.log').read_text() and (b/'focused-final-exact.log').read_text().rstrip().endswith('OK')
+assert json.loads((b/'complete-payload-verified.json').read_text())['passed']
+rows='\n'.join(f"| {r['fixture']} | {r['bytes']:,} | {r['old_kernel_increment']:,} → {r['new_kernel_increment']:,} | {r['old_retained_increment']:,} → {r['new_retained_increment']:,} | {r['old_seconds']:.3f} → {r['new_seconds']:.3f} |" for r in mem['kernel_cases'])
+text=f'''# League-cache memory handoff — v1.22.22/build2237
+
+The measured correction reduces duplicate immutable text during restoration. Every persisted evidence field remains present and the full serialized file still enters the unchanged16× admission calculation. No private Granite payload was profiled, no live entry was performed, and live Sleeper actual-score parity remains HELD because this session lacks the existing Render Shell/associated authenticated browser executor. A diagnostic or fixture is not Granite recovery.
+
+## Source and release boundary
+
+- Baseline: `{m['baseline']}`, tree `{m['baseline_tree']}`, v1.22.21/build2236.
+- Validated candidate: `{m['candidate']}`, tree `{m['tree']}`.
+- PR326: https://github.com/Richarddavis47/dtos/pull/326
+- Target: v1.22.22/build2237. This report is sealed before the normal guarded Actions prepare/merge/publish sequence. Final publication/deployment receipts supply the actual merge commit and immutable release outcome; this prepublication report does not claim they already occurred.
+
+## Confirmed cause and narrow correction
+
+Standard JSON decoding creates separate equal string values across source catalog rows, normalized identities and consumer envelopes. The original fixture's scalar duplication is reproducible. `src/platform/cache_json.py` coalesces2–128character equal immutable values within one decode, with65,536entry and16MiB conservative character limits. The temporary pool is released before publication; mutable dict/list containers stay independent. There is no global interning, cross-account pool, compact schema, omitted evidence or reconstruction behind a smaller admission basis. Default startup and connected restoration use the same helper. Native Sleeper binding, source qualification, atomic replacement, cancellation ownership, bounded expired-reference cleanup,2GiB cap and FOIS/Trade reserves remain unchanged.
+
+The source/native/derived representations serve different contracts. In the modeled one-QB payload, native rows occupy269,636serialized bytes; derived actuals603,568bytes; the entire production envelope4,033,965bytes; disclosures7,380,049bytes inside an8,896,693byte report. Native/derived and disclosure footprints overlap their enclosing totals. Standalone resident object graphs and the full unique union are recorded, not added together. The correction principally reduces repeated source/normalized text. Derived actual and disclosure containers are retained, not deleted or claimed to be freeable bytes.
+
+## Matched measurement
+
+The new producer-derived synthetic cohorts have10,788catalog identities,991modeled consumers,2,592fictional native observations, nine source weeks and existing prepared one-QB/K/DEF or Superflex projections. Real normalization, preparation/binding, projection restoration and canonical publication are exercised. These are structural controls, not private Granite contents or size-matched proof. Missing reference-analysis distribution and field density are not verified against production. High-cardinality metadata and Unicode are explicit sensitivity cases; neither is asserted to reproduce the owner's cache.
+
+| Cohort | Serialized bytes, unchanged between decoders | Actual operation kernel peak increment B, standard → sharing | Retained increment B, standard → sharing | Seconds, standard → sharing |
+| --- | ---: | ---: | ---: | ---: |
+{rows}
+
+Each primary run streams an exact raw fixture copy inside an enforced2GiB/no-swap/two-CPU/offline container before its initial sample. Charged retained file pages are included in raw initial/peak memory. No file-cache clearing or deduction occurs. The kernel peak before restoration is lower than the peak captured immediately after publication and before verification/deep graph instrumentation; this establishes the new isolated operation high-water mark without relying on a Python sampling thread. Python3.14.3 and image/commands are recorded. Kernel lifetime peaks captured later during graph inspection are separate. Initial5ms sampled measurements are preserved, but the Unicode control shows that a GIL-bound decoder can hide a much larger transient from that sampler. Primary conclusions use the operation kernel counter.
+
+Total two-league residency and three eviction/reopen cycles also complete, reducing sampled incremental peak from304,435,200B in the verified old tree to{mem['warm_sampled_peak_increment']:,}B on this candidate. Closed runtime weak references disappear and no workers remain. Allocator/cache retention remains above the initial sample; finite cycles are not long-term leak proof. Full restored fixture payloads compare value-exact against the standard decoder. Native/disclosure digests, zero, negatives, provenance, clocks, scoring, source generations and missing/conflicting evidence remain unchanged.
+
+The new decoder costs roughly a fraction of a second in these controls. This is a memory improvement, not a claim of faster decoding or universal capacity. The complete actual Granite structure remains unmeasured. The earlier79.6MiB study remains PARTIAL and is not reused as representative proof.
+
+## Admission and safe recovery
+
+The supplied November6 15:21Eastern snapshot is historical:35,531,769cache bytes;670,416,896headroom;702,726,032required. Replaying exactly those supplied inputs against the unchanged guard still yields `would_defer`:32,309,136bytes short. No fresh production sample, earlier503 cause or leak is established. A given cache's reservation does not shrink. Reduced real resident memory can improve future headroom, but a normal entry must still recheck current admission and compatibility.
+
+Exact-source native2GiB controls complete real restoration, unsafe-pressure deferral before binding, explicit recovery, full FOIS protection, idle-worker retirement and scratch cleanup. Native worker/control OOM counters stay zero. Server liveness observations remain below500ms in the disposable controls. These are not external production latency promises. Existing cancellation, timeout, sync conflicts, current/legacy startup, fresh preparation, ownership, isolation, picks, submitted-lineup separation, rendered dossier and Market controls pass. No provider acquisition or analytical work is added to ordinary reads.
+
+## Validation
+
+-63focused tests pass on the final candidate, including rendered consumers and real worker cancellation/timeout controls.
+-4250full regression executions and all ten canonical gates pass locally and separately in the original hosted canonical artifact.
+-757Product executions are corroborated from the original Product job, and all twelve exact-source hosted jobs are required and verified.
+-Local canonical manifest:{local['local_manifest_entries']}entries; hosted original:{host['entries']}entries. SHA256, byte sizes, ZIP CRCs, complete per-test events and canonical summaries are checked. Original full consoles and60kB readable parts are retained.
+-Hosted Product/security/navigation, My Team, historical journeys, projection parity, Linux/Windows tooling and all three2GiB lifecycle modes pass. Four responsive viewport acceptance remains in those original artifacts; no physical iPhone/Safari acceptance is claimed.
+-Scoped publisher tests/lint/compilation and offline manifest/certificate checks are separate from application validation. Guarded Actions uses its existing GITHUB_TOKEN; no Cloud direct release upload, credential change, new infrastructure or production preference mutation is used.
+
+## Earlier attempts retained
+
+The first new unit test addressed the wrong `json_admission` argument index; its original failure is separate from corrected passing assertions. A read-only Ruff cache invocation failed before lint; --no-cache preserves lint rules. One focused invocation used two nonexistent test names; those loader errors are retained, not counted as worker execution.
+
+The first local canonical attempt passed three gates and failed compilation in two root-owned generated bytecode directories under old ignored validation artifacts. Those artifacts were moved intact outside the source checkout, with unreadable derivative-bytecode metadata recorded and no chmod, elevated test execution or source changes. An intermediate setup inventory could not hash those inaccessible generated pycs; its incomplete attempt is separate. A later superseded b743 local run was canceled after356completed tests with the357th in progress when hosted validation exposed old decoder spies. Six gates had passed; regression and subsequent gates were incomplete. It is not a full pass.
+
+The b743 hosted public/security browser assertions passed, then the metadata-only preflight sentinel failed on the removed `preparation.json` alias. Two league-entry tests had the same obsolete reference. All three now spy on the shared cache loader, preserving their no-decode assertions. Production admission behavior was not weakened. The old hosted canonical run is canceled/incomplete; its original partial ZIP lacks final result/manifest and cannot establish passing gates. API digest/CRC and available records are preserved without fabricating missing finals. Earlier postprocessor assumptions and original profiling prototypes remain distinct from final acceptance.
+
+## Live limitation and next step
+
+Main Chat's Render-local configured-token identity200 is supplied evidence. It was not reproduced here. The unchanged external binding401 was not retried. Public readiness works; this session has no Render Shell/SSH execution tool or associated authenticated Work browser runtime. No private preflight, guarded Granite entry or live actual-score comparison was obtained. A future successful entry alone cannot prove the memory correction caused recovery.
+
+Use the complete SCOUT_HANDOFF.md procedure: one existing Render-local advisory preflight; then one normal signed-in Granite entry only if fresh capacity permits; stop on deferral. Compare a genuinely retained completed player-week's source score with deployed dossier and prepared Market/API, pinning exact league, season, week, scoring, source generation and qualification. The old26.56capture is a candidate sample, not an assumed answer. No forced sync, FOIS rebuild, Trade search, cache clearing, manual restart or settings mutation is authorized for acceptance.
+'''
+(b/'REPORT.md').write_text(text)
