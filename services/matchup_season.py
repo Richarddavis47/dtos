@@ -100,7 +100,8 @@ async def prepare_season_matchups(league: dict, current_week: int, current_rows:
         if week['availability'] != 'available' and old_rows:
             # Preserve usable prior evidence explicitly, without turning a
             # failed source read into successful current acquisition.
-            week.update(retained_rows=old_rows, observed_at=prior.get('observed_at'), freshness='last_valid')
+            week.update(retained_rows=old_rows, observed_at=prior.get('observed_at'),
+                        retrieved_at=prior.get('retrieved_at'), freshness='last_valid')
         elif week['availability'] == 'available' and old_rows:
             def scores(rows):
                 values = {}

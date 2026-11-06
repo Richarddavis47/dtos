@@ -108,7 +108,8 @@ class PreparedPlayerEvidenceTests(unittest.TestCase):
                     'scoring_settings': {'rec': 1}}
             result = prepare_player_production(data, expected_league_id='A', as_of='2026-09-01T00:00:00Z', path=path)
             self.assertFalse(path.exists())
-            self.assertEqual(result['availability'], 'not_connected')
+            self.assertEqual(result['non_sleeper_analysis_availability'], 'not_connected')
+            self.assertEqual(result['availability'], 'unavailable')
             self.assertEqual(result['provider_calls'], 0)
 
     def test_context_mismatch_rejected(self):

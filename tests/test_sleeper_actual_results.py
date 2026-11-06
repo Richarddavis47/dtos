@@ -100,6 +100,11 @@ def actual_data(
 
         with ThreadPoolExecutor(max_workers=1) as executor:
             publication = executor.submit(acquire).result(timeout=10)
+    # This fixture supplies a known receipt clock explicitly. The production
+    # batch observation boundary alone must never be relabeled as an HTTP receipt.
+    for record in publication["weeks"].values():
+        if record["availability"] == "available":
+            record["retrieved_at"] = STAMP
     return dict(
         league=league,
         scoring_settings=scoring,
@@ -708,3 +713,25 @@ class HistoricalActualObservationContractTests(unittest.TestCase):
         self.assertIsNone(value["observed_total"])
         self.assertIsNone(value["points_per_observation"])
         self.assertIsNone(value["games_played"])
+
+
+class ActualClockProvenanceTests(unittest.TestCase):
+    def test_batch_observation_time_is_not_an_invented_http_receipt(self):
+        from services.global_evidence import _sleeper_production
+
+        data = actual_data()
+        for row in data["season_matchups"]["weeks"].values():
+            row.pop("retrieved_at", None)
+        publish(data)
+        context = profile(data)
+        self.assertEqual(context.observations[0]["observation_boundary"], STAMP)
+        self.assertIsNone(context.observations[0]["retrieved_at"])
+        self.assertEqual(context.observations[0]["points"], 23.4738)
+        strict = _sleeper_production(
+            data, "4984", "2026-11-02T00:00:00Z", require_receipt=True
+        )
+        self.assertIsNone(strict["points_per_observation"])
+        current = _sleeper_production(data, "4984", "2026-11-02T00:00:00Z")
+        self.assertEqual(
+            current["points_per_observation"], context.windows[3].fantasy_points
+        )

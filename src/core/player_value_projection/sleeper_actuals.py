@@ -121,7 +121,8 @@ def prepare_actual_results(data: dict, *, expected_league_id: str) -> dict:
         "season": season,
         "scoring_fingerprint": fingerprint,
         "source_generation": prepared.get("semantic_generation"),
-        "retrieved_at": prepared.get("observed_at"),
+        "observed_at": prepared.get("observed_at"),
+        "retrieved_at": prepared.get("retrieved_at"),
         "players": {},
         "periods": {},
         "availability": "unavailable",
@@ -196,7 +197,8 @@ def prepare_actual_results(data: dict, *, expected_league_id: str) -> dict:
                 "reason": week.get("reason"),
                 "state": state,
                 "scope": phase,
-                "retrieved_at": week.get("observed_at"),
+                "observation_boundary": week.get("observed_at"),
+                "retrieved_at": week.get("retrieved_at"),
                 "last_attempt_at": week.get("last_attempt_at"),
                 "freshness": week.get("freshness", "retained"),
             }
@@ -270,7 +272,8 @@ def prepare_actual_results(data: dict, *, expected_league_id: str) -> dict:
                     "scope": phase,
                     "reasons": sorted(set(reasons)),
                     "sources": sorted({s for v in candidates for s in v["sources"]}),
-                    "retrieved_at": week.get("observed_at"),
+                    "observation_boundary": week.get("observed_at"),
+                    "retrieved_at": week.get("retrieved_at"),
                     "freshness": week.get("freshness", "retained"),
                     "corrected": pid in (week.get("corrected_players") or []),
                 }
@@ -333,6 +336,9 @@ def player_context(snapshot: dict, player_id: str):
         "Live or unconfirmed weeks are separate from completed-week windows. Team custom-point adjustments are never allocated to players.",
         "Previous-season results require their own admitted Sleeper league-season publication; another season is never substituted.",
     ]
+    notes.append(
+        "A saved observation boundary is the batch preparation clock, not an exact HTTP receipt or provider publication time. Unretained receipt times remain unknown."
+    )
     if snapshot.get("reason"):
         notes.append(
             {
@@ -349,7 +355,7 @@ def player_context(snapshot: dict, player_id: str):
         )
     if any(row["freshness"] != "current" for row in rows):
         notes.append(
-            "Some scores are retained observations, not newly revalidated results; review each week’s retrieval time."
+            "Some scores are retained observations, not newly revalidated results; review each week’s saved observation boundary."
         )
     if any(row["points"] is None for row in completed):
         notes.append(
@@ -364,7 +370,7 @@ def player_context(snapshot: dict, player_id: str):
         DataStatus.CACHED
         if any(w.fantasy_points is not None for w in windows)
         else DataStatus.UNAVAILABLE,
-        snapshot.get("retrieved_at"),
+        snapshot.get("observed_at"),
         tuple(notes),
         authority=METHOD,
         source_generation=snapshot.get("source_generation"),

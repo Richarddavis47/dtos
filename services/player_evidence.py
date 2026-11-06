@@ -137,6 +137,9 @@ def attach_sleeper_actuals(data: dict, result: dict) -> None:
     from src.core.player_value_projection.sleeper_actuals import prepare_actual_results
     actuals = prepare_actual_results(data, expected_league_id=result['league_id'])
     result['sleeper_actuals'] = actuals
+    result.setdefault('non_sleeper_analysis_availability', result.get('availability', 'unavailable'))
+    result['availability'] = actuals['availability']
+    result['scoring_basis'] = 'explicit_sleeper_league_matchup_results_not_reconstructed'
     result['generation'] = hashlib.sha256(json.dumps([
         result.get('reference_generation'), actuals['generation']], separators=(',', ':')).encode()).hexdigest()
     # Rebind only the actual-results disclosure in an existing cached Brain

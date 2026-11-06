@@ -58,7 +58,7 @@ def production_panel(production: dict | None, *, refresh_failed: bool = False) -
             qualifications.append('Sleeper score changed since the preceding retained publication')
         observations.append('<tr><th scope="row">' + str(int(row['week'])) + '</th><td>' + value
             + '</td><td>' + escape(str(row['state']) + ' · ' + str(row['scope']))
-            + '</td><td>' + escape(str(row.get('retrieved_at') or 'Unknown') + ' · ' + ('current at retrieval' if row.get('freshness') == 'current' else str(row.get('freshness') or 'Unknown')))
+            + '</td><td>' + escape('Observation: ' + str(row.get('observation_boundary') or 'Unknown') + ' · Exact receipt: ' + str(row.get('retrieved_at') or 'Unknown') + ' · ' + ('current at retrieval' if row.get('freshness') == 'current' else str(row.get('freshness') or 'Unknown')))
             + '</td><td>' + escape('; '.join(qualifications) or 'Explicit Sleeper score; participation not established') + '</td></tr>')
     periods = '; '.join('Week ' + str(key) + ': ' + str(row.get('availability') or 'unknown')
         + ' (' + str(row.get('state') or 'unknown') + ' · league ' + str(row.get('scope') or 'unknown') + ')'
@@ -88,7 +88,7 @@ def production_panel(production: dict | None, *, refresh_failed: bool = False) -
             '<details><summary>Weekly Sleeper scores and coverage</summary><p>' + escape(periods or 'Weekly acquisition coverage is not retained.') + '</p>'
             '<div class="ds-table-wrap" tabindex="0" role="region" aria-label="Weekly Sleeper results">'
             '<table style="min-width:42rem;overflow-wrap:normal;word-break:normal"><caption>Retained individual scores; team custom-point adjustments excluded</caption>'
-            '<thead><tr><th>Week</th><th>Points</th><th>Result / period</th><th>Retrieval / freshness</th><th>Qualification</th></tr></thead><tbody>'
+            '<thead><tr><th>Week</th><th>Points</th><th>Result / period</th><th>Observation / receipt / freshness</th><th>Qualification</th></tr></thead><tbody>'
             + ''.join(observations) + '</tbody></table></div></details>' + usage + '<ul>' + notes + '</ul>'
             '<p>Non-Sleeper usage, fixed-reference valuation analysis, historical roster observations and forward Sleeper '
             'projections remain separate. No absent score, bye or DNP is reconstructed. Retained historical grades are not revalidated here.</p></section>')
