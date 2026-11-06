@@ -1,0 +1,70 @@
+{
+  "schema": 1,
+  "repository": "Richarddavis47/dtos",
+  "actor": "Richarddavis47",
+  "publisher_ref": "refs/heads/release/2237-actions-publisher",
+  "baseline": "8af490880bb59b357b0e5fa82575cfa164401b07",
+  "candidate": "b743edcace45baced6293c0a7758582f008a049f",
+  "tree": "edc3cdbeceb2e8949cf9a88db83a8be9765518bb",
+  "pr": 326,
+  "source_branch": "fix/bounded-cache-string-sharing",
+  "version": "1.22.22",
+  "build": 2237,
+  "draft_id": 0,
+  "prior_immutable_tag": "v1.22.21",
+  "canonical_tests": 4250,
+  "canonical_entries": 0,
+  "product_tests": 757,
+  "recovery_file": ".github/release-plans/2237-recovery.zip",
+  "recovery_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "runs": [
+    {
+      "id": 42292231953,
+      "name": "Canonical release recovery",
+      "path": ".github/workflows/canonical-release-recovery.yml",
+      "jobs": [
+        "canonical-release"
+      ]
+    },
+    {
+      "id": 42292232024,
+      "name": "Product browser journeys",
+      "path": ".github/workflows/product-browser.yml",
+      "jobs": [
+        "product-browser",
+        "my-team-browser",
+        "beginner-navigation",
+        "public-welcome-browser",
+        "historical-trade-timeline",
+        "projection-display-cross-version"
+      ]
+    },
+    {
+      "id": 42292231910,
+      "name": "Validation tooling",
+      "path": ".github/workflows/validation-tooling.yml",
+      "jobs": [
+        "tooling (ubuntu-24.04)",
+        "tooling (windows-latest)"
+      ]
+    },
+    {
+      "id": 42292232026,
+      "name": "Linux Asset Market lifecycle",
+      "path": ".github/workflows/linux-market-lifecycle.yml",
+      "jobs": [
+        "cgroup-lifecycle (ordinary)",
+        "cgroup-lifecycle (archive-warmed)",
+        "cgroup-lifecycle (combined-read)"
+      ]
+    }
+  ],
+  "artifacts": [],
+  "prior_runs": [],
+  "prior_jobs": [],
+  "python_version": "3.14.3",
+  "prior_evidence_file": ".github/release-plans/2237-prior.zip",
+  "prior_evidence_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "finalized": false,
+  "local_canonical_entries": 0
+}
