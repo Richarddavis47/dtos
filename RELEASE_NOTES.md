@@ -1,3 +1,9 @@
+# v1.22.20 / build 2235 — Bounded cached-league memory recovery
+
+A cold cached-league read that lacks measured capacity can now perform one bounded cleanup of already expired analytical results and safely idle execution resources, then recheck the unchanged restoration guard using fresh raw container memory. Active runtimes, caller-held and unexpired results, last-valid publications, source/scoring identities and account scope remain intact. No background restoration, provider acquisition or automatic retry is added.
+
+The 2 GiB limit, 16× file allowance, restoration safety margin, independent FOIS and Trade policies, lifecycle coordination and unknown-telemetry deferral remain unchanged. Capacity may still be insufficient when live resources retain memory. Disposable source-shaped controls demonstrate recovery; this does not establish the private Granite payload's memory demand, the cause of an earlier 503, live league recovery or live Sleeper parity. See docs/audits/RESTORATION_UNUSED_MEMORY_2235.md.
+
 # DTOS v1.22.19 / build 2234
 
 - Use explicit league-scoped Sleeper matchup scores for actual fantasy-result summaries, dossier/Market production and Trade facts; keep NFLverse usage and fixed-reference valuation analysis separate.

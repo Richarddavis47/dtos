@@ -98,20 +98,8 @@ def public_readiness():
 
 def _recover_unused(control):
     """One bounded pass, only on an explicit operation, never cache invalidation."""
-    from src.core.intelligence.cache import intelligence_cache
-    from src.core.trade_intelligence.lineup_memo import lineup_store
-    from src.core.fois.process_execution import retire_idle_fois_executor_sync
-    from src.platform.memory_reclamation import release_unused_allocator_pages
-    retired = retire_idle_fois_executor_sync(force=True)
-    expired = 0
-    for _ in range(intelligence_cache.max_entries):
-        control.stop_check()
-        if not intelligence_cache.expire_one():
-            break
-        expired += 1
-    lineup_store.expire()
-    trimmed = release_unused_allocator_pages()
-    return dict(expired_entries=expired, idle_worker_retired=retired, allocator_trimmed=trimmed)
+    from src.platform.memory_reclamation import reclaim_unused_analytical_memory
+    return reclaim_unused_analytical_memory(stop_check=control.stop_check)
 
 
 @dataclass

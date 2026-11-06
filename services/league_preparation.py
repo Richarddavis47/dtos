@@ -17,6 +17,7 @@ from src.core.league_runtime import LeagueRuntime
 from src.core.sync_status import safe_sync_state
 from src.platform.cache_budget import JSON_BUDGET, reusable
 from src.platform.lifecycle import HeavyWorkDeferred, lifecycle_coordinator, memory_snapshot
+from src.platform.memory_reclamation import reclaim_unused_analytical_memory
 from src.platform.fois_admission import (
     WORKING_RESERVE_BYTES as FOIS_WORKING, SAFETY_MARGIN_BYTES as FOIS_SAFETY,
 )
@@ -80,6 +81,34 @@ def restore_cached_runtime(runtime: LeagueRuntime, publish: Callable[[LeagueRunt
                     minimum_working_bytes=CACHE_MINIMUM_WORKING,
                     cache_safety_bytes=CACHE_SAFETY, service_limit_bytes=SERVICE_LIMIT,
                 )
+                if (plan['would_admit'] is False
+                        and plan['headroom_bytes'] >= plan['safety_bytes']):
+                    # This cold reader already owns the existing phase and pins
+                    # its file generation. Reclaim only unusable cache entries
+                    # and idle execution resources, as explicit Trade already
+                    # does. Never evict active/unexpired contexts or discount
+                    # file pages. Keep the existing safety margin available even
+                    # for cleanup; unknown/near-limit samples defer immediately.
+                    recovery = {'attempted': True, 'before_bytes': sample['cgroup_current_bytes']}
+                    try:
+                        recovery.update(reclaim_unused_analytical_memory())
+                    except Exception:
+                        # Optional cleanup failure is not a Sleeper/source error
+                        # or permission to decode. Only fresh measured admission
+                        # can permit the next allocation.
+                        recovery['cleanup_unavailable'] = True
+                    sample = memory_snapshot()
+                    plan = restoration_admission(
+                        stat.st_size, sample, lifecycle_coordinator.fois_generation_active(),
+                        fois_working_bytes=FOIS_WORKING, fois_safety_bytes=FOIS_SAFETY,
+                        expansion_factor=CACHE_EXPANSION_FACTOR,
+                        minimum_working_bytes=CACHE_MINIMUM_WORKING,
+                        cache_safety_bytes=CACHE_SAFETY, service_limit_bytes=SERVICE_LIMIT,
+                    )
+                    recovery.update(after_bytes=sample.get('cgroup_current_bytes'),
+                                    required_bytes=plan['required_bytes'],
+                                    would_admit=plan['would_admit'])
+                    runtime.lifecycle['cache_restore_memory_recovery'] = recovery
                 if plan['would_admit'] is not True:
                     raise HeavyWorkDeferred('Saved league preparation is waiting for safe memory headroom.')
                 payload = json.load(handle)

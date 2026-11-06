@@ -56,3 +56,33 @@ async def maintain_unused_memory(
                 if not await asyncio.to_thread(expire_one):
                     break
         await asyncio.to_thread(release_unused_allocator_pages)
+
+
+def reclaim_unused_analytical_memory(*, stop_check: Callable[[], None] | None = None) -> dict:
+    """One existing, bounded cleanup pass; no valid source/runtime eviction.
+
+    Explicit heavyweight callers already own their lifecycle lease. Retire only
+    this process's idle pool, and leave an outstanding FOIS owner alone even
+    between its worker submissions. Caller-held and unexpired results survive.
+    The caller must remeasure raw container usage afterwards, never credit the
+    reported counts as free bytes. No collection, acquisition or retry starts.
+    """
+    from src.core.fois.process_execution import retire_idle_fois_executor_sync
+    from src.core.intelligence.cache import intelligence_cache
+    from src.core.trade_intelligence.lineup_memo import lineup_store
+    from src.platform.lifecycle import lifecycle_coordinator
+
+    check = stop_check or (lambda: None)
+    check()
+    retired = (retire_idle_fois_executor_sync(force=True)
+               if not lifecycle_coordinator.fois_generation_active() else False)
+    expired = 0
+    for _ in range(intelligence_cache.max_entries):
+        check()
+        if not intelligence_cache.expire_one():
+            break
+        expired += 1
+    check()
+    lineup_store.expire()
+    trimmed = release_unused_allocator_pages()
+    return dict(expired_entries=expired, idle_worker_retired=retired, allocator_trimmed=trimmed)
