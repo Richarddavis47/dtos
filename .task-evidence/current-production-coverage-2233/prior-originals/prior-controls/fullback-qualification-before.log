@@ -1,0 +1,15 @@
+test_position_bonuses_use_actual_eligible_counts_not_guessed_participation (tests.test_current_production_coverage.ProductionPeriodControls.test_position_bonuses_use_actual_eligible_counts_not_guessed_participation) ... FAIL
+
+======================================================================
+FAIL: test_position_bonuses_use_actual_eligible_counts_not_guessed_participation (tests.test_current_production_coverage.ProductionPeriodControls.test_position_bonuses_use_actual_eligible_counts_not_guessed_participation)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_current_production_coverage.py", line 305, in test_position_bonuses_use_actual_eligible_counts_not_guessed_participation
+    self.assertIsNone(GlobalProduction.score_game({'position':'FB','rec':5},{'bonus_rec_rb':.5})['fantasy_points'])
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 0.0 is not None
+
+----------------------------------------------------------------------
+Ran 1 test in 0.001s
+
+FAILED (failures=1)

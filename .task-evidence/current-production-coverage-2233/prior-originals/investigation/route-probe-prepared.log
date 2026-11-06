@@ -1,0 +1,20 @@
+/usr/local/lib/python3.14/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+  from starlette.testclient import TestClient as TestClient  # noqa
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:httpx:HTTP Request: GET http://testserver/api/market/assets/player:1 "HTTP/1.1 200 OK"
+API 200 ['application_version', 'application_build', 'market_schema_version', 'league_id', 'historical_dataset_version', 'historical_dataset_version_scope', 'market_generation', 'brain_generation', 'valuation_generation', 'generated_at', 'brain_snapshot_id', 'asset', 'valuation', 'value_layers', 'providers', 'front_office', 'recommendation', 'history', 'market_trend', 'historical_progress']
+nested [('asset', ['age', 'agreement', 'asset_id', 'asset_type', 'availability', 'canonical_url', 'confidence', 'display_name', 'evidence_coverage', 'historical_availability', 'market_detail_url', 'market_fact', 'missing_evidence', 'nfl_team', 'owner', 'position', 'provider_coverage', 'rookie', 'round', 'status']), ('valuation', ['asset_id', 'asset_type', 'display_name', 'pick_market_evidence', 'market_observation_evidence', 'pick_context', 'scores', 'valuation_layers', 'canonical_production', 'intrinsic_evidence_profile', 'categories', 'evidence_sources', 'provider_count', 'independent_family_count', 'missing_evidence', 'diagnostics', 'explanation']), ('value_layers', ['age_curve_score', 'confidence_score', 'contender_value', 'current_production_value', 'future_value', 'intrinsic_dtos_value', 'league_adjusted_value', 'liquidity_score', 'market_value', 'provider_consensus', 'rebuilder_value', 'risk_score']), ('recommendation', ['action', 'availability', 'primary_reason', 'supporting_evidence', 'counterarguments', 'expected_impact', 'confidence', 'missing_evidence', 'brain_snapshot_id', 'decision_provenance']), ('history', ['schema_version', 'identity', 'league_origin', 'season_summaries', 'ownership_timeline', 'ownership_intervals', 'trades', 'waiver_and_free_agent_history', 'limitations', 'current_owner_observation']), ('market_trend', ['asset_id', 'current_value', 'as_of', 'direction', 'magnitude', 'magnitude_band', 'horizon', 'confidence', 'confidence_score', 'evidence_coverage', 'checkpoint_count', 'latest_checkpoint_age_days', 'observed_high', 'observed_low', 'volatility', 'volatility_band', 'milestones', 'event_context', 'checkpoints', 'league_liquidity']), ('historical_progress', ['canonical_history_progress', 'latest_job_progress', 'active_job_progress', 'foundation_progress'])]
+prepared {'label': 'Season Average', 'fantasy_points': 18.0, 'opportunities': 4.0, 'targets': 0.0, 'carries': 4.0, 'receptions': 0.0, 'touchdowns': 2.0, 'season': 2026, 'observation_count': 8, 'scored_count': 8, 'weeks': (1, 2, 3, 4, 5, 6, 7, 8), 'missing_components': ()}
+INFO:httpx:HTTP Request: GET http://testserver/market?selected=player%3A1 "HTTP/1.1 200 OK"
+HTML /market?selected=player%3A1 200 count False value False panel False
+INFO:httpx:HTTP Request: GET http://testserver/players/1?front_office=4 "HTTP/1.1 200 OK"
+HTML /players/1?front_office=4 200 count True value True panel True

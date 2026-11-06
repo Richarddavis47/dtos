@@ -1,0 +1,119 @@
+E701 Multiple statements on one line (colon)
+   --> tests/test_release_publisher.py:744:38
+    |
+742 | …     for mutation in ('valid','source','dirty','population','partial_value','coverage','retained','overflow','heavy','oom','png'):
+743 | …         report=copy.deepcopy(good)
+744 | …         if mutation=='source': report['head']='wrong'
+    |                                ^
+745 | …         if mutation=='dirty': report['working_tree_clean']=False
+746 | …         if mutation=='population': report['records'].pop()
+    |
+
+E701 Multiple statements on one line (colon)
+   --> tests/test_release_publisher.py:745:37
+    |
+743 |                 report=copy.deepcopy(good)
+744 |                 if mutation=='source': report['head']='wrong'
+745 |                 if mutation=='dirty': report['working_tree_clean']=False
+    |                                     ^
+746 |                 if mutation=='population': report['records'].pop()
+747 |                 if mutation=='partial_value': report['records'][0]['partial']['fantasy_points']=0
+    |
+
+E701 Multiple statements on one line (colon)
+   --> tests/test_release_publisher.py:746:42
+    |
+744 |                 if mutation=='source': report['head']='wrong'
+745 |                 if mutation=='dirty': report['working_tree_clean']=False
+746 |                 if mutation=='population': report['records'].pop()
+    |                                          ^
+747 |                 if mutation=='partial_value': report['records'][0]['partial']['fantasy_points']=0
+748 |                 if mutation=='coverage': report['records'][0]['complete']['scored_count']=7
+    |
+
+E701 Multiple statements on one line (colon)
+   --> tests/test_release_publisher.py:747:45
+    |
+745 |                 if mutation=='dirty': report['working_tree_clean']=False
+746 |                 if mutation=='population': report['records'].pop()
+747 |                 if mutation=='partial_value': report['records'][0]['partial']['fantasy_points']=0
+    |                                             ^
+748 |                 if mutation=='coverage': report['records'][0]['complete']['scored_count']=7
+749 |                 if mutation=='retained': report['records'][0]['retained_failure']=False
+    |
+
+E701 Multiple statements on one line (colon)
+   --> tests/test_release_publisher.py:748:40
+    |
+746 |                 if mutation=='population': report['records'].pop()
+747 |                 if mutation=='partial_value': report['records'][0]['partial']['fantasy_points']=0
+748 |                 if mutation=='coverage': report['records'][0]['complete']['scored_count']=7
+    |                                        ^
+749 |                 if mutation=='retained': report['records'][0]['retained_failure']=False
+750 |                 if mutation=='overflow': report['records'][0]['overflow']=True
+    |
+
+E701 Multiple statements on one line (colon)
+   --> tests/test_release_publisher.py:749:40
+    |
+747 |                 if mutation=='partial_value': report['records'][0]['partial']['fantasy_points']=0
+748 |                 if mutation=='coverage': report['records'][0]['complete']['scored_count']=7
+749 |                 if mutation=='retained': report['records'][0]['retained_failure']=False
+    |                                        ^
+750 |                 if mutation=='overflow': report['records'][0]['overflow']=True
+751 |                 if mutation=='heavy': report['requests'].append({'path':'/sync'})
+    |
+
+E701 Multiple statements on one line (colon)
+   --> tests/test_release_publisher.py:750:40
+    |
+748 |                 if mutation=='coverage': report['records'][0]['complete']['scored_count']=7
+749 |                 if mutation=='retained': report['records'][0]['retained_failure']=False
+750 |                 if mutation=='overflow': report['records'][0]['overflow']=True
+    |                                        ^
+751 |                 if mutation=='heavy': report['requests'].append({'path':'/sync'})
+752 |                 if mutation=='oom': report['after_memory']['cgroup_memory_events']['oom_kill']=1
+    |
+
+E701 Multiple statements on one line (colon)
+   --> tests/test_release_publisher.py:751:37
+    |
+749 |                 if mutation=='retained': report['records'][0]['retained_failure']=False
+750 |                 if mutation=='overflow': report['records'][0]['overflow']=True
+751 |                 if mutation=='heavy': report['requests'].append({'path':'/sync'})
+    |                                     ^
+752 |                 if mutation=='oom': report['after_memory']['cgroup_memory_events']['oom_kill']=1
+753 |                 files={'browser.json':json.dumps(report).encode()}
+    |
+
+E701 Multiple statements on one line (colon)
+   --> tests/test_release_publisher.py:752:35
+    |
+750 |                 if mutation=='overflow': report['records'][0]['overflow']=True
+751 |                 if mutation=='heavy': report['requests'].append({'path':'/sync'})
+752 |                 if mutation=='oom': report['after_memory']['cgroup_memory_events']['oom_kill']=1
+    |                                   ^
+753 |                 files={'browser.json':json.dumps(report).encode()}
+754 |                 files.update({str(i)+'.png':b'\x89PNG\r\n\x1a\nfixture' for i in range(23 if mutation=='png' else 24)})
+    |
+
+E701 Multiple statements on one line (colon)
+   --> tests/test_release_publisher.py:757:41
+    |
+755 |                 p.make_zip(target,files)
+756 |                 with self.subTest(mutation=mutation):
+757 |                     if mutation=='valid': self.assertEqual(len(p.verify_current_production(target,plan)['records']),8)
+    |                                         ^
+758 |                     else:
+759 |                         with self.assertRaises(RuntimeError): p.verify_current_production(target,plan)
+    |
+
+E701 Multiple statements on one line (colon)
+   --> tests/test_release_publisher.py:759:61
+    |
+757 |                     if mutation=='valid': self.assertEqual(len(p.verify_current_production(target,plan)['records']),8)
+758 |                     else:
+759 |                         with self.assertRaises(RuntimeError): p.verify_current_production(target,plan)
+    |                                                             ^
+
+Found 11 errors.

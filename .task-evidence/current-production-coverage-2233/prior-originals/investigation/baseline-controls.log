@@ -1,0 +1,79 @@
+test_new_fields_do_not_change_reference_values_or_input_facts (tests.test_current_production_coverage.CurrentProductionCoverageTests.test_new_fields_do_not_change_reference_values_or_input_facts) ... ok
+test_no_fake_bye_dnp_or_missing_week_zero_and_no_ownership_double_count (tests.test_current_production_coverage.CurrentProductionCoverageTests.test_no_fake_bye_dnp_or_missing_week_zero_and_no_ownership_double_count) ... ERROR
+test_ongoing_season_preserves_eight_observations_and_exact_denominator (tests.test_current_production_coverage.CurrentProductionCoverageTests.test_ongoing_season_preserves_eight_observations_and_exact_denominator) ... ERROR
+test_partial_scoring_retains_coverage_and_names_the_actual_gap (tests.test_current_production_coverage.CurrentProductionCoverageTests.test_partial_scoring_retains_coverage_and_names_the_actual_gap) ... ERROR
+test_player_record_does_not_require_team_defense_but_does_require_player_special_teams (tests.test_current_production_coverage.CurrentProductionCoverageTests.test_player_record_does_not_require_team_defense_but_does_require_player_special_teams) ... FAIL
+test_published_kicking_and_return_statistics_survive_normalization (tests.test_current_production_coverage.CurrentProductionCoverageTests.test_published_kicking_and_return_statistics_survive_normalization) ... ERROR
+test_window_adapter_old_cache_keeps_unknown_counts_and_new_cache_roundtrips (tests.test_current_production_coverage.CurrentProductionCoverageTests.test_window_adapter_old_cache_keeps_unknown_counts_and_new_cache_roundtrips) ... ERROR
+test_zero_coefficient_needs_no_statistic_but_missing_active_stat_does (tests.test_current_production_coverage.CurrentProductionCoverageTests.test_zero_coefficient_needs_no_statistic_but_missing_active_stat_does) ... FAIL
+
+======================================================================
+ERROR: test_no_fake_bye_dnp_or_missing_week_zero_and_no_ownership_double_count (tests.test_current_production_coverage.CurrentProductionCoverageTests.test_no_fake_bye_dnp_or_missing_week_zero_and_no_ownership_double_count)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_current_production_coverage.py", line 96, in test_no_fake_bye_dnp_or_missing_week_zero_and_no_ownership_double_count
+    self.assertEqual(row['observation_count'], 3)
+                     ~~~^^^^^^^^^^^^^^^^^^^^^
+KeyError: 'observation_count'
+
+======================================================================
+ERROR: test_ongoing_season_preserves_eight_observations_and_exact_denominator (tests.test_current_production_coverage.CurrentProductionCoverageTests.test_ongoing_season_preserves_eight_observations_and_exact_denominator)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_current_production_coverage.py", line 75, in test_ongoing_season_preserves_eight_observations_and_exact_denominator
+    self.assertEqual((row['observation_count'], row['scored_count']), (8, 8))
+                      ~~~^^^^^^^^^^^^^^^^^^^^^
+KeyError: 'observation_count'
+
+======================================================================
+ERROR: test_partial_scoring_retains_coverage_and_names_the_actual_gap (tests.test_current_production_coverage.CurrentProductionCoverageTests.test_partial_scoring_retains_coverage_and_names_the_actual_gap)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_current_production_coverage.py", line 85, in test_partial_scoring_retains_coverage_and_names_the_actual_gap
+    self.assertEqual((row['observation_count'], row['scored_count']), (8, 0))
+                      ~~~^^^^^^^^^^^^^^^^^^^^^
+KeyError: 'observation_count'
+
+======================================================================
+ERROR: test_published_kicking_and_return_statistics_survive_normalization (tests.test_current_production_coverage.CurrentProductionCoverageTests.test_published_kicking_and_return_statistics_survive_normalization)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_current_production_coverage.py", line 63, in test_published_kicking_and_return_statistics_survive_normalization
+    self.assertEqual([stats[k] for k in ('fgm', 'fgm_50p', 'xpm', 'fgmiss', 'xpmiss', 'st_td', 'kr_yd', 'pr_yd')],
+                      ~~~~~^^^
+KeyError: 'fgm'
+
+======================================================================
+ERROR: test_window_adapter_old_cache_keeps_unknown_counts_and_new_cache_roundtrips (tests.test_current_production_coverage.CurrentProductionCoverageTests.test_window_adapter_old_cache_keeps_unknown_counts_and_new_cache_roundtrips)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_current_production_coverage.py", line 107, in test_window_adapter_old_cache_keeps_unknown_counts_and_new_cache_roundtrips
+    self.assertEqual(context.windows[3].observation_count, 8)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'ProductionWindow' object has no attribute 'observation_count'
+
+======================================================================
+FAIL: test_player_record_does_not_require_team_defense_but_does_require_player_special_teams (tests.test_current_production_coverage.CurrentProductionCoverageTests.test_player_record_does_not_require_team_defense_but_does_require_player_special_teams)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_current_production_coverage.py", line 51, in test_player_record_does_not_require_team_defense_but_does_require_player_special_teams
+    self.assertEqual(row['fantasy_points'], 10)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: None != 10
+
+======================================================================
+FAIL: test_zero_coefficient_needs_no_statistic_but_missing_active_stat_does (tests.test_current_production_coverage.CurrentProductionCoverageTests.test_zero_coefficient_needs_no_statistic_but_missing_active_stat_does)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_current_production_coverage.py", line 44, in test_zero_coefficient_needs_no_statistic_but_missing_active_stat_does
+    self.assertEqual(row['availability'], 'calculated')
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'incomplete' != 'calculated'
+- incomplete
++ calculated
+
+
+----------------------------------------------------------------------
+Ran 8 tests in 0.071s
+
+FAILED (failures=2, errors=5)

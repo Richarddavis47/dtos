@@ -1,0 +1,29 @@
+F401 [*] `dataclasses.asdict` imported but unused
+ --> tests/test_current_production_coverage.py:2:25
+  |
+1 | """Current-season production uses canonical facts, never roster-history totals."""
+2 | from dataclasses import asdict
+  |                         ^^^^^^
+3 | from pathlib import Path
+4 | import tempfile
+  |
+help: Remove unused import: `dataclasses.asdict`
+  |
+1 | """Current-season production uses canonical facts, never roster-history totals."""
+  - from dataclasses import asdict
+2 | from pathlib import Path
+  |
+
+E702 Multiple statements on one line (semicolon)
+   --> tests/test_current_production_coverage.py:120:46
+    |
+118 |     def test_new_fields_do_not_change_reference_values_or_input_facts(self):
+119 |         with tempfile.TemporaryDirectory() as folder:
+120 |             path=Path(folder)/'facts.sqlite3';first=prepared(path)
+    |                                              ^
+121 |             counts=GlobalEvidenceStore(path,readonly=True).counts()
+122 |             other=prepared(path, league='B', scoring={'pass_yd': .1})
+    |
+
+Found 2 errors.
+[*] 1 fixable with the `--fix` option.

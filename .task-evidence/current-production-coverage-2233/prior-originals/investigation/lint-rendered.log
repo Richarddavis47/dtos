@@ -1,0 +1,46 @@
+invalid-syntax: Expected `)`, found string
+  --> src/ui/canonical_production.py:51:13
+   |
+49 |     return ('<section class="card canonical-production" style="min-width:0;overflow-wrap:anywhere">'
+50 |             '<h3>Observed NFL production · selected league scoring</h3><p>' + escape(summary) + '</p>' + retained
+51 |             '<p>Windows average retained game observations, not calendar weeks. Byes, DNPs and missing '
+   |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+52 |             'weeks are not inserted as zero. Complete scoring means all applicable scoring components '
+53 |             'are supported for that sample; it does not establish full-season acquisition or final game status.</p>'
+   |
+
+invalid-syntax: Expected a statement
+  --> src/ui/canonical_production.py:62:93
+   |
+60 |             + ''.join(rows) + '</tbody></table></div><ul>' + notes + '</ul>'
+61 |             '<p>Career History contains separate Sleeper roster-week observations. Those points are not '
+62 |             'substituted here. Forward Sleeper projections are also separate.</p></section>')
+   |                                                                                             ^
+
+invalid-syntax: Expected a statement
+  --> src/ui/canonical_production.py:62:94
+   |
+60 |             + ''.join(rows) + '</tbody></table></div><ul>' + notes + '</ul>'
+61 |             '<p>Career History contains separate Sleeper roster-week observations. Those points are not '
+62 |             'substituted here. Forward Sleeper projections are also separate.</p></section>')
+   |                                                                                              ^
+
+F401 [*] `src.core.historical_memory.graph.HistoricalGraph` imported but unused
+   --> tests/test_current_production_coverage.py:258:54
+    |
+256 |         from unittest.mock import patch
+257 |         from types import SimpleNamespace
+258 |         from src.core.historical_memory.graph import HistoricalGraph
+    |                                                      ^^^^^^^^^^^^^^^
+259 |         # A synthetic roster-history total deliberately differs from canonical
+260 |         # production. It is presentation evidence, not the original Granite run.
+    |
+help: Remove unused import: `src.core.historical_memory.graph.HistoricalGraph`
+    |
+257 |         from types import SimpleNamespace
+    -         from src.core.historical_memory.graph import HistoricalGraph
+258 |         # A synthetic roster-history total deliberately differs from canonical
+    |
+
+Found 4 errors.
+[*] 1 fixable with the `--fix` option.

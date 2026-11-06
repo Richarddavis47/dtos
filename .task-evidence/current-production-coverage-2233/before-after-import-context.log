@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "/evidence/before-after.py", line 15, in <module>
+    production=previous('src/core/data_platform/global_production.py','prior_canonical_production')
+  File "/evidence/before-after.py", line 12, in previous
+    exec(compile(code,m['baseline']+':'+path,'exec'),module.__dict__)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "500d985d2f31c97680370a616a9303c47d60ca7f:src/core/data_platform/global_production.py", line 9, in <module>
+ImportError: attempted relative import with no known parent package
