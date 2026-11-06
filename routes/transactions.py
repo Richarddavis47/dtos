@@ -470,6 +470,15 @@ def create_transactions_router(
         league_context = context["league"]
         from src.ui.player_dossier_text import availability_text
         reasons = {key: availability_text(key, value) for key, value in context["availability"].items()}
+        from dataclasses import asdict
+        from src.core.player_value_projection.canonical_production import prepared_production_context
+        from src.ui.canonical_production import production_panel, production_summary
+        canonical = data.get('canonical_player_production')
+        production = (asdict(prepared_production_context(canonical, league_id=selected_league, player_id=player_id))
+                      if canonical else None)
+        if production_summary(production):
+            reasons['production'] = production_summary(production)
+        canonical_panel = production_panel(production, refresh_failed=bool(state.get('last_error')))
         fantasycalc = live["provider_details"].get("FantasyCalc") or {}
         trend_value = fantasycalc.get("trend_30_day")
         trend_label = f"{trend_value:+}" if isinstance(trend_value, (int, float)) else "No historical provider trend is available."
@@ -532,6 +541,7 @@ def create_transactions_router(
 {player_dossier(report, selected_team, teams, weekly_projection_html=weekly_panel, ownership=ownership)}
 <p class="player-reported-status">Sleeper reported status: {escape(str(player.get("injury_status") or player.get("status") or "Unavailable"))}</p>
 {profile_explanation}
+{canonical_panel}
 {live_panel}
 {historical_panel}
 <h2>Recent Transactions</h2><div class="grid">{cards}</div>

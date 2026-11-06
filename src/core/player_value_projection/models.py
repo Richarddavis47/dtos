@@ -57,6 +57,11 @@ class ProductionWindow:
     carries: float | None
     receptions: float | None
     touchdowns: float | None
+    season: int | None = None
+    observation_count: int | None = None
+    scored_count: int | None = None
+    weeks: tuple[int, ...] = ()
+    missing_components: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)

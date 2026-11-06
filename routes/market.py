@@ -440,7 +440,7 @@ def create_market_router(
             route_variant, selected_league, generation, market.dataset_version,
             VERSION, BUILD_NUMBER, league_name, selected_state.get("last_sync"),
             selected_state.get("last_error"), q, position, availability, sort,
-            direction, front_office, selected, offset, limit, projection_key, ownership.generation, trend_revision,
+            direction, front_office, selected, offset, limit, projection_key, ownership.generation, trend_revision, bool(selected_state.get("last_error")),
         )
         render_cache = home_render_cache if route_variant == "home" else market_render_cache
         body_cache = (
@@ -450,7 +450,7 @@ def create_market_router(
         body_key = (
             route_variant, selected_league, generation, market.dataset_version,
             VERSION, BUILD_NUMBER, q, position, availability, sort,
-            direction, front_office, selected, offset, limit, projection_key, ownership.generation, trend_revision,
+            direction, front_office, selected, offset, limit, projection_key, ownership.generation, trend_revision, bool(selected_state.get("last_error")),
         )
 
         def render_body() -> bytes:
@@ -557,6 +557,8 @@ def create_market_router(
                     trend_heading = 'Observed price comparison'
                     trend_classification_note = '<p>More evidence is needed to classify the trend. A supported price difference is shown separately.</p>'
                 trend_html = f'''<section class="card"><p class="eyebrow">Observed Market Trend</p><h3>{escape(trend_heading)}</h3><p>{_trend_observation_summary(trend)}</p>{f'<ul>{milestone_html}</ul>' if milestone_html else '<p class="muted">No supported milestone comparison is available yet.</p>'}<p class="muted">Recorded observations only; no daily prices are invented.</p></section>'''
+                from src.ui.canonical_production import production_panel
+                production_html = production_panel((detail.get('valuation') or {}).get('canonical_production'), refresh_failed=bool(selected_state.get('last_error')))
                 trend_html += trend_classification_note + _trend_checkpoint_details(trend)
                 trend_html += _trend_boundary_notice(trend)
                 from services.asset_explanations import market_explanation
@@ -567,7 +569,7 @@ def create_market_router(
                 if dossier_url.startswith(("/players/", "/picks/")):
                     origin = "/market?" + _market_query(q=q, position=position, availability=availability, sort=sort, direction=direction, front_office=front_office, selected=selected, offset=offset, limit=limit)
                     dossier_url += "?" + urlencode({"from_market": origin, "market_league": selected_league, **({"front_office": front_office} if front_office is not None else {})})
-                expanded = f'''<section class="card" id="selected-asset" tabindex="-1"><p class="eyebrow">Expanded Asset</p><h2>{escape(asset["display_name"])}</h2><p>{escape(str(asset.get("position") or asset["asset_type"]))} · {escape(str(asset.get("nfl_team") or "No NFL team"))}</p>{ownership_html}<p><b>Canonical Market:</b> {escape(available(values.get("market_value"), reason="Unavailable"))}</p>{forward_html}<details><summary>Valuation and source evidence</summary>{value_html}{market_fact_html(asset.get("market_fact"))}<p><b>DTOS view:</b> {escape(recommendation["primary_reason"])}</p></details><p><a href="{escape(dossier_url)}">Open canonical dossier</a> · <a href="{trade_href}">Trade Intelligence</a></p><details><summary>Why?</summary><p>Decision confidence: {escape(available(recommendation.get("confidence"), reason="Unavailable"))}</p><p>Historical availability: {escape(asset["historical_availability"])}</p><p>Missing evidence: {escape(", ".join(recommendation["missing_evidence"]) or "None reported")}</p></details><details class="technical-details"><summary>Technical Details</summary><p>Asset: <code>{escape(asset["asset_id"])}</code></p><p>Brain snapshot: <code>{escape(recommendation["brain_snapshot_id"])}</code></p><p>Market generation: <code>{escape(detail["market_generation"])}</code></p><p>Valuation generation: <code>{escape(str(detail.get("valuation_generation") or "Unavailable"))}</code></p><p>Historical dataset: <code>{escape(detail["historical_dataset_version"])}</code></p><p>Historical evidence records: {len(history.get("events") or history.get("ownership_intervals") or [])}</p></details></section><details><summary>Observed trends and comparison details</summary>{trend_html}</details>'''
+                expanded = f'''<section class="card" id="selected-asset" tabindex="-1"><p class="eyebrow">Expanded Asset</p><h2>{escape(asset["display_name"])}</h2><p>{escape(str(asset.get("position") or asset["asset_type"]))} · {escape(str(asset.get("nfl_team") or "No NFL team"))}</p>{ownership_html}<p><b>Canonical Market:</b> {escape(available(values.get("market_value"), reason="Unavailable"))}</p>{forward_html}<details><summary>Valuation and source evidence</summary>{value_html}{production_html}{market_fact_html(asset.get("market_fact"))}<p><b>DTOS view:</b> {escape(recommendation["primary_reason"])}</p></details><p><a href="{escape(dossier_url)}">Open canonical dossier</a> · <a href="{trade_href}">Trade Intelligence</a></p><details><summary>Why?</summary><p>Decision confidence: {escape(available(recommendation.get("confidence"), reason="Unavailable"))}</p><p>Historical availability: {escape(asset["historical_availability"])}</p><p>Missing evidence: {escape(", ".join(recommendation["missing_evidence"]) or "None reported")}</p></details><details class="technical-details"><summary>Technical Details</summary><p>Asset: <code>{escape(asset["asset_id"])}</code></p><p>Brain snapshot: <code>{escape(recommendation["brain_snapshot_id"])}</code></p><p>Market generation: <code>{escape(detail["market_generation"])}</code></p><p>Valuation generation: <code>{escape(str(detail.get("valuation_generation") or "Unavailable"))}</code></p><p>Historical dataset: <code>{escape(detail["historical_dataset_version"])}</code></p><p>Historical evidence records: {len(history.get("events") or history.get("ownership_intervals") or [])}</p></details></section><details><summary>Observed trends and comparison details</summary>{trend_html}</details>'''
             def options(values: Any, selected_value: str) -> str:
                 return "".join(
                     f'<option value="{value}" {"selected" if selected_value == value else ""}>{label}</option>'

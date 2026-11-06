@@ -42,8 +42,8 @@ jobs:
       - name: Retained history lifecycle and phone routes
         timeout-minutes: 5
         run: |
-          mkdir -p .validation/current-season-history .validation/history-followthrough .validation/market-history-coverage
-          docker run --rm --init --memory=2g --memory-swap=2g --cpus=2 --network=none -e NODE_OPTIONS -e DTOS_CURRENT_HISTORY_EVIDENCE=.validation/current-season-history -e DTOS_FOLLOWTHROUGH_EVIDENCE=.validation/history-followthrough -e DTOS_MARKET_HISTORY_EVIDENCE=.validation/market-history-coverage -v "$PWD:$PWD" -w "$PWD" -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0="$PWD" dtos-browser-validation python -m unittest -v tests.test_current_season_franchise_history tests.test_current_season_history_browser tests.test_history_followthrough tests.test_history_followthrough_browser tests.test_market_history_coverage tests.test_market_history_coverage_browser
+          mkdir -p .validation/current-season-history .validation/history-followthrough .validation/market-history-coverage .validation/current-production-coverage
+          docker run --rm --init --memory=2g --memory-swap=2g --cpus=2 --network=none -e NODE_OPTIONS -e DTOS_CURRENT_HISTORY_EVIDENCE=.validation/current-season-history -e DTOS_FOLLOWTHROUGH_EVIDENCE=.validation/history-followthrough -e DTOS_MARKET_HISTORY_EVIDENCE=.validation/market-history-coverage -e DTOS_PRODUCTION_COVERAGE_EVIDENCE=.validation/current-production-coverage -v "$PWD:$PWD" -w "$PWD" -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0="$PWD" dtos-browser-validation python -m unittest -v tests.test_current_season_franchise_history tests.test_current_season_history_browser tests.test_history_followthrough tests.test_history_followthrough_browser tests.test_market_history_coverage tests.test_market_history_coverage_browser tests.test_current_production_coverage tests.test_current_production_browser
       - name: Preserve current-season history evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -67,6 +67,15 @@ jobs:
         with:
           name: market-history-coverage-browser
           path: .validation/market-history-coverage
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Preserve current-production coverage evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: current-production-coverage-browser
+          path: .validation/current-production-coverage
           if-no-files-found: error
           retention-days: 14
 

@@ -148,6 +148,9 @@ def normalize_nflverse_row(row: dict[str, Any]) -> dict[str, Any]:
             "pass_2pt": "passing_2pt_conversions",
             "pass_fd": "passing_first_downs",
             "pass_sack": "sacks_suffered",
+            "pass_cmp_40p": "passing_40",
+            "rush_40p": "rushing_40",
+            "rec_40p": "receiving_40",
             "rush_att": "carries",
             "rush_yd": "rushing_yards",
             "rush_td": "rushing_tds",
@@ -166,6 +169,24 @@ def normalize_nflverse_row(row: dict[str, Any]) -> dict[str, Any]:
             "fumbles_lost": "fumbles_lost",
         }.items()
     }
+    # Exact published counts only. Team-defense totals are not individual
+    # player statistics, and 40-yard plays are not long-touchdown evidence.
+    for key, source in {
+        'fgm': 'fg_made', 'xpm': 'pat_made', 'fgm_0_19': 'fg_made_0_19',
+        'fgm_20_29': 'fg_made_20_29', 'fgm_30_39': 'fg_made_30_39',
+        'fgm_40_49': 'fg_made_40_49', 'fgm_50_59': 'fg_made_50_59',
+        'fgm_60p': 'fg_made_60_', 'st_td': 'special_teams_tds',
+        'kr_yd': 'kickoff_return_yards', 'pr_yd': 'punt_return_yards',
+    }.items():
+        raw_stats[key] = _number(row.get(source))
+    upper = (raw_stats['fgm_50_59'], raw_stats['fgm_60p'])
+    raw_stats['fgm_50p'] = sum(upper) if all(value is not None for value in upper) else None
+    # A zero number of unsuccessful attempts is provable without equating the
+    # provider's separate missed/blocked counters with Sleeper's miss category.
+    # Positive unmatched attempts remain unsupported until that mapping is proven.
+    for key, attempts, made in (('fgmiss', 'fg_att', 'fg_made'), ('xpmiss', 'pat_att', 'pat_made')):
+        attempted, successful = _number(row.get(attempts)), _number(row.get(made))
+        raw_stats[key] = 0 if attempted is not None and attempted >= 0 and attempted == successful else None
     return {
         "provider_player_id": row.get("player_id") or None,
         "provider_record_id": (

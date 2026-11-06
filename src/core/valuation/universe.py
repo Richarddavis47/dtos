@@ -329,7 +329,9 @@ class ValuationUniverse:
             points = season_window.fantasy_points if season_window is not None else None
             layers["current_production_value"] = _layer(
                 points, "Canonical current-season PPG · selected league scoring", self.generated_at,
-                reason="Current-season complete scoring evidence is unavailable; previous seasons are not substituted.",
+                reason=('Missing applicable scoring components: ' + ', '.join(season_window.missing_components)
+                        if season_window is not None and season_window.missing_components else
+                        'Current-season complete scoring evidence is unavailable; previous seasons are not substituted.'),
             )
         name = player.get("name") or player.get("full_name") or " ".join(filter(None, (player.get("first_name"), player.get("last_name")))) or player_id
         return {

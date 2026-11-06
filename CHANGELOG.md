@@ -1,3 +1,9 @@
+# v1.22.18 / build 2233 — Current-season canonical production coverage
+
+Canonical player production now excludes zero-weight and individual-inapplicable team-defense scoring requirements, retains supported kicking/return source fields, and preserves genuinely missing applicable statistics. Completed-week windows use the selected league scoring and authoritative NFL week; unsupported totals remain withheld. Existing historical scoring, reference valuation mathematics, forward projections and Trade qualification are unchanged.
+
+Market and player dossiers show admitted observation counts, scored coverage, observed weeks, per-observation averages and specific missing scoring fields. Failed source checks cannot make retained production newly fresh. Career History roster points remain separate; no fallback or inferred zero is introduced. Old prepared contexts retain their same-generation sample counts where available. See docs/audits/CURRENT_PRODUCTION_COVERAGE_2233.md for source boundaries, reproduction and limitations.
+
 # v1.22.17 / build 2232 — Market history evidence coverage
 
 Market history now refreshes its rendered comparison when legitimately retained checkpoints or event references change, even when the current price publication stays the same. Existing daily evidence-aging rules also reach the cached page. This prevents an old HTML comparison from disagreeing with the canonical API.
