@@ -170,8 +170,10 @@ class LineupProvenanceBrowserTests(unittest.TestCase):
                         )
                         restored_text = page.locator("#trade-result").inner_text()
                         if case == "global":
-                            self.assertNotIn("6.31", restored_text)
-                            self.assertNotIn("18.93", restored_text)
+                            # Match a complete score, not digits inside the
+                            # retained assessment's ISO capture timestamp.
+                            self.assertNotRegex(restored_text, r"(?<![\d.])6\.31(?!\d)")
+                            self.assertNotRegex(restored_text, r"(?<![\d.])18\.93(?!\d)")
                         else:
                             self.assertIn(
                                 "Your team · Next-N: Unavailable", restored_text
@@ -212,8 +214,8 @@ class LineupProvenanceBrowserTests(unittest.TestCase):
                         )
                         adopted_text = page.locator("#trade-result").inner_text()
                         if case == "global":
-                            self.assertNotIn("6.31", adopted_text)
-                            self.assertNotIn("18.93", adopted_text)
+                            self.assertNotRegex(adopted_text, r"(?<![\d.])6\.31(?!\d)")
+                            self.assertNotRegex(adopted_text, r"(?<![\d.])18\.93(?!\d)")
                         else:
                             self.assertIn(
                                 "Your team · Next-N: Unavailable", adopted_text
