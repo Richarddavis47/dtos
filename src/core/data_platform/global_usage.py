@@ -4,19 +4,21 @@ from __future__ import annotations
 from .global_evidence import GlobalEvidenceStore
 
 
-def player_usage(store: GlobalEvidenceStore, player_id: str, *, season: int, as_of: str) -> dict:
+def player_usage(store: GlobalEvidenceStore, player_id: str, *, season: int, as_of: str,
+                 through_week: int | None = None) -> dict:
     facts = store.read('production', f'sleeper:{player_id}', as_of=as_of, season=season)
     games = [{'game_id': fact['values'].get('game_id'), 'week': fact['week'],
               'targets': fact['values'].get('rec_tgt'), 'carries': fact['values'].get('rush_att'),
               'target_share': fact['values'].get('target_share'),
               'air_yards_share': fact['values'].get('air_yards_share'),
-              'evidence_fingerprint': fact['fingerprint']} for fact in facts]
+              'evidence_fingerprint': fact['fingerprint']} for fact in facts if through_week is None or (fact["week"] is not None and fact["week"] <= through_week)]
 
     def total(key):
         values = [game[key] for game in games]
         return sum(values) if values and all(value is not None for value in values) else None
 
     return {'player_id': player_id, 'season': season, 'as_of': as_of,
+            'completed_week_boundary': through_week,
             'availability': 'cached' if games else 'unavailable',
             'source': 'nflverse production', 'games': games,
             'targets': total('targets'), 'carries': total('carries'),

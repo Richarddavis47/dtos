@@ -19,7 +19,7 @@ from src.core.data_platform.global_evidence import utc
 from src.core.data_platform.global_production import GlobalProduction
 from src.core.player_value_projection.canonical_production import canonical_production_context
 
-PRODUCTION_ADAPTER_VERSION = "canonical-production-v3"
+PRODUCTION_ADAPTER_VERSION = "canonical-production-v4"
 REFERENCE_SCORING_SETTINGS = {"pass_yd": .04, "pass_td": 4, "pass_int": -2,
     "rush_yd": .1, "rush_td": 6, "rec": 1, "rec_yd": .1, "rec_td": 6, "fum_lost": -2}
 
@@ -41,15 +41,16 @@ def prepare_player_production(data: dict[str, Any], *, expected_league_id: str,
     catalog = data.get('normalized_players') or data.get('players') or {}
     member_ids = (data.get('relevant_player_universe') or {}).get('member_ids')
     ids = sorted(set(str(value) for value in (member_ids if isinstance(member_ids, list) else catalog)))
+    completed_week = GlobalProduction.completed_week_boundary(data, season)
     store = retained_global_evidence(path)
     result: dict[str, Any] = {'method_version': PRODUCTION_ADAPTER_VERSION, 'league_id': league_id,
-        'season': season, 'scoring_fingerprint': fingerprint, 'players': {}, 'provider_calls': 0,
+        'season': season, 'completed_week_boundary': completed_week, 'scoring_fingerprint': fingerprint, 'players': {}, 'provider_calls': 0,
         'scoring_basis': 'selected_league_rules_applied_to_each_explicit_season',
         'availability': 'cached' if store else 'not_connected', 'fact_count': 0}
     from src.core.valuation.player_methodology import REFERENCE_SCORING
     result['reference_scoring'] = REFERENCE_SCORING
-    digest = hashlib.sha256(json.dumps([PRODUCTION_ADAPTER_VERSION, season, fingerprint, ids], separators=(',', ':')).encode())
-    reference_digest = hashlib.sha256(json.dumps([REFERENCE_SCORING, REFERENCE_SCORING_SETTINGS, season, ids], sort_keys=True, separators=(',', ':')).encode())
+    digest = hashlib.sha256(json.dumps([PRODUCTION_ADAPTER_VERSION, season, fingerprint, ids, completed_week], separators=(',', ':')).encode())
+    reference_digest = hashlib.sha256(json.dumps([REFERENCE_SCORING, REFERENCE_SCORING_SETTINGS, season, ids, completed_week], sort_keys=True, separators=(',', ':')).encode())
 
     def context(player_id):
         return {year: {'league_id': league_id, 'player_id': player_id, 'season': year,
@@ -57,11 +58,21 @@ def prepare_player_production(data: dict[str, Any], *, expected_league_id: str,
                        'production': {'as_of': boundary, 'games': []}} for year in (season, season - 1)}
 
     if store is not None:
+        checks = {year: store.source_check(f'nflverse/production/{year}') for year in (season, season - 1)}
+        checks = {year: receipt for year, receipt in checks.items()
+                  if receipt and utc(receipt['checked_at']) <= boundary}
+        result['source_checks'] = {str(year): receipt for year, receipt in checks.items()}
+        digest.update(json.dumps(result['source_checks'], sort_keys=True, separators=(',', ':')).encode())
         stream = store.iter_dynasty_production(ids, current_season=season, as_of=boundary)
         for subject, facts in groupby(stream, key=lambda row: row['subject_id']):
             player_id = subject.removeprefix('sleeper:')
             periods = context(player_id)
             reference_seasons = {}
+            for year, receipt in checks.items():
+                if receipt['status'] != 'complete':
+                    periods[season].setdefault('limitations', []).append(
+                        ('Previous season: ' if year != season else '') + 'Latest canonical production source check is ' + receipt['status']
+                        + '; retained admitted observations remain a qualified sample, not newly complete source coverage.')
             count = 0
             for fact in facts:
                 count += 1
@@ -77,6 +88,11 @@ def prepare_player_production(data: dict[str, Any], *, expected_league_id: str,
                         'carries': fact['values'].get('rush_att'),
                     })
                 if fact['season'] not in periods:
+                    continue
+                if (fact['season'] == season and completed_week is not None
+                        and (fact['week'] is None or fact['week'] > completed_week)):
+                    periods[season].setdefault('limitations', []).append(
+                        'Current-week, later or unverified-week source records are excluded from completed-week production windows.')
                     continue
                 periods[fact['season']]['production']['games'].append({
                     'game_id': fact['values'].get('game_id') or fact['source_record_id'],

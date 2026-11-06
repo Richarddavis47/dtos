@@ -48,13 +48,14 @@ def canonical_player_evidence(player_id: str, data: dict, *, expected_league_id:
         return {'availability': 'not_connected', 'reason': 'global_evidence_not_retained', 'league_id': league_id}
     boundary = as_of or datetime.now(timezone.utc).isoformat()
     production = GlobalProduction(store).league_scored(player_id, league_id=league_id,
-        scoring_settings=scoring, as_of=boundary, season=season)
+        scoring_settings=scoring, as_of=boundary, season=season,
+        through_week=GlobalProduction.completed_week_boundary(data, season) if as_of is None else None)
     receipt = store.source_check(f'nflverse/production/{season}')
     if receipt and utc(receipt['checked_at']) > utc(boundary):
         # A later refresh receipt cannot enter a point-in-time response. The
         # surviving facts still carry their own independently filtered boundary.
         receipt = None
-    checked = (receipt or {}).get('checked_at')
+    checked = (receipt or {}).get('checked_at') if (receipt or {}).get('status') == 'complete' else None
     if checked is None:
         checked = max((game['knowledge_boundary'] for game in production['games']), default=None)
     nfl_season = str((data.get('nfl_state') or {}).get('season') or '')
@@ -77,8 +78,10 @@ def canonical_player_evidence(player_id: str, data: dict, *, expected_league_id:
         as_of=boundary, evidence_family='performance', completed_period=completed_period)
     return {'league_id': league_id, 'player_id': player_id, 'season': season,
             'availability': assessment.state.value, 'availability_detail': asdict(assessment),
-            'production': production, 'usage': player_usage(store, player_id, season=season, as_of=boundary),
+            'production': production, 'usage': player_usage(store, player_id, season=season, as_of=boundary,
+                through_week=production.get('completed_week_boundary')),
             'schedule': schedule,
             'scoring_fingerprint': hashlib.sha256(json.dumps(scoring, sort_keys=True, separators=(',', ':')).encode()).hexdigest(),
             'source_check': receipt, 'provider_calls': 0,
-            'limitations': ['historical_publication_time_not_inferred', 'no_current_or_prior_season_substitution']}
+            'limitations': ['historical_publication_time_not_inferred', 'no_current_or_prior_season_substitution']
+                + (['latest_source_check_' + receipt['status']] if receipt and receipt['status'] != 'complete' else [])}

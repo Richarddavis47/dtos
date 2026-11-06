@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from typing import Any, Iterable, Mapping
+import math
 
 from src.core.historical_memory.scoring import calculate_fantasy_points
 
@@ -15,20 +16,58 @@ class GlobalProduction:
         self.store = store
 
     @staticmethod
+    def completed_week_boundary(data: dict[str, Any], season: int) -> int | None:
+        nfl = data.get('nfl_state') or {}
+        week = nfl.get('week')
+        return (week - 1 if str(nfl.get('season')) == str(season)
+                and nfl.get('season_type') in (None, 'regular')
+                and type(week) is int and 1 <= week <= 18 else None)
+
+    @staticmethod
     def scoring_components(values: dict[str, Any]) -> dict[str, Any]:
         """Explicit source-to-Sleeper scoring aliases, without zero-filling gaps."""
         result = dict(values)
         result['fum'] = values.get('fumbles')
         result['fum_lost'] = values.get('fumbles_lost')
         position = values.get('position')
-        result['bonus_rec_te'] = (values.get('rec') if position == 'TE' else 0) if position else None
+        for key, required_position, stat in (
+            ('bonus_rec_te', 'TE', 'rec'), ('bonus_rec_rb', 'RB', 'rec'),
+            ('bonus_rec_wr', 'WR', 'rec'), ('bonus_rush_td_qb', 'QB', 'rush_td'),
+        ):
+            result[key] = (values.get(stat) if position == required_position else 0
+                           if position in {'QB', 'RB', 'WR', 'TE', 'FB', 'K', 'P'} else None)
         # The published passing_40/receiving_40 columns count big plays, NOT
         # long touchdowns. They cannot fill the *_td_40p scoring evidence gap.
         return result
 
     @classmethod
     def score_game(cls, values: dict[str, Any], scoring_settings: dict[str, Any]) -> dict[str, Any]:
-        result = calculate_fantasy_points(cls.scoring_components(values), scoring_settings)
+        # These categories score the fantasy team-defense asset, not an NFL
+        # individual. Player special-teams categories (st_*) remain applicable.
+        team_only = {'sack', 'int', 'ff', 'fum_rec', 'fum_rec_td', 'safe', 'blk_kick',
+                     'def_td', 'def_st_td', 'def_st_ff', 'def_st_fum_rec',
+                     'def_kr_yd', 'def_pr_yd', 'def_pr_td', 'pts_allow', 'yds_allow'}
+        individual = values.get('position') in {'QB', 'RB', 'WR', 'TE', 'FB', 'K', 'P'}
+        active, ignored, inapplicable = {}, [], []
+        for key, weight in scoring_settings.items():
+            if isinstance(weight, bool) or not isinstance(weight, (int, float)) or not math.isfinite(weight):
+                raise ValueError('Canonical production scoring coefficients must be finite numbers.')
+            if weight == 0:
+                ignored.append(key)
+            elif individual and (key in team_only or key.startswith(('pts_allow_', 'yds_allow_'))):
+                inapplicable.append(key)
+            else:
+                active[key] = weight
+        components = cls.scoring_components(values)
+        # Malformed source evidence must not be silently skipped by a permissive
+        # legacy scorer and then described as a complete canonical game.
+        for key in active:
+            value = components.get(key)
+            if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value):
+                components[key] = None
+        result = calculate_fantasy_points(components, active)
+        result['ignored_zero_weight_components'] = sorted(ignored)
+        result['inapplicable_components'] = sorted(inapplicable)
         if result['availability'] != 'calculated':
             result['known_component_points'] = result['fantasy_points']
             result['fantasy_points'] = None
@@ -118,6 +157,7 @@ class GlobalProduction:
         scoring_settings: dict[str, Any],
         as_of: str,
         season: int | None = None,
+        through_week: int | None = None,
     ) -> dict[str, Any]:
         """No provider work or durable league copy; caller supplies authorized context."""
         if not league_id:
@@ -138,12 +178,14 @@ class GlobalProduction:
                 **self.score_game(fact["values"], scoring_settings),
             }
             for fact in facts
+            if through_week is None or (fact["week"] is not None and fact["week"] <= through_week)
         ]
         complete = [row for row in games if row["availability"] == "calculated"]
         return {
             "league_id": league_id,
             "player_id": player_id,
             "as_of": as_of,
+            "completed_week_boundary": through_week,
             "games": games,
             "games_with_complete_scoring": len(complete),
             "ppg": round(

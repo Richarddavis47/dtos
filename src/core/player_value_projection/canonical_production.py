@@ -35,7 +35,7 @@ def _average(rows: list[dict[str, Any]], field: str, *, raw: bool = False) -> fl
     return round(mean(values), 2) if values and all(value is not None for value in values) else None
 
 
-def _window(label: str, rows: list[dict[str, Any]]) -> ProductionWindow:
+def _window(label: str, rows: list[dict[str, Any]], season: int | None = None) -> ProductionWindow:
     points = _average(rows, "fantasy_points") if all(
         row.get("availability") == "calculated" for row in rows
     ) else None
@@ -49,6 +49,10 @@ def _window(label: str, rows: list[dict[str, Any]]) -> ProductionWindow:
         label, points, round(targets + carries, 2) if targets is not None and carries is not None else None,
         targets, carries, _average(rows, "rec", raw=True),
         round(mean(touchdowns), 2) if touchdowns and all(value is not None for value in touchdowns) else None,
+        season=season, observation_count=len(rows),
+        scored_count=sum(row.get('availability') == 'calculated' and row.get('fantasy_points') is not None for row in rows),
+        weeks=tuple(sorted({int(row['week']) for row in rows if row.get('week') is not None})),
+        missing_components=tuple(sorted({key for row in rows for key in row.get('missing_components') or ()})),
     )
 
 
@@ -67,10 +71,10 @@ def canonical_production_context(
             raise ValueError("Canonical production knowledge boundaries differ.")
     games, old_games = _games(current), _games(previous)
     windows = [
-        _window(label, games[-size:]) for label, size in
+        _window(label, games[-size:], current.get("season")) for label, size in
         (("Last Game", 1), ("Last 3 Games", 3), ("Last 5 Games", 5))
     ]
-    windows.extend((_window("Season Average", games), _window("Previous Season Average", old_games)))
+    windows.extend((_window("Season Average", games, current.get("season")), _window("Previous Season Average", old_games, previous.get("season"))))
     complete = bool(games) and all(
         row.get("availability") == "calculated" and _number(row.get("fantasy_points")) is not None
         for row in games
@@ -89,6 +93,9 @@ def canonical_production_context(
         limitations.append("No current-season NFL sample; prior-season evidence is shown separately.")
     elif not complete:
         limitations.append("Current production scoring is incomplete; no zero or partial-window average is substituted.")
+        missing = sorted({key for row in games for key in row.get('missing_components') or ()})
+        if missing:
+            limitations.append('Missing applicable scoring components: ' + ', '.join(missing) + '.')
     elif len(games) < 6:
         limitations.append("Insufficient current-season sample for production trend.")
     source = "Canonical nflverse production · league scoring · explicit season windows"
@@ -111,8 +118,22 @@ def prepared_production_context(snapshot: dict[str, Any], *, league_id: str,
     if not value:
         return ProductionContext((), None, None, 'Unavailable', 'Canonical production',
                                  DataStatus.UNAVAILABLE, None, ('Canonical player production is not prepared.',))
+    # Older compact caches retained a season sample count outside the windows.
+    # Reuse that same-generation count; an absent scored count stays unknown.
+    windows = []
+    for window in value['windows']:
+        window = dict(window)
+        sample_key = 'previous_sample_count' if window['label'] == 'Previous Season Average' else 'current_sample_count'
+        sample = row.get(sample_key)
+        if window.get('observation_count') is None and type(sample) is int and sample >= 0:
+            size = {'Last Game': 1, 'Last 3 Games': 3, 'Last 5 Games': 5}.get(window['label'], sample)
+            window['observation_count'] = min(sample, size)
+            if window.get('fantasy_points') is not None:
+                window['scored_count'] = window['observation_count']
+        windows.append(window)
     return ProductionContext(
-        tuple(ProductionWindow(**window) for window in value['windows']),
+        tuple(ProductionWindow(**{**window, 'weeks': tuple(window.get('weeks') or ()),
+            'missing_components': tuple(window.get('missing_components') or ())}) for window in windows),
         value['volatility'], value['consistency'], value['trend'], value['source'],
         DataStatus(value['status']), value['updated_at'], tuple(value.get('limitations') or ()),
     )

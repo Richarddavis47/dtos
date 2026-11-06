@@ -22,7 +22,7 @@ from .normalization.identity import PlayerIdentityResolver
 from .source_snapshot import download_snapshot
 
 
-METHOD_VERSION = "nflverse-global-production-v3"
+METHOD_VERSION = "nflverse-global-production-v4"
 
 
 def ingest_production(client: httpx.Client, store: GlobalEvidenceStore, *, season: int,
