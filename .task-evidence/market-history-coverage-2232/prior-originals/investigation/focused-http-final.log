@@ -1,0 +1,129 @@
+/usr/local/lib/python3.14/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+  from starlette.testclient import TestClient as TestClient  # noqa
+test_admitted_checkpoint_dates_and_values_reach_existing_disclosure (tests.test_market_history_coverage.MarketHistoryCoverageTests.test_admitted_checkpoint_dates_and_values_reach_existing_disclosure) ... INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:httpx:HTTP Request: GET http://testserver/api/market/assets/player:1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/market?selected=player%3A1 "HTTP/1.1 200 OK"
+ok
+test_daily_aging_updates_rendered_confidence_without_new_source_evidence (tests.test_market_history_coverage.MarketHistoryCoverageTests.test_daily_aging_updates_rendered_confidence_without_new_source_evidence) ... INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:httpx:HTTP Request: GET http://testserver/api/market/assets/player:1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/market?selected=player%3A1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/api/market/assets/player:1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/market?selected=player%3A1 "HTTP/1.1 200 OK"
+ok
+test_exact_pick_original_franchise_history_is_not_substituted (tests.test_market_history_coverage.MarketHistoryCoverageTests.test_exact_pick_original_franchise_history_is_not_substituted) ... INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:httpx:HTTP Request: GET http://testserver/api/market/assets/pick:2027:1:4 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/api/market/assets/pick:2027:1:5 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/market?selected=pick%3A2027%3A1%3A4 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/market?selected=pick%3A2027%3A1%3A5 "HTTP/1.1 200 OK"
+ok
+test_format_boundary_remains_not_comparable_and_not_player_movement (tests.test_market_history_coverage.MarketHistoryCoverageTests.test_format_boundary_remains_not_comparable_and_not_player_movement) ... INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:httpx:HTTP Request: GET http://testserver/market?selected=player%3A1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/api/market/assets/player:1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/market?selected=player%3A1 "HTTP/1.1 200 OK"
+ok
+test_incompatible_units_do_not_acquire_canonical_movement_or_zero (tests.test_market_history_coverage.MarketHistoryCoverageTests.test_incompatible_units_do_not_acquire_canonical_movement_or_zero) ... INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:httpx:HTTP Request: GET http://testserver/market?selected=player%3A1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/api/market/assets/player:1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/market?selected=player%3A1 "HTTP/1.1 200 OK"
+ok
+test_new_checkpoint_invalidates_both_html_caches_without_price_refresh (tests.test_market_history_coverage.MarketHistoryCoverageTests.test_new_checkpoint_invalidates_both_html_caches_without_price_refresh) ... INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:httpx:HTTP Request: GET http://testserver/market?selected=player%3A1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/api/market/assets/player:1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/api/market/assets "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/api/market/trending "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/market?selected=player%3A1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/market?selected=player%3A1 "HTTP/1.1 200 OK"
+ok
+test_new_event_reference_changes_milestone_without_inventing_a_price (tests.test_market_history_coverage.MarketHistoryCoverageTests.test_new_event_reference_changes_milestone_without_inventing_a_price) ... INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:httpx:HTTP Request: GET http://testserver/market?selected=player%3A1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/api/market/assets/player:1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/market?selected=player%3A1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/api/market/assets/player:1 "HTTP/1.1 200 OK"
+ok
+test_no_history_never_becomes_an_unchanged_zero (tests.test_market_history_coverage.MarketHistoryCoverageTests.test_no_history_never_becomes_an_unchanged_zero) ... INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:httpx:HTTP Request: GET http://testserver/api/market/assets/player:1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/market?selected=player%3A1 "HTTP/1.1 200 OK"
+ok
+test_one_checkpoint_without_a_later_endpoint_keeps_known_price_not_a_change (tests.test_market_history_coverage.MarketHistoryCoverageTests.test_one_checkpoint_without_a_later_endpoint_keeps_known_price_not_a_change) ... INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:httpx:HTTP Request: GET http://testserver/api/market/assets/player:1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/market?selected=player%3A1 "HTTP/1.1 200 OK"
+ok
+test_preview_is_bounded_without_truncating_the_canonical_comparison (tests.test_market_history_coverage.MarketHistoryCoverageTests.test_preview_is_bounded_without_truncating_the_canonical_comparison) ... INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:httpx:HTTP Request: GET http://testserver/api/market/assets/player:1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/market?selected=player%3A1 "HTTP/1.1 200 OK"
+ok
+test_settled_reads_preserve_every_record_and_do_not_prepare_again (tests.test_market_history_coverage.MarketHistoryCoverageTests.test_settled_reads_preserve_every_record_and_do_not_prepare_again) ... INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:httpx:HTTP Request: GET http://testserver/market?selected=player%3A1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/market?selected=player%3A1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/api/market/assets/player:1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/market?selected=player%3A1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/api/market/assets/player:1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/market?selected=player%3A1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/api/market/assets/player:1 "HTTP/1.1 200 OK"
+ok
+test_source_catalogue_is_not_presented_as_selected_price_providers (tests.test_market_history_coverage.MarketHistoryCoverageTests.test_source_catalogue_is_not_presented_as_selected_price_providers) ... INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:httpx:HTTP Request: GET http://testserver/api/market/assets/player:1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/market?selected=player%3A1 "HTTP/1.1 200 OK"
+ok
+test_supported_zero_is_a_comparison_without_claiming_a_stable_trend (tests.test_market_history_coverage.MarketHistoryCoverageTests.test_supported_zero_is_a_comparison_without_claiming_a_stable_trend) ... INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:httpx:HTTP Request: GET http://testserver/api/market/assets/player:1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/market?selected=player%3A1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/api/market/trending "HTTP/1.1 200 OK"
+ok
+
+----------------------------------------------------------------------
+Ran 13 tests in 6.538s
+
+OK

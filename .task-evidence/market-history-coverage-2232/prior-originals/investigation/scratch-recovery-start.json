@@ -1,0 +1,17 @@
+{
+  "purpose": "Recover unchanged mandatory 8 GiB local validation scratch prerequisite",
+  "before_free": 7603318784,
+  "public_download": {
+    "file": "/workspace/2231-release/published-evidence-download.zip",
+    "bytes": 321534425,
+    "sha256": "f798f255140ac7e2767ebf7512923a8ce7eb18b49e2b1a38bf7e2076d6f52867",
+    "verified_originals_remain": "Original logs/canonical evidence stay in /workspace/2231-release, Git history and immutable release; only the redundant downloaded public aggregate ZIP is removed."
+  },
+  "completed_publication_working_copy": {
+    "path": "/workspace/team-assessment-handoff",
+    "commit": "4961750901341f01d6d8ccb4b2aa3717746d3633",
+    "verified_remote": "4961750901341f01d6d8ccb4b2aa3717746d3633",
+    "scope": "Clean duplicate checkout only; local/remote evidence branch and all Git objects remain."
+  },
+  "repository_compaction": "git repack -a -d --keep-unreachable; no prune, no ref/history changes; bounded 256 MiB delta window, two threads"
+}

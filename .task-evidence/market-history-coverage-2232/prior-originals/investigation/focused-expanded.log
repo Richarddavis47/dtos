@@ -1,0 +1,358 @@
+/usr/local/lib/python3.14/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+  from starlette.testclient import TestClient as TestClient  # noqa
+test_admitted_checkpoint_dates_and_values_reach_existing_disclosure (tests.test_market_history_coverage.MarketHistoryCoverageTests.test_admitted_checkpoint_dates_and_values_reach_existing_disclosure) ... INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:httpx:HTTP Request: GET http://testserver/api/market/assets/player:1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/market?selected=player%3A1 "HTTP/1.1 200 OK"
+ok
+test_daily_aging_updates_rendered_confidence_without_new_source_evidence (tests.test_market_history_coverage.MarketHistoryCoverageTests.test_daily_aging_updates_rendered_confidence_without_new_source_evidence) ... INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:httpx:HTTP Request: GET http://testserver/api/market/assets/player:1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/market?selected=player%3A1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/api/market/assets/player:1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/market?selected=player%3A1 "HTTP/1.1 200 OK"
+ok
+test_exact_pick_original_franchise_history_is_not_substituted (tests.test_market_history_coverage.MarketHistoryCoverageTests.test_exact_pick_original_franchise_history_is_not_substituted) ... INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:httpx:HTTP Request: GET http://testserver/api/market/assets/pick:2027:1:4 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/api/market/assets/pick:2027:1:5 "HTTP/1.1 200 OK"
+FAIL
+test_format_boundary_remains_not_comparable_and_not_player_movement (tests.test_market_history_coverage.MarketHistoryCoverageTests.test_format_boundary_remains_not_comparable_and_not_player_movement) ... INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:httpx:HTTP Request: GET http://testserver/market?selected=player%3A1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/api/market/assets/player:1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/market?selected=player%3A1 "HTTP/1.1 200 OK"
+ok
+test_incompatible_units_do_not_acquire_canonical_movement_or_zero (tests.test_market_history_coverage.MarketHistoryCoverageTests.test_incompatible_units_do_not_acquire_canonical_movement_or_zero) ... INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:httpx:HTTP Request: GET http://testserver/market?selected=player%3A1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/api/market/assets/player:1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/market?selected=player%3A1 "HTTP/1.1 200 OK"
+ok
+test_new_checkpoint_invalidates_both_html_caches_without_price_refresh (tests.test_market_history_coverage.MarketHistoryCoverageTests.test_new_checkpoint_invalidates_both_html_caches_without_price_refresh) ... INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:httpx:HTTP Request: GET http://testserver/market?selected=player%3A1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/api/market/assets/player:1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/api/market/assets "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/api/market/trending "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/market?selected=player%3A1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/market?selected=player%3A1 "HTTP/1.1 200 OK"
+ok
+test_new_event_reference_changes_milestone_without_inventing_a_price (tests.test_market_history_coverage.MarketHistoryCoverageTests.test_new_event_reference_changes_milestone_without_inventing_a_price) ... INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:httpx:HTTP Request: GET http://testserver/market?selected=player%3A1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/api/market/assets/player:1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/market?selected=player%3A1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/api/market/assets/player:1 "HTTP/1.1 200 OK"
+ok
+test_no_history_never_becomes_an_unchanged_zero (tests.test_market_history_coverage.MarketHistoryCoverageTests.test_no_history_never_becomes_an_unchanged_zero) ... INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:httpx:HTTP Request: GET http://testserver/api/market/assets/player:1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/market?selected=player%3A1 "HTTP/1.1 200 OK"
+ok
+test_one_checkpoint_without_a_later_endpoint_keeps_known_price_not_a_change (tests.test_market_history_coverage.MarketHistoryCoverageTests.test_one_checkpoint_without_a_later_endpoint_keeps_known_price_not_a_change) ... INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:httpx:HTTP Request: GET http://testserver/api/market/assets/player:1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/market?selected=player%3A1 "HTTP/1.1 200 OK"
+ok
+test_preview_is_bounded_without_truncating_the_canonical_comparison (tests.test_market_history_coverage.MarketHistoryCoverageTests.test_preview_is_bounded_without_truncating_the_canonical_comparison) ... INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:httpx:HTTP Request: GET http://testserver/api/market/assets/player:1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/market?selected=player%3A1 "HTTP/1.1 200 OK"
+ok
+test_settled_reads_preserve_every_record_and_do_not_prepare_again (tests.test_market_history_coverage.MarketHistoryCoverageTests.test_settled_reads_preserve_every_record_and_do_not_prepare_again) ... INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:httpx:HTTP Request: GET http://testserver/market?selected=player%3A1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/market?selected=player%3A1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/api/market/assets/player:1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/market?selected=player%3A1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/api/market/assets/player:1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/market?selected=player%3A1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/api/market/assets/player:1 "HTTP/1.1 200 OK"
+ok
+test_source_catalogue_is_not_presented_as_selected_price_providers (tests.test_market_history_coverage.MarketHistoryCoverageTests.test_source_catalogue_is_not_presented_as_selected_price_providers) ... INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:httpx:HTTP Request: GET http://testserver/api/market/assets/player:1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/market?selected=player%3A1 "HTTP/1.1 200 OK"
+ok
+test_supported_zero_is_a_comparison_without_claiming_a_stable_trend (tests.test_market_history_coverage.MarketHistoryCoverageTests.test_supported_zero_is_a_comparison_without_claiming_a_stable_trend) ... INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:httpx:HTTP Request: GET http://testserver/api/market/assets/player:1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/market?selected=player%3A1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/api/market/trending "HTTP/1.1 200 OK"
+ok
+test_as_of_excludes_future_and_never_fabricates_history (tests.test_market_trends_step7.Step7MarketTrendTests.test_as_of_excludes_future_and_never_fabricates_history) ... ok
+test_canonical_store_read_is_bounded_private_and_non_writing (tests.test_market_trends_step7.Step7MarketTrendTests.test_canonical_store_read_is_bounded_private_and_non_writing) ... ok
+test_compact_serialization_is_byte_identical_across_processes (tests.test_market_trends_step7.Step7MarketTrendTests.test_compact_serialization_is_byte_identical_across_processes) ... ok
+test_compact_summary_omits_deep_private_and_checkpoint_data (tests.test_market_trends_step7.Step7MarketTrendTests.test_compact_summary_omits_deep_private_and_checkpoint_data) ... ok
+test_current_boundary_advances_only_with_asset_evidence (tests.test_market_trends_step7.Step7MarketTrendTests.test_current_boundary_advances_only_with_asset_evidence) ... ok
+test_default_current_boundary_is_stable_and_evidence_driven (tests.test_market_trends_step7.Step7MarketTrendTests.test_default_current_boundary_is_stable_and_evidence_driven) ... ok
+test_default_without_current_or_historical_evidence_is_stable (tests.test_market_trends_step7.Step7MarketTrendTests.test_default_without_current_or_historical_evidence_is_stable) ... ok
+test_generation_aware_cache_is_deterministic_and_bounded (tests.test_market_trends_step7.Step7MarketTrendTests.test_generation_aware_cache_is_deterministic_and_bounded) ... ok
+test_global_trend_is_independent_of_league_liquidity (tests.test_market_trends_step7.Step7MarketTrendTests.test_global_trend_is_independent_of_league_liquidity) ... ok
+test_legacy_draft_identity_in_timestamp_is_safely_excluded (tests.test_market_trends_step7.Step7MarketTrendTests.test_legacy_draft_identity_in_timestamp_is_safely_excluded) ... ok
+test_malformed_legacy_draft_does_not_corrupt_valid_chronology (tests.test_market_trends_step7.Step7MarketTrendTests.test_malformed_legacy_draft_does_not_corrupt_valid_chronology) ... ok
+test_milestones_range_event_provenance_and_related_player (tests.test_market_trends_step7.Step7MarketTrendTests.test_milestones_range_event_provenance_and_related_player) ... ok
+test_rising_falling_stable_volatile_and_insufficient (tests.test_market_trends_step7.Step7MarketTrendTests.test_rising_falling_stable_volatile_and_insufficient) ... ok
+test_current_admission_negative_matrix (tests.test_market_trend_current_integration.CurrentComparisonAdmissionTests.test_current_admission_negative_matrix) ... ok
+test_declared_canonical_units_cannot_admit_native_sized_price (tests.test_market_trend_current_integration.CurrentComparisonAdmissionTests.test_declared_canonical_units_cannot_admit_native_sized_price) ... ok
+test_explicit_cache_follows_current_clock_and_source_revision (tests.test_market_trend_current_integration.CurrentComparisonAdmissionTests.test_explicit_cache_follows_current_clock_and_source_revision) ... ok
+test_future_unknown_and_missing_history_are_not_stable_zeroes (tests.test_market_trend_current_integration.CurrentComparisonAdmissionTests.test_future_unknown_and_missing_history_are_not_stable_zeroes) ... ok
+test_history_only_current_missing_mismatched_units_and_identity (tests.test_market_trend_current_integration.CurrentComparisonAdmissionTests.test_history_only_current_missing_mismatched_units_and_identity) ... ok
+test_malformed_comparison_semantics_stay_unavailable (tests.test_market_trend_current_integration.CurrentComparisonAdmissionTests.test_malformed_comparison_semantics_stay_unavailable) ... ok
+test_missing_zero_and_conflicting_historical_generation (tests.test_market_trend_current_integration.CurrentComparisonAdmissionTests.test_missing_zero_and_conflicting_historical_generation) ... ok
+test_one_checkpoint_current_zero_ordering_and_generation_conflict (tests.test_market_trend_current_integration.CurrentComparisonAdmissionTests.test_one_checkpoint_current_zero_ordering_and_generation_conflict) ... ok
+test_selected_canonical_evidence_not_unselected_provider_clock (tests.test_market_trend_current_integration.CurrentComparisonAdmissionTests.test_selected_canonical_evidence_not_unselected_provider_clock) ... ok
+test_stale_current_is_dated_and_qualified_not_silently_fresh (tests.test_market_trend_current_integration.CurrentComparisonAdmissionTests.test_stale_current_is_dated_and_qualified_not_silently_fresh) ... ok
+test_supported_native_history_is_explicitly_not_canonical_units (tests.test_market_trend_current_integration.CurrentComparisonAdmissionTests.test_supported_native_history_is_explicitly_not_canonical_units) ... ok
+test_unchanged_normalization_population_is_not_an_immutable_player_quote (tests.test_market_trend_current_integration.CurrentComparisonAdmissionTests.test_unchanged_normalization_population_is_not_an_immutable_player_quote) ... ok
+test_zero_is_supported_but_missing_and_boolean_are_not (tests.test_market_trend_current_integration.CurrentComparisonAdmissionTests.test_zero_is_supported_but_missing_and_boolean_are_not) ... ok
+test_100_120_200_http_matches_canonical_evaluator (tests.test_market_trend_current_integration.CurrentMarketHTTPTests.test_100_120_200_http_matches_canonical_evaluator) ... INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:httpx:HTTP Request: GET http://testserver/api/market/assets/player:1 "HTTP/1.1 200 OK"
+ok
+test_actual_http_as_of_uses_instants_not_timezone_text_order (tests.test_market_trend_current_integration.CurrentMarketHTTPTests.test_actual_http_as_of_uses_instants_not_timezone_text_order) ... INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:httpx:HTTP Request: GET http://testserver/api/market/assets/player:1?as_of=2026-11-05T19%3A44%3A41.058522-07%3A00 "HTTP/1.1 200 OK"
+ok
+test_actual_sparse_boundary_preserves_submillisecond_order (tests.test_market_trend_current_integration.CurrentMarketHTTPTests.test_actual_sparse_boundary_preserves_submillisecond_order) ... INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+ok
+test_actual_store_ambiguous_provider_generations_cannot_become_movement (tests.test_market_trend_current_integration.CurrentMarketHTTPTests.test_actual_store_ambiguous_provider_generations_cannot_become_movement) ... INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+ok
+test_directory_and_trending_share_v2_comparison (tests.test_market_trend_current_integration.CurrentMarketHTTPTests.test_directory_and_trending_share_v2_comparison) ... INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:httpx:HTTP Request: GET http://testserver/api/market/assets "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/api/market/trending "HTTP/1.1 200 OK"
+ok
+test_selected_page_uses_the_same_dated_numeric_comparison (tests.test_market_trend_current_integration.CurrentMarketHTTPTests.test_selected_page_uses_the_same_dated_numeric_comparison) ... INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:httpx:HTTP Request: GET http://testserver/market?selected=player%3A1 "HTTP/1.1 200 OK"
+ok
+test_settled_reads_no_durable_growth_or_new_provider_work (tests.test_market_trend_current_integration.CurrentMarketHTTPTests.test_settled_reads_no_durable_growth_or_new_provider_work) ... INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:httpx:HTTP Request: GET http://testserver/api/market/assets/player:1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/api/market/trending "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/api/market/assets/player:1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/api/market/assets "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/api/market/trending "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/api/market/assets/player:1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/api/market/assets "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/api/market/trending "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/api/market/assets/player:1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/api/market/assets "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/api/market/trending "HTTP/1.1 200 OK"
+ok
+test_source_revision_refreshes_explicit_cache_without_rewriting_history (tests.test_market_trend_current_integration.CurrentMarketHTTPTests.test_source_revision_refreshes_explicit_cache_without_rewriting_history) ... INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+ok
+test_as_of_respects_knowledge_not_only_source_date (tests.test_market_trend_compatibility.SparseComparisonTests.test_as_of_respects_knowledge_not_only_source_date) ... ok
+test_compatible_history_without_current_quote_remains_supported (tests.test_market_trend_compatibility.SparseComparisonTests.test_compatible_history_without_current_quote_remains_supported) ... ok
+test_current_contract_is_part_of_cache_identity (tests.test_market_trend_compatibility.SparseComparisonTests.test_current_contract_is_part_of_cache_identity) ... ok
+test_current_number_without_identity_cannot_contaminate_history (tests.test_market_trend_compatibility.SparseComparisonTests.test_current_number_without_identity_cannot_contaminate_history) ... ok
+test_each_required_semantic_boundary_fails_closed (tests.test_market_trend_compatibility.SparseComparisonTests.test_each_required_semantic_boundary_fails_closed) ... ok
+test_live_store_preserves_legacy_records_and_exposes_boundary (tests.test_market_trend_compatibility.SparseComparisonTests.test_live_store_preserves_legacy_records_and_exposes_boundary) ... ok
+test_provider_change_is_not_independent_price_movement (tests.test_market_trend_compatibility.SparseComparisonTests.test_provider_change_is_not_independent_price_movement) ... ok
+test_same_time_conflicting_prices_have_no_order (tests.test_market_trend_compatibility.SparseComparisonTests.test_same_time_conflicting_prices_have_no_order) ... ok
+test_store_retains_explicit_compatible_contract_for_valid_trend (tests.test_market_trend_compatibility.SparseComparisonTests.test_store_retains_explicit_compatible_contract_for_valid_trend) ... ok
+test_unknown_is_not_matching_semantics (tests.test_market_trend_compatibility.SparseComparisonTests.test_unknown_is_not_matching_semantics) ... ok
+test_week_label_is_not_an_observed_instant (tests.test_market_trend_compatibility.SparseComparisonTests.test_week_label_is_not_an_observed_instant) ... ok
+test_csv_numeric_quote_reaches_prepared_checkpoint_without_price_change (tests.test_market_observation_producer_identity.CSVObservationIdentityTests.test_csv_numeric_quote_reaches_prepared_checkpoint_without_price_change) ... ok
+test_numeric_quote_validation_never_invents_observation_provenance (tests.test_market_observation_producer_identity.CSVObservationIdentityTests.test_numeric_quote_validation_never_invents_observation_provenance) ... ok
+test_active_pick_handoff_preserves_generic_concept_and_selected_scale (tests.test_market_observation_producer_identity.ProducerIdentityTests.test_active_pick_handoff_preserves_generic_concept_and_selected_scale) ... ok
+test_active_price_selection_and_generation_binding (tests.test_market_observation_producer_identity.ProducerIdentityTests.test_active_price_selection_and_generation_binding) ... ok
+test_capture_keeps_selected_normalization_not_legacy_default (tests.test_market_observation_producer_identity.ProducerIdentityTests.test_capture_keeps_selected_normalization_not_legacy_default) ... ok
+test_identity_transition_persists_without_rewriting_legacy_and_replay_is_bounded (tests.test_market_observation_producer_identity.ProducerIdentityTests.test_identity_transition_persists_without_rewriting_legacy_and_replay_is_bounded) ... ok
+test_new_comparable_pair_reaches_active_explanation (tests.test_market_observation_producer_identity.ProducerIdentityTests.test_new_comparable_pair_reaches_active_explanation) ... ok
+test_new_format_boundary_is_material_even_at_unchanged_price (tests.test_market_observation_producer_identity.ProducerIdentityTests.test_new_format_boundary_is_material_even_at_unchanged_price) ... ok
+test_observation_contract_transition_is_methodology_not_player_movement (tests.test_market_observation_producer_identity.ProducerIdentityTests.test_observation_contract_transition_is_methodology_not_player_movement) ... ok
+test_pick_concepts_never_acquire_same_identity (tests.test_market_observation_producer_identity.ProducerIdentityTests.test_pick_concepts_never_acquire_same_identity) ... ok
+test_retrieval_only_repreparation_reuses_one_row_without_file_growth (tests.test_market_observation_producer_identity.ProducerIdentityTests.test_retrieval_only_repreparation_reuses_one_row_without_file_growth) ... ok
+test_unknown_format_preserves_price_but_not_comparability (tests.test_market_observation_producer_identity.ProducerIdentityTests.test_unknown_format_preserves_price_but_not_comparability) ... ok
+test_exact_bytes_reused_and_generation_isolated (tests.test_market_render_cache.GenerationRenderCacheTests.test_exact_bytes_reused_and_generation_isolated) ... ok
+test_singleflight_and_lru_bounds (tests.test_market_render_cache.GenerationRenderCacheTests.test_singleflight_and_lru_bounds) ... ok
+test_account_chrome_is_never_reused_with_shared_market_body (tests.test_market_render_cache.MarketRenderedRouteTests.test_account_chrome_is_never_reused_with_shared_market_body) ... INFO:httpx:HTTP Request: GET http://testserver/market "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/market "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/market "HTTP/1.1 200 OK"
+ok
+test_chrome_state_change_invalidates_without_personalization (tests.test_market_render_cache.MarketRenderedRouteTests.test_chrome_state_change_invalidates_without_personalization) ... INFO:httpx:HTTP Request: GET http://testserver/market "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/market "HTTP/1.1 200 OK"
+ok
+test_empty_front_office_remains_invalid_at_route_boundary (tests.test_market_render_cache.MarketRenderedRouteTests.test_empty_front_office_remains_invalid_at_route_boundary) ... INFO:httpx:HTTP Request: GET http://testserver/market?front_office= "HTTP/1.1 422 Unprocessable Entity"
+ok
+test_explicit_front_office_is_preserved_with_selected_asset (tests.test_market_render_cache.MarketRenderedRouteTests.test_explicit_front_office_is_preserved_with_selected_asset) ... ok
+test_health_exposes_bounded_render_telemetry (tests.test_market_render_cache.MarketRenderedRouteTests.test_health_exposes_bounded_render_telemetry) ... INFO:httpx:HTTP Request: GET http://testserver/market "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/api/market/health "HTTP/1.1 200 OK"
+ok
+test_market_asset_links_never_emit_empty_front_office (tests.test_market_render_cache.MarketRenderedRouteTests.test_market_asset_links_never_emit_empty_front_office) ... INFO:httpx:HTTP Request: GET http://testserver/market "HTTP/1.1 200 OK"
+ok
+test_market_filter_form_preserves_only_legitimate_context (tests.test_market_render_cache.MarketRenderedRouteTests.test_market_filter_form_preserves_only_legitimate_context) ... INFO:httpx:HTTP Request: GET http://testserver/market "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/market?front_office=2 "HTTP/1.1 200 OK"
+ok
+test_market_has_one_exact_generation_cache (tests.test_market_render_cache.MarketRenderedRouteTests.test_market_has_one_exact_generation_cache) ... INFO:httpx:HTTP Request: GET http://testserver/market "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/market "HTTP/1.1 200 OK"
+ok
+test_optional_front_office_is_omitted_from_market_query (tests.test_market_render_cache.MarketRenderedRouteTests.test_optional_front_office_is_omitted_from_market_query) ... ok
+test_query_and_generation_changes_cannot_collide (tests.test_market_render_cache.MarketRenderedRouteTests.test_query_and_generation_changes_cannot_collide) ... INFO:httpx:HTTP Request: GET http://testserver/market "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/market?position=QB&sort=intrinsic "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/market "HTTP/1.1 200 OK"
+ok
+test_actual_exception_producer_does_not_serialize_secret (tests.test_operator_context_integrity.OperatorContextIntegrityTests.test_actual_exception_producer_does_not_serialize_secret) ... ok
+test_four_viewports_and_stale_first_response (tests.test_operator_context_integrity.OperatorContextIntegrityTests.test_four_viewports_and_stale_first_response) ... Validation Chromium: /usr/bin/chromium
+Validation Chromium version: 156.0.8078.73
+{"timestamp":"2026-11-06T01:44:45.502202+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://dtos.test/account/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T01:44:45.529172+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://dtos.test/static/css/contextual_navigation.css \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-06T01:44:45.582571+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://dtos.test/static/js/contextual_navigation.js \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-06T01:44:45.588132+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://dtos.test/static/css/personal_rankings.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T01:44:45.590552+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://dtos.test/static/js/personal_rankings.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T01:44:45.632439+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://dtos.test/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T01:44:46.022246+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://dtos.test/account/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T01:44:46.096300+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://dtos.test/static/css/contextual_navigation.css \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-06T01:44:46.101136+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://dtos.test/static/js/contextual_navigation.js \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-06T01:44:46.108981+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://dtos.test/static/css/personal_rankings.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T01:44:46.113134+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://dtos.test/static/js/personal_rankings.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T01:44:46.137440+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://dtos.test/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T01:44:46.556619+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://dtos.test/account/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T01:44:46.607285+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://dtos.test/static/css/contextual_navigation.css \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-06T01:44:46.613740+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://dtos.test/static/js/contextual_navigation.js \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-06T01:44:46.616741+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://dtos.test/static/css/personal_rankings.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T01:44:46.621397+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://dtos.test/static/js/personal_rankings.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T01:44:46.697896+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://dtos.test/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T01:44:47.057909+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://dtos.test/account/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T01:44:47.103188+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://dtos.test/static/css/contextual_navigation.css \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-06T01:44:47.110194+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://dtos.test/static/js/contextual_navigation.js \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-06T01:44:47.118430+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://dtos.test/static/css/personal_rankings.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T01:44:47.123183+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://dtos.test/static/js/personal_rankings.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T01:44:47.194657+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://dtos.test/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+ok
+test_nested_provider_exception_is_safe_in_operator_http (tests.test_operator_context_integrity.OperatorContextIntegrityTests.test_nested_provider_exception_is_safe_in_operator_http) ... {"timestamp":"2026-11-06T01:44:47.786457+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/platform/health \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T01:44:47.786920+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"133240102e9c476c958062de664ffc06","event":"request_complete","duration_ms":11.196,"status_code":200,"method":"GET","path":"/api/platform/health"}
+ok
+test_peer_scope_and_incompatible_runtime_are_not_substituted (tests.test_operator_context_integrity.OperatorContextIntegrityTests.test_peer_scope_and_incompatible_runtime_are_not_substituted) ... {"timestamp":"2026-11-06T01:44:47.921475+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://dtos.test/account/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T01:44:47.926271+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://dtos.test/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T01:44:47.929026+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://dtos.test/account/my-dtos \"HTTP/1.1 409 Conflict\"","request_id":"system"}
+ok
+test_selected_membership_not_default_runtime_and_switch (tests.test_operator_context_integrity.OperatorContextIntegrityTests.test_selected_membership_not_default_runtime_and_switch) ... {"timestamp":"2026-11-06T01:44:48.007594+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://dtos.test/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T01:44:48.015977+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST https://dtos.test/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T01:44:48.019836+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://dtos.test/account/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T01:44:48.024057+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://dtos.test/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T01:44:48.027014+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://dtos.test/account/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T01:44:48.031249+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://dtos.test/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T01:44:48.036650+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://dtos.test/account/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T01:44:48.039228+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://dtos.test/api/my-dtos \"HTTP/1.1 403 Forbidden\"","request_id":"system"}
+ok
+test_unidentified_runtime_cannot_supply_a_league_name (tests.test_operator_context_integrity.OperatorContextIntegrityTests.test_unidentified_runtime_cannot_supply_a_league_name) ... {"timestamp":"2026-11-06T01:44:48.104847+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://dtos.test/account/my-dtos \"HTTP/1.1 409 Conflict\"","request_id":"system"}
+ok
+test_exact_acquired_pick_identity_is_preserved (tests.test_canonical_asset_facts.CanonicalAssetFactTests.test_exact_acquired_pick_identity_is_preserved) ... ok
+test_incompatible_secondary_is_not_averaged_and_valid_secondary_stands_alone (tests.test_canonical_asset_facts.CanonicalAssetFactTests.test_incompatible_secondary_is_not_averaged_and_valid_secondary_stands_alone) ... ok
+test_market_player_and_trade_http_boundaries_agree (tests.test_canonical_asset_facts.CanonicalAssetFactTests.test_market_player_and_trade_http_boundaries_agree) ... {"timestamp":"2026-11-06T01:44:48.540694+00:00","level":"INFO","logger":"dtos.attribution","message":"diagnostic_boundary","request_id":"activity-208e074a8f354338b30fef945adc81b7","event":"diagnostic_boundary","diagnostic":{"schema":"request-attribution-v1","event_index":1,"event_limit":512,"dropped_so_far":0,"origin_request_id":null,"name":"lifecycle_phase","span_id":1,"parent_span_id":null,"boundary":"started","timestamp":"2026-11-06T01:44:48.540650+00:00","elapsed_from_trace_ms":0.014,"duration_ms":0.003,"queue_dropped_record_count":0}}
+{"timestamp":"2026-11-06T01:44:48.541682+00:00","level":"INFO","logger":"dtos.attribution","message":"diagnostic_boundary","request_id":"activity-208e074a8f354338b30fef945adc81b7","event":"diagnostic_boundary","diagnostic":{"schema":"request-attribution-v1","event_index":2,"event_limit":512,"dropped_so_far":0,"origin_request_id":null,"name":"lifecycle_phase","span_id":1,"parent_span_id":null,"boundary":"phase_acquired","timestamp":"2026-11-06T01:44:48.541665+00:00","elapsed_from_trace_ms":1.031,"duration_ms":1.02,"phase_name":"asset_market_build","queue_dropped_record_count":0}}
+{"timestamp":"2026-11-06T01:44:48.543640+00:00","level":"INFO","logger":"dtos.attribution","message":"diagnostic_boundary","request_id":"activity-208e074a8f354338b30fef945adc81b7","event":"diagnostic_boundary","diagnostic":{"schema":"request-attribution-v1","event_index":3,"event_limit":512,"dropped_so_far":0,"origin_request_id":null,"name":"memory_sample","boundary":"captured","timestamp":"2026-11-06T01:44:48.543621+00:00","sample_id":1,"span_id":1,"requested_boundaries":[{"name":"lifecycle_phase","boundary":"started","span_id":1,"request_id":"activity-208e074a8f354338b30fef945adc81b7","requested_at":"2026-11-06T01:44:48.540809+00:00"}],"active_activities":[{"request_id":"activity-208e074a8f354338b30fef945adc81b7","name":"lifecycle_phase","span_id":1}],"dropped_activity_or_boundary_count":0,"memory":{"rss_bytes":118927360,"vms_bytes":433840128,"system_available_bytes":17750867968,"memory_accounting_scope":"cgroup","cgroup_current_bytes":103710720,"cgroup_limit_bytes":2147483648,"cgroup_inactive_file_bytes":593920,"cgroup_anonymous_bytes":99823616,"cgroup_memory_events":{"low":0,"high":0,"max":0,"oom":0,"oom_kill":0,"oom_group_kill":0},"anonymous_bytes":99823616,"file_bytes":634880,"kernel_bytes":2072576,"shmem_bytes":0,"cgroup_lifetime_peak_bytes":425897984,"observer_pid":7,"observer_kind":"main_process","active_process_count":1,"zombie_count":0,"process_samples_truncated":false,"process_samples_are_sequential":true,"processes":[{"pid":7,"role":"application","rss_bytes":118960128,"pss_bytes":118956032,"uss_bytes":118956032,"sample_offset_ms":0.867,"sample_duration_ms":1.585}],"capture_duration_ms":2.453,"pss_requested":true,"runtime_residency":{"resident_count":1,"warm_limit":2,"hydrating_count":0,"warm_count":0,"runtime_samples_truncated":false,"runtimes":[{"scope":"c9adb23a3e8be7a1","state":"cold","active_requests":0,"pinned":true,"owns_state":false,"background_tasks":0,"source_generation_count":0,"source_generation_identity":"4f53cda18c2baa0c","market_cache_owned":true,"projection_cache_owned":false}]},"sample_total_duration_ms":2.504},"queue_dropped_record_count":0}}
+{"timestamp":"2026-11-06T01:44:48.710194+00:00","level":"INFO","logger":"dtos.attribution","message":"diagnostic_boundary","request_id":"activity-208e074a8f354338b30fef945adc81b7","event":"diagnostic_boundary","diagnostic":{"schema":"request-attribution-v1","event_index":4,"event_limit":512,"dropped_so_far":0,"origin_request_id":null,"name":"lifecycle_phase","span_id":1,"parent_span_id":null,"boundary":"finished","timestamp":"2026-11-06T01:44:48.710172+00:00","elapsed_from_trace_ms":169.538,"duration_ms":169.527,"status":"complete","calling_thread_cpu_ms":144.429,"queue_dropped_record_count":0}}
+{"timestamp":"2026-11-06T01:44:48.712472+00:00","level":"INFO","logger":"dtos.attribution","message":"diagnostic_boundary","request_id":"activity-208e074a8f354338b30fef945adc81b7","event":"diagnostic_boundary","diagnostic":{"schema":"request-attribution-v1","event_index":5,"event_limit":512,"dropped_so_far":0,"origin_request_id":null,"name":"memory_sample","boundary":"captured","timestamp":"2026-11-06T01:44:48.712454+00:00","sample_id":2,"span_id":1,"requested_boundaries":[{"name":"lifecycle_phase","boundary":"finished","span_id":1,"request_id":"activity-208e074a8f354338b30fef945adc81b7","requested_at":"2026-11-06T01:44:48.710268+00:00"}],"active_activities":[],"dropped_activity_or_boundary_count":0,"memory":{"rss_bytes":120635392,"vms_bytes":435867648,"system_available_bytes":17751195648,"memory_accounting_scope":"cgroup","cgroup_current_bytes":105644032,"cgroup_limit_bytes":2147483648,"cgroup_inactive_file_bytes":995328,"cgroup_anonymous_bytes":101531648,"cgroup_memory_events":{"low":0,"high":0,"max":0,"oom":0,"oom_kill":0,"oom_group_kill":0},"anonymous_bytes":101531648,"file_bytes":1036288,"kernel_bytes":1961984,"shmem_bytes":0,"cgroup_lifetime_peak_bytes":425897984,"observer_pid":7,"observer_kind":"main_process","active_process_count":1,"zombie_count":0,"process_samples_truncated":false,"process_samples_are_sequential":true,"processes":[{"pid":7,"role":"application","rss_bytes":120635392,"pss_bytes":120631296,"uss_bytes":120631296,"sample_offset_ms":0.501,"sample_duration_ms":1.542}],"capture_duration_ms":2.045,"pss_requested":true,"runtime_residency":{"resident_count":1,"warm_limit":2,"hydrating_count":0,"warm_count":0,"runtime_samples_truncated":false,"runtimes":[{"scope":"c9adb23a3e8be7a1","state":"cold","active_requests":0,"pinned":true,"owns_state":false,"background_tasks":0,"source_generation_count":0,"source_generation_identity":"4f53cda18c2baa0c","market_cache_owned":true,"projection_cache_owned":false}]},"sample_total_duration_ms":2.086},"queue_dropped_record_count":0}}
+{"timestamp":"2026-11-06T01:44:48.758583+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":106958848,"limit_bytes":2147483648,"raw_headroom_bytes":2040524800,"clean_inactive_file_bytes":716800,"conditional_file_credit_bytes":358400,"admission_headroom_bytes":2040883200,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-06T01:44:48.760946+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/workspace?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T01:44:48.771087+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/players/4984/intelligence \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T01:44:48.779017+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/market/assets/player:4984 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T01:44:48.781353+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/players/10225/intelligence \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T01:44:48.786713+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/market/assets/player:10225 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T01:44:48.789011+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/players/1-QB-0/intelligence \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T01:44:48.794313+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/market/assets/player:1-QB-0 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T01:44:48.796631+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/players/free/intelligence \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T01:44:48.801843+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/market/assets/player:free \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T01:44:48.804088+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/players/missing/intelligence \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T01:44:48.809636+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/market/assets/player:missing \"HTTP/1.1 200 OK\"","request_id":"system"}
+ok
+test_opposing_mcbride_and_allen_and_owned_and_free_agent (tests.test_canonical_asset_facts.CanonicalAssetFactTests.test_opposing_mcbride_and_allen_and_owned_and_free_agent) ... ok
+test_portfolio_provider_cache_cannot_replace_published_quotes (tests.test_canonical_asset_facts.CanonicalAssetFactTests.test_portfolio_provider_cache_cannot_replace_published_quotes) ... ok
+test_projection_availability_uses_same_selected_week_panel (tests.test_canonical_asset_facts.CanonicalAssetFactTests.test_projection_availability_uses_same_selected_week_panel) ... {"timestamp":"2026-11-06T01:44:48.945596+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/players/2?front_office=1&week=3 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T01:44:48.949754+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/players/2?week=5 \"HTTP/1.1 200 OK\"","request_id":"system"}
+ok
+test_retained_market_generation_discloses_its_own_source_fact (tests.test_canonical_asset_facts.CanonicalAssetFactTests.test_retained_market_generation_discloses_its_own_source_fact) ... {"timestamp":"2026-11-06T01:44:49.305248+00:00","level":"INFO","logger":"dtos.attribution","message":"diagnostic_boundary","request_id":"activity-163bd6be87934a9bbe0d35b01f6fdbb8","event":"diagnostic_boundary","diagnostic":{"schema":"request-attribution-v1","event_index":1,"event_limit":512,"dropped_so_far":0,"origin_request_id":null,"name":"lifecycle_phase","span_id":1,"parent_span_id":null,"boundary":"started","timestamp":"2026-11-06T01:44:49.305213+00:00","elapsed_from_trace_ms":0.014,"duration_ms":0.002,"queue_dropped_record_count":0}}
+{"timestamp":"2026-11-06T01:44:49.306655+00:00","level":"INFO","logger":"dtos.attribution","message":"diagnostic_boundary","request_id":"activity-163bd6be87934a9bbe0d35b01f6fdbb8","event":"diagnostic_boundary","diagnostic":{"schema":"request-attribution-v1","event_index":2,"event_limit":512,"dropped_so_far":0,"origin_request_id":null,"name":"lifecycle_phase","span_id":1,"parent_span_id":null,"boundary":"phase_acquired","timestamp":"2026-11-06T01:44:49.306624+00:00","elapsed_from_trace_ms":1.426,"duration_ms":1.415,"phase_name":"asset_market_build","queue_dropped_record_count":0}}
+{"timestamp":"2026-11-06T01:44:49.308985+00:00","level":"INFO","logger":"dtos.attribution","message":"diagnostic_boundary","request_id":"activity-163bd6be87934a9bbe0d35b01f6fdbb8","event":"diagnostic_boundary","diagnostic":{"schema":"request-attribution-v1","event_index":3,"event_limit":512,"dropped_so_far":0,"origin_request_id":null,"name":"memory_sample","boundary":"captured","timestamp":"2026-11-06T01:44:49.308966+00:00","sample_id":1,"span_id":1,"requested_boundaries":[{"name":"lifecycle_phase","boundary":"started","span_id":1,"request_id":"activity-163bd6be87934a9bbe0d35b01f6fdbb8","requested_at":"2026-11-06T01:44:49.305372+00:00"}],"active_activities":[{"request_id":"activity-163bd6be87934a9bbe0d35b01f6fdbb8","name":"lifecycle_phase","span_id":1}],"dropped_activity_or_boundary_count":0,"memory":{"rss_bytes":125845504,"vms_bytes":508219392,"system_available_bytes":17739464704,"memory_accounting_scope":"cgroup","cgroup_current_bytes":110415872,"cgroup_limit_bytes":2147483648,"cgroup_inactive_file_bytes":569344,"cgroup_anonymous_bytes":106741760,"cgroup_memory_events":{"low":0,"high":0,"max":0,"oom":0,"oom_kill":0,"oom_group_kill":0},"anonymous_bytes":106741760,"file_bytes":638976,"kernel_bytes":2129920,"shmem_bytes":0,"cgroup_lifetime_peak_bytes":425897984,"observer_pid":7,"observer_kind":"main_process","active_process_count":1,"zombie_count":0,"process_samples_truncated":false,"process_samples_are_sequential":true,"processes":[{"pid":7,"role":"application","rss_bytes":125878272,"pss_bytes":125841408,"uss_bytes":125841408,"sample_offset_ms":1.19,"sample_duration_ms":1.688}],"capture_duration_ms":2.88,"pss_requested":true,"runtime_residency":{"resident_count":1,"warm_limit":2,"hydrating_count":0,"warm_count":0,"runtime_samples_truncated":false,"runtimes":[{"scope":"c9adb23a3e8be7a1","state":"cold","active_requests":0,"pinned":true,"owns_state":false,"background_tasks":0,"source_generation_count":0,"source_generation_identity":"4f53cda18c2baa0c","market_cache_owned":true,"projection_cache_owned":false}]},"sample_total_duration_ms":2.923},"queue_dropped_record_count":0}}
+{"timestamp":"2026-11-06T01:44:49.502191+00:00","level":"INFO","logger":"dtos.attribution","message":"diagnostic_boundary","request_id":"activity-163bd6be87934a9bbe0d35b01f6fdbb8","event":"diagnostic_boundary","diagnostic":{"schema":"request-attribution-v1","event_index":4,"event_limit":512,"dropped_so_far":0,"origin_request_id":null,"name":"lifecycle_phase","span_id":1,"parent_span_id":null,"boundary":"finished","timestamp":"2026-11-06T01:44:49.502170+00:00","elapsed_from_trace_ms":196.973,"duration_ms":196.961,"status":"complete","calling_thread_cpu_ms":171.804,"queue_dropped_record_count":0}}
+{"timestamp":"2026-11-06T01:44:49.505035+00:00","level":"INFO","logger":"dtos.attribution","message":"diagnostic_boundary","request_id":"activity-163bd6be87934a9bbe0d35b01f6fdbb8","event":"diagnostic_boundary","diagnostic":{"schema":"request-attribution-v1","event_index":5,"event_limit":512,"dropped_so_far":0,"origin_request_id":null,"name":"memory_sample","boundary":"captured","timestamp":"2026-11-06T01:44:49.505016+00:00","sample_id":2,"span_id":1,"requested_boundaries":[{"name":"lifecycle_phase","boundary":"finished","span_id":1,"request_id":"activity-163bd6be87934a9bbe0d35b01f6fdbb8","requested_at":"2026-11-06T01:44:49.502280+00:00"}],"active_activities":[],"dropped_activity_or_boundary_count":0,"memory":{"rss_bytes":124428288,"vms_bytes":506978304,"system_available_bytes":17739759616,"memory_accounting_scope":"cgroup","cgroup_current_bytes":109531136,"cgroup_limit_bytes":2147483648,"cgroup_inactive_file_bytes":970752,"cgroup_anonymous_bytes":104927232,"cgroup_memory_events":{"low":0,"high":0,"max":0,"oom":0,"oom_kill":0,"oom_group_kill":0},"anonymous_bytes":104927232,"file_bytes":1040384,"kernel_bytes":2019328,"shmem_bytes":0,"cgroup_lifetime_peak_bytes":425897984,"observer_pid":7,"observer_kind":"main_process","active_process_count":1,"zombie_count":0,"process_samples_truncated":false,"process_samples_are_sequential":true,"processes":[{"pid":7,"role":"application","rss_bytes":124432384,"pss_bytes":124428288,"uss_bytes":124428288,"sample_offset_ms":0.585,"sample_duration_ms":1.667}],"capture_duration_ms":2.254,"pss_requested":true,"runtime_residency":{"resident_count":1,"warm_limit":2,"hydrating_count":0,"warm_count":0,"runtime_samples_truncated":false,"runtimes":[{"scope":"c9adb23a3e8be7a1","state":"cold","active_requests":0,"pinned":true,"owns_state":false,"background_tasks":0,"source_generation_count":0,"source_generation_identity":"4f53cda18c2baa0c","market_cache_owned":true,"projection_cache_owned":false}]},"sample_total_duration_ms":2.287},"queue_dropped_record_count":0}}
+ok
+test_stale_but_usable_and_source_clock_not_retrieval (tests.test_canonical_asset_facts.CanonicalAssetFactTests.test_stale_but_usable_and_source_clock_not_retrieval) ... ok
+test_strategy_and_ownership_do_not_reprice_global_facts (tests.test_canonical_asset_facts.CanonicalAssetFactTests.test_strategy_and_ownership_do_not_reprice_global_facts) ... ok
+test_truly_unavailable_and_explicit_rejection_reasons (tests.test_canonical_asset_facts.CanonicalAssetFactTests.test_truly_unavailable_and_explicit_rejection_reasons) ... ok
+test_warming_last_valid_then_refreshed_and_cold (tests.test_canonical_asset_facts.CanonicalAssetFactTests.test_warming_last_valid_then_refreshed_and_cold) ... ok
+
+======================================================================
+FAIL: test_exact_pick_original_franchise_history_is_not_substituted (tests.test_market_history_coverage.MarketHistoryCoverageTests.test_exact_pick_original_franchise_history_is_not_substituted)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_market_history_coverage.py", line 242, in test_exact_pick_original_franchise_history_is_not_substituted
+    self.assertEqual(a['checkpoint_count'],2)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 0 != 2
+
+----------------------------------------------------------------------
+Ran 99 tests in 16.775s
+
+FAILED (failures=1)

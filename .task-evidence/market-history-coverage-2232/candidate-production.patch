@@ -1,0 +1,864 @@
+diff --git a/.github/workflows/product-browser.yml b/.github/workflows/product-browser.yml
+index 875708c..836d483 100644
+--- a/.github/workflows/product-browser.yml
++++ b/.github/workflows/product-browser.yml
+@@ -39,11 +39,11 @@ jobs:
+           docker run --rm --memory=2g --memory-swap=2g --cpus=2 --network=none -e NODE_OPTIONS -v "$PWD:$PWD" -w "$PWD" -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0="$PWD" dtos-browser-validation python -m unittest -v tests.test_historical_evidence_weeks tests.test_fois_final_trust
+ 
+ 
+-      - name: Current-season source history lifecycle and phone routes
++      - name: Retained history lifecycle and phone routes
+         timeout-minutes: 5
+         run: |
+-          mkdir -p .validation/current-season-history .validation/history-followthrough
+-          docker run --rm --init --memory=2g --memory-swap=2g --cpus=2 --network=none -e NODE_OPTIONS -e DTOS_CURRENT_HISTORY_EVIDENCE=.validation/current-season-history -e DTOS_FOLLOWTHROUGH_EVIDENCE=.validation/history-followthrough -v "$PWD:$PWD" -w "$PWD" -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0="$PWD" dtos-browser-validation python -m unittest -v tests.test_current_season_franchise_history tests.test_current_season_history_browser tests.test_history_followthrough tests.test_history_followthrough_browser
++          mkdir -p .validation/current-season-history .validation/history-followthrough .validation/market-history-coverage
++          docker run --rm --init --memory=2g --memory-swap=2g --cpus=2 --network=none -e NODE_OPTIONS -e DTOS_CURRENT_HISTORY_EVIDENCE=.validation/current-season-history -e DTOS_FOLLOWTHROUGH_EVIDENCE=.validation/history-followthrough -e DTOS_MARKET_HISTORY_EVIDENCE=.validation/market-history-coverage -v "$PWD:$PWD" -w "$PWD" -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0="$PWD" dtos-browser-validation python -m unittest -v tests.test_current_season_franchise_history tests.test_current_season_history_browser tests.test_history_followthrough tests.test_history_followthrough_browser tests.test_market_history_coverage tests.test_market_history_coverage_browser
+       - name: Preserve current-season history evidence
+         if: always()
+         uses: actions/upload-artifact@v4
+@@ -61,6 +61,14 @@ jobs:
+           path: .validation/history-followthrough
+           if-no-files-found: error
+           retention-days: 14
++      - name: Preserve Market history coverage evidence
++        if: always()
++        uses: actions/upload-artifact@v4
++        with:
++          name: market-history-coverage-browser
++          path: .validation/market-history-coverage
++          if-no-files-found: error
++          retention-days: 14
+ 
+       - name: Actual 2 GiB Trade admission execution and recovery
+         timeout-minutes: 8
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index e5ae023..e6cc73f 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -1,3 +1,11 @@
++# v1.22.17 / build 2232 — Market history evidence coverage
++
++Market history now refreshes its rendered comparison when legitimately retained checkpoints or event references change, even when the current price publication stays the same. Existing daily evidence-aging rules also reach the cached page. This prevents an old HTML comparison from disagreeing with the canonical API.
++
++The existing comparison disclosure shows a bounded preview of admitted sparse checkpoint dates and values, with the current published endpoint separate from retained observations. Missing or ineligible history remains qualified. A verified zero price difference is distinct from having enough evidence to classify a trend. Provider catalogue entries are no longer described as participants in the selected current price; its supported source is identified separately.
++
++The existing trend engine, Neutral/Custom formulas, source compatibility, observation clocks, exact picks, Trade qualification, scoring, FOIS provenance, saved settings and memory/admission safeguards remain unchanged. No new provider, historical import, daily interpolation or background acquisition is added. See docs/audits/MARKET_HISTORY_COVERAGE_2232.md for reproduction, scope and limitations.
++
+ # v1.22.16 / build 2231 — Franchise history trade follow-through
+ 
+ Contextual Back now preserves Franchise History pagination while following a completed trade, an exact pick conversion, a drafted player and a subsequent trade. Returning through the existing page history no longer skips the preceding franchise-history page merely because its page number was filtered out.
+diff --git a/RELEASE_NOTES.md b/RELEASE_NOTES.md
+index 0eb61fe..50a5686 100644
+--- a/RELEASE_NOTES.md
++++ b/RELEASE_NOTES.md
+@@ -1,3 +1,11 @@
++# v1.22.17 / build 2232 — Market history evidence coverage
++
++Market history now refreshes its rendered comparison when legitimately retained checkpoints or event references change, even when the current price publication stays the same. Existing daily evidence-aging rules also reach the cached page. This prevents an old HTML comparison from disagreeing with the canonical API.
++
++The existing comparison disclosure shows a bounded preview of admitted sparse checkpoint dates and values, with the current published endpoint separate from retained observations. Missing or ineligible history remains qualified. A verified zero price difference is distinct from having enough evidence to classify a trend. Provider catalogue entries are no longer described as participants in the selected current price; its supported source is identified separately.
++
++The existing trend engine, Neutral/Custom formulas, source compatibility, observation clocks, exact picks, Trade qualification, scoring, FOIS provenance, saved settings and memory/admission safeguards remain unchanged. No new provider, historical import, daily interpolation or background acquisition is added. See docs/audits/MARKET_HISTORY_COVERAGE_2232.md for reproduction, scope and limitations.
++
+ # v1.22.16 / build 2231 — Franchise history trade follow-through
+ 
+ Contextual Back now preserves Franchise History pagination while following a completed trade, an exact pick conversion, a drafted player and a subsequent trade. Returning through the existing page history no longer skips the preceding franchise-history page merely because its page number was filtered out.
+diff --git a/app_metadata.py b/app_metadata.py
+index 2f3eceb..5a46f67 100644
+--- a/app_metadata.py
++++ b/app_metadata.py
+@@ -7,10 +7,10 @@ from datetime import datetime, timezone
+ from pathlib import Path
+ 
+ APPLICATION_NAME = "DTOS"
+-VERSION = "1.22.16"
+-PRODUCT_VERSION = "1.22.16"
+-BUILD_NUMBER = 2231
+-RELEASE_CODENAME = "Franchise History Trade Follow-Through"
++VERSION = "1.22.17"
++PRODUCT_VERSION = "1.22.17"
++BUILD_NUMBER = 2232
++RELEASE_CODENAME = "Market History Evidence Coverage"
+ APPLICATION_STARTED_AT = datetime.now(timezone.utc).isoformat()
+ 
+ _REPOSITORY_ROOT = Path(__file__).resolve().parent
+diff --git a/docs/audits/MARKET_HISTORY_COVERAGE_2232.md b/docs/audits/MARKET_HISTORY_COVERAGE_2232.md
+new file mode 100644
+index 0000000..c747588
+--- /dev/null
++++ b/docs/audits/MARKET_HISTORY_COVERAGE_2232.md
+@@ -0,0 +1,43 @@
++# Market history evidence coverage — build 2232
++
++## Baseline and existing capability
++
++Public production readiness, clean `main` and `origin/main` agreed on v1.22.16 / build 2231, commit `bb71de7faa4ff112500d01f2e3547dbc4652715e`, tree `4e0351fa02f2a3890f1ea15b97e73274d5f56808`. There was no related unfinished PR. The next unused release was v1.22.17 / build 2232. The existing v1.21.70 investigation in `docs/HISTORICAL_MARKET_TREND_INTEGRATION.md` is reused, not rewritten.
++
++The supported path already works: selected canonical price and `market_observation_evidence` -> `CheckpointPipeline._market_observations` -> compact immutable observations plus event references -> `market_trend_evidence` -> `current_comparison` and the existing v2 `MarketTrendService` -> Market directory/trending/detail APIs and selected HTML. Player dossiers link to the same canonical comparison while independently labeling FantasyCalc's raw-provider 30-day change. Neutral history does not use saved Custom values.
++
++No new upstream source-loss defect was established. The original 69 focused producer, store, compatibility, integration and cache controls passed. Compatible fixture observations of 100 and 120 plus the supported current endpoint 200 already yield +100, with the actual retained dates and unknown source freshness preserved. History remains sparse and event driven, not a daily series.
++
++## Confirmed source-to-screen defects
++
++The rendered Market cache key omitted retained observation/reference revisions and the existing UTC-day aging dependency. A disposable actual producer/store/router reproduction warms selected HTML, then admits an earlier compatible 80-valued checkpoint. With the same current publication, APIs correctly return three checkpoints and +120, but the old HTML is byte-identical and still reports two checkpoints and +100. Adding an incompatible format similarly leaves an obsolete numerical comparison visible. These are rendering defects, not evidence that the provider lacks data.
++
++A new public event reference can add a supported milestone without creating another price observation. An observation-only cache token would miss that update. The corrected read-only revision includes high-water marks of the existing observation, reference and checkpoint tables in one indexed scalar query. No payload scan, schema change, capture, provider request or persisted revision is introduced. A separate internal render token also uses the same UTC day as the existing evaluator. It is not a canonical price generation, a freshness claim, a reservation or authorization. Both rendered cache layers use it; their entry/byte bounds and single-flight behavior remain unchanged.
++
++The selected page previously omitted individual prepared checkpoint rows. Its existing disclosure now shows a bounded preview: all supplied rows up to twelve, otherwise the first and latest eleven with an explicit omission notice. The complete canonical comparison remains unchanged and uses all admitted evidence. The current published endpoint is separately labeled and never counted as an additional retained checkpoint. Unknown/incompatible comparison units do not acquire canonical numerical treatment. Dates are observation times, not invented publication/retrieval clocks. No daily points or connecting forecasts are manufactured.
++
++A genuine +0 comparison can be supported before the existing policy has enough observations to classify a trend as stable. The page and trending unavailability reason now distinguish those facts; classification and grouping thresholds are unchanged. Counts describe checkpoints available to this comparison, rather than claiming there are no retained records when some were excluded. Exclusion counts are shown only when the existing diagnostic supplies them.
++
++The explanation adapter also called the entire provider catalogue "Participating provider" even when the admitted current evidence selected only FantasyCalc. It now identifies selected current price providers from that existing structured evidence and labels catalogue entries separately. Historical provider counts remain the actual prepared counts. No unselected provider is promoted into the price or its confidence.
++
++## Preserved numerical and source contracts
++
++The v2 direction, confidence, materiality, volatility, current-endpoint eligibility and comparison calculations are unchanged. `TREND_METHOD_VERSION`, source normalization, consensus selection, units and historical record identities are unchanged. There is no interpolation, blanket import, historical price reconstruction, preference migration or duplicate provider store. Existing missing, future, stale, methodology, provider/context and native-unit boundaries remain fail closed.
++
++The controls distinguish multiple/one/no checkpoints, genuine zero, dated retained evidence, excluded future records, new references without new prices, aging, native units and format changes. Exact picks with the same season/round but different original franchises cannot substitute each other's history. Price movement does not establish a buy recommendation, future return, a historical decision grade or championship causality. FOIS remains RETAINED / NOT REVALIDATED.
++
++The 2 GiB cap, independent FOIS/Trade reserves, lifecycle coordination, cancellation and worker cleanup remain unchanged. Warm-read controls prove no repeated Market preparation, sync, checkpoint ingestion or durable-record change. The only new ordinary-read work is the bounded metadata revision lookup; expanding the disclosure performs no acquisition or calculation.
++
++## Reproduction, validation and limitations
++
++Original logs are preserved separately. The first new test run included two fixture errors: patching a FastAPI annotation's datetime class before lazy route construction, and assuming a nonexistent cache build method. Corrected fixture setup gives six assertion-only baseline failures. Additional provider/zero controls run against the prior validated commit with the same baseline tree. No earlier failure is relabeled a pass.
++
++A pick control initially supplied an expired current quote and was correctly withheld. Its disposable retrieval clock was corrected; no quote-age safeguard was relaxed. Provider catalogue naming was made consistent for both string and metadata entries. All final results must refer to the exact committed candidate, not these intermediate runs.
++
++Rendered tests cover 320x432, 375x667, 390x844 and desktop in two league contexts, before/after compatible publication and an incompatible boundary. They verify actual APIs versus rendered values/dates/counts, keyboard focus, table scrolling, disclosures, no document overflow and no extra disclosure requests. These fixtures use the existing admitted global Market reference; their sample league IDs do not establish current live settings or live historical coverage. Physical iPhone/Safari and comprehensive screen-reader acceptance are not claimed.
++
++This session can read public readiness and authorized Render deployment metadata but has no associated owner-browser control or Render Shell/SSH execution. The external inspection binding's prior 401 is not retried; no secret is exposed or rotated. Current private production checkpoint counts and authenticated historical coverage are unverified. No forced sync, FOIS rebuild, Trade search, cache clear, manual restart or saved-user-data mutation is part of this task.
++
++Local scratch recovery preserves the unchanged 8 GiB validation prerequisite. Only a checksum-verified redundant public download, clean completed duplicate evidence/publisher checkouts, and ignored regenerable bytecode were removed. Frozen Git references, original logs, immutable attachments and source objects remain. Repository compaction retained unreachable objects without pruning and preserved every ref. No production infrastructure or permissions were changed.
++
++Release requires the final exact-source focused tests, complete canonical regression and ten gates, all required hosted Product/security/navigation/tooling/lifecycle jobs, constrained 2 GiB controls, source/manifest checksums and the established two-phase Actions publisher. Passing fixture/replay evidence does not establish private live Market history coverage or recover missing upstream periods.
+diff --git a/routes/market.py b/routes/market.py
+index ca0b4b6..8c7629b 100644
+--- a/routes/market.py
++++ b/routes/market.py
+@@ -4,6 +4,7 @@ from __future__ import annotations
+ from src.ui.market_facts import market_fact_html
+ 
+ import re
++from math import isfinite
+ from datetime import datetime
+ from html import escape
+ from typing import Any, Callable
+@@ -79,26 +80,76 @@ def _trend_boundary_notice(trend: dict[str, Any]) -> str:
+ def _trend_observation_summary(trend: dict[str, Any]) -> str:
+     """Only comparable evidence gets numerical movement presentation."""
+     count = trend.get('checkpoint_count', 0)
++    checkpoint_word = 'checkpoint' if count == 1 else 'checkpoints'
+     if (not trend.get('comparison_reasons') and trend.get('magnitude') is None
+             and trend.get('direction') in ('rising', 'falling', 'stable', 'volatile')
+             and trend.get('observed_low') is not None and trend.get('observed_high') is not None):
+         # Preserve the available range on older prepared summary DTOs without
+         # inventing an endpoint difference from that range.
+-        return (f'{count} retained checkpoints · observed range '
++        return (f'{count} retained {checkpoint_word} · observed range '
+                 f'{escape(available(trend["observed_low"]))}–{escape(available(trend["observed_high"]))}')
+     if trend.get('comparison_reasons') or trend.get('magnitude') is None:
+-        return f'{count} recorded prices. There is not enough compatible dated evidence to show a numerical change; missing history does not mean the value stayed the same.'
++        excluded = (trend.get('provenance') or {}).get('excluded_evidence_count')
++        record_word = 'record' if excluded == 1 else 'records'
++        qualification = (f' {excluded} retained {record_word} could not be used as eligible dated prices in this comparison.'
++                         if isinstance(excluded, int) and excluded > 0 else '')
++        return (f'{count} dated {checkpoint_word} available to this comparison. '
++                'There is not enough compatible dated evidence to show a numerical change; '
++                'missing history does not mean the value stayed the same.' + qualification)
+     scope = ('Historical to current publication' if trend.get('comparison_scope') == 'historical_to_current'
+              else 'Historical observations only')
+     magnitude = trend.get('magnitude')
+     units = 'Market points' if trend.get('comparison_units') == '0-1000' else str(trend.get('comparison_units') or 'observed units')
+     movement = f'{magnitude:+,.2f} {escape(units)}' if magnitude is not None else 'Movement unavailable'
+-    return (f'{scope} · {movement} · {count} retained checkpoints. '
++    return (f'{scope} · {movement} · {count} retained {checkpoint_word}. '
+             f'{escape(str(trend.get("comparison_start_at") or "Date unavailable"))} → '
+             f'{escape(str(trend.get("comparison_end_at") or "Date unavailable"))}. '
+             f'{escape(str(trend.get("current_qualification") or ""))}')
+ 
+ 
++def _trend_checkpoint_details(trend: dict[str, Any]) -> str:
++    """Render already-admitted sparse evidence; never calculate another trend."""
++    points = trend.get('checkpoints') or ()
++    if not points:
++        return ('<p>No eligible checkpoint details are available for this comparison.</p>'
++                if not trend.get('checkpoint_count') else
++                '<p>Individual checkpoint details are not included in this prepared comparison.</p>')
++    # Keep the start and most recent evidence without an unbounded HTML table.
++    preview = points if len(points) <= 12 else (points[0], *points[-11:])
++    canonical_units = not trend.get('comparison_reasons') and trend.get('comparison_units') == '0-1000'
++    rows = []
++    for point in preview:
++        value = point.get('value')
++        supported = (canonical_units and isinstance(value, (int, float))
++                     and not isinstance(value, bool) and isfinite(value) and 0 <= value <= 1000)
++        price = f'{value:,.2f}' if supported else 'Not compared across this evidence boundary'
++        stamp = escape(str(point.get('observed_at') or 'Observation time unavailable'))
++        providers = point.get('provider_count')
++        provider_count = 'Unknown' if providers is None else str(providers)
++        rows.append(f'<tr data-observation-id="{escape(str(point.get("observation_id") or ""), quote=True)}">'
++                    f'<td><time datetime="{stamp}">{stamp}</time></td><td>{price}</td>'
++                    f'<td>{escape(provider_count)}</td></tr>')
++    omitted = (f'<p>Showing the first and latest {len(preview)-1} of {len(points)} retained checkpoints. '
++               'Intermediate checkpoints are omitted from this preview; the comparison uses all admitted evidence.</p>'
++               if len(points) > len(preview) else '')
++    current = trend.get('current_value')
++    endpoint = ''
++    if (canonical_units and (trend.get('provenance') or {}).get('current_endpoint_comparable')
++            and isinstance(current, (int, float)) and not isinstance(current, bool)
++            and isfinite(current) and 0 <= current <= 1000):
++        endpoint = (f'<p>Current published endpoint: <b>{current:,.2f} Market points</b> · observed '
++                    f'{escape(str(trend.get("comparison_end_at")))}. This is separate from the retained checkpoint count.</p>')
++    return ('<section class="market-trend-checkpoints" style="min-width:0;overflow-wrap:anywhere">'
++            '<h4>Retained Market observations</h4>'
++            '<p>These are sparse checkpoints, not daily prices. Gaps are not filled. '
++            'Observation times are separate from provider publication and retrieval times. '
++            'A price change alone is not a buy recommendation, a forecast or a grade of a past decision.</p>'
++            + omitted + '<div class="ds-table-wrap" tabindex="0" role="region" '
++            'aria-label="Retained Market observations"><table><caption>Recorded sparse comparison evidence</caption>'
++            '<thead><tr><th>Observed at</th><th>Market points (0–1000)</th><th>Provider count</th></tr></thead>'
++            '<tbody>' + ''.join(rows) + '</tbody></table></div>' + endpoint + '</section>')
++
++
+ def create_market_router(
+     *, require_data: RequireData, state: dict[str, Any], league_id: str,
+     page: PageRenderer,
+@@ -335,6 +386,11 @@ def create_market_router(
+             (row for row in comparable if row["market_trend"]["direction"] == "falling"),
+             key=lambda row: (row["market_trend"].get("magnitude") or 0, str(row["asset_id"])),
+         )[:limit]
++        observed_comparison = any(
++            (row.get('market_trend') or {}).get('magnitude') is not None
++            and not (row.get('market_trend') or {}).get('comparison_reasons')
++            for row in candidates
++        )
+         return jsonable_encoder({
+             **market.identity(), "method_version": TREND_METHOD_VERSION,
+             "historical_source": "step_2_global_market_memory",
+@@ -342,7 +398,10 @@ def create_market_router(
+             "most_stable": [row for row in comparable if row["market_trend"]["direction"] == "stable"][:limit],
+             "most_volatile": [row for row in comparable if row["market_trend"]["direction"] == "volatile"][:limit],
+             "availability": "available" if comparable else "unavailable",
+-            "unavailable_reason": None if comparable else "At least two compatible dated prices are required; missing history is not unchanged value.",
++            "unavailable_reason": (None if comparable else
++                "Dated price comparisons are available, but the retained sample is too limited to classify a trend. Review an asset's observations; no daily history is invented."
++                if observed_comparison else
++                "At least two compatible dated prices are required; missing history is not unchanged value."),
+             "provider_calls": 0, "raw_history_scans": 0,
+         })
+ 
+@@ -375,12 +434,13 @@ def create_market_router(
+         pinned_reader = SimpleNamespace(snapshot=lambda: pinned_projection, week_snapshot=projection_reader.week_snapshot)
+         projection_key = ((pinned_projection or {}).get('horizon_generation'), data.get('week'),
+                           repr(data.get('scoring_settings') or (data.get('league') or {}).get('scoring_settings') or {}))
++        trend_revision = trend_service.render_revision()
+         route_variant = "market"
+         key = (
+             route_variant, selected_league, generation, market.dataset_version,
+             VERSION, BUILD_NUMBER, league_name, selected_state.get("last_sync"),
+             selected_state.get("last_error"), q, position, availability, sort,
+-            direction, front_office, selected, offset, limit, projection_key, ownership.generation,
++            direction, front_office, selected, offset, limit, projection_key, ownership.generation, trend_revision,
+         )
+         render_cache = home_render_cache if route_variant == "home" else market_render_cache
+         body_cache = (
+@@ -390,7 +450,7 @@ def create_market_router(
+         body_key = (
+             route_variant, selected_league, generation, market.dataset_version,
+             VERSION, BUILD_NUMBER, q, position, availability, sort,
+-            direction, front_office, selected, offset, limit, projection_key, ownership.generation,
++            direction, front_office, selected, offset, limit, projection_key, ownership.generation, trend_revision,
+         )
+ 
+         def render_body() -> bytes:
+@@ -491,7 +551,13 @@ def create_market_router(
+                 )
+                 trend_heading = (str(trend['direction']).replace('_', ' ').upper() + ' · ' + trend['confidence'].upper() + ' CONFIDENCE'
+                                  if trend['direction'] in ('rising', 'falling', 'stable', 'volatile') else 'Not enough comparable price history')
++                supported_difference = not trend.get('comparison_reasons') and trend.get('magnitude') is not None
++                trend_classification_note = ''
++                if supported_difference and trend['direction'] == 'insufficient_evidence':
++                    trend_heading = 'Observed price comparison'
++                    trend_classification_note = '<p>More evidence is needed to classify the trend. A supported price difference is shown separately.</p>'
+                 trend_html = f'''<section class="card"><p class="eyebrow">Observed Market Trend</p><h3>{escape(trend_heading)}</h3><p>{_trend_observation_summary(trend)}</p>{f'<ul>{milestone_html}</ul>' if milestone_html else '<p class="muted">No supported milestone comparison is available yet.</p>'}<p class="muted">Recorded observations only; no daily prices are invented.</p></section>'''
++                trend_html += trend_classification_note + _trend_checkpoint_details(trend)
+                 trend_html += _trend_boundary_notice(trend)
+                 from services.asset_explanations import market_explanation
+                 from src.ui.explanations import explanation_panel
+@@ -508,7 +574,18 @@ def create_market_router(
+                     for value, label in values
+                 )
+             trend_available = any((row.get("market_trend") or {}).get("direction") in {"rising", "falling", "stable", "volatile"} for row in rows)
+-            movers_html = '<div class="card"><p>Comparable dated Market prices show observed changes.</p><a href="/api/market/trending">Review observed price changes →</a></div>' if trend_available else '<div class="evidence-unavailable"><b>Not enough comparable price history yet.</b><br>At least two compatible dated prices are needed to show a change. Missing observations do not mean values stayed the same.</div>'
++            observed_comparison = any(
++                (row.get('market_trend') or {}).get('magnitude') is not None
++                and not (row.get('market_trend') or {}).get('comparison_reasons')
++                for row in rows
++            )
++            if trend_available:
++                movers_html = '<div class="card"><p>Comparable dated Market prices show observed changes.</p><a href="/api/market/trending">Review observed price changes →</a></div>'
++            elif observed_comparison:
++                movers_html = ('<div class="card"><b>Dated price comparisons are available.</b>'
++                               '<p>More observations are needed to classify a trend. Open an asset to review its retained evidence.</p></div>')
++            else:
++                movers_html = '<div class="evidence-unavailable"><b>Not enough comparable price history yet.</b><br>At least two compatible dated prices are needed to show a change. Missing observations do not mean values stayed the same.</div>'
+             front_office_input = (
+                 f'<input type="hidden" name="front_office" value="{front_office}">'
+                 if front_office is not None else ""
+diff --git a/services/asset_explanations.py b/services/asset_explanations.py
+index 9ba410d..dc5f4e9 100644
+--- a/services/asset_explanations.py
++++ b/services/asset_explanations.py
+@@ -70,20 +70,28 @@ def market_explanation(detail, trend, *, league_id):
+     incompatible = bool(trend.get('comparison_reasons')) or trend.get('direction') == 'not_comparable'
+     direction = trend.get('direction')
+     comparable = not incompatible and direction in ('rising', 'falling', 'stable', 'volatile')
++    supported_difference = not incompatible and trend.get('magnitude') is not None
+     rows.append(row('trend', 'Observed Market trend', direction if comparable else None,
+                     state=A.AVAILABLE if comparable else A.NO_COMPARABLE_EVIDENCE))
+     rows.append(row('as_of', 'Trend observation boundary', trend.get('as_of'), 'as-of timestamp'))
++    if supported_difference:
++        rows.append(row('price_difference', 'Observed price difference', trend['magnitude'],
++                        'Market points (0–1000)' if trend.get('comparison_units') == '0-1000' else 'observed units'))
+     for name, label in (('comparison_scope', 'Comparison scope'),
+                         ('comparison_start_at', 'Comparison starts'),
+                         ('comparison_end_at', 'Comparison ends')):
+         if trend.get(name) is not None:
+             rows.append(row(name, label, trend[name]))
+     rows.append(row('confidence', 'Trend evidence confidence', trend.get('confidence'), 'evidence support'))
++    selected_evidence = (trend.get('provenance') or {}).get('current_evidence') or {}
++    for index, provider in enumerate(selected_evidence.get('providers') or ()):
++        rows.append(row(f'selected_provider.{index}', 'Current Market price provider',
++                        provider, 'selected current price source', K.SOURCE))
+     for index, provider in enumerate(detail.get('providers') or []):
+         if isinstance(provider, str):
+-            rows.append(row(f'provider.{index}', 'Participating provider', provider, 'provider identity', K.SOURCE))
++            rows.append(row(f'provider.{index}', 'Provider catalogue entry', provider, 'provider identity', K.SOURCE))
+         elif isinstance(provider, dict):
+-            for field, label in (('provider', 'Participating provider'), ('market_format', 'Provider format'),
++            for field, label in (('provider', 'Provider catalogue entry'), ('market_format', 'Provider format'),
+                                  ('source_updated_at', 'Provider update time'), ('retrieved_at', 'Retrieval time')):
+                 if provider.get(field) is not None:
+                     rows.append(row(f'provider.{index}.{field}', label, provider[field], 'provider metadata', K.SOURCE))
+@@ -95,7 +103,9 @@ def market_explanation(detail, trend, *, league_id):
+         limits.append(('MARKET_UNAVAILABLE', 'Current acquisition-price evidence is unavailable, not zero.', 'price'))
+     if not comparable:
+         limits.append(('MARKET_NOT_COMPARABLE' if incompatible else 'MARKET_HISTORY_INSUFFICIENT',
+-            'Historical observations cannot support a comparable trend.' if incompatible else 'There is not enough comparable history to describe movement.', 'trend'))
++            'Historical observations cannot support a comparable trend.' if incompatible else
++            'More evidence is needed to classify the trend; the supported price difference is shown separately.' if supported_difference else
++            'There is not enough comparable history to describe movement.', 'trend'))
+     boundary_text = {
+         'METHODOLOGY_VERSION_CHANGED': 'DTOS methodology changed. This boundary is not a player price surge or decline.',
+         'COMPARABLE_HISTORY_UNAVAILABLE': 'Required comparison identity or history is unavailable; missing coverage is not stable performance.',
+diff --git a/src/core/intelligence_memory/store.py b/src/core/intelligence_memory/store.py
+index 600c428..3321c85 100644
+--- a/src/core/intelligence_memory/store.py
++++ b/src/core/intelligence_memory/store.py
+@@ -1249,6 +1249,21 @@ class IntelligenceCheckpointStore:
+         with self._connect() as connection:
+             return int(connection.execute('SELECT COALESCE(MAX(rowid),0) FROM global_market_observations').fetchone()[0])
+ 
++    def market_trend_generation(self) -> tuple[int, int, int]:
++        """Cheap append-only revision for derived views, not a price identity.
++
++        References can add milestone context without creating another quote.
++        Read all high-water marks together; do not scan or decode observations.
++        Existing startup migrations run before any rendered cache exists.
++        """
++        with self._connect() as connection:
++            row = connection.execute("""SELECT
++                COALESCE((SELECT MAX(rowid) FROM global_market_observations),0),
++                COALESCE((SELECT MAX(rowid) FROM market_observation_references),0),
++                COALESCE((SELECT MAX(rowid) FROM intelligence_checkpoints),0)
++            """).fetchone()
++        return tuple(int(value) for value in row)
++
+     def exact_lineages(self, *, league_id: str, draft_id: str):
+         with self._connect() as connection:
+             rows = connection.execute('SELECT * FROM exact_pick_lineage WHERE league_id=? AND draft_id=? LIMIT 1001', (league_id, draft_id)).fetchall()
+diff --git a/src/core/market_trends/service.py b/src/core/market_trends/service.py
+index ee43198..0152e1f 100644
+--- a/src/core/market_trends/service.py
++++ b/src/core/market_trends/service.py
+@@ -71,6 +71,15 @@ class MarketTrendService:
+         self._cache: OrderedDict[tuple[Any, ...], MarketTrend] = OrderedDict()
+         self._lock = RLock()
+ 
++    def render_revision(self) -> tuple[Any, ...]:
++        """Invalidate HTML for retained evidence and the existing daily age rule.
++
++        This is an internal cache dependency, never comparison eligibility,
++        a new observation, or an assertion of source freshness.
++        """
++        return (id(self.reader), self.reader.market_trend_generation(),
++                datetime.now(timezone.utc).date().isoformat())
++
+     @staticmethod
+     def _direction(values: list[float]) -> tuple[TrendDirection, float | None, float | None]:
+         if len(values) < 2:
+diff --git a/tests/test_market_history_coverage.py b/tests/test_market_history_coverage.py
+new file mode 100644
+index 0000000..256513a
+--- /dev/null
++++ b/tests/test_market_history_coverage.py
+@@ -0,0 +1,323 @@
++"""Canonical sparse observations to cached customer views; no live source reads."""
++from copy import deepcopy
++from dataclasses import replace
++from datetime import datetime, timedelta, timezone
++from pathlib import Path
++from tempfile import TemporaryDirectory
++from types import SimpleNamespace
++import unittest
++from unittest.mock import AsyncMock, patch
++
++from fastapi import FastAPI
++from fastapi.responses import HTMLResponse
++from fastapi.testclient import TestClient
++
++from routes.market import create_market_router
++from src.core.asset_market import AssetMarketCache
++from src.core.historical_memory.store import HistoricalStore
++from src.core.intelligence_memory.models import CheckpointTrigger
++from src.core.intelligence_memory.pipeline import CheckpointPipeline
++from src.core.intelligence_memory.store import IntelligenceCheckpointStore
++from src.ui.render_cache import GenerationRenderCache
++from tests.test_market_observation_producer_identity import prepared, checkpoint
++
++
++class MarketHistoryFixture:
++    """Existing real producers, stores and Market routes with disposable evidence."""
++    def __init__(self, case, *, points=((1200, '2026-07-01'), (1440, '2026-07-02')),
++                 current_raw=2400, league='2300000000000000001', page=None, picks=False, raw_trend=None):
++        self.temp = TemporaryDirectory()
++        case.addCleanup(self.temp.cleanup)
++        self.root = Path(self.temp.name)
++        self.memory = IntelligenceCheckpointStore(self.root/'memory.sqlite3')
++        self.history = HistoricalStore(self.root/'history.sqlite3')
++        self.cache = AssetMarketCache()
++        case.addCleanup(self.cache.clear)
++        self.picks = picks
++        self.data, _ = self.priced_data(current_raw)
++        # These leagues share the admitted external reference, not an invented
++        # conversion to their different lineup/scoring rules.
++        self.data['league'] = {'league_id': league, 'name': 'Disposable Market league',
++            'season': '2026', 'roster_positions': ['QB','RB','WR','TE','FLEX','K','DEF','BN']}
++        self.data['players'] = deepcopy(self.data['normalized_players'])
++        if raw_trend is not None:
++            self.data['market_data']['providers']['FantasyCalc']['1']['trend_30_day'] = raw_trend
++        self.state = {'data': self.data, 'last_sync': 'unchanged-source-publication'}
++        for n, (raw, day) in enumerate(points):
++            self.add_point('retained-'+str(n), raw, day)
++        self.market = self.cache.get(self.data, self.state, self.history, league)
++        self.page_cache = GenerationRenderCache('coverage-page')
++        self.body_cache = GenerationRenderCache('coverage-body')
++        case.enterContext(patch('routes.market.market_render_cache', self.page_cache))
++        case.enterContext(patch('routes.market.market_body_render_cache', self.body_cache))
++        case.enterContext(patch('routes.market.historical_store', self.history))
++        case.enterContext(patch('services.sleeper.sync_sleeper', side_effect=AssertionError('No sync on a trend read')))
++        case.enterContext(patch.object(CheckpointPipeline, 'ingest_runtime', side_effect=AssertionError('No history acquisition on a trend read')))
++        self.app = FastAPI()
++        with patch('routes.market.intelligence_checkpoint_store', self.memory):
++            self.app.include_router(create_market_router(require_data=lambda: self.data,
++                state=self.state, league_id=league,
++                context_resolver=lambda: SimpleNamespace(state=self.state,
++                    league_id=str(self.data['league']['league_id']), market=self.cache),
++                page=page or (lambda title, body: HTMLResponse(f'<h1>{title}</h1>{body}'))))
++        self.client = TestClient(self.app)
++        case.addCleanup(self.client.close)
++
++    def priced_data(self, raw):
++        data, asset = prepared(raw)
++        if self.picks:
++            from src.core.valuation.normalization import prepare_market_normalization
++            from src.core.valuation.universe import ValuationUniverse
++            from src.core.valuation_intelligence.engine import _score_asset
++            data['pick_ledger'].append({**data['pick_ledger'][0], 'original_roster_id':5,
++                'original_team':'Different original franchise', 'current_owner_id':4})
++            data['market_data']['pick_quotes'] = {'FantasyCalc':[{
++                'provider':'FantasyCalc', 'value':raw, 'market_format':'fc:12:2qb:ppr',
++                'year':2027, 'round':1, 'pick_type':'generic_round', 'confidence':90,
++                'availability':'current', 'retrieved_at':datetime.now(timezone.utc).isoformat()}]}
++            prepare_market_normalization(data['market_data'])
++            universe = ValuationUniverse(data, {'data':data})
++            data['valuation_intelligence']['assets'] = {
++                identity:_score_asset(row, [], {}, None) for identity,row in universe.by_id.items()}
++            asset = universe.by_id['player:1']
++        return data, asset
++
++    def add_point(self, identity, raw, day, *, trigger=CheckpointTrigger.SEASON_START,
++                  quote_day=None, context='fixture', semantics=None, asset_id='player:1'):
++        data, asset = self.priced_data(raw)
++        stamp = day+'T12:00:00+00:00'
++        quote_stamp = (quote_day or day)+'T12:00:00+00:00'
++        observations = tuple(replace(row, observed_at=quote_stamp) for row in
++            CheckpointPipeline._market_observations(data, asset_id))
++        if semantics:
++            observations = tuple(replace(row, metadata={**row.metadata,
++                'comparison_semantics': {**row.metadata['comparison_semantics'], **semantics}})
++                for row in observations)
++        value = data['valuation_intelligence']['assets'][asset_id]['valuation_layers']['market_value']['value']
++        point = replace(checkpoint(identity, value, stamp), trigger_type=trigger,
++                        asset_id=asset_id, asset_type='future_pick' if asset_id.startswith('pick:') else 'player')
++        return self.memory.put_sparse(point, market_context_id=context, provider_evidence=observations)
++
++    def trend(self, asset_id='player:1'):
++        response = self.client.get('/api/market/assets/'+asset_id)
++        assert response.status_code == 200, response.text
++        return response.json()['market_trend']
++
++    def html(self, asset_id='player:1'):
++        response = self.client.get('/market', params={'selected':asset_id})
++        assert response.status_code == 200, response.text
++        return response.text
++
++
++class MarketHistoryCoverageTests(unittest.TestCase):
++    def test_new_checkpoint_invalidates_both_html_caches_without_price_refresh(self):
++        f = MarketHistoryFixture(self)
++        before = f.html()
++        self.assertIn('+100.00 Market points', before)
++        generation = f.market.semantic_generation
++        f.add_point('earlier-supported-point', 960, '2026-06-01')
++        trend = f.trend()
++        self.assertEqual((trend['magnitude'], trend['checkpoint_count']), (120, 3))
++        directory = f.client.get('/api/market/assets').json()['assets']
++        self.assertEqual(next(r for r in directory if r['asset_id']=='player:1')['market_trend']['magnitude'], 120)
++        trending = f.client.get('/api/market/trending').json()
++        self.assertEqual(next(r for r in trending['most_volatile'] if r['asset_id']=='player:1')['market_trend']['magnitude'], 120)
++        after = f.html()
++        self.assertIn('+120.00 Market points', after)
++        self.assertIn(trend['comparison_start_at'], after)
++        self.assertIn('3 retained checkpoints', after)
++        self.assertEqual(f.market.semantic_generation, generation)
++        self.assertEqual(after, f.html())
++
++    def test_new_event_reference_changes_milestone_without_inventing_a_price(self):
++        f = MarketHistoryFixture(self)
++        self.assertNotIn('Midseason:', f.html())
++        price_generation = f.memory.observation_generation()
++        result = f.add_point('later-midseason-reference', 1440, '2026-09-01',
++            quote_day='2026-07-02', trigger=CheckpointTrigger.MIDSEASON)
++        self.assertFalse(result[3], 'A repeated quote must not create another price observation')
++        self.assertEqual(f.memory.observation_generation(), price_generation)
++        self.assertEqual(f.trend()['milestones']['midseason']['change'], 80)
++        self.assertIn('Midseason: +80.00 Market points', f.html())
++        self.assertEqual(f.trend()['checkpoint_count'], 2)
++
++    def test_daily_aging_updates_rendered_confidence_without_new_source_evidence(self):
++        f = MarketHistoryFixture(self)
++        for month in range(1,7):
++            f.add_point('earlier-month-'+str(month), 600+month*120, f'2026-{month:02d}-01')
++        initial_generation = f.memory.observation_generation()
++        boundary = datetime(2026,7,2,12,tzinfo=timezone.utc)+timedelta(days=180)
++        class Clock(datetime):
++            instant = boundary
++            @classmethod
++            def now(cls, tz=None):
++                return cls.instant.astimezone(tz) if tz else cls.instant.replace(tzinfo=None)
++        with patch('src.core.market_trends.service.datetime', Clock):
++            before = f.trend()
++            self.assertEqual(before['latest_checkpoint_age_days'], 180)
++            self.assertIn(before['confidence'].upper()+' CONFIDENCE', f.html())
++            Clock.instant += timedelta(days=1)
++            after = f.trend()
++            self.assertEqual(after['latest_checkpoint_age_days'], 181)
++            self.assertNotEqual(before['confidence'], after['confidence'])
++            for key in ('magnitude','comparison_start_at','comparison_end_at','checkpoint_count','current_qualification'):
++                self.assertEqual(before[key],after[key],key)
++            self.assertIn(after['confidence'].upper()+' CONFIDENCE', f.html())
++            self.assertEqual(f.memory.observation_generation(), initial_generation)
++
++    def test_admitted_checkpoint_dates_and_values_reach_existing_disclosure(self):
++        f = MarketHistoryFixture(self, points=((960,'2026-06-01'), (1200,'2026-06-15'), (1440,'2026-07-02')))
++        trend = f.trend()
++        html = f.html()
++        self.assertIn('Retained Market observations', html)
++        for row in trend['checkpoints']:
++            self.assertIn('data-observation-id="'+row['observation_id']+'"', html)
++            self.assertIn(row['observed_at'], html)
++            self.assertIn(f'{row["value"]:,.2f}', html)
++        self.assertIn('Current published endpoint', html)
++        self.assertIn('not daily', html)
++
++    def test_supported_zero_is_a_comparison_without_claiming_a_stable_trend(self):
++        f = MarketHistoryFixture(self, points=((0,'2026-07-01'),), current_raw=0)
++        trend = f.trend()
++        self.assertEqual(trend['magnitude'], 0)
++        self.assertEqual(trend['direction'], 'insufficient_evidence')
++        self.assertTrue(trend['provenance']['current_endpoint_comparable'])
++        html = f.html()
++        self.assertIn('+0.00 Market points', html)
++        self.assertIn('More evidence is needed to classify the trend', html)
++        self.assertNotIn('STABLE ·', html)
++        self.assertIn('Dated price comparisons are available', html)
++        trending = f.client.get('/api/market/trending').json()
++        self.assertEqual(trending['availability'], 'unavailable')
++        self.assertIn('classify a trend', trending['unavailable_reason'])
++
++    def test_source_catalogue_is_not_presented_as_selected_price_providers(self):
++        f = MarketHistoryFixture(self)
++        self.assertEqual(f.trend()['provenance']['current_evidence']['providers'], ['FantasyCalc'])
++        html = f.html()
++        self.assertIn('Current Market price provider', html)
++        self.assertIn('FantasyCalc', html)
++        self.assertNotIn('Participating provider', html)
++        self.assertIn('Provider catalogue entry', html)
++
++    def test_player_dossier_links_the_same_canonical_comparison_without_raw_contamination(self):
++        from routes.transactions import create_transactions_router
++        from src.core.data_platform import data_platform
++        from src.core.data_platform.storage import SnapshotWarehouse
++        f = MarketHistoryFixture(self,raw_trend=-999)
++        self.enterContext(patch.object(data_platform,'warehouse',SnapshotWarehouse()))
++        f.app.include_router(create_transactions_router(ensure_fresh=AsyncMock(),
++            refresh_transactions=AsyncMock(),require_data=lambda:f.data,state=f.state,
++            page=lambda title,body:HTMLResponse(body)))
++        response = f.client.get('/players/1?front_office=4')
++        self.assertEqual(response.status_code,200)
++        self.assertIn('FantasyCalc raw-price 30-day change (provider units): -999',response.text)
++        self.assertIn('href="/market?selected=player%3A1">Observed canonical Market history',response.text)
++        destination = f.client.get('/market?selected=player%3A1')
++        self.assertEqual(destination.status_code,200)
++        self.assertIn('+100.00 Market points',destination.text)
++        self.assertNotIn('-999',destination.text)
++        self.assertEqual(f.trend()['magnitude'],100)
++
++    def test_no_history_never_becomes_an_unchanged_zero(self):
++        f = MarketHistoryFixture(self, points=())
++        trend = f.trend()
++        self.assertIsNone(trend['magnitude'])
++        self.assertEqual(trend['checkpoint_count'], 0)
++        html = f.html()
++        self.assertIn('0 dated checkpoints available to this comparison', html)
++        self.assertNotIn('+0.00 Market points', html)
++        self.assertNotIn('data-observation-id=', html)
++
++    def test_one_checkpoint_without_a_later_endpoint_keeps_known_price_not_a_change(self):
++        f = MarketHistoryFixture(self, points=((1440,'2026-08-31'),), current_raw=1440)
++        trend = f.trend()
++        self.assertEqual(trend['checkpoint_count'], 1)
++        self.assertIsNone(trend['magnitude'])
++        self.assertFalse(trend['provenance']['current_endpoint_comparable'])
++        html = f.html()
++        self.assertIn('1 dated checkpoint available to this comparison', html)
++        self.assertIn('120.00', html)
++        self.assertNotIn('Current published endpoint:', html)
++        self.assertNotIn('+0.00 Market points', html)
++
++    def test_retained_but_ineligible_records_are_not_claimed_absent(self):
++        f = MarketHistoryFixture(self,points=((1200,'2099-07-01'),))
++        trend = f.trend()
++        self.assertEqual(trend['checkpoint_count'],0)
++        self.assertEqual(trend['provenance']['excluded_evidence_count'],1)
++        self.assertIsNone(trend['magnitude'])
++        html = f.html()
++        self.assertIn('1 retained record could not be used as eligible dated prices',html)
++        self.assertNotIn('0 recorded prices',html)
++        self.assertNotIn('+0.00 Market points',html)
++
++    def test_preview_is_bounded_without_truncating_the_canonical_comparison(self):
++        f = MarketHistoryFixture(self, points=tuple(
++            (1200 if n%2 else 1440, f'2026-01-{n:02d}') for n in range(1,16)))
++        trend = f.trend()
++        self.assertEqual(trend['checkpoint_count'], 15)
++        html = f.html()
++        self.assertLessEqual(html.count('data-observation-id='), 12)
++        self.assertIn(trend['checkpoints'][0]['observation_id'], html)
++        self.assertIn(trend['checkpoints'][-1]['observation_id'], html)
++        self.assertIn('Intermediate checkpoints are omitted', html)
++        self.assertIn('all admitted evidence', html)
++
++    def test_exact_pick_original_franchise_history_is_not_substituted(self):
++        f = MarketHistoryFixture(self, points=(), picks=True)
++        identity = 'pick:2027:1:4'
++        for n,(raw,day) in enumerate(((1200,'2026-07-01'),(1440,'2026-07-02'))):
++            f.add_point('exact-pick-'+str(n),raw,day,asset_id=identity,context='exact-pick-fixture')
++        a = f.trend(identity)
++        b = f.trend('pick:2027:1:5')
++        self.assertEqual(a['asset_id'],identity)
++        self.assertEqual(a['checkpoint_count'],2)
++        self.assertIsNotNone(a['magnitude'])
++        self.assertEqual(b['checkpoint_count'],0)
++        self.assertIsNone(b['magnitude'])
++        html = f.html(identity)
++        self.assertIn('Retained Market observations', html)
++        self.assertIn('pick:2027:1:4', html)
++        self.assertNotIn('data-observation-id=', f.html('pick:2027:1:5'))
++
++    def test_incompatible_units_do_not_acquire_canonical_movement_or_zero(self):
++        f = MarketHistoryFixture(self)
++        f.html()
++        f.add_point('native-unit-boundary',960,'2026-06-01',semantics={'value_scale':'native-provider-units'})
++        trend = f.trend()
++        self.assertEqual(trend['direction'],'not_comparable')
++        self.assertIsNone(trend['magnitude'])
++        html = f.html()
++        self.assertIn('Not compared across this evidence boundary',html)
++        self.assertNotIn('+0.00 Market points',html)
++        self.assertNotIn('+100.00 Market points',html)
++
++    def test_format_boundary_remains_not_comparable_and_not_player_movement(self):
++        f = MarketHistoryFixture(self)
++        f.html()
++        f.add_point('other-provider-format', 960, '2026-06-01',
++            semantics={'format_key':'incompatible-format-evidence'})
++        trend = f.trend()
++        self.assertEqual(trend['direction'], 'not_comparable')
++        self.assertIsNone(trend['magnitude'])
++        self.assertIn('INCOMPATIBLE_OBSERVATION_BOUNDARY', trend['comparison_reasons'])
++        html = f.html()
++        self.assertNotIn('+100.00 Market points', html)
++        self.assertIn('This is not player movement', html)
++
++    def test_settled_reads_preserve_every_record_and_do_not_prepare_again(self):
++        f = MarketHistoryFixture(self)
++        f.html()
++        def rows():
++            with f.memory._connect() as c:
++                return {table:[tuple(r) for r in c.execute('SELECT * FROM '+table)] for table in
++                    ('global_market_observations','market_observation_references','intelligence_checkpoints')}
++        before = rows()
++        builds = f.cache.metrics()['build_count']
++        for _ in range(3):
++            f.html()
++            f.trend()
++        self.assertEqual(f.cache.metrics()['build_count'], builds)
++        self.assertEqual(rows(), before)
+diff --git a/tests/test_market_history_coverage_browser.py b/tests/test_market_history_coverage_browser.py
+new file mode 100644
+index 0000000..58c43ea
+--- /dev/null
++++ b/tests/test_market_history_coverage_browser.py
+@@ -0,0 +1,129 @@
++"""Actual Market routes/theme at four sizes; disposable evidence, not live."""
++import json
++import os
++from pathlib import Path
++import subprocess
++from urllib.parse import urlsplit
++import unittest
++from unittest.mock import patch
++
++from playwright.sync_api import sync_playwright
++
++from tests.test_market_history_coverage import MarketHistoryFixture
++from tools.validation.browser_runtime import launch_chromium
++
++
++class MarketHistoryCoverageBrowserTests(unittest.TestCase):
++    def test_checkpoint_publication_and_boundary_are_coherent_at_four_sizes(self):
++        import dtos_app
++        from src.platform.lifecycle import memory_snapshot
++        target = os.environ.get('DTOS_MARKET_HISTORY_EVIDENCE')
++        if not target and os.environ.get('DTOS_PHASE2_EVIDENCE'):
++            target = str(Path(os.environ['DTOS_PHASE2_EVIDENCE'])/'market-history-coverage')
++        destination = Path(target) if target else None
++        if destination:
++            destination.mkdir(parents=True,exist_ok=True)
++        records, errors, requests = [], [], []
++        before_memory = memory_snapshot()
++        with sync_playwright() as pw:
++            browser = launch_chromium(pw,headless=True)
++            try:
++                for league in ('1314695233040052224','1319750579458686976'):
++                    for width,height in ((320,432),(375,667),(390,844),(1280,900)):
++                        with self.subTest(league=league,width=width):
++                            f = MarketHistoryFixture(self,league=league,page=dtos_app.page)
++                            page = browser.new_page(viewport={'width':width,'height':height})
++                            page.on('pageerror',lambda error:errors.append(str(error)))
++                            def transport(route):
++                                url = urlsplit(route.request.url)
++                                if url.netloc != 'fixture':
++                                    route.fulfill(status=404)
++                                    return
++                                if url.path.startswith('/static/'):
++                                    path = Path(url.path.lstrip('/'))
++                                    if path.is_file():
++                                        route.fulfill(path=str(path))
++                                        return
++                                response = f.client.get(url.path+('?' + url.query if url.query else ''))
++                                requests.append({'path':url.path,'status':response.status_code})
++                                route.fulfill(status=response.status_code,body=response.content,
++                                    content_type=response.headers.get('content-type','text/html'))
++                            page.route('**/*',transport)
++                            def expanded():
++                                page.wait_for_load_state('networkidle')
++                                summary = page.get_by_text('Observed trends and comparison details',exact=True)
++                                summary.focus()
++                                self.assertNotEqual(summary.evaluate('(e)=>getComputedStyle(e).outlineStyle'),'none')
++                                before = len(requests)
++                                if not summary.evaluate('e=>e.parentElement.open'):
++                                    summary.press('Enter')
++                                self.assertTrue(summary.evaluate('e=>e.parentElement.open'))
++                                self.assertEqual(len(requests),before)
++                                self.assertLessEqual(page.evaluate('document.documentElement.scrollWidth-innerWidth'),0)
++                                return page.locator('.market-trend-checkpoints')
++                            try:
++                                with patch.dict(dtos_app.STATE,{'data':f.data}):
++                                    response = page.goto('http://fixture/market?selected=player%3A1')
++                                    self.assertEqual(response.status,200)
++                                    preview = expanded()
++                                    self.assertEqual(preview.locator('tbody tr').count(),2)
++                                    self.assertIn('+100.00 Market points',page.locator('body').inner_text())
++                                    initial_generation = f.market.semantic_generation
++                                    if destination:
++                                        page.screenshot(path=str(destination/f'before-{league}-{width}.png'))
++                                    f.add_point('new-retained-checkpoint',960,'2026-06-01')
++                                    admitted = f.trend()
++                                    page.reload()
++                                    preview = expanded()
++                                    self.assertEqual(preview.locator('tbody tr').count(),3)
++                                    self.assertIn('+120.00 Market points',page.locator('body').inner_text())
++                                    self.assertIn('Current Market price provider',page.locator('body').text_content())
++                                    self.assertNotIn('Participating provider',page.locator('body').text_content())
++                                    for point in admitted['checkpoints']:
++                                        row = preview.locator('tr[data-observation-id="'+point['observation_id']+'"]')
++                                        self.assertEqual(row.count(),1)
++                                        self.assertIn(point['observed_at'],row.inner_text())
++                                        self.assertIn(f'{point["value"]:,.2f}',row.inner_text())
++                                    region = preview.get_by_role('region',name='Retained Market observations')
++                                    region.focus()
++                                    self.assertNotEqual(region.evaluate('e=>getComputedStyle(e).outlineStyle'),'none')
++                                    scrollable = region.evaluate('e=>e.scrollWidth>e.clientWidth')
++                                    if scrollable:
++                                        region.press('ArrowRight')
++                                        page.wait_for_timeout(100)
++                                        self.assertGreater(region.evaluate('e=>e.scrollLeft'),0)
++                                    if destination:
++                                        page.screenshot(path=str(destination/f'updated-{league}-{width}.png'))
++                                    f.add_point('incompatible-format',1080,'2026-05-01',
++                                        semantics={'format_key':'different-reference-format'})
++                                    blocked = f.trend()
++                                    page.reload()
++                                    preview = expanded()
++                                    self.assertEqual(preview.locator('tbody tr').count(),4)
++                                    self.assertIn('This is not player movement',page.locator('body').text_content())
++                                    self.assertIn('Not compared across this evidence boundary',preview.inner_text())
++                                    self.assertNotIn('+120.00 Market points',page.locator('body').inner_text())
++                                    self.assertIsNone(blocked['magnitude'])
++                                    if destination:
++                                        page.screenshot(path=str(destination/f'boundary-{league}-{width}.png'))
++                                    records.append({'league':league,'viewport':[width,height],
++                                        'before':{'magnitude':100,'checkpoint_count':2},
++                                        'updated':{k:admitted[k] for k in ('magnitude','checkpoint_count','comparison_start_at','comparison_end_at','comparison_scope','comparison_units','confidence')},
++                                        'boundary':{k:blocked[k] for k in ('magnitude','checkpoint_count','direction','comparison_reasons')},
++                                        'price_publication_unchanged':initial_generation==f.market.semantic_generation,
++                                        'overflow':False,'keyboard':True,'table_keyboard_scroll':scrollable,
++                                        'disclosure_extra_requests':0,'source_catalogue_not_participation':True})
++                            finally:
++                                page.close()
++            finally:
++                browser.close()
++        self.assertEqual(errors,[])
++        self.assertFalse(any(r['path'].startswith(('/sync','/trades/recommended')) for r in requests))
++        if destination:
++            report={'scope':'Disposable canonical source/store and rendered routes. Sample league IDs do not establish live history coverage or actual league settings.',
++                'head':subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),
++                'tree':subprocess.check_output(['git','rev-parse','HEAD^{tree}'],text=True).strip(),
++                'working_tree_clean':not subprocess.check_output(['git','status','--porcelain'],text=True).strip(),
++                'records':records,'errors':errors,'requests':requests,'before_memory':before_memory,
++                'after_memory':memory_snapshot(),'browser_closed':True}
++            (destination/'browser.json').write_text(json.dumps(report,indent=2)+'\n')

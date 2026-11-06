@@ -1,0 +1,92 @@
+{
+  "scope": "GitHub connector decoded job logs; original canonical ZIP payloads are separately preserved. Patch transport added a terminal newline; its known byte was removed. An initial length check used universal-newline text reading and refused Windows text. The Windows job was fetched again and transferred as JSON chunks with newline conversion disabled, preserving its original decoded CR/LF. No validation was rerun and no historical log was reconstructed.",
+  "files": [
+    {
+      "job": 127664324578,
+      "decoded_utf16_units": 379810,
+      "bytes": 381250,
+      "sha256": "681a935be5a7379141f7be8c815c6ff9dcba0f7c0d865da9dee033fed9aa2d26",
+      "carriage_returns": 0
+    },
+    {
+      "job": 127664324873,
+      "decoded_utf16_units": 367274,
+      "bytes": 367276,
+      "sha256": "1201aac31bbcd86c4d9e8d0602daed583a74ee00f5ffd237ec9f1f04ca433f4e",
+      "carriage_returns": 1060
+    },
+    {
+      "job": 127664324987,
+      "decoded_utf16_units": 34444,
+      "bytes": 34842,
+      "sha256": "453d4fa944a3b6f54d8df82b28dc78826eb3b12219ed1c045ffa9af44754052e",
+      "carriage_returns": 0
+    },
+    {
+      "job": 127664325378,
+      "decoded_utf16_units": 41296,
+      "bytes": 41696,
+      "sha256": "cba4e321fa0b03b9871c3702d2588f2101cd0cf11de9411557b3e7b851cc3dac",
+      "carriage_returns": 0
+    },
+    {
+      "job": 127664325661,
+      "decoded_utf16_units": 34471,
+      "bytes": 34869,
+      "sha256": "98e1d40c377af5b55ad28d5fea4ec72ad0dd81939f3e1d08eea867326af26d59",
+      "carriage_returns": 0
+    },
+    {
+      "job": 127664327136,
+      "decoded_utf16_units": 98354,
+      "bytes": 101716,
+      "sha256": "bc3f9e8cc977b3c011e33949c4397f060f1bedfe6e5c65f4d849b4fccca1ffd1",
+      "carriage_returns": 0
+    },
+    {
+      "job": 127664327166,
+      "decoded_utf16_units": 445108,
+      "bytes": 448470,
+      "sha256": "d3011f277d44a8f6c867024068248f2273225a76b95aae962c77c93899d1913a",
+      "carriage_returns": 0
+    },
+    {
+      "job": 127664326954,
+      "decoded_utf16_units": 3672518,
+      "bytes": 3673242,
+      "sha256": "24716737fa26892c249ca744d362ace723d2aaa4b8503639aef44f700437aa90",
+      "carriage_returns": 0
+    },
+    {
+      "job": 127664327232,
+      "decoded_utf16_units": 1814433,
+      "bytes": 1815155,
+      "sha256": "5ba390d2002f820467cc73b31326d9627a5fddc510b26f9e5475089d4211e8d0",
+      "carriage_returns": 0
+    },
+    {
+      "job": 127664327243,
+      "decoded_utf16_units": 1192018,
+      "bytes": 1192740,
+      "sha256": "2614991aa7745cf0faa8a456b0de6b8174a05066a9f37d28a910feae866b2163",
+      "carriage_returns": 0,
+      "transport": "CR encoded before patch and restored; added newline removed"
+    },
+    {
+      "job": 127664327215,
+      "decoded_utf16_units": 3763761,
+      "bytes": 3764485,
+      "sha256": "dd9b7cb5d21848cb0fb6a455eeb0d8c38ede6c2ca341453024306a1cf1a97649",
+      "carriage_returns": 0
+    },
+    {
+      "job": 127664325217,
+      "decoded_utf16_units": 209315,
+      "bytes": 209963,
+      "sha256": "ca8dffca195e30a473d2e02ac85b470cc01fa091937e19a38203f6ccf036a11e",
+      "carriage_returns": 0
+    }
+  ],
+  "direct_log_transport_boundary": "A bounded standard CLI job-log download followed GitHub's blob redirect and was refused by the managed network boundary. It yielded no log. No identical retry was made. The existing connector successfully retrieved the decoded log; no credentials or network settings were changed.",
+  "status_display_note": "A status-only tool formatter initially assumed skipped jobs have a steps list. The optional/null field was handled on the subsequent read. No job, source or test outcome was modified or rerun."
+}
