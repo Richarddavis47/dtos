@@ -275,6 +275,8 @@ class HistoricalPlayerEvidenceTests(unittest.TestCase):
         ark = player_career(ARK, pid)
         side = next(r for r in day['season_matchups']['weeks']['5']['rows'] if pid in r['players_points'])
         side['players_points'][pid] = 0
+        if pid in side.get('starters', []):
+            side['starters_points'][side['starters'].index(pid)] = 0
         self.store.update_current(DAY, day)
         changed = player_career(DAY, pid)
         self.assertNotEqual(original, changed)

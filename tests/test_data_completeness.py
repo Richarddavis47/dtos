@@ -12,13 +12,14 @@ from tests.test_batch6_matchup_season import fixture
 
 
 class SourceCompletenessTests(unittest.TestCase):
-    def test_same_row_fallback_and_zero_precedence(self):
-        row = {'starters_points': [None, 0, 'bad', True],
+    def test_same_row_valid_scores_and_conflicts_preserve_identity(self):
+        row = {'starters': ['a','b','c','d'], 'starters_points': [None, 0, 'bad', True],
                'players_points': {'a': 12.345, 'b': 25, 'c': 4, 'd': 8, 'bench': 0}}
         before = copy.deepcopy(row)
-        for pid, index, expected in [('a', 0, 12.345), ('b', 1, 0), ('c', 2, 4), ('d', 3, 8), ('bench', None, 0), ('unknown', 0, None)]:
+        for pid, index, expected in [('a', 0, 12.345), ('b', 1, None), ('c', 2, 4), ('d', 3, 8), ('bench', None, 0), ('unknown', 0, None)]:
             self.assertEqual(source_player_actual(row, pid, index), expected)
         self.assertEqual(row, before)
+        self.assertEqual(source_player_actual({'starters':['b'],'starters_points':[0],'players_points':{'b':0}}, 'b', 0), 0)
         self.assertIsNone(source_player_actual({'players_points': {'a': float('nan')}}, 'a'))
 
     def test_source_to_preparation_to_http_and_render(self):
