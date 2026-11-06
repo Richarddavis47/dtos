@@ -1,3 +1,11 @@
+# v1.22.16 / build 2231 — Franchise history trade follow-through
+
+Contextual Back now preserves Franchise History pagination while following a completed trade, an exact pick conversion, a drafted player and a subsequent trade. Returning through the existing page history no longer skips the preceding franchise-history page merely because its page number was filtered out.
+
+The existing factual timeline, original consideration, package-only relationships, exact pick identity, source/chronology limitations and original-trade return links are reused. Current-season fresh publication, cache restoration and eviction/reopening remain covered. No new history engine, provider acquisition, retrospective grades or historical Market reconstruction is added.
+
+Trade and valuation mathematics, source qualification, account isolation, saved settings, submitted lineups, scoring and the existing 2 GiB memory/admission safeguards are unchanged. See docs/audits/HISTORY_FOLLOWTHROUGH_2231.md for evidence scope and limitations.
+
 # v1.22.15 / build 2230 — Current-season franchise history
 
 Restored league publications and cached startup now register the same owned source with canonical history as fresh synchronization. Supported current-season transactions and retrieved weekly buckets remain visible while the season is ongoing, and runtime eviction releases the history reference safely.
