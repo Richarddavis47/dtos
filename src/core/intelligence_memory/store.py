@@ -1249,6 +1249,21 @@ class IntelligenceCheckpointStore:
         with self._connect() as connection:
             return int(connection.execute('SELECT COALESCE(MAX(rowid),0) FROM global_market_observations').fetchone()[0])
 
+    def market_trend_generation(self) -> tuple[int, int, int]:
+        """Cheap append-only revision for derived views, not a price identity.
+
+        References can add milestone context without creating another quote.
+        Read all high-water marks together; do not scan or decode observations.
+        Existing startup migrations run before any rendered cache exists.
+        """
+        with self._connect() as connection:
+            row = connection.execute("""SELECT
+                COALESCE((SELECT MAX(rowid) FROM global_market_observations),0),
+                COALESCE((SELECT MAX(rowid) FROM market_observation_references),0),
+                COALESCE((SELECT MAX(rowid) FROM intelligence_checkpoints),0)
+            """).fetchone()
+        return tuple(int(value) for value in row)
+
     def exact_lineages(self, *, league_id: str, draft_id: str):
         with self._connect() as connection:
             rows = connection.execute('SELECT * FROM exact_pick_lineage WHERE league_id=? AND draft_id=? LIMIT 1001', (league_id, draft_id)).fetchall()

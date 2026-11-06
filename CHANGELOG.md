@@ -1,3 +1,11 @@
+# v1.22.17 / build 2232 — Market history evidence coverage
+
+Market history now refreshes its rendered comparison when legitimately retained checkpoints or event references change, even when the current price publication stays the same. Existing daily evidence-aging rules also reach the cached page. This prevents an old HTML comparison from disagreeing with the canonical API.
+
+The existing comparison disclosure shows a bounded preview of admitted sparse checkpoint dates and values, with the current published endpoint separate from retained observations. Missing or ineligible history remains qualified. A verified zero price difference is distinct from having enough evidence to classify a trend. Provider catalogue entries are no longer described as participants in the selected current price; its supported source is identified separately.
+
+The existing trend engine, Neutral/Custom formulas, source compatibility, observation clocks, exact picks, Trade qualification, scoring, FOIS provenance, saved settings and memory/admission safeguards remain unchanged. No new provider, historical import, daily interpolation or background acquisition is added. See docs/audits/MARKET_HISTORY_COVERAGE_2232.md for reproduction, scope and limitations.
+
 # v1.22.16 / build 2231 — Franchise history trade follow-through
 
 Contextual Back now preserves Franchise History pagination while following a completed trade, an exact pick conversion, a drafted player and a subsequent trade. Returning through the existing page history no longer skips the preceding franchise-history page merely because its page number was filtered out.

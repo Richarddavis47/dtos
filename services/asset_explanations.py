@@ -70,20 +70,28 @@ def market_explanation(detail, trend, *, league_id):
     incompatible = bool(trend.get('comparison_reasons')) or trend.get('direction') == 'not_comparable'
     direction = trend.get('direction')
     comparable = not incompatible and direction in ('rising', 'falling', 'stable', 'volatile')
+    supported_difference = not incompatible and trend.get('magnitude') is not None
     rows.append(row('trend', 'Observed Market trend', direction if comparable else None,
                     state=A.AVAILABLE if comparable else A.NO_COMPARABLE_EVIDENCE))
     rows.append(row('as_of', 'Trend observation boundary', trend.get('as_of'), 'as-of timestamp'))
+    if supported_difference:
+        rows.append(row('price_difference', 'Observed price difference', trend['magnitude'],
+                        'Market points (0–1000)' if trend.get('comparison_units') == '0-1000' else 'observed units'))
     for name, label in (('comparison_scope', 'Comparison scope'),
                         ('comparison_start_at', 'Comparison starts'),
                         ('comparison_end_at', 'Comparison ends')):
         if trend.get(name) is not None:
             rows.append(row(name, label, trend[name]))
     rows.append(row('confidence', 'Trend evidence confidence', trend.get('confidence'), 'evidence support'))
+    selected_evidence = (trend.get('provenance') or {}).get('current_evidence') or {}
+    for index, provider in enumerate(selected_evidence.get('providers') or ()):
+        rows.append(row(f'selected_provider.{index}', 'Current Market price provider',
+                        provider, 'selected current price source', K.SOURCE))
     for index, provider in enumerate(detail.get('providers') or []):
         if isinstance(provider, str):
-            rows.append(row(f'provider.{index}', 'Participating provider', provider, 'provider identity', K.SOURCE))
+            rows.append(row(f'provider.{index}', 'Provider catalogue entry', provider, 'provider identity', K.SOURCE))
         elif isinstance(provider, dict):
-            for field, label in (('provider', 'Participating provider'), ('market_format', 'Provider format'),
+            for field, label in (('provider', 'Provider catalogue entry'), ('market_format', 'Provider format'),
                                  ('source_updated_at', 'Provider update time'), ('retrieved_at', 'Retrieval time')):
                 if provider.get(field) is not None:
                     rows.append(row(f'provider.{index}.{field}', label, provider[field], 'provider metadata', K.SOURCE))
@@ -95,7 +103,9 @@ def market_explanation(detail, trend, *, league_id):
         limits.append(('MARKET_UNAVAILABLE', 'Current acquisition-price evidence is unavailable, not zero.', 'price'))
     if not comparable:
         limits.append(('MARKET_NOT_COMPARABLE' if incompatible else 'MARKET_HISTORY_INSUFFICIENT',
-            'Historical observations cannot support a comparable trend.' if incompatible else 'There is not enough comparable history to describe movement.', 'trend'))
+            'Historical observations cannot support a comparable trend.' if incompatible else
+            'More evidence is needed to classify the trend; the supported price difference is shown separately.' if supported_difference else
+            'There is not enough comparable history to describe movement.', 'trend'))
     boundary_text = {
         'METHODOLOGY_VERSION_CHANGED': 'DTOS methodology changed. This boundary is not a player price surge or decline.',
         'COMPARABLE_HISTORY_UNAVAILABLE': 'Required comparison identity or history is unavailable; missing coverage is not stable performance.',
