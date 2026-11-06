@@ -1,0 +1,11 @@
+# Guarded Actions publication — build 2233
+
+Isolated tooling branch based on production 500d985d2f31c97680370a616a9303c47d60ca7f. Only eight allowed publisher paths may differ. The existing explicitly selected Actions workflow uses job-scoped GITHUB_TOKEN with contents:write; no PAT, relay, authentication change or main workflow merge.
+
+The plan remains finalized:false until exact candidate/tree, both full canonical runs, all ten gates, all twelve hosted jobs, original artifact digests and draft identity are verified. The new native production-coverage verifier requires eight league/viewport cases, twenty-four screenshots, complete versus withheld windows, retained refresh qualification, keyboard/overflow controls and enforced 2 GiB/no OOM. Existing history, Market history, Trade, preflight, league entry, public security and lifecycle verifiers remain mandatory and unchanged.
+
+prepare requires the open PR and unchanged baseline. It verifies original bytes and attachment manifests, uploads only to the existing draft and reads every attachment back. It neither merges nor creates a tag. publish requires the approved PR already merged at current main with exactly the validated tree, plus a successful preparation certificate from this same frozen tooling revision. It repeats all checks, uses an unused annotated tag, publishes immutably, verifies attachments and bounded production readiness. Existing Render automatic main deployment remains unchanged.
+
+Current canonical NFL production is separate from roster Career History and forward projections. No roster fallback, zero filling or invented source values. Remaining applicable player special-teams and long-TD gaps stay missing. Historical scoring/FOIS, reference valuation coefficients, Neutral/Custom formulas, Trade thresholds and memory admission remain unchanged. Evidence distinguishes supplied Main Chat observations, public source inspection, disposable fixture acceptance and bounded guest readiness. No authenticated production recovery or physical Safari is claimed. No production sync, Trade search, FOIS rebuild, cache clear or saved-data mutation.
+
+Prior baseline failures, fixture/setup mistakes, superseded cross-version route failure and cancelled/incomplete runs remain separately manifested. They never substitute for final-source gates.
