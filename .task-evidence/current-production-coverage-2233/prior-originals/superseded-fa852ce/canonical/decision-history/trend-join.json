@@ -1,0 +1,321 @@
+{
+  "scope": "Fictional compatible quotes through actual producer and sparse store",
+  "canonical": {
+    "asset_id": "player:a",
+    "current_value": 250.0,
+    "as_of": "2026-08-31T12:00:00+00:00",
+    "direction": "volatile",
+    "magnitude": 150.0,
+    "magnitude_band": "large",
+    "horizon": "61_days",
+    "confidence": "medium",
+    "confidence_score": 54,
+    "evidence_coverage": "partial",
+    "checkpoint_count": 4,
+    "latest_checkpoint_age_days": 124,
+    "observed_high": 160.0,
+    "observed_low": 100.0,
+    "volatility": 17.12,
+    "volatility_band": "swinging",
+    "milestones": {
+      "season_start": {
+        "checkpoint_id": "ee98695efbe9eed0e2c81ecede78a9a343b0c2363e1a5cbb881f1b6183413887",
+        "observed_at": "2026-07-04T12:00:00Z",
+        "value": 160.0,
+        "change": 90.0
+      }
+    },
+    "event_context": [
+      {
+        "checkpoint_id": "f4c0185f870ec0801aff3e7aea63877cb6ec3e33f215d5a2e314a6ec4113a443",
+        "observed_at": "2026-07-01T12:00:00Z",
+        "reason_codes": [
+          "season_start"
+        ],
+        "relationship": "coincided_with"
+      },
+      {
+        "checkpoint_id": "2659432a4a55a67433efe6105a2b73c3a4697df1ef6deb99a299ca28082114f5",
+        "observed_at": "2026-07-02T12:00:00Z",
+        "reason_codes": [
+          "season_start"
+        ],
+        "relationship": "coincided_with"
+      },
+      {
+        "checkpoint_id": "291be6e2bff6544481b13eab07bae09d96b026cd192101993bf1ca9dc43ab408",
+        "observed_at": "2026-07-03T12:00:00Z",
+        "reason_codes": [
+          "season_start"
+        ],
+        "relationship": "coincided_with"
+      },
+      {
+        "checkpoint_id": "ee98695efbe9eed0e2c81ecede78a9a343b0c2363e1a5cbb881f1b6183413887",
+        "observed_at": "2026-07-04T12:00:00Z",
+        "reason_codes": [
+          "season_start"
+        ],
+        "relationship": "coincided_with"
+      }
+    ],
+    "checkpoints": [
+      {
+        "observation_id": "f4c0185f870ec0801aff3e7aea63877cb6ec3e33f215d5a2e314a6ec4113a443",
+        "observed_at": "2026-07-01T12:00:00Z",
+        "value": 100.0,
+        "confidence": 80,
+        "reason_codes": [
+          "season_start"
+        ],
+        "provider_count": 1,
+        "related_asset_ids": []
+      },
+      {
+        "observation_id": "2659432a4a55a67433efe6105a2b73c3a4697df1ef6deb99a299ca28082114f5",
+        "observed_at": "2026-07-02T12:00:00Z",
+        "value": 120.0,
+        "confidence": 80,
+        "reason_codes": [
+          "season_start"
+        ],
+        "provider_count": 1,
+        "related_asset_ids": []
+      },
+      {
+        "observation_id": "291be6e2bff6544481b13eab07bae09d96b026cd192101993bf1ca9dc43ab408",
+        "observed_at": "2026-07-03T12:00:00Z",
+        "value": 140.0,
+        "confidence": 80,
+        "reason_codes": [
+          "season_start"
+        ],
+        "provider_count": 1,
+        "related_asset_ids": []
+      },
+      {
+        "observation_id": "ee98695efbe9eed0e2c81ecede78a9a343b0c2363e1a5cbb881f1b6183413887",
+        "observed_at": "2026-07-04T12:00:00Z",
+        "value": 160.0,
+        "confidence": 80,
+        "reason_codes": [
+          "season_start"
+        ],
+        "provider_count": 1,
+        "related_asset_ids": []
+      }
+    ],
+    "league_liquidity": null,
+    "provenance": {
+      "source": "step_2_global_market_memory",
+      "provider_calls": 0,
+      "raw_history_scans": 0,
+      "sparse_observations": true,
+      "invalid_temporal_evidence_count": 0,
+      "undated_observations_excluded_from_chronology": 0,
+      "current_endpoint_comparable": true,
+      "excluded_evidence_count": 0,
+      "current_evidence": {
+        "comparison_semantics": {
+          "value_concept": "external_market_normalized_index",
+          "value_scale": "0-1000",
+          "format_key": "[{\"concept\":{\"type\":\"player\"},\"details\":null,\"format\":\"dynasty_2qb\",\"method\":\"provider_range_linear\",\"normalization\":\"1.1\",\"provider\":\"FantasyCalc\",\"source_scale\":null}]",
+          "methodology": "compatible-consensus-or-primary-source-2:observation-identity-1"
+        },
+        "providers": [
+          "FantasyCalc"
+        ],
+        "provider_normalization_version": "1.1",
+        "asset_id": "player:a",
+        "observed_at": "2026-08-31T12:00:00+00:00",
+        "oldest_observed_at": "2026-08-31T12:00:00+00:00",
+        "source_generations": {
+          "FantasyCalc": "cdd742d754233b187057736007b53b13e2251b8af6031339dfa0977922272c2e"
+        },
+        "market_generation": "1e2cf53f081c7d55b9f1ecf78dd0a912673fbb0d7e971c0a05dd3a06ce1196da",
+        "freshness": "unknown",
+        "observation_clock": "canonical_selected_price_observation",
+        "source_times": [
+          {
+            "provider": "FantasyCalc",
+            "observed_at": "2026-08-31T12:00:00+00:00",
+            "source_updated_at": null,
+            "retrieved_at": "2026-08-31T12:00:00+00:00"
+          }
+        ]
+      }
+    },
+    "comparison_reasons": [],
+    "comparison_scope": "historical_to_current",
+    "comparison_start_at": "2026-07-01T12:00:00Z",
+    "comparison_end_at": "2026-08-31T12:00:00+00:00",
+    "current_qualification": "Current published price compared at its recorded observation time. Source update time/freshness is not established.",
+    "comparison_units": "0-1000",
+    "schema_version": "market-trend-1",
+    "method_version": "sparse-event-market-trend-2"
+  },
+  "trade": {
+    "asset_id": "player:a",
+    "current_value": 250.0,
+    "as_of": "2026-08-31T12:00:00+00:00",
+    "direction": "volatile",
+    "magnitude": 150.0,
+    "magnitude_band": "large",
+    "horizon": "61_days",
+    "confidence": "medium",
+    "confidence_score": 54,
+    "evidence_coverage": "partial",
+    "checkpoint_count": 4,
+    "latest_checkpoint_age_days": 124,
+    "observed_high": 160.0,
+    "observed_low": 100.0,
+    "volatility": 17.12,
+    "volatility_band": "swinging",
+    "milestones": {
+      "season_start": {
+        "checkpoint_id": "ee98695efbe9eed0e2c81ecede78a9a343b0c2363e1a5cbb881f1b6183413887",
+        "observed_at": "2026-07-04T12:00:00Z",
+        "value": 160.0,
+        "change": 90.0
+      }
+    },
+    "event_context": [
+      {
+        "checkpoint_id": "f4c0185f870ec0801aff3e7aea63877cb6ec3e33f215d5a2e314a6ec4113a443",
+        "observed_at": "2026-07-01T12:00:00Z",
+        "reason_codes": [
+          "season_start"
+        ],
+        "relationship": "coincided_with"
+      },
+      {
+        "checkpoint_id": "2659432a4a55a67433efe6105a2b73c3a4697df1ef6deb99a299ca28082114f5",
+        "observed_at": "2026-07-02T12:00:00Z",
+        "reason_codes": [
+          "season_start"
+        ],
+        "relationship": "coincided_with"
+      },
+      {
+        "checkpoint_id": "291be6e2bff6544481b13eab07bae09d96b026cd192101993bf1ca9dc43ab408",
+        "observed_at": "2026-07-03T12:00:00Z",
+        "reason_codes": [
+          "season_start"
+        ],
+        "relationship": "coincided_with"
+      },
+      {
+        "checkpoint_id": "ee98695efbe9eed0e2c81ecede78a9a343b0c2363e1a5cbb881f1b6183413887",
+        "observed_at": "2026-07-04T12:00:00Z",
+        "reason_codes": [
+          "season_start"
+        ],
+        "relationship": "coincided_with"
+      }
+    ],
+    "checkpoints": [
+      {
+        "observation_id": "f4c0185f870ec0801aff3e7aea63877cb6ec3e33f215d5a2e314a6ec4113a443",
+        "observed_at": "2026-07-01T12:00:00Z",
+        "value": 100.0,
+        "confidence": 80,
+        "reason_codes": [
+          "season_start"
+        ],
+        "provider_count": 1,
+        "related_asset_ids": []
+      },
+      {
+        "observation_id": "2659432a4a55a67433efe6105a2b73c3a4697df1ef6deb99a299ca28082114f5",
+        "observed_at": "2026-07-02T12:00:00Z",
+        "value": 120.0,
+        "confidence": 80,
+        "reason_codes": [
+          "season_start"
+        ],
+        "provider_count": 1,
+        "related_asset_ids": []
+      },
+      {
+        "observation_id": "291be6e2bff6544481b13eab07bae09d96b026cd192101993bf1ca9dc43ab408",
+        "observed_at": "2026-07-03T12:00:00Z",
+        "value": 140.0,
+        "confidence": 80,
+        "reason_codes": [
+          "season_start"
+        ],
+        "provider_count": 1,
+        "related_asset_ids": []
+      },
+      {
+        "observation_id": "ee98695efbe9eed0e2c81ecede78a9a343b0c2363e1a5cbb881f1b6183413887",
+        "observed_at": "2026-07-04T12:00:00Z",
+        "value": 160.0,
+        "confidence": 80,
+        "reason_codes": [
+          "season_start"
+        ],
+        "provider_count": 1,
+        "related_asset_ids": []
+      }
+    ],
+    "league_liquidity": {
+      "league_id": "league-1",
+      "transaction_count": 0,
+      "recent_transaction_count": 0,
+      "ownership_turnover_count": 0,
+      "distinct_franchises": 0,
+      "last_transaction_at": null,
+      "confidence": "unavailable",
+      "availability": "unavailable"
+    },
+    "provenance": {
+      "source": "step_2_global_market_memory",
+      "provider_calls": 0,
+      "raw_history_scans": 0,
+      "sparse_observations": true,
+      "invalid_temporal_evidence_count": 0,
+      "undated_observations_excluded_from_chronology": 0,
+      "current_endpoint_comparable": true,
+      "excluded_evidence_count": 0,
+      "current_evidence": {
+        "comparison_semantics": {
+          "value_concept": "external_market_normalized_index",
+          "value_scale": "0-1000",
+          "format_key": "[{\"concept\":{\"type\":\"player\"},\"details\":null,\"format\":\"dynasty_2qb\",\"method\":\"provider_range_linear\",\"normalization\":\"1.1\",\"provider\":\"FantasyCalc\",\"source_scale\":null}]",
+          "methodology": "compatible-consensus-or-primary-source-2:observation-identity-1"
+        },
+        "providers": [
+          "FantasyCalc"
+        ],
+        "provider_normalization_version": "1.1",
+        "asset_id": "player:a",
+        "observed_at": "2026-08-31T12:00:00+00:00",
+        "oldest_observed_at": "2026-08-31T12:00:00+00:00",
+        "source_generations": {
+          "FantasyCalc": "cdd742d754233b187057736007b53b13e2251b8af6031339dfa0977922272c2e"
+        },
+        "market_generation": "1e2cf53f081c7d55b9f1ecf78dd0a912673fbb0d7e971c0a05dd3a06ce1196da",
+        "freshness": "unknown",
+        "observation_clock": "canonical_selected_price_observation",
+        "source_times": [
+          {
+            "provider": "FantasyCalc",
+            "observed_at": "2026-08-31T12:00:00+00:00",
+            "source_updated_at": null,
+            "retrieved_at": "2026-08-31T12:00:00+00:00"
+          }
+        ]
+      }
+    },
+    "comparison_reasons": [],
+    "comparison_scope": "historical_to_current",
+    "comparison_start_at": "2026-07-01T12:00:00Z",
+    "comparison_end_at": "2026-08-31T12:00:00+00:00",
+    "current_qualification": "Current published price compared at its recorded observation time. Source update time/freshness is not established.",
+    "comparison_units": "0-1000",
+    "schema_version": "market-trend-1",
+    "method_version": "sparse-event-market-trend-2"
+  },
+  "trade_key": "a"
+}

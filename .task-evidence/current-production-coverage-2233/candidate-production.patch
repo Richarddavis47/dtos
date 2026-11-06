@@ -1,0 +1,1483 @@
+diff --git a/.github/workflows/product-browser.yml b/.github/workflows/product-browser.yml
+index 836d483..d4d9693 100644
+--- a/.github/workflows/product-browser.yml
++++ b/.github/workflows/product-browser.yml
+@@ -42,8 +42,8 @@ jobs:
+       - name: Retained history lifecycle and phone routes
+         timeout-minutes: 5
+         run: |
+-          mkdir -p .validation/current-season-history .validation/history-followthrough .validation/market-history-coverage
+-          docker run --rm --init --memory=2g --memory-swap=2g --cpus=2 --network=none -e NODE_OPTIONS -e DTOS_CURRENT_HISTORY_EVIDENCE=.validation/current-season-history -e DTOS_FOLLOWTHROUGH_EVIDENCE=.validation/history-followthrough -e DTOS_MARKET_HISTORY_EVIDENCE=.validation/market-history-coverage -v "$PWD:$PWD" -w "$PWD" -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0="$PWD" dtos-browser-validation python -m unittest -v tests.test_current_season_franchise_history tests.test_current_season_history_browser tests.test_history_followthrough tests.test_history_followthrough_browser tests.test_market_history_coverage tests.test_market_history_coverage_browser
++          mkdir -p .validation/current-season-history .validation/history-followthrough .validation/market-history-coverage .validation/current-production-coverage
++          docker run --rm --init --memory=2g --memory-swap=2g --cpus=2 --network=none -e NODE_OPTIONS -e DTOS_CURRENT_HISTORY_EVIDENCE=.validation/current-season-history -e DTOS_FOLLOWTHROUGH_EVIDENCE=.validation/history-followthrough -e DTOS_MARKET_HISTORY_EVIDENCE=.validation/market-history-coverage -e DTOS_PRODUCTION_COVERAGE_EVIDENCE=.validation/current-production-coverage -v "$PWD:$PWD" -w "$PWD" -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0="$PWD" dtos-browser-validation python -m unittest -v tests.test_current_season_franchise_history tests.test_current_season_history_browser tests.test_history_followthrough tests.test_history_followthrough_browser tests.test_market_history_coverage tests.test_market_history_coverage_browser tests.test_current_production_coverage tests.test_current_production_browser
+       - name: Preserve current-season history evidence
+         if: always()
+         uses: actions/upload-artifact@v4
+@@ -70,6 +70,15 @@ jobs:
+           if-no-files-found: error
+           retention-days: 14
+ 
++      - name: Preserve current-production coverage evidence
++        if: always()
++        uses: actions/upload-artifact@v4
++        with:
++          name: current-production-coverage-browser
++          path: .validation/current-production-coverage
++          if-no-files-found: error
++          retention-days: 14
++
+       - name: Actual 2 GiB Trade admission execution and recovery
+         timeout-minutes: 8
+         env:
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index e6cc73f..b9bf0e8 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -1,3 +1,9 @@
++# v1.22.18 / build 2233 — Current-season canonical production coverage
++
++Canonical player production now excludes zero-weight and individual-inapplicable team-defense scoring requirements, retains supported kicking/return source fields, and preserves genuinely missing applicable statistics. Completed-week windows use the selected league scoring and authoritative NFL week; unsupported totals remain withheld. Existing historical scoring, reference valuation mathematics, forward projections and Trade qualification are unchanged.
++
++Market and player dossiers show admitted observation counts, scored coverage, observed weeks, per-observation averages and specific missing scoring fields. Failed source checks cannot make retained production newly fresh. Career History roster points remain separate; no fallback or inferred zero is introduced. Old prepared contexts retain their same-generation sample counts where available. See docs/audits/CURRENT_PRODUCTION_COVERAGE_2233.md for source boundaries, reproduction and limitations.
++
+ # v1.22.17 / build 2232 — Market history evidence coverage
+ 
+ Market history now refreshes its rendered comparison when legitimately retained checkpoints or event references change, even when the current price publication stays the same. Existing daily evidence-aging rules also reach the cached page. This prevents an old HTML comparison from disagreeing with the canonical API.
+diff --git a/RELEASE_NOTES.md b/RELEASE_NOTES.md
+index 50a5686..8bc2ad0 100644
+--- a/RELEASE_NOTES.md
++++ b/RELEASE_NOTES.md
+@@ -1,3 +1,9 @@
++# v1.22.18 / build 2233 — Current-season canonical production coverage
++
++Canonical player production now excludes zero-weight and individual-inapplicable team-defense scoring requirements, retains supported kicking/return source fields, and preserves genuinely missing applicable statistics. Completed-week windows use the selected league scoring and authoritative NFL week; unsupported totals remain withheld. Existing historical scoring, reference valuation mathematics, forward projections and Trade qualification are unchanged.
++
++Market and player dossiers show admitted observation counts, scored coverage, observed weeks, per-observation averages and specific missing scoring fields. Failed source checks cannot make retained production newly fresh. Career History roster points remain separate; no fallback or inferred zero is introduced. Old prepared contexts retain their same-generation sample counts where available. See docs/audits/CURRENT_PRODUCTION_COVERAGE_2233.md for source boundaries, reproduction and limitations.
++
+ # v1.22.17 / build 2232 — Market history evidence coverage
+ 
+ Market history now refreshes its rendered comparison when legitimately retained checkpoints or event references change, even when the current price publication stays the same. Existing daily evidence-aging rules also reach the cached page. This prevents an old HTML comparison from disagreeing with the canonical API.
+diff --git a/app_metadata.py b/app_metadata.py
+index 5a46f67..2db0655 100644
+--- a/app_metadata.py
++++ b/app_metadata.py
+@@ -7,9 +7,9 @@ from datetime import datetime, timezone
+ from pathlib import Path
+ 
+ APPLICATION_NAME = "DTOS"
+-VERSION = "1.22.17"
+-PRODUCT_VERSION = "1.22.17"
+-BUILD_NUMBER = 2232
++VERSION = "1.22.18"
++PRODUCT_VERSION = "1.22.18"
++BUILD_NUMBER = 2233
+ RELEASE_CODENAME = "Market History Evidence Coverage"
+ APPLICATION_STARTED_AT = datetime.now(timezone.utc).isoformat()
+ 
+diff --git a/docs/audits/CURRENT_PRODUCTION_COVERAGE_2233.md b/docs/audits/CURRENT_PRODUCTION_COVERAGE_2233.md
+new file mode 100644
+index 0000000..8ed6c92
+--- /dev/null
++++ b/docs/audits/CURRENT_PRODUCTION_COVERAGE_2233.md
+@@ -0,0 +1,29 @@
++# Current-season canonical production coverage — build 2233
++
++## Evidence and reproduced causes
++
++Baseline: v1.22.17/build 2232, commit 500d985d2f31c97680370a616a9303c47d60ca7f, tree d2d7ff68b22b855f9bd822400031a350ae6952e7. Main Chat supplied an authenticated Granite observation for player:4984: missing canonical fantasy windows despite separate roster Career History Weeks 1–8 / 183.82 points. This session did not reproduce the private request. That roster total is neither the canonical target nor a substitute.
++
++Deterministic canonical-store fixtures establish four shared losses: individual NFL games were required to supply team-defense and zero-weight scoring fields; supported public kicking, return and big-play fields were discarded during normalization/admission; prepared production coverage was not rendered on the selected-asset Market or dossier; and a failed source-check timestamp could mark retained facts newly fresh. Current-season facts were not bounded to authoritative completed weeks. Tests cover the actual source/store/preparation/cache and rendered route paths, including a real disposable Sleeper synchronization entry point.
++
++## Contract and correction
++
++Production remains NFLverse NFL player-game evidence joined by the existing authoritative identity resolver. The provider's game record, season, week, provenance and dual clocks survive canonical admission. League coefficients score each observed game independently. Nonzero applicable missing fields withhold the game's fantasy points; a partial known-component subtotal is never a complete game/window. The historical-memory scorer and FOIS formula are unchanged. Unknown player positions do not receive team-defense exemptions. Position-specific bonuses require an explicit supported source category; NFL FB alone does not establish Sleeper RB-bonus classification, so that bonus stays unknown rather than inferred zero. Player special-teams forced fumbles/recoveries remain required when configured.
++
++Only direct provider equivalents are admitted: made kicking/PAT statistics and distance buckets, special-teams touchdowns, return yards, and big-play counts. A 40-yard play is not a 40-yard touchdown. Upper FG buckets combine only when both exist. Missing field-goal/PAT miss semantics remain unknown; explicit attempts equal made permits verified zero misses. No row's absence becomes a zero.
++
++The canonical prepared adapter uses one bounded existing current/prior-season stream and at most two local source-check lookups. For matching regular-season NFL state, windows exclude current/later/unknown-week records beyond week minus one. Explicit historical as-of queries do not borrow today's week. Window denominators are retained game observations, not scheduled weeks or asserted games played. Byes, DNPs and missing weeks are not zero-filled. Complete component scoring does not establish complete season acquisition or final game status.
++
++Old compact caches may expose same-generation top-level sample counts. If scored counts/weeks/reasons were not retained they remain unknown. Newly normalized fields require the next existing legitimate preparation/publication; old discarded source fields are not reconstructed. No new source call, fallback, hydration or expensive preparation occurs merely to display a panel.
++
++Failed/partial source checks retain admitted evidence with explicit qualification, without promoting the check timestamp to successful freshness. League refresh failures are separately disclosed. Prepared source generation is sensitive to adapter version, week boundary and receipt state. Current/prior seasons remain separate; reference scoring/model coefficients and existing numeric averaging are not recalibrated.
++
++## Source evidence and remaining limits
++
++Public authoritative Sleeper league configuration and a bounded 256,000-byte NFLverse schema sample were inspected on November 6, 2026. No private roster payload was exported. Frozen public configurations for Granite one-QB/K/DEF, Arkham Superflex and Day Traders are in tests/fixtures/current_production_leagues.json. In matched offensive fixtures Granite still legitimately lacks player st_ff and st_fum_rec; Day Traders and Arkham require additional unsupported long-TD/bonus evidence. We do not infer those values or claim a live canonical total. This player-game source does not establish team-DEF season production; existing forward K/DEF projections are independent.
++
++## Verification and boundaries
++
++Tests exercise complete/partial/unknown and zero samples, active missing scoring, unknown positions, current versus completed seasons, receipt failure/aging, ownership-independent deduplication, cache serialization/restoration, cross-league rejection and real Market/dossier output. Browser controls use two disposable league scopes and four viewports (320×432, 375×667, 390×844, 1280×900), keyboard focus, touch emulation, no overflow and no disclosure-triggered acquisition. Physical iPhone/Safari and authenticated production recovery are unverified.
++
++Full release validation must pass on the exact final candidate. Original failed attempts remain separate from final evidence. Trade thresholds, Neutral/Custom mathematics, reference valuation formulas, submitted/optimal lineups, league projection scoring, picks, preferences, FOIS provenance, cgroup admission, work reserves and lifecycle controls are preserved. Increased production availability is not proof of a qualified recommendation or better Market accuracy.
+diff --git a/routes/market.py b/routes/market.py
+index 8c7629b..24c6116 100644
+--- a/routes/market.py
++++ b/routes/market.py
+@@ -440,7 +440,7 @@ def create_market_router(
+             route_variant, selected_league, generation, market.dataset_version,
+             VERSION, BUILD_NUMBER, league_name, selected_state.get("last_sync"),
+             selected_state.get("last_error"), q, position, availability, sort,
+-            direction, front_office, selected, offset, limit, projection_key, ownership.generation, trend_revision,
++            direction, front_office, selected, offset, limit, projection_key, ownership.generation, trend_revision, bool(selected_state.get("last_error")),
+         )
+         render_cache = home_render_cache if route_variant == "home" else market_render_cache
+         body_cache = (
+@@ -450,7 +450,7 @@ def create_market_router(
+         body_key = (
+             route_variant, selected_league, generation, market.dataset_version,
+             VERSION, BUILD_NUMBER, q, position, availability, sort,
+-            direction, front_office, selected, offset, limit, projection_key, ownership.generation, trend_revision,
++            direction, front_office, selected, offset, limit, projection_key, ownership.generation, trend_revision, bool(selected_state.get("last_error")),
+         )
+ 
+         def render_body() -> bytes:
+@@ -557,6 +557,8 @@ def create_market_router(
+                     trend_heading = 'Observed price comparison'
+                     trend_classification_note = '<p>More evidence is needed to classify the trend. A supported price difference is shown separately.</p>'
+                 trend_html = f'''<section class="card"><p class="eyebrow">Observed Market Trend</p><h3>{escape(trend_heading)}</h3><p>{_trend_observation_summary(trend)}</p>{f'<ul>{milestone_html}</ul>' if milestone_html else '<p class="muted">No supported milestone comparison is available yet.</p>'}<p class="muted">Recorded observations only; no daily prices are invented.</p></section>'''
++                from src.ui.canonical_production import production_panel
++                production_html = production_panel((detail.get('valuation') or {}).get('canonical_production'), refresh_failed=bool(selected_state.get('last_error')))
+                 trend_html += trend_classification_note + _trend_checkpoint_details(trend)
+                 trend_html += _trend_boundary_notice(trend)
+                 from services.asset_explanations import market_explanation
+@@ -567,7 +569,7 @@ def create_market_router(
+                 if dossier_url.startswith(("/players/", "/picks/")):
+                     origin = "/market?" + _market_query(q=q, position=position, availability=availability, sort=sort, direction=direction, front_office=front_office, selected=selected, offset=offset, limit=limit)
+                     dossier_url += "?" + urlencode({"from_market": origin, "market_league": selected_league, **({"front_office": front_office} if front_office is not None else {})})
+-                expanded = f'''<section class="card" id="selected-asset" tabindex="-1"><p class="eyebrow">Expanded Asset</p><h2>{escape(asset["display_name"])}</h2><p>{escape(str(asset.get("position") or asset["asset_type"]))} · {escape(str(asset.get("nfl_team") or "No NFL team"))}</p>{ownership_html}<p><b>Canonical Market:</b> {escape(available(values.get("market_value"), reason="Unavailable"))}</p>{forward_html}<details><summary>Valuation and source evidence</summary>{value_html}{market_fact_html(asset.get("market_fact"))}<p><b>DTOS view:</b> {escape(recommendation["primary_reason"])}</p></details><p><a href="{escape(dossier_url)}">Open canonical dossier</a> · <a href="{trade_href}">Trade Intelligence</a></p><details><summary>Why?</summary><p>Decision confidence: {escape(available(recommendation.get("confidence"), reason="Unavailable"))}</p><p>Historical availability: {escape(asset["historical_availability"])}</p><p>Missing evidence: {escape(", ".join(recommendation["missing_evidence"]) or "None reported")}</p></details><details class="technical-details"><summary>Technical Details</summary><p>Asset: <code>{escape(asset["asset_id"])}</code></p><p>Brain snapshot: <code>{escape(recommendation["brain_snapshot_id"])}</code></p><p>Market generation: <code>{escape(detail["market_generation"])}</code></p><p>Valuation generation: <code>{escape(str(detail.get("valuation_generation") or "Unavailable"))}</code></p><p>Historical dataset: <code>{escape(detail["historical_dataset_version"])}</code></p><p>Historical evidence records: {len(history.get("events") or history.get("ownership_intervals") or [])}</p></details></section><details><summary>Observed trends and comparison details</summary>{trend_html}</details>'''
++                expanded = f'''<section class="card" id="selected-asset" tabindex="-1"><p class="eyebrow">Expanded Asset</p><h2>{escape(asset["display_name"])}</h2><p>{escape(str(asset.get("position") or asset["asset_type"]))} · {escape(str(asset.get("nfl_team") or "No NFL team"))}</p>{ownership_html}<p><b>Canonical Market:</b> {escape(available(values.get("market_value"), reason="Unavailable"))}</p>{forward_html}<details><summary>Valuation and source evidence</summary>{value_html}{production_html}{market_fact_html(asset.get("market_fact"))}<p><b>DTOS view:</b> {escape(recommendation["primary_reason"])}</p></details><p><a href="{escape(dossier_url)}">Open canonical dossier</a> · <a href="{trade_href}">Trade Intelligence</a></p><details><summary>Why?</summary><p>Decision confidence: {escape(available(recommendation.get("confidence"), reason="Unavailable"))}</p><p>Historical availability: {escape(asset["historical_availability"])}</p><p>Missing evidence: {escape(", ".join(recommendation["missing_evidence"]) or "None reported")}</p></details><details class="technical-details"><summary>Technical Details</summary><p>Asset: <code>{escape(asset["asset_id"])}</code></p><p>Brain snapshot: <code>{escape(recommendation["brain_snapshot_id"])}</code></p><p>Market generation: <code>{escape(detail["market_generation"])}</code></p><p>Valuation generation: <code>{escape(str(detail.get("valuation_generation") or "Unavailable"))}</code></p><p>Historical dataset: <code>{escape(detail["historical_dataset_version"])}</code></p><p>Historical evidence records: {len(history.get("events") or history.get("ownership_intervals") or [])}</p></details></section><details><summary>Observed trends and comparison details</summary>{trend_html}</details>'''
+             def options(values: Any, selected_value: str) -> str:
+                 return "".join(
+                     f'<option value="{value}" {"selected" if selected_value == value else ""}>{label}</option>'
+diff --git a/routes/transactions.py b/routes/transactions.py
+index cf0ac7e..f14790c 100644
+--- a/routes/transactions.py
++++ b/routes/transactions.py
+@@ -470,6 +470,15 @@ def create_transactions_router(
+         league_context = context["league"]
+         from src.ui.player_dossier_text import availability_text
+         reasons = {key: availability_text(key, value) for key, value in context["availability"].items()}
++        from dataclasses import asdict
++        from src.core.player_value_projection.canonical_production import prepared_production_context
++        from src.ui.canonical_production import production_panel, production_summary
++        canonical = data.get('canonical_player_production')
++        production = (asdict(prepared_production_context(canonical, league_id=selected_league, player_id=player_id))
++                      if canonical else None)
++        if production_summary(production):
++            reasons['production'] = production_summary(production)
++        canonical_panel = production_panel(production, refresh_failed=bool(state.get('last_error')))
+         fantasycalc = live["provider_details"].get("FantasyCalc") or {}
+         trend_value = fantasycalc.get("trend_30_day")
+         trend_label = f"{trend_value:+}" if isinstance(trend_value, (int, float)) else "No historical provider trend is available."
+@@ -532,6 +541,7 @@ def create_transactions_router(
+ {player_dossier(report, selected_team, teams, weekly_projection_html=weekly_panel, ownership=ownership)}
+ <p class="player-reported-status">Sleeper reported status: {escape(str(player.get("injury_status") or player.get("status") or "Unavailable"))}</p>
+ {profile_explanation}
++{canonical_panel}
+ {live_panel}
+ {historical_panel}
+ <h2>Recent Transactions</h2><div class="grid">{cards}</div>
+diff --git a/services/global_evidence.py b/services/global_evidence.py
+index 08ccb06..451eb0d 100644
+--- a/services/global_evidence.py
++++ b/services/global_evidence.py
+@@ -48,13 +48,14 @@ def canonical_player_evidence(player_id: str, data: dict, *, expected_league_id:
+         return {'availability': 'not_connected', 'reason': 'global_evidence_not_retained', 'league_id': league_id}
+     boundary = as_of or datetime.now(timezone.utc).isoformat()
+     production = GlobalProduction(store).league_scored(player_id, league_id=league_id,
+-        scoring_settings=scoring, as_of=boundary, season=season)
++        scoring_settings=scoring, as_of=boundary, season=season,
++        through_week=GlobalProduction.completed_week_boundary(data, season) if as_of is None else None)
+     receipt = store.source_check(f'nflverse/production/{season}')
+     if receipt and utc(receipt['checked_at']) > utc(boundary):
+         # A later refresh receipt cannot enter a point-in-time response. The
+         # surviving facts still carry their own independently filtered boundary.
+         receipt = None
+-    checked = (receipt or {}).get('checked_at')
++    checked = (receipt or {}).get('checked_at') if (receipt or {}).get('status') == 'complete' else None
+     if checked is None:
+         checked = max((game['knowledge_boundary'] for game in production['games']), default=None)
+     nfl_season = str((data.get('nfl_state') or {}).get('season') or '')
+@@ -77,8 +78,10 @@ def canonical_player_evidence(player_id: str, data: dict, *, expected_league_id:
+         as_of=boundary, evidence_family='performance', completed_period=completed_period)
+     return {'league_id': league_id, 'player_id': player_id, 'season': season,
+             'availability': assessment.state.value, 'availability_detail': asdict(assessment),
+-            'production': production, 'usage': player_usage(store, player_id, season=season, as_of=boundary),
++            'production': production, 'usage': player_usage(store, player_id, season=season, as_of=boundary,
++                through_week=production.get('completed_week_boundary')),
+             'schedule': schedule,
+             'scoring_fingerprint': hashlib.sha256(json.dumps(scoring, sort_keys=True, separators=(',', ':')).encode()).hexdigest(),
+             'source_check': receipt, 'provider_calls': 0,
+-            'limitations': ['historical_publication_time_not_inferred', 'no_current_or_prior_season_substitution']}
++            'limitations': ['historical_publication_time_not_inferred', 'no_current_or_prior_season_substitution']
++                + (['latest_source_check_' + receipt['status']] if receipt and receipt['status'] != 'complete' else [])}
+diff --git a/services/player_evidence.py b/services/player_evidence.py
+index 844a997..decebbb 100644
+--- a/services/player_evidence.py
++++ b/services/player_evidence.py
+@@ -19,7 +19,7 @@ from src.core.data_platform.global_evidence import utc
+ from src.core.data_platform.global_production import GlobalProduction
+ from src.core.player_value_projection.canonical_production import canonical_production_context
+ 
+-PRODUCTION_ADAPTER_VERSION = "canonical-production-v3"
++PRODUCTION_ADAPTER_VERSION = "canonical-production-v4"
+ REFERENCE_SCORING_SETTINGS = {"pass_yd": .04, "pass_td": 4, "pass_int": -2,
+     "rush_yd": .1, "rush_td": 6, "rec": 1, "rec_yd": .1, "rec_td": 6, "fum_lost": -2}
+ 
+@@ -41,15 +41,16 @@ def prepare_player_production(data: dict[str, Any], *, expected_league_id: str,
+     catalog = data.get('normalized_players') or data.get('players') or {}
+     member_ids = (data.get('relevant_player_universe') or {}).get('member_ids')
+     ids = sorted(set(str(value) for value in (member_ids if isinstance(member_ids, list) else catalog)))
++    completed_week = GlobalProduction.completed_week_boundary(data, season)
+     store = retained_global_evidence(path)
+     result: dict[str, Any] = {'method_version': PRODUCTION_ADAPTER_VERSION, 'league_id': league_id,
+-        'season': season, 'scoring_fingerprint': fingerprint, 'players': {}, 'provider_calls': 0,
++        'season': season, 'completed_week_boundary': completed_week, 'scoring_fingerprint': fingerprint, 'players': {}, 'provider_calls': 0,
+         'scoring_basis': 'selected_league_rules_applied_to_each_explicit_season',
+         'availability': 'cached' if store else 'not_connected', 'fact_count': 0}
+     from src.core.valuation.player_methodology import REFERENCE_SCORING
+     result['reference_scoring'] = REFERENCE_SCORING
+-    digest = hashlib.sha256(json.dumps([PRODUCTION_ADAPTER_VERSION, season, fingerprint, ids], separators=(',', ':')).encode())
+-    reference_digest = hashlib.sha256(json.dumps([REFERENCE_SCORING, REFERENCE_SCORING_SETTINGS, season, ids], sort_keys=True, separators=(',', ':')).encode())
++    digest = hashlib.sha256(json.dumps([PRODUCTION_ADAPTER_VERSION, season, fingerprint, ids, completed_week], separators=(',', ':')).encode())
++    reference_digest = hashlib.sha256(json.dumps([REFERENCE_SCORING, REFERENCE_SCORING_SETTINGS, season, ids, completed_week], sort_keys=True, separators=(',', ':')).encode())
+ 
+     def context(player_id):
+         return {year: {'league_id': league_id, 'player_id': player_id, 'season': year,
+@@ -57,11 +58,21 @@ def prepare_player_production(data: dict[str, Any], *, expected_league_id: str,
+                        'production': {'as_of': boundary, 'games': []}} for year in (season, season - 1)}
+ 
+     if store is not None:
++        checks = {year: store.source_check(f'nflverse/production/{year}') for year in (season, season - 1)}
++        checks = {year: receipt for year, receipt in checks.items()
++                  if receipt and utc(receipt['checked_at']) <= boundary}
++        result['source_checks'] = {str(year): receipt for year, receipt in checks.items()}
++        digest.update(json.dumps(result['source_checks'], sort_keys=True, separators=(',', ':')).encode())
+         stream = store.iter_dynasty_production(ids, current_season=season, as_of=boundary)
+         for subject, facts in groupby(stream, key=lambda row: row['subject_id']):
+             player_id = subject.removeprefix('sleeper:')
+             periods = context(player_id)
+             reference_seasons = {}
++            for year, receipt in checks.items():
++                if receipt['status'] != 'complete':
++                    periods[season].setdefault('limitations', []).append(
++                        ('Previous season: ' if year != season else '') + 'Latest canonical production source check is ' + receipt['status']
++                        + '; retained admitted observations remain a qualified sample, not newly complete source coverage.')
+             count = 0
+             for fact in facts:
+                 count += 1
+@@ -78,6 +89,11 @@ def prepare_player_production(data: dict[str, Any], *, expected_league_id: str,
+                     })
+                 if fact['season'] not in periods:
+                     continue
++                if (fact['season'] == season and completed_week is not None
++                        and (fact['week'] is None or fact['week'] > completed_week)):
++                    periods[season].setdefault('limitations', []).append(
++                        'Current-week, later or unverified-week source records are excluded from completed-week production windows.')
++                    continue
+                 periods[fact['season']]['production']['games'].append({
+                     'game_id': fact['values'].get('game_id') or fact['source_record_id'],
+                     'season': fact['season'], 'week': fact['week'],
+diff --git a/src/core/data_platform/global_evidence.py b/src/core/data_platform/global_evidence.py
+index 3327b1d..b6c2c5a 100644
+--- a/src/core/data_platform/global_evidence.py
++++ b/src/core/data_platform/global_evidence.py
+@@ -25,7 +25,9 @@ _FIELDS = {
+     "production": frozenset({"pass_att", "pass_cmp", "pass_yd", "pass_td", "pass_int",
+         "rush_att", "rush_yd", "rush_td", "rec", "rec_yd", "rec_td", "rec_tgt",
+         "rec_air_yd", "fumbles", "fumbles_lost", "pass_2pt", "rush_2pt", "rec_2pt",
+-        "target_share", "air_yards_share", "pass_fd", "rush_fd", "rec_fd", "pass_sack"}),
++        "target_share", "air_yards_share", "pass_fd", "rush_fd", "rec_fd", "pass_sack", "fgm", "xpm", "fgm_0_19", "fgm_20_29", "fgm_30_39",
++        "fgm_40_49", "fgm_50_59", "fgm_60p", "fgm_50p", "fgmiss", "xpmiss",
++        "st_td", "kr_yd", "pr_yd", "pass_cmp_40p", "rush_40p", "rec_40p"}),
+     "usage": frozenset({"offense_snaps", "offense_pct", "targets", "carries", "touches",
+         "team_targets", "team_carries", "target_share", "carry_share", "routes", "route_participation"}),
+     "contract": frozenset({"year_signed", "years", "value", "apy", "guaranteed", "is_active", "expires"}),
+diff --git a/src/core/data_platform/global_production.py b/src/core/data_platform/global_production.py
+index 724fe0d..2ae1ea3 100644
+--- a/src/core/data_platform/global_production.py
++++ b/src/core/data_platform/global_production.py
+@@ -3,6 +3,7 @@
+ from __future__ import annotations
+ 
+ from typing import Any, Iterable, Mapping
++import math
+ 
+ from src.core.historical_memory.scoring import calculate_fantasy_points
+ 
+@@ -14,6 +15,14 @@ class GlobalProduction:
+     def __init__(self, store: GlobalEvidenceStore):
+         self.store = store
+ 
++    @staticmethod
++    def completed_week_boundary(data: dict[str, Any], season: int) -> int | None:
++        nfl = data.get('nfl_state') or {}
++        week = nfl.get('week')
++        return (week - 1 if str(nfl.get('season')) == str(season)
++                and nfl.get('season_type') in (None, 'regular')
++                and type(week) is int and 1 <= week <= 18 else None)
++
+     @staticmethod
+     def scoring_components(values: dict[str, Any]) -> dict[str, Any]:
+         """Explicit source-to-Sleeper scoring aliases, without zero-filling gaps."""
+@@ -21,14 +30,44 @@ class GlobalProduction:
+         result['fum'] = values.get('fumbles')
+         result['fum_lost'] = values.get('fumbles_lost')
+         position = values.get('position')
+-        result['bonus_rec_te'] = (values.get('rec') if position == 'TE' else 0) if position else None
++        for key, required_position, stat in (
++            ('bonus_rec_te', 'TE', 'rec'), ('bonus_rec_rb', 'RB', 'rec'),
++            ('bonus_rec_wr', 'WR', 'rec'), ('bonus_rush_td_qb', 'QB', 'rush_td'),
++        ):
++            result[key] = (values.get(stat) if position == required_position else 0
++                           if position in {'QB', 'RB', 'WR', 'TE', 'K', 'P'} else None)
+         # The published passing_40/receiving_40 columns count big plays, NOT
+         # long touchdowns. They cannot fill the *_td_40p scoring evidence gap.
+         return result
+ 
+     @classmethod
+     def score_game(cls, values: dict[str, Any], scoring_settings: dict[str, Any]) -> dict[str, Any]:
+-        result = calculate_fantasy_points(cls.scoring_components(values), scoring_settings)
++        # These categories score the fantasy team-defense asset, not an NFL
++        # individual. Player special-teams categories (st_*) remain applicable.
++        team_only = {'sack', 'int', 'ff', 'fum_rec', 'fum_rec_td', 'safe', 'blk_kick',
++                     'def_td', 'def_st_td', 'def_st_ff', 'def_st_fum_rec',
++                     'def_kr_yd', 'def_pr_yd', 'def_pr_td', 'pts_allow', 'yds_allow'}
++        individual = values.get('position') in {'QB', 'RB', 'WR', 'TE', 'FB', 'K', 'P'}
++        active, ignored, inapplicable = {}, [], []
++        for key, weight in scoring_settings.items():
++            if isinstance(weight, bool) or not isinstance(weight, (int, float)) or not math.isfinite(weight):
++                raise ValueError('Canonical production scoring coefficients must be finite numbers.')
++            if weight == 0:
++                ignored.append(key)
++            elif individual and (key in team_only or key.startswith(('pts_allow_', 'yds_allow_'))):
++                inapplicable.append(key)
++            else:
++                active[key] = weight
++        components = cls.scoring_components(values)
++        # Malformed source evidence must not be silently skipped by a permissive
++        # legacy scorer and then described as a complete canonical game.
++        for key in active:
++            value = components.get(key)
++            if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value):
++                components[key] = None
++        result = calculate_fantasy_points(components, active)
++        result['ignored_zero_weight_components'] = sorted(ignored)
++        result['inapplicable_components'] = sorted(inapplicable)
+         if result['availability'] != 'calculated':
+             result['known_component_points'] = result['fantasy_points']
+             result['fantasy_points'] = None
+@@ -118,6 +157,7 @@ class GlobalProduction:
+         scoring_settings: dict[str, Any],
+         as_of: str,
+         season: int | None = None,
++        through_week: int | None = None,
+     ) -> dict[str, Any]:
+         """No provider work or durable league copy; caller supplies authorized context."""
+         if not league_id:
+@@ -138,12 +178,14 @@ class GlobalProduction:
+                 **self.score_game(fact["values"], scoring_settings),
+             }
+             for fact in facts
++            if through_week is None or (fact["week"] is not None and fact["week"] <= through_week)
+         ]
+         complete = [row for row in games if row["availability"] == "calculated"]
+         return {
+             "league_id": league_id,
+             "player_id": player_id,
+             "as_of": as_of,
++            "completed_week_boundary": through_week,
+             "games": games,
+             "games_with_complete_scoring": len(complete),
+             "ppg": round(
+diff --git a/src/core/data_platform/global_usage.py b/src/core/data_platform/global_usage.py
+index 1a2c41e..9fbaa83 100644
+--- a/src/core/data_platform/global_usage.py
++++ b/src/core/data_platform/global_usage.py
+@@ -4,19 +4,21 @@ from __future__ import annotations
+ from .global_evidence import GlobalEvidenceStore
+ 
+ 
+-def player_usage(store: GlobalEvidenceStore, player_id: str, *, season: int, as_of: str) -> dict:
++def player_usage(store: GlobalEvidenceStore, player_id: str, *, season: int, as_of: str,
++                 through_week: int | None = None) -> dict:
+     facts = store.read('production', f'sleeper:{player_id}', as_of=as_of, season=season)
+     games = [{'game_id': fact['values'].get('game_id'), 'week': fact['week'],
+               'targets': fact['values'].get('rec_tgt'), 'carries': fact['values'].get('rush_att'),
+               'target_share': fact['values'].get('target_share'),
+               'air_yards_share': fact['values'].get('air_yards_share'),
+-              'evidence_fingerprint': fact['fingerprint']} for fact in facts]
++              'evidence_fingerprint': fact['fingerprint']} for fact in facts if through_week is None or (fact["week"] is not None and fact["week"] <= through_week)]
+ 
+     def total(key):
+         values = [game[key] for game in games]
+         return sum(values) if values and all(value is not None for value in values) else None
+ 
+     return {'player_id': player_id, 'season': season, 'as_of': as_of,
++            'completed_week_boundary': through_week,
+             'availability': 'cached' if games else 'unavailable',
+             'source': 'nflverse production', 'games': games,
+             'targets': total('targets'), 'carries': total('carries'),
+diff --git a/src/core/data_platform/production_ingestion.py b/src/core/data_platform/production_ingestion.py
+index 68bda45..95f66db 100644
+--- a/src/core/data_platform/production_ingestion.py
++++ b/src/core/data_platform/production_ingestion.py
+@@ -22,7 +22,7 @@ from .normalization.identity import PlayerIdentityResolver
+ from .source_snapshot import download_snapshot
+ 
+ 
+-METHOD_VERSION = "nflverse-global-production-v3"
++METHOD_VERSION = "nflverse-global-production-v4"
+ 
+ 
+ def ingest_production(client: httpx.Client, store: GlobalEvidenceStore, *, season: int,
+diff --git a/src/core/historical_memory/providers.py b/src/core/historical_memory/providers.py
+index a511021..19165fb 100644
+--- a/src/core/historical_memory/providers.py
++++ b/src/core/historical_memory/providers.py
+@@ -148,6 +148,9 @@ def normalize_nflverse_row(row: dict[str, Any]) -> dict[str, Any]:
+             "pass_2pt": "passing_2pt_conversions",
+             "pass_fd": "passing_first_downs",
+             "pass_sack": "sacks_suffered",
++            "pass_cmp_40p": "passing_40",
++            "rush_40p": "rushing_40",
++            "rec_40p": "receiving_40",
+             "rush_att": "carries",
+             "rush_yd": "rushing_yards",
+             "rush_td": "rushing_tds",
+@@ -166,6 +169,24 @@ def normalize_nflverse_row(row: dict[str, Any]) -> dict[str, Any]:
+             "fumbles_lost": "fumbles_lost",
+         }.items()
+     }
++    # Exact published counts only. Team-defense totals are not individual
++    # player statistics, and 40-yard plays are not long-touchdown evidence.
++    for key, source in {
++        'fgm': 'fg_made', 'xpm': 'pat_made', 'fgm_0_19': 'fg_made_0_19',
++        'fgm_20_29': 'fg_made_20_29', 'fgm_30_39': 'fg_made_30_39',
++        'fgm_40_49': 'fg_made_40_49', 'fgm_50_59': 'fg_made_50_59',
++        'fgm_60p': 'fg_made_60_', 'st_td': 'special_teams_tds',
++        'kr_yd': 'kickoff_return_yards', 'pr_yd': 'punt_return_yards',
++    }.items():
++        raw_stats[key] = _number(row.get(source))
++    upper = (raw_stats['fgm_50_59'], raw_stats['fgm_60p'])
++    raw_stats['fgm_50p'] = sum(upper) if all(value is not None for value in upper) else None
++    # A zero number of unsuccessful attempts is provable without equating the
++    # provider's separate missed/blocked counters with Sleeper's miss category.
++    # Positive unmatched attempts remain unsupported until that mapping is proven.
++    for key, attempts, made in (('fgmiss', 'fg_att', 'fg_made'), ('xpmiss', 'pat_att', 'pat_made')):
++        attempted, successful = _number(row.get(attempts)), _number(row.get(made))
++        raw_stats[key] = 0 if attempted is not None and attempted >= 0 and attempted == successful else None
+     return {
+         "provider_player_id": row.get("player_id") or None,
+         "provider_record_id": (
+diff --git a/src/core/player_value_projection/canonical_production.py b/src/core/player_value_projection/canonical_production.py
+index c0947cc..b942657 100644
+--- a/src/core/player_value_projection/canonical_production.py
++++ b/src/core/player_value_projection/canonical_production.py
+@@ -35,7 +35,7 @@ def _average(rows: list[dict[str, Any]], field: str, *, raw: bool = False) -> fl
+     return round(mean(values), 2) if values and all(value is not None for value in values) else None
+ 
+ 
+-def _window(label: str, rows: list[dict[str, Any]]) -> ProductionWindow:
++def _window(label: str, rows: list[dict[str, Any]], season: int | None = None) -> ProductionWindow:
+     points = _average(rows, "fantasy_points") if all(
+         row.get("availability") == "calculated" for row in rows
+     ) else None
+@@ -49,6 +49,10 @@ def _window(label: str, rows: list[dict[str, Any]]) -> ProductionWindow:
+         label, points, round(targets + carries, 2) if targets is not None and carries is not None else None,
+         targets, carries, _average(rows, "rec", raw=True),
+         round(mean(touchdowns), 2) if touchdowns and all(value is not None for value in touchdowns) else None,
++        season=season, observation_count=len(rows),
++        scored_count=sum(row.get('availability') == 'calculated' and row.get('fantasy_points') is not None for row in rows),
++        weeks=tuple(sorted({int(row['week']) for row in rows if row.get('week') is not None})),
++        missing_components=tuple(sorted({key for row in rows for key in row.get('missing_components') or ()})),
+     )
+ 
+ 
+@@ -67,10 +71,10 @@ def canonical_production_context(
+             raise ValueError("Canonical production knowledge boundaries differ.")
+     games, old_games = _games(current), _games(previous)
+     windows = [
+-        _window(label, games[-size:]) for label, size in
++        _window(label, games[-size:], current.get("season")) for label, size in
+         (("Last Game", 1), ("Last 3 Games", 3), ("Last 5 Games", 5))
+     ]
+-    windows.extend((_window("Season Average", games), _window("Previous Season Average", old_games)))
++    windows.extend((_window("Season Average", games, current.get("season")), _window("Previous Season Average", old_games, previous.get("season"))))
+     complete = bool(games) and all(
+         row.get("availability") == "calculated" and _number(row.get("fantasy_points")) is not None
+         for row in games
+@@ -89,6 +93,9 @@ def canonical_production_context(
+         limitations.append("No current-season NFL sample; prior-season evidence is shown separately.")
+     elif not complete:
+         limitations.append("Current production scoring is incomplete; no zero or partial-window average is substituted.")
++        missing = sorted({key for row in games for key in row.get('missing_components') or ()})
++        if missing:
++            limitations.append('Missing applicable scoring components: ' + ', '.join(missing) + '.')
+     elif len(games) < 6:
+         limitations.append("Insufficient current-season sample for production trend.")
+     source = "Canonical nflverse production · league scoring · explicit season windows"
+@@ -111,8 +118,22 @@ def prepared_production_context(snapshot: dict[str, Any], *, league_id: str,
+     if not value:
+         return ProductionContext((), None, None, 'Unavailable', 'Canonical production',
+                                  DataStatus.UNAVAILABLE, None, ('Canonical player production is not prepared.',))
++    # Older compact caches retained a season sample count outside the windows.
++    # Reuse that same-generation count; an absent scored count stays unknown.
++    windows = []
++    for window in value['windows']:
++        window = dict(window)
++        sample_key = 'previous_sample_count' if window['label'] == 'Previous Season Average' else 'current_sample_count'
++        sample = row.get(sample_key)
++        if window.get('observation_count') is None and type(sample) is int and sample >= 0:
++            size = {'Last Game': 1, 'Last 3 Games': 3, 'Last 5 Games': 5}.get(window['label'], sample)
++            window['observation_count'] = min(sample, size)
++            if window.get('fantasy_points') is not None:
++                window['scored_count'] = window['observation_count']
++        windows.append(window)
+     return ProductionContext(
+-        tuple(ProductionWindow(**window) for window in value['windows']),
++        tuple(ProductionWindow(**{**window, 'weeks': tuple(window.get('weeks') or ()),
++            'missing_components': tuple(window.get('missing_components') or ())}) for window in windows),
+         value['volatility'], value['consistency'], value['trend'], value['source'],
+         DataStatus(value['status']), value['updated_at'], tuple(value.get('limitations') or ()),
+     )
+diff --git a/src/core/player_value_projection/models.py b/src/core/player_value_projection/models.py
+index a8cc63b..4455b65 100644
+--- a/src/core/player_value_projection/models.py
++++ b/src/core/player_value_projection/models.py
+@@ -57,6 +57,11 @@ class ProductionWindow:
+     carries: float | None
+     receptions: float | None
+     touchdowns: float | None
++    season: int | None = None
++    observation_count: int | None = None
++    scored_count: int | None = None
++    weeks: tuple[int, ...] = ()
++    missing_components: tuple[str, ...] = ()
+ 
+ 
+ @dataclass(frozen=True)
+diff --git a/src/core/valuation/universe.py b/src/core/valuation/universe.py
+index 627d894..2604b0d 100644
+--- a/src/core/valuation/universe.py
++++ b/src/core/valuation/universe.py
+@@ -329,7 +329,9 @@ class ValuationUniverse:
+             points = season_window.fantasy_points if season_window is not None else None
+             layers["current_production_value"] = _layer(
+                 points, "Canonical current-season PPG · selected league scoring", self.generated_at,
+-                reason="Current-season complete scoring evidence is unavailable; previous seasons are not substituted.",
++                reason=('Missing applicable scoring components: ' + ', '.join(season_window.missing_components)
++                        if season_window is not None and season_window.missing_components else
++                        'Current-season complete scoring evidence is unavailable; previous seasons are not substituted.'),
+             )
+         name = player.get("name") or player.get("full_name") or " ".join(filter(None, (player.get("first_name"), player.get("last_name")))) or player_id
+         return {
+diff --git a/src/ui/canonical_production.py b/src/ui/canonical_production.py
+new file mode 100644
+index 0000000..7b13306
+--- /dev/null
++++ b/src/ui/canonical_production.py
+@@ -0,0 +1,67 @@
++"""Render pinned canonical production facts without source or scoring work."""
++from html import escape
++
++
++def _stat_name(key: str) -> str:
++    return {'st_ff': 'player special-teams forced fumbles (st_ff)',
++            'st_fum_rec': 'player special-teams fumble recoveries (st_fum_rec)'}.get(key, key)
++
++
++def production_summary(production: dict | None) -> str | None:
++    if not production:
++        return None
++    row = next((w for w in production.get('windows') or [] if w['label'] == 'Season Average'), None)
++    if not row:
++        return None
++    count, scored = row.get('observation_count'), row.get('scored_count')
++    value = row.get('fantasy_points')
++    if count is None and value is None:
++        return 'The saved canonical production summary lacks observation coverage metadata. A normal league refresh can prepare current evidence when capacity and source evidence permit. Missing production is not zero.'
++    if count == 0:
++        return 'No canonical current-season NFL game observations are retained in this prepared context. Separate Career History roster observations do not fill this gap.'
++    season = str(row.get('season') or 'selected season')
++    coverage = (f'{scored} of {count} observations have complete league scoring.'
++                if count is not None and scored is not None else
++                f'{count} canonical game observations; the fully scored count was not retained.' if count is not None else
++                'Observation coverage was not retained in this older preparation.')
++    if value is not None:
++        return f'{season}: {value:,.2f} fantasy points per observed game. {coverage} This is an observed sample, not a full-season total.'
++    missing = row.get('missing_components') or ()
++    why = (' Missing applicable scoring statistics: ' + ', '.join(_stat_name(key) for key in missing) + '.' if missing else
++           ' The saved diagnostic does not identify individual missing statistics.')
++    return f'{season}: {coverage} The fantasy-point average is withheld because scoring is incomplete.' + why
++
++
++def production_panel(production: dict | None, *, refresh_failed: bool = False) -> str:
++    summary = production_summary(production)
++    if not summary:
++        return ''
++    retained = ('<p class="evidence-unavailable">The league refresh did not complete. These are retained observations, not newly revalidated production.</p>' if refresh_failed else '')
++    rows = []
++    for window in production.get('windows') or []:
++        value = window.get('fantasy_points')
++        points = f'{value:,.2f}' if value is not None else 'Withheld: incomplete or missing scoring'
++        count, scored = window.get('observation_count'), window.get('scored_count')
++        coverage = (f'{scored}/{count}' if count is not None and scored is not None else
++                    f'Unknown/{count}' if count is not None else 'Unknown')
++        weeks = ', '.join(str(w) for w in window.get('weeks') or ()) or 'Not retained'
++        missing = ', '.join(window.get('missing_components') or ())
++        rows.append('<tr><th scope="row">' + escape(window['label']) + '</th><td>'
++                    + escape(str(window.get('season') or 'Unknown')) + '</td><td>' + escape(weeks)
++                    + '</td><td>' + escape(coverage) + '</td><td>' + points + '</td><td>'
++                    + escape(missing or ('None' if value is not None else 'Specific fields not retained')) + '</td></tr>')
++    notes = ''.join('<li>' + escape(str(note)) + '</li>' for note in production.get('limitations') or ())
++    return ('<section class="card canonical-production" style="min-width:0;overflow-wrap:anywhere">'
++            '<h3>Observed NFL production · selected league scoring</h3><p>' + escape(summary) + '</p>' + retained
++            + '<p>Windows average retained game observations, not calendar weeks. Byes, DNPs and missing '
++            'weeks are not inserted as zero. Complete scoring means all applicable scoring components '
++            'are supported for that sample; it does not establish full-season acquisition or final game status.</p>'
++            '<p>Source: ' + escape(str(production.get('source') or 'Canonical production'))
++            + ' · Latest knowledge boundary across these windows: ' + escape(str(production.get('updated_at') or 'Unknown')) + '</p>'
++            '<div class="ds-table-wrap" tabindex="0" role="region" aria-label="Canonical production observations">'
++            '<table style="min-width:42rem;overflow-wrap:normal;word-break:normal"><caption>Prepared observation coverage and per-game averages</caption><thead><tr>'
++            '<th>Window</th><th>Season</th><th>Observed weeks</th><th>Fully scored / observed</th>'
++            '<th>Fantasy points per observation</th><th>Missing statistics</th></tr></thead><tbody>'
++            + ''.join(rows) + '</tbody></table></div><ul>' + notes + '</ul>'
++            '<p>Career History contains separate Sleeper roster-week observations. Those points are not '
++            'substituted here. Forward Sleeper projections are also separate. The knowledge timestamp is not a provider publication date or a new source check.</p></section>')
+diff --git a/tests/fixtures/current_production_leagues.json b/tests/fixtures/current_production_leagues.json
+new file mode 100644
+index 0000000..d7116e3
+--- /dev/null
++++ b/tests/fixtures/current_production_leagues.json
+@@ -0,0 +1,268 @@
++{
++  "observed_at": "2026-11-06T03:35:46.678369+00:00",
++  "leagues": [
++    {
++      "league_id": "1314695233040052224",
++      "name": "Granite Gridiron",
++      "season": "2026",
++      "status": "in_season",
++      "settings": {
++        "type": 2,
++        "start_week": 1,
++        "leg": 9,
++        "num_teams": 12
++      },
++      "roster_positions": [
++        "QB",
++        "RB",
++        "RB",
++        "WR",
++        "WR",
++        "TE",
++        "FLEX",
++        "FLEX",
++        "K",
++        "DEF",
++        "BN",
++        "BN",
++        "BN",
++        "BN",
++        "BN",
++        "BN",
++        "BN",
++        "BN",
++        "BN",
++        "BN"
++      ],
++      "scoring_settings": {
++        "sack": 1.0,
++        "fgm_40_49": 4.0,
++        "pass_int": -2.0,
++        "pts_allow_0": 10.0,
++        "pass_2pt": 2.0,
++        "st_td": 6.0,
++        "rec_td": 6.0,
++        "fgm_30_39": 3.0,
++        "xpmiss": -1.0,
++        "rush_td": 6.0,
++        "rec_2pt": 2.0,
++        "st_fum_rec": 1.0,
++        "fgmiss": -1.0,
++        "ff": 1.0,
++        "rec": 1.0,
++        "pts_allow_14_20": 1.0,
++        "fgm_0_19": 3.0,
++        "int": 2.0,
++        "def_st_fum_rec": 1.0,
++        "fum_lost": -2.0,
++        "pts_allow_1_6": 7.0,
++        "fgm_20_29": 3.0,
++        "pts_allow_21_27": 0.0,
++        "xpm": 1.0,
++        "rush_2pt": 2.0,
++        "fum_rec": 2.0,
++        "def_st_td": 6.0,
++        "fgm_50p": 5.0,
++        "def_td": 6.0,
++        "safe": 2.0,
++        "pass_yd": 0.04,
++        "blk_kick": 2.0,
++        "pass_td": 4.0,
++        "rush_yd": 0.1,
++        "fum": -1.0,
++        "pts_allow_28_34": -1.0,
++        "pts_allow_35p": -4.0,
++        "fum_rec_td": 6.0,
++        "rec_yd": 0.1,
++        "def_st_ff": 1.0,
++        "pts_allow_7_13": 4.0,
++        "st_ff": 1.0
++      },
++      "scope": "Bounded authoritative public Sleeper league configuration; no roster or transaction acquisition"
++    },
++    {
++      "league_id": "1319750579458686976",
++      "name": "Arkham Asylum",
++      "season": "2026",
++      "status": "in_season",
++      "settings": {
++        "type": 2,
++        "start_week": 1,
++        "leg": 9,
++        "num_teams": 10
++      },
++      "roster_positions": [
++        "QB",
++        "RB",
++        "RB",
++        "WR",
++        "WR",
++        "FLEX",
++        "FLEX",
++        "WRRB_FLEX",
++        "REC_FLEX",
++        "SUPER_FLEX",
++        "BN",
++        "BN",
++        "BN",
++        "BN",
++        "BN",
++        "BN",
++        "BN",
++        "BN",
++        "BN",
++        "BN",
++        "BN",
++        "BN"
++      ],
++      "scoring_settings": {
++        "sack": 1.0,
++        "fgm_40_49": 0.0,
++        "bonus_rec_te": 1.0,
++        "pass_int": -1.0,
++        "pts_allow_0": 0.0,
++        "pass_2pt": 2.0,
++        "st_td": 0.0,
++        "rec_td": 6.0,
++        "fgm_30_39": 0.0,
++        "fgm_50_59": 0.0,
++        "xpmiss": 0.0,
++        "rush_td_50p": 1.0,
++        "rush_td": 6.0,
++        "pass_td_40p": 0.75,
++        "rec_2pt": 2.0,
++        "rush_fd": 0.5,
++        "pass_int_td": -4.0,
++        "st_fum_rec": 0.0,
++        "fgmiss": 0.0,
++        "ff": 1.0,
++        "rec": 1.0,
++        "pts_allow_14_20": 0.0,
++        "fgm_0_19": 0.0,
++        "int": 2.0,
++        "def_st_fum_rec": 0.0,
++        "fum_lost": -2.0,
++        "pts_allow_1_6": 0.0,
++        "rec_fd": 0.5,
++        "kr_yd": 0.025,
++        "fgm_60p": 0.0,
++        "fgm_20_29": 0.0,
++        "pts_allow_21_27": 0.0,
++        "xpm": 0.0,
++        "pass_td_50p": 1.0,
++        "rec_40p": 0.5,
++        "pass_cmp": 0.5,
++        "rush_2pt": 2.0,
++        "fum_rec": 2.0,
++        "def_st_td": 0.0,
++        "pass_cmp_40p": 0.5,
++        "fgm_50p": 0.0,
++        "def_td": 0.0,
++        "pass_fd": 0.5,
++        "rec_td_40p": 0.75,
++        "safe": 2.0,
++        "pass_yd": 0.04,
++        "rec_td_50p": 1.0,
++        "blk_kick": 2.0,
++        "pass_td": 4.0,
++        "rush_yd": 0.1,
++        "bonus_rec_rb": 0.5,
++        "rush_40p": 0.5,
++        "pr_yd": 0.025,
++        "fum": 0.0,
++        "pts_allow_28_34": 0.0,
++        "pts_allow_35p": 0.0,
++        "fum_rec_td": 6.0,
++        "rec_yd": 0.1,
++        "rush_td_40p": 0.75,
++        "def_st_ff": 0.0,
++        "pts_allow_7_13": 0.0,
++        "st_ff": 0.0
++      },
++      "scope": "Bounded authoritative public Sleeper league configuration; no roster or transaction acquisition"
++    },
++    {
++      "league_id": "1313066632158924800",
++      "name": "Day Traders",
++      "season": "2026",
++      "status": "in_season",
++      "roster_positions": [
++        "QB",
++        "RB",
++        "RB",
++        "WR",
++        "WR",
++        "WR",
++        "TE",
++        "FLEX",
++        "FLEX",
++        "FLEX",
++        "SUPER_FLEX",
++        "BN",
++        "BN",
++        "BN",
++        "BN",
++        "BN",
++        "BN",
++        "BN",
++        "BN",
++        "BN",
++        "BN",
++        "BN",
++        "BN",
++        "BN",
++        "BN",
++        "BN"
++      ],
++      "scoring_settings": {
++        "sack": 1.0,
++        "fgm_40_49": 4.0,
++        "bonus_rec_te": 0.5,
++        "pass_int": -2.0,
++        "pts_allow_0": 10.0,
++        "pass_2pt": 2.0,
++        "st_td": 6.0,
++        "rec_td": 6.0,
++        "fgm_30_39": 3.0,
++        "xpmiss": -1.0,
++        "rush_td": 6.0,
++        "pass_td_40p": 1.0,
++        "rec_2pt": 2.0,
++        "st_fum_rec": 1.0,
++        "fgmiss": -1.0,
++        "ff": 1.0,
++        "rec": 1.0,
++        "pts_allow_14_20": 1.0,
++        "fgm_0_19": 3.0,
++        "int": 2.0,
++        "def_st_fum_rec": 1.0,
++        "fum_lost": -2.0,
++        "pts_allow_1_6": 7.0,
++        "fgm_20_29": 3.0,
++        "pts_allow_21_27": 0.0,
++        "xpm": 1.0,
++        "rush_2pt": 2.0,
++        "fum_rec": 2.0,
++        "def_st_td": 6.0,
++        "fgm_50p": 5.0,
++        "def_td": 6.0,
++        "rec_td_40p": 2.0,
++        "safe": 2.0,
++        "pass_yd": 0.04,
++        "blk_kick": 2.0,
++        "pass_td": 4.0,
++        "rush_yd": 0.1,
++        "fum": 0.0,
++        "pts_allow_28_34": -1.0,
++        "pts_allow_35p": -4.0,
++        "fum_rec_td": 6.0,
++        "rec_yd": 0.1,
++        "rush_td_40p": 2.0,
++        "def_st_ff": 1.0,
++        "pts_allow_7_13": 4.0,
++        "st_ff": 1.0
++      }
++    }
++  ],
++  "day_observed_at": "2026-11-06T04:01:09.789153+00:00"
++}
+diff --git a/tests/test_current_production_browser.py b/tests/test_current_production_browser.py
+new file mode 100644
+index 0000000..30ac95c
+--- /dev/null
++++ b/tests/test_current_production_browser.py
+@@ -0,0 +1,106 @@
++"""Pinned production through real Market/dossier/theme at four sizes."""
++import json
++import os
++from pathlib import Path
++import subprocess
++from urllib.parse import urlsplit
++import unittest
++from unittest.mock import patch
++
++from playwright.sync_api import sync_playwright
++from tools.validation.browser_runtime import launch_chromium
++from tests.test_current_production_coverage import ProductionViewFixture
++
++
++class CurrentProductionBrowserTests(unittest.TestCase):
++    def test_complete_partial_and_retained_failure_at_four_sizes(self):
++        import dtos_app
++        from src.platform.lifecycle import memory_snapshot
++        target=os.environ.get('DTOS_PRODUCTION_COVERAGE_EVIDENCE')
++        if not target and os.environ.get('DTOS_PHASE2_EVIDENCE'):
++            target=str(Path(os.environ['DTOS_PHASE2_EVIDENCE'])/'production-coverage')
++        dest=Path(target) if target else None
++        if dest:
++            dest.mkdir(exist_ok=True,parents=True)
++        records,errors,requests=[],[],[]
++        before_memory=memory_snapshot()
++        with sync_playwright() as pw:
++            browser=launch_chromium(pw,headless=True)
++            try:
++                for league in ('1314695233040052224','1319750579458686976'):
++                    for w,h in ((320,432),(375,667),(390,844),(1280,900)):
++                        f=ProductionViewFixture(self,league=league,page=dtos_app.page)
++                        context=browser.new_context(viewport={'width':w,'height':h},has_touch=w<1000)
++                        page=context.new_page()
++                        page.on('pageerror',lambda e:errors.append(str(e)))
++                        def transport(route):
++                            url=urlsplit(route.request.url)
++                            if url.netloc!='fixture':
++                                route.fulfill(status=404)
++                                return
++                            response=f.f.client.request(route.request.method,url.path+('?' + url.query if url.query else ''))
++                            requests.append(dict(path=url.path,status=response.status_code))
++                            route.fulfill(status=response.status_code,body=response.content,headers=dict(response.headers))
++                        page.route('**/*',transport)
++                        def inspect(expected):
++                            panel=page.locator('.canonical-production')
++                            panel.evaluate("e=>{for(let p=e.parentElement;p;p=p.parentElement)if(p.tagName==='DETAILS')p.open=true}")
++                            self.assertIn(expected,panel.inner_text())
++                            table=panel.locator('table')
++                            self.assertGreaterEqual(table.evaluate('e=>e.getBoundingClientRect().width'),672)
++                            self.assertEqual(table.evaluate('e=>getComputedStyle(e).overflowWrap'),'normal')
++                            region=panel.get_by_role('region',name='Canonical production observations')
++                            region.focus()
++                            self.assertNotEqual(region.evaluate('e=>getComputedStyle(e).outlineStyle'),'none')
++                            self.assertLessEqual(page.evaluate('document.documentElement.scrollWidth-innerWidth'),0)
++                            return panel
++                        try:
++                            with patch.dict(dtos_app.STATE,{'data':f.f.data}):
++                                response=page.goto('http://fixture/market?selected=player%3A1')
++                                self.assertEqual(response.status,200)
++                                inspect('8 of 8 observations')
++                                self.assertIn('18.00 fantasy points',page.locator('.canonical-production').inner_text())
++                                canonical=f.api()['windows'][3]
++                                if dest:
++                                    page.screenshot(path=str(dest/f'complete-market-{league}-{w}.png'))
++                                response=page.goto('http://fixture/players/1?front_office=4')
++                                self.assertEqual(response.status,200)
++                                inspect('8 of 8 observations')
++                                self.assertNotIn('This player context does not include a season production summary',page.locator('body').inner_text())
++                                if dest:
++                                    page.screenshot(path=str(dest/f'complete-dossier-{league}-{w}.png'))
++                                f.set_scoring({'pass_yd':.04,'st_ff':1,'sack':1})
++                                page.reload()
++                                panel=inspect('0 of 8 observations')
++                                self.assertIn('st_ff',panel.inner_text())
++                                self.assertIn('average is withheld',panel.inner_text())
++                                self.assertIsNone(f.api()['windows'][3]['fantasy_points'])
++                                response=page.goto('http://fixture/market?selected=player%3A1')
++                                self.assertEqual(response.status,200)
++                                inspect('0 of 8 observations')
++                                f.f.state['last_error']='Disposable league refresh failure'
++                                page.reload()
++                                panel=inspect('league refresh did not complete')
++                                self.assertIn('0 of 8 observations',panel.inner_text())
++                                if dest:
++                                    page.screenshot(path=str(dest/f'partial-retained-{league}-{w}.png'))
++                                count=len(requests)
++                                for details in page.locator('details').all():
++                                    details.evaluate('e=>e.open=!e.open')
++                                self.assertEqual(len(requests),count)
++                                records.append(dict(league=league,viewport=[w,h],complete=canonical,
++                                    partial=f.api()['windows'][3],retained_failure=True,keyboard=True,
++                                    overflow=False,extra_disclosure_requests=0,touch_emulated=w<1000))
++                        finally:
++                            context.close()
++            finally:
++                browser.close()
++        self.assertEqual(errors,[])
++        self.assertFalse(any(r['path'].startswith(('/sync','/trades/recommended')) for r in requests))
++        if dest:
++            (dest/'browser.json').write_text(json.dumps(dict(head=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),
++                tree=subprocess.check_output(['git','rev-parse','HEAD^{tree}'],text=True).strip(),
++                working_tree_clean=not subprocess.check_output(['git','status','--porcelain'],text=True).strip(),
++                scope='Disposable source/store and rendered routes, not authenticated live league production or physical Safari.',
++                records=records,errors=errors,requests=requests,before_memory=before_memory,
++                after_memory=memory_snapshot(),browser_closed=True),indent=2)+'\n')
+diff --git a/tests/test_current_production_coverage.py b/tests/test_current_production_coverage.py
+new file mode 100644
+index 0000000..e035168
+--- /dev/null
++++ b/tests/test_current_production_coverage.py
+@@ -0,0 +1,444 @@
++"""Current-season production uses canonical facts, never roster-history totals."""
++from pathlib import Path
++import tempfile
++import unittest
++
++from services.player_evidence import prepare_player_production
++from src.core.data_platform.global_evidence import GlobalEvidenceStore
++from src.core.data_platform.global_production import GlobalProduction
++from src.core.data_platform.normalization.identity import PlayerIdentityResolver
++from src.core.historical_memory.providers import normalize_nflverse_row
++
++
++def raw(week=1, **changes):
++    row = dict(player_id='00-test', season='2026', week=str(week), season_type='REG',
++               game_id=f'g-{week}', position='QB', team='BUF', completions='20', attempts='30',
++               passing_yards='250', passing_tds='2', passing_interceptions='1',
++               carries='4', rushing_yards='20', rushing_tds='0', receptions='0', targets='0',
++               receiving_yards='0', receiving_tds='0', passing_2pt_conversions='0',
++               rushing_2pt_conversions='0', receiving_2pt_conversions='0',
++               fumbles_total='0', fumbles_lost_total='0', special_teams_tds='0',
++               fg_made='0', fg_att='0', pat_made='0', pat_att='0',
++               fg_made_0_19='0', fg_made_20_29='0', fg_made_30_39='0',
++               fg_made_40_49='0', fg_made_50_59='0', fg_made_60_='0',
++               kickoff_return_yards='0', punt_return_yards='0')
++    return row | changes
++
++
++def prepared(path, *, scoring=None, weeks=range(1, 9), league='A', source_rows=None, player='4984', season=2026):
++    store = GlobalEvidenceStore(path, reserve_bytes=0)
++    rows = [normalize_nflverse_row(row) for row in (source_rows or [raw(w) for w in weeks])]
++    GlobalProduction(store).publish_batch(rows, identities=PlayerIdentityResolver({player: {'gsis_id': '00-test'}}),
++        game_dates={row['game_id']: f"{row['season']}-09-{int(row['week']):02d}T00:00:00Z" for row in rows},
++        retrieved_at='2026-10-31T00:00:00Z')
++    data = dict(league=dict(league_id=league, season=str(season), status='in_season'),
++                nfl_state=dict(season='2026', week=9), players={player: {'position': 'QB'}},
++                scoring_settings=scoring or {'pass_yd': .04, 'pass_td': 4, 'pass_int': -2, 'rush_yd': .1})
++    return prepare_player_production(data, expected_league_id=league, as_of='2026-11-01T00:00:00Z', path=path)
++
++
++class CurrentProductionCoverageTests(unittest.TestCase):
++    def test_zero_coefficient_needs_no_statistic_but_missing_active_stat_does(self):
++        row = GlobalProduction.score_game({'rec': 0}, {'rec': 1, 'unsupported': 0})
++        self.assertEqual(row['availability'], 'calculated')
++        self.assertEqual(row['fantasy_points'], 0)
++        self.assertIsNone(GlobalProduction.score_game({'rec': 0}, {'rec': 1, 'unsupported': .1})['fantasy_points'])
++
++    def test_player_record_does_not_require_team_defense_but_does_require_player_special_teams(self):
++        values = {'position': 'QB', 'pass_yd': 250}
++        row = GlobalProduction.score_game(values, {'pass_yd': .04, 'pts_allow_0': 10, 'sack': 1})
++        self.assertEqual(row['fantasy_points'], 10)
++        self.assertEqual(set(row['inapplicable_components']), {'pts_allow_0', 'sack'})
++        partial = GlobalProduction.score_game(values, {'pass_yd': .04, 'st_ff': 1})
++        self.assertIsNone(partial['fantasy_points'])
++        self.assertEqual(partial['missing_components'], ['st_ff'])
++        for position in ('DEF', '', 'unknown'):
++            self.assertIsNone(GlobalProduction.score_game(values | {'position': position}, {'sack': 1})['fantasy_points'])
++
++    def test_published_kicking_and_return_statistics_survive_normalization(self):
++        stats = normalize_nflverse_row(raw(position='K', fg_made='2', fg_att='2',
++            fg_made_50_59='1', fg_made_60_='1', pat_att='3', pat_made='3',
++            special_teams_tds='1', kickoff_return_yards='40', punt_return_yards='12'))['raw_stats']
++        self.assertEqual([stats[k] for k in ('fgm', 'fgm_50p', 'xpm', 'fgmiss', 'xpmiss', 'st_td', 'kr_yd', 'pr_yd')],
++                         [2, 2, 3, 0, 0, 1, 40, 12])
++        unknown = normalize_nflverse_row(raw(fg_made_60_='', fg_att='', pat_att=''))['raw_stats']
++        for key in ('fgm_50p', 'fgmiss', 'xpmiss'):
++            self.assertIsNone(unknown[key])
++        self.assertNotIn('st_ff', stats)
++
++    def test_ongoing_season_preserves_eight_observations_and_exact_denominator(self):
++        with tempfile.TemporaryDirectory() as folder:
++            result = prepared(Path(folder)/'facts.sqlite3')
++            row = result['players']['4984']['production']['windows'][3]
++            self.assertEqual(row['fantasy_points'], 18)
++            self.assertEqual((row['observation_count'], row['scored_count']), (8, 8))
++            self.assertEqual(list(row['weeks']), list(range(1, 9)))
++            self.assertEqual(row['season'], 2026)
++            self.assertNotIn('183.82', str(result))
++
++    def test_partial_scoring_retains_coverage_and_names_the_actual_gap(self):
++        with tempfile.TemporaryDirectory() as folder:
++            result = prepared(Path(folder)/'facts.sqlite3', scoring={'pass_yd': .04, 'st_ff': 1})
++            row = result['players']['4984']['production']['windows'][3]
++            self.assertIsNone(row['fantasy_points'])
++            self.assertEqual((row['observation_count'], row['scored_count']), (8, 0))
++            self.assertEqual(tuple(row['missing_components']), ('st_ff',))
++            self.assertIn('st_ff', ' '.join(result['players']['4984']['production']['limitations']))
++
++    def test_no_fake_bye_dnp_or_missing_week_zero_and_no_ownership_double_count(self):
++        with tempfile.TemporaryDirectory() as folder:
++            path=Path(folder)/'facts.sqlite3'
++            a=prepared(path, weeks=(1, 3, 8))
++            b=prepared(path, weeks=(1, 3, 8))
++            self.assertEqual(a, b)
++            row=a['players']['4984']['production']['windows'][3]
++            self.assertEqual(row['observation_count'], 3)
++            self.assertEqual(tuple(row['weeks']), (1, 3, 8))
++            self.assertEqual(row['fantasy_points'], 18)
++
++    def test_window_adapter_old_cache_keeps_unknown_counts_and_new_cache_roundtrips(self):
++        from src.core.player_value_projection.canonical_production import prepared_production_context
++        with tempfile.TemporaryDirectory() as folder:
++            result=prepared(Path(folder)/'facts.sqlite3')
++            import json
++            restored=json.loads(json.dumps(result))
++            context=prepared_production_context(restored, league_id='A', player_id='4984')
++            self.assertEqual(context.windows[3].observation_count, 8)
++            legacy=json.loads(json.dumps(result))
++            for row in legacy['players']['4984']['production']['windows']:
++                for key in ('season','weeks','observation_count','scored_count','missing_components'):
++                    row.pop(key,None)
++            legacy['players']['4984'].pop('current_sample_count')
++            legacy['players']['4984'].pop('previous_sample_count')
++            old=prepared_production_context(legacy, league_id='A', player_id='4984')
++            self.assertIsNone(old.windows[3].observation_count)
++            self.assertEqual(old.windows[3].fantasy_points, 18)
++            with self.assertRaises(ValueError):
++                prepared_production_context(restored, league_id='other', player_id='4984')
++
++    def test_new_fields_do_not_change_reference_values_or_input_facts(self):
++        with tempfile.TemporaryDirectory() as folder:
++            path=Path(folder)/'facts.sqlite3'
++            first=prepared(path)
++            counts=GlobalEvidenceStore(path,readonly=True).counts()
++            other=prepared(path, league='B', scoring={'pass_yd': .1})
++            self.assertEqual(first['reference_generation'], other['reference_generation'])
++            self.assertEqual(counts, GlobalEvidenceStore(path,readonly=True).counts())
++            self.assertEqual(other['players']['4984']['production']['windows'][3]['fantasy_points'],25)
++
++    def test_current_week_is_excluded_when_authoritative_context_supplies_the_boundary(self):
++        with tempfile.TemporaryDirectory() as folder:
++            value=prepared(Path(folder)/'facts.sqlite3', weeks=range(1, 10))
++            row=value['players']['4984']['production']['windows'][3]
++            self.assertEqual(value['completed_week_boundary'], 8)
++            self.assertEqual(row['observation_count'], 8)
++            self.assertNotIn(9, row['weeks'])
++            self.assertIn('Current-week', ' '.join(value['players']['4984']['production']['limitations']))
++
++    def test_legacy_same_generation_sample_count_is_preserved_without_inventing_scored_count(self):
++        from src.core.player_value_projection.canonical_production import prepared_production_context
++        with tempfile.TemporaryDirectory() as folder:
++            value=prepared(Path(folder)/'facts.sqlite3', scoring={'pass_yd': .04, 'st_ff': 1})
++            for row in value['players']['4984']['production']['windows']:
++                for key in ('observation_count','scored_count','weeks','missing_components'):
++                    row.pop(key,None)
++            row=prepared_production_context(value,league_id='A',player_id='4984').windows[3]
++            self.assertEqual(row.observation_count,8)
++            self.assertIsNone(row.scored_count)
++            self.assertIsNone(row.fantasy_points)
++            self.assertEqual(row.missing_components,())
++
++    def test_unknown_position_does_not_create_a_team_scoring_exemption(self):
++        result=GlobalProduction.score_game({'pass_yd':250}, {'pass_yd':.04,'sack':1})
++        self.assertIsNone(result['fantasy_points'])
++        self.assertEqual(result['known_component_points'],10)
++
++    def test_real_zero_and_partial_game_leave_other_windows_supported(self):
++        from src.core.player_value_projection.canonical_production import canonical_production_context
++        from tests.test_canonical_production_context import evidence
++        data=evidence([None,0,0,0])
++        data['production']['games'][0].update(availability='incomplete',missing_components=['st_ff'])
++        row=canonical_production_context(data)
++        self.assertIsNone(row.windows[3].fantasy_points)
++        self.assertEqual(row.windows[1].fantasy_points,0)
++        self.assertEqual(row.windows[3].scored_count,3)
++        self.assertEqual(row.windows[3].observation_count,4)
++
++    def test_invalid_stat_and_coefficient_never_become_a_complete_zero(self):
++        for value in (True,float('nan'),float('inf'),'not numeric'):
++            self.assertIsNone(GlobalProduction.score_game({'rec':value},{'rec':1})['fantasy_points'])
++            with self.assertRaises(ValueError):
++                GlobalProduction.score_game({'rec':0},{'rec':value})
++
++
++class ProductionViewFixture:
++    """Real store/preparation/Market/dossier paths, entirely disposable."""
++    def __init__(self, case, *, league='1314695233040052224', page=None, scoring=None):
++        from tests.test_market_history_coverage import MarketHistoryFixture
++        from routes.transactions import create_transactions_router
++        from unittest.mock import AsyncMock, patch
++        from src.core.history_context.store import CanonicalHistoryStore
++        from src.core.data_platform.storage import SnapshotWarehouse
++        from src.core.data_platform import data_platform
++        self.f=MarketHistoryFixture(case,league=league,page=page)
++        self.case=case
++        self.scoring=scoring or {'pass_yd':.04,'pass_td':4,'pass_int':-2,'rush_yd':.1,'pts_allow_0':10,'sack':1,'unused':0}
++        self.path=self.f.root/'global-production.sqlite3'
++        self.set_scoring(self.scoring)
++        self.history=CanonicalHistoryStore()
++        case.enterContext(patch.object(data_platform,'warehouse',SnapshotWarehouse()))
++        case.enterContext(patch('routes.transactions.canonical_history_store',self.history))
++        self.f.app.include_router(create_transactions_router(ensure_fresh=AsyncMock(),
++            refresh_transactions=AsyncMock(return_value=True),require_data=lambda:self.f.data,
++            state=self.f.state,page=page or (lambda title,body: __import__('fastapi.responses',fromlist=['HTMLResponse']).HTMLResponse(body))))
++
++    def set_scoring(self, scoring):
++        from src.core.valuation.universe import ValuationUniverse
++        from src.core.valuation_intelligence.engine import _score_asset
++        self.f.data['scoring_settings']=scoring
++        value=prepared(self.path,league=self.f.data['league']['league_id'],scoring=scoring,player='1')
++        self.f.data['canonical_player_production']=value
++        universe=ValuationUniverse(self.f.data, self.f.state)
++        self.f.data['valuation_intelligence']['assets']['player:1']=_score_asset(universe.by_id['player:1'],[],{},None)
++        self.f.data['valuation_intelligence']['generated_at']=value['generation']
++        self.f.cache.clear()
++        self.f.market=self.f.cache.get(self.f.data,self.f.state,self.f.history,self.f.data['league']['league_id'])
++        return value
++
++    def api(self):
++        return self.f.client.get('/api/market/assets/player:1').json()['valuation']['canonical_production']
++
++
++class ProductionRenderedCoverageTests(unittest.TestCase):
++    def test_complete_and_incomplete_canonical_samples_reach_both_rendered_consumers(self):
++        f=ProductionViewFixture(self)
++        for path in ('/market?selected=player%3A1','/players/1?front_office=4'):
++            response=f.f.client.get(path)
++            self.assertEqual(response.status_code,200)
++            self.assertIn('8 of 8 observations',response.text)
++            self.assertIn('18.00 fantasy points per observed game',response.text)
++            self.assertNotIn('This player context does not include a season production summary',response.text)
++        self.assertEqual(f.api()['windows'][3]['fantasy_points'],18)
++        f.set_scoring({'pass_yd':.04,'st_ff':1,'sack':1})
++        self.assertIsNone(f.api()['windows'][3]['fantasy_points'])
++        for path in ('/market?selected=player%3A1','/players/1?front_office=4'):
++            response=f.f.client.get(path)
++            self.assertEqual(response.status_code,200)
++            self.assertIn('0 of 8 observations',response.text)
++            self.assertIn('st_ff',response.text)
++            self.assertIn('average is withheld',response.text)
++
++    def test_failed_refresh_preserves_the_same_facts_and_changes_both_cached_explanations(self):
++        f=ProductionViewFixture(self)
++        before=f.api()
++        f.f.client.get('/market?selected=player%3A1')
++        f.f.state['last_error']='Disposable upstream failure'
++        for path in ('/market?selected=player%3A1','/players/1?front_office=4'):
++            response=f.f.client.get(path)
++            self.assertIn('league refresh did not complete',response.text)
++            self.assertIn('8 of 8 observations',response.text)
++        self.assertEqual(f.api(),before)
++
++    def test_actual_saved_cache_restoration_preserves_production_publication(self):
++        from unittest.mock import patch
++        from services import sleeper
++        f=ProductionViewFixture(self)
++        original=f.api()
++        with patch.object(sleeper,'league_cache_file',return_value=f.f.root/'saved-cache.json'):
++            sleeper.save_cache(state=f.f.state,league_id=f.f.data['league']['league_id'])
++            self.assertTrue((f.f.root/'saved-cache.json').exists())
++            restored={}
++            sleeper.load_cache(state=restored,league_id=f.f.data['league']['league_id'])
++        self.assertEqual(restored['data']['canonical_player_production'],__import__('json').loads(__import__('json').dumps(f.f.data['canonical_player_production'])))
++        f.f.data=restored['data']
++        f.f.state.update(restored)
++        f.f.cache.clear()
++        f.f.market=f.f.cache.get(f.f.data,f.f.state,f.f.history,f.f.data['league']['league_id'])
++        self.assertEqual(f.api(),original)
++        self.assertIn('8 of 8 observations',f.f.client.get('/players/1?front_office=4').text)
++
++    def test_scored_roster_history_never_substitutes_for_missing_canonical_points(self):
++        from unittest.mock import patch
++        from types import SimpleNamespace
++        # A synthetic roster-history total deliberately differs from canonical
++        # production. It is presentation evidence, not the original Granite run.
++        f=ProductionViewFixture(self,scoring={'pass_yd':.04,'st_ff':1})
++        from routes.transactions import historical_graph
++        history=historical_graph(f.history,f.f.data['league']['league_id'],f.f.data).player_dossier('1')
++        history['season_summaries']=[dict(season=2026,status='in_progress',games_observed=8,starts=8,
++            bench_appearances=0,unknown_role_appearances=0,fantasy_points=183.82,overall_rank=None,
++            positional_rank=None,completeness_percentage=44.4)]
++        with patch('routes.transactions.historical_graph',return_value=SimpleNamespace(player_dossier=lambda _:history)):
++            response=f.f.client.get('/players/1?front_office=4')
++        self.assertEqual(response.status_code,200)
++        self.assertIn('183.82',response.text)
++        self.assertIn('average is withheld',response.text)
++        self.assertIsNone(f.api()['windows'][3]['fantasy_points'])
++
++
++class ProductionPeriodControls(unittest.TestCase):
++    def test_completed_season_is_still_an_observed_sample_not_a_full_season_total(self):
++        with tempfile.TemporaryDirectory() as folder:
++            value=prepared(Path(folder)/'facts.sqlite3',season=2025,
++                source_rows=[raw(w,season='2025') for w in range(1,9)])
++            self.assertIsNone(value['completed_week_boundary'])
++            row=value['players']['4984']['production']['windows'][3]
++            self.assertEqual(row['fantasy_points'],18)
++            self.assertEqual(row['season'],2025)
++            self.assertEqual(row['observation_count'],8)
++
++    def test_current_absence_keeps_previous_production_separate(self):
++        with tempfile.TemporaryDirectory() as folder:
++            value=prepared(Path(folder)/'facts.sqlite3',source_rows=[raw(1,season='2025')])
++            rows=value['players']['4984']['production']['windows']
++            self.assertIsNone(rows[3]['fantasy_points'])
++            self.assertEqual(rows[3]['observation_count'],0)
++            self.assertEqual(rows[4]['fantasy_points'],18)
++
++    def test_position_bonuses_use_actual_eligible_counts_not_guessed_participation(self):
++        for position,points in [('QB',0),('RB',2.5),('WR',0),('TE',0)]:
++            result=GlobalProduction.score_game({'position':position,'rec':5},{'bonus_rec_rb':.5})
++            self.assertEqual(result['fantasy_points'],points)
++        self.assertIsNone(GlobalProduction.score_game({'position':'RB'},{'bonus_rec_rb':.5})['fantasy_points'])
++        self.assertIsNone(GlobalProduction.score_game({'rec':5},{'bonus_rec_rb':.5})['fantasy_points'])
++        # NFL FB alone does not prove Sleeper's RB-bonus classification.
++        self.assertIsNone(GlobalProduction.score_game({'position':'FB','rec':5},{'bonus_rec_rb':.5})['fantasy_points'])
++
++    def test_required_kicking_values_score_only_exact_counts(self):
++        values=normalize_nflverse_row(raw(position='K',fg_made='2',fg_att='2',
++            fg_made_40_49='1',fg_made_50_59='1',pat_made='2',pat_att='2'))['raw_stats']
++        values['position']='K'
++        score=GlobalProduction.score_game(values,{'fgm_40_49':4,'fgm_50p':5,'xpm':1,'fgmiss':-1,'pts_allow_0':10})
++        self.assertEqual(score['fantasy_points'],11)
++        bad=normalize_nflverse_row(raw(position='K',fg_att='2',fg_made='1'))['raw_stats']
++        self.assertIsNone(GlobalProduction.score_game(bad|{'position':'K'},{'fgmiss':-1})['fantasy_points'])
++
++    def test_failed_publication_retains_the_original_admitted_facts(self):
++        with tempfile.TemporaryDirectory() as folder:
++            path=Path(folder)/'facts.sqlite3'
++            original=prepared(path)
++            from src.core.data_platform.global_evidence import GlobalFact,IngestionCheckpoint
++            store=GlobalEvidenceStore(path,reserve_bytes=0)
++            store.publish([GlobalFact('production','sleeper:4984','nflverse','future-failed',
++                '2026-09-02T00:00:00Z',None,{'rec':99},season=2026,week=2)],
++                retrieved_at='2026-10-31T10:00:00Z',checkpoint=IngestionCheckpoint('failed','unadmitted',0,1,False))
++            data={'league':{'league_id':'A','season':2026},'nfl_state':{'season':'2026','week':9},
++                  'players':{'4984':{}},'scoring_settings':{'pass_yd':.04,'pass_td':4,'pass_int':-2,'rush_yd':.1}}
++            after=prepare_player_production(data,expected_league_id='A',as_of='2026-11-01T00:00:00Z',path=path)
++            self.assertEqual(after,original)
++
++
++class ProductionFreshSyncTests(unittest.IsolatedAsyncioTestCase):
++    async def test_real_sleeper_sync_publishes_canonical_production_before_cache_save(self):
++        from contextlib import ExitStack
++        from unittest.mock import patch,Mock
++        from services import sleeper
++        from services.player_evidence import prepare_player_production as real_prepare
++        with tempfile.TemporaryDirectory() as folder:
++            path=Path(folder)/'production.sqlite3'
++            prepared(path,player='1')
++            scoring={'pass_yd':.04,'pass_td':4,'pass_int':-2,'rush_yd':.1,'pts_allow_0':10,'sack':1,'unused':0}
++            league=dict(league_id='2100000000000000999',name='Disposable source league',season='2026',
++                status='in_season',total_rosters=1,roster_positions=['QB','K','DEF','BN'],
++                settings={'leg':9,'draft_rounds':3},scoring_settings=scoring)
++            async def get(client,route):
++                if route=='/league/'+league['league_id']:
++                    return league
++                if route.endswith('/users'):
++                    return [dict(user_id='fixture-owner',display_name='Fixture')]
++                if route.endswith('/rosters'):
++                    return [dict(roster_id=1,owner_id='fixture-owner',players=['1'],starters=['1'],settings={})]
++                if route=='/players/nfl':
++                    return {'1':dict(player_id='1',position='QB',fantasy_positions=['QB'],full_name='Source Player',team='BUF')}
++                if route=='/state/nfl':
++                    return dict(season='2026',week=9,season_type='regular')
++                return []
++            state={'data':None,'syncing':False}
++            projection=Mock()
++            projection.begin_external_refresh.return_value=False
++            projection.snapshot.return_value=None
++            with ExitStack() as stack:
++                stack.enter_context(patch.object(sleeper,'sleeper_get',side_effect=get))
++                stack.enter_context(patch.object(sleeper,'league_cache_file',return_value=Path(folder)/'cache.json'))
++                stack.enter_context(patch.object(sleeper,'refresh_public_market',return_value={'provider_status':{}}))
++                stack.enter_context(patch.object(sleeper,'player_history_evidence_batch',return_value={'1':{}}))
++                for name in ('src.core.valuation.normalization.prepare_market_normalization',
++                    'src.core.intelligence.pick_context.prepare_pick_context','src.core.relevant_players.apply_relevant_player_filter',
++                    'src.core.intelligence.team_strength.prepare_for_data','src.core.intelligence.strength_history.record_strength_history',
++                    'src.core.intelligence_memory.checkpoint_pipeline.ingest_runtime'):
++                    stack.enter_context(patch(name,return_value={}))
++                stack.enter_context(patch('src.core.valuation.ranking.prepare_global_player_ranks',return_value={'players':{}}))
++                stack.enter_context(patch('src.core.relevant_players.build_relevant_player_universe',return_value={'member_ids':['1']}))
++                for name in ('build_provider_network','build_valuation_intelligence','audit_market_calibration'):
++                    stack.enter_context(patch.object(sleeper,name))
++                def prepare_actual(data,**kwargs):
++                    return real_prepare(data,**kwargs,path=path)
++                prepare_call=stack.enter_context(patch('services.player_evidence.prepare_player_production',side_effect=prepare_actual))
++                await sleeper.sync_sleeper_league(league['league_id'],state,projections=projection)
++                self.assertIsNone(state['last_error'])
++                prepare_call.assert_called_once()
++                row=state['data']['canonical_player_production']['players']['1']['production']['windows'][3]
++                self.assertEqual((row['fantasy_points'],row['observation_count']),(18,8))
++                self.assertEqual(state['preparation_state'],'ready')
++                self.assertTrue((Path(folder)/'cache.json').exists())
++                restored={}
++                sleeper.load_cache(state=restored,league_id=league['league_id'])
++                self.assertEqual(restored['data']['canonical_player_production']['generation'],state['data']['canonical_player_production']['generation'])
++
++
++class ProductionPublishedConfigurationTests(unittest.TestCase):
++    def test_public_league_coefficients_expose_specific_remaining_gaps_without_fabricating_points(self):
++        import json
++        configs=json.loads((Path(__file__).parent/'fixtures/current_production_leagues.json').read_text())['leagues']
++        for league in configs:
++            with self.subTest(league=league['name']),tempfile.TemporaryDirectory() as folder:
++                value=prepared(Path(folder)/'facts.sqlite3',league=league['league_id'],scoring=league['scoring_settings'])
++                window=value['players']['4984']['production']['windows'][3]
++                self.assertEqual(window['observation_count'],8)
++                self.assertIsNone(window['fantasy_points'])
++                missing=set(window['missing_components'])
++                self.assertNotIn('sack',missing)
++                self.assertNotIn('pts_allow_0',missing)
++                if league['name']=='Granite Gridiron':
++                    self.assertEqual(missing,{'st_ff','st_fum_rec'})
++                elif league['name']=='Day Traders':
++                    self.assertTrue({'st_ff','st_fum_rec','pass_td_40p'}<=missing)
++                else:
++                    self.assertIn('pass_td_40p',missing)
++                    self.assertNotIn('fgm_50_59',missing)
++
++    def test_big_play_counters_never_become_long_touchdown_counters(self):
++        values=normalize_nflverse_row(raw(passing_40='2',rushing_40='0',receiving_40='1'))['raw_stats']
++        self.assertEqual([values[k] for k in ('pass_cmp_40p','rush_40p','rec_40p')],[2,0,1])
++        self.assertEqual(GlobalProduction.score_game(values,{'pass_cmp_40p':.5})['fantasy_points'],1)
++        self.assertIsNone(GlobalProduction.score_game(values,{'pass_td_40p':1})['fantasy_points'])
++
++
++class ProductionFreshnessControls(unittest.TestCase):
++    def test_failed_check_does_not_revalidate_old_facts(self):
++        from services.global_evidence import canonical_player_evidence
++        with tempfile.TemporaryDirectory() as folder:
++            path=Path(folder)/'global.sqlite3'
++            prepared(path)
++            store=GlobalEvidenceStore(path,reserve_bytes=0)
++            store.record_source_check('nflverse/production/2026',source_identity=None,
++                checked_at='2026-11-05T23:00:00Z',status='failed',details={'reason':'source_failure'})
++            data={'league':{'league_id':'A','season':2026},'nfl_state':{'season':'2026','week':9},
++                  'players':{'4984':{}},'scoring_settings':{'pass_yd':.04}}
++            report=canonical_player_evidence('4984',data,expected_league_id='A',path=path,as_of='2026-11-06T00:00:00Z')
++            self.assertEqual(report['availability_detail']['reason'],'retained_evidence_not_current')
++            self.assertIn('latest_source_check_failed',report['limitations'])
++            self.assertEqual(report['production']['ppg'],10)
++
++    def test_source_failure_qualification_reaches_both_views_without_erasing_values(self):
++        f=ProductionViewFixture(self)
++        store=GlobalEvidenceStore(f.path,reserve_bytes=0)
++        before=f.api()['windows'][3]
++        store.record_source_check('nflverse/production/2026',source_identity=None,
++            checked_at='2026-10-31T23:00:00Z',status='partial',details={'unresolved_rows':1})
++        f.set_scoring(f.scoring)
++        self.assertEqual(f.api()['windows'][3],before)
++        for path in ('/market?selected=player%3A1','/players/1?front_office=4'):
++            text=f.f.client.get(path).text
++            self.assertIn('Latest canonical production source check is partial',text)
++            self.assertIn('8 of 8 observations',text)

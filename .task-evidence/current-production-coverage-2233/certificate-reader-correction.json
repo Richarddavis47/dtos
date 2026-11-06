@@ -1,0 +1,7 @@
+{
+  "scope": "Local post-workflow evidence reader, not a validation failure",
+  "initial_error": "KeyError: no item named VALIDATION.json in the archive",
+  "cause": "Expected root file; Actions preserves assets/ subdirectory for that payload. Publication.json root remains unchanged.",
+  "correction": "Read the actual preserved ZIP member paths; do not modify archive or rerun preparation.",
+  "original_error_output": "Retained in the tool transcript; this is a factual audit note, not a recreated original log."
+}

@@ -1,0 +1,44 @@
+{
+  "status": 200,
+  "body": "<style>.history-page{min-width:0;overflow-wrap:anywhere}.history-page .card,.history-page .grid>*{min-width:0}.history-page code{white-space:normal;overflow-wrap:anywhere}.history-page .grid{grid-template-columns:repeat(auto-fit,minmax(min(260px,100%),1fr))}</style><div class=\"history-page\">\n<h2>League History</h2>\n<p class=\"muted\">Immutable Sleeper evidence with season-specific settings. Missing provider data remains explicitly unavailable.</p>\n<div class=\"summary-grid\"><article class=\"metric\"><b>6</b><span>Seasons</span></article><article class=\"metric\"><b>50</b><span>Historical standings rows</span></article><article class=\"metric\"><b>0</b><span>Blocking Issues</span></article><article class=\"metric\"><b>Completed seasons ready; more evidence pending</b><span>Archive preparation</span></article></div>\n<p class=\"history-evidence-summary\">2021\u20132025 complete; 2026 pending provider evidence. Completed seasons and pending evidence are separate; pending does not mean an empty history.</p>\n<h3>Season Memory</h3><div class=\"grid\"><article class=\"card\"><p class=\"muted\">Historical import is waiting or no season records are available.</p></article></div>\n<details class=\"card technical-details\"><summary>Historical Import Reliability</summary><p><b>Historical coverage:</b> Completed seasons ready; more evidence pending <code>completed_with_pending</code></p><p><b>Progress:</b> 5/6 seasons (83%)</p><p><b>Completed:</b> 2021, 2022, 2023, 2024, 2025</p><p><b>Pending:</b> 2026 \u2014 Active/current-season player-week evidence is not yet complete or available.</p><p><b>Current refresh job:</b> 2026 player_week \u00b7 5/6 completed_with_pending</p><p><b>Foundation import:</b> Complete</p><p><b>Overall historical readiness:</b> Ready with expected current-season evidence pending</p><p class=\"muted\">Current segment: 2026 / player_week. Progress consistent: true. Retry count: 0. Last progress: 2026-08-06T12:00:00+00:00.</p><p>Provider coverage: nflverse</p></details>\n<p><a class=\"btn\" href=\"/api/crawl/history\">Open Historical API</a> <a class=\"btn\" href=\"/api/history/coverage\">Historical Coverage</a> <a class=\"btn\" href=\"/search\">Search Historical Assets</a></p>\n</div>",
+  "canonical": {
+    "status": "completed_with_pending",
+    "display_status": "Completed with pending season",
+    "completed_steps": 5,
+    "total_steps": 6,
+    "percentage": 83,
+    "completed_seasons": [
+      2021,
+      2022,
+      2023,
+      2024,
+      2025
+    ],
+    "pending_seasons": [
+      2026
+    ],
+    "failed_seasons": [],
+    "invalidated_seasons": [],
+    "missing_seasons": [],
+    "current_season": 2026,
+    "current_data_type": "player_week",
+    "consistent": true,
+    "terminal": true,
+    "pending_reason": "Active/current-season player-week evidence is not yet complete or available.",
+    "configured_seasons": [
+      2021,
+      2022,
+      2023,
+      2024,
+      2025,
+      2026
+    ],
+    "identity_generation": 5,
+    "semantic_generations": {
+      "historical_records": 5,
+      "canonical_identities": 5,
+      "quality_reconciliation": 0
+    }
+  },
+  "unchanged": true
+}
