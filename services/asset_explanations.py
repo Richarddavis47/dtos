@@ -55,11 +55,17 @@ def player_profile_explanation(report, *, league_id):
                         'roster role'))
     # Consume accepted non-projection production facts only. Current-week
     # projection values remain exclusively in the dynamic weekly panel.
+    units = {
+        'Season Average': 'Sleeper points per completed-week score observation',
+        'Previous Season Average': 'Sleeper points per completed-week score observation',
+        'NFLverse targets per observed game': 'targets per observed NFLverse game',
+        'NFLverse carries per observed game': 'carries per observed NFLverse game',
+    }
     for index, evidence in enumerate(report.core_values.redraft.evidence):
-        if evidence.factor in ('Season Average', 'Previous Season Average', 'Targets per game', 'Carries per game'):
+        if evidence.factor in units:
             rows.append(row(f'production.{index}', evidence.factor,
                             evidence.observed_value if evidence.available else None,
-                            {'Targets per game': 'targets/game', 'Carries per game': 'carries/game'}.get(evidence.factor, 'league-scored fantasy points/game')))
+                            units[evidence.factor]))
     return _build('Player evidence context', 'player', league_id, f'player:{profile.player_id}', rows,
         ('PLAYER_EVIDENCE_SCOPE', 'Market price, demonstrated production and weekly expectation answer different questions.'))
 

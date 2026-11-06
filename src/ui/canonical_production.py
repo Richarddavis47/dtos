@@ -61,6 +61,7 @@ def production_panel(production: dict | None, *, refresh_failed: bool = False) -
             + '</td><td>' + escape(str(row.get('retrieved_at') or 'Unknown') + ' · ' + ('current at retrieval' if row.get('freshness') == 'current' else str(row.get('freshness') or 'Unknown')))
             + '</td><td>' + escape('; '.join(qualifications) or 'Explicit Sleeper score; participation not established') + '</td></tr>')
     periods = '; '.join('Week ' + str(key) + ': ' + str(row.get('availability') or 'unknown')
+        + ' (' + str(row.get('state') or 'unknown') + ' · league ' + str(row.get('scope') or 'unknown') + ')'
         + (' — ' + _reason(row['reason']) if row.get('reason') else '')
         for key, row in (production.get('periods') or {}).items())
     usage = ''.join('<li>' + escape(str(row.get('season') or 'Unknown') + ' · ' + str(row['label'])

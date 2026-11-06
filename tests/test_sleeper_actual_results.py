@@ -255,6 +255,9 @@ class SleeperPublicationTests(unittest.TestCase):
         self.assertEqual(c.observations[-1]["state"], "provisional")
         self.assertEqual(c.observations[-1]["scope"], "postseason")
         self.assertEqual(c.periods["5"]["state"], "future")
+        from src.ui.canonical_production import production_panel
+
+        self.assertIn("(future · league postseason)", production_panel(asdict(c)))
 
     def test_unknown_completion_does_not_make_live_scores_final(self):
         data = actual_data()
@@ -620,3 +623,42 @@ class LegacyConsumerRestorationTests(unittest.TestCase):
             "18.00 fantasy points per score observation",
             f.f.client.get("/players/1?front_office=4").text,
         )
+
+
+class ResultUnitConsistencyTests(unittest.TestCase):
+    def test_market_layer_and_profile_explanation_share_observation_units(self):
+        from tests.test_current_production_coverage import ProductionViewFixture
+        from src.core.asset_intelligence.models import AssetContext
+        from src.core.asset_intelligence.players import evaluate_player
+        from services.asset_explanations import player_profile_explanation
+
+        f = ProductionViewFixture(self)
+        detail = f.f.client.get("/api/market/assets/player:1").json()
+        self.assertEqual(
+            detail["value_layers"]["current_production_value"]["scale"],
+            "Sleeper fantasy points per completed-week score observation",
+        )
+        context = AssetContext(
+            f.f.data["league"]["league_id"],
+            4,
+            {},
+            canonical_production=f.f.data["canonical_player_production"],
+        )
+        report = evaluate_player(
+            {"id": "1", "position": "QB", "name": "Source player"}, context
+        )
+        explanation = player_profile_explanation(
+            report, league_id=f.f.data["league"]["league_id"]
+        )
+        average = next(
+            item for item in explanation.evidence if item.label == "Season Average"
+        )
+        self.assertEqual(
+            average.unit, "Sleeper points per completed-week score observation"
+        )
+        usage = next(
+            item
+            for item in explanation.evidence
+            if item.label == "NFLverse targets per observed game"
+        )
+        self.assertEqual(usage.unit, "targets per observed NFLverse game")

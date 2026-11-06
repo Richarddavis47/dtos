@@ -644,7 +644,7 @@ class AssetMarket:
                     **layer, "scale": {
                         "market_value": "Canonical Market price 0-1000",
                         "provider_consensus": "Canonical Market price 0-1000",
-                        "current_production_value": "Fantasy points per game · selected league scoring",
+                        "current_production_value": "Sleeper fantasy points per completed-week score observation",
                         "confidence_score": "Evidence support 0-100",
                         "age_curve_score": "Longevity context 0-100",
                     }.get(name, layer.get("scale")),
