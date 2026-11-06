@@ -1,0 +1,723 @@
+diff --git a/.github/workflows/product-browser.yml b/.github/workflows/product-browser.yml
+index 1e2d15c..2e1cc1a 100644
+--- a/.github/workflows/product-browser.yml
++++ b/.github/workflows/product-browser.yml
+@@ -119,6 +119,27 @@ jobs:
+           if-no-files-found: error
+           retention-days: 14
+ 
++      - name: Cached restoration unused-memory recovery under 2 GiB
++        timeout-minutes: 5
++        env:
++          DTOS_EXPECTED_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
++        run: |
++          set -o pipefail
++          mkdir -p .validation/restoration-unused
++          curl --fail --silent --show-error --max-time 90 --output .validation/restoration-unused/prior-study.zip https://raw.githubusercontent.com/Richarddavis47/dtos/66982aae31a84fe709e99133dcd8e5ef26f4173a/evidence/granite-restoration-study-2026-11-03/Granite-cache-restoration-memory-profile.zip
++          echo 'df5c88eda13a0671104c76a943b05032d7adfa089d11e738785b11e35a932439  .validation/restoration-unused/prior-study.zip' | sha256sum --check
++          docker run --rm --init --memory=2g --memory-swap=2g --cpus=2 --network=none -v "$PWD:$PWD:ro" -v "$PWD/.validation/restoration-unused:/proof" -w "$PWD" -e DTOS_EXPECTED_HEAD -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0="$PWD" dtos-browser-validation python -m tools.validation.restoration_unused_memory --archive /proof/prior-study.zip --output /proof/evidence 2>&1 | tee .validation/restoration-unused/raw.log
++          cd .validation/restoration-unused
++          sha256sum evidence/result.json raw.log prior-study.zip > SHA256SUMS
++      - name: Preserve restoration recovery including incomplete attempts
++        if: always()
++        uses: actions/upload-artifact@v4
++        with:
++          name: restoration-unused-2g
++          path: .validation/restoration-unused
++          if-no-files-found: error
++          retention-days: 14
++
+   my-team-browser:
+     runs-on: ubuntu-24.04
+     timeout-minutes: 20
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index 1a6dafd..ebd709c 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -1,3 +1,9 @@
++# v1.22.20 / build 2235 — Bounded cached-league memory recovery
++
++A cold cached-league read that lacks measured capacity can now perform one bounded cleanup of already expired analytical results and safely idle execution resources, then recheck the unchanged restoration guard using fresh raw container memory. Active runtimes, caller-held and unexpired results, last-valid publications, source/scoring identities and account scope remain intact. No background restoration, provider acquisition or automatic retry is added.
++
++The 2 GiB limit, 16× file allowance, restoration safety margin, independent FOIS and Trade policies, lifecycle coordination and unknown-telemetry deferral remain unchanged. Capacity may still be insufficient when live resources retain memory. Disposable source-shaped controls demonstrate recovery; this does not establish the private Granite payload's memory demand, the cause of an earlier 503, live league recovery or live Sleeper parity. See docs/audits/RESTORATION_UNUSED_MEMORY_2235.md.
++
+ ## v1.22.19 / build 2234 — Sleeper fantasy results
+ 
+ - Use explicit league-scoped Sleeper matchup scores for actual fantasy-result summaries, dossier/Market production and Trade facts; keep NFLverse usage and fixed-reference valuation analysis separate.
+diff --git a/RELEASE_NOTES.md b/RELEASE_NOTES.md
+index 478b964..eccd072 100644
+--- a/RELEASE_NOTES.md
++++ b/RELEASE_NOTES.md
+@@ -1,3 +1,9 @@
++# v1.22.20 / build 2235 — Bounded cached-league memory recovery
++
++A cold cached-league read that lacks measured capacity can now perform one bounded cleanup of already expired analytical results and safely idle execution resources, then recheck the unchanged restoration guard using fresh raw container memory. Active runtimes, caller-held and unexpired results, last-valid publications, source/scoring identities and account scope remain intact. No background restoration, provider acquisition or automatic retry is added.
++
++The 2 GiB limit, 16× file allowance, restoration safety margin, independent FOIS and Trade policies, lifecycle coordination and unknown-telemetry deferral remain unchanged. Capacity may still be insufficient when live resources retain memory. Disposable source-shaped controls demonstrate recovery; this does not establish the private Granite payload's memory demand, the cause of an earlier 503, live league recovery or live Sleeper parity. See docs/audits/RESTORATION_UNUSED_MEMORY_2235.md.
++
+ # DTOS v1.22.19 / build 2234
+ 
+ - Use explicit league-scoped Sleeper matchup scores for actual fantasy-result summaries, dossier/Market production and Trade facts; keep NFLverse usage and fixed-reference valuation analysis separate.
+diff --git a/app_metadata.py b/app_metadata.py
+index b1557f8..a458e19 100644
+--- a/app_metadata.py
++++ b/app_metadata.py
+@@ -7,9 +7,9 @@ from datetime import datetime, timezone
+ from pathlib import Path
+ 
+ APPLICATION_NAME = "DTOS"
+-VERSION = "1.22.19"
+-PRODUCT_VERSION = "1.22.19"
+-BUILD_NUMBER = 2234
++VERSION = "1.22.20"
++PRODUCT_VERSION = "1.22.20"
++BUILD_NUMBER = 2235
+ RELEASE_CODENAME = "Sleeper Fantasy Results"
+ APPLICATION_STARTED_AT = datetime.now(timezone.utc).isoformat()
+ 
+diff --git a/docs/audits/RESTORATION_UNUSED_MEMORY_2235.md b/docs/audits/RESTORATION_UNUSED_MEMORY_2235.md
+new file mode 100644
+index 0000000..9650da4
+--- /dev/null
++++ b/docs/audits/RESTORATION_UNUSED_MEMORY_2235.md
+@@ -0,0 +1,33 @@
++# Cached restoration: bounded unused-memory recovery
++
++## Evidence and scope
++
++Baseline: v1.22.19/build 2234, `9c1886c40c9697da0be3b5f06ede0bf9f45f4682`, tree `6ca249dddd6c798b56e1d2a067c63afa9b759a4f`.
++
++The owner's November 6 15:05 UTC Render-local observation reported a 26,864,873-byte Granite cache, 309,542,912-byte raw headroom and 564,055,696-byte restoration requirement. It proves insufficient policy capacity at that moment, not actual decode demand, retained-object ownership, a leak, other workers' idleness or a historical rejection reason. This session did not reproduce that private snapshot. The Render connector has no Shell/SSH operation and the browser runtime is unavailable here. The unchanged external 401 was not retried.
++
++Source inspection confirms that expired IntelligenceResult contexts can retain source graphs. The existing post-request reclaimer requires a changed request count, so quiet/inspection-only intervals need not drain that backlog before a new cold request. Explicit Trade already attempts bounded unused-memory recovery. Cached restoration previously deferred immediately. It did not attempt that recovery, even where measured reclaimable application objects could satisfy its unchanged guard.
++
++## Correction
++
++Share the existing explicit Trade cleanup: retire a truly idle local FOIS pool only when no FOIS owner remains (including gaps between submissions), expire already expired intelligence and lineup entries, and return unused allocator pages. Retain the cache's existing 512-entry bound and nonblocking entry lock. Do not collect live graphs, evict runtimes, invalidate fresh publications, invoke providers or credit inactive file pages as capacity.
++
++Only an initially negative, known-memory restoration plan with its existing safety margin still available attempts cleanup. The caller retains the existing cache-persistence lease and opened file generation. It performs one pass, remeasures raw cgroup memory and FOIS ownership, and calls the exact same restoration_admission function. Unknown or insufficient capacity still defers before JSON decoding. Counts are never converted into capacity. Optional cleanup failure is not a source failure or permission to decode. Owned-reader cancellation still drains the restoration thread before state can be released.
++
++The advisory private preflight remains read-only and grants no reservation. Entry can change unused-object retention after the snapshot, then must pass a fresh unchanged guard. It may still defer when live resources consume capacity. No periodic retry or user preference change is introduced.
++
++## Measurements and limits
++
++Reuse the sealed prior PARTIAL study archive SHA-256 `df5c88eda13a0671104c76a943b05032d7adfa089d11e738785b11e35a932439`; do not regenerate its contents. The resource tool extracts only its two synthetic caches and projection database. These contain a 10,000-identity catalog and two projection weeks. Their serialized size and structure do not establish equivalence to Granite's private payload. The prior 79.6 MiB fixture peak is not a production reservation bound.
++
++The new experiment tests expired ownership and cleanup, not another allowance study. Actual cache/context types hold expired and fresh source graphs; explicit separately reported harness padding applies container pressure. All padding remains included in admission telemetry. No completed FOIS analysis is claimed for those ownership objects. Warm live runtimes and fresh results must remain untouched. Kernel lifetime peak and sampled incremental changes have separate meanings; 5 ms samples may miss brief peaks. Record anonymous/file/inactive-file counters and local process ownership without claiming process-local idleness covers other workers.
++
++The clean-baseline probe released 213,716,992 bytes using existing explicit Trade cleanup, then restored under the same 486,292,112-byte requirement. This is less than the supplied production deficit of 254,512,784 bytes, so it does not prove Granite would now enter. The new archive-based acceptance records its own exact file size, hashes, before/after plans, active/fresh preservation, genuine completion, unexpired-pressure deferral, explicit retry after relief, FOIS reservation protection, worker exit and scratch cleanup. Actual production restoration peak remains unmeasured.
++
++## Validation and independent acceptance
++
++Focused regression covers the unchanged formula, failed/unknown telemetry, active FOIS and competing phases, atomic file replacement, cleanup failure, actual owned-reader cancellation, real decode, native Sleeper zero/negative results, exact picks, one-QB/K/DEF and Superflex identity. Mandatory canonical, Product, lifecycle and tooling gates remain required on the final exact source tree. The Product workflow runs the new real 2 GiB/offline recovery tool using the checksum-pinned existing archive; it preserves failures independently.
++
++The first new resource run reached successful restore/deferral/retry/FOIS protection but failed an overbroad no-child assertion: Python's multiprocessing resource tracker remains owned by the test process. Corrected coverage records that helper separately, permits only that identified tracker, and still requires both actual FOIS worker PIDs to exit. It does not treat a deferred operation as completion. The first Ruff invocation failed to write its cache on the intentional read-only source mount; --no-cache performs the same lint without that write. Original attempts remain in the evidence archive.
++
++After release, Main Chat/Scout should use the existing Render-local private preflight without exposing its configured token. Record fresh process/container scope, cache size, raw headroom, requirements and reason. Do not force entry under unsafe capacity. If safe normal entry completes, compare an actually retained league/season/player-week Sleeper score against the deployed dossier and the matching prepared consumer; a historical replay is insufficient for live parity. Do not force sync, FOIS or Trade searches. Diagnostic shipment or fixture recovery does not establish live Granite recovery or the cause of an earlier 503.
+diff --git a/services/league_preparation.py b/services/league_preparation.py
+index b210c44..5c85fe7 100644
+--- a/services/league_preparation.py
++++ b/services/league_preparation.py
+@@ -17,6 +17,7 @@ from src.core.league_runtime import LeagueRuntime
+ from src.core.sync_status import safe_sync_state
+ from src.platform.cache_budget import JSON_BUDGET, reusable
+ from src.platform.lifecycle import HeavyWorkDeferred, lifecycle_coordinator, memory_snapshot
++from src.platform.memory_reclamation import reclaim_unused_analytical_memory
+ from src.platform.fois_admission import (
+     WORKING_RESERVE_BYTES as FOIS_WORKING, SAFETY_MARGIN_BYTES as FOIS_SAFETY,
+ )
+@@ -80,6 +81,34 @@ def restore_cached_runtime(runtime: LeagueRuntime, publish: Callable[[LeagueRunt
+                     minimum_working_bytes=CACHE_MINIMUM_WORKING,
+                     cache_safety_bytes=CACHE_SAFETY, service_limit_bytes=SERVICE_LIMIT,
+                 )
++                if (plan['would_admit'] is False
++                        and plan['headroom_bytes'] >= plan['safety_bytes']):
++                    # This cold reader already owns the existing phase and pins
++                    # its file generation. Reclaim only unusable cache entries
++                    # and idle execution resources, as explicit Trade already
++                    # does. Never evict active/unexpired contexts or discount
++                    # file pages. Keep the existing safety margin available even
++                    # for cleanup; unknown/near-limit samples defer immediately.
++                    recovery = {'attempted': True, 'before_bytes': sample['cgroup_current_bytes']}
++                    try:
++                        recovery.update(reclaim_unused_analytical_memory())
++                    except Exception:
++                        # Optional cleanup failure is not a Sleeper/source error
++                        # or permission to decode. Only fresh measured admission
++                        # can permit the next allocation.
++                        recovery['cleanup_unavailable'] = True
++                    sample = memory_snapshot()
++                    plan = restoration_admission(
++                        stat.st_size, sample, lifecycle_coordinator.fois_generation_active(),
++                        fois_working_bytes=FOIS_WORKING, fois_safety_bytes=FOIS_SAFETY,
++                        expansion_factor=CACHE_EXPANSION_FACTOR,
++                        minimum_working_bytes=CACHE_MINIMUM_WORKING,
++                        cache_safety_bytes=CACHE_SAFETY, service_limit_bytes=SERVICE_LIMIT,
++                    )
++                    recovery.update(after_bytes=sample.get('cgroup_current_bytes'),
++                                    required_bytes=plan['required_bytes'],
++                                    would_admit=plan['would_admit'])
++                    runtime.lifecycle['cache_restore_memory_recovery'] = recovery
+                 if plan['would_admit'] is not True:
+                     raise HeavyWorkDeferred('Saved league preparation is waiting for safe memory headroom.')
+                 payload = json.load(handle)
+diff --git a/src/platform/memory_reclamation.py b/src/platform/memory_reclamation.py
+index 2c22bd8..4c01340 100644
+--- a/src/platform/memory_reclamation.py
++++ b/src/platform/memory_reclamation.py
+@@ -56,3 +56,33 @@ async def maintain_unused_memory(
+                 if not await asyncio.to_thread(expire_one):
+                     break
+         await asyncio.to_thread(release_unused_allocator_pages)
++
++
++def reclaim_unused_analytical_memory(*, stop_check: Callable[[], None] | None = None) -> dict:
++    """One existing, bounded cleanup pass; no valid source/runtime eviction.
++
++    Explicit heavyweight callers already own their lifecycle lease. Retire only
++    this process's idle pool, and leave an outstanding FOIS owner alone even
++    between its worker submissions. Caller-held and unexpired results survive.
++    The caller must remeasure raw container usage afterwards, never credit the
++    reported counts as free bytes. No collection, acquisition or retry starts.
++    """
++    from src.core.fois.process_execution import retire_idle_fois_executor_sync
++    from src.core.intelligence.cache import intelligence_cache
++    from src.core.trade_intelligence.lineup_memo import lineup_store
++    from src.platform.lifecycle import lifecycle_coordinator
++
++    check = stop_check or (lambda: None)
++    check()
++    retired = (retire_idle_fois_executor_sync(force=True)
++               if not lifecycle_coordinator.fois_generation_active() else False)
++    expired = 0
++    for _ in range(intelligence_cache.max_entries):
++        check()
++        if not intelligence_cache.expire_one():
++            break
++        expired += 1
++    check()
++    lineup_store.expire()
++    trimmed = release_unused_allocator_pages()
++    return dict(expired_entries=expired, idle_worker_retired=retired, allocator_trimmed=trimmed)
+diff --git a/src/platform/trade_execution.py b/src/platform/trade_execution.py
+index c7b613e..d5a65c8 100644
+--- a/src/platform/trade_execution.py
++++ b/src/platform/trade_execution.py
+@@ -98,20 +98,8 @@ def public_readiness():
+ 
+ def _recover_unused(control):
+     """One bounded pass, only on an explicit operation, never cache invalidation."""
+-    from src.core.intelligence.cache import intelligence_cache
+-    from src.core.trade_intelligence.lineup_memo import lineup_store
+-    from src.core.fois.process_execution import retire_idle_fois_executor_sync
+-    from src.platform.memory_reclamation import release_unused_allocator_pages
+-    retired = retire_idle_fois_executor_sync(force=True)
+-    expired = 0
+-    for _ in range(intelligence_cache.max_entries):
+-        control.stop_check()
+-        if not intelligence_cache.expire_one():
+-            break
+-        expired += 1
+-    lineup_store.expire()
+-    trimmed = release_unused_allocator_pages()
+-    return dict(expired_entries=expired, idle_worker_retired=retired, allocator_trimmed=trimmed)
++    from src.platform.memory_reclamation import reclaim_unused_analytical_memory
++    return reclaim_unused_analytical_memory(stop_check=control.stop_check)
+ 
+ 
+ @dataclass
+diff --git a/tests/test_restoration_unused_memory.py b/tests/test_restoration_unused_memory.py
+new file mode 100644
+index 0000000..c440691
+--- /dev/null
++++ b/tests/test_restoration_unused_memory.py
+@@ -0,0 +1,215 @@
++"""Cold restoration may reclaim unused objects, never relax measured admission."""
++from __future__ import annotations
++
++import asyncio
++from copy import deepcopy
++import json
++import os
++import threading
++import unittest
++from unittest.mock import Mock, patch
++
++from services import league_preparation as preparation
++from src.core.league_runtime import LeagueRuntime
++from src.platform import memory_reclamation
++from src.platform.lifecycle import HeavyWorkDeferred, lifecycle_coordinator
++from tests import test_league_entry_coordination as entry
++
++MIB = 1024**2
++LIMIT = 2 * 1024**3
++
++
++def memory(headroom):
++    return {'cgroup_current_bytes': LIMIT-headroom*MIB, 'cgroup_limit_bytes': LIMIT}
++
++
++class RestorationRecoveryTests(unittest.TestCase):
++    setUp = entry.CachedPublicationTests.setUp
++    write = entry.CachedPublicationTests.write
++
++    def test_healthy_restore_does_not_run_cleanup(self):
++        runtime = LeagueRuntime('200')
++        with patch.object(preparation, 'reclaim_unused_analytical_memory', return_value={}) as recover:
++            self.assertTrue(preparation.restore_cached_runtime(runtime, Mock(), expected_season=2026))
++        recover.assert_not_called()
++        self.assertNotIn('cache_restore_memory_recovery', runtime.lifecycle)
++
++    def test_one_recovery_then_fresh_measured_guard_allows_real_decode(self):
++        runtime, publish = LeagueRuntime('200'), Mock()
++        def recover():
++            self.assertEqual(lifecycle_coordinator.snapshot()['phase'], 'cache_persistence')
++            self.assertEqual(runtime.state['data'], {})
++            return dict(expired_entries=1, idle_worker_retired=True, allocator_trimmed=True)
++        with patch.object(preparation, 'memory_snapshot', side_effect=[memory(200), memory(300)]), \
++             patch.object(preparation, 'reclaim_unused_analytical_memory', side_effect=recover) as cleanup:
++            self.assertTrue(preparation.restore_cached_runtime(runtime, publish, expected_season=2026))
++        cleanup.assert_called_once_with()
++        publish.assert_called_once_with(runtime)
++        self.assertEqual(runtime.state['data'], self.data)
++        result = runtime.lifecycle['cache_restore_memory_recovery']
++        self.assertEqual(result['required_bytes'], 256*MIB)
++        self.assertTrue(result['would_admit'])
++        self.assertEqual(result['after_bytes'], memory(300)['cgroup_current_bytes'])
++        self.assertEqual(runtime.lifecycle['preparation_state'], 'last_valid')
++
++    def test_no_reported_cleanup_count_is_credited_as_capacity(self):
++        runtime = LeagueRuntime('200')
++        with patch.object(preparation, 'memory_snapshot', side_effect=[memory(200), memory(200)]), \
++             patch.object(preparation, 'reclaim_unused_analytical_memory', return_value={'expired_entries':512, 'idle_worker_retired':True, 'allocator_trimmed':True}) as cleanup, \
++             patch.object(preparation.json, 'load') as decode:
++            with self.assertRaises(HeavyWorkDeferred):
++                preparation.restore_cached_runtime(runtime, Mock())
++        cleanup.assert_called_once()
++        decode.assert_not_called()
++        self.assertEqual(runtime.state['data'], {})
++        self.assertFalse(runtime.lifecycle['cache_restore_memory_recovery']['would_admit'])
++
++    def test_unknown_and_near_limit_samples_defer_without_cleanup_or_decode(self):
++        for sample in ({}, memory(0), memory(127)):
++            with self.subTest(sample=sample), \
++                 patch.object(preparation, 'memory_snapshot', return_value=sample), \
++                 patch.object(preparation, 'reclaim_unused_analytical_memory', return_value={}) as cleanup, \
++                 patch.object(preparation.json, 'load') as decode:
++                with self.assertRaises(HeavyWorkDeferred):
++                    preparation.restore_cached_runtime(LeagueRuntime('200'), Mock())
++                cleanup.assert_not_called()
++                decode.assert_not_called()
++
++    def test_lost_telemetry_after_recovery_is_unknown_and_fails_closed(self):
++        runtime = LeagueRuntime('200')
++        with patch.object(preparation, 'memory_snapshot', side_effect=[memory(200), {}]), \
++             patch.object(preparation, 'reclaim_unused_analytical_memory', return_value={}), \
++             patch.object(preparation.json, 'load') as decode:
++            with self.assertRaises(HeavyWorkDeferred):
++                preparation.restore_cached_runtime(runtime, Mock())
++        decode.assert_not_called()
++        self.assertIsNone(runtime.lifecycle['cache_restore_memory_recovery']['would_admit'])
++
++    def test_active_fois_keeps_its_entire_reservation_after_recovery(self):
++        lifecycle_coordinator.reserve_fois_generation()
++        self.addCleanup(lifecycle_coordinator.release_fois_generation)
++        runtime = LeagueRuntime('200')
++        with patch.object(preparation, 'memory_snapshot', side_effect=[memory(800), memory(850)]), \
++             patch.object(preparation, 'reclaim_unused_analytical_memory', return_value={}) as cleanup, \
++             patch.object(preparation.json, 'load') as decode:
++            with self.assertRaises(HeavyWorkDeferred):
++                preparation.restore_cached_runtime(runtime, Mock())
++        cleanup.assert_called_once()
++        decode.assert_not_called()
++        self.assertEqual(runtime.lifecycle['cache_restore_memory_recovery']['required_bytes'], 896*MIB)
++
++    def test_competing_sync_phase_defers_before_recovery(self):
++        with lifecycle_coordinator.phase('sleeper_sync'), \
++             patch.object(preparation, 'reclaim_unused_analytical_memory', return_value={}) as cleanup, \
++             patch.object(preparation.json, 'load') as decode:
++            with self.assertRaises(HeavyWorkDeferred):
++                preparation.restore_cached_runtime(LeagueRuntime('200'), Mock())
++        cleanup.assert_not_called()
++        decode.assert_not_called()
++
++    def test_cleanup_failure_does_not_become_source_failure_or_allow_decode(self):
++        runtime = LeagueRuntime('200')
++        with patch.object(preparation, 'memory_snapshot', side_effect=[memory(200), memory(200)]), \
++             patch.object(preparation, 'reclaim_unused_analytical_memory', side_effect=OSError('private diagnostic text')), \
++             patch.object(preparation.json, 'load') as decode:
++            with self.assertRaises(HeavyWorkDeferred):
++                preparation.restore_cached_runtime(runtime, Mock())
++        decode.assert_not_called()
++        self.assertTrue(runtime.lifecycle['cache_restore_memory_recovery']['cleanup_unavailable'])
++        self.assertNotIn('private diagnostic text', repr(runtime.lifecycle))
++
++    def test_atomic_file_replacement_during_cleanup_keeps_opened_generation(self):
++        original = deepcopy(self.data)
++        def recover():
++            replacement = self.path.with_suffix('.next')
++            replacement.write_text(json.dumps({'data':dict(league={'league_id':'300'}), 'different_generation': 'x'*10000}))
++            os.replace(replacement, self.path)
++            return {}
++        runtime = LeagueRuntime('200')
++        with patch.object(preparation, 'memory_snapshot', side_effect=[memory(200), memory(300)]), \
++             patch.object(preparation, 'reclaim_unused_analytical_memory', side_effect=recover):
++            self.assertTrue(preparation.restore_cached_runtime(runtime, Mock(), expected_season=2026))
++        self.assertEqual(runtime.state['data'], original)
++        self.assertEqual(json.loads(self.path.read_text())['data']['league']['league_id'], '300')
++
++    def test_sleeper_actuals_exact_picks_and_other_leagues_survive_recovery(self):
++        from tests.test_sleeper_actual_results import actual_data, publish, profile
++        for league_id, superflex in (('200', False), ('300', True)):
++            with self.subTest(league_id=league_id):
++                data = actual_data(league_id=league_id, scores=(0, -2.125, 23.4738))
++                if superflex:
++                    data['league']['roster_positions'].append('SUPER_FLEX')
++                data['teams'] = [{'roster_id':1, 'league_id':league_id}]
++                data['pick_ledger'] = [{'asset_id':f'pick:{league_id}:2029:1:2', 'original_franchise_id':2}]
++                publish(data)
++                source_scores = [r['players_points']['4984'] for w in data['season_matchups']['weeks'].values() for r in w['rows']]
++                self.data = data
++                self.write()
++                runtime = LeagueRuntime(league_id)
++                with patch.object(preparation, 'memory_snapshot', side_effect=[memory(200), memory(300)]), \
++                     patch.object(preparation, 'reclaim_unused_analytical_memory', return_value={}):
++                    self.assertTrue(preparation.restore_cached_runtime(runtime, Mock(), expected_season=2026))
++                restored = runtime.state['data']
++                self.assertEqual([o['points'] for o in profile(restored).observations], source_scores)
++                self.assertEqual(restored['pick_ledger'], data['pick_ledger'])
++                self.assertEqual(restored['league']['roster_positions'], data['league']['roster_positions'])
++                self.assertEqual(restored['scoring_settings'], data['scoring_settings'])
++
++
++class RecoveryOwnershipTests(unittest.TestCase):
++    def test_active_fois_owner_is_not_retired_even_between_submissions(self):
++        from src.core.intelligence.cache import IntelligenceCache
++        cache = IntelligenceCache()
++        held, live = object(), object()
++        cache.get_or_create('expired', lambda:held, ttl=-1)
++        cache.get_or_create('live', lambda:live, ttl=100)
++        lifecycle_coordinator.reserve_fois_generation()
++        self.addCleanup(lifecycle_coordinator.release_fois_generation)
++        with patch('src.core.intelligence.cache.intelligence_cache', cache), \
++             patch('src.core.fois.process_execution.retire_idle_fois_executor_sync') as retire, \
++             patch('src.platform.memory_reclamation.release_unused_allocator_pages', return_value=False):
++            facts = memory_reclamation.reclaim_unused_analytical_memory()
++        retire.assert_not_called()
++        self.assertFalse(facts['idle_worker_retired'])
++        self.assertEqual(facts['expired_entries'], 1)
++        self.assertIsNone(cache.peek('expired'))
++        self.assertIs(cache.peek('live'), live)
++        self.assertIsNotNone(held)
++
++    def test_cancellation_check_stops_before_any_cleanup(self):
++        class Stopped(BaseException):
++            pass
++        with patch('src.core.fois.process_execution.retire_idle_fois_executor_sync') as retire:
++            with self.assertRaises(Stopped):
++                memory_reclamation.reclaim_unused_analytical_memory(stop_check=Mock(side_effect=Stopped()))
++        retire.assert_not_called()
++
++    def test_owned_cancellation_drains_real_restoration_before_releasing_state(self):
++        fixture = RestorationRecoveryTests('test_healthy_restore_does_not_run_cleanup')
++        fixture.setUp()
++        self.addCleanup(fixture.doCleanups)
++        entered, release = threading.Event(), threading.Event()
++        publish, runtime = Mock(), LeagueRuntime('200')
++        def cleanup():
++            entered.set()
++            if not release.wait(5):
++                raise AssertionError('Controlled cleanup was not released')
++            return {}
++        async def journey():
++            task = asyncio.create_task(preparation.restore_cached_runtime_owned(runtime, publish, expected_season=2026))
++            try:
++                self.assertTrue(await asyncio.to_thread(entered.wait, 3))
++                task.cancel()
++                await asyncio.sleep(.01)
++                self.assertFalse(task.done())
++            finally:
++                release.set()
++            with self.assertRaises(asyncio.CancelledError):
++                await task
++        with patch.object(preparation, 'memory_snapshot', side_effect=[memory(200), memory(300)]), \
++             patch.object(preparation, 'reclaim_unused_analytical_memory', side_effect=cleanup):
++            asyncio.run(journey())
++        publish.assert_called_once_with(runtime)
++        self.assertEqual(runtime.state['data'], fixture.data)
++        asyncio.run(runtime.close())
++        self.assertEqual(runtime.state['data'], {})
+diff --git a/tools/validation/restoration_unused_memory.py b/tools/validation/restoration_unused_memory.py
+new file mode 100644
+index 0000000..d6eb5c2
+--- /dev/null
++++ b/tools/validation/restoration_unused_memory.py
+@@ -0,0 +1,268 @@
++"""Real 2 GiB unused-reference recovery; reuse the sealed prior study's inputs.
++
++This is not a Granite payload profile or a proposed allocation multiplier.
++Explicit harness pressure is included in raw cgroup usage without deductions.
++"""
++import argparse
++import asyncio
++import gc
++import hashlib
++import json
++import logging
++import os
++from pathlib import Path
++import shutil
++import subprocess
++import tempfile
++import threading
++import time
++from unittest.mock import patch
++import weakref
++import zipfile
++
++STUDY_SHA256 = "df5c88eda13a0671104c76a943b05032d7adfa089d11e738785b11e35a932439"
++LIMIT = 2 * 1024**3
++MIB = 1024**2
++
++
++def main():
++    parser = argparse.ArgumentParser(description=__doc__)
++    parser.add_argument('--archive', type=Path, required=True)
++    parser.add_argument('--output', type=Path, required=True)
++    args = parser.parse_args()
++    args.output.mkdir(parents=True, exist_ok=True)
++    assert args.archive.stat().st_size == 9072793
++    assert hashlib.sha256(args.archive.read_bytes()).hexdigest() == STUDY_SHA256
++    result = {'scope': __doc__, 'prior_archive_sha256': STUDY_SHA256,
++              'head': subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip(),
++              'tree': subprocess.check_output(['git', 'rev-parse', 'HEAD^{tree}'], text=True).strip(),
++              'working_tree_clean': not subprocess.check_output(['git', 'status', '--porcelain'], text=True).strip(),
++              'samples': [], 'liveness': [], 'passed': False}
++    if os.environ.get('DTOS_EXPECTED_HEAD'):
++        assert result['head'] == os.environ['DTOS_EXPECTED_HEAD'] and result['working_tree_clean']
++    scratch = tempfile.TemporaryDirectory(prefix='restoration-unused-')
++    root = Path(scratch.name)
++    with zipfile.ZipFile(args.archive) as archive:
++        for name in ('oneqb.json', 'superflex.json', 'projections.sqlite3'):
++            with archive.open('granite-scale/' + name) as reader, (root/name).open('wb') as writer:
++                shutil.copyfileobj(reader, writer)
++    for key in ('CACHE', 'METADATA_DB', 'INTELLIGENCE_CHECKPOINT', 'FOIS_DB', 'HISTORY_DB', 'ACCOUNT_DB'):
++        os.environ['DTOS_' + key + '_FILE'] = str(root / (key.lower() + '.sqlite3'))
++    os.environ.update(DTOS_PROJECTION_DB_FILE=str(root/'projections.sqlite3'),
++                      DTOS_DURABLE_HISTORY_REQUIRED='0', DTOS_HISTORY_STORAGE_ROOT=str(root),
++                      DTOS_SLEEPER_SEASON_CACHE_ROOT=str(root/'seasons'),
++                      SLEEPER_BASE_URL='http://127.0.0.1:9/v1')
++    import dtos_app
++    import psutil
++    from fastapi.testclient import TestClient
++    from services import league_preparation as prep
++    from src.core.league_runtime import LeagueRuntime
++    from src.core.intelligence.context import IntelligenceContext
++    from src.core.intelligence.models import IntelligenceResult
++    from src.core.intelligence.cache import intelligence_cache
++    from src.core.fois import process_execution as workers
++    from src.platform.lifecycle import lifecycle_coordinator, memory_snapshot, HeavyWorkDeferred
++    from src.platform.memory_reclamation import release_unused_allocator_pages
++
++    assert memory_snapshot()['cgroup_limit_bytes'] == LIMIT
++    assert Path('/sys/fs/cgroup/memory.swap.max').read_text().strip() == '0'
++    timings = []
++    class Timing(logging.Handler):
++        def emit(self, record):
++            if getattr(record, 'event', None) == 'request_complete' and getattr(record, 'path', None) == '/health/live':
++                timings.append(record.duration_ms)
++    handler = Timing()
++    logging.getLogger('dtos.request').addHandler(handler)
++    client = TestClient(dtos_app.app)
++    def live(label):
++        n = len(timings)
++        started = time.monotonic()
++        assert client.get('/health/live').status_code == 200
++        assert len(timings) == n+1 and timings[-1] < 500
++        result['liveness'].append({'label':label, 'server_ms':timings[-1], 'client_ms':(time.monotonic()-started)*1000})
++    def sample(label):
++        stat = dict(line.split() for line in Path('/sys/fs/cgroup/memory.stat').read_text().splitlines())
++        record = dict(label=label, monotonic=time.monotonic(), **memory_snapshot(),
++                      **{k:int(stat[k]) for k in ('anon', 'file', 'inactive_file', 'kernel')}, processes=[])
++        for proc in (psutil.Process(), *psutil.Process().children(recursive=True)):
++            try:
++                record['processes'].append(dict(pid=proc.pid, parent=proc.ppid(), rss=proc.memory_info().rss))
++            except psutil.Error:
++                pass
++        result['samples'].append(record)
++        return record
++    def context(data):
++        teams = tuple(data['teams'])
++        ctx = IntelligenceContext(league_id=str(data['league']['league_id']), active_roster_id=1,
++            league=data['league'], roster=teams[0], teams=teams, picks=(), settings=data['league']['scoring_settings'],
++            opponents=teams[1:], market={}, front_offices=(), cached_data=data, user_preferences={}, snapshot_key='control')
++        return IntelligenceResult(context=ctx, decision=None, decisions={}, player_portfolio=None,
++            pick_portfolio=None, player_reports={}, front_office_model=None, trades=(), market=None,
++            player_values={}, roster=None, league=None, recommendation=None, timings_ms={}, cache_hit=False)
++    cache = root/'oneqb.json'
++    result['cache_bytes'] = cache.stat().st_size
++    result['cache_sha256'] = hashlib.sha256(cache.read_bytes()).hexdigest()
++    result['limitations'] = ['Reused 10000-identity/two-week synthetic catalog, not private Granite payload.',
++        'Expired ownership graphs are real cache/context types; no completed FOIS/intelligence grade is claimed.',
++        'Five-ms samples may miss brief peaks. Kernel lifetime peak includes harness pressure.',
++        'This is disposable execution, not live league recovery or Sleeper parity.']
++    active, recovered, warm_values, refs = [], [], [], []
++    padding = None
++    try:
++        for name in ('oneqb.json', 'superflex.json'):
++            data = json.loads((root/name).read_text())['data']
++            runtime = LeagueRuntime(str(data['league']['league_id']))
++            runtime.apply_data(data)
++            runtime.active_requests = 1
++            active.append(runtime)
++            warm_values.append(data)
++        result['warm_structures'] = [{k:len(d.get(k) or ()) for k in ('teams','players','normalized_players')} for d in warm_values]
++        fresh = intelligence_cache.get_or_create('unused-proof:fresh', lambda:context(warm_values[0]), ttl=3600)
++        for number in range(3):
++            value = intelligence_cache.get_or_create('unused-proof:old-'+str(number),
++                lambda:context(json.loads(cache.read_text())['data']), ttl=0)
++            refs.append(weakref.ref(value))
++            del value
++        worker = workers.warm_fois_executor_sync()
++        result['idle_worker_pid'] = worker['pid']
++        gc.collect()
++        release_unused_allocator_pages()
++        initial = sample('warm_and_expired_ownership')
++        padding = bytearray(max(0, LIMIT-initial['cgroup_current_bytes']-304*MIB))
++        for i in range(0, len(padding), 4096):
++            padding[i] = 1
++        result['harness_padding_bytes'] = len(padding)
++        before = sample('before_restore')
++        plan = prep.restoration_admission(cache.stat().st_size, before, False,
++            fois_working_bytes=prep.FOIS_WORKING, fois_safety_bytes=prep.FOIS_SAFETY)
++        assert plan['would_admit'] is False
++        result['before_plan'] = plan
++        target = LeagueRuntime(active[0].league_id)
++        recovered.append(target)
++        def publish(runtime):
++            projection = dtos_app.ProjectionService(league_id=runtime.league_id, scoring_profile_id=runtime.scoring_profile)
++            result['attached_projection_rows'] = projection.restore_into(runtime.state['data'])
++            dtos_app._publish_runtime_context(runtime, projection)
++        samples, stop = [], threading.Event()
++        def watch():
++            while not stop.wait(.005):
++                samples.append(memory_snapshot()['cgroup_current_bytes'])
++        monitor = threading.Thread(target=watch)
++        monitor.start()
++        started = time.monotonic()
++        try:
++            with patch.object(prep, 'league_cache_file', return_value=cache):
++                assert prep.restore_cached_runtime(target, publish, expected_season=2026)
++        finally:
++            stop.set()
++            monitor.join()
++        result['restore_seconds'] = time.monotonic()-started
++        result['recovery'] = target.lifecycle['cache_restore_memory_recovery']
++        result['raw_bytes_released'] = result['recovery']['before_bytes']-result['recovery']['after_bytes']
++        result['sampled_increment_from_post_cleanup_bytes'] = max([result['recovery']['after_bytes'], *samples])-result['recovery']['after_bytes']
++        assert result['recovery']['would_admit'] and result['recovery']['required_bytes'] == plan['required_bytes']
++        assert all(ref() is None for ref in refs)
++        assert intelligence_cache.peek('unused-proof:fresh') is fresh
++        assert not psutil.pid_exists(worker['pid'])
++        assert all(r.state['data'] is d and r.active_requests == 1 for r,d in zip(active,warm_values))
++        assert target.state['data']['league'] == warm_values[0]['league']
++        result['expired_released_active_and_fresh_preserved'] = True
++        sample('restored')
++        live('restored_with_warm_resources')
++        padding = None
++        # Hold actual unexpired ownership graphs. Cleanup must not delete them
++        # merely to manufacture headroom. At fixed measured pressure, defer.
++        for number in range(3):
++            intelligence_cache.get_or_create('unused-proof:held-'+str(number),
++                lambda:context(json.loads(cache.read_text())['data']), ttl=3600)
++        gc.collect()
++        release_unused_allocator_pages()
++        pressure = sample('unexpired_contexts')
++        padding = bytearray(max(0, LIMIT-pressure['cgroup_current_bytes']-304*MIB))
++        for i in range(0, len(padding), 4096):
++            padding[i] = 1
++        result['held_harness_padding_bytes'] = len(padding)
++        blocked = LeagueRuntime(active[0].league_id)
++        with patch.object(prep, 'league_cache_file', return_value=cache):
++            try:
++                prep.restore_cached_runtime(blocked, publish)
++            except HeavyWorkDeferred:
++                pass
++            else:
++                raise AssertionError('Unexpired context pressure was unsafely admitted')
++        assert not blocked.state['data']
++        assert all(intelligence_cache.peek('unused-proof:held-'+str(n)) is not None for n in range(3))
++        result['unsafe_pressure_deferred'] = blocked.lifecycle['cache_restore_memory_recovery']
++        assert result['unsafe_pressure_deferred']['would_admit'] is False
++        live('capacity_deferred')
++        padding = None
++        release_unused_allocator_pages()
++        retry = LeagueRuntime(active[0].league_id)
++        recovered.append(retry)
++        with patch.object(prep, 'league_cache_file', return_value=cache):
++            assert prep.restore_cached_runtime(retry, publish, expected_season=2026)
++        result['explicit_retry_completed'] = True
++        sample('recovered_after_pressure_relief')
++        live('recovered')
++        # Existing FOIS ownership, including its between-submission idle worker,
++        # retains its full policy. This is a diagnostic task, not historical grading.
++        worker = workers.warm_fois_executor_sync()
++        lifecycle_coordinator.reserve_fois_generation()
++        try:
++            base = sample('fois_reserved')
++            padding = bytearray(max(0, LIMIT-base['cgroup_current_bytes']-600*MIB))
++            for i in range(0, len(padding), 4096):
++                padding[i] = 1
++            owner_blocked = LeagueRuntime(active[0].league_id)
++            with patch.object(prep, 'league_cache_file', return_value=cache):
++                try:
++                    prep.restore_cached_runtime(owner_blocked, publish)
++                except HeavyWorkDeferred:
++                    pass
++                else:
++                    raise AssertionError('FOIS outstanding demand was spent on restoration')
++            assert psutil.pid_exists(worker['pid']) and not owner_blocked.state['data']
++            result['fois_reserved_plan'] = owner_blocked.lifecycle['cache_restore_memory_recovery']
++            assert result['fois_reserved_plan']['required_bytes'] > plan['required_bytes']
++            live('fois_reserved_deferral')
++        finally:
++            lifecycle_coordinator.release_fois_generation()
++            padding = None
++        result['fois_reserve_preserved'] = True
++        workers.shutdown_fois_executor_sync()
++        for runtime in recovered:
++            asyncio.run(runtime.close())
++        for runtime in active:
++            runtime.active_requests = 0
++            asyncio.run(runtime.close())
++        recovered.clear()
++        active.clear()
++        warm_values.clear()
++        del data, fresh, target, retry, runtime
++        intelligence_cache.invalidate()
++        gc.collect()
++        release_unused_allocator_pages()
++        final = sample('after_cleanup')
++        children = psutil.Process().children(recursive=True)
++        result['cleanup_processes'] = [dict(pid=p.pid, name=p.name(), resource_tracker=any('multiprocessing.resource_tracker' in v for v in p.cmdline())) for p in children]
++        assert all(p['resource_tracker'] for p in result['cleanup_processes'])
++        assert not psutil.pid_exists(worker['pid'])
++        assert not lifecycle_coordinator.fois_generation_active()
++        assert lifecycle_coordinator.snapshot()['phase'] == 'idle'
++        assert final['cgroup_memory_events']['oom'] == final['cgroup_memory_events']['oom_kill'] == 0
++        assert hashlib.sha256(cache.read_bytes()).hexdigest() == result['cache_sha256']
++        result['kernel_lifetime_peak_bytes'] = int(Path('/sys/fs/cgroup/memory.peak').read_text())
++        scratch.cleanup()
++        result['scratch_removed'] = not root.exists()
++        assert result['scratch_removed']
++        result['passed'] = True
++    finally:
++        padding = None
++        workers.shutdown_fois_executor_sync()
++        client.close()
++        logging.getLogger('dtos.request').removeHandler(handler)
++        (args.output/'result.json').write_text(json.dumps(result, indent=2)+'\n')
++
++
++if __name__ == '__main__':
++    main()

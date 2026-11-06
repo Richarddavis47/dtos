@@ -1,0 +1,131 @@
+{
+  "scope": "Real 2 GiB unused-reference recovery; reuse the sealed prior study's inputs.\n\nThis is not a Granite payload profile or a proposed allocation multiplier.\nExplicit harness pressure is included in raw cgroup usage without deductions.\n",
+  "prior_archive_sha256": "df5c88eda13a0671104c76a943b05032d7adfa089d11e738785b11e35a932439",
+  "head": "9c1886c40c9697da0be3b5f06ede0bf9f45f4682",
+  "tree": "6ca249dddd6c798b56e1d2a067c63afa9b759a4f",
+  "working_tree_clean": true,
+  "samples": [
+    {
+      "label": "warm_and_expired_ownership",
+      "monotonic": 333501.329712625,
+      "rss_bytes": 403603456,
+      "vms_bytes": 718123008,
+      "system_available_bytes": 16473354240,
+      "memory_accounting_scope": "cgroup",
+      "cgroup_current_bytes": 492265472,
+      "cgroup_limit_bytes": 2147483648,
+      "cgroup_inactive_file_bytes": 28012544,
+      "cgroup_anonymous_bytes": 434593792,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0
+      },
+      "anon": 434593792,
+      "file": 53391360,
+      "inactive_file": 28012544,
+      "kernel": 3514368,
+      "processes": [
+        {
+          "pid": 7,
+          "parent": 1,
+          "rss": 403611648
+        },
+        {
+          "pid": 18,
+          "parent": 7,
+          "rss": 18358272
+        },
+        {
+          "pid": 19,
+          "parent": 7,
+          "rss": 50290688
+        }
+      ]
+    },
+    {
+      "label": "before_restore",
+      "monotonic": 333504.278931205,
+      "rss_bytes": 1740066816,
+      "vms_bytes": 2054578176,
+      "system_available_bytes": 15400235008,
+      "memory_accounting_scope": "cgroup",
+      "cgroup_current_bytes": 1831288832,
+      "cgroup_limit_bytes": 2147483648,
+      "cgroup_inactive_file_bytes": 28012544,
+      "cgroup_anonymous_bytes": 1771069440,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0
+      },
+      "anon": 1771069440,
+      "file": 53391360,
+      "inactive_file": 28012544,
+      "kernel": 6074368,
+      "processes": [
+        {
+          "pid": 7,
+          "parent": 1,
+          "rss": 1740066816
+        },
+        {
+          "pid": 18,
+          "parent": 7,
+          "rss": 18358272
+        },
+        {
+          "pid": 19,
+          "parent": 7,
+          "rss": 50290688
+        }
+      ]
+    }
+  ],
+  "liveness": [],
+  "passed": false,
+  "cache_bytes": 22974328,
+  "cache_sha256": "60aff8883b9e0cddbf026db675a618b6b1b792c64dd0d7bca4d4c3e98de81993",
+  "limitations": [
+    "Reused 10000-identity/two-week synthetic catalog, not private Granite payload.",
+    "Expired ownership graphs are real cache/context types; no completed FOIS/intelligence grade is claimed.",
+    "Five-ms samples may miss brief peaks. Kernel lifetime peak includes harness pressure.",
+    "This is disposable execution, not live league recovery or Sleeper parity."
+  ],
+  "warm_structures": [
+    {
+      "teams": 12,
+      "players": 10788,
+      "normalized_players": 10788
+    },
+    {
+      "teams": 12,
+      "players": 10788,
+      "normalized_players": 10788
+    }
+  ],
+  "idle_worker_pid": 19,
+  "harness_padding_bytes": 1336451072,
+  "before_plan": {
+    "telemetry_valid": true,
+    "file_size_valid": true,
+    "reservation_valid": true,
+    "working_bytes": 367589248,
+    "cache_safety_bytes": 134217728,
+    "safety_bytes": 134217728,
+    "fois_working_bytes": 0,
+    "fois_safety_bytes": 0,
+    "required_bytes": 501806976,
+    "service_limit_bytes": 2147483648,
+    "effective_limit_bytes": 2147483648,
+    "headroom_bytes": 316194816,
+    "would_admit": false,
+    "reason": "insufficient_headroom"
+  }
+}

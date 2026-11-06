@@ -1,0 +1,53 @@
+{
+  "scope": "Matched synthetic inputs/ownership counts/304 MiB target headroom in separate enforced 2 GiB runs; measured values not identical atomic states. Not private Granite profiling.",
+  "baseline_commit": "9c1886c40c9697da0be3b5f06ede0bf9f45f4682",
+  "candidate_commit": "5d9c885fcc7e25d6e43fc9c759bc6349c6004da8",
+  "input_sha256": "60aff8883b9e0cddbf026db675a618b6b1b792c64dd0d7bca4d4c3e98de81993",
+  "cache_bytes": 22974328,
+  "unchanged_required_bytes": 501806976,
+  "baseline_before_plan": {
+    "telemetry_valid": true,
+    "file_size_valid": true,
+    "reservation_valid": true,
+    "working_bytes": 367589248,
+    "cache_safety_bytes": 134217728,
+    "safety_bytes": 134217728,
+    "fois_working_bytes": 0,
+    "fois_safety_bytes": 0,
+    "required_bytes": 501806976,
+    "service_limit_bytes": 2147483648,
+    "effective_limit_bytes": 2147483648,
+    "headroom_bytes": 316194816,
+    "would_admit": false,
+    "reason": "insufficient_headroom"
+  },
+  "baseline_outcome": "HeavyWorkDeferred before decode; candidate-oriented tool intentionally exits nonzero here, not a passing completion test.",
+  "candidate_before_plan": {
+    "telemetry_valid": true,
+    "file_size_valid": true,
+    "reservation_valid": true,
+    "working_bytes": 367589248,
+    "cache_safety_bytes": 134217728,
+    "safety_bytes": 134217728,
+    "fois_working_bytes": 0,
+    "fois_safety_bytes": 0,
+    "required_bytes": 501806976,
+    "service_limit_bytes": 2147483648,
+    "effective_limit_bytes": 2147483648,
+    "headroom_bytes": 316284928,
+    "would_admit": false,
+    "reason": "insufficient_headroom"
+  },
+  "candidate_recovery": {
+    "attempted": true,
+    "before_bytes": 1831456768,
+    "expired_entries": 3,
+    "idle_worker_retired": true,
+    "allocator_trimmed": true,
+    "after_bytes": 1609338880,
+    "required_bytes": 501806976,
+    "would_admit": true
+  },
+  "candidate_completed": true,
+  "source_thresholds_changed": false
+}

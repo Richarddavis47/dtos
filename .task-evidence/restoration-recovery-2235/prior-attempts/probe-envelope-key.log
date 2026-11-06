@@ -1,0 +1,15 @@
+Traceback (most recent call last):
+  File "/evidence/recovery_probe.py", line 84, in <module>
+    if __name__=='__main__':main()
+                            ~~~~^^
+  File "/evidence/recovery_probe.py", line 38, in main
+    result=intelligence_cache.get_or_create('snapshot:retired-context-'+str(n),lambda:old_result(json.loads(cache.read_text())),ttl=0)
+  File "/app/src/core/intelligence/cache.py", line 42, in get_or_create
+    value = factory()
+  File "/evidence/recovery_probe.py", line 38, in <lambda>
+    result=intelligence_cache.get_or_create('snapshot:retired-context-'+str(n),lambda:old_result(json.loads(cache.read_text())),ttl=0)
+                                                                                      ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/evidence/recovery_probe.py", line 35, in old_result
+    teams=tuple(data['teams']);context=IntelligenceContext(league_id=str(data['league']['league_id']),active_roster_id=1,league=data['league'],roster=teams[0],teams=teams,picks=(),settings=data['league'].get('scoring_settings',{}),opponents=teams[1:],market={},front_offices=(),cached_data=data,user_preferences={},snapshot_key='expired')
+                ~~~~^^^^^^^^^
+KeyError: 'teams'

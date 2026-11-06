@@ -1,0 +1,34 @@
+4 \"HTTP/1.1 405 Method Not Allowed\"","request_id":"system"}
+{"timestamp":"2026-11-06T15:52:05.672492+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: HEAD http://testserver/api/inspect/operations/restoration-preflight?league_id=1314695233040052224 \"HTTP/1.1 405 Method Not Allowed\"","request_id":"system"}
+ok
+test_original_summary_deadline_and_response_ceiling_still_apply (tests.test_restoration_preflight_http.RestorationPreflightHTTPTests.test_original_summary_deadline_and_response_ceiling_still_apply) ... {"timestamp":"2026-11-06T15:52:05.676528+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/restoration-preflight?league_id=1314695233040052224 \"HTTP/1.1 503 Service Unavailable\"","request_id":"system"}
+{"timestamp":"2026-11-06T15:52:05.679020+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/restoration-preflight?league_id=1314695233040052224 \"HTTP/1.1 503 Service Unavailable\"","request_id":"system"}
+ok
+test_preflight_does_not_consume_or_bypass_graph_cooldown (tests.test_restoration_preflight_http.RestorationPreflightHTTPTests.test_preflight_does_not_consume_or_bypass_graph_cooldown) ... {"timestamp":"2026-11-06T15:52:05.683208+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/restoration-preflight?league_id=1314695233040052224 \"HTTP/1.1 200 OK\"","request_id":"system"}
+ok
+test_provider_failures_are_sanitized_and_do_not_leak_secrets (tests.test_restoration_preflight_http.RestorationPreflightHTTPTests.test_provider_failures_are_sanitized_and_do_not_leak_secrets) ... {"timestamp":"2026-11-06T15:52:05.687348+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/restoration-preflight?league_id=1314695233040052224 \"HTTP/1.1 503 Service Unavailable\"","request_id":"system"}
+{"timestamp":"2026-11-06T15:52:05.689344+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/restoration-preflight?league_id=1314695233040052224 \"HTTP/1.1 503 Service Unavailable\"","request_id":"system"}
+{"timestamp":"2026-11-06T15:52:05.691261+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/restoration-preflight?league_id=1314695233040052224 \"HTTP/1.1 503 Service Unavailable\"","request_id":"system"}
+ok
+test_query_budget_and_catalog_are_private_without_provider_access (tests.test_restoration_preflight_http.RestorationPreflightHTTPTests.test_query_budget_and_catalog_are_private_without_provider_access) ... {"timestamp":"2026-11-06T15:52:05.693684+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/restoration-preflight?league_id=1314695233040052224&unknown=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx \"HTTP/1.1 400 Bad Request\"","request_id":"system"}
+{"timestamp":"2026-11-06T15:52:05.695992+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations \"HTTP/1.1 200 OK\"","request_id":"system"}
+ok
+test_snapshots_are_not_cached_and_do_not_grant_entry (tests.test_restoration_preflight_http.RestorationPreflightHTTPTests.test_snapshots_are_not_cached_and_do_not_grant_entry) ... {"timestamp":"2026-11-06T15:52:05.699823+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/restoration-preflight?league_id=1314695233040052224 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-06T15:52:05.701635+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/restoration-preflight?league_id=1314695233040052224 \"HTTP/1.1 200 OK\"","request_id":"system"}
+ok
+test_native_allocator_reclamation (unittest.loader._FailedTest.test_native_allocator_reclamation) ... ERROR
+
+======================================================================
+ERROR: test_native_allocator_reclamation (unittest.loader._FailedTest.test_native_allocator_reclamation)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: test_native_allocator_reclamation
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.14/unittest/loader.py", line 137, in loadTestsFromName
+    module = __import__(module_name)
+ModuleNotFoundError: No module named 'tests.test_native_allocator_reclamation'
+
+
+----------------------------------------------------------------------
+Ran 66 tests in 12.986s
+
+FAILED (errors=1)
