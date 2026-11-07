@@ -344,10 +344,11 @@ def rank(rows):
     return sorted(rows, key=rank_key)
 
 
-def zero_result_guidance(funnel, discoveries, workspace, *, projection_available):
+def zero_result_guidance(funnel, discoveries, workspace, *, projection_available, optional_count=0):
     """Summarize assessed limits and prepared search leads; never an offer."""
     counts = {key: funnel.counts[key] for key in (
         'hard_invalid', 'missing_evidence', 'counterparty_limited', 'strategically_rejected', 'filtered')}
+    counts['optional'] = optional_count
     text = 'No bilateral recommendation to show under this search’s strategy and filters.'
     descriptions = {
         'hard_invalid': 'unresolved roster-space or ownership requirements',
@@ -355,6 +356,7 @@ def zero_result_guidance(funnel, discoveries, workspace, *, projection_available
         'counterparty_limited': 'benefit to the other team was not established',
         'strategically_rejected': 'production, capital or Market cost was not justified',
         'filtered': 'offers excluded by filters or previously viewed families',
+        'optional': 'supported trade-offs were optional rather than a qualified improvement',
     }
     reasons = sorted(((count, key) for key, count in counts.items() if count), key=lambda row: (-row[0], row[1]))
     if reasons:

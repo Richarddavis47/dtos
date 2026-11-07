@@ -1683,7 +1683,11 @@ def _generate_recommended(data, payload):
     if _trade_search_boundary(data) != boundary:
         raise TradeInputError('canonical_evidence_changed', 'Canonical evidence changed during recommendation discovery. Refresh and try again.')
     verification_seconds = perf_counter() - verification_started
-    guidance = None if results else zero_result_guidance(funnel, discoveries, workspace, projection_available=projection_available)
+    # Optional rows remain inspectable, but do not suppress the explanation
+    # for a completed search with no qualified bilateral recommendations.
+    guidance = None if any(r['evaluation'].get('generated_trade_eligible') is True for r in results) else zero_result_guidance(
+        funnel, discoveries, workspace, projection_available=projection_available,
+        optional_count=sum(r.get('search_result_type') == 'OPTIONAL / LOWER-RANKED TRADE' for r in evaluated))
     return _with_lineup_details(data, {'workflow': 'recommended', 'count': len(results), 'results': results,
             'exploratory_results': funnel.explore(assets, excluded_families=excluded_families),
             'result_state': 'MISSING REQUIRED EVIDENCE' if not projection_available and not results else result_state(funnel, results), 'near_misses': funnel.near(),

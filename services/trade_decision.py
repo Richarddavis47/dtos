@@ -227,8 +227,12 @@ def decision_context(result, *, incoming=(), outgoing=(), _admissions=None, _lin
         )
     from services.trade_decision_summary import decision_summary
     two_sided = decision_summary(result, admissions, lineup_view=_lineup_view)
+    # Share the existing explanation vocabulary with cards and Evaluate. The
+    # lazy import avoids module setup work; this reads an already final verdict.
+    from services.trade_explanation import decision_lead
     return {
         **two_sided,
+        **decision_lead(result, final, admissions),
         "verdict": final["headline"],
         "final_decision": final,
         "qualification": qualification or final["qualification"],

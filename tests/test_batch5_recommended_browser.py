@@ -48,7 +48,9 @@ class RecommendedHandoffTests(unittest.TestCase):
                     page.get_by_role('button', name='Adopt alternative', exact=True).click()
                     self.assertEqual(searches[-1]['partner_roster_id'], 0)
                     self.assertIsNone(searches[-1]['asset_id'])
-                    page.get_by_text('No supported current catalyst is available.', exact=True).wait_for()
+                    # Absence of supported timing must not be presented as a
+                    # "Why now" rationale. The original handoff still works.
+                    self.assertNotIn('Why now', page.locator('#trade-result').inner_text())
                     page.locator('#trade-edit').click()
                     page.locator('#trade-adjust').click()
                     page.locator('#trade-apply-adjust').click()

@@ -52,7 +52,58 @@ REASONS = {
     'RESERVE_PRODUCTION_COST_WITHOUT_SUPPORTED_COMPENSATION': 'Useful replacement production declines without a material supported starter gain or Market compensation.',
     'RESERVE_QUALITY_UNAVAILABLE': 'Complete reserve-production evidence is unavailable; missing projections are not zero.',
     'LOW_COUNTERPARTY_PLAUSIBILITY': 'The accepted evidence gives the counterparty limited reason to consider this proposal; it does not predict their response.',
+    'MATERIAL_PRODUCTION_GAIN_WITH_DISCLOSED_ROSTER_COST': 'The supported production gain is material; the recorded roster and depth costs still matter.',
+    'SUPPORTED_DEPTH_GAIN_WITH_DISCLOSED_MARKET_COST': 'Supported replacement depth improves, with the recorded Market cost still part of the trade-off.',
 }
+
+
+def _reason_display(code, personal):
+    text = REASONS[code]
+    if personal and code not in {'NEUTRAL_SEVERE_MARKET_LOSS', 'LOW_COUNTERPARTY_PLAUSIBILITY'}:
+        text = text.replace('canonical Market', 'personal valuation').replace('Market', 'personal valuation')
+    return text
+
+
+def decision_lead(result, final, admissions):
+    """Describe the recorded verdict and rule, without deciding eligibility again."""
+    state = final['classification']
+    personal = bool(result.get('personal_value_evidence'))
+    if any(row['identity_state'] != 'compatible' or row['invalid_comparison']
+           for row in admissions.values()):
+        reason = 'The full source-compatible lineup comparison cannot be verified. Independently supported Market and cost evidence remains separate.'
+    elif state == 'HARD INVALID':
+        reason = (REASONS['OWNERSHIP_OR_IDENTITY_INVALID'] if result.get('legal') is False
+                  else REASONS['CUT_COST_UNRESOLVED'])
+    elif state == 'COUNTERPARTY LIMITED':
+        partner = (result.get('dimensions') or {}).get('counterparty_plausibility') or {}
+        blockers = {'COUNTERPARTY_PROJECTION_UNAVAILABLE', 'COUNTERPARTY_TRADEOFF_UNRESOLVED',
+                    'COUNTERPARTY_CAPACITY_UNRESOLVED', 'POOR_COUNTERPARTY_PACKAGE',
+                    'COUNTERPARTY_LINEUP_LOSS_WITHOUT_SUPPORTED_COMPENSATION', 'LOW_COUNTERPARTY_PLAUSIBILITY'}
+        reason = next((REASONS[c] for c in partner.get('reason_codes') or [] if c in blockers),
+                      partner.get('explanation') or 'A supported benefit or adequate compensation for the other team is not established.')
+    else:
+        trace = result.get('recommendation_trace') or {}
+        capital = ((result.get('dimensions') or {}).get('strategic_fit') or {}).get('active') or {}
+        capital_reason = (capital.get('capital_strategy_fit') or {}).get('explanation')
+        if capital_reason and personal:
+            capital_reason = capital_reason.replace('canonical Market', 'personal valuation').replace('Market', 'personal valuation')
+        reason = next((_reason_display(c, personal) for c in trace.get('rule_reasons') or [] if c in REASONS),
+                      capital_reason
+                      or final.get('qualification') or result.get('dominant_reason')
+                      or 'Review the supported trade-offs and evidence limitations below.')
+    if final['qualified']:
+        action = 'Preview the exact offer, review both teams’ costs and confirm the other manager’s motivation.'
+    elif state == 'HARD INVALID':
+        action = 'Resolve the recorded ownership or roster-space blocker before pursuing this package.'
+    elif state == 'COUNTERPARTY LIMITED':
+        action = 'Review their sacrifice and compensation; confirm their direction before pursuing this offer.'
+    elif state == 'MISSING REQUIRED EVIDENCE':
+        action = 'Review the named evidence gaps below. Changing a pick cannot supply missing projections.'
+    elif result.get('recommendation') in ('REJECT', 'NOT WORTH IT'):
+        action = 'Do not pursue this package on the recorded evidence. Review its costs before editing.'
+    else:
+        action = 'Compare the supported trade-offs. This is optional, not a qualified recommendation.'
+    return {'decisive_reason': reason, 'decision_next_step': action}
 
 
 def trade_explanation(result: dict, *, league_id: str, _admissions=None) -> Explanation:
@@ -67,10 +118,7 @@ def trade_explanation(result: dict, *, league_id: str, _admissions=None) -> Expl
     personal = bool(result.get('personal_value_evidence'))
 
     def reason_text(code):
-        text = REASONS[code]
-        if personal and code not in {'NEUTRAL_SEVERE_MARKET_LOSS', 'LOW_COUNTERPARTY_PLAUSIBILITY'}:
-            text = text.replace('canonical Market', 'personal valuation').replace('Market', 'personal valuation')
-        return text
+        return _reason_display(code, personal)
 
     def add(key, label, value, *, unit='classification', state=None, kind=K.DERIVED):
         evidence.append(EvidenceItem(key, label, kind, ctx, key, unit,
@@ -323,7 +371,17 @@ def _decision_primary(result, decision, admissions=None):
     else:
         market_html += paragraph('Known individual prices remain available; no complete comparable package total or advantage is established.')
     market_html += '<small>Current values, not trade-date grades. Market advantage is separate from strategy and lineup impact.</small></section>'
-    brief = '<section class="tw-decision" aria-label="Trade decision summary">' + market_html
+    # Partial/retained callers can have supported Market evidence without the
+    # new lead. Omit missing prose instead of inventing it or dropping prices.
+    lead = ''
+    if decision.get('decisive_reason') or decision.get('decision_next_step'):
+        lead = '<section class="tw-decision-lead" aria-label="Decision and next step">'
+        if decision.get('decisive_reason'):
+            lead += paragraph('Why this decision: ' + decision['decisive_reason'])
+        if decision.get('decision_next_step'):
+            lead += paragraph('Next step: ' + decision['decision_next_step'])
+        lead += '</section>'
+    brief = '<section class="tw-decision" aria-label="Trade decision summary">' + lead + market_html
     final = final_decision(result, _admissions=admissions)
     if not final['qualified'] and final['side_assessment'] in ('SMASH ACCEPT', 'WORTH PURSUING'):
         brief += paragraph('Your-side assessment only: ' + final['side_assessment'] + '. This is not the bilateral verdict.', 'tw-side-assessment')

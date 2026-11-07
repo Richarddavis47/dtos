@@ -214,6 +214,7 @@ class TradeMarketDisplayBrowserTests(unittest.TestCase):
                       'difference': float(Decimal(str(received)) - Decimal(str(sent)))}
             original = json.dumps(market, sort_keys=True)
             html = _decision_primary({'market_evidence': market}, decision)
+            self.assertNotIn('tw-decision-lead', html)
             self.assertIn('You send <b>' + manager_points(sent) + '</b>', html)
             self.assertIn('You receive <b>' + manager_points(received) + '</b>', html)
             if sent != received:
@@ -226,6 +227,11 @@ class TradeMarketDisplayBrowserTests(unittest.TestCase):
         self.assertIn('Incomplete · known 0', html)
         self.assertIn('Incomplete · known 620.12', html)
         self.assertNotIn('more current Market value', html)
+        reason_only = _decision_primary({'market_evidence': market},
+            {**decision, 'decisive_reason': 'Only the recorded price subtotal is supported.'})
+        self.assertIn('Why this decision: Only the recorded price subtotal is supported.', reason_only)
+        self.assertNotIn('Next step:', reason_only)
+        self.assertIn('Incomplete · known 0', reason_only)
 
     def test_fractional_balance_preview_and_workspace_use_same_canonical_display(self):
         # Controlled compatible canonical DTO values; not production prices.
