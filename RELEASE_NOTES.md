@@ -1,4 +1,4 @@
-# v1.22.23 / build 2238 — Release completed refresh ownership
+# v1.22.23 / build 2238 — Release obsolete maintenance references
 
 Resident-league maintenance now drops a finished refresh task before sleeping. A completed result or exception traceback can no longer keep a superseded league publication alive after a separate refresh replaces it. Current publications, legitimate readers, valid cached evidence and active work retain their existing owners. No runtime eviction or catalog sharing is introduced.
 
@@ -6,6 +6,8 @@ Cancellation drains the underlying writer even if cancellation repeats, then rel
 
 Source-compatible disposable controls reproduce obsolete snapshot retention before the correction and its release afterward. They are not live Granite recovery or proof of an earlier production failure. Normal entry still requires fresh admission. See docs/audits/RESIDENT_REFRESH_OWNERSHIP_2238.md.
 
+
+The global evidence scheduler also releases its full league-data reference after extracting season identity, before acquisition and the six-hour wait. This prevents a later default publication from leaving an obsolete source generation pinned by a scalar-only scheduling task. Current data, cadence and evidence acquisition remain unchanged.
 # v1.22.22 / build 2237 — Bounded league-cache string sharing
 
 Default startup and connected-league restoration now share equal short immutable strings within each individual JSON decode. Repeated source identities, provenance and disclosure text need fewer separate Python string objects. Mutable containers stay independent; the temporary bounded pool is discarded before publication. No global interning or cross-account cache is introduced.

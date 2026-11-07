@@ -527,6 +527,9 @@ async def refresh_global_evidence() -> None:
         await asyncio.sleep(delay)
         data = STATE.get("data") or {}
         season = (data.get("nfl_state") or {}).get("season")
+        # Keep only source season identity across ingestion and its long sleep.
+        # A later league publication must not leave this scheduler owning the old graph.
+        del data
         if not season or not lifecycle_coordinator.startup_complete():
             continue
         runtime_metrics.mark_background("global_evidence", "preparing")

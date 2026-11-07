@@ -60,7 +60,7 @@ def main():
     args = parser.parse_args()
     args.output.mkdir(parents=True, exist_ok=True)
     result = dict(
-        schema="resident-refresh-ownership-v1",
+        schema="resident-refresh-ownership-v2",
         python=sys.version,
         passed=False,
         cases=[],
@@ -83,6 +83,7 @@ def main():
         paths, identities = {}, {}
         fixture_time = datetime.now(timezone.utc).isoformat()
         result['fixture_cache_last_sync'] = fixture_time
+        result['fixture_season_context'] = 'nfl_state.season derived from each disposable league season; native rows unchanged'
         for name in ("oneqb", "superflex"):
             with (args.fixtures / (name + ".json")).open(encoding="utf8") as handle:
                 payload = json.load(handle)
@@ -90,6 +91,9 @@ def main():
                 str(payload["data"]["league"]["league_id"]),
                 int(payload["data"]["league"]["season"]),
             )
+            # Synthetic current-season identity for the real global scheduler.
+            # Derive it from the fixture league, never the machine's calendar.
+            payload["data"]["nfl_state"] = {"season": str(identities[name][1])}
             # Refresh only disposable cache-retrieval time, not native observation
             # clocks or facts. Actual admission uses each full written file size.
             payload["last_sync"] = fixture_time
@@ -463,6 +467,54 @@ def main():
             assert not runtime.background_tasks
             result["cases"].append(row)
 
+        async def run_global_owner():
+            runtime = LeagueRuntime(identities["oneqb"][0], status=RuntimeState.WARM)
+            assert restore(runtime, paths["oneqb", "first"], identities["oneqb"][1])
+            old = weakref.ref(runtime.state["data"])
+            digest = source_digest(runtime)
+            gate, calls = IntervalGate(), []
+
+            class ModuleProxy:
+                def __getattr__(self, key):
+                    return gate.sleep if key == "sleep" else getattr(asyncio, key)
+
+            async def ingest(season, path):
+                calls.append(season)
+                return {"status": "complete"}
+
+            # Source acquisition is mocked, not claimed as completed work. Both
+            # cache restorations and canonical publications below are real and
+            # retain their actual admission checks under the enforced limit.
+            assert lifecycle_coordinator.startup_complete()
+            with patch.object(dtos_app, "STATE", runtime.state), patch.object(
+                dtos_app, "asyncio", ModuleProxy()
+            ), patch(
+                "services.global_evidence_ingestion.ingest_in_background", new=ingest
+            ):
+                task = asyncio.create_task(dtos_app.refresh_global_evidence())
+                try:
+                    await gate.parked(1)
+                    gate.permits.put_nowait(None)
+                    await gate.parked(2)
+                    assert calls == [identities["oneqb"][1]]
+                    sample("global scheduler parked with scalar season")
+                    assert restore(runtime, paths["oneqb", "next"], identities["oneqb"][1])
+                    await settle()
+                    assert old() is None
+                    assert source_digest(runtime) == digest
+                    sample("global scheduler obsolete source released")
+                finally:
+                    task.cancel()
+                    await asyncio.gather(task, return_exceptions=True)
+                assert task.done()
+            await runtime.close()
+            await settle()
+            result["cases"].append(dict(
+                name="global-evidence", completed=True, source_digest=digest,
+                old_released_without_reader=True, source_acquisition_mocked=True,
+                source_restoration_completed=True, scheduler_cancelled=True,
+            ))
+
         async def run():
             gc.collect()
             release_unused_allocator_pages()
@@ -471,6 +523,7 @@ def main():
             await run_case("oneqb")
             await run_case("oneqb", failed=True)
             await run_case("superflex", reader=True)
+            await run_global_owner()
             assert not dtos_app.canonical_history_store._current
             assert lifecycle_coordinator.snapshot()["phase"] == "idle"
             assert not psutil.Process().children(recursive=True)
@@ -482,7 +535,7 @@ def main():
             passed=True,
             children_after=[],
             source_values_preserved=True,
-            scope="Three source-compatible disposable ownership cases; current/active contexts preserved. Not liveGranite or independent liveSleeper parity.",
+            scope="Four source-compatible disposable ownership cases; current/active contexts preserved. Global acquisition mocked; actual cache restoration/publication and admission remain real. Not liveGranite or independent liveSleeper parity.",
             limitations=[
                 "Fixture clocks normalized only on copies; no source facts changed.",
                 "Kernel lifetime peak includes fixture preparation,verification and bounded pressure. Stage samples distinguish publication and pressure; no decoder-only comparison claimed.",
