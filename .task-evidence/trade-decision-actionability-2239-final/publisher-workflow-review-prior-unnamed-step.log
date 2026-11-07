@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "/workspace/2239-trade-actionability/review-publisher-workflow.py", line 10, in <module>
+    run=next(s['run'] for s in jobs['canonical-release']['steps'] if s['name']=='Run unchanged ten-gate validator under actual 2 GiB');line=next(x for x in run.splitlines() if 'docker run --name' in x);args=shlex.split(line.rstrip(' \\'))
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/2239-trade-actionability/review-publisher-workflow.py", line 10, in <genexpr>
+    run=next(s['run'] for s in jobs['canonical-release']['steps'] if s['name']=='Run unchanged ten-gate validator under actual 2 GiB');line=next(x for x in run.splitlines() if 'docker run --name' in x);args=shlex.split(line.rstrip(' \\'))
+                                                                     ~^^^^^^^^
+KeyError: 'name'

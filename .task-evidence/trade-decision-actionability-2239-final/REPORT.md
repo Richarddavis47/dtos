@@ -1,0 +1,34 @@
+# Sealed Trade decision actionability validation — v1.22.24/build2239
+
+Recommended Trades and Evaluate now put the recorded decision reason and a practical next step before the longer evidence. The existing preview action follows the exact package and principal cost. No qualification, scoring, pricing or resource policy changed. This sealed report certifies validation before the guarded merge/publication; final publication and production receipts establish deployed status separately.
+
+Candidate `bc4a1eea45f5d0e68205343b2d6abfb2f2262244`; validated tree `0ca79a715f697147c8081d4d69f1afd7efca9bb4`. Baseline `9e9cca569e8c9fb80b1843db4ae8fb248cfcb971` / `7ac87bb9ff9f0da6186e50dedd0c93b9bd7bc727`. PR https://github.com/Richarddavis47/dtos/pull/328 .
+
+## Confirmed problems and correction
+
+At375×667,the first qualified fixture card put preview1298.39px below its top, after twenty direct paragraphs. The accepted policy reason existed but was buried behind generic wording. A completed search with optional offers also suppressed its existing main-limit explanation, and an unsupported catalyst list still produced a timing heading. The shared decision lead reuses recorded final verdicts and rule vocabulary. Missing lead fields remain optional for partial/legacy Market-only callers, preserving their supported prices.
+
+The same first-package preview is now498.39px below the375pxcardtop, an800pxreduction. It is603.39px at320pxand309.39px at1280px. Both teams’ full supported effects and conditions remain visible. Total card height increased1783.39→1983.39px; this is earlier action access, not a claim that the entire decision fits one screen. Native keyboard/Keep original, result focus and CDP touch passed with no overflow or obstruction,44pxminimum targets(64px at320px) and10.84:1buttoncontrast. Chromium emulation is not physical iPhone/Safari acceptance.
+
+A completed optional-only control has zero qualified recommendations, two optional offers and three exploratory alternatives. Its recorded main limit is117assessments whose production/capital/Market cost was not justified. Shop suggestions remain explicitly unqualified leads. Deferral, incomplete response, actual failure and completed zero-result states remain distinct.
+
+## Matched decisions and preserved intelligence
+
+In a single prepared disposable publication for each strategy, actual generated offers and direct Evaluate agree in verdict, bilateral eligibility, Neutral Market evidence and every weekly impact. Win Now, Retool and Rebuild each yield five qualified offers in the broader seven-franchise fixture; this is not a live or general success-rate claim. One supported Win Now exchange gives both legal lineups+6points. A separate+6.31user-side control keeps the other team's production sacrifice and unconfirmed intent explicit. The995-sent/75-received,+0.01marginal upgrade remainsREJECT. Missing partnerDEFprojection evidence remains missing while the supported user's result survives. No offer is guaranteed to be accepted.
+
+One-QB controls preserve QB/RB/WR/TE/twoFLEX/K/DEF; Superflex uses its own supported slots and scoring, without adding a dedicatedTErequirement. Both before/after lineups are independently optimized. Submitted Sleeper lineups stay separate. Neutral and partial Custom values, exact picks/original franchise, missing-versus-zero, provenance and source-generation guards remain intact. Protected scoring/valuation/optimizer/lifecycle modules are byte-unchanged; search enumeration/budgets are unchanged. Rendering introduces no provider or lineup solver work.
+
+## Mandatory validation and evidence
+
+- Final local Python3.14.3:4271tests, zero failure/error/skip; all ten canonical gates. Manifest640entries, all payload hashes verified. Enforced2,147,483,648bytes/no additionalswap, twoCPUs, no network, UID1000 in a clean writable checkout. Kernel lifetime peak2081005568bytes; elapsed3041.7s. Sampled/file-backed/anonymous accounting is recorded; this is not privateGranite profiling.
+- Final hosted canonical:4271tests and all ten gates; manifest644entries, originalZIP/API SHA256/size/CRC and every payload verified. Kernel peak2091888640bytes; elapsed4284.3s. All thirteen required hosted jobs passed; Product784executions. MyTeam, Welcome/security, beginner navigation, history, projection, Linux/Windows tooling and three Linux lifecycle modes are separately recorded.
+- Final source-bound native resource controls: actual completed recovery/publication, safe pressure deferral and relief, FOIS/Trade reserves, worker/cancellation/scratch cleanup and exact native0/-2.125scores. Four viewport and matched-case records have exact source identity. No source telemetry, reserve or threshold bypass. Fourteen noncanonical originals passed specialized guards; the canonical original is separately verified.
+- Initial70focused methods are precommit/superseded-source evidence. Renderer recovery35methods plus the extended original partial-context control passed before the final commit. Final full/canonical/hosted results independently cover the final tree. Publisher50guard methods, compilation, lint and workflow semantics pass; frozen-plan tests are rerun before dispatch. Original consoles and<=60kreadable parts accompany their checksums.
+
+The original source90Product KeyError and local548.48msFOISheartbeat failure are retained separately, as are cancelled full runs and failed author-side methods. The old heartbeat cause is unconfirmed; the isolated39.35mscontrol and complete final assertion success do not establish that cause or universal liveness. No FOIS source or500msassertion changed. Cancelled hosted90has no final result/manifest; these were never reconstructed or treated as passed. See PRIOR_ATTEMPTS.md and the independently downloadable prior-evidence package.
+
+## Production and acceptance boundary
+
+The public baseline and Render deployment were verified before editing. No production Trade search/evaluation, sync, cache clear, restart, FOIS rebuild or saved-setting write occurred. This session has no attached authenticated owner browser/RenderShell executor. Opera reports disconnected; Cloud capabilities are empty. MainChat's prior Render-localtoken200is supplied evidence; the unchanged external401was not retried. Live offer acceptance remainsHELD. The diagnostic preflight is advisory and distinct from Trade admission.
+
+This presentation release does not increase capacity or guarantee Granite entry. The2GiBcap,16×restoration allowance, FOIS768MiBandTrade256+128MiBpolicies remain unchanged; genuine deferral remains possible. Finite controls do not prove leak freedom or an explanation for earlier production503s. Use SCOUT_HANDOFF.md for one conditional safe live journey, preserve all source identity and stop on deferral. An empty qualified set can remain the correct result.

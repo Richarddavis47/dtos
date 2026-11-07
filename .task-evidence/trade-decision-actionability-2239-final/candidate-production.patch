@@ -1,0 +1,629 @@
+diff --git a/.github/workflows/product-browser.yml b/.github/workflows/product-browser.yml
+index d41747c8..5cf51141 100644
+--- a/.github/workflows/product-browser.yml
++++ b/.github/workflows/product-browser.yml
+@@ -35,7 +35,7 @@ jobs:
+         # This bounded CI allowance does not change any application timeout.
+         timeout-minutes: 25
+         run: |
+-          docker run --rm --memory=2g --memory-swap=2g --cpus=2 --network=none -e NODE_OPTIONS -e DTOS_TRADE_RESOURCE_BROWSER_EVIDENCE=.validation/trade-resource/evidence/browser -e DTOS_LINEUP_DETAIL_EVIDENCE=.validation/trade-resource/evidence/browser/lineups -v "$PWD:$PWD" -w "$PWD" -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0="$PWD" dtos-browser-validation python -m unittest -v tests.test_00_trade_simple_browser tests.test_franchise_timeline_coverage tests.test_franchise_timeline_browser tests.test_trade_reserve_evidence tests.test_trade_lineup_detail tests.test_trade_lineup_detail_browser tests.test_trade_resource_admission tests.test_trade_resource_browser tests.test_multileague_projection_browser tests.test_relative_personal_values tests.test_relative_personal_browser tests.test_decision_history_continuity_browser tests.test_personal_rankings_compatibility tests.test_personal_rankings_recovery_storage tests.test_personal_rankings_recovery_trade tests.test_personal_rankings_recovery_browser tests.test_personal_rankings_recovery_trade_browser tests.test_personal_rankings_partial_browser tests.test_dossier_plain_english tests.test_plain_english_home_depth tests.test_builder_plain_english tests.test_plain_english_preservation_final tests.test_plain_english_final_browser tests.test_plain_english_decisions tests.test_plain_english_browser tests.test_personal_rankings_availability tests.test_personal_rankings_availability_browser tests.test_personal_rankings tests.test_personal_rankings_store tests.test_personal_rankings_integration tests.test_personal_trade_workflows tests.test_personal_rankings_browser tests.test_personal_rankings_accessibility_browser tests.test_personal_trade_browser tests.test_market_trend_current_browser tests.test_standings_positioning tests.test_standings_positioning_browser tests.test_matchup_portraits_browser tests.test_matchups_phone tests.test_matchups_phone_browser tests.test_trade_projection_freshness tests.test_trade_projection_freshness_browser tests.test_trade_preview_scope_browser tests.test_trade_simple_discovery tests.test_fois_final_trust_browser tests.test_fois_evidence_integrity tests.test_fois_trust_browser tests.test_proposal_tray_browser tests.test_journey_evidence tests.test_journey_corrections_browser tests.test_dossier_status_browser tests.test_phone_visual_corrections_browser tests.test_phone_design_semantics tests.test_phone_design_browser tests.test_trade_calculator tests.test_trade_calculator_browser tests.test_calculator_balance_feedback_browser tests.test_calculator_stale_feedback_browser tests.test_trade_explicit_navigation_browser tests.test_trade_navigation_identity tests.test_trade_navigation_browser tests.test_player_actions tests.test_player_actions_browser tests.test_trade_performance tests.test_trade_construction_performance tests.test_trade_performance_browser tests.test_technical_details_browser tests.test_canonical_asset_facts tests.test_canonical_asset_facts_browser tests.test_product_browser_journey tests.test_matchup_browser_contract tests.test_trade_center_browser tests.test_trade_scout_state_browser tests.test_make_it_cheaper_browser tests.test_trade_center_accessibility tests.test_trade_workspace_browser tests.test_trade_workspace_batch1 tests.test_live_inspection tests.test_browser_fixture_images tests.test_visual_retirement tests.test_trade_decision_experience tests.test_trade_decision_browser tests.test_trade_decision_http_browser tests.test_trade_decision_standings_browser tests.test_batch6_trade_ux tests.test_trade_p2_browser tests.test_trade_final_evidence_browser tests.test_trade_endorsement_integrity tests.test_trade_missing_market_presentation tests.test_batch6_trade_explanation tests.test_league_entry_coordination
++          docker run --rm --memory=2g --memory-swap=2g --cpus=2 --network=none -e NODE_OPTIONS -e DTOS_TRADE_RESOURCE_BROWSER_EVIDENCE=.validation/trade-resource/evidence/browser -e DTOS_LINEUP_DETAIL_EVIDENCE=.validation/trade-resource/evidence/browser/lineups -v "$PWD:$PWD" -w "$PWD" -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0="$PWD" dtos-browser-validation python -m unittest -v tests.test_00_trade_simple_browser tests.test_trade_actionability tests.test_trade_actionability_browser tests.test_trade_conditional_summary tests.test_trade_recommendation_clarity tests.test_batch5_recommended_browser tests.test_franchise_timeline_coverage tests.test_franchise_timeline_browser tests.test_trade_reserve_evidence tests.test_trade_lineup_detail tests.test_trade_lineup_detail_browser tests.test_trade_resource_admission tests.test_trade_resource_browser tests.test_multileague_projection_browser tests.test_relative_personal_values tests.test_relative_personal_browser tests.test_decision_history_continuity_browser tests.test_personal_rankings_compatibility tests.test_personal_rankings_recovery_storage tests.test_personal_rankings_recovery_trade tests.test_personal_rankings_recovery_browser tests.test_personal_rankings_recovery_trade_browser tests.test_personal_rankings_partial_browser tests.test_dossier_plain_english tests.test_plain_english_home_depth tests.test_builder_plain_english tests.test_plain_english_preservation_final tests.test_plain_english_final_browser tests.test_plain_english_decisions tests.test_plain_english_browser tests.test_personal_rankings_availability tests.test_personal_rankings_availability_browser tests.test_personal_rankings tests.test_personal_rankings_store tests.test_personal_rankings_integration tests.test_personal_trade_workflows tests.test_personal_rankings_browser tests.test_personal_rankings_accessibility_browser tests.test_personal_trade_browser tests.test_market_trend_current_browser tests.test_standings_positioning tests.test_standings_positioning_browser tests.test_matchup_portraits_browser tests.test_matchups_phone tests.test_matchups_phone_browser tests.test_trade_projection_freshness tests.test_trade_projection_freshness_browser tests.test_trade_preview_scope_browser tests.test_trade_simple_discovery tests.test_fois_final_trust_browser tests.test_fois_evidence_integrity tests.test_fois_trust_browser tests.test_proposal_tray_browser tests.test_journey_evidence tests.test_journey_corrections_browser tests.test_dossier_status_browser tests.test_phone_visual_corrections_browser tests.test_phone_design_semantics tests.test_phone_design_browser tests.test_trade_calculator tests.test_trade_calculator_browser tests.test_calculator_balance_feedback_browser tests.test_calculator_stale_feedback_browser tests.test_trade_explicit_navigation_browser tests.test_trade_navigation_identity tests.test_trade_navigation_browser tests.test_player_actions tests.test_player_actions_browser tests.test_trade_performance tests.test_trade_construction_performance tests.test_trade_performance_browser tests.test_technical_details_browser tests.test_canonical_asset_facts tests.test_canonical_asset_facts_browser tests.test_product_browser_journey tests.test_matchup_browser_contract tests.test_trade_center_browser tests.test_trade_scout_state_browser tests.test_make_it_cheaper_browser tests.test_trade_center_accessibility tests.test_trade_workspace_browser tests.test_trade_workspace_batch1 tests.test_live_inspection tests.test_browser_fixture_images tests.test_visual_retirement tests.test_trade_decision_experience tests.test_trade_decision_browser tests.test_trade_decision_http_browser tests.test_trade_decision_standings_browser tests.test_batch6_trade_ux tests.test_trade_p2_browser tests.test_trade_final_evidence_browser tests.test_trade_endorsement_integrity tests.test_trade_missing_market_presentation tests.test_batch6_trade_explanation tests.test_league_entry_coordination
+           docker run --rm --memory=2g --memory-swap=2g --cpus=2 --network=none -e NODE_OPTIONS -v "$PWD:$PWD" -w "$PWD" -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0="$PWD" dtos-browser-validation python -m unittest -v tests.test_historical_evidence_weeks tests.test_fois_final_trust
+ 
+ 
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index 0552bc51..815bb544 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -1,3 +1,13 @@
++# v1.22.24 / build 2239 — Act on the recorded Trade decision
++
++Recommended Trades and Evaluate now lead with the existing assessment’s decisive reason and a practical next step. Phone recommendation cards place the preview action after the exact package and principal cost, ahead of the longer two-sided evidence. Both franchises’ supported lineup effects, conditional motivation, reserve costs and disclosures remain available.
++
++A completed search with optional offers but no qualified recommendation now retains its recorded main-limit explanation. Optional and exploratory offers remain separate. Timing headings require a supported, source-matching bye or playoff-window signal; general roster fit is not urgency.
++
++No qualification thresholds, valuation or scoring formulas, search limits, preferences, submitted lineups or resource policies changed. Neutral and Custom remain separate. Source-compatible fixtures cover matched recommendation/evaluation results, severe overpay rejection, incomplete evidence, one-QB K/DEF and Superflex lineups, preview/return/reload and four screen sizes. Fixture acceptance is not a live qualified offer.
++
++See docs/audits/TRADE_ACTIONABILITY_2239.md. Release remains contingent on all mandatory validation and guarded publication.
++
+ # v1.22.23 / build 2238 — Release obsolete maintenance references
+ 
+ Resident-league maintenance now drops a finished refresh task before sleeping. A completed result or exception traceback can no longer keep a superseded league publication alive after a separate refresh replaces it. Current publications, legitimate readers, valid cached evidence and active work retain their existing owners. No runtime eviction or catalog sharing is introduced.
+diff --git a/RELEASE_NOTES.md b/RELEASE_NOTES.md
+index c4497fc7..adca7b7f 100644
+--- a/RELEASE_NOTES.md
++++ b/RELEASE_NOTES.md
+@@ -1,3 +1,13 @@
++# v1.22.24 / build 2239 — Act on the recorded Trade decision
++
++Recommended Trades and Evaluate now lead with the existing assessment’s decisive reason and a practical next step. Phone recommendation cards place the preview action after the exact package and principal cost, ahead of the longer two-sided evidence. Both franchises’ supported lineup effects, conditional motivation, reserve costs and disclosures remain available.
++
++A completed search with optional offers but no qualified recommendation now retains its recorded main-limit explanation. Optional and exploratory offers remain separate. Timing headings require a supported, source-matching bye or playoff-window signal; general roster fit is not urgency.
++
++No qualification thresholds, valuation or scoring formulas, search limits, preferences, submitted lineups or resource policies changed. Neutral and Custom remain separate. Source-compatible fixtures cover matched recommendation/evaluation results, severe overpay rejection, incomplete evidence, one-QB K/DEF and Superflex lineups, preview/return/reload and four screen sizes. Fixture acceptance is not a live qualified offer.
++
++See docs/audits/TRADE_ACTIONABILITY_2239.md. Release remains contingent on all mandatory validation and guarded publication.
++
+ # v1.22.23 / build 2238 — Release obsolete maintenance references
+ 
+ Resident-league maintenance now drops a finished refresh task before sleeping. A completed result or exception traceback can no longer keep a superseded league publication alive after a separate refresh replaces it. Current publications, legitimate readers, valid cached evidence and active work retain their existing owners. No runtime eviction or catalog sharing is introduced.
+diff --git a/app_metadata.py b/app_metadata.py
+index bc720bb9..580caaef 100644
+--- a/app_metadata.py
++++ b/app_metadata.py
+@@ -7,10 +7,10 @@ from datetime import datetime, timezone
+ from pathlib import Path
+ 
+ APPLICATION_NAME = "DTOS"
+-VERSION = "1.22.23"
+-PRODUCT_VERSION = "1.22.23"
+-BUILD_NUMBER = 2238
+-RELEASE_CODENAME = "Resident Refresh Ownership"
++VERSION = "1.22.24"
++PRODUCT_VERSION = "1.22.24"
++BUILD_NUMBER = 2239
++RELEASE_CODENAME = "Trade Decision Actionability"
+ APPLICATION_STARTED_AT = datetime.now(timezone.utc).isoformat()
+ 
+ _REPOSITORY_ROOT = Path(__file__).resolve().parent
+diff --git a/docs/audits/TRADE_ACTIONABILITY_2239.md b/docs/audits/TRADE_ACTIONABILITY_2239.md
+new file mode 100644
+index 00000000..3049314f
+--- /dev/null
++++ b/docs/audits/TRADE_ACTIONABILITY_2239.md
+@@ -0,0 +1,23 @@
++# Trade decision actionability — build 2239
++
++Baseline: v1.22.23/build2238, commit 9e9cca569e8c9fb80b1843db4ae8fb248cfcb971, tree 7ac87bb9ff9f0da6186e50dedd0c93b9bd7bc727. Public readiness and repository identity were read before editing. No live Trade discovery, synchronization, preference write or private-cache inspection was performed.
++
++## Confirmed findings
++
++The actual generated qualified fixture offers and direct Evaluate shared their recommendation, bilateral eligibility, Neutral Market evidence and full weekly impact under the same prepared publication. There is no demonstrated verdict-engine discrepancy. The original comparison normalized JSON week-key types before comparing HTTP and Python objects; that transport distinction is not a numerical defect.
++
++At 375×667 the first qualified fixture card put its preview button 1,298.39 pixels below the top, after twenty direct paragraphs; the card was 1,783.39 pixels tall. The authoritative policy rule was available but the primary summary used generic wording. Optional result rows also suppressed the existing zero-qualified main-limit diagnosis. An empty catalyst list still produced a “Why now” heading.
++
++## Narrow correction
++
++Read the recorded final verdict and existing reason vocabulary once for a concise decision lead shared by cards and Evaluate. Keep costs, explicit picks, the two-sided summary and full legal-lineup evidence. Move the existing preview action before longer summaries; preview still does not adopt or submit an offer. Preserve unknown counterparty motivation and evidence-specific next steps. Show the existing bounded-search diagnosis when displayed offers are optional rather than qualified. No enumeration, ranking or eligibility change.
++
++Timing presentation accepts only a supported bye/playoff catalyst whose generation, weeks and numerical change match the already admitted comparison. Retained timing is not revalidated. General roster alignment and unstructured text are not labeled urgency.
++
++## Verification boundary
++
++Disposable retained-source fixtures, real authenticated HTTP and released JavaScript exercise a qualifying capital exchange, a 995/75 rejected marginal upgrade, meaningful current production, incomplete partner/reserve evidence, Neutral/Custom distinctions and actual one-QB K/DEF and Superflex legal slots. Both pre/post lineups remain independently optimized. Four viewports: 320×432, 375×667, 390×844 and 1280×900. Chromium is not physical iPhone/Safari acceptance.
++
++Original baseline probes, failed focused attempts and final logs must remain separate in task evidence. Full local canonical and required hosted gates must pass on the exact final tree before publication. The release evidence records actual results; this document does not predeclare them.
++
++Production live account acceptance requires an existing authorized session plus safe current resource admission. No credential workaround, repeated401attempt or forced heavy production workload is part of this correction. Missing live access is reported independently of fixture and public deployment verification.
+diff --git a/services/recommended_trade_search.py b/services/recommended_trade_search.py
+index 4c8dedb6..4a6e7736 100644
+--- a/services/recommended_trade_search.py
++++ b/services/recommended_trade_search.py
+@@ -344,10 +344,11 @@ def rank(rows):
+     return sorted(rows, key=rank_key)
+ 
+ 
+-def zero_result_guidance(funnel, discoveries, workspace, *, projection_available):
++def zero_result_guidance(funnel, discoveries, workspace, *, projection_available, optional_count=0):
+     """Summarize assessed limits and prepared search leads; never an offer."""
+     counts = {key: funnel.counts[key] for key in (
+         'hard_invalid', 'missing_evidence', 'counterparty_limited', 'strategically_rejected', 'filtered')}
++    counts['optional'] = optional_count
+     text = 'No bilateral recommendation to show under this search’s strategy and filters.'
+     descriptions = {
+         'hard_invalid': 'unresolved roster-space or ownership requirements',
+@@ -355,6 +356,7 @@ def zero_result_guidance(funnel, discoveries, workspace, *, projection_available
+         'counterparty_limited': 'benefit to the other team was not established',
+         'strategically_rejected': 'production, capital or Market cost was not justified',
+         'filtered': 'offers excluded by filters or previously viewed families',
++        'optional': 'supported trade-offs were optional rather than a qualified improvement',
+     }
+     reasons = sorted(((count, key) for key, count in counts.items() if count), key=lambda row: (-row[0], row[1]))
+     if reasons:
+diff --git a/services/trade_decision.py b/services/trade_decision.py
+index 87af2017..50b22a23 100644
+--- a/services/trade_decision.py
++++ b/services/trade_decision.py
+@@ -227,8 +227,12 @@ def decision_context(result, *, incoming=(), outgoing=(), _admissions=None, _lin
+         )
+     from services.trade_decision_summary import decision_summary
+     two_sided = decision_summary(result, admissions, lineup_view=_lineup_view)
++    # Share the existing explanation vocabulary with cards and Evaluate. The
++    # lazy import avoids module setup work; this reads an already final verdict.
++    from services.trade_explanation import decision_lead
+     return {
+         **two_sided,
++        **decision_lead(result, final, admissions),
+         "verdict": final["headline"],
+         "final_decision": final,
+         "qualification": qualification or final["qualification"],
+diff --git a/services/trade_explanation.py b/services/trade_explanation.py
+index f56d97f9..b85ff019 100644
+--- a/services/trade_explanation.py
++++ b/services/trade_explanation.py
+@@ -52,9 +52,60 @@ REASONS = {
+     'RESERVE_PRODUCTION_COST_WITHOUT_SUPPORTED_COMPENSATION': 'Useful replacement production declines without a material supported starter gain or Market compensation.',
+     'RESERVE_QUALITY_UNAVAILABLE': 'Complete reserve-production evidence is unavailable; missing projections are not zero.',
+     'LOW_COUNTERPARTY_PLAUSIBILITY': 'The accepted evidence gives the counterparty limited reason to consider this proposal; it does not predict their response.',
++    'MATERIAL_PRODUCTION_GAIN_WITH_DISCLOSED_ROSTER_COST': 'The supported production gain is material; the recorded roster and depth costs still matter.',
++    'SUPPORTED_DEPTH_GAIN_WITH_DISCLOSED_MARKET_COST': 'Supported replacement depth improves, with the recorded Market cost still part of the trade-off.',
+ }
+ 
+ 
++def _reason_display(code, personal):
++    text = REASONS[code]
++    if personal and code not in {'NEUTRAL_SEVERE_MARKET_LOSS', 'LOW_COUNTERPARTY_PLAUSIBILITY'}:
++        text = text.replace('canonical Market', 'personal valuation').replace('Market', 'personal valuation')
++    return text
++
++
++def decision_lead(result, final, admissions):
++    """Describe the recorded verdict and rule, without deciding eligibility again."""
++    state = final['classification']
++    personal = bool(result.get('personal_value_evidence'))
++    if any(row['identity_state'] != 'compatible' or row['invalid_comparison']
++           for row in admissions.values()):
++        reason = 'The full source-compatible lineup comparison cannot be verified. Independently supported Market and cost evidence remains separate.'
++    elif state == 'HARD INVALID':
++        reason = (REASONS['OWNERSHIP_OR_IDENTITY_INVALID'] if result.get('legal') is False
++                  else REASONS['CUT_COST_UNRESOLVED'])
++    elif state == 'COUNTERPARTY LIMITED':
++        partner = (result.get('dimensions') or {}).get('counterparty_plausibility') or {}
++        blockers = {'COUNTERPARTY_PROJECTION_UNAVAILABLE', 'COUNTERPARTY_TRADEOFF_UNRESOLVED',
++                    'COUNTERPARTY_CAPACITY_UNRESOLVED', 'POOR_COUNTERPARTY_PACKAGE',
++                    'COUNTERPARTY_LINEUP_LOSS_WITHOUT_SUPPORTED_COMPENSATION', 'LOW_COUNTERPARTY_PLAUSIBILITY'}
++        reason = next((REASONS[c] for c in partner.get('reason_codes') or [] if c in blockers),
++                      partner.get('explanation') or 'A supported benefit or adequate compensation for the other team is not established.')
++    else:
++        trace = result.get('recommendation_trace') or {}
++        capital = ((result.get('dimensions') or {}).get('strategic_fit') or {}).get('active') or {}
++        capital_reason = (capital.get('capital_strategy_fit') or {}).get('explanation')
++        if capital_reason and personal:
++            capital_reason = capital_reason.replace('canonical Market', 'personal valuation').replace('Market', 'personal valuation')
++        reason = next((_reason_display(c, personal) for c in trace.get('rule_reasons') or [] if c in REASONS),
++                      capital_reason
++                      or final.get('qualification') or result.get('dominant_reason')
++                      or 'Review the supported trade-offs and evidence limitations below.')
++    if final['qualified']:
++        action = 'Preview the exact offer, review both teams’ costs and confirm the other manager’s motivation.'
++    elif state == 'HARD INVALID':
++        action = 'Resolve the recorded ownership or roster-space blocker before pursuing this package.'
++    elif state == 'COUNTERPARTY LIMITED':
++        action = 'Review their sacrifice and compensation; confirm their direction before pursuing this offer.'
++    elif state == 'MISSING REQUIRED EVIDENCE':
++        action = 'Review the named evidence gaps below. Changing a pick cannot supply missing projections.'
++    elif result.get('recommendation') in ('REJECT', 'NOT WORTH IT'):
++        action = 'Do not pursue this package on the recorded evidence. Review its costs before editing.'
++    else:
++        action = 'Compare the supported trade-offs. This is optional, not a qualified recommendation.'
++    return {'decisive_reason': reason, 'decision_next_step': action}
++
++
+ def trade_explanation(result: dict, *, league_id: str, _admissions=None) -> Explanation:
+     admissions = _admissions or completed_lineup_admissions(result)
+     provenance = result.get('provenance') or {}
+@@ -67,10 +118,7 @@ def trade_explanation(result: dict, *, league_id: str, _admissions=None) -> Expl
+     personal = bool(result.get('personal_value_evidence'))
+ 
+     def reason_text(code):
+-        text = REASONS[code]
+-        if personal and code not in {'NEUTRAL_SEVERE_MARKET_LOSS', 'LOW_COUNTERPARTY_PLAUSIBILITY'}:
+-            text = text.replace('canonical Market', 'personal valuation').replace('Market', 'personal valuation')
+-        return text
++        return _reason_display(code, personal)
+ 
+     def add(key, label, value, *, unit='classification', state=None, kind=K.DERIVED):
+         evidence.append(EvidenceItem(key, label, kind, ctx, key, unit,
+@@ -323,7 +371,17 @@ def _decision_primary(result, decision, admissions=None):
+     else:
+         market_html += paragraph('Known individual prices remain available; no complete comparable package total or advantage is established.')
+     market_html += '<small>Current values, not trade-date grades. Market advantage is separate from strategy and lineup impact.</small></section>'
+-    brief = '<section class="tw-decision" aria-label="Trade decision summary">' + market_html
++    # Partial/retained callers can have supported Market evidence without the
++    # new lead. Omit missing prose instead of inventing it or dropping prices.
++    lead = ''
++    if decision.get('decisive_reason') or decision.get('decision_next_step'):
++        lead = '<section class="tw-decision-lead" aria-label="Decision and next step">'
++        if decision.get('decisive_reason'):
++            lead += paragraph('Why this decision: ' + decision['decisive_reason'])
++        if decision.get('decision_next_step'):
++            lead += paragraph('Next step: ' + decision['decision_next_step'])
++        lead += '</section>'
++    brief = '<section class="tw-decision" aria-label="Trade decision summary">' + lead + market_html
+     final = final_decision(result, _admissions=admissions)
+     if not final['qualified'] and final['side_assessment'] in ('SMASH ACCEPT', 'WORTH PURSUING'):
+         brief += paragraph('Your-side assessment only: ' + final['side_assessment'] + '. This is not the bilateral verdict.', 'tw-side-assessment')
+diff --git a/services/trade_intelligence.py b/services/trade_intelligence.py
+index 5aedfa5a..f9f7c936 100644
+--- a/services/trade_intelligence.py
++++ b/services/trade_intelligence.py
+@@ -1683,7 +1683,11 @@ def _generate_recommended(data, payload):
+     if _trade_search_boundary(data) != boundary:
+         raise TradeInputError('canonical_evidence_changed', 'Canonical evidence changed during recommendation discovery. Refresh and try again.')
+     verification_seconds = perf_counter() - verification_started
+-    guidance = None if results else zero_result_guidance(funnel, discoveries, workspace, projection_available=projection_available)
++    # Optional rows remain inspectable, but do not suppress the explanation
++    # for a completed search with no qualified bilateral recommendations.
++    guidance = None if any(r['evaluation'].get('generated_trade_eligible') is True for r in results) else zero_result_guidance(
++        funnel, discoveries, workspace, projection_available=projection_available,
++        optional_count=sum(r.get('search_result_type') == 'OPTIONAL / LOWER-RANKED TRADE' for r in evaluated))
+     return _with_lineup_details(data, {'workflow': 'recommended', 'count': len(results), 'results': results,
+             'exploratory_results': funnel.explore(assets, excluded_families=excluded_families),
+             'result_state': 'MISSING REQUIRED EVIDENCE' if not projection_available and not results else result_state(funnel, results), 'near_misses': funnel.near(),
+diff --git a/static/js/trade_workspace.js b/static/js/trade_workspace.js
+index 77a6c54a..520549dc 100644
+--- a/static/js/trade_workspace.js
++++ b/static/js/trade_workspace.js
+@@ -709,6 +709,14 @@
+         target.append(node('p', line, key === 'decision_conditions' ? 'tw-drawback' : ''));
+     }
+   }
++  function appendDecisionLead(target, decision) {
++    if (!decision.decisive_reason && !decision.decision_next_step) return;
++    const lead = node('section', null, 'tw-decision-lead');
++    lead.setAttribute('aria-label', 'Decision and next step');
++    if (decision.decisive_reason) lead.append(node('p', 'Why this decision: ' + decision.decisive_reason));
++    if (decision.decision_next_step) lead.append(node('p', 'Next step: ' + decision.decision_next_step));
++    target.append(lead);
++  }
+   function decisionPresentation(e) {
+     const decision = {...(e.decision_context || {})};
+     const row = value => {
+@@ -951,14 +959,17 @@
+       if (e.legality?.execution_status) { const detail = node('details'); detail.append(node('summary', 'Previous execution evidence · not current'), node('p', 'Previous execution assessment (not current): ' + e.legality.execution_status)); out.append(detail); }
+     }
+     if (opportunity) {
+-      out.append(node('h4', 'Why now · supported context'));
+-      for (const c of opportunity.why_now?.catalysts || []) out.append(node('p', `${c.side} · ${c.horizon.replaceAll('_', ' ')}: ${displayPoints(catalystDelta(c, decision))}`), node('small', c.limitation));
+-      if (!opportunity.why_now?.catalysts?.length) out.append(node('p', 'No supported current catalyst is available.'));
++      const timing = opportunity.why_now?.availability === 'supported_current_state'
++        ? (opportunity.why_now.catalysts || []).filter(c => c.availability === 'supported'
++          && ['UPCOMING_BYE_LINEUP_FIT', 'SUPPORTED_PLAYOFF_WINDOW_FIT'].includes(c.type)
++          && catalystDelta(c, decision) !== null) : [];
++      if (timing.length) out.append(node('h4', retained ? 'Timing context at assessment · not revalidated' : 'Why now · supported context'));
++      for (const c of timing) out.append(node('p', `${c.side} · ${c.horizon.replaceAll('_', ' ')}: ${displayPoints(catalystDelta(c, decision))}`), node('small', c.limitation));
+       if (opportunity.stable_opportunity_reasons?.length) {
+         out.append(node('h4', 'Supported trade fit — not urgency'));
+         for (const c of opportunity.stable_opportunity_reasons) out.append(node('p', `${c.side} · ${c.horizon.replaceAll('_', ' ')}: ${displayPoints(catalystDelta(c, decision))}`));
+       }
+-    } else if (e.why_now) out.append(node('h4', 'Why now'), node('p', e.why_now));
++    } else if (e.why_now) out.append(node('h4', 'Recorded trade context · not a timing signal'), node('p', e.why_now));
+     if (e.major_limitations?.length) out.append(node('h4', 'Evidence limitations'), node('p', e.major_limitations.join(', ').replaceAll('_', ' ')));
+     if (context) {
+       const detail = node('details'); detail.append(node('summary', 'Assessment source & strategy context'));
+@@ -1141,6 +1152,7 @@
+     if (matches?.avoid_received?.length) card.append(node('p', 'Includes an asset you prefer to avoid. This soft preference has not changed the trade facts.', 'tw-drawback'));
+     const decision = decisionPresentation(e);
+     if (decision.qualification) card.append(node('p', decision.qualification, 'tw-verdict-qualification'));
++    appendDecisionLead(card, decision);
+     if (row.repair_type) card.append(node('p', row.repair_type));
+     if (row.adjustment_evidence?.concept === 'strictly_lower_canonical_outgoing_market_cost') {
+       const cost = row.adjustment_evidence;
+@@ -1153,6 +1165,7 @@
+       ...(!decision.your_side_summary ? [node('p', 'Why this helps me: ' + (decision.summary || e.why_you_would_do_it || e.dominant_reason || 'Review the supported evidence.'))] : []),
+       node('p', 'Major drawback: ' + (decision.main_cost || e.major_drawback || e.major_risks?.join('; ').replaceAll('_', ' ') || e.major_limitations?.join('; ').replaceAll('_', ' ') || (row.proposal.preview_context?.restored ? 'Unavailable in retained context. Reevaluate for supported costs.' : 'No material drawback identified in available evidence.')), 'tw-drawback'),
+       ...(!decision.their_side_summary ? [node('p', 'Counterparty: ' + (decision.partner_summary || e.counterparty_summary || e.why_they_would_do_it || e.dimensions?.counterparty_plausibility?.explanation || 'Review the separate bilateral evidence.'))] : []));
++    if (!preview) { const b = node('button', 'Open editable offer: preview'); b.type = 'button'; b.className = 'tw-next-action primary'; b.onclick = () => previewOffer(row); card.append(b); }
+     appendDecisionSummary(card, decision);
+     for (const id of [...row.proposal.assets_sent, ...row.proposal.assets_received]) { const protection = lockDetail(id); if (protection) card.append(protection); }
+     for (const pick of e.dimensions?.strategic_fit?.active?.future_capital?.sent || []) {
+@@ -1175,7 +1188,6 @@
+       if (e.provenance?.evaluation_id) detail.append(node('small', 'Original assessment: ' + e.provenance.evaluation_id));
+       if (detail.childElementCount > 1) card.append(detail);
+     }
+-    if (!preview) { const b = node('button', 'Open editable offer: preview'); b.type = 'button'; b.className = 'tw-next-action primary'; b.onclick = () => previewOffer(row); card.append(b); }
+     if (e.explanation_html) {
+       const detail = node('details'); detail.append(node('summary', 'Why this offer · evidence and risks'));
+       const parsed = parsedExplanation(e);
+diff --git a/tests/test_batch5_recommended_browser.py b/tests/test_batch5_recommended_browser.py
+index d57b41e3..da89d1a0 100644
+--- a/tests/test_batch5_recommended_browser.py
++++ b/tests/test_batch5_recommended_browser.py
+@@ -48,7 +48,9 @@ class RecommendedHandoffTests(unittest.TestCase):
+                     page.get_by_role('button', name='Adopt alternative', exact=True).click()
+                     self.assertEqual(searches[-1]['partner_roster_id'], 0)
+                     self.assertIsNone(searches[-1]['asset_id'])
+-                    page.get_by_text('No supported current catalyst is available.', exact=True).wait_for()
++                    # Absence of supported timing must not be presented as a
++                    # "Why now" rationale. The original handoff still works.
++                    self.assertNotIn('Why now', page.locator('#trade-result').inner_text())
+                     page.locator('#trade-edit').click()
+                     page.locator('#trade-adjust').click()
+                     page.locator('#trade-apply-adjust').click()
+diff --git a/tests/test_trade_actionability.py b/tests/test_trade_actionability.py
+new file mode 100644
+index 00000000..582665cf
+--- /dev/null
++++ b/tests/test_trade_actionability.py
+@@ -0,0 +1,114 @@
++"""Prepared, bilateral evidence -> concise presentation; no new trade policy."""
++from copy import deepcopy
++import unittest
++from unittest.mock import patch
++
++from services.trade_decision import decision_context
++from services.trade_explanation import REASONS, render_trade_explanation
++from tests import test_trade_recommendation_clarity as fixtures
++from tests import test_trade_lineup_detail as lineups
++
++
++class TradeActionabilityTests(unittest.TestCase):
++    def fixture(self):
++        f = fixtures.RecommendationClarityTests()
++        f.setUp()
++        self.addCleanup(f.doCleanups)
++        return f
++
++    def test_recorded_rule_leads_both_views_without_changing_the_evaluation(self):
++        f = self.fixture()
++        for strategy in ('WIN NOW', 'RETOOL', 'REBUILD'):
++            e = f.evaluate(strategy=strategy)
++            original = deepcopy(e)
++            with patch('services.sleeper.sleeper_get', side_effect=AssertionError('No presentation acquisition')), \
++                 patch('src.core.trade_intelligence.lineup.optimal_legal_lineup', side_effect=AssertionError('No presentation optimization')):
++                d = decision_context(e)
++                html = render_trade_explanation(e, league_id='league-1')
++            self.assertEqual(e, original)
++            self.assertIn(d['decisive_reason'], html)
++            self.assertIn(d['decision_next_step'], html)
++            self.assertLess(html.index('Why this decision:'), html.index('Neutral Market'))
++            self.assertIn('-6.31', d['their_side_summary'])
++            self.assertIn('strategy is unconfirmed', d['decision_conditions'])
++
++    def test_expensive_marginal_gain_keeps_the_existing_severe_loss_rejection(self):
++        f = self.fixture()
++        f.f.f.prices(a=995, c=75)
++        f.f.f.points['c'] = 20.01
++        f.f.f.publish()
++        e = f.evaluate(assets_sent=['a'], assets_received=['c'])
++        self.assertEqual(e['recommendation'], 'REJECT')
++        self.assertFalse(e['generated_trade_eligible'])
++        self.assertEqual(e['decision_context']['decisive_reason'], REASONS['SEVERE_MARKET_LOSS'])
++        self.assertIn('Do not pursue', e['decision_context']['decision_next_step'])
++        self.assertEqual(e['market_evidence']['sent']['total'], 995)
++        self.assertEqual(e['market_evidence']['received']['total'], 75)
++
++    def test_incompatible_lineup_cannot_supply_a_positive_decision_reason(self):
++        e = self.fixture().evaluate()
++        e['multi_horizon_impact']['projection_generation'] = 'foreign'
++        d = decision_context(e)
++        self.assertIn('cannot be verified', d['decisive_reason'])
++        self.assertIsNone(d['lineup']['delta'])
++        self.assertNotIn('supported production gain', d['decisive_reason'])
++
++    def test_counterparty_limit_never_uses_a_positive_reason_as_its_blocker(self):
++        f = self.fixture()
++        f.test_real_custom_pick_exchange_keeps_neutral_counterparty_veto()
++        e = f.limited
++        e['dimensions']['counterparty_plausibility']['reason_codes'] = [
++            'SUPPORTED_COUNTERPARTY_BENEFIT', 'LOW_COUNTERPARTY_PLAUSIBILITY']
++        d = decision_context(e)
++        self.assertEqual(d['verdict'], 'COUNTERPARTY LIMITED')
++        self.assertEqual(d['decisive_reason'], REASONS['LOW_COUNTERPARTY_PLAUSIBILITY'])
++        self.assertIn('confirm their direction', d['decision_next_step'])
++
++    def test_custom_rule_names_personal_cost_without_relabeling_neutral_prices(self):
++        f = self.fixture()
++        f.f.f.prices(a=995, c=75)
++        e = f.evaluate(assets_sent=['a'], assets_received=['c'])
++        e['personal_value_evidence'] = {'unit': 'personal_rank_slot_value', 'availability': 'partial'}
++        d = decision_context(e)
++        self.assertIn('personal valuation', d['decisive_reason'])
++        self.assertIn('Neutral Market: 995 sent / 75 received', d['your_side_summary'])
++
++    def test_one_qb_k_def_and_superflex_keep_their_independent_legal_lineups(self):
++        f = lineups.TradeLineupDetailTests()
++        f.setUp()
++        self.addCleanup(f.doCleanups)
++        from services.trade_lineup_detail import lineup_detail_view
++        for superflex in (False, True):
++            if superflex:
++                f.f.test_superflex_without_dedicated_te_preserves_legal_scoring()
++            e = f.evaluate()
++            original = deepcopy(e)
++            html = render_trade_explanation(e, league_id=e['multi_horizon_impact']['league_id'])
++            for side in ('active', 'partner'):
++                for phase in ('pre', 'post'):
++                    p = lineup_detail_view(e)['sides'][side][8]['phases'][phase]
++                    self.assertEqual(p['state'], 'complete')
++                    slots = [r['slot'] for r in p['entries']]
++                    if superflex:
++                        self.assertIn('SUPER_FLEX', slots)
++                        self.assertNotIn('TE', slots)
++                    else:
++                        self.assertIn('K', slots)
++                        self.assertIn('DEF', slots)
++                        self.assertEqual(slots.count('FLEX'), 2)
++                    self.assertAlmostEqual(sum(r['projected_points'] for r in p['entries']), p['total'])
++            self.assertIn('not your submitted Sleeper starters', html)
++            self.assertEqual(e, original)
++
++    def test_missing_reserve_evidence_remains_a_named_limit_not_a_zero(self):
++        f = lineups.TradeLineupDetailTests()
++        f.setUp()
++        self.addCleanup(f.doCleanups)
++        f.f.feed = [r for r in f.f.feed if r['player_id'] != '2-9']
++        f.f.publish()
++        e = f.evaluate()
++        d = e['decision_context']
++        self.assertIn('cannot', d['their_side_summary'])
++        self.assertIn('adding a pick cannot fix missing projections', d['evidence_next_action'])
++        self.assertIn('a missing reserve effect is not zero', d['their_side_summary'])
++        self.assertFalse(e['generated_trade_eligible'])
+diff --git a/tests/test_trade_actionability_browser.py b/tests/test_trade_actionability_browser.py
+new file mode 100644
+index 00000000..49cca5f6
+--- /dev/null
++++ b/tests/test_trade_actionability_browser.py
+@@ -0,0 +1,147 @@
++"""Real authenticated HTTP and released JS, using disposable prepared evidence."""
++import json
++import os
++from pathlib import Path
++import unittest
++from unittest.mock import patch
++
++from playwright.sync_api import sync_playwright
++from services.trade_intelligence import evaluate_trade_request
++from tests import test_trade_workflow_experience as workflows
++from tools.validation.browser_runtime import launch_chromium
++
++
++class TradeActionabilityBrowserTests(unittest.TestCase):
++    def fixture(self):
++        h = workflows.TradeWorkflowExperienceTests()
++        f = h.fixture()
++        self.addCleanup(h.doCleanups)
++        return h, f
++
++    def test_qualified_offer_preview_evaluate_and_return_at_four_widths(self):
++        h, f = self.fixture()
++        evidence = []
++        with sync_playwright() as pw:
++            browser = launch_chromium(pw, headless=True)
++            try:
++                for width, height in ((320, 432), (375, 667), (390, 844), (1280, 900)):
++                    with self.subTest(width=width):
++                        page, records, _, errors, _ = h.page(browser, f, width, height)
++                        h.ready(page)
++                        self.assertEqual(records, [])  # navigation is not discovery
++                        page.select_option('#trade-strategy', 'REBUILD')
++                        page.locator('#trade-find').click()
++                        h.complete(page)
++                        body = records[-1]['body']
++                        self.assertTrue(body['results'])
++                        row = next(r for r in body['results'] if r['evaluation']['generated_trade_eligible'])
++                        e, proposal = row['evaluation'], row['proposal']
++                        again = evaluate_trade_request(f.f.data, {**proposal, 'strategy': 'REBUILD'}, projection_reader=f.source.reader)['evaluation']
++                        for key in ('recommendation', 'generated_trade_eligible', 'market_evidence', 'multi_horizon_impact'):
++                            self.assertEqual(json.loads(json.dumps(e[key])), json.loads(json.dumps(again[key])))
++                        card = page.locator('.tw-offer').first
++                        d = e['decision_context']
++                        self.assertIn(d['decisive_reason'], card.inner_text())
++                        self.assertIn(d['decision_next_step'], card.inner_text())
++                        for key in ('your_side_summary', 'their_side_summary', 'decision_conditions'):
++                            for line in d[key].splitlines():
++                                self.assertIn(line, card.inner_text())
++                        geometry = card.evaluate('e=>({action:e.querySelector(".tw-next-action").getBoundingClientRect().top-e.getBoundingClientRect().top,lead:e.querySelector(".tw-decision-lead").getBoundingClientRect().top-e.getBoundingClientRect().top})')
++                        self.assertLess(geometry['action'], 850)
++                        self.assertLess(geometry['lead'], geometry['action'])
++                        self.assertTrue(card.locator(':scope > .tw-next-action').evaluate('e=>Boolean(e.compareDocumentPosition(Array.from(e.parentNode.children).find(x=>x.textContent.startsWith("Your team:"))) & Node.DOCUMENT_POSITION_FOLLOWING)'))
++                        self.assertLessEqual(page.evaluate('document.documentElement.scrollWidth'), width)
++                        card.locator(':scope > .tw-next-action').click()
++                        preview = page.locator('#trade-result')
++                        self.assertIn(d['decisive_reason'], preview.inner_text())
++                        self.assertIn(d['verdict'], preview.inner_text())
++                        page.get_by_role('button', name='Keep original', exact=True).click()
++                        self.assertEqual(page.locator('#trade-strategy').input_value(), 'REBUILD')
++                        self.assertEqual(len(records), 1)
++                        page.locator('.tw-offer').first.locator(':scope > .tw-next-action').click()
++                        page.get_by_role('button', name='Adopt alternative', exact=True).click()
++                        self.assertIn(d['decisive_reason'], page.locator('#trade-result').inner_text())
++                        page.get_by_role('button', name='Reevaluate Trade', exact=True).click()
++                        page.wait_for_function("['fresh_complete','fresh_incomplete'].includes(document.querySelector('#trade-result').dataset.assessmentState)")
++                        evaluated = next(r for r in reversed(records) if r['path'] == '/api/trades/evaluate')
++                        self.assertEqual(evaluated['status'], 200)
++                        self.assertEqual(evaluated['payload']['assets_sent'], proposal['assets_sent'])
++                        self.assertEqual(evaluated['payload']['assets_received'], proposal['assets_received'])
++                        self.assertEqual(evaluated['body']['evaluation']['decision_context']['verdict'], d['verdict'])
++                        self.assertIn(d['decisive_reason'], page.locator('#trade-result').inner_text())
++                        # Existing workspace retention, not another navigation/history system.
++                        page.reload()
++                        page.wait_for_function("!document.querySelector('#trade-context').textContent.includes('Loading')")
++                        self.assertEqual(page.locator('#trade-strategy').input_value(), 'REBUILD')
++                        self.assertIn(d['verdict'], page.locator('#trade-result').inner_text())
++                        self.assertEqual(len([r for r in records if r['path'] == '/api/trades/generate']), 1)
++                        self.assertEqual(errors, [])
++                        evidence.append({'viewport': [width, height], 'geometry': geometry, 'proposal': proposal, 'verdict': d['verdict'], 'matched_numeric_fields': True, 'errors': errors})
++                        target = os.environ.get('DTOS_TRADE_ACTIONABILITY_EVIDENCE')
++                        if target:
++                            Path(target).mkdir(parents=True, exist_ok=True)
++                            page.screenshot(path=str(Path(target, f'evaluate-{width}.png')), full_page=True)
++                        page.close()
++            finally:
++                browser.close()
++        target = os.environ.get('DTOS_TRADE_ACTIONABILITY_EVIDENCE')
++        if target:
++            Path(target, 'matched-journeys.json').write_text(json.dumps(evidence, indent=2) + '\n')
++
++    def test_completed_zero_qualified_has_recorded_diagnosis_and_separate_alternatives(self):
++        h, f = self.fixture()
++        with sync_playwright() as pw:
++            browser = launch_chromium(pw, headless=True)
++            try:
++                page, records, _, errors, _ = h.page(browser, f)
++                h.ready(page)
++                page.select_option('#trade-strategy', 'RETOOL')
++                page.locator('#trade-find').click()
++                h.complete(page)
++                body = records[-1]['body']
++                self.assertFalse(any(r['evaluation']['generated_trade_eligible'] for r in body['results']))
++                self.assertIn('No qualified recommendations', page.locator('#trade-result').inner_text())
++                self.assertIn(body['zero_result_guidance']['message'], page.locator('#trade-result').inner_text())
++                self.assertIn('Main limit:', body['quiet_state'])
++                self.assertTrue(page.get_by_role('region', name='Other evaluated offers · not qualified').count())
++                self.assertNotIn('Why now', page.locator('#trade-result').inner_text())
++                self.assertNotIn('temporarily deferred', page.locator('#recommendation-status').inner_text())
++                self.assertEqual(errors, [])
++            finally:
++                browser.close()
++
++    def test_timing_heading_requires_a_supported_matching_calendar_signal(self):
++        h, f = self.fixture()
++        from services.recommended_trade_search import surface_evidence
++        for kind, expected in (('valid', True), ('wrong_generation', False), ('roster_fit', False), ('unavailable', False)):
++            def explanatory_fixture(row):
++                opportunity = surface_evidence(row)
++                d = row['evaluation']['decision_context']
++                weeks = d['lineup']['weeks']
++                catalyst = dict(type='UPCOMING_BYE_LINEUP_FIT', side='active', horizon='current_week',
++                    availability='supported', generation=d['lineup_source_generation'], weeks=weeks,
++                    delta=d['lineup_weekly_comparisons']['active'][str(weeks[0])], limitation='Calendar fixture; not a live timing claim.')
++                if kind == 'wrong_generation':
++                    catalyst['generation'] = 'foreign'
++                if kind == 'roster_fit':
++                    catalyst['type'] = 'CURRENT_COMPETITIVE_WINDOW_ALIGNMENT'
++                opportunity['why_now'] = dict(availability='unavailable' if kind == 'unavailable' else 'supported_current_state', catalysts=[catalyst])
++                return opportunity
++
++            with self.subTest(kind=kind), patch('services.recommended_trade_search.surface_evidence', side_effect=explanatory_fixture), sync_playwright() as pw:
++                browser = launch_chromium(pw, headless=True)
++                try:
++                    page, _, _, errors, _ = h.page(browser, f)
++                    h.ready(page)
++                    page.select_option('#trade-strategy', 'REBUILD')
++                    page.locator('#trade-find').click()
++                    h.complete(page)
++                    page.locator('.tw-offer').first.locator(':scope > .tw-next-action').click()
++                    page.get_by_role('button', name='Adopt alternative', exact=True).click()
++                    # Adopted evidence is deliberately retained, never current.
++                    text = page.locator('#trade-result').inner_text()
++                    self.assertEqual('Timing context at assessment · not revalidated' in text, expected)
++                    self.assertNotIn('Why now · supported context', text)
++                    self.assertEqual(errors, [])
++                finally:
++                    browser.close()
+diff --git a/tests/test_trade_final_evidence_browser.py b/tests/test_trade_final_evidence_browser.py
+index ebcd27d5..d1c9c960 100644
+--- a/tests/test_trade_final_evidence_browser.py
++++ b/tests/test_trade_final_evidence_browser.py
+@@ -214,6 +214,7 @@ class TradeMarketDisplayBrowserTests(unittest.TestCase):
+                       'difference': float(Decimal(str(received)) - Decimal(str(sent)))}
+             original = json.dumps(market, sort_keys=True)
+             html = _decision_primary({'market_evidence': market}, decision)
++            self.assertNotIn('tw-decision-lead', html)
+             self.assertIn('You send <b>' + manager_points(sent) + '</b>', html)
+             self.assertIn('You receive <b>' + manager_points(received) + '</b>', html)
+             if sent != received:
+@@ -226,6 +227,11 @@ class TradeMarketDisplayBrowserTests(unittest.TestCase):
+         self.assertIn('Incomplete · known 0', html)
+         self.assertIn('Incomplete · known 620.12', html)
+         self.assertNotIn('more current Market value', html)
++        reason_only = _decision_primary({'market_evidence': market},
++            {**decision, 'decisive_reason': 'Only the recorded price subtotal is supported.'})
++        self.assertIn('Why this decision: Only the recorded price subtotal is supported.', reason_only)
++        self.assertNotIn('Next step:', reason_only)
++        self.assertIn('Incomplete · known 0', reason_only)
+ 
+     def test_fractional_balance_preview_and_workspace_use_same_canonical_display(self):
+         # Controlled compatible canonical DTO values; not production prices.

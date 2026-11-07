@@ -1,0 +1,58 @@
+{
+  "source": [
+    "bc4a1eea45f5d0e68205343b2d6abfb2f2262244",
+    "0ca79a715f697147c8081d4d69f1afd7efca9bb4"
+  ],
+  "passed": true,
+  "tests": 1,
+  "checks": [
+    {
+      "value": 39.34995201416314,
+      "limit": 500
+    },
+    {
+      "value": 372,
+      "limit": 1000000
+    }
+  ],
+  "seconds": 1.1365616919938475,
+  "before": {
+    "rss_bytes": 50524160,
+    "vms_bytes": 57221120,
+    "system_available_bytes": 17059889152,
+    "memory_accounting_scope": "cgroup",
+    "cgroup_current_bytes": 38486016,
+    "cgroup_limit_bytes": 2147483648,
+    "cgroup_inactive_file_bytes": 212992,
+    "cgroup_anonymous_bytes": 37056512,
+    "cgroup_memory_events": {
+      "low": 0,
+      "high": 0,
+      "max": 0,
+      "oom": 0,
+      "oom_kill": 0,
+      "oom_group_kill": 0
+    }
+  },
+  "after": {
+    "rss_bytes": 57528320,
+    "vms_bytes": 363196416,
+    "system_available_bytes": 17084641280,
+    "memory_accounting_scope": "cgroup",
+    "cgroup_current_bytes": 57708544,
+    "cgroup_limit_bytes": 2147483648,
+    "cgroup_inactive_file_bytes": 184320,
+    "cgroup_anonymous_bytes": 55713792,
+    "cgroup_memory_events": {
+      "low": 0,
+      "high": 0,
+      "max": 0,
+      "oom": 0,
+      "oom_kill": 0,
+      "oom_group_kill": 0
+    }
+  },
+  "cpu_before": "usage_usec 968111\nuser_usec 900428\nsystem_usec 67682\nnice_usec 0\nnr_periods 10\nnr_throttled 0\nthrottled_usec 0\nnr_bursts 0\nburst_usec 0\n",
+  "cpu_after": "usage_usec 2190530\nuser_usec 2050342\nsystem_usec 140187\nnice_usec 0\nnr_periods 21\nnr_throttled 0\nthrottled_usec 0\nnr_bursts 0\nburst_usec 0\n",
+  "scope": "One unchanged mandatory liveness test in a separate enforced2GiB/no-swap/offline container. Observer records assertLess arguments and delegates without altering thresholds. A pass does not establish the cause of the earlier548msfailure or universal liveness."
+}
