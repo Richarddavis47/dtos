@@ -1,0 +1,24 @@
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/unittest/__main__.py", line 18, in <module>
+    main(module=None)
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/unittest/main.py", line 104, in __init__
+    self.parseArgs(argv)
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/unittest/main.py", line 153, in parseArgs
+    self.createTests()
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/unittest/main.py", line 164, in createTests
+    self.test = self.testLoader.loadTestsFromNames(self.testNames,
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/unittest/loader.py", line 207, in loadTestsFromNames
+    suites = [self.loadTestsFromName(name, module) for name in names]
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/unittest/loader.py", line 137, in loadTestsFromName
+    module = __import__(module_name)
+             ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/dtos-publisher-2239/tests/test_release_publisher.py", line 12, in <module>
+    from tools.release import publish as p
+  File "/workspace/dtos-publisher-2239/tools/release/publish.py", line 750
+    recovery_sha256=plan['recovery_sha256'], prior_evidence_sha256=plan['prior_evidence_sha256'], limitations='Trade presentation and existing zero-qualified diagnosis only. Recorded bilateral verdicts, scoring, Neutral/Custom values, exact picks, search limits and all memory policies remain unchanged. The preview action is earlier on phones. Why-now requires matching supported calendar evidence; retained context is not revalidated. Disposable qualifying offers and phone measurements are not live production offers. Existing authorized owner-browser/Shell control is not attached in this session; external401 is not retried. No forced production acquisition, Trade discovery, preference mutation or infrastructure change.''))
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       ^
+SyntaxError: unterminated string literal (detected at line 750)

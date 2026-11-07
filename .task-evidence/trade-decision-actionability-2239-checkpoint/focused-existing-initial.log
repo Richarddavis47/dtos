@@ -1,0 +1,29 @@
+/usr/local/lib/python3.14/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+  from starlette.testclient import TestClient as TestClient  # noqa
+test_custom_capital_is_labeled_personal_while_market_totals_stay_neutral (tests.test_trade_conditional_summary.ConditionalSummaryTests.test_custom_capital_is_labeled_personal_while_market_totals_stay_neutral) ... ok
+test_explicit_direction_and_roster_inference_are_not_conflated (tests.test_trade_conditional_summary.ConditionalSummaryTests.test_explicit_direction_and_roster_inference_are_not_conflated) ... ok
+test_future_capital_qualification_is_distinct_from_balanced_market (tests.test_trade_conditional_summary.ConditionalSummaryTests.test_future_capital_qualification_is_distinct_from_balanced_market) ... ok
+test_missing_partner_comparison_gets_evidence_action_not_add_a_pick (tests.test_trade_conditional_summary.ConditionalSummaryTests.test_missing_partner_comparison_gets_evidence_action_not_add_a_pick) ... ok
+test_provenance_conflict_does_not_repeat_a_supported_mean (tests.test_trade_conditional_summary.ConditionalSummaryTests.test_provenance_conflict_does_not_repeat_a_supported_mean) ... ok
+test_supported_partner_loss_is_visible_without_changing_verdict_or_values (tests.test_trade_conditional_summary.ConditionalSummaryTests.test_supported_partner_loss_is_visible_without_changing_verdict_or_values) ... ok
+test_zero_and_missing_are_distinct_without_source_work (tests.test_trade_conditional_summary.ConditionalSummaryTests.test_zero_and_missing_are_distinct_without_source_work) ... ok
+test_actual_authenticated_http_preserves_numeric_policy (tests.test_trade_recommendation_clarity.RecommendationClarityTests.test_actual_authenticated_http_preserves_numeric_policy) ... {"timestamp":"2026-11-07T08:01:09.358421+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":84946944,"limit_bytes":2147483648,"raw_headroom_bytes":2062536704,"clean_inactive_file_bytes":491520,"conditional_file_credit_bytes":245760,"admission_headroom_bytes":2062782464,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-07T08:01:09.359957+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/workspace \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-07T08:01:09.363696+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_admission","request_id":"system","event":"trade_admission","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":84946944,"limit_bytes":2147483648,"raw_headroom_bytes":2062536704,"clean_inactive_file_bytes":491520,"conditional_file_credit_bytes":245760,"admission_headroom_bytes":2062782464,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"recovery":null}}
+{"timestamp":"2026-11-07T08:01:09.387368+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_execution_finished","request_id":"system","event":"trade_execution_finished","duration_ms":24.095,"diagnostic":{"schema":"trade-resource-v1","outcome":"complete"}}
+{"timestamp":"2026-11-07T08:01:09.396636+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/trades/evaluate \"HTTP/1.1 200 OK\"","request_id":"system"}
+ok
+test_exact_prices_legal_gain_and_distinct_week_contexts (tests.test_trade_recommendation_clarity.RecommendationClarityTests.test_exact_prices_legal_gain_and_distinct_week_contexts) ... ok
+test_genuine_zero_remains_unchanged_not_missing (tests.test_trade_recommendation_clarity.RecommendationClarityTests.test_genuine_zero_remains_unchanged_not_missing) ... ok
+test_missing_current_week_does_not_erase_other_supported_weeks (tests.test_trade_recommendation_clarity.RecommendationClarityTests.test_missing_current_week_does_not_erase_other_supported_weeks) ... ok
+test_modes_and_explicit_strategies_preserve_neutral_math_and_packages (tests.test_trade_recommendation_clarity.RecommendationClarityTests.test_modes_and_explicit_strategies_preserve_neutral_math_and_packages) ... ok
+test_real_custom_pick_exchange_keeps_neutral_counterparty_veto (tests.test_trade_recommendation_clarity.RecommendationClarityTests.test_real_custom_pick_exchange_keeps_neutral_counterparty_veto) ... ok
+test_repeated_formatting_adds_no_heavy_work_or_mutation (tests.test_trade_recommendation_clarity.RecommendationClarityTests.test_repeated_formatting_adds_no_heavy_work_or_mutation) ... ok
+test_stricter_availability_diagnostic_does_not_erase_prepared_comparison (tests.test_trade_recommendation_clarity.RecommendationClarityTests.test_stricter_availability_diagnostic_does_not_erase_prepared_comparison) ... ok
+test_same_publication_no_preselected_target_and_strategy_differs (tests.test_trade_recommendation_clarity.UnseededStrategyControls.test_same_publication_no_preselected_target_and_strategy_differs) ... {"timestamp":"2026-11-07T08:01:10.707352+00:00","level":"WARNING","logger":"dtos.storage","message":"storage_review {'kind': 'projection', 'database_bytes': 364544, 'rows': {'projection_snapshots': 10, 'projection_source_history': 8, 'projection_player_states': 272}, 'free_bytes': 7268130816, 'row_delta': {'projection_snapshots': 5, 'projection_source_history': 4, 'projection_player_states': 224}, 'reasons': ['ROW_GROWTH_ACCELERATION_REVIEW']}","request_id":"system"}
+ok
+
+----------------------------------------------------------------------
+Ran 16 tests in 4.228s
+
+OK

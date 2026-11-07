@@ -1,0 +1,110 @@
+/usr/local/lib/python3.14/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+  from starlette.testclient import TestClient as TestClient  # noqa
+{"timestamp":"2026-11-07T07:58:34.735803+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":79773696,"limit_bytes":2147483648,"raw_headroom_bytes":2067709952,"clean_inactive_file_bytes":548864,"conditional_file_credit_bytes":274432,"admission_headroom_bytes":2067984384,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-07T07:58:34.737116+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/workspace?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-07T07:58:34.742327+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_admission","request_id":"system","event":"trade_admission","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":79630336,"limit_bytes":2147483648,"raw_headroom_bytes":2067853312,"clean_inactive_file_bytes":548864,"conditional_file_credit_bytes":274432,"admission_headroom_bytes":2068127744,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"recovery":null}}
+{"timestamp":"2026-11-07T07:58:34.789886+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_execution_finished","request_id":"system","event":"trade_execution_finished","duration_ms":47.905,"diagnostic":{"schema":"trade-resource-v1","outcome":"complete"}}
+{"timestamp":"2026-11-07T07:58:34.799021+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/trades/evaluate \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-07T07:58:34.810373+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-07T07:58:34.818609+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+Validation Chromium: /usr/bin/chromium
+Validation Chromium version: 156.0.8078.73
+{"timestamp":"2026-11-07T07:58:35.329278+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/recommended?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-07T07:58:35.419049+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-07T07:58:35.535900+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-07T07:58:35.536537+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"711bd25a13f34f17954fab1626a6f322","event":"request_complete","duration_ms":115.597,"status_code":200,"method":"GET","path":"/static/css/contextual_navigation.css"}
+{"timestamp":"2026-11-07T07:58:35.545163+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-07T07:58:35.553167+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-07T07:58:35.554046+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"bb8d3ed6eb5b45bba3f3aa6197982fc9","event":"request_complete","duration_ms":3.259,"status_code":200,"method":"GET","path":"/static/js/contextual_navigation.js"}
+{"timestamp":"2026-11-07T07:58:35.562780+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/trade_workspace.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-07T07:58:35.575725+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/strategy_session.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-07T07:58:35.580972+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/trade_workspace.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-07T07:58:35.648964+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":358834176,"limit_bytes":2147483648,"raw_headroom_bytes":1788649472,"clean_inactive_file_bytes":1294336,"conditional_file_credit_bytes":647168,"admission_headroom_bytes":1789296640,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-07T07:58:35.652088+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/workspace?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-07T07:58:35.789764+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_admission","request_id":"system","event":"trade_admission","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":373456896,"limit_bytes":2147483648,"raw_headroom_bytes":1774026752,"clean_inactive_file_bytes":1294336,"conditional_file_credit_bytes":647168,"admission_headroom_bytes":1774673920,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"recovery":null}}
+{"timestamp":"2026-11-07T07:58:36.596048+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_execution_finished","request_id":"system","event":"trade_execution_finished","duration_ms":806.945,"diagnostic":{"schema":"trade-resource-v1","outcome":"complete"}}
+{"timestamp":"2026-11-07T07:58:36.597097+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/trades/generate \"HTTP/1.1 200 OK\"","request_id":"system"}
+{
+  "results": 5,
+  "exploratory": 3,
+  "state": "CREDIBLE RECOMMENDATION",
+  "errors": [],
+  "cards": [
+    {
+      "proposal": {
+        "active_roster_id": 1,
+        "partner_roster_id": 2,
+        "assets_sent": [
+          "a"
+        ],
+        "assets_received": [
+          "2028-R2-4",
+          "2028-R1-4"
+        ]
+      },
+      "verdict": {
+        "headline": "WORTH PURSUING",
+        "classification": "CREDIBLE RECOMMENDATION",
+        "qualified": true,
+        "side_assessment": "WORTH PURSUING",
+        "qualification": null
+      },
+      "same_offer_equal": {
+        "recommendation": true,
+        "generated_trade_eligible": true,
+        "market_evidence": true,
+        "multi_horizon_impact": true
+      }
+    },
+    {
+      "proposal": {
+        "active_roster_id": 1,
+        "partner_roster_id": 2,
+        "assets_sent": [
+          "a",
+          "e"
+        ],
+        "assets_received": [
+          "2028-R1-4",
+          "c"
+        ]
+      },
+      "verdict": {
+        "headline": "WORTH PURSUING",
+        "classification": "CREDIBLE RECOMMENDATION",
+        "qualified": true,
+        "side_assessment": "WORTH PURSUING",
+        "qualification": null
+      },
+      "same_offer_equal": {
+        "recommendation": true,
+        "generated_trade_eligible": true,
+        "market_evidence": true,
+        "multi_horizon_impact": true
+      }
+    }
+  ],
+  "card_geometry": {
+    "height": 1783.390625,
+    "paragraphs": 20,
+    "action": 1298.390625,
+    "details": [
+      {
+        "label": "Before and after \u00b7 both optimal lineups",
+        "y": 1552.390625
+      },
+      {
+        "label": "Why this offer \u00b7 evidence and risks",
+        "y": 1648.390625
+      },
+      {
+        "label": "Related package variants",
+        "y": 1712.390625
+      }
+    ]
+  },
+  "preview_buttons": [
+    "Adopt alternative",
+    "Keep original"
+  ]
+}

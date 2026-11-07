@@ -1,0 +1,9 @@
+Traceback (most recent call last):
+  File "/workspace/2239-trade-actionability/verify-focused-resource.py", line 12, in <module>
+    target=Path(folder)/(label+'.zip');p.make_zip(target,{n:(b/label/n).read_bytes() for n in names});r=verifier(target,plan);assert r['passed'];results[label]={'passed':True,'head':r['head'],'tree':r['tree'],'zip_sha256':p.digest(target)}
+                                                                                                        ^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/dtos-publisher-2239/tools/release/publish.py", line 345, in verify_actuals_restoration
+    require(actual.get('passed') is True and actual.get('method') == 'sleeper-matchup-actuals-v1'
+  File "/workspace/dtos-publisher-2239/tools/release/publish.py", line 31, in require
+    raise RuntimeError(message)
+RuntimeError: Native actuals restoration parity or source identity missing
