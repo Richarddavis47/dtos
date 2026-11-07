@@ -90,7 +90,17 @@ def ensure_periodic_refresh(
                 await asyncio.shield(worker)
             except asyncio.CancelledError:
                 # Runtime.close() must not release state before a writer exits.
-                await asyncio.gather(worker, return_exceptions=True)
+                # Repeated cancellation must not propagate through a gather
+                # into the writer while its source publication is still owned.
+                while not worker.done():
+                    try:
+                        await asyncio.shield(worker)
+                    except asyncio.CancelledError:
+                        continue
+                    except Exception:
+                        break
+                if not worker.cancelled():
+                    worker.exception()
                 raise
             except Exception as exc:
                 runtime.lifecycle["refresh_state"] = "failed"
@@ -103,6 +113,11 @@ def ensure_periodic_refresh(
                 runtime.lifecycle.pop("refresh_error_type", None)
                 from src.platform.storage_accounting import periodic_storage_accounting
                 await asyncio.to_thread(periodic_storage_accounting)
+            finally:
+                # A completed task owns its result or exception traceback.
+                # Do not pin an obsolete publication throughout the next sleep.
+                # Cancellation reaches here only after the writer is drained.
+                del worker
 
     task = asyncio.create_task(maintain(), name=name)
     runtime.background_tasks.add(task)
