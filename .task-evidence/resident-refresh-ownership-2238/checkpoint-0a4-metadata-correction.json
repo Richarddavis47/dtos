@@ -1,0 +1,11 @@
+{
+  "prior_evidence_commit": "7ae7c43035d86726a9141b0c555be09dafa31c84",
+  "prior_manifest_sha256": "a7fffcc98e6e18ecdd59616f80ec4c37a3a8cf69ad3ab578af6080020870a0bd",
+  "classification": "Packaging inventory self-inclusion during existing-checkpoint update; caught before any successful readback claim",
+  "affected": [
+    "SHA256SUMS",
+    "manifest.json"
+  ],
+  "source_or_test_bytes_changed": false,
+  "correction": "Exclude only root manifest/SHA sidecars from their own payload inventory. Preserve old published commit and original sidecars."
+}
