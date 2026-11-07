@@ -1,0 +1,11 @@
+# Superseded source90 — failed and cancelled evidence
+
+This package preserves original failures and incomplete runs, not release acceptance. Source90bdd3b653eaec6ea81f534ef552244ee8b05ba6/tree0c901e2c9d027c122189f0598920b1c823cef578 was superseded bybc4a1eea45f5d0e68205343b2d6abfb2f2262244/tree0ca79a715f697147c8081d4d69f1afd7efca9bb4 after a confirmed partial-Market renderer defect. Final canonical gates remain pending at this publication; PR328is held and production2238unchanged.
+
+- Product647executions,1KeyError; later stages unexecuted. Original tool-decoded console, receipts and readable60kparts are included. Existing Market-only controls exposed required decision-lead keys. The corrected renderer omits missing prose; old price assertions remain and are extended.
+- Local canonical1918starts/1917completions, separate548.48msFOISheartbeat failure, then intentional cancellation. Six initial gates completed; regression did not complete and three later gates were unexecuted. Original observer/result/trace/console/manifest are included. The cause of the heartbeat failure is unconfirmed; unchanged source and a39.35msisolated control do not explain it or replace final full validation.
+- Hosted canonical1702starts/1701completions, cancelled. Original ZIP/CRC/checksum preserved inside Prior-attempts.zip. Final result/manifest/ten-gate record are absent, not reconstructed. Never called a pass.
+
+Prior-attempts.zip has its own source-associated prior-manifest.json covering208original payloads, including earlier failed method/test logs and source90partial outputs. It is a sanitized original-evidence archive, not a new run. See PRIOR_ATTEMPTS.md for scope and missing transient-working-tree limitations. The current candidate patch is supplied separately for review. Fixture healthy scores or qualified offers are not live acceptance. No production Trade search or user-data mutation occurred.
+
+manifest.json and SHA256SUMS cover every published byte. Numbered log parts concatenate to each unedited original UTF8 console. Original tool-decoded logs are distinguished from native archive transport bytes. A separate readback receipt follows. The original checkpoint remains unchanged at68d1da5f98e94e528528fb80df48326a6f5c4c22.

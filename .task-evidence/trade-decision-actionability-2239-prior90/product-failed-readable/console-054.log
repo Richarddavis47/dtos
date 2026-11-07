@@ -1,0 +1,221 @@
+:"httpx","message":"HTTP Request: GET http://testserver/api/recovery-context \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-07T08:29:15.8755985Z ok
+2026-11-07T08:29:15.9761972Z test_warm_league_reads_work_while_fois_is_active_without_new_preparation (tests.test_league_entry_coordination.EntryHTTPTests.test_warm_league_reads_work_while_fois_is_active_without_new_preparation) ... {"timestamp":"2026-11-07T08:29:15.974597+00:00","level":"INFO","logger":"dtos.attribution","message":"diagnostic_boundary","request_id":"activity-72eb3d9efc5e44beb9fd68e2894deabc","event":"diagnostic_boundary","diagnostic":{"schema":"request-attribution-v1","event_index":8,"event_limit":512,"dropped_so_far":0,"origin_request_id":null,"name":"memory_sample","boundary":"captured","timestamp":"2026-11-07T08:29:15.974570+00:00","sample_id":1,"span_id":1,"requested_boundaries":[{"name":"runtime_hydration","boundary":"started","span_id":1,"request_id":"activity-72eb3d9efc5e44beb9fd68e2894deabc","requested_at":"2026-11-07T08:29:15.850220+00:00"}],"active_activities":[{"request_id":"activity-72eb3d9efc5e44beb9fd68e2894deabc","name":"runtime_hydration","span_id":1}],"dropped_activity_or_boundary_count":0,"memory":{"rss_bytes":449474560,"vms_bytes":1427873792,"system_available_bytes":15063941120,"memory_accounting_scope":"cgroup","cgroup_current_bytes":583311360,"cgroup_limit_bytes":2147483648,"cgroup_inactive_file_bytes":12554240,"cgroup_anonymous_bytes":429690880,"cgroup_memory_events":{"low":0,"high":0,"max":0,"oom":0,"oom_kill":0,"oom_group_kill":0,"sock_throttled":0},"anonymous_bytes":429690880,"file_bytes":12558336,"kernel_bytes":140390400,"shmem_bytes":0,"cgroup_lifetime_peak_bytes":1073364992,"observer_pid":1,"observer_kind":"main_process","active_process_count":2,"zombie_count":921,"process_samples_truncated":false,"process_samples_are_sequential":true,"processes":[{"pid":1,"role":"application","rss_bytes":449613824,"pss_bytes":446148608,"uss_bytes":442691584,"sample_offset_ms":113.222,"sample_duration_ms":10.288},{"pid":22983,"role":"child","rss_bytes":12976128,"pss_bytes":9510912,"uss_bytes":6053888,"sample_offset_ms":123.512,"sample_duration_ms":0.474}],"capture_duration_ms":123.988,"pss_requested":true,"runtime_residency":{"resident_count":1,"warm_limit":2,"hydrating_count":0,"warm_count":0,"runtime_samples_truncated":false,"runtimes":[{"scope":"c9adb23a3e8be7a1","state":"cold","active_requests":0,"pinned":true,"owns_state":false,"background_tasks":0,"source_generation_count":0,"source_generation_identity":"4f53cda18c2baa0c","market_cache_owned":true,"projection_cache_owned":false}]},"sample_total_duration_ms":124.022},"queue_dropped_record_count":0}}
+2026-11-07T08:29:16.0134065Z {"timestamp":"2026-11-07T08:29:16.012990+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/recovery-context \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-07T08:29:16.0161924Z ok
+2026-11-07T08:29:16.0324184Z test_cancellation_collects_cache_reader_before_releasing_state (tests.test_league_entry_coordination.OwnedRecoveryTests.test_cancellation_collects_cache_reader_before_releasing_state) ... ok
+2026-11-07T08:29:16.0360100Z test_default_periodic_deferral_waits_for_existing_interval_without_starting_fois (tests.test_league_entry_coordination.OwnedRecoveryTests.test_default_periodic_deferral_waits_for_existing_interval_without_starting_fois) ... ok
+2026-11-07T08:29:16.0428386Z test_single_flight_cooldown_and_explicit_recovery (tests.test_league_entry_coordination.OwnedRecoveryTests.test_single_flight_cooldown_and_explicit_recovery) ... ok
+2026-11-07T08:29:16.0435714Z 
+2026-11-07T08:29:16.0436142Z ======================================================================
+2026-11-07T08:29:16.0437026Z ERROR: test_completed_market_panel_matches_canonical_strings_without_changing_evidence (tests.test_trade_final_evidence_browser.TradeMarketDisplayBrowserTests.test_completed_market_panel_matches_canonical_strings_without_changing_evidence)
+2026-11-07T08:29:16.0437857Z ----------------------------------------------------------------------
+2026-11-07T08:29:16.0438154Z Traceback (most recent call last):
+2026-11-07T08:29:16.0444408Z   File "/home/runner/work/dtos/dtos/tests/test_trade_final_evidence_browser.py", line 216, in test_completed_market_panel_matches_canonical_strings_without_changing_evidence
+2026-11-07T08:29:16.0445092Z     html = _decision_primary({'market_evidence': market}, decision)
+2026-11-07T08:29:16.0445399Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-11-07T08:29:16.0445829Z   File "/home/runner/work/dtos/dtos/services/trade_explanation.py", line 375, in _decision_primary
+2026-11-07T08:29:16.0446292Z     lead += paragraph('Why this decision: ' + decision['decisive_reason'])
+2026-11-07T08:29:16.0446616Z                                               ~~~~~~~~^^^^^^^^^^^^^^^^^^^
+2026-11-07T08:29:16.0446859Z KeyError: 'decisive_reason'
+2026-11-07T08:29:16.0446984Z 
+2026-11-07T08:29:16.0447114Z ----------------------------------------------------------------------
+2026-11-07T08:29:16.0447386Z Ran 647 tests in 975.806s
+2026-11-07T08:29:16.0447509Z 
+2026-11-07T08:29:16.0447589Z FAILED (errors=1)
+2026-11-07T08:29:18.1275424Z ##[error]Process completed with exit code 1.
+2026-11-07T08:29:18.1346360Z ##[group]Run actions/upload-artifact@v4
+2026-11-07T08:29:18.1346596Z with:
+2026-11-07T08:29:18.1346789Z   name: current-season-history-browser
+2026-11-07T08:29:18.1347032Z   path: .validation/current-season-history
+2026-11-07T08:29:18.1347263Z   if-no-files-found: error
+2026-11-07T08:29:18.1347455Z   retention-days: 14
+2026-11-07T08:29:18.1347642Z   compression-level: 6
+2026-11-07T08:29:18.1347827Z   overwrite: false
+2026-11-07T08:29:18.1348003Z   include-hidden-files: false
+2026-11-07T08:29:18.1348194Z env:
+2026-11-07T08:29:18.1348373Z   NODE_OPTIONS: --max-old-space-size=256
+2026-11-07T08:29:18.1348644Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-07T08:29:18.1348974Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib/pkgconfig
+2026-11-07T08:29:18.1349311Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-07T08:29:18.1349719Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-07T08:29:18.1350040Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-07T08:29:18.1350334Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib
+2026-11-07T08:29:18.1350593Z ##[endgroup]
+2026-11-07T08:29:18.2743497Z (node:50567) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-11-07T08:29:18.2744392Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-11-07T08:29:18.2769006Z ##[error]No files were found with the provided path: .validation/current-season-history. No artifacts will be uploaded.
+2026-11-07T08:29:18.2965139Z ##[group]Run actions/upload-artifact@v4
+2026-11-07T08:29:18.2965376Z with:
+2026-11-07T08:29:18.2965562Z   name: history-followthrough-browser
+2026-11-07T08:29:18.2965804Z   path: .validation/history-followthrough
+2026-11-07T08:29:18.2966049Z   if-no-files-found: error
+2026-11-07T08:29:18.2966256Z   retention-days: 14
+2026-11-07T08:29:18.2966435Z   compression-level: 6
+2026-11-07T08:29:18.2966614Z   overwrite: false
+2026-11-07T08:29:18.2966788Z   include-hidden-files: false
+2026-11-07T08:29:18.2966979Z env:
+2026-11-07T08:29:18.2967281Z   NODE_OPTIONS: --max-old-space-size=256
+2026-11-07T08:29:18.2967551Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-07T08:29:18.2967883Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib/pkgconfig
+2026-11-07T08:29:18.2968211Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-07T08:29:18.2968506Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-07T08:29:18.2968828Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-07T08:29:18.2969131Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib
+2026-11-07T08:29:18.2969391Z ##[endgroup]
+2026-11-07T08:29:18.4500020Z (node:50579) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-11-07T08:29:18.4501112Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-11-07T08:29:18.4515636Z ##[error]No files were found with the provided path: .validation/history-followthrough. No artifacts will be uploaded.
+2026-11-07T08:29:18.4721693Z ##[group]Run actions/upload-artifact@v4
+2026-11-07T08:29:18.4722186Z with:
+2026-11-07T08:29:18.4722448Z   name: market-history-coverage-browser
+2026-11-07T08:29:18.4722805Z   path: .validation/market-history-coverage
+2026-11-07T08:29:18.4723149Z   if-no-files-found: error
+2026-11-07T08:29:18.4723419Z   retention-days: 14
+2026-11-07T08:29:18.4723674Z   compression-level: 6
+2026-11-07T08:29:18.4723936Z   overwrite: false
+2026-11-07T08:29:18.4724188Z   include-hidden-files: false
+2026-11-07T08:29:18.4724475Z env:
+2026-11-07T08:29:18.4724724Z   NODE_OPTIONS: --max-old-space-size=256
+2026-11-07T08:29:18.4725124Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-07T08:29:18.4725640Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib/pkgconfig
+2026-11-07T08:29:18.4726140Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-07T08:29:18.4726585Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-07T08:29:18.4727086Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-07T08:29:18.4727537Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib
+2026-11-07T08:29:18.4727917Z ##[endgroup]
+2026-11-07T08:29:18.6228735Z (node:50591) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-11-07T08:29:18.6229715Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-11-07T08:29:18.6243330Z ##[error]No files were found with the provided path: .validation/market-history-coverage. No artifacts will be uploaded.
+2026-11-07T08:29:18.6478960Z ##[group]Run actions/upload-artifact@v4
+2026-11-07T08:29:18.6479329Z with:
+2026-11-07T08:29:18.6479622Z   name: current-production-coverage-browser
+2026-11-07T08:29:18.6480196Z   path: .validation/current-production-coverage
+2026-11-07T08:29:18.6480588Z   if-no-files-found: error
+2026-11-07T08:29:18.6480883Z   retention-days: 14
+2026-11-07T08:29:18.6481150Z   compression-level: 6
+2026-11-07T08:29:18.6481434Z   overwrite: false
+2026-11-07T08:29:18.6483490Z   include-hidden-files: false
+2026-11-07T08:29:18.6483841Z env:
+2026-11-07T08:29:18.6484113Z   NODE_OPTIONS: --max-old-space-size=256
+2026-11-07T08:29:18.6484557Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-07T08:29:18.6485167Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib/pkgconfig
+2026-11-07T08:29:18.6485708Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-07T08:29:18.6486204Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-07T08:29:18.6486721Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-07T08:29:18.6487213Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib
+2026-11-07T08:29:18.6487628Z ##[endgroup]
+2026-11-07T08:29:18.7982861Z (node:50603) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-11-07T08:29:18.7983747Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-11-07T08:29:18.7998573Z ##[error]No files were found with the provided path: .validation/current-production-coverage. No artifacts will be uploaded.
+2026-11-07T08:29:18.8210910Z ##[group]Run actions/upload-artifact@v4
+2026-11-07T08:29:18.8211151Z with:
+2026-11-07T08:29:18.8211324Z   name: trade-resource-2g
+2026-11-07T08:29:18.8211546Z   path: .validation/trade-resource/evidence
+2026-11-07T08:29:18.8212006Z   if-no-files-found: error
+2026-11-07T08:29:18.8212202Z   retention-days: 14
+2026-11-07T08:29:18.8212384Z   compression-level: 6
+2026-11-07T08:29:18.8212566Z   overwrite: false
+2026-11-07T08:29:18.8212749Z   include-hidden-files: false
+2026-11-07T08:29:18.8212948Z env:
+2026-11-07T08:29:18.8213130Z   NODE_OPTIONS: --max-old-space-size=256
+2026-11-07T08:29:18.8213420Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-07T08:29:18.8213756Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib/pkgconfig
+2026-11-07T08:29:18.8214086Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-07T08:29:18.8214402Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-07T08:29:18.8214728Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-07T08:29:18.8215036Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib
+2026-11-07T08:29:18.8215294Z ##[endgroup]
+2026-11-07T08:29:18.9657925Z (node:50615) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-11-07T08:29:18.9658829Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-11-07T08:29:18.9732467Z With the provided path, there will be 14 files uploaded
+2026-11-07T08:29:18.9737165Z Artifact name is valid!
+2026-11-07T08:29:18.9737871Z Root directory input is valid!
+2026-11-07T08:29:19.3302660Z Beginning upload of artifact content to blob storage
+2026-11-07T08:29:19.3907277Z (node:50615) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+2026-11-07T08:29:19.8293158Z Uploaded bytes 732530
+2026-11-07T08:29:19.8857628Z Finished uploading artifact content to blob storage!
+2026-11-07T08:29:19.8858382Z SHA256 digest of uploaded artifact zip is 4a9fdb56e40b4e206c9eee145599d647ce76a8803475f560cfeb8513f33a80af
+2026-11-07T08:29:19.8860284Z Finalizing artifact upload
+2026-11-07T08:29:20.2953299Z Artifact trade-resource-2g.zip successfully finalized. Artifact ID 13567641256
+2026-11-07T08:29:20.2953995Z Artifact trade-resource-2g has been successfully uploaded! Final size is 732530 bytes. Artifact ID is 13567641256
+2026-11-07T08:29:20.2959332Z Artifact download URL: https://github.com/Richarddavis47/dtos/actions/runs/42354414414/artifacts/13567641256
+2026-11-07T08:29:20.3119506Z ##[group]Run actions/upload-artifact@v4
+2026-11-07T08:29:20.3119859Z with:
+2026-11-07T08:29:20.3120114Z   name: league-entry-2g
+2026-11-07T08:29:20.3120380Z   path: .validation/trade-resource/league-entry/evidence
+2026-11-07T08:29:20.3120723Z   if-no-files-found: error
+2026-11-07T08:29:20.3121039Z   retention-days: 14
+2026-11-07T08:29:20.3121305Z   compression-level: 6
+2026-11-07T08:29:20.3121557Z   overwrite: false
+2026-11-07T08:29:20.3121912Z   include-hidden-files: false
+2026-11-07T08:29:20.3122190Z env:
+2026-11-07T08:29:20.3122434Z   NODE_OPTIONS: --max-old-space-size=256
+2026-11-07T08:29:20.3122847Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-07T08:29:20.3123360Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib/pkgconfig
+2026-11-07T08:29:20.3123772Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-07T08:29:20.3124077Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-07T08:29:20.3124422Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-07T08:29:20.3124734Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib
+2026-11-07T08:29:20.3124998Z ##[endgroup]
+2026-11-07T08:29:20.4541120Z (node:50627) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-11-07T08:29:20.4542206Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-11-07T08:29:20.4556204Z ##[error]No files were found with the provided path: .validation/trade-resource/league-entry/evidence. No artifacts will be uploaded.
+2026-11-07T08:29:20.4768826Z ##[group]Run actions/upload-artifact@v4
+2026-11-07T08:29:20.4784889Z with:
+2026-11-07T08:29:20.4785275Z   name: restoration-unused-2g
+2026-11-07T08:29:20.4785693Z   path: .validation/restoration-unused
+2026-11-07T08:29:20.4786116Z   if-no-files-found: error
+2026-11-07T08:29:20.4786469Z   retention-days: 14
+2026-11-07T08:29:20.4786793Z   compression-level: 6
+2026-11-07T08:29:20.4787085Z   overwrite: false
+2026-11-07T08:29:20.4787382Z   include-hidden-files: false
+2026-11-07T08:29:20.4787712Z env:
+2026-11-07T08:29:20.4787975Z   NODE_OPTIONS: --max-old-space-size=256
+2026-11-07T08:29:20.4788370Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-07T08:29:20.4788867Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib/pkgconfig
+2026-11-07T08:29:20.4789375Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-07T08:29:20.4789840Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-07T08:29:20.4790384Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-07T08:29:20.4790884Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib
+2026-11-07T08:29:20.4791298Z ##[endgroup]
+2026-11-07T08:29:20.6254394Z (node:50639) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-11-07T08:29:20.6255306Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-11-07T08:29:20.6289330Z ##[error]No files were found with the provided path: .validation/restoration-unused. No artifacts will be uploaded.
+2026-11-07T08:29:20.6480644Z ##[group]Run actions/upload-artifact@v4
+2026-11-07T08:29:20.6481094Z with:
+2026-11-07T08:29:20.6481426Z   name: actuals-restoration-2g
+2026-11-07T08:29:20.6481894Z   path: .validation/actuals-restoration
+2026-11-07T08:29:20.6482298Z   if-no-files-found: error
+2026-11-07T08:29:20.6482592Z   retention-days: 14
+2026-11-07T08:29:20.6482815Z   compression-level: 6
+2026-11-07T08:29:20.6483096Z   overwrite: false
+2026-11-07T08:29:20.6483341Z   include-hidden-files: false
+2026-11-07T08:29:20.6483542Z env:
+2026-11-07T08:29:20.6483778Z   NODE_OPTIONS: --max-old-space-size=256
+2026-11-07T08:29:20.6484186Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-07T08:29:20.6484673Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib/pkgconfig
+2026-11-07T08:29:20.6485318Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-07T08:29:20.6485726Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-07T08:29:20.6486061Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-07T08:29:20.6486368Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib
+2026-11-07T08:29:20.6486631Z ##[endgroup]
+2026-11-07T08:29:20.7913436Z (node:50651) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-11-07T08:29:20.7914344Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-11-07T08:29:20.7927682Z ##[error]No files were found with the provided path: .validation/actuals-restoration. No artifacts will be uploaded.
+2026-11-07T08:29:20.8142429Z Post job cleanup.
+2026-11-07T08:29:20.8915501Z [command]/usr/bin/git version
+2026-11-07T08:29:20.8956688Z git version 2.56.0
+2026-11-07T08:29:20.8987799Z Temporarily overriding HOME='/home/runner/work/_temp/682eef01-a794-4f47-9040-099106c7b86c' before making global git config changes
+2026-11-07T08:29:20.8989169Z Adding repository directory to the temporary git global config as a safe directory
+2026-11-07T08:29:20.8992354Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/dtos/dtos
+2026-11-07T08:29:20.9036830Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-11-07T08:29:20.9074439Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-11-07T08:29:20.9354266Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-11-07T08:29:20.9393047Z http.https://github.com/.extraheader
+2026-11-07T08:29:20.9412375Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+2026-11-07T08:29:20.9469279Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-11-07T08:29:20.9761279Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-11-07T08:29:20.9832491Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-11-07T08:29:21.0238948Z Cleaning up orphan processes
+2026-11-07T08:29:21.0552019Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5, actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
