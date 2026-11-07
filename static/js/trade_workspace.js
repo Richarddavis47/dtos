@@ -709,6 +709,14 @@
         target.append(node('p', line, key === 'decision_conditions' ? 'tw-drawback' : ''));
     }
   }
+  function appendDecisionLead(target, decision) {
+    if (!decision.decisive_reason && !decision.decision_next_step) return;
+    const lead = node('section', null, 'tw-decision-lead');
+    lead.setAttribute('aria-label', 'Decision and next step');
+    if (decision.decisive_reason) lead.append(node('p', 'Why this decision: ' + decision.decisive_reason));
+    if (decision.decision_next_step) lead.append(node('p', 'Next step: ' + decision.decision_next_step));
+    target.append(lead);
+  }
   function decisionPresentation(e) {
     const decision = {...(e.decision_context || {})};
     const row = value => {
@@ -951,14 +959,17 @@
       if (e.legality?.execution_status) { const detail = node('details'); detail.append(node('summary', 'Previous execution evidence · not current'), node('p', 'Previous execution assessment (not current): ' + e.legality.execution_status)); out.append(detail); }
     }
     if (opportunity) {
-      out.append(node('h4', 'Why now · supported context'));
-      for (const c of opportunity.why_now?.catalysts || []) out.append(node('p', `${c.side} · ${c.horizon.replaceAll('_', ' ')}: ${displayPoints(catalystDelta(c, decision))}`), node('small', c.limitation));
-      if (!opportunity.why_now?.catalysts?.length) out.append(node('p', 'No supported current catalyst is available.'));
+      const timing = opportunity.why_now?.availability === 'supported_current_state'
+        ? (opportunity.why_now.catalysts || []).filter(c => c.availability === 'supported'
+          && ['UPCOMING_BYE_LINEUP_FIT', 'SUPPORTED_PLAYOFF_WINDOW_FIT'].includes(c.type)
+          && catalystDelta(c, decision) !== null) : [];
+      if (timing.length) out.append(node('h4', retained ? 'Timing context at assessment · not revalidated' : 'Why now · supported context'));
+      for (const c of timing) out.append(node('p', `${c.side} · ${c.horizon.replaceAll('_', ' ')}: ${displayPoints(catalystDelta(c, decision))}`), node('small', c.limitation));
       if (opportunity.stable_opportunity_reasons?.length) {
         out.append(node('h4', 'Supported trade fit — not urgency'));
         for (const c of opportunity.stable_opportunity_reasons) out.append(node('p', `${c.side} · ${c.horizon.replaceAll('_', ' ')}: ${displayPoints(catalystDelta(c, decision))}`));
       }
-    } else if (e.why_now) out.append(node('h4', 'Why now'), node('p', e.why_now));
+    } else if (e.why_now) out.append(node('h4', 'Recorded trade context · not a timing signal'), node('p', e.why_now));
     if (e.major_limitations?.length) out.append(node('h4', 'Evidence limitations'), node('p', e.major_limitations.join(', ').replaceAll('_', ' ')));
     if (context) {
       const detail = node('details'); detail.append(node('summary', 'Assessment source & strategy context'));
@@ -1141,6 +1152,7 @@
     if (matches?.avoid_received?.length) card.append(node('p', 'Includes an asset you prefer to avoid. This soft preference has not changed the trade facts.', 'tw-drawback'));
     const decision = decisionPresentation(e);
     if (decision.qualification) card.append(node('p', decision.qualification, 'tw-verdict-qualification'));
+    appendDecisionLead(card, decision);
     if (row.repair_type) card.append(node('p', row.repair_type));
     if (row.adjustment_evidence?.concept === 'strictly_lower_canonical_outgoing_market_cost') {
       const cost = row.adjustment_evidence;
@@ -1153,6 +1165,7 @@
       ...(!decision.your_side_summary ? [node('p', 'Why this helps me: ' + (decision.summary || e.why_you_would_do_it || e.dominant_reason || 'Review the supported evidence.'))] : []),
       node('p', 'Major drawback: ' + (decision.main_cost || e.major_drawback || e.major_risks?.join('; ').replaceAll('_', ' ') || e.major_limitations?.join('; ').replaceAll('_', ' ') || (row.proposal.preview_context?.restored ? 'Unavailable in retained context. Reevaluate for supported costs.' : 'No material drawback identified in available evidence.')), 'tw-drawback'),
       ...(!decision.their_side_summary ? [node('p', 'Counterparty: ' + (decision.partner_summary || e.counterparty_summary || e.why_they_would_do_it || e.dimensions?.counterparty_plausibility?.explanation || 'Review the separate bilateral evidence.'))] : []));
+    if (!preview) { const b = node('button', 'Open editable offer: preview'); b.type = 'button'; b.className = 'tw-next-action primary'; b.onclick = () => previewOffer(row); card.append(b); }
     appendDecisionSummary(card, decision);
     for (const id of [...row.proposal.assets_sent, ...row.proposal.assets_received]) { const protection = lockDetail(id); if (protection) card.append(protection); }
     for (const pick of e.dimensions?.strategic_fit?.active?.future_capital?.sent || []) {
@@ -1175,7 +1188,6 @@
       if (e.provenance?.evaluation_id) detail.append(node('small', 'Original assessment: ' + e.provenance.evaluation_id));
       if (detail.childElementCount > 1) card.append(detail);
     }
-    if (!preview) { const b = node('button', 'Open editable offer: preview'); b.type = 'button'; b.className = 'tw-next-action primary'; b.onclick = () => previewOffer(row); card.append(b); }
     if (e.explanation_html) {
       const detail = node('details'); detail.append(node('summary', 'Why this offer · evidence and risks'));
       const parsed = parsedExplanation(e);

@@ -1,3 +1,13 @@
+# v1.22.24 / build 2239 — Act on the recorded Trade decision
+
+Recommended Trades and Evaluate now lead with the existing assessment’s decisive reason and a practical next step. Phone recommendation cards place the preview action after the exact package and principal cost, ahead of the longer two-sided evidence. Both franchises’ supported lineup effects, conditional motivation, reserve costs and disclosures remain available.
+
+A completed search with optional offers but no qualified recommendation now retains its recorded main-limit explanation. Optional and exploratory offers remain separate. Timing headings require a supported, source-matching bye or playoff-window signal; general roster fit is not urgency.
+
+No qualification thresholds, valuation or scoring formulas, search limits, preferences, submitted lineups or resource policies changed. Neutral and Custom remain separate. Source-compatible fixtures cover matched recommendation/evaluation results, severe overpay rejection, incomplete evidence, one-QB K/DEF and Superflex lineups, preview/return/reload and four screen sizes. Fixture acceptance is not a live qualified offer.
+
+See docs/audits/TRADE_ACTIONABILITY_2239.md. Release remains contingent on all mandatory validation and guarded publication.
+
 # v1.22.23 / build 2238 — Release obsolete maintenance references
 
 Resident-league maintenance now drops a finished refresh task before sleeping. A completed result or exception traceback can no longer keep a superseded league publication alive after a separate refresh replaces it. Current publications, legitimate readers, valid cached evidence and active work retain their existing owners. No runtime eviction or catalog sharing is introduced.
