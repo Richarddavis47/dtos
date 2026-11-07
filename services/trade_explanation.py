@@ -371,9 +371,16 @@ def _decision_primary(result, decision, admissions=None):
     else:
         market_html += paragraph('Known individual prices remain available; no complete comparable package total or advantage is established.')
     market_html += '<small>Current values, not trade-date grades. Market advantage is separate from strategy and lineup impact.</small></section>'
-    lead = '<section class="tw-decision-lead" aria-label="Decision and next step">'
-    lead += paragraph('Why this decision: ' + decision['decisive_reason'])
-    lead += paragraph('Next step: ' + decision['decision_next_step']) + '</section>'
+    # Partial/retained callers can have supported Market evidence without the
+    # new lead. Omit missing prose instead of inventing it or dropping prices.
+    lead = ''
+    if decision.get('decisive_reason') or decision.get('decision_next_step'):
+        lead = '<section class="tw-decision-lead" aria-label="Decision and next step">'
+        if decision.get('decisive_reason'):
+            lead += paragraph('Why this decision: ' + decision['decisive_reason'])
+        if decision.get('decision_next_step'):
+            lead += paragraph('Next step: ' + decision['decision_next_step'])
+        lead += '</section>'
     brief = '<section class="tw-decision" aria-label="Trade decision summary">' + lead + market_html
     final = final_decision(result, _admissions=admissions)
     if not final['qualified'] and final['side_assessment'] in ('SMASH ACCEPT', 'WORTH PURSUING'):
