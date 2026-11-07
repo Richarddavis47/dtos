@@ -1,0 +1,87 @@
+{
+  "final_candidate": "49e616bc4d5c4a6d49354eea1f2d015b7a1622b4",
+  "final_tree": "7ac87bb9ff9f0da6186e50dedd0c93b9bd7bc727",
+  "matched_measurement_candidate": "509ad3a98813e549d47e743045828bb285adb7bc",
+  "matched_measurement_tree": "799e97da93aed7e2a66e86fa62a0adc5db42ed1a",
+  "shared_production_function_sha256": "66c9a593127ab1369b46e98f1812c71458b2d282e982a9ba2ea41d234858b01e",
+  "qualification": "Resident-loop matched pairs actually ran on509; its entire production resident function is unchanged in0a4andfinal49. Global-loop pairs actually ran on0a4and vary only its real coroutine. Final49application modules and ownership protocol are byte-identical to0a4; CI-only allowance change is separately validated. Original measured commits/trees remain original; final49resource and mandatory gates are separately source-bound.",
+  "global_comparison": {
+    "source": "0a4b2aba52a3ebd65ec2c110c2377bfb3f9e7662",
+    "tree": "ab6d36fe3a543841e670c48f9654f64aeb5f01d3",
+    "function_sha256": "64ca848f372744307b02691e49927eed9095d053562edcb7bcd4bd10af0978b6",
+    "pairs": [
+      {
+        "case": "1",
+        "saving_bytes": 58429440,
+        "control_peak": 422768640,
+        "shipping_peak": 422682624,
+        "held_during_reader": false,
+        "held_after_reader_release": false
+      },
+      {
+        "case": "2",
+        "saving_bytes": 59072512,
+        "control_peak": 422592512,
+        "shipping_peak": 422617088,
+        "held_during_reader": false,
+        "held_after_reader_release": false
+      },
+      {
+        "case": "3",
+        "saving_bytes": 57753600,
+        "control_peak": 422952960,
+        "shipping_peak": 422871040,
+        "held_during_reader": false,
+        "held_after_reader_release": false
+      },
+      {
+        "case": "4-failed",
+        "saving_bytes": 57892864,
+        "control_peak": 422916096,
+        "shipping_peak": 422674432,
+        "held_during_reader": false,
+        "held_after_reader_release": false
+      },
+      {
+        "case": "5-reader",
+        "saving_bytes": 151552,
+        "control_peak": 422842368,
+        "shipping_peak": 422875136,
+        "held_during_reader": true,
+        "held_after_reader_release": false
+      }
+    ],
+    "qualification": "Global-only matched ownership,not decoder profiling or privateGranite. Native facts agree. Peaks unchanged. GC/allocator settling identical. Active reader intentionally retains oldsource."
+  },
+  "final_source": {
+    "baseline": "1e1234fbcf7ca18f3862e5cdeac1451780e51b49",
+    "baseline_tree": "4051883efb1f225dcd71e07f1998e45c9d96fb39",
+    "candidate": "49e616bc4d5c4a6d49354eea1f2d015b7a1622b4",
+    "tree": "7ac87bb9ff9f0da6186e50dedd0c93b9bd7bc727",
+    "version": "1.22.23",
+    "build": 2238,
+    "pr": 327,
+    "source_branch": "fix/resident-refresh-reference-release"
+  },
+  "final_app_equivalence": {
+    "measured_source": "0a4b2aba52a3ebd65ec2c110c2377bfb3f9e7662",
+    "final_source": "49e616bc4d5c4a6d49354eea1f2d015b7a1622b4",
+    "files": [
+      {
+        "path": "dtos_app.py",
+        "sha256": "9178fb290376c6ec56acf4e67da8952baf1305816c1a1ad12edbd35703bbdcfe",
+        "identical": true
+      },
+      {
+        "path": "services/league_maintenance.py",
+        "sha256": "92a1ee821944242442a4201a22b69b153feaea4a6566d0401f7ecf0180f263b5",
+        "identical": true
+      },
+      {
+        "path": "tools/validation/resident_refresh_ownership.py",
+        "sha256": "47f5b9daf740e89f194cd1cf9b36eb8f165ce3a09a0ce438fe6ff13cd6bd55c3",
+        "identical": true
+      }
+    ]
+  }
+}
