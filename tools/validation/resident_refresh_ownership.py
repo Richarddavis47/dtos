@@ -17,6 +17,7 @@ import os
 from pathlib import Path
 import shutil
 import subprocess
+import sys
 import tempfile
 import threading
 import time
@@ -60,6 +61,7 @@ def main():
     args.output.mkdir(parents=True, exist_ok=True)
     result = dict(
         schema="resident-refresh-ownership-v1",
+        python=sys.version,
         passed=False,
         cases=[],
         samples=[],
@@ -374,7 +376,16 @@ def main():
                             )
                     finally:
                         lifecycle_coordinator.release_fois_generation()
+                    owner_release_plan = admission(path)
+                    # Logical release does not guarantee immediate allocator
+                    # return (notably across supported Python versions). This
+                    # fixture owns the remaining pressure; relieve it explicitly
+                    # before proving normal execution with measured capacity.
+                    relieved_fixture_bytes = sum(len(chunk) for chunk in pressure)
+                    pressure.clear()
+                    release_unused_allocator_pages()
                     recovery_plan = admission(path)
+                    assert recovery_plan["would_admit"] is True
                     assert restore(cold, path, identities["oneqb"][1])
                     recovered = sample("cold one-QB completed after real owner release")
                     live("recovered capacity")
@@ -385,6 +396,8 @@ def main():
                         required_bytes=required,
                         unsafe_bytes=unsafe["cgroup_current_bytes"],
                         released_bytes=released["cgroup_current_bytes"],
+                        owner_release_plan=owner_release_plan,
+                        relieved_fixture_bytes=relieved_fixture_bytes,
                         recovery_plan=recovery_plan,
                         recovery_bytes=recovered["cgroup_current_bytes"],
                     )
@@ -474,6 +487,7 @@ def main():
                 "Fixture clocks normalized only on copies; no source facts changed.",
                 "Kernel lifetime peak includes fixture preparation,verification and bounded pressure. Stage samples distinguish publication and pressure; no decoder-only comparison claimed.",
                 "Three repeated publications per case are finite cleanup evidence,not long-term leak freedom.",
+                "Recovery explicitly relieves fixture-owned pressure; logical owner release alone need not return enough allocator pages to admit restoration.",
             ],
         )
     finally:
