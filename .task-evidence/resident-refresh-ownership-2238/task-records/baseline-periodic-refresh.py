@@ -1,0 +1,38 @@
+def ensure_periodic_refresh(
+    runtime: LeagueRuntime,
+    refresh: Callable[[LeagueRuntime], Awaitable[Any]],
+    *, interval_seconds: float,
+) -> None:
+    """Attach one cancellable maintenance loop to an already resident runtime."""
+    name = "dtos-resident-league-refresh"
+    if any(task.get_name() == name and not task.done() for task in runtime.background_tasks):
+        return
+
+    async def maintain() -> None:
+        while True:
+            await asyncio.sleep(interval_seconds)
+            if runtime.status is not RuntimeState.WARM:
+                return
+            runtime.lifecycle["refresh_state"] = "running"
+            worker = asyncio.create_task(refresh(runtime))
+            try:
+                await asyncio.shield(worker)
+            except asyncio.CancelledError:
+                # Runtime.close() must not release state before a writer exits.
+                await asyncio.gather(worker, return_exceptions=True)
+                raise
+            except Exception as exc:
+                runtime.lifecycle["refresh_state"] = "failed"
+                runtime.lifecycle["refresh_error_type"] = type(exc).__name__
+            else:
+                runtime.lifecycle["refresh_state"] = (
+                    "deferred" if runtime.lifecycle.get('preparation_state') == 'waiting_for_capacity'
+                    else "failed" if runtime.state.get("last_error") else "complete"
+                )
+                runtime.lifecycle.pop("refresh_error_type", None)
+                from src.platform.storage_accounting import periodic_storage_accounting
+                await asyncio.to_thread(periodic_storage_accounting)
+
+    task = asyncio.create_task(maintain(), name=name)
+    runtime.background_tasks.add(task)
+    task.add_done_callback(runtime.background_tasks.discard)

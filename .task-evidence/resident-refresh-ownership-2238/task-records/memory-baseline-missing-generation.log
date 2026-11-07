@@ -1,0 +1,20 @@
+Traceback (most recent call last):
+  File "/evidence/retention_memory_probe.py", line 87, in <module>
+    asyncio.run(main())
+    ~~~~~~~~~~~^^^^^^^^
+  File "/usr/local/lib/python3.14/asyncio/runners.py", line 204, in run
+    return runner.run(main)
+           ~~~~~~~~~~^^^^^^
+  File "/usr/local/lib/python3.14/asyncio/runners.py", line 127, in run
+    return self._loop.run_until_complete(task)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "/usr/local/lib/python3.14/asyncio/base_events.py", line 719, in run_until_complete
+    return future.result()
+           ~~~~~~~~~~~~~^^
+  File "/evidence/retention_memory_probe.py", line 45, in main
+    with src.open('rb') as r,target.open('wb') as w:shutil.copyfileobj(r,w,1024*1024);w.flush();os.fsync(w.fileno())
+         ~~~~~~~~^^^^^^
+  File "/usr/local/lib/python3.14/pathlib/__init__.py", line 771, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/evidence/runtime-retention/next-publication.json'

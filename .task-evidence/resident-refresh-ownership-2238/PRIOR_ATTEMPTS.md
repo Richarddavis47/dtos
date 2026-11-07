@@ -1,0 +1,13 @@
+# Prior attempts, not final acceptance
+
+Before-fix ownership controls:5 failures/2passes establish the bug. Incomplete asyncio test proxy and premature immediate-close assertion are fixture/setup errors; corrected controls allow event-loop cleanup. Missing fixture league display-name initialization caused a setupKeyError and dependent missing-file attempts; originals are retained. Ruff formatting/cache errors and a publisher fixture's obsolete twelve-job expectation were corrected without dropping assertions.
+
+The first final-source509resource control passed locally on Python3.14, but hosted Python3.12 correctly deferred after old owner release. Logical release did not immediately free enough allocator pages; the fixture incorrectly assumed it did. Final108explicitly relieves only fixture-owned pressure and checks actual capacity before real execution. Product memory policy is unchanged. The failed hostedZIP and decoded original job log remain intact; no missing checksum sidecar is fabricated for that failed run.
+
+Superseded509localcanonical and two hosted workflows were deliberately cancelled after this known focused failure. Two other509hosted workflows completed successfully, but are not used as final108acceptance. Local interrupted result is incomplete, not a passing full regression. Original trace/console and generated-validation records remain distinguishable. A first clean-checkout setup failed the existing8GiB scratch prerequisite before starting canonical; its command/AssertionError remain in the task transcript, with this note as an account rather than a reconstructed original log. Only final108runs establish release gates.
+
+An earlier509focused invocation mistakenly set a transcribed expected-head environment string. Unit tests did not use that variable to establish checkout identity. It is not relied upon: subsequent exact509and final108scopes passed, with separate source receipts. Matched full-lifecycle measurements were on509with a byte-identical product function in108; they are separately source-associated, not relabeled as108executions.
+
+Download transport failures from the old hostGitHubCLI (unsupported log flag and forbidden signed redirect) are not application test failures. The existing GitHub connector retrieved the original hosted artifact with exact API SHA256; temporary download URLs and signatures are not published. No credentials were changed or bypassed.
+
+All artifacts here are synthetic/source-validation evidence. Earlier release/study originals remain unchanged at their immutable published locations. No historical production payload or recovered original log has been fabricated.

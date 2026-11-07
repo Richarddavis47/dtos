@@ -1,0 +1,18 @@
+{"source": "shipping baseline", "cases": [{"case": "success", "obsolete_generation_retained_while_sleeping": true, "released_only_after_close": false, "active_requests": 0, "new_publication_preserved": true}, {"case": "exception", "obsolete_generation_retained_while_sleeping": true, "released_only_after_close": false, "active_requests": 0, "new_publication_preserved": true}], "expected_unwanted_retention": true, "method": "Existing real periodic loop and real asyncio worker. Only interval scheduling/storage bookkeeping isolated; no admission or source result seeded. Weak reference tracks obsolete dictionary after a separate legal publication."}
+Traceback (most recent call last):
+  File "/evidence/retention_reproduction.py", line 41, in <module>
+    asyncio.run(main())
+    ~~~~~~~~~~~^^^^^^^^
+  File "/usr/local/lib/python3.14/asyncio/runners.py", line 204, in run
+    return runner.run(main)
+           ~~~~~~~~~~^^^^^^
+  File "/usr/local/lib/python3.14/asyncio/runners.py", line 127, in run
+    return self._loop.run_until_complete(task)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "/usr/local/lib/python3.14/asyncio/base_events.py", line 719, in run_until_complete
+    return future.result()
+           ~~~~~~~~~~~~~^^
+  File "/evidence/retention_reproduction.py", line 40, in main
+    assert all(r['obsolete_generation_retained_while_sleeping'] and r['released_only_after_close'] and r['new_publication_preserved'] for r in rows)
+           ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError

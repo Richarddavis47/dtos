@@ -1,0 +1,89 @@
+test_cancellation_drains_writer (tests.test_resident_refresh_retention.CompletedRefreshOwnershipTests.test_cancellation_drains_writer) ... ok
+test_completed_result_releases_superseded_publication (tests.test_resident_refresh_retention.CompletedRefreshOwnershipTests.test_completed_result_releases_superseded_publication) ... FAIL
+test_failed_task_drops_traceback_but_preserves_last_valid_source (tests.test_resident_refresh_retention.CompletedRefreshOwnershipTests.test_failed_task_drops_traceback_but_preserves_last_valid_source) ... FAIL
+test_legitimate_reader_keeps_its_snapshot_until_released (tests.test_resident_refresh_retention.CompletedRefreshOwnershipTests.test_legitimate_reader_keeps_its_snapshot_until_released) ... FAIL
+test_repeated_cancellation_does_not_detach_or_cancel_writer (tests.test_resident_refresh_retention.CompletedRefreshOwnershipTests.test_repeated_cancellation_does_not_detach_or_cancel_writer) ... FAIL
+test_single_flight_and_next_interval_preserve_other_league (tests.test_resident_refresh_retention.CompletedRefreshOwnershipTests.test_single_flight_and_next_interval_preserve_other_league) ... ok
+test_timeout_traceback_does_not_retain_old_generation (tests.test_resident_refresh_retention.CompletedRefreshOwnershipTests.test_timeout_traceback_does_not_retain_old_generation) ... FAIL
+
+======================================================================
+FAIL: test_completed_result_releases_superseded_publication (tests.test_resident_refresh_retention.CompletedRefreshOwnershipTests.test_completed_result_releases_superseded_publication)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.14/asyncio/runners.py", line 127, in run
+    return self._loop.run_until_complete(task)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "/usr/local/lib/python3.14/asyncio/base_events.py", line 719, in run_until_complete
+    return future.result()
+           ~~~~~~~~~~~~~^^
+  File "/app/tests/test_resident_refresh_retention.py", line 91, in test_completed_result_releases_superseded_publication
+    self.assertIsNone(old())
+    ~~~~~~~~~~~~~~~~~^^^^^^^
+AssertionError: {'league': {'league_id': '111', 'season': '2026', 'scoring_settings': {'pass_td': 4}}, 'source_generation': 'first', 'native_points': {'zero': 0, 'negative': -2.125}} is not None
+
+======================================================================
+FAIL: test_failed_task_drops_traceback_but_preserves_last_valid_source (tests.test_resident_refresh_retention.CompletedRefreshOwnershipTests.test_failed_task_drops_traceback_but_preserves_last_valid_source)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.14/asyncio/runners.py", line 127, in run
+    return self._loop.run_until_complete(task)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "/usr/local/lib/python3.14/asyncio/base_events.py", line 719, in run_until_complete
+    return future.result()
+           ~~~~~~~~~~~~~^^
+  File "/app/tests/test_resident_refresh_retention.py", line 109, in test_failed_task_drops_traceback_but_preserves_last_valid_source
+    self.assertIsNone(old())
+    ~~~~~~~~~~~~~~~~~^^^^^^^
+AssertionError: {'league': {'league_id': '111', 'season': '2026', 'scoring_settings': {'pass_td': 4}}, 'source_generation': 'first', 'native_points': {'zero': 0, 'negative': -2.125}} is not None
+
+======================================================================
+FAIL: test_legitimate_reader_keeps_its_snapshot_until_released (tests.test_resident_refresh_retention.CompletedRefreshOwnershipTests.test_legitimate_reader_keeps_its_snapshot_until_released)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.14/asyncio/runners.py", line 127, in run
+    return self._loop.run_until_complete(task)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "/usr/local/lib/python3.14/asyncio/base_events.py", line 719, in run_until_complete
+    return future.result()
+           ~~~~~~~~~~~~~^^
+  File "/app/tests/test_resident_refresh_retention.py", line 143, in test_legitimate_reader_keeps_its_snapshot_until_released
+    self.assertIsNone(old())
+    ~~~~~~~~~~~~~~~~~^^^^^^^
+AssertionError: {'league': {'league_id': '111', 'season': '2026', 'scoring_settings': {'pass_td': 4}}, 'source_generation': 'first', 'native_points': {'zero': 0, 'negative': -2.125}} is not None
+
+======================================================================
+FAIL: test_repeated_cancellation_does_not_detach_or_cancel_writer (tests.test_resident_refresh_retention.CompletedRefreshOwnershipTests.test_repeated_cancellation_does_not_detach_or_cancel_writer)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.14/asyncio/runners.py", line 127, in run
+    return self._loop.run_until_complete(task)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "/usr/local/lib/python3.14/asyncio/base_events.py", line 719, in run_until_complete
+    return future.result()
+           ~~~~~~~~~~~~~^^
+  File "/app/tests/test_resident_refresh_retention.py", line 204, in test_repeated_cancellation_does_not_detach_or_cancel_writer
+    await self.cancellation(True)
+  File "/app/tests/test_resident_refresh_retention.py", line 192, in cancellation
+    self.assertFalse(task.done(), "Maintenance must drain the real writer before exiting")
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: True is not false : Maintenance must drain the real writer before exiting
+
+======================================================================
+FAIL: test_timeout_traceback_does_not_retain_old_generation (tests.test_resident_refresh_retention.CompletedRefreshOwnershipTests.test_timeout_traceback_does_not_retain_old_generation)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.14/asyncio/runners.py", line 127, in run
+    return self._loop.run_until_complete(task)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "/usr/local/lib/python3.14/asyncio/base_events.py", line 719, in run_until_complete
+    return future.result()
+           ~~~~~~~~~~~~~^^
+  File "/app/tests/test_resident_refresh_retention.py", line 124, in test_timeout_traceback_does_not_retain_old_generation
+    self.assertIsNone(old())
+    ~~~~~~~~~~~~~~~~~^^^^^^^
+AssertionError: {'league': {'league_id': '111', 'season': '2026', 'scoring_settings': {'pass_td': 4}}, 'source_generation': 'first', 'native_points': {'zero': 0, 'negative': -2.125}} is not None
+
+----------------------------------------------------------------------
+Ran 7 tests in 0.066s
+
+FAILED (failures=5)

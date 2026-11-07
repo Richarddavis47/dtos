@@ -1,0 +1,63 @@
+# Independent Scout acceptance — resident-refresh ownership
+
+Verify the scoped v1.22.23/build2238 correction. Do not implement, stress production or mutate settings. Final publication/deployment receipts outside this sealed handoff supply the merge commit; verify them independently.
+
+Candidate: `108624a0a3be61501376de243a54f23dd2e1e34a`
+Validated application tree required: `a09397ad108c2bf221a70ff55fe7e06ab1cbc07c`
+Baseline: v1.22.22/build2237, `1e1234fbcf7ca18f3862e5cdeac1451780e51b49` / `4051883efb1f225dcd71e07f1998e45c9d96fb39`.
+PR: https://github.com/Richarddavis47/dtos/pull/327
+Expected immutable release: https://github.com/Richarddavis47/dtos/releases/tag/v1.22.23
+
+## Integrity and implementation
+
+1. Verify immutable tag, release and production readiness. The normal squash merge must have exactly the validated application tree. The publisher is a separate tooling-only ref; it is never application code or a preliminary main merge.
+2. Verify release attachment manifests/checksums, original hosted canonical ZIP and readable local/hosted consoles. Require all ten completed gates and all thirteen final-source hosted jobs, including resident-refresh-memory. Read final receipts for authoritative counts; no failure, skip, cancellation or deferred operation counts as completed execution. Verify actual2GiB/no-swap enforcement, process cleanup and source association. Numbered console parts must concatenate to the unedited original.
+3. Review patch: only application logic is completed refresh-worker reference release and repeated-cancellation writer drain. No runtime eviction, catalog sharing, cache-format change, valuation/scoring change or admission reduction. Current data and real readers retain ownership. Persistent recovery/source evidence is unchanged.
+4. Review matched one-QB/K/DEF baseline-function/shipping controls (three normal pairs plus failure and active-reader pairs). They used commit509 and an identical production function in final108; the source-association receipt proves that identity. Same decoder, digest behavior, inputs, instrumentation, native binding and actual guards. Settled obsolete graph savings are approximately55–56MiB under Python3.14; full restoration peaks are materially unchanged. GC/allocator trimming, file accounting and verification clocks are disclosed. Finite controls do not prove long-term leak freedom or Granite recovery.
+5. Verify final-source resource cases: actual full restoration/publication, incompatible identity rejection, current/old reader ownership, real pressure deferral, FOIS standing reservation protection, explicit pressure relief and one subsequent completed restore, three repeat publications, real pending writer cancellation/drain, no children/scratch afterward. FOIS reservation protection is not a claim that this tool executed FOIS. Existing mandatory lifecycle jobs cover actual FOIS/Trade workers.
+6. Inspect original hosted failure: Python3.12 correctly deferred because logical object release did not immediately return sufficient allocator pages. The original fixture incorrectly assumed it would. Final fixture explicitly releases its own remaining pressure before recovery, records both plans and calls the actual guard once. Do not attribute that recovery solely to the product change. Preserve original failed/cancelled source509 runs and setup/publisher failures separately; final success must be final108.
+7. Reuse the accepted prior decoder reconciliation, without rerunning it or replacing its qualifications: https://github.com/Richarddavis47/dtos/tree/41edcb7acf2eaec428691482a89e9c4a9c982a41/.task-evidence/cache-string-sharing-2237-reconciliation . No new decoder-only saving is asserted.
+
+## One fresh existing authorized preflight
+
+Codex had Render management metadata access, not authenticated Shell/SSH or a connected owner browser. MainChat's earlier Render-local token200 is supplied evidence, not reproduced. Do not repeat that credential check, repair the unchanged external401 binding, rotate/export a token or create a relay.
+
+Only if the existing authenticated Render Shell is available, make one lightweight request to the **running application**. Do not import a new app or coordinator. This snippet does not reveal the token and refuses redirects:
+
+```python
+import json, os
+from urllib.error import HTTPError
+from urllib.request import Request, build_opener, HTTPRedirectHandler, ProxyHandler
+class NoRedirect(HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        return None
+secret = os.environ.get('DTOS_INSPECTION_AUTH_TOKEN')
+if not secret:
+    raise SystemExit('Existing configured inspection access unavailable; stop.')
+port = int(os.environ.get('PORT', '10000'))
+url = ('http://127.0.0.1:' + str(port)
+       + '/api/inspect/operations/restoration-preflight'
+       + '?league_id=1314695233040052224')
+try:
+    with build_opener(ProxyHandler({}), NoRedirect()).open(
+        Request(url, headers={'X-DTOS-Inspection-Auth': secret}), timeout=5
+    ) as response:
+        raw = response.read(1024 * 1024 + 1)
+except HTTPError as error:
+    raise SystemExit('Inspection HTTP ' + str(error.code) + '; stop.')
+if len(raw) > 1024 * 1024:
+    raise SystemExit('Unexpected response size; stop.')
+print(json.dumps(json.loads(raw), indent=2))
+```
+
+Record timestamp, deployment/process identity, current process-local lifecycle/reservations, shared cgroup usage/effective limit/anon/file counters, cache metadata, required capacity, verdict/reason and unknowns. It is advisory and non-atomic; it grants no lease and says nothing conclusive about other workers' idleness or payload compatibility. Do not subtract inactive-file pages yourself, deep-size or decode a private cache. Current state cannot reconstruct an earlier503. On unknown, unavailable or would_defer, stop and report the exact blocker. No repeated polling/retries or acceptance search.
+
+## One conditional normal entry and independent actual-score parity
+
+Only if fresh preflight permits, use the existing authorized signed-in account for one normal guarded Granite entry. Entry rechecks real admission and source compatibility. Stop on deferral. Do not force sync, clear caches, evict active contexts, restart, rebuild FOIS, run Trade discovery or mutate preferences/rankings/goals/lineups/trades. Confirm correct league/franchise and one-QB/FLEX/K/DEF context.
+
+If entry succeeds, select one supported completed player-week with an independently accessible native Sleeper actual result. Do not assume the historical26.56Week8sample or use projection21.00 as an actual. Compare the independent source score with the deployed dossier, prepared Market/asset result and relevant existing prepared consumer, without provider acquisition. Record exact league/season/week/player/scoring/source-generation identity, precision, source/retrieval clocks and qualification. Missing/conflicting records remain missing; zero/negative scores remain exact. A DTOS response agreeing with another DTOS response is not independent source parity. If the source leg is inaccessible safely, mark it HELD instead of reading a whole private cache.
+
+A successful entry does not prove this cleanup caused recovery. No fixture result is live acceptance. Remaining memory demand may still legitimately defer cold entry. Confirm normal Home/MyTeam/Market and existing Trade-workspace navigation without generating recommendations. Inspect the required phone sizes320×432,375×667,390×844 and desktop as available; physical iPhone/Safari remains unverified unless actually tested.
+
+Return separate PASS/PARTIAL/HELD for immutable/source integrity, mandatory validation, resource/ownership controls, safe live entry and independent actual-score parity. Name missing evidence precisely.

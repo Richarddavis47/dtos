@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "/evidence/retention_memory_probe.py", line 9, in <module>
+    payload['data']['league']['name']+=' / next fixture publication';target=out/'next-publication.json';target.write_text(json.dumps(payload,separators=(',',':'),ensure_ascii=False));print(json.dumps(dict(bytes=target.stat().st_size,sha256=hashlib.file_digest(target.open('rb'),'sha256').hexdigest(),only_source_change='Synthetic league display name; same league/scoring/season/native scores,distinct physical publication.')));raise SystemExit(0)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^
+KeyError: 'name'

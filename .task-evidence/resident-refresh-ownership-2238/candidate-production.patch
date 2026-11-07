@@ -1,0 +1,889 @@
+diff --git a/.github/workflows/product-browser.yml b/.github/workflows/product-browser.yml
+index bcf5d47e..d41747c8 100644
+--- a/.github/workflows/product-browser.yml
++++ b/.github/workflows/product-browser.yml
+@@ -313,3 +313,45 @@ jobs:
+           path: .validation/public-welcome
+           if-no-files-found: error
+           retention-days: 14
++
++  resident-refresh-memory:
++    runs-on: ubuntu-24.04
++    timeout-minutes: 15
++    steps:
++      - uses: actions/checkout@v4
++        with:
++          ref: ${{ github.event.pull_request.head.sha || github.sha }}
++          fetch-depth: 0
++          persist-credentials: false
++      - name: Build established bounded validation runtime
++        run: docker build -f tools/validation/containers/browser.Dockerfile -t dtos-browser-validation .
++      - name: Acquire only pinned public disposable fixtures
++        run: |
++          set -euo pipefail
++          mkdir -p .validation/resident-refresh/inputs .validation/resident-refresh/evidence
++          base=https://raw.githubusercontent.com/Richarddavis47/dtos/2fffaf5672202a27e155a4a9bdfeee62c9ff27b7/.task-evidence/cache-string-sharing-2237/synthetic-fixtures
++          for name in oneqb.json superflex.json projections.sqlite3; do
++            curl --fail --silent --show-error --max-time 120 --output ".validation/resident-refresh/inputs/$name" "$base/$name"
++          done
++          cd .validation/resident-refresh/inputs
++          echo '98d76b8452431ff3e6f961b6bddd9a654f7b6d23129d96cce60e52cbf79cb11b  oneqb.json' | sha256sum --check
++          echo '49915270f727cd3eb6a3a792b8531a487d7da96a06c031ee0e5a176887f69c81  superflex.json' | sha256sum --check
++          echo '43541f6a3c738d0ebeac0794cdfd7c009bd27f450816919315b824b512a7b708  projections.sqlite3' | sha256sum --check
++      - name: Prove real publication, ownership, deferral and recovery under 2 GiB
++        env:
++          DTOS_EXPECTED_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
++        run: |
++          set -o pipefail
++          docker run --rm --init --memory=2g --memory-swap=2g --cpus=2 --network=none -v "$PWD:$PWD:ro" -v "$PWD/.validation/resident-refresh:/proof" -w "$PWD" -e DTOS_EXPECTED_HEAD -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0="$PWD" dtos-browser-validation python -m tools.validation.resident_refresh_ownership --fixtures /proof/inputs --output /proof/evidence 2>&1 | tee .validation/resident-refresh/raw.log
++          cd .validation/resident-refresh
++          sha256sum evidence/result.json raw.log > SHA256SUMS
++      - name: Preserve completed and incomplete ownership evidence
++        if: always()
++        uses: actions/upload-artifact@v4
++        with:
++          name: resident-refresh-ownership-2g
++          path: |
++            .validation/resident-refresh/evidence
++            .validation/resident-refresh/raw.log
++            .validation/resident-refresh/SHA256SUMS
++          if-no-files-found: error
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index 84c5e67e..293b9c95 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -1,3 +1,11 @@
++# v1.22.23 / build 2238 — Release completed refresh ownership
++
++Resident-league maintenance now drops a finished refresh task before sleeping. A completed result or exception traceback can no longer keep a superseded league publication alive after a separate refresh replaces it. Current publications, legitimate readers, valid cached evidence and active work retain their existing owners. No runtime eviction or catalog sharing is introduced.
++
++Cancellation drains the underlying writer even if cancellation repeats, then releases the completed task reference. The normal refresh interval, failure/deferral qualification, storage accounting, restored Sleeper actuals and all existing source/scoring/valuation behavior remain unchanged. The 2 GiB cap, full 16× restoration allowance and independent FOIS/Trade reserves are untouched.
++
++Source-compatible disposable controls reproduce obsolete snapshot retention before the correction and its release afterward. They are not live Granite recovery or proof of an earlier production failure. Normal entry still requires fresh admission. See docs/audits/RESIDENT_REFRESH_OWNERSHIP_2238.md.
++
+ # v1.22.22 / build 2237 — Bounded league-cache string sharing
+ 
+ Default startup and connected-league restoration now share equal short immutable strings within each individual JSON decode. Repeated source identities, provenance and disclosure text need fewer separate Python string objects. Mutable containers stay independent; the temporary bounded pool is discarded before publication. No global interning or cross-account cache is introduced.
+diff --git a/RELEASE_NOTES.md b/RELEASE_NOTES.md
+index 22f2ba65..0f330213 100644
+--- a/RELEASE_NOTES.md
++++ b/RELEASE_NOTES.md
+@@ -1,3 +1,11 @@
++# v1.22.23 / build 2238 — Release completed refresh ownership
++
++Resident-league maintenance now drops a finished refresh task before sleeping. A completed result or exception traceback can no longer keep a superseded league publication alive after a separate refresh replaces it. Current publications, legitimate readers, valid cached evidence and active work retain their existing owners. No runtime eviction or catalog sharing is introduced.
++
++Cancellation drains the underlying writer even if cancellation repeats, then releases the completed task reference. The normal refresh interval, failure/deferral qualification, storage accounting, restored Sleeper actuals and all existing source/scoring/valuation behavior remain unchanged. The 2 GiB cap, full 16× restoration allowance and independent FOIS/Trade reserves are untouched.
++
++Source-compatible disposable controls reproduce obsolete snapshot retention before the correction and its release afterward. They are not live Granite recovery or proof of an earlier production failure. Normal entry still requires fresh admission. See docs/audits/RESIDENT_REFRESH_OWNERSHIP_2238.md.
++
+ # v1.22.22 / build 2237 — Bounded league-cache string sharing
+ 
+ Default startup and connected-league restoration now share equal short immutable strings within each individual JSON decode. Repeated source identities, provenance and disclosure text need fewer separate Python string objects. Mutable containers stay independent; the temporary bounded pool is discarded before publication. No global interning or cross-account cache is introduced.
+diff --git a/app_metadata.py b/app_metadata.py
+index 15d6b01a..bc720bb9 100644
+--- a/app_metadata.py
++++ b/app_metadata.py
+@@ -7,10 +7,10 @@ from datetime import datetime, timezone
+ from pathlib import Path
+ 
+ APPLICATION_NAME = "DTOS"
+-VERSION = "1.22.22"
+-PRODUCT_VERSION = "1.22.22"
+-BUILD_NUMBER = 2237
+-RELEASE_CODENAME = "Bounded League Cache Memory"
++VERSION = "1.22.23"
++PRODUCT_VERSION = "1.22.23"
++BUILD_NUMBER = 2238
++RELEASE_CODENAME = "Resident Refresh Ownership"
+ APPLICATION_STARTED_AT = datetime.now(timezone.utc).isoformat()
+ 
+ _REPOSITORY_ROOT = Path(__file__).resolve().parent
+diff --git a/docs/audits/RESIDENT_REFRESH_OWNERSHIP_2238.md b/docs/audits/RESIDENT_REFRESH_OWNERSHIP_2238.md
+new file mode 100644
+index 00000000..6ff6868c
+--- /dev/null
++++ b/docs/audits/RESIDENT_REFRESH_OWNERSHIP_2238.md
+@@ -0,0 +1,25 @@
++# Completed resident-refresh ownership
++
++Production/main was verified as v1.22.22/build2237, commit1e1234fbcf7ca18f3862e5cdeac1451780e51b49/tree4051883efb1f225dcd71e07f1998e45c9d96fb39. The accepted decoder-only reconciliation is reused, not repeated. Its synthetic results do not establish Granite recovery.
++
++## Confirmed boundary
++
++services.league_maintenance.ensure_periodic_refresh kept its local completed worker throughout the next interval sleep. dtos_app._refresh_resident_league returns the entire prepared source dictionary. After a separate normal publication replaced runtime.state data and consumer contexts, the sleeping maintenance coroutine still owned that old graph through Task.result. A failed or timed-out worker could similarly retain a source/candidate through its exception traceback. This is unnecessary ownership, distinct from the current warm context, legitimate old readers, persistent caches or allocator retention.
++
++Weak-reference controls reproduce both success and exception retention until the maintenance loop closes. Full source-compatible one-QB/K/DEF controls exercise two actual cache restores, native binding, projection restoration and canonical publication in an enforced2GiB/no-swap/twoCPU/offline container. The second fixture differs only by a synthetic league display name. Native result/disclosure digests agree; all source facts remain retained. A prototype changing only the completed-task reference releases the obsolete generation and materially reduces settled memory. Active-reader controls intentionally retain it until that reader releases its reference. Original results, exact source/method/input hashes and final-source measurements are sealed separately in release evidence.
++
++## Correction
++
++The existing refresh loop releases its worker reference in finally, after completion/error handling and after any cancellation drain. Nothing evicts a runtime or discards a publication. The current source, request pins, background ownership, saved workspace and persistent recovery files remain unchanged. The next ordinary interval still runs, including after failure; there is no automatic retry loop or new provider work.
++
++The same boundary now drains through asyncio.shield until the writer finishes even when cancellation repeats. The previous gather in the cancellation handler could propagate a second cancellation to the writer. The writer's terminal exception is observed, the cancellation is preserved and only then is the task reference released. Tests verify a real pending writer remains alive until explicitly allowed to finish.
++
++Seven new regression methods fail on the old source in five cases, covering superseded success/error/timeout retention, a legitimate reader and repeated cancellation. All new and existing maintenance methods must pass on the final source, followed by full mandatory local/canonical/hosted and enforced2GiB controls. Fixture setup errors and original before-fix failures are retained separately.
++
++## Preservation and limitations
++
++No catalog sharing, blind pre-entry eviction, cache-format change, allowance reduction, file-cache credit or source reconstruction shortcut is included. Cache JSON, the full16× physical-size basis,2GiB cap, FOIS768MiB and Trade256+128MiB policies are unchanged. Source generation, scoring, exact picks, account isolation, missing/zero/negative results, neutral/Custom valuation, submitted lineups, FOIS grades and active-reader evidence remain independent and unchanged.
++
++Authorized Render management access confirms the live baseline and provides retained logs/metrics, not a complete current runtime-ownership snapshot. Render memory_usage is not substituted for raw cgroup admission inputs. One existing Opera capability check reports not connected; no Render Shell/SSH executor is available in this session. The unchanged external401binding is not retried. Main Chat's earlier Render-local token200 is supplied evidence, not reproduced. No Granite entry, forced sync, Trade discovery, FOIS rebuild, cache clearing, manual restart, preference mutation or infrastructure change is performed for diagnosis.
++
++This demonstrated lifecycle defect can leave more headroom after superseded publications are released. It does not prove that it caused Granite's reported production deferral, that an eligible production runtime could be evicted, that the private cache has a particular peak, or that Granite entry/live Sleeper parity is recovered. Final acceptance requires one fresh existing Render-local preflight and, only if it permits, one normal guarded entry and an independent completed-week source-score comparison.
+diff --git a/services/league_maintenance.py b/services/league_maintenance.py
+index 718435ba..c58b8d17 100644
+--- a/services/league_maintenance.py
++++ b/services/league_maintenance.py
+@@ -90,7 +90,17 @@ def ensure_periodic_refresh(
+                 await asyncio.shield(worker)
+             except asyncio.CancelledError:
+                 # Runtime.close() must not release state before a writer exits.
+-                await asyncio.gather(worker, return_exceptions=True)
++                # Repeated cancellation must not propagate through a gather
++                # into the writer while its source publication is still owned.
++                while not worker.done():
++                    try:
++                        await asyncio.shield(worker)
++                    except asyncio.CancelledError:
++                        continue
++                    except Exception:
++                        break
++                if not worker.cancelled():
++                    worker.exception()
+                 raise
+             except Exception as exc:
+                 runtime.lifecycle["refresh_state"] = "failed"
+@@ -103,6 +113,11 @@ def ensure_periodic_refresh(
+                 runtime.lifecycle.pop("refresh_error_type", None)
+                 from src.platform.storage_accounting import periodic_storage_accounting
+                 await asyncio.to_thread(periodic_storage_accounting)
++            finally:
++                # A completed task owns its result or exception traceback.
++                # Do not pin an obsolete publication throughout the next sleep.
++                # Cancellation reaches here only after the writer is drained.
++                del worker
+ 
+     task = asyncio.create_task(maintain(), name=name)
+     runtime.background_tasks.add(task)
+diff --git a/tests/test_resident_refresh_retention.py b/tests/test_resident_refresh_retention.py
+new file mode 100644
+index 00000000..1de39e8d
+--- /dev/null
++++ b/tests/test_resident_refresh_retention.py
+@@ -0,0 +1,204 @@
++"""Completed refresh tasks must not own superseded league publications."""
++from __future__ import annotations
++
++import asyncio
++from contextlib import ExitStack
++import gc
++from types import SimpleNamespace
++import unittest
++from unittest.mock import patch
++import weakref
++
++from services import league_maintenance
++from src.core.league_runtime import LeagueRuntime, RuntimeState
++
++
++class Publication(dict):
++    """A value-identical dictionary with a weak-referenceable ownership marker."""
++
++
++class IntervalGate:
++    def __init__(self):
++        self.arrivals = asyncio.Queue()
++        self.permits = asyncio.Queue()
++        self.calls = 0
++
++    async def sleep(self, _):
++        self.calls += 1
++        self.arrivals.put_nowait(self.calls)
++        await self.permits.get()
++
++    async def parked(self, expected):
++        return await asyncio.wait_for(self.arrivals.get(), 5) == expected
++
++
++class CompletedRefreshOwnershipTests(unittest.IsolatedAsyncioTestCase):
++    async def asyncSetUp(self):
++        self.runtime = LeagueRuntime("111", status=RuntimeState.WARM)
++        self.runtime.apply_data(Publication(
++            league={"league_id": "111", "season": "2026", "scoring_settings": {"pass_td": 4}},
++            source_generation="first", native_points={"zero": 0, "negative": -2.125},
++        ))
++        self.gate = IntervalGate()
++        self.stack = ExitStack()
++        # Isolate only the interval scheduler and unrelated disk accounting.
++        # Worker tasks, cancellation, source ownership and publication are real.
++        api = SimpleNamespace(
++            sleep=self.gate.sleep, create_task=asyncio.create_task,
++            shield=asyncio.shield, gather=asyncio.gather,
++            to_thread=asyncio.to_thread, CancelledError=asyncio.CancelledError,
++        )
++        self.stack.enter_context(patch.object(league_maintenance, "asyncio", api))
++        self.stack.enter_context(patch(
++            "src.platform.storage_accounting.periodic_storage_accounting", return_value={},
++        ))
++
++    async def asyncTearDown(self):
++        try:
++            await self.runtime.close()
++            for _ in range(3):
++                await asyncio.sleep(0)
++        finally:
++            self.stack.close()
++
++    async def start(self, refresh):
++        league_maintenance.ensure_periodic_refresh(self.runtime, refresh, interval_seconds=900)
++        self.assertTrue(await self.gate.parked(1))
++        self.gate.permits.put_nowait(None)
++        self.assertTrue(await self.gate.parked(2))
++
++    async def settle(self):
++        for _ in range(3):
++            await asyncio.sleep(0)
++        gc.collect()
++
++    def replacement(self):
++        self.runtime.apply_data(Publication(
++            league={"league_id": "111", "season": "2026", "scoring_settings": {"pass_td": 4}},
++            source_generation="second", native_points={"zero": 0, "negative": -2.125},
++        ))
++
++    async def test_completed_result_releases_superseded_publication(self):
++        old = weakref.ref(self.runtime.state["data"])
++
++        async def refresh(runtime):
++            return runtime.state["data"]
++
++        await self.start(refresh)
++        self.assertIs(old(), self.runtime.state["data"])
++        self.replacement()
++        await self.settle()
++        self.assertIsNone(old())
++        self.assertEqual(self.runtime.state["data"]["native_points"], {"zero": 0, "negative": -2.125})
++        self.assertEqual(self.runtime.lifecycle["refresh_state"], "complete")
++
++    async def test_failed_task_drops_traceback_but_preserves_last_valid_source(self):
++        old = weakref.ref(self.runtime.state["data"])
++
++        async def refresh(runtime):
++            source = runtime.state["data"]
++            self.assertEqual(source["source_generation"], "first")
++            raise OSError("disposable source failure")
++
++        await self.start(refresh)
++        self.assertIs(old(), self.runtime.state["data"])
++        self.assertEqual(self.runtime.lifecycle["refresh_state"], "failed")
++        self.assertEqual(self.runtime.lifecycle["refresh_error_type"], "OSError")
++        self.replacement()
++        await self.settle()
++        self.assertIsNone(old())
++        self.assertEqual(self.runtime.state["data"]["source_generation"], "second")
++
++    async def test_timeout_traceback_does_not_retain_old_generation(self):
++        old = weakref.ref(self.runtime.state["data"])
++
++        async def refresh(runtime):
++            source = runtime.state["data"]
++            self.assertIn("native_points", source)
++            raise TimeoutError("disposable timeout")
++
++        await self.start(refresh)
++        self.assertEqual(self.runtime.lifecycle["refresh_error_type"], "TimeoutError")
++        self.replacement()
++        await self.settle()
++        self.assertIsNone(old())
++
++    async def test_legitimate_reader_keeps_its_snapshot_until_released(self):
++        reader = self.runtime.state["data"]
++        old = weakref.ref(reader)
++        self.runtime.active_requests = 1
++
++        async def refresh(runtime):
++            return runtime.state["data"]
++
++        await self.start(refresh)
++        self.replacement()
++        await self.settle()
++        self.assertIs(old(), reader)
++        self.assertEqual(reader["source_generation"], "first")
++        self.assertEqual(self.runtime.active_requests, 1)
++        self.runtime.active_requests = 0
++        del reader
++        await self.settle()
++        self.assertIsNone(old())
++        self.assertEqual(self.runtime.state["data"]["source_generation"], "second")
++
++    async def test_single_flight_and_next_interval_preserve_other_league(self):
++        other = Publication(league={"league_id": "222", "scoring_settings": {"pass_td": 6}})
++        calls = []
++
++        async def refresh(runtime):
++            calls.append(runtime.league_id)
++            return runtime.state["data"]
++
++        await self.start(refresh)
++        league_maintenance.ensure_periodic_refresh(self.runtime, refresh, interval_seconds=900)
++        self.assertEqual(len(self.runtime.background_tasks), 1)
++        self.assertEqual(calls, ["111"])
++        self.replacement()
++        self.gate.permits.put_nowait(None)
++        self.assertTrue(await self.gate.parked(3))
++        self.assertEqual(calls, ["111", "111"])
++        self.assertEqual(other, {"league": {"league_id": "222", "scoring_settings": {"pass_td": 6}}})
++        self.assertEqual(self.runtime.state["data"]["league"]["scoring_settings"], {"pass_td": 4})
++
++    async def cancellation(self, repeat):
++        entered, release, finished = asyncio.Event(), asyncio.Event(), asyncio.Event()
++        cancelled = []
++
++        async def writer(runtime):
++            entered.set()
++            try:
++                await release.wait()
++            except asyncio.CancelledError:
++                cancelled.append(True)
++                raise
++            runtime.state["data"]["writer_finished"] = True
++            finished.set()
++            return runtime.state["data"]
++
++        league_maintenance.ensure_periodic_refresh(self.runtime, writer, interval_seconds=900)
++        self.assertTrue(await self.gate.parked(1))
++        self.gate.permits.put_nowait(None)
++        await asyncio.wait_for(entered.wait(), 5)
++        task = next(iter(self.runtime.background_tasks))
++        try:
++            task.cancel()
++            await asyncio.sleep(0)
++            if repeat:
++                task.cancel()
++                for _ in range(3):
++                    await asyncio.sleep(0)
++            self.assertFalse(task.done(), "Maintenance must drain the real writer before exiting")
++            self.assertFalse(cancelled)
++        finally:
++            release.set()
++            await asyncio.gather(task, return_exceptions=True)
++        self.assertTrue(finished.is_set())
++        self.assertTrue(self.runtime.state["data"]["writer_finished"])
++
++    async def test_cancellation_drains_writer(self):
++        await self.cancellation(False)
++
++    async def test_repeated_cancellation_does_not_detach_or_cancel_writer(self):
++        await self.cancellation(True)
+diff --git a/tools/validation/resident_refresh_ownership.py b/tools/validation/resident_refresh_ownership.py
+new file mode 100644
+index 00000000..3037f6d1
+--- /dev/null
++++ b/tools/validation/resident_refresh_ownership.py
+@@ -0,0 +1,506 @@
++"""Enforced-container evidence for completed resident-refresh task ownership.
++
++Pinned public disposable inputs only. No provider acquisition, admission override,
++active-context eviction or production cache access. This is not live acceptance.
++"""
++
++from __future__ import annotations
++
++import argparse
++import asyncio
++from datetime import datetime, timezone
++import gc
++import hashlib
++import json
++import logging
++import os
++from pathlib import Path
++import shutil
++import subprocess
++import sys
++import tempfile
++import threading
++import time
++from types import SimpleNamespace
++from unittest.mock import patch
++import weakref
++
++LIMIT = 2 * 1024**3
++MIB = 1024**2
++FIXTURES = {
++    "oneqb.json": "98d76b8452431ff3e6f961b6bddd9a654f7b6d23129d96cce60e52cbf79cb11b",
++    "superflex.json": "49915270f727cd3eb6a3a792b8531a487d7da96a06c031ee0e5a176887f69c81",
++    "projections.sqlite3": "43541f6a3c738d0ebeac0794cdfd7c009bd27f450816919315b824b512a7b708",
++}
++
++
++class Publication(dict):
++    """A normal JSON-compatible dictionary with an observable weak owner."""
++
++
++class IntervalGate:
++    def __init__(self):
++        self.arrivals = asyncio.Queue()
++        self.permits = asyncio.Queue()
++        self.count = 0
++
++    async def sleep(self, _):
++        self.count += 1
++        self.arrivals.put_nowait(self.count)
++        await self.permits.get()
++
++    async def parked(self, expected):
++        assert await asyncio.wait_for(self.arrivals.get(), 10) == expected
++
++
++def main():
++    parser = argparse.ArgumentParser(description=__doc__)
++    parser.add_argument("--fixtures", type=Path, required=True)
++    parser.add_argument("--output", type=Path, required=True)
++    args = parser.parse_args()
++    args.output.mkdir(parents=True, exist_ok=True)
++    result = dict(
++        schema="resident-refresh-ownership-v1",
++        python=sys.version,
++        passed=False,
++        cases=[],
++        samples=[],
++        liveness=[],
++    )
++    scratch = tempfile.TemporaryDirectory(prefix="resident-refresh-ownership-")
++    root = Path(scratch.name)
++    try:
++        for name, sha in FIXTURES.items():
++            assert (
++                hashlib.file_digest(
++                    (args.fixtures / name).open("rb"), "sha256"
++                ).hexdigest()
++                == sha
++            )
++        shutil.copyfile(
++            args.fixtures / "projections.sqlite3", root / "projections.sqlite3"
++        )
++        paths, identities = {}, {}
++        fixture_time = datetime.now(timezone.utc).isoformat()
++        result['fixture_cache_last_sync'] = fixture_time
++        for name in ("oneqb", "superflex"):
++            with (args.fixtures / (name + ".json")).open(encoding="utf8") as handle:
++                payload = json.load(handle)
++            identities[name] = (
++                str(payload["data"]["league"]["league_id"]),
++                int(payload["data"]["league"]["season"]),
++            )
++            # Refresh only disposable cache-retrieval time, not native observation
++            # clocks or facts. Actual admission uses each full written file size.
++            payload["last_sync"] = fixture_time
++            for generation in ("first", "next", "foreign"):
++                path = root / (name + "-" + generation + ".json")
++                league = payload["data"]["league"]
++                league["name"] = "Disposable " + name + " " + generation
++                league["league_id"] = (
++                    "foreign-identity"
++                    if generation == "foreign"
++                    else identities[name][0]
++                )
++                with path.open("w", encoding="utf8") as handle:
++                    for chunk in json.JSONEncoder(
++                        separators=(",", ":"), ensure_ascii=False
++                    ).iterencode(payload):
++                        handle.write(chunk)
++                    handle.flush()
++                    os.fsync(handle.fileno())
++                paths[name, generation] = path
++            del payload
++        result["inputs"] = {
++            name: dict(source_sha256=sha) for name, sha in FIXTURES.items()
++        }
++        result["written_files"] = {
++            path.name: dict(
++                bytes=path.stat().st_size,
++                sha256=hashlib.file_digest(path.open("rb"), "sha256").hexdigest(),
++            )
++            for path in paths.values()
++        }
++        for key in (
++            "CACHE",
++            "METADATA_DB",
++            "INTELLIGENCE_CHECKPOINT",
++            "FOIS_DB",
++            "HISTORY_DB",
++            "ACCOUNT_DB",
++        ):
++            os.environ["DTOS_" + key + "_FILE"] = str(root / (key.lower() + ".sqlite3"))
++        os.environ.update(
++            DTOS_PROJECTION_DB_FILE=str(root / "projections.sqlite3"),
++            DTOS_DURABLE_HISTORY_REQUIRED="0",
++            DTOS_HISTORY_STORAGE_ROOT=str(root),
++            DTOS_SLEEPER_SEASON_CACHE_ROOT=str(root / "seasons"),
++            SLEEPER_BASE_URL="http://127.0.0.1:9/v1",
++        )
++        import dtos_app
++        import psutil
++        from fastapi.testclient import TestClient
++        from services import (
++            league_maintenance as maintenance,
++            league_preparation as prep,
++        )
++        from src.core.league_runtime import LeagueRuntime, RuntimeState
++        from src.platform.lifecycle import (
++            lifecycle_coordinator,
++            memory_snapshot,
++            HeavyWorkDeferred,
++        )
++        from src.platform.memory_reclamation import release_unused_allocator_pages
++
++        result.update(
++            head=subprocess.check_output(
++                ["git", "rev-parse", "HEAD"], text=True
++            ).strip(),
++            tree=subprocess.check_output(
++                ["git", "rev-parse", "HEAD^{tree}"], text=True
++            ).strip(),
++            working_tree_clean=not subprocess.check_output(
++                ["git", "status", "--porcelain"], text=True
++            ).strip(),
++        )
++        if os.environ.get("DTOS_EXPECTED_HEAD"):
++            assert (
++                result["head"] == os.environ["DTOS_EXPECTED_HEAD"]
++                and result["working_tree_clean"]
++            )
++        assert memory_snapshot()["cgroup_limit_bytes"] == LIMIT
++        assert Path("/sys/fs/cgroup/memory.swap.max").read_text().strip() == "0"
++        result.update(cgroup_limit=LIMIT, swap_limit=0, cpus=2, network="none")
++        timings = []
++
++        class Timing(logging.Handler):
++            def emit(self, record):
++                if (
++                    getattr(record, "event", None) == "request_complete"
++                    and getattr(record, "path", None) == "/health/live"
++                ):
++                    timings.append(record.duration_ms)
++
++        handler = Timing()
++        logging.getLogger("dtos.request").addHandler(handler)
++        client = TestClient(dtos_app.app)
++
++        def live(label):
++            count = len(timings)
++            start = time.monotonic()
++            assert (
++                client.get("/health/live").status_code == 200
++                and len(timings) == count + 1
++                and timings[-1] < 500
++            )
++            result["liveness"].append(
++                dict(
++                    label=label,
++                    server_ms=timings[-1],
++                    client_ms=(time.monotonic() - start) * 1000,
++                )
++            )
++
++        def sample(label):
++            stat = dict(
++                line.split()
++                for line in Path("/sys/fs/cgroup/memory.stat").read_text().splitlines()
++            )
++            row = dict(
++                label=label,
++                **memory_snapshot(),
++                anon=int(stat["anon"]),
++                file=int(stat["file"]),
++                inactive_file=int(stat["inactive_file"]),
++                kernel_peak=int(Path("/sys/fs/cgroup/memory.peak").read_text()),
++                child_pids=[p.pid for p in psutil.Process().children(recursive=True)],
++            )
++            result["samples"].append(row)
++            assert (
++                row["cgroup_current_bytes"] < LIMIT
++                and not row["cgroup_memory_events"]["oom_kill"]
++            )
++            return row
++
++        def publish(runtime):
++            runtime.apply_data(Publication(runtime.state["data"]))
++            service = dtos_app.ProjectionService(
++                league_id=runtime.league_id, scoring_profile_id=runtime.scoring_profile
++            )
++            service.restore_into(runtime.state["data"])
++            dtos_app._publish_runtime_context(runtime, service)
++
++        def restore(runtime, path, season):
++            with patch.object(prep, "league_cache_file", return_value=path):
++                return prep.restore_cached_runtime(
++                    runtime, publish, expected_season=season
++                )
++
++        def source_digest(runtime):
++            data = runtime.state["data"]
++            h = hashlib.sha256()
++            facts = {
++                key: data[key]
++                for key in ("season_matchups", "canonical_player_production")
++            }
++            for chunk in json.JSONEncoder(
++                sort_keys=True, separators=(",", ":"), default=str
++            ).iterencode(facts):
++                h.update(chunk.encode())
++            return h.hexdigest()
++
++        def admission(path, fois=False):
++            return prep.restoration_admission(
++                path.stat().st_size,
++                memory_snapshot(),
++                fois,
++                fois_working_bytes=prep.FOIS_WORKING,
++                fois_safety_bytes=prep.FOIS_SAFETY,
++                expansion_factor=prep.CACHE_EXPANSION_FACTOR,
++                minimum_working_bytes=prep.CACHE_MINIMUM_WORKING,
++                cache_safety_bytes=prep.CACHE_SAFETY,
++                service_limit_bytes=prep.SERVICE_LIMIT,
++            )
++
++        async def settle():
++            for _ in range(3):
++                await asyncio.sleep(0)
++
++        async def run_case(name, failed=False, reader=False):
++            runtime = LeagueRuntime(identities[name][0], status=RuntimeState.WARM)
++            assert restore(runtime, paths[name, "first"], identities[name][1])
++            old = weakref.ref(runtime.state["data"])
++            before_digest = source_digest(runtime)
++            gate = IntervalGate()
++
++            async def refresh(selected):
++                source = selected.state["data"]
++                if failed:
++                    raise OSError("Disposable refresh failure")
++                return source
++
++            api = SimpleNamespace(
++                sleep=gate.sleep,
++                create_task=asyncio.create_task,
++                shield=asyncio.shield,
++                gather=asyncio.gather,
++                to_thread=asyncio.to_thread,
++                CancelledError=asyncio.CancelledError,
++            )
++            pressure = []
++            cold = None
++            owned_reader = None
++            with patch.object(maintenance, "asyncio", api):
++                maintenance.ensure_periodic_refresh(
++                    runtime, refresh, interval_seconds=900
++                )
++                await gate.parked(1)
++                gate.permits.put_nowait(None)
++                await gate.parked(2)
++                if failed:
++                    assert (
++                        runtime.state["data"] is old()
++                        and runtime.lifecycle["refresh_state"] == "failed"
++                    )
++                if reader:
++                    owned_reader = runtime.brain_context
++                    runtime.active_requests = 1
++                before = sample(name + " before replacement")
++                assert restore(runtime, paths[name, "next"], identities[name][1])
++                await settle()
++                after = sample(name + " replacement settled")
++                assert (old() is not None) is reader
++                # Verify only after capturing publication counters.
++                assert source_digest(runtime) == before_digest
++                current = runtime.state["data"]
++                assert (
++                    restore(runtime, paths[name, "foreign"], identities[name][1])
++                    is False
++                )
++                assert runtime.state["data"] is current
++                del current
++                row = dict(
++                    name=name,
++                    failed_refresh=failed,
++                    reader=reader,
++                    completed=True,
++                    old_released_without_reader=old() is None,
++                    source_digest=before_digest,
++                    invalid_restore_preserved_current=True,
++                    before_bytes=before["cgroup_current_bytes"],
++                    after_bytes=after["cgroup_current_bytes"],
++                )
++                if reader:
++                    assert owned_reader._data is old() and runtime.active_requests == 1
++                    cold = LeagueRuntime(identities["oneqb"][0])
++                    path = paths["oneqb", "first"]
++                    required = admission(path)["required_bytes"]
++                    target = LIMIT - required + 32 * MIB
++                    while memory_snapshot()["cgroup_current_bytes"] < target:
++                        assert (
++                            memory_snapshot()["cgroup_current_bytes"]
++                            < LIMIT - 512 * MIB
++                        )
++                        chunk = bytearray(8 * MIB)
++                        for offset in range(0, len(chunk), 4096):
++                            chunk[offset] = 1
++                        pressure.append(chunk)
++                    del chunk
++                    unsafe = sample("legitimate reader under pressure")
++                    live("unsafe pressure")
++                    try:
++                        restore(cold, path, identities["oneqb"][1])
++                    except HeavyWorkDeferred:
++                        pass
++                    else:
++                        raise AssertionError(
++                            "Unsafe pressure must defer before allocating a cold publication"
++                        )
++                    assert not cold.state["data"] and runtime.active_requests == 1
++                    runtime.active_requests = 0
++                    del owned_reader
++                    await settle()
++                    assert old() is None
++                    released = sample("obsolete generation released; current runtime retained")
++                    lifecycle_coordinator.reserve_fois_generation()
++                    try:
++                        protected = admission(path, True)
++                        assert protected["would_admit"] is False
++                        try:
++                            restore(cold, path, identities["oneqb"][1])
++                        except HeavyWorkDeferred:
++                            pass
++                        else:
++                            raise AssertionError(
++                                "Outstanding FOIS demand must stay protected"
++                            )
++                    finally:
++                        lifecycle_coordinator.release_fois_generation()
++                    owner_release_plan = admission(path)
++                    # Logical release does not guarantee immediate allocator
++                    # return (notably across supported Python versions). This
++                    # fixture owns the remaining pressure; relieve it explicitly
++                    # before proving normal execution with measured capacity.
++                    relieved_fixture_bytes = sum(len(chunk) for chunk in pressure)
++                    pressure.clear()
++                    release_unused_allocator_pages()
++                    recovery_plan = admission(path)
++                    assert recovery_plan["would_admit"] is True
++                    assert restore(cold, path, identities["oneqb"][1])
++                    recovered = sample("cold one-QB completed after real owner release")
++                    live("recovered capacity")
++                    row.update(
++                        pressure_deferred=True,
++                        fois_protected=True,
++                        recovery_completed=True,
++                        required_bytes=required,
++                        unsafe_bytes=unsafe["cgroup_current_bytes"],
++                        released_bytes=released["cgroup_current_bytes"],
++                        owner_release_plan=owner_release_plan,
++                        relieved_fixture_bytes=relieved_fixture_bytes,
++                        recovery_plan=recovery_plan,
++                        recovery_bytes=recovered["cgroup_current_bytes"],
++                    )
++                    pressure.clear()
++                    release_unused_allocator_pages()
++                for cycle in range(3):
++                    previous = weakref.ref(runtime.state["data"])
++                    gate.permits.put_nowait(None)
++                    await gate.parked(cycle + 3)
++                    assert restore(
++                        runtime,
++                        paths[name, "first" if cycle % 2 == 0 else "next"],
++                        identities[name][1],
++                    )
++                    await settle()
++                    assert previous() is None
++                # Actual pending off-loop writer, not a deferred completion.
++                started, release, finished = (
++                    threading.Event(),
++                    threading.Event(),
++                    threading.Event(),
++                )
++
++                async def blocked(selected):
++                    def work():
++                        started.set()
++                        release.wait(5)
++                        finished.set()
++
++                    await asyncio.to_thread(work)
++                    return selected.state["data"]
++
++                await runtime.close()
++                runtime.status = RuntimeState.WARM
++                runtime.apply_data(
++                    Publication(
++                        league={
++                            "league_id": runtime.league_id,
++                            "season": str(identities[name][1]),
++                        }
++                    )
++                )
++                maintenance.ensure_periodic_refresh(
++                    runtime, blocked, interval_seconds=900
++                )
++                await gate.parked(6)
++                gate.permits.put_nowait(None)
++                assert await asyncio.to_thread(started.wait, 5)
++                task = next(iter(runtime.background_tasks))
++                task.cancel()
++                await asyncio.sleep(0)
++                task.cancel()
++                await settle()
++                assert not task.done() and not finished.is_set()
++                release.set()
++                await asyncio.gather(task, return_exceptions=True)
++                assert finished.is_set()
++                row.update(repeated_switches=3, cancellation_writer_drained=True)
++                await runtime.close()
++            if cold is not None:
++                await cold.close()
++            await settle()
++            assert not runtime.background_tasks
++            result["cases"].append(row)
++
++        async def run():
++            gc.collect()
++            release_unused_allocator_pages()
++            sample("initial")
++            live("initial")
++            await run_case("oneqb")
++            await run_case("oneqb", failed=True)
++            await run_case("superflex", reader=True)
++            assert not dtos_app.canonical_history_store._current
++            assert lifecycle_coordinator.snapshot()["phase"] == "idle"
++            assert not psutil.Process().children(recursive=True)
++            sample("completed")
++            live("completed")
++
++        asyncio.run(run())
++        result.update(
++            passed=True,
++            children_after=[],
++            source_values_preserved=True,
++            scope="Three source-compatible disposable ownership cases; current/active contexts preserved. Not liveGranite or independent liveSleeper parity.",
++            limitations=[
++                "Fixture clocks normalized only on copies; no source facts changed.",
++                "Kernel lifetime peak includes fixture preparation,verification and bounded pressure. Stage samples distinguish publication and pressure; no decoder-only comparison claimed.",
++                "Three repeated publications per case are finite cleanup evidence,not long-term leak freedom.",
++                "Recovery explicitly relieves fixture-owned pressure; logical owner release alone need not return enough allocator pages to admit restoration.",
++            ],
++        )
++    finally:
++        scratch.cleanup()
++        result["scratch_removed"] = not root.exists()
++        (args.output / "result.json").write_text(json.dumps(result, indent=2) + "\n")
++    assert result["passed"] and result["scratch_removed"]
++    print(
++        json.dumps(
++            {"passed": True, "cases": len(result["cases"]), "scratch_removed": True}
++        )
++    )
++
++
++if __name__ == "__main__":
++    main()

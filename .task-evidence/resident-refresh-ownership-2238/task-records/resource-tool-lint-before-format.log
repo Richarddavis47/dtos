@@ -1,0 +1,347 @@
+E702 Multiple statements on one line (semicolon)
+   --> tools/validation/resident_refresh_ownership.py:120:31
+    |
+119 |         def live(label):
+120 |             count=len(timings);start=time.monotonic()
+    |                               ^
+121 |             assert client.get('/health/live').status_code==200 and len(timings)==count+1 and timings[-1]<500
+122 |             result['liveness'].append(dict(label=label,server_ms=timings[-1],client_ms=(time.monotonic()-start)*1000))
+    |
+
+E702 Multiple statements on one line (semicolon)
+   --> tools/validation/resident_refresh_ownership.py:144:39
+    |
+143 |         def source_digest(runtime):
+144 |             data=runtime.state['data'];h=hashlib.sha256()
+    |                                       ^
+145 |             facts={key:data[key] for key in ('season_matchups','canonical_player_production')}
+146 |             for chunk in json.JSONEncoder(sort_keys=True,separators=(',',':'),default=str).iterencode(facts):
+    |
+
+E702 Multiple statements on one line (semicolon)
+   --> tools/validation/resident_refresh_ownership.py:163:51
+    |
+161 |             runtime=LeagueRuntime(identities[name][0],status=RuntimeState.WARM)
+162 |             assert restore(runtime,paths[name,'first'],identities[name][1])
+163 |             old=weakref.ref(runtime.state['data']);before_digest=source_digest(runtime)
+    |                                                   ^
+164 |             gate=IntervalGate()
+165 |             async def refresh(selected):
+    |
+
+E702 Multiple statements on one line (semicolon)
+   --> tools/validation/resident_refresh_ownership.py:172:24
+    |
+170 |             api=SimpleNamespace(sleep=gate.sleep,create_task=asyncio.create_task,shield=asyncio.shield,
+171 |                 gather=asyncio.gather,to_thread=asyncio.to_thread,CancelledError=asyncio.CancelledError)
+172 |             pressure=[];cold=None;owned_reader=None
+    |                        ^
+173 |             with patch.object(maintenance,'asyncio',api):
+174 |                 maintenance.ensure_periodic_refresh(runtime,refresh,interval_seconds=900)
+    |
+
+E702 Multiple statements on one line (semicolon)
+   --> tools/validation/resident_refresh_ownership.py:172:34
+    |
+170 |             api=SimpleNamespace(sleep=gate.sleep,create_task=asyncio.create_task,shield=asyncio.shield,
+171 |                 gather=asyncio.gather,to_thread=asyncio.to_thread,CancelledError=asyncio.CancelledError)
+172 |             pressure=[];cold=None;owned_reader=None
+    |                                  ^
+173 |             with patch.object(maintenance,'asyncio',api):
+174 |                 maintenance.ensure_periodic_refresh(runtime,refresh,interval_seconds=900)
+    |
+
+E702 Multiple statements on one line (semicolon)
+   --> tools/validation/resident_refresh_ownership.py:175:37
+    |
+173 |             with patch.object(maintenance,'asyncio',api):
+174 |                 maintenance.ensure_periodic_refresh(runtime,refresh,interval_seconds=900)
+175 |                 await gate.parked(1);gate.permits.put_nowait(None);await gate.parked(2)
+    |                                     ^
+176 |                 if failed:
+177 |                     assert runtime.state['data'] is old() and runtime.lifecycle['refresh_state']=='failed'
+    |
+
+E702 Multiple statements on one line (semicolon)
+   --> tools/validation/resident_refresh_ownership.py:175:67
+    |
+173 |             with patch.object(maintenance,'asyncio',api):
+174 |                 maintenance.ensure_periodic_refresh(runtime,refresh,interval_seconds=900)
+175 |                 await gate.parked(1);gate.permits.put_nowait(None);await gate.parked(2)
+    |                                                                   ^
+176 |                 if failed:
+177 |                     assert runtime.state['data'] is old() and runtime.lifecycle['refresh_state']=='failed'
+    |
+
+E702 Multiple statements on one line (semicolon)
+   --> tools/validation/resident_refresh_ownership.py:179:55
+    |
+177 |                     assert runtime.state['data'] is old() and runtime.lifecycle['refresh_state']=='failed'
+178 |                 if reader:
+179 |                     owned_reader=runtime.brain_context;runtime.active_requests=1
+    |                                                       ^
+180 |                 before=sample(name+' before replacement')
+181 |                 assert restore(runtime,paths[name,'next'],identities[name][1])
+    |
+
+E702 Multiple statements on one line (semicolon)
+   --> tools/validation/resident_refresh_ownership.py:182:31
+    |
+180 |                 before=sample(name+' before replacement')
+181 |                 assert restore(runtime,paths[name,'next'],identities[name][1])
+182 |                 await settle();after=sample(name+' replacement settled')
+    |                               ^
+183 |                 assert (old() is not None) is reader
+184 |                 # Verify only after capturing publication counters.
+    |
+
+E702 Multiple statements on one line (semicolon)
+   --> tools/validation/resident_refresh_ownership.py:196:48
+    |
+194 |                     assert owned_reader._data is old() and runtime.active_requests==1
+195 |                     cold=LeagueRuntime(identities['oneqb'][0])
+196 |                     path=paths['oneqb','first'];required=admission(path)['required_bytes']
+    |                                                ^
+197 |                     target=LIMIT-required+32*MIB
+198 |                     while memory_snapshot()['cgroup_current_bytes']<target:
+    |
+
+E702 Multiple statements on one line (semicolon)
+   --> tools/validation/resident_refresh_ownership.py:205:70
+    |
+203 |                         pressure.append(chunk)
+204 |                     del chunk
+205 |                     unsafe=sample('legitimate reader under pressure');live('unsafe pressure')
+    |                                                                      ^
+206 |                     try:
+207 |                         restore(cold,path,identities['oneqb'][1])
+    |
+
+E702 Multiple statements on one line (semicolon)
+   --> tools/validation/resident_refresh_ownership.py:213:46
+    |
+211 |                         raise AssertionError('Unsafe pressure must defer before allocating a cold publication')
+212 |                     assert not cold.state['data'] and runtime.active_requests==1
+213 |                     runtime.active_requests=0;del owned_reader;await settle();assert old() is None
+    |                                              ^
+214 |                     lifecycle_coordinator.reserve_fois_generation()
+215 |                     try:
+    |
+
+E702 Multiple statements on one line (semicolon)
+   --> tools/validation/resident_refresh_ownership.py:213:63
+    |
+211 |                         raise AssertionError('Unsafe pressure must defer before allocating a cold publication')
+212 |                     assert not cold.state['data'] and runtime.active_requests==1
+213 |                     runtime.active_requests=0;del owned_reader;await settle();assert old() is None
+    |                                                               ^
+214 |                     lifecycle_coordinator.reserve_fois_generation()
+215 |                     try:
+    |
+
+E702 Multiple statements on one line (semicolon)
+   --> tools/validation/resident_refresh_ownership.py:213:78
+    |
+211 |                         raise AssertionError('Unsafe pressure must defer before allocating a cold publication')
+212 |                     assert not cold.state['data'] and runtime.active_requests==1
+213 |                     runtime.active_requests=0;del owned_reader;await settle();assert old() is None
+    |                                                                              ^
+214 |                     lifecycle_coordinator.reserve_fois_generation()
+215 |                     try:
+    |
+
+E702 Multiple statements on one line (semicolon)
+   --> tools/validation/resident_refresh_ownership.py:227:87
+    |
+225 | …         lifecycle_coordinator.release_fois_generation()
+226 | …     assert restore(cold,path,identities['oneqb'][1])
+227 | …     recovered=sample('cold one-QB completed after real owner release');live('recovered capacity')
+    |                                                                         ^
+228 | …     row.update(pressure_deferred=True,fois_protected=True,recovery_completed=True,
+229 | …         required_bytes=required,unsafe_bytes=unsafe['cgroup_current_bytes'],recovery_bytes=recovered['cgroup_current_bytes'])
+    |
+
+E702 Multiple statements on one line (semicolon)
+   --> tools/validation/resident_refresh_ownership.py:230:37
+    |
+228 | …         row.update(pressure_deferred=True,fois_protected=True,recovery_completed=True,
+229 | …             required_bytes=required,unsafe_bytes=unsafe['cgroup_current_bytes'],recovery_bytes=recovered['cgroup_current_bytes'])
+230 | …         pressure.clear();release_unused_allocator_pages()
+    |                           ^
+231 | …     for cycle in range(3):
+232 | …         previous=weakref.ref(runtime.state['data'])
+    |
+
+E702 Multiple statements on one line (semicolon)
+   --> tools/validation/resident_refresh_ownership.py:233:50
+    |
+231 |                 for cycle in range(3):
+232 |                     previous=weakref.ref(runtime.state['data'])
+233 |                     gate.permits.put_nowait(None);await gate.parked(cycle+3)
+    |                                                  ^
+234 |                     assert restore(runtime,paths[name,'first' if cycle%2==0 else 'next'],identities[name][1])
+235 |                     await settle();assert previous() is None
+    |
+
+E702 Multiple statements on one line (semicolon)
+   --> tools/validation/resident_refresh_ownership.py:235:35
+    |
+233 |                     gate.permits.put_nowait(None);await gate.parked(cycle+3)
+234 |                     assert restore(runtime,paths[name,'first' if cycle%2==0 else 'next'],identities[name][1])
+235 |                     await settle();assert previous() is None
+    |                                   ^
+236 |                 # Actual pending off-loop writer, not a deferred completion.
+237 |                 started,release,finished=threading.Event(),threading.Event(),threading.Event()
+    |
+
+E702 Multiple statements on one line (semicolon)
+   --> tools/validation/resident_refresh_ownership.py:240:38
+    |
+238 |                 async def blocked(selected):
+239 |                     def work():
+240 |                         started.set();release.wait(5);finished.set()
+    |                                      ^
+241 |                     await asyncio.to_thread(work)
+242 |                     return selected.state['data']
+    |
+
+E702 Multiple statements on one line (semicolon)
+   --> tools/validation/resident_refresh_ownership.py:240:54
+    |
+238 |                 async def blocked(selected):
+239 |                     def work():
+240 |                         started.set();release.wait(5);finished.set()
+    |                                                      ^
+241 |                     await asyncio.to_thread(work)
+242 |                     return selected.state['data']
+    |
+
+E702 Multiple statements on one line (semicolon)
+   --> tools/validation/resident_refresh_ownership.py:247:37
+    |
+245 |                 runtime.apply_data(Publication(league={'league_id':runtime.league_id,'season':str(identities[name][1])}))
+246 |                 maintenance.ensure_periodic_refresh(runtime,blocked,interval_seconds=900)
+247 |                 await gate.parked(6);gate.permits.put_nowait(None)
+    |                                     ^
+248 |                 assert await asyncio.to_thread(started.wait,5)
+249 |                 task=next(iter(runtime.background_tasks));task.cancel();await asyncio.sleep(0);task.cancel()
+    |
+
+E702 Multiple statements on one line (semicolon)
+   --> tools/validation/resident_refresh_ownership.py:249:58
+    |
+247 |                 await gate.parked(6);gate.permits.put_nowait(None)
+248 |                 assert await asyncio.to_thread(started.wait,5)
+249 |                 task=next(iter(runtime.background_tasks));task.cancel();await asyncio.sleep(0);task.cancel()
+    |                                                          ^
+250 |                 await settle();assert not task.done() and not finished.is_set()
+251 |                 release.set()
+    |
+
+E702 Multiple statements on one line (semicolon)
+   --> tools/validation/resident_refresh_ownership.py:249:72
+    |
+247 |                 await gate.parked(6);gate.permits.put_nowait(None)
+248 |                 assert await asyncio.to_thread(started.wait,5)
+249 |                 task=next(iter(runtime.background_tasks));task.cancel();await asyncio.sleep(0);task.cancel()
+    |                                                                        ^
+250 |                 await settle();assert not task.done() and not finished.is_set()
+251 |                 release.set()
+    |
+
+E702 Multiple statements on one line (semicolon)
+   --> tools/validation/resident_refresh_ownership.py:249:95
+    |
+247 |                 await gate.parked(6);gate.permits.put_nowait(None)
+248 |                 assert await asyncio.to_thread(started.wait,5)
+249 |                 task=next(iter(runtime.background_tasks));task.cancel();await asyncio.sleep(0);task.cancel()
+    |                                                                                               ^
+250 |                 await settle();assert not task.done() and not finished.is_set()
+251 |                 release.set()
+    |
+
+E702 Multiple statements on one line (semicolon)
+   --> tools/validation/resident_refresh_ownership.py:250:31
+    |
+248 |                 assert await asyncio.to_thread(started.wait,5)
+249 |                 task=next(iter(runtime.background_tasks));task.cancel();await asyncio.sleep(0);task.cancel()
+250 |                 await settle();assert not task.done() and not finished.is_set()
+    |                               ^
+251 |                 release.set()
+252 |                 await asyncio.gather(task,return_exceptions=True);assert finished.is_set()
+    |
+
+E702 Multiple statements on one line (semicolon)
+   --> tools/validation/resident_refresh_ownership.py:252:66
+    |
+250 |                 await settle();assert not task.done() and not finished.is_set()
+251 |                 release.set()
+252 |                 await asyncio.gather(task,return_exceptions=True);assert finished.is_set()
+    |                                                                  ^
+253 |                 row.update(repeated_switches=3,cancellation_writer_drained=True)
+254 |                 await runtime.close()
+    |
+
+E702 Multiple statements on one line (semicolon)
+   --> tools/validation/resident_refresh_ownership.py:257:27
+    |
+255 |             if cold is not None:
+256 |                 await cold.close()
+257 |             await settle();assert not runtime.background_tasks
+    |                           ^
+258 |             result['cases'].append(row)
+    |
+
+E702 Multiple statements on one line (semicolon)
+   --> tools/validation/resident_refresh_ownership.py:261:25
+    |
+260 |         async def run():
+261 |             gc.collect();release_unused_allocator_pages();sample('initial');live('initial')
+    |                         ^
+262 |             await run_case('oneqb')
+263 |             await run_case('oneqb',failed=True)
+    |
+
+E702 Multiple statements on one line (semicolon)
+   --> tools/validation/resident_refresh_ownership.py:261:58
+    |
+260 |         async def run():
+261 |             gc.collect();release_unused_allocator_pages();sample('initial');live('initial')
+    |                                                          ^
+262 |             await run_case('oneqb')
+263 |             await run_case('oneqb',failed=True)
+    |
+
+E702 Multiple statements on one line (semicolon)
+   --> tools/validation/resident_refresh_ownership.py:261:76
+    |
+260 |         async def run():
+261 |             gc.collect();release_unused_allocator_pages();sample('initial');live('initial')
+    |                                                                            ^
+262 |             await run_case('oneqb')
+263 |             await run_case('oneqb',failed=True)
+    |
+
+E702 Multiple statements on one line (semicolon)
+   --> tools/validation/resident_refresh_ownership.py:268:32
+    |
+266 |             assert lifecycle_coordinator.snapshot()['phase']=='idle'
+267 |             assert not psutil.Process().children(recursive=True)
+268 |             sample('completed');live('completed')
+    |                                ^
+269 |         asyncio.run(run())
+270 |         result.update(passed=True,children_after=[],source_values_preserved=True,
+    |
+
+E702 Multiple statements on one line (semicolon)
+   --> tools/validation/resident_refresh_ownership.py:276:26
+    |
+274 |                 'Three repeated publications per case are finite cleanup evidence,not long-term leak freedom.'])
+275 |     finally:
+276 |         scratch.cleanup();result['scratch_removed']=not root.exists()
+    |                          ^
+277 |         (args.output/'result.json').write_text(json.dumps(result,indent=2)+'\n')
+278 |     assert result['passed'] and result['scratch_removed']
+    |
+
+Found 32 errors.
