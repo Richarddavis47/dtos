@@ -1,0 +1,160 @@
+2026-11-07T03:42:04.7897169Z {"timestamp":"2026-11-07T03:42:04.789306+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-07T03:42:04.7947326Z {"timestamp":"2026-11-07T03:42:04.794366+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-07T03:42:04.8025037Z {"timestamp":"2026-11-07T03:42:04.802171+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-07T03:42:04.8074075Z {"timestamp":"2026-11-07T03:42:04.807042+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-07T03:42:04.8149587Z {"timestamp":"2026-11-07T03:42:04.814574+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-07T03:42:04.8202286Z {"timestamp":"2026-11-07T03:42:04.819848+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-07T03:42:04.8281739Z {"timestamp":"2026-11-07T03:42:04.827811+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-07T03:42:04.8329431Z {"timestamp":"2026-11-07T03:42:04.832617+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-07T03:42:04.9501580Z {"timestamp":"2026-11-07T03:42:04.949626+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-07T03:42:04.9721081Z ok
+2026-11-07T03:42:04.9721232Z 
+2026-11-07T03:42:04.9721434Z ----------------------------------------------------------------------
+2026-11-07T03:42:04.9721858Z Ran 404 tests in 385.375s
+2026-11-07T03:42:04.9722014Z 
+2026-11-07T03:42:04.9722156Z OK
+2026-11-07T03:42:05.7979448Z ##[group]Run set -o pipefail
+2026-11-07T03:42:05.7979739Z [36;1mset -o pipefail[0m
+2026-11-07T03:42:05.7979978Z [36;1mmkdir -p .validation/restoration-preflight[0m
+2026-11-07T03:42:05.7981181Z [36;1mdocker run --rm --init --memory=2g --memory-swap=2g --cpus=2 --network=none -e NODE_OPTIONS -e DTOS_EXPECTED_HEAD -v "$PWD:$PWD:ro" -v "$PWD/.validation/restoration-preflight:/proof" -w "$PWD" -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0="$PWD" dtos-browser-validation python -m tools.validation.restoration_preflight_gate --output /proof 2>&1 | tee .validation/restoration-preflight/raw.log[0m
+2026-11-07T03:42:05.7982507Z [36;1mcd .validation/restoration-preflight[0m
+2026-11-07T03:42:05.7982779Z [36;1msha256sum result.json raw.log > SHA256SUMS[0m
+2026-11-07T03:42:05.7996212Z shell: /usr/bin/bash -e {0}
+2026-11-07T03:42:05.7996428Z env:
+2026-11-07T03:42:05.7996624Z   NODE_OPTIONS: --max-old-space-size=256
+2026-11-07T03:42:05.7996952Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-07T03:42:05.7997295Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib/pkgconfig
+2026-11-07T03:42:05.7997773Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-07T03:42:05.7998092Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-07T03:42:05.7998389Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-07T03:42:05.7998713Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib
+2026-11-07T03:42:05.7999034Z   DTOS_EXPECTED_HEAD: 49e616bc4d5c4a6d49354eea1f2d015b7a1622b4
+2026-11-07T03:42:05.7999297Z ##[endgroup]
+2026-11-07T03:42:06.5860869Z /usr/local/lib/python3.12/dist-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+2026-11-07T03:42:06.5861580Z   from starlette.testclient import TestClient as TestClient  # noqa
+2026-11-07T03:42:07.0615425Z {"timestamp":"2026-11-07T03:42:07.061010+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/restoration-preflight?league_id=1314695233040052224 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-07T03:42:07.0623190Z {"timestamp":"2026-11-07T03:42:07.061708+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"c10363f96b02448c8ff3cd47a4db3a1b","event":"request_complete","duration_ms":61.046,"status_code":200,"method":"GET","path":"/api/inspect/operations/restoration-preflight"}
+2026-11-07T03:42:07.0648001Z {"timestamp":"2026-11-07T03:42:07.064044+00:00","level":"INFO","logger":"dtos.request","message":"request_accepted","request_id":"6ab587ef8227454d87f3325e5ab6e474","event":"request_accepted","method":"GET","path":"/health/live"}
+2026-11-07T03:42:07.0649543Z {"timestamp":"2026-11-07T03:42:07.064106+00:00","level":"INFO","logger":"dtos.request","message":"handler_scheduled","request_id":"6ab587ef8227454d87f3325e5ab6e474","event":"handler_scheduled","method":"GET","path":"/health/live"}
+2026-11-07T03:42:07.0655570Z {"timestamp":"2026-11-07T03:42:07.065234+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/health/live \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-07T03:42:07.0661870Z {"timestamp":"2026-11-07T03:42:07.065745+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"6ab587ef8227454d87f3325e5ab6e474","event":"request_complete","duration_ms":1.704,"status_code":200,"method":"GET","path":"/health/live"}
+2026-11-07T03:42:07.8215768Z {"timestamp":"2026-11-07T03:42:07.820964+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/restoration-preflight?league_id=1314695233040052224 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-07T03:42:07.8223200Z {"timestamp":"2026-11-07T03:42:07.821603+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"29f66df6a8ae463397495a377f18575f","event":"request_complete","duration_ms":3.252,"status_code":200,"method":"GET","path":"/api/inspect/operations/restoration-preflight"}
+2026-11-07T03:42:07.8247579Z {"timestamp":"2026-11-07T03:42:07.823928+00:00","level":"INFO","logger":"dtos.request","message":"request_accepted","request_id":"c0210bc41b4a4d5eaa243a99497dda74","event":"request_accepted","method":"GET","path":"/health/live"}
+2026-11-07T03:42:07.8250003Z {"timestamp":"2026-11-07T03:42:07.823981+00:00","level":"INFO","logger":"dtos.request","message":"handler_scheduled","request_id":"c0210bc41b4a4d5eaa243a99497dda74","event":"handler_scheduled","method":"GET","path":"/health/live"}
+2026-11-07T03:42:07.8251482Z {"timestamp":"2026-11-07T03:42:07.824821+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/health/live \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-07T03:42:07.8257978Z {"timestamp":"2026-11-07T03:42:07.825310+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"c0210bc41b4a4d5eaa243a99497dda74","event":"request_complete","duration_ms":1.387,"status_code":200,"method":"GET","path":"/health/live"}
+2026-11-07T03:42:07.9208762Z {"timestamp":"2026-11-07T03:42:07.920301+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/restoration-preflight?league_id=1314695233040052224 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-07T03:42:07.9214871Z {"timestamp":"2026-11-07T03:42:07.920963+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"e31b5443aa8c4406982b5c355f7f8cb9","event":"request_complete","duration_ms":2.735,"status_code":200,"method":"GET","path":"/api/inspect/operations/restoration-preflight"}
+2026-11-07T03:42:07.9238294Z {"timestamp":"2026-11-07T03:42:07.923026+00:00","level":"INFO","logger":"dtos.request","message":"request_accepted","request_id":"3bd5283376164ec4899ffae7c80fa5be","event":"request_accepted","method":"GET","path":"/health/live"}
+2026-11-07T03:42:07.9240075Z {"timestamp":"2026-11-07T03:42:07.923078+00:00","level":"INFO","logger":"dtos.request","message":"handler_scheduled","request_id":"3bd5283376164ec4899ffae7c80fa5be","event":"handler_scheduled","method":"GET","path":"/health/live"}
+2026-11-07T03:42:07.9241484Z {"timestamp":"2026-11-07T03:42:07.923925+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/health/live \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-07T03:42:07.9248406Z {"timestamp":"2026-11-07T03:42:07.924416+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"3bd5283376164ec4899ffae7c80fa5be","event":"request_complete","duration_ms":1.406,"status_code":200,"method":"GET","path":"/health/live"}
+2026-11-07T03:42:08.4270854Z {"timestamp":"2026-11-07T03:42:08.426530+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/restoration-preflight?league_id=1314695233040052224 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-07T03:42:08.4277474Z {"timestamp":"2026-11-07T03:42:08.427093+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"f8230aca0a6a4d65a7cabd3e4fb8702c","event":"request_complete","duration_ms":3.143,"status_code":200,"method":"GET","path":"/api/inspect/operations/restoration-preflight"}
+2026-11-07T03:42:08.4301997Z {"timestamp":"2026-11-07T03:42:08.429207+00:00","level":"INFO","logger":"dtos.request","message":"request_accepted","request_id":"3d9718f3434a413fa19d713470127777","event":"request_accepted","method":"GET","path":"/health/live"}
+2026-11-07T03:42:08.4303064Z {"timestamp":"2026-11-07T03:42:08.429269+00:00","level":"INFO","logger":"dtos.request","message":"handler_scheduled","request_id":"3d9718f3434a413fa19d713470127777","event":"handler_scheduled","method":"GET","path":"/health/live"}
+2026-11-07T03:42:08.4306176Z {"timestamp":"2026-11-07T03:42:08.430285+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/health/live \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-07T03:42:08.4313401Z {"timestamp":"2026-11-07T03:42:08.430823+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"3d9718f3434a413fa19d713470127777","event":"request_complete","duration_ms":1.621,"status_code":200,"method":"GET","path":"/health/live"}
+2026-11-07T03:42:08.4354833Z {"timestamp":"2026-11-07T03:42:08.435096+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/restoration-preflight?league_id=1314695233040052224 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-07T03:42:08.4361289Z {"timestamp":"2026-11-07T03:42:08.435669+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"9ad6bed259404e069c6de2265187d836","event":"request_complete","duration_ms":2.83,"status_code":200,"method":"GET","path":"/api/inspect/operations/restoration-preflight"}
+2026-11-07T03:42:08.4385486Z {"timestamp":"2026-11-07T03:42:08.437804+00:00","level":"INFO","logger":"dtos.request","message":"request_accepted","request_id":"15e903fdbf2a4917aa51956156dce815","event":"request_accepted","method":"GET","path":"/health/live"}
+2026-11-07T03:42:08.4388276Z {"timestamp":"2026-11-07T03:42:08.437858+00:00","level":"INFO","logger":"dtos.request","message":"handler_scheduled","request_id":"15e903fdbf2a4917aa51956156dce815","event":"handler_scheduled","method":"GET","path":"/health/live"}
+2026-11-07T03:42:08.4389532Z {"timestamp":"2026-11-07T03:42:08.438608+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/health/live \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-07T03:42:08.4395467Z {"timestamp":"2026-11-07T03:42:08.439087+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"15e903fdbf2a4917aa51956156dce815","event":"request_complete","duration_ms":1.289,"status_code":200,"method":"GET","path":"/health/live"}
+2026-11-07T03:42:08.5397706Z {
+2026-11-07T03:42:08.5398023Z   "passed": true,
+2026-11-07T03:42:08.5398315Z   "complete": true,
+2026-11-07T03:42:08.5398531Z   "cases": 5,
+2026-11-07T03:42:08.5398804Z   "source": "49e616bc4d5c4a6d49354eea1f2d015b7a1622b4"
+2026-11-07T03:42:08.5399110Z }
+2026-11-07T03:42:08.6931447Z ##[group]Run actions/upload-artifact@v4
+2026-11-07T03:42:08.6931674Z with:
+2026-11-07T03:42:08.6931849Z   name: restoration-preflight-2g
+2026-11-07T03:42:08.6932077Z   path: .validation/restoration-preflight
+2026-11-07T03:42:08.6932314Z   if-no-files-found: error
+2026-11-07T03:42:08.6932501Z   retention-days: 14
+2026-11-07T03:42:08.6932676Z   compression-level: 6
+2026-11-07T03:42:08.6932850Z   overwrite: false
+2026-11-07T03:42:08.6933026Z   include-hidden-files: false
+2026-11-07T03:42:08.6933213Z env:
+2026-11-07T03:42:08.6933391Z   NODE_OPTIONS: --max-old-space-size=256
+2026-11-07T03:42:08.6933648Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-07T03:42:08.6933963Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib/pkgconfig
+2026-11-07T03:42:08.6934282Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-07T03:42:08.6934563Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-07T03:42:08.6934878Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-07T03:42:08.6935165Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib
+2026-11-07T03:42:08.6935404Z ##[endgroup]
+2026-11-07T03:42:08.8312807Z (node:27864) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-11-07T03:42:08.8313452Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-11-07T03:42:08.8385369Z With the provided path, there will be 3 files uploaded
+2026-11-07T03:42:08.8390017Z Artifact name is valid!
+2026-11-07T03:42:08.8390587Z Root directory input is valid!
+2026-11-07T03:42:09.1280265Z Beginning upload of artifact content to blob storage
+2026-11-07T03:42:09.1461025Z (node:27864) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+2026-11-07T03:42:09.2957862Z Uploaded bytes 3706
+2026-11-07T03:42:09.3360076Z Finished uploading artifact content to blob storage!
+2026-11-07T03:42:09.3360690Z SHA256 digest of uploaded artifact zip is 3f9bd11c051282dc8796a0424cd44d0ad7899dc1f01e95dc5ab6282c87171734
+2026-11-07T03:42:09.3361534Z Finalizing artifact upload
+2026-11-07T03:42:09.7463488Z Artifact restoration-preflight-2g.zip successfully finalized. Artifact ID 13558717864
+2026-11-07T03:42:09.7464082Z Artifact restoration-preflight-2g has been successfully uploaded! Final size is 3706 bytes. Artifact ID is 13558717864
+2026-11-07T03:42:09.7469269Z Artifact download URL: https://github.com/Richarddavis47/dtos/actions/runs/42334616991/artifacts/13558717864
+2026-11-07T03:42:09.7616071Z ##[group]Run actions/upload-artifact@v4
+2026-11-07T03:42:09.7616299Z with:
+2026-11-07T03:42:09.7616486Z   name: public-welcome-security-browser
+2026-11-07T03:42:09.7616717Z   path: .validation/public-welcome
+2026-11-07T03:42:09.7616933Z   if-no-files-found: error
+2026-11-07T03:42:09.7617125Z   retention-days: 14
+2026-11-07T03:42:09.7617306Z   compression-level: 6
+2026-11-07T03:42:09.7617477Z   overwrite: false
+2026-11-07T03:42:09.7618205Z   include-hidden-files: false
+2026-11-07T03:42:09.7618408Z env:
+2026-11-07T03:42:09.7618594Z   NODE_OPTIONS: --max-old-space-size=256
+2026-11-07T03:42:09.7618901Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-07T03:42:09.7619229Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib/pkgconfig
+2026-11-07T03:42:09.7619553Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-07T03:42:09.7619851Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-07T03:42:09.7620180Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-07T03:42:09.7620471Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib
+2026-11-07T03:42:09.7620723Z ##[endgroup]
+2026-11-07T03:42:09.8971049Z (node:27877) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-11-07T03:42:09.8971800Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-11-07T03:42:09.9342583Z With the provided path, there will be 245 files uploaded
+2026-11-07T03:42:09.9357528Z Artifact name is valid!
+2026-11-07T03:42:09.9358160Z Root directory input is valid!
+2026-11-07T03:42:10.2144088Z Beginning upload of artifact content to blob storage
+2026-11-07T03:42:10.5864943Z (node:27877) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+2026-11-07T03:42:11.2390462Z Uploaded bytes 8388608
+2026-11-07T03:42:11.5441311Z Uploaded bytes 16777216
+2026-11-07T03:42:11.5650217Z Uploaded bytes 25165824
+2026-11-07T03:42:12.0164881Z Uploaded bytes 33554432
+2026-11-07T03:42:12.1305637Z Uploaded bytes 41943040
+2026-11-07T03:42:12.3228054Z Uploaded bytes 50331648
+2026-11-07T03:42:12.5394860Z Uploaded bytes 58720256
+2026-11-07T03:42:12.7745626Z Uploaded bytes 63869746
+2026-11-07T03:42:12.8271234Z Finished uploading artifact content to blob storage!
+2026-11-07T03:42:12.8273884Z SHA256 digest of uploaded artifact zip is 8374282752160a20cb0278a24da2383471bbad3f2d80bcf74837a5a4300c84f8
+2026-11-07T03:42:12.8275785Z Finalizing artifact upload
+2026-11-07T03:42:13.1988551Z Artifact public-welcome-security-browser.zip successfully finalized. Artifact ID 13559416136
+2026-11-07T03:42:13.1989207Z Artifact public-welcome-security-browser has been successfully uploaded! Final size is 63869746 bytes. Artifact ID is 13559416136
+2026-11-07T03:42:13.1995119Z Artifact download URL: https://github.com/Richarddavis47/dtos/actions/runs/42334616991/artifacts/13559416136
+2026-11-07T03:42:13.2186005Z Post job cleanup.
+2026-11-07T03:42:13.3175239Z (node:27889) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-11-07T03:42:13.3175963Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-11-07T03:42:13.3284431Z Post job cleanup.
+2026-11-07T03:42:13.3999056Z [command]/usr/bin/git version
+2026-11-07T03:42:13.4033730Z git version 2.56.0
+2026-11-07T03:42:13.4062417Z Temporarily overriding HOME='/home/runner/work/_temp/844159ea-1c5f-4030-b49f-d52a945518f0' before making global git config changes
+2026-11-07T03:42:13.4063638Z Adding repository directory to the temporary git global config as a safe directory
+2026-11-07T03:42:13.4066888Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/dtos/dtos
+2026-11-07T03:42:13.4101491Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-11-07T03:42:13.4130087Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-11-07T03:42:13.4330048Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-11-07T03:42:13.4377273Z http.https://github.com/.extraheader
+2026-11-07T03:42:13.4394907Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+2026-11-07T03:42:13.4425607Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-11-07T03:42:13.4619676Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-11-07T03:42:13.4650475Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-11-07T03:42:13.5105533Z Cleaning up orphan processes
+2026-11-07T03:42:13.5372117Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5, actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

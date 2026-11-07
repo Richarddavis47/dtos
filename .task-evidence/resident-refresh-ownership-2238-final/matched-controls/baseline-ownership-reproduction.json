@@ -1,0 +1,21 @@
+{
+  "source": "shipping baseline",
+  "cases": [
+    {
+      "case": "success",
+      "obsolete_generation_retained_while_sleeping": true,
+      "released_only_after_close": true,
+      "active_requests": 0,
+      "new_publication_preserved": true
+    },
+    {
+      "case": "exception",
+      "obsolete_generation_retained_while_sleeping": true,
+      "released_only_after_close": true,
+      "active_requests": 0,
+      "new_publication_preserved": true
+    }
+  ],
+  "expected_unwanted_retention": true,
+  "method": "Existing real periodic loop and real asyncio worker. Only interval scheduling/storage bookkeeping isolated; no admission or source result seeded. Weak reference tracks obsolete dictionary after a separate legal publication."
+}

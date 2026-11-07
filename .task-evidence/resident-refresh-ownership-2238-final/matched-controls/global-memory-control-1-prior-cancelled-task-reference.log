@@ -1,0 +1,17 @@
+Traceback (most recent call last):
+  File "/evidence/runtime-retention/global-owner-memory.py", line 85, in <module>
+    asyncio.run(run())
+    ~~~~~~~~~~~^^^^^^^
+  File "/usr/local/lib/python3.14/asyncio/runners.py", line 204, in run
+    return runner.run(main)
+           ~~~~~~~~~~^^^^^^
+  File "/usr/local/lib/python3.14/asyncio/runners.py", line 127, in run
+    return self._loop.run_until_complete(task)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "/usr/local/lib/python3.14/asyncio/base_events.py", line 719, in run_until_complete
+    return future.result()
+           ~~~~~~~~~~~~~^^
+  File "/evidence/runtime-retention/global-owner-memory.py", line 75, in run
+    gc.collect();release_unused_allocator_pages();sample('measured_runtime_closed');assert old() is None
+                                                                                           ^^^^^^^^^^^^^
+AssertionError

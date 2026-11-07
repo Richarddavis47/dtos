@@ -1,0 +1,114 @@
+{
+  "query": {
+    "service": "srv-d9ctp8navr4c73agtnrg",
+    "workspace": "tea-d9clg1navr4c739uu88g",
+    "start": "2026-11-07T04:47:00Z",
+    "resolution_seconds": 60,
+    "types": [
+      "memory_usage",
+      "memory_limit"
+    ]
+  },
+  "response": {
+    "resourceId": "srv-d9ctp8navr4c73agtnrg",
+    "timeRange": {
+      "start": "2026-11-07T04:47:00Z"
+    },
+    "metrics": [
+      {
+        "type": "memory_usage",
+        "data": [
+          {
+            "labels": [
+              {
+                "field": "service",
+                "value": "srv-d9ctp8navr4c73agtnrg"
+              },
+              {
+                "field": "resource",
+                "value": "srv-d9ctp8navr4c73agtnrg"
+              },
+              {
+                "field": "instance",
+                "value": "srv-d9ctp8navr4c73agtnrg-68tlk"
+              }
+            ],
+            "unit": "bytes",
+            "values": [
+              {
+                "timestamp": "2026-11-07T04:47:00Z",
+                "value": 268742660
+              },
+              {
+                "timestamp": "2026-11-07T04:48:00Z",
+                "value": 427266050
+              },
+              {
+                "timestamp": "2026-11-07T04:49:00Z",
+                "value": 766681100
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "memory_limit",
+        "data": [
+          {
+            "labels": [
+              {
+                "field": "service",
+                "value": "srv-d9ctp8navr4c73agtnrg"
+              },
+              {
+                "field": "resource",
+                "value": "srv-d9ctp8navr4c73agtnrg"
+              },
+              {
+                "field": "instance",
+                "value": "srv-d9ctp8navr4c73agtnrg-sxskd"
+              }
+            ],
+            "unit": "bytes",
+            "values": [
+              {
+                "timestamp": "2026-11-07T04:47:00Z",
+                "value": 2147483600
+              }
+            ]
+          },
+          {
+            "labels": [
+              {
+                "field": "instance",
+                "value": "srv-d9ctp8navr4c73agtnrg-68tlk"
+              },
+              {
+                "field": "service",
+                "value": "srv-d9ctp8navr4c73agtnrg"
+              },
+              {
+                "field": "resource",
+                "value": "srv-d9ctp8navr4c73agtnrg"
+              }
+            ],
+            "unit": "bytes",
+            "values": [
+              {
+                "timestamp": "2026-11-07T04:48:00Z",
+                "value": 2147483600
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "limitations": [
+    "Read-only normal post-deployment metric samples, not a stress test or fresh admission snapshot.",
+    "Render memory_usage accounting semantics are not established as the guard's raw cgroup counter; do not calculate restoration headroom from these points.",
+    "Rounded API memory-limit series cover old and new instance IDs during rollout. Enforced policy remains exactly2147483648bytes as separately tested.",
+    "Deployment, initialization, source generation and warm-context residency differ from historical samples; no cleanup causation, peak bound, leak freedom, worker idleness or Granite recovery inferred."
+  ],
+  "retrieved_at": "2026-11-07T04:49:27.560382+00:00"
+}
