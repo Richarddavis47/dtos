@@ -49,11 +49,11 @@ index bcf5d47e..d41747c8 100644
 +            .validation/resident-refresh/SHA256SUMS
 +          if-no-files-found: error
 diff --git a/CHANGELOG.md b/CHANGELOG.md
-index 84c5e67e..293b9c95 100644
+index 84c5e67e..0552bc51 100644
 --- a/CHANGELOG.md
 +++ b/CHANGELOG.md
-@@ -1,3 +1,11 @@
-+# v1.22.23 / build 2238 — Release completed refresh ownership
+@@ -1,3 +1,13 @@
++# v1.22.23 / build 2238 — Release obsolete maintenance references
 +
 +Resident-league maintenance now drops a finished refresh task before sleeping. A completed result or exception traceback can no longer keep a superseded league publication alive after a separate refresh replaces it. Current publications, legitimate readers, valid cached evidence and active work retain their existing owners. No runtime eviction or catalog sharing is introduced.
 +
@@ -61,15 +61,17 @@ index 84c5e67e..293b9c95 100644
 +
 +Source-compatible disposable controls reproduce obsolete snapshot retention before the correction and its release afterward. They are not live Granite recovery or proof of an earlier production failure. Normal entry still requires fresh admission. See docs/audits/RESIDENT_REFRESH_OWNERSHIP_2238.md.
 +
++
++The global evidence scheduler also releases its full league-data reference after extracting season identity, before acquisition and the six-hour wait. This prevents a later default publication from leaving an obsolete source generation pinned by a scalar-only scheduling task. Current data, cadence and evidence acquisition remain unchanged.
  # v1.22.22 / build 2237 — Bounded league-cache string sharing
  
  Default startup and connected-league restoration now share equal short immutable strings within each individual JSON decode. Repeated source identities, provenance and disclosure text need fewer separate Python string objects. Mutable containers stay independent; the temporary bounded pool is discarded before publication. No global interning or cross-account cache is introduced.
 diff --git a/RELEASE_NOTES.md b/RELEASE_NOTES.md
-index 22f2ba65..0f330213 100644
+index 22f2ba65..c4497fc7 100644
 --- a/RELEASE_NOTES.md
 +++ b/RELEASE_NOTES.md
-@@ -1,3 +1,11 @@
-+# v1.22.23 / build 2238 — Release completed refresh ownership
+@@ -1,3 +1,13 @@
++# v1.22.23 / build 2238 — Release obsolete maintenance references
 +
 +Resident-league maintenance now drops a finished refresh task before sleeping. A completed result or exception traceback can no longer keep a superseded league publication alive after a separate refresh replaces it. Current publications, legitimate readers, valid cached evidence and active work retain their existing owners. No runtime eviction or catalog sharing is introduced.
 +
@@ -77,6 +79,8 @@ index 22f2ba65..0f330213 100644
 +
 +Source-compatible disposable controls reproduce obsolete snapshot retention before the correction and its release afterward. They are not live Granite recovery or proof of an earlier production failure. Normal entry still requires fresh admission. See docs/audits/RESIDENT_REFRESH_OWNERSHIP_2238.md.
 +
++
++The global evidence scheduler also releases its full league-data reference after extracting season identity, before acquisition and the six-hour wait. This prevents a later default publication from leaving an obsolete source generation pinned by a scalar-only scheduling task. Current data, cadence and evidence acquisition remain unchanged.
  # v1.22.22 / build 2237 — Bounded league-cache string sharing
  
  Default startup and connected-league restoration now share equal short immutable strings within each individual JSON decode. Repeated source identities, provenance and disclosure text need fewer separate Python string objects. Mutable containers stay independent; the temporary bounded pool is discarded before publication. No global interning or cross-account cache is introduced.
@@ -101,10 +105,10 @@ index 15d6b01a..bc720bb9 100644
  _REPOSITORY_ROOT = Path(__file__).resolve().parent
 diff --git a/docs/audits/RESIDENT_REFRESH_OWNERSHIP_2238.md b/docs/audits/RESIDENT_REFRESH_OWNERSHIP_2238.md
 new file mode 100644
-index 00000000..6ff6868c
+index 00000000..091f5f87
 --- /dev/null
 +++ b/docs/audits/RESIDENT_REFRESH_OWNERSHIP_2238.md
-@@ -0,0 +1,25 @@
+@@ -0,0 +1,31 @@
 +# Completed resident-refresh ownership
 +
 +Production/main was verified as v1.22.22/build2237, commit1e1234fbcf7ca18f3862e5cdeac1451780e51b49/tree4051883efb1f225dcd71e07f1998e45c9d96fb39. The accepted decoder-only reconciliation is reused, not repeated. Its synthetic results do not establish Granite recovery.
@@ -130,6 +134,26 @@ index 00000000..6ff6868c
 +Authorized Render management access confirms the live baseline and provides retained logs/metrics, not a complete current runtime-ownership snapshot. Render memory_usage is not substituted for raw cgroup admission inputs. One existing Opera capability check reports not connected; no Render Shell/SSH executor is available in this session. The unchanged external401binding is not retried. Main Chat's earlier Render-local token200 is supplied evidence, not reproduced. No Granite entry, forced sync, Trade discovery, FOIS rebuild, cache clearing, manual restart, preference mutation or infrastructure change is performed for diagnosis.
 +
 +This demonstrated lifecycle defect can leave more headroom after superseded publications are released. It does not prove that it caused Granite's reported production deferral, that an eligible production runtime could be evicted, that the private cache has a particular peak, or that Granite entry/live Sleeper parity is recovered. Final acceptance requires one fresh existing Render-local preflight and, only if it permits, one normal guarded entry and an independent completed-week source-score comparison.
++
++## Global evidence scheduler owner
++
++A bounded authorized retained-log read subsequently found one pinned default warm runtime with no runtime-owned background tasks in that serving process at01:43UTC. This was not a fresh preflight or proof of other workers' idleness. Source trace of the separately owned global maintenance path found `refresh_global_evidence` retains its whole `STATE` data local across a six-hour delay despite needing only scalar season identity. A later default publication can therefore leave an obsolete full source generation reachable outside the runtime background-task set. Four new real-coroutine tests reproduce six failing success/failure/deferred/not-ready/absent-season/reader scenarios before correction. The scheduler now releases its unnecessary data local immediately after extracting season, before acquisition or waiting. Source acquisition, cadence, locks, readiness and source facts remain unchanged.
++
++This and the completed resident-worker fix are one sleeping-maintenance ownership correction; no catalog sharing or eviction is introduced. The global owner receives separate matched full-source memory controls and a fourth enforced-container restoration/publication case. Acquisition is mocked in that case to avoid provider work; it is not counted as real ingestion completion. Actual cache restoration, canonical publication and admission remain real. Current production stack locals are not inspected, so neither retained logs nor fixture gains establish Granite recovery or the historical503cause.
+diff --git a/dtos_app.py b/dtos_app.py
+index 6150e9fd..cf839626 100644
+--- a/dtos_app.py
++++ b/dtos_app.py
+@@ -527,6 +527,9 @@ async def refresh_global_evidence() -> None:
+         await asyncio.sleep(delay)
+         data = STATE.get("data") or {}
+         season = (data.get("nfl_state") or {}).get("season")
++        # Keep only source season identity across ingestion and its long sleep.
++        # A later league publication must not leave this scheduler owning the old graph.
++        del data
+         if not season or not lifecycle_coordinator.startup_complete():
+             continue
+         runtime_metrics.mark_background("global_evidence", "preparing")
 diff --git a/services/league_maintenance.py b/services/league_maintenance.py
 index 718435ba..c58b8d17 100644
 --- a/services/league_maintenance.py
@@ -165,6 +189,94 @@ index 718435ba..c58b8d17 100644
  
      task = asyncio.create_task(maintain(), name=name)
      runtime.background_tasks.add(task)
+diff --git a/tests/test_global_evidence_retention.py b/tests/test_global_evidence_retention.py
+new file mode 100644
+index 00000000..7893c910
+--- /dev/null
++++ b/tests/test_global_evidence_retention.py
+@@ -0,0 +1,82 @@
++"""Global evidence scheduling needs scalar season identity, not a league graph."""
++from __future__ import annotations
++
++import asyncio
++from types import SimpleNamespace
++import unittest
++from unittest.mock import patch
++import weakref
++
++import dtos_app
++
++
++class Publication(dict):
++    pass
++
++
++class GlobalEvidenceOwnershipTests(unittest.IsolatedAsyncioTestCase):
++    async def exercise(self, *, status='complete', failure=False, ready=True, season='2026', reader=False):
++        arrivals, permits = asyncio.Queue(), asyncio.Queue()
++        calls, states = [], []
++        old = Publication(nfl_state={'season': season}, native={'score': -2.125})
++        observed = weakref.ref(old)
++        state = {'data': old}
++        owned_reader = old if reader else None
++        del old
++
++        async def sleep(seconds):
++            arrivals.put_nowait(seconds)
++            await permits.get()
++
++        async def ingest(selected, path):
++            calls.append(selected)
++            if failure:
++                raise RuntimeError('disposable acquisition failure')
++            return {'status': status}
++
++        metrics = SimpleNamespace(mark_background=lambda *values: states.append(values))
++        proxy = SimpleNamespace(sleep=sleep, CancelledError=asyncio.CancelledError)
++        with patch.object(dtos_app, 'STATE', state), patch.object(dtos_app, 'asyncio', proxy), \
++             patch.object(dtos_app, 'runtime_metrics', metrics), \
++             patch.object(dtos_app.lifecycle_coordinator, 'startup_complete', return_value=ready), \
++             patch('services.global_evidence_ingestion.ingest_in_background', new=ingest):
++            task = asyncio.create_task(dtos_app.refresh_global_evidence())
++            try:
++                self.assertEqual(await asyncio.wait_for(arrivals.get(), 2), 30)
++                permits.put_nowait(None)
++                delay = await asyncio.wait_for(arrivals.get(), 2)
++                self.assertEqual(delay, 30 if not ready or not season or status == 'deferred' else 21600)
++                state['data'] = Publication(nfl_state={'season': '2027'}, native={'score': 0})
++                for _ in range(3):
++                    await asyncio.sleep(0)
++                if reader:
++                    self.assertIs(observed(), owned_reader)
++                    self.assertEqual(owned_reader['native']['score'], -2.125)
++                    del owned_reader
++                    for _ in range(3):
++                        await asyncio.sleep(0)
++                self.assertIsNone(observed(), 'Sleeping evidence scheduler pins an obsolete complete league graph')
++                self.assertEqual(state['data']['native']['score'], 0)
++                self.assertEqual(calls, [2026] if ready and season else [])
++                if ready and season:
++                    self.assertEqual(states[-1], ('global_evidence', 'failed' if failure else status))
++            finally:
++                task.cancel()
++                await asyncio.gather(task, return_exceptions=True)
++            self.assertTrue(task.done())
++
++    async def test_completed_ingestion_does_not_pin_source_through_six_hour_sleep(self):
++        await self.exercise()
++
++    async def test_failed_or_deferred_ingestion_releases_unneeded_source(self):
++        for options in ({'failure': True}, {'status': 'deferred'}):
++            with self.subTest(options=options):
++                await self.exercise(**options)
++
++    async def test_waiting_for_startup_or_season_does_not_pin_source(self):
++        for options in ({'ready': False}, {'season': None}):
++            with self.subTest(options=options):
++                await self.exercise(**options)
++
++    async def test_actual_old_reader_preserves_evidence_until_it_releases(self):
++        await self.exercise(reader=True)
 diff --git a/tests/test_resident_refresh_retention.py b/tests/test_resident_refresh_retention.py
 new file mode 100644
 index 00000000..1de39e8d
@@ -377,10 +489,10 @@ index 00000000..1de39e8d
 +        await self.cancellation(True)
 diff --git a/tools/validation/resident_refresh_ownership.py b/tools/validation/resident_refresh_ownership.py
 new file mode 100644
-index 00000000..3037f6d1
+index 00000000..c87fc527
 --- /dev/null
 +++ b/tools/validation/resident_refresh_ownership.py
-@@ -0,0 +1,506 @@
+@@ -0,0 +1,559 @@
 +"""Enforced-container evidence for completed resident-refresh task ownership.
 +
 +Pinned public disposable inputs only. No provider acquisition, admission override,
@@ -443,7 +555,7 @@ index 00000000..3037f6d1
 +    args = parser.parse_args()
 +    args.output.mkdir(parents=True, exist_ok=True)
 +    result = dict(
-+        schema="resident-refresh-ownership-v1",
++        schema="resident-refresh-ownership-v2",
 +        python=sys.version,
 +        passed=False,
 +        cases=[],
@@ -466,6 +578,7 @@ index 00000000..3037f6d1
 +        paths, identities = {}, {}
 +        fixture_time = datetime.now(timezone.utc).isoformat()
 +        result['fixture_cache_last_sync'] = fixture_time
++        result['fixture_season_context'] = 'nfl_state.season derived from each disposable league season; native rows unchanged'
 +        for name in ("oneqb", "superflex"):
 +            with (args.fixtures / (name + ".json")).open(encoding="utf8") as handle:
 +                payload = json.load(handle)
@@ -473,6 +586,9 @@ index 00000000..3037f6d1
 +                str(payload["data"]["league"]["league_id"]),
 +                int(payload["data"]["league"]["season"]),
 +            )
++            # Synthetic current-season identity for the real global scheduler.
++            # Derive it from the fixture league, never the machine's calendar.
++            payload["data"]["nfl_state"] = {"season": str(identities[name][1])}
 +            # Refresh only disposable cache-retrieval time, not native observation
 +            # clocks or facts. Actual admission uses each full written file size.
 +            payload["last_sync"] = fixture_time
@@ -846,6 +962,54 @@ index 00000000..3037f6d1
 +            assert not runtime.background_tasks
 +            result["cases"].append(row)
 +
++        async def run_global_owner():
++            runtime = LeagueRuntime(identities["oneqb"][0], status=RuntimeState.WARM)
++            assert restore(runtime, paths["oneqb", "first"], identities["oneqb"][1])
++            old = weakref.ref(runtime.state["data"])
++            digest = source_digest(runtime)
++            gate, calls = IntervalGate(), []
++
++            class ModuleProxy:
++                def __getattr__(self, key):
++                    return gate.sleep if key == "sleep" else getattr(asyncio, key)
++
++            async def ingest(season, path):
++                calls.append(season)
++                return {"status": "complete"}
++
++            # Source acquisition is mocked, not claimed as completed work. Both
++            # cache restorations and canonical publications below are real and
++            # retain their actual admission checks under the enforced limit.
++            assert lifecycle_coordinator.startup_complete()
++            with patch.object(dtos_app, "STATE", runtime.state), patch.object(
++                dtos_app, "asyncio", ModuleProxy()
++            ), patch(
++                "services.global_evidence_ingestion.ingest_in_background", new=ingest
++            ):
++                task = asyncio.create_task(dtos_app.refresh_global_evidence())
++                try:
++                    await gate.parked(1)
++                    gate.permits.put_nowait(None)
++                    await gate.parked(2)
++                    assert calls == [identities["oneqb"][1]]
++                    sample("global scheduler parked with scalar season")
++                    assert restore(runtime, paths["oneqb", "next"], identities["oneqb"][1])
++                    await settle()
++                    assert old() is None
++                    assert source_digest(runtime) == digest
++                    sample("global scheduler obsolete source released")
++                finally:
++                    task.cancel()
++                    await asyncio.gather(task, return_exceptions=True)
++                assert task.done()
++            await runtime.close()
++            await settle()
++            result["cases"].append(dict(
++                name="global-evidence", completed=True, source_digest=digest,
++                old_released_without_reader=True, source_acquisition_mocked=True,
++                source_restoration_completed=True, scheduler_cancelled=True,
++            ))
++
 +        async def run():
 +            gc.collect()
 +            release_unused_allocator_pages()
@@ -854,6 +1018,7 @@ index 00000000..3037f6d1
 +            await run_case("oneqb")
 +            await run_case("oneqb", failed=True)
 +            await run_case("superflex", reader=True)
++            await run_global_owner()
 +            assert not dtos_app.canonical_history_store._current
 +            assert lifecycle_coordinator.snapshot()["phase"] == "idle"
 +            assert not psutil.Process().children(recursive=True)
@@ -865,7 +1030,7 @@ index 00000000..3037f6d1
 +            passed=True,
 +            children_after=[],
 +            source_values_preserved=True,
-+            scope="Three source-compatible disposable ownership cases; current/active contexts preserved. Not liveGranite or independent liveSleeper parity.",
++            scope="Four source-compatible disposable ownership cases; current/active contexts preserved. Global acquisition mocked; actual cache restoration/publication and admission remain real. Not liveGranite or independent liveSleeper parity.",
 +            limitations=[
 +                "Fixture clocks normalized only on copies; no source facts changed.",
 +                "Kernel lifetime peak includes fixture preparation,verification and bounded pressure. Stage samples distinguish publication and pressure; no decoder-only comparison claimed.",

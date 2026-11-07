@@ -3,10 +3,17 @@ from pathlib import Path
 import hashlib,json,re,zipfile
 b=Path('/workspace/2238-resident-refresh');r=Path('/workspace/2237-cache-duplication/runtime-retention');m=json.loads((b/'source.json').read_text());files={}
 for p in b.glob('superseded-*.json'):files['superseded-metadata/'+p.name]=p
+for p in b.glob('superseded-generated-*.zip'):files['superseded-generated-originals/'+p.name]=p
+for p in b.glob('invocation-superseded-*.json'):files['superseded-invocations/'+p.name]=p
+files['source-and-fixture-prior/global-owner-before-fix.log']=b/'global-owner-before-fix.log'
+for name in ['prior-108-product-original-decoded.log','prior-108-product-log-receipt.json','resident-host-prior-108-verified.json']:
+ files['superseded-successes/'+name]=b/name
+for pattern in ['global-owner-memory-prior-*.py','global-memory-*-prior-*.log']:
+ for p in r.glob(pattern):files['source-and-fixture-prior/'+p.name]=p
 for p in b.glob('resident-host-prior-*'):
  if p.is_file():files['hosted-resource-failure/'+p.name]=p
 for p in (b/'prior-hosted-originals').glob('*.zip'):files['original-hosted-archives/'+p.name]=p
-for folder in ['prior-local-canonical-509-cancelled','prior-local-checkout-generated-validation']:
+for folder in ['prior-local-canonical-509-cancelled','prior-local-canonical-108-cancelled','prior-local-checkout-generated-validation']:
  for p in (b/folder).rglob('*'):
   if p.is_file():files[folder+'/'+str(p.relative_to(b/folder))]=p
 for pattern in ['publisher-*-prior-*.log','publisher-tests-prior*.log']:
@@ -18,15 +25,15 @@ note=b/'PRIOR_ATTEMPTS.md';note.write_text('''# Prior attempts, not final accept
 
 Before-fix ownership controls:5 failures/2passes establish the bug. Incomplete asyncio test proxy and premature immediate-close assertion are fixture/setup errors; corrected controls allow event-loop cleanup. Missing fixture league display-name initialization caused a setupKeyError and dependent missing-file attempts; originals are retained. Ruff formatting/cache errors and a publisher fixture's obsolete twelve-job expectation were corrected without dropping assertions.
 
-The first final-source509resource control passed locally on Python3.14, but hosted Python3.12 correctly deferred after old owner release. Logical release did not immediately free enough allocator pages; the fixture incorrectly assumed it did. Final108explicitly relieves only fixture-owned pressure and checks actual capacity before real execution. Product memory policy is unchanged. The failed hostedZIP and decoded original job log remain intact; no missing checksum sidecar is fabricated for that failed run.
+The first final-source509resource control passed locally on Python3.14, but hosted Python3.12 correctly deferred after old owner release. Logical release did not immediately free enough allocator pages; the fixture incorrectly assumed it did. The final resource fixture explicitly relieves only fixture-owned pressure and checks actual capacity before real execution. Product memory policy is unchanged. The failed hostedZIP and decoded original job log remain intact; no missing checksum sidecar is fabricated for that failed run.
 
-Superseded509localcanonical and two hosted workflows were deliberately cancelled after this known focused failure. Two other509hosted workflows completed successfully, but are not used as final108acceptance. Local interrupted result is incomplete, not a passing full regression. Original trace/console and generated-validation records remain distinguishable. A first clean-checkout setup failed the existing8GiB scratch prerequisite before starting canonical; its command/AssertionError remain in the task transcript, with this note as an account rather than a reconstructed original log. Only final108runs establish release gates.
+Superseded509localcanonical and two hosted workflows were deliberately cancelled after this known focused failure. Two other509hosted workflows completed successfully, but are not used as final108acceptance. Local interrupted result is incomplete, not a passing full regression. Original trace/console and generated-validation records remain distinguishable. A first clean-checkout setup failed the existing8GiB scratch prerequisite before starting canonical; its command/AssertionError remain in the task transcript, with this note as an account rather than a reconstructed original log. Final108then exposed a separate source-backed global scheduler owner. Its local/hosted canonical runs were deliberately cancelled; its Product workflow had already completed successfully. Each actual outcome is preserved separately and none substitutes for final0a4gates. Final0a4adds the scalar-only global owner fix and must establish every final gate. Four global methods reproduce six failing scenarios before correction. A first global profiling harness kept its own cancelled task reference; its original script/log remain retained, and final controls drop that harness owner and settle before asserting cleanup.
 
 An earlier509focused invocation mistakenly set a transcribed expected-head environment string. Unit tests did not use that variable to establish checkout identity. It is not relied upon: subsequent exact509and final108scopes passed, with separate source receipts. Matched full-lifecycle measurements were on509with a byte-identical product function in108; they are separately source-associated, not relabeled as108executions.
 
 Download transport failures from the old hostGitHubCLI (unsupported log flag and forbidden signed redirect) are not application test failures. The existing GitHub connector retrieved the original hosted artifact with exact API SHA256; temporary download URLs and signatures are not published. No credentials were changed or bypassed.
 
-All artifacts here are synthetic/source-validation evidence. Earlier release/study originals remain unchanged at their immutable published locations. No historical production payload or recovered original log has been fabricated.
+All artifacts here are synthetic/source-validation evidence. Earlier release/study originals remain unchanged at their immutable published locations. The first509Docker invocationJSON was overwritten before it was separately copied; it is unavailable unchanged. Source-bound result, console, test/memory events and trace remain. No reconstructed original log is supplied. The108invocation was preserved before cancellation. Historical production payloads and logs are not fabricated.
 ''')
 files['PRIOR_ATTEMPTS.md']=note
 secret=re.compile(rb'(gh[pousr]_[A-Za-z0-9]{30,}|github_pat_[A-Za-z0-9_]{60,}|-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----)')

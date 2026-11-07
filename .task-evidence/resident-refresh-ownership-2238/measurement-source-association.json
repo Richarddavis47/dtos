@@ -1,8 +1,56 @@
 {
-  "final_candidate": "108624a0a3be61501376de243a54f23dd2e1e34a",
-  "final_tree": "a09397ad108c2bf221a70ff55fe7e06ab1cbc07c",
+  "final_candidate": "0a4b2aba52a3ebd65ec2c110c2377bfb3f9e7662",
+  "final_tree": "ab6d36fe3a543841e670c48f9654f64aeb5f01d3",
   "matched_measurement_candidate": "509ad3a98813e549d47e743045828bb285adb7bc",
   "matched_measurement_tree": "799e97da93aed7e2a66e86fa62a0adc5db42ed1a",
   "shared_production_function_sha256": "66c9a593127ab1369b46e98f1812c71458b2d282e982a9ba2ea41d234858b01e",
-  "qualification": "Formal baseline-function/shipping pairs ran on509. Final108 changes only the resource acceptance tool; the full production refresh function is byte-identical. Final108 resource and mandatory gates are separate."
+  "qualification": "Resident-loop matched pairs ran on509; the entire production resident function is unchanged in final0a4. Global-loop matched pairs run on final0a4 and vary only that real coroutine. Every final resource and mandatory gate is separately source bound.",
+  "global_comparison": {
+    "source": "0a4b2aba52a3ebd65ec2c110c2377bfb3f9e7662",
+    "tree": "ab6d36fe3a543841e670c48f9654f64aeb5f01d3",
+    "function_sha256": "64ca848f372744307b02691e49927eed9095d053562edcb7bcd4bd10af0978b6",
+    "pairs": [
+      {
+        "case": "1",
+        "saving_bytes": 58429440,
+        "control_peak": 422768640,
+        "shipping_peak": 422682624,
+        "held_during_reader": false,
+        "held_after_reader_release": false
+      },
+      {
+        "case": "2",
+        "saving_bytes": 59072512,
+        "control_peak": 422592512,
+        "shipping_peak": 422617088,
+        "held_during_reader": false,
+        "held_after_reader_release": false
+      },
+      {
+        "case": "3",
+        "saving_bytes": 57753600,
+        "control_peak": 422952960,
+        "shipping_peak": 422871040,
+        "held_during_reader": false,
+        "held_after_reader_release": false
+      },
+      {
+        "case": "4-failed",
+        "saving_bytes": 57892864,
+        "control_peak": 422916096,
+        "shipping_peak": 422674432,
+        "held_during_reader": false,
+        "held_after_reader_release": false
+      },
+      {
+        "case": "5-reader",
+        "saving_bytes": 151552,
+        "control_peak": 422842368,
+        "shipping_peak": 422875136,
+        "held_during_reader": true,
+        "held_after_reader_release": false
+      }
+    ],
+    "qualification": "Global-only matched ownership,not decoder profiling or privateGranite. Native facts agree. Peaks unchanged. GC/allocator settling identical. Active reader intentionally retains oldsource."
+  }
 }

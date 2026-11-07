@@ -1,0 +1,272 @@
+{
+  "mode": "control",
+  "repeat": 1,
+  "failed_ingest": false,
+  "reader": false,
+  "head": "0a4b2aba52a3ebd65ec2c110c2377bfb3f9e7662",
+  "tree": "ab6d36fe3a543841e670c48f9654f64aeb5f01d3",
+  "working_tree_clean": true,
+  "original_function_sha256": "64ca848f372744307b02691e49927eed9095d053562edcb7bcd4bd10af0978b6",
+  "effective_function_sha256": "b4518cfc7f60ec570e3864ec81e6fb9c8a830c71190edda0069e1d3260a43397",
+  "instrumentation_sha256": "16ed77928503248e4307a5d954845f28c3dbe90682bd59d6a83d5aa79d4674ce",
+  "inputs": {
+    "first.json": {
+      "bytes": 45671766,
+      "sha256": "988e013d4d7635f21ee0ba135793dff7cdb6a5bbfd68a30abe46249f481993e9"
+    },
+    "next.json": {
+      "bytes": 45671819,
+      "sha256": "64bc601c0ceda64fcb89dfb36139322ff572f2964274c05473d8ec6438cc8e42"
+    }
+  },
+  "environment": {
+    "python": "3.14.3 (main, Apr  7 2026, 02:23:36) [GCC 12.2.0]",
+    "limit": 2147483648,
+    "swap": 0,
+    "cpus": 2,
+    "network": "none"
+  },
+  "stages": [
+    {
+      "label": "initial",
+      "rss_bytes": 80891904,
+      "vms_bytes": 166055936,
+      "system_available_bytes": 17853202432,
+      "memory_accounting_scope": "cgroup",
+      "cgroup_current_bytes": 158736384,
+      "cgroup_limit_bytes": 2147483648,
+      "cgroup_inactive_file_bytes": 91348992,
+      "cgroup_anonymous_bytes": 63463424,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0
+      },
+      "anon": 63463424,
+      "file": 91348992,
+      "inactive_file": 91348992,
+      "kernel_peak": 161071104
+    },
+    {
+      "label": "first_publication",
+      "rss_bytes": 200265728,
+      "vms_bytes": 285995008,
+      "system_available_bytes": 17696985088,
+      "memory_accounting_scope": "cgroup",
+      "cgroup_current_bytes": 278429696,
+      "cgroup_limit_bytes": 2147483648,
+      "cgroup_inactive_file_bytes": 91348992,
+      "cgroup_anonymous_bytes": 182771712,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0
+      },
+      "anon": 182771712,
+      "file": 91348992,
+      "inactive_file": 91348992,
+      "kernel_peak": 311521280
+    },
+    {
+      "label": "global_scheduler_parked",
+      "rss_bytes": 200282112,
+      "vms_bytes": 285995008,
+      "system_available_bytes": 17696985088,
+      "memory_accounting_scope": "cgroup",
+      "cgroup_current_bytes": 278429696,
+      "cgroup_limit_bytes": 2147483648,
+      "cgroup_inactive_file_bytes": 91348992,
+      "cgroup_anonymous_bytes": 182771712,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0
+      },
+      "anon": 182771712,
+      "file": 91348992,
+      "inactive_file": 91348992,
+      "kernel_peak": 311521280
+    },
+    {
+      "label": "replacement_published",
+      "rss_bytes": 305278976,
+      "vms_bytes": 392011776,
+      "system_available_bytes": 17591787520,
+      "memory_accounting_scope": "cgroup",
+      "cgroup_current_bytes": 383561728,
+      "cgroup_limit_bytes": 2147483648,
+      "cgroup_inactive_file_bytes": 91348992,
+      "cgroup_anonymous_bytes": 287784960,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0
+      },
+      "anon": 287784960,
+      "file": 91348992,
+      "inactive_file": 91348992,
+      "kernel_peak": 422768640
+    },
+    {
+      "label": "replacement_before_gc_trim",
+      "rss_bytes": 305278976,
+      "vms_bytes": 392011776,
+      "system_available_bytes": 17591787520,
+      "memory_accounting_scope": "cgroup",
+      "cgroup_current_bytes": 383561728,
+      "cgroup_limit_bytes": 2147483648,
+      "cgroup_inactive_file_bytes": 91348992,
+      "cgroup_anonymous_bytes": 287784960,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0
+      },
+      "anon": 287784960,
+      "file": 91348992,
+      "inactive_file": 91348992,
+      "kernel_peak": 422768640
+    },
+    {
+      "label": "replacement_settled",
+      "rss_bytes": 304193536,
+      "vms_bytes": 391671808,
+      "system_available_bytes": 17592246272,
+      "memory_accounting_scope": "cgroup",
+      "cgroup_current_bytes": 382472192,
+      "cgroup_limit_bytes": 2147483648,
+      "cgroup_inactive_file_bytes": 91348992,
+      "cgroup_anonymous_bytes": 286695424,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0
+      },
+      "anon": 286695424,
+      "file": 91348992,
+      "inactive_file": 91348992,
+      "kernel_peak": 422768640
+    },
+    {
+      "label": "operation_end_before_verification",
+      "rss_bytes": 304193536,
+      "vms_bytes": 391671808,
+      "system_available_bytes": 17592246272,
+      "memory_accounting_scope": "cgroup",
+      "cgroup_current_bytes": 382472192,
+      "cgroup_limit_bytes": 2147483648,
+      "cgroup_inactive_file_bytes": 91348992,
+      "cgroup_anonymous_bytes": 286695424,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0
+      },
+      "anon": 286695424,
+      "file": 91348992,
+      "inactive_file": 91348992,
+      "kernel_peak": 422768640
+    },
+    {
+      "label": "measured_runtime_closed",
+      "rss_bytes": 174514176,
+      "vms_bytes": 313028608,
+      "system_available_bytes": 17592246272,
+      "memory_accounting_scope": "cgroup",
+      "cgroup_current_bytes": 252657664,
+      "cgroup_limit_bytes": 2147483648,
+      "cgroup_inactive_file_bytes": 91348992,
+      "cgroup_anonymous_bytes": 157016064,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0
+      },
+      "anon": 157016064,
+      "file": 91348992,
+      "inactive_file": 91348992,
+      "kernel_peak": 422768640
+    },
+    {
+      "label": "verification_finished",
+      "rss_bytes": 176320512,
+      "vms_bytes": 314077184,
+      "system_available_bytes": 17592246272,
+      "memory_accounting_scope": "cgroup",
+      "cgroup_current_bytes": 254488576,
+      "cgroup_limit_bytes": 2147483648,
+      "cgroup_inactive_file_bytes": 45678592,
+      "cgroup_anonymous_bytes": 158822400,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0
+      },
+      "anon": 158822400,
+      "file": 91348992,
+      "inactive_file": 45678592,
+      "kernel_peak": 422768640
+    },
+    {
+      "label": "scratch_removed",
+      "rss_bytes": 176320512,
+      "vms_bytes": 314077184,
+      "system_available_bytes": 17590038528,
+      "memory_accounting_scope": "cgroup",
+      "cgroup_current_bytes": 160686080,
+      "cgroup_limit_bytes": 2147483648,
+      "cgroup_inactive_file_bytes": 0,
+      "cgroup_anonymous_bytes": 158826496,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0
+      },
+      "anon": 158826496,
+      "file": 0,
+      "inactive_file": 0,
+      "kernel_peak": 422768640
+    }
+  ],
+  "released_before_gc": false,
+  "held_after_replacement": true,
+  "held_after_reader_release": true,
+  "measured_kernel_peak": 422768640,
+  "retained_increment": 223735808,
+  "source_fact_digest": "a3ca90c8ad53ef274ffcfee4506fcdd239df9363a54efba67a358c4e47fb6367",
+  "seconds": 2.1846305649960414,
+  "children_after": [],
+  "scratch_removed": true,
+  "passed": true,
+  "qualification": "Only the real global evidence coroutine varies; source acquisition mocked identically,not claimed completed. Both measured guarded restorations/publications are real; final A verification occurs after peak capture. Identical decoder/digest/inputs/admission; GC/trim separate and identical. Disposable source-compatible structure,not privateGranite or live recovery."
+}

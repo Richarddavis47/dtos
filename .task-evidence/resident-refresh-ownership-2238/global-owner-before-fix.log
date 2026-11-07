@@ -1,0 +1,91 @@
+test_actual_old_reader_preserves_evidence_until_it_releases (tests.test_global_evidence_retention.GlobalEvidenceOwnershipTests.test_actual_old_reader_preserves_evidence_until_it_releases) ... FAIL
+test_completed_ingestion_does_not_pin_source_through_six_hour_sleep (tests.test_global_evidence_retention.GlobalEvidenceOwnershipTests.test_completed_ingestion_does_not_pin_source_through_six_hour_sleep) ... FAIL
+test_failed_or_deferred_ingestion_releases_unneeded_source (tests.test_global_evidence_retention.GlobalEvidenceOwnershipTests.test_failed_or_deferred_ingestion_releases_unneeded_source) ... 
+  test_failed_or_deferred_ingestion_releases_unneeded_source (tests.test_global_evidence_retention.GlobalEvidenceOwnershipTests.test_failed_or_deferred_ingestion_releases_unneeded_source) (options={'failure': True}) ... FAIL
+  test_failed_or_deferred_ingestion_releases_unneeded_source (tests.test_global_evidence_retention.GlobalEvidenceOwnershipTests.test_failed_or_deferred_ingestion_releases_unneeded_source) (options={'status': 'deferred'}) ... FAIL
+test_waiting_for_startup_or_season_does_not_pin_source (tests.test_global_evidence_retention.GlobalEvidenceOwnershipTests.test_waiting_for_startup_or_season_does_not_pin_source) ... 
+  test_waiting_for_startup_or_season_does_not_pin_source (tests.test_global_evidence_retention.GlobalEvidenceOwnershipTests.test_waiting_for_startup_or_season_does_not_pin_source) (options={'ready': False}) ... FAIL
+  test_waiting_for_startup_or_season_does_not_pin_source (tests.test_global_evidence_retention.GlobalEvidenceOwnershipTests.test_waiting_for_startup_or_season_does_not_pin_source) (options={'season': None}) ... FAIL
+
+======================================================================
+FAIL: test_actual_old_reader_preserves_evidence_until_it_releases (tests.test_global_evidence_retention.GlobalEvidenceOwnershipTests.test_actual_old_reader_preserves_evidence_until_it_releases)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.14/asyncio/runners.py", line 127, in run
+    return self._loop.run_until_complete(task)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "/usr/local/lib/python3.14/asyncio/base_events.py", line 719, in run_until_complete
+    return future.result()
+           ~~~~~~~~~~~~~^^
+  File "/app/tests/test_global_evidence_retention.py", line 82, in test_actual_old_reader_preserves_evidence_until_it_releases
+    await self.exercise(reader=True)
+  File "/app/tests/test_global_evidence_retention.py", line 58, in exercise
+    self.assertIsNone(observed(), 'Sleeping evidence scheduler pins an obsolete complete league graph')
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: {'nfl_state': {'season': '2026'}, 'native': {'score': -2.125}} is not None : Sleeping evidence scheduler pins an obsolete complete league graph
+
+======================================================================
+FAIL: test_completed_ingestion_does_not_pin_source_through_six_hour_sleep (tests.test_global_evidence_retention.GlobalEvidenceOwnershipTests.test_completed_ingestion_does_not_pin_source_through_six_hour_sleep)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.14/asyncio/runners.py", line 127, in run
+    return self._loop.run_until_complete(task)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "/usr/local/lib/python3.14/asyncio/base_events.py", line 719, in run_until_complete
+    return future.result()
+           ~~~~~~~~~~~~~^^
+  File "/app/tests/test_global_evidence_retention.py", line 69, in test_completed_ingestion_does_not_pin_source_through_six_hour_sleep
+    await self.exercise()
+  File "/app/tests/test_global_evidence_retention.py", line 58, in exercise
+    self.assertIsNone(observed(), 'Sleeping evidence scheduler pins an obsolete complete league graph')
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: {'nfl_state': {'season': '2026'}, 'native': {'score': -2.125}} is not None : Sleeping evidence scheduler pins an obsolete complete league graph
+
+======================================================================
+FAIL: test_failed_or_deferred_ingestion_releases_unneeded_source (tests.test_global_evidence_retention.GlobalEvidenceOwnershipTests.test_failed_or_deferred_ingestion_releases_unneeded_source) (options={'failure': True})
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_global_evidence_retention.py", line 74, in test_failed_or_deferred_ingestion_releases_unneeded_source
+    await self.exercise(**options)
+  File "/app/tests/test_global_evidence_retention.py", line 58, in exercise
+    self.assertIsNone(observed(), 'Sleeping evidence scheduler pins an obsolete complete league graph')
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: {'nfl_state': {'season': '2026'}, 'native': {'score': -2.125}} is not None : Sleeping evidence scheduler pins an obsolete complete league graph
+
+======================================================================
+FAIL: test_failed_or_deferred_ingestion_releases_unneeded_source (tests.test_global_evidence_retention.GlobalEvidenceOwnershipTests.test_failed_or_deferred_ingestion_releases_unneeded_source) (options={'status': 'deferred'})
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_global_evidence_retention.py", line 74, in test_failed_or_deferred_ingestion_releases_unneeded_source
+    await self.exercise(**options)
+  File "/app/tests/test_global_evidence_retention.py", line 58, in exercise
+    self.assertIsNone(observed(), 'Sleeping evidence scheduler pins an obsolete complete league graph')
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: {'nfl_state': {'season': '2026'}, 'native': {'score': -2.125}} is not None : Sleeping evidence scheduler pins an obsolete complete league graph
+
+======================================================================
+FAIL: test_waiting_for_startup_or_season_does_not_pin_source (tests.test_global_evidence_retention.GlobalEvidenceOwnershipTests.test_waiting_for_startup_or_season_does_not_pin_source) (options={'ready': False})
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_global_evidence_retention.py", line 79, in test_waiting_for_startup_or_season_does_not_pin_source
+    await self.exercise(**options)
+  File "/app/tests/test_global_evidence_retention.py", line 58, in exercise
+    self.assertIsNone(observed(), 'Sleeping evidence scheduler pins an obsolete complete league graph')
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: {'nfl_state': {'season': '2026'}, 'native': {'score': -2.125}} is not None : Sleeping evidence scheduler pins an obsolete complete league graph
+
+======================================================================
+FAIL: test_waiting_for_startup_or_season_does_not_pin_source (tests.test_global_evidence_retention.GlobalEvidenceOwnershipTests.test_waiting_for_startup_or_season_does_not_pin_source) (options={'season': None})
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_global_evidence_retention.py", line 79, in test_waiting_for_startup_or_season_does_not_pin_source
+    await self.exercise(**options)
+  File "/app/tests/test_global_evidence_retention.py", line 58, in exercise
+    self.assertIsNone(observed(), 'Sleeping evidence scheduler pins an obsolete complete league graph')
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: {'nfl_state': {'season': None}, 'native': {'score': -2.125}} is not None : Sleeping evidence scheduler pins an obsolete complete league graph
+
+----------------------------------------------------------------------
+Ran 4 tests in 0.016s
+
+FAILED (failures=6)
