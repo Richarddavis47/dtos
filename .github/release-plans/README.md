@@ -1,0 +1,5 @@
+# Guarded build2239 publication
+
+Based on production9e9cca569e8c9fb80b1843db4ae8fb248cfcb971; never merge this tooling branch. Only the eight allowed controller/plan/evidence paths may differ. Reuse the established Actions GITHUB_TOKEN(contents:write), explicit actor/ref, exact source/PR/tree checks, thirteen required hosted jobs, ten local/hosted canonical gates, original checksums, preparation readback certificate, expected-head normal squash merge, unchanged merged tree, immutable publication and production readiness checks. No Cloud upload credential, relay or application change.
+
+Finalize plan2239only after all gates pass. Prepare while PR328is open and main remains baseline. Independently verify the certificate and remote bytes before merging. Publish from the same frozen tooling revision with that preparation run ID; require current main to be the approved merge and its tree to match validation. Preserve earlier failed/cancelled outcomes separately. This task changes recorded Trade explanations and action placement, not intelligence thresholds or resources. No live qualifying offer is claimed from fixtures.
