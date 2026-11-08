@@ -1,0 +1,99 @@
+{
+  "head": "47c1a04ab84b405fc31cba9fdd1a424c27b482e9",
+  "tree": "f620d835c7b687d79d602ee5304f328aae95edef",
+  "working_tree_clean": true,
+  "scope": "Explicitly disposable retained values; no actual historic provider prices or independently observed live coverage",
+  "cases": [
+    {
+      "case": "newer_incompatible",
+      "retained_fixture_values": [
+        {
+          "value": 800.0,
+          "observed_at": "2026-03-01T02:06:18.497000+00:00"
+        },
+        {
+          "value": 400.0,
+          "observed_at": "2026-03-01T01:07:18.497000+00:00"
+        }
+      ],
+      "selected_value": 400.0,
+      "age_seconds": 3600.0,
+      "state": "DATED_ESTIMATE",
+      "source_providers": [
+        "FantasyCalc"
+      ],
+      "package_totals_displayed": false
+    },
+    {
+      "case": "newer_foreign",
+      "retained_fixture_values": [
+        {
+          "value": 800.0,
+          "observed_at": "2026-03-01T02:06:18.497000+00:00"
+        },
+        {
+          "value": 400.0,
+          "observed_at": "2026-03-01T01:07:18.497000+00:00"
+        }
+      ],
+      "selected_value": 400.0,
+      "age_seconds": 3600.0,
+      "state": "DATED_ESTIMATE",
+      "source_providers": [
+        "FantasyCalc"
+      ],
+      "package_totals_displayed": false
+    },
+    {
+      "case": "partial_old",
+      "retained_fixture_values": [
+        {
+          "value": 275.0,
+          "observed_at": "2026-01-30T02:07:18.497000+00:00"
+        }
+      ],
+      "selected_value": 275.0,
+      "age_seconds": 2592000.0,
+      "state": "DATED_ESTIMATE",
+      "source_providers": [
+        "FantasyCalc"
+      ],
+      "package_totals_displayed": false
+    },
+    {
+      "case": "zero",
+      "retained_fixture_values": [
+        {
+          "value": 0.0,
+          "observed_at": "2026-03-01T02:07:18.497000+00:00"
+        }
+      ],
+      "selected_value": 0.0,
+      "age_seconds": 0.0,
+      "state": "EXACT",
+      "source_providers": [
+        "FantasyCalc"
+      ],
+      "package_totals_displayed": false
+    },
+    {
+      "case": "conflicting",
+      "retained_fixture_values": [
+        {
+          "value": 400.0,
+          "observed_at": "2026-03-01T01:07:18.497000+00:00"
+        },
+        {
+          "value": 800.0,
+          "observed_at": "2026-03-01T01:07:18.497000+00:00"
+        }
+      ],
+      "selected_value": null,
+      "age_seconds": null,
+      "state": "UNAVAILABLE",
+      "source_providers": [],
+      "package_totals_displayed": false
+    }
+  ],
+  "package_display_policy": "Per-asset only; no maximum-age cutoff or package totals introduced"
+}

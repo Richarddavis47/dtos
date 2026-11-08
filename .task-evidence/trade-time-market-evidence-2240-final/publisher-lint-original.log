@@ -1,0 +1,129 @@
+E702 Multiple statements on one line (semicolon)
+   --> tests/test_release_publisher.py:934:43
+    |
+932 |             self.assertTrue(p.verify_trade_time_market(path,plan)['passed'])
+933 |             for field,value in [('head','other'),('tree','other'),('working_tree_clean',False)]:
+934 |                 bad=copy.deepcopy(feature);bad[field]=value;write(phone,bad,supplied)
+    |                                           ^
+935 |                 with self.assertRaises(RuntimeError):p.verify_trade_time_market(path,plan)
+936 |             bad=copy.deepcopy(phone);bad['records'][0]['extra_disclosure_requests']=1;write(bad,feature,supplied)
+    |
+
+E702 Multiple statements on one line (semicolon)
+   --> tests/test_release_publisher.py:934:60
+    |
+932 |             self.assertTrue(p.verify_trade_time_market(path,plan)['passed'])
+933 |             for field,value in [('head','other'),('tree','other'),('working_tree_clean',False)]:
+934 |                 bad=copy.deepcopy(feature);bad[field]=value;write(phone,bad,supplied)
+    |                                                            ^
+935 |                 with self.assertRaises(RuntimeError):p.verify_trade_time_market(path,plan)
+936 |             bad=copy.deepcopy(phone);bad['records'][0]['extra_disclosure_requests']=1;write(bad,feature,supplied)
+    |
+
+E701 Multiple statements on one line (colon)
+   --> tests/test_release_publisher.py:935:53
+    |
+933 |             for field,value in [('head','other'),('tree','other'),('working_tree_clean',False)]:
+934 |                 bad=copy.deepcopy(feature);bad[field]=value;write(phone,bad,supplied)
+935 |                 with self.assertRaises(RuntimeError):p.verify_trade_time_market(path,plan)
+    |                                                     ^
+936 |             bad=copy.deepcopy(phone);bad['records'][0]['extra_disclosure_requests']=1;write(bad,feature,supplied)
+937 |             with self.assertRaises(RuntimeError):p.verify_trade_time_market(path,plan)
+    |
+
+E702 Multiple statements on one line (semicolon)
+   --> tests/test_release_publisher.py:936:37
+    |
+934 |                 bad=copy.deepcopy(feature);bad[field]=value;write(phone,bad,supplied)
+935 |                 with self.assertRaises(RuntimeError):p.verify_trade_time_market(path,plan)
+936 |             bad=copy.deepcopy(phone);bad['records'][0]['extra_disclosure_requests']=1;write(bad,feature,supplied)
+    |                                     ^
+937 |             with self.assertRaises(RuntimeError):p.verify_trade_time_market(path,plan)
+938 |             bad=copy.deepcopy(feature);bad['cases'][0]['package_totals_displayed']=True;write(phone,bad,supplied)
+    |
+
+E702 Multiple statements on one line (semicolon)
+   --> tests/test_release_publisher.py:936:86
+    |
+934 |                 bad=copy.deepcopy(feature);bad[field]=value;write(phone,bad,supplied)
+935 |                 with self.assertRaises(RuntimeError):p.verify_trade_time_market(path,plan)
+936 |             bad=copy.deepcopy(phone);bad['records'][0]['extra_disclosure_requests']=1;write(bad,feature,supplied)
+    |                                                                                      ^
+937 |             with self.assertRaises(RuntimeError):p.verify_trade_time_market(path,plan)
+938 |             bad=copy.deepcopy(feature);bad['cases'][0]['package_totals_displayed']=True;write(phone,bad,supplied)
+    |
+
+E701 Multiple statements on one line (colon)
+   --> tests/test_release_publisher.py:937:49
+    |
+935 |                 with self.assertRaises(RuntimeError):p.verify_trade_time_market(path,plan)
+936 |             bad=copy.deepcopy(phone);bad['records'][0]['extra_disclosure_requests']=1;write(bad,feature,supplied)
+937 |             with self.assertRaises(RuntimeError):p.verify_trade_time_market(path,plan)
+    |                                                 ^
+938 |             bad=copy.deepcopy(feature);bad['cases'][0]['package_totals_displayed']=True;write(phone,bad,supplied)
+939 |             with self.assertRaises(RuntimeError):p.verify_trade_time_market(path,plan)
+    |
+
+E702 Multiple statements on one line (semicolon)
+   --> tests/test_release_publisher.py:938:39
+    |
+936 |             bad=copy.deepcopy(phone);bad['records'][0]['extra_disclosure_requests']=1;write(bad,feature,supplied)
+937 |             with self.assertRaises(RuntimeError):p.verify_trade_time_market(path,plan)
+938 |             bad=copy.deepcopy(feature);bad['cases'][0]['package_totals_displayed']=True;write(phone,bad,supplied)
+    |                                       ^
+939 |             with self.assertRaises(RuntimeError):p.verify_trade_time_market(path,plan)
+940 |             bad=copy.deepcopy(supplied);bad['exhaustive']=True;write(phone,feature,bad)
+    |
+
+E702 Multiple statements on one line (semicolon)
+   --> tests/test_release_publisher.py:938:88
+    |
+936 |             bad=copy.deepcopy(phone);bad['records'][0]['extra_disclosure_requests']=1;write(bad,feature,supplied)
+937 |             with self.assertRaises(RuntimeError):p.verify_trade_time_market(path,plan)
+938 |             bad=copy.deepcopy(feature);bad['cases'][0]['package_totals_displayed']=True;write(phone,bad,supplied)
+    |                                                                                        ^
+939 |             with self.assertRaises(RuntimeError):p.verify_trade_time_market(path,plan)
+940 |             bad=copy.deepcopy(supplied);bad['exhaustive']=True;write(phone,feature,bad)
+    |
+
+E701 Multiple statements on one line (colon)
+   --> tests/test_release_publisher.py:939:49
+    |
+937 |             with self.assertRaises(RuntimeError):p.verify_trade_time_market(path,plan)
+938 |             bad=copy.deepcopy(feature);bad['cases'][0]['package_totals_displayed']=True;write(phone,bad,supplied)
+939 |             with self.assertRaises(RuntimeError):p.verify_trade_time_market(path,plan)
+    |                                                 ^
+940 |             bad=copy.deepcopy(supplied);bad['exhaustive']=True;write(phone,feature,bad)
+941 |             with self.assertRaises(RuntimeError):p.verify_trade_time_market(path,plan)
+    |
+
+E702 Multiple statements on one line (semicolon)
+   --> tests/test_release_publisher.py:940:40
+    |
+938 |             bad=copy.deepcopy(feature);bad['cases'][0]['package_totals_displayed']=True;write(phone,bad,supplied)
+939 |             with self.assertRaises(RuntimeError):p.verify_trade_time_market(path,plan)
+940 |             bad=copy.deepcopy(supplied);bad['exhaustive']=True;write(phone,feature,bad)
+    |                                        ^
+941 |             with self.assertRaises(RuntimeError):p.verify_trade_time_market(path,plan)
+    |
+
+E702 Multiple statements on one line (semicolon)
+   --> tests/test_release_publisher.py:940:63
+    |
+938 |             bad=copy.deepcopy(feature);bad['cases'][0]['package_totals_displayed']=True;write(phone,bad,supplied)
+939 |             with self.assertRaises(RuntimeError):p.verify_trade_time_market(path,plan)
+940 |             bad=copy.deepcopy(supplied);bad['exhaustive']=True;write(phone,feature,bad)
+    |                                                               ^
+941 |             with self.assertRaises(RuntimeError):p.verify_trade_time_market(path,plan)
+    |
+
+E701 Multiple statements on one line (colon)
+   --> tests/test_release_publisher.py:941:49
+    |
+939 |             with self.assertRaises(RuntimeError):p.verify_trade_time_market(path,plan)
+940 |             bad=copy.deepcopy(supplied);bad['exhaustive']=True;write(phone,feature,bad)
+941 |             with self.assertRaises(RuntimeError):p.verify_trade_time_market(path,plan)
+    |                                                 ^
+    |
+
+Found 12 errors.

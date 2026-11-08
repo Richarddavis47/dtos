@@ -1,0 +1,308 @@
+/usr/local/lib/python3.14/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+  from starlette.testclient import TestClient as TestClient  # noqa
+test_conflict_between_pick_aliases_is_unknown (tests.test_trade_time_market_evidence.TradeTimeMarketEvidenceTests.test_conflict_between_pick_aliases_is_unknown) ... ok
+test_conversion_does_not_price_the_original_pick (tests.test_trade_time_market_evidence.TradeTimeMarketEvidenceTests.test_conversion_does_not_price_the_original_pick) ... ok
+test_foreign_future_quote_is_not_exposed_as_raw_evidence (tests.test_trade_time_market_evidence.TradeTimeMarketEvidenceTests.test_foreign_future_quote_is_not_exposed_as_raw_evidence) ... INFO:httpx:HTTP Request: GET http://testserver/trades/history/1333655835015942144 "HTTP/1.1 200 OK"
+ok
+test_foreign_only_raw_evidence_is_not_exposed (tests.test_trade_time_market_evidence.TradeTimeMarketEvidenceTests.test_foreign_only_raw_evidence_is_not_exposed) ... INFO:httpx:HTTP Request: GET http://testserver/trades/history/1333655835015942144 "HTTP/1.1 200 OK"
+ok
+test_known_asset_identity_mismatch_cannot_enter (tests.test_trade_time_market_evidence.TradeTimeMarketEvidenceTests.test_known_asset_identity_mismatch_cannot_enter) ... ok
+test_later_publication_is_excluded_and_earlier_quote_survives (tests.test_trade_time_market_evidence.TradeTimeMarketEvidenceTests.test_later_publication_is_excluded_and_earlier_quote_survives) ... ok
+test_newer_foreign_scope_does_not_hide_compatible_quote (tests.test_trade_time_market_evidence.TradeTimeMarketEvidenceTests.test_newer_foreign_scope_does_not_hide_compatible_quote) ... ok
+test_newer_incompatible_does_not_hide_older_compatible_quote (tests.test_trade_time_market_evidence.TradeTimeMarketEvidenceTests.test_newer_incompatible_does_not_hide_older_compatible_quote) ... ok
+test_old_individual_value_remains_dated_not_package_freshness (tests.test_trade_time_market_evidence.TradeTimeMarketEvidenceTests.test_old_individual_value_remains_dated_not_package_freshness) ... INFO:httpx:HTTP Request: GET http://testserver/trades/history/1333655835015942144 "HTTP/1.1 200 OK"
+ok
+test_partial_values_survive_without_package_claim (tests.test_trade_time_market_evidence.TradeTimeMarketEvidenceTests.test_partial_values_survive_without_package_claim) ... INFO:httpx:HTTP Request: GET http://testserver/trades/history/1333655835015942144 "HTTP/1.1 200 OK"
+ok
+test_pick_aliases_select_latest_compatible_before_winner (tests.test_trade_time_market_evidence.TradeTimeMarketEvidenceTests.test_pick_aliases_select_latest_compatible_before_winner) ... ok
+test_post_trade_observation_is_excluded (tests.test_trade_time_market_evidence.TradeTimeMarketEvidenceTests.test_post_trade_observation_is_excluded) ... ok
+test_reads_and_disclosures_do_not_acquire_or_persist (tests.test_trade_time_market_evidence.TradeTimeMarketEvidenceTests.test_reads_and_disclosures_do_not_acquire_or_persist) ... INFO:httpx:HTTP Request: GET http://testserver/trades/history/1333655835015942144 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/trades/history/1333655835015942144 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/trades/history/1333655835015942144 "HTTP/1.1 200 OK"
+ok
+test_retained_unknown_later_or_ambiguous_knowledge_is_not_replaced (tests.test_trade_time_market_evidence.TradeTimeMarketEvidenceTests.test_retained_unknown_later_or_ambiguous_knowledge_is_not_replaced) ... ok
+test_same_instant_conflicting_prices_are_unknown (tests.test_trade_time_market_evidence.TradeTimeMarketEvidenceTests.test_same_instant_conflicting_prices_are_unknown) ... ok
+test_subsecond_age_does_not_claim_the_trade_instant (tests.test_trade_time_market_evidence.TradeTimeMarketEvidenceTests.test_subsecond_age_does_not_claim_the_trade_instant) ... INFO:httpx:HTTP Request: GET http://testserver/trades/history/1333655835015942144 "HTTP/1.1 200 OK"
+ok
+test_unavailable_retained_metadata_withholds_without_error (tests.test_trade_time_market_evidence.TradeTimeMarketEvidenceTests.test_unavailable_retained_metadata_withholds_without_error) ... INFO:httpx:HTTP Request: GET http://testserver/trades/history/1333655835015942144 "HTTP/1.1 200 OK"
+ok
+test_zero_is_supported_and_exact_instant_is_distinct (tests.test_trade_time_market_evidence.TradeTimeMarketEvidenceTests.test_zero_is_supported_and_exact_instant_is_distinct) ... INFO:httpx:HTTP Request: GET http://testserver/trades/history/1333655835015942144 "HTTP/1.1 200 OK"
+ok
+test_partial_quotes_source_age_and_keyboard_disclosure (tests.test_trade_time_market_evidence_browser.TradeTimeMarketEvidenceBrowserTests.test_partial_quotes_source_age_and_keyboard_disclosure) ... Validation Chromium: /usr/bin/chromium
+Validation Chromium version: 156.0.8078.73
+{"timestamp":"2026-11-08T06:46:24.608055+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/history/1333655835015942144 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:24.635291+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/history-production.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:25.111316+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/history/1333655835015942144 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:25.134655+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/history-production.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:25.633320+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/history/1333655835015942144 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:25.701360+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/history-production.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:26.200699+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/history/1333655835015942144 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:26.225370+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/history-production.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+ok
+test_matching_never_requests_or_substitutes_a_later_observation (tests.test_historical_trade_time.HistoricalTradeTimeTests.test_matching_never_requests_or_substitutes_a_later_observation) ... ok
+test_naive_iso_is_rejected_and_aware_iso_is_utc (tests.test_historical_trade_time.HistoricalTradeTimeTests.test_naive_iso_is_rejected_and_aware_iso_is_utc) ... ok
+test_sleeper_created_is_canonical_utc_and_precedes_status_updated (tests.test_historical_trade_time.HistoricalTradeTimeTests.test_sleeper_created_is_canonical_utc_and_precedes_status_updated) ... ok
+test_status_updated_is_fallback_and_missing_is_not_fabricated (tests.test_historical_trade_time.HistoricalTradeTimeTests.test_status_updated_is_fallback_and_missing_is_not_fabricated) ... ok
+test_trade_and_asset_events_share_timestamp_without_identity_change (tests.test_historical_trade_time.HistoricalTradeTimeTests.test_trade_and_asset_events_share_timestamp_without_identity_change) ... ok
+test_trade_time_matching_uses_pre_event_observation_and_partial_coverage (tests.test_historical_trade_time.HistoricalTradeTimeTests.test_trade_time_matching_uses_pre_event_observation_and_partial_coverage) ... ok
+test_waiver_and_drop_events_inherit_transaction_time (tests.test_historical_trade_time.HistoricalTradeTimeTests.test_waiver_and_drop_events_inherit_transaction_time) ... ok
+test_actual_source_league_and_foreign_roster_ids (tests.test_trade_timeline.TradeTimelineTests.test_actual_source_league_and_foreign_roster_ids) ... ok
+test_auction_does_not_convert_future_franchise_picks (tests.test_trade_timeline.TradeTimelineTests.test_auction_does_not_convert_future_franchise_picks) ... ok
+test_boston_pick_conversion_then_observed_trade (tests.test_trade_timeline.TradeTimelineTests.test_boston_pick_conversion_then_observed_trade) ... ok
+test_bounded_index_reuse_for_expansion (tests.test_trade_timeline.TradeTimelineTests.test_bounded_index_reuse_for_expansion) ... ok
+test_compatible_exact_zero_and_future_pick_context_alias (tests.test_trade_timeline.TradeTimelineTests.test_compatible_exact_zero_and_future_pick_context_alias) ... ok
+test_current_transaction_only_generation_invalidates (tests.test_trade_timeline.TradeTimelineTests.test_current_transaction_only_generation_invalidates) ... ok
+test_drop_closes_interval_without_claiming_final_owner (tests.test_trade_timeline.TradeTimelineTests.test_drop_closes_interval_without_claiming_final_owner) ... ok
+test_equal_clock_and_missing_transition_stop_continuation (tests.test_trade_timeline.TradeTimelineTests.test_equal_clock_and_missing_transition_stop_continuation) ... ok
+test_equivalent_utc_clocks_do_not_reject_valid_evidence (tests.test_trade_timeline.TradeTimelineTests.test_equivalent_utc_clocks_do_not_reject_valid_evidence) ... ok
+test_event_index_excludes_irrelevant_scoring_universe (tests.test_trade_timeline.TradeTimelineTests.test_event_index_excludes_irrelevant_scoring_universe) ... ok
+test_future_and_later_knowledge_quotes_are_rejected_by_real_producer (tests.test_trade_timeline.TradeTimelineTests.test_future_and_later_knowledge_quotes_are_rejected_by_real_producer) ... ok
+test_http_readable_exact_assets_and_dossier_return (tests.test_trade_timeline.TradeTimelineTests.test_http_readable_exact_assets_and_dossier_return) ... {"timestamp":"2026-11-08T06:46:29.687419+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/history/1333655835015942144 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:29.691808+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/picks/PICK-2026-R2-ORIG7?from_trade=1333655835015942144 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:29.695317+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/history/1333655835015942144 \"HTTP/1.1 200 OK\"","request_id":"system"}
+ok
+test_legacy_untouched_and_repeat_reads_no_growth (tests.test_trade_timeline.TradeTimelineTests.test_legacy_untouched_and_repeat_reads_no_growth) ... ok
+test_love_original4_selecting5_exact_writer_and_graph (tests.test_trade_timeline.TradeTimelineTests.test_love_original4_selecting5_exact_writer_and_graph) ... ok
+test_missing_pick_not_substituted_by_player_or_current_value (tests.test_trade_timeline.TradeTimelineTests.test_missing_pick_not_substituted_by_player_or_current_value) ... ok
+test_multiple_same_round_all_exact_selections_distinct (tests.test_trade_timeline.TradeTimelineTests.test_multiple_same_round_all_exact_selections_distinct) ... ok
+test_null_chronology_http_and_coverage_preserve_events (tests.test_trade_timeline.TradeTimelineTests.test_null_chronology_http_and_coverage_preserve_events) ... {"timestamp":"2026-11-08T06:46:30.014494+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/history/transactions \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:30.041257+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/history/trades/coverage \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:30.052131+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/history/players/13346 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:30.057039+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/history/1333655835015942144 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:30.060120+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/history/1333655835015942144 \"HTTP/1.1 200 OK\"","request_id":"system"}
+ok
+test_older_quote_keeps_clock_and_not_exact (tests.test_trade_timeline.TradeTimelineTests.test_older_quote_keeps_clock_and_not_exact) ... ok
+test_partial_started_scoring_zero_and_duplicates (tests.test_trade_timeline.TradeTimelineTests.test_partial_started_scoring_zero_and_duplicates) ... ok
+test_price_units_opaque_legacy_fail_closed (tests.test_trade_timeline.TradeTimelineTests.test_price_units_opaque_legacy_fail_closed) ... ok
+test_prior_integrity2_grades_and_snapshots_are_preserved (tests.test_trade_timeline.TradeTimelineTests.test_prior_integrity2_grades_and_snapshots_are_preserved) ... ok
+test_shared_package_event_dedup_and_manager_scope (tests.test_trade_timeline.TradeTimelineTests.test_shared_package_event_dedup_and_manager_scope) ... ok
+test_sparse_quote_publication_invalidates_cached_history (tests.test_trade_timeline.TradeTimelineTests.test_sparse_quote_publication_invalidates_cached_history) ... ok
+test_unknown_original_not_replaced_by_current_owner (tests.test_trade_timeline.TradeTimelineTests.test_unknown_original_not_replaced_by_current_owner) ... ok
+test_170_season_points_are_not_30_recipient_points (tests.test_historical_tracker_phase2.TrackerPhase2Tests.test_170_season_points_are_not_30_recipient_points) ... {"timestamp":"2026-11-08T06:46:30.789672+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/history/1333655835015942144/production \"HTTP/1.1 200 OK\"","request_id":"system"}
+ok
+test_all_hops_and_historical_performance_preserve_origin (tests.test_historical_tracker_phase2.TrackerPhase2Tests.test_all_hops_and_historical_performance_preserve_origin) ... {"timestamp":"2026-11-08T06:46:31.221409+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/picks/PICK-2026-R2-ORIG7?from_trade=1333655835015942144 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:31.322495+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/players/13346?from_trade=1333655835015942144 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:31.328236+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/player/13346?from_trade=1333655835015942144 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:31.340788+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/history/1414718106177122304?from_trade=1333655835015942144 \"HTTP/1.1 200 OK\"","request_id":"system"}
+ok
+test_archive_owner_filter_uses_historical_manager_not_current_franchise_owner (tests.test_historical_tracker_phase2.TrackerPhase2Tests.test_archive_owner_filter_uses_historical_manager_not_current_franchise_owner) ... {"timestamp":"2026-11-08T06:46:31.771801+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/transactions?scope=all_history&season=2023&owner=zkobes \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:31.776210+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/transactions?scope=all_history&season=2023&owner=MikeMoss \"HTTP/1.1 200 OK\"","request_id":"system"}
+ok
+test_archive_source_filters_and_pagination (tests.test_historical_tracker_phase2.TrackerPhase2Tests.test_archive_source_filters_and_pagination) ... {"timestamp":"2026-11-08T06:46:32.238449+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/transactions?scope=all_history&season=2023 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:32.246984+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/transactions?scope=all_history&season=2023&team=2 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:32.255176+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/transactions?scope=all_history&season=2023&draft_pick=no \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:32.263282+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/transactions?scope=all_history&season=2023&date_from=2030-01-01 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:32.271348+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/transactions?scope=all_history&season=2023&type=trade \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:32.279251+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/transactions?scope=all_history&season=2023&q=nonexistent-audit-query \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:32.287255+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/transactions?scope=all_history&season=2023&team=2&draft_pick=no&per_page=10&page=2 \"HTTP/1.1 200 OK\"","request_id":"system"}
+ok
+test_blank_optional_fields_are_omitted_but_malformed_are_rejected (tests.test_historical_tracker_phase2.TrackerPhase2Tests.test_blank_optional_fields_are_omitted_but_malformed_are_rejected) ... {"timestamp":"2026-11-08T06:46:32.824678+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/transactions?scope=all_history&type=trade&season=&week= \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:32.826092+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/transactions?season=wrong \"HTTP/1.1 422 Unprocessable Entity\"","request_id":"system"}
+ok
+test_consumed_love_and_boston_keep_conversion_and_no_active_pick_action (tests.test_historical_tracker_phase2.TrackerPhase2Tests.test_consumed_love_and_boston_keep_conversion_and_no_active_pick_action) ... {"timestamp":"2026-11-08T06:46:33.278704+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/picks/PICK-2026-R1-ORIG4?front_office=4&from_trade=1333655835015942144 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:33.282147+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/picks/PICK-2026-R2-ORIG7?front_office=4&from_trade=1333655835015942144 \"HTTP/1.1 200 OK\"","request_id":"system"}
+ok
+test_converted_branch_has_separate_current_player_observation (tests.test_historical_tracker_phase2.TrackerPhase2Tests.test_converted_branch_has_separate_current_player_observation) ... ok
+test_current_activity_does_not_scan_historical_archive (tests.test_historical_tracker_phase2.TrackerPhase2Tests.test_current_activity_does_not_scan_historical_archive) ... {"timestamp":"2026-11-08T06:46:34.244625+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/transactions \"HTTP/1.1 200 OK\"","request_id":"system"}
+ok
+test_current_ledger_owner_is_distinct_from_historical_transfer (tests.test_historical_tracker_phase2.TrackerPhase2Tests.test_current_ledger_owner_is_distinct_from_historical_transfer) ... {"timestamp":"2026-11-08T06:46:34.720645+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/picks/PICK-2028-R3-ORIG7 \"HTTP/1.1 200 OK\"","request_id":"system"}
+ok
+test_current_owner_requires_current_league_and_exact_pick (tests.test_historical_tracker_phase2.TrackerPhase2Tests.test_current_owner_requires_current_league_and_exact_pick) ... ok
+test_direct_leaders_preserve_score_conflicts_without_full_record_projection (tests.test_historical_tracker_phase2.TrackerPhase2Tests.test_direct_leaders_preserve_score_conflicts_without_full_record_projection) ... ok
+test_explicit_empty_lineup_and_zero_are_observed (tests.test_historical_tracker_phase2.TrackerPhase2Tests.test_explicit_empty_lineup_and_zero_are_observed) ... ok
+test_faab_once_grouped_parties_and_unique_asset_count (tests.test_historical_tracker_phase2.TrackerPhase2Tests.test_faab_once_grouped_parties_and_unique_asset_count) ... {"timestamp":"2026-11-08T06:46:36.583165+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/history/965057520920260608 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:36.599491+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/transactions?scope=all_history&season=2023&type=trade \"HTTP/1.1 200 OK\"","request_id":"system"}
+ok
+test_foreign_canonical_trade_origin_is_not_reinterpreted (tests.test_historical_tracker_phase2.TrackerPhase2Tests.test_foreign_canonical_trade_origin_is_not_reinterpreted) ... {"timestamp":"2026-11-08T06:46:37.025235+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/picks/PICK-2026-R2-ORIG7?from_trade=TRADE-1319750579458686976-1333655835015942144 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:37.124774+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/players/13346?from_trade=TRADE-1319750579458686976-1333655835015942144 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:37.137632+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/history/1414718106177122304?from_trade=TRADE-1319750579458686976-1333655835015942144 \"HTTP/1.1 200 OK\"","request_id":"system"}
+ok
+test_future_quote_is_visible_only_as_rejected_raw_evidence (tests.test_historical_tracker_phase2.TrackerPhase2Tests.test_future_quote_is_visible_only_as_rejected_raw_evidence) ... ok
+test_known_completed_trade_survives_unavailable_other_bucket (tests.test_historical_tracker_phase2.TrackerPhase2Tests.test_known_completed_trade_survives_unavailable_other_bucket) ... {"timestamp":"2026-11-08T06:46:38.081871+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/history/965057520920260608 \"HTTP/1.1 200 OK\"","request_id":"system"}
+ok
+test_ledger_publication_changes_generation_and_unchanged_reuse_is_stable (tests.test_historical_tracker_phase2.TrackerPhase2Tests.test_ledger_publication_changes_generation_and_unchanged_reuse_is_stable) ... ok
+test_malformed_optional_scoring_and_bracket_shapes_do_not_crash (tests.test_historical_tracker_phase2.TrackerPhase2Tests.test_malformed_optional_scoring_and_bracket_shapes_do_not_crash) ... {"timestamp":"2026-11-08T06:46:39.052185+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/players/13346 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:39.055440+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/history/players/13346 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:39.102225+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/2026 \"HTTP/1.1 200 OK\"","request_id":"system"}
+ok
+test_missing_current_ledger_does_not_promote_last_transfer (tests.test_historical_tracker_phase2.TrackerPhase2Tests.test_missing_current_ledger_does_not_promote_last_transfer) ... ok
+test_missing_or_null_starters_are_unknown_not_bench (tests.test_historical_tracker_phase2.TrackerPhase2Tests.test_missing_or_null_starters_are_unknown_not_bench) ... ok
+test_optional_scores_and_brackets_keep_independent_pages_available (tests.test_historical_tracker_phase2.TrackerPhase2Tests.test_optional_scores_and_brackets_keep_independent_pages_available) ... {"timestamp":"2026-11-08T06:46:40.565072+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/players/13346 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:40.596749+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/2023 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:40.599774+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/history/players/13346 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:40.604445+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/history/seasons/2023 \"HTTP/1.1 200 OK\"","request_id":"system"}
+ok
+test_partial_recipient_scores_roles_and_zero_are_distinct (tests.test_historical_tracker_phase2.TrackerPhase2Tests.test_partial_recipient_scores_roles_and_zero_are_distinct) ... ok
+test_pick_conversion_retains_validated_origin_and_human_identity (tests.test_historical_tracker_phase2.TrackerPhase2Tests.test_pick_conversion_retains_validated_origin_and_human_identity) ... {"timestamp":"2026-11-08T06:46:41.470837+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/picks/PICK-2026-R2-ORIG7?from_trade=1333655835015942144 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:41.474175+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/picks/PICK-2026-R2-ORIG7?from_trade=foreign-trade \"HTTP/1.1 200 OK\"","request_id":"system"}
+ok
+test_production_fragment_rejects_changed_source_generation (tests.test_historical_tracker_phase2.TrackerPhase2Tests.test_production_fragment_rejects_changed_source_generation) ... {"timestamp":"2026-11-08T06:46:41.916685+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/history/1333655835015942144/production?generation=ede624929f56b2f6ca1a7b2e6fd7b7e90346a6ef345312935760240da3aa17d8 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:41.922625+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/history/1333655835015942144/production?generation=ede624929f56b2f6ca1a7b2e6fd7b7e90346a6ef345312935760240da3aa17d8 \"HTTP/1.1 409 Conflict\"","request_id":"system"}
+ok
+test_quote_cards_explain_provider_units_dates_and_retained_incompatible_value (tests.test_historical_tracker_phase2.TrackerPhase2Tests.test_quote_cards_explain_provider_units_dates_and_retained_incompatible_value) ... ok
+test_reacquisition_intervals_remain_independent_not_a_continuous_hold (tests.test_historical_tracker_phase2.TrackerPhase2Tests.test_reacquisition_intervals_remain_independent_not_a_continuous_hold) ... ok
+test_role_conflicts_and_unknown_survive_reconciliation (tests.test_historical_tracker_phase2.TrackerPhase2Tests.test_role_conflicts_and_unknown_survive_reconciliation) ... ok
+test_source_periods_distinguish_empty_unavailable_unacquired_malformed (tests.test_historical_tracker_phase2.TrackerPhase2Tests.test_source_periods_distinguish_empty_unavailable_unacquired_malformed) ... {"timestamp":"2026-11-08T06:46:43.708791+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/history/965057520920260608 \"HTTP/1.1 200 OK\"","request_id":"system"}
+ok
+test_unchanged_route_reads_have_zero_durable_growth_after_initialization (tests.test_historical_tracker_phase2.TrackerPhase2Tests.test_unchanged_route_reads_have_zero_durable_growth_after_initialization) ... {"timestamp":"2026-11-08T06:46:44.167207+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/history/1333655835015942144 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:44.179795+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/history/1333655835015942144/production \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:44.184680+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/picks/PICK-2026-R2-ORIG7 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:44.199474+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/transactions?scope=all_history&type=trade \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:44.203212+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/history/1333655835015942144 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:44.206150+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/history/1333655835015942144/production \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:44.209421+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/picks/PICK-2026-R2-ORIG7 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:44.213959+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/transactions?scope=all_history&type=trade \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:44.217209+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/history/1333655835015942144 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:44.219802+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/history/1333655835015942144/production \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:44.222572+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/picks/PICK-2026-R2-ORIG7 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:44.226957+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/transactions?scope=all_history&type=trade \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:44.230065+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/history/1333655835015942144 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:44.232329+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/history/1333655835015942144/production \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:44.235114+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/picks/PICK-2026-R2-ORIG7 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:44.239443+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/transactions?scope=all_history&type=trade \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:44.242378+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/history/1333655835015942144 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:44.244754+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/history/1333655835015942144/production \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:44.247433+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/picks/PICK-2026-R2-ORIG7 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:44.251489+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/transactions?scope=all_history&type=trade \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:44.254308+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/history/1333655835015942144 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:44.256645+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/history/1333655835015942144/production \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:44.259391+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/picks/PICK-2026-R2-ORIG7 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:44.263490+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/transactions?scope=all_history&type=trade \"HTTP/1.1 200 OK\"","request_id":"system"}
+ok
+test_unknown_original_pick_is_visible_and_cannot_complete_pricing (tests.test_historical_tracker_phase2.TrackerPhase2Tests.test_unknown_original_pick_is_visible_and_cannot_complete_pricing) ... {"timestamp":"2026-11-08T06:46:44.738211+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/history/1333655835015942144 \"HTTP/1.1 200 OK\"","request_id":"system"}
+ok
+test_equal_instants_have_stable_identity_tie_break_without_date_rewrites (tests.test_historical_observation_ordering.HistoricalObservationOrderingTests.test_equal_instants_have_stable_identity_tie_break_without_date_rewrites) ... ok
+test_future_malformed_missing_and_naive_provider_clocks_withheld (tests.test_historical_observation_ordering.HistoricalObservationOrderingTests.test_future_malformed_missing_and_naive_provider_clocks_withheld) ... ok
+test_future_rows_cannot_hide_eligible_history_behind_textual_limit (tests.test_historical_observation_ordering.HistoricalObservationOrderingTests.test_future_rows_cannot_hide_eligible_history_behind_textual_limit) ... ok
+test_mixed_precision_and_offset_cutoffs (tests.test_historical_observation_ordering.HistoricalObservationOrderingTests.test_mixed_precision_and_offset_cutoffs) ... ok
+test_observation_and_knowledge_are_independent_cutoffs (tests.test_historical_observation_ordering.HistoricalObservationOrderingTests.test_observation_and_knowledge_are_independent_cutoffs) ... ok
+test_original_subsecond_reproduction (tests.test_historical_observation_ordering.HistoricalObservationOrderingTests.test_original_subsecond_reproduction) ... ok
+test_zero_and_exact_scope_and_source_identity_survive_selection (tests.test_historical_observation_ordering.HistoricalObservationOrderingTests.test_zero_and_exact_scope_and_source_identity_survive_selection) ... ok
+test_bulk_replay_preserves_final_unavailable (tests.test_sparse_historical_market.SparseHistoricalResolverTests.test_bulk_replay_preserves_final_unavailable) ... ok
+test_bulk_replay_resolves_only_missing_durable_keys (tests.test_sparse_historical_market.SparseHistoricalResolverTests.test_bulk_replay_resolves_only_missing_durable_keys) ... ok
+test_bulk_replay_uses_one_connection_and_three_read_queries (tests.test_sparse_historical_market.SparseHistoricalResolverTests.test_bulk_replay_uses_one_connection_and_three_read_queries) ... ok
+test_cache_is_global_bounded_disposable_and_omits_league (tests.test_sparse_historical_market.SparseHistoricalResolverTests.test_cache_is_global_bounded_disposable_and_omits_league) ... ok
+test_concurrent_preservation_creates_one_observation (tests.test_sparse_historical_market.SparseHistoricalResolverTests.test_concurrent_preservation_creates_one_observation) ... ok
+test_dynastyprocess_snapshot_matches_player_and_generic_pick_without_disk_archive (tests.test_sparse_historical_market.SparseHistoricalResolverTests.test_dynastyprocess_snapshot_matches_player_and_generic_pick_without_disk_archive) ... ok
+test_ephemeral_evidence_is_not_persisted (tests.test_sparse_historical_market.SparseHistoricalResolverTests.test_ephemeral_evidence_is_not_persisted) ... ok
+test_exact_durable_replay_survives_cache_clear_and_skips_provider (tests.test_sparse_historical_market.SparseHistoricalResolverTests.test_exact_durable_replay_survives_cache_clear_and_skips_provider) ... ok
+test_faab_only_trade_is_unavailable_and_process_not_gradable (tests.test_sparse_historical_market.SparseHistoricalResolverTests.test_faab_only_trade_is_unavailable_and_process_not_gradable) ... ok
+test_faab_plus_pick_preserves_supported_asset_gradability (tests.test_sparse_historical_market.SparseHistoricalResolverTests.test_faab_plus_pick_preserves_supported_asset_gradability) ... ok
+test_faab_plus_player_preserves_supported_asset_gradability (tests.test_sparse_historical_market.SparseHistoricalResolverTests.test_faab_plus_player_preserves_supported_asset_gradability) ... ok
+test_final_unavailable_is_durable_and_not_retried (tests.test_sparse_historical_market.SparseHistoricalResolverTests.test_final_unavailable_is_durable_and_not_retried) ... ok
+test_later_evidence_and_current_values_are_unavailable (tests.test_sparse_historical_market.SparseHistoricalResolverTests.test_later_evidence_and_current_values_are_unavailable) ... ok
+test_migration_does_not_finalize_live_current_market_unavailability (tests.test_sparse_historical_market.SparseHistoricalResolverTests.test_migration_does_not_finalize_live_current_market_unavailability) ... ok
+test_no_supported_assets_has_explicit_reason_and_retains_history (tests.test_sparse_historical_market.SparseHistoricalResolverTests.test_no_supported_assets_has_explicit_reason_and_retains_history) ... ok
+test_partial_trade_never_counts_missing_asset_as_zero (tests.test_sparse_historical_market.SparseHistoricalResolverTests.test_partial_trade_never_counts_missing_asset_as_zero) ... ok
+test_persistence_policy_is_central_and_auditable (tests.test_sparse_historical_market.SparseHistoricalResolverTests.test_persistence_policy_is_central_and_auditable) ... ok
+test_pick_requires_legitimate_generic_pick_evidence (tests.test_sparse_historical_market.SparseHistoricalResolverTests.test_pick_requires_legitimate_generic_pick_evidence) ... ok
+test_rate_limit_without_durable_resolution_remains_retryable (tests.test_sparse_historical_market.SparseHistoricalResolverTests.test_rate_limit_without_durable_resolution_remains_retryable) ... ok
+test_replay_of_faab_only_trade_is_idempotent (tests.test_sparse_historical_market.SparseHistoricalResolverTests.test_replay_of_faab_only_trade_is_idempotent) ... ok
+test_resolver_version_mismatch_requires_explicit_resolution (tests.test_sparse_historical_market.SparseHistoricalResolverTests.test_resolver_version_mismatch_requires_explicit_resolution) ... ok
+test_retained_synthetic_pick_quote_is_preserved_but_not_gradable (tests.test_sparse_historical_market.SparseHistoricalResolverTests.test_retained_synthetic_pick_quote_is_preserved_but_not_gradable) ... ok
+test_service_reports_degraded_retry_pending_without_fabricating_a_grade (tests.test_sparse_historical_market.SparseHistoricalResolverTests.test_service_reports_degraded_retry_pending_without_fabricating_a_grade) ... ok
+test_summary_fails_closed_when_canonical_total_cannot_balance (tests.test_sparse_historical_market.SparseHistoricalResolverTests.test_summary_fails_closed_when_canonical_total_cannot_balance) ... ok
+test_three_production_shaped_faab_trades_all_balance (tests.test_sparse_historical_market.SparseHistoricalResolverTests.test_three_production_shaped_faab_trades_all_balance) ... ok
+test_trade_evidence_is_preserved_once_and_reused_across_leagues (tests.test_sparse_historical_market.SparseHistoricalResolverTests.test_trade_evidence_is_preserved_once_and_reused_across_leagues) ... ok
+test_trade_service_backfill_limit_is_bounded_and_reported (tests.test_sparse_historical_market.SparseHistoricalResolverTests.test_trade_service_backfill_limit_is_bounded_and_reported) ... ok
+test_trade_service_reads_canonical_facts_and_persists_no_league_snapshot (tests.test_sparse_historical_market.SparseHistoricalResolverTests.test_trade_service_reads_canonical_facts_and_persists_no_league_snapshot) ... ok
+test_arkham_history_overflow_regression (tests.test_trade_timeline_browser.TradeTimelineBrowserTests.test_arkham_history_overflow_regression) ... Validation Chromium: /usr/bin/chromium
+Validation Chromium version: 156.0.8078.73
+{"timestamp":"2026-11-08T06:46:46.084914+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:46.399235+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:46.788822+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:47.093570+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history \"HTTP/1.1 200 OK\"","request_id":"system"}
+ok
+test_day_timeline_pick_and_history_phone_and_desktop (tests.test_trade_timeline_browser.TradeTimelineBrowserTests.test_day_timeline_pick_and_history_phone_and_desktop) ... Validation Chromium: /usr/bin/chromium
+Validation Chromium version: 156.0.8078.73
+{"timestamp":"2026-11-08T06:46:48.225399+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/history/1333655835015942144 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:48.295496+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/history-production.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:48.411813+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/history/1333655835015942144/production?generation=ede624929f56b2f6ca1a7b2e6fd7b7e90346a6ef345312935760240da3aa17d8 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:48.519702+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/history/965057520920260608 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:48.536388+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/history-production.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:48.576573+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/history/965057520920260608/production?generation=ede624929f56b2f6ca1a7b2e6fd7b7e90346a6ef345312935760240da3aa17d8 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:48.691751+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/picks/PICK-2026-R1-ORIG4?from_trade=1333655835015942144 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:48.767678+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:48.865241+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:3 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:49.179581+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/history/1333655835015942144 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:49.206039+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/history-production.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:49.329282+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/history/1333655835015942144/production?generation=ede624929f56b2f6ca1a7b2e6fd7b7e90346a6ef345312935760240da3aa17d8 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:49.429843+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/history/965057520920260608 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:49.450528+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/history-production.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:49.489104+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/history/965057520920260608/production?generation=ede624929f56b2f6ca1a7b2e6fd7b7e90346a6ef345312935760240da3aa17d8 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:49.606174+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/picks/PICK-2026-R1-ORIG4?from_trade=1333655835015942144 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:49.682659+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:49.769096+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:3 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:50.006070+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/history/1333655835015942144 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:50.024340+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/history-production.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:50.196631+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/history/1333655835015942144/production?generation=ede624929f56b2f6ca1a7b2e6fd7b7e90346a6ef345312935760240da3aa17d8 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:50.305619+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/history/965057520920260608 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:50.329387+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/history-production.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:50.368444+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/history/965057520920260608/production?generation=ede624929f56b2f6ca1a7b2e6fd7b7e90346a6ef345312935760240da3aa17d8 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:50.484700+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/picks/PICK-2026-R1-ORIG4?from_trade=1333655835015942144 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:50.558905+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:50.648167+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:3 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:50.890791+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/history/1333655835015942144 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:50.917853+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/history-production.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:51.025565+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/history/1333655835015942144/production?generation=ede624929f56b2f6ca1a7b2e6fd7b7e90346a6ef345312935760240da3aa17d8 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:51.125774+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/history/965057520920260608 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:51.143959+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/history-production.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:51.207023+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/history/965057520920260608/production?generation=ede624929f56b2f6ca1a7b2e6fd7b7e90346a6ef345312935760240da3aa17d8 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:51.287005+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/picks/PICK-2026-R1-ORIG4?from_trade=1333655835015942144 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:51.354127+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:51.432537+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:3 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:51.699279+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/history/1333655835015942144 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:51.724416+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/history-production.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:51.822086+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/history/1333655835015942144/production?generation=ede624929f56b2f6ca1a7b2e6fd7b7e90346a6ef345312935760240da3aa17d8 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:51.922122+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/history/965057520920260608 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:51.938848+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/history-production.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:51.998755+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/history/965057520920260608/production?generation=ede624929f56b2f6ca1a7b2e6fd7b7e90346a6ef345312935760240da3aa17d8 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:52.088822+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/picks/PICK-2026-R1-ORIG4?from_trade=1333655835015942144 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:52.148408+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:52.227056+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:3 \"HTTP/1.1 200 OK\"","request_id":"system"}
+ok
+test_chain_conversion_origin_and_paginated_return_at_four_sizes (tests.test_history_followthrough_browser.HistoryFollowThroughBrowserTests.test_chain_conversion_origin_and_paginated_return_at_four_sizes) ... Validation Chromium: /usr/bin/chromium
+Validation Chromium version: 156.0.8078.73
+{"timestamp":"2026-11-08T06:46:53.424030+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:4 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:53.499026+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:53.499935+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:53.542461+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/favicon.ico \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:54.085456+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:4?events_page=2 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:54.103827+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:54.106759+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:54.693595+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/history/1333655835015942144 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:54.711119+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:54.713756+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:54.715248+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/history-production.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:55.269883+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/picks/PICK-2026-R2-ORIG7?from_trade=1333655835015942144 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:55.284058+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:55.288130+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:55.932527+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/players/13346?from_trade=1333655835015942144 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:55.961069+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:55.961563+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:55.961689+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:55.964341+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/player-projections.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:56.023530+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:56.024138+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"dbd854d70a614e278432acb9b500cd7c","event":"request_complete","duration_ms":56.699,"status_code":200,"method":"GET","path":"/static/css/matchups.css"}
+{"timestamp":"2026-11-08T06:46:56.595483+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/history/1414718106177122304?from_trade=1333655835015942144 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:56.614259+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:56.618254+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/history-production.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:56.618738+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:57.184660+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/history/1333655835015942144 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:57.200112+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:57.207608+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:57.209388+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/history-production.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:57.844869+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/account/navigation-context \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:57.862662+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/history/1414718106177122304?from_trade=1333655835015942144 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:58.429597+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/account/navigation-context \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:58.448583+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/players/13346?from_trade=1333655835015942144 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:59.028694+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/account/navigation-context \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:59.046013+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/picks/PICK-2026-R2-ORIG7?from_trade=1333655835015942144 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:59.611840+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/account/navigation-context \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:46:59.629024+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/history/1333655835015942144 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:47:00.193994+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/account/navigation-context \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:47:00.225280+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:4?events_page=2 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:47:00.796257+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/account/navigation-context \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:47:00.826163+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:4 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:47:01.383550+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:4?events_page=2 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T06:47:01.925839+00:00","level":"INFO","logge

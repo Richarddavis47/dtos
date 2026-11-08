@@ -1,0 +1,47 @@
+F401 [*] `src.core.historical_memory.graph.HistoricalAssetGraph` imported but unused
+  --> tests/test_trade_time_market_evidence.py:9:46
+   |
+ 7 | from unittest.mock import patch
+ 8 |
+ 9 | from src.core.historical_memory.graph import HistoricalAssetGraph
+   |                                              ^^^^^^^^^^^^^^^^^^^^
+10 | from src.core.intelligence_memory.models import CheckpointTrigger, EvidenceCompleteness, ProvenanceType
+11 | from src.core.intelligence_memory.pipeline import CheckpointPipeline
+   |
+help: Remove unused import: `src.core.historical_memory.graph.HistoricalAssetGraph`
+
+E701 Multiple statements on one line (colon)
+  --> tests/test_trade_time_market_evidence.py:85:30
+   |
+83 |             for row in c.execute('SELECT observation_id,provider_evidence_json FROM global_market_observations').fetchall():
+84 |                 data=json.loads(row['provider_evidence_json'])
+85 |                 for e in data:e['metadata']='unsupported legacy metadata'
+   |                              ^
+86 |                 c.execute('UPDATE global_market_observations SET provider_evidence_json=? WHERE observation_id=?',
+87 |                     (json.dumps(data),row['observation_id']))
+   |
+
+E701 Multiple statements on one line (colon)
+   --> tests/test_trade_time_market_evidence.py:130:42
+    |
+128 |                     for r in c.execute('SELECT observation_id,provider_evidence_json FROM global_market_observations').fetchall():
+129 |                         evidence=json.loads(r['provider_evidence_json'])
+130 |                         for e in evidence:e['metadata']['source_knowledge_at']=clock
+    |                                          ^
+131 |                         c.execute('UPDATE global_market_observations SET provider_evidence_json=? WHERE observation_id=?',
+132 |                                   (json.dumps(evidence),r['observation_id']))
+    |
+
+E701 Multiple statements on one line (colon)
+  --> tests/test_trade_time_market_evidence_browser.py:80:20
+   |
+78 |                     self.assertFalse(errors)
+79 |                     page.close()
+80 |             finally:browser.close()
+   |                    ^
+81 |         if output:
+82 |             def git(*args):return subprocess.check_output(['git',*args],text=True).strip()
+   |
+
+Found 4 errors.
+[*] 1 fixable with the `--fix` option.

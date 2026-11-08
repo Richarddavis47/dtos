@@ -1,0 +1,42 @@
+v:
+2026-11-08T07:19:32.1905665Z   NODE_OPTIONS: --max-old-space-size=256
+2026-11-08T07:19:32.1906191Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-08T07:19:32.1906675Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib/pkgconfig
+2026-11-08T07:19:32.1907155Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-08T07:19:32.1907596Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-08T07:19:32.1908053Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-08T07:19:32.1908554Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib
+2026-11-08T07:19:32.1908930Z ##[endgroup]
+2026-11-08T07:19:32.3701490Z (node:55592) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-11-08T07:19:32.3702335Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-11-08T07:19:32.3795792Z With the provided path, there will be 4 files uploaded
+2026-11-08T07:19:32.3797713Z Artifact name is valid!
+2026-11-08T07:19:32.3798510Z Root directory input is valid!
+2026-11-08T07:19:32.6429660Z Beginning upload of artifact content to blob storage
+2026-11-08T07:19:32.9460200Z (node:55592) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+2026-11-08T07:19:33.3663286Z Uploaded bytes 7340907
+2026-11-08T07:19:33.3995072Z Finished uploading artifact content to blob storage!
+2026-11-08T07:19:33.3996492Z SHA256 digest of uploaded artifact zip is c4e3ef248f773c8bb0f6accd70b13e631a63965b2fdaa29972676d7149fa15a5
+2026-11-08T07:19:33.3997728Z Finalizing artifact upload
+2026-11-08T07:19:33.8233852Z Artifact actuals-restoration-2g.zip successfully finalized. Artifact ID 13608184404
+2026-11-08T07:19:33.8234746Z Artifact actuals-restoration-2g has been successfully uploaded! Final size is 7340907 bytes. Artifact ID is 13608184404
+2026-11-08T07:19:33.8240191Z Artifact download URL: https://github.com/Richarddavis47/dtos/actions/runs/42456600425/artifacts/13608184404
+2026-11-08T07:19:33.8454836Z Post job cleanup.
+2026-11-08T07:19:33.9671723Z (node:55604) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-11-08T07:19:33.9672586Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-11-08T07:19:33.9802114Z Post job cleanup.
+2026-11-08T07:19:34.0781784Z [command]/usr/bin/git version
+2026-11-08T07:19:34.0829732Z git version 2.56.0
+2026-11-08T07:19:34.0875433Z Temporarily overriding HOME='/home/runner/work/_temp/e7ed79ae-4520-4581-b1c9-2aacf268cfb4' before making global git config changes
+2026-11-08T07:19:34.0876522Z Adding repository directory to the temporary git global config as a safe directory
+2026-11-08T07:19:34.0881906Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/dtos/dtos
+2026-11-08T07:19:34.0926956Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-11-08T07:19:34.0980516Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-11-08T07:19:34.1257555Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-11-08T07:19:34.1286481Z http.https://github.com/.extraheader
+2026-11-08T07:19:34.1299699Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+2026-11-08T07:19:34.1344131Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-11-08T07:19:34.1648025Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-11-08T07:19:34.1695968Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-11-08T07:19:34.2117874Z Cleaning up orphan processes
+2026-11-08T07:19:34.2535531Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5, actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

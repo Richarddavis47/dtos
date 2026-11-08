@@ -1,0 +1,704 @@
+diff --git a/.github/workflows/product-browser.yml b/.github/workflows/product-browser.yml
+index 5cf51141..ebcbd39c 100644
+--- a/.github/workflows/product-browser.yml
++++ b/.github/workflows/product-browser.yml
+@@ -36,7 +36,7 @@ jobs:
+         timeout-minutes: 25
+         run: |
+           docker run --rm --memory=2g --memory-swap=2g --cpus=2 --network=none -e NODE_OPTIONS -e DTOS_TRADE_RESOURCE_BROWSER_EVIDENCE=.validation/trade-resource/evidence/browser -e DTOS_LINEUP_DETAIL_EVIDENCE=.validation/trade-resource/evidence/browser/lineups -v "$PWD:$PWD" -w "$PWD" -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0="$PWD" dtos-browser-validation python -m unittest -v tests.test_00_trade_simple_browser tests.test_trade_actionability tests.test_trade_actionability_browser tests.test_trade_conditional_summary tests.test_trade_recommendation_clarity tests.test_batch5_recommended_browser tests.test_franchise_timeline_coverage tests.test_franchise_timeline_browser tests.test_trade_reserve_evidence tests.test_trade_lineup_detail tests.test_trade_lineup_detail_browser tests.test_trade_resource_admission tests.test_trade_resource_browser tests.test_multileague_projection_browser tests.test_relative_personal_values tests.test_relative_personal_browser tests.test_decision_history_continuity_browser tests.test_personal_rankings_compatibility tests.test_personal_rankings_recovery_storage tests.test_personal_rankings_recovery_trade tests.test_personal_rankings_recovery_browser tests.test_personal_rankings_recovery_trade_browser tests.test_personal_rankings_partial_browser tests.test_dossier_plain_english tests.test_plain_english_home_depth tests.test_builder_plain_english tests.test_plain_english_preservation_final tests.test_plain_english_final_browser tests.test_plain_english_decisions tests.test_plain_english_browser tests.test_personal_rankings_availability tests.test_personal_rankings_availability_browser tests.test_personal_rankings tests.test_personal_rankings_store tests.test_personal_rankings_integration tests.test_personal_trade_workflows tests.test_personal_rankings_browser tests.test_personal_rankings_accessibility_browser tests.test_personal_trade_browser tests.test_market_trend_current_browser tests.test_standings_positioning tests.test_standings_positioning_browser tests.test_matchup_portraits_browser tests.test_matchups_phone tests.test_matchups_phone_browser tests.test_trade_projection_freshness tests.test_trade_projection_freshness_browser tests.test_trade_preview_scope_browser tests.test_trade_simple_discovery tests.test_fois_final_trust_browser tests.test_fois_evidence_integrity tests.test_fois_trust_browser tests.test_proposal_tray_browser tests.test_journey_evidence tests.test_journey_corrections_browser tests.test_dossier_status_browser tests.test_phone_visual_corrections_browser tests.test_phone_design_semantics tests.test_phone_design_browser tests.test_trade_calculator tests.test_trade_calculator_browser tests.test_calculator_balance_feedback_browser tests.test_calculator_stale_feedback_browser tests.test_trade_explicit_navigation_browser tests.test_trade_navigation_identity tests.test_trade_navigation_browser tests.test_player_actions tests.test_player_actions_browser tests.test_trade_performance tests.test_trade_construction_performance tests.test_trade_performance_browser tests.test_technical_details_browser tests.test_canonical_asset_facts tests.test_canonical_asset_facts_browser tests.test_product_browser_journey tests.test_matchup_browser_contract tests.test_trade_center_browser tests.test_trade_scout_state_browser tests.test_make_it_cheaper_browser tests.test_trade_center_accessibility tests.test_trade_workspace_browser tests.test_trade_workspace_batch1 tests.test_live_inspection tests.test_browser_fixture_images tests.test_visual_retirement tests.test_trade_decision_experience tests.test_trade_decision_browser tests.test_trade_decision_http_browser tests.test_trade_decision_standings_browser tests.test_batch6_trade_ux tests.test_trade_p2_browser tests.test_trade_final_evidence_browser tests.test_trade_endorsement_integrity tests.test_trade_missing_market_presentation tests.test_batch6_trade_explanation tests.test_league_entry_coordination
+-          docker run --rm --memory=2g --memory-swap=2g --cpus=2 --network=none -e NODE_OPTIONS -v "$PWD:$PWD" -w "$PWD" -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0="$PWD" dtos-browser-validation python -m unittest -v tests.test_historical_evidence_weeks tests.test_fois_final_trust
++          docker run --rm --memory=2g --memory-swap=2g --cpus=2 --network=none -e NODE_OPTIONS -v "$PWD:$PWD" -w "$PWD" -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0="$PWD" dtos-browser-validation python -m unittest -v tests.test_historical_evidence_weeks tests.test_fois_final_trust tests.test_trade_time_market_evidence tests.test_trade_time_market_evidence_browser
+ 
+ 
+       - name: Retained history lifecycle and phone routes
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index 815bb544..91df427a 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -1,3 +1,11 @@
++# v1.22.25 / build 2240 — Readable trade-time Market quotes
++
++Completed-trade history now selects the latest eligible compatible retained quote after checking exact asset identity, source/knowledge clocks, scope and existing Market semantics. A newer incompatible or foreign-scope record no longer masks an older supported value. Unresolved same-instant price conflicts remain unknown, including the two existing pick-type context aliases. Foreign-scope raw evidence is not exposed.
++
++The existing disclosure shows each supported value with source, observation date and age, distinguishing dated estimates from exact recorded observations. Missing assets retain specific limitations. Technical provenance and excluded observations remain available on demand. No package totals or freshness cutoff are introduced: the bounded supplied production screen demonstrates individual quote coverage, not complete-package coverage, an approved maximum age or historical league-format parity.
++
++No provider acquisition, sync, historical grade rewrite, Trade policy, neutral/custom calculation, saved setting or resource reservation changes. Exact picks, conversion boundaries and History navigation are preserved. See docs/audits/TRADE_TIME_MARKET_2240.md for evidence provenance and limitations. Release requires complete source-pinned validation and the guarded Actions publisher.
++
+ # v1.22.24 / build 2239 — Act on the recorded Trade decision
+ 
+ Recommended Trades and Evaluate now lead with the existing assessment’s decisive reason and a practical next step. Phone recommendation cards place the preview action after the exact package and principal cost, ahead of the longer two-sided evidence. Both franchises’ supported lineup effects, conditional motivation, reserve costs and disclosures remain available.
+diff --git a/RELEASE_NOTES.md b/RELEASE_NOTES.md
+index adca7b7f..a6029574 100644
+--- a/RELEASE_NOTES.md
++++ b/RELEASE_NOTES.md
+@@ -1,3 +1,11 @@
++# v1.22.25 / build 2240 — Readable trade-time Market quotes
++
++Completed-trade history now selects the latest eligible compatible retained quote after checking exact asset identity, source/knowledge clocks, scope and existing Market semantics. A newer incompatible or foreign-scope record no longer masks an older supported value. Unresolved same-instant price conflicts remain unknown, including the two existing pick-type context aliases. Foreign-scope raw evidence is not exposed.
++
++The existing disclosure shows each supported value with source, observation date and age, distinguishing dated estimates from exact recorded observations. Missing assets retain specific limitations. Technical provenance and excluded observations remain available on demand. No package totals or freshness cutoff are introduced: the bounded supplied production screen demonstrates individual quote coverage, not complete-package coverage, an approved maximum age or historical league-format parity.
++
++No provider acquisition, sync, historical grade rewrite, Trade policy, neutral/custom calculation, saved setting or resource reservation changes. Exact picks, conversion boundaries and History navigation are preserved. See docs/audits/TRADE_TIME_MARKET_2240.md for evidence provenance and limitations. Release requires complete source-pinned validation and the guarded Actions publisher.
++
+ # v1.22.24 / build 2239 — Act on the recorded Trade decision
+ 
+ Recommended Trades and Evaluate now lead with the existing assessment’s decisive reason and a practical next step. Phone recommendation cards place the preview action after the exact package and principal cost, ahead of the longer two-sided evidence. Both franchises’ supported lineup effects, conditional motivation, reserve costs and disclosures remain available.
+diff --git a/app_metadata.py b/app_metadata.py
+index 580caaef..0a7e08f8 100644
+--- a/app_metadata.py
++++ b/app_metadata.py
+@@ -7,10 +7,10 @@ from datetime import datetime, timezone
+ from pathlib import Path
+ 
+ APPLICATION_NAME = "DTOS"
+-VERSION = "1.22.24"
+-PRODUCT_VERSION = "1.22.24"
+-BUILD_NUMBER = 2239
+-RELEASE_CODENAME = "Trade Decision Actionability"
++VERSION = "1.22.25"
++PRODUCT_VERSION = "1.22.25"
++BUILD_NUMBER = 2240
++RELEASE_CODENAME = "Trade-time Market Evidence"
+ APPLICATION_STARTED_AT = datetime.now(timezone.utc).isoformat()
+ 
+ _REPOSITORY_ROOT = Path(__file__).resolve().parent
+diff --git a/docs/audits/TRADE_TIME_MARKET_2240.md b/docs/audits/TRADE_TIME_MARKET_2240.md
+new file mode 100644
+index 00000000..df58b7a2
+--- /dev/null
++++ b/docs/audits/TRADE_TIME_MARKET_2240.md
+@@ -0,0 +1,29 @@
++# Trade-time Market evidence — build 2240
++
++Baseline production/current clean main: v1.22.24/build2239, b982e49ded18455e2fcc4fab58610569cc784343, tree0ca79a715f697147c8081d4d69f1afd7efca9bb4. Public readiness and Render deployment metadata agree. No related unfinished PR exists. The next tag/release v1.22.25 was unused before edits.
++
++## Real coverage and authority
++
++Reuse the prior audit at c48d4a9fb96420c2aae397535d08b68dd1a461d9/.task-evidence/trade-time-market-coverage-2239. Its 25-trade replay has no paired real Market population and is not production-zero evidence. Main Chat subsequently supplied an authorized Render-local bounded screen: at least one qualifying pre-trade quote for10/26DayTraders events and3/11Arkham events, none of31sampledGranite events. These are event counts from retained trade-execution references, not exhaustive coverage, asset counts, package completeness, historical format parity or a Codex-reproduced private snapshot. No private payload or credentials are copied. Seven days is only a screening bucket, never an expiry threshold.
++
++The useful authorized scope is individual retained quotes. No package totals are added to the interface. The disclosure explicitly withholds whole-package comparison until complete real coverage, compatible historical league format and a documented package freshness policy are substantiated. Older individual observations remain labeled dated estimates with visible age. Existing model calculations and retained grades are not rewritten; a canonical technical completeness check does not certify package freshness or decision quality.
++
++## Matched failure and correction
++
++On an exact production-source checkout, two new matched controls fail: a newer incompatible quote masks an older compatible quote, as does a newer foreign-league quote. Both fail assertions, without setup errors. Shared sparse selection now accepts an optional pure admission predicate before selecting a winner. Other callers retain their existing default temporal contract. Trade supplies the extracted existing exact identity/units/format/method and scope checks plus explicit unknown/later knowledge/publication protection. Unknown metadata stays unavailable.
++
++Selection streams only the exact asset and one or two existing asset-type contexts, keeps constant candidate state and acquires no lifecycle lease. Picks consider both supported aliases in one query; conflicting same-instant prices are withheld rather than arbitrarily selected by ID. No provider resolver, pricing formula, store schema, source acquisition or permanent storage is added. Exact picks never borrow a converted player's quote. Rejected foreign-scope records are not rendered as raw evidence.
++
++The existing quote card leads with the value, exact-observation/dated-estimate label, source, observation date, age and missing-value reason. Age uses the oldest admitted provider observation, not a later attachment/retrieval or grading timestamp. Subsecond ages do not claim the trade instant. Technical format, provenance and excluded evidence remain under the existing disclosure. No new page-render solver, background search or provider work.
++
++## Validation boundaries
++
++Focused tests cover newer-incompatible/foreign masking, exact pick aliases and conflicts, partial/stale/zero/subsecond values, later or ambiguous knowledge, publication clocks, missing metadata, conversion and no durable growth. Phone controls use actual existing routes at320×432,375×667,390×844,1280×900 with keyboard, touch emulation, source/age, no overflow and no disclosure requests. Existing History chain/contextual Back/pagination/Forward/reload and league isolation are preserved. Fixtures are not real coverage, live acceptance or physical Safari acceptance.
++
++First focused execution had four new-fixture assertion failures: equivalent UTC spelling and cross-fixture reuse of the process-wide history cache. Disposable cache isolation and canonical timestamp comparison corrected those fixture assumptions without weakening the original values/assertions. The expanded controls passed162tests before final metadata/commit. A later lint pass identified one unused import and three single-line test statements; those were corrected. Original logs remain separate. Final exact-source full/canonical/hosted results and manifests are required for release; this source note does not claim they have already passed.
++
++Validation scratch recovery losslessly archives old standalone validation copies, verifies every readable byte and preserves inaccessible originals unchanged. Original tool-method failures are retained; no permission escalation, current source loss, production eviction, cache clear, infrastructure change or scratch-prerequisite reduction is authorized.
++
++## Live acceptance
++
++This session has management/public HTTP access but no attached authenticated owner browser or Render Shell executor. The prior unchanged external401is not retried. Main Chat's supplied Render-local evidence is authoritative supplied evidence, not reproduced by Codex. Post-deployment public readiness/assets and auth-boundary checks remain distinct from private per-asset acceptance. Do not force entry/sync, rebuild FOIS, search trades or change preferences to demonstrate this feature. Trade256+128MiB, FOIS768MiB, restoration16× and the2GiBcap remain unchanged.
+diff --git a/src/core/historical_intelligence/market_comparison.py b/src/core/historical_intelligence/market_comparison.py
+index f1c0c772..7f1a46fb 100644
+--- a/src/core/historical_intelligence/market_comparison.py
++++ b/src/core/historical_intelligence/market_comparison.py
+@@ -105,3 +105,54 @@ def observation_clocks(observation, boundary: str | None = None):
+     return {'quote_observed_at': max(quotes, key=observation_time), 'oldest_quote_at': min(quotes, key=observation_time),
+             'source_knowledge_at': max(known, key=observation_time), 'retained_attachment_at':
+             getattr(observation, 'retained_attachment_at', None) or observation.observed_at}
++
++
++def trade_observation_admission(observation, *, asset_id, league_ids, boundary):
++    """Existing trade quote admission, applied before latest-state selection.
++
++    This proves a retained quote's identity/units, not historical league-format
++    parity or whole-package freshness. No price conversion or acquisition.
++    """
++    from src.core.intelligence_memory.market import supported_quote_identity
++    from src.core.valuation.config import CANONICAL_MIN, CANONICAL_MAX
++    from src.core.intelligence_memory.timestamps import observation_time
++    if observation_time(boundary) is None:
++        return None, 'Trade timestamp unavailable; prior quote ordering cannot be established.'
++    if observation.asset_id != asset_id:
++        return None, 'Retained observation has a different exact asset identity.'
++    rows = tuple(observation.provider_evidence)
++    from collections.abc import Mapping
++    for row in rows:
++        metadata = row.metadata or {}
++        if not isinstance(metadata, Mapping):
++            return None, 'Retained observation has unavailable source metadata.'
++        if metadata.get('league_id') not in (None, '', *league_ids):
++            return None, 'Retained observation belongs to a different league context.'
++        if metadata.get('asset_id') not in (None, asset_id):
++            return None, 'Retained observation has a different exact asset identity.'
++        if not supported_quote_identity(row):
++            return None, 'Retained observation lacks compatible exact asset evidence; no range-average substitute is admitted.'
++    clocks = observation_clocks(observation, boundary)
++    if not clocks:
++        return None, 'Retained observation is not decision-time eligible: quote/knowledge clocks are after the trade or unavailable.'
++    for row in rows:
++        metadata = row.metadata or {}
++        # Explicit unknown/invalid knowledge is not replaced by an earlier
++        # quote. A source publication/update later than the trade is not prior
++        # evidence. Optional absent publication fields make no extra claim.
++        for field in ('source_knowledge_at', 'known_at', 'published_at', 'source_updated_at'):
++            if field not in metadata or (field in ('published_at', 'source_updated_at') and metadata[field] is None):
++                continue
++            stamp = observation_time(metadata[field])
++            if stamp is None or stamp > observation_time(boundary):
++                return None, 'Retained observation is not decision-time eligible: a stated knowledge/publication/update clock is unavailable or after the trade.'
++    semantics = [(row.metadata or {}).get('comparison_semantics') for row in rows]
++    providers = tuple(sorted({row.provider for row in rows}))
++    identity = retained_comparison_identity(
++        semantics[0] if semantics and all(s == semantics[0] for s in semantics) else None, providers)
++    value = observation.canonical_value
++    if (not identity or identity[:2] != ('external_market_normalized_index', '0-1000')
++            or not isinstance(value, (int, float)) or isinstance(value, bool)
++            or not isfinite(value) or not CANONICAL_MIN <= value <= CANONICAL_MAX):
++        return None, 'Retained observation lacks compatible provider, units, format or normalization evidence.'
++    return identity, None
+diff --git a/src/core/historical_memory/graph.py b/src/core/historical_memory/graph.py
+index b51967be..4b42213a 100644
+--- a/src/core/historical_memory/graph.py
++++ b/src/core/historical_memory/graph.py
+@@ -913,9 +913,8 @@ class HistoricalAssetGraph:
+         from types import SimpleNamespace
+         from src.core.intelligence_memory.confidence import temporal_confidence
+         from src.core.intelligence_memory.market_memory import market_context_id
+-        from src.core.intelligence_memory.market import supported_quote_identity
+         from src.core.historical_intelligence.market_comparison import (
+-            comparison_reason, retained_comparison_identity, observation_clocks)
++            comparison_reason, observation_clocks, trade_observation_admission)
+         from src.core.history_context.timestamps import canonical_utc_timestamp
+         boundary = canonical_utc_timestamp(occurred_at)
+         asset_rows, compare = [], []
+@@ -927,11 +926,14 @@ class HistoricalAssetGraph:
+             else:
+                 memory_id = 'player:' + asset_id.removeprefix('DTOS-P-')
+             kinds = ('future_pick', 'pick') if is_pick else ('player',)
+-            candidates = [store.observation_at_or_before(asset_id=memory_id,
+-                market_context_id=market_context_id(asset_type=kind, scoring_profile_id=None), event_at=occurred_at)
+-                for kind in kinds]
+-            candidates = [r for r in candidates if r is not None]
+-            observation = max(candidates, key=lambda r: r.observed_at) if candidates else None
++            def admission(candidate):
++                return trade_observation_admission(candidate, asset_id=memory_id,
++                    league_ids=(self.league_id, (row.get('payload') or {}).get('source_league_id')), boundary=boundary)
++
++            contexts = tuple(market_context_id(asset_type=kind, scoring_profile_id=None) for kind in kinds)
++            observation = store.observation_at_or_before(asset_id=memory_id,
++                market_context_id=contexts[0] if len(contexts) == 1 else contexts, event_at=occurred_at,
++                eligible=lambda candidate: admission(candidate)[0] is not None, reject_conflicts=True)
+             retained = observation
+             if retained is None and hasattr(store, 'observations'):
+                 latest = []
+@@ -942,16 +944,20 @@ class HistoricalAssetGraph:
+                         latest.extend(rows)
+                 retained = max(latest, key=lambda r: r.observed_at) if latest else None
+             clocks = observation_clocks(observation, boundary) if observation else None
+-            identity = None
+-            if observation and clocks:
+-                semantics = [r.metadata.get('comparison_semantics') for r in observation.provider_evidence]
+-                providers = tuple(sorted({r.provider for r in observation.provider_evidence}))
+-                identity = retained_comparison_identity(semantics[0] if semantics and all(s == semantics[0] for s in semantics) else None, providers)
+-                if (not identity or identity[:2] != ('external_market_normalized_index', '0-1000')
+-                    or any(not supported_quote_identity(r) or (r.metadata or {}).get('asset_id') not in (None, memory_id) for r in observation.provider_evidence)):
+-                    identity = None
+-            foreign_context = observation and any(r.metadata.get('league_id') not in (None, '', self.league_id, (row.get('payload') or {}).get('source_league_id')) for r in getattr(observation, 'provider_evidence', ()))
+-            value = observation.canonical_value if observation and identity and clocks and not foreign_context else None
++            identity, issue = admission(observation) if observation else (None, None)
++            if retained is not None and observation is None:
++                _, issue = admission(retained)
++                issue = issue or 'No unique latest compatible pre-trade quote can be established from retained evidence.'
++            # A rejected foreign-scope record is not a public raw quote.
++            retained_for_display = retained if issue not in (
++                'Retained observation belongs to a different league context.',
++                'Retained observation has a different exact asset identity.',
++                'Retained observation has unavailable source metadata.') else None
++            value = observation.canonical_value if observation and identity and clocks else None
++            quote_age = None
++            if value is not None:
++                from src.core.intelligence_memory.timestamps import observation_time
++                quote_age = (observation_time(boundary) - observation_time(clocks['oldest_quote_at'])).total_seconds()
+             confidence, reason = temporal_confidence(clocks['oldest_quote_at'] if clocks else None, occurred_at)
+             entry = {'asset_id': asset_id, 'asset_name': self.asset_label(asset_id, row.get('season')), 'value': value,
+                 'match_state': ('EXACT' if clocks and clocks['oldest_quote_at'] == boundary and clocks['source_knowledge_at'] == boundary else 'DATED_ESTIMATE') if value is not None else 'UNAVAILABLE',
+@@ -964,14 +970,12 @@ class HistoricalAssetGraph:
+                 'normalization_version': getattr(observation, "normalization_version", None) if observation else None,
+                 'comparison_identity': identity, 'temporal_confidence': min(confidence, getattr(observation, "confidence", 0)) if value is not None else 0,
+                 'source_quote_confidence': getattr(observation, 'confidence', None),
+-                'retained_observation': ({'provider_evidence': [r.__dict__ for r in retained.provider_evidence],
+-                                          'normalization_version': retained.normalization_version,
+-                                          'source_confidence': retained.confidence}
+-                                         if retained is not None else None),
+-                'admission_reason': ('No quote in available exact asset/context evidence.' if retained is None else
+-                                     'Retained observation is not decision-time eligible: quote/knowledge clocks are after the trade or unavailable.' if observation is None else
+-                                     'Retained observation belongs to a different league context.' if foreign_context else
+-                                     'Retained observation lacks compatible provider, units, format or normalization evidence.' if value is None else
++                'retained_observation': ({'provider_evidence': [r.__dict__ for r in retained_for_display.provider_evidence],
++                                          'normalization_version': retained_for_display.normalization_version,
++                                          'source_confidence': retained_for_display.confidence}
++                                         if retained_for_display is not None else None),
++                'quote_age_seconds': quote_age, 'age_basis': 'oldest admitted provider observation',
++                'admission_reason': (issue or 'No quote in available exact asset/context evidence.' if value is None else
+                                      'Compatible dated quote: not an exact trade-time observation.' if clocks['oldest_quote_at'] != boundary or clocks['source_knowledge_at'] != boundary else
+                                      'Contemporaneous admitted evidence; whole-package coverage is assessed separately.'),
+                 'temporal_reason': reason, 'provenance': observation.provenance_type.value if observation else 'unavailable',
+diff --git a/src/core/intelligence_memory/store.py b/src/core/intelligence_memory/store.py
+index 3321c85e..04ea30b4 100644
+--- a/src/core/intelligence_memory/store.py
++++ b/src/core/intelligence_memory/store.py
+@@ -10,7 +10,7 @@ from contextlib import contextmanager
+ from dataclasses import replace
+ from datetime import datetime, timezone
+ from pathlib import Path
+-from typing import Any, Iterator
++from typing import Any, Callable, Iterator
+ 
+ from .models import (
+     CheckpointTrigger, EvidenceCompleteness, GlobalMarketObservation,
+@@ -1015,9 +1015,15 @@ class IntelligenceCheckpointStore:
+         return result
+ 
+     def observation_at_or_before(
+-        self, *, asset_id: str, market_context_id: str, event_at: str,
++        self, *, asset_id: str, market_context_id: str | tuple[str, str], event_at: str,
++        eligible: Callable[[GlobalMarketObservation], bool] | None = None, reject_conflicts: bool = False,
+     ) -> GlobalMarketObservation | None:
+-        """Read one legitimate pre-event state without creating an observation."""
++        """Stream retained states; apply optional admission before choosing latest.
++
++        Existing callers keep their temporal-only contract. Trade readers can
++        reject incompatible candidates and unresolved same-instant prices.
++        No lease, provider request, record write or unbounded candidate list.
++        """
+         from src.core.historical_intelligence.market_comparison import observation_clocks
+         from src.core.history_context.timestamps import canonical_utc_timestamp
+         from .timestamps import observation_time
+@@ -1026,26 +1032,45 @@ class IntelligenceCheckpointStore:
+             return None
+         selected = None
+         selected_key = None
++        conflict = False
++
++        def same_price(left, right):
++            def evidence(row):
++                return (row.canonical_value, row.normalization_version,
++                        sorted(((r.provider, r.normalization_version,
++                                 (r.metadata or {}).get('comparison_semantics'))
++                                for r in row.provider_evidence), key=lambda r: r[0]))
++            return evidence(left) == evidence(right)
+         with self._connect() as connection:
+             # Textual ISO ordering (including a textual LIMIT) is not temporal
+             # ordering across precision/offset spellings. Stream the exact
+             # asset/context scope, retaining only the latest admitted state.
+-            rows = connection.execute("""SELECT * FROM global_market_observations
+-                WHERE asset_id=? AND market_context_id=?""",
+-                (asset_id, market_context_id))
++            contexts = (market_context_id,) if isinstance(market_context_id, str) else market_context_id
++            if not isinstance(contexts, tuple) or not 1 <= len(contexts) <= 2:
++                raise ValueError('One exact context or two supported asset-type aliases are required')
++            placeholders = ','.join('?' for _ in contexts)
++            rows = connection.execute("SELECT * FROM global_market_observations "
++                + "WHERE asset_id=? AND market_context_id IN (" + placeholders + ")",
++                (asset_id, *contexts))
+             for raw in rows:
+                 row = self._decode_observation(raw)
++                if eligible is not None and not eligible(row):
++                    continue
+                 clocks = observation_clocks(row, boundary)
+                 if not clocks:
+                     continue
+                 # Equal quote instants use the immutable observation ID only.
+                 # Retrieval/attachment time does not invent a newer quote.
+                 key = (observation_time(clocks['quote_observed_at']), row.observation_id)
++                if selected_key is not None and key[0] == selected_key[0]:
++                    conflict = conflict or (reject_conflicts and not same_price(selected, row))
+                 if selected_key is None or key > selected_key:
++                    if selected_key is None or key[0] > selected_key[0]:
++                        conflict = False
+                     selected_key = key
+                     selected = replace(row, observed_at=clocks['quote_observed_at'],
+                                        retained_attachment_at=clocks['retained_attachment_at'])
+-        return selected
++        return None if conflict else selected
+ 
+     def market_memory_health(self) -> dict[str, Any]:
+         with self._connect() as connection:
+diff --git a/src/ui/trade_timeline.py b/src/ui/trade_timeline.py
+index 82ccb5af..246b9f78 100644
+--- a/src/ui/trade_timeline.py
++++ b/src/ui/trade_timeline.py
+@@ -54,6 +54,22 @@ def readable_trade_reference(reference, graph):
+     return action + '<details><summary>Source reference details</summary><code style="overflow-wrap:anywhere">' + escape(reference) + '</code></details>'
+ 
+ 
++def _quote_age(seconds):
++    from math import isfinite
++    if type(seconds) not in (int, float) or not isfinite(seconds) or seconds < 0:
++        return 'Age unavailable'
++    if seconds == 0:
++        return 'Observed at the recorded trade instant'
++    if seconds < 1:
++        return 'Less than a second before the trade'
++    for size, unit in ((86400, 'day'), (3600, 'hour'), (60, 'minute')):
++        if seconds >= size:
++            count = int(seconds // size)
++            return f"{count} {unit}{'s' if count != 1 else ''} before the trade"
++    count = int(seconds)
++    return f"{count} second{'s' if count != 1 else ''} before the trade"
++
++
+ def _quote_card(row, label):
+     def safe(value):
+         return escape(str(value))
+@@ -86,12 +102,18 @@ def _quote_card(row, label):
+     attachment = ('<p>Original retained attachment timestamp: ' + safe(attachment_time) + ' · separate from quote observation.</p>'
+                   if attachment_time else '<p>Legacy retained attachment reference: ' + safe(row['retained_attachment_at'])
+                   + ' · identifier, not a supported timestamp.</p>' if row.get('retained_attachment_at') else '')
+-    return f'''<li><h4>{safe(row.get('asset_name') or label)}</h4><p>{safe(row.get('match_state'))} · {safe(value)}</p>
++    status = ('Exact recorded observation' if row.get('match_state') == 'EXACT'
++              else 'Dated estimate · not an exact trade-time quote' if row.get('value') is not None else 'Value withheld')
++    age = ('<p>Quote age: ' + safe(_quote_age(row.get('quote_age_seconds')))
++           + ' · oldest admitted provider observation.</p>') if row.get('value') is not None else ''
++    return f'''<li class="timeline-quote"><h4>{safe(row.get('asset_name') or label)}</h4><p><b>{safe(value)}</b> · {safe(status)}</p>
++<p>Source: {safe(names)} · {safe(units)}</p>{age}<p>Quote observed: {safe(row.get('observed_at') or 'Unavailable')}</p>
+ <p>{safe(row.get('admission_reason') or 'No admitted quote; original trade time or source evidence is unavailable.')}</p>
+-<p>Provider: {safe(names)} · {safe(units)}</p><p>Source format: {safe('; '.join(contexts) or 'Unavailable')}. Provider format is not proof of exact historical league-format parity.</p>
++<details class="timeline-evidence"><summary>Source details and excluded observations</summary>
++<p>Source format: {safe('; '.join(contexts) or 'Unavailable')}. Provider format is not proof of exact historical league-format parity.</p>
+ <p>Quote observed: {safe(row.get('observed_at') or 'Unavailable')} · Source knowledge: {safe(row.get('source_knowledge_at') or 'Unavailable')}</p>{attachment}
+ <p>Normalization version: {safe(version)} · Comparison version: {safe(identity[3] if identity else 'Unavailable')}.</p><p>Comparison temporal confidence: {safe(row.get('temporal_confidence')) if row.get('value') is not None else 'Not eligible for comparison'} · Source observation confidence: {safe(confidence if confidence is not None else 'Unavailable')}. Ineligibility does not imply zero source confidence. Confidence is not a trade outcome probability.</p>
+-<p>{safe(row.get('limitation') or '') if row.get('match_state') == 'DATED_ESTIMATE' else ''}</p><details><summary>Retained raw observations · excluded unless admitted above</summary><ul>{raw or '<li>No raw quote in available exact asset/context evidence.</li>'}</ul></details></li>'''
++<p>{safe(row.get('limitation') or '') if row.get('match_state') == 'DATED_ESTIMATE' else ''}</p><details><summary>Retained raw observations · excluded unless admitted above</summary><ul>{raw or '<li>No raw quote in available exact asset/context evidence.</li>'}</ul></details></details></li>'''
+ 
+ 
+ def render_timeline(model, dossier, *, return_url="/transactions", origin_id=None):
+@@ -157,12 +179,9 @@ def render_timeline(model, dossier, *, return_url="/transactions", origin_id=Non
+         summary.append(
+             f"<li class='timeline-faab'><b>{safe(amount)} FAAB</b><div>{safe(movement['sent_by']['name'])} → {safe(movement['received_by']['name'])}</div><details><summary>FAAB source</summary><p>{safe(movement['provenance'])}</p><p>Source league: {safe(movement['source_league_id'])} · Transaction: {safe(movement['transaction_id'])}</p></details></li>"
+         )
+-    if evidence.get("fairness_state") == "comparable_exact_evidence":
+-        price_text = "Complete comparable decision-time Market evidence is available. No automatic trade winner is declared."
+-    elif evidence.get("fairness_state") == "estimated_comparison":
+-        price_text = "Compatible dated estimates are available; they are not exact trade-time quotes. Process quality requires additional evidence."
+-    else:
+-        price_text = "Decision-time Market fairness unavailable: complete compatible dated prices are required, including exact picks."
++    price_text = ("Individual retained quotes only; they are not a verdict on the manager’s decision. "
++                  "Package totals are not shown: useful complete retained coverage, historical league-format "
++                  "alignment and package freshness have not been established.")
+     if dossier.get("faab"):
+         price_text += " FAAB is shown as original trade consideration; player/pick Market totals do not value FAAB or establish fairness of the whole trade."
+     labels = {b['asset_id']: b['label'] for b in model['branches']}
+@@ -186,7 +205,7 @@ def render_timeline(model, dossier, *, return_url="/transactions", origin_id=Non
+     technical = [f"{k}: {v}" for k, v in dossier["source"].items()]
+     return (
+         CSS
+-        + f'''<section class="trade-timeline"><a class="back" href="{href(return_url)}">← {back_label}</a><h2>Original completed trade</h2><p><b>{safe(model["league_name"])} · {safe(model["season"])} · {safe(trade_date)}</b></p><section><h3>Assets sent and received</h3><p>{safe(' ↔ '.join(p['name'] for p in model['participants']))}</p><div class="timeline-sides">{participants}</div>{'<h4>FAAB consideration</h4><ul>' + ''.join(cash) + '</ul>' if cash else ''}<details><summary>Historical manager context</summary><p>Managers are season observations; exact trade-time takeover timing is not established.</p></details></section><h3>Subsequent events & confirmed current state</h3><p>Current roster observations and last transfers are separate. As-of dates describe DTOS Sleeper retrieval/sync observations, not acquisition timestamps; missing intervals do not establish uninterrupted ownership.</p>{"".join(branches)}{production}<section class="card"><h3>At the time: Market evidence</h3><p>{price_text}</p><p>{evidence.get('valued_assets', 0)} / {evidence.get('total_assets', 0)} assets have admitted compatible pre-trade quotes. Retained raw observations do not establish comparable package coverage.</p><p>Trade reference date: {safe(trade_date)}. Production, present Market value and later team outcomes are separate. Retained FOIS grades remain NOT REVALIDATED.</p><details class="timeline-evidence"><summary>Prices, dates and limitations</summary><ul>{"".join(quotes)}</ul><p>Package admission: {safe(str(evidence.get('reason') or 'Unavailable').replace('_', ' '))}</p></details></section>{render_source_coverage(model.get('source_coverage') or {})}<details class="card timeline-evidence"><summary>Source provenance and branch limitations</summary>{"".join("<p>" + safe(x) + "</p>" for x in model["limitations"])}<pre>{safe(chr(10).join(technical))}</pre></details></section>'''
++        + f'''<section class="trade-timeline"><a class="back" href="{href(return_url)}">← {back_label}</a><h2>Original completed trade</h2><p><b>{safe(model["league_name"])} · {safe(model["season"])} · {safe(trade_date)}</b></p><section><h3>Assets sent and received</h3><p>{safe(' ↔ '.join(p['name'] for p in model['participants']))}</p><div class="timeline-sides">{participants}</div>{'<h4>FAAB consideration</h4><ul>' + ''.join(cash) + '</ul>' if cash else ''}<details><summary>Historical manager context</summary><p>Managers are season observations; exact trade-time takeover timing is not established.</p></details></section><h3>Subsequent events & confirmed current state</h3><p>Current roster observations and last transfers are separate. As-of dates describe DTOS Sleeper retrieval/sync observations, not acquisition timestamps; missing intervals do not establish uninterrupted ownership.</p>{"".join(branches)}{production}<section class="card"><h3>At the time: Market evidence</h3><p>{price_text}</p><p>{evidence.get('valued_assets', 0)} / {evidence.get('total_assets', 0)} assets have admitted compatible pre-trade quotes. Retained raw observations do not establish comparable package coverage.</p><p>Trade reference date: {safe(trade_date)}. Production, present Market value and later team outcomes are separate. Retained FOIS grades remain NOT REVALIDATED.</p><details class="timeline-evidence"><summary>Prices, dates and limitations</summary><ul>{"".join(quotes)}</ul><p>Retained quote coverage check: {safe(str(evidence.get('reason') or 'Unavailable').replace('_', ' '))}. This does not certify whole-package freshness or historical league-format parity.</p></details></section>{render_source_coverage(model.get('source_coverage') or {})}<details class="card timeline-evidence"><summary>Source provenance and branch limitations</summary>{"".join("<p>" + safe(x) + "</p>" for x in model["limitations"])}<pre>{safe(chr(10).join(technical))}</pre></details></section>'''
+     )
+ 
+ 
+diff --git a/tests/test_historical_trade_time.py b/tests/test_historical_trade_time.py
+index 9b434783..ce6ed07b 100644
+--- a/tests/test_historical_trade_time.py
++++ b/tests/test_historical_trade_time.py
+@@ -93,7 +93,7 @@ class HistoricalTradeTimeTests(unittest.TestCase):
+                 if query["asset_id"] != "player:100":
+                     return None
+                 return SimpleNamespace(
+-                    observation_id="OBS-1", observed_at="2025-08-24T12:00:00Z",
++                    asset_id=query["asset_id"], observation_id="OBS-1", observed_at="2025-08-24T12:00:00Z",
+                     canonical_value=700, provider_evidence=evidence, normalization_version=evidence[0].normalization_version, market_context_id='test', confidence=85, provenance_type=SimpleNamespace(
+                         value="historical_source_backfill",
+                     ),
+diff --git a/tests/test_trade_time_market_evidence.py b/tests/test_trade_time_market_evidence.py
+new file mode 100644
+index 00000000..1de1d725
+--- /dev/null
++++ b/tests/test_trade_time_market_evidence.py
+@@ -0,0 +1,192 @@
++"""Retained price -> shared selection -> completed trade disclosure."""
++from copy import deepcopy
++from dataclasses import replace
++from datetime import datetime, timedelta
++import json
++import unittest
++from unittest.mock import patch
++
++from src.core.intelligence_memory.models import CheckpointTrigger, EvidenceCompleteness, ProvenanceType
++from src.core.intelligence_memory.pipeline import CheckpointPipeline
++from tests import test_historical_tracker_phase2 as fixtures
++from tests.test_market_observation_producer_identity import prepared
++
++
++class TradeTimeMarketEvidenceTests(unittest.TestCase):
++    def setUp(self):
++        self.f = fixtures.TrackerPhase2Tests()
++        self.f.setUp()
++        self.addCleanup(self.f.tearDown)
++        from src.core.historical_memory.read_model import HistoricalReadModelCache
++        self.f.stack.enter_context(patch(
++            "src.core.historical_memory.read_model.historical_read_model_cache", HistoricalReadModelCache()))
++        self.boundary = self.f.graph().trade_dossier(fixtures.ROOT)['occurred_at']
++        self.when = datetime.fromisoformat(self.boundary.replace('Z', '+00:00'))
++        self.serial = 0
++
++    def capture(self, asset='player:12506', *, seconds=-3600, value=400, metadata=None,
++                kind='player', scope=fixtures.DAY):
++        data, _ = prepared()
++        stamp = (self.when + timedelta(seconds=seconds)).isoformat()
++        evidence = []
++        for r in CheckpointPipeline._market_observations(data, 'player:1'):
++            extra = deepcopy(r.metadata)
++            extra.update(metadata or {})
++            evidence.append(replace(r, observed_at=stamp, raw_value=value, normalized_value=value, metadata=extra))
++        self.serial += 1
++        self.f.fixture.service.capture(trigger=CheckpointTrigger.TRADE_EXECUTION, asset_id=asset,
++            asset_type=kind, timestamp=stamp, season=self.when.year, provenance=ProvenanceType.LIVE_CAPTURED,
++            league_id=scope, event_id='disposable-distinct-'+str(self.serial), market_value=value,
++            confidence=90, completeness=EvidenceCompleteness.COMPLETE, observations=tuple(evidence))
++        return stamp.replace("+00:00", "Z")
++
++    def row(self, asset='DTOS-P-12506'):
++        d = self.f.graph().trade_dossier(fixtures.ROOT)
++        return next(r for r in d['trade_time_intelligence']['assets'] if r['asset_id'] == asset)
++
++    def test_newer_incompatible_does_not_hide_older_compatible_quote(self):
++        older = self.capture()
++        data, _ = prepared()
++        semantics = deepcopy(CheckpointPipeline._market_observations(data, 'player:1')[0].metadata['comparison_semantics'])
++        semantics['value_scale'] = 'native_units'
++        self.capture(seconds=-60, value=800, metadata={'comparison_semantics': semantics})
++        row = self.row()
++        self.assertEqual(row['value'], 400)
++        self.assertEqual((row['observed_at'], row['quote_age_seconds']), (older, 3600))
++
++    def test_newer_foreign_scope_does_not_hide_compatible_quote(self):
++        self.capture()
++        self.capture(seconds=-60, value=800, metadata={'league_id': fixtures.ARK})
++        self.assertEqual(self.row()['value'], 400)
++
++    def test_foreign_only_raw_evidence_is_not_exposed(self):
++        self.capture(metadata={'league_id': fixtures.ARK, 'private_marker': 'foreign-private-quote'})
++        row = self.row()
++        self.assertIsNone(row['value'])
++        self.assertIsNone(row['retained_observation'])
++        response = self.f.client.get('/trades/history/'+fixtures.ROOT)
++        self.assertNotIn('foreign-private-quote', response.text)
++        self.assertIn('different league context', response.text)
++
++    def test_foreign_future_quote_is_not_exposed_as_raw_evidence(self):
++        self.capture(seconds=1, metadata={'league_id':fixtures.ARK,'private_marker':'future-private-quote'})
++        row = self.row()
++        self.assertIsNone(row['value'])
++        self.assertIsNone(row['retained_observation'])
++        response = self.f.client.get('/trades/history/'+fixtures.ROOT)
++        self.assertNotIn('future-private-quote',response.text)
++
++    def test_unavailable_retained_metadata_withholds_without_error(self):
++        self.capture()
++        with self.f.fixture.memory._connect() as c:
++            for row in c.execute('SELECT observation_id,provider_evidence_json FROM global_market_observations').fetchall():
++                data=json.loads(row['provider_evidence_json'])
++                for e in data:
++                    e['metadata']='unsupported legacy metadata'
++                c.execute('UPDATE global_market_observations SET provider_evidence_json=? WHERE observation_id=?',
++                    (json.dumps(data),row['observation_id']))
++        response=self.f.client.get('/trades/history/'+fixtures.ROOT)
++        self.assertEqual(response.status_code,200)
++        self.assertIn('unavailable source metadata',response.text)
++
++    def test_known_asset_identity_mismatch_cannot_enter(self):
++        self.capture(metadata={'asset_id': 'player:other'})
++        self.assertIsNone(self.row()['value'])
++
++    def test_pick_aliases_select_latest_compatible_before_winner(self):
++        self.capture('pick:2026:2:7', kind='pick', value=100)
++        self.capture('pick:2026:2:7', kind='future_pick', seconds=-60, value=200,
++                     metadata={'asset_id':'pick:2026:2:8'})
++        row = self.row(fixtures.PICK)
++        self.assertEqual(row['value'], 100)
++        self.assertIn('originally', row['asset_name'])
++
++    def test_same_instant_conflicting_prices_are_unknown(self):
++        self.capture(value=100)
++        self.capture(value=800)
++        row = self.row()
++        self.assertIsNone(row['value'])
++        self.assertIn('unique latest', row['admission_reason'])
++
++    def test_conflict_between_pick_aliases_is_unknown(self):
++        self.capture('pick:2026:2:7', kind='pick', value=100)
++        self.capture('pick:2026:2:7', kind='future_pick', value=800)
++        self.assertIsNone(self.row(fixtures.PICK)['value'])
++
++    def test_post_trade_observation_is_excluded(self):
++        self.capture(seconds=1)
++        self.assertIsNone(self.row()['value'])
++        self.assertIn('not decision-time eligible', self.row()['admission_reason'])
++
++    def test_retained_unknown_later_or_ambiguous_knowledge_is_not_replaced(self):
++        for clock in [None, '', 'not-a-time', self.boundary[:10],
++                      (self.when+timedelta(seconds=1)).isoformat()]:
++            with self.subTest(clock=clock):
++                self.capture(value=100+self.serial*30)
++                # Existing historical/legacy records, not a new provider claim.
++                with self.f.fixture.memory._connect() as c:
++                    for r in c.execute('SELECT observation_id,provider_evidence_json FROM global_market_observations').fetchall():
++                        evidence=json.loads(r['provider_evidence_json'])
++                        for e in evidence:
++                            e['metadata']['source_knowledge_at']=clock
++                        c.execute('UPDATE global_market_observations SET provider_evidence_json=? WHERE observation_id=?',
++                                  (json.dumps(evidence),r['observation_id']))
++                self.assertIsNone(self.row()['value'])
++
++    def test_later_publication_is_excluded_and_earlier_quote_survives(self):
++        self.capture(value=100)
++        self.capture(seconds=-60, value=800, metadata={'published_at':(self.when+timedelta(seconds=1)).isoformat()})
++        self.assertEqual(self.row()['value'], 100)
++
++    def test_old_individual_value_remains_dated_not_package_freshness(self):
++        self.capture(seconds=-30*86400, value=275)
++        row = self.row()
++        self.assertEqual((row['value'],row['quote_age_seconds'],row['match_state']), (275,30*86400,'DATED_ESTIMATE'))
++        response = self.f.client.get('/trades/history/'+fixtures.ROOT)
++        self.assertIn('30 days before the trade',response.text)
++        self.assertIn('Package totals are not shown',response.text)
++        self.assertIn('Dated estimate',response.text)
++        self.assertIn('FantasyCalc',response.text)
++
++    def test_zero_is_supported_and_exact_instant_is_distinct(self):
++        self.capture(seconds=0,value=0)
++        row=self.row()
++        self.assertEqual((row['value'],row['quote_age_seconds'],row['match_state']),(0,0,'EXACT'))
++        response=self.f.client.get('/trades/history/'+fixtures.ROOT)
++        self.assertIn('Exact recorded observation',response.text)
++        self.assertIn('Observed at the recorded trade instant',response.text)
++
++    def test_subsecond_age_does_not_claim_the_trade_instant(self):
++        self.capture(seconds=-0.25)
++        row = self.row()
++        self.assertEqual((row['quote_age_seconds'],row['match_state']),(0.25,'DATED_ESTIMATE'))
++        response = self.f.client.get('/trades/history/'+fixtures.ROOT)
++        self.assertIn('Less than a second before the trade',response.text)
++        self.assertNotIn('Observed at the recorded trade instant',response.text)
++
++    def test_partial_values_survive_without_package_claim(self):
++        self.capture(value=321)
++        response=self.f.client.get('/trades/history/'+fixtures.ROOT)
++        self.assertEqual(response.status_code,200)
++        self.assertIn('321.0',response.text)
++        self.assertIn('Value withheld',response.text)
++        self.assertIn('No quote in available exact asset/context evidence',response.text)
++        self.assertNotIn('Complete comparable decision-time Market evidence is available',response.text)
++
++    def test_conversion_does_not_price_the_original_pick(self):
++        self.capture('player:13346',value=600)
++        graph=self.f.graph()
++        self.assertIsNotNone(graph.trade_timeline(fixtures.ROOT)['branches'])
++        self.assertIsNone(self.row(fixtures.PICK)['value'])
++
++    def test_reads_and_disclosures_do_not_acquire_or_persist(self):
++        self.capture()
++        memory=self.f.fixture.memory
++        with memory._connect() as c:
++            before=c.execute('SELECT * FROM global_market_observations ORDER BY observation_id').fetchall()
++        with patch.object(memory,'put_sparse',side_effect=AssertionError('write on read')):
++            for _ in range(3):
++                self.assertEqual(self.f.client.get('/trades/history/'+fixtures.ROOT).status_code,200)
++        with memory._connect() as c:
++            self.assertEqual([tuple(r) for r in before],
++                [tuple(r) for r in c.execute('SELECT * FROM global_market_observations ORDER BY observation_id')])
+diff --git a/tests/test_trade_time_market_evidence_browser.py b/tests/test_trade_time_market_evidence_browser.py
+new file mode 100644
+index 00000000..a50c3e11
+--- /dev/null
++++ b/tests/test_trade_time_market_evidence_browser.py
+@@ -0,0 +1,87 @@
++"""Existing completed-trade disclosure, actual routes and narrow Chromium."""
++from pathlib import Path
++import json
++import os
++import subprocess
++import unittest
++
++from playwright.sync_api import sync_playwright
++from tools.validation.browser_runtime import launch_chromium
++from tests import test_trade_time_market_evidence as fixture
++
++
++class TradeTimeMarketEvidenceBrowserTests(unittest.TestCase):
++    def test_partial_quotes_source_age_and_keyboard_disclosure(self):
++        h = fixture.TradeTimeMarketEvidenceTests()
++        h.setUp()
++        self.addCleanup(h.doCleanups)
++        h.capture(value=321)
++        import dtos_app
++        h.f.page_renderer = dtos_app.page
++        target = os.getenv('DTOS_TRADE_TIME_MARKET_EVIDENCE')
++        if not target and os.getenv('DTOS_PHASE2_EVIDENCE'):
++            target = str(Path(os.environ['DTOS_PHASE2_EVIDENCE'])/'trade-time-market')
++        output = Path(target) if target else None
++        if output:
++            output.mkdir(parents=True,exist_ok=True)
++        records = []
++        with sync_playwright() as pw:
++            browser = launch_chromium(pw,headless=True)
++            try:
++                for width,height in ((320,432),(375,667),(390,844),(1280,900)):
++                    page = browser.new_page(viewport={'width':width,'height':height})
++                    requests=[]
++                    errors=[]
++                    page.on('pageerror',lambda error:errors.append(str(error)))
++                    def respond(route):
++                        requests.append(route.request.url)
++                        r=h.f.client.get(route.request.url.replace('http://fixture',''))
++                        route.fulfill(status=r.status_code,body=r.content,
++                                      content_type=r.headers.get('content-type','text/html'))
++                    page.route('http://fixture/**',respond)
++                    r=page.goto('http://fixture/trades/history/'+fixture.fixtures.ROOT)
++                    self.assertEqual(r.status,200)
++                    section=page.locator('section.card').filter(has=page.get_by_role('heading',name='At the time: Market evidence',exact=True))
++                    disclosure=section.locator(':scope > details')
++                    summary=disclosure.locator(':scope > summary')
++                    summary.scroll_into_view_if_needed()
++                    summary.focus()
++                    self.assertNotEqual(summary.evaluate('e=>getComputedStyle(e).outlineStyle'),'none')
++                    count=len(requests)
++                    summary.press('Enter')
++                    self.assertTrue(disclosure.evaluate('e=>e.open'))
++                    row=section.locator('.timeline-quote').first
++                    self.assertIn('321.0',row.inner_text())
++                    self.assertIn('FantasyCalc',row.inner_text())
++                    self.assertIn('1 hour before the trade',row.inner_text())
++                    self.assertIn('Dated estimate',row.inner_text())
++                    self.assertIn('Package totals are not shown',section.inner_text())
++                    self.assertIn('Value withheld',section.inner_text())
++                    self.assertFalse(row.locator(':scope > details').evaluate('e=>e.open'))
++                    self.assertEqual(len(requests),count)
++                    self.assertLessEqual(page.evaluate('document.documentElement.scrollWidth'),width)
++                    self.assertGreaterEqual(summary.bounding_box()['height'],44)
++                    if width<500:
++                        session=page.context.new_cdp_session(page)
++                        session.send('Emulation.setTouchEmulationEnabled',{'enabled':True})
++                        summary.scroll_into_view_if_needed()
++                        box=summary.bounding_box()
++                        session.send('Input.dispatchTouchEvent',{'type':'touchStart','touchPoints':[{'x':box['x']+box['width']/2,'y':box['y']+box['height']/2}]})
++                        session.send('Input.dispatchTouchEvent',{'type':'touchEnd','touchPoints':[]})
++                        self.assertFalse(disclosure.evaluate('e=>e.open'))
++                        summary.press('Enter')
++                    if output:
++                        section.screenshot(path=str(output/f'quotes-{width}.png'))
++                    records.append({'width':width,'height':height,'source_value':321,'age_seconds':3600,
++                        'overflow':False,'keyboard':True,'touch_emulated':width<500,
++                        'extra_disclosure_requests':len(requests)-count,'errors':errors})
++                    self.assertFalse(errors)
++                    page.close()
++            finally:
++                browser.close()
++        if output:
++            def git(*args):return subprocess.check_output(['git',*args],text=True).strip()
++            (output/'browser.json').write_text(json.dumps({'head':git('rev-parse','HEAD'),
++                'tree':git('rev-parse','HEAD^{tree}'),'working_tree_clean':not git('status','--porcelain'),
++                'scope':'Disposable route fixture; prices are not historical real coverage or live acceptance',
++                'records':records},indent=2)+'\n')
