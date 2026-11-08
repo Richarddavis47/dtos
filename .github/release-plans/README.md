@@ -1,0 +1,5 @@
+# Frozen guarded build2240 publisher
+
+Never merge this tooling-only branch into main. Based on production b982e49. Reuse the established scoped Actions GITHUB_TOKEN, actor/ref binding, unchanged canonical workflow steps and resource budgets, exact candidate/tree/PR and all thirteen required hosted jobs. Verify originals, both ten-gate results, native cleanup/admission and all attachment bytes before expected-head squash merge. Publish only from this same frozen controller after merging the exact validated tree, with the preparation certificate, correct tag and immutable evidence. No Cloud upload retry, relay, credential change or application deployment from tooling.
+
+The release concerns individual historical Market quote selection and presentation. No whole-package totals or seven-day expiry policy. Main Chat supplied bounded real event counts; fixtures do not establish real full-package coverage or a new live observation. Preserve failed/incomplete attempts separately. Finalize only after all mandatory gates pass.
