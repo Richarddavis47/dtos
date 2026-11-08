@@ -913,9 +913,8 @@ class HistoricalAssetGraph:
         from types import SimpleNamespace
         from src.core.intelligence_memory.confidence import temporal_confidence
         from src.core.intelligence_memory.market_memory import market_context_id
-        from src.core.intelligence_memory.market import supported_quote_identity
         from src.core.historical_intelligence.market_comparison import (
-            comparison_reason, retained_comparison_identity, observation_clocks)
+            comparison_reason, observation_clocks, trade_observation_admission)
         from src.core.history_context.timestamps import canonical_utc_timestamp
         boundary = canonical_utc_timestamp(occurred_at)
         asset_rows, compare = [], []
@@ -927,11 +926,14 @@ class HistoricalAssetGraph:
             else:
                 memory_id = 'player:' + asset_id.removeprefix('DTOS-P-')
             kinds = ('future_pick', 'pick') if is_pick else ('player',)
-            candidates = [store.observation_at_or_before(asset_id=memory_id,
-                market_context_id=market_context_id(asset_type=kind, scoring_profile_id=None), event_at=occurred_at)
-                for kind in kinds]
-            candidates = [r for r in candidates if r is not None]
-            observation = max(candidates, key=lambda r: r.observed_at) if candidates else None
+            def admission(candidate):
+                return trade_observation_admission(candidate, asset_id=memory_id,
+                    league_ids=(self.league_id, (row.get('payload') or {}).get('source_league_id')), boundary=boundary)
+
+            contexts = tuple(market_context_id(asset_type=kind, scoring_profile_id=None) for kind in kinds)
+            observation = store.observation_at_or_before(asset_id=memory_id,
+                market_context_id=contexts[0] if len(contexts) == 1 else contexts, event_at=occurred_at,
+                eligible=lambda candidate: admission(candidate)[0] is not None, reject_conflicts=True)
             retained = observation
             if retained is None and hasattr(store, 'observations'):
                 latest = []
@@ -942,16 +944,20 @@ class HistoricalAssetGraph:
                         latest.extend(rows)
                 retained = max(latest, key=lambda r: r.observed_at) if latest else None
             clocks = observation_clocks(observation, boundary) if observation else None
-            identity = None
-            if observation and clocks:
-                semantics = [r.metadata.get('comparison_semantics') for r in observation.provider_evidence]
-                providers = tuple(sorted({r.provider for r in observation.provider_evidence}))
-                identity = retained_comparison_identity(semantics[0] if semantics and all(s == semantics[0] for s in semantics) else None, providers)
-                if (not identity or identity[:2] != ('external_market_normalized_index', '0-1000')
-                    or any(not supported_quote_identity(r) or (r.metadata or {}).get('asset_id') not in (None, memory_id) for r in observation.provider_evidence)):
-                    identity = None
-            foreign_context = observation and any(r.metadata.get('league_id') not in (None, '', self.league_id, (row.get('payload') or {}).get('source_league_id')) for r in getattr(observation, 'provider_evidence', ()))
-            value = observation.canonical_value if observation and identity and clocks and not foreign_context else None
+            identity, issue = admission(observation) if observation else (None, None)
+            if retained is not None and observation is None:
+                _, issue = admission(retained)
+                issue = issue or 'No unique latest compatible pre-trade quote can be established from retained evidence.'
+            # A rejected foreign-scope record is not a public raw quote.
+            retained_for_display = retained if issue not in (
+                'Retained observation belongs to a different league context.',
+                'Retained observation has a different exact asset identity.',
+                'Retained observation has unavailable source metadata.') else None
+            value = observation.canonical_value if observation and identity and clocks else None
+            quote_age = None
+            if value is not None:
+                from src.core.intelligence_memory.timestamps import observation_time
+                quote_age = (observation_time(boundary) - observation_time(clocks['oldest_quote_at'])).total_seconds()
             confidence, reason = temporal_confidence(clocks['oldest_quote_at'] if clocks else None, occurred_at)
             entry = {'asset_id': asset_id, 'asset_name': self.asset_label(asset_id, row.get('season')), 'value': value,
                 'match_state': ('EXACT' if clocks and clocks['oldest_quote_at'] == boundary and clocks['source_knowledge_at'] == boundary else 'DATED_ESTIMATE') if value is not None else 'UNAVAILABLE',
@@ -964,14 +970,12 @@ class HistoricalAssetGraph:
                 'normalization_version': getattr(observation, "normalization_version", None) if observation else None,
                 'comparison_identity': identity, 'temporal_confidence': min(confidence, getattr(observation, "confidence", 0)) if value is not None else 0,
                 'source_quote_confidence': getattr(observation, 'confidence', None),
-                'retained_observation': ({'provider_evidence': [r.__dict__ for r in retained.provider_evidence],
-                                          'normalization_version': retained.normalization_version,
-                                          'source_confidence': retained.confidence}
-                                         if retained is not None else None),
-                'admission_reason': ('No quote in available exact asset/context evidence.' if retained is None else
-                                     'Retained observation is not decision-time eligible: quote/knowledge clocks are after the trade or unavailable.' if observation is None else
-                                     'Retained observation belongs to a different league context.' if foreign_context else
-                                     'Retained observation lacks compatible provider, units, format or normalization evidence.' if value is None else
+                'retained_observation': ({'provider_evidence': [r.__dict__ for r in retained_for_display.provider_evidence],
+                                          'normalization_version': retained_for_display.normalization_version,
+                                          'source_confidence': retained_for_display.confidence}
+                                         if retained_for_display is not None else None),
+                'quote_age_seconds': quote_age, 'age_basis': 'oldest admitted provider observation',
+                'admission_reason': (issue or 'No quote in available exact asset/context evidence.' if value is None else
                                      'Compatible dated quote: not an exact trade-time observation.' if clocks['oldest_quote_at'] != boundary or clocks['source_knowledge_at'] != boundary else
                                      'Contemporaneous admitted evidence; whole-package coverage is assessed separately.'),
                 'temporal_reason': reason, 'provenance': observation.provenance_type.value if observation else 'unavailable',

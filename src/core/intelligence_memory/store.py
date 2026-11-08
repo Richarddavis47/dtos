@@ -10,7 +10,7 @@ from contextlib import contextmanager
 from dataclasses import replace
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Iterator
+from typing import Any, Callable, Iterator
 
 from .models import (
     CheckpointTrigger, EvidenceCompleteness, GlobalMarketObservation,
@@ -1015,9 +1015,15 @@ class IntelligenceCheckpointStore:
         return result
 
     def observation_at_or_before(
-        self, *, asset_id: str, market_context_id: str, event_at: str,
+        self, *, asset_id: str, market_context_id: str | tuple[str, str], event_at: str,
+        eligible: Callable[[GlobalMarketObservation], bool] | None = None, reject_conflicts: bool = False,
     ) -> GlobalMarketObservation | None:
-        """Read one legitimate pre-event state without creating an observation."""
+        """Stream retained states; apply optional admission before choosing latest.
+
+        Existing callers keep their temporal-only contract. Trade readers can
+        reject incompatible candidates and unresolved same-instant prices.
+        No lease, provider request, record write or unbounded candidate list.
+        """
         from src.core.historical_intelligence.market_comparison import observation_clocks
         from src.core.history_context.timestamps import canonical_utc_timestamp
         from .timestamps import observation_time
@@ -1026,26 +1032,45 @@ class IntelligenceCheckpointStore:
             return None
         selected = None
         selected_key = None
+        conflict = False
+
+        def same_price(left, right):
+            def evidence(row):
+                return (row.canonical_value, row.normalization_version,
+                        sorted(((r.provider, r.normalization_version,
+                                 (r.metadata or {}).get('comparison_semantics'))
+                                for r in row.provider_evidence), key=lambda r: r[0]))
+            return evidence(left) == evidence(right)
         with self._connect() as connection:
             # Textual ISO ordering (including a textual LIMIT) is not temporal
             # ordering across precision/offset spellings. Stream the exact
             # asset/context scope, retaining only the latest admitted state.
-            rows = connection.execute("""SELECT * FROM global_market_observations
-                WHERE asset_id=? AND market_context_id=?""",
-                (asset_id, market_context_id))
+            contexts = (market_context_id,) if isinstance(market_context_id, str) else market_context_id
+            if not isinstance(contexts, tuple) or not 1 <= len(contexts) <= 2:
+                raise ValueError('One exact context or two supported asset-type aliases are required')
+            placeholders = ','.join('?' for _ in contexts)
+            rows = connection.execute("SELECT * FROM global_market_observations "
+                + "WHERE asset_id=? AND market_context_id IN (" + placeholders + ")",
+                (asset_id, *contexts))
             for raw in rows:
                 row = self._decode_observation(raw)
+                if eligible is not None and not eligible(row):
+                    continue
                 clocks = observation_clocks(row, boundary)
                 if not clocks:
                     continue
                 # Equal quote instants use the immutable observation ID only.
                 # Retrieval/attachment time does not invent a newer quote.
                 key = (observation_time(clocks['quote_observed_at']), row.observation_id)
+                if selected_key is not None and key[0] == selected_key[0]:
+                    conflict = conflict or (reject_conflicts and not same_price(selected, row))
                 if selected_key is None or key > selected_key:
+                    if selected_key is None or key[0] > selected_key[0]:
+                        conflict = False
                     selected_key = key
                     selected = replace(row, observed_at=clocks['quote_observed_at'],
                                        retained_attachment_at=clocks['retained_attachment_at'])
-        return selected
+        return None if conflict else selected
 
     def market_memory_health(self) -> dict[str, Any]:
         with self._connect() as connection:
