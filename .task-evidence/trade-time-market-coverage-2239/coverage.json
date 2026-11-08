@@ -1,0 +1,385 @@
+{
+  "observed_at": "2026-11-08T01:41:29.818408+00:00",
+  "source": "Existing retained Sleeper capture fixtures; no new source requests",
+  "inputs": [
+    {
+      "file": "trade_timeline_sources.json",
+      "sha256": "012de53aeefa4cfb4cb7de717910fa829f399b23d6f6ad7962598afe8c76833f",
+      "bytes": 328877,
+      "provenance": "Read-only Sleeper source captures, October 12 2026; partial transaction fixtures, not full season coverage",
+      "newly_distinct_completed_trades": 2,
+      "retained_market_population_supplied": false
+    },
+    {
+      "file": "trade_faab_source.json",
+      "sha256": "9314b274867234315cad111b04c78844a23003a3f09f784b746aa4b55adf457d",
+      "bytes": 34793,
+      "provenance": {
+        "https://api.sleeper.app/v1/league/916477632584318976": {
+          "at": "2026-10-12T16:57:03.166971+00:00",
+          "sha256": "549877892c073e6a031ad6182da7d1e9053db9b25f8f4cdc4331d69b90bbe0b1"
+        },
+        "https://api.sleeper.app/v1/league/916477632584318976/rosters": {
+          "at": "2026-10-12T16:57:05.724219+00:00",
+          "sha256": "1f7e844299a0e53710444253334b5facbdfa8a15e5fd0de4b87fe522dd2f30b2"
+        },
+        "https://api.sleeper.app/v1/league/916477632584318976/users": {
+          "at": "2026-10-12T16:57:05.847256+00:00",
+          "sha256": "9e7133f4ca990d9f20e5f57650da0b4ffbfe8ea9b5f563b8e591e3bd50943b7d"
+        },
+        "https://api.sleeper.app/v1/league/916477632584318976/transactions/1": {
+          "at": "2026-10-12T16:57:06.265717+00:00",
+          "sha256": "76161018cdc4bc7b353dafb08482c8c0abc20f71e5360c3bc6b917f266cf2d7f"
+        },
+        "https://api.sleeper.app/v1/players/nfl": {
+          "at": "2026-10-12T22:16:28.089464+00:00",
+          "sha256": "d48ea956e604fd0a48e74322c296d67ea0649137645814652152cb662a58533d",
+          "scope": "Three current player identities only; not historical ownership or status"
+        }
+      },
+      "newly_distinct_completed_trades": 1,
+      "retained_market_population_supplied": false
+    },
+    {
+      "file": "historical_archive_source.json",
+      "sha256": "a1512f9a930286f883fa312660dc34b0676b79c255ec772be83f0d62fba44588",
+      "bytes": 62001,
+      "provenance": {
+        "url": "https://api.sleeper.app/v1/league/916477632584318976/transactions/1",
+        "at": "2026-10-13T02:17:23.921318+00:00",
+        "sha256": "76161018cdc4bc7b353dafb08482c8c0abc20f71e5360c3bc6b917f266cf2d7f"
+      },
+      "newly_distinct_completed_trades": 21,
+      "retained_market_population_supplied": false
+    },
+    {
+      "file": "home_news_recent_trades.json",
+      "sha256": "8d9d1dff8703333f102ec9e4a09cbca7b73549ee202354d68d9ebb04929048ca",
+      "bytes": 2763,
+      "provenance": {
+        "source": "https://api.sleeper.app/v1/league/1313066632158924800/transactions/5",
+        "retrieved_at": "2026-10-14T07:06:27.507259+00:00"
+      },
+      "newly_distinct_completed_trades": 1,
+      "retained_market_population_supplied": false
+    }
+  ],
+  "distinct_completed_trades": 25,
+  "transaction_instants_known": 25,
+  "asset_appearances": 104,
+  "seasons_by_transaction_utc": {
+    "2026": 3,
+    "2023": 22
+  },
+  "exact_pick_appearances": 62,
+  "faab_packages": 1,
+  "supplied_real_market_observations": 0,
+  "verified_real_quote_trade_overlap": 0,
+  "real_trade_quote_coverage": "UNKNOWN: none of these retained source captures supplies a Market population; no authorized production store read was available",
+  "production_missing_observations": null,
+  "warning": "0 demonstrated overlaps is not a measured zero in production. Arkham has no completed trade in the retained timeline capture; this is not evidence it has no trades.",
+  "trades": [
+    {
+      "input_files": [
+        "trade_timeline_sources.json"
+      ],
+      "timestamp": "2026-03-01T02:07:18.497000Z",
+      "timestamp_field": "created",
+      "player_assets": 2,
+      "exact_pick_assets": 6,
+      "pick_identity_complete": true,
+      "faab_present": false,
+      "paired_retained_market_observations": null
+    },
+    {
+      "input_files": [
+        "trade_timeline_sources.json",
+        "home_news_recent_trades.json"
+      ],
+      "timestamp": "2026-10-10T18:39:50.006000Z",
+      "timestamp_field": "created",
+      "player_assets": 2,
+      "exact_pick_assets": 1,
+      "pick_identity_complete": true,
+      "faab_present": false,
+      "paired_retained_market_observations": null
+    },
+    {
+      "input_files": [
+        "trade_faab_source.json",
+        "historical_archive_source.json"
+      ],
+      "timestamp": "2023-05-18T22:49:12.190000Z",
+      "timestamp_field": "created",
+      "player_assets": 3,
+      "exact_pick_assets": 5,
+      "pick_identity_complete": true,
+      "faab_present": true,
+      "paired_retained_market_observations": null
+    },
+    {
+      "input_files": [
+        "historical_archive_source.json"
+      ],
+      "timestamp": "2023-08-05T19:55:21.712000Z",
+      "timestamp_field": "created",
+      "player_assets": 2,
+      "exact_pick_assets": 0,
+      "pick_identity_complete": true,
+      "faab_present": false,
+      "paired_retained_market_observations": null
+    },
+    {
+      "input_files": [
+        "historical_archive_source.json"
+      ],
+      "timestamp": "2023-07-20T19:09:07.869000Z",
+      "timestamp_field": "created",
+      "player_assets": 1,
+      "exact_pick_assets": 2,
+      "pick_identity_complete": true,
+      "faab_present": false,
+      "paired_retained_market_observations": null
+    },
+    {
+      "input_files": [
+        "historical_archive_source.json"
+      ],
+      "timestamp": "2023-05-24T20:22:46.176000Z",
+      "timestamp_field": "created",
+      "player_assets": 4,
+      "exact_pick_assets": 1,
+      "pick_identity_complete": true,
+      "faab_present": false,
+      "paired_retained_market_observations": null
+    },
+    {
+      "input_files": [
+        "historical_archive_source.json"
+      ],
+      "timestamp": "2023-05-23T00:41:30.571000Z",
+      "timestamp_field": "created",
+      "player_assets": 2,
+      "exact_pick_assets": 3,
+      "pick_identity_complete": true,
+      "faab_present": false,
+      "paired_retained_market_observations": null
+    },
+    {
+      "input_files": [
+        "historical_archive_source.json"
+      ],
+      "timestamp": "2023-05-17T16:44:12.031000Z",
+      "timestamp_field": "created",
+      "player_assets": 1,
+      "exact_pick_assets": 3,
+      "pick_identity_complete": true,
+      "faab_present": false,
+      "paired_retained_market_observations": null
+    },
+    {
+      "input_files": [
+        "historical_archive_source.json"
+      ],
+      "timestamp": "2023-05-17T01:16:06.598000Z",
+      "timestamp_field": "created",
+      "player_assets": 3,
+      "exact_pick_assets": 5,
+      "pick_identity_complete": true,
+      "faab_present": false,
+      "paired_retained_market_observations": null
+    },
+    {
+      "input_files": [
+        "historical_archive_source.json"
+      ],
+      "timestamp": "2023-05-16T19:08:10.597000Z",
+      "timestamp_field": "created",
+      "player_assets": 3,
+      "exact_pick_assets": 1,
+      "pick_identity_complete": true,
+      "faab_present": false,
+      "paired_retained_market_observations": null
+    },
+    {
+      "input_files": [
+        "historical_archive_source.json"
+      ],
+      "timestamp": "2023-05-12T02:03:14.050000Z",
+      "timestamp_field": "created",
+      "player_assets": 1,
+      "exact_pick_assets": 1,
+      "pick_identity_complete": true,
+      "faab_present": false,
+      "paired_retained_market_observations": null
+    },
+    {
+      "input_files": [
+        "historical_archive_source.json"
+      ],
+      "timestamp": "2023-05-11T22:30:32.633000Z",
+      "timestamp_field": "created",
+      "player_assets": 2,
+      "exact_pick_assets": 2,
+      "pick_identity_complete": true,
+      "faab_present": false,
+      "paired_retained_market_observations": null
+    },
+    {
+      "input_files": [
+        "historical_archive_source.json"
+      ],
+      "timestamp": "2023-05-07T18:43:32.212000Z",
+      "timestamp_field": "created",
+      "player_assets": 1,
+      "exact_pick_assets": 3,
+      "pick_identity_complete": true,
+      "faab_present": false,
+      "paired_retained_market_observations": null
+    },
+    {
+      "input_files": [
+        "historical_archive_source.json"
+      ],
+      "timestamp": "2023-05-05T22:16:25.428000Z",
+      "timestamp_field": "created",
+      "player_assets": 1,
+      "exact_pick_assets": 1,
+      "pick_identity_complete": true,
+      "faab_present": false,
+      "paired_retained_market_observations": null
+    },
+    {
+      "input_files": [
+        "historical_archive_source.json"
+      ],
+      "timestamp": "2023-05-05T18:56:52.007000Z",
+      "timestamp_field": "created",
+      "player_assets": 0,
+      "exact_pick_assets": 3,
+      "pick_identity_complete": true,
+      "faab_present": false,
+      "paired_retained_market_observations": null
+    },
+    {
+      "input_files": [
+        "historical_archive_source.json"
+      ],
+      "timestamp": "2023-05-05T13:01:11.986000Z",
+      "timestamp_field": "created",
+      "player_assets": 1,
+      "exact_pick_assets": 4,
+      "pick_identity_complete": true,
+      "faab_present": false,
+      "paired_retained_market_observations": null
+    },
+    {
+      "input_files": [
+        "historical_archive_source.json"
+      ],
+      "timestamp": "2023-05-05T03:56:37.263000Z",
+      "timestamp_field": "created",
+      "player_assets": 0,
+      "exact_pick_assets": 2,
+      "pick_identity_complete": true,
+      "faab_present": false,
+      "paired_retained_market_observations": null
+    },
+    {
+      "input_files": [
+        "historical_archive_source.json"
+      ],
+      "timestamp": "2023-05-05T03:49:08.510000Z",
+      "timestamp_field": "created",
+      "player_assets": 1,
+      "exact_pick_assets": 1,
+      "pick_identity_complete": true,
+      "faab_present": false,
+      "paired_retained_market_observations": null
+    },
+    {
+      "input_files": [
+        "historical_archive_source.json"
+      ],
+      "timestamp": "2023-04-21T01:04:34.348000Z",
+      "timestamp_field": "created",
+      "player_assets": 1,
+      "exact_pick_assets": 1,
+      "pick_identity_complete": true,
+      "faab_present": false,
+      "paired_retained_market_observations": null
+    },
+    {
+      "input_files": [
+        "historical_archive_source.json"
+      ],
+      "timestamp": "2023-04-21T00:45:48.139000Z",
+      "timestamp_field": "created",
+      "player_assets": 1,
+      "exact_pick_assets": 1,
+      "pick_identity_complete": true,
+      "faab_present": false,
+      "paired_retained_market_observations": null
+    },
+    {
+      "input_files": [
+        "historical_archive_source.json"
+      ],
+      "timestamp": "2023-03-10T21:52:17.371000Z",
+      "timestamp_field": "created",
+      "player_assets": 2,
+      "exact_pick_assets": 4,
+      "pick_identity_complete": true,
+      "faab_present": false,
+      "paired_retained_market_observations": null
+    },
+    {
+      "input_files": [
+        "historical_archive_source.json"
+      ],
+      "timestamp": "2023-02-20T22:23:13.149000Z",
+      "timestamp_field": "created",
+      "player_assets": 1,
+      "exact_pick_assets": 1,
+      "pick_identity_complete": true,
+      "faab_present": false,
+      "paired_retained_market_observations": null
+    },
+    {
+      "input_files": [
+        "historical_archive_source.json"
+      ],
+      "timestamp": "2023-02-19T16:08:00.618000Z",
+      "timestamp_field": "created",
+      "player_assets": 1,
+      "exact_pick_assets": 3,
+      "pick_identity_complete": true,
+      "faab_present": false,
+      "paired_retained_market_observations": null
+    },
+    {
+      "input_files": [
+        "historical_archive_source.json"
+      ],
+      "timestamp": "2023-01-27T19:20:56.362000Z",
+      "timestamp_field": "created",
+      "player_assets": 1,
+      "exact_pick_assets": 2,
+      "pick_identity_complete": true,
+      "faab_present": false,
+      "paired_retained_market_observations": null
+    },
+    {
+      "input_files": [
+        "home_news_recent_trades.json"
+      ],
+      "timestamp": "2026-10-11T14:46:18.097000Z",
+      "timestamp_field": "created",
+      "player_assets": 5,
+      "exact_pick_assets": 6,
+      "pick_identity_complete": true,
+      "faab_present": false,
+      "paired_retained_market_observations": null
+    }
+  ]
+}

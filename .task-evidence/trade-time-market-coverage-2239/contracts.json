@@ -1,0 +1,257 @@
+{
+  "scope": "Disposable source-shaped canonical producer/store controls only; no actual historical provider prices",
+  "cases": [
+    {
+      "case": "constructed_complete_same_instant",
+      "coverage": "complete",
+      "valued": 2,
+      "total": 2,
+      "side_totals": {
+        "1313066632158924800:franchise:1": 700.0,
+        "1313066632158924800:franchise:2": 350.0
+      },
+      "fairness_state": "comparable_exact_evidence",
+      "reason": "complete_compatible_dated_evidence",
+      "assets": [
+        {
+          "asset_id": "DTOS-P-1",
+          "value": 700.0,
+          "observed_at": "2026-03-01T00:00:00Z",
+          "source_knowledge_at": "2026-03-01T00:00:00Z",
+          "match_state": "EXACT",
+          "temporal_reason": "same_day_or_24h",
+          "admission_reason": "Contemporaneous admitted evidence; whole-package coverage is assessed separately."
+        },
+        {
+          "asset_id": "PICK-2027-R1-ORIG4",
+          "value": 350.0,
+          "observed_at": "2026-03-01T00:00:00Z",
+          "source_knowledge_at": "2026-03-01T00:00:00Z",
+          "match_state": "EXACT",
+          "temporal_reason": "same_day_or_24h",
+          "admission_reason": "Contemporaneous admitted evidence; whole-package coverage is assessed separately."
+        }
+      ]
+    },
+    {
+      "case": "constructed_partial_pick_missing",
+      "coverage": "partial",
+      "valued": 1,
+      "total": 2,
+      "side_totals": {},
+      "fairness_state": "unavailable",
+      "reason": "historical_market_package_incomplete",
+      "assets": [
+        {
+          "asset_id": "DTOS-P-1",
+          "value": 700.0,
+          "observed_at": "2026-03-01T00:00:00Z",
+          "source_knowledge_at": "2026-03-01T00:00:00Z",
+          "match_state": "EXACT",
+          "temporal_reason": "same_day_or_24h",
+          "admission_reason": "Contemporaneous admitted evidence; whole-package coverage is assessed separately."
+        },
+        {
+          "asset_id": "PICK-2027-R1-ORIG4",
+          "value": null,
+          "observed_at": null,
+          "source_knowledge_at": null,
+          "match_state": "UNAVAILABLE",
+          "temporal_reason": "observation_unavailable",
+          "admission_reason": "No quote in available exact asset/context evidence."
+        }
+      ]
+    },
+    {
+      "case": "post_trade_quote_excluded",
+      "coverage": "unavailable",
+      "valued": 0,
+      "total": 2,
+      "side_totals": {},
+      "fairness_state": "unavailable",
+      "reason": "historical_market_package_incomplete",
+      "assets": [
+        {
+          "asset_id": "DTOS-P-1",
+          "value": null,
+          "observed_at": null,
+          "source_knowledge_at": null,
+          "match_state": "UNAVAILABLE",
+          "temporal_reason": "observation_unavailable",
+          "admission_reason": "No quote in available exact asset/context evidence."
+        },
+        {
+          "asset_id": "PICK-2027-R1-ORIG4",
+          "value": null,
+          "observed_at": null,
+          "source_knowledge_at": null,
+          "match_state": "UNAVAILABLE",
+          "temporal_reason": "observation_unavailable",
+          "admission_reason": "No quote in available exact asset/context evidence."
+        }
+      ]
+    },
+    {
+      "case": "knowledge_after_trade_excluded",
+      "coverage": "unavailable",
+      "valued": 0,
+      "total": 2,
+      "side_totals": {},
+      "fairness_state": "unavailable",
+      "reason": "historical_market_package_incomplete",
+      "assets": [
+        {
+          "asset_id": "DTOS-P-1",
+          "value": null,
+          "observed_at": null,
+          "source_knowledge_at": null,
+          "match_state": "UNAVAILABLE",
+          "temporal_reason": "observation_unavailable",
+          "admission_reason": "No quote in available exact asset/context evidence."
+        },
+        {
+          "asset_id": "PICK-2027-R1-ORIG4",
+          "value": null,
+          "observed_at": null,
+          "source_knowledge_at": null,
+          "match_state": "UNAVAILABLE",
+          "temporal_reason": "observation_unavailable",
+          "admission_reason": "No quote in available exact asset/context evidence."
+        }
+      ]
+    },
+    {
+      "case": "opaque_units_excluded",
+      "coverage": "unavailable",
+      "valued": 0,
+      "total": 2,
+      "side_totals": {},
+      "fairness_state": "unavailable",
+      "reason": "historical_market_package_incomplete",
+      "assets": [
+        {
+          "asset_id": "DTOS-P-1",
+          "value": null,
+          "observed_at": null,
+          "source_knowledge_at": null,
+          "match_state": "UNAVAILABLE",
+          "temporal_reason": "observation_unavailable",
+          "admission_reason": "No quote in available exact asset/context evidence."
+        },
+        {
+          "asset_id": "PICK-2027-R1-ORIG4",
+          "value": null,
+          "observed_at": null,
+          "source_knowledge_at": null,
+          "match_state": "UNAVAILABLE",
+          "temporal_reason": "observation_unavailable",
+          "admission_reason": "No quote in available exact asset/context evidence."
+        }
+      ]
+    },
+    {
+      "case": "old_quotes_existing_estimate_policy",
+      "coverage": "complete",
+      "valued": 2,
+      "total": 2,
+      "side_totals": {
+        "1313066632158924800:franchise:1": 700.0,
+        "1313066632158924800:franchise:2": 350.0
+      },
+      "fairness_state": "estimated_comparison",
+      "reason": "complete_compatible_dated_evidence",
+      "assets": [
+        {
+          "asset_id": "DTOS-P-1",
+          "value": 700.0,
+          "observed_at": "2026-01-01T00:00:00Z",
+          "source_knowledge_at": "2026-01-01T00:00:00Z",
+          "match_state": "DATED_ESTIMATE",
+          "temporal_reason": "older_than_seven_days",
+          "admission_reason": "Compatible dated quote: not an exact trade-time observation."
+        },
+        {
+          "asset_id": "PICK-2027-R1-ORIG4",
+          "value": 350.0,
+          "observed_at": "2026-01-01T00:00:00Z",
+          "source_knowledge_at": "2026-01-01T00:00:00Z",
+          "match_state": "DATED_ESTIMATE",
+          "temporal_reason": "older_than_seven_days",
+          "admission_reason": "Compatible dated quote: not an exact trade-time observation."
+        }
+      ]
+    },
+    {
+      "case": "latest_clock_candidate_incompatible_older_compatible_not_recovered",
+      "coverage": "unavailable",
+      "valued": 0,
+      "total": 2,
+      "side_totals": {},
+      "fairness_state": "unavailable",
+      "reason": "historical_market_package_incomplete",
+      "assets": [
+        {
+          "asset_id": "DTOS-P-1",
+          "value": null,
+          "observed_at": "2026-02-28T00:00:00Z",
+          "source_knowledge_at": "2026-02-28T00:00:00Z",
+          "match_state": "UNAVAILABLE",
+          "temporal_reason": "same_day_or_24h",
+          "admission_reason": "Retained observation lacks compatible provider, units, format or normalization evidence."
+        },
+        {
+          "asset_id": "PICK-2027-R1-ORIG4",
+          "value": null,
+          "observed_at": null,
+          "source_knowledge_at": null,
+          "match_state": "UNAVAILABLE",
+          "temporal_reason": "observation_unavailable",
+          "admission_reason": "No quote in available exact asset/context evidence."
+        }
+      ]
+    },
+    {
+      "case": "explicit_foreign_league_quote_excluded",
+      "coverage": "unavailable",
+      "valued": 0,
+      "total": 2,
+      "side_totals": {},
+      "fairness_state": "unavailable",
+      "reason": "historical_market_package_incomplete",
+      "assets": [
+        {
+          "asset_id": "DTOS-P-1",
+          "value": null,
+          "observed_at": "2026-03-01T00:00:00Z",
+          "source_knowledge_at": "2026-03-01T00:00:00Z",
+          "match_state": "UNAVAILABLE",
+          "temporal_reason": "same_day_or_24h",
+          "admission_reason": "Retained observation belongs to a different league context."
+        },
+        {
+          "asset_id": "PICK-2027-R1-ORIG4",
+          "value": null,
+          "observed_at": null,
+          "source_knowledge_at": null,
+          "match_state": "UNAVAILABLE",
+          "temporal_reason": "observation_unavailable",
+          "admission_reason": "No quote in available exact asset/context evidence."
+        }
+      ]
+    }
+  ],
+  "identity_control": {
+    "date_only_observation_order": "unknown / withheld",
+    "exact_pick": "PICK-2026-R2-ORIG7",
+    "later_converted_player": "DTOS-P-13346",
+    "price_substitution": false,
+    "notice": "Retained Sleeper pick-conversion identity; prices in other cases are synthetic and do not establish coverage."
+  },
+  "gaps_not_corrected": [
+    "Current UI does not display a calculated quote age or package side totals.",
+    "Current package admission permits old dated estimates and does not enforce a maximum age; temporal confidence alone is not the documented freshness policy requested for this feature.",
+    "Explicitly altered legacy-retained incompatible latest row can hide an older compatible candidate; this is a disposable negative control, not a proven production occurrence.",
+    "Historical league-format parity is not established merely by matching provider format across package assets."
+  ],
+  "release": "Not justified by these fixtures; real trade/quote overlap remains unverified."
+}

@@ -1,0 +1,12 @@
+Source: /workspace/dtos @ b982e49ded18455e2fcc4fab58610569cc784343 / 0ca79a715f697147c8081d4d69f1afd7efca9bb4
+Runner: python /workspace/trade-time-market-audit/run-constrained.py <arguments>
+Arguments:
+  /evidence/coverage.py
+  /evidence/contracts.py (final script; see distinct failed-method copies/logs)
+  -m unittest -v tests.test_trade_timeline tests.test_historical_faab_conflicts tests.test_market_trend_compatibility tests.test_historical_intelligence_contract
+  /evidence/phone.py
+  /evidence/limits.py
+  -m unittest -v tests.test_history_followthrough_browser
+Last command receives DTOS_FOLLOWTHROUGH_EVIDENCE=/evidence/followthrough.
+All application execution: source read-only, Python 3.14.3, --memory=2g --memory-swap=2g --cpus=2 --network=none, UID1000, original verified runtime SHA pinned in runner.
+No application changes; mandatory full/canonical/hosted suites and release are not run for this audit.
