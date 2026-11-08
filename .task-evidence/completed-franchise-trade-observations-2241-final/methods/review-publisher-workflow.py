@@ -1,0 +1,12 @@
+from pathlib import Path
+import json,shlex,subprocess,yaml
+root=Path('/workspace/dtos-publisher-2241');b=Path('/workspace/2241-trade-partner-history');p=root/'.github/workflows/canonical-release-recovery.yml';d=yaml.load(p.read_text(),Loader=yaml.BaseLoader);plan=json.loads((root/'.github/release-plans/2241.json').read_text());base=yaml.load(subprocess.check_output(['git','show',plan['baseline']+':.github/workflows/canonical-release-recovery.yml'],cwd=root,text=True),Loader=yaml.BaseLoader);jobs=d['jobs'];pub=jobs['guarded-release-publisher']
+assert pub['permissions']=={'contents':'write','checks':'read','pull-requests':'read','actions':'read'},'Publisher permission scope'
+assert pub['concurrency']['cancel-in-progress']=='false','Publication serialization'
+assert d['on']['workflow_dispatch']['inputs']['release_operation']['options']==['validate','audit','prepare','publish'],'Supported explicit phases'
+assert jobs['canonical-release']['steps']==base['jobs']['canonical-release']['steps'],'Canonical steps/inputs/resources/budgets changed'
+assert jobs['publish-2191']==base['jobs']['publish-2191'],'Legacy publisher changed'
+assert 'inputs.release_operation' in jobs['canonical-release']['if'],'Canonical must not rerun during publication'
+run=next(s['run'] for s in jobs['canonical-release']['steps'] if s.get('name')=='Run unchanged ten-gate validator under actual 2 GiB');line=next(x for x in run.splitlines() if 'docker run --name' in x);args=shlex.split(line.rstrip(' \\'))
+for name,value in [('--memory','2g'),('--memory-swap','2g'),('--cpus','2'),('--network','none')]:assert args[args.index(name)+1]==value,name
+r={'parsed':True,'standard_credential':'Existing GitHub Actions GITHUB_TOKEN; no external Cloud upload','permissions':pub['permissions'],'canonical_steps_byte_semantics_unchanged':True,'canonical_budget':'4500s/77min step/85min job','resource_flags':args,'old2191_job_unchanged_and_not_dispatched':True,'controller_never_merged_into_main':True,'phases':['prepare open PR on unchanged baseline','verify native readback certificate','normal expected-head squash with identical tree','publish immutable tag/evidence from same frozen controller']};(b/'publisher-workflow-review.json').write_text(json.dumps(r,indent=2)+'\n');print('PASS workflow structure, unchanged canonical steps and exact parsed Docker resource flags')

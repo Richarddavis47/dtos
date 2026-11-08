@@ -1,0 +1,49 @@
+/usr/local/lib/python3.14/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+  from starlette.testclient import TestClient as TestClient  # noqa
+test_complete_observed_empty_scope_can_support_zero (tests.test_completed_trade_observations.CompletedTradeObservationTests.test_complete_observed_empty_scope_can_support_zero) ... ok
+test_conflicting_exact_pick_directions_do_not_invent_a_transfer (tests.test_completed_trade_observations.CompletedTradeObservationTests.test_conflicting_exact_pick_directions_do_not_invent_a_transfer) ... ok
+test_empty_partial_history_is_unknown_not_a_zero (tests.test_completed_trade_observations.CompletedTradeObservationTests.test_empty_partial_history_is_unknown_not_a_zero) ... INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:2 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:2 "HTTP/1.1 200 OK"
+ok
+test_incomplete_exact_pick_identity_keeps_only_supported_lower_bounds (tests.test_completed_trade_observations.CompletedTradeObservationTests.test_incomplete_exact_pick_identity_keeps_only_supported_lower_bounds) ... INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:2 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:2 "HTTP/1.1 200 OK"
+ok
+test_manager_change_never_backdates_counts_to_current_manager (tests.test_completed_trade_observations.CompletedTradeObservationTests.test_manager_change_never_backdates_counts_to_current_manager) ... INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:2 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:2 "HTTP/1.1 200 OK"
+ok
+test_multiple_firsts_and_multiteam_directions_count_assets_and_deals_separately (tests.test_completed_trade_observations.CompletedTradeObservationTests.test_multiple_firsts_and_multiteam_directions_count_assets_and_deals_separately) ... INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:2 "HTTP/1.1 200 OK"
+ok
+test_other_league_never_receives_day_trade_references (tests.test_completed_trade_observations.CompletedTradeObservationTests.test_other_league_never_receives_day_trade_references) ... INFO:httpx:HTTP Request: GET http://testserver/history/team/1319750579458686976:franchise:4 "HTTP/1.1 200 OK"
+ok
+test_pagination_does_not_recount_a_visible_page_as_the_sample (tests.test_completed_trade_observations.CompletedTradeObservationTests.test_pagination_does_not_recount_a_visible_page_as_the_sample) ... ok
+test_pending_rejected_waivers_and_corrections_are_not_completed_trades (tests.test_completed_trade_observations.CompletedTradeObservationTests.test_pending_rejected_waivers_and_corrections_are_not_completed_trades) ... ok
+test_reads_do_not_build_intelligence_or_write_history (tests.test_completed_trade_observations.CompletedTradeObservationTests.test_reads_do_not_build_intelligence_or_write_history) ... INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:4 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:4 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:4 "HTTP/1.1 200 OK"
+ok
+test_retained_day_counts_match_original_directed_consideration (tests.test_completed_trade_observations.CompletedTradeObservationTests.test_retained_day_counts_match_original_directed_consideration) ... FAIL
+test_source_change_withholds_the_whole_numeric_summary (tests.test_completed_trade_observations.CompletedTradeObservationTests.test_source_change_withholds_the_whole_numeric_summary) ... ok
+test_supported_zero_is_only_a_zero_within_observed_trades (tests.test_completed_trade_observations.CompletedTradeObservationTests.test_supported_zero_is_only_a_zero_within_observed_trades) ... INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:2 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:2 "HTTP/1.1 200 OK"
+ok
+test_undated_completed_trade_is_not_given_a_creation_based_window (tests.test_completed_trade_observations.CompletedTradeObservationTests.test_undated_completed_trade_is_not_given_a_creation_based_window) ... INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:2 "HTTP/1.1 200 OK"
+ok
+
+======================================================================
+FAIL: test_retained_day_counts_match_original_directed_consideration (tests.test_completed_trade_observations.CompletedTradeObservationTests.test_retained_day_counts_match_original_directed_consideration)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_completed_trade_observations.py", line 42, in test_retained_day_counts_match_original_directed_consideration
+    self.assertEqual(row['first_completion_at'], '2026-03-01T14:01:05.246000+00:00')
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: '2026-03-01T14:01:05.246000Z' != '2026-03-01T14:01:05.246000+00:00'
+- 2026-03-01T14:01:05.246000Z
+?                           ^
++ 2026-03-01T14:01:05.246000+00:00
+?                           ^^^^^^
+
+
+----------------------------------------------------------------------
+Ran 14 tests in 7.002s
+
+FAILED (failures=1)

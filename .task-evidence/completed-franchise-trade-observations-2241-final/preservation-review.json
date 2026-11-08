@@ -1,0 +1,44 @@
+{
+  "candidate": "8355f19a0ae89ad8ceaee17a1e89f3d586be9660",
+  "tree": "d8ee85a9fe6b9f54c3bd31140fa2f9c8267dcd7f",
+  "protected_paths_byte_unchanged": [
+    "src/core",
+    "src/core/trade_intelligence",
+    "src/core/intelligence",
+    "src/core/asset_market",
+    "src/core/valuation",
+    "src/core/fois",
+    "src/platform",
+    "services/sleeper.py",
+    "services/league_preparation.py",
+    "services/player_evidence.py",
+    "services/matchup_season.py",
+    "src/core/accounts",
+    "static/js/contextual_navigation.js",
+    "static/js/trade_workspace.js"
+  ],
+  "source_changes": [
+    ".github/workflows/product-browser.yml",
+    "CHANGELOG.md",
+    "RELEASE_NOTES.md",
+    "app_metadata.py",
+    "docs/audits/COMPLETED_TRADE_OBSERVATIONS_2241.md",
+    "services/franchise_timeline.py",
+    "src/ui/franchise_timeline.py",
+    "tests/test_completed_trade_observations.py",
+    "tests/test_completed_trade_observations_browser.py"
+  ],
+  "new_counter_consumers": "Only services/franchise_timeline.py, src/ui/franchise_timeline.py and regression tests; no persisted publication or analytical input",
+  "preserved_policies": [
+    "2GiB cap",
+    "16x restoration allowance",
+    "FOIS768MiB",
+    "Trade256+128MiB",
+    "Sleeper-only fantasy results/projections",
+    "neutral/custom separation",
+    "saved settings/rankings",
+    "submitted lineups",
+    "FOIS retained grades"
+  ],
+  "passed": true
+}

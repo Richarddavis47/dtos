@@ -1,0 +1,92 @@
+/usr/local/lib/python3.14/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+  from starlette.testclient import TestClient as TestClient  # noqa
+test_complete_observed_empty_scope_can_support_zero (tests.test_completed_trade_observations.CompletedTradeObservationTests.test_complete_observed_empty_scope_can_support_zero) ... ok
+test_conflicting_exact_pick_directions_do_not_invent_a_transfer (tests.test_completed_trade_observations.CompletedTradeObservationTests.test_conflicting_exact_pick_directions_do_not_invent_a_transfer) ... ok
+test_empty_partial_history_is_unknown_not_a_zero (tests.test_completed_trade_observations.CompletedTradeObservationTests.test_empty_partial_history_is_unknown_not_a_zero) ... INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:2 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:2 "HTTP/1.1 200 OK"
+ok
+test_future_completion_cannot_establish_an_observed_completed_trade (tests.test_completed_trade_observations.CompletedTradeObservationTests.test_future_completion_cannot_establish_an_observed_completed_trade) ... ok
+test_incomplete_exact_pick_identity_keeps_only_supported_lower_bounds (tests.test_completed_trade_observations.CompletedTradeObservationTests.test_incomplete_exact_pick_identity_keeps_only_supported_lower_bounds) ... INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:2 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:2 "HTTP/1.1 200 OK"
+ok
+test_manager_change_never_backdates_counts_to_current_manager (tests.test_completed_trade_observations.CompletedTradeObservationTests.test_manager_change_never_backdates_counts_to_current_manager) ... INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:2 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:2 "HTTP/1.1 200 OK"
+ok
+test_multiple_firsts_and_multiteam_directions_count_assets_and_deals_separately (tests.test_completed_trade_observations.CompletedTradeObservationTests.test_multiple_firsts_and_multiteam_directions_count_assets_and_deals_separately) ... INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:2 "HTTP/1.1 200 OK"
+ok
+test_other_league_never_receives_day_trade_references (tests.test_completed_trade_observations.CompletedTradeObservationTests.test_other_league_never_receives_day_trade_references) ... INFO:httpx:HTTP Request: GET http://testserver/history/team/1319750579458686976:franchise:4 "HTTP/1.1 200 OK"
+ok
+test_pagination_does_not_recount_a_visible_page_as_the_sample (tests.test_completed_trade_observations.CompletedTradeObservationTests.test_pagination_does_not_recount_a_visible_page_as_the_sample) ... ok
+test_pending_rejected_waivers_and_corrections_are_not_completed_trades (tests.test_completed_trade_observations.CompletedTradeObservationTests.test_pending_rejected_waivers_and_corrections_are_not_completed_trades) ... ok
+test_reads_do_not_build_intelligence_or_write_history (tests.test_completed_trade_observations.CompletedTradeObservationTests.test_reads_do_not_build_intelligence_or_write_history) ... INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:4 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:4 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:4 "HTTP/1.1 200 OK"
+ok
+test_retained_day_counts_match_original_directed_consideration (tests.test_completed_trade_observations.CompletedTradeObservationTests.test_retained_day_counts_match_original_directed_consideration) ... INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:4 "HTTP/1.1 200 OK"
+ok
+test_same_exact_pick_in_later_trade_counts_a_separate_directed_transfer (tests.test_completed_trade_observations.CompletedTradeObservationTests.test_same_exact_pick_in_later_trade_counts_a_separate_directed_transfer) ... ok
+test_source_change_withholds_the_whole_numeric_summary (tests.test_completed_trade_observations.CompletedTradeObservationTests.test_source_change_withholds_the_whole_numeric_summary) ... ok
+test_supported_zero_is_only_a_zero_within_observed_trades (tests.test_completed_trade_observations.CompletedTradeObservationTests.test_supported_zero_is_only_a_zero_within_observed_trades) ... INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:2 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:2 "HTTP/1.1 200 OK"
+ok
+test_undated_completed_trade_is_not_given_a_creation_based_window (tests.test_completed_trade_observations.CompletedTradeObservationTests.test_undated_completed_trade_is_not_given_a_creation_based_window) ... INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:2 "HTTP/1.1 200 OK"
+ok
+test_unlinked_source_season_is_not_current_franchise_behavior (tests.test_completed_trade_observations.CompletedTradeObservationTests.test_unlinked_source_season_is_not_current_franchise_behavior) ... INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:2 "HTTP/1.1 200 OK"
+ok
+test_retained_counts_links_back_and_four_viewports (tests.test_completed_trade_observations_browser.CompletedTradeObservationBrowserTests.test_retained_counts_links_back_and_four_viewports) ... Validation Chromium: /usr/bin/chromium
+Validation Chromium version: 156.0.8078.73
+{"timestamp":"2026-11-08T17:57:38.819160+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:4 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T17:57:38.891728+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T17:57:38.895231+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T17:57:38.948835+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/favicon.ico \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-08T17:57:39.633884+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/history/1333655835015942144 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T17:57:39.660419+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T17:57:39.662295+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T17:57:39.663365+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/history-production.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T17:57:39.722081+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/account/navigation-context \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T17:57:39.749553+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:4 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T17:57:40.008891+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:4 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T17:57:40.087972+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T17:57:40.091307+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T17:57:40.815087+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/history/1333655835015942144 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T17:57:40.834927+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T17:57:40.840720+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T17:57:40.843472+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/history-production.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T17:57:40.919695+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/account/navigation-context \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T17:57:40.951022+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:4 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T17:57:41.218292+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:4 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T17:57:41.288978+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T17:57:41.295627+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T17:57:41.943099+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/history/1333655835015942144 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T17:57:41.964600+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T17:57:41.965910+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/history-production.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T17:57:41.966844+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T17:57:42.036197+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/account/navigation-context \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T17:57:42.070395+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:4 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T17:57:42.315653+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:4 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T17:57:42.390721+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T17:57:42.395586+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T17:57:43.026281+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/history/1333655835015942144 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T17:57:43.049886+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T17:57:43.050243+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T17:57:43.052669+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/history-production.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T17:57:43.120796+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/account/navigation-context \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T17:57:43.149652+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:4 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T17:57:43.525150+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/team/1319750579458686976:franchise:1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T17:57:43.593028+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T17:57:43.593790+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T17:57:44.311095+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/team/1319750579458686976:franchise:1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T17:57:44.331265+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T17:57:44.335547+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T17:57:45.197362+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/team/1319750579458686976:franchise:1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T17:57:45.223072+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T17:57:45.233714+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T17:57:46.028185+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/team/1319750579458686976:franchise:1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T17:57:46.095381+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T17:57:46.099491+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+ok
+
+----------------------------------------------------------------------
+Ran 18 tests in 18.752s
+
+OK

@@ -1,0 +1,606 @@
+diff --git a/.github/workflows/product-browser.yml b/.github/workflows/product-browser.yml
+index ebcbd39c..03e771ed 100644
+--- a/.github/workflows/product-browser.yml
++++ b/.github/workflows/product-browser.yml
+@@ -43,7 +43,7 @@ jobs:
+         timeout-minutes: 5
+         run: |
+           mkdir -p .validation/current-season-history .validation/history-followthrough .validation/market-history-coverage .validation/current-production-coverage
+-          docker run --rm --init --memory=2g --memory-swap=2g --cpus=2 --network=none -e NODE_OPTIONS -e DTOS_CURRENT_HISTORY_EVIDENCE=.validation/current-season-history -e DTOS_FOLLOWTHROUGH_EVIDENCE=.validation/history-followthrough -e DTOS_MARKET_HISTORY_EVIDENCE=.validation/market-history-coverage -e DTOS_PRODUCTION_COVERAGE_EVIDENCE=.validation/current-production-coverage -v "$PWD:$PWD" -w "$PWD" -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0="$PWD" dtos-browser-validation python -m unittest -v tests.test_current_season_franchise_history tests.test_current_season_history_browser tests.test_history_followthrough tests.test_history_followthrough_browser tests.test_market_history_coverage tests.test_market_history_coverage_browser tests.test_sleeper_actual_results tests.test_sleeper_actual_restoration tests.test_current_production_coverage tests.test_current_production_browser
++          docker run --rm --init --memory=2g --memory-swap=2g --cpus=2 --network=none -e NODE_OPTIONS -e DTOS_CURRENT_HISTORY_EVIDENCE=.validation/current-season-history -e DTOS_FOLLOWTHROUGH_EVIDENCE=.validation/history-followthrough -e DTOS_COMPLETED_TRADE_OBSERVATIONS_EVIDENCE=.validation/history-followthrough/completed-trade-observations -e DTOS_MARKET_HISTORY_EVIDENCE=.validation/market-history-coverage -e DTOS_PRODUCTION_COVERAGE_EVIDENCE=.validation/current-production-coverage -v "$PWD:$PWD" -w "$PWD" -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0="$PWD" dtos-browser-validation python -m unittest -v tests.test_current_season_franchise_history tests.test_current_season_history_browser tests.test_history_followthrough tests.test_history_followthrough_browser tests.test_market_history_coverage tests.test_market_history_coverage_browser tests.test_sleeper_actual_results tests.test_sleeper_actual_restoration tests.test_current_production_coverage tests.test_current_production_browser tests.test_completed_trade_observations tests.test_completed_trade_observations_browser
+       - name: Preserve current-season history evidence
+         if: always()
+         uses: actions/upload-artifact@v4
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index 91df427a..9a8d1515 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -1,3 +1,11 @@
++# v1.22.26 / build 2241 — Completed franchise trade observations
++
++Franchise History adds a compact descriptive sample of supported completed trades and directed first-round pick transfers. It separates assets from transactions, preserves exact year/round/original-franchise picks, shows the supported completion-date window and source-season coverage, and links to existing completed-trade evidence. Counts span the admitted retained sample rather than the visible pagination page.
++
++Unknown history and incomplete consideration do not become zero. Unlinked or unverified source-season franchise continuity is excluded, and all observations remain franchise history rather than claims about the current manager’s intent. Same-season firsts are not automatically labeled future capital. Pending/rejected transactions, waivers, corrections and draft selections are excluded from completed-trade counts. Existing history, manager and Trade surfaces remain available.
++
++No provider acquisition or new durable data store is added. Trade qualification/counterparty scores, valuation, scoring, projections/results, FOIS grades, saved settings, submitted lineups and memory/admission policies are unchanged. Release requires all source-pinned local/hosted gates and the guarded Actions publisher. See docs/audits/COMPLETED_TRADE_OBSERVATIONS_2241.md for retained versus disposable evidence and live-access limits.
++
+ # v1.22.25 / build 2240 — Readable trade-time Market quotes
+ 
+ Completed-trade history now selects the latest eligible compatible retained quote after checking exact asset identity, source/knowledge clocks, scope and existing Market semantics. A newer incompatible or foreign-scope record no longer masks an older supported value. Unresolved same-instant price conflicts remain unknown, including the two existing pick-type context aliases. Foreign-scope raw evidence is not exposed.
+diff --git a/RELEASE_NOTES.md b/RELEASE_NOTES.md
+index a6029574..b001e663 100644
+--- a/RELEASE_NOTES.md
++++ b/RELEASE_NOTES.md
+@@ -1,3 +1,11 @@
++# v1.22.26 / build 2241 — Completed franchise trade observations
++
++Franchise History adds a compact descriptive sample of supported completed trades and directed first-round pick transfers. It separates assets from transactions, preserves exact year/round/original-franchise picks, shows the supported completion-date window and source-season coverage, and links to existing completed-trade evidence. Counts span the admitted retained sample rather than the visible pagination page.
++
++Unknown history and incomplete consideration do not become zero. Unlinked or unverified source-season franchise continuity is excluded, and all observations remain franchise history rather than claims about the current manager’s intent. Same-season firsts are not automatically labeled future capital. Pending/rejected transactions, waivers, corrections and draft selections are excluded from completed-trade counts. Existing history, manager and Trade surfaces remain available.
++
++No provider acquisition or new durable data store is added. Trade qualification/counterparty scores, valuation, scoring, projections/results, FOIS grades, saved settings, submitted lineups and memory/admission policies are unchanged. Release requires all source-pinned local/hosted gates and the guarded Actions publisher. See docs/audits/COMPLETED_TRADE_OBSERVATIONS_2241.md for retained versus disposable evidence and live-access limits.
++
+ # v1.22.25 / build 2240 — Readable trade-time Market quotes
+ 
+ Completed-trade history now selects the latest eligible compatible retained quote after checking exact asset identity, source/knowledge clocks, scope and existing Market semantics. A newer incompatible or foreign-scope record no longer masks an older supported value. Unresolved same-instant price conflicts remain unknown, including the two existing pick-type context aliases. Foreign-scope raw evidence is not exposed.
+diff --git a/app_metadata.py b/app_metadata.py
+index 0a7e08f8..3d748eba 100644
+--- a/app_metadata.py
++++ b/app_metadata.py
+@@ -7,10 +7,10 @@ from datetime import datetime, timezone
+ from pathlib import Path
+ 
+ APPLICATION_NAME = "DTOS"
+-VERSION = "1.22.25"
+-PRODUCT_VERSION = "1.22.25"
+-BUILD_NUMBER = 2240
+-RELEASE_CODENAME = "Trade-time Market Evidence"
++VERSION = "1.22.26"
++PRODUCT_VERSION = "1.22.26"
++BUILD_NUMBER = 2241
++RELEASE_CODENAME = "Franchise Trade Observations"
+ APPLICATION_STARTED_AT = datetime.now(timezone.utc).isoformat()
+ 
+ _REPOSITORY_ROOT = Path(__file__).resolve().parent
+diff --git a/docs/audits/COMPLETED_TRADE_OBSERVATIONS_2241.md b/docs/audits/COMPLETED_TRADE_OBSERVATIONS_2241.md
+new file mode 100644
+index 00000000..19db69bd
+--- /dev/null
++++ b/docs/audits/COMPLETED_TRADE_OBSERVATIONS_2241.md
+@@ -0,0 +1,33 @@
++# Completed franchise trade observations — build 2241
++
++## Baseline and existing behavior
++
++Production v1.22.25/build 2240 reports ready on commit 55eeb20f27c7e3380c1c4f70e3f2151a7ea1d5e8, tree f620d835c7b687d79d602ee5304f328aae95edef. Clean current main and existing work were checked before editing; no related unfinished PR was found. Tag/release v1.22.26 was unused. The repository roadmap and release contracts were reviewed.
++
++League already shows franchise completed-trade participation, supported aggregate pick transfers, source coverage, manager-attribution limits and sampled original-trade links. Team HQ reuses that source-qualified context. Franchise History has the stronger existing source-linked season, transaction/attempt, exact-pick and ownership qualifications. FOIS and Trade Center retain their own prepared manager evidence; they are not replaced or rescored.
++
++The addition belongs to the existing Franchise History surface: first-round transfers and their transaction denominators, completion-date window and all-page sample were not previously summarized there. This avoids a duplicate League intelligence pipeline or new Trade input.
++
++## Retained source coverage
++
++The existing read-only October 12, 2026 Sleeper capture `tests/fixtures/trade_timeline_sources.json` contains two Day Traders completed trades, four first-round transfers in one trade, and partial acquired periods. In the existing canonical replay, franchise 4 has two supported completed trades, three firsts acquired in one trade and one first sent in one trade. Completion observations run from March 1 to October 11, 2026. Exact original franchises remain 5, 7 and 8 rather than their sending or receiving owners. These are retained replay facts, not a fresh production sample or complete season coverage.
++
++The Arkham capture in the same file has no completed trades; partial coverage means unknown history, not zero trading. The separate `home_news_recent_trades.json` capture overlaps a Day event and must not be summed with it as independent activity. `historical_archive_source.json` contains 22 older completed source trades and eight first-round transfers in seven trades; that raw screen does not establish current-franchise continuity for every record. Only the existing timeline's compatible, source-linked franchise records enter the feature. No provider acquisition or historical backfill was performed.
++
++## Counting and scope contract
++
++The factual timeline already deduplicates source league plus transaction ID, withholds conflicting versions, admits only completed source movements and preserves source-season compatibility. The new bounded, display-only accumulator consumes those existing rows before pagination. Only completed trades with linked source-season continuity, observed franchise identity and supported participant membership count. Unconfirmed continuity is explicitly excluded. Waivers, non-trade corrections, draft selections and pending/rejected/cancelled/unknown attempts cannot count as completed trades.
++
++Exact directed consideration and completion clocks reuse the existing shared `_movement_evidence` and `_clock` contracts. First-round transfer counts distinguish assets from deals. Multiple firsts in one deal are multiple transfers but one participating transaction; duplicate legs collapse; conflicting directions remain unknown. The same exact pick moved in a later completed deal is another transfer. Every supported pick year is included; a same-season first is not inferred to be future capital. Exact year, round and original-franchise identities survive the link to the existing trade dossier.
++
++Known positive counts remain supported subsets when pick consideration is incomplete. A zero requires complete consideration within the observed trade sample; an empty history supports zero only with complete compatible source coverage. Undated completed trades contribute to the season sample without receiving a creation-based completion window. The outer source-revision check withholds the summary if evidence changes during assembly. References remain bounded to 12 trades and four listed picks per direction; the existing full timeline/pagination remains available.
++
++No manager-specific attribution is asserted. All observations are franchise history and do not establish current intent, willingness to accept, acceptance probability, skill or decision quality. These fields are not consumed by Trade qualification, counterparty scores, valuation or FOIS. Retained grades remain RETAINED / NOT REVALIDATED.
++
++## Resources, navigation and validation boundaries
++
++The accumulator uses the already-read canonical transaction archive and constant counters plus bounded references. No extra retained source store, provider request, source synchronization, worker/lease or intelligence build is added on page render. Existing account/league scope and authenticated contextual Back are preserved. Trade/FOIS reserves, restoration allowance, the 2 GiB cap, scoring, Sleeper results/projections, exact picks, submitted lineups and saved settings are unchanged.
++
++The first 14-test focused run had one test-only failure comparing equivalent `Z` and `+00:00` UTC spellings. The control now compares the canonical timestamp to the retained source instant; original count/identity assertions are preserved. The subsequent 44-test focused run passed. The broader 106-test preliminary run, including browser journeys, also passed before final metadata/source sealing. An additional 18-test feature/browser pass completed after the compact presentation and repeated-pick-transfer control were added; it is also preliminary until the exact committed source is tested. Final exact-source focused, full local/canonical and hosted validation remain required; this source note does not claim their future outcomes.
++
++Read-only public production identity is verified. The existing browser connector was checked and reports disconnected; no Render Shell executor is attached. The unchanged external inspection 401 was not retried. Private live franchise acceptance remains unverified. No production entry, sync, FOIS rebuild, Trade search, restart, cache clear, credential change or saved-data mutation was performed. Chromium phone/touch emulation is not physical iPhone/Safari acceptance.
+diff --git a/services/franchise_timeline.py b/services/franchise_timeline.py
+index 82657e45..25014f28 100644
+--- a/services/franchise_timeline.py
++++ b/services/franchise_timeline.py
+@@ -7,6 +7,81 @@ from src.core.history_context.coverage import transaction_coverage_summary
+ from src.core.history_context.ownership import reconcile_ownership
+ 
+ 
++class _CompletedTradeObservations:
++    """Display-only counters over the timeline's admitted, source-linked trades.
++
++    Never supplied to Trade/FOIS intelligence. Exact directed consideration and
++    completion clocks reuse their existing contracts; references stay bounded.
++    """
++    def __init__(self, roster_id):
++        self.roster_id = str(roster_id)
++        self.trades = self.unattributed = self.dated = self.pick_covered = 0
++        self.firsts_received = self.firsts_sent = 0
++        self.receiving_trades = self.sending_trades = 0
++        self.earliest = self.latest = None
++        self.references = []
++
++    def observe(self, row, raw, *, identity_observed):
++        if row['kind'] != 'trade' or not row['completed']:
++            return
++        if row['attribution'] != 'source-linked roster-slot continuity' or not identity_observed:
++            self.unattributed += 1
++            return
++        from datetime import datetime, timezone
++        from src.core.gm_behavioral_intelligence.diagnostics import _clock, _movement_evidence
++        participants, movements, _, categories = _movement_evidence(raw)
++        if self.roster_id not in participants:
++            self.unattributed += 1
++            return
++        self.trades += 1
++        self.pick_covered += int(categories.get('pick') is True)
++        clock = _clock(raw, datetime.now(timezone.utc))
++        if clock:
++            self.dated += 1
++            self.earliest = min(self.earliest, clock) if self.earliest else clock
++            self.latest = max(self.latest, clock) if self.latest else clock
++        incoming, outgoing = [], []
++        for kind, identity, sender, receiver, _ in movements:
++            if kind != 'pick' or int(identity.split('-')[2][1:]) != 1:
++                continue
++            if receiver == self.roster_id:
++                incoming.append(identity)
++            if sender == self.roster_id:
++                outgoing.append(identity)
++        self.firsts_received += len(incoming)
++        self.firsts_sent += len(outgoing)
++        self.receiving_trades += int(bool(incoming))
++        self.sending_trades += int(bool(outgoing))
++        if row['detail_url'] and len(self.references) < 12:
++            self.references.append({'url': row['detail_url'], 'transaction_id': row['id'],
++                'season': row['season'], 'completion_at': clock,
++                'firsts_received': incoming[:4], 'firsts_sent': outgoing[:4]})
++
++    def result(self, *, seasons, stable, earlier_gap):
++        complete = bool(seasons) and all(s['state'] == 'complete' for s in seasons)
++        complete = complete and not earlier_gap and not self.unattributed
++        known = stable and (self.trades > 0 or complete)
++        picks_known = known and self.pick_covered == self.trades
++        return {'state': 'complete' if known and complete else 'partial' if known else 'unknown',
++            'completed_trades': self.trades if known else None,
++            'firsts_received': self.firsts_received if known and (picks_known or self.firsts_received) else None,
++            'firsts_sent': self.firsts_sent if known and (picks_known or self.firsts_sent) else None,
++            'receiving_trades': self.receiving_trades if known and (picks_known or self.receiving_trades) else None,
++            'sending_trades': self.sending_trades if known and (picks_known or self.sending_trades) else None,
++            'pick_covered_trades': self.pick_covered if known else None,
++            'pick_counts_complete_in_sample': picks_known,
++            'dated_trades': self.dated if known else None,
++            'first_completion_at': self.earliest if known else None,
++            'last_completion_at': self.latest if known else None,
++            'source_seasons': [s['season'] for s in seasons],
++            'unattributed_source_trades': self.unattributed,
++            'references': self.references if known else [],
++            'reason': ('Source changed while the page was assembled; reload for coherent observations.' if not stable else
++                       'All listed source seasons have complete transaction coverage.' if complete else
++                       'Only supported retained trades are counted. Missing periods and unconfirmed franchise continuity remain unknown.'),
++            'attribution': 'Franchise history. These observations do not establish the current manager’s past decisions, present intent or willingness to trade.'}
++
++
+ def franchise_timeline(graph, roster_id, *, page=1, per_page=25):
+     roster_id = str(roster_id)
+     target = f'{graph.league_id}:franchise:{roster_id}'
+@@ -75,6 +150,7 @@ def franchise_timeline(graph, roster_id, *, page=1, per_page=25):
+     summarize_activity(((r['season'], r['source']['source_league_id'], r['raw']) for _, r in unique.values()), [],
+         on_completed=lambda league, tid: completed.add((league, tid)))
+     events, attempts = [], []
++    trade_observations = _CompletedTradeObservations(roster_id)
+     for key, (_, r) in unique.items():
+         parties = {str(x) for x in r['roster_ids']}
+         parties.update(str(x) for field in ('adds', 'drops') for x in r[field].values())
+@@ -118,6 +194,7 @@ def franchise_timeline(graph, roster_id, *, page=1, per_page=25):
+                 row['incomplete_pick_identity'] = True
+                 row['reason'] = ((row['reason'] + ' ') if row['reason'] else '') + 'Exact draft-pick identity is incomplete; known movement fields remain visible, but no missing year, round or original franchise is inferred.'
+                 row['detail_url'] = None
++        trade_observations.observe(row, r['raw'], identity_observed=any(r['season'] == year for r in own))
+         (events if admitted else attempts).append(row)
+ 
+     drafts = retained('draft_pick')
+@@ -176,6 +253,7 @@ def franchise_timeline(graph, roster_id, *, page=1, per_page=25):
+     pages = max(1, (len(events) + per_page - 1) // per_page)
+     page = min(max(1, page), pages)
+     return {'franchise_id': target, 'seasons': seasons, 'events': events[(page - 1) * per_page:page * per_page],
++        'completed_trade_observations': trade_observations.result(seasons=seasons, stable=stable, earlier_gap=bool(cursor)),
+         'attempts': attempts[:50], 'attempts_total': len(attempts), 'total': len(events), 'page': page,
+         'pages': pages, 'per_page': per_page, 'ownership': ownership, 'stable_source': stable,
+         'earlier_link_gap': bool(cursor), 'provider_calls': 0,
+diff --git a/src/ui/franchise_timeline.py b/src/ui/franchise_timeline.py
+index 64022389..934ce1d3 100644
+--- a/src/ui/franchise_timeline.py
++++ b/src/ui/franchise_timeline.py
+@@ -3,6 +3,45 @@ from html import escape
+ from urllib.parse import quote
+ 
+ 
++def _completed_trade_observations(view):
++    """A factual sample, independent of every manager/Trade/FOIS score."""
++    row = view.get('completed_trade_observations') or {}
++    count = row.get('completed_trades')
++    heading = '<section class="card franchise-trades fh-trades" aria-labelledby="fh-trades-title"><h3 id="fh-trades-title">Completed trade observations</h3>'
++    if count is None:
++        excluded = ('<p>' + str(row['unattributed_source_trades']) + ' source-season trades are excluded because franchise continuity or identity is unconfirmed.</p>') if row.get('unattributed_source_trades') else ''
++        return heading + '<p>Completed trade counts and first-round pick totals are unknown from the available compatible history.</p><p>' + escape(row.get('reason') or 'Review the source-season coverage below; missing history is not no activity.') + '</p>' + excluded + '</section>'
++    def metric(direction, deals, label):
++        value = row.get(direction)
++        if value is None:
++            return '<p><b>' + label + ':</b> Unknown; exact pick consideration is incomplete.</p>'
++        prefix = '' if row['pick_counts_complete_in_sample'] else 'At least '
++        return '<p><b>' + label + ':</b> ' + prefix + str(value) + (' pick transfer' if value == 1 else ' pick transfers') + ' across ' + prefix.lower() + str(row[deals]) + (' completed trade' if row[deals] == 1 else ' completed trades') + '.</p>'
++    body = heading + '<p><b>' + str(count) + ' completed trades observed from retained Sleeper records.</b></p>'
++    body += metric('firsts_received', 'receiving_trades', 'First-round picks acquired')
++    body += metric('firsts_sent', 'sending_trades', 'First-round picks sent')
++    first, last = row.get('first_completion_at'), row.get('last_completion_at')
++    body += ('<p>Observed completion dates: <time datetime="' + escape(first) + '">' + escape(first[:10])
++             + '</time> to <time datetime="' + escape(last) + '">' + escape(last[:10]) + '</time> UTC.</p>') if first and last else '<p>Completion date window unknown; no supported completion times are retained.</p>'
++    body += '<p>Coverage: ' + escape(row['state']) + '. ' + escape(row['reason']) + '</p>'
++    body += '<p>Franchise history. Current managerial intent is unconfirmed.</p>'
++    body += '<details><summary>Coverage and supporting completed trades · up to 12</summary><p>Each transaction is counted once for this franchise; pick transfers count assets separately.</p><p>' + escape(row['attribution']) + '</p>'
++    body += '<p>' + str(row['dated_trades']) + ' of ' + str(count) + ' trades have supported completion times. Undated trades contribute only to the observed season sample.</p>'
++    body += '<p>Source seasons: ' + escape(', '.join(map(str, row['source_seasons']))) + '.</p>'
++    body += '<p>' + str(row['pick_covered_trades']) + ' of ' + str(count) + ' trades have complete exact-pick consideration. Counts apply to this observed sample; unacquired periods are not zero activity.</p>'
++    body += '<p>First-round picks include every supported pick year. A same-season pick is not automatically described as future capital. A pick moved again in another trade counts as another transfer. These are descriptive records, not a recommendation or a judgment of past decisions.</p>'
++    if row['unattributed_source_trades']:
++        body += '<p>' + str(row['unattributed_source_trades']) + ' source-season trades are excluded because franchise continuity or identity is unconfirmed.</p>'
++    links = []
++    for ref in row['references']:
++        details = ''.join('<p>First-round picks ' + direction + ': ' + escape(', '.join(ref[key])) + '.</p>'
++                          for key, direction in (('firsts_received', 'acquired'), ('firsts_sent', 'sent')) if ref[key])
++        links.append('<li><a href="' + escape(ref['url']) + '">' + escape(str(ref['season'])) + ' · completed trade ' + escape(ref['transaction_id']) + '</a>' + details + '</li>')
++    if links:
++        body += '<p>Sample evidence links; full retained events and pagination remain below. Up to four exact picks per direction are listed for each link.</p><ul>' + ''.join(links) + '</ul>'
++    return body + '</details></section>'
++
++
+ def render_franchise_timeline(view):
+     def text(value):
+         return escape(str(value))
+@@ -60,4 +99,4 @@ def render_franchise_timeline(view):
+     for n, label in ((view['page'] - 1, 'Previous events'), (view['page'] + 1, 'Next events')):
+         if 1 <= n <= view['pages']:
+             links.append('<a class="ds-action" href="/history/team/' + quote(view['franchise_id'], safe=':') + '?events_page=' + str(n) + '">' + label + '</a>')
+-    return '''<style>.franchise-timeline{min-width:0;overflow-wrap:anywhere}.franchise-timeline .grid{grid-template-columns:repeat(auto-fit,minmax(min(260px,100%),1fr))}.franchise-timeline article{min-width:0}.franchise-timeline summary,.franchise-timeline a{min-height:44px;padding:10px 0;display:block}.franchise-timeline summary{cursor:pointer}.franchise-timeline :focus-visible{outline:2px solid #86efac;outline-offset:3px}.franchise-timeline ul{padding-left:20px}</style>''' + '<section class="franchise-timeline"><h3>Franchise transaction timeline</h3><p>' + text(view['qualification']) + '</p>' + changes + ('<p>Earlier linked source-season metadata is unavailable; earlier history remains unknown.</p>' if view['earlier_link_gap'] else '') + '<p>Historical FOIS grades remain RETAINED / NOT REVALIDATED. This factual timeline does not calculate retrospective grades or historical Market values.</p><div class="grid fh-coverage">' + ''.join(cards) + '</div><h3>Completed movements and observed draft selections</h3><p>' + str(view['total']) + ' supported events · page ' + str(view['page']) + ' of ' + str(view['pages']) + '. Undated events are grouped by source identity, not a proven chronological sequence.</p><div class="fh-events">' + ''.join(events) + '</div>' + ''.join(links) + attempts + '</section>'
++    return '''<style>.franchise-timeline{min-width:0;overflow-wrap:anywhere}.franchise-timeline .grid{grid-template-columns:repeat(auto-fit,minmax(min(260px,100%),1fr))}.franchise-timeline article{min-width:0}.franchise-timeline summary,.franchise-timeline a{min-height:44px;padding:10px 0;display:block}.franchise-timeline summary{cursor:pointer}.franchise-timeline :focus-visible{outline:2px solid #86efac;outline-offset:3px}.franchise-timeline ul{padding-left:20px}.franchise-trades{min-width:0;overflow-wrap:anywhere}.franchise-trades summary,.franchise-trades a{min-height:44px;padding:10px 0;display:block}.franchise-trades summary{cursor:pointer}.franchise-trades :focus-visible{outline:2px solid #86efac;outline-offset:3px}.franchise-trades ul{padding-left:20px}</style>''' + _completed_trade_observations(view) + '<section class="franchise-timeline"><h3>Franchise transaction timeline</h3><p>' + text(view['qualification']) + '</p>' + changes + ('<p>Earlier linked source-season metadata is unavailable; earlier history remains unknown.</p>' if view['earlier_link_gap'] else '') + '<p>Historical FOIS grades remain RETAINED / NOT REVALIDATED. This factual timeline does not calculate retrospective grades or historical Market values.</p><div class="grid fh-coverage">' + ''.join(cards) + '</div><h3>Completed movements and observed draft selections</h3><p>' + str(view['total']) + ' supported events · page ' + str(view['page']) + ' of ' + str(view['pages']) + '. Undated events are grouped by source identity, not a proven chronological sequence.</p><div class="fh-events">' + ''.join(events) + '</div>' + ''.join(links) + attempts + '</section>'
+diff --git a/tests/test_completed_trade_observations.py b/tests/test_completed_trade_observations.py
+new file mode 100644
+index 00000000..f6ae047c
+--- /dev/null
++++ b/tests/test_completed_trade_observations.py
+@@ -0,0 +1,187 @@
++"""Source-linked franchise facts, never a model of manager intent."""
++from copy import deepcopy
++from datetime import datetime, timezone
++import unittest
++from unittest.mock import patch
++
++from services.franchise_timeline import franchise_timeline, _CompletedTradeObservations
++from src.ui.franchise_timeline import _completed_trade_observations
++from tests import test_franchise_timeline_coverage as fixtures
++
++
++class CompletedTradeObservationTests(unittest.TestCase):
++    def setUp(self):
++        self.f = fixtures.FranchiseTimelineCoverageTests()
++        self.f.setUp()
++        self.addCleanup(self.f.doCleanups)
++        from src.core.historical_memory.read_model import HistoricalReadModelCache
++        self.enterContext(patch('src.core.historical_memory.read_model.historical_read_model_cache', HistoricalReadModelCache()))
++
++    def view(self, roster='2', **kwargs):
++        return franchise_timeline(self.f.graph(), roster, **kwargs)
++
++    def row(self, roster='2', **kwargs):
++        return self.view(roster, **kwargs)['completed_trade_observations']
++
++    def page(self, roster='2'):
++        html = self.f.page(roster)
++        return html.split('<section class="card franchise-trades fh-trades"', 1)[1].split('</section>', 1)[0]
++
++    def pick(self, original=9, sender=1, receiver=2, season='2028'):
++        return dict(season=season, round=1, roster_id=original, previous_owner_id=sender, owner_id=receiver)
++
++    def trade(self, **updates):
++        row = self.f.trade()
++        row.update(roster_ids=[1, 2, 3], draft_picks=[self.pick(), self.pick(7, 3, 2, '2029'), self.pick(2, 2, 3, '2027')])
++        row.update(updates)
++        return row
++
++    def test_retained_day_counts_match_original_directed_consideration(self):
++        row = self.row('4')
++        self.assertEqual(row['completed_trades'], 2)
++        self.assertEqual((row['firsts_received'], row['firsts_sent']), (3, 1))
++        self.assertEqual((row['receiving_trades'], row['sending_trades']), (1, 1))
++        self.assertEqual(row['dated_trades'], 2)
++        self.assertEqual(datetime.fromisoformat(row['first_completion_at'].replace('Z', '+00:00')), datetime.fromtimestamp(1772373665246 / 1000, timezone.utc))
++        self.assertEqual(datetime.fromisoformat(row['last_completion_at'].replace('Z', '+00:00')), datetime.fromtimestamp(1791731121347 / 1000, timezone.utc))
++        self.assertIn('PICK-2027-R1-ORIG7', next(r for r in row['references'] if r['transaction_id'] == '1333655835015942144')['firsts_received'])
++        html = self.page('4')
++        self.assertIn('3 pick transfers across 1 completed trade', html)
++        self.assertIn('Coverage: partial', html)
++        self.assertIn('Franchise history', html)
++
++    def test_multiple_firsts_and_multiteam_directions_count_assets_and_deals_separately(self):
++        trade = self.trade()
++        trade['draft_picks'].append(deepcopy(trade['draft_picks'][0]))
++        self.f.past({'1': [trade, deepcopy(trade)], '2': [deepcopy(trade)]})
++        row = self.row()
++        self.assertEqual(row['completed_trades'], 1)
++        self.assertEqual((row['firsts_received'], row['firsts_sent']), (2, 1))
++        self.assertEqual((row['receiving_trades'], row['sending_trades']), (1, 1))
++        ref = row['references'][0]
++        self.assertEqual(ref['firsts_received'], ['PICK-2028-R1-ORIG9', 'PICK-2029-R1-ORIG7'])
++        self.assertEqual(ref['firsts_sent'], ['PICK-2027-R1-ORIG2'])
++        self.assertIn('2 pick transfers across 1 completed trade', self.page())
++
++    def test_same_exact_pick_in_later_trade_counts_a_separate_directed_transfer(self):
++        self.f.past({'1': [self.trade(transaction_id='first', draft_picks=[self.pick()]),
++                            self.trade(transaction_id='later', draft_picks=[self.pick(9, 2, 3)])]})
++        row = self.row()
++        self.assertEqual((row['completed_trades'], row['firsts_received'], row['firsts_sent']), (2, 1, 1))
++        self.assertEqual((row['receiving_trades'], row['sending_trades']), (1, 1))
++        self.assertEqual({pick for r in row['references'] for direction in ('firsts_received', 'firsts_sent') for pick in r[direction]}, {'PICK-2028-R1-ORIG9'})
++
++    def test_pending_rejected_waivers_and_corrections_are_not_completed_trades(self):
++        rows = [self.trade(transaction_id=state, status=state) for state in ('pending', 'failed', 'rejected', 'cancelled', 'unknown')]
++        rows.extend([self.trade(transaction_id=kind, type=kind) for kind in ('waiver', 'correction')])
++        rows.append(self.trade(transaction_id='supported'))
++        self.f.past({'1': rows})
++        row = self.row()
++        self.assertEqual(row['completed_trades'], 1)
++        self.assertEqual([r['transaction_id'] for r in row['references']], ['supported'])
++
++    def test_empty_partial_history_is_unknown_not_a_zero(self):
++        row = self.row()
++        self.assertIsNone(row['completed_trades'])
++        self.assertIsNone(row['firsts_received'])
++        self.assertIn('totals are unknown', self.page())
++        self.assertNotIn('0 completed trades observed', self.page())
++
++    def test_supported_zero_is_only_a_zero_within_observed_trades(self):
++        self.f.past({'1': [self.trade(draft_picks=[])]})
++        row = self.row()
++        self.assertEqual((row['completed_trades'], row['firsts_received'], row['firsts_sent']), (1, 0, 0))
++        self.assertTrue(row['pick_counts_complete_in_sample'])
++        self.assertIn('0 pick transfers across 0 completed trades', self.page())
++        self.assertIn('unacquired periods are not zero activity', self.page())
++
++    def test_complete_observed_empty_scope_can_support_zero(self):
++        row = _CompletedTradeObservations('1').result(seasons=[{'season': 2031, 'state': 'complete'}], stable=True, earlier_gap=False)
++        self.assertEqual((row['completed_trades'], row['firsts_received'], row['firsts_sent']), (0, 0, 0))
++        self.assertIn('0 completed trades observed', _completed_trade_observations({'completed_trade_observations': row}))
++
++    def test_incomplete_exact_pick_identity_keeps_only_supported_lower_bounds(self):
++        self.f.past({'1': [self.trade(draft_picks=[self.pick(), self.pick(None, 2, 1)])]})
++        row = self.row()
++        self.assertEqual((row['completed_trades'], row['firsts_received']), (1, 1))
++        self.assertIsNone(row['firsts_sent'])
++        self.assertFalse(row['pick_counts_complete_in_sample'])
++        self.assertIn('At least 1 pick transfer', self.page())
++        self.assertIn('Unknown; exact pick consideration is incomplete', self.page())
++
++    def test_conflicting_exact_pick_directions_do_not_invent_a_transfer(self):
++        self.f.past({'1': [self.trade(draft_picks=[self.pick(), self.pick(9, 2, 1)])]})
++        row = self.row()
++        self.assertIsNone(row['firsts_received'])
++        self.assertIsNone(row['firsts_sent'])
++
++    def test_manager_change_never_backdates_counts_to_current_manager(self):
++        self.f.past({'1': [self.trade()]})
++        before = self.row()
++        self.f.f.data['teams'][1]['owner_id'] = 'new-current-owner'
++        after = self.row()
++        self.assertEqual(before, after)
++        self.assertIn('do not establish the current manager', self.page())
++        self.assertNotIn('new-current-owner', self.page())
++
++    def test_undated_completed_trade_is_not_given_a_creation_based_window(self):
++        self.f.past({'1': [self.trade(status_updated=None)]})
++        row = self.row()
++        self.assertEqual((row['completed_trades'], row['dated_trades']), (1, 0))
++        self.assertIsNone(row['first_completion_at'])
++        self.assertIn('Completion date window unknown', self.page())
++
++    def test_unlinked_source_season_is_not_current_franchise_behavior(self):
++        self.f.past({'1': [self.trade()]})
++        current = deepcopy(self.f.f.fixture.sources[0])
++        current['league']['previous_league_id'] = None
++        self.f.f.data['league']['previous_league_id'] = None
++        self.f.f.publish(current)
++        row = self.row()
++        self.assertIsNone(row['completed_trades'])
++        self.assertEqual(row['unattributed_source_trades'], 1)
++        self.assertIn('franchise continuity or identity is unconfirmed', self.page())
++
++    def test_future_completion_cannot_establish_an_observed_completed_trade(self):
++        self.f.past({'1': [self.trade(status_updated=4102444800000)]})
++        self.assertIsNone(self.row()['completed_trades'])
++
++    def test_source_change_withholds_the_whole_numeric_summary(self):
++        self.f.past({'1': [self.trade()]})
++        graph = self.f.graph()
++        calls = []
++        def version(*args):
++            calls.append(None)
++            return 'first' if len(calls) == 1 else 'changed'
++        with patch.object(graph.store, 'dataset_version', side_effect=version):
++            view = franchise_timeline(graph, '2')
++        self.assertFalse(view['stable_source'])
++        self.assertIsNone(view['completed_trade_observations']['completed_trades'])
++        self.assertIn('Source changed', _completed_trade_observations(view))
++
++    def test_pagination_does_not_recount_a_visible_page_as_the_sample(self):
++        self.f.past({'1': [self.trade(transaction_id='sample-'+str(i)) for i in range(31)]})
++        first, last = self.row(page=1, per_page=10), self.row(page=4, per_page=10)
++        self.assertEqual(first, last)
++        self.assertEqual(first['completed_trades'], 31)
++        self.assertEqual(len(first['references']), 12)
++
++    def test_other_league_never_receives_day_trade_references(self):
++        self.assertEqual(self.row('4')['completed_trades'], 2)
++        self.f.f.data = self.f.f.fixture.data[fixtures.fixtures.ARK]
++        row = self.row('4')
++        self.assertIsNone(row['completed_trades'])
++        self.assertEqual(row['references'], [])
++        self.assertNotIn('1333655835015942144', self.page('4'))
++
++    def test_reads_do_not_build_intelligence_or_write_history(self):
++        store = self.f.f.fixture.store
++        before = store.dataset_version(self.f.f.data['league']['league_id'])
++        with patch('src.core.intelligence.orchestrator.intelligence_orchestrator.analyze', side_effect=AssertionError('No analytics on render')):
++            for _ in range(3):
++                self.assertIn('Completed trade observations', self.page('4'))
++        self.assertEqual(store.dataset_version(self.f.f.data['league']['league_id']), before)
++
++
++if __name__ == '__main__':
++    unittest.main()
+diff --git a/tests/test_completed_trade_observations_browser.py b/tests/test_completed_trade_observations_browser.py
+new file mode 100644
+index 00000000..f2cd87e1
+--- /dev/null
++++ b/tests/test_completed_trade_observations_browser.py
+@@ -0,0 +1,138 @@
++"""Prepared retained replay, real account routes and contextual Back; not live."""
++from copy import deepcopy
++from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
++import json
++import os
++from pathlib import Path
++import subprocess
++from threading import Thread
++import unittest
++from unittest.mock import patch
++
++from playwright.sync_api import sync_playwright
++from tools.validation.browser_runtime import launch_chromium
++from tests import test_history_followthrough as fixtures
++
++
++class CompletedTradeObservationBrowserTests(unittest.TestCase):
++    def test_retained_counts_links_back_and_four_viewports(self):
++        from src.core.historical_memory.read_model import HistoricalReadModelCache
++        self.enterContext(patch('src.core.historical_memory.read_model.historical_read_model_cache', HistoricalReadModelCache()))
++        f = fixtures.FollowThroughFixture(self)
++        requests, records, errors = [], [], []
++        before = deepcopy(f.data)
++        class Handler(BaseHTTPRequestHandler):
++            def log_message(self, *args):
++                pass
++            def do_GET(self):
++                response = f.client.get(self.path, follow_redirects=False)
++                if response.status_code == 404 and self.path.startswith('/static/'):
++                    response = f.static.get(self.path)
++                requests.append(self.path)
++                self.send_response(response.status_code)
++                for key, value in response.headers.items():
++                    if key.lower() in {'content-type', 'location', 'cache-control'}:
++                        self.send_header(key, value)
++                self.end_headers()
++                try:
++                    self.wfile.write(response.content)
++                except (BrokenPipeError, ConnectionResetError):
++                    pass
++        server = ThreadingHTTPServer(('127.0.0.1', 0), Handler)
++        thread = Thread(target=server.serve_forever, daemon=True)
++        thread.start()
++        origin = 'http://127.0.0.1:' + str(server.server_port)
++        output = os.getenv('DTOS_COMPLETED_TRADE_OBSERVATIONS_EVIDENCE')
++        if not output and os.getenv('DTOS_PHASE2_EVIDENCE'):
++            output = str(Path(os.environ['DTOS_PHASE2_EVIDENCE'])/'completed-trade-observations')
++        target = Path(output) if output else None
++        if target:
++            target.mkdir(parents=True, exist_ok=True)
++        try:
++            with sync_playwright() as pw:
++                browser = launch_chromium(pw, headless=True)
++                try:
++                    for league, roster, control in ((fixtures.source.DAY, '4', 'Day retained trades; disposable waiver pagination'),
++                                                   (fixtures.source.ARK, '1', 'Arkham sparse retained source')):
++                        f.accounts.activate('account-a', league)
++                        history = '/history/team/' + league + ':franchise:' + roster
++                        for width, height in ((320, 432), (375, 667), (390, 844), (1280, 900)):
++                            page = browser.new_page(viewport={'width': width, 'height': height})
++                            page.on('pageerror', lambda error: errors.append(str(error)))
++                            try:
++                                response = page.goto(origin + history)
++                                self.assertEqual(response.status, 200)
++                                page.wait_for_load_state('networkidle')
++                                section = page.locator('.franchise-trades')
++                                body = section.inner_text()
++                                self.assertLessEqual(page.evaluate('document.documentElement.scrollWidth-innerWidth'), 0)
++                                if league == fixtures.source.DAY:
++                                    self.assertIn('2 completed trades observed', body)
++                                    self.assertIn('3 pick transfers across 1 completed trade', body)
++                                    self.assertIn('1 pick transfer across 1 completed trade', body)
++                                    self.assertIn('2026-03-01', body)
++                                    self.assertIn('2026-10-11', body)
++                                    self.assertIn('Coverage: partial', body)
++                                    self.assertIn('Franchise history', body)
++                                    summary = section.locator('summary')
++                                    summary.scroll_into_view_if_needed()
++                                    summary.evaluate('e=>e.scrollIntoView({block:"center"})')
++                                    summary.focus()
++                                    count = len(requests)
++                                    page.keyboard.press('Enter')
++                                    self.assertTrue(section.locator('details').evaluate('e=>e.open'))
++                                    self.assertNotEqual(summary.evaluate('e=>getComputedStyle(e).outlineStyle'), 'none')
++                                    box = summary.bounding_box()
++                                    self.assertGreaterEqual(box['height'], 44)
++                                    self.assertTrue(summary.evaluate('(e)=>{const r=e.getBoundingClientRect();return e.contains(document.elementFromPoint(r.x+r.width/2,r.y+r.height/2))}'))
++                                    if width < 1000:
++                                        touch = page.context.new_cdp_session(page)
++                                        touch.send('Emulation.setTouchEmulationEnabled', {'enabled': True})
++                                        touch.send('Input.dispatchTouchEvent', {'type': 'touchStart', 'touchPoints': [{'x': box['x']+box['width']/2, 'y': box['y']+box['height']/2}]})
++                                        touch.send('Input.dispatchTouchEvent', {'type': 'touchEnd', 'touchPoints': []})
++                                        self.assertFalse(section.locator('details').evaluate('e=>e.open'))
++                                        summary.press('Enter')
++                                    self.assertEqual(len(requests), count)
++                                    self.assertIn('PICK-2027-R1-ORIG7', section.inner_text())
++                                    root = '/trades/history/' + fixtures.ROOT
++                                    section.locator('a[href="'+root+'"]').click()
++                                    page.wait_for_url('**'+root)
++                                    self.assertIn('Original completed trade', page.locator('.trade-timeline').inner_text())
++                                    page.locator('#dtos-back').click()
++                                    page.wait_for_url('**'+history)
++                                    self.assertIn('2 completed trades observed', page.locator('.franchise-trades').inner_text())
++                                else:
++                                    self.assertIn('totals are unknown', body)
++                                    self.assertNotIn('0 completed trades observed', body)
++                                self.assertEqual(errors, [])
++                                self.assertLessEqual(page.evaluate('document.documentElement.scrollWidth-innerWidth'), 0)
++                                records.append(dict(control=control, width=width, height=height,
++                                    supported_trades=2 if league == fixtures.source.DAY else None,
++                                    firsts_received=3 if league == fixtures.source.DAY else None,
++                                    firsts_sent=1 if league == fixtures.source.DAY else None,
++                                    keyboard=league == fixtures.source.DAY, touch_emulated=width < 1000 and league == fixtures.source.DAY,
++                                    contextual_back=league == fixtures.source.DAY, overflow=False))
++                                if target:
++                                    page.locator('.franchise-trades').scroll_into_view_if_needed()
++                                    page.screenshot(path=str(target/(('Day' if league == fixtures.source.DAY else 'Arkham')+'-'+str(width)+'.png')))
++                            finally:
++                                page.close()
++                finally:
++                    browser.close()
++        finally:
++            server.shutdown()
++            server.server_close()
++            thread.join(3)
++        self.assertFalse(thread.is_alive())
++        self.assertEqual(before, f.data)
++        if target:
++            report = dict(head=subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip(),
++                tree=subprocess.check_output(['git', 'rev-parse', 'HEAD^{tree}'], text=True).strip(),
++                working_tree_clean=not subprocess.check_output(['git', 'status', '--porcelain'], text=True).strip(),
++                records=records, errors=errors, server_thread_reaped=True,
++                scope='Retained source replay with disposable account sessions and waiver-only pagination; no fresh production observation or manager-intent claim.')
++            (target/'browser.json').write_text(json.dumps(report, indent=2)+'\n')
++
++
++if __name__ == '__main__':
++    unittest.main()

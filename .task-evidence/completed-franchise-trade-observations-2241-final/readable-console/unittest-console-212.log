@@ -1,0 +1,35 @@
+level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/valuation/coverage \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T18:54:41.879390+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/valuation/agreement \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T18:54:41.882171+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/valuation/explanation?asset_id=player:1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T18:54:41.885335+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/valuation/timeline?asset_id=player:1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T18:54:41.887963+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/valuation/diagnostics \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T18:54:41.905089+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/valuation/assets/player:1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T18:54:41.922088+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/valuation/calibration \"HTTP/1.1 200 OK\"","request_id":"system"}
+..............{"timestamp":"2026-11-08T18:54:43.515913+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/valuation/evidence/not-real \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-08T18:54:43.519457+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/valuation/explanation?asset_id=not-real \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+.............{"timestamp":"2026-11-08T18:54:44.436235+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/valuation \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T18:54:44.443710+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/valuation/assets?limit=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T18:54:44.451726+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/valuation/assets/player:1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T18:54:44.457302+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/valuation/assets/missing \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-08T18:54:44.462571+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/valuation/status \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T18:54:44.467956+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/valuation/export.json \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T18:54:44.473316+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/valuation/export.csv \"HTTP/1.1 200 OK\"","request_id":"system"}
+..........Validation Chromium: /usr/bin/chromium
+Validation Chromium version: 156.0.8078.73
+.Validation Chromium: /usr/bin/chromium
+Validation Chromium version: 156.0.8078.73
+........{"timestamp":"2026-11-08T18:54:47.098458+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/pages/missing \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-08T18:54:47.100473+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/visual/pages/home/watch \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+.{"timestamp":"2026-11-08T18:54:47.117791+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/schema \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T18:54:47.120269+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/site-map \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T18:54:47.125287+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/health \"HTTP/1.1 200 OK\"","request_id":"system"}
+...{"timestamp":"2026-11-08T18:54:48.232817+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/health \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-08T18:54:48.234015+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/visual \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-08T18:54:48.235004+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/releases/current \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-08T18:54:48.236316+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/current-visual/manifest \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-08T18:54:48.237348+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/live/visual \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+.
+----------------------------------------------------------------------
+Ran 4308 tests in 2952.342s
+
+OK

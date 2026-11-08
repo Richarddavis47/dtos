@@ -1,0 +1,35 @@
+{
+  "parsed": true,
+  "standard_credential": "Existing GitHub Actions GITHUB_TOKEN; no external Cloud upload",
+  "permissions": {
+    "contents": "write",
+    "checks": "read",
+    "pull-requests": "read",
+    "actions": "read"
+  },
+  "canonical_steps_byte_semantics_unchanged": true,
+  "canonical_budget": "4500s/77min step/85min job",
+  "resource_flags": [
+    "docker",
+    "run",
+    "--name",
+    "dtos-canonical-release",
+    "--init",
+    "--memory",
+    "2g",
+    "--memory-swap",
+    "2g",
+    "--cpus",
+    "2",
+    "--network",
+    "none"
+  ],
+  "old2191_job_unchanged_and_not_dispatched": true,
+  "controller_never_merged_into_main": true,
+  "phases": [
+    "prepare open PR on unchanged baseline",
+    "verify native readback certificate",
+    "normal expected-head squash with identical tree",
+    "publish immutable tag/evidence from same frozen controller"
+  ]
+}
