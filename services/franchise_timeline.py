@@ -7,6 +7,81 @@ from src.core.history_context.coverage import transaction_coverage_summary
 from src.core.history_context.ownership import reconcile_ownership
 
 
+class _CompletedTradeObservations:
+    """Display-only counters over the timeline's admitted, source-linked trades.
+
+    Never supplied to Trade/FOIS intelligence. Exact directed consideration and
+    completion clocks reuse their existing contracts; references stay bounded.
+    """
+    def __init__(self, roster_id):
+        self.roster_id = str(roster_id)
+        self.trades = self.unattributed = self.dated = self.pick_covered = 0
+        self.firsts_received = self.firsts_sent = 0
+        self.receiving_trades = self.sending_trades = 0
+        self.earliest = self.latest = None
+        self.references = []
+
+    def observe(self, row, raw, *, identity_observed):
+        if row['kind'] != 'trade' or not row['completed']:
+            return
+        if row['attribution'] != 'source-linked roster-slot continuity' or not identity_observed:
+            self.unattributed += 1
+            return
+        from datetime import datetime, timezone
+        from src.core.gm_behavioral_intelligence.diagnostics import _clock, _movement_evidence
+        participants, movements, _, categories = _movement_evidence(raw)
+        if self.roster_id not in participants:
+            self.unattributed += 1
+            return
+        self.trades += 1
+        self.pick_covered += int(categories.get('pick') is True)
+        clock = _clock(raw, datetime.now(timezone.utc))
+        if clock:
+            self.dated += 1
+            self.earliest = min(self.earliest, clock) if self.earliest else clock
+            self.latest = max(self.latest, clock) if self.latest else clock
+        incoming, outgoing = [], []
+        for kind, identity, sender, receiver, _ in movements:
+            if kind != 'pick' or int(identity.split('-')[2][1:]) != 1:
+                continue
+            if receiver == self.roster_id:
+                incoming.append(identity)
+            if sender == self.roster_id:
+                outgoing.append(identity)
+        self.firsts_received += len(incoming)
+        self.firsts_sent += len(outgoing)
+        self.receiving_trades += int(bool(incoming))
+        self.sending_trades += int(bool(outgoing))
+        if row['detail_url'] and len(self.references) < 12:
+            self.references.append({'url': row['detail_url'], 'transaction_id': row['id'],
+                'season': row['season'], 'completion_at': clock,
+                'firsts_received': incoming[:4], 'firsts_sent': outgoing[:4]})
+
+    def result(self, *, seasons, stable, earlier_gap):
+        complete = bool(seasons) and all(s['state'] == 'complete' for s in seasons)
+        complete = complete and not earlier_gap and not self.unattributed
+        known = stable and (self.trades > 0 or complete)
+        picks_known = known and self.pick_covered == self.trades
+        return {'state': 'complete' if known and complete else 'partial' if known else 'unknown',
+            'completed_trades': self.trades if known else None,
+            'firsts_received': self.firsts_received if known and (picks_known or self.firsts_received) else None,
+            'firsts_sent': self.firsts_sent if known and (picks_known or self.firsts_sent) else None,
+            'receiving_trades': self.receiving_trades if known and (picks_known or self.receiving_trades) else None,
+            'sending_trades': self.sending_trades if known and (picks_known or self.sending_trades) else None,
+            'pick_covered_trades': self.pick_covered if known else None,
+            'pick_counts_complete_in_sample': picks_known,
+            'dated_trades': self.dated if known else None,
+            'first_completion_at': self.earliest if known else None,
+            'last_completion_at': self.latest if known else None,
+            'source_seasons': [s['season'] for s in seasons],
+            'unattributed_source_trades': self.unattributed,
+            'references': self.references if known else [],
+            'reason': ('Source changed while the page was assembled; reload for coherent observations.' if not stable else
+                       'All listed source seasons have complete transaction coverage.' if complete else
+                       'Only supported retained trades are counted. Missing periods and unconfirmed franchise continuity remain unknown.'),
+            'attribution': 'Franchise history. These observations do not establish the current manager’s past decisions, present intent or willingness to trade.'}
+
+
 def franchise_timeline(graph, roster_id, *, page=1, per_page=25):
     roster_id = str(roster_id)
     target = f'{graph.league_id}:franchise:{roster_id}'
@@ -75,6 +150,7 @@ def franchise_timeline(graph, roster_id, *, page=1, per_page=25):
     summarize_activity(((r['season'], r['source']['source_league_id'], r['raw']) for _, r in unique.values()), [],
         on_completed=lambda league, tid: completed.add((league, tid)))
     events, attempts = [], []
+    trade_observations = _CompletedTradeObservations(roster_id)
     for key, (_, r) in unique.items():
         parties = {str(x) for x in r['roster_ids']}
         parties.update(str(x) for field in ('adds', 'drops') for x in r[field].values())
@@ -118,6 +194,7 @@ def franchise_timeline(graph, roster_id, *, page=1, per_page=25):
                 row['incomplete_pick_identity'] = True
                 row['reason'] = ((row['reason'] + ' ') if row['reason'] else '') + 'Exact draft-pick identity is incomplete; known movement fields remain visible, but no missing year, round or original franchise is inferred.'
                 row['detail_url'] = None
+        trade_observations.observe(row, r['raw'], identity_observed=any(r['season'] == year for r in own))
         (events if admitted else attempts).append(row)
 
     drafts = retained('draft_pick')
@@ -176,6 +253,7 @@ def franchise_timeline(graph, roster_id, *, page=1, per_page=25):
     pages = max(1, (len(events) + per_page - 1) // per_page)
     page = min(max(1, page), pages)
     return {'franchise_id': target, 'seasons': seasons, 'events': events[(page - 1) * per_page:page * per_page],
+        'completed_trade_observations': trade_observations.result(seasons=seasons, stable=stable, earlier_gap=bool(cursor)),
         'attempts': attempts[:50], 'attempts_total': len(attempts), 'total': len(events), 'page': page,
         'pages': pages, 'per_page': per_page, 'ownership': ownership, 'stable_source': stable,
         'earlier_link_gap': bool(cursor), 'provider_calls': 0,

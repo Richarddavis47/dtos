@@ -1,3 +1,11 @@
+# v1.22.26 / build 2241 — Completed franchise trade observations
+
+Franchise History adds a compact descriptive sample of supported completed trades and directed first-round pick transfers. It separates assets from transactions, preserves exact year/round/original-franchise picks, shows the supported completion-date window and source-season coverage, and links to existing completed-trade evidence. Counts span the admitted retained sample rather than the visible pagination page.
+
+Unknown history and incomplete consideration do not become zero. Unlinked or unverified source-season franchise continuity is excluded, and all observations remain franchise history rather than claims about the current manager’s intent. Same-season firsts are not automatically labeled future capital. Pending/rejected transactions, waivers, corrections and draft selections are excluded from completed-trade counts. Existing history, manager and Trade surfaces remain available.
+
+No provider acquisition or new durable data store is added. Trade qualification/counterparty scores, valuation, scoring, projections/results, FOIS grades, saved settings, submitted lineups and memory/admission policies are unchanged. Release requires all source-pinned local/hosted gates and the guarded Actions publisher. See docs/audits/COMPLETED_TRADE_OBSERVATIONS_2241.md for retained versus disposable evidence and live-access limits.
+
 # v1.22.25 / build 2240 — Readable trade-time Market quotes
 
 Completed-trade history now selects the latest eligible compatible retained quote after checking exact asset identity, source/knowledge clocks, scope and existing Market semantics. A newer incompatible or foreign-scope record no longer masks an older supported value. Unresolved same-instant price conflicts remain unknown, including the two existing pick-type context aliases. Foreign-scope raw evidence is not exposed.
