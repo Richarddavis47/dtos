@@ -54,6 +54,22 @@ def readable_trade_reference(reference, graph):
     return action + '<details><summary>Source reference details</summary><code style="overflow-wrap:anywhere">' + escape(reference) + '</code></details>'
 
 
+def _quote_age(seconds):
+    from math import isfinite
+    if type(seconds) not in (int, float) or not isfinite(seconds) or seconds < 0:
+        return 'Age unavailable'
+    if seconds == 0:
+        return 'Observed at the recorded trade instant'
+    if seconds < 1:
+        return 'Less than a second before the trade'
+    for size, unit in ((86400, 'day'), (3600, 'hour'), (60, 'minute')):
+        if seconds >= size:
+            count = int(seconds // size)
+            return f"{count} {unit}{'s' if count != 1 else ''} before the trade"
+    count = int(seconds)
+    return f"{count} second{'s' if count != 1 else ''} before the trade"
+
+
 def _quote_card(row, label):
     def safe(value):
         return escape(str(value))
@@ -86,12 +102,18 @@ def _quote_card(row, label):
     attachment = ('<p>Original retained attachment timestamp: ' + safe(attachment_time) + ' · separate from quote observation.</p>'
                   if attachment_time else '<p>Legacy retained attachment reference: ' + safe(row['retained_attachment_at'])
                   + ' · identifier, not a supported timestamp.</p>' if row.get('retained_attachment_at') else '')
-    return f'''<li><h4>{safe(row.get('asset_name') or label)}</h4><p>{safe(row.get('match_state'))} · {safe(value)}</p>
+    status = ('Exact recorded observation' if row.get('match_state') == 'EXACT'
+              else 'Dated estimate · not an exact trade-time quote' if row.get('value') is not None else 'Value withheld')
+    age = ('<p>Quote age: ' + safe(_quote_age(row.get('quote_age_seconds')))
+           + ' · oldest admitted provider observation.</p>') if row.get('value') is not None else ''
+    return f'''<li class="timeline-quote"><h4>{safe(row.get('asset_name') or label)}</h4><p><b>{safe(value)}</b> · {safe(status)}</p>
+<p>Source: {safe(names)} · {safe(units)}</p>{age}<p>Quote observed: {safe(row.get('observed_at') or 'Unavailable')}</p>
 <p>{safe(row.get('admission_reason') or 'No admitted quote; original trade time or source evidence is unavailable.')}</p>
-<p>Provider: {safe(names)} · {safe(units)}</p><p>Source format: {safe('; '.join(contexts) or 'Unavailable')}. Provider format is not proof of exact historical league-format parity.</p>
+<details class="timeline-evidence"><summary>Source details and excluded observations</summary>
+<p>Source format: {safe('; '.join(contexts) or 'Unavailable')}. Provider format is not proof of exact historical league-format parity.</p>
 <p>Quote observed: {safe(row.get('observed_at') or 'Unavailable')} · Source knowledge: {safe(row.get('source_knowledge_at') or 'Unavailable')}</p>{attachment}
 <p>Normalization version: {safe(version)} · Comparison version: {safe(identity[3] if identity else 'Unavailable')}.</p><p>Comparison temporal confidence: {safe(row.get('temporal_confidence')) if row.get('value') is not None else 'Not eligible for comparison'} · Source observation confidence: {safe(confidence if confidence is not None else 'Unavailable')}. Ineligibility does not imply zero source confidence. Confidence is not a trade outcome probability.</p>
-<p>{safe(row.get('limitation') or '') if row.get('match_state') == 'DATED_ESTIMATE' else ''}</p><details><summary>Retained raw observations · excluded unless admitted above</summary><ul>{raw or '<li>No raw quote in available exact asset/context evidence.</li>'}</ul></details></li>'''
+<p>{safe(row.get('limitation') or '') if row.get('match_state') == 'DATED_ESTIMATE' else ''}</p><details><summary>Retained raw observations · excluded unless admitted above</summary><ul>{raw or '<li>No raw quote in available exact asset/context evidence.</li>'}</ul></details></details></li>'''
 
 
 def render_timeline(model, dossier, *, return_url="/transactions", origin_id=None):
@@ -157,12 +179,9 @@ def render_timeline(model, dossier, *, return_url="/transactions", origin_id=Non
         summary.append(
             f"<li class='timeline-faab'><b>{safe(amount)} FAAB</b><div>{safe(movement['sent_by']['name'])} → {safe(movement['received_by']['name'])}</div><details><summary>FAAB source</summary><p>{safe(movement['provenance'])}</p><p>Source league: {safe(movement['source_league_id'])} · Transaction: {safe(movement['transaction_id'])}</p></details></li>"
         )
-    if evidence.get("fairness_state") == "comparable_exact_evidence":
-        price_text = "Complete comparable decision-time Market evidence is available. No automatic trade winner is declared."
-    elif evidence.get("fairness_state") == "estimated_comparison":
-        price_text = "Compatible dated estimates are available; they are not exact trade-time quotes. Process quality requires additional evidence."
-    else:
-        price_text = "Decision-time Market fairness unavailable: complete compatible dated prices are required, including exact picks."
+    price_text = ("Individual retained quotes only; they are not a verdict on the manager’s decision. "
+                  "Package totals are not shown: useful complete retained coverage, historical league-format "
+                  "alignment and package freshness have not been established.")
     if dossier.get("faab"):
         price_text += " FAAB is shown as original trade consideration; player/pick Market totals do not value FAAB or establish fairness of the whole trade."
     labels = {b['asset_id']: b['label'] for b in model['branches']}
@@ -186,7 +205,7 @@ def render_timeline(model, dossier, *, return_url="/transactions", origin_id=Non
     technical = [f"{k}: {v}" for k, v in dossier["source"].items()]
     return (
         CSS
-        + f'''<section class="trade-timeline"><a class="back" href="{href(return_url)}">← {back_label}</a><h2>Original completed trade</h2><p><b>{safe(model["league_name"])} · {safe(model["season"])} · {safe(trade_date)}</b></p><section><h3>Assets sent and received</h3><p>{safe(' ↔ '.join(p['name'] for p in model['participants']))}</p><div class="timeline-sides">{participants}</div>{'<h4>FAAB consideration</h4><ul>' + ''.join(cash) + '</ul>' if cash else ''}<details><summary>Historical manager context</summary><p>Managers are season observations; exact trade-time takeover timing is not established.</p></details></section><h3>Subsequent events & confirmed current state</h3><p>Current roster observations and last transfers are separate. As-of dates describe DTOS Sleeper retrieval/sync observations, not acquisition timestamps; missing intervals do not establish uninterrupted ownership.</p>{"".join(branches)}{production}<section class="card"><h3>At the time: Market evidence</h3><p>{price_text}</p><p>{evidence.get('valued_assets', 0)} / {evidence.get('total_assets', 0)} assets have admitted compatible pre-trade quotes. Retained raw observations do not establish comparable package coverage.</p><p>Trade reference date: {safe(trade_date)}. Production, present Market value and later team outcomes are separate. Retained FOIS grades remain NOT REVALIDATED.</p><details class="timeline-evidence"><summary>Prices, dates and limitations</summary><ul>{"".join(quotes)}</ul><p>Package admission: {safe(str(evidence.get('reason') or 'Unavailable').replace('_', ' '))}</p></details></section>{render_source_coverage(model.get('source_coverage') or {})}<details class="card timeline-evidence"><summary>Source provenance and branch limitations</summary>{"".join("<p>" + safe(x) + "</p>" for x in model["limitations"])}<pre>{safe(chr(10).join(technical))}</pre></details></section>'''
+        + f'''<section class="trade-timeline"><a class="back" href="{href(return_url)}">← {back_label}</a><h2>Original completed trade</h2><p><b>{safe(model["league_name"])} · {safe(model["season"])} · {safe(trade_date)}</b></p><section><h3>Assets sent and received</h3><p>{safe(' ↔ '.join(p['name'] for p in model['participants']))}</p><div class="timeline-sides">{participants}</div>{'<h4>FAAB consideration</h4><ul>' + ''.join(cash) + '</ul>' if cash else ''}<details><summary>Historical manager context</summary><p>Managers are season observations; exact trade-time takeover timing is not established.</p></details></section><h3>Subsequent events & confirmed current state</h3><p>Current roster observations and last transfers are separate. As-of dates describe DTOS Sleeper retrieval/sync observations, not acquisition timestamps; missing intervals do not establish uninterrupted ownership.</p>{"".join(branches)}{production}<section class="card"><h3>At the time: Market evidence</h3><p>{price_text}</p><p>{evidence.get('valued_assets', 0)} / {evidence.get('total_assets', 0)} assets have admitted compatible pre-trade quotes. Retained raw observations do not establish comparable package coverage.</p><p>Trade reference date: {safe(trade_date)}. Production, present Market value and later team outcomes are separate. Retained FOIS grades remain NOT REVALIDATED.</p><details class="timeline-evidence"><summary>Prices, dates and limitations</summary><ul>{"".join(quotes)}</ul><p>Retained quote coverage check: {safe(str(evidence.get('reason') or 'Unavailable').replace('_', ' '))}. This does not certify whole-package freshness or historical league-format parity.</p></details></section>{render_source_coverage(model.get('source_coverage') or {})}<details class="card timeline-evidence"><summary>Source provenance and branch limitations</summary>{"".join("<p>" + safe(x) + "</p>" for x in model["limitations"])}<pre>{safe(chr(10).join(technical))}</pre></details></section>'''
     )
 
 

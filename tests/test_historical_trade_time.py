@@ -93,7 +93,7 @@ class HistoricalTradeTimeTests(unittest.TestCase):
                 if query["asset_id"] != "player:100":
                     return None
                 return SimpleNamespace(
-                    observation_id="OBS-1", observed_at="2025-08-24T12:00:00Z",
+                    asset_id=query["asset_id"], observation_id="OBS-1", observed_at="2025-08-24T12:00:00Z",
                     canonical_value=700, provider_evidence=evidence, normalization_version=evidence[0].normalization_version, market_context_id='test', confidence=85, provenance_type=SimpleNamespace(
                         value="historical_source_backfill",
                     ),

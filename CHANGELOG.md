@@ -1,3 +1,11 @@
+# v1.22.25 / build 2240 — Readable trade-time Market quotes
+
+Completed-trade history now selects the latest eligible compatible retained quote after checking exact asset identity, source/knowledge clocks, scope and existing Market semantics. A newer incompatible or foreign-scope record no longer masks an older supported value. Unresolved same-instant price conflicts remain unknown, including the two existing pick-type context aliases. Foreign-scope raw evidence is not exposed.
+
+The existing disclosure shows each supported value with source, observation date and age, distinguishing dated estimates from exact recorded observations. Missing assets retain specific limitations. Technical provenance and excluded observations remain available on demand. No package totals or freshness cutoff are introduced: the bounded supplied production screen demonstrates individual quote coverage, not complete-package coverage, an approved maximum age or historical league-format parity.
+
+No provider acquisition, sync, historical grade rewrite, Trade policy, neutral/custom calculation, saved setting or resource reservation changes. Exact picks, conversion boundaries and History navigation are preserved. See docs/audits/TRADE_TIME_MARKET_2240.md for evidence provenance and limitations. Release requires complete source-pinned validation and the guarded Actions publisher.
+
 # v1.22.24 / build 2239 — Act on the recorded Trade decision
 
 Recommended Trades and Evaluate now lead with the existing assessment’s decisive reason and a practical next step. Phone recommendation cards place the preview action after the exact package and principal cost, ahead of the longer two-sided evidence. Both franchises’ supported lineup effects, conditional motivation, reserve costs and disclosures remain available.

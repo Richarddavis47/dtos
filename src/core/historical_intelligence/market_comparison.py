@@ -105,3 +105,54 @@ def observation_clocks(observation, boundary: str | None = None):
     return {'quote_observed_at': max(quotes, key=observation_time), 'oldest_quote_at': min(quotes, key=observation_time),
             'source_knowledge_at': max(known, key=observation_time), 'retained_attachment_at':
             getattr(observation, 'retained_attachment_at', None) or observation.observed_at}
+
+
+def trade_observation_admission(observation, *, asset_id, league_ids, boundary):
+    """Existing trade quote admission, applied before latest-state selection.
+
+    This proves a retained quote's identity/units, not historical league-format
+    parity or whole-package freshness. No price conversion or acquisition.
+    """
+    from src.core.intelligence_memory.market import supported_quote_identity
+    from src.core.valuation.config import CANONICAL_MIN, CANONICAL_MAX
+    from src.core.intelligence_memory.timestamps import observation_time
+    if observation_time(boundary) is None:
+        return None, 'Trade timestamp unavailable; prior quote ordering cannot be established.'
+    if observation.asset_id != asset_id:
+        return None, 'Retained observation has a different exact asset identity.'
+    rows = tuple(observation.provider_evidence)
+    from collections.abc import Mapping
+    for row in rows:
+        metadata = row.metadata or {}
+        if not isinstance(metadata, Mapping):
+            return None, 'Retained observation has unavailable source metadata.'
+        if metadata.get('league_id') not in (None, '', *league_ids):
+            return None, 'Retained observation belongs to a different league context.'
+        if metadata.get('asset_id') not in (None, asset_id):
+            return None, 'Retained observation has a different exact asset identity.'
+        if not supported_quote_identity(row):
+            return None, 'Retained observation lacks compatible exact asset evidence; no range-average substitute is admitted.'
+    clocks = observation_clocks(observation, boundary)
+    if not clocks:
+        return None, 'Retained observation is not decision-time eligible: quote/knowledge clocks are after the trade or unavailable.'
+    for row in rows:
+        metadata = row.metadata or {}
+        # Explicit unknown/invalid knowledge is not replaced by an earlier
+        # quote. A source publication/update later than the trade is not prior
+        # evidence. Optional absent publication fields make no extra claim.
+        for field in ('source_knowledge_at', 'known_at', 'published_at', 'source_updated_at'):
+            if field not in metadata or (field in ('published_at', 'source_updated_at') and metadata[field] is None):
+                continue
+            stamp = observation_time(metadata[field])
+            if stamp is None or stamp > observation_time(boundary):
+                return None, 'Retained observation is not decision-time eligible: a stated knowledge/publication/update clock is unavailable or after the trade.'
+    semantics = [(row.metadata or {}).get('comparison_semantics') for row in rows]
+    providers = tuple(sorted({row.provider for row in rows}))
+    identity = retained_comparison_identity(
+        semantics[0] if semantics and all(s == semantics[0] for s in semantics) else None, providers)
+    value = observation.canonical_value
+    if (not identity or identity[:2] != ('external_market_normalized_index', '0-1000')
+            or not isinstance(value, (int, float)) or isinstance(value, bool)
+            or not isfinite(value) or not CANONICAL_MIN <= value <= CANONICAL_MAX):
+        return None, 'Retained observation lacks compatible provider, units, format or normalization evidence.'
+    return identity, None
