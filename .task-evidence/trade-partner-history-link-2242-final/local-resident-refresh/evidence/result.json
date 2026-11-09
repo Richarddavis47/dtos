@@ -1,0 +1,487 @@
+{
+  "schema": "resident-refresh-ownership-v2",
+  "python": "3.14.3 (main, Apr  7 2026, 02:23:36) [GCC 12.2.0]",
+  "passed": true,
+  "cases": [
+    {
+      "name": "oneqb",
+      "failed_refresh": false,
+      "reader": false,
+      "completed": true,
+      "old_released_without_reader": true,
+      "source_digest": "1c4cf11c2ec072ab13c3ef73d41670c91029ecd615d0a6f787704b0d4705c9a3",
+      "invalid_restore_preserved_current": true,
+      "before_bytes": 488718336,
+      "after_bytes": 553951232,
+      "repeated_switches": 3,
+      "cancellation_writer_drained": true
+    },
+    {
+      "name": "oneqb",
+      "failed_refresh": true,
+      "reader": false,
+      "completed": true,
+      "old_released_without_reader": true,
+      "source_digest": "1c4cf11c2ec072ab13c3ef73d41670c91029ecd615d0a6f787704b0d4705c9a3",
+      "invalid_restore_preserved_current": true,
+      "before_bytes": 580616192,
+      "after_bytes": 620417024,
+      "repeated_switches": 3,
+      "cancellation_writer_drained": true
+    },
+    {
+      "name": "superflex",
+      "failed_refresh": false,
+      "reader": true,
+      "completed": true,
+      "old_released_without_reader": false,
+      "source_digest": "6e35cf0194a1e81f34ce72d471aaa51c83c87971f6955c7e12f6b29cf636800f",
+      "invalid_restore_preserved_current": true,
+      "before_bytes": 615550976,
+      "after_bytes": 605446144,
+      "pressure_deferred": true,
+      "fois_protected": true,
+      "recovery_completed": true,
+      "required_bytes": 864966496,
+      "unsafe_bytes": 1321238528,
+      "released_bytes": 1310457856,
+      "owner_release_plan": {
+        "telemetry_valid": true,
+        "file_size_valid": true,
+        "reservation_valid": true,
+        "working_bytes": 730748768,
+        "cache_safety_bytes": 134217728,
+        "safety_bytes": 134217728,
+        "fois_working_bytes": 0,
+        "fois_safety_bytes": 0,
+        "required_bytes": 864966496,
+        "service_limit_bytes": 2147483648,
+        "effective_limit_bytes": 2147483648,
+        "headroom_bytes": 860975104,
+        "would_admit": false,
+        "reason": "insufficient_headroom"
+      },
+      "relieved_fixture_bytes": 704643072,
+      "recovery_plan": {
+        "telemetry_valid": true,
+        "file_size_valid": true,
+        "reservation_valid": true,
+        "working_bytes": 730748768,
+        "cache_safety_bytes": 134217728,
+        "safety_bytes": 134217728,
+        "fois_working_bytes": 0,
+        "fois_safety_bytes": 0,
+        "required_bytes": 864966496,
+        "service_limit_bytes": 2147483648,
+        "effective_limit_bytes": 2147483648,
+        "headroom_bytes": 1565700096,
+        "would_admit": true,
+        "reason": "sufficient_headroom"
+      },
+      "recovery_bytes": 638476288,
+      "repeated_switches": 3,
+      "cancellation_writer_drained": true
+    },
+    {
+      "name": "global-evidence",
+      "completed": true,
+      "source_digest": "1c4cf11c2ec072ab13c3ef73d41670c91029ecd615d0a6f787704b0d4705c9a3",
+      "old_released_without_reader": true,
+      "source_acquisition_mocked": true,
+      "source_restoration_completed": true,
+      "scheduler_cancelled": true
+    }
+  ],
+  "samples": [
+    {
+      "label": "initial",
+      "rss_bytes": 80789504,
+      "vms_bytes": 174071808,
+      "system_available_bytes": 16978407424,
+      "memory_accounting_scope": "cgroup",
+      "cgroup_current_bytes": 354902016,
+      "cgroup_limit_bytes": 2147483648,
+      "cgroup_inactive_file_bytes": 281415680,
+      "cgroup_anonymous_bytes": 63430656,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0
+      },
+      "anon": 63430656,
+      "file": 281493504,
+      "inactive_file": 281415680,
+      "kernel_peak": 431104000,
+      "child_pids": []
+    },
+    {
+      "label": "oneqb before replacement",
+      "rss_bytes": 214429696,
+      "vms_bytes": 366895104,
+      "system_available_bytes": 16996225024,
+      "memory_accounting_scope": "cgroup",
+      "cgroup_current_bytes": 488718336,
+      "cgroup_limit_bytes": 2147483648,
+      "cgroup_inactive_file_bytes": 229806080,
+      "cgroup_anonymous_bytes": 196796416,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0
+      },
+      "anon": 196796416,
+      "file": 281645056,
+      "inactive_file": 229806080,
+      "kernel_peak": 509059072,
+      "child_pids": []
+    },
+    {
+      "label": "oneqb replacement settled",
+      "rss_bytes": 279441408,
+      "vms_bytes": 431788032,
+      "system_available_bytes": 16913166336,
+      "memory_accounting_scope": "cgroup",
+      "cgroup_current_bytes": 553951232,
+      "cgroup_limit_bytes": 2147483648,
+      "cgroup_inactive_file_bytes": 184135680,
+      "cgroup_anonymous_bytes": 261808128,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0
+      },
+      "anon": 261808128,
+      "file": 281645056,
+      "inactive_file": 184135680,
+      "kernel_peak": 627781632,
+      "child_pids": []
+    },
+    {
+      "label": "oneqb before replacement",
+      "rss_bytes": 306372608,
+      "vms_bytes": 522285056,
+      "system_available_bytes": 16757538816,
+      "memory_accounting_scope": "cgroup",
+      "cgroup_current_bytes": 580616192,
+      "cgroup_limit_bytes": 2147483648,
+      "cgroup_inactive_file_bytes": 138452992,
+      "cgroup_anonymous_bytes": 288739328,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0
+      },
+      "anon": 288739328,
+      "file": 281645056,
+      "inactive_file": 138452992,
+      "kernel_peak": 694390784,
+      "child_pids": []
+    },
+    {
+      "label": "oneqb replacement settled",
+      "rss_bytes": 345985024,
+      "vms_bytes": 563515392,
+      "system_available_bytes": 16894447616,
+      "memory_accounting_scope": "cgroup",
+      "cgroup_current_bytes": 620417024,
+      "cgroup_limit_bytes": 2147483648,
+      "cgroup_inactive_file_bytes": 138452992,
+      "cgroup_anonymous_bytes": 328351744,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0
+      },
+      "anon": 328351744,
+      "file": 281645056,
+      "inactive_file": 138452992,
+      "kernel_peak": 694390784,
+      "child_pids": []
+    },
+    {
+      "label": "superflex before replacement",
+      "rss_bytes": 340893696,
+      "vms_bytes": 558272512,
+      "system_available_bytes": 16821006336,
+      "memory_accounting_scope": "cgroup",
+      "cgroup_current_bytes": 615550976,
+      "cgroup_limit_bytes": 2147483648,
+      "cgroup_inactive_file_bytes": 92434432,
+      "cgroup_anonymous_bytes": 323260416,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0
+      },
+      "anon": 323260416,
+      "file": 281645056,
+      "inactive_file": 92434432,
+      "kernel_peak": 732168192,
+      "child_pids": []
+    },
+    {
+      "label": "superflex replacement settled",
+      "rss_bytes": 330846208,
+      "vms_bytes": 546410496,
+      "system_available_bytes": 16963719168,
+      "memory_accounting_scope": "cgroup",
+      "cgroup_current_bytes": 605446144,
+      "cgroup_limit_bytes": 2147483648,
+      "cgroup_inactive_file_bytes": 46686208,
+      "cgroup_anonymous_bytes": 313212928,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0
+      },
+      "anon": 313212928,
+      "file": 281645056,
+      "inactive_file": 46686208,
+      "kernel_peak": 732168192,
+      "child_pids": []
+    },
+    {
+      "label": "legitimate reader under pressure",
+      "rss_bytes": 1045225472,
+      "vms_bytes": 1261039616,
+      "system_available_bytes": 16268496896,
+      "memory_accounting_scope": "cgroup",
+      "cgroup_current_bytes": 1321238528,
+      "cgroup_limit_bytes": 2147483648,
+      "cgroup_inactive_file_bytes": 1003520,
+      "cgroup_anonymous_bytes": 1027592192,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0
+      },
+      "anon": 1027592192,
+      "file": 281645056,
+      "inactive_file": 1003520,
+      "kernel_peak": 1321238528,
+      "child_pids": []
+    },
+    {
+      "label": "obsolete generation released; current runtime retained",
+      "rss_bytes": 1034244096,
+      "vms_bytes": 1336410112,
+      "system_available_bytes": 16268292096,
+      "memory_accounting_scope": "cgroup",
+      "cgroup_current_bytes": 1310457856,
+      "cgroup_limit_bytes": 2147483648,
+      "cgroup_inactive_file_bytes": 1003520,
+      "cgroup_anonymous_bytes": 1016610816,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0
+      },
+      "anon": 1016610816,
+      "file": 281645056,
+      "inactive_file": 1003520,
+      "kernel_peak": 1321500672,
+      "child_pids": []
+    },
+    {
+      "label": "cold one-QB completed after real owner release",
+      "rss_bytes": 363552768,
+      "vms_bytes": 645398528,
+      "system_available_bytes": 16799268864,
+      "memory_accounting_scope": "cgroup",
+      "cgroup_current_bytes": 638476288,
+      "cgroup_limit_bytes": 2147483648,
+      "cgroup_inactive_file_bytes": 1003520,
+      "cgroup_anonymous_bytes": 345919488,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0
+      },
+      "anon": 345919488,
+      "file": 281645056,
+      "inactive_file": 1003520,
+      "kernel_peak": 1321500672,
+      "child_pids": []
+    },
+    {
+      "label": "global scheduler parked with scalar season",
+      "rss_bytes": 436527104,
+      "vms_bytes": 715272192,
+      "system_available_bytes": 16737984512,
+      "memory_accounting_scope": "cgroup",
+      "cgroup_current_bytes": 711192576,
+      "cgroup_limit_bytes": 2147483648,
+      "cgroup_inactive_file_bytes": 1003520,
+      "cgroup_anonymous_bytes": 418893824,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0
+      },
+      "anon": 418893824,
+      "file": 281645056,
+      "inactive_file": 1003520,
+      "kernel_peak": 1321500672,
+      "child_pids": []
+    },
+    {
+      "label": "global scheduler obsolete source released",
+      "rss_bytes": 434479104,
+      "vms_bytes": 713175040,
+      "system_available_bytes": 16752230400,
+      "memory_accounting_scope": "cgroup",
+      "cgroup_current_bytes": 709083136,
+      "cgroup_limit_bytes": 2147483648,
+      "cgroup_inactive_file_bytes": 1003520,
+      "cgroup_anonymous_bytes": 416845824,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0
+      },
+      "anon": 416845824,
+      "file": 281645056,
+      "inactive_file": 1003520,
+      "kernel_peak": 1321500672,
+      "child_pids": []
+    },
+    {
+      "label": "completed",
+      "rss_bytes": 410542080,
+      "vms_bytes": 689057792,
+      "system_available_bytes": 16776716288,
+      "memory_accounting_scope": "cgroup",
+      "cgroup_current_bytes": 685146112,
+      "cgroup_limit_bytes": 2147483648,
+      "cgroup_inactive_file_bytes": 1003520,
+      "cgroup_anonymous_bytes": 392908800,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0
+      },
+      "anon": 392908800,
+      "file": 281645056,
+      "inactive_file": 1003520,
+      "kernel_peak": 1321500672,
+      "child_pids": []
+    }
+  ],
+  "liveness": [
+    {
+      "label": "initial",
+      "server_ms": 11.361,
+      "client_ms": 38.59577700018235
+    },
+    {
+      "label": "unsafe pressure",
+      "server_ms": 3.089,
+      "client_ms": 8.146691000092687
+    },
+    {
+      "label": "recovered capacity",
+      "server_ms": 1.72,
+      "client_ms": 4.634660999954576
+    },
+    {
+      "label": "completed",
+      "server_ms": 1.869,
+      "client_ms": 5.067551999900388
+    }
+  ],
+  "fixture_cache_last_sync": "2026-11-09T17:52:16.747844+00:00",
+  "fixture_season_context": "nfl_state.season derived from each disposable league season; native rows unchanged",
+  "inputs": {
+    "oneqb.json": {
+      "source_sha256": "98d76b8452431ff3e6f961b6bddd9a654f7b6d23129d96cce60e52cbf79cb11b"
+    },
+    "superflex.json": {
+      "source_sha256": "49915270f727cd3eb6a3a792b8531a487d7da96a06c031ee0e5a176887f69c81"
+    },
+    "projections.sqlite3": {
+      "source_sha256": "43541f6a3c738d0ebeac0794cdfd7c009bd27f450816919315b824b512a7b708"
+    }
+  },
+  "written_files": {
+    "oneqb-first.json": {
+      "bytes": 45671798,
+      "sha256": "969c89bfb61250c0113ee5c9428522dd67937a3eb5f85642bc9ce675b9db4e9e"
+    },
+    "oneqb-next.json": {
+      "bytes": 45671797,
+      "sha256": "fdd565be634304c6ad222d14922bf324694a8f4d4ff726b66abca17fcdcc013a"
+    },
+    "oneqb-foreign.json": {
+      "bytes": 45671806,
+      "sha256": "00e72e3ce94dfd3a9f6d81eedb3d1f08b8cff0222f28fcfc8f9c6bcd152a500b"
+    },
+    "superflex-first.json": {
+      "bytes": 45679719,
+      "sha256": "fcc2ef9bb0597fc6e7ce9362de3917a8e0b3a947b0ddc86308257e38603dbad7"
+    },
+    "superflex-next.json": {
+      "bytes": 45679718,
+      "sha256": "05ebcce6e60ee12e6f6b0e0064ca0005197d78e730fb51a9e0898001b18d49af"
+    },
+    "superflex-foreign.json": {
+      "bytes": 45679723,
+      "sha256": "63f27613366fcd7f8fd7be7005cbe6ec68e9b27dbae3e2521b207492f20e4522"
+    }
+  },
+  "head": "b65421d5e55e4e0e755ffb77f675e962d9282f54",
+  "tree": "ca1345adc5ede802e5a286c69892657d5e1abdc1",
+  "working_tree_clean": true,
+  "cgroup_limit": 2147483648,
+  "swap_limit": 0,
+  "cpus": 2,
+  "network": "none",
+  "children_after": [],
+  "source_values_preserved": true,
+  "scope": "Four source-compatible disposable ownership cases; current/active contexts preserved. Global acquisition mocked; actual cache restoration/publication and admission remain real. Not liveGranite or independent liveSleeper parity.",
+  "limitations": [
+    "Fixture clocks normalized only on copies; no source facts changed.",
+    "Kernel lifetime peak includes fixture preparation,verification and bounded pressure. Stage samples distinguish publication and pressure; no decoder-only comparison claimed.",
+    "Three repeated publications per case are finite cleanup evidence,not long-term leak freedom.",
+    "Recovery explicitly relieves fixture-owned pressure; logical owner release alone need not return enough allocator pages to admit restoration."
+  ],
+  "scratch_removed": true
+}

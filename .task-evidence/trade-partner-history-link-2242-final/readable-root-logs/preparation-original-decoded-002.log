@@ -1,0 +1,93 @@
+ce_checks_reject (tests.test_release_publisher.RunAdmissionTests.test_later_failed_missing_and_wrong_source_checks_reject) ... ok
+2026-11-09T18:59:08.7435557Z test_publish_cannot_omit_preparation_certificate (tests.test_release_publisher.RunAdmissionTests.test_publish_cannot_omit_preparation_certificate) ... ok
+2026-11-09T18:59:08.7438862Z test_successful_run_from_another_commit_is_rejected (tests.test_release_publisher.RunAdmissionTests.test_successful_run_from_another_commit_is_rejected) ... ok
+2026-11-09T18:59:08.7497025Z test_exact_source_and_complete_real_work_are_required (tests.test_release_publisher.TradeResourceIntegrityTests.test_exact_source_and_complete_real_work_are_required) ... ok
+2026-11-09T18:59:08.7525212Z test_feature_source_phone_and_package_boundaries (tests.test_release_publisher.TradeTimeMarketPublisherTests.test_feature_source_phone_and_package_boundaries) ... ok
+2026-11-09T18:59:08.7525998Z 
+2026-11-09T18:59:08.7526155Z ----------------------------------------------------------------------
+2026-11-09T18:59:08.7526461Z Ran 55 tests in 0.241s
+2026-11-09T18:59:08.7526583Z 
+2026-11-09T18:59:08.7526919Z OK
+2026-11-09T18:59:09.3216117Z ##[group]Run arguments=()
+2026-11-09T18:59:09.3216321Z [36;1marguments=()[0m
+2026-11-09T18:59:09.3216470Z [36;1mif [ "$RELEASE_OPERATION" = publish ]; then[0m
+2026-11-09T18:59:09.3216657Z [36;1m  test -n "$PREPARATION_RUN_ID"[0m
+2026-11-09T18:59:09.3216849Z [36;1m  arguments+=(--prepared-run "$PREPARATION_RUN_ID")[0m
+2026-11-09T18:59:09.3217150Z [36;1mfi[0m
+2026-11-09T18:59:09.3217436Z [36;1mpython -m tools.release.publish --plan .github/release-plans/2242.json --operation "$RELEASE_OPERATION" "${arguments[@]}"[0m
+2026-11-09T18:59:09.3235424Z shell: /usr/bin/bash -e {0}
+2026-11-09T18:59:09.3235569Z env:
+2026-11-09T18:59:09.3235783Z   NODE_OPTIONS: --max-old-space-size=256
+2026-11-09T18:59:09.3235974Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-09T18:59:09.3236208Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib/pkgconfig
+2026-11-09T18:59:09.3236441Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-09T18:59:09.3236689Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-09T18:59:09.3236899Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-09T18:59:09.3237112Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib
+2026-11-09T18:59:09.3238689Z   GH_TOKEN: ***
+2026-11-09T18:59:09.3238815Z   RELEASE_OPERATION: prepare
+2026-11-09T18:59:09.3238963Z   PREPARATION_RUN_ID: 
+2026-11-09T18:59:09.3239087Z ##[endgroup]
+2026-11-09T18:59:11.3835904Z From https://github.com/Richarddavis47/dtos
+2026-11-09T18:59:11.3836311Z  * branch              refs/pull/331/head -> FETCH_HEAD
+2026-11-09T18:59:11.3836617Z  * branch              main       -> FETCH_HEAD
+2026-11-09T19:00:25.5965202Z Verified guarded release prepare completed.
+2026-11-09T19:00:25.6166083Z ##[group]Run actions/upload-artifact@v4
+2026-11-09T19:00:25.6166260Z with:
+2026-11-09T19:00:25.6166401Z   name: guarded-release-2242-prepare-42678870790
+2026-11-09T19:00:25.6167269Z   path: .validation/guarded-release/outcome.json
+.validation/guarded-release/publication.json
+.validation/guarded-release/readiness.json
+.validation/guarded-release/production-smoke.json
+.validation/guarded-release/assets/VALIDATION.json
+.validation/guarded-release/assets/evidence-manifest.json
+.validation/guarded-release/assets/SHA256SUMS
+.validation/guarded-release/assets/prior-attempts.json
+
+2026-11-09T19:00:25.6168133Z   if-no-files-found: error
+2026-11-09T19:00:25.6168270Z   retention-days: 14
+2026-11-09T19:00:25.6168394Z   compression-level: 6
+2026-11-09T19:00:25.6168519Z   overwrite: false
+2026-11-09T19:00:25.6168641Z   include-hidden-files: false
+2026-11-09T19:00:25.6168778Z env:
+2026-11-09T19:00:25.6168906Z   NODE_OPTIONS: --max-old-space-size=256
+2026-11-09T19:00:25.6169124Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-09T19:00:25.6169368Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib/pkgconfig
+2026-11-09T19:00:25.6169606Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-09T19:00:25.6169828Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-09T19:00:25.6170043Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-09T19:00:25.6170260Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib
+2026-11-09T19:00:25.6170443Z ##[endgroup]
+2026-11-09T19:00:25.7338009Z (node:2731) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-11-09T19:00:25.7338548Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-11-09T19:00:25.7410489Z Multiple search paths detected. Calculating the least common ancestor of all paths
+2026-11-09T19:00:25.7417137Z The least common ancestor is /home/runner/work/dtos/dtos/.validation/guarded-release. This will be the root directory of the artifact
+2026-11-09T19:00:25.7417717Z With the provided path, there will be 6 files uploaded
+2026-11-09T19:00:25.7418147Z Artifact name is valid!
+2026-11-09T19:00:25.7418362Z Root directory input is valid!
+2026-11-09T19:00:26.0513987Z Beginning upload of artifact content to blob storage
+2026-11-09T19:00:26.0749576Z (node:2731) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+2026-11-09T19:00:26.2684283Z Uploaded bytes 14325
+2026-11-09T19:00:26.3143753Z Finished uploading artifact content to blob storage!
+2026-11-09T19:00:26.3144310Z SHA256 digest of uploaded artifact zip is 396a883a217213ec1a4fe0d7f472f13696498b95c5e25ae966f456f06b935f55
+2026-11-09T19:00:26.3145002Z Finalizing artifact upload
+2026-11-09T19:00:26.6988023Z Artifact guarded-release-2242-prepare-42678870790.zip successfully finalized. Artifact ID 13700803902
+2026-11-09T19:00:26.6988742Z Artifact guarded-release-2242-prepare-42678870790 has been successfully uploaded! Final size is 14325 bytes. Artifact ID is 13700803902
+2026-11-09T19:00:26.6993323Z Artifact download URL: https://github.com/Richarddavis47/dtos/actions/runs/42678870790/artifacts/13700803902
+2026-11-09T19:00:26.7160796Z Post job cleanup.
+2026-11-09T19:00:26.8062102Z (node:2745) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-11-09T19:00:26.8062754Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-11-09T19:00:26.8189038Z Post job cleanup.
+2026-11-09T19:00:26.8842208Z [command]/usr/bin/git version
+2026-11-09T19:00:26.8879826Z git version 2.56.0
+2026-11-09T19:00:26.8905898Z Temporarily overriding HOME='/home/runner/work/_temp/7b608250-e6b1-4247-b8a7-e5744be66250' before making global git config changes
+2026-11-09T19:00:26.8906617Z Adding repository directory to the temporary git global config as a safe directory
+2026-11-09T19:00:26.8909969Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/dtos/dtos
+2026-11-09T19:00:26.8955500Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-11-09T19:00:26.9005827Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-11-09T19:00:26.9297236Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-11-09T19:00:26.9373993Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-11-09T19:00:26.9622872Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-11-09T19:00:26.9666703Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-11-09T19:00:27.0068208Z Cleaning up orphan processes
+2026-11-09T19:00:27.0363848Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5, actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

@@ -1,0 +1,183 @@
+/usr/local/lib/python3.14/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+  from starlette.testclient import TestClient as TestClient  # noqa
+Validation Chromium: /usr/bin/chromium
+Validation Chromium version: 156.0.8078.73
+test_ambiguous_or_changed_workspace_is_omitted (tests.test_trade_partner_history.PartnerHistoryLinkTests.test_ambiguous_or_changed_workspace_is_omitted) ... ok
+test_exact_link_does_not_save_until_followed (tests.test_trade_partner_history.PartnerHistoryLinkTests.test_exact_link_does_not_save_until_followed) ... ok
+test_missing_self_unknown_and_malformed_partner_are_omitted (tests.test_trade_partner_history.PartnerHistoryLinkTests.test_missing_self_unknown_and_malformed_partner_are_omitted) ... ok
+test_recommendation_retains_preview_only_on_normal_click (tests.test_trade_partner_history.PartnerHistoryLinkTests.test_recommendation_retains_preview_only_on_normal_click) ... ok
+test_saved_context_cannot_cross_binding_or_declared_league (tests.test_trade_partner_history.PartnerHistoryLinkTests.test_saved_context_cannot_cross_binding_or_declared_league) ... ok
+test_evaluation_round_trip_retains_custom_draft_and_filters_at_four_sizes (tests.test_trade_partner_history_browser.TradePartnerHistoryBrowserTests.test_evaluation_round_trip_retains_custom_draft_and_filters_at_four_sizes) ... {"timestamp":"2026-11-09T17:42:00.491480+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T17:42:00.499700+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+Validation Chromium: /usr/bin/chromium
+Validation Chromium version: 156.0.8078.73
+{"timestamp":"2026-11-09T17:42:01.006682+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/create \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T17:42:01.103939+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/trade_workspace.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T17:42:01.104497+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T17:42:01.107584+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/trade_workspace.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T17:42:01.108156+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T17:42:01.109597+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/strategy_session.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T17:42:01.210871+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":349458432,"limit_bytes":2147483648,"raw_headroom_bytes":1798025216,"clean_inactive_file_bytes":1273856,"conditional_file_credit_bytes":636928,"admission_headroom_bytes":1798662144,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-09T17:42:01.212384+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/workspace?front_office=1&mode=calculator \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T17:42:01.570819+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_admission","request_id":"system","event":"trade_admission","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":380698624,"limit_bytes":2147483648,"raw_headroom_bytes":1766785024,"clean_inactive_file_bytes":1273856,"conditional_file_credit_bytes":636928,"admission_headroom_bytes":1767421952,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"recovery":null}}
+{"timestamp":"2026-11-09T17:42:01.628162+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_execution_finished","request_id":"system","event":"trade_execution_finished","duration_ms":58.216,"diagnostic":{"schema":"trade-resource-v1","outcome":"complete"}}
+{"timestamp":"2026-11-09T17:42:01.629896+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/trades/evaluate \"HTTP/1.1 200 OK\"","request_id":"system"}
+ERROR
+test_evaluation_round_trip_retains_custom_draft_and_filters_at_four_sizes (tests.test_trade_partner_history_browser.TradePartnerHistoryBrowserTests.test_evaluation_round_trip_retains_custom_draft_and_filters_at_four_sizes) ... ERROR
+test_league_switch_reauthorizes_and_discards_stale_return (tests.test_trade_partner_history_browser.TradePartnerHistoryBrowserTests.test_league_switch_reauthorizes_and_discards_stale_return) ... {"timestamp":"2026-11-09T17:42:11.182588+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T17:42:11.189830+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+Validation Chromium: /usr/bin/chromium
+Validation Chromium version: 156.0.8078.73
+{"timestamp":"2026-11-09T17:42:11.630809+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/create \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T17:42:11.722382+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/strategy_session.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T17:42:11.725599+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/trade_workspace.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T17:42:11.727088+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T17:42:11.728971+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/trade_workspace.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T17:42:11.736141+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T17:42:11.848950+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":350756864,"limit_bytes":2147483648,"raw_headroom_bytes":1796726784,"clean_inactive_file_bytes":1273856,"conditional_file_credit_bytes":636928,"admission_headroom_bytes":1797363712,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-09T17:42:11.850504+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/workspace?front_office=1&mode=calculator \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T17:42:12.277991+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_admission","request_id":"system","event":"trade_admission","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":381591552,"limit_bytes":2147483648,"raw_headroom_bytes":1765892096,"clean_inactive_file_bytes":1273856,"conditional_file_credit_bytes":636928,"admission_headroom_bytes":1766529024,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"recovery":null}}
+{"timestamp":"2026-11-09T17:42:12.324450+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_execution_finished","request_id":"system","event":"trade_execution_finished","duration_ms":46.802,"diagnostic":{"schema":"trade-resource-v1","outcome":"complete"}}
+{"timestamp":"2026-11-09T17:42:12.326298+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/trades/evaluate \"HTTP/1.1 200 OK\"","request_id":"system"}
+ERROR
+test_league_switch_reauthorizes_and_discards_stale_return (tests.test_trade_partner_history_browser.TradePartnerHistoryBrowserTests.test_league_switch_reauthorizes_and_discards_stale_return) ... ERROR
+test_recommendation_round_trip_retains_clicked_offer_without_adopting (tests.test_trade_partner_history_browser.TradePartnerHistoryBrowserTests.test_recommendation_round_trip_retains_clicked_offer_without_adopting) ... {"timestamp":"2026-11-09T17:42:21.886486+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T17:42:21.893577+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+Validation Chromium: /usr/bin/chromium
+Validation Chromium version: 156.0.8078.73
+{"timestamp":"2026-11-09T17:42:22.340717+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/recommended \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T17:42:22.424212+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T17:42:22.427270+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/strategy_session.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T17:42:22.432412+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/trade_workspace.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T17:42:22.436396+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T17:42:22.436752+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/trade_workspace.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T17:42:22.545207+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":357097472,"limit_bytes":2147483648,"raw_headroom_bytes":1790386176,"clean_inactive_file_bytes":1261568,"conditional_file_credit_bytes":630784,"admission_headroom_bytes":1791016960,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-09T17:42:22.547082+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/workspace?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T17:42:22.724169+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_admission","request_id":"system","event":"trade_admission","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":378941440,"limit_bytes":2147483648,"raw_headroom_bytes":1768542208,"clean_inactive_file_bytes":1261568,"conditional_file_credit_bytes":630784,"admission_headroom_bytes":1769172992,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"recovery":null}}
+{"timestamp":"2026-11-09T17:42:23.660964+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_execution_finished","request_id":"system","event":"trade_execution_finished","duration_ms":937.142,"diagnostic":{"schema":"trade-resource-v1","outcome":"complete"}}
+{"timestamp":"2026-11-09T17:42:23.662729+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/trades/generate \"HTTP/1.1 200 OK\"","request_id":"system"}
+FAIL
+test_recommendation_round_trip_retains_clicked_offer_without_adopting (tests.test_trade_partner_history_browser.TradePartnerHistoryBrowserTests.test_recommendation_round_trip_retains_clicked_offer_without_adopting) ... ERROR
+
+======================================================================
+ERROR: test_evaluation_round_trip_retains_custom_draft_and_filters_at_four_sizes (tests.test_trade_partner_history_browser.TradePartnerHistoryBrowserTests.test_evaluation_round_trip_retains_custom_draft_and_filters_at_four_sizes)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_trade_partner_history_browser.py", line 91, in test_evaluation_round_trip_retains_custom_draft_and_filters_at_four_sizes
+    page.locator('#trade-result .tw-partner-history').wait_for()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/site-packages/playwright/sync_api/_generated.py", line 20696, in wait_for
+    self._sync(
+    ~~~~~~~~~~^
+        self._impl_obj.wait_for(timeout=to_milliseconds(timeout), state=state)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/usr/local/lib/python3.14/site-packages/playwright/_impl/_sync_base.py", line 115, in _sync
+    return task.result()
+           ~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/site-packages/playwright/_impl/_locator.py", line 752, in wait_for
+    await self._frame.wait_for_selector(
+        self._selector, strict=True, timeout=timeout, state=state
+    )
+  File "/usr/local/lib/python3.14/site-packages/playwright/_impl/_frame.py", line 395, in wait_for_selector
+    await self._channel.send(
+        "waitForSelector", self._timeout, locals_to_params(locals())
+    )
+  File "/usr/local/lib/python3.14/site-packages/playwright/_impl/_connection.py", line 76, in send
+    return await self._connection.wrap_api_call(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    )
+    ^
+  File "/usr/local/lib/python3.14/site-packages/playwright/_impl/_connection.py", line 632, in wrap_api_call
+    raise rewrite_error(error, f"{parsed_st['apiName']}: {error}") from None
+playwright._impl._errors.TimeoutError: Locator.wait_for: Timeout 9000ms exceeded.
+Call log:
+  - waiting for locator("#trade-result .tw-partner-history") to be visible
+
+
+======================================================================
+ERROR: test_evaluation_round_trip_retains_custom_draft_and_filters_at_four_sizes (tests.test_trade_partner_history_browser.TradePartnerHistoryBrowserTests.test_evaluation_round_trip_retains_custom_draft_and_filters_at_four_sizes)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.14/site-packages/playwright/sync_api/_generated.py", line 16537, in close
+    return mapping.from_maybe_impl(self._sync(self._impl_obj.close(reason=reason)))
+                                   ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/playwright/_impl/_sync_base.py", line 104, in _sync
+    raise Error("Event loop is closed! Is Playwright already stopped?")
+playwright._impl._errors.Error: Event loop is closed! Is Playwright already stopped?
+
+======================================================================
+ERROR: test_league_switch_reauthorizes_and_discards_stale_return (tests.test_trade_partner_history_browser.TradePartnerHistoryBrowserTests.test_league_switch_reauthorizes_and_discards_stale_return)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_trade_partner_history_browser.py", line 151, in test_league_switch_reauthorizes_and_discards_stale_return
+    page.locator('#trade-result .tw-partner-history').click()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/site-packages/playwright/sync_api/_generated.py", line 18032, in click
+    self._sync(
+    ~~~~~~~~~~^
+        self._impl_obj.click(
+        ^^^^^^^^^^^^^^^^^^^^^
+    ...<11 lines>...
+        )
+        ^
+    )
+    ^
+  File "/usr/local/lib/python3.14/site-packages/playwright/_impl/_sync_base.py", line 115, in _sync
+    return task.result()
+           ~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/site-packages/playwright/_impl/_locator.py", line 165, in click
+    return await self._frame._click(self._selector, strict=True, **params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/playwright/_impl/_frame.py", line 594, in _click
+    await self._channel.send("click", self._timeout, locals_to_params(locals()))
+  File "/usr/local/lib/python3.14/site-packages/playwright/_impl/_connection.py", line 76, in send
+    return await self._connection.wrap_api_call(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    )
+    ^
+  File "/usr/local/lib/python3.14/site-packages/playwright/_impl/_connection.py", line 632, in wrap_api_call
+    raise rewrite_error(error, f"{parsed_st['apiName']}: {error}") from None
+playwright._impl._errors.TimeoutError: Locator.click: Timeout 9000ms exceeded.
+Call log:
+  - waiting for locator("#trade-result .tw-partner-history")
+
+
+======================================================================
+ERROR: test_league_switch_reauthorizes_and_discards_stale_return (tests.test_trade_partner_history_browser.TradePartnerHistoryBrowserTests.test_league_switch_reauthorizes_and_discards_stale_return)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.14/site-packages/playwright/sync_api/_generated.py", line 16537, in close
+    return mapping.from_maybe_impl(self._sync(self._impl_obj.close(reason=reason)))
+                                   ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/playwright/_impl/_sync_base.py", line 104, in _sync
+    raise Error("Event loop is closed! Is Playwright already stopped?")
+playwright._impl._errors.Error: Event loop is closed! Is Playwright already stopped?
+
+======================================================================
+ERROR: test_recommendation_round_trip_retains_clicked_offer_without_adopting (tests.test_trade_partner_history_browser.TradePartnerHistoryBrowserTests.test_recommendation_round_trip_retains_clicked_offer_without_adopting)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.14/site-packages/playwright/sync_api/_generated.py", line 16537, in close
+    return mapping.from_maybe_impl(self._sync(self._impl_obj.close(reason=reason)))
+                                   ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/playwright/_impl/_sync_base.py", line 104, in _sync
+    raise Error("Event loop is closed! Is Playwright already stopped?")
+playwright._impl._errors.Error: Event loop is closed! Is Playwright already stopped?
+
+======================================================================
+FAIL: test_recommendation_round_trip_retains_clicked_offer_without_adopting (tests.test_trade_partner_history_browser.TradePartnerHistoryBrowserTests.test_recommendation_round_trip_retains_clicked_offer_without_adopting)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_trade_partner_history_browser.py", line 122, in test_recommendation_round_trip_retains_clicked_offer_without_adopting
+    self.assertTrue(package)
+    ~~~~~~~~~~~~~~~^^^^^^^^^
+AssertionError: [] is not true
+
+----------------------------------------------------------------------
+Ran 8 tests in 24.978s
+
+FAILED (failures=1, errors=5)

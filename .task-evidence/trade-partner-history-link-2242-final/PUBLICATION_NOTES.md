@@ -1,0 +1,9 @@
+# Publication-only reconciliation
+
+All application validation passed on the exact candidate/tree before merge. The existing authorized native Actions publisher prepared and independently read back23attachments, followed by normal expected-head squash, immutable publication and verified rollout. Its workflow/controller branch was never merged into application main. No direct Codex Cloud asset-upload attempt was made.
+
+Original metadata/transport errors are separate from application tests: an early final-queue call yielded before output, and an outer parser attempted to parse its empty early response; the completed on-disk queue was reused. gh pr edit queried deprecated Projects(classic); authorized REST pulls PATCH updated the body instead. A local post-preparation helper assembled an invalid numeric filename literal; its interactive SyntaxError was corrected before certificate verification or merge. These interactive errors were not saved as separate original stderr files and are not reconstructed as logs. Original job logs and certificate bytes are preserved.
+
+The first recovery package exceeded the unchanged100MiB Git file limit. Its original failure log, CRC/hash, size and method are retained; its original binary remains local. The replacement removes only duplicate hosted-readable copies from that upload bundle, keeping all local manifested originals, all13original job logs and required feature/resource records. The original hosted canonical ZIP is independently attached immutably; the full omitted readable folders remain in this public handoff. No test/assertion, reserve, evidence requirement or attachment guard was weakened.
+
+The updated public Scout prompt adds the actual deployed identity to the preparation-time source-pinned handoff. The original immutable handoff and evidence remain unchanged. Public payload readback proves bytes, not independent feature acceptance or live owner access.

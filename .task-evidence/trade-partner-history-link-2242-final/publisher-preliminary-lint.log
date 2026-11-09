@@ -1,0 +1,12 @@
+E701 Multiple statements on one line (colon)
+    --> tests/test_release_publisher.py:1150:17
+     |
+1148 |     def verify(self, alter=None):
+1149 |         evaluation,recommendation=self.reports()
+1150 |         if alter:alter(evaluation,recommendation)
+     |                 ^
+1151 |         files={'trade-partner-history/'+name+'-round-trip.json':json.dumps(report).encode()
+1152 |                for name,report in [('evaluation',evaluation),('recommendation',recommendation)]}
+     |
+
+Found 1 error.

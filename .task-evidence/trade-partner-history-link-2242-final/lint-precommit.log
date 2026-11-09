@@ -1,0 +1,20 @@
+invalid-syntax: Unexpected indentation
+   --> tests/test_trade_partner_history_browser.py:147:1
+    |
+145 |             self.assertTrue(after['navigationView']['includePicks'])
+146 |             self.assertEqual(after['navigationView']['typeFilter'], 'all')
+147 |                 self.assertEqual(page.locator('#trade-result .tw-offer').first.locator(':scope > p').filter(has_text=re.compile(r'^Yo…
+    | ^^^^^^^^^^^^^^^^
+148 |                 proposal = after['previewProposal']
+149 |                 exact = {k:proposal[k] for k in ('partner_roster_id','assets_sent','assets_received')}
+    |
+
+invalid-syntax: Expected a statement
+   --> tests/test_trade_partner_history_browser.py:176:1
+    |
+174 |         self.assertEqual(f.editor.client.get('/history/team/league-1:franchise:2').status_code, 404)
+175 |         self.assertFalse(errors, errors)
+    |                                         ^
+    |
+
+Found 2 errors.

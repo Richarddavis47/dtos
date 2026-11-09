@@ -1,0 +1,34 @@
+{
+  "candidate": "b65421d5e55e4e0e755ffb77f675e962d9282f54",
+  "tree": "ca1345adc5ede802e5a286c69892657d5e1abdc1",
+  "records": [
+    {
+      "file": "focused-precommit.log",
+      "command": "DTOS_PARTNER_HISTORY_EVIDENCE=/evidence/focused-precommit python run-constrained.py -m unittest -v tests.test_trade_partner_history tests.test_trade_partner_history_browser tests.test_contextual_back tests.test_completed_trade_observations tests.test_completed_trade_observations_browser",
+      "boundary": "Precommit working-tree controls; not exact final-source validation",
+      "tests": 40,
+      "seconds": 67.481,
+      "sha256": "c70365b1bdec82057bf008ec95f3ed47e119f08fd1790c092a4df7ab6b19a439",
+      "passed": true
+    },
+    {
+      "file": "final-source-focused.log",
+      "command": "DTOS_PARTNER_HISTORY_EVIDENCE=/evidence/browser-final-source python run-constrained.py -m unittest -v tests.test_trade_partner_history tests.test_trade_partner_history_browser",
+      "boundary": "Exact clean committed source, Python3.14.3, enforced2GiB/no extra swap,2CPU,networknone,UID1000",
+      "tests": 8,
+      "seconds": 11.4,
+      "sha256": "43454d6ec0118299e02630df9d0fc56148cea372072470aa7b6b2c31323568fc",
+      "passed": true
+    },
+    {
+      "file": "final-history-browser-original.log",
+      "command": "DTOS_COMPLETED_TRADE_OBSERVATIONS_EVIDENCE=/evidence/history-browser-final-source python run-constrained.py -m unittest -v tests.test_completed_trade_observations_browser",
+      "boundary": "Exact source; existing retained replay plus disposable pagination/ownership controls",
+      "tests": 1,
+      "seconds": 10.374,
+      "sha256": "fd7937e1baf48b5b4e552a194e502919a5bbe9289cf619ac6b1deb2b75e84809",
+      "passed": true
+    }
+  ],
+  "method": "Existing verified runtime image and wrapper; original console bytes retained, not regenerated. Precommit scope remains separate."
+}

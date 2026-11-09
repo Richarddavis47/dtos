@@ -1,0 +1,142 @@
+/usr/local/lib/python3.14/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+  from starlette.testclient import TestClient as TestClient  # noqa
+Validation Chromium: /usr/bin/chromium
+Validation Chromium version: 156.0.8078.73
+test_ambiguous_or_changed_workspace_is_omitted (tests.test_trade_partner_history.PartnerHistoryLinkTests.test_ambiguous_or_changed_workspace_is_omitted) ... ok
+test_exact_link_does_not_save_until_followed (tests.test_trade_partner_history.PartnerHistoryLinkTests.test_exact_link_does_not_save_until_followed) ... ok
+test_missing_self_unknown_and_malformed_partner_are_omitted (tests.test_trade_partner_history.PartnerHistoryLinkTests.test_missing_self_unknown_and_malformed_partner_are_omitted) ... ok
+test_recommendation_retains_preview_only_on_normal_click (tests.test_trade_partner_history.PartnerHistoryLinkTests.test_recommendation_retains_preview_only_on_normal_click) ... ok
+test_saved_context_cannot_cross_binding_or_declared_league (tests.test_trade_partner_history.PartnerHistoryLinkTests.test_saved_context_cannot_cross_binding_or_declared_league) ... ok
+test_evaluation_round_trip_retains_custom_draft_and_filters_at_four_sizes (tests.test_trade_partner_history_browser.TradePartnerHistoryBrowserTests.test_evaluation_round_trip_retains_custom_draft_and_filters_at_four_sizes) ... {"timestamp":"2026-11-09T17:43:29.779321+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T17:43:29.788645+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+Validation Chromium: /usr/bin/chromium
+Validation Chromium version: 156.0.8078.73
+{"timestamp":"2026-11-09T17:43:30.280875+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/create \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T17:43:30.377970+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T17:43:30.380853+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T17:43:30.385872+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/trade_workspace.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T17:43:30.386282+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/trade_workspace.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T17:43:30.389144+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/strategy_session.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T17:43:30.495892+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":345059328,"limit_bytes":2147483648,"raw_headroom_bytes":1802424320,"clean_inactive_file_bytes":1277952,"conditional_file_credit_bytes":638976,"admission_headroom_bytes":1803063296,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-09T17:43:30.497770+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/workspace?front_office=1&mode=calculator \"HTTP/1.1 200 OK\"","request_id":"system"}
+ERROR
+test_league_switch_reauthorizes_and_discards_stale_return (tests.test_trade_partner_history_browser.TradePartnerHistoryBrowserTests.test_league_switch_reauthorizes_and_discards_stale_return) ... {"timestamp":"2026-11-09T17:43:40.106205+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T17:43:40.113204+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+Validation Chromium: /usr/bin/chromium
+Validation Chromium version: 156.0.8078.73
+{"timestamp":"2026-11-09T17:43:40.596928+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/create \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T17:43:40.680270+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T17:43:40.700647+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/trade_workspace.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T17:43:40.703389+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/strategy_session.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T17:43:40.707009+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T17:43:40.755000+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/trade_workspace.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T17:43:40.861296+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":349908992,"limit_bytes":2147483648,"raw_headroom_bytes":1797574656,"clean_inactive_file_bytes":1277952,"conditional_file_credit_bytes":638976,"admission_headroom_bytes":1798213632,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-09T17:43:40.862887+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/workspace?front_office=1&mode=calculator \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T17:43:41.185031+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_admission","request_id":"system","event":"trade_admission","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":380723200,"limit_bytes":2147483648,"raw_headroom_bytes":1766760448,"clean_inactive_file_bytes":1277952,"conditional_file_credit_bytes":638976,"admission_headroom_bytes":1767399424,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"recovery":null}}
+{"timestamp":"2026-11-09T17:43:41.238252+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_execution_finished","request_id":"system","event":"trade_execution_finished","duration_ms":53.538,"diagnostic":{"schema":"trade-resource-v1","outcome":"complete"}}
+{"timestamp":"2026-11-09T17:43:41.239549+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/trades/evaluate \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T17:43:41.341146+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/team/league-1%3Afranchise%3A2 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T17:43:41.374352+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T17:43:41.374893+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T17:43:41.436143+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/account/navigation-context \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T17:43:41.453690+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/ \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T17:43:41.500535+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T17:43:41.502088+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T17:43:41.502259+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-09T17:43:41.503036+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/home-opportunities.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T17:43:41.505801+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/strategy_session.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T17:43:41.511224+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/trade_workspace.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T17:43:41.578996+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T17:43:41.579678+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"18137377bb4a4fb3a9fdcb170a4d7bfb","event":"request_complete","duration_ms":65.256,"status_code":200,"method":"GET","path":"/static/css/matchups.css"}
+{"timestamp":"2026-11-09T17:43:41.592055+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1&protected=%5B%5D&excluded=%5B%5D \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T17:43:41.618888+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/team/league-1:franchise:2 \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+ok
+test_recommendation_round_trip_retains_clicked_offer_without_adopting (tests.test_trade_partner_history_browser.TradePartnerHistoryBrowserTests.test_recommendation_round_trip_retains_clicked_offer_without_adopting) ... {"timestamp":"2026-11-09T17:43:42.157470+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T17:43:42.166417+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+Validation Chromium: /usr/bin/chromium
+Validation Chromium version: 156.0.8078.73
+{"timestamp":"2026-11-09T17:43:42.665155+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/recommended \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T17:43:42.712287+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/trade_workspace.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T17:43:42.712963+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T17:43:42.758557+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T17:43:42.760643+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/strategy_session.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T17:43:42.761157+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/trade_workspace.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T17:43:42.878641+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":362663936,"limit_bytes":2147483648,"raw_headroom_bytes":1784819712,"clean_inactive_file_bytes":1265664,"conditional_file_credit_bytes":632832,"admission_headroom_bytes":1785452544,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-09T17:43:42.880910+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/workspace?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T17:43:43.058158+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_admission","request_id":"system","event":"trade_admission","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":384094208,"limit_bytes":2147483648,"raw_headroom_bytes":1763389440,"clean_inactive_file_bytes":1265664,"conditional_file_credit_bytes":632832,"admission_headroom_bytes":1764022272,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"recovery":null}}
+{"timestamp":"2026-11-09T17:43:43.999785+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_execution_finished","request_id":"system","event":"trade_execution_finished","duration_ms":942.063,"diagnostic":{"schema":"trade-resource-v1","outcome":"complete"}}
+{"timestamp":"2026-11-09T17:43:44.001337+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/trades/generate \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T17:43:44.491256+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/team/league-1%3Afranchise%3A2 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T17:43:44.524442+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T17:43:44.526702+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T17:43:44.602579+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/account/navigation-context \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T17:43:44.618816+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/recommended \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T17:43:44.650447+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/strategy_session.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T17:43:44.651801+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T17:43:44.652553+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T17:43:44.654116+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/trade_workspace.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T17:43:44.656823+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/trade_workspace.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T17:43:44.696065+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":497364992,"limit_bytes":2147483648,"raw_headroom_bytes":1650118656,"clean_inactive_file_bytes":1245184,"conditional_file_credit_bytes":622592,"admission_headroom_bytes":1650741248,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-09T17:43:44.697850+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/workspace?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+FAIL
+
+======================================================================
+ERROR: test_evaluation_round_trip_retains_custom_draft_and_filters_at_four_sizes (tests.test_trade_partner_history_browser.TradePartnerHistoryBrowserTests.test_evaluation_round_trip_retains_custom_draft_and_filters_at_four_sizes)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_trade_partner_history_browser.py", line 91, in test_evaluation_round_trip_retains_custom_draft_and_filters_at_four_sizes
+    page.get_by_role('searchbox', name='Search my assets').fill('a')
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^
+  File "/usr/local/lib/python3.14/site-packages/playwright/sync_api/_generated.py", line 18398, in fill
+    self._sync(
+    ~~~~~~~~~~^
+        self._impl_obj.fill(
+        ^^^^^^^^^^^^^^^^^^^^
+    ...<4 lines>...
+        )
+        ^
+    )
+    ^
+  File "/usr/local/lib/python3.14/site-packages/playwright/_impl/_sync_base.py", line 115, in _sync
+    return task.result()
+           ~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/site-packages/playwright/_impl/_locator.py", line 219, in fill
+    return await self._frame.fill(self._selector, strict=True, **params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/playwright/_impl/_frame.py", line 637, in fill
+    await self._fill(**locals_to_params(locals()))
+  File "/usr/local/lib/python3.14/site-packages/playwright/_impl/_frame.py", line 649, in _fill
+    await self._channel.send("fill", self._timeout, locals_to_params(locals()))
+  File "/usr/local/lib/python3.14/site-packages/playwright/_impl/_connection.py", line 76, in send
+    return await self._connection.wrap_api_call(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    )
+    ^
+  File "/usr/local/lib/python3.14/site-packages/playwright/_impl/_connection.py", line 632, in wrap_api_call
+    raise rewrite_error(error, f"{parsed_st['apiName']}: {error}") from None
+playwright._impl._errors.TimeoutError: Locator.fill: Timeout 9000ms exceeded.
+Call log:
+  - waiting for get_by_role("searchbox", name="Search my assets")
+
+
+======================================================================
+FAIL: test_recommendation_round_trip_retains_clicked_offer_without_adopting (tests.test_trade_partner_history_browser.TradePartnerHistoryBrowserTests.test_recommendation_round_trip_retains_clicked_offer_without_adopting)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_trade_partner_history_browser.py", line 133, in test_recommendation_round_trip_retains_clicked_offer_without_adopting
+    self.assertEqual(page.locator('#trade-result .tw-offer').first.locator('p').filter(has_text='You send:').all_text_contents(), package)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Lists differ: ['You send: a'] != ['You send: a', 'You send: b + a', 'You send: a + b', 'You send: a']
+
+Second list contains 3 additional elements.
+First extra element 1:
+'You send: b + a'
+
+- ['You send: a']
++ ['You send: a', 'You send: b + a', 'You send: a + b', 'You send: a']
+
+----------------------------------------------------------------------
+Ran 8 tests in 16.527s
+
+FAILED (failures=1, errors=1)
