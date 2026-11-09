@@ -265,12 +265,22 @@ def create_trades_router(*, ensure_fresh: EnsureFresh, require_data: RequireData
             return page("Trade Intelligence", manager_context_selection(list(require_data().get("teams") or [])))
         return page("Trade Intelligence", trade_center(await view(front_office)))
 
-    async def workflow_page(workflow: str, front_office: int | None, asset_id: str | None = None, owner_roster_id: int | None = None) -> HTMLResponse:
+    async def workflow_page(workflow: str, front_office: int | None, asset_id: str | None = None, owner_roster_id: int | None = None, team_need: str | None = None) -> HTMLResponse:
         await ensure_fresh()
         if front_office is None:
             return page("Trade Center", manager_context_selection(list(require_data().get("teams") or []), workflow=workflow))
         try:
             context = workflow_view(front_office)
+            if workflow == 'recommended':
+                from services.team_trade_need import prepared_need, supported_positions
+                from services.team_assessment_presentation import prepared_comparison
+                data = require_data()
+                context['recommended_positions'] = supported_positions(data)
+                if team_need:
+                    need = prepared_need(data, int(context['active_team']['roster_id']), prepared_comparison(data))
+                    context['team_need'] = need if (need and need['fingerprint'] == team_need
+                        and front_office == int(context['active_team']['roster_id'])) else None
+                    context['team_need_expired'] = not context['team_need']
             if asset_id and workflow in {"shop", "trade-for"}:
                 ownership = validate_targeted_player_action(require_data(), asset_id, int(context["active_team"]["roster_id"]), workflow)
                 if ownership:
@@ -303,8 +313,8 @@ def create_trades_router(*, ensure_fresh: EnsureFresh, require_data: RequireData
         return await workflow_page("shop", front_office, asset_id, owner_roster_id)
 
     @router.get("/trades/recommended", response_class=HTMLResponse)
-    async def recommended_trades_page(front_office: int | None = None) -> HTMLResponse:
-        return await workflow_page("recommended", front_office)
+    async def recommended_trades_page(front_office: int | None = None, team_need: str | None = None) -> HTMLResponse:
+        return await workflow_page("recommended", front_office, team_need=team_need)
 
     @router.get("/api/trades", response_class=JSONResponse)
     async def trades_api(front_office: int | None = None) -> JSONResponse:
@@ -475,7 +485,7 @@ def create_trades_router(*, ensure_fresh: EnsureFresh, require_data: RequireData
                     payload.get('protected_assets') or [], payload.get('excluded_assets') or []) != key:
                     raise TradeInputError('canonical_evidence_changed', 'Prepared evidence changed. Try the same search again.')
                 trade_checkpoint()
-                if not payload.get('_personal_context'):
+                if not payload.get('_personal_context') and not payload.get('recommendation_position'):
                     home_ideas.publish(key, result, payload)
                 return result
             def bounded_discover():

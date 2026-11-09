@@ -10,6 +10,10 @@ def outlook_panel(outlook, *, editable, roster_id):
             ('Depth and uncertainty', outlook['concern']), ('Future flexibility', outlook['future'])]
     action = (f'<a id="my-team-outlook-action" class="thq-action" href="{escape(outlook["href"], quote=True)}">{escape(outlook["action"])}</a>'
               if editable else '')
+    need = outlook.get('trade_need') if editable else None
+    if need:
+        action += (f'<p>{escape(need["reason"])}</p><a id="my-team-trade-need" class="thq-action" '
+                   f'href="{escape(need["href"], quote=True)}">Explore {escape(need["position"])} trades</a>')
     trade = (f'<a class="thq-action" href="/trades/calculator?front_office={roster_id}">Trade Calculator</a>'
              f'<a class="thq-action" href="/trades?front_office={roster_id}">Trade opportunities</a>') if editable else ''
     navigation = ('<div class="thq-outlook-next">' + action + '</div>'

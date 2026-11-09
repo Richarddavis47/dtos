@@ -418,8 +418,10 @@ def create_teams_router(
         roster_summary = ' · '.join(f'{count} {slot.lower()}' for slot, count in overview['slots'].items())
         view["outlook"]["details"].extend(overview["statuses"])
         assessment_outlook = view['outlook']
+        comparison = prepared_comparison(data, view['projection_snapshot'])
+        from services.team_trade_need import prepared_need
+        assessment_outlook = {**assessment_outlook, 'trade_need': prepared_need(data, roster_id, comparison) if editable else None}
         if view['team_intelligence'].overall.score is None:
-            comparison = prepared_comparison(data, view['projection_snapshot'])
             assessment_outlook = {
                 **assessment_outlook,
                 'brief': weekly_comparison(view['team_intelligence'], data.get('week'), compact=True,

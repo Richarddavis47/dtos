@@ -1,5 +1,6 @@
 """One mobile/desktop workspace for all bilateral Trade Center entry paths."""
 from html import escape
+import json
 
 
 def trade_workspace(view: dict, workflow: str, asset_id=None, owner_roster_id=None) -> str:
@@ -18,6 +19,15 @@ def trade_workspace(view: dict, workflow: str, asset_id=None, owner_roster_id=No
     calculator_link = '' if calculator else f'<a class="ti-action" href="/trades/calculator?front_office={active}">Open this workspace in Calculator</a>'
     protect_control = '<button id="calculator-lock" type="button">Do not trade selected exact asset</button>' if market_editor else ''
     recommended_controls = '''<label for="recommendation-filter">Opportunity filter</label><select id="recommendation-filter" disabled><option value="all">All supported opportunities</option><option value="win_now">Win Now</option><option value="value">Value</option><option value="roster_fit">Roster Fit</option><option value="future">Draft Capital</option><option value="sell_high" disabled>Sell High — movement evidence unavailable</option></select><p class="muted">Filters select supported opportunity types; they do not change your strategy or valuations.</p>''' if workflow == 'recommended' else ''
+    position_controls = ''
+    if workflow == 'recommended':
+        options = ''.join(f'<option value="{escape(pos)}">{escape(pos)}</option>' for pos in view.get('recommended_positions', []))
+        origin = 'My Team’s need evidence changed or is no longer current. No roster-need filter was applied.' if view.get('team_need_expired') else 'Choose an incoming player position, or search all positions.'
+        position_controls = (f'<section class="tw-position-filter" aria-label="Recommended Trades position">'
+            f'<label for="recommendation-position">Incoming player position</label><select id="recommendation-position" disabled><option value="">All positions</option>{options}</select>'
+            '<button type="button" id="recommendation-position-clear" disabled>Clear position</button>'
+            f'<p id="recommendation-position-origin" role="status">{escape(origin)}</p>'
+            '<p class="muted">Run Generate to search. This filter narrows the existing bounded offer search; it does not change your saved goal or valuations.</p></section>')
     shop_controls = '''<details id="shop-refinements"><summary>Refine Shop results · optional</summary><section aria-label="Shop search preferences"><label for="shop-preference">Search preference (this session only)</label>
 <select id="shop-preference"><option value="best_overall">Best Overall Return</option><option value="win_now">Win-Now Help</option><option value="youth_rebuild">Youth / Rebuild</option><option value="draft_capital">Draft Capital</option><option value="position_need">Position Need</option><option value="custom">Custom — protect assets</option></select>
 <label for="shop-position">Position for Position Need</label><select id="shop-position" disabled><option value="QB">QB</option><option value="RB">RB</option><option value="WR">WR</option><option value="TE">TE</option></select>
@@ -47,11 +57,12 @@ def trade_workspace(view: dict, workflow: str, asset_id=None, owner_roster_id=No
         )
     )
     return f'''<link rel="stylesheet" href="/static/css/trade_workspace.css">
-<section id="trade-builder" class="card tw-workspace" data-trade-workflow="{workflow}" data-front-office="{active}" data-league="{escape(league, quote=True)}" data-preload-asset="{escape(str(asset_id or ''), quote=True)}" data-owner-roster="{int(owner_roster_id or 0)}">
+<section id="trade-builder" class="card tw-workspace" data-trade-workflow="{workflow}" data-front-office="{active}" data-league="{escape(league, quote=True)}" data-preload-asset="{escape(str(asset_id or ''), quote=True)}" data-owner-roster="{int(owner_roster_id or 0)}" data-team-need="{escape(json.dumps(view.get('team_need')), quote=True)}" data-team-need-expired="{str(bool(view.get('team_need_expired'))).lower()}">
 {heading}
 {intent_nav}
 <p id="trade-context" class="muted">Loading current league assets…</p>
 <div id="trade-intent-controls" class="tw-intent-controls">{strategy_controls}</div>
+{position_controls}
 {optional_search}
 <section id="trade-target" class="tw-target" hidden aria-label="Selected trade target"></section>
 <div class="tw-primary-actions">{primary}{next_ideas}</div>
@@ -59,6 +70,7 @@ def trade_workspace(view: dict, workflow: str, asset_id=None, owner_roster_id=No
 <p id="trade-search-readiness" class="ds-inline-feedback">Search capacity will be checked when you generate or evaluate.</p>
 <button id="trade-cancel" type="button" hidden>Cancel current operation</button>
 <span id="trade-results-home"></span><section id="trade-result" role="status" aria-live="polite" tabindex="-1" hidden></section>
+{'<details id="recommendation-previous" hidden><summary>Earlier search · not revalidated</summary><p>Earlier offers have not been searched with the current filter. Your Evaluate draft is unchanged.</p><div id="recommendation-previous-offers"></div></details>' if workflow == 'recommended' else ''}
 {tray}
 {'<details id="trade-asset-options"><summary>Owned assets and exact constraints · optional</summary>' if workflow == 'recommended' else ''}
 {partner_controls}
