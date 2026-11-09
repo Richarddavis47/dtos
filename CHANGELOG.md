@@ -1,3 +1,11 @@
+# v1.22.27 / build 2242 — Open the partner’s franchise trade history
+
+Recommended Trades and Evaluate add a compact “See franchise trade history” link when the exact counterparty can be resolved in the active league. It opens the existing descriptive completed-trade evidence and keeps its source/coverage qualifications.
+
+Contextual Back restores Evaluate’s draft, valuation mode, strategy and filters. A recommendation opened through this link returns as a retained preview, leaving the original draft unchanged. Existing freshness and reevaluation rules apply; changing accounts or leagues invalidates stale return context.
+
+No search, provider backfill or synchronization is added to navigation. Recommendation policy, counterparty scores, FOIS grades, scoring, neutral/custom valuation, saved preferences and resource admission remain unchanged. See docs/audits/TRADE_PARTNER_HISTORY_LINK_2242.md for disposable versus retained-source controls and live-access limits. Release requires all mandatory source-pinned checks and guarded Actions publication.
+
 # v1.22.26 / build 2241 — Completed franchise trade observations
 
 Franchise History adds a compact descriptive sample of supported completed trades and directed first-round pick transfers. It separates assets from transactions, preserves exact year/round/original-franchise picks, shows the supported completion-date window and source-season coverage, and links to existing completed-trade evidence. Counts span the admitted retained sample rather than the visible pagination page.

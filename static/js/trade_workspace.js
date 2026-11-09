@@ -144,6 +144,32 @@
   const setPartner = id => { selected.partner = Number(id); el('trade-partner').value = flow === 'shop' ? (session.shopSearchPartner ? String(session.shopSearchPartner) : '') : Number(id) ? String(id) : ''; };
   const storageKey = () => 'dtos-trade-workspace:' + workspace.workspace_context.binding;
   const node = (tag, text, cls) => { const n = document.createElement(tag); if (text != null) n.textContent = text; if (cls) n.className = cls; return n; };
+  function appendPartnerHistory(target, context, beforeVisit = null) {
+    // Presentation only. History reauthorizes the active league; a saved
+    // package or opaque workspace binding is never authorization.
+    try {
+      const current = workspace?.workspace_context, manager = workspace?.manager_context;
+      const league = manager?.league_id, proposal = JSON.parse(context?.identity?.package || 'null');
+      if (!current?.binding || context?.identity?.binding !== current.binding ||
+          typeof league !== 'string' || !/^[a-zA-Z0-9_-]{1,100}$/.test(league) || league !== current.league_id ||
+          workspace.active_front_office !== active || current.roster_id !== active || manager.roster_id !== active ||
+          !Array.isArray(proposal) || proposal.length !== 3 || !Array.isArray(proposal[1]) || !Array.isArray(proposal[2])) return;
+      const id = proposal[0], sourceLeague = context.evaluation?.provenance?.inputs?.league_id;
+      if (!Number.isSafeInteger(id) || id <= 0 || id === active || sourceLeague && sourceLeague !== league ||
+          !Array.isArray(workspace.teams) || workspace.teams.filter(t => t?.roster_id === active).length !== 1) return;
+      const matches = workspace.teams.filter(t => t?.roster_id === id);
+      if (matches.length !== 1) return;
+      const link = node('a', 'See franchise trade history', 'ds-action tw-partner-history');
+      link.href = '/history/team/' + encodeURIComponent(league + ':franchise:' + id);
+      link.setAttribute('aria-label', 'See franchise trade history for ' + matches[0].team_name);
+      link.addEventListener('click', event => {
+        if (event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+        if (beforeVisit) beforeVisit();
+        else persist();
+      });
+      target.append(link);
+    } catch (_) { /* Unknown or malformed retained identity cannot create a link. */ }
+  }
   el('trade-result').dataset.assessmentState = 'not_evaluated';
   function message(text, error = false) { const box = el('trade-result'); delete box.dataset.assessment; delete box.dataset.assessmentFreshness; box.dataset.assessmentState = 'not_evaluated'; box.hidden = false; box.className = error ? 'tw-error' : ''; box.replaceChildren(node('p', text)); }
   function personalChangedNotice() {
@@ -821,6 +847,7 @@
       showEvaluation(prior.evaluation || {}, prior.opportunity, prior, detail);
       out.append(detail);
     }
+    if (!previousContainer) appendPartnerHistory(out, context);
     if (e.explanation_html) {
       // Same-origin server renderer escapes all evidence text. No client-side
       // recommendation/scoring or reason-code interpretation is performed.
@@ -1042,6 +1069,11 @@
     const context = {...assessmentContext(row), stale_reason: 'Package adopted for editing; its assessment has not been revalidated'};
     changed(); session.currentAssessment = context; persist(); review(); showEvaluation(row.evaluation || context.evaluation || {}, row.opportunity || context.opportunity, context); focusResult();
   }
+  function rememberPreview(row, context) {
+    session.originalProposal = {sent: [...selected.sent], received: [...selected.received], partner: partner()};
+    session.previewProposal = {...row.proposal, preview_context: context, preview_balance_adjustment: row.balance_adjustment || row.proposal.preview_balance_adjustment, preview_origin_workflow: row.workflow || row.proposal.preview_origin_workflow || session.originWorkflow};
+    persist();
+  }
   function previewOffer(row) {
     const conflict = offerConflict(row); if (conflict) return message(conflict, true);
     const adjustment = row.balance_adjustment || row.proposal.preview_balance_adjustment;
@@ -1053,7 +1085,7 @@
     const context = assessmentContext(row);
     row = {...row, proposal: {...row.proposal, preview_context: context}, evaluation: row.evaluation || context.evaluation, exploration: context.exploration, search_result_type: context.search_result_type, opportunity: row.opportunity || context.opportunity};
     retainAssessment();
-    session.originalProposal = original; session.previewProposal = {...row.proposal, preview_context: context, preview_balance_adjustment: row.balance_adjustment || row.proposal.preview_balance_adjustment, preview_origin_workflow: row.workflow || row.proposal.preview_origin_workflow || session.originWorkflow}; persist();
+    rememberPreview(row, context);
     const out = el('trade-result'); out.hidden = false; out.replaceChildren(node('h3', 'Alternative preview'));
     delete out.dataset.assessment;
     const names = ids => ids.map(id => label(asset(id) || {label: id})).join(' + ') || 'None';
@@ -1159,6 +1191,7 @@
       card.append(node('p', `Outgoing Market cost: ${cost.current_outgoing_cost} → ${cost.alternative_outgoing_cost} (${cost.market_cost_reduction} lower).`));
     }
     card.append(node('p', 'Trade with ' + (team(row.proposal.partner_roster_id)?.team_name || 'the selected counterparty')));
+    appendPartnerHistory(card, context, preview ? null : () => rememberPreview(row, context));
     const sentRows = row.proposal_presentation?.send || row.proposal.assets_sent.map(id => ({label: label(asset(id) || {label:id})}));
     const receivedRows = row.proposal_presentation?.receive || row.proposal.assets_received.map(id => ({label: label(asset(id) || {label:id})}));
     card.append(node('p', 'You send: ' + sentRows.map(a => a.label).join(' + ')), node('p', 'You receive: ' + receivedRows.map(a => a.label).join(' + ')),
