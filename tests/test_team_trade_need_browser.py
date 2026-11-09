@@ -175,6 +175,13 @@ class TeamTradeNeedBrowserTests(unittest.TestCase):
             self.assertGreaterEqual(position_box["y"], 0)
             self.assertLessEqual(position_box["y"] + position_box["height"], height)
             self.assertGreaterEqual(position_box["height"], 44)
+            label_clear = page.locator('label[for="recommendation-position"]').evaluate("""e => {
+                const r=e.getBoundingClientRect(), hit=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);
+                return hit===e || e.contains(hit);
+            }""")
+            self.assertTrue(
+                label_clear, "Position label is obscured by the sticky Back bar"
+            )
             self.assertEqual(
                 helper.draft(page)["currentProposal"], before["currentProposal"]
             )
@@ -217,6 +224,7 @@ class TeamTradeNeedBrowserTests(unittest.TestCase):
                     "changed_and_cleared_after_reload": True,
                     "no_automatic_search": True,
                     "position_visible_on_entry": True,
+                    "position_clear_of_back_bar": True,
                     "back": "My Team",
                     "overflow": 0,
                 }
