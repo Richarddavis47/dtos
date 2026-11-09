@@ -22,12 +22,11 @@ def trade_workspace(view: dict, workflow: str, asset_id=None, owner_roster_id=No
     position_controls = ''
     if workflow == 'recommended':
         options = ''.join(f'<option value="{escape(pos)}">{escape(pos)}</option>' for pos in view.get('recommended_positions', []))
-        origin = 'My Team’s need evidence changed or is no longer current. No roster-need filter was applied.' if view.get('team_need_expired') else 'Choose an incoming player position, or search all positions.'
+        origin = 'My Team’s need evidence changed or is no longer current. No roster-need filter was applied.' if view.get('team_need_expired') else 'Choose an incoming position. Generate starts the search.'
         position_controls = (f'<section class="tw-position-filter" aria-label="Recommended Trades position">'
-            f'<label for="recommendation-position">Incoming player position</label><select id="recommendation-position" disabled><option value="">All positions</option>{options}</select>'
-            '<button type="button" id="recommendation-position-clear" disabled>Clear position</button>'
-            f'<p id="recommendation-position-origin" role="status">{escape(origin)}</p>'
-            '<p class="muted">Run Generate to search. This filter narrows the existing bounded offer search; it does not change your saved goal or valuations.</p></section>')
+            f'<label for="recommendation-position">Incoming player position</label><div class="tw-position-controls"><select id="recommendation-position" aria-describedby="recommendation-position-origin" disabled><option value="">All positions</option>{options}</select>'
+            '<button type="button" id="recommendation-position-clear" disabled>Clear position</button></div>'
+            f'<p id="recommendation-position-origin" role="status">{escape(origin)}</p></section>')
     shop_controls = '''<details id="shop-refinements"><summary>Refine Shop results · optional</summary><section aria-label="Shop search preferences"><label for="shop-preference">Search preference (this session only)</label>
 <select id="shop-preference"><option value="best_overall">Best Overall Return</option><option value="win_now">Win-Now Help</option><option value="youth_rebuild">Youth / Rebuild</option><option value="draft_capital">Draft Capital</option><option value="position_need">Position Need</option><option value="custom">Custom — protect assets</option></select>
 <label for="shop-position">Position for Position Need</label><select id="shop-position" disabled><option value="QB">QB</option><option value="RB">RB</option><option value="WR">WR</option><option value="TE">TE</option></select>

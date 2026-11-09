@@ -51,7 +51,7 @@ class TeamTradeNeedTests(unittest.TestCase):
         self.assertEqual(result.status_code, 200)
         self.assertIn("&quot;kind&quot;: &quot;starter&quot;", result.text)
         self.assertIn("Incoming player position", result.text)
-        self.assertIn("Run Generate to search", result.text)
+        self.assertIn("Generate starts the search", result.text)
         # The opaque hint is not authorization or a saved preference.
         for bad in (href[:-1] + ("a" if href[-1] != "a" else "b"),):
             rejected = f.f.f.client.get(bad)

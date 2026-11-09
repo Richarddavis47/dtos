@@ -168,6 +168,13 @@ class TeamTradeNeedBrowserTests(unittest.TestCase):
                 "From My Team",
                 page.locator("#recommendation-position-origin").inner_text(),
             )
+            page.wait_for_function(
+                "document.activeElement?.id === 'recommendation-position'"
+            )
+            position_box = page.locator("#recommendation-position").bounding_box()
+            self.assertGreaterEqual(position_box["y"], 0)
+            self.assertLessEqual(position_box["y"] + position_box["height"], height)
+            self.assertGreaterEqual(position_box["height"], 44)
             self.assertEqual(
                 helper.draft(page)["currentProposal"], before["currentProposal"]
             )
@@ -209,6 +216,7 @@ class TeamTradeNeedBrowserTests(unittest.TestCase):
                     "draft_and_custom_preserved": True,
                     "changed_and_cleared_after_reload": True,
                     "no_automatic_search": True,
+                    "position_visible_on_entry": True,
                     "back": "My Team",
                     "overflow": 0,
                 }

@@ -1809,7 +1809,7 @@
           if (!manual) {
             el('recommendation-position').value = need.position;
             session.teamNeedChoice = {fingerprint: need.fingerprint, position: need.position, manual: false};
-            el('recommendation-position-origin').textContent = 'From My Team · ' + need.reason + ' You can change or clear this position before Generate.';
+            el('recommendation-position-origin').textContent = 'From My Team · ' + need.reason + ' Change or clear, then Generate.';
           } else el('recommendation-position-origin').textContent = 'Position filter selected here. My Team’s original suggestion has been changed; choose Generate to search.';
         } else if (root.dataset.teamNeedExpired === 'true') {
           el('recommendation-position').value = ''; session.teamNeedChoice = null;
@@ -1832,6 +1832,15 @@
     if (session.previewProposal && !entryBlocked) previewOffer({proposal: session.previewProposal});
     if (interruptedNavigation && !entryBlocked) operationStatus('The previous operation stopped when you left. Your exact workspace is retained; Generate or Evaluate explicitly to continue.', 'cancelled');
     window.dtosNavigation?.restoreView();
+    if (flow === 'recommended' && root.dataset.teamNeed && root.dataset.teamNeed !== 'null' &&
+        !['reload', 'back_forward'].includes(performance.getEntriesByType('navigation')[0]?.type)) {
+      // This explicit contextual action lands at its editable filter on phones.
+      // Reload/Back retain their existing focus and scroll restoration.
+      requestAnimationFrame(() => {
+        el('recommendation-position').focus({preventScroll: true});
+        root.querySelector('.tw-position-filter').scrollIntoView({block: 'start'});
+      });
+    }
     const homeOffer = new URL(location.href).searchParams.get('home_offer');
     if (homeOffer && !entryBlocked && !departed && (!['reload', 'back_forward'].includes(performance.getEntriesByType('navigation')[0]?.type) || (!session.adoptedProposal && !session.previewProposal && history.state?.dtosHomeOffer !== homeOffer))) {
       const navigationRevision = revision;
