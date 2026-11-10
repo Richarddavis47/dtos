@@ -1,0 +1,20 @@
+/usr/local/lib/python3.14/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+  from starlette.testclient import TestClient as TestClient  # noqa
+test_01_reported_metadata_pressure_is_deferral_but_generic_failure (__main__.Probe.test_01_reported_metadata_pressure_is_deferral_but_generic_failure) ... {"timestamp":"2026-11-10T23:18:51.023627+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/account/leagues/200/activate \"HTTP/1.1 503 Service Unavailable\"","request_id":"system"}
+ok
+test_02_cooldown_does_not_repeat_cleanup_or_restore (__main__.Probe.test_02_cooldown_does_not_repeat_cleanup_or_restore) ... {"timestamp":"2026-11-10T23:18:51.229499+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/account/leagues/200/activate \"HTTP/1.1 503 Service Unavailable\"","request_id":"system"}
+{"timestamp":"2026-11-10T23:18:51.235302+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/account/leagues/200/activate \"HTTP/1.1 503 Service Unavailable\"","request_id":"system"}
+ok
+test_03_unknown_telemetry_defers_without_cleanup_or_decode (__main__.Probe.test_03_unknown_telemetry_defers_without_cleanup_or_decode) ... {"timestamp":"2026-11-10T23:18:51.447826+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/account/leagues/200/activate \"HTTP/1.1 503 Service Unavailable\"","request_id":"system"}
+ok
+test_04_actual_lease_conflict_is_separate_from_memory (__main__.Probe.test_04_actual_lease_conflict_is_separate_from_memory) ... {"timestamp":"2026-11-10T23:18:51.630332+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/account/leagues/200/activate \"HTTP/1.1 503 Service Unavailable\"","request_id":"system"}
+ok
+test_05_real_healthy_fixture_restoration_activates (__main__.Probe.test_05_real_healthy_fixture_restoration_activates) ... {"timestamp":"2026-11-10T23:18:51.841382+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/account/leagues/200/activate \"HTTP/1.1 303 See Other\"","request_id":"system"}
+ok
+test_06_incompatible_cache_is_failure_not_deferral (__main__.Probe.test_06_incompatible_cache_is_failure_not_deferral) ... {"timestamp":"2026-11-10T23:18:52.021177+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/account/leagues/200/activate \"HTTP/1.1 503 Service Unavailable\"","request_id":"system"}
+ok
+
+----------------------------------------------------------------------
+Ran 6 tests in 2.272s
+
+OK
