@@ -1,0 +1,3 @@
+# Preliminary source b3dd7 — preserved originals
+
+These artifacts are not final release acceptance. Source b3dd7a028d47e3e55993364117a1b56b2b007ed7/tree276a9edad67b786fae2eb7dbb5e4fc2983a0296b was superseded by verdict-neutral protection wording. Original partial canonical records show565 completed tests and566 started; there is no ten-gate completion claim. GitHub run/job final outcomes are retained with all eight available native ZIPs and all thirteen executed job consoles. Existing publisher-only2191 was skipped and not a required validation gate. No original payload has been rewritten to appear successful.
