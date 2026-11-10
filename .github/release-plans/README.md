@@ -1,0 +1,3 @@
+# Frozen guarded build 2245 publisher
+
+Never merge this tooling-only controller into main. Reuse the established actor/ref-bound Actions GITHUB_TOKEN and prepare → expected-head squash → publish sequence. Require exact candidate/tree, thirteen hosted jobs, fifteen original archives, both full ten-gate results, byte manifests and source-bound existing resource/history/need/comparison controls. Add native temporary Recommended Trades protections proof in both original hosted evidence and the recovery handoff. No application admission, valuation, qualification, source or preference changes. Fixtures are not owner live acceptance. Canonical validation steps must exactly equal the final candidate. Preserve earlier failures separately.
