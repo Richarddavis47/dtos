@@ -18,6 +18,7 @@ from src.platform.cache_budget import JSON_BUDGET, reusable
 from src.platform.cache_json import load_cache_json
 from src.platform.lifecycle import HeavyWorkDeferred, lifecycle_coordinator, memory_snapshot
 from src.platform.memory_reclamation import reclaim_unused_analytical_memory
+from src.platform.runtime_errors import log_restoration_admission
 from src.platform.fois_admission import (
     WORKING_RESERVE_BYTES as FOIS_WORKING, SAFETY_MARGIN_BYTES as FOIS_SAFETY,
 )
@@ -70,6 +71,7 @@ def restore_cached_runtime(runtime: LeagueRuntime, publish: Callable[[LeagueRunt
                         or not 0 <= time.time() - stat.st_mtime <= JSON_BUDGET.maximum_age_seconds):
                     raise ValueError('Saved publication outside retention policy')
                 sample = memory_snapshot()
+                recovery = None
                 # Existing FOIS allocations are already in cgroup current, but
                 # its outstanding demand is not. Do not spend the analytical
                 # owner's reserve on a newly decoded league. No RSS subtraction
@@ -109,6 +111,8 @@ def restore_cached_runtime(runtime: LeagueRuntime, publish: Callable[[LeagueRunt
                                     required_bytes=plan['required_bytes'],
                                     would_admit=plan['would_admit'])
                     runtime.lifecycle['cache_restore_memory_recovery'] = recovery
+                log_restoration_admission(file_bytes=stat.st_size, memory=sample,
+                                          plan=plan, recovery=recovery)
                 if plan['would_admit'] is not True:
                     raise HeavyWorkDeferred('Saved league preparation is waiting for safe memory headroom.')
                 payload = load_cache_json(handle)

@@ -1,3 +1,11 @@
+# v1.22.31 / build 2246 — Distinguish deferred league preparation
+
+Connected-league activation preserves the existing typed capacity deferral instead of presenting it as an unexplained preparation failure. The page explains manual retry, keeps the saved league unchanged and makes clear that no Trade search ran. API clients receive the existing private, no-store deferred response and Retry-After guidance.
+
+Bounded authorized logs record the existing restoration guard inputs and the actual bounded cleanup outcome without payloads, account identifiers or exception messages. They add no telemetry sampling, restoration, provider calls or heavyweight work. Earlier unrecorded guard inputs cannot be recovered by this change.
+
+Memory policy and analytical calculations are unchanged. This corrects error handling; it does not create additional capacity or establish Granite recovery. See docs/audits/ACTIVATION_DEFERRAL_2246.md for source, fixture and live evidence boundaries.
+
 # v1.22.30 / build 2245 — Protect assets in Recommended Trades
 
 Recommended Trades adds an editable, removable list of owned players and exact picks to protect before an explicit Generate action. The existing exact-identity constraint excludes these assets from outgoing packages, including exploratory offers. Another pick from the same year and round remains eligible. No search is started by opening or editing the controls.
