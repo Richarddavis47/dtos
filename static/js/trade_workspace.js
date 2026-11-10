@@ -279,7 +279,8 @@
     if (Array.from(picker.options).some(o => o.value === selectedId)) picker.value = selectedId;
     picker.disabled = busy;
     el('recommendation-protection-add').disabled = busy || !picker.value;
-    el('recommendation-protection-count').textContent = 'Protect outgoing assets · ' + (protectedIds.length ? protectedIds.length + ' selected' : 'none selected');
+    el('recommendation-protection-count').textContent = 'Protect assets & options · ' + (protectedIds.length ? protectedIds.length + ' selected' : 'none');
+    el('recommendation-protection-selection').hidden = !protectedIds.length;
     const list = el('recommendation-protection-list'); list.replaceChildren();
     for (const row of protectionFacts(protectedIds)) {
       const item = node('li'), remove = node('button', 'Remove protection'); remove.type = 'button'; remove.disabled = busy;

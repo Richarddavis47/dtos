@@ -51,7 +51,7 @@ class RecommendedProtectionBrowserTests(unittest.TestCase):
             page.screenshot(path=str(destination / (name + '.png')), full_page=True)
 
     def protect(self, page, asset_id):
-        details = page.locator('#recommendation-protection-options')
+        details = page.locator('#trade-search-options')
         if not details.evaluate('e=>e.open'):
             details.locator('summary').press('Enter')
         page.select_option('#recommendation-protection-asset', asset_id)

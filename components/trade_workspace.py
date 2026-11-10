@@ -29,12 +29,9 @@ def trade_workspace(view: dict, workflow: str, asset_id=None, owner_roster_id=No
             '<button type="button" id="recommendation-position-clear" disabled>Clear position</button></div>'
             f'<p id="recommendation-position-origin" role="status">{escape(origin)}</p></section>')
         search_protections = '''<section class="tw-search-protections" aria-label="Recommended Trades protections">
-<details id="recommendation-protection-options"><summary id="recommendation-protection-count">Protect outgoing assets · none selected</summary>
 <p>Keep owned players or exact picks out of this Recommended Trades search. Your Evaluate draft and saved preferences are unchanged. Saved Custom preferences still apply in Custom mode.</p>
 <label for="recommendation-protection-asset">Owned player or exact pick</label><select id="recommendation-protection-asset" disabled><option value="">Choose an owned asset</option></select>
 <button id="recommendation-protection-add" type="button" disabled>Protect selected asset</button>
-</details><ul id="recommendation-protection-list" aria-label="Temporary outgoing protections"></ul>
-<button id="recommendation-protection-clear" type="button" hidden disabled>Clear search protections</button>
 </section>'''
     shop_controls = '''<details id="shop-refinements"><summary>Refine Shop results · optional</summary><section aria-label="Shop search preferences"><label for="shop-preference">Search preference (this session only)</label>
 <select id="shop-preference"><option value="best_overall">Best Overall Return</option><option value="win_now">Win-Now Help</option><option value="youth_rebuild">Youth / Rebuild</option><option value="draft_capital">Draft Capital</option><option value="position_need">Position Need</option><option value="custom">Custom — protect assets</option></select>
@@ -50,6 +47,9 @@ def trade_workspace(view: dict, workflow: str, asset_id=None, owner_roster_id=No
     is_discovery = workflow in ('recommended', 'shop', 'trade-for')
     pick_options = '<label class="tw-check"><input id="trade-include-picks" type="checkbox" checked disabled>Include draft picks in this search</label><p class="muted">Turning picks off excludes exact current picks from generated packages only. It does not change your entered offer or saved preferences.</p>'
     optional_search = (shop_controls.replace('</details>', pick_options + '</details>') if workflow == 'shop' else f'<details id="trade-search-options"><summary>Search options · optional</summary>{recommended_controls}{pick_options}</details>') if is_discovery else ''
+    if workflow == 'recommended':
+        optional_search = (f'<details id="trade-search-options"><summary id="recommendation-protection-count">Protect assets &amp; options · none</summary>{search_protections}{recommended_controls}{pick_options}</details>'
+            '<section id="recommendation-protection-selection" class="tw-search-protections" aria-label="Selected outgoing protections" hidden><ul id="recommendation-protection-list" aria-label="Temporary outgoing protections"></ul><button id="recommendation-protection-clear" type="button" hidden disabled>Clear search protections</button></section>')
     intent_nav = f'<nav class="tw-intent-nav" aria-label="Trade purpose"><a href="/trades/recommended?front_office={active}" {"aria-current=page" if is_discovery else ""}>Generate Trades</a><a href="/trades/calculator?front_office={active}" {"aria-current=page" if not is_discovery else ""}>Evaluate Trade</a></nav>'
     primary = discovery if is_discovery else f'<button id="trade-run" class="tw-primary-action" type="button" disabled>{"Advanced DTOS analysis" if calculator else "Evaluate Trade"}</button>'
     next_ideas = '<button id="recommendation-refresh" type="button" disabled hidden aria-describedby="recommendation-status">Show Next 5</button>' if workflow == 'recommended' else ''
@@ -71,7 +71,6 @@ def trade_workspace(view: dict, workflow: str, asset_id=None, owner_roster_id=No
 <p id="trade-context" class="muted">Loading current league assets…</p>
 <div id="trade-intent-controls" class="tw-intent-controls">{strategy_controls}</div>
 {position_controls}
-{search_protections}
 {optional_search}
 <section id="trade-target" class="tw-target" hidden aria-label="Selected trade target"></section>
 <div class="tw-primary-actions">{primary}{next_ideas}</div>
