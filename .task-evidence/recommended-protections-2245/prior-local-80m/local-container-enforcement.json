@@ -1,0 +1,17 @@
+{
+  "observed_at": "2026-11-10T18:04:14.785834+00:00",
+  "candidate": "238dfc108b904eb499a73a06c938cc2d704cea51",
+  "tree": "cf649ee06ec3228d51d251ce7afbdbb15866f398",
+  "container": "a3b38c57b157cbbccb69e67b982e24e2d5b6a52206f58fc7a1063ccc4e39557d",
+  "image": "sha256:f70a0c6402700dfb954c99d8163d4164926f74435c34d2e7e462407151663ae6",
+  "running": true,
+  "init": true,
+  "memory": 2147483648,
+  "memory_swap": 2147483648,
+  "nano_cpus": 2000000000,
+  "network": "none",
+  "user": "1000:1000",
+  "source_mount": "/workspace/dtos-2245-validate-release:/app",
+  "process_ownership": "PID                 PPID                USER                STAT                COMMAND\n98485               98422               agent               Ss                  docker-init\n98520               98485               agent               Sl                  python\n98831               98520               agent               Ss                  python\n99113               98831               agent               Sl                  python\n101859              99113               agent               Sl                  MainThread\n101874              101859              agent               Ssl                 chromium\n101892              98485               agent               Sl                  chrome_crashpad\n101895              98485               agent               S                   chrome_crashpad\n101896              101874              agent               S                   chromium\n101897              101874              agent               S                   chromium\n101920              101896              agent               Sl                  chromium\n101921              101874              agent               Sl                  chromium\n101944              101897              agent               Sl                  chromium\n101982              101897              agent               Sl                  chromium\n101993              101897              agent               Sl                  chromium\n101995              101897              agent               Sl                  chromium\n",
+  "scope": "Disposable validation; no production sampling"
+}

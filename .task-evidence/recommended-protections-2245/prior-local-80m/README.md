@@ -1,0 +1,5 @@
+# Preserved incomplete local canonical run — final source
+
+This is the original 80-minute local orchestration attempt on candidate238dfc108b904eb499a73a06c938cc2d704cea51, treecf649ee06ec3228d51d251ce7afbdbb15866f398. It is **incomplete**, not a passed regression or ten-gate run.3,998tests completed;3,999started. No recorded assertion failures, errors, skips or OOM; timeout cleanup confirmed0active descendants. See reconciliation.json and original result.json. The separate later local recovery run and all passing hosted evidence are reconciled elsewhere.
+
+Every620original canonical manifest entry is preserved under local-canonical with its original manifest/SHA256SUMS, including screenshots, traces, memory counters and complete partial console. The original daemon stdout and command-handle records are separate. Readable-console parts retain the exact original console bytes and hashes. No test logs were reconstructed. Disposable source fixture scratch contents are not included; their original generated evidence and method remain available. These are disposable controls, not private owner data or live acceptance.

@@ -1,0 +1,25 @@
+{
+  "observed_at": "2026-11-10T18:39:50.678070+00:00",
+  "candidate": "238dfc108b904eb499a73a06c938cc2d704cea51",
+  "container": "a3b38c57b157cbbccb69e67b982e24e2d5b6a52206f58fc7a1063ccc4e39557d",
+  "running": true,
+  "started_at": "2026-11-10T18:02:31.748890804Z",
+  "memory": 2147483648,
+  "image": "sha256:f70a0c6402700dfb954c99d8163d4164926f74435c34d2e7e462407151663ae6",
+  "source_mount": [
+    {
+      "Type": "bind",
+      "Source": "/workspace/dtos-2245-validate-release",
+      "Destination": "/app",
+      "Mode": "",
+      "RW": true,
+      "Propagation": "rprivate"
+    }
+  ],
+  "events": {
+    "starts": 2467,
+    "stops": 2466,
+    "adverse": []
+  },
+  "limitation": "Original outer command session handle expired. Original inner canonical/gate/test/cgroup files remain, and the same container continues. No validation restart or reconstructed console. Daemon stdout follow is a separate original transport capture; final outcome and exit event must still be verified."
+}
