@@ -266,7 +266,7 @@
     if (!Array.isArray(facts)) section.append(node('p', 'This earlier search did not retain its exact protection settings. No new restrictions are inferred.'));
     else if (!facts.length) section.append(node('p', 'No outgoing asset protections were applied to this search.'));
     else for (const row of facts) section.append(node('p', row.label), node('small', 'Exact asset: ' + row.id));
-    section.append(node('small', 'Restrictions describe this search; they do not establish why no offer qualified.'));
+    section.append(node('small', 'Protections limit outgoing assets; they do not explain a trade’s verdict.'));
     out.append(section);
   }
   function paintSearchProtections() {

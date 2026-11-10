@@ -195,6 +195,6 @@ class RecommendedProtectionBrowserTests(unittest.TestCase):
         self.assertFalse(body.get('results'))
         self.assertFalse(body.get('exploratory_results'))
         self.assertIn('No qualified recommendations', page.locator('#trade-result').inner_text())
-        self.assertIn('do not establish why no offer qualified', page.locator('#trade-result').inner_text())
+        self.assertIn('do not explain a trade’s verdict', page.locator('#trade-result').inner_text())
         self.assertEqual(len(helper.draft(page)['recommendedSearch']['protections']), len(options))
         self.record('completed-zero-result', dict(payload=payload, body=body, completed=True, no_protection_causality_claim=True), page)
