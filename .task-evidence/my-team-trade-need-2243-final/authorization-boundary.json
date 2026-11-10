@@ -1,0 +1,39 @@
+{
+  "scope": "Release dispatch only; no application or production authorization change",
+  "observed_cli_result": "gh api returned HTTP401 Bad credentials on an Actions job-record read near2026-11-10T00:22UTC",
+  "provenance": "Retained tool observation; this JSON records that observation and is not a recreated original terminal log",
+  "github_cli_token_binding_present": true,
+  "github_cli_hosts_configuration_present": false,
+  "network_policy": "Current managed environment reports connected, unrestricted/enforced; no ready GitHub CLI secret binding is listed in its configured-secrets metadata",
+  "cause": "Not established: expiration, invalid binding or another credential condition cannot be distinguished from the available metadata",
+  "independent_authorized_access": [
+    "Standard git push successfully updated the existing feature branch to fa321bc1569bd3d624f88aa4eea389c86a9cf840",
+    "Existing GitHub connector retrieved original job logs/artifacts and updated PR332 metadata",
+    "Connector authenticated profile matches the expected release actor; personal profile details are omitted"
+  ],
+  "missing_capability": "Existing native connector does not expose workflow_dispatch. The established guarded publisher requires an authorized dispatch against its frozen controller ref.",
+  "prohibited_actions_not_taken": [
+    "No repeated identical unauthorized API request",
+    "No credential values printed, exported, copied from Git transport, committed or relayed",
+    "No new token or authentication mechanism",
+    "No publisher-trigger or merge-control workaround",
+    "No direct Codex Cloud release-asset upload retry"
+  ],
+  "release_state": "Original auth blocker cleared. Final mandatory canonical result still pending; no merge/publication yet.",
+  "existing_source_workflows": [
+    "canonical-release-recovery.yml",
+    "product-browser.yml",
+    "validation-tooling.yml",
+    "linux-market-lifecycle.yml"
+  ],
+  "alternate_existing_trigger": "No issue_comment, repository_dispatch or workflow_run publishing path exists in the verified source. The reviewed guarded controller requires explicit workflow_dispatch and the approved owner actor.",
+  "recovery": {
+    "observed_at": "2026-11-10T01:41:29.566149+00:00",
+    "mechanism": "Existing authorized environment resumed; supported standard gh auth status reported authentication and expected actor, then normal Actions API read succeeded. No new credential or auth mutation.",
+    "exact_prior_failure_cause": "Not established; successful recovery does not retrospectively prove expiry or binding cause.",
+    "status": "restored"
+  },
+  "historical_requested_action": "Restore the existing GitHub CLI/API authorization binding in this execution environment through approved connection settings. Do not send token values in chat.",
+  "owner_action_required": false,
+  "current_access": "Standard existing CLI authentication and normal Actions reads work after environment resume; guarded dispatch permissions and final preparation remain subject to normal checks."
+}

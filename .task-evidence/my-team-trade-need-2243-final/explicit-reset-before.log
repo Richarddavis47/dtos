@@ -1,0 +1,51 @@
+/usr/local/lib/python3.14/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+  from starlette.testclient import TestClient as TestClient  # noqa
+test_existing_real_results_stay_separate_and_search_is_explicit (tests.test_team_trade_need_browser.TeamTradeNeedBrowserTests.test_existing_real_results_stay_separate_and_search_is_explicit) ... {"timestamp":"2026-11-09T23:56:55.304832+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T23:56:55.316024+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+Validation Chromium: /usr/bin/chromium
+Validation Chromium version: 156.0.8078.73
+{"timestamp":"2026-11-09T23:56:55.822015+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/recommended?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T23:56:55.877896+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T23:56:55.884450+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/trade_workspace.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T23:56:55.889549+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/trade_workspace.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T23:56:55.890890+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T23:56:55.921251+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/strategy_session.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T23:56:56.048483+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":344817664,"limit_bytes":2147483648,"raw_headroom_bytes":1802665984,"clean_inactive_file_bytes":1277952,"conditional_file_credit_bytes":638976,"admission_headroom_bytes":1803304960,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-09T23:56:56.051989+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/workspace?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T23:56:56.206032+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_admission","request_id":"system","event":"trade_admission","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":368562176,"limit_bytes":2147483648,"raw_headroom_bytes":1778921472,"clean_inactive_file_bytes":1277952,"conditional_file_credit_bytes":638976,"admission_headroom_bytes":1779560448,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"recovery":null}}
+{"timestamp":"2026-11-09T23:56:57.128356+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_execution_finished","request_id":"system","event":"trade_execution_finished","duration_ms":922.695,"diagnostic":{"schema":"trade-resource-v1","outcome":"complete"}}
+{"timestamp":"2026-11-09T23:56:57.132358+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/trades/generate \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T23:56:57.386997+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/recommended?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T23:56:57.437997+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T23:56:57.439528+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/trade_workspace.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T23:56:57.442047+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T23:56:57.445440+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/trade_workspace.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T23:56:57.446349+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/strategy_session.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T23:56:57.489562+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":492986368,"limit_bytes":2147483648,"raw_headroom_bytes":1654497280,"clean_inactive_file_bytes":1257472,"conditional_file_credit_bytes":628736,"admission_headroom_bytes":1655126016,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-09T23:56:57.490865+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/workspace?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T23:56:58.150223+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_admission","request_id":"system","event":"trade_admission","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":508375040,"limit_bytes":2147483648,"raw_headroom_bytes":1639108608,"clean_inactive_file_bytes":1257472,"conditional_file_credit_bytes":628736,"admission_headroom_bytes":1639737344,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"recovery":null}}
+{"timestamp":"2026-11-09T23:56:59.062459+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_execution_finished","request_id":"system","event":"trade_execution_finished","duration_ms":912.722,"diagnostic":{"schema":"trade-resource-v1","outcome":"complete"}}
+{"timestamp":"2026-11-09T23:56:59.064515+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/trades/generate \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T23:56:59.296671+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/create?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T23:56:59.341396+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/trade_workspace.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T23:56:59.342828+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T23:56:59.343231+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/strategy_session.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T23:56:59.344297+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T23:56:59.346679+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/trade_workspace.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T23:56:59.385653+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":505942016,"limit_bytes":2147483648,"raw_headroom_bytes":1641541632,"clean_inactive_file_bytes":1249280,"conditional_file_credit_bytes":624640,"admission_headroom_bytes":1642166272,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-09T23:56:59.387122+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/workspace?front_office=1&mode=calculator \"HTTP/1.1 200 OK\"","request_id":"system"}
+FAIL
+
+======================================================================
+FAIL: test_existing_real_results_stay_separate_and_search_is_explicit (tests.test_team_trade_need_browser.TeamTradeNeedBrowserTests.test_existing_real_results_stay_separate_and_search_is_explicit)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_team_trade_need_browser.py", line 343, in test_existing_real_results_stay_separate_and_search_is_explicit
+    self.assertFalse(helper.draft(page).get('recommendedSearch') is not None, 'Explicit reset retained a prior search snapshot')
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: True is not false : Explicit reset retained a prior search snapshot
+
+----------------------------------------------------------------------
+Ran 1 test in 5.153s
+
+FAILED (failures=1)

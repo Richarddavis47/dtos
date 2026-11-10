@@ -1,0 +1,13 @@
+F841 Local variable `f` is assigned to but never used
+  --> tests/test_team_trade_need.py:68:9
+   |
+67 |     def test_need_requires_current_own_matching_prepared_evidence(self):
+68 |         f = self.fixture()
+   |         ^
+69 |         diagnostic = prepared_diagnostics(self.data, self.snapshot)
+70 |         row = diagnostic["teams"]["1"]
+   |
+help: Remove assignment to unused variable `f`
+
+Found 1 error.
+No fixes available (1 hidden fix can be enabled with the `--unsafe-fixes` option).

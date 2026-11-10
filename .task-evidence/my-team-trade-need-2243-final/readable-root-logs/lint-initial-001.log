@@ -1,0 +1,178 @@
+F841 Local variable `f` is assigned to but never used
+  --> tests/test_team_trade_need.py:62:9
+   |
+61 |     def test_need_requires_current_own_matching_prepared_evidence(self):
+62 |         f = self.fixture()
+   |         ^
+63 |         diagnostic = prepared_diagnostics(self.data, self.snapshot)
+64 |         row = diagnostic['teams']['1']
+   |
+help: Remove assignment to unused variable `f`
+
+E701 Multiple statements on one line (colon)
+  --> tests/test_team_trade_need.py:77:36
+   |
+75 |             for change in ('week', 'league', 'generation', 'provisional', 'missing', 'franchise'):
+76 |                 altered = copy.deepcopy(diagnostic)
+77 |                 if change == 'week': altered['week'] += 1
+   |                                    ^
+78 |                 if change == 'league': altered['league_id'] = 'other'
+79 |                 if change == 'generation': altered['projection_generation'] = None
+   |
+
+E701 Multiple statements on one line (colon)
+  --> tests/test_team_trade_need.py:78:38
+   |
+76 |                 altered = copy.deepcopy(diagnostic)
+77 |                 if change == 'week': altered['week'] += 1
+78 |                 if change == 'league': altered['league_id'] = 'other'
+   |                                      ^
+79 |                 if change == 'generation': altered['projection_generation'] = None
+80 |                 if change == 'provisional': altered['teams']['1']['positions']['QB']['conclusion_state'] = 'provisional'
+   |
+
+E701 Multiple statements on one line (colon)
+  --> tests/test_team_trade_need.py:79:42
+   |
+77 |                 if change == 'week': altered['week'] += 1
+78 |                 if change == 'league': altered['league_id'] = 'other'
+79 |                 if change == 'generation': altered['projection_generation'] = None
+   |                                          ^
+80 |                 if change == 'provisional': altered['teams']['1']['positions']['QB']['conclusion_state'] = 'provisional'
+81 |                 with self.subTest(change=change):
+   |
+
+E701 Multiple statements on one line (colon)
+  --> tests/test_team_trade_need.py:80:43
+   |
+78 | …     if change == 'league': altered['league_id'] = 'other'
+79 | …     if change == 'generation': altered['projection_generation'] = None
+80 | …     if change == 'provisional': altered['teams']['1']['positions']['QB']['conclusion_state'] = 'provisional'
+   |                                 ^
+81 | …     with self.subTest(change=change):
+82 | …         self.assertIsNone(prepared_need(self.data, 2 if change == 'franchise' else 1, None if change == 'missing' else altered))
+   |
+
+E701 Multiple statements on one line (colon)
+  --> tests/test_team_trade_need.py:95:51
+   |
+93 |             self.assertIsNone(requested_position(data, None))
+94 |             for invalid in ('K', 'DEF', 'FLEX', 'SUPER_FLEX', 'qb', {}, ['RB']):
+95 |                 with self.assertRaises(ValueError): requested_position(data, invalid)
+   |                                                   ^
+96 |         data = {**self.data, 'roster_positions': ['QB', 'BN']}
+97 |         with self.assertRaises(ValueError): requested_position(data, 'RB')
+   |
+
+E701 Multiple statements on one line (colon)
+  --> tests/test_team_trade_need.py:97:43
+   |
+95 |                 with self.assertRaises(ValueError): requested_position(data, invalid)
+96 |         data = {**self.data, 'roster_positions': ['QB', 'BN']}
+97 |         with self.assertRaises(ValueError): requested_position(data, 'RB')
+   |                                           ^
+98 |         assets = {'player:a': SimpleNamespace(kind='player', position='RB'),
+99 |                   'pick:exact': SimpleNamespace(kind='pick', position=None)}
+   |
+
+E701 Multiple statements on one line (colon)
+  --> tests/test_team_trade_need_browser.py:24:21
+   |
+22 | …     data = f.editor.data
+23 | …     slots = ['QB', 'RB', 'WR', 'FLEX', 'BN'] if superflex else ['QB', 'RB', 'RB', 'WR', 'WR', 'TE', 'FLEX', 'FLEX', 'K', 'DEF', 'BN']
+24 | …     if superflex: slots.insert(1, 'SUPER_FLEX')
+   |                   ^
+25 | …     data['roster_positions'] = slots
+26 | …     data['league'].update(roster_positions=slots, scoring_settings={'pass_yd': 1, 'rush_yd': 1, 'rec_yd': 1, 'fgm': 1, 'sack': 1})
+   |
+
+E701 Multiple statements on one line (colon)
+  --> tests/test_team_trade_need_browser.py:43:35
+   |
+41 |                     data['players'][pid] = {**player, 'full_name': pid, 'age': 25}
+42 |                     points = 20 if rid == 1 else 10
+43 |                     if pos == 'RB': points = (2 if not depth or n > 1 else 20) if rid == 1 else 12
+   |                                   ^
+44 |                     self.rows.append({'player_id': pid, 'player': {'position': pos}, 'stats': {stats[pos]: points}})
+45 |         self.enterContext(patch('src.core.projection_intelligence.projection_service', f.capital.reader))
+   |
+
+E702 Multiple statements on one line (semicolon)
+  --> tests/test_team_trade_need_browser.py:60:32
+   |
+58 |         folder = os.environ.get('DTOS_TEAM_NEED_EVIDENCE')
+59 |         if folder:
+60 |             dest = Path(folder); dest.mkdir(parents=True, exist_ok=True)
+   |                                ^
+61 |             (dest / (name + '.json')).write_text(json.dumps({
+62 |                 'commit': subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip(),
+   |
+
+E702 Multiple statements on one line (semicolon)
+  --> tests/test_team_trade_need_browser.py:70:53
+   |
+68 |         helper, f = self.fixture()
+69 |         pw = self.enterContext(sync_playwright())
+70 |         browser = launch_chromium(pw, headless=True); self.addCleanup(browser.close)
+   |                                                     ^
+71 |         rows = []
+72 |         for width, height in ((320, 432), (375, 667), (390, 844), (1280, 900)):
+   |
+
+E702 Multiple statements on one line (semicolon)
+  --> tests/test_team_trade_need_browser.py:85:27
+   |
+83 |             posts = [r for r in requests if r[0] == 'POST']
+84 |             href = action.get_attribute('href')
+85 |             action.focus(); action.press('Enter')
+   |                           ^
+86 |             page.wait_for_function("!document.querySelector('#trade-context').textContent.includes('Loading')")
+87 |             self.assertEqual(page.locator('#recommendation-position').input_value(), 'RB')
+   |
+
+E701 Multiple statements on one line (colon)
+  --> tests/test_team_trade_need_browser.py:93:23
+   |
+91 |             self.assertEqual(helper.draft(page)['strategy'], before['strategy'])
+92 |             for pos in ('WR', ''):
+93 |                 if pos: page.locator('#recommendation-position').select_option(pos)
+   |                       ^
+94 |                 else: page.locator('#recommendation-position-clear').click()
+95 |                 page.reload(wait_until='networkidle')
+   |
+
+E701 Multiple statements on one line (colon)
+  --> tests/test_team_trade_need_browser.py:94:21
+   |
+92 |             for pos in ('WR', ''):
+93 |                 if pos: page.locator('#recommendation-position').select_option(pos)
+94 |                 else: page.locator('#recommendation-position-clear').click()
+   |                     ^
+95 |                 page.reload(wait_until='networkidle')
+96 |                 page.wait_for_function("!document.querySelector('#trade-context').textContent.includes('Loading')")
+   |
+
+E701 Multiple statements on one line (colon)
+   --> tests/test_team_trade_need_browser.py:107:22
+    |
+105 | …         rows.append({'width': width, 'height': height, 'handoff': 'RB starter', 'draft_and_custom_preserved': True, 'changed_and_cl…
+106 | …         folder = os.environ.get('DTOS_TEAM_NEED_EVIDENCE')
+107 | …         if folder: page.screenshot(path=str(Path(folder) / f'my-team-{width}.png'), full_page=True) if Path(folder).exists() else N…
+    |                    ^
+108 | …         page.close()
+109 | …     self.record('phone-round-trips', rows)
+    |
+
+E702 Multiple statements on one line (semicolon)
+   --> tests/test_team_trade_need_browser.py:114:53
+    |
+112 |         helper, f = self.fixture(superflex=True, depth=True)
+113 |         pw = self.enterContext(sync_playwright())
+114 |         browser = launch_chromium(pw, headless=True); self.addCleanup(browser.close)
+    |                                                     ^
+115 |         page, requests, _, _, errors = helper.page(browser, f)
+116 |         self.addCleanup(page.close)
+    |
+
+Found 16 errors.
+No fixes available (1 hidden fix can be enabled with the `--unsafe-fixes` option).

@@ -1,0 +1,44 @@
+/usr/local/lib/python3.14/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+  from starlette.testclient import TestClient as TestClient  # noqa
+test_superflex_depth_stale_and_unprepared_controls (tests.test_team_trade_need_browser.TeamTradeNeedBrowserTests.test_superflex_depth_stale_and_unprepared_controls) ... {"timestamp":"2026-11-09T23:55:09.632110+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T23:55:09.641953+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T23:55:09.657269+00:00","level":"WARNING","logger":"dtos.storage","message":"storage_review {'kind': 'projection', 'database_bytes': 241664, 'rows': {'projection_snapshots': 7, 'projection_source_history': 5, 'projection_player_states': 140}, 'free_bytes': 8531841024, 'row_delta': {'projection_snapshots': 2, 'projection_source_history': 1, 'projection_player_states': 92}, 'reasons': ['ROW_GROWTH_ACCELERATION_REVIEW']}","request_id":"system"}
+Validation Chromium: /usr/bin/chromium
+Validation Chromium version: 156.0.8078.73
+{"timestamp":"2026-11-09T23:55:10.284149+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/teams/1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T23:55:10.357371+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T23:55:10.368670+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T23:55:10.369648+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/strategy_session.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T23:55:11.019125+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/recommended?front_office=1&team_need=3031fb218266b0edaa76a7167b67a97a9d9927cc2c05598aa3ea707bed46cefb \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T23:55:11.052773+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T23:55:11.055027+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/strategy_session.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T23:55:11.055676+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T23:55:11.058684+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/trade_workspace.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T23:55:11.060075+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/trade_workspace.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T23:55:11.114824+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":376233984,"limit_bytes":2147483648,"raw_headroom_bytes":1771249664,"clean_inactive_file_bytes":1347584,"conditional_file_credit_bytes":673792,"admission_headroom_bytes":1771923456,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-09T23:55:11.117404+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/workspace?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T23:55:11.677606+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/recommended?front_office=1&team_need=3031fb218266b0edaa76a7167b67a97a9d9927cc2c05598aa3ea707bed46cefb \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T23:55:11.725488+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/trade_workspace.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T23:55:11.730154+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/strategy_session.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T23:55:11.731026+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T23:55:11.730782+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/trade_workspace.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T23:55:11.732645+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-09T23:55:11.788856+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":385748992,"limit_bytes":2147483648,"raw_headroom_bytes":1761734656,"clean_inactive_file_bytes":1347584,"conditional_file_credit_bytes":673792,"admission_headroom_bytes":1762408448,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-09T23:55:11.791444+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/workspace?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+FAIL
+
+======================================================================
+FAIL: test_superflex_depth_stale_and_unprepared_controls (tests.test_team_trade_need_browser.TeamTradeNeedBrowserTests.test_superflex_depth_stale_and_unprepared_controls)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_team_trade_need_browser.py", line 279, in test_superflex_depth_stale_and_unprepared_controls
+    self.assertEqual(page.locator('#recommendation-position').input_value(), 'QB')
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: '' != 'QB'
++ QB
+
+
+----------------------------------------------------------------------
+Ran 1 test in 3.645s
+
+FAILED (failures=1)

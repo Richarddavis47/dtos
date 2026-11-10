@@ -1,0 +1,59 @@
+{
+  "candidate": "e89178166fa2d90431666675487df85ad207f751",
+  "tree": "9a6fb02bd00b789f6566cfb59f70868972b3ed2d",
+  "runtime": "Python3.14.3 and Chromium156 from pinned image sha256:2c9de92bf8e05a79587f6edba94052cf614c984a5cb81a62613871388cd6533e",
+  "constraints": {
+    "uid": 1000,
+    "memory_bytes": 2147483648,
+    "extra_swap_bytes": 0,
+    "cpus": 2,
+    "network": "none"
+  },
+  "focused": {
+    "entry": "python -m unittest tests.test_team_trade_need tests.test_team_trade_need_browser tests.test_trade_partner_history tests.test_trade_partner_history_browser tests.test_completed_trade_observations_browser tests.test_canonical_harness_lifecycle tests.test_batch6_trade_ux.TradeUXTests.test_quiet_result_is_not_error_and_stale_error_cannot_replace_changed_context -v",
+    "count": 24,
+    "passed": true,
+    "original_console": "final-source-focused.log",
+    "recordings": [
+      "browser-final-source/team-need",
+      "browser-final-source",
+      "history-browser-final-source"
+    ]
+  },
+  "original_failed_browser_control": {
+    "entry": "python -m unittest tests.test_batch6_trade_ux.TradeUXTests.test_quiet_result_is_not_error_and_stale_error_cannot_replace_changed_context -v",
+    "test_methods": 1,
+    "subtest_widths": [
+      390,
+      1280
+    ],
+    "passed": true,
+    "original_console": "final-source-pending-filter-original.log"
+  },
+  "resource_controls": [
+    "python -m tools.validation.restoration_preflight_gate --output /evidence/local-preflight",
+    "python -m tools.validation.restoration_unused_memory --archive /prior/Granite-cache-restoration-memory-profile.zip --output /evidence/local-restoration-unused/evidence --native-actuals",
+    "python -m tools.validation.resident_refresh_ownership --fixtures /evidence/local-resident-refresh-candidate588/inputs --output /evidence/local-resident-refresh/evidence"
+  ],
+  "supplemental": [
+    {
+      "method": "capture-layout.py",
+      "output": "position-filter-layout/layout.json",
+      "scope": "Four source-bound responsive captures; not additional unittest executions"
+    },
+    {
+      "method": "capture-touch.py",
+      "output": "position-filter-layout/touch.json",
+      "scope": "Three source-bound Chromium CDP touch controls; not additional unittest executions or physical Safari acceptance"
+    },
+    {
+      "method": "retained-history-probe.py",
+      "output": "retained-history-feature.json",
+      "scope": "Five existing retained/disposable descriptive-history summaries; separate from the new handoff and live acceptance"
+    }
+  ],
+  "full_local": "run-local-canonical.py binds the clean writable exact checkout, unchanged observer and canonical runner; actual entry python -m tools.validation.validate_release",
+  "count_policy": "Focused repetitions, supplemental captures, local regression, hosted regression, Product and separate Welcome/security executions are distinct. Earlier failures/cancellations are never counted as passes.",
+  "full_expected_tests": 4330,
+  "validation_wrapper": "80minute complete canonical command within unchanged85minutejob/82minstep; owned timeout descendants reaped before sealing; no production policy or assertion changes"
+}

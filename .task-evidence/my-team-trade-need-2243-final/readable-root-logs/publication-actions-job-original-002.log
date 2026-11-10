@@ -1,0 +1,113 @@
+26-11-10T03:28:40.5247137Z test_exact_thirteen_jobs_are_required (tests.test_release_publisher.RunAdmissionTests.test_exact_thirteen_jobs_are_required) ... ok
+2026-11-10T03:28:40.5255459Z test_later_failed_missing_and_wrong_source_checks_reject (tests.test_release_publisher.RunAdmissionTests.test_later_failed_missing_and_wrong_source_checks_reject) ... ok
+2026-11-10T03:28:40.5259439Z test_publish_cannot_omit_preparation_certificate (tests.test_release_publisher.RunAdmissionTests.test_publish_cannot_omit_preparation_certificate) ... ok
+2026-11-10T03:28:40.5262523Z test_successful_run_from_another_commit_is_rejected (tests.test_release_publisher.RunAdmissionTests.test_successful_run_from_another_commit_is_rejected) ... ok
+2026-11-10T03:28:40.5273604Z test_auto_search_blocks_publication (tests.test_release_publisher.TeamNeedHandoffGuardTests.test_auto_search_blocks_publication) ... ok
+2026-11-10T03:28:40.5283486Z test_complete_source_bound_fixture_passes (tests.test_release_publisher.TeamNeedHandoffGuardTests.test_complete_source_bound_fixture_passes) ... ok
+2026-11-10T03:28:40.5293508Z test_deferred_does_not_count_as_real_execution (tests.test_release_publisher.TeamNeedHandoffGuardTests.test_deferred_does_not_count_as_real_execution) ... ok
+2026-11-10T03:28:40.5303269Z test_explicit_reset_retaining_context_blocks_publication (tests.test_release_publisher.TeamNeedHandoffGuardTests.test_explicit_reset_retaining_context_blocks_publication) ... ok
+2026-11-10T03:28:40.5312700Z test_hidden_position_blocks_publication (tests.test_release_publisher.TeamNeedHandoffGuardTests.test_hidden_position_blocks_publication) ... ok
+2026-11-10T03:28:40.5321856Z test_lost_draft_or_custom_blocks_publication (tests.test_release_publisher.TeamNeedHandoffGuardTests.test_lost_draft_or_custom_blocks_publication) ... ok
+2026-11-10T03:28:40.5331143Z test_missing_phone_is_blocked (tests.test_release_publisher.TeamNeedHandoffGuardTests.test_missing_phone_is_blocked) ... ok
+2026-11-10T03:28:40.5339146Z test_missing_report_is_blocked (tests.test_release_publisher.TeamNeedHandoffGuardTests.test_missing_report_is_blocked) ... ok
+2026-11-10T03:28:40.5348125Z test_obscured_label_blocks_publication (tests.test_release_publisher.TeamNeedHandoffGuardTests.test_obscured_label_blocks_publication) ... ok
+2026-11-10T03:28:40.5357520Z test_stale_league_hint_blocks_publication (tests.test_release_publisher.TeamNeedHandoffGuardTests.test_stale_league_hint_blocks_publication) ... ok
+2026-11-10T03:28:40.5366498Z test_stale_manual_override_lost_blocks_publication (tests.test_release_publisher.TeamNeedHandoffGuardTests.test_stale_manual_override_lost_blocks_publication) ... ok
+2026-11-10T03:28:40.5375142Z test_type_change_losing_reason_blocks_publication (tests.test_release_publisher.TeamNeedHandoffGuardTests.test_type_change_losing_reason_blocks_publication) ... ok
+2026-11-10T03:28:40.5383876Z test_wrong_candidate_is_blocked (tests.test_release_publisher.TeamNeedHandoffGuardTests.test_wrong_candidate_is_blocked) ... ok
+2026-11-10T03:28:40.5440787Z test_exact_source_and_complete_real_work_are_required (tests.test_release_publisher.TradeResourceIntegrityTests.test_exact_source_and_complete_real_work_are_required) ... ok
+2026-11-10T03:28:40.5470423Z test_feature_source_phone_and_package_boundaries (tests.test_release_publisher.TradeTimeMarketPublisherTests.test_feature_source_phone_and_package_boundaries) ... ok
+2026-11-10T03:28:40.5471002Z 
+2026-11-10T03:28:40.5471168Z ----------------------------------------------------------------------
+2026-11-10T03:28:40.5471652Z Ran 68 tests in 0.291s
+2026-11-10T03:28:40.5471795Z 
+2026-11-10T03:28:40.5472006Z OK
+2026-11-10T03:28:41.1669559Z ##[group]Run arguments=()
+2026-11-10T03:28:41.1669751Z [36;1marguments=()[0m
+2026-11-10T03:28:41.1669904Z [36;1mif [ "$RELEASE_OPERATION" = publish ]; then[0m
+2026-11-10T03:28:41.1670093Z [36;1m  test -n "$PREPARATION_RUN_ID"[0m
+2026-11-10T03:28:41.1670283Z [36;1m  arguments+=(--prepared-run "$PREPARATION_RUN_ID")[0m
+2026-11-10T03:28:41.1670462Z [36;1mfi[0m
+2026-11-10T03:28:41.1670753Z [36;1mpython -m tools.release.publish --plan .github/release-plans/2243.json --operation "$RELEASE_OPERATION" "${arguments[@]}"[0m
+2026-11-10T03:28:41.1688674Z shell: /usr/bin/bash -e {0}
+2026-11-10T03:28:41.1688817Z env:
+2026-11-10T03:28:41.1688948Z   NODE_OPTIONS: --max-old-space-size=256
+2026-11-10T03:28:41.1689146Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-10T03:28:41.1689387Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib/pkgconfig
+2026-11-10T03:28:41.1689634Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-10T03:28:41.1689866Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-10T03:28:41.1690080Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-10T03:28:41.1690293Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib
+2026-11-10T03:28:41.1691969Z   GH_TOKEN: ***
+2026-11-10T03:28:41.1692102Z   RELEASE_OPERATION: publish
+2026-11-10T03:28:41.1692249Z   PREPARATION_RUN_ID: 42748932880
+2026-11-10T03:28:41.1692394Z ##[endgroup]
+2026-11-10T03:28:42.9765941Z From https://github.com/Richarddavis47/dtos
+2026-11-10T03:28:42.9766256Z  * branch              refs/pull/332/head -> FETCH_HEAD
+2026-11-10T03:28:42.9766458Z  * branch              main       -> FETCH_HEAD
+2026-11-10T03:29:26.0022248Z From https://github.com/Richarddavis47/dtos
+2026-11-10T03:29:26.0022669Z  * branch              refs/pull/332/head -> FETCH_HEAD
+2026-11-10T03:29:26.0022968Z  * branch              main       -> FETCH_HEAD
+2026-11-10T03:29:31.4776949Z From https://github.com/Richarddavis47/dtos
+2026-11-10T03:29:31.4777388Z  * branch              refs/pull/332/head -> FETCH_HEAD
+2026-11-10T03:29:31.4777668Z  * branch              main       -> FETCH_HEAD
+2026-11-10T03:29:37.9418492Z Verified guarded release publish completed.
+2026-11-10T03:29:37.9598088Z ##[group]Run actions/upload-artifact@v4
+2026-11-10T03:29:37.9598258Z with:
+2026-11-10T03:29:37.9598398Z   name: guarded-release-2243-publish-42749630561
+2026-11-10T03:29:37.9599235Z   path: .validation/guarded-release/outcome.json
+.validation/guarded-release/publication.json
+.validation/guarded-release/readiness.json
+.validation/guarded-release/production-smoke.json
+.validation/guarded-release/assets/VALIDATION.json
+.validation/guarded-release/assets/evidence-manifest.json
+.validation/guarded-release/assets/SHA256SUMS
+.validation/guarded-release/assets/prior-attempts.json
+
+2026-11-10T03:29:37.9600046Z   if-no-files-found: error
+2026-11-10T03:29:37.9600190Z   retention-days: 14
+2026-11-10T03:29:37.9600314Z   compression-level: 6
+2026-11-10T03:29:37.9600436Z   overwrite: false
+2026-11-10T03:29:37.9600559Z   include-hidden-files: false
+2026-11-10T03:29:37.9600691Z env:
+2026-11-10T03:29:37.9600817Z   NODE_OPTIONS: --max-old-space-size=256
+2026-11-10T03:29:37.9601040Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-10T03:29:37.9601275Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib/pkgconfig
+2026-11-10T03:29:37.9601509Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-10T03:29:37.9601721Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-10T03:29:37.9601932Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-10T03:29:37.9602142Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib
+2026-11-10T03:29:37.9602324Z ##[endgroup]
+2026-11-10T03:29:38.0784068Z (node:2891) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-11-10T03:29:38.0784604Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-11-10T03:29:38.0843614Z Multiple search paths detected. Calculating the least common ancestor of all paths
+2026-11-10T03:29:38.0847211Z The least common ancestor is /home/runner/work/dtos/dtos/.validation/guarded-release. This will be the root directory of the artifact
+2026-11-10T03:29:38.0848009Z With the provided path, there will be 8 files uploaded
+2026-11-10T03:29:38.0850620Z Artifact name is valid!
+2026-11-10T03:29:38.0850901Z Root directory input is valid!
+2026-11-10T03:29:38.3957661Z Beginning upload of artifact content to blob storage
+2026-11-10T03:29:38.4183400Z (node:2891) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+2026-11-10T03:29:38.5878087Z Uploaded bytes 15913
+2026-11-10T03:29:38.7662073Z Finished uploading artifact content to blob storage!
+2026-11-10T03:29:38.7662587Z SHA256 digest of uploaded artifact zip is 6cd031d9314d75b0c57185b3827fe7c89054b17fac6add2bc96ae8068c6043f1
+2026-11-10T03:29:38.7663725Z Finalizing artifact upload
+2026-11-10T03:29:39.0905247Z Artifact guarded-release-2243-publish-42749630561.zip successfully finalized. Artifact ID 13732678397
+2026-11-10T03:29:39.0906755Z Artifact guarded-release-2243-publish-42749630561 has been successfully uploaded! Final size is 15913 bytes. Artifact ID is 13732678397
+2026-11-10T03:29:39.0910858Z Artifact download URL: https://github.com/Richarddavis47/dtos/actions/runs/42749630561/artifacts/13732678397
+2026-11-10T03:29:39.1080821Z Post job cleanup.
+2026-11-10T03:29:39.1854852Z (node:2904) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-11-10T03:29:39.1855455Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-11-10T03:29:39.2008657Z Post job cleanup.
+2026-11-10T03:29:39.2620847Z [command]/usr/bin/git version
+2026-11-10T03:29:39.2658490Z git version 2.56.0
+2026-11-10T03:29:39.2685411Z Temporarily overriding HOME='/home/runner/work/_temp/3fdaf76c-9c0b-4846-9827-e7d35101aec3' before making global git config changes
+2026-11-10T03:29:39.2686027Z Adding repository directory to the temporary git global config as a safe directory
+2026-11-10T03:29:39.2689144Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/dtos/dtos
+2026-11-10T03:29:39.2724212Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-11-10T03:29:39.2755884Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-11-10T03:29:39.2988525Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-11-10T03:29:39.3030406Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-11-10T03:29:39.3330042Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-11-10T03:29:39.3368350Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-11-10T03:29:39.3701357Z Cleaning up orphan processes
+2026-11-10T03:29:39.3994197Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5, actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

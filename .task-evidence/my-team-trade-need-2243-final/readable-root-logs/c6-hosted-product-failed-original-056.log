@@ -1,0 +1,59 @@
+will be uploaded.
+2026-11-10T00:25:35.3910970Z ##[group]Run actions/upload-artifact@v4
+2026-11-10T00:25:35.3911462Z with:
+2026-11-10T00:25:35.3911792Z   name: restoration-unused-2g
+2026-11-10T00:25:35.3912251Z   path: .validation/restoration-unused
+2026-11-10T00:25:35.3912716Z   if-no-files-found: error
+2026-11-10T00:25:35.3913103Z   retention-days: 14
+2026-11-10T00:25:35.3913465Z   compression-level: 6
+2026-11-10T00:25:35.3913829Z   overwrite: false
+2026-11-10T00:25:35.3914181Z   include-hidden-files: false
+2026-11-10T00:25:35.3914842Z env:
+2026-11-10T00:25:35.3915178Z   NODE_OPTIONS: --max-old-space-size=256
+2026-11-10T00:25:35.3915744Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-10T00:25:35.3916450Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib/pkgconfig
+2026-11-10T00:25:35.3917166Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-10T00:25:35.3917958Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-10T00:25:35.3918636Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-10T00:25:35.3919296Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib
+2026-11-10T00:25:35.3919842Z ##[endgroup]
+2026-11-10T00:25:35.5728220Z (node:52071) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-11-10T00:25:35.5729137Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-11-10T00:25:35.5746797Z ##[error]No files were found with the provided path: .validation/restoration-unused. No artifacts will be uploaded.
+2026-11-10T00:25:35.5997794Z ##[group]Run actions/upload-artifact@v4
+2026-11-10T00:25:35.5998272Z with:
+2026-11-10T00:25:35.5998594Z   name: actuals-restoration-2g
+2026-11-10T00:25:35.5999032Z   path: .validation/actuals-restoration
+2026-11-10T00:25:35.5999484Z   if-no-files-found: error
+2026-11-10T00:25:35.5999862Z   retention-days: 14
+2026-11-10T00:25:35.6000222Z   compression-level: 6
+2026-11-10T00:25:35.6000570Z   overwrite: false
+2026-11-10T00:25:35.6000927Z   include-hidden-files: false
+2026-11-10T00:25:35.6001309Z env:
+2026-11-10T00:25:35.6001772Z   NODE_OPTIONS: --max-old-space-size=256
+2026-11-10T00:25:35.6002327Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-10T00:25:35.6003036Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib/pkgconfig
+2026-11-10T00:25:35.6003747Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-10T00:25:35.6004582Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-10T00:25:35.6005267Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-10T00:25:35.6005907Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib
+2026-11-10T00:25:35.6006445Z ##[endgroup]
+2026-11-10T00:25:35.7773761Z (node:52083) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-11-10T00:25:35.7774982Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-11-10T00:25:35.7793828Z ##[error]No files were found with the provided path: .validation/actuals-restoration. No artifacts will be uploaded.
+2026-11-10T00:25:35.8056283Z Post job cleanup.
+2026-11-10T00:25:35.9004609Z [command]/usr/bin/git version
+2026-11-10T00:25:35.9051357Z git version 2.56.0
+2026-11-10T00:25:35.9123798Z Temporarily overriding HOME='/home/runner/work/_temp/3de9d250-b2e9-47d1-9b40-e603ba18e04d' before making global git config changes
+2026-11-10T00:25:35.9125345Z Adding repository directory to the temporary git global config as a safe directory
+2026-11-10T00:25:35.9130457Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/dtos/dtos
+2026-11-10T00:25:35.9191327Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-11-10T00:25:35.9233805Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-11-10T00:25:35.9504218Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-11-10T00:25:35.9543561Z http.https://github.com/.extraheader
+2026-11-10T00:25:35.9555529Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+2026-11-10T00:25:35.9595955Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-11-10T00:25:35.9872610Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-11-10T00:25:35.9920229Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-11-10T00:25:36.0385659Z Cleaning up orphan processes
+2026-11-10T00:25:36.0809623Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5, actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

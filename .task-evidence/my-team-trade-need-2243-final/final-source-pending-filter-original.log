@@ -1,0 +1,22 @@
+/usr/local/lib/python3.14/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+  from starlette.testclient import TestClient as TestClient  # noqa
+test_quiet_result_is_not_error_and_stale_error_cannot_replace_changed_context (tests.test_batch6_trade_ux.TradeUXTests.test_quiet_result_is_not_error_and_stale_error_cannot_replace_changed_context) ... Validation Chromium: /usr/bin/chromium
+Validation Chromium version: 156.0.8078.73
+INFO:httpx:HTTP Request: GET http://testserver/trades/recommended? "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/static/css/trade_workspace.css? "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/static/js/strategy_session.js? "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/static/js/trade_workspace.js? "HTTP/1.1 200 OK"
+INFO:dtos.trade_resources:trade_readiness
+INFO:httpx:HTTP Request: GET http://testserver/api/trades/workspace?front_office=1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/trades/recommended? "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/static/css/trade_workspace.css? "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/static/js/strategy_session.js? "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/static/js/trade_workspace.js? "HTTP/1.1 200 OK"
+INFO:dtos.trade_resources:trade_readiness
+INFO:httpx:HTTP Request: GET http://testserver/api/trades/workspace?front_office=1 "HTTP/1.1 200 OK"
+ok
+
+----------------------------------------------------------------------
+Ran 1 test in 1.735s
+
+OK

@@ -1,0 +1,1465 @@
+diff --git a/.github/workflows/canonical-release-recovery.yml b/.github/workflows/canonical-release-recovery.yml
+index 78360f63..65019787 100644
+--- a/.github/workflows/canonical-release-recovery.yml
++++ b/.github/workflows/canonical-release-recovery.yml
+@@ -44,6 +44,7 @@ jobs:
+           import os
+           from pathlib import Path
+           import shutil
++          import signal
+           import subprocess
+           import sys
+           import threading
+@@ -143,10 +144,59 @@ jobs:
+                       row["sampling_window_ms"] = (time.monotonic() - sample_start) * 1000
+                       sink.write(json.dumps(row, separators=(",", ":")) + "\n")
+ 
++          def run_canonical_process(command, stream, timeout, cleanup):
++              """Reap the timed-out validator tree before hashing its evidence."""
++              child = subprocess.Popen(command, stdout=stream, stderr=subprocess.STDOUT,
++                                       start_new_session=os.name == "posix")
++              cleanup.update(timeout_triggered=False, validator_pid=child.pid)
++              try:
++                  result = child.wait(timeout=timeout)
++              except subprocess.TimeoutExpired:
++                  cleanup["timeout_triggered"] = True
++                  discovery_ok = True
++                  try:
++                      descendants = psutil.Process(child.pid).children(recursive=True)
++                  except psutil.Error:
++                      descendants = []
++                      discovery_ok = False
++                  if os.name == "posix":
++                      try:
++                          os.killpg(child.pid, signal.SIGTERM)
++                      except ProcessLookupError:
++                          pass
++                  else:
++                      child.terminate()
++                  # Detached descendants may not belong to the validator group.
++                  for process in descendants:
++                      try:
++                          process.terminate()
++                      except psutil.NoSuchProcess:
++                          pass
++                  try:
++                      child.wait(timeout=3)
++                  except subprocess.TimeoutExpired:
++                      child.kill()
++                      child.wait(timeout=3)
++                  _, alive = psutil.wait_procs(descendants, timeout=3)
++                  for process in alive:
++                      try:
++                          process.kill()
++                      except psutil.NoSuchProcess:
++                          pass
++                  _, alive = psutil.wait_procs(alive, timeout=3)
++                  active = [p.pid for p in alive if p.is_running()]
++                  cleanup.update(descendant_count=len(descendants), active_after_count=len(active),
++                                 active_after=active[:16], discovery_complete=discovery_ok,
++                                 timeout_cleanup_complete=discovery_ok and not active and child.poll() is not None)
++                  raise
++              cleanup["validator_reaped"] = True
++              return subprocess.CompletedProcess(command, result)
++
+           watcher = threading.Thread(target=watch, daemon=True)
+           watcher.start()
+           code = 1
+           error = None
++          process_cleanup = {}
+           try:
+               from tools.validation import generate_sanitized_market_fixture as seed
+               seed.ASSET_COUNT = 250
+@@ -154,8 +204,12 @@ jobs:
+               seed.seed_fixture_projection(data, FIXTURE / "projections.sqlite3")
+               seed._canonical_history_fixture(FIXTURE)
+               with (OUTPUT / "canonical.log").open("w") as stream:
+-                  result = subprocess.run([sys.executable, "-m", "tools.validation.validate_release"],
+-                                          stdout=stream, stderr=subprocess.STDOUT, timeout=4500)
++                  # Matched CI evidence completed4188/4326tests at75min, with
++                  # no assertion failures; remaining local work was38seconds.
++                  # Keep every test/cap/performance assertion, within the85min job.
++                  result = run_canonical_process(
++                      [sys.executable, "-m", "tools.validation.validate_release"],
++                      stream, timeout=4800, cleanup=process_cleanup)
+               code = result.returncode
+           except BaseException as exc:
+               error = type(exc).__name__ + ": " + str(exc)
+@@ -169,7 +223,8 @@ jobs:
+               report = dict(head=head, tree=subprocess.check_output(["git", "rev-parse", "HEAD^{tree}"], text=True).strip(),
+                   python=sys.version, started_at=started, finished_at=time.time(),
+                   elapsed_seconds=time.time()-started, exit_code=code, passed=code == 0,
+-                  error=error, cgroup_limit=2147483648, cpus=2, network="none",
++                  error=error, process_cleanup=process_cleanup,
++                  cgroup_limit=2147483648, cpus=2, network="none",
+                   final_memory=memory_snapshot(), kernel_peak=int(Path("/sys/fs/cgroup/memory.peak").read_text()),
+                   fixture="250 asset prepared sanitized foundation; disposable authenticated test transports")
+               (OUTPUT / "result.json").write_text(json.dumps(report, indent=2))
+@@ -260,7 +315,7 @@ jobs:
+           docker build --file .validation/canonical-build/Dockerfile --tag dtos-canonical-release:validation .validation/canonical-build 2>&1 | tee .validation/canonical-release/image-build.log
+           docker run --rm dtos-canonical-release:validation sh -c 'python --version && chromium --version && python -m pip check' | tee .validation/canonical-release/environment.txt
+       - name: Run unchanged ten-gate validator under actual 2 GiB
+-        timeout-minutes: 77
++        timeout-minutes: 82
+         env:
+           DTOS_EXPECTED_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+         run: |
+diff --git a/.github/workflows/product-browser.yml b/.github/workflows/product-browser.yml
+index a1201b4c..e4e66300 100644
+--- a/.github/workflows/product-browser.yml
++++ b/.github/workflows/product-browser.yml
+@@ -35,7 +35,7 @@ jobs:
+         # This bounded CI allowance does not change any application timeout.
+         timeout-minutes: 25
+         run: |
+-          docker run --rm --memory=2g --memory-swap=2g --cpus=2 --network=none -e NODE_OPTIONS -e DTOS_TRADE_RESOURCE_BROWSER_EVIDENCE=.validation/trade-resource/evidence/browser -e DTOS_LINEUP_DETAIL_EVIDENCE=.validation/trade-resource/evidence/browser/lineups -v "$PWD:$PWD" -w "$PWD" -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0="$PWD" dtos-browser-validation python -m unittest -v tests.test_00_trade_simple_browser tests.test_trade_actionability tests.test_trade_actionability_browser tests.test_trade_conditional_summary tests.test_trade_recommendation_clarity tests.test_batch5_recommended_browser tests.test_franchise_timeline_coverage tests.test_franchise_timeline_browser tests.test_trade_reserve_evidence tests.test_trade_lineup_detail tests.test_trade_lineup_detail_browser tests.test_trade_resource_admission tests.test_trade_resource_browser tests.test_multileague_projection_browser tests.test_relative_personal_values tests.test_relative_personal_browser tests.test_decision_history_continuity_browser tests.test_personal_rankings_compatibility tests.test_personal_rankings_recovery_storage tests.test_personal_rankings_recovery_trade tests.test_personal_rankings_recovery_browser tests.test_personal_rankings_recovery_trade_browser tests.test_personal_rankings_partial_browser tests.test_dossier_plain_english tests.test_plain_english_home_depth tests.test_builder_plain_english tests.test_plain_english_preservation_final tests.test_plain_english_final_browser tests.test_plain_english_decisions tests.test_plain_english_browser tests.test_personal_rankings_availability tests.test_personal_rankings_availability_browser tests.test_personal_rankings tests.test_personal_rankings_store tests.test_personal_rankings_integration tests.test_personal_trade_workflows tests.test_personal_rankings_browser tests.test_personal_rankings_accessibility_browser tests.test_personal_trade_browser tests.test_market_trend_current_browser tests.test_standings_positioning tests.test_standings_positioning_browser tests.test_matchup_portraits_browser tests.test_matchups_phone tests.test_matchups_phone_browser tests.test_trade_projection_freshness tests.test_trade_projection_freshness_browser tests.test_trade_preview_scope_browser tests.test_trade_simple_discovery tests.test_fois_final_trust_browser tests.test_fois_evidence_integrity tests.test_fois_trust_browser tests.test_proposal_tray_browser tests.test_journey_evidence tests.test_journey_corrections_browser tests.test_dossier_status_browser tests.test_phone_visual_corrections_browser tests.test_phone_design_semantics tests.test_phone_design_browser tests.test_trade_calculator tests.test_trade_calculator_browser tests.test_calculator_balance_feedback_browser tests.test_calculator_stale_feedback_browser tests.test_trade_explicit_navigation_browser tests.test_trade_navigation_identity tests.test_trade_navigation_browser tests.test_player_actions tests.test_player_actions_browser tests.test_trade_performance tests.test_trade_construction_performance tests.test_trade_performance_browser tests.test_technical_details_browser tests.test_canonical_asset_facts tests.test_canonical_asset_facts_browser tests.test_product_browser_journey tests.test_matchup_browser_contract tests.test_trade_center_browser tests.test_trade_scout_state_browser tests.test_make_it_cheaper_browser tests.test_trade_center_accessibility tests.test_trade_workspace_browser tests.test_trade_workspace_batch1 tests.test_live_inspection tests.test_browser_fixture_images tests.test_visual_retirement tests.test_trade_decision_experience tests.test_trade_decision_browser tests.test_trade_decision_http_browser tests.test_trade_decision_standings_browser tests.test_batch6_trade_ux tests.test_trade_p2_browser tests.test_trade_final_evidence_browser tests.test_trade_endorsement_integrity tests.test_trade_missing_market_presentation tests.test_batch6_trade_explanation tests.test_league_entry_coordination
++          docker run --rm --memory=2g --memory-swap=2g --cpus=2 --network=none -e NODE_OPTIONS -e DTOS_TRADE_RESOURCE_BROWSER_EVIDENCE=.validation/trade-resource/evidence/browser -e DTOS_LINEUP_DETAIL_EVIDENCE=.validation/trade-resource/evidence/browser/lineups -e DTOS_TEAM_NEED_EVIDENCE=.validation/trade-resource/evidence/browser/team-need -v "$PWD:$PWD" -w "$PWD" -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0="$PWD" dtos-browser-validation python -m unittest -v tests.test_team_trade_need tests.test_team_trade_need_browser tests.test_00_trade_simple_browser tests.test_trade_actionability tests.test_trade_actionability_browser tests.test_trade_conditional_summary tests.test_trade_recommendation_clarity tests.test_batch5_recommended_browser tests.test_franchise_timeline_coverage tests.test_franchise_timeline_browser tests.test_trade_reserve_evidence tests.test_trade_lineup_detail tests.test_trade_lineup_detail_browser tests.test_trade_resource_admission tests.test_trade_resource_browser tests.test_multileague_projection_browser tests.test_relative_personal_values tests.test_relative_personal_browser tests.test_decision_history_continuity_browser tests.test_personal_rankings_compatibility tests.test_personal_rankings_recovery_storage tests.test_personal_rankings_recovery_trade tests.test_personal_rankings_recovery_browser tests.test_personal_rankings_recovery_trade_browser tests.test_personal_rankings_partial_browser tests.test_dossier_plain_english tests.test_plain_english_home_depth tests.test_builder_plain_english tests.test_plain_english_preservation_final tests.test_plain_english_final_browser tests.test_plain_english_decisions tests.test_plain_english_browser tests.test_personal_rankings_availability tests.test_personal_rankings_availability_browser tests.test_personal_rankings tests.test_personal_rankings_store tests.test_personal_rankings_integration tests.test_personal_trade_workflows tests.test_personal_rankings_browser tests.test_personal_rankings_accessibility_browser tests.test_personal_trade_browser tests.test_market_trend_current_browser tests.test_standings_positioning tests.test_standings_positioning_browser tests.test_matchup_portraits_browser tests.test_matchups_phone tests.test_matchups_phone_browser tests.test_trade_projection_freshness tests.test_trade_projection_freshness_browser tests.test_trade_preview_scope_browser tests.test_trade_simple_discovery tests.test_fois_final_trust_browser tests.test_fois_evidence_integrity tests.test_fois_trust_browser tests.test_proposal_tray_browser tests.test_journey_evidence tests.test_journey_corrections_browser tests.test_dossier_status_browser tests.test_phone_visual_corrections_browser tests.test_phone_design_semantics tests.test_phone_design_browser tests.test_trade_calculator tests.test_trade_calculator_browser tests.test_calculator_balance_feedback_browser tests.test_calculator_stale_feedback_browser tests.test_trade_explicit_navigation_browser tests.test_trade_navigation_identity tests.test_trade_navigation_browser tests.test_player_actions tests.test_player_actions_browser tests.test_trade_performance tests.test_trade_construction_performance tests.test_trade_performance_browser tests.test_technical_details_browser tests.test_canonical_asset_facts tests.test_canonical_asset_facts_browser tests.test_product_browser_journey tests.test_matchup_browser_contract tests.test_trade_center_browser tests.test_trade_scout_state_browser tests.test_make_it_cheaper_browser tests.test_trade_center_accessibility tests.test_trade_workspace_browser tests.test_trade_workspace_batch1 tests.test_live_inspection tests.test_browser_fixture_images tests.test_visual_retirement tests.test_trade_decision_experience tests.test_trade_decision_browser tests.test_trade_decision_http_browser tests.test_trade_decision_standings_browser tests.test_batch6_trade_ux tests.test_trade_p2_browser tests.test_trade_final_evidence_browser tests.test_trade_endorsement_integrity tests.test_trade_missing_market_presentation tests.test_batch6_trade_explanation tests.test_league_entry_coordination
+           docker run --rm --memory=2g --memory-swap=2g --cpus=2 --network=none -e NODE_OPTIONS -v "$PWD:$PWD" -w "$PWD" -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0="$PWD" dtos-browser-validation python -m unittest -v tests.test_historical_evidence_weeks tests.test_fois_final_trust tests.test_trade_time_market_evidence tests.test_trade_time_market_evidence_browser
+ 
+ 
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index 77c0746f..472ce8b6 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -1,3 +1,11 @@
++# v1.22.28 / build 2243 — Carry a prepared roster need into Trade
++
++My Team adds one contextual “Explore [position] trades” action when the existing, current prepared diagnostic supports a starter or replacement-depth need for the manager’s own franchise. Stale, missing, incompatible or unmappable evidence keeps the general Trade shortcut. The original saved-goal actions remain available.
++
++Recommended Trades shows an editable incoming-player position and the dated My Team reason. Changing or clearing it requires an explicit Generate action; it never changes a saved goal, valuation mode or Evaluate draft. Earlier offers remain separately qualified as retained context, not results of the new filter. Active account, session, league, franchise, ownership and prepared-evidence identity are rechecked; a stale handoff applies no filter.
++
++The position constraint narrows the existing bounded search using the established QB/RB/WR/TE eligibility contract. Candidate caps, independent bilateral evaluation, exact picks, Neutral/Custom mathematics, Sleeper sources, submitted lineups and memory reservations are unchanged. Navigation adds no provider acquisition or recommendation search. See docs/audits/MY_TEAM_TRADE_NEED_2243.md for verification scope and remaining limits.
++
+ # v1.22.27 / build 2242 — Open the partner’s franchise trade history
+ 
+ Recommended Trades and Evaluate add a compact “See franchise trade history” link when the exact counterparty can be resolved in the active league. It opens the existing descriptive completed-trade evidence and keeps its source/coverage qualifications.
+diff --git a/RELEASE_NOTES.md b/RELEASE_NOTES.md
+index ee1bb807..6eb9b198 100644
+--- a/RELEASE_NOTES.md
++++ b/RELEASE_NOTES.md
+@@ -1,3 +1,11 @@
++# v1.22.28 / build 2243 — Carry a prepared roster need into Trade
++
++My Team adds one contextual “Explore [position] trades” action when the existing, current prepared diagnostic supports a starter or replacement-depth need for the manager’s own franchise. Stale, missing, incompatible or unmappable evidence keeps the general Trade shortcut. The original saved-goal actions remain available.
++
++Recommended Trades shows an editable incoming-player position and the dated My Team reason. Changing or clearing it requires an explicit Generate action; it never changes a saved goal, valuation mode or Evaluate draft. Earlier offers remain separately qualified as retained context, not results of the new filter. Active account, session, league, franchise, ownership and prepared-evidence identity are rechecked; a stale handoff applies no filter.
++
++The position constraint narrows the existing bounded search using the established QB/RB/WR/TE eligibility contract. Candidate caps, independent bilateral evaluation, exact picks, Neutral/Custom mathematics, Sleeper sources, submitted lineups and memory reservations are unchanged. Navigation adds no provider acquisition or recommendation search. See docs/audits/MY_TEAM_TRADE_NEED_2243.md for verification scope and remaining limits.
++
+ # v1.22.27 / build 2242 — Open the partner’s franchise trade history
+ 
+ Recommended Trades and Evaluate add a compact “See franchise trade history” link when the exact counterparty can be resolved in the active league. It opens the existing descriptive completed-trade evidence and keeps its source/coverage qualifications.
+diff --git a/app_metadata.py b/app_metadata.py
+index b76b3f55..500dd51f 100644
+--- a/app_metadata.py
++++ b/app_metadata.py
+@@ -7,10 +7,10 @@ from datetime import datetime, timezone
+ from pathlib import Path
+ 
+ APPLICATION_NAME = "DTOS"
+-VERSION = "1.22.27"
+-PRODUCT_VERSION = "1.22.27"
+-BUILD_NUMBER = 2242
+-RELEASE_CODENAME = "Trade Partner History Links"
++VERSION = "1.22.28"
++PRODUCT_VERSION = "1.22.28"
++BUILD_NUMBER = 2243
++RELEASE_CODENAME = "My Team Trade Need Handoff"
+ APPLICATION_STARTED_AT = datetime.now(timezone.utc).isoformat()
+ 
+ _REPOSITORY_ROOT = Path(__file__).resolve().parent
+diff --git a/components/trade_workspace.py b/components/trade_workspace.py
+index 184639f8..de692c98 100644
+--- a/components/trade_workspace.py
++++ b/components/trade_workspace.py
+@@ -1,5 +1,6 @@
+ """One mobile/desktop workspace for all bilateral Trade Center entry paths."""
+ from html import escape
++import json
+ 
+ 
+ def trade_workspace(view: dict, workflow: str, asset_id=None, owner_roster_id=None) -> str:
+@@ -18,6 +19,14 @@ def trade_workspace(view: dict, workflow: str, asset_id=None, owner_roster_id=No
+     calculator_link = '' if calculator else f'<a class="ti-action" href="/trades/calculator?front_office={active}">Open this workspace in Calculator</a>'
+     protect_control = '<button id="calculator-lock" type="button">Do not trade selected exact asset</button>' if market_editor else ''
+     recommended_controls = '''<label for="recommendation-filter">Opportunity filter</label><select id="recommendation-filter" disabled><option value="all">All supported opportunities</option><option value="win_now">Win Now</option><option value="value">Value</option><option value="roster_fit">Roster Fit</option><option value="future">Draft Capital</option><option value="sell_high" disabled>Sell High — movement evidence unavailable</option></select><p class="muted">Filters select supported opportunity types; they do not change your strategy or valuations.</p>''' if workflow == 'recommended' else ''
++    position_controls = ''
++    if workflow == 'recommended':
++        options = ''.join(f'<option value="{escape(pos)}">{escape(pos)}</option>' for pos in view.get('recommended_positions', []))
++        origin = 'My Team’s need evidence changed or is no longer current. No roster-need filter was applied.' if view.get('team_need_expired') else 'Choose an incoming position. Generate starts the search.'
++        position_controls = (f'<section class="tw-position-filter" aria-label="Recommended Trades position">'
++            f'<label for="recommendation-position">Incoming player position</label><div class="tw-position-controls"><select id="recommendation-position" aria-describedby="recommendation-position-origin" disabled><option value="">All positions</option>{options}</select>'
++            '<button type="button" id="recommendation-position-clear" disabled>Clear position</button></div>'
++            f'<p id="recommendation-position-origin" role="status">{escape(origin)}</p></section>')
+     shop_controls = '''<details id="shop-refinements"><summary>Refine Shop results · optional</summary><section aria-label="Shop search preferences"><label for="shop-preference">Search preference (this session only)</label>
+ <select id="shop-preference"><option value="best_overall">Best Overall Return</option><option value="win_now">Win-Now Help</option><option value="youth_rebuild">Youth / Rebuild</option><option value="draft_capital">Draft Capital</option><option value="position_need">Position Need</option><option value="custom">Custom — protect assets</option></select>
+ <label for="shop-position">Position for Position Need</label><select id="shop-position" disabled><option value="QB">QB</option><option value="RB">RB</option><option value="WR">WR</option><option value="TE">TE</option></select>
+@@ -47,11 +56,12 @@ def trade_workspace(view: dict, workflow: str, asset_id=None, owner_roster_id=No
+         )
+     )
+     return f'''<link rel="stylesheet" href="/static/css/trade_workspace.css">
+-<section id="trade-builder" class="card tw-workspace" data-trade-workflow="{workflow}" data-front-office="{active}" data-league="{escape(league, quote=True)}" data-preload-asset="{escape(str(asset_id or ''), quote=True)}" data-owner-roster="{int(owner_roster_id or 0)}">
++<section id="trade-builder" class="card tw-workspace" data-trade-workflow="{workflow}" data-front-office="{active}" data-league="{escape(league, quote=True)}" data-preload-asset="{escape(str(asset_id or ''), quote=True)}" data-owner-roster="{int(owner_roster_id or 0)}" data-team-need="{escape(json.dumps(view.get('team_need')), quote=True)}" data-team-need-expired="{str(bool(view.get('team_need_expired'))).lower()}">
+ {heading}
+ {intent_nav}
+ <p id="trade-context" class="muted">Loading current league assets…</p>
+ <div id="trade-intent-controls" class="tw-intent-controls">{strategy_controls}</div>
++{position_controls}
+ {optional_search}
+ <section id="trade-target" class="tw-target" hidden aria-label="Selected trade target"></section>
+ <div class="tw-primary-actions">{primary}{next_ideas}</div>
+@@ -59,6 +69,7 @@ def trade_workspace(view: dict, workflow: str, asset_id=None, owner_roster_id=No
+ <p id="trade-search-readiness" class="ds-inline-feedback">Search capacity will be checked when you generate or evaluate.</p>
+ <button id="trade-cancel" type="button" hidden>Cancel current operation</button>
+ <span id="trade-results-home"></span><section id="trade-result" role="status" aria-live="polite" tabindex="-1" hidden></section>
++{'<details id="recommendation-previous" hidden><summary>Earlier search · not revalidated</summary><p>Earlier offers have not been searched with the current filter. Your Evaluate draft is unchanged.</p><div id="recommendation-previous-offers"></div></details>' if workflow == 'recommended' else ''}
+ {tray}
+ {'<details id="trade-asset-options"><summary>Owned assets and exact constraints · optional</summary>' if workflow == 'recommended' else ''}
+ {partner_controls}
+diff --git a/docs/audits/MY_TEAM_TRADE_NEED_2243.md b/docs/audits/MY_TEAM_TRADE_NEED_2243.md
+new file mode 100644
+index 00000000..69591e3f
+--- /dev/null
++++ b/docs/audits/MY_TEAM_TRADE_NEED_2243.md
+@@ -0,0 +1,27 @@
++# My Team → Recommended Trades need handoff (2243)
++
++## Confirmed gap
++
++Baseline build 2242 had general My Team Trade shortcuts and a Shop-only position-need preference. Recommended Trades selected opportunity types, but had no incoming-position control or prepared-need handoff. Reuse the canonical diagnostic flags and existing legal position eligibility; do not invent a need score.
++
++## Evidence and state contract
++
++The My Team action and destination use the existing `prepared_diagnostics` reader, which reapplies availability, age and failed-refresh qualifications. No diagnostic is calculated on a missing read. Only the authorized own franchise's current supported need is eligible. Choose one canonical starter need first, then a resilience/quality-depth need in the existing positional order. Do not infer strategy from that choice.
++
++The hint fingerprints the authenticated workspace, ownership, league/week and diagnostic/projection identity. It is not authorization. Destination membership and current prepared evidence are checked again. A mismatched, stale or unmappable hint opens the general workspace with no need filter. K/DEF remain in legal lineup evidence; they are not forced into the existing four-position player filter. FLEX/Superflex eligibility follows actual league slots.
++
++The visible position filter selects received players (mixed returns remain possible). It is applied at the existing request-only session-filter boundary; full evaluation/verdicts are unchanged. It does not expand the candidate universe or promise a matching qualified offer. Position-filtered results cannot populate the broader Home opportunity cache.
++
++Filter changes do not call the draft-edit reset path. The existing scoped tab draft, valuation mode and strategy remain separate. Up to eight bounded earlier offer contexts are retained in existing session storage, with original package identities and source qualifications. They are displayed separately as not revalidated, never relabeled as results for the new position. This is temporary browser context, not a recommendation database or a full search archive. Home/fresh-entry and account/league boundaries remain in effect. A changed or cleared suggestion stays changed on reload. Editing opportunity type preserves the position’s My Team reason. A manual position survives an expired hint on reload as an explicitly manual choice; fresh stale handoffs still apply no need filter. Start New Trade clears the new temporary choice and prior-search context. The compact position control is focused and brought into view only on a fresh explicit My Team handoff; reload and Back keep normal restoration. The source-pinned four-size control asserts actual field visibility, an unobscured label below the contextual Back bar and a44px target. The first candidate’s separate visual capture found its region below the320x432 viewport; those earlier measurements and superseded/cancelled gates remain separate.
++
++## Validation and limits
++
++`tests.test_team_trade_need` covers real prepared/rendered needs, context/qualification rejection, failed refresh, admission-independent read misses, supported positions and unchanged real evaluator verdicts. `tests.test_team_trade_need_browser` uses authenticated disposable native-source fixtures: one-QB/FLEX/K/DEF and Superflex, starter/depth distinctions, four viewports, Custom/draft preservation, explicit search, retained result separation, reload, Back and league switching. No seeded successful recommendation or mocked admission is used in the new controls.
++
++Final release evidence records exact source identity, focused/full/ten-gate/hosted outcomes, original failed attempts and enforced 2 GiB resource controls. Disposable fixture acceptance is not authenticated live owner-league acceptance. Chromium keyboard/touch emulation does not establish physical iPhone/Safari acceptance. No production search, sync, FOIS rebuild or preference mutation is authorized by this handoff verification.
++
++## Canonical runner correction
++
++Candidate fa321bc1 passed all4326tests and ten local gates. Hosted canonical attempt42728661851 completed4188tests without an observed assertion failure before the75minute wrapper deadline. Matched test/occurrence timing was1.568×local; the remaining138tests took38local seconds (about59seconds at that observed ratio). This does not establish the exact source of CI wall-time variation. The canonical command now has80minutes within the unchanged85minute job (82minute execution step); no test, application timeout, liveness bound,2GiB quota,CPU allocation, network isolation, reserve or assertion is reduced.
++
++The failed attempt also demonstrated a runner lifecycle defect: killing only the validator parent left its unittest child writing briefly while the manifest was being sealed. The original failed ZIP/API checksum and two mismatched original entries remain preserved, without repair or a passing claim. The wrapper now starts an owned process group and, on timeout, stops and reaps the group plus observed detached descendants before recording evidence. Focused controls exercise real completion, nonzero exit and a detached writer stopped by the actual timeout helper, then prove the sealed bytes stay unchanged. Final validation must run again against the resulting exact source tree.
+diff --git a/routes/teams.py b/routes/teams.py
+index 5ba2c5e5..cd715adf 100644
+--- a/routes/teams.py
++++ b/routes/teams.py
+@@ -418,8 +418,10 @@ def create_teams_router(
+         roster_summary = ' · '.join(f'{count} {slot.lower()}' for slot, count in overview['slots'].items())
+         view["outlook"]["details"].extend(overview["statuses"])
+         assessment_outlook = view['outlook']
++        comparison = prepared_comparison(data, view['projection_snapshot'])
++        from services.team_trade_need import prepared_need
++        assessment_outlook = {**assessment_outlook, 'trade_need': prepared_need(data, roster_id, comparison) if editable else None}
+         if view['team_intelligence'].overall.score is None:
+-            comparison = prepared_comparison(data, view['projection_snapshot'])
+             assessment_outlook = {
+                 **assessment_outlook,
+                 'brief': weekly_comparison(view['team_intelligence'], data.get('week'), compact=True,
+diff --git a/routes/trades.py b/routes/trades.py
+index eabbc40f..62251250 100644
+--- a/routes/trades.py
++++ b/routes/trades.py
+@@ -265,12 +265,22 @@ def create_trades_router(*, ensure_fresh: EnsureFresh, require_data: RequireData
+             return page("Trade Intelligence", manager_context_selection(list(require_data().get("teams") or [])))
+         return page("Trade Intelligence", trade_center(await view(front_office)))
+ 
+-    async def workflow_page(workflow: str, front_office: int | None, asset_id: str | None = None, owner_roster_id: int | None = None) -> HTMLResponse:
++    async def workflow_page(workflow: str, front_office: int | None, asset_id: str | None = None, owner_roster_id: int | None = None, team_need: str | None = None) -> HTMLResponse:
+         await ensure_fresh()
+         if front_office is None:
+             return page("Trade Center", manager_context_selection(list(require_data().get("teams") or []), workflow=workflow))
+         try:
+             context = workflow_view(front_office)
++            if workflow == 'recommended':
++                from services.team_trade_need import prepared_need, supported_positions
++                from services.team_assessment_presentation import prepared_comparison
++                data = require_data()
++                context['recommended_positions'] = supported_positions(data)
++                if team_need:
++                    need = prepared_need(data, int(context['active_team']['roster_id']), prepared_comparison(data))
++                    context['team_need'] = need if (need and need['fingerprint'] == team_need
++                        and front_office == int(context['active_team']['roster_id'])) else None
++                    context['team_need_expired'] = not context['team_need']
+             if asset_id and workflow in {"shop", "trade-for"}:
+                 ownership = validate_targeted_player_action(require_data(), asset_id, int(context["active_team"]["roster_id"]), workflow)
+                 if ownership:
+@@ -303,8 +313,8 @@ def create_trades_router(*, ensure_fresh: EnsureFresh, require_data: RequireData
+         return await workflow_page("shop", front_office, asset_id, owner_roster_id)
+ 
+     @router.get("/trades/recommended", response_class=HTMLResponse)
+-    async def recommended_trades_page(front_office: int | None = None) -> HTMLResponse:
+-        return await workflow_page("recommended", front_office)
++    async def recommended_trades_page(front_office: int | None = None, team_need: str | None = None) -> HTMLResponse:
++        return await workflow_page("recommended", front_office, team_need=team_need)
+ 
+     @router.get("/api/trades", response_class=JSONResponse)
+     async def trades_api(front_office: int | None = None) -> JSONResponse:
+@@ -475,7 +485,7 @@ def create_trades_router(*, ensure_fresh: EnsureFresh, require_data: RequireData
+                     payload.get('protected_assets') or [], payload.get('excluded_assets') or []) != key:
+                     raise TradeInputError('canonical_evidence_changed', 'Prepared evidence changed. Try the same search again.')
+                 trade_checkpoint()
+-                if not payload.get('_personal_context'):
++                if not payload.get('_personal_context') and not payload.get('recommendation_position'):
+                     home_ideas.publish(key, result, payload)
+                 return result
+             def bounded_discover():
+diff --git a/services/team_trade_need.py b/services/team_trade_need.py
+new file mode 100644
+index 00000000..199db39d
+--- /dev/null
++++ b/services/team_trade_need.py
+@@ -0,0 +1,108 @@
++"""Read-only handoff over a matching, currently qualified roster diagnostic.
++
++The fingerprint is freshness/context identity, never authorization. Membership
++and the prepared diagnostic are checked again on the destination page.
++"""
++
++from hashlib import sha256
++import json
++from urllib.parse import urlencode
++
++from services.trade_workspace_context import workspace_context
++from src.core.intelligence.roster_diagnostics import POSITIONS, BENCH_SLOTS
++from src.core.intelligence import lineup_slot_eligible
++from src.platform.account_context import current_account
++
++
++def supported_positions(data):
++    slots = (
++        data.get("roster_positions")
++        or (data.get("league") or {}).get("roster_positions")
++        or []
++    )
++    return [
++        pos
++        for pos in POSITIONS
++        if any(
++            str(slot).upper() not in BENCH_SLOTS
++            and lineup_slot_eligible(pos, str(slot).upper())
++            for slot in slots
++        )
++    ]
++
++
++def prepared_need(data, roster_id, diagnostic):
++    account = current_account()
++    context = workspace_context(data, roster_id)
++    membership = account.membership if account else None
++    if (
++        not membership
++        or membership.league_id != context["league_id"]
++        or membership.roster_id != roster_id
++        or not diagnostic
++        or diagnostic.get("league_id") != context["league_id"]
++        or diagnostic.get("week") != data.get("week")
++        or not diagnostic.get("generation")
++        or not diagnostic.get("projection_generation")
++    ):
++        return None
++    row = (diagnostic.get("teams") or {}).get(str(roster_id)) or {}
++    for kind, flags in (
++        ("starter", ("starter_need",)),
++        ("depth", ("resilience_need", "quality_depth_need")),
++    ):
++        for pos in supported_positions(data):
++            facts = (row.get("positions") or {}).get(pos) or {}
++            evidence = facts.get("evidence") or {}
++            if (
++                not evidence.get("calculation_supported")
++                or facts.get("conclusion_state") != "current"
++                or not any(facts.get(flag) is True for flag in flags)
++            ):
++                continue
++            reason = (
++                f"Week {diagnostic['week']}: a supported {pos} addition can improve the legal starting lineup."
++                if kind == "starter"
++                else f"Week {diagnostic['week']}: prepared {pos} replacement evidence identifies a depth need, not a starter-upgrade verdict."
++            )
++            identity = [
++                context["binding"],
++                context["ownership_generation"],
++                diagnostic["league_id"],
++                diagnostic["week"],
++                diagnostic["generation"],
++                diagnostic["projection_generation"],
++                pos,
++                kind,
++            ]
++            fingerprint = sha256(
++                json.dumps(identity, separators=(",", ":")).encode()
++            ).hexdigest()
++            return {
++                "position": pos,
++                "kind": kind,
++                "reason": reason,
++                "fingerprint": fingerprint,
++                "href": "/trades/recommended?"
++                + urlencode({"front_office": roster_id, "team_need": fingerprint}),
++            }
++    return None
++
++
++def requested_position(data, value):
++    if value in (None, "", "all"):
++        return None
++    if not isinstance(value, str) or value not in supported_positions(data):
++        raise ValueError(
++            "Choose an eligible Recommended Trades position or clear the filter."
++        )
++    return value
++
++
++def position_matches(row, assets, position):
++    return not position or any(
++        (asset := assets.get(asset_id)) is not None
++        and asset.kind == "player"
++        and asset.position == position
++        for asset_id in row["proposal"]["assets_received"]
++    )
+diff --git a/services/trade_intelligence.py b/services/trade_intelligence.py
+index f9f7c936..727cb6ba 100644
+--- a/services/trade_intelligence.py
++++ b/services/trade_intelligence.py
+@@ -1612,6 +1612,8 @@ def _generate_recommended(data, payload):
+     from services.trade_search_policy import SearchFunnel, diverse_rows, result_state
+     started = perf_counter()
+     selected_filter, excluded_families = session_constraints(payload)
++    from services.team_trade_need import requested_position, position_matches
++    position = requested_position(data, payload.get('recommendation_position'))
+     if payload.get('asset_id') or payload.get('partner_roster_id'):
+         raise ValueError('Recommended Trades discovers its own targets and counterparties.')
+     if selected_filter == 'sell_high':
+@@ -1670,7 +1672,9 @@ def _generate_recommended(data, payload):
+                 row['opportunity'] = surface_evidence(row)
+                 row['discovery_thesis'] = thesis
+                 derivation_seconds += perf_counter() - stage
+-                filtered = row['family_id'] in excluded_families or bool(tag and tag not in row['opportunity']['reason_tags'])
++                filtered = (row['family_id'] in excluded_families
++                            or bool(tag and tag not in row['opportunity']['reason_tags'])
++                            or not position_matches(row, assets, position))
+                 qualifies = funnel.assessed(row, filtered=filtered)
+                 row['workflow_eligibility'] = {'workflow': 'recommended', 'eligible': qualifies}
+                 if qualifies:
+@@ -1683,17 +1687,22 @@ def _generate_recommended(data, payload):
+     if _trade_search_boundary(data) != boundary:
+         raise TradeInputError('canonical_evidence_changed', 'Canonical evidence changed during recommendation discovery. Refresh and try again.')
+     verification_seconds = perf_counter() - verification_started
++    # Choose the bounded near-miss display from matching offers. Filtering only
++    # after near() truncates could hide supported matching alternatives.
++    if position:
++        funnel.near_misses = [row for row in funnel.near_misses if position_matches(row, assets, position)]
+     # Optional rows remain inspectable, but do not suppress the explanation
+     # for a completed search with no qualified bilateral recommendations.
+     guidance = None if any(r['evaluation'].get('generated_trade_eligible') is True for r in results) else zero_result_guidance(
+         funnel, discoveries, workspace, projection_available=projection_available,
+         optional_count=sum(r.get('search_result_type') == 'OPTIONAL / LOWER-RANKED TRADE' for r in evaluated))
+     return _with_lineup_details(data, {'workflow': 'recommended', 'count': len(results), 'results': results,
+-            'exploratory_results': funnel.explore(assets, excluded_families=excluded_families),
+-            'result_state': 'MISSING REQUIRED EVIDENCE' if not projection_available and not results else result_state(funnel, results), 'near_misses': funnel.near(),
++            'exploratory_results': [row for row in funnel.explore(assets, excluded_families=excluded_families) if position_matches(row, assets, position)],
++            'result_state': 'MISSING REQUIRED EVIDENCE' if not projection_available and not results else result_state(funnel, results),
++            'near_misses': funnel.near(),
+             'quiet_state': guidance['message'] if guidance else None,
+             'zero_result_guidance': guidance,
+-            'recommendation_filter': selected_filter, 'discovery': discovery,
++            'recommendation_filter': selected_filter, 'recommendation_position': position, 'discovery': discovery,
+             'has_more': bool(results and projection_available and (discovery.get('omitted_theses') or len(evaluated) > len(results) or phase < 2)),
+             'search_evidence': {**funnel.result(len(results)), 'stages': funnel.stages, 'phases': len(discoveries),
+                 'construction_admission': workspace['candidate_admission'].summary(),
+diff --git a/src/ui/my_team_outlook.py b/src/ui/my_team_outlook.py
+index 19581bd6..faf42304 100644
+--- a/src/ui/my_team_outlook.py
++++ b/src/ui/my_team_outlook.py
+@@ -10,6 +10,10 @@ def outlook_panel(outlook, *, editable, roster_id):
+             ('Depth and uncertainty', outlook['concern']), ('Future flexibility', outlook['future'])]
+     action = (f'<a id="my-team-outlook-action" class="thq-action" href="{escape(outlook["href"], quote=True)}">{escape(outlook["action"])}</a>'
+               if editable else '')
++    need = outlook.get('trade_need') if editable else None
++    if need:
++        action += (f'<p>{escape(need["reason"])}</p><a id="my-team-trade-need" class="thq-action" '
++                   f'href="{escape(need["href"], quote=True)}">Explore {escape(need["position"])} trades</a>')
+     trade = (f'<a class="thq-action" href="/trades/calculator?front_office={roster_id}">Trade Calculator</a>'
+              f'<a class="thq-action" href="/trades?front_office={roster_id}">Trade opportunities</a>') if editable else ''
+     navigation = ('<div class="thq-outlook-next">' + action + '</div>'
+diff --git a/static/css/trade_workspace.css b/static/css/trade_workspace.css
+index c9afbc10..2a645bfc 100644
+--- a/static/css/trade_workspace.css
++++ b/static/css/trade_workspace.css
+@@ -113,6 +113,10 @@ body:has(#trade-builder) .ds-page-header>div:first-child{display:flex;flex-wrap:
+ .tw-partner-controls{display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px;align-items:center;margin:6px 0}
+ .tw-partner-controls select{width:100%;min-width:0;margin:0}
+ .tw-partner-controls>p{grid-column:1/-1;margin:4px 0}
++.tw-position-filter{margin:8px 0;scroll-margin-top:80px}
++.tw-position-controls{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center}
++.tw-workspace .tw-position-controls select,.tw-workspace .tw-position-controls button{width:100%;min-width:0;margin:0;min-height:44px}
++.tw-workspace .tw-position-filter p{font-size:13px;line-height:1.4;margin:6px 0}
+ 
+ .tw-discovery-scope{display:block;clear:both;margin:12px 0 8px;line-height:1.5;color:var(--text-secondary);overflow-wrap:anywhere}.tw-intent-help{font-size:12px;font-weight:400;line-height:1.4;color:var(--text-secondary);margin:0}
+ /* Completed analytical evidence: native disclosure, no extra request/solver. */
+diff --git a/static/js/contextual_navigation.js b/static/js/contextual_navigation.js
+index 0178c00d..960bf9e9 100644
+--- a/static/js/contextual_navigation.js
++++ b/static/js/contextual_navigation.js
+@@ -11,7 +11,7 @@
+   const tab = window.name.match(/\|dtos-trade-tab=([a-zA-Z0-9-]+)$/)?.[1] || uuid();
+   if (!window.name.endsWith('|dtos-trade-tab=' + tab)) window.name += '|dtos-trade-tab=' + tab;
+   const paths = new Set(['', 'teams', 'league', 'matchups', 'market', 'players', 'trades', 'picks', 'history', 'fois', 'front-offices', 'transactions', 'reports', 'settings', 'brain', 'valuation', 'commissioner', 'account', 'search']);
+-  const queryKeys = new Set(['q','position','availability','sort','direction','front_office','selected','offset','limit','week','season','year','round','from_team','from_section','from_trade','from_market','market_league','matchup','asset_id','owner_roster_id','home_offer','partner_roster_id','shop_preference','league','league_id','view','tab','format','team','scope','owner','type','player','draft_pick','date_from','date_to','status','page','events_page','per_page','from_home','since']);
++  const queryKeys = new Set(['q','position','availability','sort','direction','front_office','selected','offset','limit','week','season','year','round','from_team','from_section','from_trade','from_market','market_league','matchup','asset_id','owner_roster_id','home_offer','partner_roster_id','shop_preference','league','league_id','view','tab','format','team','scope','owner','type','player','draft_pick','date_from','date_to','status','page','events_page','per_page','from_home','since','team_need']);
+   const sections = new Set(['#full-roster','#positional-depth','#draft-capital','#my-team-advanced']);
+   function safeUrl(raw) {
+     if (!raw || typeof raw !== 'string' || raw.length > 2400 || /[\x00-\x1f\\]/.test(raw)) return null;
+diff --git a/static/js/trade_workspace.js b/static/js/trade_workspace.js
+index 50797b10..61b0bde2 100644
+--- a/static/js/trade_workspace.js
++++ b/static/js/trade_workspace.js
+@@ -210,6 +210,8 @@
+     const navigationView = {workflow: flow, filters: Object.fromEntries(['sent','received'].map(key => [key, {q: String(filters[key]?.q || '').slice(0,200), pos: String(filters[key]?.pos || '').slice(0,16)}])), side, interrupted: interruptedNavigation,
+       includePicks: el('trade-include-picks')?.checked !== false,
+       typeFilter: el('recommendation-filter')?.value || 'all',
++      positionFilter: el('recommendation-position')?.value || '',
++      teamNeedChoice: session.teamNeedChoice || null,
+       assistOpen: !el('trade-assist').hidden, reviewOpen: !el('trade-review').hidden,
+       details: Object.fromEntries(['trade-asset-options','trade-search-options','shop-refinements'].map(id => [id, !!el(id)?.open]))};
+     const draft = {...draftSession, valuationMode, tabOwner, navigationView, strategy: el('trade-strategy').value, ownership: workspace.workspace_context.ownership_generation};
+@@ -226,7 +228,7 @@
+     // reload/history may restore it, and only under fresh server authorization.
+     try { history.replaceState({...history.state, dtosTrade: {
+       binding: workspace.workspace_context.binding, workflow: flow,
+-      preload: root.dataset.preloadAsset, draft
++      preload: root.dataset.preloadAsset, draft: {...draft, recommendedSearch: null}
+     }}, ''); } catch (_) { /* History-disabled browsing still works. */ }
+   }
+   function retainedDraft() {
+@@ -250,6 +252,35 @@
+   function syncLocks() { if (el('shop-protected')) for (const option of el('shop-protected').options) option.selected = session.protectedAssets.includes(option.value); }
+   function addLock(kind, id) { if (!session[kind].includes(id)) session[kind].push(id); syncLocks(); persist(); }
+   function changed() { el('trade-evaluation-retained')?.remove(); session.currentAssessment = null; cancelBalance(); const focusId = document.activeElement?.dataset.assetId; revision++; session.previewProposal = null; lastOffers = null; lastOffersIsBalance = false; el('trade-result').hidden = true; el('trade-result').dataset.assessmentState = 'not_evaluated'; persist(); paint(); if (focusId) root.querySelector('button[data-asset-id="' + CSS.escape(focusId) + '"]')?.focus(); }
++  function previousSearch() {
++    const panel = el('recommendation-previous'), out = el('recommendation-previous-offers');
++    if (!panel || !out) return;
++    const prior = session.recommendedSearch;
++    out.replaceChildren(); panel.hidden = !prior;
++    if (!prior) return;
++    out.append(node('p', `Earlier search: ${prior.position || 'all positions'} · ${prior.type || 'all'} opportunities. ${prior.count} offers in the saved result; up to eight offer contexts retained for review.`));
++    for (const context of prior.offers || []) {
++      if (context.identity?.binding !== workspace.workspace_context.binding) continue;
++      const detail = node('details'); detail.append(node('summary', 'Earlier offer · not current'));
++      showEvaluation(context.evaluation || {}, context.opportunity, restoreContext(context), detail);
++      out.append(detail);
++    }
++  }
++  function positionChanged(updateOrigin = true) {
++    // The existing opportunity control remains editable during generation.
++    // Retire its exact request before changing context so a late response cannot
++    // replace the draft or be presented under the newly selected filter.
++    cancelBalance(); revision++;
++    // A search control does not edit or invalidate the independent Evaluate draft.
++    excludedFamilies.clear(); searchExhausted = false; hasDiscovered = false; displayedFamilies = [];
++    lastOffers = null; el('trade-result').hidden = true;
++    if (updateOrigin) {
++      el('recommendation-position-origin').textContent = 'Position filter selected here. Choose Generate to search; saved goals, valuation mode and your draft are unchanged.';
++      session.teamNeedChoice = {fingerprint: JSON.parse(root.dataset.teamNeed || 'null')?.fingerprint || null, position: el('recommendation-position').value, manual: true};
++    }
++    previousSearch(); persist(); paint();
++    searchStatus('Search filter changed. Earlier offers are separate; no new search has run.', 'ready');
++  }
+   function toggle(which, id) { if (busy) return; const required = which === 'sent' ? session.requiredOutgoingAsset : session.requiredIncomingAsset; if (id === required && selected[which].includes(id)) return message('The required target stays fixed. Choose Build My Own to change the trade objective.', true); if (selected[which].includes(id)) selected[which] = selected[which].filter(x => x !== id); else if (!selected.sent.includes(id) && !selected.received.includes(id)) selected[which].push(id); changed(); if ((flow === 'shop' && which === 'sent' && selected.sent.length === 1) || (flow === 'trade_for' && which === 'received' && selected.received.length === 1)) run('generate'); }
+   function lockDetail(id) {
+     const meanings = [];
+@@ -404,6 +435,8 @@
+     if (el('trade-include-picks')) el('trade-include-picks').disabled = false;
+     el('trade-strategy').disabled = false;
+     if (el('recommendation-filter')) el('recommendation-filter').disabled = false;
++    if (el('recommendation-position')) el('recommendation-position').disabled = busy;
++    if (el('recommendation-position-clear')) el('recommendation-position-clear').disabled = busy;
+     const sourceIdentity = el('trade-source-context-identity');
+     if (sourceIdentity) sourceIdentity.textContent = `League ID: ${workspace.manager_context.league_id}`;
+     for (const id of ['shop-preference','shop-protected']) if (el(id)) el(id).disabled = busy;
+@@ -1302,9 +1335,14 @@
+     lastOffers = body; lastOffersIsBalance = isBalance;
+     if (isBalance) el('calculator-balance-status').after(el('trade-result'));
+     if (flow === 'recommended' && body.workflow === 'recommended') {
++      session.recommendedSearch = {position: body.recommendation_position || '', type: body.recommendation_filter || 'all',
++        count: (body.results || []).length + (body.exploratory_results || []).length,
++        offers: [...(body.results || []), ...(body.exploratory_results || [])].slice(0, 8).map(row => assessmentContext(row))};
++      persist(); el('recommendation-previous').hidden = true;
+       displayedFamilies = [...(body.results || []), ...(body.exploratory_results || [])].map(row => row.family_id);
+       searchExhausted = body.has_more === false;
+       const out = el('trade-result'); out.hidden = false; out.replaceChildren();
++      out.append(node('p', `Search position: ${body.recommendation_position || 'all positions'}. These results belong to this completed search.`));
+       const qualified = (body.results || []).filter(qualifiedOffer);
+       const other = (body.results || []).filter(row => !qualifiedOffer(row));
+       out.append(node('h3', qualified.length ? `Qualified recommendations · ${qualified.length}` : 'No qualified recommendations'));
+@@ -1367,7 +1405,8 @@
+     }
+     if (path === 'generate' && flow === 'trade_for') { session.requiredIncomingAsset = session.requiredIncomingAsset || selected.received[0]; session.requiredOutgoingAsset = null; session.originWorkflow = 'trade_for'; }
+     if (path === 'generate' && flow === 'recommended') extra = {...extra, partner_roster_id: 0, asset_id: null,
+-      recommendation_filter: el('recommendation-filter').value, excluded_recommendation_families: [...excludedFamilies]};
++      recommendation_filter: el('recommendation-filter').value, recommendation_position: el('recommendation-position').value || null,
++      excluded_recommendation_families: [...excludedFamilies]};
+     // A display control over the established exact exclusion contract, not a
+     // new search policy or persistent intent. Manual evaluation is unaffected.
+     const temporaryPickExclusions = new Set();
+@@ -1508,12 +1547,14 @@
+   function clearDraft() {
+     cancelBalance(); revision++; runSequence++; busy = false;
+     selected.sent = []; selected.received = []; selected.partner = 0;
+-    for (const key of ['originalProposal','previewProposal','adoptedProposal','currentAssessment','requiredOutgoingAsset','requiredIncomingAsset','shopScopeAsset']) session[key] = null;
++    for (const key of ['originalProposal','previewProposal','adoptedProposal','currentAssessment','requiredOutgoingAsset','requiredIncomingAsset','shopScopeAsset','recommendedSearch','teamNeedChoice']) session[key] = null;
+     session.protectedAssets = []; session.excludedAssets = []; session.overrideSavedProtections = []; session.adjustmentConstraints = {};
+     for (const which of ['sent','received']) {filters[which].q = ''; filters[which].pos = 'ALL';}
+     side = 'sent'; interruptedNavigation = false;
+     if (el('trade-include-picks')) el('trade-include-picks').checked = true;
+     if (el('recommendation-filter')) el('recommendation-filter').selectedIndex = 0;
++    if (el('recommendation-position')) el('recommendation-position').selectedIndex = 0;
++    if (el('recommendation-previous')) el('recommendation-previous').hidden = true;
+     session.originWorkflow = 'create'; session.shopSearchPartner = 0;
+     session.shopPreference = 'best_overall'; session.shopPosition = 'QB';
+     session.resetGeneration = String(Date.now()) + ':' + Math.random().toString(36).slice(2);
+@@ -1662,7 +1703,9 @@
+         for (const family of displayedFamilies) if (excludedFamilies.size < 256) excludedFamilies.add(family);
+         run('generate');
+       };
+-      el('recommendation-filter').onchange = () => { excludedFamilies.clear(); searchExhausted = false; hasDiscovered = false; displayedFamilies = []; changed(); searchStatus('Filter changed. Discover supported opportunities under the selected context.', 'ready'); };
++      el('recommendation-filter').onchange = () => positionChanged(false);
++      el('recommendation-position').onchange = () => positionChanged();
++      el('recommendation-position-clear').onclick = () => { if (busy) return; el('recommendation-position').value = ''; positionChanged(); };
+     }
+     if (flow === 'shop') {
+       pickerOptions(el('shop-protected'), team(active)?.assets || []);
+@@ -1674,6 +1717,12 @@
+     for (const t of data.teams) if (t.roster_id !== active) { const option = node('option', t.team_name); option.value = t.roster_id; el('trade-partner').append(option); }
+     try {
+       let saved = restoredDraft();
++      // Results are retained separately from the draft, never relabeled under
++      // a new filter. Exact ownership/source checks still gate every operation.
++      const retainedSearch = retainedDraft()?.recommendedSearch;
++      if (retainedSearch && Array.isArray(retainedSearch.offers) && retainedSearch.offers.length <= 8
++          && JSON.stringify(retainedSearch).length <= 520000 && !saved?.endedAtHome)
++        session.recommendedSearch = retainedSearch;
+       if (saved?.endedAtHome) { clearDraft(); saved = null; }
+       const proposal = saved?.currentProposal || (saved?.selected ? {...saved.selected, partner: saved.partner} : null);
+       if (proposal && (team(proposal.partner) || Number(proposal.partner) === 0) && Array.isArray(proposal.sent) && Array.isArray(proposal.received)) {
+@@ -1689,6 +1738,8 @@
+           if (['sent','received'].includes(view.side)) side = view.side;
+           if (el('trade-include-picks') && typeof view.includePicks === 'boolean') el('trade-include-picks').checked = view.includePicks;
+           if (Array.from(el('recommendation-filter')?.options || []).some(o => o.value === view.typeFilter)) el('recommendation-filter').value = view.typeFilter;
++          if (Array.from(el('recommendation-position')?.options || []).some(o => o.value === view.positionFilter)) el('recommendation-position').value = view.positionFilter;
++          session.teamNeedChoice = view.teamNeedChoice || null;
+           for (const id of ['trade-asset-options','trade-search-options','shop-refinements']) if (el(id) && typeof view.details?.[id] === 'boolean') el(id).open = view.details[id];
+           if (view.assistOpen === true) el('trade-assist').hidden = false;
+           if (view.reviewOpen === true) el('trade-review').hidden = false;
+@@ -1756,6 +1807,28 @@
+       if (Array.from(el('shop-position').options).some(o => o.value === session.shopPosition)) el('shop-position').value = session.shopPosition;
+     }
+ 
++    if (flow === 'recommended') {
++      try {
++        const need = JSON.parse(root.dataset.teamNeed || 'null');
++        const restoring = ['reload', 'back_forward'].includes(performance.getEntriesByType('navigation')[0]?.type);
++        if (need && Array.from(el('recommendation-position').options).some(o => o.value === need.position)) {
++          const manual = restoring && session.teamNeedChoice?.fingerprint === need.fingerprint && session.teamNeedChoice.manual;
++          if (!manual) {
++            el('recommendation-position').value = need.position;
++            session.teamNeedChoice = {fingerprint: need.fingerprint, position: need.position, manual: false};
++            el('recommendation-position-origin').textContent = 'From My Team · ' + need.reason + ' Change or clear, then Generate.';
++          } else el('recommendation-position-origin').textContent = 'Position filter selected here. My Team’s original suggestion has been changed; choose Generate to search.';
++        } else if (root.dataset.teamNeedExpired === 'true') {
++          if (restoring && session.teamNeedChoice?.manual) {
++            session.teamNeedChoice.fingerprint = null;
++            el('recommendation-position-origin').textContent = 'Position filter selected here. My Team’s earlier need is no longer current. Generate rechecks current evidence.';
++          } else {
++            el('recommendation-position').value = ''; session.teamNeedChoice = null;
++          }
++        }
++      } catch (_) { /* An unavailable need never guesses a position. */ }
++      previousSearch();
++    }
+     syncLocks(); el('trade-find').hidden = flow === 'create'; persist(); paint();
+     if (data.projection_evidence) latestEvidence.projection_generation = data.projection_evidence.generation;
+     if (el('trade-search-readiness') && data.search_readiness) {
+@@ -1771,6 +1844,15 @@
+     if (session.previewProposal && !entryBlocked) previewOffer({proposal: session.previewProposal});
+     if (interruptedNavigation && !entryBlocked) operationStatus('The previous operation stopped when you left. Your exact workspace is retained; Generate or Evaluate explicitly to continue.', 'cancelled');
+     window.dtosNavigation?.restoreView();
++    if (flow === 'recommended' && root.dataset.teamNeed && root.dataset.teamNeed !== 'null' &&
++        !['reload', 'back_forward'].includes(performance.getEntriesByType('navigation')[0]?.type)) {
++      // This explicit contextual action lands at its editable filter on phones.
++      // Reload/Back retain their existing focus and scroll restoration.
++      requestAnimationFrame(() => {
++        el('recommendation-position').focus({preventScroll: true});
++        root.querySelector('.tw-position-filter').scrollIntoView({block: 'start'});
++      });
++    }
+     const homeOffer = new URL(location.href).searchParams.get('home_offer');
+     if (homeOffer && !entryBlocked && !departed && (!['reload', 'back_forward'].includes(performance.getEntriesByType('navigation')[0]?.type) || (!session.adoptedProposal && !session.previewProposal && history.state?.dtosHomeOffer !== homeOffer))) {
+       const navigationRevision = revision;
+diff --git a/tests/test_canonical_harness_lifecycle.py b/tests/test_canonical_harness_lifecycle.py
+new file mode 100644
+index 00000000..e4e1e0bd
+--- /dev/null
++++ b/tests/test_canonical_harness_lifecycle.py
+@@ -0,0 +1,92 @@
++"""Exercise the actual embedded CI helper without running a second validator."""
++import ast
++from hashlib import sha256
++import json
++import os
++from pathlib import Path
++import signal
++import subprocess
++import sys
++from tempfile import TemporaryDirectory
++import textwrap
++import time
++import unittest
++
++import psutil
++
++
++WORKFLOW = Path(__file__).resolve().parents[1] / '.github/workflows/canonical-release-recovery.yml'
++
++
++def actual_helper():
++    source = WORKFLOW.read_text().split(
++        "cat > .validation/canonical-release/runner.py <<'PY'\n", 1
++    )[1].split('\n          PY\n', 1)[0]
++    tree = ast.parse(textwrap.dedent(source))
++    nodes = [n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name == 'run_canonical_process']
++    assert len(nodes) == 1
++    namespace = dict(os=os, signal=signal, subprocess=subprocess, psutil=psutil)
++    exec(compile(ast.Module(body=nodes, type_ignores=[]), str(WORKFLOW), 'exec'), namespace)
++    return namespace['run_canonical_process']
++
++
++class CanonicalHarnessLifecycleTests(unittest.TestCase):
++    def test_real_normal_execution_completes(self):
++        cleanup = {}
++        with TemporaryDirectory() as directory:
++            output = Path(directory) / 'output.txt'
++            with output.open('w') as stream:
++                result = actual_helper()([sys.executable, '-c', "print('actually executed')"], stream, 5, cleanup)
++            self.assertEqual(result.returncode, 0)
++            self.assertEqual(output.read_text(), 'actually executed\n')
++        self.assertFalse(cleanup['timeout_triggered'])
++        self.assertTrue(cleanup['validator_reaped'])
++
++    def test_nonzero_result_is_not_converted_to_success(self):
++        with open(os.devnull, 'w') as stream:
++            result = actual_helper()([sys.executable, '-c', 'raise SystemExit(7)'], stream, 5, {})
++        self.assertEqual(result.returncode, 7)
++
++    def test_timeout_stops_detached_writer_before_manifest_sealing(self):
++        with TemporaryDirectory() as directory:
++            folder = Path(directory)
++            marker = folder / 'writer.json'
++            evidence = folder / 'events.log'
++            writer = (
++                'from pathlib import Path; import os,json,time; '
++                f'Path({str(marker)!r}).write_text(json.dumps(dict(pid=os.getpid()))); '
++                f'out=open({str(evidence)!r},"a",buffering=1); '
++                'exec("for n in range(1000):\\n out.write(str(n)+chr(10)); time.sleep(.01)")'
++            )
++            parent = (
++                'import subprocess,sys,time; '
++                f'subprocess.Popen([sys.executable,"-c",{writer!r}],start_new_session={os.name == "posix"!r}); '
++                'time.sleep(30)'
++            )
++            cleanup = {}
++            with open(os.devnull, 'w') as stream:
++                with self.assertRaises(subprocess.TimeoutExpired):
++                    actual_helper()([sys.executable, '-c', parent], stream, 2, cleanup)
++            self.assertTrue(marker.is_file(), 'Timeout must exercise an actual writer')
++            self.assertGreater(evidence.stat().st_size, 0)
++            self.assertTrue(cleanup['timeout_triggered'])
++            self.assertGreaterEqual(cleanup['descendant_count'], 1)
++            self.assertTrue(cleanup['timeout_cleanup_complete'], cleanup)
++            self.assertEqual(cleanup['active_after_count'], 0)
++            pid = json.loads(marker.read_text())['pid']
++            self.assertFalse(psutil.pid_exists(pid), 'No detached writer may survive timeout')
++            sealed = sha256(evidence.read_bytes()).hexdigest()
++            time.sleep(.15)
++            self.assertEqual(sha256(evidence.read_bytes()).hexdigest(), sealed)
++
++    def test_ci_budget_and_resource_contract_remain_bounded(self):
++        source = WORKFLOW.read_text()
++        self.assertIn('timeout-minutes: 85', source)
++        self.assertIn('timeout-minutes: 82', source)
++        self.assertIn('stream, timeout=4800, cleanup=process_cleanup', source)
++        self.assertIn('[sys.executable, "-m", "tools.validation.validate_release"]', source)
++        self.assertIn('--memory 2g --memory-swap 2g --cpus 2 --network none', source)
++
++
++if __name__ == '__main__':
++    unittest.main()
+diff --git a/tests/test_team_trade_need.py b/tests/test_team_trade_need.py
+new file mode 100644
+index 00000000..f94a6e37
+--- /dev/null
++++ b/tests/test_team_trade_need.py
+@@ -0,0 +1,226 @@
++"""Source-qualified need handoff; no new projections, prices or need rules."""
++
++import copy
++from datetime import datetime, timedelta, timezone
++from html import unescape
++import re
++from types import SimpleNamespace
++import unittest
++from unittest.mock import patch
++
++from services.team_trade_need import prepared_need, requested_position, position_matches
++from src.core.intelligence.roster_diagnostics import (
++    diagnose_league,
++    prepared_diagnostics,
++)
++from tests import test_roster_diagnostic_http as http
++
++
++class TeamTradeNeedTests(unittest.TestCase):
++    def fixture(self):
++        f = http.DiagnosticHTTPTests()
++        f.setUp()
++        self.addCleanup(f.doCleanups)
++        self.data = f.f.f.data
++        # Actual source fixtures, both franchises' statuses and source clocks.
++        for team in self.data["teams"]:
++            for player in team["players"]:
++                player["status"] = "Active"
++                self.data["players"][player["id"]]["status"] = "Active"
++        f.publish(datetime.now(timezone.utc).isoformat())
++        self.snapshot = f.f.source.reader.snapshot()
++        diagnose_league(self.data, self.snapshot)
++        return f
++
++    def test_rendered_current_need_and_destination_recheck(self):
++        f = self.fixture()
++        # Swap source projections to give the authorized franchise a supported
++        # starter need. All point values remain native fixture Sleeper records.
++        f.f.source.points = {k: 40 - v for k, v in f.f.source.points.items()}
++        f.publish(datetime.now(timezone.utc).isoformat())
++        diagnose_league(self.data, f.f.source.reader.snapshot())
++        response = f.f.f.client.get("/teams/1")
++        self.assertEqual(response.status_code, 200)
++        match = re.search(r'id="my-team-trade-need"[^>]*href="([^"]+)"', response.text)
++        self.assertIsNotNone(
++            match, response.text[response.text.index("my-team-outlook") :][:5000]
++        )
++        href = unescape(match[1])
++        self.assertIn("Explore QB trades", response.text)
++        result = f.f.f.client.get(href)
++        self.assertEqual(result.status_code, 200)
++        self.assertIn("&quot;kind&quot;: &quot;starter&quot;", result.text)
++        self.assertIn("Incoming player position", result.text)
++        self.assertIn("Generate starts the search", result.text)
++        # The opaque hint is not authorization or a saved preference.
++        for bad in (href[:-1] + ("a" if href[-1] != "a" else "b"),):
++            rejected = f.f.f.client.get(bad)
++            self.assertIn("No roster-need filter was applied", rejected.text)
++            self.assertIn('data-team-need="null"', rejected.text)
++        # Requalification at render time, not the saved profile's old label.
++        self.data["sync_status"] = {"last_refresh_failed": True}
++        f.publish((datetime.now(timezone.utc) - timedelta(hours=8)).isoformat())
++        expired = f.f.f.client.get(href)
++        self.assertIn("No roster-need filter was applied", expired.text)
++        self.assertNotIn('id="my-team-trade-need"', f.f.f.client.get("/teams/1").text)
++
++    def test_need_requires_current_own_matching_prepared_evidence(self):
++        self.fixture()
++        diagnostic = prepared_diagnostics(self.data, self.snapshot)
++        row = diagnostic["teams"]["1"]
++        # Selection controls only: force a canonical flag in a copied diagnostic
++        # to exercise all negative identity/qualification cases independently.
++        for facts in row["positions"].values():
++            facts.update(
++                starter_need=False, resilience_need=False, quality_depth_need=False
++            )
++        row["positions"]["QB"].update(starter_need=True, conclusion_state="current")
++        row["positions"]["QB"]["evidence"]["calculation_supported"] = True
++        account = SimpleNamespace(
++            account_id="test",
++            session_id="test",
++            membership=SimpleNamespace(league_id="league-1", roster_id=1),
++        )
++        with patch("services.team_trade_need.current_account", return_value=account):
++            value = prepared_need(self.data, 1, diagnostic)
++            self.assertEqual(value["kind"], "starter")
++            for change in (
++                "week",
++                "league",
++                "generation",
++                "provisional",
++                "missing",
++                "franchise",
++            ):
++                altered = copy.deepcopy(diagnostic)
++                if change == "week":
++                    altered["week"] += 1
++                if change == "league":
++                    altered["league_id"] = "other"
++                if change == "generation":
++                    altered["projection_generation"] = None
++                if change == "provisional":
++                    altered["teams"]["1"]["positions"]["QB"]["conclusion_state"] = (
++                        "provisional"
++                    )
++                with self.subTest(change=change):
++                    self.assertIsNone(
++                        prepared_need(
++                            self.data,
++                            2 if change == "franchise" else 1,
++                            None if change == "missing" else altered,
++                        )
++                    )
++            row["positions"]["QB"].update(starter_need=False, resilience_need=True)
++            depth = prepared_need(self.data, 1, diagnostic)
++            self.assertEqual(depth["kind"], "depth")
++            self.assertIn("not a starter-upgrade verdict", depth["reason"])
++
++    def test_league_positions_and_incoming_filter_are_request_only(self):
++        self.fixture()
++        for slots in (
++            ["QB", "RB", "WR", "TE", "FLEX", "K", "DEF", "BN"],
++            ["QB", "SUPER_FLEX", "FLEX", "BN"],
++        ):
++            data = {**self.data, "roster_positions": slots}
++            self.assertEqual(requested_position(data, "RB"), "RB")
++            self.assertIsNone(requested_position(data, None))
++            for invalid in ("K", "DEF", "FLEX", "SUPER_FLEX", "qb", {}, ["RB"]):
++                with self.assertRaises(ValueError):
++                    requested_position(data, invalid)
++        data = {**self.data, "roster_positions": ["QB", "BN"]}
++        with self.assertRaises(ValueError):
++            requested_position(data, "RB")
++        assets = {
++            "player:a": SimpleNamespace(kind="player", position="RB"),
++            "pick:exact": SimpleNamespace(kind="pick", position=None),
++        }
++        row = {"proposal": {"assets_received": ["pick:exact", "player:a"]}}
++        self.assertTrue(position_matches(row, assets, "RB"))
++        self.assertFalse(position_matches(row, assets, "QB"))
++        self.assertTrue(position_matches(row, assets, None))
++
++    def test_prepared_reader_never_prepares_on_miss(self):
++        self.fixture()
++        with patch(
++            "src.core.intelligence.roster_diagnostics._compute",
++            side_effect=AssertionError("new diagnostic on read"),
++        ):
++            changed = copy.deepcopy(self.data)
++            changed["league"]["league_id"] = "other"
++            self.assertIsNone(prepared_diagnostics(changed, self.snapshot))
++            self.assertIsNone(prepared_need(changed, 1, None))
++
++    def test_failed_refresh_and_different_account_do_not_reuse_need(self):
++        f = self.fixture()
++        f.f.source.points = {k: 40 - v for k, v in f.f.source.points.items()}
++        f.publish(datetime.now(timezone.utc).isoformat())
++        diagnose_league(self.data, f.f.source.reader.snapshot())
++        page = f.f.f.client.get("/teams/1")
++        href = unescape(
++            re.search(r'id="my-team-trade-need"[^>]*href="([^"]+)"', page.text)[1]
++        )
++        with patch.object(
++            f.f.source.reader,
++            "refresh_evidence",
++            return_value={"retained_publication": True},
++        ):
++            self.assertNotIn(
++                'id="my-team-trade-need"', f.f.f.client.get("/teams/1").text
++            )
++            self.assertIn(
++                "No roster-need filter was applied", f.f.f.client.get(href).text
++            )
++        # Authentication still gates the normal page, including the hint.
++        original = f.f.f.client.cookies.get("dtos_session")
++        f.f.f.client.cookies.clear()
++        response = f.f.f.client.get(href, follow_redirects=False)
++        self.assertIn(response.status_code, (303, 307))
++        f.f.f.client.cookies.set("dtos_session", original)
++
++    def test_real_recommended_position_filter_preserves_bilateral_verdicts(self):
++        from tests import test_home_opportunity_integrity as fixtures
++        from services.trade_intelligence import (
++            generate_trade_workflow,
++            build_trade_workspace,
++        )
++
++        f = fixtures.OpportunityIntegrityTests()
++        f.setUp()
++        self.addCleanup(f.doCleanups)
++        data = f.f.data
++        before = copy.deepcopy(data)
++        payload = {
++            "workflow": "recommended",
++            "active_roster_id": 1,
++            "strategy": "REBUILD",
++        }
++        original = generate_trade_workflow(data, payload)
++        filtered = generate_trade_workflow(
++            data, {**payload, "recommendation_position": "QB"}
++        )
++        self.assertGreater(original["search_evidence"]["full_evaluations"], 0)
++        self.assertGreater(len(original["results"]), 0)
++        assets = {
++            a.asset_id: a
++            for pool in build_trade_workspace(data, 1)["pools"].values()
++            for a in pool
++        }
++        original_rows = {
++            str(row["proposal"]): row["evaluation"]["recommendation"]
++            for row in original["results"]
++        }
++        for row in (
++            filtered["results"]
++            + filtered["exploratory_results"]
++            + filtered["near_misses"]
++        ):
++            self.assertTrue(position_matches(row, assets, "QB"))
++            if str(row["proposal"]) in original_rows:
++                self.assertEqual(
++                    row["evaluation"]["recommendation"],
++                    original_rows[str(row["proposal"])],
++                )
++        self.assertLessEqual(filtered["search_evidence"]["full_evaluations"], 180)
++        self.assertEqual(filtered["recommendation_position"], "QB")
++        self.assertEqual(data, before)
+diff --git a/tests/test_team_trade_need_browser.py b/tests/test_team_trade_need_browser.py
+new file mode 100644
+index 00000000..3332fee0
+--- /dev/null
++++ b/tests/test_team_trade_need_browser.py
+@@ -0,0 +1,421 @@
++"""Authenticated prepared-source handoff controls; no physical Safari claim."""
++
++from datetime import datetime, timedelta, timezone
++import json
++import os
++from pathlib import Path
++import subprocess
++import unittest
++from unittest.mock import patch
++
++from playwright.sync_api import sync_playwright
++from tools.validation.browser_runtime import launch_chromium
++from tests import test_contextual_back as back
++from src.core.intelligence.roster_diagnostics import diagnose_league
++from src.core.intelligence.team_strength import prepare_for_data
++
++
++class TeamTradeNeedBrowserTests(unittest.TestCase):
++    def fixture(self, *, superflex=False, depth=False):
++        helper = back.ContextualBackTests()
++        self.addCleanup(helper.doCleanups)
++        f = helper.fixture()
++        data = f.editor.data
++        slots = (
++            ["QB", "RB", "WR", "FLEX", "BN"]
++            if superflex
++            else ["QB", "RB", "RB", "WR", "WR", "TE", "FLEX", "FLEX", "K", "DEF", "BN"]
++        )
++        if superflex:
++            slots.insert(1, "SUPER_FLEX")
++        data["roster_positions"] = slots
++        data["league"].update(
++            roster_positions=slots,
++            scoring_settings={
++                "pass_yd": 1,
++                "rush_yd": 1,
++                "rec_yd": 1,
++                "fgm": 1,
++                "sack": 1,
++            },
++        )
++        data["scoring_settings"] = data["league"]["scoring_settings"]
++        stats = {
++            "QB": "pass_yd",
++            "RB": "rush_yd",
++            "WR": "rec_yd",
++            "TE": "rec_yd",
++            "K": "fgm",
++            "DEF": "sack",
++        }
++        self.rows = []
++        for team in data["teams"]:
++            rid = team["roster_id"]
++            for player in team["players"]:
++                player.update(status="Active", fantasy_positions=["QB"])
++                data["players"][player["id"]].update(
++                    status="Active", fantasy_positions=["QB"]
++                )
++                self.rows.append(
++                    {
++                        "player_id": player["id"],
++                        "player": {"position": "QB"},
++                        "stats": {"pass_yd": 30},
++                    }
++                )
++            for pos in ("RB", "WR", "TE", "K", "DEF"):
++                for n in range(4):
++                    pid = f"{rid}-{pos}-{n}"
++                    player = {
++                        "id": pid,
++                        "name": pid,
++                        "position": pos,
++                        "fantasy_positions": [pos],
++                        "status": "Active",
++                        "roster_slot": "Bench",
++                    }
++                    team["players"].append(player)
++                    data["players"][pid] = {**player, "full_name": pid, "age": 25}
++                    points = 20 if rid == 1 else 10
++                    if pos == "RB":
++                        points = (2 if not depth or n > 0 else 20) if rid == 1 else 12
++                    self.rows.append(
++                        {
++                            "player_id": pid,
++                            "player": {"position": pos},
++                            "stats": {stats[pos]: points},
++                        }
++                    )
++        self.enterContext(
++            patch(
++                "src.core.projection_intelligence.projection_service", f.capital.reader
++            )
++        )
++        self.publish(f)
++        return helper, f
++
++    def publish(self, f, *, age=0):
++        stamp = (datetime.now(timezone.utc) - timedelta(hours=age)).isoformat()
++        rows = [
++            {**row, "season": 2026, "week": 2, "updated_at": stamp} for row in self.rows
++        ]
++        f.capital.reader.publish_horizon(
++            {2: rows},
++            data=f.editor.data,
++            league_id="league-1",
++            season=2026,
++            current_week=2,
++        )
++        with patch(
++            "services.global_evidence.retained_global_evidence", return_value=None
++        ):
++            prepare_for_data(f.capital.reader, f.editor.data)
++        diagnose_league(f.editor.data, f.capital.reader.snapshot())
++
++    def record(self, name, observations):
++        folder = os.environ.get("DTOS_TEAM_NEED_EVIDENCE")
++        if folder:
++            dest = Path(folder)
++            dest.mkdir(parents=True, exist_ok=True)
++            (dest / (name + ".json")).write_text(
++                json.dumps(
++                    {
++                        "commit": subprocess.check_output(
++                            ["git", "rev-parse", "HEAD"], text=True
++                        ).strip(),
++                        "tree": subprocess.check_output(
++                            ["git", "rev-parse", "HEAD^{tree}"], text=True
++                        ).strip(),
++                        "source": "disposable authenticated prepared Sleeper fixture",
++                        "physical_safari_tested": False,
++                        "observations": observations,
++                    },
++                    indent=2,
++                )
++                + "\n"
++            )
++
++    def test_phone_handoff_edit_clear_reload_and_back_preserves_evaluate(self):
++        helper, f = self.fixture()
++        pw = self.enterContext(sync_playwright())
++        browser = launch_chromium(pw, headless=True)
++        self.addCleanup(browser.close)
++        rows = []
++        for width, height in ((320, 432), (375, 667), (390, 844), (1280, 900)):
++            page, requests, _, _, errors = helper.page(browser, f, width, height)
++            self.addCleanup(page.close)
++            helper.ready(page)
++            helper.choose(page)
++            page.locator("#trade-valuation-mode").select_option("custom")
++            before = helper.draft(page)
++            page.goto(helper.origin + "/teams/1", wait_until="networkidle")
++            action = page.locator("#my-team-trade-need")
++            self.assertEqual(action.inner_text(), "Explore RB trades")
++            self.assertIn(
++                "starting lineup", page.locator("#my-team-outlook").inner_text()
++            )
++            posts = [r for r in requests if r[0] == "POST"]
++            href = action.get_attribute("href")
++            action.focus()
++            action.press("Enter")
++            page.wait_for_function(
++                "document.querySelector('#trade-context') && !document.querySelector('#trade-context').textContent.includes('Loading')"
++            )
++            self.assertEqual(
++                page.locator("#recommendation-position").input_value(), "RB"
++            )
++            self.assertIn(
++                "From My Team",
++                page.locator("#recommendation-position-origin").inner_text(),
++            )
++            page.wait_for_function(
++                "document.activeElement?.id === 'recommendation-position'"
++            )
++            position_box = page.locator("#recommendation-position").bounding_box()
++            self.assertGreaterEqual(position_box["y"], 0)
++            self.assertLessEqual(position_box["y"] + position_box["height"], height)
++            self.assertGreaterEqual(position_box["height"], 44)
++            label_clear = page.locator('label[for="recommendation-position"]').evaluate("""e => {
++                const r=e.getBoundingClientRect(), hit=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);
++                return hit===e || e.contains(hit);
++            }""")
++            self.assertTrue(
++                label_clear, "Position label is obscured by the sticky Back bar"
++            )
++            reason = page.locator("#recommendation-position-origin").inner_text()
++            page.locator("#trade-search-options > summary").click()
++            page.locator("#recommendation-filter").select_option("value")
++            self.assertEqual(
++                page.locator("#recommendation-position-origin").inner_text(), reason
++            )
++            self.assertEqual(
++                page.locator("#recommendation-position").input_value(), "RB"
++            )
++            page.locator("#trade-search-options > summary").click()
++            self.assertEqual(
++                helper.draft(page)["currentProposal"], before["currentProposal"]
++            )
++            self.assertEqual(helper.draft(page)["valuationMode"], "custom")
++            self.assertEqual(helper.draft(page)["strategy"], before["strategy"])
++            for pos in ("WR", ""):
++                if pos:
++                    page.locator("#recommendation-position").select_option(pos)
++                else:
++                    page.locator("#recommendation-position-clear").click()
++                page.reload(wait_until="networkidle")
++                page.wait_for_function(
++                    "document.querySelector('#trade-context') && !document.querySelector('#trade-context').textContent.includes('Loading')"
++                )
++                self.assertEqual(
++                    page.locator("#recommendation-position").input_value(), pos
++                )
++                self.assertNotIn(
++                    "From My Team",
++                    page.locator("#recommendation-position-origin").inner_text(),
++                )
++                self.assertEqual(
++                    helper.draft(page)["currentProposal"], before["currentProposal"]
++                )
++            self.assertEqual(posts, [r for r in requests if r[0] == "POST"])
++            self.assertLessEqual(
++                page.evaluate("document.documentElement.scrollWidth-innerWidth"), 0
++            )
++            helper.back(page, "/teams/1")
++            self.assertEqual(
++                page.locator("#my-team-trade-need").get_attribute("href"), href
++            )
++            self.assertFalse(errors, errors)
++            rows.append(
++                {
++                    "width": width,
++                    "height": height,
++                    "handoff": "RB starter",
++                    "draft_and_custom_preserved": True,
++                    "changed_and_cleared_after_reload": True,
++                    "no_automatic_search": True,
++                    "position_visible_on_entry": True,
++                    "position_clear_of_back_bar": True,
++                    "type_filter_preserves_need_reason": True,
++                    "back": "My Team",
++                    "overflow": 0,
++                }
++            )
++            folder = os.environ.get("DTOS_TEAM_NEED_EVIDENCE")
++            if folder:
++                page.screenshot(
++                    path=str(Path(folder) / f"my-team-{width}.png"), full_page=True
++                ) if Path(folder).exists() else None
++            page.close()
++        self.record("phone-round-trips", rows)
++
++    def test_superflex_depth_stale_and_unprepared_controls(self):
++        helper, f = self.fixture(superflex=True, depth=True)
++        pw = self.enterContext(sync_playwright())
++        browser = launch_chromium(pw, headless=True)
++        self.addCleanup(browser.close)
++        page, requests, _, _, errors = helper.page(browser, f)
++        self.addCleanup(page.close)
++        page.goto(helper.origin + "/teams/1", wait_until="networkidle")
++        action = page.locator("#my-team-trade-need")
++        self.assertEqual(action.inner_text(), "Explore RB trades")
++        self.assertIn(
++            "depth need, not a starter-upgrade",
++            page.locator("#my-team-outlook").inner_text(),
++        )
++        href = action.get_attribute("href")
++        self.publish(f, age=8)
++        page.goto(helper.origin + href, wait_until="networkidle")
++        page.wait_for_function(
++            "document.querySelector('#trade-context') && !document.querySelector('#trade-context').textContent.includes('Loading')"
++        )
++        self.assertEqual(page.locator("#recommendation-position").input_value(), "")
++        self.assertIn(
++            "No roster-need filter was applied",
++            page.locator("#recommendation-position-origin").inner_text(),
++        )
++        page.locator("#recommendation-position").select_option("QB")
++        page.reload(wait_until="networkidle")
++        page.wait_for_function(
++            "document.querySelector('#trade-context') && !document.querySelector('#trade-context').textContent.includes('Loading')"
++        )
++        self.assertEqual(page.locator("#recommendation-position").input_value(), "QB")
++        self.assertIn(
++            "Position filter selected here",
++            page.locator("#recommendation-position-origin").inner_text(),
++        )
++        page.goto(helper.origin + "/teams/1", wait_until="networkidle")
++        self.assertEqual(page.locator("#my-team-trade-need").count(), 0)
++        page.locator("#my-team-outlook-evidence").evaluate("e=>e.open=true")
++        self.assertEqual(
++            page.get_by_role("link", name="Trade opportunities", exact=True).count(), 1
++        )
++        self.assertFalse([r for r in requests if r[0] == "POST"])
++        self.assertFalse(errors, errors)
++        self.record(
++            "superflex-depth-and-stale",
++            {
++                "depth_distinct": True,
++                "stale_hint_rejected": True,
++                "general_shortcut": True,
++                "stale_manual_filter_preserved": True,
++                "no_automatic_search": True,
++            },
++        )
++
++    def test_existing_real_results_stay_separate_and_search_is_explicit(self):
++        helper = back.ContextualBackTests()
++        self.addCleanup(helper.doCleanups)
++        f = helper.fixture()
++        pw = self.enterContext(sync_playwright())
++        browser = launch_chromium(pw, headless=True)
++        self.addCleanup(browser.close)
++        page, requests, _, _, errors = helper.page(browser, f)
++        self.addCleanup(page.close)
++        helper.ready(page, "/trades/recommended?front_office=1")
++        page.locator("#trade-strategy").select_option("REBUILD")
++        page.locator("#trade-find").click()
++        page.wait_for_function(
++            "document.querySelector('#trade-result').innerText.includes('Search position: all positions')"
++        )
++        prior = helper.draft(page)["recommendedSearch"]
++        self.assertGreater(len(prior["offers"]), 0)
++        posts = len([r for r in requests if r[0] == "POST"])
++        page.locator("#recommendation-position").select_option("QB")
++        self.assertTrue(page.locator("#trade-result").is_hidden())
++        self.assertTrue(page.locator("#recommendation-previous").is_visible())
++        page.locator("#recommendation-previous").evaluate("e=>e.open=true")
++        self.assertIn(
++            "Earlier offers have not been searched with the current filter",
++            page.locator("#recommendation-previous").inner_text(),
++        )
++        page.reload(wait_until="networkidle")
++        page.wait_for_function(
++            "document.querySelector('#trade-context') && !document.querySelector('#trade-context').textContent.includes('Loading')"
++        )
++        self.assertEqual(helper.draft(page)["recommendedSearch"], prior)
++        self.assertEqual(len([r for r in requests if r[0] == "POST"]), posts)
++        self.assertEqual(page.locator("#recommendation-position").input_value(), "QB")
++        page.locator("#trade-find").click()
++        page.wait_for_function(
++            "document.querySelector('#trade-result').innerText.includes('Search position: QB')"
++        )
++        self.assertEqual(helper.draft(page)["recommendedSearch"]["position"], "QB")
++        before_reset_posts = len([r for r in requests if r[0] == "POST"])
++        page.once("dialog", lambda dialog: dialog.accept())
++        page.locator("#trade-start-new").click()
++        page.wait_for_url("**/trades/create?front_office=1")
++        page.wait_for_function(
++            "document.querySelector('#trade-context') && !document.querySelector('#trade-context').textContent.includes('Loading')"
++        )
++        self.assertFalse(
++            helper.draft(page).get("recommendedSearch") is not None,
++            "Explicit reset retained a prior search snapshot",
++        )
++        page.goto(
++            helper.origin + "/trades/recommended?front_office=1",
++            wait_until="networkidle",
++        )
++        page.wait_for_function(
++            "document.querySelector('#trade-context') && !document.querySelector('#trade-context').textContent.includes('Loading')"
++        )
++        self.assertEqual(page.locator("#recommendation-position").input_value(), "")
++        self.assertTrue(page.locator("#recommendation-previous").is_hidden())
++        self.assertEqual(
++            len([r for r in requests if r[0] == "POST"]), before_reset_posts
++        )
++        self.assertFalse(errors, errors)
++        self.record(
++            "real-search-and-prior-context",
++            {
++                "real_evaluations": True,
++                "prior_contexts": len(prior["offers"]),
++                "position_applied_only_on_generate": True,
++                "old_results_separate": True,
++                "explicit_reset_clears_prior_context": True,
++            },
++        )
++
++    def test_league_switch_discards_need_and_old_draft(self):
++        helper, f = self.fixture()
++        pw = self.enterContext(sync_playwright())
++        browser = launch_chromium(pw, headless=True)
++        self.addCleanup(browser.close)
++        page, requests, _, _, errors = helper.page(browser, f)
++        self.addCleanup(page.close)
++        helper.ready(page)
++        helper.choose(page)
++        before = helper.draft(page)
++        page.goto(helper.origin + "/teams/1", wait_until="networkidle")
++        href = page.locator("#my-team-trade-need").get_attribute("href")
++        f.editor.store.upsert_membership(
++            "account-a",
++            {"league_id": "league-2", "name": "Other"},
++            "account-a",
++            1,
++            "Other",
++            "active",
++        )
++        f.editor.store.activate("account-a", "league-2")
++        f.editor.data["league"]["league_id"] = "league-2"
++        page.goto(helper.origin + href, wait_until="networkidle")
++        page.wait_for_function(
++            "document.querySelector('#trade-context') && !document.querySelector('#trade-context').textContent.includes('Loading')"
++        )
++        self.assertEqual(page.locator("#recommendation-position").input_value(), "")
++        self.assertIn(
++            "No roster-need filter was applied",
++            page.locator("#recommendation-position-origin").inner_text(),
++        )
++        self.assertNotEqual(
++            helper.draft(page)["currentProposal"], before["currentProposal"]
++        )
++        self.assertFalse([r for r in requests if r[0] == "POST"])
++        self.assertFalse(errors, errors)
++        self.record(
++            "league-switch",
++            {
++                "hint_discarded": True,
++                "old_draft_not_loaded": True,
++                "no_automatic_search": True,
++            },
++        )

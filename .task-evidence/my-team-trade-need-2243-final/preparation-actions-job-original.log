@@ -1,0 +1,718 @@
+﻿2026-11-10T03:21:50.2451891Z Current runner version: '2.338.2'
+2026-11-10T03:21:50.2472310Z ##[group]Runner Image Provisioner
+2026-11-10T03:21:50.2473204Z Hosted Compute Agent
+2026-11-10T03:21:50.2473766Z Version: 20261028.624
+2026-11-10T03:21:50.2474328Z Commit: 54898b74c23fde5556c9b3c3a2290865feef0dfe
+2026-11-10T03:21:50.2474949Z Build Date: 2026-10-28T21:51:42Z
+2026-11-10T03:21:50.2475593Z Worker ID: {c3c74e25-2f14-4aef-b5b6-5f7817747c61}
+2026-11-10T03:21:50.2476184Z Region: westus2
+2026-11-10T03:21:50.2476672Z Cloud: Azure
+2026-11-10T03:21:50.2477260Z ##[endgroup]
+2026-11-10T03:21:50.2478467Z ##[group]Operating System
+2026-11-10T03:21:50.2479089Z Ubuntu
+2026-11-10T03:21:50.2479560Z 24.04.5
+2026-11-10T03:21:50.2480025Z LTS
+2026-11-10T03:21:50.2480486Z ##[endgroup]
+2026-11-10T03:21:50.2481026Z ##[group]Runner Image
+2026-11-10T03:21:50.2481575Z Image: ubuntu-24.04
+2026-11-10T03:21:50.2482062Z Version: 20261101.360.1
+2026-11-10T03:21:50.2483458Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20261101.360/images/ubuntu/Ubuntu2404-Readme.md
+2026-11-10T03:21:50.2484744Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20261101.360
+2026-11-10T03:21:50.2485593Z ##[endgroup]
+2026-11-10T03:21:50.2486741Z ##[group]GITHUB_TOKEN Permissions
+2026-11-10T03:21:50.2488432Z Actions: read
+2026-11-10T03:21:50.2488965Z Checks: read
+2026-11-10T03:21:50.2489782Z Contents: write
+2026-11-10T03:21:50.2490325Z Metadata: read
+2026-11-10T03:21:50.2490793Z PullRequests: read
+2026-11-10T03:21:50.2491330Z ##[endgroup]
+2026-11-10T03:21:50.2493365Z Secret source: Actions
+2026-11-10T03:21:50.2494219Z Cache mode: write
+2026-11-10T03:21:50.2494842Z Prepare workflow directory
+2026-11-10T03:21:50.2797568Z Prepare all required actions
+2026-11-10T03:21:50.2836282Z Getting action download info
+2026-11-10T03:21:50.6101042Z Download action repository 'actions/checkout@v4' (SHA:11d5960a326750d5838078e36cf38b85af677262)
+2026-11-10T03:21:50.8456563Z Download action repository 'actions/setup-python@v5' (SHA:a26af69be951a213d495a4c3e4e4022e16d87065)
+2026-11-10T03:21:50.9523148Z Download action repository 'actions/upload-artifact@v4' (SHA:ea165f8d65b6e75b540449e92b4886f43607fa02)
+2026-11-10T03:21:51.2023793Z Complete job name: guarded-release-publisher
+2026-11-10T03:21:51.2721875Z ##[group]Run actions/checkout@v4
+2026-11-10T03:21:51.2722737Z with:
+2026-11-10T03:21:51.2723166Z   ref: 9859cfae13a840d4a376ee88c3745b622eca98d9
+2026-11-10T03:21:51.2723694Z   fetch-depth: 0
+2026-11-10T03:21:51.2724156Z   persist-credentials: false
+2026-11-10T03:21:51.2724626Z   repository: Richarddavis47/dtos
+2026-11-10T03:21:51.2728143Z   token: ***
+2026-11-10T03:21:51.2728546Z   ssh-strict: true
+2026-11-10T03:21:51.2728953Z   ssh-user: git
+2026-11-10T03:21:51.2729327Z   clean: true
+2026-11-10T03:21:51.2729722Z   sparse-checkout-cone-mode: true
+2026-11-10T03:21:51.2730186Z   fetch-tags: false
+2026-11-10T03:21:51.2730588Z   show-progress: true
+2026-11-10T03:21:51.2730998Z   lfs: false
+2026-11-10T03:21:51.2731374Z   submodules: false
+2026-11-10T03:21:51.2731790Z   set-safe-directory: true
+2026-11-10T03:21:51.2732235Z   allow-unsafe-pr-checkout: false
+2026-11-10T03:21:51.2732968Z env:
+2026-11-10T03:21:51.2733398Z   NODE_OPTIONS: --max-old-space-size=256
+2026-11-10T03:21:51.2733918Z ##[endgroup]
+2026-11-10T03:21:51.4816419Z Syncing repository: Richarddavis47/dtos
+2026-11-10T03:21:51.4818760Z ##[group]Getting Git version info
+2026-11-10T03:21:51.4819696Z Working directory is '/home/runner/work/dtos/dtos'
+2026-11-10T03:21:51.4821024Z [command]/usr/bin/git version
+2026-11-10T03:21:51.4871900Z git version 2.56.0
+2026-11-10T03:21:51.4887449Z ##[endgroup]
+2026-11-10T03:21:51.4899039Z Temporarily overriding HOME='/home/runner/work/_temp/3c2cfd87-2646-4b44-903e-87310f2ed65a' before making global git config changes
+2026-11-10T03:21:51.4901056Z Adding repository directory to the temporary git global config as a safe directory
+2026-11-10T03:21:51.4902906Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/dtos/dtos
+2026-11-10T03:21:51.4944477Z Deleting the contents of '/home/runner/work/dtos/dtos'
+2026-11-10T03:21:51.4950335Z ##[group]Initializing the repository
+2026-11-10T03:21:51.4951372Z [command]/usr/bin/git init /home/runner/work/dtos/dtos
+2026-11-10T03:21:51.5023960Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-11-10T03:21:51.5025139Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-11-10T03:21:51.5025955Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-11-10T03:21:51.5026593Z hint: call:
+2026-11-10T03:21:51.5026952Z hint:
+2026-11-10T03:21:51.5027416Z hint: 	git config --global init.defaultBranch <name>
+2026-11-10T03:21:51.5027962Z hint:
+2026-11-10T03:21:51.5028467Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-11-10T03:21:51.5029268Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-11-10T03:21:51.5029894Z hint:
+2026-11-10T03:21:51.5030257Z hint: 	git branch -m <name>
+2026-11-10T03:21:51.5030689Z hint:
+2026-11-10T03:21:51.5031234Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-11-10T03:21:51.5039398Z Initialized empty Git repository in /home/runner/work/dtos/dtos/.git/
+2026-11-10T03:21:51.5049861Z [command]/usr/bin/git remote add origin https://github.com/Richarddavis47/dtos
+2026-11-10T03:21:51.5089557Z ##[endgroup]
+2026-11-10T03:21:51.5092999Z ##[group]Disabling automatic garbage collection
+2026-11-10T03:21:51.5093961Z [command]/usr/bin/git config --local gc.auto 0
+2026-11-10T03:21:51.5121300Z ##[endgroup]
+2026-11-10T03:21:51.5122642Z ##[group]Setting up auth
+2026-11-10T03:21:51.5126614Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-11-10T03:21:51.5156675Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-11-10T03:21:51.5448118Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-11-10T03:21:51.5488019Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-11-10T03:21:51.5700300Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-11-10T03:21:51.5735987Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-11-10T03:21:51.5937992Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-11-10T03:21:51.5979895Z ##[endgroup]
+2026-11-10T03:21:51.5980639Z ##[group]Fetching the repository
+2026-11-10T03:21:51.5989465Z [command]/usr/bin/git -c protocol.version=2 fetch --prune --no-recurse-submodules origin +refs/heads/*:refs/remotes/origin/* +refs/tags/*:refs/tags/*
+2026-11-10T03:22:40.3866705Z From https://github.com/Richarddavis47/dtos
+2026-11-10T03:22:40.3869256Z  * [new branch]        agent/repository-guidance-changelog -> origin/agent/repository-guidance-changelog
+2026-11-10T03:22:40.3870634Z  * [new branch]        audit/2225-cache-admission-corrigendum -> origin/audit/2225-cache-admission-corrigendum
+2026-11-10T03:22:40.3871975Z  * [new branch]        audit/granite-restoration-study-handoff -> origin/audit/granite-restoration-study-handoff
+2026-11-10T03:22:40.3873255Z  * [new branch]        codex/build2201-final-memory -> origin/codex/build2201-final-memory
+2026-11-10T03:22:40.3874242Z  * [new branch]        codex/build2201-headroom-audit -> origin/codex/build2201-headroom-audit
+2026-11-10T03:22:40.3875409Z  * [new branch]        codex/storage-architecture-correction -> origin/codex/storage-architecture-correction
+2026-11-10T03:22:40.3876525Z  * [new branch]        codex/v1.21.96-public-welcome -> origin/codex/v1.21.96-public-welcome
+2026-11-10T03:22:40.3877508Z  * [new branch]        codex/v1.22.11-granite-preflight -> origin/codex/v1.22.11-granite-preflight
+2026-11-10T03:22:40.3878809Z  * [new branch]        dtos-chatgpt-fetch-probe -> origin/dtos-chatgpt-fetch-probe
+2026-11-10T03:22:40.3879774Z  * [new branch]        dtos-release-automation -> origin/dtos-release-automation
+2026-11-10T03:22:40.3880732Z  * [new branch]        dtos-v0.8.9-draft-migration -> origin/dtos-v0.8.9-draft-migration
+2026-11-10T03:22:40.3881719Z  * [new branch]        dtos-v0.9.0-front-office-foundation -> origin/dtos-v0.9.0-front-office-foundation
+2026-11-10T03:22:40.3883170Z  * [new branch]        dtos-v1.10.0-live-projection-forward-production -> origin/dtos-v1.10.0-live-projection-forward-production
+2026-11-10T03:22:40.3884448Z  * [new branch]        dtos-v1.10.37-chatgpt-current-visual-mirror -> origin/dtos-v1.10.37-chatgpt-current-visual-mirror
+2026-11-10T03:22:40.3885529Z  * [new branch]        dtos-v1.10.56-mobile-trade-filter-visibility -> origin/dtos-v1.10.56-mobile-trade-filter-visibility
+2026-11-10T03:22:40.3886559Z  * [new branch]        dtos-v1.10.68-visual-fidelity-correction -> origin/dtos-v1.10.68-visual-fidelity-correction
+2026-11-10T03:22:40.3887942Z  * [new branch]        dtos-v1.13.0-multi-league-intelligence-isolation -> origin/dtos-v1.13.0-multi-league-intelligence-isolation
+2026-11-10T03:22:40.3889138Z  * [new branch]        dtos-v1.13.1-account-league-context-isolation -> origin/dtos-v1.13.1-account-league-context-isolation
+2026-11-10T03:22:40.3890424Z  * [new branch]        dtos-v1.13.2-projection-restore-league-isolation -> origin/dtos-v1.13.2-projection-restore-league-isolation
+2026-11-10T03:22:40.3891734Z  * [new branch]        dtos-v1.13.3-semantic-freshness-restart-evidence -> origin/dtos-v1.13.3-semantic-freshness-restart-evidence
+2026-11-10T03:22:40.3893069Z  * [new branch]        dtos-v1.13.4-restart-evidence-deduplication -> origin/dtos-v1.13.4-restart-evidence-deduplication
+2026-11-10T03:22:40.3894132Z  * [new branch]        dtos-v1.13.5-fois-tenure-continuity -> origin/dtos-v1.13.5-fois-tenure-continuity
+2026-11-10T03:22:40.3895110Z  * [new branch]        dtos-v1.13.6-dins-bounded-capture -> origin/dtos-v1.13.6-dins-bounded-capture
+2026-11-10T03:22:40.3896012Z  * [new branch]        dtos-v1.8.10-market-health-dataset-scope -> origin/dtos-v1.8.10-market-health-dataset-scope
+2026-11-10T03:22:40.3896735Z  * [new branch]        dtos-v1.8.12-market-memory-admission -> origin/dtos-v1.8.12-market-memory-admission
+2026-11-10T03:22:40.3897465Z  * [new branch]        dtos-v1.8.9-semantic-market-artifact-identity -> origin/dtos-v1.8.9-semantic-market-artifact-identity
+2026-11-10T03:22:40.3898204Z  * [new branch]        dtos-v1.9.4-valuation-fois-history-corrections -> origin/dtos-v1.9.4-valuation-fois-history-corrections
+2026-11-10T03:22:40.3898851Z  * [new branch]        evidence/cache-string-sharing-2237 -> origin/evidence/cache-string-sharing-2237
+2026-11-10T03:22:40.3899540Z  * [new branch]        evidence/current-production-coverage-2233 -> origin/evidence/current-production-coverage-2233
+2026-11-10T03:22:40.3900213Z  * [new branch]        evidence/current-season-history-2230 -> origin/evidence/current-season-history-2230
+2026-11-10T03:22:40.3900758Z  * [new branch]        evidence/franchise-history-2229 -> origin/evidence/franchise-history-2229
+2026-11-10T03:22:40.3901344Z  * [new branch]        evidence/history-trade-followthrough-2231 -> origin/evidence/history-trade-followthrough-2231
+2026-11-10T03:22:40.3901951Z  * [new branch]        evidence/market-history-coverage-2232 -> origin/evidence/market-history-coverage-2232
+2026-11-10T03:22:40.3902726Z  * [new branch]        evidence/restoration-recovery-2235 -> origin/evidence/restoration-recovery-2235
+2026-11-10T03:22:40.3903332Z  * [new branch]        evidence/sleeper-actuals-restoration-2236 -> origin/evidence/sleeper-actuals-restoration-2236
+2026-11-10T03:22:40.3903972Z  * [new branch]        evidence/sleeper-only-fantasy-results-2234 -> origin/evidence/sleeper-only-fantasy-results-2234
+2026-11-10T03:22:40.3904551Z  * [new branch]        evidence/team-assessment-cd400cf -> origin/evidence/team-assessment-cd400cf
+2026-11-10T03:22:40.3905193Z  * [new branch]        evidence/trade-reserve-2228 -> origin/evidence/trade-reserve-2228
+2026-11-10T03:22:40.3905711Z  * [new branch]        feat/my-team-trade-need-2243 -> origin/feat/my-team-trade-need-2243
+2026-11-10T03:22:40.3906386Z  * [new branch]        fix/resident-refresh-reference-release -> origin/fix/resident-refresh-reference-release
+2026-11-10T03:22:40.3907081Z  * [new branch]        fix/restoration-unused-memory -> origin/fix/restoration-unused-memory
+2026-11-10T03:22:40.3907629Z  * [new branch]        fix/sleeper-actuals-restoration -> origin/fix/sleeper-actuals-restoration
+2026-11-10T03:22:40.3908174Z  * [new branch]        fix/trade-time-market-evidence -> origin/fix/trade-time-market-evidence
+2026-11-10T03:22:40.3908768Z  * [new branch]        fix/v1.21.105-history-decision-continuity -> origin/fix/v1.21.105-history-decision-continuity
+2026-11-10T03:22:40.3909340Z  * [new branch]        fix/v1.21.72-fois-navigation -> origin/fix/v1.21.72-fois-navigation
+2026-11-10T03:22:40.3909934Z  * [new branch]        fix/v1.21.83-fois-flight-source-retention -> origin/fix/v1.21.83-fois-flight-source-retention
+2026-11-10T03:22:40.3910422Z  * [new branch]        main                    -> origin/main
+2026-11-10T03:22:40.3910869Z  * [new branch]        release/2221-actions-publisher -> origin/release/2221-actions-publisher
+2026-11-10T03:22:40.3911372Z  * [new branch]        release/2222-actions-publisher -> origin/release/2222-actions-publisher
+2026-11-10T03:22:40.3911875Z  * [new branch]        release/2223-actions-publisher -> origin/release/2223-actions-publisher
+2026-11-10T03:22:40.3912387Z  * [new branch]        release/2224-actions-publisher -> origin/release/2224-actions-publisher
+2026-11-10T03:22:40.3913058Z  * [new branch]        release/2225-actions-publisher -> origin/release/2225-actions-publisher
+2026-11-10T03:22:40.3913564Z  * [new branch]        release/2226-actions-publisher -> origin/release/2226-actions-publisher
+2026-11-10T03:22:40.3914075Z  * [new branch]        release/2227-actions-publisher -> origin/release/2227-actions-publisher
+2026-11-10T03:22:40.3914688Z  * [new branch]        release/2228-actions-publisher -> origin/release/2228-actions-publisher
+2026-11-10T03:22:40.3915207Z  * [new branch]        release/2229-actions-publisher -> origin/release/2229-actions-publisher
+2026-11-10T03:22:40.3915726Z  * [new branch]        release/2230-actions-publisher -> origin/release/2230-actions-publisher
+2026-11-10T03:22:40.3916236Z  * [new branch]        release/2231-actions-publisher -> origin/release/2231-actions-publisher
+2026-11-10T03:22:40.3916735Z  * [new branch]        release/2232-actions-publisher -> origin/release/2232-actions-publisher
+2026-11-10T03:22:40.3917223Z  * [new branch]        release/2233-actions-publisher -> origin/release/2233-actions-publisher
+2026-11-10T03:22:40.3917718Z  * [new branch]        release/2234-actions-publisher -> origin/release/2234-actions-publisher
+2026-11-10T03:22:40.3918258Z  * [new branch]        release/2235-actions-publisher -> origin/release/2235-actions-publisher
+2026-11-10T03:22:40.3918779Z  * [new branch]        release/2236-actions-publisher -> origin/release/2236-actions-publisher
+2026-11-10T03:22:40.3919279Z  * [new branch]        release/2237-actions-publisher -> origin/release/2237-actions-publisher
+2026-11-10T03:22:40.3919801Z  * [new branch]        release/2238-actions-publisher -> origin/release/2238-actions-publisher
+2026-11-10T03:22:40.3920372Z  * [new branch]        release/2239-actions-publisher -> origin/release/2239-actions-publisher
+2026-11-10T03:22:40.3920879Z  * [new branch]        release/2240-actions-publisher -> origin/release/2240-actions-publisher
+2026-11-10T03:22:40.3921408Z  * [new branch]        release/2241-actions-publisher -> origin/release/2241-actions-publisher
+2026-11-10T03:22:40.3921919Z  * [new branch]        release/2242-actions-publisher -> origin/release/2242-actions-publisher
+2026-11-10T03:22:40.3922551Z  * [new branch]        release/2243-actions-publisher -> origin/release/2243-actions-publisher
+2026-11-10T03:22:40.3923257Z  * [new branch]        tooling/cloud-validation-polish -> origin/tooling/cloud-validation-polish
+2026-11-10T03:22:40.3923828Z  * [new branch]        validation/2221-focused-resources -> origin/validation/2221-focused-resources
+2026-11-10T03:22:40.3924270Z  * [new tag]           v0.9.4                  -> v0.9.4
+2026-11-10T03:22:40.3924603Z  * [new tag]           v0.9.5                  -> v0.9.5
+2026-11-10T03:22:40.3924914Z  * [new tag]           v0.9.6                  -> v0.9.6
+2026-11-10T03:22:40.3925219Z  * [new tag]           v0.9.7                  -> v0.9.7
+2026-11-10T03:22:40.3925524Z  * [new tag]           v0.9.8                  -> v0.9.8
+2026-11-10T03:22:40.3925827Z  * [new tag]           v0.9.9                  -> v0.9.9
+2026-11-10T03:22:40.3926141Z  * [new tag]           v1.0.0                  -> v1.0.0
+2026-11-10T03:22:40.3926466Z  * [new tag]           v1.1.0                  -> v1.1.0
+2026-11-10T03:22:40.3926782Z  * [new tag]           v1.10.0                 -> v1.10.0
+2026-11-10T03:22:40.3927097Z  * [new tag]           v1.10.1                 -> v1.10.1
+2026-11-10T03:22:40.3927432Z  * [new tag]           v1.10.10                -> v1.10.10
+2026-11-10T03:22:40.3927754Z  * [new tag]           v1.10.11                -> v1.10.11
+2026-11-10T03:22:40.3928066Z  * [new tag]           v1.10.12                -> v1.10.12
+2026-11-10T03:22:40.3928377Z  * [new tag]           v1.10.13                -> v1.10.13
+2026-11-10T03:22:40.3928684Z  * [new tag]           v1.10.14                -> v1.10.14
+2026-11-10T03:22:40.3929129Z  * [new tag]           v1.10.15                -> v1.10.15
+2026-11-10T03:22:40.3929599Z  * [new tag]           v1.10.16                -> v1.10.16
+2026-11-10T03:22:40.3930110Z  * [new tag]           v1.10.17                -> v1.10.17
+2026-11-10T03:22:40.3930447Z  * [new tag]           v1.10.18                -> v1.10.18
+2026-11-10T03:22:40.3930846Z  * [new tag]           v1.10.19                -> v1.10.19
+2026-11-10T03:22:40.3931179Z  * [new tag]           v1.10.2                 -> v1.10.2
+2026-11-10T03:22:40.3931487Z  * [new tag]           v1.10.20                -> v1.10.20
+2026-11-10T03:22:40.3931929Z  * [new tag]           v1.10.21                -> v1.10.21
+2026-11-10T03:22:40.3932274Z  * [new tag]           v1.10.22                -> v1.10.22
+2026-11-10T03:22:40.3932929Z  * [new tag]           v1.10.23                -> v1.10.23
+2026-11-10T03:22:40.3933281Z  * [new tag]           v1.10.24                -> v1.10.24
+2026-11-10T03:22:40.3933742Z  * [new tag]           v1.10.25                -> v1.10.25
+2026-11-10T03:22:40.3934218Z  * [new tag]           v1.10.26                -> v1.10.26
+2026-11-10T03:22:40.3934534Z  * [new tag]           v1.10.27                -> v1.10.27
+2026-11-10T03:22:40.3935000Z  * [new tag]           v1.10.28                -> v1.10.28
+2026-11-10T03:22:40.3935334Z  * [new tag]           v1.10.29                -> v1.10.29
+2026-11-10T03:22:40.3935667Z  * [new tag]           v1.10.3                 -> v1.10.3
+2026-11-10T03:22:40.3935978Z  * [new tag]           v1.10.30                -> v1.10.30
+2026-11-10T03:22:40.3936313Z  * [new tag]           v1.10.31                -> v1.10.31
+2026-11-10T03:22:40.3936683Z  * [new tag]           v1.10.32                -> v1.10.32
+2026-11-10T03:22:40.3936997Z  * [new tag]           v1.10.33                -> v1.10.33
+2026-11-10T03:22:40.3937338Z  * [new tag]           v1.10.34                -> v1.10.34
+2026-11-10T03:22:40.3937651Z  * [new tag]           v1.10.35                -> v1.10.35
+2026-11-10T03:22:40.3937970Z  * [new tag]           v1.10.36                -> v1.10.36
+2026-11-10T03:22:40.3938291Z  * [new tag]           v1.10.37                -> v1.10.37
+2026-11-10T03:22:40.3938735Z  * [new tag]           v1.10.38                -> v1.10.38
+2026-11-10T03:22:40.3939082Z  * [new tag]           v1.10.39                -> v1.10.39
+2026-11-10T03:22:40.3939582Z  * [new tag]           v1.10.4                 -> v1.10.4
+2026-11-10T03:22:40.3940082Z  * [new tag]           v1.10.40                -> v1.10.40
+2026-11-10T03:22:40.3940426Z  * [new tag]           v1.10.41                -> v1.10.41
+2026-11-10T03:22:40.3940799Z  * [new tag]           v1.10.42                -> v1.10.42
+2026-11-10T03:22:40.3941138Z  * [new tag]           v1.10.43                -> v1.10.43
+2026-11-10T03:22:40.3941462Z  * [new tag]           v1.10.44                -> v1.10.44
+2026-11-10T03:22:40.3941770Z  * [new tag]           v1.10.45                -> v1.10.45
+2026-11-10T03:22:40.3942072Z  * [new tag]           v1.10.46                -> v1.10.46
+2026-11-10T03:22:40.4016667Z  * [new tag]           v1.10.47                -> v1.10.47
+2026-11-10T03:22:40.4017299Z  * [new tag]           v1.10.48                -> v1.10.48
+2026-11-10T03:22:40.4017751Z  * [new tag]           v1.10.49                -> v1.10.49
+2026-11-10T03:22:40.4018241Z  * [new tag]           v1.10.5                 -> v1.10.5
+2026-11-10T03:22:40.4018759Z  * [new tag]           v1.10.50                -> v1.10.50
+2026-11-10T03:22:40.4019306Z  * [new tag]           v1.10.51                -> v1.10.51
+2026-11-10T03:22:40.4019727Z  * [new tag]           v1.10.52                -> v1.10.52
+2026-11-10T03:22:40.4020146Z  * [new tag]           v1.10.53                -> v1.10.53
+2026-11-10T03:22:40.4020571Z  * [new tag]           v1.10.54                -> v1.10.54
+2026-11-10T03:22:40.4020998Z  * [new tag]           v1.10.55                -> v1.10.55
+2026-11-10T03:22:40.4021429Z  * [new tag]           v1.10.56                -> v1.10.56
+2026-11-10T03:22:40.4021848Z  * [new tag]           v1.10.57                -> v1.10.57
+2026-11-10T03:22:40.4022265Z  * [new tag]           v1.10.58                -> v1.10.58
+2026-11-10T03:22:40.4022918Z  * [new tag]           v1.10.59                -> v1.10.59
+2026-11-10T03:22:40.4023367Z  * [new tag]           v1.10.6                 -> v1.10.6
+2026-11-10T03:22:40.4023821Z  * [new tag]           v1.10.60                -> v1.10.60
+2026-11-10T03:22:40.4024301Z  * [new tag]           v1.10.61                -> v1.10.61
+2026-11-10T03:22:40.4024785Z  * [new tag]           v1.10.62                -> v1.10.62
+2026-11-10T03:22:40.4025498Z  * [new tag]           v1.10.63                -> v1.10.63
+2026-11-10T03:22:40.4025986Z  * [new tag]           v1.10.64                -> v1.10.64
+2026-11-10T03:22:40.4026459Z  * [new tag]           v1.10.65                -> v1.10.65
+2026-11-10T03:22:40.4026949Z  * [new tag]           v1.10.66                -> v1.10.66
+2026-11-10T03:22:40.4027433Z  * [new tag]           v1.10.67                -> v1.10.67
+2026-11-10T03:22:40.4027927Z  * [new tag]           v1.10.68                -> v1.10.68
+2026-11-10T03:22:40.4028411Z  * [new tag]           v1.10.69                -> v1.10.69
+2026-11-10T03:22:40.4028904Z  * [new tag]           v1.10.7                 -> v1.10.7
+2026-11-10T03:22:40.4029408Z  * [new tag]           v1.10.70                -> v1.10.70
+2026-11-10T03:22:40.4029951Z  * [new tag]           v1.10.71                -> v1.10.71
+2026-11-10T03:22:40.4030434Z  * [new tag]           v1.10.8                 -> v1.10.8
+2026-11-10T03:22:40.4030941Z  * [new tag]           v1.10.9                 -> v1.10.9
+2026-11-10T03:22:40.4031437Z  * [new tag]           v1.12.0                 -> v1.12.0
+2026-11-10T03:22:40.4031914Z  * [new tag]           v1.12.1                 -> v1.12.1
+2026-11-10T03:22:40.4032396Z  * [new tag]           v1.12.2                 -> v1.12.2
+2026-11-10T03:22:40.4033016Z  * [new tag]           v1.12.3                 -> v1.12.3
+2026-11-10T03:22:40.4033505Z  * [new tag]           v1.12.4                 -> v1.12.4
+2026-11-10T03:22:40.4033997Z  * [new tag]           v1.12.5                 -> v1.12.5
+2026-11-10T03:22:40.4034498Z  * [new tag]           v1.12.6                 -> v1.12.6
+2026-11-10T03:22:40.4034936Z  * [new tag]           v1.12.7                 -> v1.12.7
+2026-11-10T03:22:40.4035414Z  * [new tag]           v1.12.8                 -> v1.12.8
+2026-11-10T03:22:40.4035840Z  * [new tag]           v1.12.9                 -> v1.12.9
+2026-11-10T03:22:40.4036535Z  * [new tag]           v1.13.0                 -> v1.13.0
+2026-11-10T03:22:40.4036868Z  * [new tag]           v1.13.1                 -> v1.13.1
+2026-11-10T03:22:40.4037186Z  * [new tag]           v1.13.2                 -> v1.13.2
+2026-11-10T03:22:40.4037484Z  * [new tag]           v1.13.3                 -> v1.13.3
+2026-11-10T03:22:40.4037798Z  * [new tag]           v1.13.4                 -> v1.13.4
+2026-11-10T03:22:40.4038106Z  * [new tag]           v1.13.5                 -> v1.13.5
+2026-11-10T03:22:40.4038410Z  * [new tag]           v1.13.6                 -> v1.13.6
+2026-11-10T03:22:40.4038709Z  * [new tag]           v1.13.7                 -> v1.13.7
+2026-11-10T03:22:40.4039004Z  * [new tag]           v1.14.0                 -> v1.14.0
+2026-11-10T03:22:40.4039311Z  * [new tag]           v1.14.1                 -> v1.14.1
+2026-11-10T03:22:40.4039613Z  * [new tag]           v1.15.0                 -> v1.15.0
+2026-11-10T03:22:40.4039912Z  * [new tag]           v1.15.1                 -> v1.15.1
+2026-11-10T03:22:40.4040219Z  * [new tag]           v1.16.0                 -> v1.16.0
+2026-11-10T03:22:40.4040519Z  * [new tag]           v1.16.1                 -> v1.16.1
+2026-11-10T03:22:40.4040821Z  * [new tag]           v1.17.0                 -> v1.17.0
+2026-11-10T03:22:40.4041121Z  * [new tag]           v1.17.1                 -> v1.17.1
+2026-11-10T03:22:40.4041415Z  * [new tag]           v1.17.2                 -> v1.17.2
+2026-11-10T03:22:40.4041712Z  * [new tag]           v1.18.0                 -> v1.18.0
+2026-11-10T03:22:40.4042008Z  * [new tag]           v1.18.1                 -> v1.18.1
+2026-11-10T03:22:40.4042304Z  * [new tag]           v1.19.0                 -> v1.19.0
+2026-11-10T03:22:40.4042835Z  * [new tag]           v1.19.1                 -> v1.19.1
+2026-11-10T03:22:40.4043151Z  * [new tag]           v1.2.0                  -> v1.2.0
+2026-11-10T03:22:40.4043473Z  * [new tag]           v1.20.0                 -> v1.20.0
+2026-11-10T03:22:40.4043794Z  * [new tag]           v1.21.0                 -> v1.21.0
+2026-11-10T03:22:40.4044102Z  * [new tag]           v1.21.1                 -> v1.21.1
+2026-11-10T03:22:40.4044548Z  * [new tag]           v1.21.10                -> v1.21.10
+2026-11-10T03:22:40.4044916Z  * [new tag]           v1.21.100               -> v1.21.100
+2026-11-10T03:22:40.4045335Z  * [new tag]           v1.21.101               -> v1.21.101
+2026-11-10T03:22:40.4045673Z  * [new tag]           v1.21.102               -> v1.21.102
+2026-11-10T03:22:40.4045979Z  * [new tag]           v1.21.103               -> v1.21.103
+2026-11-10T03:22:40.4046303Z  * [new tag]           v1.21.104               -> v1.21.104
+2026-11-10T03:22:40.4046606Z  * [new tag]           v1.21.105               -> v1.21.105
+2026-11-10T03:22:40.4046908Z  * [new tag]           v1.21.106               -> v1.21.106
+2026-11-10T03:22:40.4047214Z  * [new tag]           v1.21.107               -> v1.21.107
+2026-11-10T03:22:40.4047517Z  * [new tag]           v1.21.108               -> v1.21.108
+2026-11-10T03:22:40.4047834Z  * [new tag]           v1.21.109               -> v1.21.109
+2026-11-10T03:22:40.4048143Z  * [new tag]           v1.21.11                -> v1.21.11
+2026-11-10T03:22:40.4048451Z  * [new tag]           v1.21.110               -> v1.21.110
+2026-11-10T03:22:40.4048741Z  * [new tag]           v1.21.111               -> v1.21.111
+2026-11-10T03:22:40.4049038Z  * [new tag]           v1.21.112               -> v1.21.112
+2026-11-10T03:22:40.4049337Z  * [new tag]           v1.21.113               -> v1.21.113
+2026-11-10T03:22:40.4049640Z  * [new tag]           v1.21.114               -> v1.21.114
+2026-11-10T03:22:40.4049943Z  * [new tag]           v1.21.12                -> v1.21.12
+2026-11-10T03:22:40.4050257Z  * [new tag]           v1.21.13                -> v1.21.13
+2026-11-10T03:22:40.4050562Z  * [new tag]           v1.21.14                -> v1.21.14
+2026-11-10T03:22:40.4050859Z  * [new tag]           v1.21.15                -> v1.21.15
+2026-11-10T03:22:40.4051156Z  * [new tag]           v1.21.16                -> v1.21.16
+2026-11-10T03:22:40.4051556Z  * [new tag]           v1.21.17                -> v1.21.17
+2026-11-10T03:22:40.4051860Z  * [new tag]           v1.21.18                -> v1.21.18
+2026-11-10T03:22:40.4052154Z  * [new tag]           v1.21.19                -> v1.21.19
+2026-11-10T03:22:40.4052708Z  * [new tag]           v1.21.2                 -> v1.21.2
+2026-11-10T03:22:40.4053030Z  * [new tag]           v1.21.20                -> v1.21.20
+2026-11-10T03:22:40.4053332Z  * [new tag]           v1.21.21                -> v1.21.21
+2026-11-10T03:22:40.4053627Z  * [new tag]           v1.21.22                -> v1.21.22
+2026-11-10T03:22:40.4053918Z  * [new tag]           v1.21.23                -> v1.21.23
+2026-11-10T03:22:40.4054206Z  * [new tag]           v1.21.24                -> v1.21.24
+2026-11-10T03:22:40.4054493Z  * [new tag]           v1.21.25                -> v1.21.25
+2026-11-10T03:22:40.4054784Z  * [new tag]           v1.21.26                -> v1.21.26
+2026-11-10T03:22:40.4055085Z  * [new tag]           v1.21.27                -> v1.21.27
+2026-11-10T03:22:40.4055381Z  * [new tag]           v1.21.28                -> v1.21.28
+2026-11-10T03:22:40.4055690Z  * [new tag]           v1.21.29                -> v1.21.29
+2026-11-10T03:22:40.4056036Z  * [new tag]           v1.21.3                 -> v1.21.3
+2026-11-10T03:22:40.4056517Z  * [new tag]           v1.21.30                -> v1.21.30
+2026-11-10T03:22:40.4056940Z  * [new tag]           v1.21.31                -> v1.21.31
+2026-11-10T03:22:40.4057382Z  * [new tag]           v1.21.32                -> v1.21.32
+2026-11-10T03:22:40.4057859Z  * [new tag]           v1.21.33                -> v1.21.33
+2026-11-10T03:22:40.4058316Z  * [new tag]           v1.21.34                -> v1.21.34
+2026-11-10T03:22:40.4058720Z  * [new tag]           v1.21.35                -> v1.21.35
+2026-11-10T03:22:40.4059022Z  * [new tag]           v1.21.36                -> v1.21.36
+2026-11-10T03:22:40.4059317Z  * [new tag]           v1.21.37                -> v1.21.37
+2026-11-10T03:22:40.4059624Z  * [new tag]           v1.21.38                -> v1.21.38
+2026-11-10T03:22:40.4059922Z  * [new tag]           v1.21.39                -> v1.21.39
+2026-11-10T03:22:40.4060409Z  * [new tag]           v1.21.4                 -> v1.21.4
+2026-11-10T03:22:40.4060713Z  * [new tag]           v1.21.40                -> v1.21.40
+2026-11-10T03:22:40.4061003Z  * [new tag]           v1.21.41                -> v1.21.41
+2026-11-10T03:22:40.4061297Z  * [new tag]           v1.21.42                -> v1.21.42
+2026-11-10T03:22:40.4061597Z  * [new tag]           v1.21.43                -> v1.21.43
+2026-11-10T03:22:40.4061895Z  * [new tag]           v1.21.44                -> v1.21.44
+2026-11-10T03:22:40.4062194Z  * [new tag]           v1.21.45                -> v1.21.45
+2026-11-10T03:22:40.4062657Z  * [new tag]           v1.21.46                -> v1.21.46
+2026-11-10T03:22:40.4062969Z  * [new tag]           v1.21.47                -> v1.21.47
+2026-11-10T03:22:40.4063273Z  * [new tag]           v1.21.48                -> v1.21.48
+2026-11-10T03:22:40.4063565Z  * [new tag]           v1.21.49                -> v1.21.49
+2026-11-10T03:22:40.4063869Z  * [new tag]           v1.21.5                 -> v1.21.5
+2026-11-10T03:22:40.4064163Z  * [new tag]           v1.21.50                -> v1.21.50
+2026-11-10T03:22:40.4064459Z  * [new tag]           v1.21.51                -> v1.21.51
+2026-11-10T03:22:40.4064763Z  * [new tag]           v1.21.52                -> v1.21.52
+2026-11-10T03:22:40.4065060Z  * [new tag]           v1.21.53                -> v1.21.53
+2026-11-10T03:22:40.4065355Z  * [new tag]           v1.21.54                -> v1.21.54
+2026-11-10T03:22:40.4065648Z  * [new tag]           v1.21.55                -> v1.21.55
+2026-11-10T03:22:40.4065943Z  * [new tag]           v1.21.56                -> v1.21.56
+2026-11-10T03:22:40.4066356Z  * [new tag]           v1.21.57                -> v1.21.57
+2026-11-10T03:22:40.4066783Z  * [new tag]           v1.21.58                -> v1.21.58
+2026-11-10T03:22:40.4067353Z  * [new tag]           v1.21.59                -> v1.21.59
+2026-11-10T03:22:40.4067768Z  * [new tag]           v1.21.6                 -> v1.21.6
+2026-11-10T03:22:40.4068225Z  * [new tag]           v1.21.60                -> v1.21.60
+2026-11-10T03:22:40.4068691Z  * [new tag]           v1.21.61                -> v1.21.61
+2026-11-10T03:22:40.4069150Z  * [new tag]           v1.21.62                -> v1.21.62
+2026-11-10T03:22:40.4069595Z  * [new tag]           v1.21.63                -> v1.21.63
+2026-11-10T03:22:40.4070052Z  * [new tag]           v1.21.64                -> v1.21.64
+2026-11-10T03:22:40.4070505Z  * [new tag]           v1.21.65                -> v1.21.65
+2026-11-10T03:22:40.4070959Z  * [new tag]           v1.21.66                -> v1.21.66
+2026-11-10T03:22:40.4071409Z  * [new tag]           v1.21.67                -> v1.21.67
+2026-11-10T03:22:40.4071871Z  * [new tag]           v1.21.68                -> v1.21.68
+2026-11-10T03:22:40.4072375Z  * [new tag]           v1.21.69                -> v1.21.69
+2026-11-10T03:22:40.4073082Z  * [new tag]           v1.21.7                 -> v1.21.7
+2026-11-10T03:22:40.4073557Z  * [new tag]           v1.21.70                -> v1.21.70
+2026-11-10T03:22:40.4074035Z  * [new tag]           v1.21.71                -> v1.21.71
+2026-11-10T03:22:40.4074486Z  * [new tag]           v1.21.72                -> v1.21.72
+2026-11-10T03:22:40.4074927Z  * [new tag]           v1.21.73                -> v1.21.73
+2026-11-10T03:22:40.4075374Z  * [new tag]           v1.21.74                -> v1.21.74
+2026-11-10T03:22:40.4075833Z  * [new tag]           v1.21.75                -> v1.21.75
+2026-11-10T03:22:40.4076303Z  * [new tag]           v1.21.76                -> v1.21.76
+2026-11-10T03:22:40.4076761Z  * [new tag]           v1.21.77                -> v1.21.77
+2026-11-10T03:22:40.4077220Z  * [new tag]           v1.21.78                -> v1.21.78
+2026-11-10T03:22:40.4077672Z  * [new tag]           v1.21.79                -> v1.21.79
+2026-11-10T03:22:40.4078128Z  * [new tag]           v1.21.8                 -> v1.21.8
+2026-11-10T03:22:40.4078595Z  * [new tag]           v1.21.80                -> v1.21.80
+2026-11-10T03:22:40.4079209Z  * [new tag]           v1.21.81                -> v1.21.81
+2026-11-10T03:22:40.4079679Z  * [new tag]           v1.21.82                -> v1.21.82
+2026-11-10T03:22:40.4080134Z  * [new tag]           v1.21.83                -> v1.21.83
+2026-11-10T03:22:40.4080598Z  * [new tag]           v1.21.84                -> v1.21.84
+2026-11-10T03:22:40.4081054Z  * [new tag]           v1.21.85                -> v1.21.85
+2026-11-10T03:22:40.4081504Z  * [new tag]           v1.21.86                -> v1.21.86
+2026-11-10T03:22:40.4081959Z  * [new tag]           v1.21.87                -> v1.21.87
+2026-11-10T03:22:40.4082558Z  * [new tag]           v1.21.88                -> v1.21.88
+2026-11-10T03:22:40.4083046Z  * [new tag]           v1.21.89                -> v1.21.89
+2026-11-10T03:22:40.4083528Z  * [new tag]           v1.21.9                 -> v1.21.9
+2026-11-10T03:22:40.4084029Z  * [new tag]           v1.21.90                -> v1.21.90
+2026-11-10T03:22:40.4084521Z  * [new tag]           v1.21.91                -> v1.21.91
+2026-11-10T03:22:40.4085013Z  * [new tag]           v1.21.92                -> v1.21.92
+2026-11-10T03:22:40.4085495Z  * [new tag]           v1.21.93                -> v1.21.93
+2026-11-10T03:22:40.4085984Z  * [new tag]           v1.21.94                -> v1.21.94
+2026-11-10T03:22:40.4086467Z  * [new tag]           v1.21.95                -> v1.21.95
+2026-11-10T03:22:40.4086946Z  * [new tag]           v1.21.96                -> v1.21.96
+2026-11-10T03:22:40.4087427Z  * [new tag]           v1.21.97                -> v1.21.97
+2026-11-10T03:22:40.4087909Z  * [new tag]           v1.21.98                -> v1.21.98
+2026-11-10T03:22:40.4088411Z  * [new tag]           v1.21.99                -> v1.21.99
+2026-11-10T03:22:40.4088921Z  * [new tag]           v1.22.0                 -> v1.22.0
+2026-11-10T03:22:40.4089416Z  * [new tag]           v1.22.1                 -> v1.22.1
+2026-11-10T03:22:40.4090207Z  * [new tag]           v1.22.10                -> v1.22.10
+2026-11-10T03:22:40.4090700Z  * [new tag]           v1.22.11                -> v1.22.11
+2026-11-10T03:22:40.4091203Z  * [new tag]           v1.22.12                -> v1.22.12
+2026-11-10T03:22:40.4091696Z  * [new tag]           v1.22.13                -> v1.22.13
+2026-11-10T03:22:40.4092186Z  * [new tag]           v1.22.14                -> v1.22.14
+2026-11-10T03:22:40.4092790Z  * [new tag]           v1.22.15                -> v1.22.15
+2026-11-10T03:22:40.4093280Z  * [new tag]           v1.22.16                -> v1.22.16
+2026-11-10T03:22:40.4093789Z  * [new tag]           v1.22.17                -> v1.22.17
+2026-11-10T03:22:40.4094286Z  * [new tag]           v1.22.18                -> v1.22.18
+2026-11-10T03:22:40.4094777Z  * [new tag]           v1.22.19                -> v1.22.19
+2026-11-10T03:22:40.4095268Z  * [new tag]           v1.22.2                 -> v1.22.2
+2026-11-10T03:22:40.4095766Z  * [new tag]           v1.22.20                -> v1.22.20
+2026-11-10T03:22:40.4096257Z  * [new tag]           v1.22.21                -> v1.22.21
+2026-11-10T03:22:40.4096750Z  * [new tag]           v1.22.22                -> v1.22.22
+2026-11-10T03:22:40.4097235Z  * [new tag]           v1.22.23                -> v1.22.23
+2026-11-10T03:22:40.4097726Z  * [new tag]           v1.22.24                -> v1.22.24
+2026-11-10T03:22:40.4098200Z  * [new tag]           v1.22.25                -> v1.22.25
+2026-11-10T03:22:40.4098689Z  * [new tag]           v1.22.26                -> v1.22.26
+2026-11-10T03:22:40.4099167Z  * [new tag]           v1.22.27                -> v1.22.27
+2026-11-10T03:22:40.4099652Z  * [new tag]           v1.22.3                 -> v1.22.3
+2026-11-10T03:22:40.4100141Z  * [new tag]           v1.22.4                 -> v1.22.4
+2026-11-10T03:22:40.4100638Z  * [new tag]           v1.22.6                 -> v1.22.6
+2026-11-10T03:22:40.4101127Z  * [new tag]           v1.22.7                 -> v1.22.7
+2026-11-10T03:22:40.4101622Z  * [new tag]           v1.22.8                 -> v1.22.8
+2026-11-10T03:22:40.4102114Z  * [new tag]           v1.22.9                 -> v1.22.9
+2026-11-10T03:22:40.4102870Z  * [new tag]           v1.3.0                  -> v1.3.0
+2026-11-10T03:22:40.4103358Z  * [new tag]           v1.4.0                  -> v1.4.0
+2026-11-10T03:22:40.4103840Z  * [new tag]           v1.4.1                  -> v1.4.1
+2026-11-10T03:22:40.4104322Z  * [new tag]           v1.4.2                  -> v1.4.2
+2026-11-10T03:22:40.4104800Z  * [new tag]           v1.4.3                  -> v1.4.3
+2026-11-10T03:22:40.4105280Z  * [new tag]           v1.4.4                  -> v1.4.4
+2026-11-10T03:22:40.4105756Z  * [new tag]           v1.4.5                  -> v1.4.5
+2026-11-10T03:22:40.4106232Z  * [new tag]           v1.5.0                  -> v1.5.0
+2026-11-10T03:22:40.4106725Z  * [new tag]           v1.5.1                  -> v1.5.1
+2026-11-10T03:22:40.4107203Z  * [new tag]           v1.5.10                 -> v1.5.10
+2026-11-10T03:22:40.4107699Z  * [new tag]           v1.5.11                 -> v1.5.11
+2026-11-10T03:22:40.4108183Z  * [new tag]           v1.5.2                  -> v1.5.2
+2026-11-10T03:22:40.4108668Z  * [new tag]           v1.5.3                  -> v1.5.3
+2026-11-10T03:22:40.4109144Z  * [new tag]           v1.5.4                  -> v1.5.4
+2026-11-10T03:22:40.4109613Z  * [new tag]           v1.5.5                  -> v1.5.5
+2026-11-10T03:22:40.4110090Z  * [new tag]           v1.5.6                  -> v1.5.6
+2026-11-10T03:22:40.4110572Z  * [new tag]           v1.5.7                  -> v1.5.7
+2026-11-10T03:22:40.4111049Z  * [new tag]           v1.5.8                  -> v1.5.8
+2026-11-10T03:22:40.4111533Z  * [new tag]           v1.5.9                  -> v1.5.9
+2026-11-10T03:22:40.4112008Z  * [new tag]           v1.6.0                  -> v1.6.0
+2026-11-10T03:22:40.4112598Z  * [new tag]           v1.6.1                  -> v1.6.1
+2026-11-10T03:22:40.4113075Z  * [new tag]           v1.6.2                  -> v1.6.2
+2026-11-10T03:22:40.4113694Z  * [new tag]           v1.6.3                  -> v1.6.3
+2026-11-10T03:22:40.4114166Z  * [new tag]           v1.6.4                  -> v1.6.4
+2026-11-10T03:22:40.4114647Z  * [new tag]           v1.6.5                  -> v1.6.5
+2026-11-10T03:22:40.4115136Z  * [new tag]           v1.6.6                  -> v1.6.6
+2026-11-10T03:22:40.4115623Z  * [new tag]           v1.6.7                  -> v1.6.7
+2026-11-10T03:22:40.4116098Z  * [new tag]           v1.7.0                  -> v1.7.0
+2026-11-10T03:22:40.4116581Z  * [new tag]           v1.7.1                  -> v1.7.1
+2026-11-10T03:22:40.4117058Z  * [new tag]           v1.7.10                 -> v1.7.10
+2026-11-10T03:22:40.4117545Z  * [new tag]           v1.7.11                 -> v1.7.11
+2026-11-10T03:22:40.4118017Z  * [new tag]           v1.7.12                 -> v1.7.12
+2026-11-10T03:22:40.4118485Z  * [new tag]           v1.7.13                 -> v1.7.13
+2026-11-10T03:22:40.4118961Z  * [new tag]           v1.7.14                 -> v1.7.14
+2026-11-10T03:22:40.4119432Z  * [new tag]           v1.7.2                  -> v1.7.2
+2026-11-10T03:22:40.4119894Z  * [new tag]           v1.7.3                  -> v1.7.3
+2026-11-10T03:22:40.4120357Z  * [new tag]           v1.7.4                  -> v1.7.4
+2026-11-10T03:22:40.4120819Z  * [new tag]           v1.7.5                  -> v1.7.5
+2026-11-10T03:22:40.4121281Z  * [new tag]           v1.7.6                  -> v1.7.6
+2026-11-10T03:22:40.4121745Z  * [new tag]           v1.7.7                  -> v1.7.7
+2026-11-10T03:22:40.4122209Z  * [new tag]           v1.7.8                  -> v1.7.8
+2026-11-10T03:22:40.4122815Z  * [new tag]           v1.7.9                  -> v1.7.9
+2026-11-10T03:22:40.4123287Z  * [new tag]           v1.8.0                  -> v1.8.0
+2026-11-10T03:22:40.4123758Z  * [new tag]           v1.8.1                  -> v1.8.1
+2026-11-10T03:22:40.4124220Z  * [new tag]           v1.8.10                 -> v1.8.10
+2026-11-10T03:22:40.4124688Z  * [new tag]           v1.8.11                 -> v1.8.11
+2026-11-10T03:22:40.4125166Z  * [new tag]           v1.8.12                 -> v1.8.12
+2026-11-10T03:22:40.4125784Z  * [new tag]           v1.8.13                 -> v1.8.13
+2026-11-10T03:22:40.4126268Z  * [new tag]           v1.8.14                 -> v1.8.14
+2026-11-10T03:22:40.4126741Z  * [new tag]           v1.8.15                 -> v1.8.15
+2026-11-10T03:22:40.4127212Z  * [new tag]           v1.8.2                  -> v1.8.2
+2026-11-10T03:22:40.4127685Z  * [new tag]           v1.8.3                  -> v1.8.3
+2026-11-10T03:22:40.4128147Z  * [new tag]           v1.8.4                  -> v1.8.4
+2026-11-10T03:22:40.4128602Z  * [new tag]           v1.8.5                  -> v1.8.5
+2026-11-10T03:22:40.4129073Z  * [new tag]           v1.8.6                  -> v1.8.6
+2026-11-10T03:22:40.4129538Z  * [new tag]           v1.8.7                  -> v1.8.7
+2026-11-10T03:22:40.4130055Z  * [new tag]           v1.8.8                  -> v1.8.8
+2026-11-10T03:22:40.4130520Z  * [new tag]           v1.8.9                  -> v1.8.9
+2026-11-10T03:22:40.4130979Z  * [new tag]           v1.9.0                  -> v1.9.0
+2026-11-10T03:22:40.4131452Z  * [new tag]           v1.9.1                  -> v1.9.1
+2026-11-10T03:22:40.4131929Z  * [new tag]           v1.9.2                  -> v1.9.2
+2026-11-10T03:22:40.4132516Z  * [new tag]           v1.9.3                  -> v1.9.3
+2026-11-10T03:22:40.4132997Z  * [new tag]           v1.9.4                  -> v1.9.4
+2026-11-10T03:22:40.4133466Z  * [new tag]           v1.9.5                  -> v1.9.5
+2026-11-10T03:22:40.4133926Z  * [new tag]           v1.9.6                  -> v1.9.6
+2026-11-10T03:22:40.4135873Z [command]/usr/bin/git rev-parse --verify --quiet 9859cfae13a840d4a376ee88c3745b622eca98d9^{object}
+2026-11-10T03:22:40.4136576Z 9859cfae13a840d4a376ee88c3745b622eca98d9
+2026-11-10T03:22:40.4137660Z ##[endgroup]
+2026-11-10T03:22:40.4138214Z ##[group]Determining the checkout info
+2026-11-10T03:22:40.4138815Z ##[endgroup]
+2026-11-10T03:22:40.4139325Z [command]/usr/bin/git sparse-checkout disable
+2026-11-10T03:22:40.4140413Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-11-10T03:22:40.4141668Z ##[group]Checking out the ref
+2026-11-10T03:22:40.4142312Z [command]/usr/bin/git checkout --progress --force 9859cfae13a840d4a376ee88c3745b622eca98d9
+2026-11-10T03:22:41.2588160Z Note: switching to '9859cfae13a840d4a376ee88c3745b622eca98d9'.
+2026-11-10T03:22:41.2588415Z 
+2026-11-10T03:22:41.2588591Z You are in 'detached HEAD' state. You can look around, make experimental
+2026-11-10T03:22:41.2588983Z changes and commit them, and you can discard any commits you make in this
+2026-11-10T03:22:41.2589350Z state without impacting any branches by switching back to a branch.
+2026-11-10T03:22:41.2589565Z 
+2026-11-10T03:22:41.2589711Z If you want to create a new branch to retain commits you create, you may
+2026-11-10T03:22:41.2590226Z do so (now or later) by using -c with the switch command. Example:
+2026-11-10T03:22:41.2590535Z 
+2026-11-10T03:22:41.2590651Z   git switch -c <new-branch-name>
+2026-11-10T03:22:41.2590834Z 
+2026-11-10T03:22:41.2590941Z Or undo this operation with:
+2026-11-10T03:22:41.2591102Z 
+2026-11-10T03:22:41.2591212Z   git switch -
+2026-11-10T03:22:41.2591337Z 
+2026-11-10T03:22:41.2591570Z Turn off this advice by setting config variable advice.detachedHead to false
+2026-11-10T03:22:41.2591895Z 
+2026-11-10T03:22:41.2592241Z HEAD is now at 9859cfae Release tooling: guarded v1.22.28 build 2243 publication with exact-source evidence
+2026-11-10T03:22:41.2652270Z ##[endgroup]
+2026-11-10T03:22:41.2696566Z [command]/usr/bin/git log -1 --format=%H
+2026-11-10T03:22:41.2726358Z 9859cfae13a840d4a376ee88c3745b622eca98d9
+2026-11-10T03:22:41.2736498Z ##[group]Removing auth
+2026-11-10T03:22:41.2738881Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-11-10T03:22:41.2773200Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-11-10T03:22:41.2994878Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-11-10T03:22:41.3014547Z http.https://github.com/.extraheader
+2026-11-10T03:22:41.3019888Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+2026-11-10T03:22:41.3057106Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-11-10T03:22:41.3273318Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-11-10T03:22:41.3306198Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-11-10T03:22:41.3505305Z ##[endgroup]
+2026-11-10T03:22:41.3726102Z ##[group]Run actions/setup-python@v5
+2026-11-10T03:22:41.3726342Z with:
+2026-11-10T03:22:41.3726506Z   python-version: 3.12
+2026-11-10T03:22:41.3726690Z   check-latest: false
+2026-11-10T03:22:41.3728918Z   token: ***
+2026-11-10T03:22:41.3729092Z   update-environment: true
+2026-11-10T03:22:41.3729292Z   allow-prereleases: false
+2026-11-10T03:22:41.3729484Z   freethreaded: false
+2026-11-10T03:22:41.3729659Z env:
+2026-11-10T03:22:41.3729834Z   NODE_OPTIONS: --max-old-space-size=256
+2026-11-10T03:22:41.3730052Z ##[endgroup]
+2026-11-10T03:22:41.4798864Z ##[group]Installed versions
+2026-11-10T03:22:41.4879709Z (node:2215) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-11-10T03:22:41.4880642Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-11-10T03:22:41.4881165Z Successfully set up CPython (3.12.16)
+2026-11-10T03:22:41.4881712Z ##[endgroup]
+2026-11-10T03:22:41.5038587Z ##[group]Run python -m unittest -v tests.test_release_publisher
+2026-11-10T03:22:41.5039211Z [36;1mpython -m unittest -v tests.test_release_publisher[0m
+2026-11-10T03:22:41.5040020Z [36;1mpython -m compileall -q tools/release tests/test_release_publisher.py[0m
+2026-11-10T03:22:41.5040543Z [36;1mgit diff --check[0m
+2026-11-10T03:22:41.5077833Z shell: /usr/bin/bash -e {0}
+2026-11-10T03:22:41.5078130Z env:
+2026-11-10T03:22:41.5078402Z   NODE_OPTIONS: --max-old-space-size=256
+2026-11-10T03:22:41.5078833Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-10T03:22:41.5079365Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib/pkgconfig
+2026-11-10T03:22:41.5079897Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-10T03:22:41.5080356Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-10T03:22:41.5080827Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-10T03:22:41.5081372Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib
+2026-11-10T03:22:41.5081785Z ##[endgroup]
+2026-11-10T03:22:41.8371765Z test_canonical_checksum_sidecar_cannot_disagree_with_manifest (tests.test_release_publisher.ArchiveIntegrityTests.test_canonical_checksum_sidecar_cannot_disagree_with_manifest) ... ok
+2026-11-10T03:22:41.8386223Z test_complete_local_validation_is_required_in_recovery (tests.test_release_publisher.ArchiveIntegrityTests.test_complete_local_validation_is_required_in_recovery) ... ok
+2026-11-10T03:22:41.8399729Z test_complete_source_pinned_evidence (tests.test_release_publisher.ArchiveIntegrityTests.test_complete_source_pinned_evidence) ... ok
+2026-11-10T03:22:41.8405271Z test_credential_shaped_payload_holds_publication (tests.test_release_publisher.ArchiveIntegrityTests.test_credential_shaped_payload_holds_publication) ... ok
+2026-11-10T03:22:41.8442601Z test_failure_skip_and_incomplete_tests_fail (tests.test_release_publisher.ArchiveIntegrityTests.test_failure_skip_and_incomplete_tests_fail) ... ok
+2026-11-10T03:22:41.8455724Z test_incomplete_local_validation_holds_publication (tests.test_release_publisher.ArchiveIntegrityTests.test_incomplete_local_validation_holds_publication) ... ok
+2026-11-10T03:22:41.8468461Z test_local_checksum_sidecar_is_required (tests.test_release_publisher.ArchiveIntegrityTests.test_local_checksum_sidecar_is_required) ... ok
+2026-11-10T03:22:41.8502692Z test_local_manifest_and_every_payload_are_required (tests.test_release_publisher.ArchiveIntegrityTests.test_local_manifest_and_every_payload_are_required) ... ok
+2026-11-10T03:22:41.8516225Z test_missing_gate_completion_fails (tests.test_release_publisher.ArchiveIntegrityTests.test_missing_gate_completion_fails) ... ok
+2026-11-10T03:22:41.8528582Z test_older_python_cannot_replace_local_canonical (tests.test_release_publisher.ArchiveIntegrityTests.test_older_python_cannot_replace_local_canonical) ... ok
+2026-11-10T03:22:41.8540064Z test_older_python_cannot_replace_production_canonical (tests.test_release_publisher.ArchiveIntegrityTests.test_older_python_cannot_replace_production_canonical) ... ok
+2026-11-10T03:22:41.8552995Z test_path_escape_and_symlink_fail (tests.test_release_publisher.ArchiveIntegrityTests.test_path_escape_and_symlink_fail) ... ok
+2026-11-10T03:22:41.8572349Z test_payload_changed_after_manifest_fails (tests.test_release_publisher.ArchiveIntegrityTests.test_payload_changed_after_manifest_fails) ... ok
+2026-11-10T03:22:41.8580762Z test_prior_archive_hash_cannot_be_substituted (tests.test_release_publisher.ArchiveIntegrityTests.test_prior_archive_hash_cannot_be_substituted) ... ok
+2026-11-10T03:22:41.8627050Z test_prior_attempts_require_their_own_source_association_and_payload_manifest (tests.test_release_publisher.ArchiveIntegrityTests.test_prior_attempts_require_their_own_source_association_and_payload_manifest) ... ok
+2026-11-10T03:22:41.8668475Z test_wrong_source_and_resource_limit_fail (tests.test_release_publisher.ArchiveIntegrityTests.test_wrong_source_and_resource_limit_fail) ... ok
+2026-11-10T03:22:41.8908730Z test_completed_feature_fail_closed_source_counts_unknown_and_interaction (tests.test_release_publisher.CompletedTradePublisherTests.test_completed_feature_fail_closed_source_counts_unknown_and_interaction) ... ok
+2026-11-10T03:22:41.8960600Z test_new_browser_namespace_does_not_replace_original_history_screenshots (tests.test_release_publisher.CompletedTradePublisherTests.test_new_browser_namespace_does_not_replace_original_history_screenshots) ... ok
+2026-11-10T03:22:41.8972973Z test_advanced_main_does_not_publish_old_merge (tests.test_release_publisher.ContextAdmissionTests.test_advanced_main_does_not_publish_old_merge) ... ok
+2026-11-10T03:22:41.8983416Z test_candidate_revision_change_is_rejected (tests.test_release_publisher.ContextAdmissionTests.test_candidate_revision_change_is_rejected) ... ok
+2026-11-10T03:22:41.9003425Z test_merged_identical_tree_is_required (tests.test_release_publisher.ContextAdmissionTests.test_merged_identical_tree_is_required) ... ok
+2026-11-10T03:22:41.9013951Z test_prepare_accepts_only_unchanged_open_candidate (tests.test_release_publisher.ContextAdmissionTests.test_prepare_accepts_only_unchanged_open_candidate) ... ok
+2026-11-10T03:22:41.9023354Z test_publish_refuses_unmerged_candidate (tests.test_release_publisher.ContextAdmissionTests.test_publish_refuses_unmerged_candidate) ... ok
+2026-11-10T03:22:41.9028706Z test_rejected_context_has_no_upload_or_tag_side_effect (tests.test_release_publisher.ContextAdmissionTests.test_rejected_context_has_no_upload_or_tag_side_effect) ... ok
+2026-11-10T03:22:41.9038997Z test_tooling_branch_cannot_smuggle_application_changes (tests.test_release_publisher.ContextAdmissionTests.test_tooling_branch_cannot_smuggle_application_changes) ... ok
+2026-11-10T03:22:41.9068241Z test_wrong_actor_event_ref_and_repository_fail (tests.test_release_publisher.ContextAdmissionTests.test_wrong_actor_event_ref_and_repository_fail) ... ok
+2026-11-10T03:22:41.9247989Z test_only_complete_exact_source_browser_evidence_is_accepted (tests.test_release_publisher.CurrentHistoryArtifactTests.test_only_complete_exact_source_browser_evidence_is_accepted) ... ok
+2026-11-10T03:22:41.9517345Z test_exact_coverage_missing_safety_and_rendered_controls_are_required (tests.test_release_publisher.CurrentProductionIntegrityTests.test_exact_coverage_missing_safety_and_rendered_controls_are_required) ... ok
+2026-11-10T03:22:41.9705611Z test_exact_source_complete_chain_context_and_cleanup_are_required (tests.test_release_publisher.HistoryFollowThroughArtifactTests.test_exact_source_complete_chain_context_and_cleanup_are_required) ... ok
+2026-11-10T03:22:41.9706834Z test_handoff_requires_exact_source_and_no_credentials (tests.test_release_publisher.LeagueEntryIntegrityTests.test_handoff_requires_exact_source_and_no_credentials) ... ok
+2026-11-10T03:22:41.9822379Z test_real_execution_deferral_recovery_ownership_and_liveness_are_required (tests.test_release_publisher.LeagueEntryIntegrityTests.test_real_execution_deferral_recovery_ownership_and_liveness_are_required) ... ok
+2026-11-10T03:22:42.0357506Z test_complete_cache_transition_compatibility_and_cleanup_required (tests.test_release_publisher.MarketHistoryArtifactTests.test_complete_cache_transition_compatibility_and_cleanup_required) ... ok
+2026-11-10T03:22:42.0375450Z test_completed_generic_recovery_does_not_replace_native_actuals_parity (tests.test_release_publisher.NativeRestorationAdmissionTests.test_completed_generic_recovery_does_not_replace_native_actuals_parity) ... ok
+2026-11-10T03:22:42.0484324Z test_extra_work_lost_draft_filters_preview_or_exact_picks_block_publication (tests.test_release_publisher.PartnerHistoryLinkIntegrityTests.test_extra_work_lost_draft_filters_preview_or_exact_picks_block_publication) ... ok
+2026-11-10T03:22:42.0594204Z test_two_source_bound_four_viewport_round_trips_are_required (tests.test_release_publisher.PartnerHistoryLinkIntegrityTests.test_two_source_bound_four_viewport_round_trips_are_required) ... ok
+2026-11-10T03:22:42.0600092Z test_placeholder_or_incomplete_evidence_cannot_publish (tests.test_release_publisher.PlanFinalizationTests.test_placeholder_or_incomplete_evidence_cannot_publish) ... ok
+2026-11-10T03:22:42.0786222Z test_advisory_scope_compatibility_and_reservations_are_required (tests.test_release_publisher.PreflightIntegrityTests.test_advisory_scope_compatibility_and_reservations_are_required) ... ok
+2026-11-10T03:22:42.0797677Z test_changed_original_payload_holds_preflight (tests.test_release_publisher.PreflightIntegrityTests.test_changed_original_payload_holds_preflight) ... ok
+2026-11-10T03:22:42.0808957Z test_exact_five_case_metadata_acceptance (tests.test_release_publisher.PreflightIntegrityTests.test_exact_five_case_metadata_acceptance) ... ok
+2026-11-10T03:22:42.0877980Z test_fois_recovery_requires_same_pressure_and_live_reservation (tests.test_release_publisher.PreflightIntegrityTests.test_fois_recovery_requires_same_pressure_and_live_reservation) ... ok
+2026-11-10T03:22:42.1020211Z test_source_resource_cleanup_and_completion_are_required (tests.test_release_publisher.PreflightIntegrityTests.test_source_resource_cleanup_and_completion_are_required) ... ok
+2026-11-10T03:22:42.1023298Z test_history_cannot_substitute_latest_success_for_failed_attempt (tests.test_release_publisher.PriorAttemptIdentityTests.test_history_cannot_substitute_latest_success_for_failed_attempt) ... ok
+2026-11-10T03:22:42.1025074Z test_history_uses_attempt_specific_endpoint_and_preserves_failure (tests.test_release_publisher.PriorAttemptIdentityTests.test_history_uses_attempt_specific_endpoint_and_preserves_failure) ... ok
+2026-11-10T03:22:42.1030615Z test_invalid_history_reference_does_not_issue_a_request (tests.test_release_publisher.PriorAttemptIdentityTests.test_invalid_history_reference_does_not_issue_a_request) ... ok
+2026-11-10T03:22:42.1031670Z test_exact_readback_metadata (tests.test_release_publisher.RemoteAttachmentTests.test_exact_readback_metadata) ... ok
+2026-11-10T03:22:42.1036172Z test_log_escape_bytes_are_retained_in_file_only (tests.test_release_publisher.RemoteAttachmentTests.test_log_escape_bytes_are_retained_in_file_only) ... ok
+2026-11-10T03:22:42.1037523Z test_missing_partial_unexpected_duplicate_and_corrupt_assets (tests.test_release_publisher.RemoteAttachmentTests.test_missing_partial_unexpected_duplicate_and_corrupt_assets) ... ok
+2026-11-10T03:22:42.1305354Z test_resource_source_cleanup_execution_and_checksums_are_required (tests.test_release_publisher.ResidentRefreshIntegrityTests.test_resource_source_cleanup_execution_and_checksums_are_required) ... ok
+2026-11-10T03:22:42.1381908Z test_incomplete_or_weakened_restoration_records_cannot_publish (tests.test_release_publisher.RestorationAdmissionEvidenceTests.test_incomplete_or_weakened_restoration_records_cannot_publish) ... ok
+2026-11-10T03:22:42.1386429Z test_exact_thirteen_jobs_are_required (tests.test_release_publisher.RunAdmissionTests.test_exact_thirteen_jobs_are_required) ... ok
+2026-11-10T03:22:42.1395116Z test_later_failed_missing_and_wrong_source_checks_reject (tests.test_release_publisher.RunAdmissionTests.test_later_failed_missing_and_wrong_source_checks_reject) ... ok
+2026-11-10T03:22:42.1398874Z test_publish_cannot_omit_preparation_certificate (tests.test_release_publisher.RunAdmissionTests.test_publish_cannot_omit_preparation_certificate) ... ok
+2026-11-10T03:22:42.1401926Z test_successful_run_from_another_commit_is_rejected (tests.test_release_publisher.RunAdmissionTests.test_successful_run_from_another_commit_is_rejected) ... ok
+2026-11-10T03:22:42.1414248Z test_auto_search_blocks_publication (tests.test_release_publisher.TeamNeedHandoffGuardTests.test_auto_search_blocks_publication) ... ok
+2026-11-10T03:22:42.1425276Z test_complete_source_bound_fixture_passes (tests.test_release_publisher.TeamNeedHandoffGuardTests.test_complete_source_bound_fixture_passes) ... ok
+2026-11-10T03:22:42.1436866Z test_deferred_does_not_count_as_real_execution (tests.test_release_publisher.TeamNeedHandoffGuardTests.test_deferred_does_not_count_as_real_execution) ... ok
+2026-11-10T03:22:42.1447977Z test_explicit_reset_retaining_context_blocks_publication (tests.test_release_publisher.TeamNeedHandoffGuardTests.test_explicit_reset_retaining_context_blocks_publication) ... ok
+2026-11-10T03:22:42.1459078Z test_hidden_position_blocks_publication (tests.test_release_publisher.TeamNeedHandoffGuardTests.test_hidden_position_blocks_publication) ... ok
+2026-11-10T03:22:42.1470084Z test_lost_draft_or_custom_blocks_publication (tests.test_release_publisher.TeamNeedHandoffGuardTests.test_lost_draft_or_custom_blocks_publication) ... ok
+2026-11-10T03:22:42.1481037Z test_missing_phone_is_blocked (tests.test_release_publisher.TeamNeedHandoffGuardTests.test_missing_phone_is_blocked) ... ok
+2026-11-10T03:22:42.1490429Z test_missing_report_is_blocked (tests.test_release_publisher.TeamNeedHandoffGuardTests.test_missing_report_is_blocked) ... ok
+2026-11-10T03:22:42.1501307Z test_obscured_label_blocks_publication (tests.test_release_publisher.TeamNeedHandoffGuardTests.test_obscured_label_blocks_publication) ... ok
+2026-11-10T03:22:42.1512872Z test_stale_league_hint_blocks_publication (tests.test_release_publisher.TeamNeedHandoffGuardTests.test_stale_league_hint_blocks_publication) ... ok
+2026-11-10T03:22:42.1523859Z test_stale_manual_override_lost_blocks_publication (tests.test_release_publisher.TeamNeedHandoffGuardTests.test_stale_manual_override_lost_blocks_publication) ... ok
+2026-11-10T03:22:42.1534542Z test_type_change_losing_reason_blocks_publication (tests.test_release_publisher.TeamNeedHandoffGuardTests.test_type_change_losing_reason_blocks_publication) ... ok
+2026-11-10T03:22:42.1544684Z test_wrong_candidate_is_blocked (tests.test_release_publisher.TeamNeedHandoffGuardTests.test_wrong_candidate_is_blocked) ... ok
+2026-11-10T03:22:42.1613642Z test_exact_source_and_complete_real_work_are_required (tests.test_release_publisher.TradeResourceIntegrityTests.test_exact_source_and_complete_real_work_are_required) ... ok
+2026-11-10T03:22:42.1647491Z test_feature_source_phone_and_package_boundaries (tests.test_release_publisher.TradeTimeMarketPublisherTests.test_feature_source_phone_and_package_boundaries) ... ok
+2026-11-10T03:22:42.1648274Z 
+2026-11-10T03:22:42.1648404Z ----------------------------------------------------------------------
+2026-11-10T03:22:42.1648702Z Ran 68 tests in 0.331s
+2026-11-10T03:22:42.1648826Z 
+2026-11-10T03:22:42.1648893Z OK
+2026-11-10T03:22:42.4129789Z ##[group]Run arguments=()
+2026-11-10T03:22:42.4130055Z [36;1marguments=()[0m
+2026-11-10T03:22:42.4130273Z [36;1mif [ "$RELEASE_OPERATION" = publish ]; then[0m
+2026-11-10T03:22:42.4130550Z [36;1m  test -n "$PREPARATION_RUN_ID"[0m
+2026-11-10T03:22:42.4130835Z [36;1m  arguments+=(--prepared-run "$PREPARATION_RUN_ID")[0m
+2026-11-10T03:22:42.4131095Z [36;1mfi[0m
+2026-11-10T03:22:42.4131511Z [36;1mpython -m tools.release.publish --plan .github/release-plans/2243.json --operation "$RELEASE_OPERATION" "${arguments[@]}"[0m
+2026-11-10T03:22:42.4150065Z shell: /usr/bin/bash -e {0}
+2026-11-10T03:22:42.4150276Z env:
+2026-11-10T03:22:42.4150463Z   NODE_OPTIONS: --max-old-space-size=256
+2026-11-10T03:22:42.4150750Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-10T03:22:42.4151089Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib/pkgconfig
+2026-11-10T03:22:42.4151445Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-10T03:22:42.4151784Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-10T03:22:42.4152086Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-10T03:22:42.4152381Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib
+2026-11-10T03:22:42.4154917Z   GH_TOKEN: ***
+2026-11-10T03:22:42.4155117Z   RELEASE_OPERATION: prepare
+2026-11-10T03:22:42.4155333Z   PREPARATION_RUN_ID: 
+2026-11-10T03:22:42.4155521Z ##[endgroup]
+2026-11-10T03:22:44.3356978Z From https://github.com/Richarddavis47/dtos
+2026-11-10T03:22:44.3373169Z  * branch              refs/pull/332/head -> FETCH_HEAD
+2026-11-10T03:22:44.3373594Z  * branch              main       -> FETCH_HEAD
+2026-11-10T03:24:21.2533189Z Verified guarded release prepare completed.
+2026-11-10T03:24:21.2715189Z ##[group]Run actions/upload-artifact@v4
+2026-11-10T03:24:21.2715430Z with:
+2026-11-10T03:24:21.2715639Z   name: guarded-release-2243-prepare-42748932880
+2026-11-10T03:24:21.2717022Z   path: .validation/guarded-release/outcome.json
+.validation/guarded-release/publication.json
+.validation/guarded-release/readiness.json
+.validation/guarded-release/production-smoke.json
+.validation/guarded-release/assets/VALIDATION.json
+.validation/guarded-release/assets/evidence-manifest.json
+.validation/guarded-release/assets/SHA256SUMS
+.validation/guarded-release/assets/prior-attempts.json
+
+2026-11-10T03:24:21.2718216Z   if-no-files-found: error
+2026-11-10T03:24:21.2718421Z   retention-days: 14
+2026-11-10T03:24:21.2718603Z   compression-level: 6
+2026-11-10T03:24:21.2718785Z   overwrite: false
+2026-11-10T03:24:21.2718964Z   include-hidden-files: false
+2026-11-10T03:24:21.2719162Z env:
+2026-11-10T03:24:21.2719339Z   NODE_OPTIONS: --max-old-space-size=256
+2026-11-10T03:24:21.2719650Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-10T03:24:21.2719992Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib/pkgconfig
+2026-11-10T03:24:21.2720326Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-10T03:24:21.2720623Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-10T03:24:21.2720912Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-10T03:24:21.2721202Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib
+2026-11-10T03:24:21.2721459Z ##[endgroup]
+2026-11-10T03:24:21.4078078Z (node:2873) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-11-10T03:24:21.4079036Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-11-10T03:24:21.4151762Z Multiple search paths detected. Calculating the least common ancestor of all paths
+2026-11-10T03:24:21.4156267Z The least common ancestor is /home/runner/work/dtos/dtos/.validation/guarded-release. This will be the root directory of the artifact
+2026-11-10T03:24:21.4157663Z With the provided path, there will be 6 files uploaded
+2026-11-10T03:24:21.4159513Z Artifact name is valid!
+2026-11-10T03:24:21.4160155Z Root directory input is valid!
+2026-11-10T03:24:21.8106915Z Beginning upload of artifact content to blob storage
+2026-11-10T03:24:21.8376112Z (node:2873) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+2026-11-10T03:24:22.1687998Z Uploaded bytes 15129
+2026-11-10T03:24:22.2415678Z Finished uploading artifact content to blob storage!
+2026-11-10T03:24:22.2416500Z SHA256 digest of uploaded artifact zip is b214094fc5ffb21cfb3236660b0347feef47d16ad539b0caeaef84d95d3c033e
+2026-11-10T03:24:22.2417683Z Finalizing artifact upload
+2026-11-10T03:24:22.6260059Z Artifact guarded-release-2243-prepare-42748932880.zip successfully finalized. Artifact ID 13732353343
+2026-11-10T03:24:22.6261408Z Artifact guarded-release-2243-prepare-42748932880 has been successfully uploaded! Final size is 15129 bytes. Artifact ID is 13732353343
+2026-11-10T03:24:22.6269286Z Artifact download URL: https://github.com/Richarddavis47/dtos/actions/runs/42748932880/artifacts/13732353343
+2026-11-10T03:24:22.6438475Z Post job cleanup.
+2026-11-10T03:24:22.7414175Z (node:2886) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-11-10T03:24:22.7414768Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-11-10T03:24:22.7978102Z Post job cleanup.
+2026-11-10T03:24:22.8814375Z [command]/usr/bin/git version
+2026-11-10T03:24:22.8863136Z git version 2.56.0
+2026-11-10T03:24:22.8943487Z Temporarily overriding HOME='/home/runner/work/_temp/c6e6f70d-c5df-4951-8935-7c6c3ff23abf' before making global git config changes
+2026-11-10T03:24:22.8947272Z Adding repository directory to the temporary git global config as a safe directory
+2026-11-10T03:24:22.8968456Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/dtos/dtos
+2026-11-10T03:24:22.9049228Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-11-10T03:24:22.9099724Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-11-10T03:24:22.9545820Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-11-10T03:24:22.9584710Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-11-10T03:24:22.9854153Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-11-10T03:24:22.9881592Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-11-10T03:24:23.0226951Z Cleaning up orphan processes
+2026-11-10T03:24:23.0583085Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5, actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

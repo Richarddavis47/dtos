@@ -1,0 +1,30 @@
+{
+  "observed_at": "2026-11-10T01:21:42.131040+00:00",
+  "scope": "Bounded public baseline readiness only; no new-feature deployment or authenticated owner acceptance claimed",
+  "checks": [
+    {
+      "path": "/health/ready",
+      "status": 200,
+      "body": {
+        "status": "ready",
+        "version": "1.22.27",
+        "build": 2242,
+        "deployment": {
+          "branch": "main",
+          "commit": "d412c89cc2f3ca252f68f363e304eb2773863e97",
+          "deployed_at": "2026-11-09T19:03:48.789740+00:00"
+        },
+        "reason": "Application ready."
+      }
+    },
+    {
+      "path": "/health/live",
+      "status": 200,
+      "body": {
+        "status": "alive",
+        "version": "1.22.27"
+      }
+    }
+  ],
+  "no_authenticated_league_entry_search_sync_or_user_mutation": true
+}

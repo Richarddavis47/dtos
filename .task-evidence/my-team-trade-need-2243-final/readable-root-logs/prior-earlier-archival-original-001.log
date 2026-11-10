@@ -1,0 +1,13 @@
+Traceback (most recent call last):
+  File "/workspace/2243-my-team-trade-need/archive-prior-local-logs.py", line 18, in <module>
+    for folder in folders:shutil.rmtree(folder)
+                          ^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/shutil.py", line 759, in rmtree
+    _rmtree_safe_fd(stack, onexc)
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/shutil.py", line 703, in _rmtree_safe_fd
+    onexc(func, path, err)
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/shutil.py", line 700, in _rmtree_safe_fd
+    onexc(os.unlink, fullname, err)
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/shutil.py", line 698, in _rmtree_safe_fd
+    os.unlink(entry.name, dir_fd=topfd)
+PermissionError: [Errno 13] Permission denied: '/workspace/2226-release/local-canonical/manager-browser'

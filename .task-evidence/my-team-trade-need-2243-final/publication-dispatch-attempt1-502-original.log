@@ -1,0 +1,7 @@
+could not create workflow dispatch event: HTTP 502: Server Error (https://api.github.com/repos/Richarddavis47/dtos/actions/workflows/394862998/dispatches)
+Traceback (most recent call last):
+  File "/workspace/2243-my-team-trade-need/dispatch-guarded.py", line 48, in <module>
+    subprocess.run(command, check=True)
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/subprocess.py", line 571, in run
+    raise CalledProcessError(retcode, process.args,
+subprocess.CalledProcessError: Command '['gh', 'workflow', 'run', 'canonical-release-recovery.yml', '--repo', 'Richarddavis47/dtos', '--ref', 'release/2243-actions-publisher', '-f', 'release_operation=publish', '-f', 'preparation_run_id=42748932880']' returned non-zero exit status 1.

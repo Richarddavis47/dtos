@@ -1,0 +1,41 @@
+From https://github.com/Richarddavis47/dtos
+ * branch              main       -> FETCH_HEAD
+ * [new tag]           v1.22.28   -> v1.22.28
+   d412c89c..6ed905ce  main       -> origin/main
+Switched to branch 'main'
+Your branch is behind 'origin/main' by 1 commit, and can be fast-forwarded.
+  (use "git pull" to update your local branch)
+Updating d412c89c..6ed905ce
+Fast-forward
+ .github/workflows/canonical-release-recovery.yml |  63 +++-
+ .github/workflows/product-browser.yml            |   2 +-
+ CHANGELOG.md                                     |   8 +
+ RELEASE_NOTES.md                                 |   8 +
+ app_metadata.py                                  |   8 +-
+ components/trade_workspace.py                    |  13 +-
+ docs/audits/MY_TEAM_TRADE_NEED_2243.md           |  27 ++
+ routes/teams.py                                  |   4 +-
+ routes/trades.py                                 |  18 +-
+ services/team_trade_need.py                      | 108 ++++++
+ services/trade_intelligence.py                   |  17 +-
+ src/ui/my_team_outlook.py                        |   4 +
+ static/css/trade_workspace.css                   |   4 +
+ static/js/contextual_navigation.js               |   2 +-
+ static/js/trade_workspace.js                     |  90 ++++-
+ tests/test_canonical_harness_lifecycle.py        |  92 +++++
+ tests/test_team_trade_need.py                    | 226 ++++++++++++
+ tests/test_team_trade_need_browser.py            | 421 +++++++++++++++++++++++
+ 18 files changed, 1091 insertions(+), 24 deletions(-)
+ create mode 100644 docs/audits/MY_TEAM_TRADE_NEED_2243.md
+ create mode 100644 services/team_trade_need.py
+ create mode 100644 tests/test_canonical_harness_lifecycle.py
+ create mode 100644 tests/test_team_trade_need.py
+ create mode 100644 tests/test_team_trade_need_browser.py
+error: the branch 'feat/my-team-trade-need-2243' is not fully merged
+hint: If you are sure you want to delete it, run 'git branch -D feat/my-team-trade-need-2243'
+hint: Disable this message with "git config set advice.forceDeleteBranch false"
+Traceback (most recent call last):
+  File "<stdin>", line 8, in <module>
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/subprocess.py", line 571, in run
+    raise CalledProcessError(retcode, process.args,
+subprocess.CalledProcessError: Command '['git', 'branch', '-d', 'feat/my-team-trade-need-2243']' returned non-zero exit status 1.
