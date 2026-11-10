@@ -1,0 +1,5 @@
+# Superseded238layout predecessor4850546 — original evidence
+
+Source48505467faa1195a72f9dbd4fc57cf3fd5d68609/tree11a73936722a9312d0718eff5286301b6c125f5b. Product job130004774181 ran673tests and failed three subtests of the unchanged proposal-tray phone journey at375/390/400×677. Generate was partially behind the fixed navigation. Subsequent Product commands/resource scenarios were skipped and are not passed.
+
+The unchanged test reproduced all three failures independently. Local and hosted canonical work was canceled to correct the real layout regression; original partial logs are retained without a final success claim. Native original failed/canceled ZIPs are API-digest/size/CRC verified; all thirteen executed hosted job consoles are retained with receipt hashes. Successful sibling jobs remain preliminary-source successes, not final-source gates. The correction reuses the existing search-options disclosure and preserves the exact original pointer/reachability assertions. Final candidate238dfc108b904eb499a73a06c938cc2d704cea51 is separately validated.

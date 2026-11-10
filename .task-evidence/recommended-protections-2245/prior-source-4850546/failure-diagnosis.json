@@ -1,0 +1,34 @@
+{
+  "candidate": "48505467faa1195a72f9dbd4fc57cf3fd5d68609",
+  "verified_original_archives": [
+    {
+      "file": "canonical-partial.zip",
+      "artifact": 13788084828,
+      "bytes": 17545167,
+      "sha256": "ee4e9c93750efb8ebee3aeb80ce8facf0a0b96a1a7bb8eacfbd2f510cdcb71a9",
+      "meaning": "Failed/canceled preliminary source; not final acceptance"
+    },
+    {
+      "file": "trade-resource-incomplete.zip",
+      "artifact": 13787089548,
+      "bytes": 14820873,
+      "sha256": "7fe0a8edee4819322a011e816a1af9bd827752ed3642a777bf0499121f66a8aa",
+      "meaning": "Failed/canceled preliminary source; not final acceptance"
+    }
+  ],
+  "local_partial_events": {
+    "start": 1288,
+    "stop": 1287
+  },
+  "hosted_product_executions": [
+    "673"
+  ],
+  "hosted_product_failures": [
+    "2026-11-10T17:50:11.1591935Z FAIL: test_retained_recommended_pointer_loading_tray_and_next_five (tests.test_proposal_tray_browser.ProposalTrayBrowserTests.test_retained_recommended_pointer_loading_tray_and_next_five) (width=375, height=677)",
+    "2026-11-10T17:50:11.1602188Z FAIL: test_retained_recommended_pointer_loading_tray_and_next_five (tests.test_proposal_tray_browser.ProposalTrayBrowserTests.test_retained_recommended_pointer_loading_tray_and_next_five) (width=390, height=677)",
+    "2026-11-10T17:50:11.1612725Z FAIL: test_retained_recommended_pointer_loading_tray_and_next_five (tests.test_proposal_tray_browser.ProposalTrayBrowserTests.test_retained_recommended_pointer_loading_tray_and_next_five) (width=400, height=677)"
+  ],
+  "root_cause": "Extra collapsed row placed Generate below fixed phone navigation at375/390/400\u00d7677; no overflow or memory-admission defect",
+  "correction": "Reuse existing search-options disclosure; keep selected count and exact assets visible. Unchanged browser reachability assertions pass.",
+  "final_source_pending_separate_validation": true
+}
