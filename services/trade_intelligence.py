@@ -1612,6 +1612,8 @@ def _generate_recommended(data, payload):
     from services.trade_search_policy import SearchFunnel, diverse_rows, result_state
     started = perf_counter()
     selected_filter, excluded_families = session_constraints(payload)
+    from services.team_trade_need import requested_position, position_matches
+    position = requested_position(data, payload.get('recommendation_position'))
     if payload.get('asset_id') or payload.get('partner_roster_id'):
         raise ValueError('Recommended Trades discovers its own targets and counterparties.')
     if selected_filter == 'sell_high':
@@ -1670,7 +1672,9 @@ def _generate_recommended(data, payload):
                 row['opportunity'] = surface_evidence(row)
                 row['discovery_thesis'] = thesis
                 derivation_seconds += perf_counter() - stage
-                filtered = row['family_id'] in excluded_families or bool(tag and tag not in row['opportunity']['reason_tags'])
+                filtered = (row['family_id'] in excluded_families
+                            or bool(tag and tag not in row['opportunity']['reason_tags'])
+                            or not position_matches(row, assets, position))
                 qualifies = funnel.assessed(row, filtered=filtered)
                 row['workflow_eligibility'] = {'workflow': 'recommended', 'eligible': qualifies}
                 if qualifies:
@@ -1683,17 +1687,22 @@ def _generate_recommended(data, payload):
     if _trade_search_boundary(data) != boundary:
         raise TradeInputError('canonical_evidence_changed', 'Canonical evidence changed during recommendation discovery. Refresh and try again.')
     verification_seconds = perf_counter() - verification_started
+    # Choose the bounded near-miss display from matching offers. Filtering only
+    # after near() truncates could hide supported matching alternatives.
+    if position:
+        funnel.near_misses = [row for row in funnel.near_misses if position_matches(row, assets, position)]
     # Optional rows remain inspectable, but do not suppress the explanation
     # for a completed search with no qualified bilateral recommendations.
     guidance = None if any(r['evaluation'].get('generated_trade_eligible') is True for r in results) else zero_result_guidance(
         funnel, discoveries, workspace, projection_available=projection_available,
         optional_count=sum(r.get('search_result_type') == 'OPTIONAL / LOWER-RANKED TRADE' for r in evaluated))
     return _with_lineup_details(data, {'workflow': 'recommended', 'count': len(results), 'results': results,
-            'exploratory_results': funnel.explore(assets, excluded_families=excluded_families),
-            'result_state': 'MISSING REQUIRED EVIDENCE' if not projection_available and not results else result_state(funnel, results), 'near_misses': funnel.near(),
+            'exploratory_results': [row for row in funnel.explore(assets, excluded_families=excluded_families) if position_matches(row, assets, position)],
+            'result_state': 'MISSING REQUIRED EVIDENCE' if not projection_available and not results else result_state(funnel, results),
+            'near_misses': funnel.near(),
             'quiet_state': guidance['message'] if guidance else None,
             'zero_result_guidance': guidance,
-            'recommendation_filter': selected_filter, 'discovery': discovery,
+            'recommendation_filter': selected_filter, 'recommendation_position': position, 'discovery': discovery,
             'has_more': bool(results and projection_available and (discovery.get('omitted_theses') or len(evaluated) > len(results) or phase < 2)),
             'search_evidence': {**funnel.result(len(results)), 'stages': funnel.stages, 'phases': len(discoveries),
                 'construction_admission': workspace['candidate_admission'].summary(),

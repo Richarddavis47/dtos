@@ -1,3 +1,11 @@
+# v1.22.28 / build 2243 — Carry a prepared roster need into Trade
+
+My Team adds one contextual “Explore [position] trades” action when the existing, current prepared diagnostic supports a starter or replacement-depth need for the manager’s own franchise. Stale, missing, incompatible or unmappable evidence keeps the general Trade shortcut. The original saved-goal actions remain available.
+
+Recommended Trades shows an editable incoming-player position and the dated My Team reason. Changing or clearing it requires an explicit Generate action; it never changes a saved goal, valuation mode or Evaluate draft. Earlier offers remain separately qualified as retained context, not results of the new filter. Active account, session, league, franchise, ownership and prepared-evidence identity are rechecked; a stale handoff applies no filter.
+
+The position constraint narrows the existing bounded search using the established QB/RB/WR/TE eligibility contract. Candidate caps, independent bilateral evaluation, exact picks, Neutral/Custom mathematics, Sleeper sources, submitted lineups and memory reservations are unchanged. Navigation adds no provider acquisition or recommendation search. See docs/audits/MY_TEAM_TRADE_NEED_2243.md for verification scope and remaining limits.
+
 # v1.22.27 / build 2242 — Open the partner’s franchise trade history
 
 Recommended Trades and Evaluate add a compact “See franchise trade history” link when the exact counterparty can be resolved in the active league. It opens the existing descriptive completed-trade evidence and keeps its source/coverage qualifications.
