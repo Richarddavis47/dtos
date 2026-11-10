@@ -20,6 +20,7 @@ def trade_workspace(view: dict, workflow: str, asset_id=None, owner_roster_id=No
     protect_control = '<button id="calculator-lock" type="button">Do not trade selected exact asset</button>' if market_editor else ''
     recommended_controls = '''<label for="recommendation-filter">Opportunity filter</label><select id="recommendation-filter" disabled><option value="all">All supported opportunities</option><option value="win_now">Win Now</option><option value="value">Value</option><option value="roster_fit">Roster Fit</option><option value="future">Draft Capital</option><option value="sell_high" disabled>Sell High — movement evidence unavailable</option></select><p class="muted">Filters select supported opportunity types; they do not change your strategy or valuations.</p>''' if workflow == 'recommended' else ''
     position_controls = ''
+    search_protections = ''
     if workflow == 'recommended':
         options = ''.join(f'<option value="{escape(pos)}">{escape(pos)}</option>' for pos in view.get('recommended_positions', []))
         origin = 'My Team’s need evidence changed or is no longer current. No roster-need filter was applied.' if view.get('team_need_expired') else 'Choose an incoming position. Generate starts the search.'
@@ -27,6 +28,14 @@ def trade_workspace(view: dict, workflow: str, asset_id=None, owner_roster_id=No
             f'<label for="recommendation-position">Incoming player position</label><div class="tw-position-controls"><select id="recommendation-position" aria-describedby="recommendation-position-origin" disabled><option value="">All positions</option>{options}</select>'
             '<button type="button" id="recommendation-position-clear" disabled>Clear position</button></div>'
             f'<p id="recommendation-position-origin" role="status">{escape(origin)}</p></section>')
+        search_protections = '''<section class="tw-search-protections" aria-label="Recommended Trades protections">
+<details id="recommendation-protection-options"><summary id="recommendation-protection-count">Protect outgoing assets · none selected</summary>
+<p>Keep owned players or exact picks out of this Recommended Trades search. Your Evaluate draft and saved preferences are unchanged. Saved Custom preferences still apply in Custom mode.</p>
+<label for="recommendation-protection-asset">Owned player or exact pick</label><select id="recommendation-protection-asset" disabled><option value="">Choose an owned asset</option></select>
+<button id="recommendation-protection-add" type="button" disabled>Protect selected asset</button>
+</details><ul id="recommendation-protection-list" aria-label="Temporary outgoing protections"></ul>
+<button id="recommendation-protection-clear" type="button" hidden disabled>Clear search protections</button>
+</section>'''
     shop_controls = '''<details id="shop-refinements"><summary>Refine Shop results · optional</summary><section aria-label="Shop search preferences"><label for="shop-preference">Search preference (this session only)</label>
 <select id="shop-preference"><option value="best_overall">Best Overall Return</option><option value="win_now">Win-Now Help</option><option value="youth_rebuild">Youth / Rebuild</option><option value="draft_capital">Draft Capital</option><option value="position_need">Position Need</option><option value="custom">Custom — protect assets</option></select>
 <label for="shop-position">Position for Position Need</label><select id="shop-position" disabled><option value="QB">QB</option><option value="RB">RB</option><option value="WR">WR</option><option value="TE">TE</option></select>
@@ -62,6 +71,7 @@ def trade_workspace(view: dict, workflow: str, asset_id=None, owner_roster_id=No
 <p id="trade-context" class="muted">Loading current league assets…</p>
 <div id="trade-intent-controls" class="tw-intent-controls">{strategy_controls}</div>
 {position_controls}
+{search_protections}
 {optional_search}
 <section id="trade-target" class="tw-target" hidden aria-label="Selected trade target"></section>
 <div class="tw-primary-actions">{primary}{next_ideas}</div>
