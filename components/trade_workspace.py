@@ -69,6 +69,8 @@ def trade_workspace(view: dict, workflow: str, asset_id=None, owner_roster_id=No
 <p id="trade-search-readiness" class="ds-inline-feedback">Search capacity will be checked when you generate or evaluate.</p>
 <button id="trade-cancel" type="button" hidden>Cancel current operation</button>
 <span id="trade-results-home"></span><section id="trade-result" role="status" aria-live="polite" tabindex="-1" hidden></section>
+<section id="trade-comparison-tray" class="tw-comparison-tray" aria-label="Selected offers for comparison" aria-live="polite" hidden></section>
+<section id="trade-comparison" class="tw-comparison" aria-labelledby="trade-comparison-heading" hidden></section>
 {'<details id="recommendation-previous" hidden><summary>Earlier search · not revalidated</summary><p>Earlier offers have not been searched with the current filter. Your Evaluate draft is unchanged.</p><div id="recommendation-previous-offers"></div></details>' if workflow == 'recommended' else ''}
 {tray}
 {'<details id="trade-asset-options"><summary>Owned assets and exact constraints · optional</summary>' if workflow == 'recommended' else ''}
@@ -84,4 +86,4 @@ def trade_workspace(view: dict, workflow: str, asset_id=None, owner_roster_id=No
 <button id="trade-build-own" type="button" {'hidden' if workflow == 'create' else ''}>Build My Own</button>
 {market_detail}{balance_controls if not market_editor else ""}
 <details id="trade-source-context"><summary>League identity details</summary><p id="trade-source-context-identity"></p></details>
-<p class="muted">Ownership is revalidated before evaluation. Market Balance is neutral market evidence, not the recommendation. DTOS evaluates proposals; it does not send trades to Sleeper.</p></section><p id="trade-operation-announcement" class="tw-announcement" role="status" aria-live="polite" aria-atomic="true"></p><script src="/static/js/strategy_session.js" defer></script><script src="/static/js/trade_workspace.js" defer></script>'''
+<p class="muted">Ownership is revalidated before evaluation. Market Balance is neutral market evidence, not the recommendation. DTOS evaluates proposals; it does not send trades to Sleeper.</p></section><p id="trade-operation-announcement" class="tw-announcement" role="status" aria-live="polite" aria-atomic="true"></p><script src="/static/js/strategy_session.js" defer></script><script src="/static/js/trade_comparison.js" defer></script><script src="/static/js/trade_workspace.js" defer></script>'''

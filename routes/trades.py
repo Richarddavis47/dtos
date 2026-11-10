@@ -28,6 +28,7 @@ from services.trade_calculator import calculate_trade_market, balance_trade_mark
 
 _STATIC_ROOT = Path(__file__).resolve().parents[1] / "static"
 _WORKSPACE_JS = (_STATIC_ROOT / "js" / "trade_workspace.js").read_text(encoding="utf-8")
+_COMPARISON_JS = (_STATIC_ROOT / "js" / "trade_comparison.js").read_text(encoding="utf-8")
 _WORKSPACE_CSS = (_STATIC_ROOT / "css" / "trade_workspace.css").read_text(encoding="utf-8")
 _OPPORTUNITIES_JS = (_STATIC_ROOT / "js" / "home-opportunities.js").read_text(encoding="utf-8")
 _STRATEGY_JS = (_STATIC_ROOT / "js" / "strategy_session.js").read_text(encoding="utf-8")
@@ -154,6 +155,10 @@ def create_trades_router(*, ensure_fresh: EnsureFresh, require_data: RequireData
     @router.get("/static/js/trade_workspace.js", include_in_schema=False)
     async def workspace_script() -> Response:
         return Response(_WORKSPACE_JS, media_type="text/javascript", headers={"Cache-Control": "no-cache"})
+
+    @router.get("/static/js/trade_comparison.js", include_in_schema=False)
+    async def comparison_script() -> Response:
+        return Response(_COMPARISON_JS, media_type="text/javascript", headers={"Cache-Control": "no-cache"})
 
     @router.get("/static/css/trade_workspace.css", include_in_schema=False)
     async def workspace_styles() -> Response:
@@ -411,6 +416,7 @@ def create_trades_router(*, ensure_fresh: EnsureFresh, require_data: RequireData
         profile = compatible_profile(data, _trade_projection_service(data).snapshot())
         payload['lineup_preparation'] = {
             'state': 'prepared' if profile is not None else 'incompatible_or_missing',
+            'generation': profile.get('semantic_generation') if profile is not None else None,
             'message': ('A compatible lineup publication is prepared. Each offer still needs supported legal pre/post lineups.'
                 if profile is not None else 'Team-impact analysis needs a compatible prepared league, week and scoring publication. Individual projections may still be visible; Neutral Market comparisons remain separate.')}
         return JSONResponse(jsonable_encoder(payload), headers={'Cache-Control': 'no-store'})

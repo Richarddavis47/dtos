@@ -130,7 +130,8 @@
   const session = {schema: 2, resetGeneration: null, currentProposal: {sent: [], received: [], partner: 0}, originalProposal: null,
     previewProposal: null, adoptedProposal: null, requiredOutgoingAsset: null, requiredIncomingAsset: null,
     protectedAssets: [], excludedAssets: [], overrideSavedProtections: [], adjustmentConstraints: {}, originWorkflow: flow, shopSearchPartner: 0,
-    shopScopeAsset: null, shopPreference: 'best_overall', shopPosition: 'QB', currentAssessment: null};
+    shopScopeAsset: null, shopPreference: 'best_overall', shopPosition: 'QB', currentAssessment: null, comparisonOffers: []};
+  let comparison = null;
   const excludedFamilies = new Set(); let displayedFamilies = []; let lastOffers = null; let lastOffersIsBalance = false; let searchExhausted = false; let hasDiscovered = false;
   let valuationMode = 'neutral', personalRevisionStale = false, checkingPersonal = false;
   let interruptedNavigation = false;
@@ -228,7 +229,7 @@
     // reload/history may restore it, and only under fresh server authorization.
     try { history.replaceState({...history.state, dtosTrade: {
       binding: workspace.workspace_context.binding, workflow: flow,
-      preload: root.dataset.preloadAsset, draft: {...draft, recommendedSearch: null}
+      preload: root.dataset.preloadAsset, draft: {...draft, recommendedSearch: null, comparisonOffers: null}
     }}, ''); } catch (_) { /* History-disabled browsing still works. */ }
   }
   function retainedDraft() {
@@ -560,6 +561,10 @@
         error.code = code; throw error;
       }
       if (code === 'canonical_evidence_changed') {
+        for (const entry of session.comparisonOffers || []) {
+          entry.context = {...entry.context, stale_reason: 'Prepared source evidence changed after the recorded assessment.'};
+        }
+        comparison?.refresh();
         staleAssessment('Source evidence changed');
         const error = new Error('Market or projection evidence refreshed during this search. Your proposal and exact protections are unchanged. Try again when the refresh settles.');
         error.code = code; throw error;
@@ -656,6 +661,77 @@
       evaluation: boundedEvidence(compactRetainedEvaluation(value.evaluation || {})), opportunity: boundedEvidence(value.opportunity)};
   }
   const assessedOfferContexts = new WeakMap();
+  const comparisonScope = () => ({binding: workspace.workspace_context.binding,
+    league: workspace.workspace_context.league_id, roster: active});
+  function comparisonEnvironment() {
+    const projection = workspace.projection_evidence || {};
+    return {scope: comparisonScope(), ownership: workspace.workspace_context.ownership_generation,
+      projection: projection.generation, season: projection.season, week: projection.week,
+      scoring: projection.scoring_profile_id, provider: projection.canonical_provider,
+      lineup: workspace.lineup_preparation?.generation, market: workspace.calculator_generation,
+      personalContext: {revision: workspace.personalization?.revision, market: workspace.personalization?.market_generation,
+        baseline: workspace.personalization?.baseline_generation, method: workspace.personalization?.method},
+      observed: latestEvidence, personalStale: personalRevisionStale};
+  }
+  function addComparisonControl(target, row, context) {
+    const e = row.evaluation || context?.evaluation || {}, p = row.proposal || {};
+    if (!e.provenance?.evaluation_id || !Array.isArray(p.assets_sent) || !Array.isArray(p.assets_received)) return;
+    const button = node('button', 'Add to comparison'); button.type = 'button'; button.className = 'tw-compare-add';
+    button.onclick = () => {
+      if (!comparison) return;
+      const d = decisionPresentation(e), inputs = e.provenance?.inputs || {}, projection = inputs.projection_evidence || {};
+      // Keep exact source order and names; no current quote is substituted for
+      // the neutral/personal values admitted in this completed assessment.
+      const assets = {};
+      for (const [side, ids] of [['sent', p.assets_sent], ['received', p.assets_received]]) {
+        if (ids.length > 32 || ids.some(id => typeof id !== 'string' || id.length > 256)) {
+          button.after(node('p', 'This package exceeds the bounded comparison size. Its original offer remains available.')); return;
+        }
+        assets[side] = ids.map(id => {
+          const a = asset(id), pick = a?.kind === 'pick' ? ` · ${a.season} round ${a.round} · Original franchise: ${team(a.original_roster_id)?.team_name || a.original_roster_id || 'unavailable'}` : '';
+          return {id, label: String((a ? label(a) : id) + pick).slice(0,512)};
+        });
+      }
+      const depth = {}, capacity = {};
+      for (const side of ['active', 'partner']) {
+        const profile = e.dimensions?.strategic_fit?.[side] || {};
+        // Reuse the existing producer's reserve paragraphs, not a new injury,
+        // replacement or positional model. Full original summaries stay below.
+        const summary = side === 'active' ? d.your_side_summary : d.their_side_summary;
+        const lines = (summary || '').split('\n').filter(line => /reserve|replacement|depth/i.test(line));
+        depth[side] = lines.join(' ') || 'Complete reserve-depth consequences are unavailable in this recorded assessment; missing evidence is not zero.';
+        capacity[side] = profile.roster_capacity?.additional_spots_to_resolve ?? null;
+      }
+      const evidence = e.market_evidence || {}, personal = e.personal_value_evidence || {};
+      const entry = {schema: 1, id: e.provenance.evaluation_id + ':' + JSON.stringify([p.assets_sent, p.assets_received]),
+        scope: comparisonScope(), baseline: {league: inputs.league_id, roster: inputs.active_roster_id,
+          ownership: context?.identity?.ownership, lineup: d.lineup_source_generation,
+          season: projection.season, week: projection.week, scoring: projection.scoring_profile_id,
+          projection: inputs.projection_generation === projection.generation ? projection.generation : null,
+          provider: projection.canonical_provider},
+        assets, context, proposal: {active_roster_id: active, partner_roster_id: p.partner_roster_id,
+          assets_sent: [...p.assets_sent], assets_received: [...p.assets_received]},
+        summary: {verdict: finalVerdict(e), strategy: context?.identity?.strategy,
+          partner: context?.identity?.counterparty || team(p.partner_roster_id)?.team_name || 'Franchise identity unavailable',
+          mode: e.personalization?.mode || 'neutral', method: e.personalization?.method || null,
+          personalContext: {revision: e.personalization?.revision, market: e.personalization?.market_generation,
+            baseline: e.personalization?.baseline_generation, method: e.personalization?.method},
+          methodLabel: String(e.personalization?.method || '').includes('relative') ? 'Relative priced order' :
+            String(e.personalization?.method || '').includes('absolute') ? 'Absolute slot' : 'Custom method not retained',
+          neutral: {availability: evidence.availability, sent: evidence.sent?.total, received: evidence.received?.total},
+          personal: {availability: personal.availability, sent: personal.sent?.total, received: personal.received?.total},
+          lineup: d.lineup_comparisons.current_week || {}, depth, capacity,
+          cost: d.main_cost || e.major_drawback || 'The main cost is not established in this assessment.',
+          partnerReason: d.partner_summary || 'Supported counterparty motivation is unavailable.',
+          conditions: d.decision_conditions || 'Manager motivation and acceptance are not established by this comparison.',
+          limitation: d.limitation || d.qualification || null}};
+      // Later draft edits must not mutate an original selected assessment.
+      const snapshot = JSON.parse(JSON.stringify(entry));
+      if (!window.DTOSOfferComparison.sameScope(snapshot, comparisonScope()) || !comparison.add(snapshot, button))
+        button.after(node('p', 'The completed evidence cannot fit safely in this scoped comparison. Your offer remains unchanged.'));
+    };
+    target.append(button);
+  }
   function assessmentContext(row) {
     if (assessedOfferContexts.has(row)) return assessedOfferContexts.get(row);
     if (row.proposal?.preview_context) return row.proposal.preview_context;
@@ -725,6 +801,7 @@
     };
     if (changedSource(session.currentAssessment)) staleAssessment('Source evidence changed since the completed assessment');
     if (changedSource(session.previewProposal?.preview_context)) { session.previewProposal.preview_context.restored = true; session.previewProposal.preview_context.stale_reason = 'Source evidence changed since this preview'; persist(); }
+    comparison?.refresh();
   }
   function retainAssessment() {
     if (!session.currentAssessment || el('trade-evaluation-retained')) return;
@@ -849,6 +926,9 @@
     out.dataset.assessmentFreshness = retained ? 'retained' : 'current';
     const attemptState = context?.attempt_state || e.assessment_state?.state || 'fresh_incomplete';
     out.dataset.assessmentState = retained ? 'retained' : attemptState;
+    if (!previousContainer) addComparisonControl(out, {evaluation: e, proposal: {
+      active_roster_id: active, partner_roster_id: selected.partner,
+      assets_sent: [...selected.sent], assets_received: [...selected.received]}}, context);
     const incomplete = !retained && attemptState === 'fresh_incomplete';
     if (incomplete) {
       out.append(node('p', 'Current evaluation completed · incomplete evidence. ' + (e.assessment_state?.limitation || e.decision_context?.blocker || e.decision_context?.limitation || 'A complete supported recommendation is unavailable; review the evidence and reevaluate.'), 'tw-assessment-status'));
@@ -1196,6 +1276,7 @@
       appendLineupComparisons(detail, e, decision.partner_lineup_comparisons, 'Their team', true);
     }
     card.append(detail, node('small', 'Current values, not trade-date grades. Preview before adopting.'));
+    addComparisonControl(card, row, context);
     return card;
   }
   function offerCard(row, preview = false) {
@@ -1233,6 +1314,7 @@
       ...(!decision.their_side_summary ? [node('p', 'Counterparty: ' + (decision.partner_summary || e.counterparty_summary || e.why_they_would_do_it || e.dimensions?.counterparty_plausibility?.explanation || 'Review the separate bilateral evidence.'))] : []));
     if (!preview) { const b = node('button', 'Open editable offer: preview'); b.type = 'button'; b.className = 'tw-next-action primary'; b.onclick = () => previewOffer(row); card.append(b); }
     appendDecisionSummary(card, decision);
+    addComparisonControl(card, row, context);
     for (const id of [...row.proposal.assets_sent, ...row.proposal.assets_received]) { const protection = lockDetail(id); if (protection) card.append(protection); }
     for (const pick of e.dimensions?.strategic_fit?.active?.future_capital?.sent || []) {
       const exact = asset(pick.asset_id);
@@ -1548,6 +1630,7 @@
     cancelBalance(); revision++; runSequence++; busy = false;
     selected.sent = []; selected.received = []; selected.partner = 0;
     for (const key of ['originalProposal','previewProposal','adoptedProposal','currentAssessment','requiredOutgoingAsset','requiredIncomingAsset','shopScopeAsset','recommendedSearch','teamNeedChoice']) session[key] = null;
+    session.comparisonOffers = []; comparison?.refresh(); if (el('trade-comparison')) el('trade-comparison').hidden = true;
     session.protectedAssets = []; session.excludedAssets = []; session.overrideSavedProtections = []; session.adjustmentConstraints = {};
     for (const which of ['sent','received']) {filters[which].q = ''; filters[which].pos = 'ALL';}
     side = 'sent'; interruptedNavigation = false;
@@ -1723,6 +1806,13 @@
       if (retainedSearch && Array.isArray(retainedSearch.offers) && retainedSearch.offers.length <= 8
           && JSON.stringify(retainedSearch).length <= 520000 && !saved?.endedAtHome)
         session.recommendedSearch = retainedSearch;
+      const retainedComparison = retainedDraft();
+      if (!retainedComparison?.endedAtHome && (!retainedComparison?.tabOwner || retainedComparison.tabOwner === tabOwner) &&
+          Array.isArray(retainedComparison?.comparisonOffers) && retainedComparison.comparisonOffers.length <= 2 &&
+          JSON.stringify(retainedComparison.comparisonOffers).length <= 200000) {
+        session.comparisonOffers = retainedComparison.comparisonOffers.filter(row => window.DTOSOfferComparison.wellFormed(row) && window.DTOSOfferComparison.sameScope(row, comparisonScope()))
+          .map(row => ({...row, retained: true, context: restoreContext(row.context || {})}));
+      }
       if (saved?.endedAtHome) { clearDraft(); saved = null; }
       const proposal = saved?.currentProposal || (saved?.selected ? {...saved.selected, partner: saved.partner} : null);
       if (proposal && (team(proposal.partner) || Number(proposal.partner) === 0) && Array.isArray(proposal.sent) && Array.isArray(proposal.received)) {
@@ -1838,6 +1928,16 @@
     }
     if (flow === 'recommended') searchStatus(data.search_readiness && data.search_readiness.state !== 'ready' ? 'Search capacity is temporarily unconfirmed. Generate rechecks it before starting; no search has run.' : 'Choose Generate to search eligible teams; choosing a goal is optional.', data.search_readiness && data.search_readiness.state !== 'ready' ? 'deferred' : 'ready');
     if (flow === 'create') operationStatus('Choose assets to evaluate below.', 'ready');
+    comparison = window.DTOSOfferComparison.create({node, points: displayPoints, market: displayMarket,
+      tray: el('trade-comparison-tray'), panel: el('trade-comparison'),
+      getEntries: () => session.comparisonOffers || [], setEntries: rows => {session.comparisonOffers = rows; persist();},
+      environment: comparisonEnvironment, details: (entry, target) => {
+        const e = entry.context?.evaluation || {}, d = decisionPresentation(e);
+        appendDecisionSummary(target, d);
+        appendLineupComparisons(target, e, d.lineup_comparisons, 'Your team', true);
+        appendLineupComparisons(target, e, d.partner_lineup_comparisons, 'Their team', true);
+        for (const text of e.major_limitations || []) target.append(node('p', text));
+      }});
     if (flow === 'trade_for') searchStatus('Choose an opponent-owned target below to find acquisition options.', 'ready');
     if (flow === 'shop') { el('trade-find').textContent = 'Find Shop returns'; searchStatus('Not started. Find Shop returns searches the selected scope; strategy alone cannot resolve missing projection coverage.', 'not_started'); }
     if (session.currentAssessment && !entryBlocked) showEvaluation(session.currentAssessment.evaluation || {}, session.currentAssessment.opportunity, session.currentAssessment);

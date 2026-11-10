@@ -1,3 +1,11 @@
+# v1.22.29 / build 2244 — Compare assessed offers with keeping your roster
+
+Trade Center can retain up to two completed assessments for a read-only comparison against their supported pre-trade optimal lineup. Add, explicitly replace or remove an offer without changing the current draft. Each ordered player/pick package, original decision, cost, counterparty case and depth/capacity qualification stays attached to that offer.
+
+A shared lineup comparison requires matching league, franchise, roster baseline, scoring, week and projection publication. Incomplete, changed or incompatible evidence is named rather than inferred as zero. Supported individual effects remain visible when another offer lacks a full lineup. Retained assessments are labeled NOT REVALIDATED; Neutral Market and personal Custom values remain separate.
+
+Opening or expanding the comparison performs no search, reevaluation or source refresh. Existing scoring, qualification, submitted Sleeper lineups, exact pick identity, saved settings and memory/admission policies are unchanged. See docs/audits/OFFER_COMPARISON_2244.md for source/fixture coverage and live limitations.
+
 # v1.22.28 / build 2243 — Carry a prepared roster need into Trade
 
 My Team adds one contextual “Explore [position] trades” action when the existing, current prepared diagnostic supports a starter or replacement-depth need for the manager’s own franchise. Stale, missing, incompatible or unmappable evidence keeps the general Trade shortcut. The original saved-goal actions remain available.
