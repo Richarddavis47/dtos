@@ -267,7 +267,10 @@
     }
   }
   function positionChanged(updateOrigin = true) {
-    if (busy) return;
+    // The existing opportunity control remains editable during generation.
+    // Retire its exact request before changing context so a late response cannot
+    // replace the draft or be presented under the newly selected filter.
+    cancelBalance(); revision++;
     // A search control does not edit or invalidate the independent Evaluate draft.
     excludedFamilies.clear(); searchExhausted = false; hasDiscovered = false; displayedFamilies = [];
     lastOffers = null; el('trade-result').hidden = true;
@@ -275,7 +278,7 @@
       el('recommendation-position-origin').textContent = 'Position filter selected here. Choose Generate to search; saved goals, valuation mode and your draft are unchanged.';
       session.teamNeedChoice = {fingerprint: JSON.parse(root.dataset.teamNeed || 'null')?.fingerprint || null, position: el('recommendation-position').value, manual: true};
     }
-    previousSearch(); persist();
+    previousSearch(); persist(); paint();
     searchStatus('Search filter changed. Earlier offers are separate; no new search has run.', 'ready');
   }
   function toggle(which, id) { if (busy) return; const required = which === 'sent' ? session.requiredOutgoingAsset : session.requiredIncomingAsset; if (id === required && selected[which].includes(id)) return message('The required target stays fixed. Choose Build My Own to change the trade objective.', true); if (selected[which].includes(id)) selected[which] = selected[which].filter(x => x !== id); else if (!selected.sent.includes(id) && !selected.received.includes(id)) selected[which].push(id); changed(); if ((flow === 'shop' && which === 'sent' && selected.sent.length === 1) || (flow === 'trade_for' && which === 'received' && selected.received.length === 1)) run('generate'); }
@@ -431,7 +434,7 @@
     el('trade-context').textContent = flow === 'shop' ? `Active league · ${leagueLabel} · Shop: ${team(session.shopSearchPartner)?.team_name || 'All eligible teams'}` : flow === 'recommended' ? `${team(active)?.team_name || 'Your franchise'} · Active league · ${leagueLabel}` : `${team(active)?.team_name || 'Your franchise'} → ${team(partner())?.team_name || 'Choose partner'} · Active league · ${leagueLabel}`;
     if (el('trade-include-picks')) el('trade-include-picks').disabled = false;
     el('trade-strategy').disabled = false;
-    if (el('recommendation-filter')) el('recommendation-filter').disabled = busy;
+    if (el('recommendation-filter')) el('recommendation-filter').disabled = false;
     if (el('recommendation-position')) el('recommendation-position').disabled = busy;
     if (el('recommendation-position-clear')) el('recommendation-position-clear').disabled = busy;
     const sourceIdentity = el('trade-source-context-identity');
