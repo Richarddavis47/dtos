@@ -182,6 +182,16 @@ class TeamTradeNeedBrowserTests(unittest.TestCase):
             self.assertTrue(
                 label_clear, "Position label is obscured by the sticky Back bar"
             )
+            reason = page.locator("#recommendation-position-origin").inner_text()
+            page.locator("#trade-search-options > summary").click()
+            page.locator("#recommendation-filter").select_option("value")
+            self.assertEqual(
+                page.locator("#recommendation-position-origin").inner_text(), reason
+            )
+            self.assertEqual(
+                page.locator("#recommendation-position").input_value(), "RB"
+            )
+            page.locator("#trade-search-options > summary").click()
             self.assertEqual(
                 helper.draft(page)["currentProposal"], before["currentProposal"]
             )
@@ -225,6 +235,7 @@ class TeamTradeNeedBrowserTests(unittest.TestCase):
                     "no_automatic_search": True,
                     "position_visible_on_entry": True,
                     "position_clear_of_back_bar": True,
+                    "type_filter_preserves_need_reason": True,
                     "back": "My Team",
                     "overflow": 0,
                 }
@@ -262,6 +273,16 @@ class TeamTradeNeedBrowserTests(unittest.TestCase):
             "No roster-need filter was applied",
             page.locator("#recommendation-position-origin").inner_text(),
         )
+        page.locator("#recommendation-position").select_option("QB")
+        page.reload(wait_until="networkidle")
+        page.wait_for_function(
+            "document.querySelector('#trade-context') && !document.querySelector('#trade-context').textContent.includes('Loading')"
+        )
+        self.assertEqual(page.locator("#recommendation-position").input_value(), "QB")
+        self.assertIn(
+            "Position filter selected here",
+            page.locator("#recommendation-position-origin").inner_text(),
+        )
         page.goto(helper.origin + "/teams/1", wait_until="networkidle")
         self.assertEqual(page.locator("#my-team-trade-need").count(), 0)
         page.locator("#my-team-outlook-evidence").evaluate("e=>e.open=true")
@@ -276,6 +297,7 @@ class TeamTradeNeedBrowserTests(unittest.TestCase):
                 "depth_distinct": True,
                 "stale_hint_rejected": True,
                 "general_shortcut": True,
+                "stale_manual_filter_preserved": True,
                 "no_automatic_search": True,
             },
         )
@@ -318,6 +340,29 @@ class TeamTradeNeedBrowserTests(unittest.TestCase):
             "document.querySelector('#trade-result').innerText.includes('Search position: QB')"
         )
         self.assertEqual(helper.draft(page)["recommendedSearch"]["position"], "QB")
+        before_reset_posts = len([r for r in requests if r[0] == "POST"])
+        page.once("dialog", lambda dialog: dialog.accept())
+        page.locator("#trade-start-new").click()
+        page.wait_for_url("**/trades/create?front_office=1")
+        page.wait_for_function(
+            "document.querySelector('#trade-context') && !document.querySelector('#trade-context').textContent.includes('Loading')"
+        )
+        self.assertFalse(
+            helper.draft(page).get("recommendedSearch") is not None,
+            "Explicit reset retained a prior search snapshot",
+        )
+        page.goto(
+            helper.origin + "/trades/recommended?front_office=1",
+            wait_until="networkidle",
+        )
+        page.wait_for_function(
+            "document.querySelector('#trade-context') && !document.querySelector('#trade-context').textContent.includes('Loading')"
+        )
+        self.assertEqual(page.locator("#recommendation-position").input_value(), "")
+        self.assertTrue(page.locator("#recommendation-previous").is_hidden())
+        self.assertEqual(
+            len([r for r in requests if r[0] == "POST"]), before_reset_posts
+        )
         self.assertFalse(errors, errors)
         self.record(
             "real-search-and-prior-context",
@@ -326,6 +371,7 @@ class TeamTradeNeedBrowserTests(unittest.TestCase):
                 "prior_contexts": len(prior["offers"]),
                 "position_applied_only_on_generate": True,
                 "old_results_separate": True,
+                "explicit_reset_clears_prior_context": True,
             },
         )
 

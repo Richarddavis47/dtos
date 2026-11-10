@@ -266,15 +266,17 @@
       out.append(detail);
     }
   }
-  function positionChanged() {
+  function positionChanged(updateOrigin = true) {
     if (busy) return;
     // A search control does not edit or invalidate the independent Evaluate draft.
     excludedFamilies.clear(); searchExhausted = false; hasDiscovered = false; displayedFamilies = [];
     lastOffers = null; el('trade-result').hidden = true;
-    el('recommendation-position-origin').textContent = 'Position filter selected here. Choose Generate to search; saved goals, valuation mode and your draft are unchanged.';
-    session.teamNeedChoice = {fingerprint: JSON.parse(root.dataset.teamNeed || 'null')?.fingerprint || null, position: el('recommendation-position').value, manual: true};
+    if (updateOrigin) {
+      el('recommendation-position-origin').textContent = 'Position filter selected here. Choose Generate to search; saved goals, valuation mode and your draft are unchanged.';
+      session.teamNeedChoice = {fingerprint: JSON.parse(root.dataset.teamNeed || 'null')?.fingerprint || null, position: el('recommendation-position').value, manual: true};
+    }
     previousSearch(); persist();
-    searchStatus('Position filter changed. Earlier offers are separate; no new search has run.', 'ready');
+    searchStatus('Search filter changed. Earlier offers are separate; no new search has run.', 'ready');
   }
   function toggle(which, id) { if (busy) return; const required = which === 'sent' ? session.requiredOutgoingAsset : session.requiredIncomingAsset; if (id === required && selected[which].includes(id)) return message('The required target stays fixed. Choose Build My Own to change the trade objective.', true); if (selected[which].includes(id)) selected[which] = selected[which].filter(x => x !== id); else if (!selected.sent.includes(id) && !selected.received.includes(id)) selected[which].push(id); changed(); if ((flow === 'shop' && which === 'sent' && selected.sent.length === 1) || (flow === 'trade_for' && which === 'received' && selected.received.length === 1)) run('generate'); }
   function lockDetail(id) {
@@ -1542,12 +1544,14 @@
   function clearDraft() {
     cancelBalance(); revision++; runSequence++; busy = false;
     selected.sent = []; selected.received = []; selected.partner = 0;
-    for (const key of ['originalProposal','previewProposal','adoptedProposal','currentAssessment','requiredOutgoingAsset','requiredIncomingAsset','shopScopeAsset']) session[key] = null;
+    for (const key of ['originalProposal','previewProposal','adoptedProposal','currentAssessment','requiredOutgoingAsset','requiredIncomingAsset','shopScopeAsset','recommendedSearch','teamNeedChoice']) session[key] = null;
     session.protectedAssets = []; session.excludedAssets = []; session.overrideSavedProtections = []; session.adjustmentConstraints = {};
     for (const which of ['sent','received']) {filters[which].q = ''; filters[which].pos = 'ALL';}
     side = 'sent'; interruptedNavigation = false;
     if (el('trade-include-picks')) el('trade-include-picks').checked = true;
     if (el('recommendation-filter')) el('recommendation-filter').selectedIndex = 0;
+    if (el('recommendation-position')) el('recommendation-position').selectedIndex = 0;
+    if (el('recommendation-previous')) el('recommendation-previous').hidden = true;
     session.originWorkflow = 'create'; session.shopSearchPartner = 0;
     session.shopPreference = 'best_overall'; session.shopPosition = 'QB';
     session.resetGeneration = String(Date.now()) + ':' + Math.random().toString(36).slice(2);
@@ -1696,8 +1700,8 @@
         for (const family of displayedFamilies) if (excludedFamilies.size < 256) excludedFamilies.add(family);
         run('generate');
       };
-      el('recommendation-filter').onchange = positionChanged;
-      el('recommendation-position').onchange = positionChanged;
+      el('recommendation-filter').onchange = () => positionChanged(false);
+      el('recommendation-position').onchange = () => positionChanged();
       el('recommendation-position-clear').onclick = () => { if (busy) return; el('recommendation-position').value = ''; positionChanged(); };
     }
     if (flow === 'shop') {
@@ -1803,8 +1807,8 @@
     if (flow === 'recommended') {
       try {
         const need = JSON.parse(root.dataset.teamNeed || 'null');
+        const restoring = ['reload', 'back_forward'].includes(performance.getEntriesByType('navigation')[0]?.type);
         if (need && Array.from(el('recommendation-position').options).some(o => o.value === need.position)) {
-          const restoring = ['reload', 'back_forward'].includes(performance.getEntriesByType('navigation')[0]?.type);
           const manual = restoring && session.teamNeedChoice?.fingerprint === need.fingerprint && session.teamNeedChoice.manual;
           if (!manual) {
             el('recommendation-position').value = need.position;
@@ -1812,7 +1816,12 @@
             el('recommendation-position-origin').textContent = 'From My Team · ' + need.reason + ' Change or clear, then Generate.';
           } else el('recommendation-position-origin').textContent = 'Position filter selected here. My Team’s original suggestion has been changed; choose Generate to search.';
         } else if (root.dataset.teamNeedExpired === 'true') {
-          el('recommendation-position').value = ''; session.teamNeedChoice = null;
+          if (restoring && session.teamNeedChoice?.manual) {
+            session.teamNeedChoice.fingerprint = null;
+            el('recommendation-position-origin').textContent = 'Position filter selected here. My Team’s earlier need is no longer current. Generate rechecks current evidence.';
+          } else {
+            el('recommendation-position').value = ''; session.teamNeedChoice = null;
+          }
         }
       } catch (_) { /* An unavailable need never guesses a position. */ }
       previousSearch();
