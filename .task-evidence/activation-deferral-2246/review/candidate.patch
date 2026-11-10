@@ -1,0 +1,511 @@
+diff --git a/.github/workflows/canonical-release-recovery.yml b/.github/workflows/canonical-release-recovery.yml
+index 6501978..e009265 100644
+--- a/.github/workflows/canonical-release-recovery.yml
++++ b/.github/workflows/canonical-release-recovery.yml
+@@ -95,6 +95,7 @@ jobs:
+               DTOS_CONTEXTUAL_BACK_EVIDENCE="/output/contextual-back",
+               DTOS_FOIS_BROWSER_EVIDENCE="/output/fois-browser.json",
+               DTOS_PREPARATION_BROWSER_EVIDENCE="/output/preparation-browser.json",
++              DTOS_ACTIVATION_EVIDENCE="/output/activation",
+               PYTHONPATH="/output/observer:/app")
+           git_n = int(os.environ.get("GIT_CONFIG_COUNT", "0"))
+           os.environ["GIT_CONFIG_COUNT"] = str(git_n + 1)
+diff --git a/.github/workflows/product-browser.yml b/.github/workflows/product-browser.yml
+index 3f32524..149ca0e 100644
+--- a/.github/workflows/product-browser.yml
++++ b/.github/workflows/product-browser.yml
+@@ -35,7 +35,7 @@ jobs:
+         # This bounded CI allowance does not change any application timeout.
+         timeout-minutes: 25
+         run: |
+-          docker run --rm --memory=2g --memory-swap=2g --cpus=2 --network=none -e NODE_OPTIONS -e DTOS_TRADE_RESOURCE_BROWSER_EVIDENCE=.validation/trade-resource/evidence/browser -e DTOS_LINEUP_DETAIL_EVIDENCE=.validation/trade-resource/evidence/browser/lineups -e DTOS_TEAM_NEED_EVIDENCE=.validation/trade-resource/evidence/browser/team-need -e DTOS_PROTECTIONS_EVIDENCE=.validation/trade-resource/evidence/browser/protections -e DTOS_COMPARE_EVIDENCE=.validation/trade-resource/evidence/browser/offer-comparison -v "$PWD:$PWD" -w "$PWD" -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0="$PWD" dtos-browser-validation python -m unittest -v tests.test_recommended_protections_browser tests.test_offer_comparison tests.test_offer_comparison_browser tests.test_team_trade_need tests.test_team_trade_need_browser tests.test_00_trade_simple_browser tests.test_trade_actionability tests.test_trade_actionability_browser tests.test_trade_conditional_summary tests.test_trade_recommendation_clarity tests.test_batch5_recommended_browser tests.test_franchise_timeline_coverage tests.test_franchise_timeline_browser tests.test_trade_reserve_evidence tests.test_trade_lineup_detail tests.test_trade_lineup_detail_browser tests.test_trade_resource_admission tests.test_trade_resource_browser tests.test_multileague_projection_browser tests.test_relative_personal_values tests.test_relative_personal_browser tests.test_decision_history_continuity_browser tests.test_personal_rankings_compatibility tests.test_personal_rankings_recovery_storage tests.test_personal_rankings_recovery_trade tests.test_personal_rankings_recovery_browser tests.test_personal_rankings_recovery_trade_browser tests.test_personal_rankings_partial_browser tests.test_dossier_plain_english tests.test_plain_english_home_depth tests.test_builder_plain_english tests.test_plain_english_preservation_final tests.test_plain_english_final_browser tests.test_plain_english_decisions tests.test_plain_english_browser tests.test_personal_rankings_availability tests.test_personal_rankings_availability_browser tests.test_personal_rankings tests.test_personal_rankings_store tests.test_personal_rankings_integration tests.test_personal_trade_workflows tests.test_personal_rankings_browser tests.test_personal_rankings_accessibility_browser tests.test_personal_trade_browser tests.test_market_trend_current_browser tests.test_standings_positioning tests.test_standings_positioning_browser tests.test_matchup_portraits_browser tests.test_matchups_phone tests.test_matchups_phone_browser tests.test_trade_projection_freshness tests.test_trade_projection_freshness_browser tests.test_trade_preview_scope_browser tests.test_trade_simple_discovery tests.test_fois_final_trust_browser tests.test_fois_evidence_integrity tests.test_fois_trust_browser tests.test_proposal_tray_browser tests.test_journey_evidence tests.test_journey_corrections_browser tests.test_dossier_status_browser tests.test_phone_visual_corrections_browser tests.test_phone_design_semantics tests.test_phone_design_browser tests.test_trade_calculator tests.test_trade_calculator_browser tests.test_calculator_balance_feedback_browser tests.test_calculator_stale_feedback_browser tests.test_trade_explicit_navigation_browser tests.test_trade_navigation_identity tests.test_trade_navigation_browser tests.test_player_actions tests.test_player_actions_browser tests.test_trade_performance tests.test_trade_construction_performance tests.test_trade_performance_browser tests.test_technical_details_browser tests.test_canonical_asset_facts tests.test_canonical_asset_facts_browser tests.test_product_browser_journey tests.test_matchup_browser_contract tests.test_trade_center_browser tests.test_trade_scout_state_browser tests.test_make_it_cheaper_browser tests.test_trade_center_accessibility tests.test_trade_workspace_browser tests.test_trade_workspace_batch1 tests.test_live_inspection tests.test_browser_fixture_images tests.test_visual_retirement tests.test_trade_decision_experience tests.test_trade_decision_browser tests.test_trade_decision_http_browser tests.test_trade_decision_standings_browser tests.test_batch6_trade_ux tests.test_trade_p2_browser tests.test_trade_final_evidence_browser tests.test_trade_endorsement_integrity tests.test_trade_missing_market_presentation tests.test_batch6_trade_explanation tests.test_league_entry_coordination
++          docker run --rm --memory=2g --memory-swap=2g --cpus=2 --network=none -e NODE_OPTIONS -e DTOS_TRADE_RESOURCE_BROWSER_EVIDENCE=.validation/trade-resource/evidence/browser -e DTOS_LINEUP_DETAIL_EVIDENCE=.validation/trade-resource/evidence/browser/lineups -e DTOS_TEAM_NEED_EVIDENCE=.validation/trade-resource/evidence/browser/team-need -e DTOS_ACTIVATION_EVIDENCE=.validation/trade-resource/evidence/browser/activation -e DTOS_PROTECTIONS_EVIDENCE=.validation/trade-resource/evidence/browser/protections -e DTOS_COMPARE_EVIDENCE=.validation/trade-resource/evidence/browser/offer-comparison -v "$PWD:$PWD" -w "$PWD" -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0="$PWD" dtos-browser-validation python -m unittest -v tests.test_account_activation_deferral tests.test_recommended_protections_browser tests.test_offer_comparison tests.test_offer_comparison_browser tests.test_team_trade_need tests.test_team_trade_need_browser tests.test_00_trade_simple_browser tests.test_trade_actionability tests.test_trade_actionability_browser tests.test_trade_conditional_summary tests.test_trade_recommendation_clarity tests.test_batch5_recommended_browser tests.test_franchise_timeline_coverage tests.test_franchise_timeline_browser tests.test_trade_reserve_evidence tests.test_trade_lineup_detail tests.test_trade_lineup_detail_browser tests.test_trade_resource_admission tests.test_trade_resource_browser tests.test_multileague_projection_browser tests.test_relative_personal_values tests.test_relative_personal_browser tests.test_decision_history_continuity_browser tests.test_personal_rankings_compatibility tests.test_personal_rankings_recovery_storage tests.test_personal_rankings_recovery_trade tests.test_personal_rankings_recovery_browser tests.test_personal_rankings_recovery_trade_browser tests.test_personal_rankings_partial_browser tests.test_dossier_plain_english tests.test_plain_english_home_depth tests.test_builder_plain_english tests.test_plain_english_preservation_final tests.test_plain_english_final_browser tests.test_plain_english_decisions tests.test_plain_english_browser tests.test_personal_rankings_availability tests.test_personal_rankings_availability_browser tests.test_personal_rankings tests.test_personal_rankings_store tests.test_personal_rankings_integration tests.test_personal_trade_workflows tests.test_personal_rankings_browser tests.test_personal_rankings_accessibility_browser tests.test_personal_trade_browser tests.test_market_trend_current_browser tests.test_standings_positioning tests.test_standings_positioning_browser tests.test_matchup_portraits_browser tests.test_matchups_phone tests.test_matchups_phone_browser tests.test_trade_projection_freshness tests.test_trade_projection_freshness_browser tests.test_trade_preview_scope_browser tests.test_trade_simple_discovery tests.test_fois_final_trust_browser tests.test_fois_evidence_integrity tests.test_fois_trust_browser tests.test_proposal_tray_browser tests.test_journey_evidence tests.test_journey_corrections_browser tests.test_dossier_status_browser tests.test_phone_visual_corrections_browser tests.test_phone_design_semantics tests.test_phone_design_browser tests.test_trade_calculator tests.test_trade_calculator_browser tests.test_calculator_balance_feedback_browser tests.test_calculator_stale_feedback_browser tests.test_trade_explicit_navigation_browser tests.test_trade_navigation_identity tests.test_trade_navigation_browser tests.test_player_actions tests.test_player_actions_browser tests.test_trade_performance tests.test_trade_construction_performance tests.test_trade_performance_browser tests.test_technical_details_browser tests.test_canonical_asset_facts tests.test_canonical_asset_facts_browser tests.test_product_browser_journey tests.test_matchup_browser_contract tests.test_trade_center_browser tests.test_trade_scout_state_browser tests.test_make_it_cheaper_browser tests.test_trade_center_accessibility tests.test_trade_workspace_browser tests.test_trade_workspace_batch1 tests.test_live_inspection tests.test_browser_fixture_images tests.test_visual_retirement tests.test_trade_decision_experience tests.test_trade_decision_browser tests.test_trade_decision_http_browser tests.test_trade_decision_standings_browser tests.test_batch6_trade_ux tests.test_trade_p2_browser tests.test_trade_final_evidence_browser tests.test_trade_endorsement_integrity tests.test_trade_missing_market_presentation tests.test_batch6_trade_explanation tests.test_league_entry_coordination
+           docker run --rm --memory=2g --memory-swap=2g --cpus=2 --network=none -e NODE_OPTIONS -v "$PWD:$PWD" -w "$PWD" -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0="$PWD" dtos-browser-validation python -m unittest -v tests.test_historical_evidence_weeks tests.test_fois_final_trust tests.test_trade_time_market_evidence tests.test_trade_time_market_evidence_browser
+ 
+ 
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index 2cbed51..0acabb4 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -1,3 +1,11 @@
++# v1.22.31 / build 2246 — Distinguish deferred league preparation
++
++Connected-league activation preserves the existing typed capacity deferral instead of presenting it as an unexplained preparation failure. The page explains manual retry, keeps the saved league unchanged and makes clear that no Trade search ran. API clients receive the existing private, no-store deferred response and Retry-After guidance.
++
++Bounded authorized logs record the existing restoration guard inputs and the actual bounded cleanup outcome without payloads, account identifiers or exception messages. They add no telemetry sampling, restoration, provider calls or heavyweight work. Earlier unrecorded guard inputs cannot be recovered by this change.
++
++Memory policy and analytical calculations are unchanged. This corrects error handling; it does not create additional capacity or establish Granite recovery. See docs/audits/ACTIVATION_DEFERRAL_2246.md for source, fixture and live evidence boundaries.
++
+ # v1.22.30 / build 2245 — Protect assets in Recommended Trades
+ 
+ Recommended Trades adds an editable, removable list of owned players and exact picks to protect before an explicit Generate action. The existing exact-identity constraint excludes these assets from outgoing packages, including exploratory offers. Another pick from the same year and round remains eligible. No search is started by opening or editing the controls.
+diff --git a/RELEASE_NOTES.md b/RELEASE_NOTES.md
+index 4c33b5c..b6ed1c2 100644
+--- a/RELEASE_NOTES.md
++++ b/RELEASE_NOTES.md
+@@ -1,3 +1,11 @@
++# v1.22.31 / build 2246 — Distinguish deferred league preparation
++
++Connected-league activation preserves the existing typed capacity deferral instead of presenting it as an unexplained preparation failure. The page explains manual retry, keeps the saved league unchanged and makes clear that no Trade search ran. API clients receive the existing private, no-store deferred response and Retry-After guidance.
++
++Bounded authorized logs record the existing restoration guard inputs and the actual bounded cleanup outcome without payloads, account identifiers or exception messages. They add no telemetry sampling, restoration, provider calls or heavyweight work. Earlier unrecorded guard inputs cannot be recovered by this change.
++
++Memory policy and analytical calculations are unchanged. This corrects error handling; it does not create additional capacity or establish Granite recovery. See docs/audits/ACTIVATION_DEFERRAL_2246.md for source, fixture and live evidence boundaries.
++
+ # v1.22.30 / build 2245 — Protect assets in Recommended Trades
+ 
+ Recommended Trades adds an editable, removable list of owned players and exact picks to protect before an explicit Generate action. The existing exact-identity constraint excludes these assets from outgoing packages, including exploratory offers. Another pick from the same year and round remains eligible. No search is started by opening or editing the controls.
+diff --git a/app_metadata.py b/app_metadata.py
+index cb17e15..b15bf0d 100644
+--- a/app_metadata.py
++++ b/app_metadata.py
+@@ -7,10 +7,10 @@ from datetime import datetime, timezone
+ from pathlib import Path
+ 
+ APPLICATION_NAME = "DTOS"
+-VERSION = "1.22.30"
+-PRODUCT_VERSION = "1.22.30"
+-BUILD_NUMBER = 2245
+-RELEASE_CODENAME = "Temporary Search Protections"
++VERSION = "1.22.31"
++PRODUCT_VERSION = "1.22.31"
++BUILD_NUMBER = 2246
++RELEASE_CODENAME = "Truthful League Preparation"
+ APPLICATION_STARTED_AT = datetime.now(timezone.utc).isoformat()
+ 
+ _REPOSITORY_ROOT = Path(__file__).resolve().parent
+diff --git a/docs/audits/ACTIVATION_DEFERRAL_2246.md b/docs/audits/ACTIVATION_DEFERRAL_2246.md
+new file mode 100644
+index 0000000..cdb3c63
+--- /dev/null
++++ b/docs/audits/ACTIVATION_DEFERRAL_2246.md
+@@ -0,0 +1,27 @@
++# Connected-league activation deferral — build 2246
++
++## Verified baseline and incident evidence
++
++Production v1.22.30/build2245 at commit abbe723a0566cf84a8fff947cf7320cb66567a77, tree cf649ee06ec3228d51d251ce7afbdbb15866f398, was ready at the initial read-only check. Existing authorized Render logs for three November 10 activation failures show restoration starting, acquisition of cache_persistence and failure before meaningful restoration. The retained runtime status is DEFERRED. In the deployed manager, HeavyWorkDeferred and LeagueRuntimeDeferred take that path; other exceptions mark FAILED. Acquiring the cache phase excludes a lease conflict at that acquisition, but does not prove all other processes idle.
++
++Nearby queued serving-process samples report raw container usage about 1.50GB of 2GiB, inactive-file about599MB and anonymous about875MB. Those samples occurred after the request and are not the exact original guard inputs. The hosting working-set metric about902MB excludes memory included in raw cgroup usage and must not be substituted. No OOM was recorded. One intentionally pinned warm runtime and the deferred target were observed; nine source-generation keys do not imply nine resident copies. No eligible production runtime eviction or allocator leak is established.
++
++The supplied earlier cache size35,839,104bytes requires707,643,392bytes with the unchanged16x allowance and128MiB safety margin, before any FOIS outstanding demand. Applying that file size to a nearby raw sample gives a roughly60MiB deficit; this is an illustration using non-atomic historical inputs, not a recovered original admission decision or measured restoration peak. The retained logs do not expose the original exception traceback, guard inputs, cleanup count or reclaimed bytes. The existing private preflight is current advisory metadata, not historical reconstruction. New logging cannot retroactively fill these gaps.
++
++## Confirmed shared defect and narrow correction
++
++The activation handler caught the deferred subtype with all LeagueRuntimeError failures and returned a generic preparation-failed page/API status. It discarded existing deferral and cooldown semantics. Catching the subtype first retains the existing manager decision and safe retry path. The saved account selection is changed only after preparation succeeds, through the unchanged authorized/revision-checked store operation. Deferred requests neither activate the requested league nor run Trade searches. No automatic retry is introduced.
++
++A single prospective bounded log event records the already-calculated final restoration plan and already-performed cleanup counts. It reads no extra telemetry or source data, does not change the predicate, and is not an admission grant. Missing inputs remain unknown, negative measured headroom is preserved, and optional sink failure cannot authorize or abort restoration. Exception logs use the existing safe type/location helper without messages, locals or payloads. No file paths, account/player identifiers or private cache contents are logged by the new event.
++
++## Deterministic acceptance and limitations
++
++Disposable authenticated route controls reproduce the original misleading response and verify the corrected HTML/API result, sixty-second retry guidance, cooldown, no duplicate hydration, unknown-memory deferral, real lease contention, actual guarded safe retry, incompatible publication failure, authorization and unchanged account selection. Phone controls submit the actual league form at320x432,375x667,390x844 and1280x900, verify no overflow, visible feedback, focus and return navigation. Modelled telemetry controls are not measured production pressure. A small compatible real restore proves execution but is not the private Granite payload or a representative restoration demand study.
++
++The existing enforced2GiB lifecycle suites still require actual safe restoration, unsafe pressure deferral, FOIS outstanding-reserve protection, recovery, worker exit, scratch cleanup and server liveness. Full canonical and hosted results, exact source tree, original logs and checksums are recorded externally. Failed commands and earlier assertions remain distinct. Physical iPhone/Safari and owner authenticated live entry/search are not implied by fixture controls.
++
++## Preserved policy and customer outcome
++
++No memory optimization or reserve reduction is made:2GiB effective cap,16x restoration allowance,FOIS768MiB,Trade256+128MiB, raw cgroup accounting, admission rechecks, lifecycle ownership and bounded cleanup are unchanged. Pinned or active contexts are not evicted; inactive-file memory is not arbitrarily credited. Cache compatibility, Sleeper-only scores/projections, explicit zero/negative/missing values, exact picks, neutral/Custom valuations, Trade bilateral thresholds, saved settings and submitted lineups retain their existing behavior.
++
++This release makes a deferred attempt truthful and diagnosable. It does not resolve sustained capacity pressure, establish the original exact allocation, or promise Granite entry. Read-only live entry/search require fresh safe admission and an existing authorized session; stop on deferral. No forced sync, cache clear, restart, FOIS rebuild, Trade search or production preference mutation is performed for publication.
+diff --git a/routes/accounts.py b/routes/accounts.py
+index 45a759c..f721a37 100644
+--- a/routes/accounts.py
++++ b/routes/accounts.py
+@@ -13,8 +13,9 @@ from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, Resp
+ 
+ from config import SESSION_COOKIE_SECURE, SESSION_TTL_HOURS
+ from src.core.accounts import AccountService
+-from src.core.league_runtime import LeagueRuntimeError
++from src.core.league_runtime import LeagueRuntimeDeferred, LeagueRuntimeError
+ from src.platform.account_context import SESSION_COOKIE, current_account
++from src.platform.runtime_errors import PRIVATE_HEADERS, log_runtime_failure, runtime_error_response
+ from src.ui.design_system import DESIGN_SYSTEM_CSS, account_page_header
+ 
+ 
+@@ -50,6 +51,15 @@ def _preparation_unavailable() -> HTMLResponse:
+     return _shell("League preparation unavailable", '<section class="card"><h2>League preparation did not finish.</h2><p>Your saved account and active league are unchanged. Return to your leagues and try again shortly.</p><a class="btn" href="/account/leagues">Your leagues</a></section>', status_code=503)
+ 
+ 
++def _preparation_waiting() -> HTMLResponse:
++    response = _shell("League preparation waiting", '<section class="card"><h2>League preparation is waiting</h2>'
++                      '<p>DTOS is waiting for safe capacity before preparing this league. Another preparation task may still be active.</p>'
++                      '<p>Your saved choices were not changed by this attempt. Wait about a minute, then retry from Your leagues. Capacity is checked again on each manual attempt.</p>'
++                      '<p>No Trade search has run.</p><a class="btn" href="/account/leagues">Your leagues</a></section>', status_code=503)
++    response.headers.update({**PRIVATE_HEADERS, "Retry-After": "60"})
++    return response
++
++
+ def _unmatched_franchise() -> HTMLResponse:
+     return _shell("Review team mapping", '<section class="card"><h1>We found the league, but could not confidently match your team.</h1><p>DTOS did not guess or create ownership. Your saved leagues and active league are unchanged.</p><p>Return to your connected leagues, or review the linked Sleeper identity. You can retry the import after the identity or Sleeper league membership is corrected.</p><div class="grid"><a class="btn" href="/account/leagues">Your leagues</a><a class="btn" href="/account/sleeper">Review Sleeper identity</a></div></section>')
+ 
+@@ -173,7 +183,13 @@ def create_accounts_router(*, service: AccountService, runtime_manager: Any) ->
+             return JSONResponse({"status": "unauthorized_league"}, status_code=403)
+         try:
+             await runtime_manager.get(league_id)
+-        except (httpx.HTTPError, LeagueRuntimeError):
++        except LeagueRuntimeDeferred as exc:
++            # Preserve the existing manager's typed outcome, cooldown and
++            # admission policy. The safe logger records locations, not messages.
++            log_runtime_failure(exc.__cause__ or exc, operation="activation_deferred", status=503)
++            return runtime_error_response(503, deferred=True) if api else _preparation_waiting()
++        except (httpx.HTTPError, LeagueRuntimeError) as exc:
++            log_runtime_failure(exc, operation="activation_preparation", status=503)
+             if api:
+                 return JSONResponse({"status": "league_preparation_unavailable", "message": "League preparation did not finish. Your active league is unchanged. Try again shortly."}, status_code=503)
+             return _preparation_unavailable()
+diff --git a/services/league_preparation.py b/services/league_preparation.py
+index 8d0397b..c62312f 100644
+--- a/services/league_preparation.py
++++ b/services/league_preparation.py
+@@ -18,6 +18,7 @@ from src.platform.cache_budget import JSON_BUDGET, reusable
+ from src.platform.cache_json import load_cache_json
+ from src.platform.lifecycle import HeavyWorkDeferred, lifecycle_coordinator, memory_snapshot
+ from src.platform.memory_reclamation import reclaim_unused_analytical_memory
++from src.platform.runtime_errors import log_restoration_admission
+ from src.platform.fois_admission import (
+     WORKING_RESERVE_BYTES as FOIS_WORKING, SAFETY_MARGIN_BYTES as FOIS_SAFETY,
+ )
+@@ -70,6 +71,7 @@ def restore_cached_runtime(runtime: LeagueRuntime, publish: Callable[[LeagueRunt
+                         or not 0 <= time.time() - stat.st_mtime <= JSON_BUDGET.maximum_age_seconds):
+                     raise ValueError('Saved publication outside retention policy')
+                 sample = memory_snapshot()
++                recovery = None
+                 # Existing FOIS allocations are already in cgroup current, but
+                 # its outstanding demand is not. Do not spend the analytical
+                 # owner's reserve on a newly decoded league. No RSS subtraction
+@@ -109,6 +111,8 @@ def restore_cached_runtime(runtime: LeagueRuntime, publish: Callable[[LeagueRunt
+                                     required_bytes=plan['required_bytes'],
+                                     would_admit=plan['would_admit'])
+                     runtime.lifecycle['cache_restore_memory_recovery'] = recovery
++                log_restoration_admission(file_bytes=stat.st_size, memory=sample,
++                                          plan=plan, recovery=recovery)
+                 if plan['would_admit'] is not True:
+                     raise HeavyWorkDeferred('Saved league preparation is waiting for safe memory headroom.')
+                 payload = load_cache_json(handle)
+diff --git a/src/platform/runtime_errors.py b/src/platform/runtime_errors.py
+index 945252a..34a0ebe 100644
+--- a/src/platform/runtime_errors.py
++++ b/src/platform/runtime_errors.py
+@@ -2,6 +2,7 @@
+ from __future__ import annotations
+ 
+ from collections import deque
++from collections.abc import Mapping
+ import logging
+ from pathlib import PurePath
+ import traceback
+@@ -56,6 +57,66 @@ def log_sync_failure(exc: Exception, *, operation: str) -> None:
+     _log_failure(exc, event="synchronization_failure", operation=operation)
+ 
+ 
++def log_restoration_admission(*, file_bytes: Any, memory: Any, plan: Any,
++                              recovery: Any = None) -> None:
++    """One best-effort bounded record of existing guard inputs, never a guard.
++
++    No new measurement, source read, path, identifier or exception message.
++    Missing records (including a full logging queue) establish nothing about
++    admission or cleanup. Only the caller's unchanged predicate grants work.
++    """
++    from src.platform.observability import request_id_context
++
++    sample = memory if isinstance(memory, Mapping) else {}
++    decision = plan if isinstance(plan, Mapping) else {}
++    reclaimed = recovery if isinstance(recovery, Mapping) else {}
++
++    def number(value):
++        return value if type(value) is int and value >= 0 else None
++
++    def boolean(value):
++        return value if type(value) is bool else None
++
++    reason = decision.get('reason')
++    diagnostic = {
++        'schema': 'cache-restoration-admission-v1',
++        'scope': 'existing_guard_inputs_not_atomic',
++        'file_bytes': number(file_bytes),
++        'current_bytes': number(sample.get('cgroup_current_bytes')),
++        'limit_bytes': number(sample.get('cgroup_limit_bytes')),
++        'anonymous_bytes': number(sample.get('cgroup_anonymous_bytes')),
++        'inactive_file_bytes': number(sample.get('cgroup_inactive_file_bytes')),
++        'reason': reason if isinstance(reason, str) and reason in {
++            'sufficient_headroom', 'insufficient_headroom', 'unknown_file_size',
++            'unknown_reservation', 'unknown_memory',
++        } else None,
++        'would_admit': boolean(decision.get('would_admit')),
++        'headroom_bytes': decision.get('headroom_bytes') if type(decision.get('headroom_bytes')) is int else None,
++        **{key: number(decision.get(key)) for key in (
++            'effective_limit_bytes', 'working_bytes',
++            'safety_bytes', 'fois_working_bytes', 'fois_safety_bytes', 'required_bytes',
++        )},
++        'cleanup': {
++            'attempted': reclaimed.get('attempted') is True,
++            **{key: number(reclaimed.get(key)) for key in (
++                'before_bytes', 'after_bytes', 'expired_entries',
++            )},
++            **{key: boolean(reclaimed.get(key)) for key in (
++                'idle_worker_retired', 'allocator_trimmed', 'cleanup_unavailable',
++            )},
++        },
++    }
++    try:
++        logging.getLogger('dtos.request').info('cache_restoration_admission', extra={
++            'event': 'cache_restoration_admission', 'request_id': request_id_context.get(),
++            'diagnostic': diagnostic,
++        })
++    except (OSError, ValueError, TypeError, RuntimeError):
++        # Optional telemetry must not turn a capacity deferral into a source
++        # failure/fallback. The caller still executes its exact existing guard.
++        pass
++
++
+ def customer_runtime_health(payload: dict[str, Any]) -> dict[str, Any]:
+     """Preserve health facts without reflecting a cached acquisition exception."""
+     result = dict(payload)
+diff --git a/tests/test_account_activation_deferral.py b/tests/test_account_activation_deferral.py
+new file mode 100644
+index 0000000..940a2b1
+--- /dev/null
++++ b/tests/test_account_activation_deferral.py
+@@ -0,0 +1,242 @@
++"""Typed activation outcomes through real routes, restoration and ownership."""
++from datetime import datetime, timezone
++import json
++import logging
++import os
++from pathlib import Path
++import subprocess
++from time import monotonic
++import unittest
++from unittest.mock import Mock, patch
++
++from services import league_preparation as preparation
++from src.core.league_runtime import LeagueRuntime, LeagueRuntimeError, RuntimeState
++from src.platform import runtime_errors
++from src.platform.lifecycle import HeavyWorkDeferred, lifecycle_coordinator
++from tests import test_cold_league_recovery as cold
++from tests.test_import_commissioner_integrity import snapshot
++from tests.test_league_runtime import league_data
++
++LIMIT = 2 * 1024**3
++
++
++def record(name, observations, page=None):
++    target = os.environ.get('DTOS_ACTIVATION_EVIDENCE')
++    if not target:
++        return
++    path = Path(target)
++    path.mkdir(parents=True, exist_ok=True)
++    meta = dict(commit=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),
++                tree=subprocess.check_output(['git','rev-parse','HEAD^{tree}'],text=True).strip(),
++                working_tree_clean=not subprocess.check_output(['git','status','--porcelain'],text=True).strip(),
++                physical_safari_tested=False, scope='Disposable authenticated native route/manager/guard controls; modeled telemetry identified, not live Granite',
++                observations=observations)
++    (path/(name+'.json')).write_text(json.dumps(meta,indent=2)+'\n')
++    if page:
++        page.screenshot(path=str(path/(name+'.png')),full_page=True)
++
++
++class ActivationDeferralHTTPTests(unittest.TestCase):
++    upstream = cold.ColdLeagueRecoveryTests.upstream
++
++    def setUp(self):
++        cold.ColdLeagueRecoveryTests.setUp(self)
++        self.store.activate(self.account,'100')
++        self.path = Path(self.folder.name)/'prepared.json'
++        self.path.write_text(json.dumps({'data':league_data('200'),'last_sync':datetime.now(timezone.utc).isoformat()}))
++        self.enterContext(patch.object(preparation,'league_cache_file',return_value=self.path))
++        self.hydrations = []
++        async def hydrate(runtime):
++            self.hydrations.append(runtime.league_id)
++            if not await preparation.restore_cached_runtime_owned(runtime,lambda _:None,expected_season=2026):
++                raise LeagueRuntimeError('private incompatible publication details')
++            return runtime.state['data']
++        self.manager._hydrator = hydrate
++
++    def post(self,api=False):
++        if api:
++            return self.client.post('/api/account/active-league',json={'league_id':'200'},headers={'X-CSRF-Token':self.csrf})
++        return self.client.post('/account/leagues/200/activate',data={'csrf_token':self.csrf},follow_redirects=False)
++
++    def test_memory_deferral_stays_typed_in_html_and_api(self):
++        before = snapshot(self.store)
++        with patch.object(preparation,'memory_snapshot',return_value={'cgroup_current_bytes':LIMIT-200*1024**2,'cgroup_limit_bytes':LIMIT}), patch.object(preparation,'load_cache_json') as decode:
++            html,api = self.post(),self.post(True)
++            decode.assert_not_called()
++        self.assertEqual((html.status_code,api.status_code),(503,503))
++        self.assertIn('League preparation is waiting',html.text)
++        self.assertNotIn('League preparation did not finish',html.text)
++        self.assertIn('minute',html.text)
++        self.assertIn('No Trade search',html.text)
++        self.assertEqual((api.json()['status'],api.json()['code']),('deferred','league_preparation_waiting'))
++        for response in (html,api):
++            self.assertEqual(response.headers['retry-after'],'60')
++            self.assertIn('no-store',response.headers['cache-control'])
++            self.assertIn('private',response.headers['cache-control'])
++        self.assertEqual(snapshot(self.store),before)
++        self.assertEqual(self.hydrations,['200'])
++        self.assertEqual(self.manager.resident('200').status,RuntimeState.DEFERRED)
++        self.assertEqual(self.source_requests,[])
++        record('typed-capacity',dict(html=503,api=api.json(),retry_after='60',modeled_headroom_bytes=200*1024**2,
++               account_unchanged=True,source_requests=0,actual_hydrations=1))
++
++    def test_cooldown_never_repeats_restoration_or_changes_account(self):
++        before = snapshot(self.store)
++        with patch.object(preparation,'memory_snapshot',return_value={'cgroup_current_bytes':LIMIT-200*1024**2,'cgroup_limit_bytes':LIMIT}), patch.object(preparation,'reclaim_unused_analytical_memory',return_value={}) as cleanup:
++            first,second = self.post(),self.post()
++        self.assertEqual((first.status_code,second.status_code),(503,503))
++        self.assertEqual(second.headers.get('retry-after'),'60')
++        self.assertEqual(self.hydrations,['200'])
++        cleanup.assert_called_once_with()
++        self.assertEqual(snapshot(self.store),before)
++
++    def test_unknown_memory_and_real_lease_conflict_remain_deferred(self):
++        before = snapshot(self.store)
++        with patch.object(preparation,'memory_snapshot',return_value={}), patch.object(preparation,'load_cache_json') as decode, patch.object(preparation,'reclaim_unused_analytical_memory') as cleanup:
++            response = self.post(True)
++            decode.assert_not_called()
++            cleanup.assert_not_called()
++        self.assertEqual(response.json()['status'],'deferred')
++        with patch('src.core.league_runtime.manager.monotonic',return_value=monotonic()+61), lifecycle_coordinator.phase('sleeper_sync'), patch.object(preparation,'load_cache_json') as decode:
++            response = self.post(True)
++            decode.assert_not_called()
++        self.assertEqual(response.json()['status'],'deferred')
++        self.assertEqual(self.manager.resident('200').status,RuntimeState.DEFERRED)
++        self.assertEqual(snapshot(self.store),before)
++
++    def test_real_safe_restore_and_explicit_retry_can_activate(self):
++        with lifecycle_coordinator.phase('sleeper_sync'):
++            self.assertEqual(self.post().status_code,503)
++        with patch('src.core.league_runtime.manager.monotonic',return_value=monotonic()+61):
++            response = self.post()
++        self.assertEqual(response.status_code,303,response.text)
++        self.assertEqual(self.store.context_for_session(self.token).active_league_id,'200')
++        self.assertEqual(self.manager.resident('200').status,RuntimeState.WARM)
++        self.assertEqual(self.manager.resident('200').state['data'],league_data('200'))
++        self.assertEqual(self.hydrations,['200','200'])
++        self.assertEqual(self.source_requests,[])
++        record('real-recovery',dict(initial=503,explicit_retry=303,warm=True,source_values_preserved=True,source_requests=0,
++               limitation='Small compatible fixture, actual enforced memory telemetry; not private Granite payload or live acceptance'))
++
++    def test_incompatible_failure_stays_distinct_and_private(self):
++        payload = json.loads(self.path.read_text())
++        payload['data']['league']['league_id'] = '300'
++        self.path.write_text(json.dumps(payload))
++        before = snapshot(self.store)
++        response = self.post(True)
++        self.assertEqual(response.status_code,503)
++        self.assertNotEqual(response.json()['status'],'deferred')
++        self.assertNotIn('private incompatible',response.text)
++        self.assertNotIn('retry-after',response.headers)
++        self.assertEqual(self.manager.resident('200').status,RuntimeState.FAILED)
++        self.assertEqual(snapshot(self.store),before)
++        self.assertEqual(self.source_requests,[])
++
++    def test_foreign_league_rejected_before_preparation(self):
++        before = snapshot(self.store)
++        response = self.client.post('/account/leagues/999/activate',data={'csrf_token':self.csrf})
++        self.assertEqual(response.status_code,403)
++        self.assertEqual(self.hydrations,[])
++        self.assertEqual(snapshot(self.store),before)
++
++    def test_cause_location_is_logged_without_exception_message(self):
++        with patch.object(preparation,'memory_snapshot',return_value={}), self.assertLogs('dtos.request',level='WARNING') as logs:
++            self.post()
++        failures = [r for r in logs.records if getattr(r,'event',None)=='league_runtime_failure']
++        self.assertEqual(len(failures),1)
++        diag = failures[0].diagnostic
++        self.assertEqual((diag['operation'],diag['exception_type']),('activation_deferred','HeavyWorkDeferred'))
++        self.assertTrue(any(r['file']=='league_preparation.py' and r['function']=='restore_cached_runtime' for r in diag['frames']))
++        self.assertNotIn('Saved league preparation',str(diag))
++        self.assertNotIn(self.token,str(diag))
++
++
++class AdmissionLogTests(unittest.TestCase):
++    def test_final_existing_plan_and_actual_cleanup_counts_are_bounded(self):
++        from src.platform.cache_restoration_admission import restoration_admission
++        from src.platform.fois_admission import WORKING_RESERVE_BYTES,SAFETY_MARGIN_BYTES
++        memory = dict(cgroup_current_bytes=1502986240,cgroup_limit_bytes=LIMIT,cgroup_anonymous_bytes=875569152,
++                      cgroup_inactive_file_bytes=599330816,secret='private source payload')
++        plan = restoration_admission(35839104,memory,False,fois_working_bytes=WORKING_RESERVE_BYTES,fois_safety_bytes=SAFETY_MARGIN_BYTES)
++        recovery = dict(attempted=True,before_bytes=1503500000,after_bytes=1502986240,expired_entries=0,
++                        idle_worker_retired=False,allocator_trimmed=True,secret='private cleanup detail')
++        with self.assertLogs('dtos.request',level='INFO') as logs:
++            runtime_errors.log_restoration_admission(file_bytes=35839104,memory=memory,plan=plan,recovery=recovery)
++        self.assertEqual(len(logs.records),1)
++        diag = logs.records[0].diagnostic
++        self.assertEqual(diag['reason'],'insufficient_headroom')
++        self.assertEqual(diag['required_bytes'],707643392)
++        self.assertEqual(diag['headroom_bytes'],LIMIT-memory['cgroup_current_bytes'])
++        self.assertEqual(diag['cleanup']['expired_entries'],0)
++        self.assertEqual(diag['cleanup']['before_bytes'],recovery['before_bytes'])
++        self.assertEqual(diag['cleanup']['after_bytes'],recovery['after_bytes'])
++        self.assertFalse(diag['would_admit'])
++        self.assertNotIn('private',json.dumps(diag))
++        self.assertNotIn('secret',json.dumps(diag))
++        self.assertLess(len(json.dumps(diag)),2048)
++
++    def test_unknown_inputs_remain_unknown(self):
++        with self.assertLogs('dtos.request',level='INFO') as logs:
++            runtime_errors.log_restoration_admission(file_bytes=True,memory={'cgroup_current_bytes':True},plan={'reason':'private reason'})
++        diag = logs.records[0].diagnostic
++        for key in ['file_bytes','current_bytes','would_admit','reason']:
++            self.assertIsNone(diag[key])
++        self.assertFalse(diag['cleanup']['attempted'])
++        self.assertIsNone(diag['cleanup']['expired_entries'])
++
++    def test_known_negative_headroom_is_preserved(self):
++        with self.assertLogs('dtos.request',level='INFO') as logs:
++            runtime_errors.log_restoration_admission(file_bytes=0,memory={},plan={'headroom_bytes':-1,'reason':'insufficient_headroom','would_admit':False})
++        self.assertEqual(logs.records[0].diagnostic['headroom_bytes'],-1)
++
++    def test_optional_sink_failure_cannot_change_admission(self):
++        from tests import test_league_entry_coordination as entry
++        helper = entry.CachedPublicationTests()
++        helper.setUp()
++        self.addCleanup(helper.doCleanups)
++        with patch.object(preparation,'memory_snapshot',return_value={}), patch.object(logging.getLogger('dtos.request'),'info',side_effect=OSError('sink unavailable')), patch.object(preparation,'load_cache_json') as decode:
++            with self.assertRaises(HeavyWorkDeferred):
++                preparation.restore_cached_runtime(LeagueRuntime('200'),Mock())
++            decode.assert_not_called()
++
++
++class ActivationDeferralPhoneTests(unittest.TestCase):
++    setUp = cold.ColdLeagueRecoveryTests.setUp
++    upstream = cold.ColdLeagueRecoveryTests.upstream
++
++    def test_normal_form_is_accessible_and_never_retries_automatically(self):
++        self.store.activate(self.account,'100')
++        self.discovery_failed = True
++        path = Path(self.folder.name)/'phone-cache.json'
++        path.write_text(json.dumps({'data':league_data('200'),'last_sync':datetime.now(timezone.utc).isoformat()}))
++        self.enterContext(patch.object(preparation,'league_cache_file',return_value=path))
++        before = snapshot(self.store)
++        rows = []
++        with lifecycle_coordinator.phase('sleeper_sync'):
++            for width,height in ((320,432),(375,667),(390,844),(1280,900)):
++                with cold.onboarding.PublicOnboardingTests.browser(self,width,height) as page:
++                    page.goto(self.origin+'/account/leagues',wait_until='networkidle')
++                    requests_before = list(self.source_requests)
++                    with page.expect_response(lambda r:'/account/leagues/200/activate' in r.url and r.request.method=='POST') as posted:
++                        page.locator('form[action="/account/leagues/200/activate"] button').click()
++                    page.wait_for_load_state('networkidle')
++                    self.assertEqual(posted.value.status,503)
++                    self.assertEqual(posted.value.headers.get('retry-after'),'60')
++                    self.assertTrue(page.get_by_role('heading',name='League preparation is waiting').is_visible())
++                    self.assertNotIn('League preparation did not finish',page.locator('body').inner_text())
++                    self.assertIn('No Trade search',page.locator('body').inner_text())
++                    link = page.get_by_role('link',name='Your leagues',exact=True)
++                    self.assertGreaterEqual(link.bounding_box()['height'],44)
++                    link.focus()
++                    self.assertNotEqual(link.evaluate('e=>getComputedStyle(e).outlineStyle'),'none')
++                    self.assertLessEqual(page.evaluate('document.documentElement.scrollWidth'),width)
++                    self.assertEqual(self.source_requests,requests_before)
++                    self.assertEqual(snapshot(self.store),before)
++                    row=dict(viewport=[width,height],status=503,retry_after='60',no_overflow=True,no_new_source_requests=True,account_unchanged=True)
++                    rows.append(row)
++                    record('phone-'+str(width),row,page)
++                    link.press('Enter')
++                    page.wait_for_load_state('networkidle')
++                    self.assertTrue(page.get_by_role('heading', name='Your leagues', exact=True).is_visible())
++                    self.assertEqual(snapshot(self.store),before)
++        record('browser',rows)

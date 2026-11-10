@@ -1,0 +1,282 @@
+{
+  "baseline": "abbe723a0566cf84a8fff947cf7320cb66567a77",
+  "tree": "cf649ee06ec3228d51d251ce7afbdbb15866f398",
+  "tests": 6,
+  "passed": true,
+  "cases": [
+    {
+      "case": "modeled queued-sample inputs; not original guard evidence",
+      "http": 503,
+      "retry_after": null,
+      "generic_failure": true,
+      "waiting_label": false,
+      "chain": [
+        [
+          "LeagueRuntimeDeferred",
+          "HeavyWorkDeferred"
+        ]
+      ],
+      "runtime_state": "deferred",
+      "deferrals": 1,
+      "failures": 0,
+      "restore_calls": 1,
+      "cleanup_fixture_results": [
+        {
+          "expired_entries": 0,
+          "idle_worker_retired": false,
+          "allocator_trimmed": true
+        }
+      ],
+      "recovery_fixture_metadata": {
+        "attempted": true,
+        "before_bytes": 1502986240,
+        "expired_entries": 0,
+        "idle_worker_retired": false,
+        "allocator_trimmed": true,
+        "after_bytes": 1502986240,
+        "required_bytes": 707643392,
+        "would_admit": false
+      },
+      "cache_bytes": 35839104,
+      "admission_inputs": {
+        "cgroup_current_bytes": 1502986240,
+        "cgroup_limit_bytes": 2147483648
+      },
+      "real_container_sample": {
+        "rss_bytes": 97931264,
+        "vms_bytes": 359514112,
+        "system_available_bytes": 17720299520,
+        "memory_accounting_scope": "cgroup",
+        "cgroup_current_bytes": 116330496,
+        "cgroup_limit_bytes": 2147483648,
+        "cgroup_inactive_file_bytes": 36364288,
+        "cgroup_anonymous_bytes": 77193216,
+        "cgroup_memory_events": {
+          "low": 0,
+          "high": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_kill": 0,
+          "oom_group_kill": 0
+        }
+      },
+      "provider_requests": 0
+    },
+    {
+      "case": "cooldown reuse; no repeated heavyweight allocation",
+      "http": 503,
+      "retry_after": null,
+      "generic_failure": true,
+      "waiting_label": false,
+      "chain": [
+        [
+          "LeagueRuntimeDeferred",
+          "HeavyWorkDeferred"
+        ],
+        [
+          "LeagueRuntimeDeferred"
+        ]
+      ],
+      "runtime_state": "deferred",
+      "deferrals": 1,
+      "failures": 0,
+      "restore_calls": 1,
+      "cleanup_fixture_results": [
+        {
+          "expired_entries": 0,
+          "idle_worker_retired": false,
+          "allocator_trimmed": true
+        }
+      ],
+      "recovery_fixture_metadata": {
+        "attempted": true,
+        "before_bytes": 1937768448,
+        "expired_entries": 0,
+        "idle_worker_retired": false,
+        "allocator_trimmed": true,
+        "after_bytes": 1937768448,
+        "required_bytes": 268435456,
+        "would_admit": false
+      },
+      "cache_bytes": 492,
+      "admission_inputs": {
+        "cgroup_current_bytes": 1937768448,
+        "cgroup_limit_bytes": 2147483648
+      },
+      "real_container_sample": {
+        "rss_bytes": 98353152,
+        "vms_bytes": 426622976,
+        "system_available_bytes": 17786843136,
+        "memory_accounting_scope": "cgroup",
+        "cgroup_current_bytes": 79978496,
+        "cgroup_limit_bytes": 2147483648,
+        "cgroup_inactive_file_bytes": 507904,
+        "cgroup_anonymous_bytes": 77627392,
+        "cgroup_memory_events": {
+          "low": 0,
+          "high": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_kill": 0,
+          "oom_group_kill": 0
+        }
+      },
+      "provider_requests": 0
+    },
+    {
+      "case": "unknown telemetry; fail closed",
+      "http": 503,
+      "retry_after": null,
+      "generic_failure": true,
+      "waiting_label": false,
+      "chain": [
+        [
+          "LeagueRuntimeDeferred",
+          "HeavyWorkDeferred"
+        ]
+      ],
+      "runtime_state": "deferred",
+      "deferrals": 1,
+      "failures": 0,
+      "restore_calls": 1,
+      "cleanup_fixture_results": [],
+      "recovery_fixture_metadata": null,
+      "cache_bytes": 492,
+      "admission_inputs": {},
+      "real_container_sample": {
+        "rss_bytes": 99172352,
+        "vms_bytes": 426622976,
+        "system_available_bytes": 17790971904,
+        "memory_accounting_scope": "cgroup",
+        "cgroup_current_bytes": 80736256,
+        "cgroup_limit_bytes": 2147483648,
+        "cgroup_inactive_file_bytes": 503808,
+        "cgroup_anonymous_bytes": 78405632,
+        "cgroup_memory_events": {
+          "low": 0,
+          "high": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_kill": 0,
+          "oom_group_kill": 0
+        }
+      },
+      "provider_requests": 0
+    },
+    {
+      "case": "held fixture sync lease; no memory decision",
+      "http": 503,
+      "retry_after": null,
+      "generic_failure": true,
+      "waiting_label": false,
+      "chain": [
+        [
+          "LeagueRuntimeDeferred",
+          "HeavyWorkDeferred"
+        ]
+      ],
+      "runtime_state": "deferred",
+      "deferrals": 1,
+      "failures": 0,
+      "restore_calls": 1,
+      "cleanup_fixture_results": [],
+      "recovery_fixture_metadata": null,
+      "cache_bytes": 492,
+      "admission_inputs": null,
+      "real_container_sample": {
+        "rss_bytes": 99475456,
+        "vms_bytes": 426622976,
+        "system_available_bytes": 17781776384,
+        "memory_accounting_scope": "cgroup",
+        "cgroup_current_bytes": 81211392,
+        "cgroup_limit_bytes": 2147483648,
+        "cgroup_inactive_file_bytes": 532480,
+        "cgroup_anonymous_bytes": 78565376,
+        "cgroup_memory_events": {
+          "low": 0,
+          "high": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_kill": 0,
+          "oom_group_kill": 0
+        }
+      },
+      "provider_requests": 0
+    },
+    {
+      "case": "small real cache/real admission; not Granite payload or protected live journey",
+      "http": 303,
+      "retry_after": null,
+      "generic_failure": false,
+      "waiting_label": false,
+      "chain": [],
+      "runtime_state": "warm",
+      "deferrals": 0,
+      "failures": 0,
+      "restore_calls": 1,
+      "cleanup_fixture_results": [],
+      "recovery_fixture_metadata": null,
+      "cache_bytes": 492,
+      "admission_inputs": null,
+      "real_container_sample": {
+        "rss_bytes": 101523456,
+        "vms_bytes": 428720128,
+        "system_available_bytes": 17778135040,
+        "memory_accounting_scope": "cgroup",
+        "cgroup_current_bytes": 83333120,
+        "cgroup_limit_bytes": 2147483648,
+        "cgroup_inactive_file_bytes": 561152,
+        "cgroup_anonymous_bytes": 80785408,
+        "cgroup_memory_events": {
+          "low": 0,
+          "high": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_kill": 0,
+          "oom_group_kill": 0
+        }
+      },
+      "provider_requests": 0
+    },
+    {
+      "case": "foreign league body rejected; no source fallback",
+      "http": 503,
+      "retry_after": null,
+      "generic_failure": true,
+      "waiting_label": false,
+      "chain": [
+        [
+          "LeagueRuntimeError"
+        ]
+      ],
+      "runtime_state": "failed",
+      "deferrals": 0,
+      "failures": 1,
+      "restore_calls": 1,
+      "cleanup_fixture_results": [],
+      "recovery_fixture_metadata": null,
+      "cache_bytes": 492,
+      "admission_inputs": null,
+      "real_container_sample": {
+        "rss_bytes": 102273024,
+        "vms_bytes": 428720128,
+        "system_available_bytes": 17780981760,
+        "memory_accounting_scope": "cgroup",
+        "cgroup_current_bytes": 83902464,
+        "cgroup_limit_bytes": 2147483648,
+        "cgroup_inactive_file_bytes": 565248,
+        "cgroup_anonymous_bytes": 81272832,
+        "cgroup_memory_events": {
+          "low": 0,
+          "high": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_kill": 0,
+          "oom_group_kill": 0
+        }
+      },
+      "provider_requests": 0
+    }
+  ],
+  "method": "Real account routes,manager,owned restoration and native lease; model telemetry explicitly separated. Pressure file is harmless JSON+whitespace metadata fixture, never a production cache or representative memory study. Native cleanup results here are fixture-only, not original Render cleanup evidence. Healthy small publication uses actual enforced2GiB telemetry. No providers or production state."
+}

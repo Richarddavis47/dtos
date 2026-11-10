@@ -1,0 +1,931 @@
+{
+  "schema": 1,
+  "prepared_at": "2026-11-10T23:40:09.251363+00:00",
+  "source": "Authorized read-only Render logs, full retained narrow request window; no new request or restoration",
+  "historical": true,
+  "not_current_admission": true,
+  "complete_tool_window": true,
+  "private_original_sha256": "01790ff15c3112cfe1625f7d97825c63282e2640f3046e01e44593144b80542a",
+  "records": [
+    {
+      "timestamp": "2026-11-10T22:58:39.278670831Z",
+      "request_id": "6abbec62-3f97-42b0-8e12-6c893df5ec84",
+      "event": "diagnostic_boundary",
+      "facts": {
+        "name": "request",
+        "boundary": "started",
+        "timestamp": "2026-11-10T22:58:39.273581+00:00",
+        "duration_ms": 0.005,
+        "span_id": 1,
+        "parent_span_id": null,
+        "elapsed_from_trace_ms": 0.019
+      }
+    },
+    {
+      "timestamp": "2026-11-10T22:58:39.278723712Z",
+      "request_id": "6abbec62-3f97-42b0-8e12-6c893df5ec84",
+      "event": "diagnostic_boundary",
+      "facts": {
+        "name": "account_context",
+        "boundary": "started",
+        "timestamp": "2026-11-10T22:58:39.273622+00:00",
+        "duration_ms": 0.002,
+        "span_id": 2,
+        "parent_span_id": 1,
+        "elapsed_from_trace_ms": 0.061
+      }
+    },
+    {
+      "timestamp": "2026-11-10T22:58:39.278740033Z",
+      "request_id": "6abbec62-3f97-42b0-8e12-6c893df5ec84",
+      "event": "diagnostic_boundary",
+      "facts": {
+        "name": "account_context",
+        "boundary": "finished",
+        "timestamp": "2026-11-10T22:58:39.274415+00:00",
+        "status": "complete",
+        "duration_ms": 0.795,
+        "span_id": 2,
+        "parent_span_id": 1,
+        "elapsed_from_trace_ms": 0.854
+      }
+    },
+    {
+      "timestamp": "2026-11-10T22:58:39.278808845Z",
+      "request_id": "6abbec62-3f97-42b0-8e12-6c893df5ec84",
+      "event": "diagnostic_boundary",
+      "facts": {
+        "name": "runtime_hydration",
+        "boundary": "started",
+        "timestamp": "2026-11-10T22:58:39.278329+00:00",
+        "duration_ms": 0.003,
+        "span_id": 3,
+        "parent_span_id": 1,
+        "elapsed_from_trace_ms": 4.768
+      }
+    },
+    {
+      "timestamp": "2026-11-10T22:58:39.282244857Z",
+      "request_id": "6abbec62-3f97-42b0-8e12-6c893df5ec84",
+      "event": "diagnostic_boundary",
+      "facts": {
+        "name": "lifecycle_phase",
+        "boundary": "started",
+        "timestamp": "2026-11-10T22:58:39.281937+00:00",
+        "duration_ms": 0.003,
+        "span_id": 4,
+        "parent_span_id": 3,
+        "elapsed_from_trace_ms": 8.376
+      }
+    },
+    {
+      "timestamp": "2026-11-10T22:58:39.283328366Z",
+      "request_id": "6abbec62-3f97-42b0-8e12-6c893df5ec84",
+      "event": "diagnostic_boundary",
+      "facts": {
+        "name": "lifecycle_phase",
+        "boundary": "phase_acquired",
+        "timestamp": "2026-11-10T22:58:39.283112+00:00",
+        "duration_ms": 1.177,
+        "span_id": 4,
+        "parent_span_id": 3,
+        "elapsed_from_trace_ms": 9.55
+      }
+    },
+    {
+      "timestamp": "2026-11-10T22:58:39.287720113Z",
+      "request_id": "6abbec62-3f97-42b0-8e12-6c893df5ec84",
+      "event": "diagnostic_boundary",
+      "facts": {
+        "name": "lifecycle_phase",
+        "boundary": "finished",
+        "timestamp": "2026-11-10T22:58:39.287181+00:00",
+        "status": "failed",
+        "duration_ms": 5.246,
+        "span_id": 4,
+        "parent_span_id": 3,
+        "elapsed_from_trace_ms": 13.619
+      }
+    },
+    {
+      "timestamp": "2026-11-10T22:58:39.289729537Z",
+      "request_id": "6abbec62-3f97-42b0-8e12-6c893df5ec84",
+      "event": "diagnostic_boundary",
+      "facts": {
+        "name": "runtime_hydration",
+        "boundary": "finished",
+        "timestamp": "2026-11-10T22:58:39.287791+00:00",
+        "status": "failed",
+        "duration_ms": 9.462,
+        "span_id": 3,
+        "parent_span_id": 1,
+        "elapsed_from_trace_ms": 14.227
+      }
+    },
+    {
+      "timestamp": "2026-11-10T22:58:39.289749497Z",
+      "request_id": "6abbec62-3f97-42b0-8e12-6c893df5ec84",
+      "event": "diagnostic_boundary",
+      "facts": {
+        "name": "request",
+        "boundary": "response_headers",
+        "timestamp": "2026-11-10T22:58:39.288436+00:00",
+        "duration_ms": 14.86,
+        "span_id": 1,
+        "parent_span_id": null,
+        "elapsed_from_trace_ms": 14.875
+      }
+    },
+    {
+      "timestamp": "2026-11-10T22:58:39.289789399Z",
+      "request_id": "6abbec62-3f97-42b0-8e12-6c893df5ec84",
+      "event": "diagnostic_boundary",
+      "facts": {
+        "name": "request",
+        "boundary": "response_body_handoff",
+        "timestamp": "2026-11-10T22:58:39.289211+00:00",
+        "duration_ms": 15.635,
+        "span_id": 1,
+        "parent_span_id": null,
+        "elapsed_from_trace_ms": 15.65
+      }
+    },
+    {
+      "timestamp": "2026-11-10T22:58:39.289802699Z",
+      "request_id": "6abbec62-3f97-42b0-8e12-6c893df5ec84",
+      "event": "diagnostic_boundary",
+      "facts": {
+        "name": "request",
+        "boundary": "finished",
+        "timestamp": "2026-11-10T22:58:39.289333+00:00",
+        "status": "complete",
+        "duration_ms": 15.757,
+        "span_id": 1,
+        "parent_span_id": null,
+        "elapsed_from_trace_ms": 15.771
+      }
+    },
+    {
+      "timestamp": "2026-11-10T22:58:39.289828849Z",
+      "request_id": "6abbec62-3f97-42b0-8e12-6c893df5ec84",
+      "event": "request_complete",
+      "method": "POST",
+      "status_code": 503,
+      "duration_ms": 15.866
+    },
+    {
+      "timestamp": "2026-11-10T22:58:39.313102401Z",
+      "request_id": "6abbec62-3f97-42b0-8e12-6c893df5ec84",
+      "event": "diagnostic_boundary",
+      "facts": {
+        "name": "memory_sample",
+        "boundary": "captured",
+        "timestamp": "2026-11-10T22:58:39.312548+00:00",
+        "span_id": 3,
+        "memory": {
+          "cgroup_current_bytes": 1500078080,
+          "cgroup_limit_bytes": 2147483648,
+          "cgroup_inactive_file_bytes": 599261184,
+          "cgroup_anonymous_bytes": 873267200,
+          "cgroup_memory_events": {
+            "low": 0,
+            "high": 0,
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0,
+            "oom_group_kill": 0,
+            "sock_throttled": 0
+          },
+          "rss_bytes": 882147328,
+          "observer_pid": 60,
+          "observer_kind": "main_process",
+          "active_process_count": 2,
+          "zombie_count": 0,
+          "process_samples_are_sequential": true,
+          "capture_duration_ms": 33.528
+        },
+        "residency": {
+          "resident_count": 2,
+          "warm_limit": 2,
+          "hydrating_count": 0,
+          "warm_count": 1,
+          "runtime_samples_truncated": false,
+          "runtimes": [
+            {
+              "role": "other_current",
+              "state": "warm",
+              "active_requests": 0,
+              "pinned": true,
+              "owns_state": false,
+              "background_tasks": 0,
+              "source_generation_count": 9
+            },
+            {
+              "role": "target",
+              "state": "deferred",
+              "active_requests": 0,
+              "pinned": false,
+              "owns_state": true,
+              "background_tasks": 0,
+              "source_generation_count": 0
+            }
+          ]
+        },
+        "requested_boundaries": [
+          {
+            "name": "runtime_hydration",
+            "boundary": "started",
+            "requested_at": "2026-11-10T22:58:39.278380+00:00",
+            "request_id": "6abbec62-3f97-42b0-8e12-6c893df5ec84"
+          }
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-11-10T22:58:39.341164302Z",
+      "request_id": "6abbec62-3f97-42b0-8e12-6c893df5ec84",
+      "event": "diagnostic_boundary",
+      "facts": {
+        "name": "memory_sample",
+        "boundary": "captured",
+        "timestamp": "2026-11-10T22:58:39.340772+00:00",
+        "span_id": 3,
+        "memory": {
+          "cgroup_current_bytes": 1500135424,
+          "cgroup_limit_bytes": 2147483648,
+          "cgroup_inactive_file_bytes": 599261184,
+          "cgroup_anonymous_bytes": 873267200,
+          "cgroup_memory_events": {
+            "low": 0,
+            "high": 0,
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0,
+            "oom_group_kill": 0,
+            "sock_throttled": 0
+          },
+          "rss_bytes": 882245632,
+          "observer_pid": 60,
+          "observer_kind": "main_process",
+          "active_process_count": 2,
+          "zombie_count": 0,
+          "process_samples_are_sequential": true,
+          "capture_duration_ms": 27.904
+        },
+        "residency": {
+          "resident_count": 2,
+          "warm_limit": 2,
+          "hydrating_count": 0,
+          "warm_count": 1,
+          "runtime_samples_truncated": false,
+          "runtimes": [
+            {
+              "role": "other_current",
+              "state": "warm",
+              "active_requests": 0,
+              "pinned": true,
+              "owns_state": false,
+              "background_tasks": 0,
+              "source_generation_count": 9
+            },
+            {
+              "role": "target",
+              "state": "deferred",
+              "active_requests": 0,
+              "pinned": false,
+              "owns_state": true,
+              "background_tasks": 0,
+              "source_generation_count": 0
+            }
+          ]
+        },
+        "requested_boundaries": [
+          {
+            "name": "runtime_hydration",
+            "boundary": "finished",
+            "requested_at": "2026-11-10T22:58:39.287951+00:00",
+            "request_id": "6abbec62-3f97-42b0-8e12-6c893df5ec84"
+          }
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-11-10T23:02:07.085133461Z",
+      "request_id": "69809a43-f9d0-42f0-844a-a517e36aecdd",
+      "event": "diagnostic_boundary",
+      "facts": {
+        "name": "request",
+        "boundary": "started",
+        "timestamp": "2026-11-10T23:02:07.080594+00:00",
+        "duration_ms": 0.007,
+        "span_id": 1,
+        "parent_span_id": null,
+        "elapsed_from_trace_ms": 0.02
+      }
+    },
+    {
+      "timestamp": "2026-11-10T23:02:07.085412428Z",
+      "request_id": "69809a43-f9d0-42f0-844a-a517e36aecdd",
+      "event": "diagnostic_boundary",
+      "facts": {
+        "name": "account_context",
+        "boundary": "started",
+        "timestamp": "2026-11-10T23:02:07.080637+00:00",
+        "duration_ms": 0.002,
+        "span_id": 2,
+        "parent_span_id": 1,
+        "elapsed_from_trace_ms": 0.063
+      }
+    },
+    {
+      "timestamp": "2026-11-10T23:02:07.085424419Z",
+      "request_id": "69809a43-f9d0-42f0-844a-a517e36aecdd",
+      "event": "diagnostic_boundary",
+      "facts": {
+        "name": "account_context",
+        "boundary": "finished",
+        "timestamp": "2026-11-10T23:02:07.081728+00:00",
+        "status": "complete",
+        "duration_ms": 1.092,
+        "span_id": 2,
+        "parent_span_id": 1,
+        "elapsed_from_trace_ms": 1.153
+      }
+    },
+    {
+      "timestamp": "2026-11-10T23:02:07.085443729Z",
+      "request_id": "69809a43-f9d0-42f0-844a-a517e36aecdd",
+      "event": "diagnostic_boundary",
+      "facts": {
+        "name": "runtime_hydration",
+        "boundary": "started",
+        "timestamp": "2026-11-10T23:02:07.084742+00:00",
+        "duration_ms": 0.004,
+        "span_id": 3,
+        "parent_span_id": 1,
+        "elapsed_from_trace_ms": 4.168
+      }
+    },
+    {
+      "timestamp": "2026-11-10T23:02:07.085983114Z",
+      "request_id": "69809a43-f9d0-42f0-844a-a517e36aecdd",
+      "event": "diagnostic_boundary",
+      "facts": {
+        "name": "lifecycle_phase",
+        "boundary": "started",
+        "timestamp": "2026-11-10T23:02:07.085591+00:00",
+        "duration_ms": 0.003,
+        "span_id": 4,
+        "parent_span_id": 3,
+        "elapsed_from_trace_ms": 5.017
+      }
+    },
+    {
+      "timestamp": "2026-11-10T23:02:07.087305789Z",
+      "request_id": "69809a43-f9d0-42f0-844a-a517e36aecdd",
+      "event": "diagnostic_boundary",
+      "facts": {
+        "name": "lifecycle_phase",
+        "boundary": "phase_acquired",
+        "timestamp": "2026-11-10T23:02:07.087023+00:00",
+        "duration_ms": 1.435,
+        "span_id": 4,
+        "parent_span_id": 3,
+        "elapsed_from_trace_ms": 6.449
+      }
+    },
+    {
+      "timestamp": "2026-11-10T23:02:07.090750081Z",
+      "request_id": "69809a43-f9d0-42f0-844a-a517e36aecdd",
+      "event": "diagnostic_boundary",
+      "facts": {
+        "name": "lifecycle_phase",
+        "boundary": "finished",
+        "timestamp": "2026-11-10T23:02:07.090425+00:00",
+        "status": "failed",
+        "duration_ms": 4.837,
+        "span_id": 4,
+        "parent_span_id": 3,
+        "elapsed_from_trace_ms": 9.851
+      }
+    },
+    {
+      "timestamp": "2026-11-10T23:02:07.091046499Z",
+      "request_id": "69809a43-f9d0-42f0-844a-a517e36aecdd",
+      "event": "diagnostic_boundary",
+      "facts": {
+        "name": "runtime_hydration",
+        "boundary": "finished",
+        "timestamp": "2026-11-10T23:02:07.090774+00:00",
+        "status": "failed",
+        "duration_ms": 6.036,
+        "span_id": 3,
+        "parent_span_id": 1,
+        "elapsed_from_trace_ms": 10.2
+      }
+    },
+    {
+      "timestamp": "2026-11-10T23:02:07.092154018Z",
+      "request_id": "69809a43-f9d0-42f0-844a-a517e36aecdd",
+      "event": "diagnostic_boundary",
+      "facts": {
+        "name": "request",
+        "boundary": "response_headers",
+        "timestamp": "2026-11-10T23:02:07.091412+00:00",
+        "duration_ms": 10.824,
+        "span_id": 1,
+        "parent_span_id": null,
+        "elapsed_from_trace_ms": 10.838
+      }
+    },
+    {
+      "timestamp": "2026-11-10T23:02:07.092564749Z",
+      "request_id": "69809a43-f9d0-42f0-844a-a517e36aecdd",
+      "event": "diagnostic_boundary",
+      "facts": {
+        "name": "request",
+        "boundary": "response_body_handoff",
+        "timestamp": "2026-11-10T23:02:07.092145+00:00",
+        "duration_ms": 11.557,
+        "span_id": 1,
+        "parent_span_id": null,
+        "elapsed_from_trace_ms": 11.571
+      }
+    },
+    {
+      "timestamp": "2026-11-10T23:02:07.09258913Z",
+      "request_id": "69809a43-f9d0-42f0-844a-a517e36aecdd",
+      "event": "diagnostic_boundary",
+      "facts": {
+        "name": "request",
+        "boundary": "finished",
+        "timestamp": "2026-11-10T23:02:07.092273+00:00",
+        "status": "complete",
+        "duration_ms": 11.686,
+        "span_id": 1,
+        "parent_span_id": null,
+        "elapsed_from_trace_ms": 11.699
+      }
+    },
+    {
+      "timestamp": "2026-11-10T23:02:07.092707153Z",
+      "request_id": "69809a43-f9d0-42f0-844a-a517e36aecdd",
+      "event": "request_complete",
+      "method": "POST",
+      "status_code": 503,
+      "duration_ms": 11.784
+    },
+    {
+      "timestamp": "2026-11-10T23:02:07.120617848Z",
+      "request_id": "69809a43-f9d0-42f0-844a-a517e36aecdd",
+      "event": "diagnostic_boundary",
+      "facts": {
+        "name": "memory_sample",
+        "boundary": "captured",
+        "timestamp": "2026-11-10T23:02:07.120166+00:00",
+        "span_id": 3,
+        "memory": {
+          "cgroup_current_bytes": 1501827072,
+          "cgroup_limit_bytes": 2147483648,
+          "cgroup_inactive_file_bytes": 599330816,
+          "cgroup_anonymous_bytes": 874409984,
+          "cgroup_memory_events": {
+            "low": 0,
+            "high": 0,
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0,
+            "oom_group_kill": 0,
+            "sock_throttled": 0
+          },
+          "rss_bytes": 883261440,
+          "observer_pid": 60,
+          "observer_kind": "main_process",
+          "active_process_count": 2,
+          "zombie_count": 0,
+          "process_samples_are_sequential": true,
+          "capture_duration_ms": 34.829
+        },
+        "residency": {
+          "resident_count": 2,
+          "warm_limit": 2,
+          "hydrating_count": 0,
+          "warm_count": 1,
+          "runtime_samples_truncated": false,
+          "runtimes": [
+            {
+              "role": "other_current",
+              "state": "warm",
+              "active_requests": 0,
+              "pinned": true,
+              "owns_state": false,
+              "background_tasks": 0,
+              "source_generation_count": 9
+            },
+            {
+              "role": "target",
+              "state": "deferred",
+              "active_requests": 0,
+              "pinned": false,
+              "owns_state": true,
+              "background_tasks": 0,
+              "source_generation_count": 0
+            }
+          ]
+        },
+        "requested_boundaries": [
+          {
+            "name": "runtime_hydration",
+            "boundary": "started",
+            "requested_at": "2026-11-10T23:02:07.084805+00:00",
+            "request_id": "69809a43-f9d0-42f0-844a-a517e36aecdd"
+          }
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-11-10T23:02:07.1535994Z",
+      "request_id": "69809a43-f9d0-42f0-844a-a517e36aecdd",
+      "event": "diagnostic_boundary",
+      "facts": {
+        "name": "memory_sample",
+        "boundary": "captured",
+        "timestamp": "2026-11-10T23:02:07.153163+00:00",
+        "span_id": 3,
+        "memory": {
+          "cgroup_current_bytes": 1501708288,
+          "cgroup_limit_bytes": 2147483648,
+          "cgroup_inactive_file_bytes": 599330816,
+          "cgroup_anonymous_bytes": 874409984,
+          "cgroup_memory_events": {
+            "low": 0,
+            "high": 0,
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0,
+            "oom_group_kill": 0,
+            "sock_throttled": 0
+          },
+          "rss_bytes": 883359744,
+          "observer_pid": 60,
+          "observer_kind": "main_process",
+          "active_process_count": 2,
+          "zombie_count": 0,
+          "process_samples_are_sequential": true,
+          "capture_duration_ms": 32.735
+        },
+        "residency": {
+          "resident_count": 2,
+          "warm_limit": 2,
+          "hydrating_count": 0,
+          "warm_count": 1,
+          "runtime_samples_truncated": false,
+          "runtimes": [
+            {
+              "role": "other_current",
+              "state": "warm",
+              "active_requests": 0,
+              "pinned": true,
+              "owns_state": false,
+              "background_tasks": 0,
+              "source_generation_count": 9
+            },
+            {
+              "role": "target",
+              "state": "deferred",
+              "active_requests": 0,
+              "pinned": false,
+              "owns_state": true,
+              "background_tasks": 0,
+              "source_generation_count": 0
+            }
+          ]
+        },
+        "requested_boundaries": [
+          {
+            "name": "runtime_hydration",
+            "boundary": "finished",
+            "requested_at": "2026-11-10T23:02:07.090859+00:00",
+            "request_id": "69809a43-f9d0-42f0-844a-a517e36aecdd"
+          }
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-11-10T23:04:51.985112263Z",
+      "request_id": "bc89eaac-263b-46f8-be6a-d48eedd4a4c0",
+      "event": "diagnostic_boundary",
+      "facts": {
+        "name": "request",
+        "boundary": "started",
+        "timestamp": "2026-11-10T23:04:51.980944+00:00",
+        "duration_ms": 0.006,
+        "span_id": 1,
+        "parent_span_id": null,
+        "elapsed_from_trace_ms": 0.023
+      }
+    },
+    {
+      "timestamp": "2026-11-10T23:04:51.985340849Z",
+      "request_id": "bc89eaac-263b-46f8-be6a-d48eedd4a4c0",
+      "event": "diagnostic_boundary",
+      "facts": {
+        "name": "account_context",
+        "boundary": "started",
+        "timestamp": "2026-11-10T23:04:51.981002+00:00",
+        "duration_ms": 0.003,
+        "span_id": 2,
+        "parent_span_id": 1,
+        "elapsed_from_trace_ms": 0.082
+      }
+    },
+    {
+      "timestamp": "2026-11-10T23:04:51.98535325Z",
+      "request_id": "bc89eaac-263b-46f8-be6a-d48eedd4a4c0",
+      "event": "diagnostic_boundary",
+      "facts": {
+        "name": "account_context",
+        "boundary": "finished",
+        "timestamp": "2026-11-10T23:04:51.982092+00:00",
+        "status": "complete",
+        "duration_ms": 1.092,
+        "span_id": 2,
+        "parent_span_id": 1,
+        "elapsed_from_trace_ms": 1.171
+      }
+    },
+    {
+      "timestamp": "2026-11-10T23:04:51.985401431Z",
+      "request_id": "bc89eaac-263b-46f8-be6a-d48eedd4a4c0",
+      "event": "diagnostic_boundary",
+      "facts": {
+        "name": "runtime_hydration",
+        "boundary": "started",
+        "timestamp": "2026-11-10T23:04:51.984741+00:00",
+        "duration_ms": 0.003,
+        "span_id": 3,
+        "parent_span_id": 1,
+        "elapsed_from_trace_ms": 3.821
+      }
+    },
+    {
+      "timestamp": "2026-11-10T23:04:51.985801682Z",
+      "request_id": "bc89eaac-263b-46f8-be6a-d48eedd4a4c0",
+      "event": "diagnostic_boundary",
+      "facts": {
+        "name": "lifecycle_phase",
+        "boundary": "started",
+        "timestamp": "2026-11-10T23:04:51.985540+00:00",
+        "duration_ms": 0.003,
+        "span_id": 4,
+        "parent_span_id": 3,
+        "elapsed_from_trace_ms": 4.619
+      }
+    },
+    {
+      "timestamp": "2026-11-10T23:04:51.987057855Z",
+      "request_id": "bc89eaac-263b-46f8-be6a-d48eedd4a4c0",
+      "event": "diagnostic_boundary",
+      "facts": {
+        "name": "lifecycle_phase",
+        "boundary": "phase_acquired",
+        "timestamp": "2026-11-10T23:04:51.986756+00:00",
+        "duration_ms": 1.218,
+        "span_id": 4,
+        "parent_span_id": 3,
+        "elapsed_from_trace_ms": 5.835
+      }
+    },
+    {
+      "timestamp": "2026-11-10T23:04:51.990359423Z",
+      "request_id": "bc89eaac-263b-46f8-be6a-d48eedd4a4c0",
+      "event": "diagnostic_boundary",
+      "facts": {
+        "name": "lifecycle_phase",
+        "boundary": "finished",
+        "timestamp": "2026-11-10T23:04:51.990100+00:00",
+        "status": "failed",
+        "duration_ms": 4.563,
+        "span_id": 4,
+        "parent_span_id": 3,
+        "elapsed_from_trace_ms": 9.179
+      }
+    },
+    {
+      "timestamp": "2026-11-10T23:04:51.991757711Z",
+      "request_id": "bc89eaac-263b-46f8-be6a-d48eedd4a4c0",
+      "event": "diagnostic_boundary",
+      "facts": {
+        "name": "runtime_hydration",
+        "boundary": "finished",
+        "timestamp": "2026-11-10T23:04:51.990383+00:00",
+        "status": "failed",
+        "duration_ms": 5.646,
+        "span_id": 3,
+        "parent_span_id": 1,
+        "elapsed_from_trace_ms": 9.463
+      }
+    },
+    {
+      "timestamp": "2026-11-10T23:04:51.991774071Z",
+      "request_id": "bc89eaac-263b-46f8-be6a-d48eedd4a4c0",
+      "event": "diagnostic_boundary",
+      "facts": {
+        "name": "request",
+        "boundary": "response_headers",
+        "timestamp": "2026-11-10T23:04:51.990841+00:00",
+        "duration_ms": 9.905,
+        "span_id": 1,
+        "parent_span_id": null,
+        "elapsed_from_trace_ms": 9.921
+      }
+    },
+    {
+      "timestamp": "2026-11-10T23:04:51.991780681Z",
+      "request_id": "bc89eaac-263b-46f8-be6a-d48eedd4a4c0",
+      "event": "diagnostic_boundary",
+      "facts": {
+        "name": "request",
+        "boundary": "response_body_handoff",
+        "timestamp": "2026-11-10T23:04:51.991349+00:00",
+        "duration_ms": 10.412,
+        "span_id": 1,
+        "parent_span_id": null,
+        "elapsed_from_trace_ms": 10.428
+      }
+    },
+    {
+      "timestamp": "2026-11-10T23:04:51.991820092Z",
+      "request_id": "bc89eaac-263b-46f8-be6a-d48eedd4a4c0",
+      "event": "diagnostic_boundary",
+      "facts": {
+        "name": "request",
+        "boundary": "finished",
+        "timestamp": "2026-11-10T23:04:51.991432+00:00",
+        "status": "complete",
+        "duration_ms": 10.496,
+        "span_id": 1,
+        "parent_span_id": null,
+        "elapsed_from_trace_ms": 10.512
+      }
+    },
+    {
+      "timestamp": "2026-11-10T23:04:51.991852583Z",
+      "request_id": "bc89eaac-263b-46f8-be6a-d48eedd4a4c0",
+      "event": "request_complete",
+      "method": "POST",
+      "status_code": 503,
+      "duration_ms": 10.588
+    },
+    {
+      "timestamp": "2026-11-10T23:04:52.018213047Z",
+      "request_id": "bc89eaac-263b-46f8-be6a-d48eedd4a4c0",
+      "event": "diagnostic_boundary",
+      "facts": {
+        "name": "memory_sample",
+        "boundary": "captured",
+        "timestamp": "2026-11-10T23:04:52.017719+00:00",
+        "span_id": 3,
+        "memory": {
+          "cgroup_current_bytes": 1502986240,
+          "cgroup_limit_bytes": 2147483648,
+          "cgroup_inactive_file_bytes": 599330816,
+          "cgroup_anonymous_bytes": 875569152,
+          "cgroup_memory_events": {
+            "low": 0,
+            "high": 0,
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0,
+            "oom_group_kill": 0,
+            "sock_throttled": 0
+          },
+          "rss_bytes": 884428800,
+          "observer_pid": 60,
+          "observer_kind": "main_process",
+          "active_process_count": 2,
+          "zombie_count": 0,
+          "process_samples_are_sequential": true,
+          "capture_duration_ms": 32.415
+        },
+        "residency": {
+          "resident_count": 2,
+          "warm_limit": 2,
+          "hydrating_count": 0,
+          "warm_count": 1,
+          "runtime_samples_truncated": false,
+          "runtimes": [
+            {
+              "role": "other_current",
+              "state": "warm",
+              "active_requests": 0,
+              "pinned": true,
+              "owns_state": false,
+              "background_tasks": 0,
+              "source_generation_count": 9
+            },
+            {
+              "role": "target",
+              "state": "deferred",
+              "active_requests": 0,
+              "pinned": false,
+              "owns_state": true,
+              "background_tasks": 0,
+              "source_generation_count": 0
+            }
+          ]
+        },
+        "requested_boundaries": [
+          {
+            "name": "runtime_hydration",
+            "boundary": "started",
+            "requested_at": "2026-11-10T23:04:51.984798+00:00",
+            "request_id": "bc89eaac-263b-46f8-be6a-d48eedd4a4c0"
+          }
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-11-10T23:04:52.050720075Z",
+      "request_id": "bc89eaac-263b-46f8-be6a-d48eedd4a4c0",
+      "event": "diagnostic_boundary",
+      "facts": {
+        "name": "memory_sample",
+        "boundary": "captured",
+        "timestamp": "2026-11-10T23:04:52.050246+00:00",
+        "span_id": 3,
+        "memory": {
+          "cgroup_current_bytes": 1502441472,
+          "cgroup_limit_bytes": 2147483648,
+          "cgroup_inactive_file_bytes": 599330816,
+          "cgroup_anonymous_bytes": 875569152,
+          "cgroup_memory_events": {
+            "low": 0,
+            "high": 0,
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0,
+            "oom_group_kill": 0,
+            "sock_throttled": 0
+          },
+          "rss_bytes": 884523008,
+          "observer_pid": 60,
+          "observer_kind": "main_process",
+          "active_process_count": 2,
+          "zombie_count": 0,
+          "process_samples_are_sequential": true,
+          "capture_duration_ms": 32.251
+        },
+        "residency": {
+          "resident_count": 2,
+          "warm_limit": 2,
+          "hydrating_count": 0,
+          "warm_count": 1,
+          "runtime_samples_truncated": false,
+          "runtimes": [
+            {
+              "role": "other_current",
+              "state": "warm",
+              "active_requests": 0,
+              "pinned": true,
+              "owns_state": false,
+              "background_tasks": 0,
+              "source_generation_count": 9
+            },
+            {
+              "role": "target",
+              "state": "deferred",
+              "active_requests": 0,
+              "pinned": false,
+              "owns_state": true,
+              "background_tasks": 0,
+              "source_generation_count": 0
+            }
+          ]
+        },
+        "requested_boundaries": [
+          {
+            "name": "runtime_hydration",
+            "boundary": "finished",
+            "requested_at": "2026-11-10T23:04:51.990465+00:00",
+            "request_id": "bc89eaac-263b-46f8-be6a-d48eedd4a4c0"
+          }
+        ]
+      }
+    }
+  ],
+  "omitted": [
+    "client IP and HTTP query/user context",
+    "opaque service/log labels",
+    "unneeded runtime identifiers",
+    "unrelated process names/IDs",
+    "private source records, credentials and cache payloads were not requested"
+  ],
+  "limitations": [
+    "Queued memory capture follows failure; it is not the guard input.",
+    "Original exception type/traceback and cleanup result were not emitted by deployed activation handling.",
+    "Runtime DEFERRED and acquired cache phase support the typed admission path from source; no exact historical branch input or fatal allocation is proved.",
+    "One serving process does not establish idleness in other processes.",
+    "Source-generation key count is not a count of retained version copies."
+  ]
+}
