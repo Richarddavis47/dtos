@@ -1,0 +1,993 @@
+diff --git a/.github/workflows/product-browser.yml b/.github/workflows/product-browser.yml
+index e4e66300..3377b72d 100644
+--- a/.github/workflows/product-browser.yml
++++ b/.github/workflows/product-browser.yml
+@@ -35,7 +35,7 @@ jobs:
+         # This bounded CI allowance does not change any application timeout.
+         timeout-minutes: 25
+         run: |
+-          docker run --rm --memory=2g --memory-swap=2g --cpus=2 --network=none -e NODE_OPTIONS -e DTOS_TRADE_RESOURCE_BROWSER_EVIDENCE=.validation/trade-resource/evidence/browser -e DTOS_LINEUP_DETAIL_EVIDENCE=.validation/trade-resource/evidence/browser/lineups -e DTOS_TEAM_NEED_EVIDENCE=.validation/trade-resource/evidence/browser/team-need -v "$PWD:$PWD" -w "$PWD" -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0="$PWD" dtos-browser-validation python -m unittest -v tests.test_team_trade_need tests.test_team_trade_need_browser tests.test_00_trade_simple_browser tests.test_trade_actionability tests.test_trade_actionability_browser tests.test_trade_conditional_summary tests.test_trade_recommendation_clarity tests.test_batch5_recommended_browser tests.test_franchise_timeline_coverage tests.test_franchise_timeline_browser tests.test_trade_reserve_evidence tests.test_trade_lineup_detail tests.test_trade_lineup_detail_browser tests.test_trade_resource_admission tests.test_trade_resource_browser tests.test_multileague_projection_browser tests.test_relative_personal_values tests.test_relative_personal_browser tests.test_decision_history_continuity_browser tests.test_personal_rankings_compatibility tests.test_personal_rankings_recovery_storage tests.test_personal_rankings_recovery_trade tests.test_personal_rankings_recovery_browser tests.test_personal_rankings_recovery_trade_browser tests.test_personal_rankings_partial_browser tests.test_dossier_plain_english tests.test_plain_english_home_depth tests.test_builder_plain_english tests.test_plain_english_preservation_final tests.test_plain_english_final_browser tests.test_plain_english_decisions tests.test_plain_english_browser tests.test_personal_rankings_availability tests.test_personal_rankings_availability_browser tests.test_personal_rankings tests.test_personal_rankings_store tests.test_personal_rankings_integration tests.test_personal_trade_workflows tests.test_personal_rankings_browser tests.test_personal_rankings_accessibility_browser tests.test_personal_trade_browser tests.test_market_trend_current_browser tests.test_standings_positioning tests.test_standings_positioning_browser tests.test_matchup_portraits_browser tests.test_matchups_phone tests.test_matchups_phone_browser tests.test_trade_projection_freshness tests.test_trade_projection_freshness_browser tests.test_trade_preview_scope_browser tests.test_trade_simple_discovery tests.test_fois_final_trust_browser tests.test_fois_evidence_integrity tests.test_fois_trust_browser tests.test_proposal_tray_browser tests.test_journey_evidence tests.test_journey_corrections_browser tests.test_dossier_status_browser tests.test_phone_visual_corrections_browser tests.test_phone_design_semantics tests.test_phone_design_browser tests.test_trade_calculator tests.test_trade_calculator_browser tests.test_calculator_balance_feedback_browser tests.test_calculator_stale_feedback_browser tests.test_trade_explicit_navigation_browser tests.test_trade_navigation_identity tests.test_trade_navigation_browser tests.test_player_actions tests.test_player_actions_browser tests.test_trade_performance tests.test_trade_construction_performance tests.test_trade_performance_browser tests.test_technical_details_browser tests.test_canonical_asset_facts tests.test_canonical_asset_facts_browser tests.test_product_browser_journey tests.test_matchup_browser_contract tests.test_trade_center_browser tests.test_trade_scout_state_browser tests.test_make_it_cheaper_browser tests.test_trade_center_accessibility tests.test_trade_workspace_browser tests.test_trade_workspace_batch1 tests.test_live_inspection tests.test_browser_fixture_images tests.test_visual_retirement tests.test_trade_decision_experience tests.test_trade_decision_browser tests.test_trade_decision_http_browser tests.test_trade_decision_standings_browser tests.test_batch6_trade_ux tests.test_trade_p2_browser tests.test_trade_final_evidence_browser tests.test_trade_endorsement_integrity tests.test_trade_missing_market_presentation tests.test_batch6_trade_explanation tests.test_league_entry_coordination
++          docker run --rm --memory=2g --memory-swap=2g --cpus=2 --network=none -e NODE_OPTIONS -e DTOS_TRADE_RESOURCE_BROWSER_EVIDENCE=.validation/trade-resource/evidence/browser -e DTOS_LINEUP_DETAIL_EVIDENCE=.validation/trade-resource/evidence/browser/lineups -e DTOS_TEAM_NEED_EVIDENCE=.validation/trade-resource/evidence/browser/team-need -e DTOS_COMPARE_EVIDENCE=.validation/trade-resource/evidence/browser/offer-comparison -v "$PWD:$PWD" -w "$PWD" -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0="$PWD" dtos-browser-validation python -m unittest -v tests.test_offer_comparison tests.test_offer_comparison_browser tests.test_team_trade_need tests.test_team_trade_need_browser tests.test_00_trade_simple_browser tests.test_trade_actionability tests.test_trade_actionability_browser tests.test_trade_conditional_summary tests.test_trade_recommendation_clarity tests.test_batch5_recommended_browser tests.test_franchise_timeline_coverage tests.test_franchise_timeline_browser tests.test_trade_reserve_evidence tests.test_trade_lineup_detail tests.test_trade_lineup_detail_browser tests.test_trade_resource_admission tests.test_trade_resource_browser tests.test_multileague_projection_browser tests.test_relative_personal_values tests.test_relative_personal_browser tests.test_decision_history_continuity_browser tests.test_personal_rankings_compatibility tests.test_personal_rankings_recovery_storage tests.test_personal_rankings_recovery_trade tests.test_personal_rankings_recovery_browser tests.test_personal_rankings_recovery_trade_browser tests.test_personal_rankings_partial_browser tests.test_dossier_plain_english tests.test_plain_english_home_depth tests.test_builder_plain_english tests.test_plain_english_preservation_final tests.test_plain_english_final_browser tests.test_plain_english_decisions tests.test_plain_english_browser tests.test_personal_rankings_availability tests.test_personal_rankings_availability_browser tests.test_personal_rankings tests.test_personal_rankings_store tests.test_personal_rankings_integration tests.test_personal_trade_workflows tests.test_personal_rankings_browser tests.test_personal_rankings_accessibility_browser tests.test_personal_trade_browser tests.test_market_trend_current_browser tests.test_standings_positioning tests.test_standings_positioning_browser tests.test_matchup_portraits_browser tests.test_matchups_phone tests.test_matchups_phone_browser tests.test_trade_projection_freshness tests.test_trade_projection_freshness_browser tests.test_trade_preview_scope_browser tests.test_trade_simple_discovery tests.test_fois_final_trust_browser tests.test_fois_evidence_integrity tests.test_fois_trust_browser tests.test_proposal_tray_browser tests.test_journey_evidence tests.test_journey_corrections_browser tests.test_dossier_status_browser tests.test_phone_visual_corrections_browser tests.test_phone_design_semantics tests.test_phone_design_browser tests.test_trade_calculator tests.test_trade_calculator_browser tests.test_calculator_balance_feedback_browser tests.test_calculator_stale_feedback_browser tests.test_trade_explicit_navigation_browser tests.test_trade_navigation_identity tests.test_trade_navigation_browser tests.test_player_actions tests.test_player_actions_browser tests.test_trade_performance tests.test_trade_construction_performance tests.test_trade_performance_browser tests.test_technical_details_browser tests.test_canonical_asset_facts tests.test_canonical_asset_facts_browser tests.test_product_browser_journey tests.test_matchup_browser_contract tests.test_trade_center_browser tests.test_trade_scout_state_browser tests.test_make_it_cheaper_browser tests.test_trade_center_accessibility tests.test_trade_workspace_browser tests.test_trade_workspace_batch1 tests.test_live_inspection tests.test_browser_fixture_images tests.test_visual_retirement tests.test_trade_decision_experience tests.test_trade_decision_browser tests.test_trade_decision_http_browser tests.test_trade_decision_standings_browser tests.test_batch6_trade_ux tests.test_trade_p2_browser tests.test_trade_final_evidence_browser tests.test_trade_endorsement_integrity tests.test_trade_missing_market_presentation tests.test_batch6_trade_explanation tests.test_league_entry_coordination
+           docker run --rm --memory=2g --memory-swap=2g --cpus=2 --network=none -e NODE_OPTIONS -v "$PWD:$PWD" -w "$PWD" -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0="$PWD" dtos-browser-validation python -m unittest -v tests.test_historical_evidence_weeks tests.test_fois_final_trust tests.test_trade_time_market_evidence tests.test_trade_time_market_evidence_browser
+ 
+ 
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index 472ce8b6..14f4e84c 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -1,3 +1,11 @@
++# v1.22.29 / build 2244 — Compare assessed offers with keeping your roster
++
++Trade Center can retain up to two completed assessments for a read-only comparison against their supported pre-trade optimal lineup. Add, explicitly replace or remove an offer without changing the current draft. Each ordered player/pick package, original decision, cost, counterparty case and depth/capacity qualification stays attached to that offer.
++
++A shared lineup comparison requires matching league, franchise, roster baseline, scoring, week and projection publication. Incomplete, changed or incompatible evidence is named rather than inferred as zero. Supported individual effects remain visible when another offer lacks a full lineup. Retained assessments are labeled NOT REVALIDATED; Neutral Market and personal Custom values remain separate.
++
++Opening or expanding the comparison performs no search, reevaluation or source refresh. Existing scoring, qualification, submitted Sleeper lineups, exact pick identity, saved settings and memory/admission policies are unchanged. See docs/audits/OFFER_COMPARISON_2244.md for source/fixture coverage and live limitations.
++
+ # v1.22.28 / build 2243 — Carry a prepared roster need into Trade
+ 
+ My Team adds one contextual “Explore [position] trades” action when the existing, current prepared diagnostic supports a starter or replacement-depth need for the manager’s own franchise. Stale, missing, incompatible or unmappable evidence keeps the general Trade shortcut. The original saved-goal actions remain available.
+diff --git a/RELEASE_NOTES.md b/RELEASE_NOTES.md
+index 6eb9b198..4b61c11f 100644
+--- a/RELEASE_NOTES.md
++++ b/RELEASE_NOTES.md
+@@ -1,3 +1,11 @@
++# v1.22.29 / build 2244 — Compare assessed offers with keeping your roster
++
++Trade Center can retain up to two completed assessments for a read-only comparison against their supported pre-trade optimal lineup. Add, explicitly replace or remove an offer without changing the current draft. Each ordered player/pick package, original decision, cost, counterparty case and depth/capacity qualification stays attached to that offer.
++
++A shared lineup comparison requires matching league, franchise, roster baseline, scoring, week and projection publication. Incomplete, changed or incompatible evidence is named rather than inferred as zero. Supported individual effects remain visible when another offer lacks a full lineup. Retained assessments are labeled NOT REVALIDATED; Neutral Market and personal Custom values remain separate.
++
++Opening or expanding the comparison performs no search, reevaluation or source refresh. Existing scoring, qualification, submitted Sleeper lineups, exact pick identity, saved settings and memory/admission policies are unchanged. See docs/audits/OFFER_COMPARISON_2244.md for source/fixture coverage and live limitations.
++
+ # v1.22.28 / build 2243 — Carry a prepared roster need into Trade
+ 
+ My Team adds one contextual “Explore [position] trades” action when the existing, current prepared diagnostic supports a starter or replacement-depth need for the manager’s own franchise. Stale, missing, incompatible or unmappable evidence keeps the general Trade shortcut. The original saved-goal actions remain available.
+diff --git a/app_metadata.py b/app_metadata.py
+index 500dd51f..a41bd36b 100644
+--- a/app_metadata.py
++++ b/app_metadata.py
+@@ -7,10 +7,10 @@ from datetime import datetime, timezone
+ from pathlib import Path
+ 
+ APPLICATION_NAME = "DTOS"
+-VERSION = "1.22.28"
+-PRODUCT_VERSION = "1.22.28"
+-BUILD_NUMBER = 2243
+-RELEASE_CODENAME = "My Team Trade Need Handoff"
++VERSION = "1.22.29"
++PRODUCT_VERSION = "1.22.29"
++BUILD_NUMBER = 2244
++RELEASE_CODENAME = "Recorded Offer Comparison"
+ APPLICATION_STARTED_AT = datetime.now(timezone.utc).isoformat()
+ 
+ _REPOSITORY_ROOT = Path(__file__).resolve().parent
+diff --git a/components/trade_workspace.py b/components/trade_workspace.py
+index de692c98..93f66e3b 100644
+--- a/components/trade_workspace.py
++++ b/components/trade_workspace.py
+@@ -69,6 +69,8 @@ def trade_workspace(view: dict, workflow: str, asset_id=None, owner_roster_id=No
+ <p id="trade-search-readiness" class="ds-inline-feedback">Search capacity will be checked when you generate or evaluate.</p>
+ <button id="trade-cancel" type="button" hidden>Cancel current operation</button>
+ <span id="trade-results-home"></span><section id="trade-result" role="status" aria-live="polite" tabindex="-1" hidden></section>
++<section id="trade-comparison-tray" class="tw-comparison-tray" aria-label="Selected offers for comparison" aria-live="polite" hidden></section>
++<section id="trade-comparison" class="tw-comparison" aria-labelledby="trade-comparison-heading" hidden></section>
+ {'<details id="recommendation-previous" hidden><summary>Earlier search · not revalidated</summary><p>Earlier offers have not been searched with the current filter. Your Evaluate draft is unchanged.</p><div id="recommendation-previous-offers"></div></details>' if workflow == 'recommended' else ''}
+ {tray}
+ {'<details id="trade-asset-options"><summary>Owned assets and exact constraints · optional</summary>' if workflow == 'recommended' else ''}
+@@ -84,4 +86,4 @@ def trade_workspace(view: dict, workflow: str, asset_id=None, owner_roster_id=No
+ <button id="trade-build-own" type="button" {'hidden' if workflow == 'create' else ''}>Build My Own</button>
+ {market_detail}{balance_controls if not market_editor else ""}
+ <details id="trade-source-context"><summary>League identity details</summary><p id="trade-source-context-identity"></p></details>
+-<p class="muted">Ownership is revalidated before evaluation. Market Balance is neutral market evidence, not the recommendation. DTOS evaluates proposals; it does not send trades to Sleeper.</p></section><p id="trade-operation-announcement" class="tw-announcement" role="status" aria-live="polite" aria-atomic="true"></p><script src="/static/js/strategy_session.js" defer></script><script src="/static/js/trade_workspace.js" defer></script>'''
++<p class="muted">Ownership is revalidated before evaluation. Market Balance is neutral market evidence, not the recommendation. DTOS evaluates proposals; it does not send trades to Sleeper.</p></section><p id="trade-operation-announcement" class="tw-announcement" role="status" aria-live="polite" aria-atomic="true"></p><script src="/static/js/strategy_session.js" defer></script><script src="/static/js/trade_comparison.js" defer></script><script src="/static/js/trade_workspace.js" defer></script>'''
+diff --git a/docs/audits/OFFER_COMPARISON_2244.md b/docs/audits/OFFER_COMPARISON_2244.md
+new file mode 100644
+index 00000000..34385596
+--- /dev/null
++++ b/docs/audits/OFFER_COMPARISON_2244.md
+@@ -0,0 +1,21 @@
++# Recorded offer comparison — build 2244
++
++Baseline inspection confirmed v1.22.28/build2243, commit 6ed905ce18832be10f04e47cac8a703af4895719, tree 9a6fb02bd00b789f6566cfb59f70868972b3ed2d. The actual existing comparison service reevaluates two to four proposals. An enforced-2-GiB disposable baseline replay observed two real evaluation calls, and the workspace renderer had no select-two assessed-offer journey. That legacy API remains unchanged.
++
++The new contextual action reuses completed assessment contexts and existing scoped tab storage. The existing Trade workspace holds at most two compact offers; it does not create another page, database, background operation or comparison API. Add, explicit replacement, removal and return leave the underlying draft and recommendation intact. Original asset order and exact player/pick IDs are separate from the existing order-insensitive evaluation identity. Pick labels retain verified original-franchise metadata. Opening and expanding the comparison perform no HTTP work.
++
++Shared lineup numbers require matching authorized workspace, league/franchise, ownership generation, canonical prepared-roster generation, scoring profile, projection source, season, week and projection generation. The prepared-roster identity is exposed from the profile the workspace already reads; it is not calculated again. Source conflicts, missing metadata, explicit staleness and unsupported/provisional full lineups withhold a joint numerical comparison. A supported independent effect remains visible when the other offer has incomplete lineup evidence under the same established identity. Missing is never zero. The no-trade baseline means no exchanged assets and, only with admitted numerical evidence, zero trade-related change.
++
++Captured decisions, counterparty cases, supported reserve disclosures and configured roster-space consequences remain attached to each offer. The comparison does not choose a winner, endorse an exploratory offer, change a recommendation or infer manager acceptance. Neutral Market evidence and Custom personal values retain their original separate fields. Different valuation modes/methods are explicitly labeled. Submitted Sleeper lineups remain separate from the analytical optimized lineups.
++
++Reloaded records are labeled RETAINED / NOT REVALIDATED. If their immutable identities still match the prepared workspace, recorded snapshot-relative effects can be inspected; the UI makes no new freshness or current-endorsement claim. Changed/aged publications, changed ownership, missing compatible preparation and known stale contexts withhold the shared comparison. Normal admission and evaluation remain necessary for a new assessment. Scope checks use the server-authorized workspace; a hash is not a new authorization mechanism.
++
++Selection takes an independent immutable copy of the completed context. Editing the live draft's valuation mode cannot mutate a selected assessment. A real canonical-source invalidation marks the stored assessments stale; Custom evidence additionally requires the known saved revision, selected method and personal publication identities to match the current prepared workspace. The reload controls separately prove complete retained comparisons and retention of a native incomplete Custom evaluation, without promoting incomplete evidence to supported.
++
++## Acceptance and preservation
++
++Focused controls use real authenticated routes, canonical evaluation and retained native fixture scores: a legal one-QB/FLEX/K/DEF roster, Superflex, a higher-gain/higher-cost pair, incomplete depth, an impossible post-trade starting lineup, source-generation changes, aging, Neutral/Custom differences, replacement/removal, exact ordering, reload and league switching. Four viewports are 320×432, 375×667, 390×844 and 1280×900, with keyboard and Chromium touch emulation. Physical iPhone/Safari and authenticated owner acceptance are not established by these fixtures.
++
++Initial failures are retained separately. They exposed missing static-script registration and assumptions in test setup: the packaged Node binary was not on PATH, an edited draft's board was still collapsed, Playwright cleanup was ordered incorrectly, a reused fixture lacked legal bench capacity, and a selector reached a hidden package variant. The fixture now uses actual legal configured capacity; no roster/admission assertion or qualification rule was weakened. Keyboard focus is tested after real keyboard input rather than mouse modality. The comparison action is visible before nested variants.
++
++No optimizer, scoring, fantasy source, Market/Custom formula, final bilateral qualification, source acquisition, FOIS grade, roster-capacity policy, saved preference, submitted lineup or resource reserve changes. The container cap remains 2 GiB, Trade 256+128 MiB and FOIS 768 MiB. Opening ordinary pages adds no discovery or provider work. Full exact-source mandatory validation and guarded Actions preparation/publication are required before release; the final external evidence package records completed outcomes and all original failed/incomplete attempts.
+diff --git a/routes/trades.py b/routes/trades.py
+index 62251250..c38fe56b 100644
+--- a/routes/trades.py
++++ b/routes/trades.py
+@@ -28,6 +28,7 @@ from services.trade_calculator import calculate_trade_market, balance_trade_mark
+ 
+ _STATIC_ROOT = Path(__file__).resolve().parents[1] / "static"
+ _WORKSPACE_JS = (_STATIC_ROOT / "js" / "trade_workspace.js").read_text(encoding="utf-8")
++_COMPARISON_JS = (_STATIC_ROOT / "js" / "trade_comparison.js").read_text(encoding="utf-8")
+ _WORKSPACE_CSS = (_STATIC_ROOT / "css" / "trade_workspace.css").read_text(encoding="utf-8")
+ _OPPORTUNITIES_JS = (_STATIC_ROOT / "js" / "home-opportunities.js").read_text(encoding="utf-8")
+ _STRATEGY_JS = (_STATIC_ROOT / "js" / "strategy_session.js").read_text(encoding="utf-8")
+@@ -155,6 +156,10 @@ def create_trades_router(*, ensure_fresh: EnsureFresh, require_data: RequireData
+     async def workspace_script() -> Response:
+         return Response(_WORKSPACE_JS, media_type="text/javascript", headers={"Cache-Control": "no-cache"})
+ 
++    @router.get("/static/js/trade_comparison.js", include_in_schema=False)
++    async def comparison_script() -> Response:
++        return Response(_COMPARISON_JS, media_type="text/javascript", headers={"Cache-Control": "no-cache"})
++
+     @router.get("/static/css/trade_workspace.css", include_in_schema=False)
+     async def workspace_styles() -> Response:
+         return Response(_WORKSPACE_CSS, media_type="text/css", headers={"Cache-Control": "no-cache"})
+@@ -411,6 +416,7 @@ def create_trades_router(*, ensure_fresh: EnsureFresh, require_data: RequireData
+         profile = compatible_profile(data, _trade_projection_service(data).snapshot())
+         payload['lineup_preparation'] = {
+             'state': 'prepared' if profile is not None else 'incompatible_or_missing',
++            'generation': profile.get('semantic_generation') if profile is not None else None,
+             'message': ('A compatible lineup publication is prepared. Each offer still needs supported legal pre/post lineups.'
+                 if profile is not None else 'Team-impact analysis needs a compatible prepared league, week and scoring publication. Individual projections may still be visible; Neutral Market comparisons remain separate.')}
+         return JSONResponse(jsonable_encoder(payload), headers={'Cache-Control': 'no-store'})
+diff --git a/static/css/trade_workspace.css b/static/css/trade_workspace.css
+index 2a645bfc..ff08cf79 100644
+--- a/static/css/trade_workspace.css
++++ b/static/css/trade_workspace.css
+@@ -121,3 +121,4 @@ body:has(#trade-builder) .ds-page-header>div:first-child{display:flex;flex-wrap:
+ .tw-discovery-scope{display:block;clear:both;margin:12px 0 8px;line-height:1.5;color:var(--text-secondary);overflow-wrap:anywhere}.tw-intent-help{font-size:12px;font-weight:400;line-height:1.4;color:var(--text-secondary);margin:0}
+ /* Completed analytical evidence: native disclosure, no extra request/solver. */
+ .tw-lineup-details{min-width:0;margin:12px 0}.tw-lineup-details>summary{min-height:44px;cursor:pointer;padding:10px;border:1px solid var(--border);border-radius:8px;font-weight:700}.tw-lineup-details summary:focus-visible{outline:2px solid var(--accent);outline-offset:3px}.tw-lineup-week{min-width:0;padding:12px 0;border-top:1px solid var(--border);overflow-wrap:anywhere}.tw-lineup-phases{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(290px,100%),1fr));gap:16px}.tw-lineup-phases>section{min-width:0}.tw-lineup-table{width:100%;table-layout:fixed;border-collapse:collapse;font-size:14px}.tw-lineup-table caption{text-align:left;font-weight:600;padding:8px 0}.tw-lineup-table th,.tw-lineup-table td{padding:7px 4px;text-align:left;vertical-align:top;border-bottom:1px solid var(--border);overflow-wrap:anywhere}.tw-lineup-table th:first-child{width:22%}.tw-lineup-table th:last-child,.tw-lineup-table td:last-child{width:23%;text-align:right;font-variant-numeric:tabular-nums}.tw-lineup-table td small{display:block;color:var(--text-secondary)}.tw-lineup-warning{border-left:3px solid var(--warning);padding-left:9px}.tw-lineup-source{font-size:12px;overflow-wrap:anywhere;color:var(--text-secondary)}
++.tw-comparison,.tw-comparison-tray{scroll-margin-top:80px;margin:12px 0;padding:12px;border:1px solid #527364;border-radius:10px}.tw-comparison-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.tw-comparison-offer,.tw-comparison-keep{min-width:0;padding:12px;border:1px solid #4f6259;border-radius:8px;overflow-wrap:anywhere}.tw-comparison button,.tw-comparison-tray button,.tw-compare-add,.tw-comparison-replace button{min-height:44px;white-space:normal}.tw-comparison small{display:block;overflow-wrap:anywhere}.tw-comparison-gain{font-weight:700}.tw-comparison h5{font-size:1rem;margin:12px 0 4px}.tw-comparison ol{padding-left:20px}.tw-comparison-replace{padding:8px;border:1px solid #527364}.tw-comparison[hidden],.tw-comparison-tray[hidden]{display:none}@media(max-width:700px){.tw-comparison-grid{display:block}.tw-comparison-offer,.tw-comparison-keep{margin:10px 0}.tw-comparison button{width:100%}}
+diff --git a/static/js/trade_comparison.js b/static/js/trade_comparison.js
+new file mode 100644
+index 00000000..2f27f85e
+--- /dev/null
++++ b/static/js/trade_comparison.js
+@@ -0,0 +1,172 @@
++/* Bounded presentation of two completed assessments. No HTTP or evaluation. */
++(() => {
++  'use strict';
++  const number = value => typeof value === 'number' && Number.isFinite(value);
++  const known = value => (typeof value === 'string' && value.length > 0) || number(value);
++  const sameScope = (entry, scope) => entry?.schema === 1 && scope?.binding &&
++    entry.scope?.binding === scope.binding && entry.scope.league === scope.league && entry.scope.roster === scope.roster;
++  const wellFormed = entry => entry && typeof entry.id === 'string' && entry.id.length > 0 &&
++    typeof entry.summary === 'object' && entry.summary !== null && !Array.isArray(entry.summary) &&
++    typeof entry.summary.verdict === 'string' && ['neutral', 'custom'].includes(entry.summary.mode) &&
++    ['sent', 'received'].every(side => Array.isArray(entry.assets?.[side]) && entry.assets[side].length <= 32 &&
++      entry.assets[side].every(row => typeof row?.id === 'string' && row.id.length <= 256 && typeof row.label === 'string' && row.label.length <= 512));
++  const keys = {
++    league: 'league', roster: 'franchise', ownership: 'roster baseline', lineup: 'prepared roster baseline',
++    season: 'season', week: 'projection week', scoring: 'scoring context', projection: 'projection generation', provider: 'projection source'
++  };
++  function compatibility(entries, current) {
++    const stop = (state, reason) => ({supported: false, state, reason});
++    if (!entries.length || entries.length > 2) return stop('missing', 'Choose one or two completed offers.');
++    for (const entry of entries) {
++      if (!sameScope(entry, current.scope)) return stop('incompatible', 'The account, league or franchise context differs.');
++      const identity = entry.baseline || {};
++      if (Object.keys(keys).some(key => !known(identity[key]))) return stop('unknown', 'The recorded league, roster, week, scoring or generation identity is incomplete.');
++      if (identity.league !== entry.scope.league || identity.roster !== entry.scope.roster)
++        return stop('incompatible', 'The assessment provenance names another league or franchise.');
++      if (entry.context?.stale_reason || entry.summary?.stale) return stop('stale', entry.context?.stale_reason || entry.summary.stale);
++      if (identity.ownership !== current.ownership) return stop('stale', 'Roster ownership changed since the recorded assessment.');
++      if (!known(current.projection) || identity.projection !== current.projection) return stop('stale', 'The compatible current projection generation is missing or has changed.');
++      for (const key of ['lineup', 'season', 'week', 'scoring', 'provider']) {
++        if (!known(current[key])) return stop('unknown', 'The prepared ' + keys[key] + ' is not currently established.');
++        if (identity[key] !== current[key]) return stop('stale', 'The prepared ' + keys[key] + ' changed since this offer was assessed.');
++      }
++      if (entry.context?.identity?.market !== current.market) return stop('stale', 'Market evidence changed since this assessment.');
++      if (current.personalStale && entry.summary?.mode === 'custom') return stop('stale', 'The saved personal ranking revision is no longer verified.');
++      if (entry.summary?.mode === 'custom' && ['revision', 'market', 'baseline', 'method'].some(key =>
++          !known(entry.summary.personalContext?.[key]) || !known(current.personalContext?.[key]) ||
++          entry.summary.personalContext[key] !== current.personalContext[key]))
++        return stop('stale', 'The Custom ranking revision, valuation method or compatible personal publication changed or is unverified. Original personal values remain recorded evidence only.');
++      const inputs = entry.context?.evaluation?.provenance?.inputs || {};
++      if (Object.entries(current.observed || {}).some(([key, value]) => known(value) && known(inputs[key]) && value !== inputs[key]))
++        return stop('stale', 'Prepared source evidence changed since an offer was evaluated.');
++    }
++    const first = entries[0];
++    if (entries.some(entry => Object.keys(keys).some(key => entry.baseline[key] !== first.baseline[key]))) {
++      const key = Object.keys(keys).find(key => entries.some(entry => entry.baseline[key] !== first.baseline[key]));
++      return stop('incompatible', 'Offers use different ' + keys[key] + '; they cannot share a lineup comparison.');
++    }
++    if (entries.every(entry => number(entry.summary?.lineup?.pre_total)) &&
++        entries.some(entry => entry.summary.lineup.pre_total !== first.summary.lineup.pre_total))
++      return stop('incompatible', 'The recorded before-trade lineup totals differ; keeping the roster is not the same baseline.');
++    for (const entry of entries) {
++      const row = entry.summary?.lineup || {};
++      if (row.state !== 'supported' || ![row.pre_total, row.post_total, row.delta].every(number))
++        return {...stop('incomplete', 'A complete, nonprovisional legal-lineup comparison is not supported for every offer. Supported individual effects remain separate; missing evidence is not zero.'), shared_identity: true};
++      if (!Array.isArray(row.weeks) || row.weeks.length !== 1 || String(row.weeks[0]) !== String(entry.baseline.week) ||
++          Math.abs(row.post_total - row.pre_total - row.delta) > 1e-8)
++        return stop('unknown', 'The recorded lineup totals, week and change cannot be reconciled.');
++    }
++    const retained = entries.some(entry => entry.retained || entry.context?.restored);
++    return {supported: true, state: retained ? 'retained' : 'recorded',
++      reason: 'Same recorded roster baseline, scoring, week and projection generation. ' +
++        (retained ? 'Retained evidence · NOT REVALIDATED. ' : '') +
++        'These are projections at assessment time, not a new evaluation or a guarantee of current availability.',
++      baseline: first.summary.lineup.pre_total, week: first.baseline.week, season: first.baseline.season};
++  }
++
++  function create(options) {
++    const {node, points, market, panel, tray, getEntries, setEntries, environment, details} = options;
++    let returnFocus = null, returnScroll = 0;
++    const entries = () => getEntries().filter(row => wellFormed(row) && sameScope(row, environment().scope)).slice(0, 2);
++    const button = (text, action) => { const b = node('button', text); b.type = 'button'; b.onclick = action; return b; };
++    const signed = value => number(value) ? (value > 0 ? '+' : '') + points(value) : 'Unavailable';
++    function save(rows) { setEntries(rows); refresh(); }
++    function price(side, label) {
++      return label + ': ' + (side?.availability === 'full' && number(side.sent) && number(side.received)
++        ? market(side.sent) + ' sent / ' + market(side.received) + ' received'
++        : 'Incomplete or unavailable; no complete package value inferred.');
++    }
++    function offer(entry, index, comparison) {
++      const out = node('article', null, 'tw-comparison-offer'); out.dataset.comparisonSlot = String(index + 1);
++      const s = entry.summary, depth = s.depth || {}, capacity = s.capacity || {};
++      out.append(node('h4', 'Offer ' + (index + 1) + ' · ' + s.verdict),
++        node('p', 'Counterparty: ' + s.partner), node('p', 'Assessment strategy: ' + (s.strategy || 'No selected goal')));
++      if (entry.retained || entry.context?.restored) out.append(node('p', 'Retained assessment · NOT REVALIDATED', 'tw-drawback'));
++      if (entry.context?.exploration) out.append(node('p', 'Exploratory only · not a qualified recommendation', 'tw-drawback'));
++      const individual = comparison.supported ? comparison : comparison.shared_identity ? compatibility([entry], environment()) : null;
++      if (individual?.supported) out.append(node('p', (comparison.supported ? '' : 'Supported individual effect · not a complete two-offer comparison. ') +
++        'Week ' + individual.week + ' lineup change vs keeping the roster: ' + signed(s.lineup.delta) + ' projected points.', 'tw-comparison-gain'),
++        node('p', points(individual.baseline) + ' → ' + points(s.lineup.post_total) + ' optimal-lineup points.'));
++      else out.append(node('p', 'Shared lineup comparison withheld. Original results below remain separate recorded evidence.', 'tw-drawback'));
++      for (const [side, title] of [['sent', 'You send'], ['received', 'You receive']]) {
++        out.append(node('h5', title)); const list = node('ol'); list.setAttribute('aria-label', title + ' in original asset order');
++        for (const item of entry.assets[side]) {
++          const row = node('li', item.label); row.append(node('small', 'Exact asset: ' + item.id)); list.append(row);
++        }
++        out.append(list);
++      }
++      out.append(node('p', price(s.neutral, 'Neutral Market at evaluation')));
++      if (s.mode === 'custom') out.append(node('p', price(s.personal, 'Your Custom values · ' + (s.methodLabel || 'method not retained'))),
++        node('small', 'Personal value does not establish the counterparty’s willingness or change Neutral Market.'));
++      out.append(node('h5', 'Depth and roster consequences'));
++      for (const side of ['active', 'partner']) {
++        out.append(node('p', (side === 'active' ? 'Your team: ' : 'Their team: ') + (depth[side] || 'Reserve-depth evidence unavailable.')));
++        const spots = capacity[side];
++        out.append(node('p', (side === 'active' ? 'Your' : 'Their') + ' additional configured roster spots to resolve: ' +
++          (number(spots) ? spots + '. No cut is assumed.' : 'Unknown; roster feasibility is not inferred.')));
++      }
++      out.append(node('p', 'Main cost or risk: ' + s.cost, 'tw-drawback'),
++        node('p', 'Their case: ' + s.partnerReason), node('p', 'Conditions: ' + s.conditions, 'tw-drawback'));
++      if (s.limitation) out.append(node('p', 'Evidence limit: ' + s.limitation, 'tw-drawback'));
++      const disclosure = node('details'); disclosure.append(node('summary', 'Original assessment · both teams and evidence limits'));
++      disclosure.append(node('small', 'Captured ' + (entry.context?.identity?.captured_at || 'time unavailable') + '. Values and conclusions belong to this offer’s original assessment.'));
++      details(entry, disclosure); out.append(disclosure);
++      out.append(button('Remove offer ' + (index + 1), () => save(entries().filter((_, i) => i !== index))));
++      return out;
++    }
++    function close() {
++      panel.hidden = true;
++      window.scrollTo({top: returnScroll, behavior: 'instant'});
++      const focus = returnFocus?.isConnected ? returnFocus : tray.querySelector('button');
++      focus?.focus({preventScroll: true});
++    }
++    function render() {
++      const rows = entries(), result = compatibility(rows, environment()); panel.replaceChildren();
++      const heading = node('h3', 'Compare with keeping your roster'); heading.tabIndex = -1; heading.id = 'trade-comparison-heading';
++      panel.append(heading, button('Return to my offer or draft', close), node('p', result.reason, result.supported ? '' : 'tw-drawback'));
++      panel.dataset.comparisonState = result.state;
++      panel.append(node('p', 'No search, reevaluation or refresh runs here. Each original decision and counterparty case remains attached to its own offer.'));
++      panel.append(node('small', 'Analytical optimal lineups are separate from your submitted Sleeper lineup, which this view never changes.'));
++      if (rows.length === 2 && (rows[0].summary.mode !== rows[1].summary.mode || rows[0].summary.method !== rows[1].summary.method))
++        panel.append(node('p', 'Valuation modes or methods differ. Personal and Neutral values are separate; this view does not choose a preferred deal.'));
++      const grid = node('div', null, 'tw-comparison-grid'), keep = node('section', null, 'tw-comparison-keep');
++      keep.append(node('h4', 'Keep the roster · no trade'), node('p', 'No players or picks exchanged. Existing depth and roster spots are unchanged by a trade.'));
++      keep.append(node('p', result.supported ? 'Season ' + result.season + ' · week ' + result.week + ': ' + points(result.baseline) + ' recorded optimal-lineup points; 0.00 trade-related change.' : 'A shared supported lineup total is unavailable. No zero projection is inferred.'));
++      grid.append(keep); rows.forEach((row, i) => grid.append(offer(row, i, result))); panel.append(grid);
++      if (!rows.length) panel.append(node('p', 'Add a completed assessment from this Trade workspace. Your draft has not changed.'));
++    }
++    function open() {
++      returnFocus = document.activeElement; returnScroll = window.scrollY;
++      render(); panel.hidden = false;
++      panel.querySelector('h3').focus({preventScroll: true}); panel.scrollIntoView({block: 'start'});
++    }
++    function refresh() {
++      const rows = entries(); tray.hidden = !rows.length; tray.replaceChildren();
++      tray.append(node('span', rows.length + ' of 2 offers selected. '), button('Compare selected offers', open));
++      if (!panel.hidden) {
++        const focused = panel.contains(document.activeElement);
++        render(); if (focused) panel.querySelector('h3').focus({preventScroll: true});
++      }
++    }
++    function add(entry, source) {
++      if (!wellFormed(entry) || !sameScope(entry, environment().scope) || JSON.stringify(entry).length > 100000) return false;
++      const nearby = () => {
++        source.parentElement.querySelector('.tw-compare-open')?.remove();
++        const action = button('Open comparison', open); action.className = 'tw-compare-open'; source.after(action);
++      };
++      const rows = entries();
++      if (rows.some(row => row.id === entry.id)) { open(); return true; }
++      if (rows.length < 2) { save([...rows, entry]); nearby(); return true; }
++      source.parentElement.querySelector('.tw-comparison-replace')?.remove();
++      const choices = node('div', null, 'tw-comparison-replace'); choices.setAttribute('role', 'group'); choices.setAttribute('aria-label', 'Replace selected comparison offer');
++      choices.append(node('p', 'Two offers are selected. Choose which to replace; your draft stays unchanged.'));
++      for (let i = 0; i < 2; i++) choices.append(button('Replace offer ' + (i + 1), () => { save(rows.map((row, n) => n === i ? entry : row)); choices.remove(); nearby(); }));
++      choices.append(button('Keep both selected offers', () => choices.remove())); source.after(choices); return true;
++    }
++    refresh();
++    return {add, refresh};
++  }
++  const api = {compatibility, sameScope, wellFormed, create};
++  if (typeof module !== 'undefined' && module.exports) module.exports = api;
++  else globalThis.DTOSOfferComparison = api;
++})();
+diff --git a/static/js/trade_workspace.js b/static/js/trade_workspace.js
+index 61b0bde2..c10b3f27 100644
+--- a/static/js/trade_workspace.js
++++ b/static/js/trade_workspace.js
+@@ -130,7 +130,8 @@
+   const session = {schema: 2, resetGeneration: null, currentProposal: {sent: [], received: [], partner: 0}, originalProposal: null,
+     previewProposal: null, adoptedProposal: null, requiredOutgoingAsset: null, requiredIncomingAsset: null,
+     protectedAssets: [], excludedAssets: [], overrideSavedProtections: [], adjustmentConstraints: {}, originWorkflow: flow, shopSearchPartner: 0,
+-    shopScopeAsset: null, shopPreference: 'best_overall', shopPosition: 'QB', currentAssessment: null};
++    shopScopeAsset: null, shopPreference: 'best_overall', shopPosition: 'QB', currentAssessment: null, comparisonOffers: []};
++  let comparison = null;
+   const excludedFamilies = new Set(); let displayedFamilies = []; let lastOffers = null; let lastOffersIsBalance = false; let searchExhausted = false; let hasDiscovered = false;
+   let valuationMode = 'neutral', personalRevisionStale = false, checkingPersonal = false;
+   let interruptedNavigation = false;
+@@ -228,7 +229,7 @@
+     // reload/history may restore it, and only under fresh server authorization.
+     try { history.replaceState({...history.state, dtosTrade: {
+       binding: workspace.workspace_context.binding, workflow: flow,
+-      preload: root.dataset.preloadAsset, draft: {...draft, recommendedSearch: null}
++      preload: root.dataset.preloadAsset, draft: {...draft, recommendedSearch: null, comparisonOffers: null}
+     }}, ''); } catch (_) { /* History-disabled browsing still works. */ }
+   }
+   function retainedDraft() {
+@@ -560,6 +561,10 @@
+         error.code = code; throw error;
+       }
+       if (code === 'canonical_evidence_changed') {
++        for (const entry of session.comparisonOffers || []) {
++          entry.context = {...entry.context, stale_reason: 'Prepared source evidence changed after the recorded assessment.'};
++        }
++        comparison?.refresh();
+         staleAssessment('Source evidence changed');
+         const error = new Error('Market or projection evidence refreshed during this search. Your proposal and exact protections are unchanged. Try again when the refresh settles.');
+         error.code = code; throw error;
+@@ -656,6 +661,77 @@
+       evaluation: boundedEvidence(compactRetainedEvaluation(value.evaluation || {})), opportunity: boundedEvidence(value.opportunity)};
+   }
+   const assessedOfferContexts = new WeakMap();
++  const comparisonScope = () => ({binding: workspace.workspace_context.binding,
++    league: workspace.workspace_context.league_id, roster: active});
++  function comparisonEnvironment() {
++    const projection = workspace.projection_evidence || {};
++    return {scope: comparisonScope(), ownership: workspace.workspace_context.ownership_generation,
++      projection: projection.generation, season: projection.season, week: projection.week,
++      scoring: projection.scoring_profile_id, provider: projection.canonical_provider,
++      lineup: workspace.lineup_preparation?.generation, market: workspace.calculator_generation,
++      personalContext: {revision: workspace.personalization?.revision, market: workspace.personalization?.market_generation,
++        baseline: workspace.personalization?.baseline_generation, method: workspace.personalization?.method},
++      observed: latestEvidence, personalStale: personalRevisionStale};
++  }
++  function addComparisonControl(target, row, context) {
++    const e = row.evaluation || context?.evaluation || {}, p = row.proposal || {};
++    if (!e.provenance?.evaluation_id || !Array.isArray(p.assets_sent) || !Array.isArray(p.assets_received)) return;
++    const button = node('button', 'Add to comparison'); button.type = 'button'; button.className = 'tw-compare-add';
++    button.onclick = () => {
++      if (!comparison) return;
++      const d = decisionPresentation(e), inputs = e.provenance?.inputs || {}, projection = inputs.projection_evidence || {};
++      // Keep exact source order and names; no current quote is substituted for
++      // the neutral/personal values admitted in this completed assessment.
++      const assets = {};
++      for (const [side, ids] of [['sent', p.assets_sent], ['received', p.assets_received]]) {
++        if (ids.length > 32 || ids.some(id => typeof id !== 'string' || id.length > 256)) {
++          button.after(node('p', 'This package exceeds the bounded comparison size. Its original offer remains available.')); return;
++        }
++        assets[side] = ids.map(id => {
++          const a = asset(id), pick = a?.kind === 'pick' ? ` · ${a.season} round ${a.round} · Original franchise: ${team(a.original_roster_id)?.team_name || a.original_roster_id || 'unavailable'}` : '';
++          return {id, label: String((a ? label(a) : id) + pick).slice(0,512)};
++        });
++      }
++      const depth = {}, capacity = {};
++      for (const side of ['active', 'partner']) {
++        const profile = e.dimensions?.strategic_fit?.[side] || {};
++        // Reuse the existing producer's reserve paragraphs, not a new injury,
++        // replacement or positional model. Full original summaries stay below.
++        const summary = side === 'active' ? d.your_side_summary : d.their_side_summary;
++        const lines = (summary || '').split('\n').filter(line => /reserve|replacement|depth/i.test(line));
++        depth[side] = lines.join(' ') || 'Complete reserve-depth consequences are unavailable in this recorded assessment; missing evidence is not zero.';
++        capacity[side] = profile.roster_capacity?.additional_spots_to_resolve ?? null;
++      }
++      const evidence = e.market_evidence || {}, personal = e.personal_value_evidence || {};
++      const entry = {schema: 1, id: e.provenance.evaluation_id + ':' + JSON.stringify([p.assets_sent, p.assets_received]),
++        scope: comparisonScope(), baseline: {league: inputs.league_id, roster: inputs.active_roster_id,
++          ownership: context?.identity?.ownership, lineup: d.lineup_source_generation,
++          season: projection.season, week: projection.week, scoring: projection.scoring_profile_id,
++          projection: inputs.projection_generation === projection.generation ? projection.generation : null,
++          provider: projection.canonical_provider},
++        assets, context, proposal: {active_roster_id: active, partner_roster_id: p.partner_roster_id,
++          assets_sent: [...p.assets_sent], assets_received: [...p.assets_received]},
++        summary: {verdict: finalVerdict(e), strategy: context?.identity?.strategy,
++          partner: context?.identity?.counterparty || team(p.partner_roster_id)?.team_name || 'Franchise identity unavailable',
++          mode: e.personalization?.mode || 'neutral', method: e.personalization?.method || null,
++          personalContext: {revision: e.personalization?.revision, market: e.personalization?.market_generation,
++            baseline: e.personalization?.baseline_generation, method: e.personalization?.method},
++          methodLabel: String(e.personalization?.method || '').includes('relative') ? 'Relative priced order' :
++            String(e.personalization?.method || '').includes('absolute') ? 'Absolute slot' : 'Custom method not retained',
++          neutral: {availability: evidence.availability, sent: evidence.sent?.total, received: evidence.received?.total},
++          personal: {availability: personal.availability, sent: personal.sent?.total, received: personal.received?.total},
++          lineup: d.lineup_comparisons.current_week || {}, depth, capacity,
++          cost: d.main_cost || e.major_drawback || 'The main cost is not established in this assessment.',
++          partnerReason: d.partner_summary || 'Supported counterparty motivation is unavailable.',
++          conditions: d.decision_conditions || 'Manager motivation and acceptance are not established by this comparison.',
++          limitation: d.limitation || d.qualification || null}};
++      // Later draft edits must not mutate an original selected assessment.
++      const snapshot = JSON.parse(JSON.stringify(entry));
++      if (!window.DTOSOfferComparison.sameScope(snapshot, comparisonScope()) || !comparison.add(snapshot, button))
++        button.after(node('p', 'The completed evidence cannot fit safely in this scoped comparison. Your offer remains unchanged.'));
++    };
++    target.append(button);
++  }
+   function assessmentContext(row) {
+     if (assessedOfferContexts.has(row)) return assessedOfferContexts.get(row);
+     if (row.proposal?.preview_context) return row.proposal.preview_context;
+@@ -725,6 +801,7 @@
+     };
+     if (changedSource(session.currentAssessment)) staleAssessment('Source evidence changed since the completed assessment');
+     if (changedSource(session.previewProposal?.preview_context)) { session.previewProposal.preview_context.restored = true; session.previewProposal.preview_context.stale_reason = 'Source evidence changed since this preview'; persist(); }
++    comparison?.refresh();
+   }
+   function retainAssessment() {
+     if (!session.currentAssessment || el('trade-evaluation-retained')) return;
+@@ -849,6 +926,9 @@
+     out.dataset.assessmentFreshness = retained ? 'retained' : 'current';
+     const attemptState = context?.attempt_state || e.assessment_state?.state || 'fresh_incomplete';
+     out.dataset.assessmentState = retained ? 'retained' : attemptState;
++    if (!previousContainer) addComparisonControl(out, {evaluation: e, proposal: {
++      active_roster_id: active, partner_roster_id: selected.partner,
++      assets_sent: [...selected.sent], assets_received: [...selected.received]}}, context);
+     const incomplete = !retained && attemptState === 'fresh_incomplete';
+     if (incomplete) {
+       out.append(node('p', 'Current evaluation completed · incomplete evidence. ' + (e.assessment_state?.limitation || e.decision_context?.blocker || e.decision_context?.limitation || 'A complete supported recommendation is unavailable; review the evidence and reevaluate.'), 'tw-assessment-status'));
+@@ -1196,6 +1276,7 @@
+       appendLineupComparisons(detail, e, decision.partner_lineup_comparisons, 'Their team', true);
+     }
+     card.append(detail, node('small', 'Current values, not trade-date grades. Preview before adopting.'));
++    addComparisonControl(card, row, context);
+     return card;
+   }
+   function offerCard(row, preview = false) {
+@@ -1233,6 +1314,7 @@
+       ...(!decision.their_side_summary ? [node('p', 'Counterparty: ' + (decision.partner_summary || e.counterparty_summary || e.why_they_would_do_it || e.dimensions?.counterparty_plausibility?.explanation || 'Review the separate bilateral evidence.'))] : []));
+     if (!preview) { const b = node('button', 'Open editable offer: preview'); b.type = 'button'; b.className = 'tw-next-action primary'; b.onclick = () => previewOffer(row); card.append(b); }
+     appendDecisionSummary(card, decision);
++    addComparisonControl(card, row, context);
+     for (const id of [...row.proposal.assets_sent, ...row.proposal.assets_received]) { const protection = lockDetail(id); if (protection) card.append(protection); }
+     for (const pick of e.dimensions?.strategic_fit?.active?.future_capital?.sent || []) {
+       const exact = asset(pick.asset_id);
+@@ -1548,6 +1630,7 @@
+     cancelBalance(); revision++; runSequence++; busy = false;
+     selected.sent = []; selected.received = []; selected.partner = 0;
+     for (const key of ['originalProposal','previewProposal','adoptedProposal','currentAssessment','requiredOutgoingAsset','requiredIncomingAsset','shopScopeAsset','recommendedSearch','teamNeedChoice']) session[key] = null;
++    session.comparisonOffers = []; comparison?.refresh(); if (el('trade-comparison')) el('trade-comparison').hidden = true;
+     session.protectedAssets = []; session.excludedAssets = []; session.overrideSavedProtections = []; session.adjustmentConstraints = {};
+     for (const which of ['sent','received']) {filters[which].q = ''; filters[which].pos = 'ALL';}
+     side = 'sent'; interruptedNavigation = false;
+@@ -1723,6 +1806,13 @@
+       if (retainedSearch && Array.isArray(retainedSearch.offers) && retainedSearch.offers.length <= 8
+           && JSON.stringify(retainedSearch).length <= 520000 && !saved?.endedAtHome)
+         session.recommendedSearch = retainedSearch;
++      const retainedComparison = retainedDraft();
++      if (!retainedComparison?.endedAtHome && (!retainedComparison?.tabOwner || retainedComparison.tabOwner === tabOwner) &&
++          Array.isArray(retainedComparison?.comparisonOffers) && retainedComparison.comparisonOffers.length <= 2 &&
++          JSON.stringify(retainedComparison.comparisonOffers).length <= 200000) {
++        session.comparisonOffers = retainedComparison.comparisonOffers.filter(row => window.DTOSOfferComparison.wellFormed(row) && window.DTOSOfferComparison.sameScope(row, comparisonScope()))
++          .map(row => ({...row, retained: true, context: restoreContext(row.context || {})}));
++      }
+       if (saved?.endedAtHome) { clearDraft(); saved = null; }
+       const proposal = saved?.currentProposal || (saved?.selected ? {...saved.selected, partner: saved.partner} : null);
+       if (proposal && (team(proposal.partner) || Number(proposal.partner) === 0) && Array.isArray(proposal.sent) && Array.isArray(proposal.received)) {
+@@ -1838,6 +1928,16 @@
+     }
+     if (flow === 'recommended') searchStatus(data.search_readiness && data.search_readiness.state !== 'ready' ? 'Search capacity is temporarily unconfirmed. Generate rechecks it before starting; no search has run.' : 'Choose Generate to search eligible teams; choosing a goal is optional.', data.search_readiness && data.search_readiness.state !== 'ready' ? 'deferred' : 'ready');
+     if (flow === 'create') operationStatus('Choose assets to evaluate below.', 'ready');
++    comparison = window.DTOSOfferComparison.create({node, points: displayPoints, market: displayMarket,
++      tray: el('trade-comparison-tray'), panel: el('trade-comparison'),
++      getEntries: () => session.comparisonOffers || [], setEntries: rows => {session.comparisonOffers = rows; persist();},
++      environment: comparisonEnvironment, details: (entry, target) => {
++        const e = entry.context?.evaluation || {}, d = decisionPresentation(e);
++        appendDecisionSummary(target, d);
++        appendLineupComparisons(target, e, d.lineup_comparisons, 'Your team', true);
++        appendLineupComparisons(target, e, d.partner_lineup_comparisons, 'Their team', true);
++        for (const text of e.major_limitations || []) target.append(node('p', text));
++      }});
+     if (flow === 'trade_for') searchStatus('Choose an opponent-owned target below to find acquisition options.', 'ready');
+     if (flow === 'shop') { el('trade-find').textContent = 'Find Shop returns'; searchStatus('Not started. Find Shop returns searches the selected scope; strategy alone cannot resolve missing projection coverage.', 'not_started'); }
+     if (session.currentAssessment && !entryBlocked) showEvaluation(session.currentAssessment.evaluation || {}, session.currentAssessment.opportunity, session.currentAssessment);
+diff --git a/tests/test_offer_comparison.py b/tests/test_offer_comparison.py
+new file mode 100644
+index 00000000..0a426edc
+--- /dev/null
++++ b/tests/test_offer_comparison.py
+@@ -0,0 +1,104 @@
++"""Pure comparison admission; source numbers remain unchanged, including zero."""
++from copy import deepcopy
++import json
++import os
++from pathlib import Path
++import shutil
++import subprocess
++import unittest
++import playwright
++
++
++class OfferComparisonTests(unittest.TestCase):
++    def fixture(self):
++        baseline = dict(league='league-a', roster=1, ownership='owned-a', lineup='lineup-a',
++                        season=2026, week=8, scoring='scoring-a', projection='projection-a', provider='Sleeper')
++        scope = dict(binding='account/session/league/franchise', league='league-a', roster=1)
++        context = dict(identity=dict(market='market-a'), evaluation=dict(provenance=dict(inputs={})))
++        entry = dict(schema=1, scope=scope, baseline=baseline, context=context,
++                     summary=dict(mode='neutral', lineup=dict(state='supported', pre_total=100,
++                                                             post_total=104, delta=4, weeks=[8])))
++        current = dict(baseline, scope=scope, market='market-a', observed={}, personalStale=False)
++        return [entry, deepcopy(entry)], current
++
++    def compare(self, entries, current):
++        bundled = Path(playwright.__file__).parent / 'driver' / ('node.exe' if os.name == 'nt' else 'node')
++        node = shutil.which('node') or (str(bundled) if bundled.is_file() else None)
++        self.assertIsNotNone(node, 'The required browser runtime must include Node')
++        module = Path(__file__).resolve().parents[1] / 'static/js/trade_comparison.js'
++        source = "const api=require(process.argv[1]);let d=JSON.parse(process.argv[2]);const before=JSON.stringify(d);let r=api.compatibility(d.entries,d.current);if(JSON.stringify(d)!==before)throw Error('mutated evidence');console.log(JSON.stringify(r));"
++        result = subprocess.check_output([node, '-e', source, str(module),
++                                          json.dumps(dict(entries=entries, current=current))], text=True)
++        return json.loads(result)
++
++    def test_complete_and_explicit_zero_use_the_same_recorded_roster(self):
++        entries, current = self.fixture()
++        entries[1]['summary']['lineup'].update(post_total=100, delta=0)
++        result = self.compare(entries, current)
++        self.assertTrue(result['supported'])
++        self.assertEqual(result['baseline'], 100)
++        self.assertTrue(self.compare(entries[:1], current)['supported'])
++        self.assertFalse(self.compare(entries * 2, current)['supported'])
++
++    def test_each_required_identity_and_current_baseline_is_checked(self):
++        entries, current = self.fixture()
++        for key in entries[0]['baseline']:
++            with self.subTest(key=key):
++                altered = deepcopy(entries)
++                altered[1]['baseline'][key] = 'different'
++                self.assertFalse(self.compare(altered, current)['supported'])
++                altered[1]['baseline'][key] = None
++                self.assertFalse(self.compare(altered, current)['supported'])
++        for key in ['projection', 'scoring', 'season', 'week', 'lineup', 'provider', 'ownership', 'market']:
++            with self.subTest(current=key):
++                altered = dict(current, **{key: None})
++                self.assertFalse(self.compare(entries, altered)['supported'])
++        entries[1]['summary']['lineup'].update(pre_total=101, post_total=105)
++        self.assertIn('before-trade', self.compare(entries, current)['reason'])
++
++    def test_stale_provisional_missing_and_conflicting_numbers_are_withheld(self):
++        entries, current = self.fixture()
++        for change in [dict(delta=None), dict(post_total=None), dict(delta=0), dict(state='provisional'), dict(weeks=[9])]:
++            with self.subTest(change=change):
++                altered = deepcopy(entries)
++                altered[1]['summary']['lineup'].update(change)
++                self.assertFalse(self.compare(altered, current)['supported'])
++        entries[1]['context']['stale_reason'] = 'Failed source refresh; retained context'
++        result = self.compare(entries, current)
++        self.assertEqual(result['state'], 'stale')
++        self.assertIn('Failed source refresh', result['reason'])
++        entries[1]['context'].pop('stale_reason')
++        entries[1]['summary']['lineup']['post_total'] = None
++        self.assertTrue(self.compare(entries, current)['shared_identity'])
++        self.assertTrue(self.compare(entries[:1], current)['supported'])
++
++    def test_valuation_modes_do_not_blend_and_retention_does_not_claim_currentness(self):
++        entries, current = self.fixture()
++        entries[1]['summary']['mode'] = 'custom'
++        entries[1]['summary']['method'] = 'relative-priced-order-v1'
++        current['personalContext'] = dict(revision=1, market='personal-market-a', baseline='personal-baseline-a',
++                                          method='relative-priced-order-v1')
++        entries[1]['summary']['personalContext'] = dict(current['personalContext'])
++        entries[1]['retained'] = True
++        result = self.compare(entries, current)
++        self.assertTrue(result['supported'])
++        self.assertEqual(result['state'], 'retained')
++        self.assertIn('NOT REVALIDATED', result['reason'])
++        current['personalStale'] = True
++        self.assertFalse(self.compare(entries, current)['supported'])
++        current['personalStale'] = False
++        current['personalContext']['revision'] = 2
++        self.assertFalse(self.compare(entries, current)['supported'])
++        current['personalContext']['revision'] = 1
++        entries[1]['scope']['binding'] = 'another-account'
++        self.assertFalse(self.compare(entries, current)['supported'])
++
++    def test_untrusted_stored_entries_are_bounded_before_rendering(self):
++        module = Path(__file__).resolve().parents[1] / 'static/js/trade_comparison.js'
++        bundled = Path(playwright.__file__).parent / 'driver' / ('node.exe' if os.name == 'nt' else 'node')
++        node = shutil.which('node') or str(bundled)
++        code = """const assert=require('assert'),api=require(process.argv[1]);
++const entry={id:'evaluated-id',summary:{verdict:'Limited',mode:'neutral'},assets:{sent:[{id:'pick:2028:1:4',label:'Exact pick'}],received:[]}};
++assert(api.wellFormed(entry));for(const value of [null,{}, {...entry,summary:[]},{...entry,assets:{sent:[null],received:[]}}, {...entry,assets:{sent:new Array(33).fill({id:'a',label:'a'}),received:[]}}])assert(!api.wellFormed(value));
++assert.equal(entry.assets.sent[0].id,'pick:2028:1:4');console.log('bounded stored state verified');"""
++        self.assertIn('verified', subprocess.check_output([node, '-e', code, str(module)], text=True))
+diff --git a/tests/test_offer_comparison_browser.py b/tests/test_offer_comparison_browser.py
+new file mode 100644
+index 00000000..dc5e7230
+--- /dev/null
++++ b/tests/test_offer_comparison_browser.py
+@@ -0,0 +1,364 @@
++"""Actual source/evaluator -> phone comparison, with zero comparison HTTP work."""
++from copy import deepcopy
++import json
++import os
++from pathlib import Path
++import subprocess
++import unittest
++from unittest.mock import patch
++
++from playwright.sync_api import sync_playwright
++from tools.validation.browser_runtime import launch_chromium
++from tests import test_team_trade_need_browser as need
++from tests import test_contextual_back as back
++
++
++class OfferComparisonBrowserTests(unittest.TestCase):
++    def fixture(self, superflex=False):
++        source = need.TeamTradeNeedBrowserTests()
++        self.addCleanup(source.doCleanups)
++        helper, f = source.fixture(superflex=superflex)
++        points = {'a': 20, 'b': 10, 'e': 8, 'c': 28, 'd': 24, 'f': 6}
++        for row in source.rows:
++            if row['player_id'] in points:
++                row['stats'] = {'pass_yd': points[row['player_id']]}
++        # The reused need fixture has extra depth to exercise positional flags.
++        # Give this legal-execution control real configured bench capacity;
++        # never bypass canonical roster-space qualification.
++        slots = [s for s in f.editor.data['league']['roster_positions'] if s != 'BN'] + ['BN'] * 20
++        f.editor.data['league']['roster_positions'] = slots
++        f.editor.data['roster_positions'] = slots
++        source.publish(f)
++        return source, helper, f
++
++    def record(self, name, rows, page=None):
++        folder = os.environ.get('DTOS_COMPARE_EVIDENCE')
++        if folder:
++            destination = Path(folder)
++            destination.mkdir(parents=True, exist_ok=True)
++            report = dict(commit=subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip(),
++                          tree=subprocess.check_output(['git', 'rev-parse', 'HEAD^{tree}'], text=True).strip(),
++                          working_tree_clean=not subprocess.check_output(['git', 'status', '--porcelain'], text=True).strip(),
++                          source='Disposable authenticated prepared Sleeper fixture; actual canonical evaluator',
++                          physical_safari_tested=False, observations=rows)
++            (destination / (name + '.json')).write_text(json.dumps(report, indent=2) + '\n')
++            if page:
++                page.screenshot(path=str(destination / (name + '.png')), full_page=True)
++
++    def evaluate(self, page, helper, target, with_pick=False):
++        if page.locator('#trade-board').is_hidden():
++            page.locator('#trade-edit').click()
++        page.select_option('#trade-partner', '2')
++        page.select_option('#trade-strategy', 'WIN NOW')
++        page.locator('[data-side=sent]').click()
++        desired = ['2028-R1-3', 'a'] if with_pick else ['a']
++        current = helper.draft(page)['currentProposal']
++        for asset_id in list(current['sent']):
++            page.locator(f'#trade-sent-board button[data-asset-id="{asset_id}"]').click()
++        for asset_id in desired:
++            page.locator(f'#trade-sent-board button[data-asset-id="{asset_id}"]').click()
++        page.locator('[data-side=received]').click()
++        current = helper.draft(page)['currentProposal']
++        for asset_id in list(current['received']):
++            page.locator(f'#trade-received-board button[data-asset-id="{asset_id}"]').click()
++        page.locator(f'#trade-received-board button[data-asset-id="{target}"]').click()
++        with page.expect_response(lambda r: r.url.endswith('/api/trades/evaluate') and r.request.method == 'POST') as response:
++            page.locator('#trade-run').click()
++        body = response.value.json()
++        self.assertIn('evaluation', body, body)
++        page.locator('#trade-result > .tw-compare-add').wait_for()
++        return body['evaluation']
++
++    def open_readonly(self, page, requests):
++        before = list(requests)
++        with (patch('routes.trades.compare_trade_requests', side_effect=AssertionError('No recomparison')),
++              patch('routes.trades.evaluate_trade_request', side_effect=AssertionError('No reevaluation')),
++              patch('routes.trades.generate_trade_workflow', side_effect=AssertionError('No search'))):
++            page.get_by_role('button', name='Compare selected offers', exact=True).click()
++            page.locator('#trade-comparison h3').wait_for()
++            self.assertEqual(requests, before)
++        return before
++
++    def test_phone_two_real_evaluations_keep_packages_costs_and_exact_draft(self):
++        source, helper, f = self.fixture()
++        saved = deepcopy(f.editor.state())
++        pw = self.enterContext(sync_playwright())
++        browser = launch_chromium(pw, headless=True)
++        self.addCleanup(browser.close)
++        page, requests, _, _, errors = helper.page(browser, f)
++        helper.ready(page)
++        first = self.evaluate(page, helper, 'd')
++        page.locator('#trade-result > .tw-compare-add').click()
++        second = self.evaluate(page, helper, 'c', with_pick=True)
++        page.locator('#trade-result > .tw-compare-add').click()
++        original = helper.draft(page)
++        offers = original['comparisonOffers']
++        self.assertEqual(offers[0]['summary']['lineup']['delta'], first['decision_context']['lineup_comparisons']['current_week']['delta'])
++        self.assertEqual(offers[1]['summary']['lineup']['delta'], second['decision_context']['lineup_comparisons']['current_week']['delta'])
++        self.assertGreater(offers[1]['summary']['lineup']['delta'], offers[0]['summary']['lineup']['delta'])
++        self.assertGreater(offers[1]['summary']['neutral']['sent'], offers[0]['summary']['neutral']['sent'])
++        self.assertEqual(offers[1]['proposal']['assets_sent'], ['2028-R1-3', 'a'])
++        rows = []
++        for width, height in [(320,432), (375,667), (390,844), (1280,900)]:
++            page.set_viewport_size(dict(width=width, height=height))
++            count = self.open_readonly(page, requests)
++            panel = page.locator('#trade-comparison')
++            self.assertEqual(panel.get_attribute('data-comparison-state'), 'recorded')
++            self.assertIn('Keep the roster', panel.inner_text())
++            self.assertEqual(panel.locator('.tw-comparison-offer').count(), 2)
++            self.assertIn('Original franchise: 3', panel.inner_text())
++            self.assertEqual(panel.locator('[data-comparison-slot="2"] ol').first.locator('small').all_text_contents(),
++                             ['Exact asset: 2028-R1-3', 'Exact asset: a'])
++            self.assertIn('Their case:', panel.inner_text())
++            disclosure = panel.locator('.tw-comparison-offer > details').first
++            disclosure.locator('summary').first.press('Enter')
++            self.assertTrue(disclosure.evaluate('e=>e.open'))
++            self.assertEqual(requests, count)
++            self.assertLessEqual(page.evaluate('document.documentElement.scrollWidth'), width)
++            close = page.get_by_role('button', name='Return to my offer or draft', exact=True)
++            self.assertGreaterEqual(close.bounding_box()['height'], 44)
++            page.keyboard.press('Tab')
++            close.focus()
++            self.assertNotEqual(close.evaluate('e=>getComputedStyle(e).outlineStyle'), 'none')
++            self.record('phone-' + str(width), dict(width=width, height=height, no_http=True,
++                        independent_evaluations=2, higher_gain_higher_cost=True, asset_order_preserved=True,
++                        native_deltas=[first['decision_context']['lineup']['delta'], second['decision_context']['lineup']['delta']],
++                        native_sent_market=[first['market_evidence']['sent']['total'], second['market_evidence']['sent']['total']],
++                        lineage='Current exact picks only; no historical conversion inferred'), page)
++            if width == 390:
++                cdp = page.context.new_cdp_session(page)
++                cdp.send('Emulation.setTouchEmulationEnabled', {'enabled': True})
++                box = close.bounding_box()
++                cdp.send('Input.dispatchTouchEvent', {'type': 'touchStart', 'touchPoints': [{'x': box['x'] + box['width']/2, 'y': box['y'] + box['height']/2}]})
++                cdp.send('Input.dispatchTouchEvent', {'type': 'touchEnd', 'touchPoints': []})
++                cdp.send('Emulation.setTouchEmulationEnabled', {'enabled': False})
++                cdp.detach()
++            else:
++                close.press('Enter')
++            self.assertTrue(panel.is_hidden())
++            after = helper.draft(page)
++            for key in ['currentProposal', 'valuationMode', 'strategy', 'currentAssessment']:
++                self.assertEqual(after[key], original[key])
++            self.assertEqual(requests, count)
++            rows.append(dict(width=width, height=height, preserved_draft=True, no_http=True))
++        self.assertFalse(errors, errors)
++        self.assertEqual(f.editor.state(), saved)
++        self.record('phone-round-trips', rows)
++        page.reload()
++        page.wait_for_function("!document.querySelector('#trade-context').textContent.includes('Loading')")
++        count = self.open_readonly(page, requests)
++        self.assertEqual(page.locator('#trade-comparison').get_attribute('data-comparison-state'), 'retained')
++        self.assertIn('NOT REVALIDATED', page.locator('#trade-comparison').inner_text())
++        self.assertEqual(helper.draft(page)['currentProposal'], original['currentProposal'])
++        self.assertEqual(requests, count)
++        self.record('retained-reload', dict(selected_offers=2, same_prepared_generation=True,
++                    retained_qualification_visible=True, exact_draft=True, no_http=True), page)
++
++    def test_superflex_replacement_removal_and_missing_depth_stay_independent(self):
++        source, helper, f = self.fixture(superflex=True)
++        missing = {'id': 'unknown-cover', 'name': 'Unpriced uncovered receiver', 'position': 'WR',
++                   'fantasy_positions': ['WR'], 'status': 'Active', 'roster_slot': 'Bench'}
++        f.editor.data['players'][missing['id']] = missing.copy()
++        f.editor.data['teams'][0]['players'].append(missing.copy())
++        source.publish(f)
++        pw = self.enterContext(sync_playwright())
++        browser = launch_chromium(pw, headless=True)
++        self.addCleanup(browser.close)
++        page, requests, _, _, errors = helper.page(browser, f)
++        helper.ready(page)
++        for target, pick in [('d', False), ('c', True), ('f', False)]:
++            self.evaluate(page, helper, target, with_pick=pick)
++            page.locator('#trade-result > .tw-compare-add').click()
++        self.assertIn('Two offers are selected', page.locator('.tw-comparison-replace').inner_text())
++        before = helper.draft(page)['currentProposal']
++        page.get_by_role('button', name='Replace offer 1', exact=True).click()
++        entries = helper.draft(page)['comparisonOffers']
++        self.assertEqual(entries[0]['proposal']['assets_received'], ['f'])
++        self.assertEqual(entries[1]['proposal']['assets_received'], ['c'])
++        count = self.open_readonly(page, requests)
++        panel = page.locator('#trade-comparison')
++        self.assertIn('reserve', panel.inner_text().lower())
++        self.assertRegex(panel.inner_text().lower(), r'incomplete|unknown|unavailable')
++        self.assertEqual(entries[0]['summary']['partnerReason'], entries[0]['context']['evaluation']['decision_context']['partner_summary'])
++        page.get_by_role('button', name='Remove offer 1', exact=True).click()
++        self.assertEqual(len(helper.draft(page)['comparisonOffers']), 1)
++        self.assertEqual(helper.draft(page)['comparisonOffers'][0]['proposal']['assets_received'], ['c'])
++        self.assertEqual(helper.draft(page)['currentProposal'], before)
++        self.assertEqual(requests, count)
++        self.assertFalse(errors, errors)
++        self.record('superflex-depth-replace-remove', dict(actual_evaluations=3, missing_depth_qualified=True,
++                    counterparty_attached=True, explicit_replacement=True, no_http=True), page)
++
++    def test_aged_publication_reload_withholds_shared_numbers_and_keeps_original_offers(self):
++        source, helper, f = self.fixture()
++        pw = self.enterContext(sync_playwright())
++        browser = launch_chromium(pw, headless=True)
++        self.addCleanup(browser.close)
++        page, requests, _, _, errors = helper.page(browser, f)
++        helper.ready(page)
++        self.evaluate(page, helper, 'd')
++        page.locator('#trade-result > .tw-compare-add').click()
++        source.publish(f, age=8)
++        page.reload()
++        page.wait_for_function("!document.querySelector('#trade-context').textContent.includes('Loading')")
++        count = self.open_readonly(page, requests)
++        panel = page.locator('#trade-comparison')
++        self.assertIn(panel.get_attribute('data-comparison-state'), ['stale', 'unknown'])
++        self.assertIn('Shared lineup comparison withheld', panel.inner_text())
++        self.assertEqual(panel.locator('.tw-comparison-gain').count(), 0)
++        self.assertIn('NOT REVALIDATED', panel.inner_text())
++        self.assertEqual(len(helper.draft(page)['comparisonOffers']), 1)
++        self.assertEqual(requests, count)
++        self.assertFalse(errors, errors)
++        self.record('aged-incompatible', dict(source_age_hours=8, shared_numbers_withheld=True,
++                    retained_offer_visible=True, no_http=True), page)
++
++    def test_recommendations_compare_without_adoption_and_league_switch_discards_scope(self):
++        helper = back.ContextualBackTests()
++        self.addCleanup(helper.doCleanups)
++        f = helper.fixture()
++        pw = self.enterContext(sync_playwright())
++        browser = launch_chromium(pw, headless=True)
++        self.addCleanup(browser.close)
++        page, requests, _, _, errors = helper.page(browser, f)
++        helper.ready(page, '/trades/recommended')
++        page.select_option('#trade-strategy', 'REBUILD')
++        with page.expect_response(lambda r: r.url.endswith('/api/trades/generate') and r.request.method == 'POST') as response:
++            page.locator('#trade-find').click()
++        generated = response.value.json()
++        page.wait_for_function("document.querySelector('#recommendation-status').dataset.state==='complete'")
++        buttons = page.locator('#trade-result .tw-compare-add:visible')
++        self.assertGreaterEqual(buttons.count(), 2)
++        buttons.nth(0).click()
++        buttons.nth(1).click()
++        draft = helper.draft(page)['currentProposal']
++        before = self.open_readonly(page, requests)
++        page.get_by_role('button', name='Return to my offer or draft', exact=True).click()
++        self.assertEqual(helper.draft(page)['currentProposal'], draft)
++        self.assertEqual(requests, before)
++        f.editor.store.upsert_membership('account-a', {'league_id': 'league-2', 'name': 'Other'},
++                                         'account-a', 1, 'Other', 'active')
++        f.editor.store.activate('account-a', 'league-2')
++        f.editor.data['league']['league_id'] = 'league-2'
++        helper.ready(page, '/trades/recommended')
++        self.assertTrue(page.locator('#trade-comparison-tray').is_hidden())
++        self.assertEqual(helper.draft(page).get('comparisonOffers'), [])
++        self.assertFalse(errors, errors)
++        self.record('recommendation-league-scope', dict(real_searches=1, no_comparison_search=True,
++                    qualified_source_offers=sum(row['evaluation'].get('generated_trade_eligible') is True for row in generated.get('results', [])),
++                    no_adoption=True, league_switch_discards_comparison=True))
++
++    def test_two_actual_source_generations_cannot_share_a_lineup_comparison(self):
++        source, helper, f = self.fixture()
++        pw = self.enterContext(sync_playwright())
++        browser = launch_chromium(pw, headless=True)
++        self.addCleanup(browser.close)
++        page, requests, _, _, errors = helper.page(browser, f)
++        helper.ready(page)
++        self.evaluate(page, helper, 'd')
++        page.locator('#trade-result > .tw-compare-add').click()
++        for row in source.rows:
++            if row['player_id'] == 'c':
++                row['stats']['pass_yd'] = 29
++        source.publish(f)
++        page.reload()
++        page.wait_for_function("!document.querySelector('#trade-context').textContent.includes('Loading')")
++        self.evaluate(page, helper, 'c', with_pick=True)
++        page.locator('#trade-result > .tw-compare-add').click()
++        offers = helper.draft(page)['comparisonOffers']
++        self.assertNotEqual(offers[0]['baseline']['projection'], offers[1]['baseline']['projection'])
++        before = self.open_readonly(page, requests)
++        panel = page.locator('#trade-comparison')
++        self.assertEqual(panel.get_attribute('data-comparison-state'), 'stale')
++        self.assertEqual(panel.locator('.tw-comparison-gain').count(), 0)
++        self.assertIn('projection generation', panel.inner_text())
++        self.assertEqual(requests, before)
++        self.assertFalse(errors, errors)
++        self.record('two-generations', dict(actual_evaluations=2, incompatible_generations_withheld=True,
++                    original_packages_retained=True, no_http=True), page)
++
++    def test_supported_offer_effect_survives_an_incomplete_other_lineup(self):
++        source, helper, f = self.fixture()
++        pw = self.enterContext(sync_playwright())
++        browser = launch_chromium(pw, headless=True)
++        self.addCleanup(browser.close)
++        page, requests, _, _, errors = helper.page(browser, f)
++        helper.ready(page)
++        self.evaluate(page, helper, 'd')
++        page.locator('#trade-result > .tw-compare-add').click()
++        page.locator('#trade-edit').click()
++        page.locator('[data-side=sent]').click()
++        for pid in ['b', 'e']:
++            page.locator(f'#trade-sent-board button[data-asset-id="{pid}"]').click()
++        page.locator('[data-side=received]').click()
++        page.locator('#trade-received-board button[data-asset-id="d"]').click()
++        page.locator('#trade-received-board button[data-asset-id="2028-R1-4"]').click()
++        with page.expect_response(lambda r: r.url.endswith('/api/trades/evaluate') and r.request.method == 'POST') as response:
++            page.locator('#trade-run').click()
++        incomplete = response.value.json()['evaluation']
++        self.assertIsNone(incomplete['decision_context']['lineup_comparisons']['current_week']['delta'])
++        page.locator('#trade-result > .tw-compare-add').click()
++        before = self.open_readonly(page, requests)
++        panel = page.locator('#trade-comparison')
++        self.assertEqual(panel.get_attribute('data-comparison-state'), 'incomplete')
++        self.assertEqual(panel.locator('.tw-comparison-gain').count(), 1)
++        self.assertIn('Supported individual effect', panel.inner_text())
++        self.assertIn('Shared lineup comparison withheld', panel.inner_text())
++        self.assertEqual(requests, before)
++        self.assertFalse(errors, errors)
++        self.record('partial-pair', dict(actual_evaluations=2, supported_individual_delta_preserved=True,
++                    incomplete_other_lineup_unknown=True, no_http=True), page)
++
++    def test_custom_and_neutral_values_remain_attached_to_their_actual_evaluations(self):
++        helper = back.ContextualBackTests()
++        self.addCleanup(helper.doCleanups)
++        f = helper.fixture()
++        pw = self.enterContext(sync_playwright())
++        browser = launch_chromium(pw, headless=True)
++        self.addCleanup(browser.close)
++        page, requests, _, _, errors = helper.page(browser, f)
++        helper.ready(page)
++        helper.choose(page)
++        originals = []
++        for mode in ['custom', 'neutral']:
++            page.select_option('#trade-valuation-mode', mode)
++            with page.expect_response(lambda r: r.url.endswith('/api/trades/evaluate') and r.request.method == 'POST') as response:
++                page.locator('#trade-run').click()
++            e = response.value.json()['evaluation']
++            page.locator('#trade-result > .tw-compare-add').wait_for()
++            page.locator('#trade-result > .tw-compare-add').click()
++            originals.append(e)
++        selected = helper.draft(page)['comparisonOffers']
++        self.assertEqual([r['summary']['mode'] for r in selected], ['custom', 'neutral'])
++        for index, e in enumerate(originals):
++            self.assertEqual(selected[index]['summary']['neutral']['sent'], e['market_evidence']['sent']['total'])
++            self.assertEqual(selected[index]['summary']['neutral']['received'], e['market_evidence']['received']['total'])
++        self.assertEqual(selected[0]['summary']['personal']['sent'], originals[0]['personal_value_evidence']['sent']['total'])
++        draft = helper.draft(page)['currentProposal']
++        before = self.open_readonly(page, requests)
++        panel = page.locator('#trade-comparison')
++        self.assertIn('Valuation modes or methods differ', panel.inner_text())
++        self.assertEqual(panel.get_attribute('data-comparison-state'), 'incomplete')
++        self.assertTrue(any(e['decision_context']['lineup_comparisons']['current_week']['state'] != 'supported'
++                            for e in originals))
++        self.assertIn('Your Custom values', panel.inner_text())
++        self.assertEqual(panel.locator('.tw-comparison-offer').count(), 2)
++        page.get_by_role('button', name='Return to my offer or draft', exact=True).click()
++        self.assertEqual(helper.draft(page)['currentProposal'], draft)
++        self.assertEqual(requests, before)
++        self.assertFalse(errors, errors)
++        self.record('neutral-custom', dict(actual_evaluations=2, neutral_values_match_originals=True,
++                    custom_values_match_original=True, modes_separate=True, no_http=True), page)
++        page.reload()
++        page.wait_for_function("!document.querySelector('#trade-context').textContent.includes('Loading')")
++        count = self.open_readonly(page, requests)
++        self.assertEqual(page.locator('#trade-comparison').get_attribute('data-comparison-state'), 'incomplete',
++                         page.locator('#trade-comparison > p').first.inner_text())
++        self.assertTrue(all(not r['context'].get('stale_reason') for r in helper.draft(page)['comparisonOffers']))
++        self.assertIn('NOT REVALIDATED', page.locator('#trade-comparison').inner_text())
++        self.assertEqual(len(helper.draft(page)['comparisonOffers']), 2)
++        self.assertEqual(helper.draft(page)['currentProposal'], draft)
++        self.assertEqual(requests, count)
++        self.record('custom-incomplete-reload', dict(selected_offers=2, same_prepared_generation=True,
++                    original_incomplete_lineup_preserved=True, draft_mode_does_not_mutate_selected_assessment=True,
++                    retained_qualification_visible=True, exact_draft=True, no_http=True), page)

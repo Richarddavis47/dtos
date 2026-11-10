@@ -1,0 +1,108 @@
+{
+  "observed_at": "2026-11-10T07:13:10.676911+00:00",
+  "production_ready": {
+    "status": "ready",
+    "version": "1.22.29",
+    "build": 2244,
+    "deployment": {
+      "branch": "main",
+      "commit": "a17f9113868c3b9dcc3dd68d0b02613a2ad1de98",
+      "deployed_at": "2026-11-10T07:10:08.311993+00:00"
+    },
+    "reason": "Application ready."
+  },
+  "reads": [
+    {
+      "path": "/health/live",
+      "status": 200,
+      "guest_read_only": true
+    },
+    {
+      "path": "/static/js/contextual_navigation.js",
+      "status": 200,
+      "guest_read_only": true,
+      "sha256": "84385c651e4f58becdd6c7f9a55169610fe533d727eab27a6defe24e1c1d48de",
+      "bytes": 19945
+    },
+    {
+      "path": "/static/js/trade_workspace.js",
+      "status": 200,
+      "guest_read_only": true,
+      "sha256": "c6b98f9ea04e9ec84b95dcfd3e3d54b88f31ad3c381cc32eca37cdf50dfaae87",
+      "bytes": 176579
+    },
+    {
+      "path": "/static/js/trade_comparison.js",
+      "status": 200,
+      "guest_read_only": true,
+      "sha256": "43ee199aa5d286256f7d61c7474d38adfda5bebad72f33cf5895251ad34cbd45",
+      "bytes": 14561
+    },
+    {
+      "path": "/static/css/trade_workspace.css",
+      "status": 200,
+      "guest_read_only": true,
+      "sha256": "a22127853f84a8d2be7f7ca740017ebfd7883ee5308d4d16b717eb45b6fa6d20",
+      "bytes": 20634
+    },
+    {
+      "path": "/welcome",
+      "status": 200,
+      "guest_read_only": true
+    },
+    {
+      "path": "/account/sign-in",
+      "status": 200,
+      "guest_read_only": true
+    },
+    {
+      "path": "/api/my-dtos",
+      "status": 401,
+      "guest_read_only": true
+    },
+    {
+      "path": "/market",
+      "status": 303,
+      "guest_read_only": true,
+      "scope": "Authentication boundary only; no private league/history content or hydration"
+    },
+    {
+      "path": "/players/1",
+      "status": 303,
+      "guest_read_only": true,
+      "scope": "Authentication boundary only; no private league/history content or hydration"
+    },
+    {
+      "path": "/trades/recommended",
+      "status": 303,
+      "guest_read_only": true,
+      "scope": "Authentication boundary only; no private league/history content or hydration"
+    },
+    {
+      "path": "/trades/calculator",
+      "status": 303,
+      "guest_read_only": true,
+      "scope": "Authentication boundary only; no private league/history content or hydration"
+    },
+    {
+      "path": "/history",
+      "status": 303,
+      "guest_read_only": true,
+      "scope": "Authentication boundary only; no private league/history content or hydration"
+    },
+    {
+      "path": "/history/team/source-scope:franchise:4",
+      "status": 303,
+      "guest_read_only": true,
+      "scope": "Authentication boundary only; no private league/history content or hydration"
+    },
+    {
+      "path": "/trades/history/retained-source-control",
+      "status": 303,
+      "guest_read_only": true,
+      "scope": "Authentication boundary only; no private league/history content or hydration"
+    }
+  ],
+  "welcome_preservation_matches": [],
+  "scope": "Bounded public unauthenticated reads only. No authenticated league entry, search, synchronization, FOIS rebuild, account login or saved user-data mutation."
+}

@@ -1,0 +1,81 @@
+/usr/local/lib/python3.14/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+  from starlette.testclient import TestClient as TestClient  # noqa
+{"timestamp":"2026-11-10T04:55:57.053331+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T04:55:57.060976+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T04:55:57.076176+00:00","level":"WARNING","logger":"dtos.storage","message":"storage_review {'kind': 'projection', 'database_bytes': 241664, 'rows': {'projection_snapshots': 7, 'projection_source_history': 5, 'projection_player_states': 140}, 'free_bytes': 7213576192, 'row_delta': {'projection_snapshots': 2, 'projection_source_history': 1, 'projection_player_states': 92}, 'reasons': ['ROW_GROWTH_ACCELERATION_REVIEW']}","request_id":"system"}
+[
+  {
+    "lineup": {
+      "season": 2026,
+      "league_id": "league-1",
+      "scoring_profile_id": "b7799ccb7806beda77e5f10387a5aba41d474c52401d7a16a463b8243e9d882a",
+      "projection_generation": "fe8d2d2b81a7cad3c6ad57520a7a827a184cd7bc6a52558831fab7cd86b8ede3",
+      "delta": 4.0,
+      "pre_total": 164.0,
+      "post_total": 168.0,
+      "state": "provisional",
+      "weeks": [
+        2
+      ],
+      "coverage": "complete",
+      "availability_state": "provisional",
+      "subtotal": 4.0,
+      "comparable_weeks": [
+        2
+      ]
+    },
+    "evidence": {
+      "scoring": "supported",
+      "calculation_supported": true,
+      "projection_freshness": [
+        "Fresh"
+      ],
+      "retained": false,
+      "refresh": {},
+      "source_observations": [
+        "2026-11-10T04:55:57.180339+00:00"
+      ],
+      "conclusion_state": "provisional",
+      "limitations": [
+        "Availability-qualified post-trade lineup or capacity differs from the canonical comparison; no dependable complete impact is established."
+      ]
+    }
+  },
+  {
+    "lineup": {
+      "season": 2026,
+      "league_id": "league-1",
+      "scoring_profile_id": "b7799ccb7806beda77e5f10387a5aba41d474c52401d7a16a463b8243e9d882a",
+      "projection_generation": "fe8d2d2b81a7cad3c6ad57520a7a827a184cd7bc6a52558831fab7cd86b8ede3",
+      "delta": 8.0,
+      "pre_total": 164.0,
+      "post_total": 172.0,
+      "state": "provisional",
+      "weeks": [
+        2
+      ],
+      "coverage": "complete",
+      "availability_state": "provisional",
+      "subtotal": 8.0,
+      "comparable_weeks": [
+        2
+      ]
+    },
+    "evidence": {
+      "scoring": "supported",
+      "calculation_supported": true,
+      "projection_freshness": [
+        "Fresh"
+      ],
+      "retained": false,
+      "refresh": {},
+      "source_observations": [
+        "2026-11-10T04:55:57.180339+00:00"
+      ],
+      "conclusion_state": "provisional",
+      "limitations": [
+        "Availability-qualified post-trade lineup or capacity differs from the canonical comparison; no dependable complete impact is established."
+      ]
+    }
+  }
+]

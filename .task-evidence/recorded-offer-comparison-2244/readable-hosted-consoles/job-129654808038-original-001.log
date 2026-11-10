@@ -1,0 +1,493 @@
+﻿2026-11-10T05:23:46.7902908Z Current runner version: '2.338.2'
+2026-11-10T05:23:46.7939894Z ##[group]Runner Image Provisioner
+2026-11-10T05:23:46.7941343Z Hosted Compute Agent
+2026-11-10T05:23:46.7942504Z Version: 20261028.624
+2026-11-10T05:23:46.7943614Z Commit: 54898b74c23fde5556c9b3c3a2290865feef0dfe
+2026-11-10T05:23:46.7945158Z Build Date: 2026-10-28T21:51:42Z
+2026-11-10T05:23:46.7946754Z Worker ID: {865e20c6-8403-4c7b-91c9-4b4fe08f6d9c}
+2026-11-10T05:23:46.7948239Z Region: eastus
+2026-11-10T05:23:46.7949242Z Cloud: Azure
+2026-11-10T05:23:46.7950232Z ##[endgroup]
+2026-11-10T05:23:46.7953407Z ##[group]Operating System
+2026-11-10T05:23:46.7954518Z Ubuntu
+2026-11-10T05:23:46.7955582Z 24.04.5
+2026-11-10T05:23:46.7956774Z LTS
+2026-11-10T05:23:46.7957905Z ##[endgroup]
+2026-11-10T05:23:46.7958963Z ##[group]Runner Image
+2026-11-10T05:23:46.7960046Z Image: ubuntu-24.04
+2026-11-10T05:23:46.7961254Z Version: 20261101.360.1
+2026-11-10T05:23:46.7963510Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20261101.360/images/ubuntu/Ubuntu2404-Readme.md
+2026-11-10T05:23:46.7966834Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20261101.360
+2026-11-10T05:23:46.7968739Z ##[endgroup]
+2026-11-10T05:23:46.7970801Z ##[group]GITHUB_TOKEN Permissions
+2026-11-10T05:23:46.7974104Z Contents: read
+2026-11-10T05:23:46.7975153Z Metadata: read
+2026-11-10T05:23:46.7976105Z ##[endgroup]
+2026-11-10T05:23:46.7979874Z Secret source: Actions
+2026-11-10T05:23:46.7981656Z Cache mode: write
+2026-11-10T05:23:46.7983190Z Prepare workflow directory
+2026-11-10T05:23:46.8590123Z Prepare all required actions
+2026-11-10T05:23:46.8664738Z Getting action download info
+2026-11-10T05:23:47.0240324Z Download action repository 'actions/checkout@v4' (SHA:11d5960a326750d5838078e36cf38b85af677262)
+2026-11-10T05:23:47.1191545Z Download action repository 'actions/setup-python@v5' (SHA:a26af69be951a213d495a4c3e4e4022e16d87065)
+2026-11-10T05:23:47.3054697Z Complete job name: beginner-navigation
+2026-11-10T05:23:47.3927705Z ##[group]Run actions/checkout@v4
+2026-11-10T05:23:47.3928653Z with:
+2026-11-10T05:23:47.3929124Z   repository: Richarddavis47/dtos
+2026-11-10T05:23:47.3932805Z   token: ***
+2026-11-10T05:23:47.3933245Z   ssh-strict: true
+2026-11-10T05:23:47.3933700Z   ssh-user: git
+2026-11-10T05:23:47.3934158Z   persist-credentials: true
+2026-11-10T05:23:47.3934662Z   clean: true
+2026-11-10T05:23:47.3935119Z   sparse-checkout-cone-mode: true
+2026-11-10T05:23:47.3935652Z   fetch-depth: 1
+2026-11-10T05:23:47.3936089Z   fetch-tags: false
+2026-11-10T05:23:47.3936741Z   show-progress: true
+2026-11-10T05:23:47.3937201Z   lfs: false
+2026-11-10T05:23:47.3937620Z   submodules: false
+2026-11-10T05:23:47.3938087Z   set-safe-directory: true
+2026-11-10T05:23:47.3938605Z   allow-unsafe-pr-checkout: false
+2026-11-10T05:23:47.3939370Z env:
+2026-11-10T05:23:47.3939850Z   NODE_OPTIONS: --max-old-space-size=256
+2026-11-10T05:23:47.3940411Z ##[endgroup]
+2026-11-10T05:23:47.6592294Z Syncing repository: Richarddavis47/dtos
+2026-11-10T05:23:47.6594547Z ##[group]Getting Git version info
+2026-11-10T05:23:47.6595331Z Working directory is '/home/runner/work/dtos/dtos'
+2026-11-10T05:23:47.6596717Z [command]/usr/bin/git version
+2026-11-10T05:23:47.6683823Z git version 2.56.0
+2026-11-10T05:23:47.6706687Z ##[endgroup]
+2026-11-10T05:23:47.6723440Z Temporarily overriding HOME='/home/runner/work/_temp/92b7f22f-9f4b-4eaa-8708-8e3c69611988' before making global git config changes
+2026-11-10T05:23:47.6725991Z Adding repository directory to the temporary git global config as a safe directory
+2026-11-10T05:23:47.6728566Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/dtos/dtos
+2026-11-10T05:23:47.6801603Z Deleting the contents of '/home/runner/work/dtos/dtos'
+2026-11-10T05:23:47.6807614Z ##[group]Initializing the repository
+2026-11-10T05:23:47.6809274Z [command]/usr/bin/git init /home/runner/work/dtos/dtos
+2026-11-10T05:23:47.6917755Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-11-10T05:23:47.6919777Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-11-10T05:23:47.6922172Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-11-10T05:23:47.6923754Z hint: call:
+2026-11-10T05:23:47.6924459Z hint:
+2026-11-10T05:23:47.6925379Z hint: 	git config --global init.defaultBranch <name>
+2026-11-10T05:23:47.6926951Z hint:
+2026-11-10T05:23:47.6928002Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-11-10T05:23:47.6929709Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-11-10T05:23:47.6931164Z hint:
+2026-11-10T05:23:47.6931903Z hint: 	git branch -m <name>
+2026-11-10T05:23:47.6932748Z hint:
+2026-11-10T05:23:47.6933858Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-11-10T05:23:47.6935732Z Initialized empty Git repository in /home/runner/work/dtos/dtos/.git/
+2026-11-10T05:23:47.6943377Z [command]/usr/bin/git remote add origin https://github.com/Richarddavis47/dtos
+2026-11-10T05:23:47.6997081Z ##[endgroup]
+2026-11-10T05:23:47.6998662Z ##[group]Disabling automatic garbage collection
+2026-11-10T05:23:47.7001136Z [command]/usr/bin/git config --local gc.auto 0
+2026-11-10T05:23:47.7039834Z ##[endgroup]
+2026-11-10T05:23:47.7041416Z ##[group]Setting up auth
+2026-11-10T05:23:47.7049972Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-11-10T05:23:47.7095706Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-11-10T05:23:47.7508465Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-11-10T05:23:47.7558342Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-11-10T05:23:47.7817273Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-11-10T05:23:47.7873294Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-11-10T05:23:47.8164118Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-11-10T05:23:47.8223232Z ##[endgroup]
+2026-11-10T05:23:47.8241172Z ##[group]Fetching the repository
+2026-11-10T05:23:47.8243064Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +263975594497195be116ca5ce7f23c4a7719580d:refs/remotes/pull/333/merge
+2026-11-10T05:23:49.3604187Z From https://github.com/Richarddavis47/dtos
+2026-11-10T05:23:49.3605967Z  * [new ref]         263975594497195be116ca5ce7f23c4a7719580d -> pull/333/merge
+2026-11-10T05:23:49.3610771Z ##[endgroup]
+2026-11-10T05:23:49.3612098Z ##[group]Determining the checkout info
+2026-11-10T05:23:49.3614513Z ##[endgroup]
+2026-11-10T05:23:49.3619872Z [command]/usr/bin/git sparse-checkout disable
+2026-11-10T05:23:49.3682671Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-11-10T05:23:49.3724507Z ##[group]Checking out the ref
+2026-11-10T05:23:49.3728833Z [command]/usr/bin/git checkout --progress --force refs/remotes/pull/333/merge
+2026-11-10T05:23:50.0471128Z Note: switching to 'refs/remotes/pull/333/merge'.
+2026-11-10T05:23:50.0472090Z 
+2026-11-10T05:23:50.0472661Z You are in 'detached HEAD' state. You can look around, make experimental
+2026-11-10T05:23:50.0474024Z changes and commit them, and you can discard any commits you make in this
+2026-11-10T05:23:50.0475164Z state without impacting any branches by switching back to a branch.
+2026-11-10T05:23:50.0475833Z 
+2026-11-10T05:23:50.0476164Z If you want to create a new branch to retain commits you create, you may
+2026-11-10T05:23:50.0477181Z do so (now or later) by using -c with the switch command. Example:
+2026-11-10T05:23:50.0477651Z 
+2026-11-10T05:23:50.0478245Z   git switch -c <new-branch-name>
+2026-11-10T05:23:50.0478513Z 
+2026-11-10T05:23:50.0478685Z Or undo this operation with:
+2026-11-10T05:23:50.0478931Z 
+2026-11-10T05:23:50.0479096Z   git switch -
+2026-11-10T05:23:50.0479308Z 
+2026-11-10T05:23:50.0479628Z Turn off this advice by setting config variable advice.detachedHead to false
+2026-11-10T05:23:50.0480095Z 
+2026-11-10T05:23:50.0480591Z HEAD is now at 2639755 Merge 3ec78ec4e055c42b65d6e5ac2c14fe6d557b68c2 into 6ed905ce18832be10f04e47cac8a703af4895719
+2026-11-10T05:23:50.0511988Z ##[endgroup]
+2026-11-10T05:23:50.0568164Z [command]/usr/bin/git log -1 --format=%H
+2026-11-10T05:23:50.0602700Z 263975594497195be116ca5ce7f23c4a7719580d
+2026-11-10T05:23:50.0891990Z ##[group]Run actions/setup-python@v5
+2026-11-10T05:23:50.0892356Z with:
+2026-11-10T05:23:50.0892610Z   python-version: 3.12
+2026-11-10T05:23:50.0892883Z   check-latest: false
+2026-11-10T05:23:50.0895315Z   token: ***
+2026-11-10T05:23:50.0895579Z   update-environment: true
+2026-11-10T05:23:50.0895900Z   allow-prereleases: false
+2026-11-10T05:23:50.0896203Z   freethreaded: false
+2026-11-10T05:23:50.0896655Z env:
+2026-11-10T05:23:50.0896912Z   NODE_OPTIONS: --max-old-space-size=256
+2026-11-10T05:23:50.0897232Z ##[endgroup]
+2026-11-10T05:23:50.2823567Z ##[group]Installed versions
+2026-11-10T05:23:50.2927186Z (node:2316) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-11-10T05:23:50.2928461Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-11-10T05:23:50.2929215Z Successfully set up CPython (3.12.16)
+2026-11-10T05:23:50.2930005Z ##[endgroup]
+2026-11-10T05:23:50.3161279Z ##[group]Run docker build -f tools/validation/containers/browser.Dockerfile -t dtos-browser-validation .
+2026-11-10T05:23:50.3162583Z [36;1mdocker build -f tools/validation/containers/browser.Dockerfile -t dtos-browser-validation .[0m
+2026-11-10T05:23:50.3208426Z shell: /usr/bin/bash -e {0}
+2026-11-10T05:23:50.3208821Z env:
+2026-11-10T05:23:50.3209185Z   NODE_OPTIONS: --max-old-space-size=256
+2026-11-10T05:23:50.3209758Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-10T05:23:50.3210481Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib/pkgconfig
+2026-11-10T05:23:50.3211202Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-10T05:23:50.3211849Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-10T05:23:50.3212536Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-10T05:23:50.3213209Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib
+2026-11-10T05:23:50.3213766Z ##[endgroup]
+2026-11-10T05:23:50.9043178Z #0 building with "default" instance using docker driver
+2026-11-10T05:23:50.9043964Z 
+2026-11-10T05:23:50.9044445Z #1 [internal] load build definition from browser.Dockerfile
+2026-11-10T05:23:50.9045169Z #1 transferring dockerfile: 467B done
+2026-11-10T05:23:50.9045625Z #1 DONE 0.0s
+2026-11-10T05:23:50.9045798Z 
+2026-11-10T05:23:50.9046113Z #2 [internal] load metadata for mcr.microsoft.com/playwright/python:v1.63.0-noble
+2026-11-10T05:23:50.9399310Z #2 DONE 0.2s
+2026-11-10T05:23:51.0609290Z 
+2026-11-10T05:23:51.0617094Z #3 [internal] load .dockerignore
+2026-11-10T05:23:51.0617881Z #3 transferring context: 2B done
+2026-11-10T05:23:51.0619203Z #3 DONE 0.0s
+2026-11-10T05:23:51.0619416Z 
+2026-11-10T05:23:51.0619582Z #4 [internal] load build context
+2026-11-10T05:23:51.0620045Z #4 transferring context: 316B done
+2026-11-10T05:23:51.0620718Z #4 DONE 0.0s
+2026-11-10T05:23:51.0622095Z 
+2026-11-10T05:23:51.0624606Z #5 [stage-0 1/4] FROM mcr.microsoft.com/playwright/python:v1.63.0-noble@sha256:72bd171a9ffc2b4b59532aaa6210e21014d07093120dc25528870c0b840da1f0
+2026-11-10T05:23:51.0629335Z #5 resolve mcr.microsoft.com/playwright/python:v1.63.0-noble@sha256:72bd171a9ffc2b4b59532aaa6210e21014d07093120dc25528870c0b840da1f0 done
+2026-11-10T05:23:51.0632105Z #5 sha256:59fe35832a79d1324e778b737760b2afc11cffcbaeba325012f96cabae832a75 4.59kB / 4.59kB done
+2026-11-10T05:23:51.0634843Z #5 sha256:e51aee9c82ec5dd5ba2add49c45c6d85d460512757e2615b69bcdf9469c7cb58 23.07MB / 29.76MB 0.1s
+2026-11-10T05:23:51.0635944Z #5 sha256:8d325af5888b74be784c993fd685b8e9657598b353d41edf72820183c88d2378 10.49MB / 46.27MB 0.1s
+2026-11-10T05:23:51.0638541Z #5 sha256:780286d9a7ac6ce567a0b1125bbb28a1dbb2df0aebbf1a493789e23a31879f3d 5.24MB / 95.95MB 0.1s
+2026-11-10T05:23:51.0639560Z #5 sha256:72bd171a9ffc2b4b59532aaa6210e21014d07093120dc25528870c0b840da1f0 705B / 705B done
+2026-11-10T05:23:51.0640693Z #5 sha256:96b39581c89131729a7ecb8d532314af54c7f9bcc7a61fe15c7a9e77602acf59 1.06kB / 1.06kB done
+2026-11-10T05:23:51.1800215Z #5 sha256:e51aee9c82ec5dd5ba2add49c45c6d85d460512757e2615b69bcdf9469c7cb58 29.76MB / 29.76MB 0.1s done
+2026-11-10T05:23:51.1805012Z #5 sha256:8d325af5888b74be784c993fd685b8e9657598b353d41edf72820183c88d2378 36.70MB / 46.27MB 0.2s
+2026-11-10T05:23:51.1808643Z #5 sha256:780286d9a7ac6ce567a0b1125bbb28a1dbb2df0aebbf1a493789e23a31879f3d 29.36MB / 95.95MB 0.2s
+2026-11-10T05:23:51.1810142Z #5 sha256:1b410ff087eccb9613563907f5381c27c0e2c02bad2a2bc9b408539c09efbac1 10.49MB / 841.95MB 0.2s
+2026-11-10T05:23:51.1811486Z #5 extracting sha256:e51aee9c82ec5dd5ba2add49c45c6d85d460512757e2615b69bcdf9469c7cb58
+2026-11-10T05:23:51.2892648Z #5 sha256:8d325af5888b74be784c993fd685b8e9657598b353d41edf72820183c88d2378 46.27MB / 46.27MB 0.3s done
+2026-11-10T05:23:51.2893925Z #5 sha256:780286d9a7ac6ce567a0b1125bbb28a1dbb2df0aebbf1a493789e23a31879f3d 57.67MB / 95.95MB 0.3s
+2026-11-10T05:23:51.4087910Z #5 sha256:780286d9a7ac6ce567a0b1125bbb28a1dbb2df0aebbf1a493789e23a31879f3d 83.89MB / 95.95MB 0.4s
+2026-11-10T05:23:51.4090837Z #5 sha256:1b410ff087eccb9613563907f5381c27c0e2c02bad2a2bc9b408539c09efbac1 75.50MB / 841.95MB 0.4s
+2026-11-10T05:23:51.5170561Z #5 sha256:780286d9a7ac6ce567a0b1125bbb28a1dbb2df0aebbf1a493789e23a31879f3d 95.95MB / 95.95MB 0.5s done
+2026-11-10T05:23:51.6182113Z #5 sha256:1b410ff087eccb9613563907f5381c27c0e2c02bad2a2bc9b408539c09efbac1 141.56MB / 841.95MB 0.6s
+2026-11-10T05:23:51.8205896Z #5 sha256:1b410ff087eccb9613563907f5381c27c0e2c02bad2a2bc9b408539c09efbac1 196.08MB / 841.95MB 0.8s
+2026-11-10T05:23:51.9585778Z #5 sha256:1b410ff087eccb9613563907f5381c27c0e2c02bad2a2bc9b408539c09efbac1 262.14MB / 841.95MB 1.0s
+2026-11-10T05:23:52.2585712Z #5 sha256:1b410ff087eccb9613563907f5381c27c0e2c02bad2a2bc9b408539c09efbac1 360.71MB / 841.95MB 1.3s
+2026-11-10T05:23:52.3714648Z #5 extracting sha256:e51aee9c82ec5dd5ba2add49c45c6d85d460512757e2615b69bcdf9469c7cb58 1.2s done
+2026-11-10T05:23:52.4818806Z #5 sha256:1b410ff087eccb9613563907f5381c27c0e2c02bad2a2bc9b408539c09efbac1 406.85MB / 841.95MB 1.5s
+2026-11-10T05:23:52.4820408Z #5 extracting sha256:8d325af5888b74be784c993fd685b8e9657598b353d41edf72820183c88d2378
+2026-11-10T05:23:52.6861915Z #5 sha256:1b410ff087eccb9613563907f5381c27c0e2c02bad2a2bc9b408539c09efbac1 469.76MB / 841.95MB 1.7s
+2026-11-10T05:23:52.9445762Z #5 sha256:1b410ff087eccb9613563907f5381c27c0e2c02bad2a2bc9b408539c09efbac1 536.87MB / 841.95MB 1.9s
+2026-11-10T05:23:53.0600248Z #5 sha256:1b410ff087eccb9613563907f5381c27c0e2c02bad2a2bc9b408539c09efbac1 590.35MB / 841.95MB 2.1s
+2026-11-10T05:23:53.3079174Z #5 sha256:1b410ff087eccb9613563907f5381c27c0e2c02bad2a2bc9b408539c09efbac1 650.12MB / 841.95MB 2.3s
+2026-11-10T05:23:53.5596772Z #5 sha256:1b410ff087eccb9613563907f5381c27c0e2c02bad2a2bc9b408539c09efbac1 742.39MB / 841.95MB 2.6s
+2026-11-10T05:23:53.7772431Z #5 sha256:1b410ff087eccb9613563907f5381c27c0e2c02bad2a2bc9b408539c09efbac1 807.40MB / 841.95MB 2.8s
+2026-11-10T05:23:54.6159908Z #5 extracting sha256:8d325af5888b74be784c993fd685b8e9657598b353d41edf72820183c88d2378 2.1s done
+2026-11-10T05:23:55.8582745Z #5 sha256:1b410ff087eccb9613563907f5381c27c0e2c02bad2a2bc9b408539c09efbac1 841.95MB / 841.95MB 4.9s done
+2026-11-10T05:23:56.8704859Z #5 extracting sha256:780286d9a7ac6ce567a0b1125bbb28a1dbb2df0aebbf1a493789e23a31879f3d
+2026-11-10T05:23:57.2763592Z #5 extracting sha256:780286d9a7ac6ce567a0b1125bbb28a1dbb2df0aebbf1a493789e23a31879f3d 0.3s done
+2026-11-10T05:23:57.2764787Z #5 extracting sha256:1b410ff087eccb9613563907f5381c27c0e2c02bad2a2bc9b408539c09efbac1
+2026-11-10T05:24:02.3769186Z #5 extracting sha256:1b410ff087eccb9613563907f5381c27c0e2c02bad2a2bc9b408539c09efbac1 5.1s
+2026-11-10T05:24:07.6127974Z #5 extracting sha256:1b410ff087eccb9613563907f5381c27c0e2c02bad2a2bc9b408539c09efbac1 10.3s
+2026-11-10T05:24:10.4414874Z #5 extracting sha256:1b410ff087eccb9613563907f5381c27c0e2c02bad2a2bc9b408539c09efbac1 13.0s done
+2026-11-10T05:24:13.8671253Z #5 DONE 22.9s
+2026-11-10T05:24:14.0341679Z 
+2026-11-10T05:24:14.0342320Z #6 [stage-0 2/4] COPY requirements.txt requirements-validation.txt /tmp/
+2026-11-10T05:24:14.0343225Z #6 DONE 0.0s
+2026-11-10T05:24:14.0343471Z 
+2026-11-10T05:24:14.0344715Z #7 [stage-0 3/4] RUN --mount=type=secret,id=proxy_ca,target=/run/proxy-ca.pem     if [ -f /run/proxy-ca.pem ]; then export PIP_CERT=/run/proxy-ca.pem; fi;     pip install --no-cache-dir -r /tmp/requirements-validation.txt
+2026-11-10T05:24:14.5695238Z #7 0.686 Collecting fastapi<1.0,>=0.116 (from -r /tmp/requirements.txt (line 1))
+2026-11-10T05:24:14.6861068Z #7 0.757   Downloading fastapi-0.162.2-py3-none-any.whl.metadata (27 kB)
+2026-11-10T05:24:14.6862427Z #7 0.803 Collecting uvicorn<1.0,>=0.35 (from uvicorn[standard]<1.0,>=0.35->-r /tmp/requirements.txt (line 2))
+2026-11-10T05:24:14.8349424Z #7 0.813   Downloading uvicorn-0.54.0-py3-none-any.whl.metadata (6.6 kB)
+2026-11-10T05:24:14.8350354Z #7 0.843 Collecting httpx<1.0,>=0.28 (from -r /tmp/requirements.txt (line 3))
+2026-11-10T05:24:14.8351002Z #7 0.852   Downloading httpx-0.28.1-py3-none-any.whl.metadata (7.1 kB)
+2026-11-10T05:24:14.8352047Z #7 0.952 Collecting psutil<8.0,>=6.0 (from -r /tmp/requirements.txt (line 4))
+2026-11-10T05:24:15.0706674Z #7 0.962   Downloading psutil-7.2.2-cp36-abi3-manylinux2010_x86_64.manylinux_2_12_x86_64.manylinux_2_28_x86_64.whl.metadata (22 kB)
+2026-11-10T05:24:15.0707756Z #7 0.989 Collecting pwdlib<1.0,>=0.2 (from pwdlib[argon2]<1.0,>=0.2->-r /tmp/requirements.txt (line 5))
+2026-11-10T05:24:15.0708506Z #7 1.000   Downloading pwdlib-0.3.1-py3-none-any.whl.metadata (5.6 kB)
+2026-11-10T05:24:15.0709167Z #7 1.026 Collecting tzdata>=2025.1 (from -r /tmp/requirements.txt (line 6))
+2026-11-10T05:24:15.0709815Z #7 1.037   Downloading tzdata-2026.6-py2.py3-none-any.whl.metadata (1.4 kB)
+2026-11-10T05:24:15.1005930Z #7 1.217 Collecting cryptography<51,>=43 (from -r /tmp/requirements.txt (line 7))
+2026-11-10T05:24:15.3173106Z #7 1.227   Downloading cryptography-50.0.2-cp311-abi3-manylinux_2_34_x86_64.whl.metadata (4.4 kB)
+2026-11-10T05:24:15.3173934Z #7 1.273 Collecting playwright==1.63.0 (from -r /tmp/requirements-validation.txt (line 2))
+2026-11-10T05:24:15.3174711Z #7 1.283   Downloading playwright-1.63.0-py3-none-manylinux1_x86_64.whl.metadata (3.3 kB)
+2026-11-10T05:24:15.4643235Z #7 1.581 Collecting ruff==0.16.9 (from -r /tmp/requirements-validation.txt (line 3))
+2026-11-10T05:24:15.6254463Z #7 1.592   Downloading ruff-0.16.9-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (20 kB)
+2026-11-10T05:24:15.6480703Z #7 1.765 Collecting Pillow<13.0,>=11.0 (from -r /tmp/requirements-validation.txt (line 4))
+2026-11-10T05:24:15.8348614Z #7 1.775   Downloading pillow-12.3.0-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (9.1 kB)
+2026-11-10T05:24:15.8350309Z #7 1.804 Collecting pyee<14,>=13 (from playwright==1.63.0->-r /tmp/requirements-validation.txt (line 2))
+2026-11-10T05:24:15.8351266Z #7 1.813   Downloading pyee-13.0.1-py3-none-any.whl.metadata (3.0 kB)
+2026-11-10T05:24:15.8352045Z #7 1.952 Collecting greenlet<4.0.0,>=3.1.1 (from playwright==1.63.0->-r /tmp/requirements-validation.txt (line 2))
+2026-11-10T05:24:15.9929399Z #7 1.962   Downloading greenlet-3.5.6-cp312-cp312-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl.metadata (3.8 kB)
+2026-11-10T05:24:15.9930565Z #7 1.997 Collecting starlette>=0.46.0 (from fastapi<1.0,>=0.116->-r /tmp/requirements.txt (line 1))
+2026-11-10T05:24:15.9931465Z #7 2.006   Downloading starlette-1.10.0-py3-none-any.whl.metadata (6.6 kB)
+2026-11-10T05:24:15.9932320Z #7 2.110 Collecting pydantic>=2.9.0 (from fastapi<1.0,>=0.116->-r /tmp/requirements.txt (line 1))
+2026-11-10T05:24:16.1118737Z #7 2.121   Downloading pydantic-2.14.3-py3-none-any.whl.metadata (141 kB)
+2026-11-10T05:24:16.1119788Z #7 2.162 Collecting typing-extensions>=4.8.0 (from fastapi<1.0,>=0.116->-r /tmp/requirements.txt (line 1))
+2026-11-10T05:24:16.1120627Z #7 2.172   Downloading typing_extensions-4.16.0-py3-none-any.whl.metadata (3.3 kB)
+2026-11-10T05:24:16.1121431Z #7 2.196 Collecting typing-inspection>=0.4.2 (from fastapi<1.0,>=0.116->-r /tmp/requirements.txt (line 1))
+2026-11-10T05:24:16.1122256Z #7 2.206   Downloading typing_inspection-0.4.5-py3-none-any.whl.metadata (2.6 kB)
+2026-11-10T05:24:16.1123049Z #7 2.229 Collecting annotated-doc>=0.0.2 (from fastapi<1.0,>=0.116->-r /tmp/requirements.txt (line 1))
+2026-11-10T05:24:16.2278399Z #7 2.238   Downloading annotated_doc-0.0.5-py3-none-any.whl.metadata (6.5 kB)
+2026-11-10T05:24:16.2279571Z #7 2.269 Collecting opentelemetry-api>=1.44.0 (from fastapi<1.0,>=0.116->-r /tmp/requirements.txt (line 1))
+2026-11-10T05:24:16.2280689Z #7 2.279   Downloading opentelemetry_api-1.45.2-py3-none-any.whl.metadata (1.4 kB)
+2026-11-10T05:24:16.2281812Z #7 2.307 Collecting click>=7.0 (from uvicorn<1.0,>=0.35->uvicorn[standard]<1.0,>=0.35->-r /tmp/requirements.txt (line 2))
+2026-11-10T05:24:16.2282857Z #7 2.321   Downloading click-8.5.1-py3-none-any.whl.metadata (2.6 kB)
+2026-11-10T05:24:16.2283806Z #7 2.345 Collecting h11>=0.8 (from uvicorn<1.0,>=0.35->uvicorn[standard]<1.0,>=0.35->-r /tmp/requirements.txt (line 2))
+2026-11-10T05:24:16.3473912Z #7 2.354   Downloading h11-0.16.0-py3-none-any.whl.metadata (8.3 kB)
+2026-11-10T05:24:16.3475457Z #7 2.387 Collecting anyio (from httpx<1.0,>=0.28->-r /tmp/requirements.txt (line 3))
+2026-11-10T05:24:16.3477068Z #7 2.397   Downloading anyio-4.16.0-py3-none-any.whl.metadata (4.7 kB)
+2026-11-10T05:24:16.3478302Z #7 2.427 Collecting certifi (from httpx<1.0,>=0.28->-r /tmp/requirements.txt (line 3))
+2026-11-10T05:24:16.3479652Z #7 2.437   Downloading certifi-2026.10.23-py3-none-any.whl.metadata (2.5 kB)
+2026-11-10T05:24:16.3480925Z #7 2.464 Collecting httpcore==1.* (from httpx<1.0,>=0.28->-r /tmp/requirements.txt (line 3))
+2026-11-10T05:24:16.5065615Z #7 2.479   Downloading httpcore-1.0.9-py3-none-any.whl.metadata (21 kB)
+2026-11-10T05:24:16.5066879Z #7 2.507 Collecting idna (from httpx<1.0,>=0.28->-r /tmp/requirements.txt (line 3))
+2026-11-10T05:24:16.5067784Z #7 2.518   Downloading idna-3.20-py3-none-any.whl.metadata (7.2 kB)
+2026-11-10T05:24:16.5068676Z #7 2.623 Collecting cffi>=2.0.0 (from cryptography<51,>=43->-r /tmp/requirements.txt (line 7))
+2026-11-10T05:24:16.6138347Z #7 2.633   Downloading cffi-2.1.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (2.5 kB)
+2026-11-10T05:24:16.6139605Z #7 2.666 Collecting argon2-cffi>=23.1.0 (from pwdlib[argon2]<1.0,>=0.2->-r /tmp/requirements.txt (line 5))
+2026-11-10T05:24:16.6140559Z #7 2.675   Downloading argon2_cffi-25.1.0-py3-none-any.whl.metadata (4.1 kB)
+2026-11-10T05:24:16.6141566Z #7 2.720 Collecting httptools>=0.8.0 (from uvicorn[standard]<1.0,>=0.35->-r /tmp/requirements.txt (line 2))
+2026-11-10T05:24:16.6142654Z #7 2.730   Downloading httptools-0.9.0-cp312-cp312-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl.metadata (3.5 kB)
+2026-11-10T05:24:16.7527983Z #7 2.757 Collecting python-dotenv>=0.13 (from uvicorn[standard]<1.0,>=0.35->-r /tmp/requirements.txt (line 2))
+2026-11-10T05:24:16.7529126Z #7 2.767   Downloading python_dotenv-1.2.4-py3-none-any.whl.metadata (29 kB)
+2026-11-10T05:24:16.7529955Z #7 2.813 Collecting pyyaml>=5.1 (from uvicorn[standard]<1.0,>=0.35->-r /tmp/requirements.txt (line 2))
+2026-11-10T05:24:16.7531089Z #7 2.823   Downloading pyyaml-6.0.3-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (2.4 kB)
+2026-11-10T05:24:16.7532413Z #7 2.870 Collecting uvloop>=0.15.1 (from uvicorn[standard]<1.0,>=0.35->-r /tmp/requirements.txt (line 2))
+2026-11-10T05:24:16.8674742Z #7 2.879   Downloading uvloop-0.23.0-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (5.1 kB)
+2026-11-10T05:24:16.8676873Z #7 2.984 Collecting watchfiles>=0.20 (from uvicorn[standard]<1.0,>=0.35->-r /tmp/requirements.txt (line 2))
+2026-11-10T05:24:16.9990887Z #7 2.994   Downloading watchfiles-1.3.0-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (4.9 kB)
+2026-11-10T05:24:16.9992249Z #7 3.116 Collecting websockets>=13.0 (from uvicorn[standard]<1.0,>=0.35->-r /tmp/requirements.txt (line 2))
+2026-11-10T05:24:17.1088980Z #7 3.126   Downloading websockets-17.4-cp312-cp312-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl.metadata (6.3 kB)
+2026-11-10T05:24:17.1090824Z #7 3.154 Collecting argon2-cffi-bindings (from argon2-cffi>=23.1.0->pwdlib[argon2]<1.0,>=0.2->-r /tmp/requirements.txt (line 5))
+2026-11-10T05:24:17.1092804Z #7 3.164   Downloading argon2_cffi_bindings-26.1.0-cp310-abi3-manylinux_2_26_x86_64.manylinux_2_28_x86_64.whl.metadata (7.5 kB)
+2026-11-10T05:24:17.1094506Z #7 3.189 Collecting pycparser (from cffi>=2.0.0->cryptography<51,>=43->-r /tmp/requirements.txt (line 7))
+2026-11-10T05:24:17.1095782Z #7 3.199   Downloading pycparser-3.12-py3-none-any.whl.metadata (9.7 kB)
+2026-11-10T05:24:17.1097370Z #7 3.226 Collecting annotated-types>=0.6.0 (from pydantic>=2.9.0->fastapi<1.0,>=0.116->-r /tmp/requirements.txt (line 1))
+2026-11-10T05:24:17.2694450Z #7 3.236   Downloading annotated_types-0.8.0-py3-none-any.whl.metadata (15 kB)
+2026-11-10T05:24:17.7696045Z #7 3.886 Collecting pydantic-core==2.50.4 (from pydantic>=2.9.0->fastapi<1.0,>=0.116->-r /tmp/requirements.txt (line 1))
+2026-11-10T05:24:17.9560935Z #7 3.896   Downloading pydantic_core-2.50.4-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (6.6 kB)
+2026-11-10T05:24:17.9562389Z #7 3.922 Downloading playwright-1.63.0-py3-none-manylinux1_x86_64.whl (48.2 MB)
+2026-11-10T05:24:18.2228676Z #7 4.232    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 48.2/48.2 MB 160.1 MB/s  0:00:00
+2026-11-10T05:24:18.2229431Z #7 4.247 Downloading ruff-0.16.9-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (10.4 MB)
+2026-11-10T05:24:18.2230253Z #7 4.306    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 10.4/10.4 MB 178.1 MB/s  0:00:00
+2026-11-10T05:24:18.2230782Z #7 4.320 Downloading fastapi-0.162.2-py3-none-any.whl (151 kB)
+2026-11-10T05:24:18.2231260Z #7 4.329 Downloading uvicorn-0.54.0-py3-none-any.whl (87 kB)
+2026-11-10T05:24:18.2231708Z #7 4.339 Downloading httpx-0.28.1-py3-none-any.whl (73 kB)
+2026-11-10T05:24:18.3263580Z #7 4.348 Downloading psutil-7.2.2-cp36-abi3-manylinux2010_x86_64.manylinux_2_12_x86_64.manylinux_2_28_x86_64.whl (155 kB)
+2026-11-10T05:24:18.3264454Z #7 4.359 Downloading pwdlib-0.3.1-py3-none-any.whl (9.3 kB)
+2026-11-10T05:24:18.3265061Z #7 4.368 Downloading cryptography-50.0.2-cp311-abi3-manylinux_2_34_x86_64.whl (4.8 MB)
+2026-11-10T05:24:18.3265982Z #7 4.379    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.8/4.8 MB 555.1 MB/s  0:00:00
+2026-11-10T05:24:18.3266971Z #7 4.389 Downloading pillow-12.3.0-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (6.9 MB)
+2026-11-10T05:24:18.3267775Z #7 4.404    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 6.9/6.9 MB 543.8 MB/s  0:00:00
+2026-11-10T05:24:18.3268441Z #7 4.413 Downloading greenlet-3.5.6-cp312-cp312-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl (621 kB)
+2026-11-10T05:24:18.3269112Z #7 4.417    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 621.4/621.4 kB 479.0 MB/s  0:00:00
+2026-11-10T05:24:18.3269558Z #7 4.426 Downloading httpcore-1.0.9-py3-none-any.whl (78 kB)
+2026-11-10T05:24:18.3269971Z #7 4.443 Downloading pyee-13.0.1-py3-none-any.whl (15 kB)
+2026-11-10T05:24:18.4300412Z #7 4.452 Downloading tzdata-2026.6-py2.py3-none-any.whl (348 kB)
+2026-11-10T05:24:18.4301079Z #7 4.463 Downloading annotated_doc-0.0.5-py3-none-any.whl (5.3 kB)
+2026-11-10T05:24:18.4301662Z #7 4.472 Downloading argon2_cffi-25.1.0-py3-none-any.whl (14 kB)
+2026-11-10T05:24:18.4302367Z #7 4.484 Downloading cffi-2.1.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (221 kB)
+2026-11-10T05:24:18.4303067Z #7 4.494 Downloading click-8.5.1-py3-none-any.whl (126 kB)
+2026-11-10T05:24:18.4303850Z #7 4.504 Downloading h11-0.16.0-py3-none-any.whl (37 kB)
+2026-11-10T05:24:18.4304619Z #7 4.513 Downloading httptools-0.9.0-cp312-cp312-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl (552 kB)
+2026-11-10T05:24:18.4305800Z #7 4.516    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 552.8/552.8 kB 748.0 MB/s  0:00:00
+2026-11-10T05:24:18.4306725Z #7 4.527 Downloading opentelemetry_api-1.45.2-py3-none-any.whl (60 kB)
+2026-11-10T05:24:18.4307335Z #7 4.536 Downloading pydantic-2.14.3-py3-none-any.whl (494 kB)
+2026-11-10T05:24:18.4308101Z #7 4.547 Downloading pydantic_core-2.50.4-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (2.3 MB)
+2026-11-10T05:24:18.5463173Z #7 4.553    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.3/2.3 MB 618.6 MB/s  0:00:00
+2026-11-10T05:24:18.5464072Z #7 4.562 Downloading annotated_types-0.8.0-py3-none-any.whl (13 kB)
+2026-11-10T05:24:18.5464870Z #7 4.574 Downloading python_dotenv-1.2.4-py3-none-any.whl (23 kB)
+2026-11-10T05:24:18.5465877Z #7 4.584 Downloading pyyaml-6.0.3-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (807 kB)
+2026-11-10T05:24:18.5467282Z #7 4.587    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 807.9/807.9 kB 630.5 MB/s  0:00:00
+2026-11-10T05:24:18.5467912Z #7 4.597 Downloading starlette-1.10.0-py3-none-any.whl (80 kB)
+2026-11-10T05:24:18.5468426Z #7 4.607 Downloading anyio-4.16.0-py3-none-any.whl (134 kB)
+2026-11-10T05:24:18.5468865Z #7 4.616 Downloading idna-3.20-py3-none-any.whl (69 kB)
+2026-11-10T05:24:18.5469761Z #7 4.625 Downloading typing_extensions-4.16.0-py3-none-any.whl (45 kB)
+2026-11-10T05:24:18.5470481Z #7 4.635 Downloading typing_inspection-0.4.5-py3-none-any.whl (14 kB)
+2026-11-10T05:24:18.5471267Z #7 4.646 Downloading uvloop-0.23.0-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (4.5 MB)
+2026-11-10T05:24:18.7468787Z #7 4.663    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.5/4.5 MB 296.1 MB/s  0:00:00
+2026-11-10T05:24:18.7469700Z #7 4.673 Downloading watchfiles-1.3.0-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (458 kB)
+2026-11-10T05:24:18.7470661Z #7 4.684 Downloading websockets-17.4-cp312-cp312-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl (226 kB)
+2026-11-10T05:24:18.7471646Z #7 4.694 Downloading argon2_cffi_bindings-26.1.0-cp310-abi3-manylinux_2_26_x86_64.manylinux_2_28_x86_64.whl (26 kB)
+2026-11-10T05:24:18.7472373Z #7 4.704 Downloading certifi-2026.10.23-py3-none-any.whl (135 kB)
+2026-11-10T05:24:18.7472888Z #7 4.713 Downloading pycparser-3.12-py3-none-any.whl (62 kB)
+2026-11-10T05:24:18.8024353Z #7 4.919 Installing collected packages: websockets, uvloop, tzdata, typing-extensions, ruff, pyyaml, python-dotenv, pycparser, pwdlib, psutil, Pillow, idna, httptools, h11, greenlet, click, certifi, annotated-types, annotated-doc, uvicorn, typing-inspection, pyee, pydantic-core, opentelemetry-api, httpcore, cffi, anyio, watchfiles, starlette, pydantic, playwright, httpx, cryptography, argon2-cffi-bindings, fastapi, argon2-cffi
+2026-11-10T05:24:21.7707666Z #7 7.887 
+2026-11-10T05:24:21.9256452Z #7 7.890 Successfully installed Pillow-12.3.0 annotated-doc-0.0.5 annotated-types-0.8.0 anyio-4.16.0 argon2-cffi-25.1.0 argon2-cffi-bindings-26.1.0 certifi-2026.10.23 cffi-2.1.1 click-8.5.1 cryptography-50.0.2 fastapi-0.162.2 greenlet-3.5.6 h11-0.16.0 httpcore-1.0.9 httptools-0.9.0 httpx-0.28.1 idna-3.20 opentelemetry-api-1.45.2 playwright-1.63.0 psutil-7.2.2 pwdlib-0.3.1 pycparser-3.12 pydantic-2.14.3 pydantic-core-2.50.4 pyee-13.0.1 python-dotenv-1.2.4 pyyaml-6.0.3 ruff-0.16.9 starlette-1.10.0 typing-extensions-4.16.0 typing-inspection-0.4.5 tzdata-2026.6 uvicorn-0.54.0 uvloop-0.23.0 watchfiles-1.3.0 websockets-17.4
+2026-11-10T05:24:21.9260036Z #7 7.890 WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+2026-11-10T05:24:21.9261701Z #7 7.892 
+2026-11-10T05:24:21.9261975Z #7 7.892 [notice] A new release of pip is available: 26.2.1 -> 26.3
+2026-11-10T05:24:21.9262409Z #7 7.892 [notice] To update, run: python -m pip install --upgrade pip
+2026-11-10T05:24:22.3056704Z #7 DONE 8.4s
+2026-11-10T05:24:22.4567841Z 
+2026-11-10T05:24:22.4568603Z #8 [stage-0 4/4] RUN apt-get update && apt-get install -y --no-install-recommends git && rm -rf /var/lib/apt/lists/*
+2026-11-10T05:24:37.0174827Z #8 14.71 Get:1 http://azure.archive.ubuntu.com/ubuntu noble InRelease [256 kB]
+2026-11-10T05:24:37.1804995Z #8 14.72 Get:2 http://azure.archive.ubuntu.com/ubuntu noble-updates InRelease [126 kB]
+2026-11-10T05:24:37.1808124Z #8 14.72 Get:3 http://azure.archive.ubuntu.com/ubuntu noble-backports InRelease [126 kB]
+2026-11-10T05:24:37.1809669Z #8 14.78 Get:4 http://azure.archive.ubuntu.com/ubuntu noble/multiverse amd64 Packages [331 kB]
+2026-11-10T05:24:37.1811015Z #8 14.79 Get:5 http://azure.archive.ubuntu.com/ubuntu noble/restricted amd64 Packages [117 kB]
+2026-11-10T05:24:37.1812305Z #8 14.79 Get:6 http://azure.archive.ubuntu.com/ubuntu noble/universe amd64 Packages [19.3 MB]
+2026-11-10T05:24:37.1813513Z #8 14.87 Get:7 http://azure.archive.ubuntu.com/ubuntu noble/main amd64 Packages [1808 kB]
+2026-11-10T05:24:37.3714780Z #8 14.88 Get:8 http://azure.archive.ubuntu.com/ubuntu noble-updates/multiverse amd64 Packages [61.7 kB]
+2026-11-10T05:24:37.3716050Z #8 14.88 Get:9 http://azure.archive.ubuntu.com/ubuntu noble-updates/restricted amd64 Packages [2319 kB]
+2026-11-10T05:24:37.3717802Z #8 14.89 Get:10 http://azure.archive.ubuntu.com/ubuntu noble-updates/universe amd64 Packages [2177 kB]
+2026-11-10T05:24:37.3718841Z #8 14.91 Get:11 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 Packages [1782 kB]
+2026-11-10T05:24:37.3719983Z #8 14.91 Get:12 http://azure.archive.ubuntu.com/ubuntu noble-backports/multiverse amd64 Packages [669 B]
+2026-11-10T05:24:37.3721199Z #8 14.91 Get:13 http://azure.archive.ubuntu.com/ubuntu noble-backports/main amd64 Packages [49.0 kB]
+2026-11-10T05:24:37.3722355Z #8 14.91 Get:14 http://azure.archive.ubuntu.com/ubuntu noble-backports/universe amd64 Packages [36.0 kB]
+2026-11-10T05:25:24.0006654Z #8 61.69 Get:15 http://security.ubuntu.com/ubuntu noble-security InRelease [126 kB]
+2026-11-10T05:25:56.6171626Z #8 94.31 Ign:15 http://security.ubuntu.com/ubuntu noble-security InRelease
+2026-11-10T05:26:59.7073136Z #8 157.4 Get:15 http://security.ubuntu.com/ubuntu noble-security InRelease [126 kB]
+2026-11-10T05:27:00.0740361Z #8 157.8 Get:16 http://security.ubuntu.com/ubuntu noble-security/universe amd64 Packages [1557 kB]
+2026-11-10T05:27:00.4677488Z #8 158.2 Get:17 http://security.ubuntu.com/ubuntu noble-security/main amd64 Packages [1427 kB]
+2026-11-10T05:27:00.5897132Z #8 158.3 Get:18 http://security.ubuntu.com/ubuntu noble-security/multiverse amd64 Packages [55.6 kB]
+2026-11-10T05:27:00.8140135Z #8 158.4 Get:19 http://security.ubuntu.com/ubuntu noble-security/restricted amd64 Packages [2137 kB]
+2026-11-10T05:27:00.8141105Z #8 158.5 Fetched 33.8 MB in 2min 38s (213 kB/s)
+2026-11-10T05:27:01.6064673Z #8 158.5 Reading package lists...
+2026-11-10T05:27:02.4145138Z #8 159.3 Reading package lists...
+2026-11-10T05:27:02.6130504Z #8 160.1 Building dependency tree...
+2026-11-10T05:27:02.7638336Z #8 160.3 Reading state information...
+2026-11-10T05:27:02.7768144Z #8 160.5 The following additional packages will be installed:
+2026-11-10T05:27:02.9545321Z #8 160.5   git-man
+2026-11-10T05:27:02.9545650Z #8 160.5 Suggested packages:
+2026-11-10T05:27:02.9546465Z #8 160.5   gettext-base git-daemon-run | git-daemon-sysvinit git-doc git-email git-gui
+2026-11-10T05:27:02.9547079Z #8 160.5   gitk gitweb git-cvs git-mediawiki git-svn
+2026-11-10T05:27:02.9547448Z #8 160.5 Recommended packages:
+2026-11-10T05:27:02.9547731Z #8 160.5   patch less
+2026-11-10T05:27:02.9548027Z #8 160.5 The following packages will be upgraded:
+2026-11-10T05:27:02.9548798Z #8 160.5   git git-man
+2026-11-10T05:28:09.0110491Z #8 226.7 2 upgraded, 0 newly installed, 0 to remove and 62 not upgraded.
+2026-11-10T05:28:09.0111580Z #8 226.7 Need to get 4781 kB of archives.
+2026-11-10T05:28:09.0112811Z #8 226.7 After this operation, 5120 B of additional disk space will be used.
+2026-11-10T05:28:09.0114037Z #8 226.7 Ign:1 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 git-man all 1:2.43.0-1ubuntu7.4
+2026-11-10T05:29:21.2693860Z #8 299.0 Ign:2 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 git amd64 1:2.43.0-1ubuntu7.4
+2026-11-10T05:29:51.5502316Z #8 329.2 Ign:1 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 git-man all 1:2.43.0-1ubuntu7.4
+2026-11-10T05:29:51.7007813Z #8 329.2 Ign:2 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 git amd64 1:2.43.0-1ubuntu7.4
+2026-11-10T05:29:53.5509817Z #8 331.2 Ign:1 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 git-man all 1:2.43.0-1ubuntu7.4
+2026-11-10T05:29:53.5511056Z #8 331.2 Ign:2 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 git amd64 1:2.43.0-1ubuntu7.4
+2026-11-10T05:29:57.5519567Z #8 335.2 Ign:1 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 git-man all 1:2.43.0-1ubuntu7.4
+2026-11-10T05:29:57.7111599Z #8 335.3 Ign:2 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 git amd64 1:2.43.0-1ubuntu7.4
+2026-11-10T05:30:29.4081779Z #8 367.1 Get:1 http://security.ubuntu.com/ubuntu noble-updates/main amd64 git-man all 1:2.43.0-1ubuntu7.4 [1101 kB]
+2026-11-10T05:30:29.9946845Z #8 367.7 Get:2 http://security.ubuntu.com/ubuntu noble-updates/main amd64 git amd64 1:2.43.0-1ubuntu7.4 [3681 kB]
+2026-11-10T05:30:30.3075170Z #8 368.0 debconf: delaying package configuration, since apt-utils is not installed
+2026-11-10T05:30:30.4137897Z #8 368.0 Fetched 4781 kB in 3min 27s (23.1 kB/s)
+2026-11-10T05:30:30.4138745Z #8 368.1 (Reading database ... 
+2026-11-10T05:30:30.4139325Z (Reading database ... 5%
+2026-11-10T05:30:30.4139932Z (Reading database ... 10%
+2026-11-10T05:30:30.4140326Z (Reading database ... 15%
+2026-11-10T05:30:30.4140575Z (Reading database ... 20%
+2026-11-10T05:30:30.4140817Z (Reading database ... 25%
+2026-11-10T05:30:30.4141061Z (Reading database ... 30%
+2026-11-10T05:30:30.4141304Z (Reading database ... 35%
+2026-11-10T05:30:30.4141548Z (Reading database ... 40%
+2026-11-10T05:30:30.4141912Z (Reading database ... 45%
+2026-11-10T05:30:30.4142340Z (Reading database ... 50%
+2026-11-10T05:30:30.4142761Z (Reading database ... 55%
+2026-11-10T05:30:30.4143224Z (Reading database ... 60%
+2026-11-10T05:30:30.4143628Z (Reading database ... 65%
+2026-11-10T05:30:30.4144062Z (Reading database ... 70%
+2026-11-10T05:30:30.4144476Z (Reading database ... 75%
+2026-11-10T05:30:30.4144897Z (Reading database ... 80%
+2026-11-10T05:30:30.4145309Z (Reading database ... 85%
+2026-11-10T05:30:30.4145726Z (Reading database ... 90%
+2026-11-10T05:30:30.4146137Z (Reading database ... 95%
+2026-11-10T05:30:30.4146789Z (Reading database ... 100%
+2026-11-10T05:30:30.4147554Z (Reading database ... 28981 files and directories currently installed.)
+2026-11-10T05:30:30.4148179Z #8 368.1 Preparing to unpack .../git-man_1%3a2.43.0-1ubuntu7.4_all.deb ...
+2026-11-10T05:30:30.4148721Z #8 368.1 Unpacking git-man (1:2.43.0-1ubuntu7.4) over (1:2.43.0-1ubuntu7.3) ...
+2026-11-10T05:30:30.4149237Z #8 368.1 Preparing to unpack .../git_1%3a2.43.0-1ubuntu7.4_amd64.deb ...
+2026-11-10T05:30:30.5799430Z #8 368.1 Unpacking git (1:2.43.0-1ubuntu7.4) over (1:2.43.0-1ubuntu7.3) ...
+2026-11-10T05:30:30.6492857Z #8 368.3 Setting up git-man (1:2.43.0-1ubuntu7.4) ...
+2026-11-10T05:30:30.8487748Z #8 368.3 Setting up git (1:2.43.0-1ubuntu7.4) ...
+2026-11-10T05:30:30.8488634Z #8 DONE 368.4s
+2026-11-10T05:30:30.8489247Z 
+2026-11-10T05:30:30.8489629Z #9 exporting to image
+2026-11-10T05:30:30.8490222Z #9 exporting layers
+2026-11-10T05:30:32.7910723Z #9 exporting layers 2.1s done
+2026-11-10T05:30:32.8078393Z #9 writing image sha256:d34d6de2a954adc75f74cb451702ec81d9153730c5954a3d1c6c59a4592fc9b8 done
+2026-11-10T05:30:32.8084380Z #9 naming to docker.io/library/dtos-browser-validation done
+2026-11-10T05:30:32.8085049Z #9 DONE 2.1s
+2026-11-10T05:30:32.8188157Z ##[group]Run docker run --rm --memory=2g --memory-swap=2g --cpus=2 --network=none -e NODE_OPTIONS -v "$PWD:$PWD" -w "$PWD" -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0="$PWD" dtos-browser-validation python -m unittest tests.test_front_office_brief tests.test_front_office_brief_http tests.test_front_office_brief_browser tests.test_beginner_market tests.test_beginner_browser tests.test_beginner_final tests.test_beginner_final_browser tests.test_home_trade_news tests.test_home_news_corrections tests.test_home_trade_news_browser tests.test_home_opportunities tests.test_home_opportunities_browser tests.test_home_opportunity_integrity tests.test_home_read_responsiveness tests.test_public_readiness tests.test_market_warming_middleware tests.test_import_commissioner_integrity tests.test_batch6_rank_presentation tests.test_cold_league_recovery tests.test_unmatched_import_recovery tests.test_navigation_residency tests.test_sync_diagnostics
+2026-11-10T05:30:32.8194897Z [36;1mdocker run --rm --memory=2g --memory-swap=2g --cpus=2 --network=none -e NODE_OPTIONS -v "$PWD:$PWD" -w "$PWD" -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0="$PWD" dtos-browser-validation python -m unittest tests.test_front_office_brief tests.test_front_office_brief_http tests.test_front_office_brief_browser tests.test_beginner_market tests.test_beginner_browser tests.test_beginner_final tests.test_beginner_final_browser tests.test_home_trade_news tests.test_home_news_corrections tests.test_home_trade_news_browser tests.test_home_opportunities tests.test_home_opportunities_browser tests.test_home_opportunity_integrity tests.test_home_read_responsiveness tests.test_public_readiness tests.test_market_warming_middleware tests.test_import_commissioner_integrity tests.test_batch6_rank_presentation tests.test_cold_league_recovery tests.test_unmatched_import_recovery tests.test_navigation_residency tests.test_sync_diagnostics[0m
+2026-11-10T05:30:32.8199669Z [36;1mdocker run --rm --memory=2g --memory-swap=2g --cpus=2 --network=none -e NODE_OPTIONS -v "$PWD:$PWD" -w "$PWD" -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0="$PWD" dtos-browser-validation python -m unittest tests.test_fois_navigation_reliability[0m
+2026-11-10T05:30:32.8222248Z shell: /usr/bin/bash -e {0}
+2026-11-10T05:30:32.8222495Z env:
+2026-11-10T05:30:32.8222714Z   NODE_OPTIONS: --max-old-space-size=256
+2026-11-10T05:30:32.8223068Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-10T05:30:32.8223510Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib/pkgconfig
+2026-11-10T05:30:32.8223952Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-10T05:30:32.8224355Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-10T05:30:32.8224740Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-10T05:30:32.8225141Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib
+2026-11-10T05:30:32.8225465Z ##[endgroup]
+2026-11-10T05:30:33.9480621Z /usr/local/lib/python3.12/dist-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+2026-11-10T05:30:33.9482291Z   from starlette.testclient import TestClient as TestClient  # noqa
+2026-11-10T05:30:35.3466802Z .........{"timestamp":"2026-11-10T05:30:35.345859+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":80949248,"limit_bytes":2147483648,"raw_headroom_bytes":2066534400,"clean_inactive_file_bytes":622592,"conditional_file_credit_bytes":311296,"admission_headroom_bytes":2066845696,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+2026-11-10T05:30:35.3487353Z {"timestamp":"2026-11-10T05:30:35.348265+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/workspace?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T05:30:35.3546097Z {"timestamp":"2026-11-10T05:30:35.354160+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_admission","request_id":"system","event":"trade_admission","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":80908288,"limit_bytes":2147483648,"raw_headroom_bytes":2066575360,"clean_inactive_file_bytes":622592,"conditional_file_credit_bytes":311296,"admission_headroom_bytes":2066886656,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"recovery":null}}
+2026-11-10T05:30:35.4165749Z {"timestamp":"2026-11-10T05:30:35.416162+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_execution_finished","request_id":"system","event":"trade_execution_finished","duration_ms":62.65,"diagnostic":{"schema":"trade-resource-v1","outcome":"complete"}}
+2026-11-10T05:30:35.4297938Z {"timestamp":"2026-11-10T05:30:35.429388+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/trades/evaluate \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T05:30:35.4434675Z {"timestamp":"2026-11-10T05:30:35.443119+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T05:30:35.4563049Z {"timestamp":"2026-11-10T05:30:35.455957+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T05:30:35.4933503Z {"timestamp":"2026-11-10T05:30:35.493008+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=2 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T05:30:35.6491574Z .{"timestamp":"2026-11-10T05:30:35.648378+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":89509888,"limit_bytes":2147483648,"raw_headroom_bytes":2057973760,"clean_inactive_file_bytes":622592,"conditional_file_credit_bytes":311296,"admission_headroom_bytes":2058285056,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+2026-11-10T05:30:35.6510633Z {"timestamp":"2026-11-10T05:30:35.650717+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/workspace?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T05:30:35.6579197Z {"timestamp":"2026-11-10T05:30:35.656006+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_admission","request_id":"system","event":"trade_admission","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":89489408,"limit_bytes":2147483648,"raw_headroom_bytes":2057994240,"clean_inactive_file_bytes":622592,"conditional_file_credit_bytes":311296,"admission_headroom_bytes":2058305536,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"recovery":null}}
+2026-11-10T05:30:35.6938888Z {"timestamp":"2026-11-10T05:30:35.693367+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_execution_finished","request_id":"system","event":"trade_execution_finished","duration_ms":37.946,"diagnostic":{"schema":"trade-resource-v1","outcome":"complete"}}
+2026-11-10T05:30:35.6944958Z {"timestamp":"2026-11-10T05:30:35.694167+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/trades/evaluate \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T05:30:35.7046814Z {"timestamp":"2026-11-10T05:30:35.704295+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T05:30:35.7173170Z {"timestamp":"2026-11-10T05:30:35.716987+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T05:30:35.7899659Z {"timestamp":"2026-11-10T05:30:35.789543+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/teams/1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T05:30:35.7964797Z {"timestamp":"2026-11-10T05:30:35.796087+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T05:30:35.9889784Z .{"timestamp":"2026-11-10T05:30:35.988207+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":93159424,"limit_bytes":2147483648,"raw_headroom_bytes":2054324224,"clean_inactive_file_bytes":622592,"conditional_file_credit_bytes":311296,"admission_headroom_bytes":2054635520,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+2026-11-10T05:30:35.9906101Z {"timestamp":"2026-11-10T05:30:35.990238+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/workspace?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T05:30:35.9962431Z {"timestamp":"2026-11-10T05:30:35.995776+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_admission","request_id":"system","event":"trade_admission","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":93122560,"limit_bytes":2147483648,"raw_headroom_bytes":2054361088,"clean_inactive_file_bytes":622592,"conditional_file_credit_bytes":311296,"admission_headroom_bytes":2054672384,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"recovery":null}}
+2026-11-10T05:30:36.0323252Z {"timestamp":"2026-11-10T05:30:36.031956+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_execution_finished","request_id":"system","event":"trade_execution_finished","duration_ms":36.793,"diagnostic":{"schema":"trade-resource-v1","outcome":"complete"}}
+2026-11-10T05:30:36.0331270Z {"timestamp":"2026-11-10T05:30:36.032820+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/trades/evaluate \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T05:30:36.0431685Z {"timestamp":"2026-11-10T05:30:36.042815+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T05:30:36.0559667Z {"timestamp":"2026-11-10T05:30:36.055645+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T05:30:36.1167994Z {"timestamp":"2026-11-10T05:30:36.116219+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/teams/1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T05:30:36.1252118Z {"timestamp":"2026-11-10T05:30:36.124836+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T05:30:36.1339933Z {"timestamp":"2026-11-10T05:30:36.133665+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/ \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T05:30:36.1424362Z {"timestamp":"2026-11-10T05:30:36.142049+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T05:30:36.1480358Z {"timestamp":"2026-11-10T05:30:36.147681+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/ \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T05:30:36.1569502Z {"timestamp":"2026-11-10T05:30:36.156541+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T05:30:36.1626634Z {"timestamp":"2026-11-10T05:30:36.162315+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/ \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T05:30:36.1707746Z {"timestamp":"2026-11-10T05:30:36.170408+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T05:30:36.1764405Z {"timestamp":"2026-11-10T05:30:36.176091+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/ \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T05:30:36.1848759Z {"timestamp":"2026-11-10T05:30:36.184484+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T05:30:36.1904814Z {"timestamp":"2026-11-10T05:30:36.190169+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/ \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T05:30:36.1988891Z {"timestamp":"2026-11-10T05:30:36.198509+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T05:30:36.2045769Z {"timestamp":"2026-11-10T05:30:36.204230+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/ \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T05:30:36.2129080Z {"timestamp":"2026-11-10T05:30:36.212526+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T05:30:36.2185839Z {"timestamp":"2026-11-10T05:30:36.218253+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/ \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T05:30:36.2268574Z {"timestamp":"2026-11-10T05:30:36.226493+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T05:30:36.2325160Z {"timestamp":"2026-11-10T05:30:36.232177+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/ \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T05:30:36.2408328Z {"timestamp":"2026-11-10T05:30:36.240468+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T05:30:36.2467470Z {"timestamp":"2026-11-10T05:30:36.246382+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/ \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T05:30:36.2549413Z {"timestamp":"2026-11-10T05:30:36.254546+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T05:30:36.2607506Z {"timestamp":"2026-11-10T05:30:36.260353+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/ \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T05:30:36.2690579Z {"timestamp":"2026-11-10T05:30:36.268670+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T05:30:36.4229283Z .{"timestamp":"2026-11-10T05:30:36.422109+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":95703040,"limit_bytes":2147483648,"raw_headroom_bytes":2051780608,"clean_inactive_file_bytes":622592,"conditional_file_credit_bytes":311296,"admission_headroom_bytes":2052091904,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+2026-11-10T05:30:36.4247346Z {"timestamp":"2026-11-10T05:30:36.424408+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/workspace?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T05:30:36.4301705Z {"timestamp":"2026-11-10T05:30:36.429701+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_admission","request_id":"system","event":"trade_admission","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":95674368,"limit_bytes":2147483648,"raw_headroom_bytes":2051809280,"clean_inactive_file_bytes":622592,"conditional_file_credit_bytes":311296,"admission_headroom_bytes":2052120576,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"recovery":null}}
+2026-11-10T05:30:36.4673928Z {"timestamp":"2026-11-10T05:30:36.466835+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_execution_finished","request_id":"system","event":"trade_execution_finished","duration_ms":37.732,"diagnostic":{"schema":"trade-resource-v1","outcome":"complete"}}
+2026-11-10T05:30:36.4680874Z {"timestamp":"2026-11-10T05:30:36.467752+00:00","level":"INFO","logger":"htt

@@ -1,0 +1,40 @@
+[
+  {
+    "command": [
+      "/workspace/dtos-publisher-2239/.venv/bin/python",
+      "-m",
+      "unittest",
+      "-v",
+      "tests.test_release_publisher"
+    ],
+    "working_directory": "/workspace/dtos-publisher-2244",
+    "exit_code": 0,
+    "original_log": "publisher-final-tests-original.log"
+  },
+  {
+    "command": [
+      "/workspace/dtos-publisher-2239/.venv/bin/python",
+      "-m",
+      "ruff",
+      "check",
+      "tools/release",
+      "tests/test_release_publisher.py"
+    ],
+    "working_directory": "/workspace/dtos-publisher-2244",
+    "exit_code": 0,
+    "original_log": "publisher-final-lint-original.log"
+  },
+  {
+    "command": [
+      "/workspace/dtos-publisher-2239/.venv/bin/python",
+      "-m",
+      "compileall",
+      "-q",
+      "tools/release",
+      "tests/test_release_publisher.py"
+    ],
+    "working_directory": "/workspace/dtos-publisher-2244",
+    "exit_code": 0,
+    "original_log": "publisher-final-compile-original.log"
+  }
+]

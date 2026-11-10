@@ -1,0 +1,23 @@
+{
+  "candidate": "3ec78ec4e055c42b65d6e5ac2c14fe6d557b68c2",
+  "tree": "b6c1729a5559167557dcc7b4eaa677c81e00b588",
+  "observed_at": "2026-11-10T06:22:26.079838+00:00",
+  "original_outer_console": "local-canonical-original.log",
+  "observed_outer_bytes": 20,
+  "original_outer_after_receipt_missing": true,
+  "environment_reconnection_observed": true,
+  "exact_transport_cause": "Not established",
+  "complete_original_evidence": [
+    "canonical/unittest-console.log",
+    "canonical/canonical.log",
+    "canonical/tests.jsonl",
+    "canonical/canonical-trace.jsonl",
+    "canonical/result.json",
+    "canonical/manifest.json",
+    "canonical/SHA256SUMS"
+  ],
+  "independent_after_check": "immutable-static-assets-after.json",
+  "container_cleanup": "local-container-cleanup.json",
+  "no_regression_rerun": true,
+  "qualification": "Original outer stdout was not reconstructed. Complete original in-container regression and gate logs survive and independently pass all source/manifest checks."
+}

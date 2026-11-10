@@ -1,0 +1,20 @@
+{
+  "stage": "preparation",
+  "publisher": "76e7e21eacd9c568dafe06c511416c4418279db8",
+  "candidate": "3ec78ec4e055c42b65d6e5ac2c14fe6d557b68c2",
+  "tree": "b6c1729a5559167557dcc7b4eaa677c81e00b588",
+  "requested_at": "2026-11-10T06:59:55.245623+00:00",
+  "command": [
+    "gh",
+    "workflow",
+    "run",
+    "canonical-release-recovery.yml",
+    "--repo",
+    "Richarddavis47/dtos",
+    "--ref",
+    "release/2244-actions-publisher",
+    "-f",
+    "release_operation=prepare"
+  ],
+  "mechanism": "Standard existing authorized GitHub Actions workflow_dispatch; no Cloud release-asset upload"
+}

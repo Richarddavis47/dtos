@@ -1,0 +1,558 @@
+﻿2026-11-10T05:23:46.6393569Z Current runner version: '2.338.2'
+2026-11-10T05:23:46.6422216Z ##[group]Runner Image Provisioner
+2026-11-10T05:23:46.6423245Z Hosted Compute Agent
+2026-11-10T05:23:46.6423925Z Version: 20261028.624
+2026-11-10T05:23:46.6424785Z Commit: 54898b74c23fde5556c9b3c3a2290865feef0dfe
+2026-11-10T05:23:46.6425687Z Build Date: 2026-10-28T21:51:42Z
+2026-11-10T05:23:46.6426601Z Worker ID: {0de81ce6-ea54-416e-b028-6128a36a0232}
+2026-11-10T05:23:46.6427557Z Region: eastus
+2026-11-10T05:23:46.6428316Z Cloud: Azure
+2026-11-10T05:23:46.6428997Z ##[endgroup]
+2026-11-10T05:23:46.6430913Z ##[group]Operating System
+2026-11-10T05:23:46.6431799Z Ubuntu
+2026-11-10T05:23:46.6432479Z 24.04.5
+2026-11-10T05:23:46.6433179Z LTS
+2026-11-10T05:23:46.6433813Z ##[endgroup]
+2026-11-10T05:23:46.6434469Z ##[group]Runner Image
+2026-11-10T05:23:46.6435309Z Image: ubuntu-24.04
+2026-11-10T05:23:46.6436043Z Version: 20261101.360.1
+2026-11-10T05:23:46.6437723Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20261101.360/images/ubuntu/Ubuntu2404-Readme.md
+2026-11-10T05:23:46.6439860Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20261101.360
+2026-11-10T05:23:46.6441110Z ##[endgroup]
+2026-11-10T05:23:46.6442554Z ##[group]GITHUB_TOKEN Permissions
+2026-11-10T05:23:46.6444615Z Contents: read
+2026-11-10T05:23:46.6445432Z Metadata: read
+2026-11-10T05:23:46.6446106Z ##[endgroup]
+2026-11-10T05:23:46.6448542Z Secret source: Actions
+2026-11-10T05:23:46.6449904Z Cache mode: write
+2026-11-10T05:23:46.6450892Z Prepare workflow directory
+2026-11-10T05:23:46.6822478Z Prepare all required actions
+2026-11-10T05:23:46.6878683Z Getting action download info
+2026-11-10T05:23:46.8425740Z Download action repository 'actions/checkout@v4' (SHA:11d5960a326750d5838078e36cf38b85af677262)
+2026-11-10T05:23:46.9439868Z Download action repository 'actions/setup-python@v5' (SHA:a26af69be951a213d495a4c3e4e4022e16d87065)
+2026-11-10T05:23:47.1614222Z Complete job name: tooling (ubuntu-24.04)
+2026-11-10T05:23:47.2323731Z ##[group]Run actions/checkout@v4
+2026-11-10T05:23:47.2324432Z with:
+2026-11-10T05:23:47.2324815Z   repository: Richarddavis47/dtos
+2026-11-10T05:23:47.2328086Z   token: ***
+2026-11-10T05:23:47.2328452Z   ssh-strict: true
+2026-11-10T05:23:47.2328816Z   ssh-user: git
+2026-11-10T05:23:47.2329178Z   persist-credentials: true
+2026-11-10T05:23:47.2329724Z   clean: true
+2026-11-10T05:23:47.2330111Z   sparse-checkout-cone-mode: true
+2026-11-10T05:23:47.2330549Z   fetch-depth: 1
+2026-11-10T05:23:47.2330908Z   fetch-tags: false
+2026-11-10T05:23:47.2331274Z   show-progress: true
+2026-11-10T05:23:47.2331647Z   lfs: false
+2026-11-10T05:23:47.2331987Z   submodules: false
+2026-11-10T05:23:47.2332347Z   set-safe-directory: true
+2026-11-10T05:23:47.2332753Z   allow-unsafe-pr-checkout: false
+2026-11-10T05:23:47.2333319Z ##[endgroup]
+2026-11-10T05:23:47.4362229Z Syncing repository: Richarddavis47/dtos
+2026-11-10T05:23:47.4364336Z ##[group]Getting Git version info
+2026-11-10T05:23:47.4365317Z Working directory is '/home/runner/work/dtos/dtos'
+2026-11-10T05:23:47.4366792Z [command]/usr/bin/git version
+2026-11-10T05:23:47.4425757Z git version 2.56.0
+2026-11-10T05:23:47.4443124Z ##[endgroup]
+2026-11-10T05:23:47.4456083Z Temporarily overriding HOME='/home/runner/work/_temp/c05bdb6b-070c-4398-87fc-4643e07d9638' before making global git config changes
+2026-11-10T05:23:47.4461074Z Adding repository directory to the temporary git global config as a safe directory
+2026-11-10T05:23:47.4462694Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/dtos/dtos
+2026-11-10T05:23:47.4504513Z Deleting the contents of '/home/runner/work/dtos/dtos'
+2026-11-10T05:23:47.4509417Z ##[group]Initializing the repository
+2026-11-10T05:23:47.4513306Z [command]/usr/bin/git init /home/runner/work/dtos/dtos
+2026-11-10T05:23:47.4598033Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-11-10T05:23:47.4599056Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-11-10T05:23:47.4600098Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-11-10T05:23:47.4601018Z hint: call:
+2026-11-10T05:23:47.4601381Z hint:
+2026-11-10T05:23:47.4601946Z hint: 	git config --global init.defaultBranch <name>
+2026-11-10T05:23:47.4602844Z hint:
+2026-11-10T05:23:47.4603721Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-11-10T05:23:47.4605203Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-11-10T05:23:47.4606297Z hint:
+2026-11-10T05:23:47.4606908Z hint: 	git branch -m <name>
+2026-11-10T05:23:47.4607590Z hint:
+2026-11-10T05:23:47.4608460Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-11-10T05:23:47.4610075Z Initialized empty Git repository in /home/runner/work/dtos/dtos/.git/
+2026-11-10T05:23:47.4615134Z [command]/usr/bin/git remote add origin https://github.com/Richarddavis47/dtos
+2026-11-10T05:23:47.4662485Z ##[endgroup]
+2026-11-10T05:23:47.4663844Z ##[group]Disabling automatic garbage collection
+2026-11-10T05:23:47.4665458Z [command]/usr/bin/git config --local gc.auto 0
+2026-11-10T05:23:47.4697496Z ##[endgroup]
+2026-11-10T05:23:47.4698573Z ##[group]Setting up auth
+2026-11-10T05:23:47.4704586Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-11-10T05:23:47.4738831Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-11-10T05:23:47.5075133Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-11-10T05:23:47.5114426Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-11-10T05:23:47.5322316Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-11-10T05:23:47.5359595Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-11-10T05:23:47.5562859Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-11-10T05:23:47.5604107Z ##[endgroup]
+2026-11-10T05:23:47.5613798Z ##[group]Fetching the repository
+2026-11-10T05:23:47.5615264Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +263975594497195be116ca5ce7f23c4a7719580d:refs/remotes/pull/333/merge
+2026-11-10T05:23:49.3480384Z From https://github.com/Richarddavis47/dtos
+2026-11-10T05:23:49.3482529Z  * [new ref]         263975594497195be116ca5ce7f23c4a7719580d -> pull/333/merge
+2026-11-10T05:23:49.3487890Z ##[endgroup]
+2026-11-10T05:23:49.3488866Z ##[group]Determining the checkout info
+2026-11-10T05:23:49.3490301Z ##[endgroup]
+2026-11-10T05:23:49.3491140Z [command]/usr/bin/git sparse-checkout disable
+2026-11-10T05:23:49.3552216Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-11-10T05:23:49.3588924Z ##[group]Checking out the ref
+2026-11-10T05:23:49.3592188Z [command]/usr/bin/git checkout --progress --force refs/remotes/pull/333/merge
+2026-11-10T05:23:49.9302498Z Note: switching to 'refs/remotes/pull/333/merge'.
+2026-11-10T05:23:49.9303167Z 
+2026-11-10T05:23:49.9303850Z You are in 'detached HEAD' state. You can look around, make experimental
+2026-11-10T05:23:49.9304571Z changes and commit them, and you can discard any commits you make in this
+2026-11-10T05:23:49.9305308Z state without impacting any branches by switching back to a branch.
+2026-11-10T05:23:49.9340002Z 
+2026-11-10T05:23:49.9340376Z If you want to create a new branch to retain commits you create, you may
+2026-11-10T05:23:49.9341001Z do so (now or later) by using -c with the switch command. Example:
+2026-11-10T05:23:49.9341501Z 
+2026-11-10T05:23:49.9341652Z   git switch -c <new-branch-name>
+2026-11-10T05:23:49.9341969Z 
+2026-11-10T05:23:49.9342239Z Or undo this operation with:
+2026-11-10T05:23:49.9342954Z 
+2026-11-10T05:23:49.9343237Z   git switch -
+2026-11-10T05:23:49.9343717Z 
+2026-11-10T05:23:49.9344133Z Turn off this advice by setting config variable advice.detachedHead to false
+2026-11-10T05:23:49.9344599Z 
+2026-11-10T05:23:49.9345048Z HEAD is now at 2639755 Merge 3ec78ec4e055c42b65d6e5ac2c14fe6d557b68c2 into 6ed905ce18832be10f04e47cac8a703af4895719
+2026-11-10T05:23:49.9346969Z ##[endgroup]
+2026-11-10T05:23:49.9382204Z [command]/usr/bin/git log -1 --format=%H
+2026-11-10T05:23:49.9410656Z 263975594497195be116ca5ce7f23c4a7719580d
+2026-11-10T05:23:49.9718106Z ##[group]Run actions/setup-python@v5
+2026-11-10T05:23:49.9718331Z with:
+2026-11-10T05:23:49.9718509Z   python-version: 3.12
+2026-11-10T05:23:49.9718695Z   cache: pip
+2026-11-10T05:23:49.9718956Z   cache-dependency-path: requirements.txt
+requirements-validation.txt
+
+2026-11-10T05:23:49.9719262Z   check-latest: false
+2026-11-10T05:23:49.9721537Z   token: ***
+2026-11-10T05:23:49.9721747Z   update-environment: true
+2026-11-10T05:23:49.9721963Z   allow-prereleases: false
+2026-11-10T05:23:49.9722147Z   freethreaded: false
+2026-11-10T05:23:49.9722327Z ##[endgroup]
+2026-11-10T05:23:50.0802049Z ##[group]Installed versions
+2026-11-10T05:23:50.0946781Z (node:2110) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-11-10T05:23:50.0947454Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-11-10T05:23:50.0947798Z Successfully set up CPython (3.12.16)
+2026-11-10T05:23:50.0961343Z ##[endgroup]
+2026-11-10T05:23:50.1214406Z [command]/opt/hostedtoolcache/Python/3.12.16/x64/bin/pip cache dir
+2026-11-10T05:23:50.3683475Z /home/runner/.cache/pip
+2026-11-10T05:23:50.4452898Z pip cache is not found
+2026-11-10T05:23:50.4598286Z ##[group]Run python -m pip install -r requirements-validation.txt
+2026-11-10T05:23:50.4598724Z [36;1mpython -m pip install -r requirements-validation.txt[0m
+2026-11-10T05:23:50.4622405Z shell: /usr/bin/bash -e {0}
+2026-11-10T05:23:50.4622637Z env:
+2026-11-10T05:23:50.4622856Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-10T05:23:50.4623215Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib/pkgconfig
+2026-11-10T05:23:50.4623576Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-10T05:23:50.4623892Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-10T05:23:50.4624186Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-10T05:23:50.4624477Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib
+2026-11-10T05:23:50.4624730Z ##[endgroup]
+2026-11-10T05:23:51.1778769Z Collecting fastapi<1.0,>=0.116 (from -r /home/runner/work/dtos/dtos/requirements.txt (line 1))
+2026-11-10T05:23:51.2489167Z   Downloading fastapi-0.162.2-py3-none-any.whl.metadata (27 kB)
+2026-11-10T05:23:51.3520398Z Collecting uvicorn<1.0,>=0.35 (from uvicorn[standard]<1.0,>=0.35->-r /home/runner/work/dtos/dtos/requirements.txt (line 2))
+2026-11-10T05:23:51.3613848Z   Downloading uvicorn-0.54.0-py3-none-any.whl.metadata (6.6 kB)
+2026-11-10T05:23:51.3750933Z Collecting httpx<1.0,>=0.28 (from -r /home/runner/work/dtos/dtos/requirements.txt (line 3))
+2026-11-10T05:23:51.3846771Z   Downloading httpx-0.28.1-py3-none-any.whl.metadata (7.1 kB)
+2026-11-10T05:23:51.4440521Z Collecting psutil<8.0,>=6.0 (from -r /home/runner/work/dtos/dtos/requirements.txt (line 4))
+2026-11-10T05:23:51.4535819Z   Downloading psutil-7.2.2-cp36-abi3-manylinux2010_x86_64.manylinux_2_12_x86_64.manylinux_2_28_x86_64.whl.metadata (22 kB)
+2026-11-10T05:23:51.4686708Z Collecting pwdlib<1.0,>=0.2 (from pwdlib[argon2]<1.0,>=0.2->-r /home/runner/work/dtos/dtos/requirements.txt (line 5))
+2026-11-10T05:23:51.4805724Z   Downloading pwdlib-0.3.1-py3-none-any.whl.metadata (5.6 kB)
+2026-11-10T05:23:51.4912942Z Collecting tzdata>=2025.1 (from -r /home/runner/work/dtos/dtos/requirements.txt (line 6))
+2026-11-10T05:23:51.4998908Z   Downloading tzdata-2026.6-py2.py3-none-any.whl.metadata (1.4 kB)
+2026-11-10T05:23:51.6310970Z Collecting cryptography<51,>=43 (from -r /home/runner/work/dtos/dtos/requirements.txt (line 7))
+2026-11-10T05:23:51.6415073Z   Downloading cryptography-50.0.2-cp311-abi3-manylinux_2_34_x86_64.whl.metadata (4.4 kB)
+2026-11-10T05:23:51.6682444Z Collecting playwright==1.63.0 (from -r requirements-validation.txt (line 2))
+2026-11-10T05:23:51.6773795Z   Downloading playwright-1.63.0-py3-none-manylinux1_x86_64.whl.metadata (3.3 kB)
+2026-11-10T05:23:51.9156526Z Collecting ruff==0.16.9 (from -r requirements-validation.txt (line 3))
+2026-11-10T05:23:51.9262129Z   Downloading ruff-0.16.9-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (20 kB)
+2026-11-10T05:23:52.0745510Z Collecting Pillow<13.0,>=11.0 (from -r requirements-validation.txt (line 4))
+2026-11-10T05:23:52.0836854Z   Downloading pillow-12.3.0-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (9.1 kB)
+2026-11-10T05:23:52.0970388Z Collecting pyee<14,>=13 (from playwright==1.63.0->-r requirements-validation.txt (line 2))
+2026-11-10T05:23:52.1060052Z   Downloading pyee-13.0.1-py3-none-any.whl.metadata (3.0 kB)
+2026-11-10T05:23:52.2236649Z Collecting greenlet<4.0.0,>=3.1.1 (from playwright==1.63.0->-r requirements-validation.txt (line 2))
+2026-11-10T05:23:52.2339970Z   Downloading greenlet-3.5.6-cp312-cp312-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl.metadata (3.8 kB)
+2026-11-10T05:23:52.2539725Z Collecting starlette>=0.46.0 (from fastapi<1.0,>=0.116->-r /home/runner/work/dtos/dtos/requirements.txt (line 1))
+2026-11-10T05:23:52.2631515Z   Downloading starlette-1.10.0-py3-none-any.whl.metadata (6.6 kB)
+2026-11-10T05:23:52.3373913Z Collecting pydantic>=2.9.0 (from fastapi<1.0,>=0.116->-r /home/runner/work/dtos/dtos/requirements.txt (line 1))
+2026-11-10T05:23:52.3471680Z   Downloading pydantic-2.14.3-py3-none-any.whl.metadata (141 kB)
+2026-11-10T05:23:52.3763488Z Collecting typing-extensions>=4.8.0 (from fastapi<1.0,>=0.116->-r /home/runner/work/dtos/dtos/requirements.txt (line 1))
+2026-11-10T05:23:52.3857831Z   Downloading typing_extensions-4.16.0-py3-none-any.whl.metadata (3.3 kB)
+2026-11-10T05:23:52.3960855Z Collecting typing-inspection>=0.4.2 (from fastapi<1.0,>=0.116->-r /home/runner/work/dtos/dtos/requirements.txt (line 1))
+2026-11-10T05:23:52.4048484Z   Downloading typing_inspection-0.4.5-py3-none-any.whl.metadata (2.6 kB)
+2026-11-10T05:23:52.4133826Z Collecting annotated-doc>=0.0.2 (from fastapi<1.0,>=0.116->-r /home/runner/work/dtos/dtos/requirements.txt (line 1))
+2026-11-10T05:23:52.4224960Z   Downloading annotated_doc-0.0.5-py3-none-any.whl.metadata (6.5 kB)
+2026-11-10T05:23:52.4363974Z Collecting opentelemetry-api>=1.44.0 (from fastapi<1.0,>=0.116->-r /home/runner/work/dtos/dtos/requirements.txt (line 1))
+2026-11-10T05:23:52.4455641Z   Downloading opentelemetry_api-1.45.2-py3-none-any.whl.metadata (1.4 kB)
+2026-11-10T05:23:52.4590444Z Collecting click>=7.0 (from uvicorn<1.0,>=0.35->uvicorn[standard]<1.0,>=0.35->-r /home/runner/work/dtos/dtos/requirements.txt (line 2))
+2026-11-10T05:23:52.4686130Z   Downloading click-8.5.1-py3-none-any.whl.metadata (2.6 kB)
+2026-11-10T05:23:52.4781367Z Collecting h11>=0.8 (from uvicorn<1.0,>=0.35->uvicorn[standard]<1.0,>=0.35->-r /home/runner/work/dtos/dtos/requirements.txt (line 2))
+2026-11-10T05:23:52.4870532Z   Downloading h11-0.16.0-py3-none-any.whl.metadata (8.3 kB)
+2026-11-10T05:23:52.5026196Z Collecting anyio (from httpx<1.0,>=0.28->-r /home/runner/work/dtos/dtos/requirements.txt (line 3))
+2026-11-10T05:23:52.5114102Z   Downloading anyio-4.16.0-py3-none-any.whl.metadata (4.7 kB)
+2026-11-10T05:23:52.5449131Z Collecting certifi (from httpx<1.0,>=0.28->-r /home/runner/work/dtos/dtos/requirements.txt (line 3))
+2026-11-10T05:23:52.5538145Z   Downloading certifi-2026.10.23-py3-none-any.whl.metadata (2.5 kB)
+2026-11-10T05:23:52.5656119Z Collecting httpcore==1.* (from httpx<1.0,>=0.28->-r /home/runner/work/dtos/dtos/requirements.txt (line 3))
+2026-11-10T05:23:52.5744801Z   Downloading httpcore-1.0.9-py3-none-any.whl.metadata (21 kB)
+2026-11-10T05:23:52.5866633Z Collecting idna (from httpx<1.0,>=0.28->-r /home/runner/work/dtos/dtos/requirements.txt (line 3))
+2026-11-10T05:23:52.5955544Z   Downloading idna-3.20-py3-none-any.whl.metadata (7.2 kB)
+2026-11-10T05:23:52.6700531Z Collecting cffi>=2.0.0 (from cryptography<51,>=43->-r /home/runner/work/dtos/dtos/requirements.txt (line 7))
+2026-11-10T05:23:52.6790555Z   Downloading cffi-2.1.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (2.5 kB)
+2026-11-10T05:23:52.6971467Z Collecting argon2-cffi>=23.1.0 (from pwdlib[argon2]<1.0,>=0.2->-r /home/runner/work/dtos/dtos/requirements.txt (line 5))
+2026-11-10T05:23:52.7058359Z   Downloading argon2_cffi-25.1.0-py3-none-any.whl.metadata (4.1 kB)
+2026-11-10T05:23:52.7322202Z Collecting httptools>=0.8.0 (from uvicorn[standard]<1.0,>=0.35->-r /home/runner/work/dtos/dtos/requirements.txt (line 2))
+2026-11-10T05:23:52.7416073Z   Downloading httptools-0.9.0-cp312-cp312-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl.metadata (3.5 kB)
+2026-11-10T05:23:52.7771544Z Collecting python-dotenv>=0.13 (from uvicorn[standard]<1.0,>=0.35->-r /home/runner/work/dtos/dtos/requirements.txt (line 2))
+2026-11-10T05:23:52.7863713Z   Downloading python_dotenv-1.2.4-py3-none-any.whl.metadata (29 kB)
+2026-11-10T05:23:52.8164516Z Collecting pyyaml>=5.1 (from uvicorn[standard]<1.0,>=0.35->-r /home/runner/work/dtos/dtos/requirements.txt (line 2))
+2026-11-10T05:23:52.8265567Z   Downloading pyyaml-6.0.3-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (2.4 kB)
+2026-11-10T05:23:52.8536417Z Collecting uvloop>=0.15.1 (from uvicorn[standard]<1.0,>=0.35->-r /home/runner/work/dtos/dtos/requirements.txt (line 2))
+2026-11-10T05:23:52.8627324Z   Downloading uvloop-0.23.0-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (5.1 kB)
+2026-11-10T05:23:52.9391017Z Collecting watchfiles>=0.20 (from uvicorn[standard]<1.0,>=0.35->-r /home/runner/work/dtos/dtos/requirements.txt (line 2))
+2026-11-10T05:23:52.9487280Z   Downloading watchfiles-1.3.0-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (4.9 kB)
+2026-11-10T05:23:53.0343833Z Collecting websockets>=13.0 (from uvicorn[standard]<1.0,>=0.35->-r /home/runner/work/dtos/dtos/requirements.txt (line 2))
+2026-11-10T05:23:53.0439065Z   Downloading websockets-17.4-cp312-cp312-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl.metadata (6.3 kB)
+2026-11-10T05:23:53.0567938Z Collecting argon2-cffi-bindings (from argon2-cffi>=23.1.0->pwdlib[argon2]<1.0,>=0.2->-r /home/runner/work/dtos/dtos/requirements.txt (line 5))
+2026-11-10T05:23:53.0670082Z   Downloading argon2_cffi_bindings-26.1.0-cp310-abi3-manylinux_2_26_x86_64.manylinux_2_28_x86_64.whl.metadata (7.5 kB)
+2026-11-10T05:23:53.0803137Z Collecting pycparser (from cffi>=2.0.0->cryptography<51,>=43->-r /home/runner/work/dtos/dtos/requirements.txt (line 7))
+2026-11-10T05:23:53.0890200Z   Downloading pycparser-3.12-py3-none-any.whl.metadata (9.7 kB)
+2026-11-10T05:23:53.1035961Z Collecting annotated-types>=0.6.0 (from pydantic>=2.9.0->fastapi<1.0,>=0.116->-r /home/runner/work/dtos/dtos/requirements.txt (line 1))
+2026-11-10T05:23:53.1125869Z   Downloading annotated_types-0.8.0-py3-none-any.whl.metadata (15 kB)
+2026-11-10T05:23:53.6339383Z Collecting pydantic-core==2.50.4 (from pydantic>=2.9.0->fastapi<1.0,>=0.116->-r /home/runner/work/dtos/dtos/requirements.txt (line 1))
+2026-11-10T05:23:53.6433703Z   Downloading pydantic_core-2.50.4-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (6.6 kB)
+2026-11-10T05:23:53.6684323Z Downloading playwright-1.63.0-py3-none-manylinux1_x86_64.whl (48.2 MB)
+2026-11-10T05:23:54.4808182Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 48.2/48.2 MB 59.7 MB/s  0:00:00
+2026-11-10T05:23:54.4944445Z Downloading ruff-0.16.9-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (10.4 MB)
+2026-11-10T05:23:54.6180373Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 10.4/10.4 MB 83.6 MB/s  0:00:00
+2026-11-10T05:23:54.6280725Z Downloading fastapi-0.162.2-py3-none-any.whl (151 kB)
+2026-11-10T05:23:54.6395146Z Downloading uvicorn-0.54.0-py3-none-any.whl (87 kB)
+2026-11-10T05:23:54.6506268Z Downloading httpx-0.28.1-py3-none-any.whl (73 kB)
+2026-11-10T05:23:54.6609433Z Downloading psutil-7.2.2-cp36-abi3-manylinux2010_x86_64.manylinux_2_12_x86_64.manylinux_2_28_x86_64.whl (155 kB)
+2026-11-10T05:23:54.6868094Z Downloading pwdlib-0.3.1-py3-none-any.whl (9.3 kB)
+2026-11-10T05:23:54.6972987Z Downloading cryptography-50.0.2-cp311-abi3-manylinux_2_34_x86_64.whl (4.8 MB)
+2026-11-10T05:23:54.7639053Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.8/4.8 MB 69.5 MB/s  0:00:00
+2026-11-10T05:23:54.7730536Z Downloading pillow-12.3.0-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (6.9 MB)
+2026-11-10T05:23:54.9639288Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 6.9/6.9 MB 35.5 MB/s  0:00:00
+2026-11-10T05:23:54.9741710Z Downloading greenlet-3.5.6-cp312-cp312-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl (621 kB)
+2026-11-10T05:23:54.9791955Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 621.4/621.4 kB 106.3 MB/s  0:00:00
+2026-11-10T05:23:54.9882453Z Downloading httpcore-1.0.9-py3-none-any.whl (78 kB)
+2026-11-10T05:23:54.9986954Z Downloading pyee-13.0.1-py3-none-any.whl (15 kB)
+2026-11-10T05:23:55.0092432Z Downloading tzdata-2026.6-py2.py3-none-any.whl (348 kB)
+2026-11-10T05:23:55.0209031Z Downloading annotated_doc-0.0.5-py3-none-any.whl (5.3 kB)
+2026-11-10T05:23:55.0312137Z Downloading argon2_cffi-25.1.0-py3-none-any.whl (14 kB)
+2026-11-10T05:23:55.0420715Z Downloading cffi-2.1.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (221 kB)
+2026-11-10T05:23:55.2507567Z Downloading click-8.5.1-py3-none-any.whl (126 kB)
+2026-11-10T05:23:55.2635263Z Downloading h11-0.16.0-py3-none-any.whl (37 kB)
+2026-11-10T05:23:55.2753881Z Downloading httptools-0.9.0-cp312-cp312-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl (552 kB)
+2026-11-10T05:23:55.2993407Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 552.8/552.8 kB 84.7 MB/s  0:00:00
+2026-11-10T05:23:55.3082879Z Downloading opentelemetry_api-1.45.2-py3-none-any.whl (60 kB)
+2026-11-10T05:23:55.3196280Z Downloading pydantic-2.14.3-py3-none-any.whl (494 kB)
+2026-11-10T05:23:55.3350098Z Downloading pydantic_core-2.50.4-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (2.3 MB)
+2026-11-10T05:23:55.3516591Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.3/2.3 MB 137.9 MB/s  0:00:00
+2026-11-10T05:23:55.3609251Z Downloading annotated_types-0.8.0-py3-none-any.whl (13 kB)
+2026-11-10T05:23:55.3721901Z Downloading python_dotenv-1.2.4-py3-none-any.whl (23 kB)
+2026-11-10T05:23:55.3836703Z Downloading pyyaml-6.0.3-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (807 kB)
+2026-11-10T05:23:55.4117033Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 807.9/807.9 kB 21.0 MB/s  0:00:00
+2026-11-10T05:23:55.4214451Z Downloading starlette-1.10.0-py3-none-any.whl (80 kB)
+2026-11-10T05:23:55.4453933Z Downloading anyio-4.16.0-py3-none-any.whl (134 kB)
+2026-11-10T05:23:55.4569723Z Downloading idna-3.20-py3-none-any.whl (69 kB)
+2026-11-10T05:23:55.4690766Z Downloading typing_extensions-4.16.0-py3-none-any.whl (45 kB)
+2026-11-10T05:23:55.4805416Z Downloading typing_inspection-0.4.5-py3-none-any.whl (14 kB)
+2026-11-10T05:23:55.4917467Z Downloading uvloop-0.23.0-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (4.5 MB)
+2026-11-10T05:23:55.5257749Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.5/4.5 MB 133.7 MB/s  0:00:00
+2026-11-10T05:23:55.5348054Z Downloading watchfiles-1.3.0-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (458 kB)
+2026-11-10T05:23:55.5473702Z Downloading websockets-17.4-cp312-cp312-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl (226 kB)
+2026-11-10T05:23:55.5591699Z Downloading argon2_cffi_bindings-26.1.0-cp310-abi3-manylinux_2_26_x86_64.manylinux_2_28_x86_64.whl (26 kB)
+2026-11-10T05:23:55.5695122Z Downloading certifi-2026.10.23-py3-none-any.whl (135 kB)
+2026-11-10T05:23:55.5810783Z Downloading pycparser-3.12-py3-none-any.whl (62 kB)
+2026-11-10T05:23:55.7707971Z Installing collected packages: websockets, uvloop, tzdata, typing-extensions, ruff, pyyaml, python-dotenv, pycparser, pwdlib, psutil, Pillow, idna, httptools, h11, greenlet, click, certifi, annotated-types, annotated-doc, uvicorn, typing-inspection, pyee, pydantic-core, opentelemetry-api, httpcore, cffi, anyio, watchfiles, starlette, pydantic, playwright, httpx, cryptography, argon2-cffi-bindings, fastapi, argon2-cffi
+2026-11-10T05:23:58.5290586Z 
+2026-11-10T05:23:58.5315512Z Successfully installed Pillow-12.3.0 annotated-doc-0.0.5 annotated-types-0.8.0 anyio-4.16.0 argon2-cffi-25.1.0 argon2-cffi-bindings-26.1.0 certifi-2026.10.23 cffi-2.1.1 click-8.5.1 cryptography-50.0.2 fastapi-0.162.2 greenlet-3.5.6 h11-0.16.0 httpcore-1.0.9 httptools-0.9.0 httpx-0.28.1 idna-3.20 opentelemetry-api-1.45.2 playwright-1.63.0 psutil-7.2.2 pwdlib-0.3.1 pycparser-3.12 pydantic-2.14.3 pydantic-core-2.50.4 pyee-13.0.1 python-dotenv-1.2.4 pyyaml-6.0.3 ruff-0.16.9 starlette-1.10.0 typing-extensions-4.16.0 typing-inspection-0.4.5 tzdata-2026.6 uvicorn-0.54.0 uvloop-0.23.0 watchfiles-1.3.0 websockets-17.4
+2026-11-10T05:23:58.5322790Z 
+2026-11-10T05:23:58.5323058Z [notice] A new release of pip is available: 26.2.2 -> 26.3
+2026-11-10T05:23:58.5323372Z [notice] To update, run: pip install --upgrade pip
+2026-11-10T05:23:58.6524339Z ##[group]Run python -m unittest tests.test_request_attribution tests.test_cloud_tooling tests.test_server_lifecycle tests.test_process_check tests.test_validation_progress tests.test_market_warming_validation
+2026-11-10T05:23:58.6525414Z [36;1mpython -m unittest tests.test_request_attribution tests.test_cloud_tooling tests.test_server_lifecycle tests.test_process_check tests.test_validation_progress tests.test_market_warming_validation[0m
+2026-11-10T05:23:58.6544731Z shell: /usr/bin/bash -e {0}
+2026-11-10T05:23:58.6544938Z env:
+2026-11-10T05:23:58.6545165Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-10T05:23:58.6545516Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib/pkgconfig
+2026-11-10T05:23:58.6545861Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-10T05:23:58.6546159Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-10T05:23:58.6546450Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-10T05:23:58.6546778Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib
+2026-11-10T05:23:58.6547039Z ##[endgroup]
+2026-11-10T05:23:59.1385701Z /opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+2026-11-10T05:23:59.1386988Z   from starlette.testclient import TestClient as TestClient  # noqa
+2026-11-10T05:23:59.5553543Z ..{"timestamp":"2026-11-10T05:23:59.554782+00:00","level":"INFO","logger":"dtos.request","message":"request_accepted","request_id":"dd49159a74c4449f9cce99c82e7b68af","event":"request_accepted","method":"GET","path":"/"}
+2026-11-10T05:23:59.5554647Z {"timestamp":"2026-11-10T05:23:59.554873+00:00","level":"INFO","logger":"dtos.request","message":"handler_scheduled","request_id":"dd49159a74c4449f9cce99c82e7b68af","event":"handler_scheduled","method":"GET","path":"/"}
+2026-11-10T05:23:59.5563226Z {"timestamp":"2026-11-10T05:23:59.556155+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/ \"HTTP/1.1 303 See Other\"","request_id":"system"}
+2026-11-10T05:23:59.5569340Z {"timestamp":"2026-11-10T05:23:59.556681+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"dd49159a74c4449f9cce99c82e7b68af","event":"request_complete","duration_ms":1.922,"status_code":303,"method":"GET","path":"/"}
+2026-11-10T05:23:59.5826983Z ......{"timestamp":"2026-11-10T05:23:59.582228+00:00","level":"INFO","logger":"dtos.request","message":"request_accepted","request_id":"body-barrier","event":"request_accepted","method":"GET","path":"/"}
+2026-11-10T05:23:59.5828546Z {"timestamp":"2026-11-10T05:23:59.582294+00:00","level":"INFO","logger":"dtos.request","message":"handler_scheduled","request_id":"body-barrier","event":"handler_scheduled","method":"GET","path":"/"}
+2026-11-10T05:23:59.5833181Z {"timestamp":"2026-11-10T05:23:59.583078+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"body-barrier","event":"request_complete","duration_ms":0.862,"status_code":200,"method":"GET","path":"/"}
+2026-11-10T05:23:59.5862370Z ..{"timestamp":"2026-11-10T05:23:59.586068+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://api.sleeper.app/players/nfl \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T05:23:59.5880632Z .{"timestamp":"2026-11-10T05:23:59.587853+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://api.sleeper.app/projections/nfl/2026/6?private=do-not-log-query \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T05:23:59.5906109Z .{"timestamp":"2026-11-10T05:23:59.590448+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://api.sleeper.app/state/nfl \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T05:23:59.6267633Z .{"timestamp":"2026-11-10T05:23:59.626524+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:36301/league/100 \"HTTP/1.0 200 OK\"","request_id":"system"}
+2026-11-10T05:24:00.1297357Z Validation Chromium: /tmp/tmp_lzangjb/chrome
+2026-11-10T05:24:00.1305589Z Validation Chromium: /usr/bin/chromium
+2026-11-10T05:24:00.1306720Z Validation Chromium version: <Mock name='mock.launch().version' id='139899092931632'>
+2026-11-10T05:24:00.1317195Z Validation Chromium: /home/runner/work/dtos/dtos/tmpy4iok1s7/system-chrome
+2026-11-10T05:24:00.1318233Z Validation Chromium version: <Mock name='mock.launch().version' id='139899093385392'>
+2026-11-10T05:24:00.8104474Z DTOS development setup complete: /tmp/tmphb1tgpw_/bin/python
+2026-11-10T05:24:00.8105095Z DTOS development setup complete: /tmp/tmpyvm240ic/bin/python
+2026-11-10T05:24:00.8105898Z Asset Market warming completed: path=/market duration=0.500s attempts=2 final_status=200 generation=published-page-contract
+2026-11-10T05:24:00.8108617Z Asset Market warming completed: path=/market duration=0.500s attempts=2 final_status=200 generation=published-page-contract
+2026-11-10T05:24:00.8116952Z Asset Market warming completed: path=/market duration=1.000s attempts=3 final_status=200 generation=published-page-contract
+2026-11-10T05:24:00.8118027Z Asset Market warming completed: path=/market duration=0.000s attempts=2 final_status=200 generation=generation-1
+2026-11-10T05:24:00.8120143Z Asset Market warming completed: path=/market duration=1.000s attempts=3 final_status=200 generation=published-page-contract
+2026-11-10T05:24:00.8122718Z Asset Market warming completed: path=/market duration=0.500s attempts=2 final_status=200 generation=published-page-contract
+2026-11-10T05:24:00.8125202Z ................................................................................
+2026-11-10T05:24:00.8125710Z ----------------------------------------------------------------------
+2026-11-10T05:24:00.8126137Z Ran 93 tests in 1.299s
+2026-11-10T05:24:00.8126324Z 
+2026-11-10T05:24:00.8126451Z OK
+2026-11-10T05:24:00.8712585Z ##[group]Run docker build -f tools/validation/containers/worker.Dockerfile -t dtos-worker-validation .
+2026-11-10T05:24:00.8713145Z [36;1mdocker build -f tools/validation/containers/worker.Dockerfile -t dtos-worker-validation .[0m
+2026-11-10T05:24:00.8731696Z shell: /usr/bin/bash -e {0}
+2026-11-10T05:24:00.8731906Z env:
+2026-11-10T05:24:00.8732125Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-10T05:24:00.8732466Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib/pkgconfig
+2026-11-10T05:24:00.8732800Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-10T05:24:00.8733089Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-10T05:24:00.8733377Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-10T05:24:00.8733669Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib
+2026-11-10T05:24:00.8734112Z ##[endgroup]
+2026-11-10T05:24:01.5832476Z #0 building with "default" instance using docker driver
+2026-11-10T05:24:01.5832728Z 
+2026-11-10T05:24:01.5832864Z #1 [internal] load build definition from worker.Dockerfile
+2026-11-10T05:24:01.5833142Z #1 transferring dockerfile: 333B done
+2026-11-10T05:24:01.5833345Z #1 DONE 0.0s
+2026-11-10T05:24:01.5833443Z 
+2026-11-10T05:24:01.5833567Z #2 [auth] library/python:pull token for registry-1.docker.io
+2026-11-10T05:24:01.5833817Z #2 DONE 0.0s
+2026-11-10T05:24:01.5833910Z 
+2026-11-10T05:24:01.5834061Z #3 [internal] load metadata for docker.io/library/python:3.12-slim
+2026-11-10T05:24:01.7371891Z #3 DONE 0.3s
+2026-11-10T05:24:01.8508990Z 
+2026-11-10T05:24:01.8509382Z #4 [internal] load .dockerignore
+2026-11-10T05:24:01.8509878Z #4 transferring context: 2B done
+2026-11-10T05:24:01.8510133Z #4 DONE 0.0s
+2026-11-10T05:24:01.8510241Z 
+2026-11-10T05:24:01.8510318Z #5 [internal] load build context
+2026-11-10T05:24:01.8510521Z #5 transferring context: 316B done
+2026-11-10T05:24:01.8510755Z #5 DONE 0.0s
+2026-11-10T05:24:01.8510845Z 
+2026-11-10T05:24:01.8511177Z #6 [stage-0 1/3] FROM docker.io/library/python:3.12-slim@sha256:5e2bdb1b0d542d5039cffb8181c65930093949194a65c365dfb1b0fe13a4fa5b
+2026-11-10T05:24:01.8511815Z #6 resolve docker.io/library/python:3.12-slim@sha256:5e2bdb1b0d542d5039cffb8181c65930093949194a65c365dfb1b0fe13a4fa5b done
+2026-11-10T05:24:01.8512370Z #6 sha256:78976a69c067520ef8be34cde307ef9f6fea6dcefa50edb57039773d241ca0db 5.66kB / 5.66kB done
+2026-11-10T05:24:01.8512858Z #6 sha256:37fb86c2a767b88d500c6872195f88078f64765fe0d2f9cc375cc2efbd4c0a41 29.86MB / 29.86MB 0.1s
+2026-11-10T05:24:01.8513360Z #6 sha256:68bced9e0afa4479df17c3646e27c7c7e9ce9ba70c0e6c73b6826487b89037d9 1.29MB / 1.29MB 0.0s done
+2026-11-10T05:24:01.8513860Z #6 sha256:2dc99d2d0a39fce31e37615eb4c932e16dcc4c2b0ce9993714280081b5dbe085 12.12MB / 12.12MB 0.1s
+2026-11-10T05:24:01.8514341Z #6 sha256:05e0eee5572e9c9f50408a2132590133b830a668a1cf2ff2b150f19c57707e2b 248B / 248B 0.1s done
+2026-11-10T05:24:01.8514831Z #6 sha256:5e2bdb1b0d542d5039cffb8181c65930093949194a65c365dfb1b0fe13a4fa5b 10.37kB / 10.37kB done
+2026-11-10T05:24:01.8515298Z #6 sha256:05a994d2344eb364cc186910f4fc8786a38215f39f00d0acc25bff33a08f4177 1.75kB / 1.75kB done
+2026-11-10T05:24:02.0497861Z #6 sha256:37fb86c2a767b88d500c6872195f88078f64765fe0d2f9cc375cc2efbd4c0a41 29.86MB / 29.86MB 0.3s done
+2026-11-10T05:24:02.0498796Z #6 sha256:2dc99d2d0a39fce31e37615eb4c932e16dcc4c2b0ce9993714280081b5dbe085 12.12MB / 12.12MB 0.3s done
+2026-11-10T05:24:02.1628123Z #6 extracting sha256:37fb86c2a767b88d500c6872195f88078f64765fe0d2f9cc375cc2efbd4c0a41 0.1s
+2026-11-10T05:24:02.7718498Z #6 extracting sha256:37fb86c2a767b88d500c6872195f88078f64765fe0d2f9cc375cc2efbd4c0a41 0.7s done
+2026-11-10T05:24:02.7719306Z #6 extracting sha256:68bced9e0afa4479df17c3646e27c7c7e9ce9ba70c0e6c73b6826487b89037d9
+2026-11-10T05:24:02.9952884Z #6 extracting sha256:68bced9e0afa4479df17c3646e27c7c7e9ce9ba70c0e6c73b6826487b89037d9 0.1s done
+2026-11-10T05:24:06.4645542Z #6 extracting sha256:2dc99d2d0a39fce31e37615eb4c932e16dcc4c2b0ce9993714280081b5dbe085
+2026-11-10T05:24:07.0289731Z #6 extracting sha256:2dc99d2d0a39fce31e37615eb4c932e16dcc4c2b0ce9993714280081b5dbe085 0.4s done
+2026-11-10T05:24:07.1656233Z #6 extracting sha256:05e0eee5572e9c9f50408a2132590133b830a668a1cf2ff2b150f19c57707e2b
+2026-11-10T05:24:07.3659690Z #6 extracting sha256:05e0eee5572e9c9f50408a2132590133b830a668a1cf2ff2b150f19c57707e2b done
+2026-11-10T05:24:07.3660317Z #6 DONE 5.5s
+2026-11-10T05:24:07.3660468Z 
+2026-11-10T05:24:07.3660737Z #7 [stage-0 2/3] COPY requirements.txt requirements-validation.txt /tmp/
+2026-11-10T05:24:07.3661214Z #7 DONE 0.0s
+2026-11-10T05:24:07.3661366Z 
+2026-11-10T05:24:07.3662228Z #8 [stage-0 3/3] RUN --mount=type=secret,id=proxy_ca,target=/run/proxy-ca.pem     if [ -f /run/proxy-ca.pem ]; then export PIP_CERT=/run/proxy-ca.pem; fi;     pip install --no-cache-dir -r /tmp/requirements-validation.txt
+2026-11-10T05:24:08.4317574Z #8 1.217 Collecting fastapi<1.0,>=0.116 (from -r /tmp/requirements.txt (line 1))
+2026-11-10T05:24:08.5627151Z #8 1.235   Downloading fastapi-0.162.2-py3-none-any.whl.metadata (27 kB)
+2026-11-10T05:24:08.5627862Z #8 1.266 Collecting uvicorn<1.0,>=0.35 (from uvicorn[standard]<1.0,>=0.35->-r /tmp/requirements.txt (line 2))
+2026-11-10T05:24:08.5628332Z #8 1.270   Downloading uvicorn-0.54.0-py3-none-any.whl.metadata (6.6 kB)
+2026-11-10T05:24:08.5628725Z #8 1.290 Collecting httpx<1.0,>=0.28 (from -r /tmp/requirements.txt (line 3))
+2026-11-10T05:24:08.5629082Z #8 1.293   Downloading httpx-0.28.1-py3-none-any.whl.metadata (7.1 kB)
+2026-11-10T05:24:08.5629438Z #8 1.347 Collecting psutil<8.0,>=6.0 (from -r /tmp/requirements.txt (line 4))
+2026-11-10T05:24:08.7440543Z #8 1.351   Downloading psutil-7.2.2-cp36-abi3-manylinux2010_x86_64.manylinux_2_12_x86_64.manylinux_2_28_x86_64.whl.metadata (22 kB)
+2026-11-10T05:24:08.7441296Z #8 1.367 Collecting pwdlib<1.0,>=0.2 (from pwdlib[argon2]<1.0,>=0.2->-r /tmp/requirements.txt (line 5))
+2026-11-10T05:24:08.7441747Z #8 1.371   Downloading pwdlib-0.3.1-py3-none-any.whl.metadata (5.6 kB)
+2026-11-10T05:24:08.7442171Z #8 1.385 Collecting tzdata>=2025.1 (from -r /tmp/requirements.txt (line 6))
+2026-11-10T05:24:08.7459937Z #8 1.389   Downloading tzdata-2026.6-py2.py3-none-any.whl.metadata (1.4 kB)
+2026-11-10T05:24:08.7460587Z #8 1.529 Collecting cryptography<51,>=43 (from -r /tmp/requirements.txt (line 7))
+2026-11-10T05:24:08.9302905Z #8 1.533   Downloading cryptography-50.0.2-cp311-abi3-manylinux_2_34_x86_64.whl.metadata (4.4 kB)
+2026-11-10T05:24:08.9303451Z #8 1.560 Collecting playwright==1.63.0 (from -r /tmp/requirements-validation.txt (line 2))
+2026-11-10T05:24:08.9303924Z #8 1.565   Downloading playwright-1.63.0-py3-none-manylinux1_x86_64.whl.metadata (3.3 kB)
+2026-11-10T05:24:08.9996520Z #8 1.785 Collecting ruff==0.16.9 (from -r /tmp/requirements-validation.txt (line 3))
+2026-11-10T05:24:09.1378454Z #8 1.789   Downloading ruff-0.16.9-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (20 kB)
+2026-11-10T05:24:09.1379302Z #8 1.923 Collecting Pillow<13.0,>=11.0 (from -r /tmp/requirements-validation.txt (line 4))
+2026-11-10T05:24:09.2591178Z #8 1.927   Downloading pillow-12.3.0-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (9.1 kB)
+2026-11-10T05:24:09.2592040Z #8 1.946 Collecting pyee<14,>=13 (from playwright==1.63.0->-r /tmp/requirements-validation.txt (line 2))
+2026-11-10T05:24:09.2592633Z #8 1.950   Downloading pyee-13.0.1-py3-none-any.whl.metadata (3.0 kB)
+2026-11-10T05:24:09.2593240Z #8 2.044 Collecting greenlet<4.0.0,>=3.1.1 (from playwright==1.63.0->-r /tmp/requirements-validation.txt (line 2))
+2026-11-10T05:24:09.3660595Z #8 2.048   Downloading greenlet-3.5.6-cp312-cp312-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl.metadata (3.8 kB)
+2026-11-10T05:24:09.3661490Z #8 2.074 Collecting starlette>=0.46.0 (from fastapi<1.0,>=0.116->-r /tmp/requirements.txt (line 1))
+2026-11-10T05:24:09.3662213Z #8 2.077   Downloading starlette-1.10.0-py3-none-any.whl.metadata (6.6 kB)
+2026-11-10T05:24:09.3662852Z #8 2.151 Collecting pydantic>=2.9.0 (from fastapi<1.0,>=0.116->-r /tmp/requirements.txt (line 1))
+2026-11-10T05:24:09.4666491Z #8 2.155   Downloading pydantic-2.14.3-py3-none-any.whl.metadata (141 kB)
+2026-11-10T05:24:09.4667301Z #8 2.177 Collecting typing-extensions>=4.8.0 (from fastapi<1.0,>=0.116->-r /tmp/requirements.txt (line 1))
+2026-11-10T05:24:09.4668068Z #8 2.180   Downloading typing_extensions-4.16.0-py3-none-any.whl.metadata (3.3 kB)
+2026-11-10T05:24:09.4668831Z #8 2.192 Collecting typing-inspection>=0.4.2 (from fastapi<1.0,>=0.116->-r /tmp/requirements.txt (line 1))
+2026-11-10T05:24:09.4669797Z #8 2.196   Downloading typing_inspection-0.4.5-py3-none-any.whl.metadata (2.6 kB)
+2026-11-10T05:24:09.4670542Z #8 2.206 Collecting annotated-doc>=0.0.2 (from fastapi<1.0,>=0.116->-r /tmp/requirements.txt (line 1))
+2026-11-10T05:24:09.4671262Z #8 2.210   Downloading annotated_doc-0.0.5-py3-none-any.whl.metadata (6.5 kB)
+2026-11-10T05:24:09.4671999Z #8 2.228 Collecting opentelemetry-api>=1.44.0 (from fastapi<1.0,>=0.116->-r /tmp/requirements.txt (line 1))
+2026-11-10T05:24:09.4673223Z #8 2.231   Downloading opentelemetry_api-1.45.2-py3-none-any.whl.metadata (1.4 kB)
+2026-11-10T05:24:09.4674029Z #8 2.248 Collecting click>=7.0 (from uvicorn<1.0,>=0.35->uvicorn[standard]<1.0,>=0.35->-r /tmp/requirements.txt (line 2))
+2026-11-10T05:24:09.4674819Z #8 2.252   Downloading click-8.5.1-py3-none-any.whl.metadata (2.6 kB)
+2026-11-10T05:24:09.5690409Z #8 2.264 Collecting h11>=0.8 (from uvicorn<1.0,>=0.35->uvicorn[standard]<1.0,>=0.35->-r /tmp/requirements.txt (line 2))
+2026-11-10T05:24:09.5691201Z #8 2.271   Downloading h11-0.16.0-py3-none-any.whl.metadata (8.3 kB)
+2026-11-10T05:24:09.5691816Z #8 2.290 Collecting anyio (from httpx<1.0,>=0.28->-r /tmp/requirements.txt (line 3))
+2026-11-10T05:24:09.5692621Z #8 2.293   Downloading anyio-4.16.0-py3-none-any.whl.metadata (4.7 kB)
+2026-11-10T05:24:09.5693345Z #8 2.311 Collecting certifi (from httpx<1.0,>=0.28->-r /tmp/requirements.txt (line 3))
+2026-11-10T05:24:09.5694075Z #8 2.314   Downloading certifi-2026.10.23-py3-none-any.whl.metadata (2.5 kB)
+2026-11-10T05:24:09.5694888Z #8 2.332 Collecting httpcore==1.* (from httpx<1.0,>=0.28->-r /tmp/requirements.txt (line 3))
+2026-11-10T05:24:09.5695615Z #8 2.336   Downloading httpcore-1.0.9-py3-none-any.whl.metadata (21 kB)
+2026-11-10T05:24:09.5696286Z #8 2.350 Collecting idna (from httpx<1.0,>=0.28->-r /tmp/requirements.txt (line 3))
+2026-11-10T05:24:09.5696954Z #8 2.354   Downloading idna-3.20-py3-none-any.whl.metadata (7.2 kB)
+2026-11-10T05:24:09.6930591Z #8 2.425 Collecting cffi>=2.0.0 (from cryptography<51,>=43->-r /tmp/requirements.txt (line 7))
+2026-11-10T05:24:09.6931497Z #8 2.429   Downloading cffi-2.1.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (2.5 kB)
+2026-11-10T05:24:09.6932412Z #8 2.447 Collecting argon2-cffi>=23.1.0 (from pwdlib[argon2]<1.0,>=0.2->-r /tmp/requirements.txt (line 5))
+2026-11-10T05:24:09.6933168Z #8 2.450   Downloading argon2_cffi-25.1.0-py3-none-any.whl.metadata (4.1 kB)
+2026-11-10T05:24:09.6933922Z #8 2.478 Collecting httptools>=0.8.0 (from uvicorn[standard]<1.0,>=0.35->-r /tmp/requirements.txt (line 2))
+2026-11-10T05:24:09.8564739Z #8 2.482   Downloading httptools-0.9.0-cp312-cp312-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl.metadata (3.5 kB)
+2026-11-10T05:24:09.8565799Z #8 2.497 Collecting python-dotenv>=0.13 (from uvicorn[standard]<1.0,>=0.35->-r /tmp/requirements.txt (line 2))
+2026-11-10T05:24:09.8566596Z #8 2.502   Downloading python_dotenv-1.2.4-py3-none-any.whl.metadata (29 kB)
+2026-11-10T05:24:09.8567262Z #8 2.529 Collecting pyyaml>=5.1 (from uvicorn[standard]<1.0,>=0.35->-r /tmp/requirements.txt (line 2))
+2026-11-10T05:24:09.8568142Z #8 2.532   Downloading pyyaml-6.0.3-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (2.4 kB)
+2026-11-10T05:24:09.8568898Z #8 2.561 Collecting uvloop>=0.15.1 (from uvicorn[standard]<1.0,>=0.35->-r /tmp/requirements.txt (line 2))
+2026-11-10T05:24:09.8569852Z #8 2.565   Downloading uvloop-0.23.0-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (5.1 kB)
+2026-11-10T05:24:09.8571193Z #8 2.641 Collecting watchfiles>=0.20 (from uvicorn[standard]<1.0,>=0.35->-r /tmp/requirements.txt (line 2))
+2026-11-10T05:24:09.9644435Z #8 2.645   Downloading watchfiles-1.3.0-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (4.9 kB)
+2026-11-10T05:24:09.9645436Z #8 2.731 Collecting websockets>=13.0 (from uvicorn[standard]<1.0,>=0.35->-r /tmp/requirements.txt (line 2))
+2026-11-10T05:24:09.9646446Z #8 2.734   Downloading websockets-17.4-cp312-cp312-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl.metadata (6.3 kB)
+2026-11-10T05:24:09.9647506Z #8 2.749 Collecting argon2-cffi-bindings (from argon2-cffi>=23.1.0->pwdlib[argon2]<1.0,>=0.2->-r /tmp/requirements.txt (line 5))
+2026-11-10T05:24:10.1604512Z #8 2.753   Downloading argon2_cffi_bindings-26.1.0-cp310-abi3-manylinux_2_26_x86_64.manylinux_2_28_x86_64.whl.metadata (7.5 kB)
+2026-11-10T05:24:10.1605155Z #8 2.766 Collecting pycparser (from cffi>=2.0.0->cryptography<51,>=43->-r /tmp/requirements.txt (line 7))
+2026-11-10T05:24:10.1606021Z #8 2.770   Downloading pycparser-3.12-py3-none-any.whl.metadata (9.7 kB)
+2026-11-10T05:24:10.1606533Z #8 2.788 Collecting annotated-types>=0.6.0 (from pydantic>=2.9.0->fastapi<1.0,>=0.116->-r /tmp/requirements.txt (line 1))
+2026-11-10T05:24:10.1607051Z #8 2.795   Downloading annotated_types-0.8.0-py3-none-any.whl.metadata (15 kB)
+2026-11-10T05:24:10.4883083Z #8 3.273 Collecting pydantic-core==2.50.4 (from pydantic>=2.9.0->fastapi<1.0,>=0.116->-r /tmp/requirements.txt (line 1))
+2026-11-10T05:24:10.6826871Z #8 3.277   Downloading pydantic_core-2.50.4-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (6.6 kB)
+2026-11-10T05:24:10.6827454Z #8 3.317 Downloading playwright-1.63.0-py3-none-manylinux1_x86_64.whl (48.2 MB)
+2026-11-10T05:24:10.8377206Z #8 3.520    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 48.2/48.2 MB 242.3 MB/s eta 0:00:00
+2026-11-10T05:24:10.8377990Z #8 3.524 Downloading ruff-0.16.9-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (10.4 MB)
+2026-11-10T05:24:10.8378910Z #8 3.608    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 10.4/10.4 MB 132.5 MB/s eta 0:00:00
+2026-11-10T05:24:10.8379636Z #8 3.612 Downloading fastapi-0.162.2-py3-none-any.whl (151 kB)
+2026-11-10T05:24:10.8380162Z #8 3.616 Downloading uvicorn-0.54.0-py3-none-any.whl (87 kB)
+2026-11-10T05:24:10.8380636Z #8 3.619 Downloading httpx-0.28.1-py3-none-any.whl (73 kB)
+2026-11-10T05:24:10.8381111Z #8 3.623 Downloading httpcore-1.0.9-py3-none-any.whl (78 kB)
+2026-11-10T05:24:10.9433255Z #8 3.626 Downloading psutil-7.2.2-cp36-abi3-manylinux2010_x86_64.manylinux_2_12_x86_64.manylinux_2_28_x86_64.whl (155 kB)
+2026-11-10T05:24:10.9433794Z #8 3.631 Downloading pwdlib-0.3.1-py3-none-any.whl (9.3 kB)
+2026-11-10T05:24:10.9434131Z #8 3.636 Downloading tzdata-2026.6-py2.py3-none-any.whl (348 kB)
+2026-11-10T05:24:10.9434524Z #8 3.640 Downloading cryptography-50.0.2-cp311-abi3-manylinux_2_34_x86_64.whl (4.8 MB)
+2026-11-10T05:24:10.9435266Z #8 3.656    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.8/4.8 MB 312.1 MB/s eta 0:00:00
+2026-11-10T05:24:10.9435721Z #8 3.660 Downloading pillow-12.3.0-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (6.9 MB)
+2026-11-10T05:24:10.9436226Z #8 3.675    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 6.9/6.9 MB 536.4 MB/s eta 0:00:00
+2026-11-10T05:24:10.9436572Z #8 3.679 Downloading annotated_doc-0.0.5-py3-none-any.whl (5.3 kB)
+2026-11-10T05:24:10.9436900Z #8 3.682 Downloading argon2_cffi-25.1.0-py3-none-any.whl (14 kB)
+2026-11-10T05:24:10.9437296Z #8 3.691 Downloading cffi-2.1.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (221 kB)
+2026-11-10T05:24:10.9437694Z #8 3.698 Downloading click-8.5.1-py3-none-any.whl (126 kB)
+2026-11-10T05:24:10.9438090Z #8 3.710 Downloading greenlet-3.5.6-cp312-cp312-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl (621 kB)
+2026-11-10T05:24:10.9438584Z #8 3.714    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 621.4/621.4 kB 121.6 MB/s eta 0:00:00
+2026-11-10T05:24:10.9439169Z #8 3.722 Downloading h11-0.16.0-py3-none-any.whl (37 kB)
+2026-11-10T05:24:10.9439998Z #8 3.728 Downloading httptools-0.9.0-cp312-cp312-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl (552 kB)
+2026-11-10T05:24:11.0435152Z #8 3.732    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 552.8/552.8 kB 342.5 MB/s eta 0:00:00
+2026-11-10T05:24:11.0435809Z #8 3.735 Downloading opentelemetry_api-1.45.2-py3-none-any.whl (60 kB)
+2026-11-10T05:24:11.0436385Z #8 3.739 Downloading pydantic-2.14.3-py3-none-any.whl (494 kB)
+2026-11-10T05:24:11.0437085Z #8 3.743 Downloading pydantic_core-2.50.4-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (2.3 MB)
+2026-11-10T05:24:11.0437937Z #8 3.757    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.3/2.3 MB 176.6 MB/s eta 0:00:00
+2026-11-10T05:24:11.0438448Z #8 3.760 Downloading pyee-13.0.1-py3-none-any.whl (15 kB)
+2026-11-10T05:24:11.0438938Z #8 3.764 Downloading python_dotenv-1.2.4-py3-none-any.whl (23 kB)
+2026-11-10T05:24:11.0439928Z #8 3.768 Downloading pyyaml-6.0.3-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (807 kB)
+2026-11-10T05:24:11.0440867Z #8 3.771    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 807.9/807.9 kB 674.2 MB/s eta 0:00:00
+2026-11-10T05:24:11.0441403Z #8 3.775 Downloading starlette-1.10.0-py3-none-any.whl (80 kB)
+2026-11-10T05:24:11.0441887Z #8 3.778 Downloading anyio-4.16.0-py3-none-any.whl (134 kB)
+2026-11-10T05:24:11.0442358Z #8 3.782 Downloading idna-3.20-py3-none-any.whl (69 kB)
+2026-11-10T05:24:11.0442877Z #8 3.786 Downloading typing_extensions-4.16.0-py3-none-any.whl (45 kB)
+2026-11-10T05:24:11.0443456Z #8 3.790 Downloading typing_inspection-0.4.5-py3-none-any.whl (14 kB)
+2026-11-10T05:24:11.0444234Z #8 3.793 Downloading uvloop-0.23.0-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (4.5 MB)
+2026-11-10T05:24:11.0445146Z #8 3.822    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.5/4.5 MB 165.4 MB/s eta 0:00:00
+2026-11-10T05:24:11.0445581Z #8 3.828 Downloading watchfiles-1.3.0-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (458 kB)
+2026-11-10T05:24:11.1854881Z #8 3.833 Downloading websockets-17.4-cp312-cp312-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl (226 kB)
+2026-11-10T05:24:11.1855639Z #8 3.839 Downloading certifi-2026.10.23-py3-none-any.whl (135 kB)
+2026-11-10T05:24:11.1856101Z #8 3.843 Downloading annotated_types-0.8.0-py3-none-any.whl (13 kB)
+2026-11-10T05:24:11.1856639Z #8 3.846 Downloading argon2_cffi_bindings-26.1.0-cp310-abi3-manylinux_2_26_x86_64.manylinux_2_28_x86_64.whl (26 kB)
+2026-11-10T05:24:11.1857112Z #8 3.849 Downloading pycparser-3.12-py3-none-any.whl (62 kB)
+2026-11-10T05:24:11.1858564Z #8 3.970 Installing collected packages: websockets, uvloop, tzdata, typing-extensions, ruff, pyyaml, python-dotenv, pycparser, pwdlib, psutil, Pillow, idna, httptools, h11, greenlet, click, certifi, annotated-types, annotated-doc, uvicorn, typing-inspection, pyee, pydantic-core, opentelemetry-api, httpcore, cffi, anyio, watchfiles, starlette, pydantic, playwright, httpx, cryptography, argon2-cffi-bindings, fastapi, argon2-cffi
+2026-11-10T05:24:13.8732431Z #8 6.658 Successfully installed Pillow-12.3.0 annotated-doc-0.0.5 annotated-types-0.8.0 anyio-4.16.0 argon2-cffi-25.1.0 argon2-cffi-bindings-26.1.0 certifi-2026.10.23 cffi-2.1.1 click-8.5.1 cryptography-50.0.2 fastapi-0.162.2 greenlet-3.5.6 h11-0.16.0 httpcore-1.0.9 httptools-0.9.0 httpx-0.28.1 idna-3.20 opentelemetry-api-1.45.2 playwright-1.63.0 psutil-7.2.2 pwdlib-0.3.1 pycparser-3.12 pydantic-2.14.3 pydantic-core-2.50.4 pyee-13.0.1 python-dotenv-1.2.4 pyyaml-6.0.3 ruff-0.16.9 starlette-1.10.0 typing-extensions-4.16.0 typing-inspection-0.4.5 tzdata-2026.6 uvicorn-0.54.0 uvloop-0.23.0 watchfiles-1.3.0 websockets-17.4
+2026-11-10T05:24:14.0898677Z #8 6.658 WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+2026-11-10T05:24:14.0900524Z #8 6.724 
+2026-11-10T05:24:14.0900855Z #8 6.724 [notice] A new release of pip is available: 25.0.1 -> 26.3
+2026-11-10T05:24:14.0901334Z #8 6.724 [notice] To update, run: pip install --upgrade pip
+2026-11-10T05:24:15.4569344Z #8 DONE 8.2s
+2026-11-10T05:24:15.6085757Z 
+2026-11-10T05:24:15.6086238Z #9 exporting to image
+2026-11-10T05:24:15.6086630Z #9 exporting layers
+2026-11-10T05:24:16.3047833Z #9 exporting layers 0.8s done
+2026-11-10T05:24:16.3182258Z #9 writing image sha256:4c7827485cfcc0f222bf78eda74bd8229720153e8847d76c31e80b2b0085cfd5 done
+2026-11-10T05:24:16.3182955Z #9 naming to docker.io/library/dtos-worker-validation done
+2026-11-10T05:24:16.3183266Z #9 DONE 0.9s
+2026-11-10T05:24:16.3295165Z ##[group]Run if [ "Linux" = "Windows" ]; then
+2026-11-10T05:24:16.3295458Z [36;1mif [ "Linux" = "Windows" ]; then[0m
+2026-11-10T05:24:16.3295842Z [36;1m  python -m tools.validation.windows_bounded_unittest tests.test_fois_preparation_cleanup[0m
+2026-11-10T05:24:16.3296216Z [36;1melse[0m
+2026-11-10T05:24:16.3297774Z [36;1m  docker run --rm --memory=2g --memory-swap=2g --cpus=2 --network=none -e PYTHONPATH=/src -e PYTHONDONTWRITEBYTECODE=1 -v "$PWD:/src:ro" -e RUNNER_TEMP -e DTOS_CACHE_FILE -e DTOS_DATA_WAREHOUSE_FILE -e DTOS_HISTORY_DB_FILE -e DTOS_PROJECTION_DB_FILE -e DTOS_INTELLIGENCE_CHECKPOINT_FILE -e DTOS_METADATA_DB_FILE -e DTOS_ACCOUNT_DB_FILE -e DTOS_GLOBAL_EVIDENCE_FILE -e DTOS_FOIS_DB_FILE -e DTOS_SLEEPER_SEASON_CACHE_ROOT -e DTOS_HISTORY_STORAGE_ROOT -e DTOS_DURABLE_HISTORY_REQUIRED -e SLEEPER_BASE_URL -w /tmp dtos-worker-validation sh -c 'mkdir -p "$RUNNER_TEMP"; exec python -m unittest tests.test_fois_preparation_cleanup'[0m
+2026-11-10T05:24:16.3299339Z [36;1mfi[0m
+2026-11-10T05:24:16.3318777Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-11-10T05:24:16.3319052Z env:
+2026-11-10T05:24:16.3319262Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-10T05:24:16.3319797Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib/pkgconfig
+2026-11-10T05:24:16.3320131Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-10T05:24:16.3320425Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-10T05:24:16.3320717Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-10T05:24:16.3321006Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib
+2026-11-10T05:24:16.3321325Z   DTOS_CACHE_FILE: /home/runner/work/_temp/preparation-cache.json
+2026-11-10T05:24:16.3321675Z   DTOS_DATA_WAREHOUSE_FILE: /home/runner/work/_temp/preparation-warehouse.json
+2026-11-10T05:24:16.3322045Z   DTOS_HISTORY_DB_FILE: /home/runner/work/_temp/preparation-history.sqlite3
+2026-11-10T05:24:16.3322431Z   DTOS_PROJECTION_DB_FILE: /home/runner/work/_temp/preparation-projections.sqlite3
+2026-11-10T05:24:16.3322863Z   DTOS_INTELLIGENCE_CHECKPOINT_FILE: /home/runner/work/_temp/preparation-checkpoint.sqlite3
+2026-11-10T05:24:16.3323276Z   DTOS_METADATA_DB_FILE: /home/runner/work/_temp/preparation-metadata.sqlite3
+2026-11-10T05:24:16.3323644Z   DTOS_ACCOUNT_DB_FILE: /home/runner/work/_temp/preparation-accounts.sqlite3
+2026-11-10T05:24:16.3324013Z   DTOS_GLOBAL_EVIDENCE_FILE: /home/runner/work/_temp/preparation-global.sqlite3
+2026-11-10T05:24:16.3324367Z   DTOS_FOIS_DB_FILE: /home/runner/work/_temp/preparation-fois.sqlite3
+2026-11-10T05:24:16.3324710Z   DTOS_SLEEPER_SEASON_CACHE_ROOT: /home/runner/work/_temp/preparation-seasons
+2026-11-10T05:24:16.3325079Z   DTOS_HISTORY_STORAGE_ROOT: /home/runner/work/_temp/preparation-history-root
+2026-11-10T05:24:16.3325378Z   DTOS_DURABLE_HISTORY_REQUIRED: false
+2026-11-10T05:24:16.3325614Z   SLEEPER_BASE_URL: http://127.0.0.1:9/v1
+2026-11-10T05:24:16.3325842Z ##[endgroup]
+2026-11-10T05:24:18.4331381Z {"interruption": "SIGKILL", "expected_residual_directories": 1, "canonical_unchanged": true, "automatic_cleanup_claimed": false}
+2026-11-10T05:24:19.9836945Z {"operations": 30, "scratch_directories": 0, "scratch_bytes": 0, "abandoned_publications": 0, "canonical_unchanged_after_every_failed_or_cancelled_operation": true}
+2026-11-10T05:24:20.6222189Z ........
+2026-11-10T05:24:20.6222537Z ----------------------------------------------------------------------
+2026-11-10T05:24:20.6222910Z Ran 8 tests in 3.591s
+2026-11-10T05:24:20.6223052Z 
+2026-11-10T05:24:20.6223138Z OK
+2026-11-10T05:24:20.8097911Z ##[group]Run python -m ruff check .
+2026-11-10T05:24:20.8098186Z [36;1mpython -m ruff check .[0m
+2026-11-10T05:24:20.8116348Z shell: /usr/bin/bash -e {0}
+2026-11-10T05:24:20.8116578Z env:
+2026-11-10T05:24:20.8116802Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-10T05:24:20.8117146Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib/pkgconfig
+2026-11-10T05:24:20.8117472Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-10T05:24:20.8117769Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-10T05:24:20.8118060Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-10T05:24:20.8118375Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib
+2026-11-10T05:24:20.8118633Z ##[endgroup]
+2026-11-10T05:24:20.9345214Z All checks passed!
+2026-11-10T05:24:20.9387724Z ##[group]Run if [ "Linux" = "Windows" ]; then
+2026-11-10T05:24:20.9388030Z [36;1mif [ "Linux" = "Windows" ]; then[0m
+2026-11-10T05:24:20.9388898Z [36;1m  python -m tools.validation.windows_bounded_unittest tests.test_fois_history_execution tests.test_fois_history_qualification tests.test_sleeper_history_publication tests.test_fois_history_read tests.test_fois_delta_integrity tests.test_season_cache_residency tests.test_fois_worker_residency[0m
+2026-11-10T05:24:20.9389916Z [36;1melse[0m
+2026-11-10T05:24:20.9391072Z [36;1m  docker run --rm --memory=2g --memory-swap=2g --cpus=2 --network=none -e PYTHONPATH=/src -e PYTHONDONTWRITEBYTECODE=1 -v "$PWD:/src:ro" -w /tmp dtos-worker-validation python -m unittest tests.test_fois_history_execution tests.test_fois_history_qualification tests.test_sleeper_history_publication tests.test_fois_history_read tests.test_fois_delta_integrity tests.test_season_cache_residency tests

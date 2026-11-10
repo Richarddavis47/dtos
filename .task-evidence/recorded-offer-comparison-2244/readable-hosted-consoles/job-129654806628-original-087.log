@@ -1,0 +1,56 @@
+8c2baa0c","market_cache_owned":true,"projection_cache_owned":false}]},"sample_total_duration_ms":320.382},"queue_dropped_record_count":0}}
+2026-11-10T06:04:04.8807875Z {"timestamp":"2026-11-10T06:04:04.880567+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/health/live \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T06:04:04.8811897Z {"timestamp":"2026-11-10T06:04:04.879894+00:00","level":"INFO","logger":"dtos.request","message":"request_accepted","request_id":"77654ba584a144ecb5ec4dd339d0556d","event":"request_accepted","method":"GET","path":"/health/live"}
+2026-11-10T06:04:04.8812925Z {"timestamp":"2026-11-10T06:04:04.879946+00:00","level":"INFO","logger":"dtos.request","message":"handler_scheduled","request_id":"77654ba584a144ecb5ec4dd339d0556d","event":"handler_scheduled","method":"GET","path":"/health/live"}
+2026-11-10T06:04:04.8815792Z {"timestamp":"2026-11-10T06:04:04.881204+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"77654ba584a144ecb5ec4dd339d0556d","event":"request_complete","duration_ms":1.312,"status_code":200,"method":"GET","path":"/health/live"}
+2026-11-10T06:04:05.3872218Z ##[group]Run actions/upload-artifact@v4
+2026-11-10T06:04:05.3872420Z with:
+2026-11-10T06:04:05.3872571Z   name: actuals-restoration-2g
+2026-11-10T06:04:05.3872750Z   path: .validation/actuals-restoration
+2026-11-10T06:04:05.3872936Z   if-no-files-found: error
+2026-11-10T06:04:05.3873093Z   retention-days: 14
+2026-11-10T06:04:05.3873243Z   compression-level: 6
+2026-11-10T06:04:05.3873391Z   overwrite: false
+2026-11-10T06:04:05.3873541Z   include-hidden-files: false
+2026-11-10T06:04:05.3873705Z env:
+2026-11-10T06:04:05.3873951Z   NODE_OPTIONS: --max-old-space-size=256
+2026-11-10T06:04:05.3874173Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-10T06:04:05.3874452Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib/pkgconfig
+2026-11-10T06:04:05.3874714Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-10T06:04:05.3874961Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-10T06:04:05.3875219Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-10T06:04:05.3875467Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib
+2026-11-10T06:04:05.3875674Z ##[endgroup]
+2026-11-10T06:04:05.5730752Z (node:58813) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-11-10T06:04:05.5731610Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-11-10T06:04:05.5773877Z With the provided path, there will be 4 files uploaded
+2026-11-10T06:04:05.5777377Z Artifact name is valid!
+2026-11-10T06:04:05.5777702Z Root directory input is valid!
+2026-11-10T06:04:05.8874064Z Beginning upload of artifact content to blob storage
+2026-11-10T06:04:06.0969135Z (node:58813) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+2026-11-10T06:04:06.5414511Z Uploaded bytes 7340918
+2026-11-10T06:04:06.5869965Z Finished uploading artifact content to blob storage!
+2026-11-10T06:04:06.5870621Z SHA256 digest of uploaded artifact zip is eb4f3e27fdbef3d3bcfe8a5c957188fbe57a391bc2df916881c5f88192dc3ce6
+2026-11-10T06:04:06.5871380Z Finalizing artifact upload
+2026-11-10T06:04:06.9615550Z Artifact actuals-restoration-2g.zip successfully finalized. Artifact ID 13739791826
+2026-11-10T06:04:06.9616128Z Artifact actuals-restoration-2g has been successfully uploaded! Final size is 7340918 bytes. Artifact ID is 13739791826
+2026-11-10T06:04:06.9620389Z Artifact download URL: https://github.com/Richarddavis47/dtos/actions/runs/42761857745/artifacts/13739791826
+2026-11-10T06:04:06.9790445Z Post job cleanup.
+2026-11-10T06:04:07.0586810Z (node:58826) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-11-10T06:04:07.0587288Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-11-10T06:04:07.0720299Z Post job cleanup.
+2026-11-10T06:04:07.1322538Z [command]/usr/bin/git version
+2026-11-10T06:04:07.1358743Z git version 2.56.0
+2026-11-10T06:04:07.1385473Z Temporarily overriding HOME='/home/runner/work/_temp/b0a8710e-11fc-444e-9286-47349bcbd927' before making global git config changes
+2026-11-10T06:04:07.1386302Z Adding repository directory to the temporary git global config as a safe directory
+2026-11-10T06:04:07.1389215Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/dtos/dtos
+2026-11-10T06:04:07.1426734Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-11-10T06:04:07.1464465Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-11-10T06:04:07.1690904Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-11-10T06:04:07.1715920Z http.https://github.com/.extraheader
+2026-11-10T06:04:07.1723770Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+2026-11-10T06:04:07.1760174Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-11-10T06:04:07.1998439Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-11-10T06:04:07.2048721Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-11-10T06:04:07.2370722Z Cleaning up orphan processes
+2026-11-10T06:04:07.2621813Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5, actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

@@ -1,0 +1,162 @@
+/usr/local/lib/python3.14/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+  from starlette.testclient import TestClient as TestClient  # noqa
+test_complete_and_explicit_zero_use_the_same_recorded_roster (tests.test_offer_comparison.OfferComparisonTests.test_complete_and_explicit_zero_use_the_same_recorded_roster) ... ok
+test_each_required_identity_and_current_baseline_is_checked (tests.test_offer_comparison.OfferComparisonTests.test_each_required_identity_and_current_baseline_is_checked) ... ok
+test_stale_provisional_missing_and_conflicting_numbers_are_withheld (tests.test_offer_comparison.OfferComparisonTests.test_stale_provisional_missing_and_conflicting_numbers_are_withheld) ... ok
+test_valuation_modes_do_not_blend_and_retention_does_not_claim_currentness (tests.test_offer_comparison.OfferComparisonTests.test_valuation_modes_do_not_blend_and_retention_does_not_claim_currentness) ... ok
+test_aged_publication_reload_withholds_shared_numbers_and_keeps_original_offers (tests.test_offer_comparison_browser.OfferComparisonBrowserTests.test_aged_publication_reload_withholds_shared_numbers_and_keeps_original_offers) ... {"timestamp":"2026-11-10T04:57:08.768843+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T04:57:08.777681+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T04:57:08.792189+00:00","level":"WARNING","logger":"dtos.storage","message":"storage_review {'kind': 'projection', 'database_bytes': 241664, 'rows': {'projection_snapshots': 7, 'projection_source_history': 5, 'projection_player_states': 140}, 'free_bytes': 7213559808, 'row_delta': {'projection_snapshots': 2, 'projection_source_history': 1, 'projection_player_states': 92}, 'reasons': ['ROW_GROWTH_ACCELERATION_REVIEW']}","request_id":"system"}
+Validation Chromium: /usr/bin/chromium
+Validation Chromium version: 156.0.8078.73
+{"timestamp":"2026-11-10T04:57:09.463393+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/create \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T04:57:09.552895+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/trade_workspace.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T04:57:09.559836+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T04:57:09.560359+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/strategy_session.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T04:57:09.560903+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/trade_workspace.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T04:57:09.562191+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T04:57:09.568285+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/trade_comparison.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T04:57:09.673281+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":353071104,"limit_bytes":2147483648,"raw_headroom_bytes":1794412544,"clean_inactive_file_bytes":1359872,"conditional_file_credit_bytes":679936,"admission_headroom_bytes":1795092480,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-10T04:57:09.679174+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/workspace?front_office=1&mode=calculator \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T04:57:10.106865+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_admission","request_id":"system","event":"trade_admission","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":395968512,"limit_bytes":2147483648,"raw_headroom_bytes":1751515136,"clean_inactive_file_bytes":1359872,"conditional_file_credit_bytes":679936,"admission_headroom_bytes":1752195072,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"recovery":null}}
+{"timestamp":"2026-11-10T04:57:10.215703+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_execution_finished","request_id":"system","event":"trade_execution_finished","duration_ms":111.189,"diagnostic":{"schema":"trade-resource-v1","outcome":"complete"}}
+{"timestamp":"2026-11-10T04:57:10.216883+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/trades/evaluate \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T04:57:10.415513+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/create \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T04:57:10.453879+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/strategy_session.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T04:57:10.454867+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/trade_comparison.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T04:57:10.455945+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/trade_workspace.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T04:57:10.457729+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T04:57:10.459556+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/trade_workspace.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T04:57:10.458180+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T04:57:10.483311+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":416395264,"limit_bytes":2147483648,"raw_headroom_bytes":1731088384,"clean_inactive_file_bytes":1290240,"conditional_file_credit_bytes":645120,"admission_headroom_bytes":1731733504,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-10T04:57:10.485774+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/workspace?front_office=1&mode=calculator \"HTTP/1.1 200 OK\"","request_id":"system"}
+ok
+test_phone_two_real_evaluations_keep_packages_costs_and_exact_draft (tests.test_offer_comparison_browser.OfferComparisonBrowserTests.test_phone_two_real_evaluations_keep_packages_costs_and_exact_draft) ... {"timestamp":"2026-11-10T04:57:11.057909+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T04:57:11.064443+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T04:57:11.078470+00:00","level":"WARNING","logger":"dtos.storage","message":"storage_review {'kind': 'projection', 'database_bytes': 241664, 'rows': {'projection_snapshots': 7, 'projection_source_history': 5, 'projection_player_states': 140}, 'free_bytes': 7213547520, 'row_delta': {'projection_snapshots': 2, 'projection_source_history': 1, 'projection_player_states': 92}, 'reasons': ['ROW_GROWTH_ACCELERATION_REVIEW']}","request_id":"system"}
+{"timestamp":"2026-11-10T04:57:11.281516+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+Validation Chromium: /usr/bin/chromium
+Validation Chromium version: 156.0.8078.73
+{"timestamp":"2026-11-10T04:57:11.683246+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/create \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T04:57:11.771636+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/trade_comparison.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T04:57:11.772392+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/strategy_session.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T04:57:11.773274+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/trade_workspace.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T04:57:11.778037+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/trade_workspace.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T04:57:11.782482+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T04:57:11.782786+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T04:57:11.868826+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":353849344,"limit_bytes":2147483648,"raw_headroom_bytes":1793634304,"clean_inactive_file_bytes":1351680,"conditional_file_credit_bytes":675840,"admission_headroom_bytes":1794310144,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-10T04:57:11.874197+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/workspace?front_office=1&mode=calculator \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T04:57:12.428783+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_admission","request_id":"system","event":"trade_admission","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":411238400,"limit_bytes":2147483648,"raw_headroom_bytes":1736245248,"clean_inactive_file_bytes":1351680,"conditional_file_credit_bytes":675840,"admission_headroom_bytes":1736921088,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"recovery":null}}
+{"timestamp":"2026-11-10T04:57:12.499273+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_execution_finished","request_id":"system","event":"trade_execution_finished","duration_ms":71.464,"diagnostic":{"schema":"trade-resource-v1","outcome":"complete"}}
+{"timestamp":"2026-11-10T04:57:12.500562+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/trades/evaluate \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T04:57:13.079136+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_admission","request_id":"system","event":"trade_admission","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":468635648,"limit_bytes":2147483648,"raw_headroom_bytes":1678848000,"clean_inactive_file_bytes":1343488,"conditional_file_credit_bytes":671744,"admission_headroom_bytes":1679519744,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"recovery":null}}
+{"timestamp":"2026-11-10T04:57:13.147464+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_execution_finished","request_id":"system","event":"trade_execution_finished","duration_ms":68.668,"diagnostic":{"schema":"trade-resource-v1","outcome":"complete"}}
+{"timestamp":"2026-11-10T04:57:13.148855+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/trades/evaluate \"HTTP/1.1 200 OK\"","request_id":"system"}
+FAIL
+test_recommendations_compare_without_adoption_and_league_switch_discards_scope (tests.test_offer_comparison_browser.OfferComparisonBrowserTests.test_recommendations_compare_without_adoption_and_league_switch_discards_scope) ... {"timestamp":"2026-11-10T04:57:13.682244+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T04:57:13.688633+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+Validation Chromium: /usr/bin/chromium
+Validation Chromium version: 156.0.8078.73
+{"timestamp":"2026-11-10T04:57:14.085797+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/recommended \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T04:57:14.177189+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/trade_workspace.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T04:57:14.179522+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T04:57:14.183251+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/strategy_session.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T04:57:14.187139+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T04:57:14.187615+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/trade_comparison.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T04:57:14.189896+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/trade_workspace.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T04:57:14.294959+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":383770624,"limit_bytes":2147483648,"raw_headroom_bytes":1763713024,"clean_inactive_file_bytes":1261568,"conditional_file_credit_bytes":630784,"admission_headroom_bytes":1764343808,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-10T04:57:14.296501+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/workspace?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T04:57:14.427828+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_admission","request_id":"system","event":"trade_admission","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":398233600,"limit_bytes":2147483648,"raw_headroom_bytes":1749250048,"clean_inactive_file_bytes":1261568,"conditional_file_credit_bytes":630784,"admission_headroom_bytes":1749880832,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"recovery":null}}
+{"timestamp":"2026-11-10T04:57:15.340268+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_execution_finished","request_id":"system","event":"trade_execution_finished","duration_ms":912.83,"diagnostic":{"schema":"trade-resource-v1","outcome":"complete"}}
+{"timestamp":"2026-11-10T04:57:15.341856+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/trades/generate \"HTTP/1.1 200 OK\"","request_id":"system"}
+ERROR
+test_superflex_replacement_removal_and_missing_depth_stay_independent (tests.test_offer_comparison_browser.OfferComparisonBrowserTests.test_superflex_replacement_removal_and_missing_depth_stay_independent) ... {"timestamp":"2026-11-10T04:57:25.017335+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T04:57:25.023643+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T04:57:25.037705+00:00","level":"WARNING","logger":"dtos.storage","message":"storage_review {'kind': 'projection', 'database_bytes': 241664, 'rows': {'projection_snapshots': 7, 'projection_source_history': 5, 'projection_player_states': 140}, 'free_bytes': 7213522944, 'row_delta': {'projection_snapshots': 2, 'projection_source_history': 1, 'projection_player_states': 92}, 'reasons': ['ROW_GROWTH_ACCELERATION_REVIEW']}","request_id":"system"}
+Validation Chromium: /usr/bin/chromium
+Validation Chromium version: 156.0.8078.73
+{"timestamp":"2026-11-10T04:57:25.560867+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/create \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T04:57:25.602317+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/trade_comparison.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T04:57:25.610917+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T04:57:25.653079+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T04:57:25.654394+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/strategy_session.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T04:57:25.653963+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/trade_workspace.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T04:57:25.660678+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/trade_workspace.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T04:57:25.768707+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":408809472,"limit_bytes":2147483648,"raw_headroom_bytes":1738674176,"clean_inactive_file_bytes":1286144,"conditional_file_credit_bytes":643072,"admission_headroom_bytes":1739317248,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-10T04:57:25.774472+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/workspace?front_office=1&mode=calculator \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T04:57:26.252530+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_admission","request_id":"system","event":"trade_admission","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":459956224,"limit_bytes":2147483648,"raw_headroom_bytes":1687527424,"clean_inactive_file_bytes":1286144,"conditional_file_credit_bytes":643072,"admission_headroom_bytes":1688170496,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"recovery":null}}
+{"timestamp":"2026-11-10T04:57:26.301971+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_execution_finished","request_id":"system","event":"trade_execution_finished","duration_ms":53.646,"diagnostic":{"schema":"trade-resource-v1","outcome":"complete"}}
+{"timestamp":"2026-11-10T04:57:26.303304+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/trades/evaluate \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T04:57:26.843463+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_admission","request_id":"system","event":"trade_admission","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":509464576,"limit_bytes":2147483648,"raw_headroom_bytes":1638019072,"clean_inactive_file_bytes":1286144,"conditional_file_credit_bytes":643072,"admission_headroom_bytes":1638662144,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"recovery":null}}
+{"timestamp":"2026-11-10T04:57:26.900267+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_execution_finished","request_id":"system","event":"trade_execution_finished","duration_ms":57.278,"diagnostic":{"schema":"trade-resource-v1","outcome":"complete"}}
+{"timestamp":"2026-11-10T04:57:26.901680+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/trades/evaluate \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T04:57:27.459823+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_admission","request_id":"system","event":"trade_admission","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":553091072,"limit_bytes":2147483648,"raw_headroom_bytes":1594392576,"clean_inactive_file_bytes":1286144,"conditional_file_credit_bytes":643072,"admission_headroom_bytes":1595035648,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"recovery":null}}
+{"timestamp":"2026-11-10T04:57:27.518840+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_execution_finished","request_id":"system","event":"trade_execution_finished","duration_ms":59.355,"diagnostic":{"schema":"trade-resource-v1","outcome":"complete"}}
+{"timestamp":"2026-11-10T04:57:27.520141+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/trades/evaluate \"HTTP/1.1 200 OK\"","request_id":"system"}
+ok
+
+======================================================================
+ERROR: test_recommendations_compare_without_adoption_and_league_switch_discards_scope (tests.test_offer_comparison_browser.OfferComparisonBrowserTests.test_recommendations_compare_without_adoption_and_league_switch_discards_scope)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_offer_comparison_browser.py", line 205, in test_recommendations_compare_without_adoption_and_league_switch_discards_scope
+    buttons.nth(0).click()
+    ~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/site-packages/playwright/sync_api/_generated.py", line 18032, in click
+    self._sync(
+    ~~~~~~~~~~^
+        self._impl_obj.click(
+        ^^^^^^^^^^^^^^^^^^^^^
+    ...<11 lines>...
+        )
+        ^
+    )
+    ^
+  File "/usr/local/lib/python3.14/site-packages/playwright/_impl/_sync_base.py", line 115, in _sync
+    return task.result()
+           ~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/site-packages/playwright/_impl/_locator.py", line 165, in click
+    return await self._frame._click(self._selector, strict=True, **params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/playwright/_impl/_frame.py", line 594, in _click
+    await self._channel.send("click", self._timeout, locals_to_params(locals()))
+  File "/usr/local/lib/python3.14/site-packages/playwright/_impl/_connection.py", line 76, in send
+    return await self._connection.wrap_api_call(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    )
+    ^
+  File "/usr/local/lib/python3.14/site-packages/playwright/_impl/_connection.py", line 632, in wrap_api_call
+    raise rewrite_error(error, f"{parsed_st['apiName']}: {error}") from None
+playwright._impl._errors.TimeoutError: Locator.click: Timeout 9000ms exceeded.
+Call log:
+  - waiting for locator("#trade-result .tw-compare-add").first
+    - locator resolved to <button type="button" class="tw-compare-add">Add to comparison</button>
+  - attempting click action
+    2 × waiting for element to be visible, enabled and stable
+      - element is not visible
+    - retrying click action
+    - waiting 20ms
+    2 × waiting for element to be visible, enabled and stable
+      - element is not visible
+    - retrying click action
+      - waiting 100ms
+    17 × waiting for element to be visible, enabled and stable
+       - element is not visible
+     - retrying click action
+       - waiting 500ms
+
+
+======================================================================
+FAIL: test_phone_two_real_evaluations_keep_packages_costs_and_exact_draft (tests.test_offer_comparison_browser.OfferComparisonBrowserTests.test_phone_two_real_evaluations_keep_packages_costs_and_exact_draft)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_offer_comparison_browser.py", line 117, in test_phone_two_real_evaluations_keep_packages_costs_and_exact_draft
+    self.assertNotEqual(close.evaluate('e=>getComputedStyle(e).outlineStyle'), 'none')
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'none' == 'none'
+
+----------------------------------------------------------------------
+Ran 8 tests in 20.346s
+
+FAILED (failures=1, errors=1)

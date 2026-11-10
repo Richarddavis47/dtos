@@ -1,0 +1,42 @@
+{
+  "candidate": "3ec78ec4e055c42b65d6e5ac2c14fe6d557b68c2",
+  "tree": "b6c1729a5559167557dcc7b4eaa677c81e00b588",
+  "runtime": "Python3.14.3 / Chromium156 from pinned sha256:2c9de92bf8e05a79587f6edba94052cf614c984a5cb81a62613871388cd6533e",
+  "constraints": {
+    "uid": 1000,
+    "memory_bytes": 2147483648,
+    "extra_swap_bytes": 0,
+    "cpus": 2,
+    "network": "none"
+  },
+  "focused": {
+    "entry": "python -m unittest -v tests.test_offer_comparison tests.test_offer_comparison_browser tests.test_team_trade_need tests.test_team_trade_need_browser tests.test_trade_partner_history tests.test_trade_partner_history_browser tests.test_batch6_trade_ux.TradeUXTests.test_quiet_result_is_not_error_and_stale_error_cannot_replace_changed_context",
+    "count": 31,
+    "passed": true,
+    "original_console": "focused-final2-original.log",
+    "recordings": "focused-final2"
+  },
+  "preserved_native_feature": {
+    "entry": "python -m unittest -v tests.test_team_trade_need_browser tests.test_trade_partner_history_browser tests.test_completed_trade_observations_browser",
+    "count": 8,
+    "passed": true,
+    "original_console": "preserved-native-feature-controls-original.log",
+    "recordings": [
+      "browser-final-source",
+      "history-browser-final-source"
+    ]
+  },
+  "resource": {
+    "entry": "python run-local-resource.py",
+    "commands": "run-local-resource.py",
+    "guards": "focused-resource-verified.json",
+    "passed": true
+  },
+  "canonical": {
+    "entry": "python run-local-canonical.py",
+    "state": "Running, completion must be independently verified; this invocation record is not a gate result",
+    "source": "Clean writable exact checkout /workspace/dtos-2244-validate",
+    "runner": "Extracted verbatim from exact candidate workflow",
+    "scratch_free_prerequisite_bytes": 8589934592
+  }
+}

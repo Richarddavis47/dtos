@@ -1,0 +1,70 @@
+offer_comparison.OfferComparisonTests.test_stale_provisional_missing_and_conflicting_numbers_are_withheld) (change={'delta': 0})
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_offer_comparison.py", line 62, in test_stale_provisional_missing_and_conflicting_numbers_are_withheld
+    self.assertFalse(self.compare(altered, current)['supported'])
+                     ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "/app/tests/test_offer_comparison.py", line 24, in compare
+    self.assertIsNotNone(node, 'The required browser runtime must include Node')
+    ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: unexpectedly None : The required browser runtime must include Node
+
+======================================================================
+FAIL: test_stale_provisional_missing_and_conflicting_numbers_are_withheld (tests.test_offer_comparison.OfferComparisonTests.test_stale_provisional_missing_and_conflicting_numbers_are_withheld) (change={'state': 'provisional'})
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_offer_comparison.py", line 62, in test_stale_provisional_missing_and_conflicting_numbers_are_withheld
+    self.assertFalse(self.compare(altered, current)['supported'])
+                     ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "/app/tests/test_offer_comparison.py", line 24, in compare
+    self.assertIsNotNone(node, 'The required browser runtime must include Node')
+    ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: unexpectedly None : The required browser runtime must include Node
+
+======================================================================
+FAIL: test_stale_provisional_missing_and_conflicting_numbers_are_withheld (tests.test_offer_comparison.OfferComparisonTests.test_stale_provisional_missing_and_conflicting_numbers_are_withheld) (change={'weeks': [9]})
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_offer_comparison.py", line 62, in test_stale_provisional_missing_and_conflicting_numbers_are_withheld
+    self.assertFalse(self.compare(altered, current)['supported'])
+                     ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "/app/tests/test_offer_comparison.py", line 24, in compare
+    self.assertIsNotNone(node, 'The required browser runtime must include Node')
+    ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: unexpectedly None : The required browser runtime must include Node
+
+======================================================================
+FAIL: test_stale_provisional_missing_and_conflicting_numbers_are_withheld (tests.test_offer_comparison.OfferComparisonTests.test_stale_provisional_missing_and_conflicting_numbers_are_withheld)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_offer_comparison.py", line 64, in test_stale_provisional_missing_and_conflicting_numbers_are_withheld
+    result = self.compare(entries, current)
+  File "/app/tests/test_offer_comparison.py", line 24, in compare
+    self.assertIsNotNone(node, 'The required browser runtime must include Node')
+    ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: unexpectedly None : The required browser runtime must include Node
+
+======================================================================
+FAIL: test_valuation_modes_do_not_blend_and_retention_does_not_claim_currentness (tests.test_offer_comparison.OfferComparisonTests.test_valuation_modes_do_not_blend_and_retention_does_not_claim_currentness)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_offer_comparison.py", line 73, in test_valuation_modes_do_not_blend_and_retention_does_not_claim_currentness
+    result = self.compare(entries, current)
+  File "/app/tests/test_offer_comparison.py", line 24, in compare
+    self.assertIsNotNone(node, 'The required browser runtime must include Node')
+    ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: unexpectedly None : The required browser runtime must include Node
+
+======================================================================
+FAIL: test_recommendations_compare_without_adoption_and_league_switch_discards_scope (tests.test_offer_comparison_browser.OfferComparisonBrowserTests.test_recommendations_compare_without_adoption_and_league_switch_discards_scope)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_offer_comparison_browser.py", line 192, in test_recommendations_compare_without_adoption_and_league_switch_discards_scope
+    self.assertGreaterEqual(buttons.count(), 2)
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+AssertionError: 0 not greater than or equal to 2
+
+----------------------------------------------------------------------
+Ran 8 tests in 35.737s
+
+FAILED (failures=27, errors=7)

@@ -1,0 +1,36 @@
+{
+  "readiness": {
+    "build": 2244,
+    "deployment": {
+      "branch": "main",
+      "commit": "a17f9113868c3b9dcc3dd68d0b02613a2ad1de98",
+      "deployed_at": "2026-11-10T07:10:08.311993+00:00"
+    },
+    "reason": "Application ready.",
+    "status": "ready",
+    "version": "1.22.29"
+  },
+  "reads": [
+    {
+      "path": "/health/live",
+      "status": 200
+    },
+    {
+      "path": "/welcome",
+      "status": 200
+    },
+    {
+      "path": "/account/sign-in",
+      "status": 200
+    },
+    {
+      "path": "/api/my-dtos",
+      "status": 401
+    },
+    {
+      "path": "/api/inspect/live/teams",
+      "status": 401
+    }
+  ],
+  "scope": "Bounded public read-only requests; no private-account mutations or heavy production workloads."
+}
