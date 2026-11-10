@@ -44,6 +44,7 @@ jobs:
           import os
           from pathlib import Path
           import shutil
+          import signal
           import subprocess
           import sys
           import threading
@@ -143,10 +144,59 @@ jobs:
                       row["sampling_window_ms"] = (time.monotonic() - sample_start) * 1000
                       sink.write(json.dumps(row, separators=(",", ":")) + "\n")
 
+          def run_canonical_process(command, stream, timeout, cleanup):
+              """Reap the timed-out validator tree before hashing its evidence."""
+              child = subprocess.Popen(command, stdout=stream, stderr=subprocess.STDOUT,
+                                       start_new_session=os.name == "posix")
+              cleanup.update(timeout_triggered=False, validator_pid=child.pid)
+              try:
+                  result = child.wait(timeout=timeout)
+              except subprocess.TimeoutExpired:
+                  cleanup["timeout_triggered"] = True
+                  discovery_ok = True
+                  try:
+                      descendants = psutil.Process(child.pid).children(recursive=True)
+                  except psutil.Error:
+                      descendants = []
+                      discovery_ok = False
+                  if os.name == "posix":
+                      try:
+                          os.killpg(child.pid, signal.SIGTERM)
+                      except ProcessLookupError:
+                          pass
+                  else:
+                      child.terminate()
+                  # Detached descendants may not belong to the validator group.
+                  for process in descendants:
+                      try:
+                          process.terminate()
+                      except psutil.NoSuchProcess:
+                          pass
+                  try:
+                      child.wait(timeout=3)
+                  except subprocess.TimeoutExpired:
+                      child.kill()
+                      child.wait(timeout=3)
+                  _, alive = psutil.wait_procs(descendants, timeout=3)
+                  for process in alive:
+                      try:
+                          process.kill()
+                      except psutil.NoSuchProcess:
+                          pass
+                  _, alive = psutil.wait_procs(alive, timeout=3)
+                  active = [p.pid for p in alive if p.is_running()]
+                  cleanup.update(descendant_count=len(descendants), active_after_count=len(active),
+                                 active_after=active[:16], discovery_complete=discovery_ok,
+                                 timeout_cleanup_complete=discovery_ok and not active and child.poll() is not None)
+                  raise
+              cleanup["validator_reaped"] = True
+              return subprocess.CompletedProcess(command, result)
+
           watcher = threading.Thread(target=watch, daemon=True)
           watcher.start()
           code = 1
           error = None
+          process_cleanup = {}
           try:
               from tools.validation import generate_sanitized_market_fixture as seed
               seed.ASSET_COUNT = 250
@@ -154,8 +204,12 @@ jobs:
               seed.seed_fixture_projection(data, FIXTURE / "projections.sqlite3")
               seed._canonical_history_fixture(FIXTURE)
               with (OUTPUT / "canonical.log").open("w") as stream:
-                  result = subprocess.run([sys.executable, "-m", "tools.validation.validate_release"],
-                                          stdout=stream, stderr=subprocess.STDOUT, timeout=4500)
+                  # Matched CI evidence completed4188/4326tests at75min, with
+                  # no assertion failures; remaining local work was38seconds.
+                  # Keep every test/cap/performance assertion, within the85min job.
+                  result = run_canonical_process(
+                      [sys.executable, "-m", "tools.validation.validate_release"],
+                      stream, timeout=4800, cleanup=process_cleanup)
               code = result.returncode
           except BaseException as exc:
               error = type(exc).__name__ + ": " + str(exc)
@@ -169,7 +223,8 @@ jobs:
               report = dict(head=head, tree=subprocess.check_output(["git", "rev-parse", "HEAD^{tree}"], text=True).strip(),
                   python=sys.version, started_at=started, finished_at=time.time(),
                   elapsed_seconds=time.time()-started, exit_code=code, passed=code == 0,
-                  error=error, cgroup_limit=2147483648, cpus=2, network="none",
+                  error=error, process_cleanup=process_cleanup,
+                  cgroup_limit=2147483648, cpus=2, network="none",
                   final_memory=memory_snapshot(), kernel_peak=int(Path("/sys/fs/cgroup/memory.peak").read_text()),
                   fixture="250 asset prepared sanitized foundation; disposable authenticated test transports")
               (OUTPUT / "result.json").write_text(json.dumps(report, indent=2))
@@ -260,7 +315,7 @@ jobs:
           docker build --file .validation/canonical-build/Dockerfile --tag dtos-canonical-release:validation .validation/canonical-build 2>&1 | tee .validation/canonical-release/image-build.log
           docker run --rm dtos-canonical-release:validation sh -c 'python --version && chromium --version && python -m pip check' | tee .validation/canonical-release/environment.txt
       - name: Run unchanged ten-gate validator under actual 2 GiB
-        timeout-minutes: 77
+        timeout-minutes: 82
         env:
           DTOS_EXPECTED_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
         run: |
