@@ -1,3 +1,11 @@
+# v1.22.30 / build 2245 — Protect assets in Recommended Trades
+
+Recommended Trades adds an editable, removable list of owned players and exact picks to protect before an explicit Generate action. The existing exact-identity constraint excludes these assets from outgoing packages, including exploratory offers. Another pick from the same year and round remains eligible. No search is started by opening or editing the controls.
+
+These temporary controls belong to the authorized account, league and franchise workspace. They do not change saved preferences or apply to Evaluate. Existing Custom saved protections still apply in Custom mode. Completed searches retain their effective restrictions; changing controls keeps earlier results separately labeled, without claiming restrictions caused a zero-qualified result. Drafts, selected comparisons, scoring, valuation formulas, qualification and memory admission remain unchanged.
+
+See docs/audits/RECOMMENDED_PROTECTIONS_2245.md for reproducible controls, source boundaries and live limitations.
+
 # v1.22.29 / build 2244 — Compare assessed offers with keeping your roster
 
 Trade Center can retain up to two completed assessments for a read-only comparison against their supported pre-trade optimal lineup. Add, explicitly replace or remove an offer without changing the current draft. Each ordered player/pick package, original decision, cost, counterparty case and depth/capacity qualification stays attached to that offer.

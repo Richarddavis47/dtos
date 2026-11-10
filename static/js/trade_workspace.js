@@ -130,7 +130,7 @@
   const session = {schema: 2, resetGeneration: null, currentProposal: {sent: [], received: [], partner: 0}, originalProposal: null,
     previewProposal: null, adoptedProposal: null, requiredOutgoingAsset: null, requiredIncomingAsset: null,
     protectedAssets: [], excludedAssets: [], overrideSavedProtections: [], adjustmentConstraints: {}, originWorkflow: flow, shopSearchPartner: 0,
-    shopScopeAsset: null, shopPreference: 'best_overall', shopPosition: 'QB', currentAssessment: null, comparisonOffers: []};
+    shopScopeAsset: null, shopPreference: 'best_overall', shopPosition: 'QB', currentAssessment: null, comparisonOffers: [], recommendationProtectedAssets: []};
   let comparison = null;
   const excludedFamilies = new Set(); let displayedFamilies = []; let lastOffers = null; let lastOffersIsBalance = false; let searchExhausted = false; let hasDiscovered = false;
   let valuationMode = 'neutral', personalRevisionStale = false, checkingPersonal = false;
@@ -252,6 +252,45 @@
   }
   function syncLocks() { if (el('shop-protected')) for (const option of el('shop-protected').options) option.selected = session.protectedAssets.includes(option.value); }
   function addLock(kind, id) { if (!session[kind].includes(id)) session[kind].push(id); syncLocks(); persist(); }
+  function protectionFacts(ids) {
+    return ids.map(id => {
+      const a = asset(id);
+      const original = a?.kind === 'pick' ? ` · ${a.season} round ${a.round} · Original franchise: ${team(a.original_roster_id)?.team_name || a.original_roster_id || 'unavailable'}` : '';
+      return {id, label: (a ? label(a) : id) + original};
+    });
+  }
+  function appliedProtections(out, facts) {
+    const section = node('section', null, 'tw-applied-protections');
+    section.setAttribute('aria-label', 'Protections applied to this search');
+    section.append(node('h4', 'Outgoing protections applied'));
+    if (!Array.isArray(facts)) section.append(node('p', 'This earlier search did not retain its exact protection settings. No new restrictions are inferred.'));
+    else if (!facts.length) section.append(node('p', 'No outgoing asset protections were applied to this search.'));
+    else for (const row of facts) section.append(node('p', row.label), node('small', 'Exact asset: ' + row.id));
+    section.append(node('small', 'Protections limit outgoing assets; they do not explain a trade’s verdict.'));
+    out.append(section);
+  }
+  function paintSearchProtections() {
+    const picker = el('recommendation-protection-asset'); if (!picker) return;
+    const selectedId = picker.value, protectedIds = session.recommendationProtectedAssets;
+    picker.replaceChildren(new Option('Choose an owned asset', ''));
+    for (const row of protectionFacts((team(active)?.assets || []).map(a => a.asset_id).filter(id => !protectedIds.includes(id)))) {
+      picker.append(new Option(row.label + ' · ' + row.id, row.id));
+    }
+    if (Array.from(picker.options).some(o => o.value === selectedId)) picker.value = selectedId;
+    picker.disabled = busy;
+    el('recommendation-protection-add').disabled = busy || !picker.value;
+    el('recommendation-protection-count').textContent = 'Protect assets & options · ' + (protectedIds.length ? protectedIds.length + ' selected' : 'none');
+    el('recommendation-protection-selection').hidden = !protectedIds.length;
+    const list = el('recommendation-protection-list'); list.replaceChildren();
+    for (const row of protectionFacts(protectedIds)) {
+      const item = node('li'), remove = node('button', 'Remove protection'); remove.type = 'button'; remove.disabled = busy;
+      remove.setAttribute('aria-label', 'Remove protection for ' + row.label); remove.dataset.protectedAsset = row.id;
+      remove.onclick = () => { if (busy) return; session.recommendationProtectedAssets = protectedIds.filter(id => id !== row.id); positionChanged(false); picker.focus({preventScroll: true}); };
+      item.append(node('span', row.label), node('small', 'Exact asset: ' + row.id), remove); list.append(item);
+    }
+    el('recommendation-protection-clear').hidden = !protectedIds.length;
+    el('recommendation-protection-clear').disabled = busy;
+  }
   function changed() { el('trade-evaluation-retained')?.remove(); session.currentAssessment = null; cancelBalance(); const focusId = document.activeElement?.dataset.assetId; revision++; session.previewProposal = null; lastOffers = null; lastOffersIsBalance = false; el('trade-result').hidden = true; el('trade-result').dataset.assessmentState = 'not_evaluated'; persist(); paint(); if (focusId) root.querySelector('button[data-asset-id="' + CSS.escape(focusId) + '"]')?.focus(); }
   function previousSearch() {
     const panel = el('recommendation-previous'), out = el('recommendation-previous-offers');
@@ -260,6 +299,7 @@
     out.replaceChildren(); panel.hidden = !prior;
     if (!prior) return;
     out.append(node('p', `Earlier search: ${prior.position || 'all positions'} · ${prior.type || 'all'} opportunities. ${prior.count} offers in the saved result; up to eight offer contexts retained for review.`));
+    appliedProtections(out, prior.protections);
     for (const context of prior.offers || []) {
       if (context.identity?.binding !== workspace.workspace_context.binding) continue;
       const detail = node('details'); detail.append(node('summary', 'Earlier offer · not current'));
@@ -438,6 +478,7 @@
     if (el('recommendation-filter')) el('recommendation-filter').disabled = false;
     if (el('recommendation-position')) el('recommendation-position').disabled = busy;
     if (el('recommendation-position-clear')) el('recommendation-position-clear').disabled = busy;
+    paintSearchProtections();
     const sourceIdentity = el('trade-source-context-identity');
     if (sourceIdentity) sourceIdentity.textContent = `League ID: ${workspace.manager_context.league_id}`;
     for (const id of ['shop-preference','shop-protected']) if (el(id)) el(id).disabled = busy;
@@ -1418,6 +1459,7 @@
     if (isBalance) el('calculator-balance-status').after(el('trade-result'));
     if (flow === 'recommended' && body.workflow === 'recommended') {
       session.recommendedSearch = {position: body.recommendation_position || '', type: body.recommendation_filter || 'all',
+        protections: Array.isArray(body.constraints?.protected_assets) ? protectionFacts(body.constraints.protected_assets) : null,
         count: (body.results || []).length + (body.exploratory_results || []).length,
         offers: [...(body.results || []), ...(body.exploratory_results || [])].slice(0, 8).map(row => assessmentContext(row))};
       persist(); el('recommendation-previous').hidden = true;
@@ -1425,6 +1467,7 @@
       searchExhausted = body.has_more === false;
       const out = el('trade-result'); out.hidden = false; out.replaceChildren();
       out.append(node('p', `Search position: ${body.recommendation_position || 'all positions'}. These results belong to this completed search.`));
+      appliedProtections(out, session.recommendedSearch.protections);
       const qualified = (body.results || []).filter(qualifiedOffer);
       const other = (body.results || []).filter(row => !qualifiedOffer(row));
       out.append(node('h3', qualified.length ? `Qualified recommendations · ${qualified.length}` : 'No qualified recommendations'));
@@ -1487,6 +1530,7 @@
     }
     if (path === 'generate' && flow === 'trade_for') { session.requiredIncomingAsset = session.requiredIncomingAsset || selected.received[0]; session.requiredOutgoingAsset = null; session.originWorkflow = 'trade_for'; }
     if (path === 'generate' && flow === 'recommended') extra = {...extra, partner_roster_id: 0, asset_id: null,
+      protected_assets: [...session.recommendationProtectedAssets],
       recommendation_filter: el('recommendation-filter').value, recommendation_position: el('recommendation-position').value || null,
       excluded_recommendation_families: [...excludedFamilies]};
     // A display control over the established exact exclusion contract, not a
@@ -1627,6 +1671,7 @@
     el('calculator-lock').onclick = () => { if (busy) return; const exact = el('trade-constraint-asset').value; if (!exact) return message('Choose an exact owned player or pick to protect.', true); addLock('protectedAssets', exact); revision++; clearBalancePreview(); persist(); paint(); message('Exact outgoing protection added. Original offer retained; remove this asset if it is currently outgoing.'); };
   }
   function clearDraft() {
+    session.recommendationProtectedAssets = [];
     cancelBalance(); revision++; runSequence++; busy = false;
     selected.sent = []; selected.received = []; selected.partner = 0;
     for (const key of ['originalProposal','previewProposal','adoptedProposal','currentAssessment','requiredOutgoingAsset','requiredIncomingAsset','shopScopeAsset','recommendedSearch','teamNeedChoice']) session[key] = null;
@@ -1780,6 +1825,14 @@
     if (window.dtosStrategy) el('trade-strategy').value = window.dtosStrategy.get(data.workspace_context);
     pickerOptions(el('trade-constraint-asset'), team(active)?.assets || []);
     if (flow === 'recommended') {
+      el('recommendation-protection-asset').onchange = () => { el('recommendation-protection-add').disabled = busy || !el('recommendation-protection-asset').value; };
+      el('recommendation-protection-add').onclick = () => {
+        const id = el('recommendation-protection-asset').value;
+        if (busy || !(team(active)?.assets || []).some(a => a.asset_id === id) || session.recommendationProtectedAssets.includes(id)) return;
+        session.recommendationProtectedAssets.push(id); el('recommendation-protection-asset').value = '';
+        positionChanged(false); el('recommendation-protection-asset').focus({preventScroll: true});
+      };
+      el('recommendation-protection-clear').onclick = () => { if (busy) return; session.recommendationProtectedAssets = []; positionChanged(false); };
       el('trade-find').textContent = 'Generate Trades';
       el('recommendation-refresh').onclick = () => {
         if (busy) return;
@@ -1800,6 +1853,12 @@
     for (const t of data.teams) if (t.roster_id !== active) { const option = node('option', t.team_name); option.value = t.roster_id; el('trade-partner').append(option); }
     try {
       let saved = restoredDraft();
+      const temporary = retainedDraft();
+      if (!saved?.endedAtHome && temporary?.tabOwner === tabOwner && Array.isArray(temporary.recommendationProtectedAssets)
+          && temporary.recommendationProtectedAssets.length <= 128) {
+        const owned = new Set((team(active)?.assets || []).map(a => a.asset_id));
+        session.recommendationProtectedAssets = [...new Set(temporary.recommendationProtectedAssets.filter(id => typeof id === 'string' && owned.has(id)))];
+      }
       // Results are retained separately from the draft, never relabeled under
       // a new filter. Exact ownership/source checks still gate every operation.
       const retainedSearch = retainedDraft()?.recommendedSearch;
