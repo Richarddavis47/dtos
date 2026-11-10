@@ -1,0 +1,23 @@
+{
+  "candidate": "238dfc108b904eb499a73a06c938cc2d704cea51",
+  "tree": "cf649ee06ec3228d51d251ce7afbdbb15866f398",
+  "official_command": [
+    "python",
+    "-m",
+    "tools.validation.validate_release"
+  ],
+  "old_outer_budget_seconds": 4800,
+  "new_outer_budget_seconds": 6600,
+  "sampling_interval_seconds": 0.5,
+  "old_sample_cap": 10000,
+  "new_sample_cap": 14000,
+  "changes": "Local orchestration allowance and matching bounded observer duration only. No canonical gate/test, resource reserve, app timeout, worker policy or hosted workflow change.",
+  "limits": {
+    "memory": 2147483648,
+    "extra_swap": 0,
+    "cpus": 2,
+    "network": "none",
+    "uid": 1000
+  },
+  "reuse": "All13hosted jobs,4346hostedtests/10gates and15original artifacts stay valid on unchanged source. Prior local timeout is not a pass."
+}

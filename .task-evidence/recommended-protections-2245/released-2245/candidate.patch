@@ -1,0 +1,477 @@
+diff --git a/.github/workflows/product-browser.yml b/.github/workflows/product-browser.yml
+index 3377b72..3f32524 100644
+--- a/.github/workflows/product-browser.yml
++++ b/.github/workflows/product-browser.yml
+@@ -35,7 +35,7 @@ jobs:
+         # This bounded CI allowance does not change any application timeout.
+         timeout-minutes: 25
+         run: |
+-          docker run --rm --memory=2g --memory-swap=2g --cpus=2 --network=none -e NODE_OPTIONS -e DTOS_TRADE_RESOURCE_BROWSER_EVIDENCE=.validation/trade-resource/evidence/browser -e DTOS_LINEUP_DETAIL_EVIDENCE=.validation/trade-resource/evidence/browser/lineups -e DTOS_TEAM_NEED_EVIDENCE=.validation/trade-resource/evidence/browser/team-need -e DTOS_COMPARE_EVIDENCE=.validation/trade-resource/evidence/browser/offer-comparison -v "$PWD:$PWD" -w "$PWD" -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0="$PWD" dtos-browser-validation python -m unittest -v tests.test_offer_comparison tests.test_offer_comparison_browser tests.test_team_trade_need tests.test_team_trade_need_browser tests.test_00_trade_simple_browser tests.test_trade_actionability tests.test_trade_actionability_browser tests.test_trade_conditional_summary tests.test_trade_recommendation_clarity tests.test_batch5_recommended_browser tests.test_franchise_timeline_coverage tests.test_franchise_timeline_browser tests.test_trade_reserve_evidence tests.test_trade_lineup_detail tests.test_trade_lineup_detail_browser tests.test_trade_resource_admission tests.test_trade_resource_browser tests.test_multileague_projection_browser tests.test_relative_personal_values tests.test_relative_personal_browser tests.test_decision_history_continuity_browser tests.test_personal_rankings_compatibility tests.test_personal_rankings_recovery_storage tests.test_personal_rankings_recovery_trade tests.test_personal_rankings_recovery_browser tests.test_personal_rankings_recovery_trade_browser tests.test_personal_rankings_partial_browser tests.test_dossier_plain_english tests.test_plain_english_home_depth tests.test_builder_plain_english tests.test_plain_english_preservation_final tests.test_plain_english_final_browser tests.test_plain_english_decisions tests.test_plain_english_browser tests.test_personal_rankings_availability tests.test_personal_rankings_availability_browser tests.test_personal_rankings tests.test_personal_rankings_store tests.test_personal_rankings_integration tests.test_personal_trade_workflows tests.test_personal_rankings_browser tests.test_personal_rankings_accessibility_browser tests.test_personal_trade_browser tests.test_market_trend_current_browser tests.test_standings_positioning tests.test_standings_positioning_browser tests.test_matchup_portraits_browser tests.test_matchups_phone tests.test_matchups_phone_browser tests.test_trade_projection_freshness tests.test_trade_projection_freshness_browser tests.test_trade_preview_scope_browser tests.test_trade_simple_discovery tests.test_fois_final_trust_browser tests.test_fois_evidence_integrity tests.test_fois_trust_browser tests.test_proposal_tray_browser tests.test_journey_evidence tests.test_journey_corrections_browser tests.test_dossier_status_browser tests.test_phone_visual_corrections_browser tests.test_phone_design_semantics tests.test_phone_design_browser tests.test_trade_calculator tests.test_trade_calculator_browser tests.test_calculator_balance_feedback_browser tests.test_calculator_stale_feedback_browser tests.test_trade_explicit_navigation_browser tests.test_trade_navigation_identity tests.test_trade_navigation_browser tests.test_player_actions tests.test_player_actions_browser tests.test_trade_performance tests.test_trade_construction_performance tests.test_trade_performance_browser tests.test_technical_details_browser tests.test_canonical_asset_facts tests.test_canonical_asset_facts_browser tests.test_product_browser_journey tests.test_matchup_browser_contract tests.test_trade_center_browser tests.test_trade_scout_state_browser tests.test_make_it_cheaper_browser tests.test_trade_center_accessibility tests.test_trade_workspace_browser tests.test_trade_workspace_batch1 tests.test_live_inspection tests.test_browser_fixture_images tests.test_visual_retirement tests.test_trade_decision_experience tests.test_trade_decision_browser tests.test_trade_decision_http_browser tests.test_trade_decision_standings_browser tests.test_batch6_trade_ux tests.test_trade_p2_browser tests.test_trade_final_evidence_browser tests.test_trade_endorsement_integrity tests.test_trade_missing_market_presentation tests.test_batch6_trade_explanation tests.test_league_entry_coordination
++          docker run --rm --memory=2g --memory-swap=2g --cpus=2 --network=none -e NODE_OPTIONS -e DTOS_TRADE_RESOURCE_BROWSER_EVIDENCE=.validation/trade-resource/evidence/browser -e DTOS_LINEUP_DETAIL_EVIDENCE=.validation/trade-resource/evidence/browser/lineups -e DTOS_TEAM_NEED_EVIDENCE=.validation/trade-resource/evidence/browser/team-need -e DTOS_PROTECTIONS_EVIDENCE=.validation/trade-resource/evidence/browser/protections -e DTOS_COMPARE_EVIDENCE=.validation/trade-resource/evidence/browser/offer-comparison -v "$PWD:$PWD" -w "$PWD" -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0="$PWD" dtos-browser-validation python -m unittest -v tests.test_recommended_protections_browser tests.test_offer_comparison tests.test_offer_comparison_browser tests.test_team_trade_need tests.test_team_trade_need_browser tests.test_00_trade_simple_browser tests.test_trade_actionability tests.test_trade_actionability_browser tests.test_trade_conditional_summary tests.test_trade_recommendation_clarity tests.test_batch5_recommended_browser tests.test_franchise_timeline_coverage tests.test_franchise_timeline_browser tests.test_trade_reserve_evidence tests.test_trade_lineup_detail tests.test_trade_lineup_detail_browser tests.test_trade_resource_admission tests.test_trade_resource_browser tests.test_multileague_projection_browser tests.test_relative_personal_values tests.test_relative_personal_browser tests.test_decision_history_continuity_browser tests.test_personal_rankings_compatibility tests.test_personal_rankings_recovery_storage tests.test_personal_rankings_recovery_trade tests.test_personal_rankings_recovery_browser tests.test_personal_rankings_recovery_trade_browser tests.test_personal_rankings_partial_browser tests.test_dossier_plain_english tests.test_plain_english_home_depth tests.test_builder_plain_english tests.test_plain_english_preservation_final tests.test_plain_english_final_browser tests.test_plain_english_decisions tests.test_plain_english_browser tests.test_personal_rankings_availability tests.test_personal_rankings_availability_browser tests.test_personal_rankings tests.test_personal_rankings_store tests.test_personal_rankings_integration tests.test_personal_trade_workflows tests.test_personal_rankings_browser tests.test_personal_rankings_accessibility_browser tests.test_personal_trade_browser tests.test_market_trend_current_browser tests.test_standings_positioning tests.test_standings_positioning_browser tests.test_matchup_portraits_browser tests.test_matchups_phone tests.test_matchups_phone_browser tests.test_trade_projection_freshness tests.test_trade_projection_freshness_browser tests.test_trade_preview_scope_browser tests.test_trade_simple_discovery tests.test_fois_final_trust_browser tests.test_fois_evidence_integrity tests.test_fois_trust_browser tests.test_proposal_tray_browser tests.test_journey_evidence tests.test_journey_corrections_browser tests.test_dossier_status_browser tests.test_phone_visual_corrections_browser tests.test_phone_design_semantics tests.test_phone_design_browser tests.test_trade_calculator tests.test_trade_calculator_browser tests.test_calculator_balance_feedback_browser tests.test_calculator_stale_feedback_browser tests.test_trade_explicit_navigation_browser tests.test_trade_navigation_identity tests.test_trade_navigation_browser tests.test_player_actions tests.test_player_actions_browser tests.test_trade_performance tests.test_trade_construction_performance tests.test_trade_performance_browser tests.test_technical_details_browser tests.test_canonical_asset_facts tests.test_canonical_asset_facts_browser tests.test_product_browser_journey tests.test_matchup_browser_contract tests.test_trade_center_browser tests.test_trade_scout_state_browser tests.test_make_it_cheaper_browser tests.test_trade_center_accessibility tests.test_trade_workspace_browser tests.test_trade_workspace_batch1 tests.test_live_inspection tests.test_browser_fixture_images tests.test_visual_retirement tests.test_trade_decision_experience tests.test_trade_decision_browser tests.test_trade_decision_http_browser tests.test_trade_decision_standings_browser tests.test_batch6_trade_ux tests.test_trade_p2_browser tests.test_trade_final_evidence_browser tests.test_trade_endorsement_integrity tests.test_trade_missing_market_presentation tests.test_batch6_trade_explanation tests.test_league_entry_coordination
+           docker run --rm --memory=2g --memory-swap=2g --cpus=2 --network=none -e NODE_OPTIONS -v "$PWD:$PWD" -w "$PWD" -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0="$PWD" dtos-browser-validation python -m unittest -v tests.test_historical_evidence_weeks tests.test_fois_final_trust tests.test_trade_time_market_evidence tests.test_trade_time_market_evidence_browser
+ 
+ 
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index 14f4e84..2cbed51 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -1,3 +1,11 @@
++# v1.22.30 / build 2245 — Protect assets in Recommended Trades
++
++Recommended Trades adds an editable, removable list of owned players and exact picks to protect before an explicit Generate action. The existing exact-identity constraint excludes these assets from outgoing packages, including exploratory offers. Another pick from the same year and round remains eligible. No search is started by opening or editing the controls.
++
++These temporary controls belong to the authorized account, league and franchise workspace. They do not change saved preferences or apply to Evaluate. Existing Custom saved protections still apply in Custom mode. Completed searches retain their effective restrictions; changing controls keeps earlier results separately labeled, without claiming restrictions caused a zero-qualified result. Drafts, selected comparisons, scoring, valuation formulas, qualification and memory admission remain unchanged.
++
++See docs/audits/RECOMMENDED_PROTECTIONS_2245.md for reproducible controls, source boundaries and live limitations.
++
+ # v1.22.29 / build 2244 — Compare assessed offers with keeping your roster
+ 
+ Trade Center can retain up to two completed assessments for a read-only comparison against their supported pre-trade optimal lineup. Add, explicitly replace or remove an offer without changing the current draft. Each ordered player/pick package, original decision, cost, counterparty case and depth/capacity qualification stays attached to that offer.
+diff --git a/RELEASE_NOTES.md b/RELEASE_NOTES.md
+index 4b61c11..4c33b5c 100644
+--- a/RELEASE_NOTES.md
++++ b/RELEASE_NOTES.md
+@@ -1,3 +1,11 @@
++# v1.22.30 / build 2245 — Protect assets in Recommended Trades
++
++Recommended Trades adds an editable, removable list of owned players and exact picks to protect before an explicit Generate action. The existing exact-identity constraint excludes these assets from outgoing packages, including exploratory offers. Another pick from the same year and round remains eligible. No search is started by opening or editing the controls.
++
++These temporary controls belong to the authorized account, league and franchise workspace. They do not change saved preferences or apply to Evaluate. Existing Custom saved protections still apply in Custom mode. Completed searches retain their effective restrictions; changing controls keeps earlier results separately labeled, without claiming restrictions caused a zero-qualified result. Drafts, selected comparisons, scoring, valuation formulas, qualification and memory admission remain unchanged.
++
++See docs/audits/RECOMMENDED_PROTECTIONS_2245.md for reproducible controls, source boundaries and live limitations.
++
+ # v1.22.29 / build 2244 — Compare assessed offers with keeping your roster
+ 
+ Trade Center can retain up to two completed assessments for a read-only comparison against their supported pre-trade optimal lineup. Add, explicitly replace or remove an offer without changing the current draft. Each ordered player/pick package, original decision, cost, counterparty case and depth/capacity qualification stays attached to that offer.
+diff --git a/app_metadata.py b/app_metadata.py
+index a41bd36..cb17e15 100644
+--- a/app_metadata.py
++++ b/app_metadata.py
+@@ -7,10 +7,10 @@ from datetime import datetime, timezone
+ from pathlib import Path
+ 
+ APPLICATION_NAME = "DTOS"
+-VERSION = "1.22.29"
+-PRODUCT_VERSION = "1.22.29"
+-BUILD_NUMBER = 2244
+-RELEASE_CODENAME = "Recorded Offer Comparison"
++VERSION = "1.22.30"
++PRODUCT_VERSION = "1.22.30"
++BUILD_NUMBER = 2245
++RELEASE_CODENAME = "Temporary Search Protections"
+ APPLICATION_STARTED_AT = datetime.now(timezone.utc).isoformat()
+ 
+ _REPOSITORY_ROOT = Path(__file__).resolve().parent
+diff --git a/components/trade_workspace.py b/components/trade_workspace.py
+index 93f66e3..619903f 100644
+--- a/components/trade_workspace.py
++++ b/components/trade_workspace.py
+@@ -20,6 +20,7 @@ def trade_workspace(view: dict, workflow: str, asset_id=None, owner_roster_id=No
+     protect_control = '<button id="calculator-lock" type="button">Do not trade selected exact asset</button>' if market_editor else ''
+     recommended_controls = '''<label for="recommendation-filter">Opportunity filter</label><select id="recommendation-filter" disabled><option value="all">All supported opportunities</option><option value="win_now">Win Now</option><option value="value">Value</option><option value="roster_fit">Roster Fit</option><option value="future">Draft Capital</option><option value="sell_high" disabled>Sell High — movement evidence unavailable</option></select><p class="muted">Filters select supported opportunity types; they do not change your strategy or valuations.</p>''' if workflow == 'recommended' else ''
+     position_controls = ''
++    search_protections = ''
+     if workflow == 'recommended':
+         options = ''.join(f'<option value="{escape(pos)}">{escape(pos)}</option>' for pos in view.get('recommended_positions', []))
+         origin = 'My Team’s need evidence changed or is no longer current. No roster-need filter was applied.' if view.get('team_need_expired') else 'Choose an incoming position. Generate starts the search.'
+@@ -27,6 +28,11 @@ def trade_workspace(view: dict, workflow: str, asset_id=None, owner_roster_id=No
+             f'<label for="recommendation-position">Incoming player position</label><div class="tw-position-controls"><select id="recommendation-position" aria-describedby="recommendation-position-origin" disabled><option value="">All positions</option>{options}</select>'
+             '<button type="button" id="recommendation-position-clear" disabled>Clear position</button></div>'
+             f'<p id="recommendation-position-origin" role="status">{escape(origin)}</p></section>')
++        search_protections = '''<section class="tw-search-protections" aria-label="Recommended Trades protections">
++<p>Keep owned players or exact picks out of this Recommended Trades search. Your Evaluate draft and saved preferences are unchanged. Saved Custom preferences still apply in Custom mode.</p>
++<label for="recommendation-protection-asset">Owned player or exact pick</label><select id="recommendation-protection-asset" disabled><option value="">Choose an owned asset</option></select>
++<button id="recommendation-protection-add" type="button" disabled>Protect selected asset</button>
++</section>'''
+     shop_controls = '''<details id="shop-refinements"><summary>Refine Shop results · optional</summary><section aria-label="Shop search preferences"><label for="shop-preference">Search preference (this session only)</label>
+ <select id="shop-preference"><option value="best_overall">Best Overall Return</option><option value="win_now">Win-Now Help</option><option value="youth_rebuild">Youth / Rebuild</option><option value="draft_capital">Draft Capital</option><option value="position_need">Position Need</option><option value="custom">Custom — protect assets</option></select>
+ <label for="shop-position">Position for Position Need</label><select id="shop-position" disabled><option value="QB">QB</option><option value="RB">RB</option><option value="WR">WR</option><option value="TE">TE</option></select>
+@@ -41,6 +47,9 @@ def trade_workspace(view: dict, workflow: str, asset_id=None, owner_roster_id=No
+     is_discovery = workflow in ('recommended', 'shop', 'trade-for')
+     pick_options = '<label class="tw-check"><input id="trade-include-picks" type="checkbox" checked disabled>Include draft picks in this search</label><p class="muted">Turning picks off excludes exact current picks from generated packages only. It does not change your entered offer or saved preferences.</p>'
+     optional_search = (shop_controls.replace('</details>', pick_options + '</details>') if workflow == 'shop' else f'<details id="trade-search-options"><summary>Search options · optional</summary>{recommended_controls}{pick_options}</details>') if is_discovery else ''
++    if workflow == 'recommended':
++        optional_search = (f'<details id="trade-search-options"><summary id="recommendation-protection-count">Protect assets &amp; options · none</summary>{search_protections}{recommended_controls}{pick_options}</details>'
++            '<section id="recommendation-protection-selection" class="tw-search-protections" aria-label="Selected outgoing protections" hidden><ul id="recommendation-protection-list" aria-label="Temporary outgoing protections"></ul><button id="recommendation-protection-clear" type="button" hidden disabled>Clear search protections</button></section>')
+     intent_nav = f'<nav class="tw-intent-nav" aria-label="Trade purpose"><a href="/trades/recommended?front_office={active}" {"aria-current=page" if is_discovery else ""}>Generate Trades</a><a href="/trades/calculator?front_office={active}" {"aria-current=page" if not is_discovery else ""}>Evaluate Trade</a></nav>'
+     primary = discovery if is_discovery else f'<button id="trade-run" class="tw-primary-action" type="button" disabled>{"Advanced DTOS analysis" if calculator else "Evaluate Trade"}</button>'
+     next_ideas = '<button id="recommendation-refresh" type="button" disabled hidden aria-describedby="recommendation-status">Show Next 5</button>' if workflow == 'recommended' else ''
+diff --git a/docs/audits/RECOMMENDED_PROTECTIONS_2245.md b/docs/audits/RECOMMENDED_PROTECTIONS_2245.md
+new file mode 100644
+index 0000000..acc952c
+--- /dev/null
++++ b/docs/audits/RECOMMENDED_PROTECTIONS_2245.md
+@@ -0,0 +1,23 @@
++# Temporary Recommended Trades protections — build 2245
++
++## Confirmed gap and shared boundary
++
++Production v1.22.29/build2244, commit a17f9113868c3b9dcc3dd68d0b02613a2ad1de98, tree b6c1729a5559167557dcc7b4eaa677c81e00b588, was ready at the bounded baseline check. A real authenticated 320×432 disposable baseline replay confirmed that Recommended Trades had no pre-search protection picker. Shop and offer-adjustment controls already existed, and the native search already honored `protected_assets` using exact trade asset IDs. No new generator, qualification rule or protection formula is introduced.
++
++The existing recommendation pipeline filters protected IDs from the active franchise's discovery and construction pools before candidate evaluation. Every variant, qualified result and exploratory result comes from those filtered pools. Original-franchise pick identity is retained: an owned `2029-R1-1` is distinct from an acquired `2029-R1-3`. The source-compatible test population includes both, not interchangeable year/round placeholders.
++
++## State and presentation
++
++A Recommended Trades-only temporary list is kept in the existing authorized tab/workspace storage. It is distinct from legacy draft/Shop adjustment constraints. Generate sends this list through the existing exact constraint; Evaluate continues to use its own draft constraints. Opening, adding, removing or clearing protections makes no search/provider request and changes no saved preference. Existing saved Custom Protect flags continue to merge through the established personal constraint boundary; clearing temporary controls does not clear those flags.
++
++The existing search-options disclosure exposes owned assets without adding another collapsed row above Generate. Its summary shows the selected protection count; chosen exact assets and removal/clear actions remain visible outside the disclosure. The manager can protect an exact asset, remove it, or clear the list. Exact IDs and original-franchise metadata are shown with picks. Selection is rechecked against current prepared ownership on restoration and scoped to the authorized account, league and franchise. An asset no longer in the owned universe is not offered as a temporary owned protection. The server continues to enforce ordinary authorization, source compatibility, admission and final evaluation. Workspace storage is not an authorization mechanism.
++
++Each completed search stores the effective constraint returned by the native search, including existing saved Custom protections when applicable. The visible completed summary and separately retained earlier-search disclosure show that snapshot, never the newly edited controls. Legacy results without a retained constraint snapshot are explicitly unknown. A completed zero-qualified search remains distinct from deferral/failure; displaying restrictions makes no claim that they caused rejection. Existing search results, Evaluate assets/order/valuation/strategy, selected comparisons and contextual navigation retain their existing evidence qualifications.
++
++## Verification and limits
++
++Focused regression uses actual authenticated routes, native prepared Sleeper projection and Market fixtures, the canonical search/evaluator and normal memory admission inside a real 2 GiB disposable container. Controls exercise a protected player, own first versus acquired first, full outgoing-pool filtering, returned qualified/exploratory rows, keyboard/touch removal, clearing, original-results labeling, contextual Back to an evaluated draft, comparison preservation, reload, league switching and a real completed empty-candidate search. Four responsive sizes are 320×432, 375×667, 390×844 and desktop1280×900. Fixtures prove deterministic implementation behavior; they are not live owner offers, a production capacity assertion or physical iPhone/Safari acceptance.
++
++Initial focused failures are preserved externally. One asserted hidden prior-results text before opening its disclosure. Another compared the whole restored assessment, although the existing restore path truthfully adds retained-state metadata. The corrected assertions open the disclosure and independently compare the exact evaluation and ordered proposal. No application guard, calculation, source compatibility or browser assertion was removed to make these controls pass. A subsequent hosted regression exposed Generate behind the fixed phone navigation at375/390/400×677 after an additional collapsed row was introduced. The unchanged test independently reproduced all three failures. Reusing the existing search-options disclosure removes the redundant row while retaining a visible selected count and exact selected assets; the same original reachability assertions are required to pass. The failed hosted console and canceled preliminary canonical evidence remain separate.
++
++No changes to canonical Market/Custom formulas, scoring, Sleeper projections/results, optimal lineups, submitted Sleeper lineups, exact picks, bilateral thresholds, source acquisition, FOIS grades, resource reservations or admission arithmetic. The cap stays 2 GiB, Trade256+128MiB and FOIS768MiB. Final exact-source focused, full canonical, hosted, resource, publication and production evidence is recorded in the immutable external handoff. Production search acceptance is separate and must stop on capacity deferral. No production search is required merely to publish this UI correction.
+diff --git a/static/css/trade_workspace.css b/static/css/trade_workspace.css
+index ff08cf7..d66e33e 100644
+--- a/static/css/trade_workspace.css
++++ b/static/css/trade_workspace.css
+@@ -122,3 +122,4 @@ body:has(#trade-builder) .ds-page-header>div:first-child{display:flex;flex-wrap:
+ /* Completed analytical evidence: native disclosure, no extra request/solver. */
+ .tw-lineup-details{min-width:0;margin:12px 0}.tw-lineup-details>summary{min-height:44px;cursor:pointer;padding:10px;border:1px solid var(--border);border-radius:8px;font-weight:700}.tw-lineup-details summary:focus-visible{outline:2px solid var(--accent);outline-offset:3px}.tw-lineup-week{min-width:0;padding:12px 0;border-top:1px solid var(--border);overflow-wrap:anywhere}.tw-lineup-phases{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(290px,100%),1fr));gap:16px}.tw-lineup-phases>section{min-width:0}.tw-lineup-table{width:100%;table-layout:fixed;border-collapse:collapse;font-size:14px}.tw-lineup-table caption{text-align:left;font-weight:600;padding:8px 0}.tw-lineup-table th,.tw-lineup-table td{padding:7px 4px;text-align:left;vertical-align:top;border-bottom:1px solid var(--border);overflow-wrap:anywhere}.tw-lineup-table th:first-child{width:22%}.tw-lineup-table th:last-child,.tw-lineup-table td:last-child{width:23%;text-align:right;font-variant-numeric:tabular-nums}.tw-lineup-table td small{display:block;color:var(--text-secondary)}.tw-lineup-warning{border-left:3px solid var(--warning);padding-left:9px}.tw-lineup-source{font-size:12px;overflow-wrap:anywhere;color:var(--text-secondary)}
+ .tw-comparison,.tw-comparison-tray{scroll-margin-top:80px;margin:12px 0;padding:12px;border:1px solid #527364;border-radius:10px}.tw-comparison-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.tw-comparison-offer,.tw-comparison-keep{min-width:0;padding:12px;border:1px solid #4f6259;border-radius:8px;overflow-wrap:anywhere}.tw-comparison button,.tw-comparison-tray button,.tw-compare-add,.tw-comparison-replace button{min-height:44px;white-space:normal}.tw-comparison small{display:block;overflow-wrap:anywhere}.tw-comparison-gain{font-weight:700}.tw-comparison h5{font-size:1rem;margin:12px 0 4px}.tw-comparison ol{padding-left:20px}.tw-comparison-replace{padding:8px;border:1px solid #527364}.tw-comparison[hidden],.tw-comparison-tray[hidden]{display:none}@media(max-width:700px){.tw-comparison-grid{display:block}.tw-comparison-offer,.tw-comparison-keep{margin:10px 0}.tw-comparison button{width:100%}}
++.tw-search-protections{min-width:0;margin:.5rem 0}.tw-search-protections select{width:100%;min-width:0;max-width:100%}.tw-search-protections ul{padding:0;margin:.25rem 0}.tw-search-protections li{list-style:none;padding:.5rem 0;border-bottom:1px solid var(--border,#3c4843);overflow-wrap:anywhere}.tw-search-protections li>span,.tw-search-protections li>small{display:block}.tw-search-protections button{min-height:44px}.tw-applied-protections{overflow-wrap:anywhere}
+diff --git a/static/js/trade_workspace.js b/static/js/trade_workspace.js
+index c10b3f2..13d847c 100644
+--- a/static/js/trade_workspace.js
++++ b/static/js/trade_workspace.js
+@@ -130,7 +130,7 @@
+   const session = {schema: 2, resetGeneration: null, currentProposal: {sent: [], received: [], partner: 0}, originalProposal: null,
+     previewProposal: null, adoptedProposal: null, requiredOutgoingAsset: null, requiredIncomingAsset: null,
+     protectedAssets: [], excludedAssets: [], overrideSavedProtections: [], adjustmentConstraints: {}, originWorkflow: flow, shopSearchPartner: 0,
+-    shopScopeAsset: null, shopPreference: 'best_overall', shopPosition: 'QB', currentAssessment: null, comparisonOffers: []};
++    shopScopeAsset: null, shopPreference: 'best_overall', shopPosition: 'QB', currentAssessment: null, comparisonOffers: [], recommendationProtectedAssets: []};
+   let comparison = null;
+   const excludedFamilies = new Set(); let displayedFamilies = []; let lastOffers = null; let lastOffersIsBalance = false; let searchExhausted = false; let hasDiscovered = false;
+   let valuationMode = 'neutral', personalRevisionStale = false, checkingPersonal = false;
+@@ -252,6 +252,45 @@
+   }
+   function syncLocks() { if (el('shop-protected')) for (const option of el('shop-protected').options) option.selected = session.protectedAssets.includes(option.value); }
+   function addLock(kind, id) { if (!session[kind].includes(id)) session[kind].push(id); syncLocks(); persist(); }
++  function protectionFacts(ids) {
++    return ids.map(id => {
++      const a = asset(id);
++      const original = a?.kind === 'pick' ? ` · ${a.season} round ${a.round} · Original franchise: ${team(a.original_roster_id)?.team_name || a.original_roster_id || 'unavailable'}` : '';
++      return {id, label: (a ? label(a) : id) + original};
++    });
++  }
++  function appliedProtections(out, facts) {
++    const section = node('section', null, 'tw-applied-protections');
++    section.setAttribute('aria-label', 'Protections applied to this search');
++    section.append(node('h4', 'Outgoing protections applied'));
++    if (!Array.isArray(facts)) section.append(node('p', 'This earlier search did not retain its exact protection settings. No new restrictions are inferred.'));
++    else if (!facts.length) section.append(node('p', 'No outgoing asset protections were applied to this search.'));
++    else for (const row of facts) section.append(node('p', row.label), node('small', 'Exact asset: ' + row.id));
++    section.append(node('small', 'Protections limit outgoing assets; they do not explain a trade’s verdict.'));
++    out.append(section);
++  }
++  function paintSearchProtections() {
++    const picker = el('recommendation-protection-asset'); if (!picker) return;
++    const selectedId = picker.value, protectedIds = session.recommendationProtectedAssets;
++    picker.replaceChildren(new Option('Choose an owned asset', ''));
++    for (const row of protectionFacts((team(active)?.assets || []).map(a => a.asset_id).filter(id => !protectedIds.includes(id)))) {
++      picker.append(new Option(row.label + ' · ' + row.id, row.id));
++    }
++    if (Array.from(picker.options).some(o => o.value === selectedId)) picker.value = selectedId;
++    picker.disabled = busy;
++    el('recommendation-protection-add').disabled = busy || !picker.value;
++    el('recommendation-protection-count').textContent = 'Protect assets & options · ' + (protectedIds.length ? protectedIds.length + ' selected' : 'none');
++    el('recommendation-protection-selection').hidden = !protectedIds.length;
++    const list = el('recommendation-protection-list'); list.replaceChildren();
++    for (const row of protectionFacts(protectedIds)) {
++      const item = node('li'), remove = node('button', 'Remove protection'); remove.type = 'button'; remove.disabled = busy;
++      remove.setAttribute('aria-label', 'Remove protection for ' + row.label); remove.dataset.protectedAsset = row.id;
++      remove.onclick = () => { if (busy) return; session.recommendationProtectedAssets = protectedIds.filter(id => id !== row.id); positionChanged(false); picker.focus({preventScroll: true}); };
++      item.append(node('span', row.label), node('small', 'Exact asset: ' + row.id), remove); list.append(item);
++    }
++    el('recommendation-protection-clear').hidden = !protectedIds.length;
++    el('recommendation-protection-clear').disabled = busy;
++  }
+   function changed() { el('trade-evaluation-retained')?.remove(); session.currentAssessment = null; cancelBalance(); const focusId = document.activeElement?.dataset.assetId; revision++; session.previewProposal = null; lastOffers = null; lastOffersIsBalance = false; el('trade-result').hidden = true; el('trade-result').dataset.assessmentState = 'not_evaluated'; persist(); paint(); if (focusId) root.querySelector('button[data-asset-id="' + CSS.escape(focusId) + '"]')?.focus(); }
+   function previousSearch() {
+     const panel = el('recommendation-previous'), out = el('recommendation-previous-offers');
+@@ -260,6 +299,7 @@
+     out.replaceChildren(); panel.hidden = !prior;
+     if (!prior) return;
+     out.append(node('p', `Earlier search: ${prior.position || 'all positions'} · ${prior.type || 'all'} opportunities. ${prior.count} offers in the saved result; up to eight offer contexts retained for review.`));
++    appliedProtections(out, prior.protections);
+     for (const context of prior.offers || []) {
+       if (context.identity?.binding !== workspace.workspace_context.binding) continue;
+       const detail = node('details'); detail.append(node('summary', 'Earlier offer · not current'));
+@@ -438,6 +478,7 @@
+     if (el('recommendation-filter')) el('recommendation-filter').disabled = false;
+     if (el('recommendation-position')) el('recommendation-position').disabled = busy;
+     if (el('recommendation-position-clear')) el('recommendation-position-clear').disabled = busy;
++    paintSearchProtections();
+     const sourceIdentity = el('trade-source-context-identity');
+     if (sourceIdentity) sourceIdentity.textContent = `League ID: ${workspace.manager_context.league_id}`;
+     for (const id of ['shop-preference','shop-protected']) if (el(id)) el(id).disabled = busy;
+@@ -1418,6 +1459,7 @@
+     if (isBalance) el('calculator-balance-status').after(el('trade-result'));
+     if (flow === 'recommended' && body.workflow === 'recommended') {
+       session.recommendedSearch = {position: body.recommendation_position || '', type: body.recommendation_filter || 'all',
++        protections: Array.isArray(body.constraints?.protected_assets) ? protectionFacts(body.constraints.protected_assets) : null,
+         count: (body.results || []).length + (body.exploratory_results || []).length,
+         offers: [...(body.results || []), ...(body.exploratory_results || [])].slice(0, 8).map(row => assessmentContext(row))};
+       persist(); el('recommendation-previous').hidden = true;
+@@ -1425,6 +1467,7 @@
+       searchExhausted = body.has_more === false;
+       const out = el('trade-result'); out.hidden = false; out.replaceChildren();
+       out.append(node('p', `Search position: ${body.recommendation_position || 'all positions'}. These results belong to this completed search.`));
++      appliedProtections(out, session.recommendedSearch.protections);
+       const qualified = (body.results || []).filter(qualifiedOffer);
+       const other = (body.results || []).filter(row => !qualifiedOffer(row));
+       out.append(node('h3', qualified.length ? `Qualified recommendations · ${qualified.length}` : 'No qualified recommendations'));
+@@ -1487,6 +1530,7 @@
+     }
+     if (path === 'generate' && flow === 'trade_for') { session.requiredIncomingAsset = session.requiredIncomingAsset || selected.received[0]; session.requiredOutgoingAsset = null; session.originWorkflow = 'trade_for'; }
+     if (path === 'generate' && flow === 'recommended') extra = {...extra, partner_roster_id: 0, asset_id: null,
++      protected_assets: [...session.recommendationProtectedAssets],
+       recommendation_filter: el('recommendation-filter').value, recommendation_position: el('recommendation-position').value || null,
+       excluded_recommendation_families: [...excludedFamilies]};
+     // A display control over the established exact exclusion contract, not a
+@@ -1627,6 +1671,7 @@
+     el('calculator-lock').onclick = () => { if (busy) return; const exact = el('trade-constraint-asset').value; if (!exact) return message('Choose an exact owned player or pick to protect.', true); addLock('protectedAssets', exact); revision++; clearBalancePreview(); persist(); paint(); message('Exact outgoing protection added. Original offer retained; remove this asset if it is currently outgoing.'); };
+   }
+   function clearDraft() {
++    session.recommendationProtectedAssets = [];
+     cancelBalance(); revision++; runSequence++; busy = false;
+     selected.sent = []; selected.received = []; selected.partner = 0;
+     for (const key of ['originalProposal','previewProposal','adoptedProposal','currentAssessment','requiredOutgoingAsset','requiredIncomingAsset','shopScopeAsset','recommendedSearch','teamNeedChoice']) session[key] = null;
+@@ -1780,6 +1825,14 @@
+     if (window.dtosStrategy) el('trade-strategy').value = window.dtosStrategy.get(data.workspace_context);
+     pickerOptions(el('trade-constraint-asset'), team(active)?.assets || []);
+     if (flow === 'recommended') {
++      el('recommendation-protection-asset').onchange = () => { el('recommendation-protection-add').disabled = busy || !el('recommendation-protection-asset').value; };
++      el('recommendation-protection-add').onclick = () => {
++        const id = el('recommendation-protection-asset').value;
++        if (busy || !(team(active)?.assets || []).some(a => a.asset_id === id) || session.recommendationProtectedAssets.includes(id)) return;
++        session.recommendationProtectedAssets.push(id); el('recommendation-protection-asset').value = '';
++        positionChanged(false); el('recommendation-protection-asset').focus({preventScroll: true});
++      };
++      el('recommendation-protection-clear').onclick = () => { if (busy) return; session.recommendationProtectedAssets = []; positionChanged(false); };
+       el('trade-find').textContent = 'Generate Trades';
+       el('recommendation-refresh').onclick = () => {
+         if (busy) return;
+@@ -1800,6 +1853,12 @@
+     for (const t of data.teams) if (t.roster_id !== active) { const option = node('option', t.team_name); option.value = t.roster_id; el('trade-partner').append(option); }
+     try {
+       let saved = restoredDraft();
++      const temporary = retainedDraft();
++      if (!saved?.endedAtHome && temporary?.tabOwner === tabOwner && Array.isArray(temporary.recommendationProtectedAssets)
++          && temporary.recommendationProtectedAssets.length <= 128) {
++        const owned = new Set((team(active)?.assets || []).map(a => a.asset_id));
++        session.recommendationProtectedAssets = [...new Set(temporary.recommendationProtectedAssets.filter(id => typeof id === 'string' && owned.has(id)))];
++      }
+       // Results are retained separately from the draft, never relabeled under
+       // a new filter. Exact ownership/source checks still gate every operation.
+       const retainedSearch = retainedDraft()?.recommendedSearch;
+diff --git a/tests/test_recommended_protections_browser.py b/tests/test_recommended_protections_browser.py
+new file mode 100644
+index 0000000..c4d2842
+--- /dev/null
++++ b/tests/test_recommended_protections_browser.py
+@@ -0,0 +1,200 @@
++"""Exact temporary constraints through real authenticated search and phone UI.
++
++Disposable prepared Sleeper fixtures and actual admission/evaluation. No live
++owner league, synthetic successful response, or physical Safari claim.
++"""
++from copy import deepcopy
++import json
++import os
++from pathlib import Path
++import subprocess
++import unittest
++from unittest.mock import patch
++
++from playwright.sync_api import sync_playwright
++from tools.validation.browser_runtime import launch_chromium
++from tests import test_contextual_back as back
++
++
++class RecommendedProtectionBrowserTests(unittest.TestCase):
++    def fixture(self):
++        helper = back.ContextualBackTests()
++        self.addCleanup(helper.doCleanups)
++        f = helper.fixture()
++        for original in (1, 3):
++            f.editor.data['teams'][0]['picks_owned'].append(dict(
++                year=2029, round=1, original_roster_id=original, current_owner_id=1))
++        quote = dict(f.editor.data['market_data']['pick_quotes']['FantasyCalc'][0], year=2029, value=334 * 12)
++        quote['normalization_reference'] = dict(quote['normalization_reference'], raw_value=334 * 12, normalized_value=334)
++        f.editor.data['market_data']['pick_quotes']['FantasyCalc'].append(quote)
++        f.capital.publish()
++        pw = self.enterContext(sync_playwright())
++        browser = launch_chromium(pw, headless=True)
++        self.addCleanup(browser.close)
++        page, requests, _, _, errors = helper.page(browser, f, 320, 432)
++        self.addCleanup(lambda: self.assertFalse(errors, errors))
++        return helper, f, page, requests
++
++    def record(self, name, facts, page=None):
++        folder = os.environ.get('DTOS_PROTECTIONS_EVIDENCE')
++        if not folder:
++            return
++        destination = Path(folder)
++        destination.mkdir(parents=True, exist_ok=True)
++        report = dict(commit=subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip(),
++                      tree=subprocess.check_output(['git', 'rev-parse', 'HEAD^{tree}'], text=True).strip(),
++                      working_tree_clean=not subprocess.check_output(['git', 'status', '--porcelain'], text=True).strip(),
++                      source='Disposable prepared Sleeper fixture; actual authenticated routes, canonical search and admission',
++                      physical_safari_tested=False, observations=facts)
++        (destination / (name + '.json')).write_text(json.dumps(report, indent=2) + '\n')
++        if page:
++            page.screenshot(path=str(destination / (name + '.png')), full_page=True)
++
++    def protect(self, page, asset_id):
++        details = page.locator('#trade-search-options')
++        if not details.evaluate('e=>e.open'):
++            details.locator('summary').press('Enter')
++        page.select_option('#recommendation-protection-asset', asset_id)
++        page.locator('#recommendation-protection-add').press('Enter')
++
++    def generate(self, page):
++        with page.expect_response(lambda r: r.url.endswith('/api/trades/generate') and r.request.method == 'POST') as response:
++            page.locator('#trade-find').click()
++        body = response.value.json()
++        self.assertEqual(response.value.status, 200, body)
++        page.wait_for_function("document.querySelector('#recommendation-status').dataset.state==='complete'")
++        return response.value.request.post_data_json, body
++
++    def test_exact_pick_player_and_phone_search_preserve_other_same_round_pick(self):
++        helper, f, page, requests = self.fixture()
++        saved = deepcopy(f.editor.state())
++        helper.ready(page, '/trades/recommended')
++        before = [r for r in requests if r[0] == 'POST']
++        self.protect(page, '2029-R1-1')
++        self.protect(page, 'a')
++        self.assertEqual([r for r in requests if r[0] == 'POST'], before)
++        self.assertEqual(helper.draft(page)['recommendationProtectedAssets'], ['2029-R1-1', 'a'])
++        self.assertIn('2029-R1-3', page.locator('#recommendation-protection-asset option').evaluate_all('es=>es.map(e=>e.value)'))
++        rows = []
++        for width, height in [(320,432), (375,667), (390,844), (1280,900)]:
++            page.set_viewport_size(dict(width=width, height=height))
++            selected = page.locator('#recommendation-protection-list')
++            self.assertIn('2029-R1-1', selected.inner_text())
++            self.assertIn('Original franchise:', selected.inner_text())
++            self.assertLessEqual(page.evaluate('document.documentElement.scrollWidth'), width)
++            remove = selected.get_by_role('button').first
++            self.assertGreaterEqual(remove.bounding_box()['height'], 44)
++            remove.focus()
++            self.assertNotEqual(remove.evaluate('e=>getComputedStyle(e).outlineStyle'), 'none')
++            self.record('phone-' + str(width), dict(width=width, height=height, exact_ids=['2029-R1-1','a'], no_search_from_controls=True), page)
++            rows.append(dict(width=width, height=height))
++        page.set_viewport_size(dict(width=390, height=844))
++        page.evaluate('()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))')
++        remove = page.locator('[data-protected-asset="a"]')
++        remove.scroll_into_view_if_needed()
++        cdp = page.context.new_cdp_session(page)
++        cdp.send('Emulation.setTouchEmulationEnabled', {'enabled': True})
++        box = remove.bounding_box()
++        cdp.send('Input.dispatchTouchEvent', {'type':'touchStart', 'touchPoints':[{'x':box['x']+box['width']/2, 'y':box['y']+box['height']/2}]})
++        cdp.send('Input.dispatchTouchEvent', {'type':'touchEnd', 'touchPoints':[]})
++        cdp.send('Emulation.setTouchEmulationEnabled', {'enabled': False})
++        cdp.detach()
++        self.assertEqual(helper.draft(page)['recommendationProtectedAssets'], ['2029-R1-1'])
++        self.protect(page, 'a')
++        import services.recommended_trade_search as search
++        original = search.generate_proposals
++        pools = []
++        def observe(*args, **kwargs):
++            pools.append([a.asset_id for a in args[2]])
++            return original(*args, **kwargs)
++        page.select_option('#trade-strategy', 'REBUILD')
++        with patch.object(search, 'generate_proposals', side_effect=observe):
++            payload, body = self.generate(page)
++        self.assertEqual(payload['protected_assets'], ['2029-R1-1', 'a'])
++        self.assertEqual(set(body['constraints']['protected_assets']), {'2029-R1-1', 'a'})
++        self.assertTrue(pools, 'Actual candidate construction must execute')
++        self.assertTrue(any('2029-R1-3' in pool for pool in pools))
++        for pool in pools:
++            self.assertTrue(set(pool).isdisjoint({'2029-R1-1','a'}))
++        offers = body.get('results', []) + body.get('exploratory_results', [])
++        for row in offers:
++            self.assertTrue(set(row['proposal']['assets_sent']).isdisjoint({'2029-R1-1','a'}))
++        self.assertIn('2029-R1-1', page.locator('#trade-result .tw-applied-protections').inner_text())
++        self.assertEqual(f.editor.state(), saved)
++        self.record('exact-native-search', dict(payload=payload, constraints=body['constraints'], candidate_pools=pools,
++                    offers=offers, diagnostics=body.get('search_evidence'), viewports=rows, saved_preferences_unchanged=True))
++
++    def test_clear_controls_retains_original_results_and_no_automatic_search(self):
++        helper, f, page, requests = self.fixture()
++        helper.ready(page, '/trades/recommended')
++        self.protect(page, '2029-R1-1')
++        _, body = self.generate(page)
++        old = deepcopy(helper.draft(page)['recommendedSearch'])
++        count = len([r for r in requests if r[0] == 'POST'])
++        page.locator('#recommendation-protection-clear').click()
++        self.assertEqual(helper.draft(page)['recommendationProtectedAssets'], [])
++        self.assertEqual(helper.draft(page)['recommendedSearch'], old)
++        page.locator('#recommendation-previous > summary').click()
++        self.assertIn('2029-R1-1', page.locator('#recommendation-previous').inner_text())
++        self.assertTrue(page.locator('#trade-result').is_hidden())
++        self.assertEqual(len([r for r in requests if r[0] == 'POST']), count)
++        payload, second = self.generate(page)
++        self.assertEqual(payload['protected_assets'], [])
++        self.assertEqual(second['constraints']['protected_assets'], [])
++        self.assertIn('No outgoing asset protections were applied', page.locator('#trade-result').inner_text())
++        self.record('clear-and-prior-results', dict(old=old, first_constraints=body['constraints'], second_constraints=second['constraints'],
++                    old_results_not_relabeled=True, clearing_did_not_search=True))
++
++    def test_evaluate_draft_comparison_return_and_league_isolation(self):
++        helper, f, page, requests = self.fixture()
++        helper.ready(page)
++        helper.choose(page)
++        with page.expect_response(lambda r: r.url.endswith('/api/trades/evaluate') and r.request.method == 'POST') as response:
++            page.locator('#trade-run').click()
++        self.assertEqual(response.value.status, 200)
++        page.locator('#trade-result > .tw-compare-add').click()
++        original = helper.draft(page)
++        page.locator('.tw-intent-nav a[href*=recommended]').click()
++        page.wait_for_url('**/trades/recommended?front_office=1')
++        page.wait_for_function("!document.querySelector('#trade-context').textContent.includes('Loading')")
++        self.protect(page, '2029-R1-1')
++        self.protect(page, 'a')
++        helper.back(page, '/trades/create')
++        page.wait_for_function("!document.querySelector('#trade-context').textContent.includes('Loading')")
++        restored = helper.draft(page)
++        for key in ['currentProposal','valuationMode','strategy']:
++            self.assertEqual(restored[key], original[key], key)
++        self.assertEqual(restored['currentAssessment']['evaluation'], original['currentAssessment']['evaluation'])
++        self.assertEqual([r['proposal'] for r in restored['comparisonOffers']], [r['proposal'] for r in original['comparisonOffers']])
++        with page.expect_response(lambda r: r.url.endswith('/api/trades/evaluate') and r.request.method == 'POST') as evaluated:
++            page.locator('#trade-run').click()
++        self.assertEqual(evaluated.value.status, 200)
++        self.assertEqual(evaluated.value.request.post_data_json['protected_assets'], [])
++        helper.ready(page, '/trades/recommended')
++        self.assertEqual(helper.draft(page)['recommendationProtectedAssets'], ['2029-R1-1','a'])
++        page.reload()
++        page.wait_for_function("!document.querySelector('#trade-context').textContent.includes('Loading')")
++        self.assertEqual(helper.draft(page)['recommendationProtectedAssets'], ['2029-R1-1','a'])
++        f.editor.store.upsert_membership('account-a', {'league_id':'league-2','name':'Other'}, 'account-a',1,'Other','active')
++        f.editor.store.activate('account-a','league-2')
++        f.editor.data['league']['league_id'] = 'league-2'
++        helper.ready(page, '/trades/recommended')
++        self.assertEqual(helper.draft(page)['recommendationProtectedAssets'], [])
++        self.assertEqual(helper.draft(page)['comparisonOffers'], [])
++        self.record('draft-and-scope', dict(real_evaluations=2, recommended_controls_not_applied_to_evaluate=True,
++                    original_draft_retained=True, comparison_proposals_retained=True, reload_retained=True, league_switch_cleared=True))
++
++    def test_no_qualified_offers_keeps_applied_restrictions_and_real_completion(self):
++        helper, f, page, requests = self.fixture()
++        helper.ready(page, '/trades/recommended')
++        options = page.locator('#recommendation-protection-asset option').evaluate_all('es=>es.map(e=>e.value).filter(Boolean)')
++        for exact in options:
++            self.protect(page, exact)
++        payload, body = self.generate(page)
++        self.assertEqual(set(payload['protected_assets']), set(options))
++        self.assertFalse(body.get('results'))
++        self.assertFalse(body.get('exploratory_results'))
++        self.assertIn('No qualified recommendations', page.locator('#trade-result').inner_text())
++        self.assertIn('do not explain a trade’s verdict', page.locator('#trade-result').inner_text())
++        self.assertEqual(len(helper.draft(page)['recommendedSearch']['protections']), len(options))
++        self.record('completed-zero-result', dict(payload=payload, body=body, completed=True, no_protection_causality_claim=True), page)

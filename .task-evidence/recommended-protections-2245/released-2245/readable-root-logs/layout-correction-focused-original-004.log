@@ -1,0 +1,10 @@
+HTTP Request: GET http://testserver/static/js/trade_comparison.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T17:59:02.343153+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/trade_workspace.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T17:59:02.384770+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":658362368,"limit_bytes":2147483648,"raw_headroom_bytes":1489121280,"clean_inactive_file_bytes":1155072,"conditional_file_credit_bytes":577536,"admission_headroom_bytes":1489698816,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-10T17:59:02.388838+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/workspace?front_office=1&mode=calculator \"HTTP/1.1 200 OK\"","request_id":"system"}
+ok
+
+----------------------------------------------------------------------
+Ran 16 tests in 58.339s
+
+OK

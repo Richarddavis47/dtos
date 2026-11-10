@@ -1,0 +1,59 @@
+","event":"diagnostic_boundary","diagnostic":{"schema":"request-attribution-v1","event_index":8,"event_limit":512,"dropped_so_far":0,"origin_request_id":null,"name":"sleeper_sync","span_id":1,"parent_span_id":null,"boundary":"finished","timestamp":"2026-11-10T17:31:50.619623+00:00","elapsed_from_trace_ms":81.912,"duration_ms":81.903,"status":"complete","calling_thread_cpu_ms":79.902,"queue_dropped_record_count":0}}
+.{"timestamp":"2026-11-10T17:31:50.629211+00:00","level":"INFO","logger":"dtos.attribution","message":"diagnostic_boundary","request_id":"activity-f91e7e386d3844788c0a82e7411d70e7","event":"diagnostic_boundary","diagnostic":{"schema":"request-attribution-v1","event_index":9,"event_limit":512,"dropped_so_far":0,"origin_request_id":null,"name":"memory_sample","boundary":"captured","timestamp":"2026-11-10T17:31:50.629176+00:00","sample_id":2,"span_id":1,"requested_boundaries":[{"name":"sleeper_sync","boundary":"finished","span_id":1,"request_id":"activity-f91e7e386d3844788c0a82e7411d70e7","requested_at":"2026-11-10T17:31:50.619708+00:00"}],"active_activities":[],"dropped_activity_or_boundary_count":0,"memory":{"rss_bytes":417771520,"vms_bytes":948633600,"system_available_bytes":17371619328,"memory_accounting_scope":"cgroup","cgroup_current_bytes":466378752,"cgroup_limit_bytes":2147483648,"cgroup_inactive_file_bytes":9764864,"cgroup_anonymous_bytes":437673984,"cgroup_memory_events":{"low":0,"high":0,"max":0,"oom":0,"oom_kill":0,"oom_group_kill":0},"anonymous_bytes":437673984,"file_bytes":18272256,"kernel_bytes":9592832,"shmem_bytes":0,"cgroup_lifetime_peak_bytes":1131741184,"observer_pid":32,"observer_kind":"main_process","active_process_count":1,"zombie_count":0,"process_samples_truncated":false,"process_samples_are_sequential":true,"processes":[{"pid":32,"role":"application","rss_bytes":417767424,"pss_bytes":409385984,"uss_bytes":403628032,"sample_offset_ms":4.919,"sample_duration_ms":3.785}],"capture_duration_ms":8.707,"pss_requested":true,"runtime_residency":{"resident_count":1,"warm_limit":2,"hydrating_count":0,"warm_count":0,"runtime_samples_truncated":false,"runtimes":[{"scope":"af48184638e2578b","state":"cold","active_requests":0,"pinned":true,"owns_state":false,"background_tasks":0,"source_generation_count":0,"source_generation_identity":"4f53cda18c2baa0c","market_cache_owned":true,"projection_cache_owned":false}]},"sample_total_duration_ms":8.756},"queue_dropped_record_count":0}}
+...Validation Chromium: /usr/bin/chromium
+Validation Chromium version: 156.0.8078.79
+{"timestamp":"2026-11-10T17:31:52.025183+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/market/sync-recovery \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T17:31:52.077804+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"0ea66311d3b74fb0a82e6f1f8051baaa","event":"request_complete","duration_ms":85.302,"status_code":200,"method":"GET","path":"/market/sync-recovery"}
+{"timestamp":"2026-11-10T17:31:52.190609+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-10T17:31:52.191235+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"38c97fc5039143dc8c3780ac706b69b4","event":"request_complete","duration_ms":3.983,"status_code":404,"method":"GET","path":"/static/css/contextual_navigation.css"}
+{"timestamp":"2026-11-10T17:31:52.205263+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-10T17:31:52.206649+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"c2488f7e1eba40f2bad8c945c6b17233","event":"request_complete","duration_ms":9.229,"status_code":404,"method":"GET","path":"/static/js/contextual_navigation.js"}
+{"timestamp":"2026-11-10T17:31:53.017307+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/market/sync-recovery \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T17:31:53.018608+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"c802179d0361405189a137e1bb2cd42b","event":"request_complete","duration_ms":10.307,"status_code":200,"method":"GET","path":"/market/sync-recovery"}
+{"timestamp":"2026-11-10T17:31:53.109869+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-10T17:31:53.110471+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"5991c981ebdb40839d84f3326c3e3e36","event":"request_complete","duration_ms":3.818,"status_code":404,"method":"GET","path":"/static/css/contextual_navigation.css"}
+{"timestamp":"2026-11-10T17:31:53.118484+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-10T17:31:53.118804+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"b66dd379fb544127967840f2ee4c0393","event":"request_complete","duration_ms":1.934,"status_code":404,"method":"GET","path":"/static/js/contextual_navigation.js"}
+{"timestamp":"2026-11-10T17:31:53.920733+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/market/sync-recovery \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T17:31:53.921694+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"0b3367b7426347668ccf0cba01dab366","event":"request_complete","duration_ms":8.098,"status_code":200,"method":"GET","path":"/market/sync-recovery"}
+{"timestamp":"2026-11-10T17:31:54.013704+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-10T17:31:54.014315+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"57abe8ca64164806ad5efab0e8f4be48","event":"request_complete","duration_ms":6.877,"status_code":404,"method":"GET","path":"/static/css/contextual_navigation.css"}
+{"timestamp":"2026-11-10T17:31:54.079280+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-10T17:31:54.079796+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"bd6bece91c1441788d3538336a4eaf48","event":"request_complete","duration_ms":53.243,"status_code":404,"method":"GET","path":"/static/js/contextual_navigation.js"}
+{"timestamp":"2026-11-10T17:31:54.889912+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/market/sync-recovery \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T17:31:54.890926+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"1cb40d7e78c841b7ade0df9fa43cf6df","event":"request_complete","duration_ms":10.066,"status_code":200,"method":"GET","path":"/market/sync-recovery"}
+{"timestamp":"2026-11-10T17:31:55.005484+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-10T17:31:55.006066+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"f1c727c5039043809e3aa2a805b55263","event":"request_complete","duration_ms":3.598,"status_code":404,"method":"GET","path":"/static/css/contextual_navigation.css"}
+{"timestamp":"2026-11-10T17:31:55.013286+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-10T17:31:55.013814+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"014ed83891ed44749f025328a2aeeed3","event":"request_complete","duration_ms":1.952,"status_code":404,"method":"GET","path":"/static/js/contextual_navigation.js"}
+.Validation Chromium: /usr/bin/chromium
+Validation Chromium version: 156.0.8078.79
+Validation Chromium: /usr/bin/chromium
+Validation Chromium version: 156.0.8078.79
+Validation Chromium: /usr/bin/chromium
+Validation Chromium version: 156.0.8078.79
+{"timestamp":"2026-11-10T17:32:01.720070+00:00","level":"ERROR","logger":"asyncio","message":"Exception in callback Connection.dispatch.<locals>._done_callback() at /usr/local/lib/python3.14/site-packages/playwright/_impl/_connection.py:542\nhandle: <Handle Connection.dispatch.<locals>._done_callback() at /usr/local/lib/python3.14/site-packages/playwright/_impl/_connection.py:542>","request_id":"system","exception":"Traceback (most recent call last):\n  File \"/usr/local/lib/python3.14/asyncio/events.py\", line 94, in _run\n    self._context.run(self._callback, *self._args)\n    ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.14/site-packages/playwright/_impl/_connection.py\", line 543, in _done_callback\n    exc = future.exception()\n  File \"/usr/local/lib/python3.14/site-packages/playwright/_impl/_browser_context.py\", line 267, in _on_route\n    handled = await route_handler.handle(route)\n              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.14/site-packages/playwright/_impl/_helper.py\", line 442, in handle\n    return await self._handle_internal(route)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.14/site-packages/playwright/_impl/_helper.py\", line 484, in _handle_internal\n    return await handled_future\n           ^^^^^^^^^^^^^^^^^^^^\nasyncio.exceptions.CancelledError"}
+Validation Chromium: /usr/bin/chromium
+Validation Chromium version: 156.0.8078.79
+.Validation Chromium: /usr/bin/chromium
+Validation Chromium version: 156.0.8078.79
+Validation Chromium: /usr/bin/chromium
+Validation Chromium version: 156.0.8078.79
+Validation Chromium: /usr/bin/chromium
+Validation Chromium version: 156.0.8078.79
+Validation Chromium: /usr/bin/chromium
+Validation Chromium version: 156.0.8078.79
+.Validation Chromium: /usr/bin/chromium
+Validation Chromium version: 156.0.8078.79
+.Validation Chromium: /usr/bin/chromium
+Validation Chromium version: 156.0.8078.79
+Validation Chromium: /usr/bin/chromium
+Validation Chromium version: 156.0.8078.79
+Validation Chromium: /usr/bin/chromium
+Validation Chromium version: 156.0.8078.79
+.Validation Chromium: /usr/bin/chromium
+Validation Chromium version: 156.0.8078.79
+Validation Chromium: /usr/bin/chromium
+Validation Chromium version: 156.0.8078.79
+Validation Chromium: /usr/bin/chromium
+Validation Chromium version: 156.0.8078.79

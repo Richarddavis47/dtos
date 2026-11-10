@@ -1,0 +1,304 @@
+testserver/api/trades/workspace?front_office=1&mode=calculator \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:27.098306+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_admission","request_id":"system","event":"trade_admission","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":1734139904,"limit_bytes":2147483648,"raw_headroom_bytes":413343744,"clean_inactive_file_bytes":165507072,"conditional_file_credit_bytes":82753536,"admission_headroom_bytes":496097280,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"recovery":null}}
+{"timestamp":"2026-11-10T19:15:27.135031+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_execution_finished","request_id":"system","event":"trade_execution_finished","duration_ms":37.452,"diagnostic":{"schema":"trade-resource-v1","outcome":"failed"}}
+{"timestamp":"2026-11-10T19:15:27.135759+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/trades/evaluate \"HTTP/1.1 422 Unprocessable Entity\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:27.197539+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/create \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:27.268167+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/trade_workspace.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:27.273340+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/strategy_session.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:27.280600+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/trade_comparison.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:27.287681+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/trade_workspace.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:27.359498+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":1744101376,"limit_bytes":2147483648,"raw_headroom_bytes":403382272,"clean_inactive_file_bytes":165507072,"conditional_file_credit_bytes":82753536,"admission_headroom_bytes":486135808,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-10T19:15:27.365635+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/workspace?front_office=1&mode=calculator \"HTTP/1.1 200 OK\"","request_id":"system"}
+.{"timestamp":"2026-11-10T19:15:27.647688+00:00","level":"WARNING","logger":"dtos.request","message":"synchronization_failure","request_id":"system","event":"synchronization_failure","diagnostic":{"operation":"transaction_sync","exception_type":"RuntimeError","frames":[{"file":"sleeper.py","function":"sync_transactions","line":745},{"file":"mock.py","function":"_execute_mock_call","line":2326}],"queue_dropped_record_count":0}}
+.{"timestamp":"2026-11-10T19:15:27.689519+00:00","level":"INFO","logger":"dtos.sleeper","message":"Transaction sync complete: 1 transactions","request_id":"system"}
+.....{"timestamp":"2026-11-10T19:15:27.786681+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-manager \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:27.788393+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST https://dtos.test/account/sleeper \"HTTP/1.1 303 See Other\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:27.793527+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2026 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:27.793803+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2025 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:27.794081+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2024 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:27.794334+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2023 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:27.794574+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2022 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:27.794811+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2021 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:27.795283+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/league/100/rosters \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:27.795534+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/league/100/users \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:27.797797+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST https://dtos.test/account/leagues/100 \"HTTP/1.1 303 See Other\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:27.803457+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/league/200 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:27.803865+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/league/200/rosters \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:27.804198+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/league/200/users \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:27.804624+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST https://dtos.test/account/leagues/import \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:27.809344+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2026 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:27.809613+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2025 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:27.809864+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2024 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:27.810165+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2023 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:27.810417+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2022 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:27.810656+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2021 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:27.811161+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://dtos.test/account/leagues \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:27.814872+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://dtos.test/account/sleeper \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:27.820023+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2026 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:27.820360+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2025 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:27.820619+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2024 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:27.820858+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2023 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:27.821139+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2022 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:27.821413+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2021 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:27.821857+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/league/200/rosters \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:27.822144+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/league/200/users \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:27.822531+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST https://dtos.test/account/leagues/200 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:27.826436+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2026 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:27.826703+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2025 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:27.826945+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2024 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:27.827223+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2023 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:27.827466+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2022 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:27.827702+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2021 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:27.828200+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://dtos.test/account/leagues \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:27.831685+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://dtos.test/account/sleeper \"HTTP/1.1 200 OK\"","request_id":"system"}
+.{"timestamp":"2026-11-10T19:15:27.965362+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-manager \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:27.966950+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST https://dtos.test/account/sleeper \"HTTP/1.1 303 See Other\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:27.971699+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2026 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:27.972047+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2025 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:27.972309+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2024 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:27.972551+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2023 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:27.972790+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2022 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:27.973064+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2021 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:27.973515+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/league/100/rosters \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:27.973757+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/league/100/users \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:27.975899+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST https://dtos.test/account/leagues/100 \"HTTP/1.1 303 See Other\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:27.980628+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/league/200 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:27.981128+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/league/200/rosters \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:27.981396+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/league/200/users \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:27.981837+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST https://dtos.test/account/leagues/import \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:27.985796+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/league/200 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:27.986295+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/league/200/rosters \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:27.986551+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/league/200/users \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:27.988801+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST https://dtos.test/account/leagues/import \"HTTP/1.1 303 See Other\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:27.994110+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2026 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:27.994379+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2025 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:27.994623+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2024 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:27.994862+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2023 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:27.995122+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2022 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:27.995358+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2021 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:27.995774+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/league/200/rosters \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:27.996068+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/league/200/users \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:27.996455+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST https://dtos.test/account/leagues/200 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:28.000642+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2026 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:28.000907+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2025 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:28.001211+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2024 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:28.001463+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2023 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:28.001712+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2022 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:28.001952+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2021 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:28.002476+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/league/200/rosters \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:28.002737+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/league/200/users \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:28.004703+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST https://dtos.test/account/leagues/200 \"HTTP/1.1 303 See Other\"","request_id":"system"}
+.{"timestamp":"2026-11-10T19:15:28.097337+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-manager \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:28.128219+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST https://dtos.test/account/sleeper \"HTTP/1.1 303 See Other\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:28.133008+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2026 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:28.133316+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2025 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:28.133591+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2024 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:28.133859+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2023 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:28.134159+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2022 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:28.134431+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2021 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:28.134889+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/league/100/rosters \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:28.135190+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/league/100/users \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:28.137169+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST https://dtos.test/account/leagues/100 \"HTTP/1.1 303 See Other\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:28.142307+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST https://dtos.test/account/leagues/import \"HTTP/1.1 403 Forbidden\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:28.146056+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST https://dtos.test/account/leagues/200 \"HTTP/1.1 403 Forbidden\"","request_id":"system"}
+.{"timestamp":"2026-11-10T19:15:28.251403+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-manager \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:28.253089+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST https://dtos.test/account/sleeper \"HTTP/1.1 303 See Other\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:28.257861+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2026 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:28.258176+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2025 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:28.258432+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2024 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:28.258668+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2023 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:28.258895+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2022 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:28.259173+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2021 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:28.259600+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/league/100/rosters \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:28.259839+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/league/100/users \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:28.261868+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST https://dtos.test/account/leagues/100 \"HTTP/1.1 303 See Other\"","request_id":"system"}
+Validation Chromium: /usr/bin/chromium
+Validation Chromium version: 156.0.8078.79
+{"timestamp":"2026-11-10T19:15:29.073345+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2026 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:29.073706+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2025 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:29.074091+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2024 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:29.074384+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2023 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:29.074659+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2022 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:29.074915+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2021 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:29.755665+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/league/200 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:29.756130+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/league/200/rosters \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:29.756408+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/league/200/users \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:29.908121+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2026 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:29.908441+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2025 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:29.908692+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2024 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:29.908933+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2023 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:29.909222+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2022 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:29.909560+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2021 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:30.474405+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2026 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:30.474722+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2025 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:30.474995+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2024 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:30.475248+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2023 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:30.475486+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2022 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:30.475722+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2021 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:31.090942+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/league/200 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:31.091442+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/league/200/rosters \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:31.091738+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/league/200/users \"HTTP/1.1 200 OK\"","request_id":"system"}
+Validation Chromium: /usr/bin/chromium
+Validation Chromium version: 156.0.8078.79
+{"timestamp":"2026-11-10T19:15:32.797478+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2026 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:32.798000+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2025 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:32.798400+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2024 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:32.798801+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2023 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:32.799221+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2022 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:32.799563+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2021 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:33.506822+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2026 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:33.507192+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2025 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:33.507469+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2024 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:33.507722+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2023 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:33.507986+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2022 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:33.508232+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2021 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:33.508657+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/league/200/rosters \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:33.508943+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/league/200/users \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:33.657383+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2026 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:33.657692+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2025 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:33.657941+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2024 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:33.658216+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2023 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:33.658454+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2022 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:33.658688+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2021 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:34.222698+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2026 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:34.223049+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2025 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:34.223310+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2024 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:34.223552+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2023 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:34.223792+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2022 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:34.224051+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2021 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:34.821773+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2026 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:34.822109+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2025 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:34.822367+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2024 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:34.822613+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2023 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:34.822855+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2022 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:34.823122+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2021 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:34.823539+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/league/200/rosters \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:34.823783+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/league/200/users \"HTTP/1.1 200 OK\"","request_id":"system"}
+Validation Chromium: /usr/bin/chromium
+Validation Chromium version: 156.0.8078.79
+{"timestamp":"2026-11-10T19:15:36.575685+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2026 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:36.576232+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2025 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:36.576674+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2024 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:36.577266+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2023 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:36.579184+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2022 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:36.579673+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2021 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:37.271592+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/league/200 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:37.272070+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/league/200/rosters \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:37.272362+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/league/200/users \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:37.424245+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2026 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:37.424556+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2025 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:37.424804+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2024 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:37.425071+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2023 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:37.425317+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2022 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:37.425549+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2021 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:37.990284+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2026 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:37.990617+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2025 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:37.990886+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2024 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:37.991191+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2023 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:37.991461+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2022 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:37.991721+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2021 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:38.618511+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/league/200 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:38.618946+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/league/200/rosters \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:38.619279+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/league/200/users \"HTTP/1.1 200 OK\"","request_id":"system"}
+Validation Chromium: /usr/bin/chromium
+Validation Chromium version: 156.0.8078.79
+{"timestamp":"2026-11-10T19:15:40.332805+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2026 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:40.333433+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2025 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:40.333813+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2024 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:40.334275+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2023 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:40.335082+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2022 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:40.335497+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2021 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:41.038385+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2026 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:41.038716+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2025 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:41.039011+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2024 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:41.039271+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2023 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:41.039510+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2022 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:41.039743+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2021 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:41.040178+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/league/200/rosters \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:41.040438+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/league/200/users \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:41.191048+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2026 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:41.191386+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2025 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:41.191644+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2024 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:41.191891+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2023 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:41.192186+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2022 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:41.192532+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2021 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:41.759008+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2026 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:41.759393+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2025 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:41.759723+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2024 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:41.760013+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2023 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:41.760266+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2022 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:41.760497+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2021 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:42.371467+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2026 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:42.371810+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2025 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:42.372127+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2024 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:42.372407+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2023 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:42.372677+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2022 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:42.372937+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2021 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:42.373405+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/league/200/rosters \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:42.373691+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/league/200/users \"HTTP/1.1 200 OK\"","request_id":"system"}
+Validation Chromium: /usr/bin/chromium
+Validation Chromium version: 156.0.8078.79
+{"timestamp":"2026-11-10T19:15:44.072609+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2026 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:44.073071+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2025 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:44.073452+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2024 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:44.073875+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2023 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:44.074315+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2022 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:44.074675+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2021 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:44.771850+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/league/200 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:44.772306+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/league/200/rosters \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:44.772592+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/league/200/users \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:44.941020+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2026 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:44.941329+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2025 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:44.941575+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2024 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:44.941815+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2023 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:44.942145+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2022 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:44.942457+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2021 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:45.508797+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2026 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:45.509202+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2025 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:45.509512+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2024 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:45.509764+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2023 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:45.510056+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2022 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:45.510306+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2021 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:46.120784+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/league/200 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:46.121252+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/league/200/rosters \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:46.121539+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/league/200/users \"HTTP/1.1 200 OK\"","request_id":"system"}
+Validation Chromium: /usr/bin/chromium
+Validation Chromium version: 156.0.8078.79
+{"timestamp":"2026-11-10T19:15:47.784946+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2026 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:47.785442+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2025 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:47.785838+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2024 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:47.786288+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2023 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:47.786696+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2022 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:47.787121+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2021 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:48.471347+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2026 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:48.471652+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2025 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:48.471897+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2024 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:48.472160+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2023 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:48.472403+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2022 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:48.472640+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2021 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:48.473064+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/league/200/rosters \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:48.473315+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/league/200/users \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:48.623428+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2026 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:48.623743+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2025 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:48.624018+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2024 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:48.624266+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2023 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:48.624506+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2022 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:48.624743+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2021 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:49.189423+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2026 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:49.189731+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2025 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:49.190000+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2024 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:49.190247+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2023 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:49.190482+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2022 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:49.190713+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2021 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:49.797925+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2026 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:49.798311+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2025 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:49.798601+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2024 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:49.798882+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2023 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:49.799184+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2022 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:49.799465+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2021 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:49.799935+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/league/200/rosters \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:49.800287+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/league/200/users \"HTTP/1.1 200 OK\"","request_id":"system"}
+Validation Chromium: /usr/bin/chromium
+Validation Chromium version: 156.0.8078.79
+{"timestamp":"2026-11-10T19:15:51.554001+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:9/v1/user/new-user/leagues/nfl/2026 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-10T19:15:51.554538+00:00","level":"

@@ -1,0 +1,23 @@
+# Independently verify deployed temporary protections
+
+Verify v1.22.30/build2245,PR #334,commit `abbe723a0566cf84a8fff947cf7320cb66567a77`,tree `cf649ee06ec3228d51d251ce7afbdbb15866f398`,[immutable release](https://github.com/Richarddavis47/dtos/releases/tag/v1.22.30). Candidate `238dfc108b904eb499a73a06c938cc2d704cea51`. Native publication and bounded public smoke are complete; owner live acceptance and physical Safari remain separate. No saved settings or production search was modified by Codex.
+
+# Independent acceptance — temporary Recommended Trades protections
+
+Source candidate: 238dfc108b904eb499a73a06c938cc2d704cea51.
+Validated-source target tree: cf649ee06ec3228d51d251ce7afbdbb15866f398.
+PR: https://github.com/Richarddavis47/dtos/pull/334.
+Target: v1.22.30 / build2245. Consult the final publication receipt for the actual merged/deployed commit; these targets alone are not a deployment claim.
+
+You are Scout, independently verifying the finished release, not implementing it. Verify actual readiness, immutable tag/tree, all required final-source jobs and attached evidence checksums before customer acceptance. The preliminary source b3dd7 and canceled runs are separately retained and are not substitutes for final gates. Fixture screenshots and native evaluations are author evidence, not owner live acceptance or physical Safari.
+
+1. In an already authorized, safely prepared owner session, open Recommended Trades on a narrow phone viewport. Confirm “Protect assets & options” is available before Generate. Expand it and choose an owned player and an exact owned pick. Confirm the pick year, round and original franchise; an acquired first from the same year/round is a separate choice. Do not create or move assets just to manufacture this sample.
+2. Opening/editing/removing/clearing protections must not issue Generate, Evaluate, Sync or provider requests. The selected list and count are visible and removable using keyboard and touch. Confirm no horizontal overflow at320×432,375×667,390×844 and desktop. Physical iPhone/Safari remains separate unless actually tested.
+3. Preserve any existing Evaluate draft and selected comparisons. Opening Recommended controls and contextual Back must retain ordered assets, valuation mode, strategy and stored assessments with their truthful retained qualifications. New Recommended protections must not be automatically sent as Evaluate constraints. Do not change saved rankings, method, goals or other preferences.
+4. Before one optional bounded live Generate, establish current Trade capacity through existing diagnostics/normal admission. Stop on deferral; do not bypass admission, force sync, clear caches, restart, rebuild FOIS or repeat searches. A deferred search is not a completed zero-result search.
+5. If safely admitted and explicitly run, verify the exact protected IDs in the submitted and effective returned constraints. Inspect outgoing assets in qualified and exploratory offers. None may include a protected ID. Another same-year/same-round pick remains eligible but is not required to appear. A qualified offer is not required for success. Existing saved Custom Protect flags may also appear in the effective restrictions; clearing temporary controls must not erase those saved flags.
+6. Inspect the completed search’s “Outgoing protections applied” summary. Change/clear a temporary control: no new search may start, and the separately labeled earlier search must retain its original effective protections. A completed zero-qualified result must show those restrictions without claiming they caused rejection. The footnote is neutral for every verdict.
+7. Switch leagues using the normal selector. No stale protections/results/comparison context may leak to the other authorized account/league/franchise. Reopening the original scope may restore its own temporary tab workspace under existing ownership/freshness rules. Missing ownership cannot authorize an asset.
+8. Record live source/week/generation, valuation mode, readiness and exact observations. Distinguish live results, deterministic fixture controls and source inspection. Report any authentication/capacity boundary without substituting fixture success or forcing a heavy workload.
+
+The change exposes the existing exact-ID constraint. It does not change generation caps, bilateral qualification, scoring, Sleeper projections/results, Neutral/Custom formulas, submitted lineups, exact pick identity, saved preferences, FOIS provenance, the2GiB cap, Trade 256+128 MiB or FOIS 768 MiB policies.

@@ -1,0 +1,12 @@
+E702 Multiple statements on one line (semicolon)
+    --> tests/test_release_publisher.py:1425:41
+     |
+1423 |         def change(plan, files):
+1424 |             key = 'browser/protections/exact-native-search.json'
+1425 |             row = json.loads(files[key]); row['observations']['offers'][0]['proposal']['assets_sent'].append('2029-R1-1')
+     |                                         ^
+1426 |             files[key] = json.dumps(row).encode()
+1427 |         with self.assertRaisesRegex(RuntimeError, 'escaped'):
+     |
+
+Found 1 error.

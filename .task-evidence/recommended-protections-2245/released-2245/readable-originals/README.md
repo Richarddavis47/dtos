@@ -1,0 +1,1 @@
+Original consoles split at UTF-8 boundaries into at most60,000byte parts. Follow each index and join parts in numeric order to reproduce its original SHA256. No lines are removed, rewritten or borrowed from another source/attempt. Preliminary/canceled canonical logs are explicitly incomplete; only final canonical logs with separately verified final summaries count as complete.

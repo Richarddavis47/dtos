@@ -1,0 +1,7 @@
+# Temporary Recommended Trades protections
+
+[Deployed result](FINAL_STATUS.md) · [Full report](REPORT.md) · [Scout acceptance](SCOUT_DEPLOYED.md) · [Exact patch](candidate.patch) · [Immutable attachment URLs/SHA256](immutable-attachments.json)
+
+Read full original 4346-test consoles directly: [local](local-canonical/unittest-console.log), [hosted](host-canonical-readable/unittest-console.log). [Readable original parts](readable-originals/INDEX.json) preserve every byte and original SHA256 using <=60,000 byte UTF-8 parts; source/attempt labels remain distinct. [Final hosted job logs](hosted-decoded-originals) and [prior attempts](PRIOR_ATTEMPTS.md) retain original outcomes. The sealed review report precedes publication; FINAL_STATUS and publication receipts establish actual deployed identity.
+
+[Exact picker/phone captures](focused-final), [independent Win Now control](win-now), [unchanged draft/comparison controls](offer-comparison). Complete manifest-bound validation payloads and original native hosted ZIPs remain immutable release attachments; selected directly readable core records here do not imply every manifest entry is duplicated in this directory. Public manifest.json/SHA256SUMS cover every delivered public byte. Recovery uses standard ZIP/LZMA (Python zipfile); every original validation member is unchanged. Compression only resolved Git blob transport and did not change application cache decoding or admission. No authenticated owner or physical Safari acceptance is claimed.

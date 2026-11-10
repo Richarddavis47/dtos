@@ -1,0 +1,339 @@
+68,"pss_bytes":48596992,"uss_bytes":24653824,"sample_offset_ms":33.324,"sample_duration_ms":4.403}],"capture_duration_ms":37.73,"pss_requested":true,"runtime_residency":{"resident_count":1,"warm_limit":2,"hydrating_count":0,"warm_count":0,"runtime_samples_truncated":false,"runtimes":[{"scope":"c9adb23a3e8be7a1","state":"cold","active_requests":0,"pinned":true,"owns_state":false,"background_tasks":0,"source_generation_count":0,"source_generation_identity":"4f53cda18c2baa0c","market_cache_owned":true,"projection_cache_owned":false}]},"sample_total_duration_ms":37.791},"queue_dropped_record_count":0}}
+2026-11-10T18:27:32.2868946Z {"timestamp":"2026-11-10T18:27:32.286418+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+2026-11-10T18:27:32.2917523Z {"timestamp":"2026-11-10T18:27:32.291285+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/player-projections.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T18:27:32.4010785Z {"timestamp":"2026-11-10T18:27:32.400509+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/market/assets/player:1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T18:27:32.4142021Z {"timestamp":"2026-11-10T18:27:32.413792+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/market?selected=player%3A1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T18:27:32.5231880Z {"timestamp":"2026-11-10T18:27:32.522675+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/market?selected=player%3A1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T18:27:32.8632624Z {"timestamp":"2026-11-10T18:27:32.862546+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/market/assets/player:1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T18:27:32.9528529Z ok
+2026-11-10T18:27:33.4841938Z test_complete_observed_empty_scope_can_support_zero (tests.test_completed_trade_observations.CompletedTradeObservationTests.test_complete_observed_empty_scope_can_support_zero) ... ok
+2026-11-10T18:27:34.0688804Z test_conflicting_exact_pick_directions_do_not_invent_a_transfer (tests.test_completed_trade_observations.CompletedTradeObservationTests.test_conflicting_exact_pick_directions_do_not_invent_a_transfer) ... ok
+2026-11-10T18:27:34.6933885Z test_empty_partial_history_is_unknown_not_a_zero (tests.test_completed_trade_observations.CompletedTradeObservationTests.test_empty_partial_history_is_unknown_not_a_zero) ... {"timestamp":"2026-11-10T18:27:34.692580+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:2 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T18:27:34.7138167Z {"timestamp":"2026-11-10T18:27:34.713342+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:2 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T18:27:34.7163240Z ok
+2026-11-10T18:27:35.2867704Z test_future_completion_cannot_establish_an_observed_completed_trade (tests.test_completed_trade_observations.CompletedTradeObservationTests.test_future_completion_cannot_establish_an_observed_completed_trade) ... ok
+2026-11-10T18:27:35.9470236Z test_incomplete_exact_pick_identity_keeps_only_supported_lower_bounds (tests.test_completed_trade_observations.CompletedTradeObservationTests.test_incomplete_exact_pick_identity_keeps_only_supported_lower_bounds) ... {"timestamp":"2026-11-10T18:27:35.946327+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:2 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T18:27:35.9734930Z {"timestamp":"2026-11-10T18:27:35.973066+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:2 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T18:27:35.9760200Z ok
+2026-11-10T18:27:36.6746507Z test_manager_change_never_backdates_counts_to_current_manager (tests.test_completed_trade_observations.CompletedTradeObservationTests.test_manager_change_never_backdates_counts_to_current_manager) ... {"timestamp":"2026-11-10T18:27:36.673947+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:2 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T18:27:36.7012413Z {"timestamp":"2026-11-10T18:27:36.700866+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:2 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T18:27:36.7042462Z ok
+2026-11-10T18:27:37.3619840Z test_multiple_firsts_and_multiteam_directions_count_assets_and_deals_separately (tests.test_completed_trade_observations.CompletedTradeObservationTests.test_multiple_firsts_and_multiteam_directions_count_assets_and_deals_separately) ... {"timestamp":"2026-11-10T18:27:37.361150+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:2 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T18:27:37.3645729Z ok
+2026-11-10T18:27:38.0689561Z test_other_league_never_receives_day_trade_references (tests.test_completed_trade_observations.CompletedTradeObservationTests.test_other_league_never_receives_day_trade_references) ... {"timestamp":"2026-11-10T18:27:38.068129+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/team/1319750579458686976:franchise:4 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T18:27:38.0719054Z ok
+2026-11-10T18:27:38.7151777Z test_pagination_does_not_recount_a_visible_page_as_the_sample (tests.test_completed_trade_observations.CompletedTradeObservationTests.test_pagination_does_not_recount_a_visible_page_as_the_sample) ... ok
+2026-11-10T18:27:39.2837844Z test_pending_rejected_waivers_and_corrections_are_not_completed_trades (tests.test_completed_trade_observations.CompletedTradeObservationTests.test_pending_rejected_waivers_and_corrections_are_not_completed_trades) ... ok
+2026-11-10T18:27:39.8724398Z test_reads_do_not_build_intelligence_or_write_history (tests.test_completed_trade_observations.CompletedTradeObservationTests.test_reads_do_not_build_intelligence_or_write_history) ... {"timestamp":"2026-11-10T18:27:39.871853+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:4 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T18:27:39.8937884Z {"timestamp":"2026-11-10T18:27:39.893338+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:4 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T18:27:39.9149271Z {"timestamp":"2026-11-10T18:27:39.914527+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:4 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T18:27:39.9176178Z ok
+2026-11-10T18:27:40.8182680Z test_retained_day_counts_match_original_directed_consideration (tests.test_completed_trade_observations.CompletedTradeObservationTests.test_retained_day_counts_match_original_directed_consideration) ... {"timestamp":"2026-11-10T18:27:40.817482+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:4 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T18:27:40.8211092Z ok
+2026-11-10T18:27:41.3928861Z test_same_exact_pick_in_later_trade_counts_a_separate_directed_transfer (tests.test_completed_trade_observations.CompletedTradeObservationTests.test_same_exact_pick_in_later_trade_counts_a_separate_directed_transfer) ... ok
+2026-11-10T18:27:41.9888493Z test_source_change_withholds_the_whole_numeric_summary (tests.test_completed_trade_observations.CompletedTradeObservationTests.test_source_change_withholds_the_whole_numeric_summary) ... ok
+2026-11-10T18:27:42.6545899Z test_supported_zero_is_only_a_zero_within_observed_trades (tests.test_completed_trade_observations.CompletedTradeObservationTests.test_supported_zero_is_only_a_zero_within_observed_trades) ... {"timestamp":"2026-11-10T18:27:42.654048+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:2 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T18:27:42.6815776Z {"timestamp":"2026-11-10T18:27:42.681127+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:2 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T18:27:42.6841842Z ok
+2026-11-10T18:27:43.3510629Z test_undated_completed_trade_is_not_given_a_creation_based_window (tests.test_completed_trade_observations.CompletedTradeObservationTests.test_undated_completed_trade_is_not_given_a_creation_based_window) ... {"timestamp":"2026-11-10T18:27:43.350320+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:2 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T18:27:43.3544732Z ok
+2026-11-10T18:27:44.0360612Z test_unlinked_source_season_is_not_current_franchise_behavior (tests.test_completed_trade_observations.CompletedTradeObservationTests.test_unlinked_source_season_is_not_current_franchise_behavior) ... {"timestamp":"2026-11-10T18:27:44.035343+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:2 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T18:27:44.0387940Z ok
+2026-11-10T18:27:44.9901707Z Validation Chromium: /ms-playwright/chromium-1243/chrome-linux64/chrome
+2026-11-10T18:27:45.0677653Z Validation Chromium version: 153.0.8010.12
+2026-11-10T18:27:45.2197893Z test_retained_counts_links_back_and_four_viewports (tests.test_completed_trade_observations_browser.CompletedTradeObservationBrowserTests.test_retained_counts_links_back_and_four_viewports) ... {"timestamp":"2026-11-10T18:27:45.219061+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:4 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T18:27:45.2488973Z {"timestamp":"2026-11-10T18:27:45.248323+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T18:27:45.2501740Z {"timestamp":"2026-11-10T18:27:45.249840+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T18:27:46.0813638Z {"timestamp":"2026-11-10T18:27:46.080842+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/history/1333655835015942144 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T18:27:46.1070636Z {"timestamp":"2026-11-10T18:27:46.106566+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/history-production.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T18:27:46.1084267Z {"timestamp":"2026-11-10T18:27:46.108041+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T18:27:46.1119547Z {"timestamp":"2026-11-10T18:27:46.111277+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T18:27:46.1872990Z {"timestamp":"2026-11-10T18:27:46.186687+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/account/navigation-context \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T18:27:46.2214170Z {"timestamp":"2026-11-10T18:27:46.220896+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:4 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T18:27:46.4130665Z {"timestamp":"2026-11-10T18:27:46.412458+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:4 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T18:27:46.4316708Z {"timestamp":"2026-11-10T18:27:46.431188+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T18:27:46.4321292Z {"timestamp":"2026-11-10T18:27:46.431811+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T18:27:47.1573034Z {"timestamp":"2026-11-10T18:27:47.156831+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/history/1333655835015942144 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T18:27:47.1824452Z {"timestamp":"2026-11-10T18:27:47.181939+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/history-production.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T18:27:47.1857260Z {"timestamp":"2026-11-10T18:27:47.185171+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T18:27:47.1861553Z {"timestamp":"2026-11-10T18:27:47.185663+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T18:27:47.2520474Z {"timestamp":"2026-11-10T18:27:47.251493+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/account/navigation-context \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T18:27:47.2882049Z {"timestamp":"2026-11-10T18:27:47.287741+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:4 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T18:27:47.4719448Z {"timestamp":"2026-11-10T18:27:47.471335+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:4 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T18:27:47.4958330Z {"timestamp":"2026-11-10T18:27:47.495287+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T18:27:47.4964375Z {"timestamp":"2026-11-10T18:27:47.496079+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T18:27:48.2248319Z {"timestamp":"2026-11-10T18:27:48.224204+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/history/1333655835015942144 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T18:27:48.2507274Z {"timestamp":"2026-11-10T18:27:48.250190+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T18:27:48.2521188Z {"timestamp":"2026-11-10T18:27:48.251757+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/history-production.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T18:27:48.2558194Z {"timestamp":"2026-11-10T18:27:48.255354+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T18:27:48.3182559Z {"timestamp":"2026-11-10T18:27:48.317796+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/account/navigation-context \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T18:27:48.3541938Z {"timestamp":"2026-11-10T18:27:48.353729+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:4 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T18:27:48.5338339Z {"timestamp":"2026-11-10T18:27:48.533270+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:4 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T18:27:48.5524167Z {"timestamp":"2026-11-10T18:27:48.551940+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T18:27:48.5543128Z {"timestamp":"2026-11-10T18:27:48.553784+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T18:27:49.1906448Z {"timestamp":"2026-11-10T18:27:49.189974+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/history/1333655835015942144 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T18:27:49.2136428Z {"timestamp":"2026-11-10T18:27:49.212909+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T18:27:49.2148165Z {"timestamp":"2026-11-10T18:27:49.214462+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/history-production.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T18:27:49.2181833Z {"timestamp":"2026-11-10T18:27:49.217588+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T18:27:49.2855167Z {"timestamp":"2026-11-10T18:27:49.284924+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/account/navigation-context \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T18:27:49.3210291Z {"timestamp":"2026-11-10T18:27:49.320492+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:4 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T18:27:49.5885375Z {"timestamp":"2026-11-10T18:27:49.587843+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/team/1319750579458686976:franchise:1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T18:27:49.6073259Z {"timestamp":"2026-11-10T18:27:49.606802+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T18:27:49.6076688Z {"timestamp":"2026-11-10T18:27:49.607217+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T18:27:50.2602995Z {"timestamp":"2026-11-10T18:27:50.259750+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/team/1319750579458686976:franchise:1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T18:27:50.2785998Z {"timestamp":"2026-11-10T18:27:50.278153+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T18:27:50.2792711Z {"timestamp":"2026-11-10T18:27:50.278891+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T18:27:50.9813983Z {"timestamp":"2026-11-10T18:27:50.980838+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/team/1319750579458686976:franchise:1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T18:27:50.9994142Z {"timestamp":"2026-11-10T18:27:50.998921+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T18:27:50.9998585Z {"timestamp":"2026-11-10T18:27:50.999464+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T18:27:51.7030606Z {"timestamp":"2026-11-10T18:27:51.702443+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/team/1319750579458686976:franchise:1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T18:27:51.7202486Z {"timestamp":"2026-11-10T18:27:51.719788+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T18:27:51.7214111Z {"timestamp":"2026-11-10T18:27:51.721048+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T18:27:52.7340243Z ok
+2026-11-10T18:27:52.7340450Z 
+2026-11-10T18:27:52.7340665Z ----------------------------------------------------------------------
+2026-11-10T18:27:52.7341182Z Ran 139 tests in 183.697s
+2026-11-10T18:27:52.7341360Z 
+2026-11-10T18:27:52.7341442Z OK
+2026-11-10T18:27:54.1238540Z ##[group]Run actions/upload-artifact@v4
+2026-11-10T18:27:54.1238849Z with:
+2026-11-10T18:27:54.1239078Z   name: current-season-history-browser
+2026-11-10T18:27:54.1239376Z   path: .validation/current-season-history
+2026-11-10T18:27:54.1239662Z   if-no-files-found: error
+2026-11-10T18:27:54.1239901Z   retention-days: 14
+2026-11-10T18:27:54.1240119Z   compression-level: 6
+2026-11-10T18:27:54.1240331Z   overwrite: false
+2026-11-10T18:27:54.1240543Z   include-hidden-files: false
+2026-11-10T18:27:54.1240772Z env:
+2026-11-10T18:27:54.1240982Z   NODE_OPTIONS: --max-old-space-size=256
+2026-11-10T18:27:54.1241322Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-10T18:27:54.1241745Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib/pkgconfig
+2026-11-10T18:27:54.1242164Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-10T18:27:54.1242550Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-10T18:27:54.1242959Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-10T18:27:54.1243380Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib
+2026-11-10T18:27:54.1243696Z ##[endgroup]
+2026-11-10T18:27:54.2967258Z (node:58760) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-11-10T18:27:54.2968481Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-11-10T18:27:54.3053497Z With the provided path, there will be 13 files uploaded
+2026-11-10T18:27:54.3058193Z Artifact name is valid!
+2026-11-10T18:27:54.3059078Z Root directory input is valid!
+2026-11-10T18:27:54.5195785Z Beginning upload of artifact content to blob storage
+2026-11-10T18:27:54.6063828Z (node:58760) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+2026-11-10T18:27:54.6739918Z Uploaded bytes 895176
+2026-11-10T18:27:54.6990510Z Finished uploading artifact content to blob storage!
+2026-11-10T18:27:54.6991696Z SHA256 digest of uploaded artifact zip is 350d7a26aa691417138baa62cd7665e12e0884fa2eaee0461bf03fa2c26e4134
+2026-11-10T18:27:54.6993759Z Finalizing artifact upload
+2026-11-10T18:27:55.1752327Z Artifact current-season-history-browser.zip successfully finalized. Artifact ID 13791746805
+2026-11-10T18:27:55.1754318Z Artifact current-season-history-browser has been successfully uploaded! Final size is 895176 bytes. Artifact ID is 13791746805
+2026-11-10T18:27:55.1761941Z Artifact download URL: https://github.com/Richarddavis47/dtos/actions/runs/42870743244/artifacts/13791746805
+2026-11-10T18:27:55.1953356Z ##[group]Run actions/upload-artifact@v4
+2026-11-10T18:27:55.1953665Z with:
+2026-11-10T18:27:55.1953887Z   name: history-followthrough-browser
+2026-11-10T18:27:55.1954191Z   path: .validation/history-followthrough
+2026-11-10T18:27:55.1954494Z   if-no-files-found: error
+2026-11-10T18:27:55.1954732Z   retention-days: 14
+2026-11-10T18:27:55.1954966Z   compression-level: 6
+2026-11-10T18:27:55.1955183Z   overwrite: false
+2026-11-10T18:27:55.1955402Z   include-hidden-files: false
+2026-11-10T18:27:55.1955640Z env:
+2026-11-10T18:27:55.1955849Z   NODE_OPTIONS: --max-old-space-size=256
+2026-11-10T18:27:55.1956203Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-10T18:27:55.1956870Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib/pkgconfig
+2026-11-10T18:27:55.1957300Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-10T18:27:55.1957691Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-10T18:27:55.1958111Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-10T18:27:55.1958508Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib
+2026-11-10T18:27:55.1958831Z ##[endgroup]
+2026-11-10T18:27:55.3806350Z (node:58773) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-11-10T18:27:55.3807604Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-11-10T18:27:55.3955968Z With the provided path, there will be 18 files uploaded
+2026-11-10T18:27:55.3957719Z Artifact name is valid!
+2026-11-10T18:27:55.3958316Z Root directory input is valid!
+2026-11-10T18:27:55.6089079Z Beginning upload of artifact content to blob storage
+2026-11-10T18:27:55.6915978Z (node:58773) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+2026-11-10T18:27:55.7461575Z Uploaded bytes 1044843
+2026-11-10T18:27:55.7632755Z Finished uploading artifact content to blob storage!
+2026-11-10T18:27:55.7633924Z SHA256 digest of uploaded artifact zip is 378c72b39b5da8d5adc9516487a50eb498d2f3334962490f8d0a0e5a7e427ce0
+2026-11-10T18:27:55.7635829Z Finalizing artifact upload
+2026-11-10T18:27:56.1344004Z Artifact history-followthrough-browser.zip successfully finalized. Artifact ID 13791746811
+2026-11-10T18:27:56.1345404Z Artifact history-followthrough-browser has been successfully uploaded! Final size is 1044843 bytes. Artifact ID is 13791746811
+2026-11-10T18:27:56.1351505Z Artifact download URL: https://github.com/Richarddavis47/dtos/actions/runs/42870743244/artifacts/13791746811
+2026-11-10T18:27:56.1517149Z ##[group]Run actions/upload-artifact@v4
+2026-11-10T18:27:56.1517523Z with:
+2026-11-10T18:27:56.1517750Z   name: market-history-coverage-browser
+2026-11-10T18:27:56.1518072Z   path: .validation/market-history-coverage
+2026-11-10T18:27:56.1518378Z   if-no-files-found: error
+2026-11-10T18:27:56.1518619Z   retention-days: 14
+2026-11-10T18:27:56.1518855Z   compression-level: 6
+2026-11-10T18:27:56.1519077Z   overwrite: false
+2026-11-10T18:27:56.1519299Z   include-hidden-files: false
+2026-11-10T18:27:56.1519544Z env:
+2026-11-10T18:27:56.1519766Z   NODE_OPTIONS: --max-old-space-size=256
+2026-11-10T18:27:56.1520128Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-10T18:27:56.1520573Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib/pkgconfig
+2026-11-10T18:27:56.1521017Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-10T18:27:56.1521453Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-10T18:27:56.1521877Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-10T18:27:56.1522266Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib
+2026-11-10T18:27:56.1522595Z ##[endgroup]
+2026-11-10T18:27:56.3196092Z (node:58785) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-11-10T18:27:56.3197692Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-11-10T18:27:56.3302147Z With the provided path, there will be 25 files uploaded
+2026-11-10T18:27:56.3308753Z Artifact name is valid!
+2026-11-10T18:27:56.3309230Z Root directory input is valid!
+2026-11-10T18:27:56.5548933Z Beginning upload of artifact content to blob storage
+2026-11-10T18:27:56.6542799Z (node:58785) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+2026-11-10T18:27:56.7177760Z Uploaded bytes 1429622
+2026-11-10T18:27:56.7333665Z Finished uploading artifact content to blob storage!
+2026-11-10T18:27:56.7334836Z SHA256 digest of uploaded artifact zip is 0504c4a77b90009d96ba7ff8b96e6b58efe621ecb4936d14c9cb5fae8166fbf8
+2026-11-10T18:27:56.7336913Z Finalizing artifact upload
+2026-11-10T18:27:57.0755998Z Artifact market-history-coverage-browser.zip successfully finalized. Artifact ID 13791492109
+2026-11-10T18:27:57.0757950Z Artifact market-history-coverage-browser has been successfully uploaded! Final size is 1429622 bytes. Artifact ID is 13791492109
+2026-11-10T18:27:57.0764195Z Artifact download URL: https://github.com/Richarddavis47/dtos/actions/runs/42870743244/artifacts/13791492109
+2026-11-10T18:27:57.0938743Z ##[group]Run actions/upload-artifact@v4
+2026-11-10T18:27:57.0939069Z with:
+2026-11-10T18:27:57.0939314Z   name: current-production-coverage-browser
+2026-11-10T18:27:57.0939672Z   path: .validation/current-production-coverage
+2026-11-10T18:27:57.0939993Z   if-no-files-found: error
+2026-11-10T18:27:57.0940246Z   retention-days: 14
+2026-11-10T18:27:57.0940474Z   compression-level: 6
+2026-11-10T18:27:57.0940707Z   overwrite: false
+2026-11-10T18:27:57.0940934Z   include-hidden-files: false
+2026-11-10T18:27:57.0941185Z env:
+2026-11-10T18:27:57.0941411Z   NODE_OPTIONS: --max-old-space-size=256
+2026-11-10T18:27:57.0941778Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-10T18:27:57.0942217Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib/pkgconfig
+2026-11-10T18:27:57.0942666Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-10T18:27:57.0943072Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-10T18:27:57.0943507Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-10T18:27:57.0954427Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib
+2026-11-10T18:27:57.0955039Z ##[endgroup]
+2026-11-10T18:27:57.2646964Z (node:58797) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-11-10T18:27:57.2648363Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-11-10T18:27:57.2751250Z With the provided path, there will be 25 files uploaded
+2026-11-10T18:27:57.2758559Z Artifact name is valid!
+2026-11-10T18:27:57.2759139Z Root directory input is valid!
+2026-11-10T18:27:57.4740075Z Beginning upload of artifact content to blob storage
+2026-11-10T18:27:57.5924095Z (node:58797) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+2026-11-10T18:27:57.7373295Z Uploaded bytes 2095301
+2026-11-10T18:27:57.7535702Z Finished uploading artifact content to blob storage!
+2026-11-10T18:27:57.7537019Z SHA256 digest of uploaded artifact zip is faf8c25a06d82b487ad5391bf7c905ac463a546c45ee166b0e88ef8e535b39e0
+2026-11-10T18:27:57.7538711Z Finalizing artifact upload
+2026-11-10T18:27:58.1606182Z Artifact current-production-coverage-browser.zip successfully finalized. Artifact ID 13790818376
+2026-11-10T18:27:58.1607717Z Artifact current-production-coverage-browser has been successfully uploaded! Final size is 2095301 bytes. Artifact ID is 13790818376
+2026-11-10T18:27:58.1612948Z Artifact download URL: https://github.com/Richarddavis47/dtos/actions/runs/42870743244/artifacts/13790818376
+2026-11-10T18:27:58.1789142Z ##[group]Run set -o pipefail
+2026-11-10T18:27:58.1789494Z [36;1mset -o pipefail[0m
+2026-11-10T18:27:58.1789943Z [36;1mmkdir -p .validation/trade-resource/fixture .validation/trade-resource/evidence[0m
+2026-11-10T18:27:58.1791704Z [36;1mdocker run --rm --init --memory=2g --memory-swap=2g --cpus=2 --network=none -v "$PWD:$PWD:ro" -v "$PWD/.validation/trade-resource:/proof" -w "$PWD" -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0="$PWD" dtos-browser-validation python -m tools.validation.trade_resource_recovery --prepare --fixture /proof/fixture 2>&1 | tee .validation/trade-resource/evidence/preparation.log[0m
+2026-11-10T18:27:58.1794689Z [36;1mdocker run --rm --init --memory=2g --memory-swap=2g --cpus=2 --network=none -v "$PWD:$PWD:ro" -v "$PWD/.validation/trade-resource:/proof" -w "$PWD" -e DTOS_EXPECTED_HEAD -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0="$PWD" dtos-browser-validation python -m tools.validation.trade_resource_recovery --fixture /proof/fixture --output /proof/evidence 2>&1 | tee .validation/trade-resource/evidence/raw.log[0m
+2026-11-10T18:27:58.1796660Z [36;1mcd .validation/trade-resource/evidence[0m
+2026-11-10T18:27:58.1797231Z [36;1msha256sum result.json raw.log preparation.log > SHA256SUMS[0m
+2026-11-10T18:27:58.1818003Z shell: /usr/bin/bash -e {0}
+2026-11-10T18:27:58.1818278Z env:
+2026-11-10T18:27:58.1818527Z   NODE_OPTIONS: --max-old-space-size=256
+2026-11-10T18:27:58.1818908Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-10T18:27:58.1819377Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib/pkgconfig
+2026-11-10T18:27:58.1819829Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-10T18:27:58.1820230Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-10T18:27:58.1820634Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-10T18:27:58.1821039Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib
+2026-11-10T18:27:58.1821453Z   DTOS_EXPECTED_HEAD: 238dfc108b904eb499a73a06c938cc2d704cea51
+2026-11-10T18:27:58.1821795Z ##[endgroup]
+2026-11-10T18:27:58.6142156Z /usr/local/lib/python3.12/dist-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+2026-11-10T18:27:58.6143358Z   from starlette.testclient import TestClient as TestClient  # noqa
+2026-11-10T18:28:00.0900577Z WARNING:dtos.storage:storage_review {'kind': 'projection', 'database_bytes': 7618560, 'rows': {'projection_snapshots': 19, 'projection_source_history': 17, 'projection_player_states': 8368}, 'free_bytes': 86491709440, 'row_delta': {'projection_snapshots': 14, 'projection_source_history': 13, 'projection_player_states': 8320}, 'reasons': ['ROW_GROWTH_ACCELERATION_REVIEW']}
+2026-11-10T18:28:01.5132781Z {"phase": "fixture preparation before application observation", "identities": 12229, "json_bytes": 18725307}
+2026-11-10T18:28:02.0472240Z /usr/local/lib/python3.12/dist-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+2026-11-10T18:28:02.0473496Z   from starlette.testclient import TestClient as TestClient  # noqa
+2026-11-10T18:28:02.7646960Z {"timestamp":"2026-11-10T18:28:02.758940+00:00","level":"INFO","logger":"dtos.request","message":"request_accepted","request_id":"e71efdadc2d04d9cb006dfb504caf82a","event":"request_accepted","method":"GET","path":"/health/live"}
+2026-11-10T18:28:02.7682124Z {"timestamp":"2026-11-10T18:28:02.759035+00:00","level":"INFO","logger":"dtos.request","message":"handler_scheduled","request_id":"e71efdadc2d04d9cb006dfb504caf82a","event":"handler_scheduled","method":"GET","path":"/health/live"}
+2026-11-10T18:28:02.7694539Z {"timestamp":"2026-11-10T18:28:02.769071+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/health/live \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T18:28:02.7704904Z {"timestamp":"2026-11-10T18:28:02.769823+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"e71efdadc2d04d9cb006dfb504caf82a","event":"request_complete","duration_ms":10.9,"status_code":200,"method":"GET","path":"/health/live"}
+2026-11-10T18:28:02.9283849Z {"timestamp":"2026-11-10T18:28:02.927549+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_admission","request_id":"system","event":"trade_admission","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":115843072,"limit_bytes":2147483648,"raw_headroom_bytes":2031640576,"clean_inactive_file_bytes":663552,"conditional_file_credit_bytes":331776,"admission_headroom_bytes":2031972352,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"recovery":null}}
+2026-11-10T18:28:03.3819001Z {"timestamp":"2026-11-10T18:28:03.381196+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_execution_finished","request_id":"system","event":"trade_execution_finished","duration_ms":454.261,"diagnostic":{"schema":"trade-resource-v1","outcome":"complete"}}
+2026-11-10T18:28:03.3837809Z {"timestamp":"2026-11-10T18:28:03.383409+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/trades/evaluate \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T18:28:03.3929740Z {"timestamp":"2026-11-10T18:28:03.392006+00:00","level":"INFO","logger":"dtos.request","message":"request_accepted","request_id":"848522c12a9f481bb73382cb61d671bf","event":"request_accepted","method":"GET","path":"/health/live"}
+2026-11-10T18:28:03.3932658Z {"timestamp":"2026-11-10T18:28:03.392065+00:00","level":"INFO","logger":"dtos.request","message":"handler_scheduled","request_id":"848522c12a9f481bb73382cb61d671bf","event":"handler_scheduled","method":"GET","path":"/health/live"}
+2026-11-10T18:28:03.3934907Z {"timestamp":"2026-11-10T18:28:03.393175+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/health/live \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T18:28:03.3954262Z {"timestamp":"2026-11-10T18:28:03.394123+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"848522c12a9f481bb73382cb61d671bf","event":"request_complete","duration_ms":2.12,"status_code":200,"method":"GET","path":"/health/live"}
+2026-11-10T18:28:03.3957649Z {"timestamp":"2026-11-10T18:28:03.395273+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_admission","request_id":"system","event":"trade_admission","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":122068992,"limit_bytes":2147483648,"raw_headroom_bytes":2025414656,"clean_inactive_file_bytes":339968,"conditional_file_credit_bytes":169984,"admission_headroom_bytes":2025584640,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"recovery":null}}
+2026-11-10T18:28:03.8998498Z {"timestamp":"2026-11-10T18:28:03.898534+00:00","level":"INFO","logger":"dtos.request","message":"request_accepted","request_id":"640abefa246e4c83a2b8da4e30f31988","event":"request_accepted","method":"GET","path":"/health/live"}
+2026-11-10T18:28:03.9000918Z {"timestamp":"2026-11-10T18:28:03.899451+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/health/live \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T18:28:03.9010152Z {"timestamp":"2026-11-10T18:28:03.898617+00:00","level":"INFO","logger":"dtos.request","message":"handler_scheduled","request_id":"640abefa246e4c83a2b8da4e30f31988","event":"handler_scheduled","method":"GET","path":"/health/live"}
+2026-11-10T18:28:03.9015213Z {"timestamp":"2026-11-10T18:28:03.900785+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"640abefa246e4c83a2b8da4e30f31988","event":"request_complete","duration_ms":2.267,"status_code":200,"method":"GET","path":"/health/live"}
+2026-11-10T18:28:04.4831225Z {"timestamp":"2026-11-10T18:28:04.482615+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/health/live \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T18:28:04.4883533Z {"timestamp":"2026-11-10T18:28:04.481863+00:00","level":"INFO","logger":"dtos.request","message":"request_accepted","request_id":"de203a01e16c46b88be472c29be96941","event":"request_accepted","method":"GET","path":"/health/live"}
+2026-11-10T18:28:04.4885696Z {"timestamp":"2026-11-10T18:28:04.481940+00:00","level":"INFO","logger":"dtos.request","message":"handler_scheduled","request_id":"de203a01e16c46b88be472c29be96941","event":"handler_scheduled","method":"GET","path":"/health/live"}
+2026-11-10T18:28:04.5135580Z {"timestamp":"2026-11-10T18:28:04.512932+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"de203a01e16c46b88be472c29be96941","event":"request_complete","duration_ms":31.087,"status_code":200,"method":"GET","path":"/health/live"}
+2026-11-10T18:28:05.0725657Z {"timestamp":"2026-11-10T18:28:05.071306+00:00","level":"INFO","logger":"dtos.request","message":"request_accepted","request_id":"c63701367c23408fb5df875812271ec4","event":"request_accepted","method":"GET","path":"/health/live"}
+2026-11-10T18:28:05.0730156Z {"timestamp":"2026-11-10T18:28:05.071383+00:00","level":"INFO","logger":"dtos.request","message":"handler_scheduled","request_id":"c63701367c23408fb5df875812271ec4","event":"handler_scheduled","method":"GET","path":"/health/live"}
+2026-11-10T18:28:05.0734775Z {"timestamp":"2026-11-10T18:28:05.072411+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/health/live \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T18:28:05.0743747Z {"timestamp":"2026-11-10T18:28:05.073764+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"c63701367c23408fb5df875812271ec4","event":"request_complete","duration_ms":2.471,"status_code":200,"method":"GET","path":"/health/live"}
+2026-11-10T18:28:05.7338973Z {"timestamp":"2026-11-10T18:28:05.716326+00:00","level":"INFO","logger":"dtos.request","message":"request_accepted","request_id":"e341418fc6654270b1431ba1f681245c","event":"request_accepted","method":"GET","path":"/health/live"}
+2026-11-10T18:28:05.7341885Z {"timestamp":"2026-11-10T18:28:05.716419+00:00","level":"INFO","logger":"dtos.request","message":"handler_scheduled","request_id":"e341418fc6654270b1431ba1f681245c","event":"handler_scheduled","method":"GET","path":"/health/live"}
+2026-11-10T18:28:05.7385563Z {"timestamp":"2026-11-10T18:28:05.738166+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/health/live \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T18:28:05.7506616Z {"timestamp":"2026-11-10T18:28:05.750101+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"e341418fc6654270b1431ba1f681245c","event":"request_complete","duration_ms":33.793,"status_code":200,"method":"GET","path":"/health/live"}
+2026-11-10T18:28:06.3303120Z {"timestamp":"2026-11-10T18:28:06.329901+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/health/live \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T18:28:06.3306846Z {"timestamp":"2026-11-10T18:28:06.329257+00:00","level":"INFO","logger":"dtos.request","message":"request_accepted","request_id":"80590b7fac6049fd988e838db37b281d","event":"request_accepted","method":"GET","path":"/health/live"}
+2026-11-10T18:28:06.3459266Z {"timestamp":"2026-11-10T18:28:06.329317+00:00","level":"INFO","logger":"dtos.request","message":"handler_scheduled","request_id":"80590b7fac6049fd988e838db37b281d","event":"handler_scheduled","method":"GET","path":"/health/live"}
+2026-11-10T18:28:06.3561925Z {"timestamp":"2026-11-10T18:28:06.346213+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"80590b7fac6049fd988e838db37b281d","event":"request_complete","duration_ms":16.965,"status_code":200,"method":"GET","path":"/health/live"}
+2026-11-10T18:28:06.9724383Z {"timestamp":"2026-11-10T18:28:06.972049+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/health/live \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T18:28:06.9880326Z {"timestamp":"2026-11-10T18:28:06.971364+00:00","level":"INFO","logger":"dtos.request","message":"request_accepted","request_id":"5ad45358198541a8a72ac9237ca551c7","event":"request_accepted","method":"GET","path":"/health/live"}
+2026-11-10T18:28:06.9883260Z {"timestamp":"2026-11-10T18:28:06.971422+00:00","level":"INFO","logger":"dtos.request","message":"handler_scheduled","request_id":"5ad45358198541a8a72ac9237ca551c7","event":"handler_scheduled","method":"GET","path":"/health/live"}
+2026-11-10T18:28:06.9890446Z {"timestamp":"2026-11-10T18:28:06.988356+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"5ad45358198541a8a72ac9237ca551c7","event":"request_complete","duration_ms":16.999,"status_code":200,"method":"GET","path":"/health/live"}
+2026-11-10T18:28:07.5905918Z {"timestamp":"2026-11-10T18:28:07.590082+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/health/live \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T18:28:07.5913566Z {"timestamp":"2026-11-10T18:28:07.589344+00:00","level":"INFO","logger":"dtos.request","message":"request_accepted","request_id":"9d1c150f49124e2ea1fcd37e37963b4f","event":"request_accepted","method":"GET","path":"/health/live"}
+2026-11-10T18:28:07.5915598Z {"timestamp":"2026-11-10T18:28:07.589423+00:00","level":"INFO","logger":"dtos.request","message":"handler_scheduled","request_id":"9d1c150f49124e2ea1fcd37e37963b4f","event":"handler_scheduled","method":"GET","path":"/health/live"}
+2026-11-10T18:28:07.5923961Z {"timestamp":"2026-11-10T18:28:07.591838+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"9d1c150f49124e2ea1fcd37e37963b4f","event":"request_complete","duration_ms":2.508,"status_code":200,"method":"GET","path":"/health/live"}
+2026-11-10T18:28:08.1511708Z {"timestamp":"2026-11-10T18:28:08.150598+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/health/live \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T18:28:08.1514295Z {"timestamp":"2026-11-10T18:28:08.149925+00:00","level":"INFO","logger":"dtos.request","message":"request_accepted","request_id":"9bed47f3d0944b45a10153265c4c83e5","event":"request_accepted","method":"GET","path":"/health/live"}
+2026-11-10T18:28:08.1516998Z {"timestamp":"2026-11-10T18:28:08.149997+00:00","level":"INFO","logger":"dtos.request","message":"handler_scheduled","request_id":"9bed47f3d0944b45a10153265c4c83e5","event":"handler_scheduled","method":"GET","path":"/health/live"}
+2026-11-10T18:28:08.1527110Z {"timestamp":"2026-11-10T18:28:08.151919+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"9bed47f3d0944b45a10153265c4c83e5","event":"request_complete","duration_ms":2.007,"status_code":200,"method":"GET","path":"/health/live"}
+2026-11-10T18:28:08.6953629Z {"timestamp":"2026-11-10T18:28:08.693959+00:00","level":"INFO","logger":"dtos.request","message":"request_accepted","request_id":"d40a90b3fa9d41a984e7c9de97b8da03","event":"request_accepted","method":"GET","path":"/health/live"}
+2026-11-10T18:28:08.7230899Z {"timestamp":"2026-11-10T18:28:08.694973+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/health/live \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T18:28:08.7389320Z {"timestamp":"2026-11-10T18:28:08.694043+00:00","level":"INFO","logger":"dtos.request","message":"handler_scheduled","request_id":"d40a90b3fa9d41a984e7c9de97b8da03","event":"handler_scheduled","method":"GET","path":"/health/live"}
+2026-11-10T18:28:08.7394868Z {"timestamp":"2026-11-10T18:28:08.738923+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"d40a90b3fa9d41a984e7c9de97b8da03","event":"request_complete","duration_ms":44.981,"status_code":200,"method":"GET","path":"/health/live"}
+2026-11-10T18:28:09.3827934Z {"timestamp":"2026-11-10T18:28:09.371314+00:00","level":"INFO","logger":"dtos.request","message":"request_accepted","request_id":"0392d32b64b14c47bd7625a04001ffe2","event":"request_accepted","method":"GET","path":"/health/live"}
+2026-11-10T18:28:09.4139363Z {"timestamp":"2026-11-10T18:28:09.387955+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/health/live \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T18:28:09.4273600Z {"timestamp":"2026-11-10T18:28:09.371395+00:00","level":"INFO","logger":"dtos.request","message":"handler_scheduled","request_id":"0392d32b64b14c47bd7625a04001ffe2","event":"handler_scheduled","method":"GET","path":"/health/live"}
+2026-11-10T18:28:09.4279943Z {"timestamp":"2026-11-10T18:28:09.427327+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"0392d32b64b14c47bd7625a04001ffe2","event":"request_complete","duration_ms":56.025,"status_code":200,"method":"GET","path":"/health/live"}
+2026-11-10T18:28:10.0091243Z {"timestamp":"2026-11-10T18:28:10.007944+00:00","level":"INFO","logger":"dtos.request","message":"request_accepted","request_id":"b71bba89be444d07a537c8a1c8e8c960","event":"request_accepted","method":"GET","path":"/health/live"}
+2026-11-10T18:28:10.0094926Z {"timestamp":"2026-11-10T18:28:10.008016+00:00","level":"INFO","logger":"dtos.request","message":"handler_scheduled","request_id":"b71bba89be444d07a537c8a1c8e8c960","event":"handler_scheduled","method":"GET","path":"/health/live"}
+2026-11-10T18:28:10.0097993Z {"timestamp":"2026-11-10T18:28:10.009152+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/health/live \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T18:28:10.0108548Z {"timestamp":"2026-11-10T18:28:10.009944+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"b71bba89be444d07a537c8a1c8e8c960","event":"request_complete","duration_ms":2.01,"status_code":200,"method":"GET","path":"/health/live"}
+2026-11-10T18:28:10.5224329Z {"timestamp":"2026-11-10T18:28:10.521062+00:00","level":"INFO","logger":"dtos.request","message":"request_accepted","request_id":"5c26c4d08d574e3ca82fbfaf084c46ee","event":"request_accepted","method":"GET","path":"/health/live"}
+2026-11-10T18:28:10.5229018Z {"timestamp":"2026-11-10T18:28:10.521138+00:00","level":"INFO","logger":"dtos.request","message":"handler_scheduled","request_id":"5c26c4d08d574e3ca82fbfaf084c46ee","event":"handler_scheduled","method":"GET","path":"/health/live"}
+2026-11-10T18:28:10.5303266Z {"timestamp":"2026-11-10T18:28:10.529917+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/health/live \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T18:28:10.5450526Z {"timestamp":"2026-11-10T18:28:10.540081+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"5c26c4d08d574e3ca82fbfaf084c46ee","event":"request_complete","duration_ms":19.029,"status_code":200,"method":"GET","path":"/health/live"}
+2026-11-10T18:28:11.2253047Z {"timestamp":"2026-11-10T18:28:11.224021+00:00","level":"INFO","logger":"dtos.request","message":"request_accepted","request_id":"b74c17a42d574b37a198db637d52326e","event":"request_accepted","method":"GET","path":"/health/live"}
+2026-11-10T18:28:11.2255393Z {"timestamp":"2026-11-10T18:28:11.224097+00:00","level":"INFO","logger":"dtos.request","message":"handler_scheduled","request_id":"b74c17a42d574b37a198db637d52326e","event":"handler_scheduled","method":"GET","path":"/health/live"}
+2026-11-10T18:28:11.2307941Z {"timestamp":"2026-11-10T18:28:11.229450+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/health/live \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T18:28:11.2665260Z {"timestamp":"2026-11-10T18:28:11.261209+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"b74c17a42d574b37a198db637d52326e","event":"request_complete","duration_ms":37.199,"status_code":200,"method":"GET","path":"/health/live"}
+2026-11-10T18:28:11.8016511Z {"timestamp":"2026-11-10T18:28:11.800964+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/health/live \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T18:28:11.8018768Z {"timestamp":"2026-11-10T18:28:11.800231+00:00","level":"INFO","logger":"dtos.request","message":"request_accepted","request_id":"8b4257b21e114290823ddf70b8f540f6","event":"request_accepted","method":"GET","path":"/health/live"}
+2026-11-10T18:28:11.8021685Z {"timestamp":"2026-11-10T18:28:11.800304+00:00","level":"INFO","logger":"dtos.request","message":"handler_scheduled","request_id":"8b4257b21e114290823ddf70b8f540f6","event":"handler_scheduled","method":"GET","path":"/health/live"}
+2026-11-10T18:28:11.8029787Z {"timestamp":"2026-11-10T18:28:11.802079+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"8b4257b21e114290823ddf70b8f540f6","event":"request_complete","duration_ms":1.859,"status_code":200,"method":"GET","path":"/health/live"}
+2026-11-10T18:28:12.3620339Z {"timestamp":"2026-11-10T18:28:12.360539+00:00","level":"INFO","logger":"dtos.request","message":"request_accepted","request_id":"e501b616d2b34ab5a0243c753e7cc7c3","event":"request_accepted","method":"GET","path":"/health/live"}
+2026-11-10T18:28:12.3622860Z {"timestamp":"2026-11-10T18:28:12.361594+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/health/live \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T18:28:12.3624591Z {"timestamp":"2026-11-10T18:28:12.360613+00:00","level":"INFO","logger":"dtos.request","message":"handler_scheduled","request_id":"e501b616d2b34ab5a0243c753e7cc7c3","event":"handler_scheduled","method":"GET","path":"/health/live"}
+2026-11-10T18:28:12.3921723Z {"timestamp":"2026-11-10T18:28:12.379097+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"e501b616d2b34ab5a0243c753e7cc7c3","event":"request_complete","duration_ms":18.569,"status_code":200,"method":"GET","path":"/health/live"}
+2026-11-10T18:28:13.0926659Z {"timestamp":"2026-11-10T18:28:13.091290+00:00","level":"INFO","logger":"dtos.request","message":"request_accepted","request_id":"a1ee9c80fa2947fcbe0235109b581971","event":"request_accepted","method":"GET","path":"/health/live"}
+2026-11-10T18:28:13.0979210Z {"timestamp":"2026-11-10T18:28:13.091375+00:00","level":"INFO","logger":"dtos.request","message":"handler_scheduled","request_id":"a1ee9c80fa2947fcbe0235109b581971","event":"handler_scheduled","method":"GET","path":"/health/live"}
+2026-11-10T18:28:13.0981973Z {"timestamp":"2026-11-10T18:28:13.092182+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/health/live \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T18:28:13.1238535Z {"timestamp":"2026-11-10T18:28:13.123187+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"a1ee9c80fa2947fcbe0235109b581971","event":"request_complete","duration_ms":31.909,"status_code":200,"method":"GET","path":"/health/live"}
+2026-11-10T18:28:13.6604545Z {"timestamp":"2026-11-10T18:28:13.659909+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/health/live \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T18:28:13.6608892Z {"timestamp":"2026-11-10T18:28:13.659115+00:00","level":"INFO","logger":"dtos.request","message":"request_accepted","request_id":"030da560b667420889d98eed88f6e3f8","event":"request_accepted","method":"GET","path":"/health/live"}
+2026-11-10T18:28:13.6610787Z {"timestamp":"2026-11-10T18:28:13.659192+00:00","level":"INFO","logger":"dtos.request","message":"handler_scheduled","request_id":"030da560b667420889d98eed88f6e3f8","event":"handler_scheduled","method":"GET","path":"/health/live"}
+2026-11-10T18:28:13.6619016Z {"timestamp":"2026-11-10T18:28:13.661077+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"030da560b667420889d98eed88f6e3f8","event":"request_complete","duration_ms":1.974,"status_code":200,"method":"GET","path":"/health/live"}
+2026-11-10T18:28:14.2703421Z {"timestamp":"2026-11-10T18:28:14.269731+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/health/live \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T18:28:14.2712790Z {"timestamp":"2026-11-10T18:28:14.268976+00:00","level":"INFO","logger":"dtos.request","message":"request_accepted","request_id":"2b02c940ded1489c984b0a0c407693fe","event":"request_accepted","method":"GET","path":"/health/live"}
+2026-11-10T18:28:14.2714905Z {"timestamp":"2026-11-10T18:28:14.269061+00:00","level":"INFO","logger":"dtos.request","message":"handler_scheduled","request_id":"2b02c940ded1489c984b0a0c407693fe","event":"handler_scheduled","method":"GET","path":"/health/live"}
+2026-11-10T18:28:14.2717992Z {"timestamp":"2026-11-10T18:28:14.270618+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"2b02c940ded1489c984b0a0c407693fe","event":"request_complete","duration_ms":1.657,"status_code":200,"method":"GET","path":"/health/live"}
+2026-11-10T18:28:14.8999579Z {"timestamp":"2026-11-10T18:28:14.899286+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/health/live \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-10T18:28:14.9003505Z {"timestamp":"2026-11-10T18:28:14.898493+00:00","level":"INFO","logger":"dtos.request","message":"request_accepted","request_id":"25718af274d445a29eb4b7f386327f99","event":"request_accepted","method":"GET","path":"/health/live"}
+2026-11-10T18:28:14.9006857Z {"timestamp":"2026-11-10T18:28:14.898580+00:00","level":"INFO","logger":"dtos.request","message":"handler_scheduled","request_id":"25718af274d445a29eb4b7f386327f99","event":"handler_scheduled","method":"GET","path":"/health/live"}
+2026-11-10T18:28:14.9011395Z {"timestamp":"2026-11-10T18:28:14.900432+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"25718af274d445a29eb4b7f386327f99","event":"request_complete","duration_ms":1.953,"status_code":200,"method":"GET","path":"/health/live"}
+2026-11-10T18:28:15.5304902Z {"timestamp":"2026-11-10T18:28:15.524185+00:00","level":"INFO","logger":"dtos.request","message":"request_accepted","request_id":"72280b32ab414f4ba886aeb7c86eda1a","event":"request_accepted","method":"GET","path":"/health/live"}
+2026-11-10T18:28:15.5307887Z {"timestamp":"2026-11-10T18:28:15.524267+00:00","level":"INFO","logger":"dtos.request","message":"handler_scheduled","request_id":"72280b32ab414f4ba886aeb7c86eda1a","event":"handler_scheduled","method":"GET","path":"/health/li
