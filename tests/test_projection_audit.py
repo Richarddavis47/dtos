@@ -307,6 +307,9 @@ class ProjectionAuditTests(unittest.IsolatedAsyncioTestCase):
             with patch("routes.audit.build_projection_audit", side_effect=slow_builder):
                 token = request_context.set("projection-audit-request")
                 try:
+                    # Settle fixture graphs before the worker's unchanged
+                    # two-second hold begins, with GC still enabled.
+                    gc.collect()
                     audit_request = asyncio.create_task(
                         client.get("/api/audit/projections/current"),
                     )
@@ -317,9 +320,6 @@ class ProjectionAuditTests(unittest.IsolatedAsyncioTestCase):
                     self.assertTrue(started.is_set())
                     # This measures whether the pending audit blocks a separate
                     # request, not collection of earlier test/HTTP fixture graphs.
-                    # Keep GC enabled, but settle setup allocations before the
-                    # unchanged request timer (important in the full 3.14 suite).
-                    gc.collect()
                     began = time.perf_counter()
                     response = await asyncio.wait_for(client.get("/lightweight"), 0.25)
                     latency_ms = (time.perf_counter() - began) * 1000
