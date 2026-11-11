@@ -1,0 +1,633 @@
+{
+  "schema": "dtos-r3-offer-copy-reuse-readonly-audit-v1",
+  "observed_at": "2026-11-11T12:05:08.484681+00:00",
+  "candidate": "4cf524c488efb36c77defd78bfd7acf84a3f6ddd",
+  "tree": "79fe9268fb3394604559bbcbe1119616a080b71b",
+  "scope": "Read-only stored ZIP central-directory, existing receipt/source inspection and file hashing; no ZIP member decompression, test/Docker/network/app import or source/archive mutation. Newly authored index, not a recreated original execution.",
+  "oversized_archive": {
+    "file": "/workspace/2246-granite-activation/expansion/final-r3/recovery-package.zip",
+    "bytes": 114866370,
+    "sha256": "5548273f038280b792c9b392d480ba979ed8639e683f84b033ddfd88ba4c62a3",
+    "cap_bytes": 104857600,
+    "excess_bytes": 10008770
+  },
+  "complete_local_canonical": {
+    "manifest_payloads": 687,
+    "manifest_sha256": "2cbbd8f5dabcbd6fe58c5013c28d6f9b73e27a08f324f60d158262b664f198f5",
+    "all_payload_names_sizes_present": true,
+    "payloads_plus_sidecars": 689,
+    "compressed_bytes": 89546452,
+    "independent_payload_rehash_of_zip": false,
+    "original_successful_full_manifest_verification_reused": true
+  },
+  "families": [
+    {
+      "family": "partner-history",
+      "original": "public-welcome-security.zip",
+      "original_prefix": "trade-partner-history/",
+      "original_queue": {
+        "id": 13846424159,
+        "name": "public-welcome-security-browser",
+        "run": 43002908291,
+        "file": "public-welcome-security.zip",
+        "bytes": 72979529,
+        "sha256": "98b601a38462f17f4507fcfb73d4e4ddb482c7024c0d4e5f0a55da078d91c921"
+      },
+      "verified_source_receipt": true,
+      "compressed_copy_bytes": 5263129,
+      "members": [
+        {
+          "name": "create-1280-history.png",
+          "bytes": 220096,
+          "sha256": "6ccc62502ff352bd90b857948315cf1d59077e4de5e9af4def784263953fb96c",
+          "crc32": 3727864911,
+          "local_copy_sha256_matched": true,
+          "original_and_recovery_central_directory_size_crc_match": true
+        },
+        {
+          "name": "create-1280-returned.png",
+          "bytes": 675615,
+          "sha256": "91b8239041530b3b260a456d971fad4b8082985607e2dd8ba272575f449f150f",
+          "crc32": 1111247592,
+          "local_copy_sha256_matched": true,
+          "original_and_recovery_central_directory_size_crc_match": true
+        },
+        {
+          "name": "create-320-history.png",
+          "bytes": 214942,
+          "sha256": "6bc3f0ab54ce908a5b1ad717afe332c9179d0ff03b84897ea36e6121f9d1148e",
+          "crc32": 1649199499,
+          "local_copy_sha256_matched": true,
+          "original_and_recovery_central_directory_size_crc_match": true
+        },
+        {
+          "name": "create-320-returned.png",
+          "bytes": 660576,
+          "sha256": "13e8dc0b0bf33dbfdcd31d6d51cf342a33cdecf0bf701ae0c68416fa900ccb76",
+          "crc32": 1623612116,
+          "local_copy_sha256_matched": true,
+          "original_and_recovery_central_directory_size_crc_match": true
+        },
+        {
+          "name": "create-375-history.png",
+          "bytes": 211578,
+          "sha256": "622d3bd2471a10bbd405fc8a52bcc1ac07918f711fab34ed8036f58f8397d1ca",
+          "crc32": 2939815348,
+          "local_copy_sha256_matched": true,
+          "original_and_recovery_central_directory_size_crc_match": true
+        },
+        {
+          "name": "create-375-returned.png",
+          "bytes": 643229,
+          "sha256": "ca38225c3e60ed409e07725ba511d8105def725b9c688d7ebb8fb3a3eef7dcff",
+          "crc32": 3119235106,
+          "local_copy_sha256_matched": true,
+          "original_and_recovery_central_directory_size_crc_match": true
+        },
+        {
+          "name": "create-390-history.png",
+          "bytes": 209873,
+          "sha256": "aa94227b54bf83a6c785e6414018c1ec35693b06ef9a24ce919bffe302bddb9f",
+          "crc32": 380003956,
+          "local_copy_sha256_matched": true,
+          "original_and_recovery_central_directory_size_crc_match": true
+        },
+        {
+          "name": "create-390-returned.png",
+          "bytes": 640070,
+          "sha256": "a1606c284cd3243668c65632aa40cade057b91f8e244e7ab600f13e2e4fe6f07",
+          "crc32": 1974000341,
+          "local_copy_sha256_matched": true,
+          "original_and_recovery_central_directory_size_crc_match": true
+        },
+        {
+          "name": "evaluation-round-trip.json",
+          "bytes": 2364,
+          "sha256": "5914ef17d17e193d677324405ebe23286cb4b378f207d9f30aa8080f8da2e635",
+          "crc32": 1446974678,
+          "local_copy_sha256_matched": true,
+          "original_and_recovery_central_directory_size_crc_match": true
+        },
+        {
+          "name": "recommendation-round-trip.json",
+          "bytes": 2192,
+          "sha256": "f367098f026fe32c6317e9a5a819769f767b593618bd8904a2b859efa15f2c1a",
+          "crc32": 517568751,
+          "local_copy_sha256_matched": true,
+          "original_and_recovery_central_directory_size_crc_match": true
+        },
+        {
+          "name": "recommended-1280-history.png",
+          "bytes": 220096,
+          "sha256": "6ccc62502ff352bd90b857948315cf1d59077e4de5e9af4def784263953fb96c",
+          "crc32": 3727864911,
+          "local_copy_sha256_matched": true,
+          "original_and_recovery_central_directory_size_crc_match": true
+        },
+        {
+          "name": "recommended-1280-returned.png",
+          "bytes": 339992,
+          "sha256": "6e9253cc18286a81233cb42b5fdb7f875b09972793cefdb524f36482a0ae312c",
+          "crc32": 554397170,
+          "local_copy_sha256_matched": true,
+          "original_and_recovery_central_directory_size_crc_match": true
+        },
+        {
+          "name": "recommended-320-history.png",
+          "bytes": 214942,
+          "sha256": "6bc3f0ab54ce908a5b1ad717afe332c9179d0ff03b84897ea36e6121f9d1148e",
+          "crc32": 1649199499,
+          "local_copy_sha256_matched": true,
+          "original_and_recovery_central_directory_size_crc_match": true
+        },
+        {
+          "name": "recommended-320-returned.png",
+          "bytes": 338143,
+          "sha256": "7aa0c885d05206c9347dcf80400d1808371a778ada3cb5921cfd5c12ae2b4607",
+          "crc32": 838667600,
+          "local_copy_sha256_matched": true,
+          "original_and_recovery_central_directory_size_crc_match": true
+        },
+        {
+          "name": "recommended-375-history.png",
+          "bytes": 211578,
+          "sha256": "622d3bd2471a10bbd405fc8a52bcc1ac07918f711fab34ed8036f58f8397d1ca",
+          "crc32": 2939815348,
+          "local_copy_sha256_matched": true,
+          "original_and_recovery_central_directory_size_crc_match": true
+        },
+        {
+          "name": "recommended-375-returned.png",
+          "bytes": 332724,
+          "sha256": "674a5b8703dd0e1c6db28ea2cf7c5220d9a740af2071434efd3ef2b72e909dd6",
+          "crc32": 3857504964,
+          "local_copy_sha256_matched": true,
+          "original_and_recovery_central_directory_size_crc_match": true
+        },
+        {
+          "name": "recommended-390-history.png",
+          "bytes": 209873,
+          "sha256": "aa94227b54bf83a6c785e6414018c1ec35693b06ef9a24ce919bffe302bddb9f",
+          "crc32": 380003956,
+          "local_copy_sha256_matched": true,
+          "original_and_recovery_central_directory_size_crc_match": true
+        },
+        {
+          "name": "recommended-390-returned.png",
+          "bytes": 327720,
+          "sha256": "089ccaddfdd24d8ecca5e9ce8ca3003ac356c74b4ed1af3e1600e6a948f83f3b",
+          "crc32": 1051899242,
+          "local_copy_sha256_matched": true,
+          "original_and_recovery_central_directory_size_crc_match": true
+        }
+      ]
+    },
+    {
+      "family": "team-need",
+      "original": "trade-resource-original.zip",
+      "original_prefix": "browser/team-need/",
+      "original_queue": {
+        "id": 13848332661,
+        "name": "trade-resource-2g",
+        "run": 43002908291,
+        "file": "trade-resource-original.zip",
+        "bytes": 25626813,
+        "sha256": "b50e553413c2c9c3b93a879702147defc3d2f9bbf5696fd9b9c0b54c12340159"
+      },
+      "verified_source_receipt": true,
+      "compressed_copy_bytes": 1889828,
+      "members": [
+        {
+          "name": "league-switch.json",
+          "bytes": 332,
+          "sha256": "e78c919a6aff4bd8a19981e9ed84f67ba54e007b7751a5fd88d0b7aa4b63be93",
+          "crc32": 3004470004,
+          "local_copy_sha256_matched": true,
+          "original_and_recovery_central_directory_size_crc_match": true
+        },
+        {
+          "name": "my-team-1280.png",
+          "bytes": 499819,
+          "sha256": "d238bfab1cdcb2a0a03571e38a6c45f9f475c10e7df5fd76f42016229bf7d486",
+          "crc32": 2598785248,
+          "local_copy_sha256_matched": true,
+          "original_and_recovery_central_directory_size_crc_match": true
+        },
+        {
+          "name": "my-team-320.png",
+          "bytes": 546766,
+          "sha256": "deca35ad39fbb67f0b992469d1e7ff5fc1074950105d6516470cfe5aa829bcc5",
+          "crc32": 4203841980,
+          "local_copy_sha256_matched": true,
+          "original_and_recovery_central_directory_size_crc_match": true
+        },
+        {
+          "name": "my-team-375.png",
+          "bytes": 541129,
+          "sha256": "e5251677bbf00da2af1dc16d2ebbff0f683fc673fe2133041c167082498744c0",
+          "crc32": 3164946446,
+          "local_copy_sha256_matched": true,
+          "original_and_recovery_central_directory_size_crc_match": true
+        },
+        {
+          "name": "my-team-390.png",
+          "bytes": 537193,
+          "sha256": "e962f783d2ee29ff898e342718ad13b938e369bde7befd5ef94a694910de066c",
+          "crc32": 1365190239,
+          "local_copy_sha256_matched": true,
+          "original_and_recovery_central_directory_size_crc_match": true
+        },
+        {
+          "name": "phone-round-trips.json",
+          "bytes": 1786,
+          "sha256": "47f663c7c604ada8f821d682bc420cae6af4200c77a577fd49cc40f829b6a368",
+          "crc32": 406940145,
+          "local_copy_sha256_matched": true,
+          "original_and_recovery_central_directory_size_crc_match": true
+        },
+        {
+          "name": "real-search-and-prior-context.json",
+          "bytes": 422,
+          "sha256": "360e747d151d8ca1c03111460a8d7425069c880999c013b4a80f6a9fd7204c67",
+          "crc32": 1778953653,
+          "local_copy_sha256_matched": true,
+          "original_and_recovery_central_directory_size_crc_match": true
+        },
+        {
+          "name": "superflex-depth-and-stale.json",
+          "bytes": 404,
+          "sha256": "1ae14afecb0210bb1fee11c3d2c076901c07209f25ef236346876ed3272e7902",
+          "crc32": 4152412505,
+          "local_copy_sha256_matched": true,
+          "original_and_recovery_central_directory_size_crc_match": true
+        }
+      ]
+    },
+    {
+      "family": "protections",
+      "original": "trade-resource-original.zip",
+      "original_prefix": "browser/protections/",
+      "original_queue": {
+        "id": 13848332661,
+        "name": "trade-resource-2g",
+        "run": 43002908291,
+        "file": "trade-resource-original.zip",
+        "bytes": 25626813,
+        "sha256": "b50e553413c2c9c3b93a879702147defc3d2f9bbf5696fd9b9c0b54c12340159"
+      },
+      "verified_source_receipt": true,
+      "compressed_copy_bytes": 1029837,
+      "members": [
+        {
+          "name": "clear-and-prior-results.json",
+          "bytes": 274402,
+          "sha256": "84860e81d61b25de73c4f8888e1e748e4715517e444eedd5d9f3e27a1a12da8c",
+          "crc32": 2462754885,
+          "local_copy_sha256_matched": true,
+          "original_and_recovery_central_directory_size_crc_match": true
+        },
+        {
+          "name": "completed-zero-result.json",
+          "bytes": 7124,
+          "sha256": "0747a7e460bbb181a4165cc5053e1fa9775e4fa4d9971bb76b4045ed736d4a1f",
+          "crc32": 2535464025,
+          "local_copy_sha256_matched": true,
+          "original_and_recovery_central_directory_size_crc_match": true
+        },
+        {
+          "name": "completed-zero-result.png",
+          "bytes": 319530,
+          "sha256": "fbae1de6c1952cab190081b452a3507f3f6c13a1111e5c68982330dcf148dccb",
+          "crc32": 63558311,
+          "local_copy_sha256_matched": true,
+          "original_and_recovery_central_directory_size_crc_match": true
+        },
+        {
+          "name": "draft-and-scope.json",
+          "bytes": 597,
+          "sha256": "6ea582858aa6b2cfa44c3b68a0f11caa876cbb84270a79f5003912deec720b06",
+          "crc32": 404988157,
+          "local_copy_sha256_matched": true,
+          "original_and_recovery_central_directory_size_crc_match": true
+        },
+        {
+          "name": "exact-native-search.json",
+          "bytes": 2112951,
+          "sha256": "05583c9edf505a717986e3932c0bca1caaea5f69f8a77e8d76643b7dbe2ec1e9",
+          "crc32": 3014894286,
+          "local_copy_sha256_matched": true,
+          "original_and_recovery_central_directory_size_crc_match": true
+        },
+        {
+          "name": "phone-1280.png",
+          "bytes": 199322,
+          "sha256": "26115baaf44fda2bb1575e9a1545e90bc67bd75d28761e9ee88e1d801b2c99e0",
+          "crc32": 3106179219,
+          "local_copy_sha256_matched": true,
+          "original_and_recovery_central_directory_size_crc_match": true
+        },
+        {
+          "name": "phone-1280.json",
+          "bytes": 444,
+          "sha256": "14a36cbf5e00c1bd586abbb74a8117adb2d497564aa05fef5054536ae5c95150",
+          "crc32": 2157155613,
+          "local_copy_sha256_matched": true,
+          "original_and_recovery_central_directory_size_crc_match": true
+        },
+        {
+          "name": "phone-320.json",
+          "bytes": 443,
+          "sha256": "0a1880f9f8a2a82dbbd24b335e979605c82ac8620834eb3adb7bdf167b06baf8",
+          "crc32": 3739546943,
+          "local_copy_sha256_matched": true,
+          "original_and_recovery_central_directory_size_crc_match": true
+        },
+        {
+          "name": "phone-320.png",
+          "bytes": 178844,
+          "sha256": "f40ad0e66ebafa16e0b65696e0e0809a749230d4342d557a3c37696d5ae1b6f8",
+          "crc32": 2433134100,
+          "local_copy_sha256_matched": true,
+          "original_and_recovery_central_directory_size_crc_match": true
+        },
+        {
+          "name": "phone-375.json",
+          "bytes": 443,
+          "sha256": "9784f73c137774e088eb4e5fe3a55d32498b29314d901a819ebb0748db711808",
+          "crc32": 1811679613,
+          "local_copy_sha256_matched": true,
+          "original_and_recovery_central_directory_size_crc_match": true
+        },
+        {
+          "name": "phone-375.png",
+          "bytes": 178438,
+          "sha256": "d1b9a98d0ed52dc34eb4167742c642c38767fb7d535c6a5eaaed4c0094c0214c",
+          "crc32": 4181848920,
+          "local_copy_sha256_matched": true,
+          "original_and_recovery_central_directory_size_crc_match": true
+        },
+        {
+          "name": "phone-390.json",
+          "bytes": 443,
+          "sha256": "2270a39d64b1bc7dc42e5ca2c140b37167f34e4b313a91311f817f4536043839",
+          "crc32": 475323611,
+          "local_copy_sha256_matched": true,
+          "original_and_recovery_central_directory_size_crc_match": true
+        },
+        {
+          "name": "phone-390.png",
+          "bytes": 178112,
+          "sha256": "11ee9817ecf5c0e3c8852dc20f0511057a9d2b11328a7a8ab2daa7ec2ad47cef",
+          "crc32": 1758735725,
+          "local_copy_sha256_matched": true,
+          "original_and_recovery_central_directory_size_crc_match": true
+        }
+      ]
+    },
+    {
+      "family": "offer-comparison",
+      "original": "trade-resource-original.zip",
+      "original_prefix": "browser/offer-comparison/",
+      "original_queue": {
+        "id": 13848332661,
+        "name": "trade-resource-2g",
+        "run": 43002908291,
+        "file": "trade-resource-original.zip",
+        "bytes": 25626813,
+        "sha256": "b50e553413c2c9c3b93a879702147defc3d2f9bbf5696fd9b9c0b54c12340159"
+      },
+      "verified_source_receipt": true,
+      "compressed_copy_bytes": 11600941,
+      "members": [
+        {
+          "name": "aged-incompatible.json",
+          "bytes": 416,
+          "sha256": "cea36c7cc146a8ec378bccc8ea389e130803a41bd0cf53c7b87641f0c3be05bd",
+          "crc32": 863009576,
+          "local_copy_sha256_matched": true,
+          "original_and_recovery_central_directory_size_crc_match": true
+        },
+        {
+          "name": "aged-incompatible.png",
+          "bytes": 897368,
+          "sha256": "ec23e5050fea9842cedc067c9c286507d2c1bce2eb9baf43e37a5ec895b6af2d",
+          "crc32": 2677545916,
+          "local_copy_sha256_matched": true,
+          "original_and_recovery_central_directory_size_crc_match": true
+        },
+        {
+          "name": "custom-incomplete-reload.json",
+          "bytes": 559,
+          "sha256": "45737ba8027b905788f3fc0a7027458a96f841997d63c22c43b26312f9853561",
+          "crc32": 142802888,
+          "local_copy_sha256_matched": true,
+          "original_and_recovery_central_directory_size_crc_match": true
+        },
+        {
+          "name": "custom-incomplete-reload.png",
+          "bytes": 1039587,
+          "sha256": "19d4043e2e713e2d5ea7bfa131396a1d7f2a73bdea808fed74f49d144aa35eed",
+          "crc32": 1291207315,
+          "local_copy_sha256_matched": true,
+          "original_and_recovery_central_directory_size_crc_match": true
+        },
+        {
+          "name": "neutral-custom.json",
+          "bytes": 459,
+          "sha256": "9a1ec6d02eff1e25d79090029af966d69e8f075af3983cf21c907e4261275fcf",
+          "crc32": 2429212705,
+          "local_copy_sha256_matched": true,
+          "original_and_recovery_central_directory_size_crc_match": true
+        },
+        {
+          "name": "neutral-custom.png",
+          "bytes": 606680,
+          "sha256": "aa204bbb632dd60f0b6a91108cc56bd28d11c8a17600df6e26051d48aae3a097",
+          "crc32": 2644827924,
+          "local_copy_sha256_matched": true,
+          "original_and_recovery_central_directory_size_crc_match": true
+        },
+        {
+          "name": "partial-pair.json",
+          "bytes": 440,
+          "sha256": "2bbbbdc62b673269c577bebcfecd2275ce25acaa741ef96a77efa5d6d97b1540",
+          "crc32": 1060928767,
+          "local_copy_sha256_matched": true,
+          "original_and_recovery_central_directory_size_crc_match": true
+        },
+        {
+          "name": "partial-pair.png",
+          "bytes": 998037,
+          "sha256": "b018623087e10c33ff8fde166d825423abdf708b81fb7d7b8a4e0c6491111f46",
+          "crc32": 245938485,
+          "local_copy_sha256_matched": true,
+          "original_and_recovery_central_directory_size_crc_match": true
+        },
+        {
+          "name": "phone-1280.json",
+          "bytes": 649,
+          "sha256": "b0af549a186b7375c3ca040f1c17319e4b8dde5be43e193eb3190134e800411e",
+          "crc32": 2350712088,
+          "local_copy_sha256_matched": true,
+          "original_and_recovery_central_directory_size_crc_match": true
+        },
+        {
+          "name": "phone-1280.png",
+          "bytes": 1386564,
+          "sha256": "f982a6fa11b497543aa11af7e7b4705f7a76264049fbb60decad2a60faaffb6d",
+          "crc32": 2148262496,
+          "local_copy_sha256_matched": true,
+          "original_and_recovery_central_directory_size_crc_match": true
+        },
+        {
+          "name": "phone-320.json",
+          "bytes": 648,
+          "sha256": "b01ab39507ba294a7a4dd0e7663da974fef6311e165477e2a0e349b7cd4e3fcc",
+          "crc32": 2382898351,
+          "local_copy_sha256_matched": true,
+          "original_and_recovery_central_directory_size_crc_match": true
+        },
+        {
+          "name": "phone-320.png",
+          "bytes": 1319936,
+          "sha256": "df8ac2c76edcb8b305919dfb16c3d4a6ef1ac20989db0051c3a9442ba45f7524",
+          "crc32": 1626788126,
+          "local_copy_sha256_matched": true,
+          "original_and_recovery_central_directory_size_crc_match": true
+        },
+        {
+          "name": "phone-375.json",
+          "bytes": 648,
+          "sha256": "58ac3a3503cd864c4c2da6e435b88199c0053aa76e8d6862d8db40bb10eb7652",
+          "crc32": 3966852342,
+          "local_copy_sha256_matched": true,
+          "original_and_recovery_central_directory_size_crc_match": true
+        },
+        {
+          "name": "phone-375.png",
+          "bytes": 1289802,
+          "sha256": "892e8823a8d551c192ab038aefb3643ba85c312ab1e7a95c1ce5e240696f2b57",
+          "crc32": 38504794,
+          "local_copy_sha256_matched": true,
+          "original_and_recovery_central_directory_size_crc_match": true
+        },
+        {
+          "name": "phone-390.json",
+          "bytes": 648,
+          "sha256": "22c06801c0eea70cddddaaf1177eb0eeb376ddf122944d03eae7070f341cc1c3",
+          "crc32": 3037308499,
+          "local_copy_sha256_matched": true,
+          "original_and_recovery_central_directory_size_crc_match": true
+        },
+        {
+          "name": "phone-390.png",
+          "bytes": 1289806,
+          "sha256": "1c0280ab0515b6f2b3367e95674bdaf506c0ebb7ef23aef83cc062c9df060662",
+          "crc32": 861218782,
+          "local_copy_sha256_matched": true,
+          "original_and_recovery_central_directory_size_crc_match": true
+        },
+        {
+          "name": "phone-round-trips.json",
+          "bytes": 724,
+          "sha256": "f6047e5fb8ade894c80340b369964af8b9491c244fccfc2699729ecf1603d38e",
+          "crc32": 3947782214,
+          "local_copy_sha256_matched": true,
+          "original_and_recovery_central_directory_size_crc_match": true
+        },
+        {
+          "name": "recommendation-league-scope.json",
+          "bytes": 459,
+          "sha256": "ea5224d8e8db2cf8cb127b3263cc1d3bf6ae08b12840599eec92e73f2c3fac2c",
+          "crc32": 3181496891,
+          "local_copy_sha256_matched": true,
+          "original_and_recovery_central_directory_size_crc_match": true
+        },
+        {
+          "name": "retained-bfcache.json",
+          "bytes": 446,
+          "sha256": "19b33b8ef3f7822343c03efe7b6437122f7261b8ebe7dd558a7f5719a6e34752",
+          "crc32": 3325310269,
+          "local_copy_sha256_matched": true,
+          "original_and_recovery_central_directory_size_crc_match": true
+        },
+        {
+          "name": "retained-bfcache.png",
+          "bytes": 917390,
+          "sha256": "fe15f7e6567ccab82a2ac28826e8024a31de3dfaa285f7313d5e3ce20395fb4e",
+          "crc32": 1123460474,
+          "local_copy_sha256_matched": true,
+          "original_and_recovery_central_directory_size_crc_match": true
+        },
+        {
+          "name": "retained-reload.json",
+          "bytes": 449,
+          "sha256": "0aea53e2682037a1955308c31035088e99ab28c4dbecd3bc49c5880457624711",
+          "crc32": 3235930479,
+          "local_copy_sha256_matched": true,
+          "original_and_recovery_central_directory_size_crc_match": true
+        },
+        {
+          "name": "retained-reload.png",
+          "bytes": 966538,
+          "sha256": "cde369c9845585c8c345d134d98edddfd3fcb4e76b0e092a0cf3777e048efd58",
+          "crc32": 1749248131,
+          "local_copy_sha256_matched": true,
+          "original_and_recovery_central_directory_size_crc_match": true
+        },
+        {
+          "name": "superflex-depth-replace-remove.json",
+          "bytes": 451,
+          "sha256": "08028e03c729e5833be7da1ead2b744eebe6a11aca3e489a9d56f4befec6fea3",
+          "crc32": 3433791251,
+          "local_copy_sha256_matched": true,
+          "original_and_recovery_central_directory_size_crc_match": true
+        },
+        {
+          "name": "two-generations.json",
+          "bytes": 432,
+          "sha256": "d72970bf42c01087093b4d87a594a2c659c6560def048e008c46f433d34fe12b",
+          "crc32": 2909835473,
+          "local_copy_sha256_matched": true,
+          "original_and_recovery_central_directory_size_crc_match": true
+        },
+        {
+          "name": "superflex-depth-replace-remove.png",
+          "bytes": 890546,
+          "sha256": "63ae04f854fd24b25e5036bd200c792a7fb7bf5092b32185436b76131ddeb941",
+          "crc32": 805521583,
+          "local_copy_sha256_matched": true,
+          "original_and_recovery_central_directory_size_crc_match": true
+        },
+        {
+          "name": "two-generations.png",
+          "bytes": 1022870,
+          "sha256": "53de7a984101953030108efe4a115c87f43fc2960d1f833691e4566acb3bc867",
+          "crc32": 341560420,
+          "local_copy_sha256_matched": true,
+          "original_and_recovery_central_directory_size_crc_match": true
+        }
+      ]
+    }
+  ],
+  "selected_minimal_change": {
+    "family": "offer-comparison",
+    "members": 26,
+    "original": "trade-resource-original.zip",
+    "prefix": "browser/offer-comparison/",
+    "archive_bytes_less_only_selected_compressed_data": 103265429,
+    "cap_margin_before_small_new_metadata": 1592171,
+    "estimate_is_final_seal": false,
+    "retained_other_three_standalone_families": true,
+    "instruction": "Omit only standalone offer-comparison copies from new Recovery; retain existing already-verified original Trade asset/native guard result for VALIDATION; offline guard reads exact plan-bound native original. Preserve all687 local payloads,15originals,13jobs,23assets and caps."
+  },
+  "source_files": {
+    "/workspace/2246-granite-activation/expansion/final-r3/make-recovery.py": "0bc7acfc2edb105a6d6e4c1afe35e97952d6def9d94f1bb61902a7c3935bf665",
+    "/workspace/2246-granite-activation/expansion/final-r3/verify-recovery-offline.py": "41e9b78e5b34c42351ade4a46d1cd560163749658c2c789fe6983bcff9faad22",
+    "/workspace/dtos-publisher-2246/tools/release/publish.py": "ad7215119c0799014d05edc640ec1525913d768382c2c9f497535ae32ab55646"
+  },
+  "method_limits": [
+    "No independent SHA256 was computed for decompressed ZIP member bytes during this read-only audit. Each original native ZIP whole-file SHA256 matches exact API/queue/native receipt; each local copied member SHA256 matches extraction receipt; matching original/Recovery central-directory sizes and CRCs plus unchanged writer source demonstrate the duplication. Parent must retain full native sealed verification.",
+    "Computed size is a conservative planning subtraction of compressed member data only. New archive must be sealed/measured/CRC/native-verified and remain strictly below100MiB."
+  ]
+}

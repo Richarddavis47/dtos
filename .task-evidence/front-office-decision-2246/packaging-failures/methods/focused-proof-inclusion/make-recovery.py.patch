@@ -1,0 +1,19 @@
+--- focused-proof-inclusion/before/make-recovery.py
++++ focused-proof-inclusion/after/make-recovery.py
+@@ -36,7 +36,7 @@
+ for path in (BASE / "history-browser").glob("*.png"):
+     files["feature/" + path.name] = path
+ required = [
+-    "REPORT.md", "SCOUT_HANDOFF.md", "PRIOR_ATTEMPTS.md", "CAPACITY_OPTIONS.md", "source.json", "candidate.patch", "release-inputs.json",
++    "REPORT.md", "SCOUT_HANDOFF.md", "PRIOR_ATTEMPTS.md", "CAPACITY_OPTIONS.md", "source.json", "candidate.patch", "release-inputs.json", "focused-ready.json",
+     "local-verified.json", "host-canonical-verified.json", "hosted-artifacts-verified.json", "hosted-final-records.json",
+     "artifact-download-queue.json", "validation-runs.json", "capture-extraction.json", "focused-resource-verified.json",
+     "resource-preservation-verified.json", "resource-inputs.json", "resource-invocation.json", "resource-native-guards.json",
+@@ -50,6 +50,7 @@
+     "recovery-offer-reuse-method-peer-review.json", "offer-artifact-reuse-revision-v6.json", "offer-artifact-reuse-changes-v6.patch",
+     "packaging-failures/preservation.json", "recovery-seal-original.log", "recovery-seal-reconciled-provenance-original.log",
+     "inherited-harness-origins-original.json",
++    "focused-proof-inclusion-revision-v7.json", "recovery-offline-original.log",
+ ]
+ for name in required:
+     path = BASE / name

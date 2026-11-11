@@ -1,0 +1,46 @@
+{
+  "schema": "dtos-packaging-failure-staging-audit-v1",
+  "observed_at": "2026-11-11T12:27:33.228893+00:00",
+  "candidate": "4cf524c488efb36c77defd78bfd7acf84a3f6ddd",
+  "tree": "79fe9268fb3394604559bbcbe1119616a080b71b",
+  "original_archives": [
+    {
+      "name": "recovery-size-114866370-original.zip",
+      "bytes": 114866370,
+      "sha256": "5548273f038280b792c9b392d480ba979ed8639e683f84b033ddfd88ba4c62a3"
+    },
+    {
+      "name": "recovery-missing-focused-proof-103289480-original.zip",
+      "bytes": 103289480,
+      "sha256": "0e965c50af57d41e606cdf9c162ce249ec3f508fac875a75e538fa79b7be6b7f"
+    }
+  ],
+  "audit_counts": {
+    "archives": 4,
+    "members": 1887,
+    "raw_bytes": 547343149,
+    "text_members": 978,
+    "json_documents": 52954,
+    "nested_archives": 2,
+    "exact_public_fixture_urls": 2
+  },
+  "credential_shape_scan": true,
+  "signed_sensitive_url_scan": true,
+  "source_pinned_public_fixture_exception_only": true,
+  "full_Docker_Config_Env_excluded": true,
+  "path_safety_and_CRC_checked": true,
+  "archive_member_limit": 2000,
+  "member_byte_limit": 67108864,
+  "per_archive_uncompressed_limit": 536870912,
+  "nested_depth_limit": 2,
+  "no_production_private_payload_acquired": true,
+  "no_network_or_provider_reads": true,
+  "no_application_or_controller_changes": true,
+  "no_tests_or_production_work": true,
+  "original_split_rejoin_verified": true,
+  "exact_second_archive_copy_verified": true,
+  "source_fixture_classifier_sha256": "1fb9d68094873c1374ff047c5a112e4ac49528731339dc768cf65862cde512dc",
+  "source_fixture_classifier_controls_sha256": "97e6e5d658433f36807acac3da44ea2b4b0a5869d972c350b0ca6582fccb2517",
+  "method": "methods/stage_original_packaging_failures.py",
+  "scope": "Bounded authored privacy/path/integrity staging audit only. Public fixture exception is proven from pinned public source; no credential values emitted. This is not application validation, independent Scout acceptance, publication or production recovery."
+}

@@ -1,0 +1,49 @@
+{
+  "schema": "dtos-r3-offer-reuse-method-static-peer-v1",
+  "reviewed_at": "2026-11-11T12:07:00.903832+00:00",
+  "candidate": "4cf524c488efb36c77defd78bfd7acf84a3f6ddd",
+  "tree": "79fe9268fb3394604559bbcbe1119616a080b71b",
+  "app_worktree_clean": true,
+  "result": "PASS_STATIC_REVIEW",
+  "blocking_findings": [],
+  "reviewed_files": [
+    {
+      "name": "make-recovery.py",
+      "before_sha256": "0bc7acfc2edb105a6d6e4c1afe35e97952d6def9d94f1bb61902a7c3935bf665",
+      "after_sha256": "dacb351773aee4d19014cda33e5bffa168a8c07e9a7f114c01c6a7cfee97902f",
+      "scope": "Exact source diff reviewed; AST syntax parsed for Python only, no imports or execution"
+    },
+    {
+      "name": "verify-recovery-offline.py",
+      "before_sha256": "41e9b78e5b34c42351ade4a46d1cd560163749658c2c789fe6983bcff9faad22",
+      "after_sha256": "20671d28def4ec7da082a23ef50cbab1641370c927b2e65b652fd041b3f94ea1",
+      "scope": "Exact source diff reviewed; AST syntax parsed for Python only, no imports or execution"
+    },
+    {
+      "name": "PACKAGING_AND_PUBLICATION.md",
+      "before_sha256": "67b8a80daa5f29df39490a0f3b0082370e5b56955e54e90634fce64cb2fb0233",
+      "after_sha256": "ed7b084d2fbc2381d070e226c114d7d9347b854be68de29ec55765e489111e87",
+      "scope": "Exact source diff reviewed; AST syntax parsed for Python only, no imports or execution"
+    }
+  ],
+  "capture_source_reuse_sha256": "ad8b95e8adab3c9219b1417a895c8d1b449f9fdedb26f8927fefd75eb6c194db",
+  "all_26_member_identity_records_match_prior_readonly_audit": true,
+  "confirmed": [
+    "Only standalone offer-comparison is removed from the copied folder loop; the other three families remain.",
+    "Complete local-canonical traversal, all687manifest payload size/SHA checks, recovery CRC, secret/path checks and strict100MiB cap are byte-unchanged predicates.",
+    "Offline reuse requires current candidate/tree, exact family/guard/browser prefix, exact plan-bound artifact file/id/run/name/SHA, actual native ZIP bytes/SHA, ZIP safety and unchanged native offer-comparison guard.",
+    "Offline code additionally checks exactly26original member names/content sizes/SHA and equality of the capture-source-reuse index embedded in sealedRecovery.",
+    "All other nativeRecovery andPrior guard calls remain; only redundant offercomparisonRecoverycall is replaced.",
+    "No application, source-policy, resource or authentication code is changed. Controller changes are separately owned and were not reviewed here."
+  ],
+  "limits": [
+    "Static source/receipt review only; no methods, tests, native guards, Docker, network or app imports were executed.",
+    "Actual new archive size, full native offline verification and sealed publisher tests/preparation remain mandatory.",
+    "Root independently recorded original member-byte verification; this review compared that index with the prior source/hash/CD audit without decompression."
+  ],
+  "original_oversize_archive": {
+    "preserved_path": "packaging-failures/recovery-size-114866370-original.zip",
+    "expected_sha256": "5548273f038280b792c9b392d480ba979ed8639e683f84b033ddfd88ba4c62a3",
+    "verification_scope": "Parent supplied preservation identity; this static peer did not rehash or mutate the large archive."
+  }
+}

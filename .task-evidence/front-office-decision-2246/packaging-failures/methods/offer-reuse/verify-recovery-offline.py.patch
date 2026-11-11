@@ -1,0 +1,53 @@
+--- offer-reuse/before/verify-recovery-offline.py
++++ offer-reuse/after/verify-recovery-offline.py
+@@ -18,10 +18,32 @@
+ prior = BASE / "prior-package.zip"
+ assert digest(recovery) == plan["recovery_sha256"] and digest(prior) == plan["prior_evidence_sha256"]
+ results = {"local_canonical": guard.verify_local_recovery(recovery, plan)}
++# The comparison family already resides in a separately mandatory, source-bound
++# original. Verify those exact bytes rather than requiring a second ZIP copy.
++reuse = json.loads((BASE / "capture-source-reuse.json").read_text())
++assert reuse["candidate"] == source["candidate"] and reuse["tree"] == source["tree"]
++assert reuse["family"] == "offer_comparison" and reuse["guard"] == "verify_offer_comparison"
++assert reuse["prefix"] == "browser/offer-comparison/" and reuse["all_26_copied_members_match_original_bytes"] is True
++original = reuse["original"]
++assert original["file"] == "trade-resource-original.zip"
++planned = [row for row in plan["artifacts"] if row["file"] == original["file"]]
++assert len(planned) == 1 and all(planned[0][key] == original[key] for key in ("id", "run", "name", "sha256"))
++native_comparison = BASE / "hosted-originals" / original["file"]
++assert native_comparison.stat().st_size == original["bytes"] and digest(native_comparison) == original["sha256"]
++guard.verify_zip(native_comparison)
++results["offer_comparison"] = guard.verify_offer_comparison(native_comparison, plan)
++assert results["offer_comparison"]["passed"]
++with zipfile.ZipFile(native_comparison) as comparison_archive:
++    expected_members = {row["name"] for row in reuse["members"]}
++    assert len(expected_members) == len(reuse["members"]) == 26
++    assert {name.removeprefix(reuse["prefix"]) for name in comparison_archive.namelist()
++            if name.startswith(reuse["prefix"]) and not name.endswith("/")} == expected_members
++    for row in reuse["members"]:
++        raw = comparison_archive.read(reuse["prefix"] + row["name"])
++        assert len(raw) == row["bytes"] and hashlib.sha256(raw).hexdigest() == row["sha256"]
+ for name, verify, prefix in [
+     ("partner_history", guard.verify_partner_history_links, "partner-history/"),
+     ("team_need", guard.verify_team_need_handoff, "team-need/"),
+-    ("offer_comparison", guard.verify_offer_comparison, "offer-comparison/"),
+     ("protections", guard.verify_recommended_protections, "protections/"),
+     ("activation", guard.verify_activation_deferral, "local-canonical/activation/"),
+     ("front_office_workflow", guard.verify_front_office_workflow, "local-canonical/front-office-workflow/"),
+@@ -38,6 +60,8 @@
+     names = {row["name"] for row in rows}
+     assert len(names) == len(rows)
+     assert set(archive.namelist()) == names | {"recovery-manifest.json"}
++    assert not any(name.startswith("offer-comparison/") for name in names)
++    assert json.loads(archive.read("capture-source-reuse.json")) == reuse
+     for row in rows:
+         raw = archive.read(row["name"])
+         assert len(raw) == row["bytes"] and hashlib.sha256(raw).hexdigest() == row["sha256"], row["name"]
+@@ -65,6 +89,7 @@
+ write_json(BASE / "recovery-offline-verified.json", dict(candidate=source["candidate"], tree=source["tree"],
+     all_native_recovery_guards_passed=True, recovery_sha256=digest(recovery), prior_sha256=digest(prior),
+     local_canonical_tests=source["expected_test_count"],
++    reused_native_comparison=original,
+     guards={name: {key: value for key, value in row.items() if key in ("passed", "head", "tree", "commit", "cgroup_limit", "matched_cases")} for name, row in results.items()},
+     method="Current publisher native guards applied to sealed original final-source Recovery and Prior ZIPs; not Actions preparation or production acceptance."))
+ print("Offline final-source Recovery/Prior native guards passed.")

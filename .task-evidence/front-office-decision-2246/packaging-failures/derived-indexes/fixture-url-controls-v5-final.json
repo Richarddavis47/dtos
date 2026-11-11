@@ -1,0 +1,173 @@
+{
+  "schema": "dtos-disposable-fixture-url-metadata-controls-v1",
+  "all_controls_passed": true,
+  "controls": [
+    {
+      "name": "exact_public_fixture",
+      "expected_fixture_allowed": true,
+      "fixture_allowed": true,
+      "sensitive_url_blocked": false,
+      "passed": true
+    },
+    {
+      "name": "changed_token",
+      "expected_fixture_allowed": false,
+      "fixture_allowed": false,
+      "sensitive_url_blocked": true,
+      "passed": true
+    },
+    {
+      "name": "changed_league",
+      "expected_fixture_allowed": false,
+      "fixture_allowed": false,
+      "sensitive_url_blocked": true,
+      "passed": true
+    },
+    {
+      "name": "changed_path",
+      "expected_fixture_allowed": false,
+      "fixture_allowed": false,
+      "sensitive_url_blocked": true,
+      "passed": true
+    },
+    {
+      "name": "external_host",
+      "expected_fixture_allowed": false,
+      "fixture_allowed": false,
+      "sensitive_url_blocked": true,
+      "passed": true
+    },
+    {
+      "name": "subdomain_host",
+      "expected_fixture_allowed": false,
+      "fixture_allowed": false,
+      "sensitive_url_blocked": true,
+      "passed": true
+    },
+    {
+      "name": "port",
+      "expected_fixture_allowed": false,
+      "fixture_allowed": false,
+      "sensitive_url_blocked": true,
+      "passed": true
+    },
+    {
+      "name": "userinfo",
+      "expected_fixture_allowed": false,
+      "fixture_allowed": false,
+      "sensitive_url_blocked": true,
+      "passed": true
+    },
+    {
+      "name": "https_scheme",
+      "expected_fixture_allowed": false,
+      "fixture_allowed": false,
+      "sensitive_url_blocked": true,
+      "passed": true
+    },
+    {
+      "name": "ftp_scheme",
+      "expected_fixture_allowed": false,
+      "fixture_allowed": false,
+      "sensitive_url_blocked": true,
+      "passed": true
+    },
+    {
+      "name": "extra_query",
+      "expected_fixture_allowed": false,
+      "fixture_allowed": false,
+      "sensitive_url_blocked": true,
+      "passed": true
+    },
+    {
+      "name": "signature_query",
+      "expected_fixture_allowed": false,
+      "fixture_allowed": false,
+      "sensitive_url_blocked": true,
+      "passed": true
+    },
+    {
+      "name": "amz_signature",
+      "expected_fixture_allowed": false,
+      "fixture_allowed": false,
+      "sensitive_url_blocked": true,
+      "passed": true
+    },
+    {
+      "name": "duplicate_query",
+      "expected_fixture_allowed": false,
+      "fixture_allowed": false,
+      "sensitive_url_blocked": true,
+      "passed": true
+    },
+    {
+      "name": "reordered_query",
+      "expected_fixture_allowed": false,
+      "fixture_allowed": false,
+      "sensitive_url_blocked": true,
+      "passed": true
+    },
+    {
+      "name": "percent_encoded_value",
+      "expected_fixture_allowed": false,
+      "fixture_allowed": false,
+      "sensitive_url_blocked": true,
+      "passed": true
+    },
+    {
+      "name": "fragment",
+      "expected_fixture_allowed": false,
+      "fixture_allowed": false,
+      "sensitive_url_blocked": true,
+      "passed": true
+    },
+    {
+      "name": "quoted_original_log_form",
+      "passed": true
+    },
+    {
+      "name": "exact_fixture_does_not_exempt_other_url",
+      "passed": true
+    },
+    {
+      "name": "ordinary_public_source_url_allowed",
+      "passed": true
+    },
+    {
+      "name": "changed_pinned_source_rejected",
+      "passed": true
+    },
+    {
+      "name": "changed_pinned_prefix_source_rejected",
+      "passed": true
+    }
+  ],
+  "provenance": {
+    "scope": "Metadata-only exception for one public disposable in-process test URL; no request/authentication change",
+    "source_commits": [
+      "b602d6acd03cc1c95d85ee734d2d7f28658885cf",
+      "4cf524c488efb36c77defd78bfd7acf84a3f6ddd"
+    ],
+    "test_file": "tests/test_restoration_preflight_http.py",
+    "test_file_sha256": "07b81fcfb222d43d27c84957e62ed7bcac757a906b0af195f20917195ec5ec9c",
+    "prefix_file": "src/platform/inspection_security.py",
+    "prefix_file_sha256": "9385cd34ff31a10dbd162bbb489298535510395b0f27e4e879421fe76b7cfe5a",
+    "source_test": "test_cookie_bearer_and_query_values_cannot_authorize",
+    "inprocess_TestClient_without_base_url_override": true,
+    "origin": "http://testserver",
+    "path": "/api/inspect/operations/restoration-preflight",
+    "query_keys": [
+      "league_id",
+      "token"
+    ],
+    "fixture_values_emitted": false,
+    "public_fixture_token_length": 36,
+    "public_fixture_token_sha256": "e4e222ac8467340e3dc9dd1b4c58f5f3f1a99acc293065283d7a738b8c30d333",
+    "public_fixture_league_sha256": "ae041fd655d87f3cebf6ccd84aa3e3b3c5c76501015f8818999d2969942575df",
+    "expected_authentication_result": 401
+  },
+  "classifier_sha256": "1fb9d68094873c1374ff047c5a112e4ac49528731339dc768cf65862cde512dc",
+  "controls_method_sha256": "a557f91875c0484894809d9ed1c046135cb27ee0da78c7fb51ec641ded3cff8a",
+  "authority": "Pure URL/source-metadata controls only. No request authorization, app import, HTTP call, production credential read, Docker, original-log rewrite, full test or release-gate execution.",
+  "fixture_values_emitted": false
+}

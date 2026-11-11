@@ -1,0 +1,51 @@
+--- offer-reuse/before/make-recovery.py
++++ offer-reuse/after/make-recovery.py
+@@ -22,7 +22,7 @@
+ for name, raw in worker_payloads.items():
+     files['worker-setup-controls/' + name] = raw
+ for folder in ("local-canonical", "local-preflight", "local-restoration-unused", "local-resident-refresh",
+-               "partner-history", "team-need", "protections", "offer-comparison"):
++               "partner-history", "team-need", "protections"):
+     root = BASE / folder
+     assert root.is_dir(), folder
+     for path in root.rglob("*"):
+@@ -43,9 +43,13 @@
+     "product-test-counts.json", "public-welcome-test-counts.json", "canonical-invocation.json", "local-container-cleanup.json",
+     "local-container-state-original.json", "local-container-stdout-original.log", "local-canonical-integrity-original.log",
+     "retained-history-probe-original.log", "retained-history-probe-invocation.json", "prior-package.json",
+-    "resource-methods.md", "README.md", "harness-origins.json", "worker-setup-verified.json",
++    "resource-methods.md", "README.md", "harness-origins.json", "worker-setup-verified.json", "capture-source-reuse.json",
+     "prior-url-scan-false-positive.json", "fixture-url-controls-v5-final.json", "fixture-url-logged-matches-v5.json",
+     "fixture-url-classifier-revision-v5.json", "fixture-url-classifier-changes-v5.patch", "prior-package-original.log",
++    "recovery-offer-reuse-readonly-audit.json", "recovery-offer-reuse-readonly-audit.md",
++    "recovery-offer-reuse-method-peer-review.json", "offer-artifact-reuse-revision-v6.json", "offer-artifact-reuse-changes-v6.patch",
++    "packaging-failures/preservation.json", "recovery-seal-original.log", "recovery-seal-reconciled-provenance-original.log",
++    "inherited-harness-origins-original.json",
+ ]
+ for name in required:
+     path = BASE / name
+@@ -55,6 +59,8 @@
+     files["methods/" + path.name] = path
+ for name in ('prior-b602-additions.py', 'build-released-evidence.py'):
+     files['methods/history/prior-fixture-url-scan-before/' + name] = BASE / 'method-revisions/pre-fixture-url-classifier' / name
++for name in ('make-recovery.py', 'verify-recovery-offline.py', 'PACKAGING_AND_PUBLICATION.md'):
++    files['methods/history/prior-offer-artifact-reuse/' + name] = BASE / 'method-revisions/pre-offer-artifact-reuse' / name
+ for name in ("methods-manifest.json", "SHA256SUMS"):
+     if (BASE / name).exists():
+         files["methods/" + name] = BASE / name
+@@ -83,13 +89,13 @@
+         archive.writestr(name, raw)
+         rows.append(dict(name=name, bytes=len(raw), sha256=hashlib.sha256(raw).hexdigest()))
+     archive.writestr("recovery-manifest.json", json.dumps(dict(candidate=source["candidate"], tree=source["tree"],
+-        scope="Final-source proof; activation and front-office workflow captures use complete local-canonical native families. Independently produced hosted originals remain separate required release assets; no local/host byte-identity claim. Historical failures remain separate linked original evidence in Prior-attempts.", files=rows), indent=2) + "\n")
++        scope="Final-source proof; all local canonical members are preserved. Activation and front-office captures use local-canonical families. Offer comparison uses its exact existing mandatory Trade original, recorded in capture-source-reuse.json; only its redundant copied family is omitted here. All15hosted originals remain required separate release assets. No local/host byte-identity claim. Historical failures remain separate Prior evidence.", files=rows), indent=2) + "\n")
+ with zipfile.ZipFile(target) as archive:
+     assert archive.testzip() is None
+ assert target.stat().st_size < 100 * 1024**2, "Preserve all mandatory proof; resolve packaging without dropping originals"
+ write_json(BASE / "recovery-package.json", dict(candidate=source["candidate"], tree=source["tree"],
+     file=target.name, files=len(rows) + 1, bytes=target.stat().st_size, sha256=digest(target),
+     canonical_manifest_entries_preserved=len(manifest), private_production_reports_excluded=True,
+-    scope="All complete final local canonical manifest payloads, including activation and front-office workflow families, plus selected final-source native captures/resources and original consoles. Redundant standalone hosted copies of these two families are omitted only from Recovery. Fifteen independently produced hosted native archives remain required separate unchanged attachments; no local/host byte-identity or final-size claim."))
++    scope="All complete final local canonical manifest payloads, including activation/front-office families, plus selected captures/resources/original consoles. Redundant standalone hosted activation/front-office copies and the exact offer-comparison copy are omitted only from Recovery; the comparison guard reads the existing mandatory Trade original. All15native archives, source/guard predicates,23assets and100MiB cap remain unchanged."))
+ print("Sealed final-source Recovery locally; no controller files changed.")
+ 
