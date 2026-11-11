@@ -164,14 +164,14 @@ def create_market_router(
         ) for asset in assets[:250]}
 
     def add_trends(
-        market: Any, assets: list[dict[str, Any]], selected_league: str,
+        market: Any, assets: list[dict[str, Any]], selected_league: str, *, compact: bool = True,
     ) -> None:
         if not assets:
             return
         summaries = trend_service.summaries(
             assets, league_id=selected_league, as_of=None,
             generation=market.semantic_generation,
-            current_comparisons=current_trend_evidence(market, assets),
+            current_comparisons=current_trend_evidence(market, assets), compact=compact,
         )
         for asset in assets:
             asset["market_trend"] = summaries.get(str(asset.get("asset_id")))
@@ -425,6 +425,10 @@ def create_market_router(
             return warming_page(request.url.query, headers=exc.headers, snapshot=snapshot)
         selected_state, selected_league, _cache = dependencies()
         data = selected_state.get("data") or {}
+        account = current_account()
+        membership = account.membership if account else None
+        if front_office is None and membership and membership.league_id == selected_league:
+            front_office = membership.roster_id
         ownership = PlayerOwnershipIndex(data)
         league_name = str((data.get("league") or {}).get("name") or "Sleeper League")
         generation = str(market.semantic_generation)
@@ -453,20 +457,21 @@ def create_market_router(
             direction, front_office, selected, offset, limit, projection_key, ownership.generation, trend_revision, bool(selected_state.get("last_error")),
         )
 
+        directory_limit = limit
+        result = market.search(q, limit, offset=offset, sort=sort, direction=direction,
+                               position=position or None, availability=availability or None,
+                               availability_asset_ids=availability_ids(ownership, availability, q)) if q else market.directory(
+            offset=offset, limit=directory_limit, sort=sort, direction=direction,
+            position=position or None, availability=availability or None,
+            availability_asset_ids=availability_ids(ownership, availability),
+        )
+        rows = [ownership_row(row, ownership, front_office) for row in (result.get("assets") or result.get("results") or [])]
+        add_trends(market, rows, selected_league, compact=False)
+
         def render_body() -> bytes:
-            directory_limit = limit
-            result = market.search(q, limit, offset=offset, sort=sort, direction=direction,
-                                   position=position or None, availability=availability or None,
-                                   availability_asset_ids=availability_ids(ownership, availability, q)) if q else market.directory(
-                offset=offset, limit=directory_limit, sort=sort, direction=direction,
-                position=position or None, availability=availability or None,
-                availability_asset_ids=availability_ids(ownership, availability),
-            )
-            rows = [ownership_row(row, ownership, front_office) for row in (result.get("assets") or result.get("results") or [])]
             card_projections = player_projection_views(data,
                 [str(row.get('asset_id', '')).split(':', 1)[1] for row in rows
                  if str(row.get('asset_id', '')).startswith('player:')], pinned_reader)
-            add_trends(market, rows, selected_league)
             table_rows = []
             market_cards = []
             for index, row in enumerate(rows, start=offset + 1):
@@ -606,7 +611,7 @@ def create_market_router(
             pagination_html = " · ".join(pagination)
             empty_html = '<b>End of these results.</b>Use Previous or Browse all assets.' if total and offset >= total else '<b>No matching assets.</b>Adjust the current market filters.'
             ownership_notice = '<p class="evidence-unavailable">Current roster evidence is incomplete; ownership and free-agent filters cannot establish complete results.</p>' if (availability or re.search(r'\b(?:free[ -]+agents?|taxi)\b', q, re.I)) and not ownership.complete else ''
-            body = f'''<nav class="market-mode" aria-label="Valuation views"><a class="ds-action" href="/market" aria-current="page">Neutral DTOS</a><a class="ds-action" href="/account/my-dtos">Custom DTOS · Personal rankings</a></nav><form class="market-filters" method="get" action="/market" aria-label="Asset Market filters"><h3>Find your next dynasty asset</h3><label for="market-search">Player or pick<input id="market-search" name="q" value="{escape(q)}" placeholder="Josh Allen or 2028 1st"></label><div class="market-filter-field"><label for="market-position">Position</label><select id="market-position" name="position"><option value="">All assets</option>{options(((item,item) for item in ("QB","RB","WR","TE","PICK")), position)}</select></div><div class="market-filter-field"><label for="market-availability">Availability</label><select id="market-availability" name="availability"><option value="">All</option>{options((("rostered","Rostered"),("day_traders_free_agent","Free Agents"),("taxi","Taxi"),("retired","Retired"),("owned_pick","Picks")), availability)}</select></div><div class="market-filter-field"><label for="market-sort">Sort</label><select id="market-sort" name="sort">{options(((item,item.title()) for item in ("market","intrinsic","contender","rebuilder","confidence","risk","liquidity")), sort)}</select></div><input type="hidden" name="direction" value="{escape(direction if direction in {'asc', 'desc'} else 'desc')}"><input type="hidden" name="limit" value="{limit}">{front_office_input}<button class="btn" type="submit">Search market</button></form><section class="market-hero"><p>Global values. League-specific ownership and fit.</p><span><b>{result.get("total", result.get("count", 0))}</b> matching assets</span></section><details class="market-view-evidence"><summary>About Neutral and Custom values</summary><p class="muted">Market prices below remain neutral. Open Custom DTOS to view or edit your personal valuations.</p></details><section class="ux-section"><div class="ux-section-head"><h2>{'Search Results' if q else 'Market Assets'}</h2><p>{'Exact compact matches' if q else 'Player identity, rank, value, and ownership at a glance'}</p></div>{ownership_notice}<div class="market-grid">{''.join(market_cards) or '<div class="ds-empty">' + empty_html + '</div>'}</div><nav aria-label="Market pagination">{pagination_html}</nav><details class="technical-details"><summary>Full market evidence table</summary><div class="ds-table-wrap" tabindex="0" role="region" aria-label="Full Market evidence"><table><caption>Filtered asset results · order is not a dynasty rank</caption><thead><tr><th>Result</th><th>Asset</th><th>Owner</th><th>Market</th><th>Intrinsic</th><th>Contender</th><th>Rebuilder</th><th>Confidence</th><th>Agreement</th><th>Evidence</th></tr></thead><tbody>{''.join(table_rows) or '<tr><td colspan="10">No canonical assets match these filters.</td></tr>'}</tbody></table></div></details></section><section class="ux-section" id="market-movers"><div class="ux-section-head"><h2>Market Movement</h2><p>Only timestamped, meaningful comparison data receives movement treatment</p></div>{movers_html}</section>{expanded}'''
+            body = f'''<nav class="market-mode" aria-label="Valuation views"><a class="ds-action" href="/market" aria-current="page">Neutral DTOS</a><a class="ds-action" href="/account/my-dtos">Custom DTOS · Personal rankings</a></nav><form class="market-filters" method="get" action="/market" aria-label="Asset Market filters"><h3>Find your next dynasty asset</h3><label for="market-search">Player or pick<input id="market-search" name="q" value="{escape(q)}" placeholder="Josh Allen or 2028 1st"></label><div class="market-filter-field"><label for="market-position">Position</label><select id="market-position" name="position"><option value="">All assets</option>{options(((item,item) for item in ("QB","RB","WR","TE","PICK")), position)}</select></div><div class="market-filter-field"><label for="market-availability">Availability</label><select id="market-availability" name="availability"><option value="">All</option>{options((("rostered","Rostered"),("day_traders_free_agent","Free Agents"),("taxi","Taxi"),("retired","Retired"),("owned_pick","Picks")), availability)}</select></div><div class="market-filter-field"><label for="market-sort">Sort</label><select id="market-sort" name="sort">{options(((item,item.title()) for item in ("market","intrinsic","contender","rebuilder","confidence","risk","liquidity")), sort)}</select></div><input type="hidden" name="direction" value="{escape(direction if direction in {'asc', 'desc'} else 'desc')}"><input type="hidden" name="limit" value="{limit}">{front_office_input}<button class="btn" type="submit">Search market</button></form><section class="market-hero"><p>Global values. League-specific ownership and fit.</p><a class="ds-action" href="#market-roster-movement">Movement and roster relevance ↓</a><span><b>{result.get("total", result.get("count", 0))}</b> matching assets</span></section><details class="market-view-evidence"><summary>About Neutral and Custom values</summary><p class="muted">Market prices below remain neutral. Open Custom DTOS to view or edit your personal valuations.</p></details><section class="ux-section"><div class="ux-section-head"><h2>{'Search Results' if q else 'Market Assets'}</h2><p>{'Exact compact matches' if q else 'Player identity, rank, value, and ownership at a glance'}</p></div>{ownership_notice}<div class="market-grid">{''.join(market_cards) or '<div class="ds-empty">' + empty_html + '</div>'}</div><nav aria-label="Market pagination">{pagination_html}</nav><details class="technical-details"><summary>Full market evidence table</summary><div class="ds-table-wrap" tabindex="0" role="region" aria-label="Full Market evidence"><table><caption>Filtered asset results · order is not a dynasty rank</caption><thead><tr><th>Result</th><th>Asset</th><th>Owner</th><th>Market</th><th>Intrinsic</th><th>Contender</th><th>Rebuilder</th><th>Confidence</th><th>Agreement</th><th>Evidence</th></tr></thead><tbody>{''.join(table_rows) or '<tr><td colspan="10">No canonical assets match these filters.</td></tr>'}</tbody></table></div></details></section><section class="ux-section" id="market-movers"><div class="ux-section-head"><h2>Market Movement</h2><p>Only timestamped, meaningful comparison data receives movement treatment</p></div>{movers_html}<!--market-roster-movement-slot--></section>{expanded}'''
             body += (
                 '<p class="muted market-evidence-contract">'
                 "Values remain separate; unavailable evidence is never substituted."
@@ -623,6 +628,16 @@ def create_market_router(
 
         # Shared caches must never retain account chrome or session CSRF fields.
         body = render_cache.get_or_build(key, generation, render).decode("utf-8")
+        # Personalized reasons and evidence tokens never enter shared HTML caches.
+        # Reuse the one bounded prepared directory/trend read; no catalog clone.
+        from services.market_roster_relevance import movement_view
+        from src.ui.market_roster_relevance import movement_panel
+        relevance = movement_view(data, rows, front_office, ownership,
+            market_data=getattr(market, 'data', data), snapshot=pinned_projection,
+            reader=projection_reader)
+        body = body.replace('<!--market-roster-movement-slot-->', movement_panel(relevance,
+            dict(q=q, position=position, availability=availability, sort=sort,
+                 direction=direction, front_office=front_office, offset=offset, limit=limit)), 1)
         selected_state, selected_league, cache = dependencies()
         if hasattr(cache, 'preparation_status'):
             observed = cache.preparation_status(
