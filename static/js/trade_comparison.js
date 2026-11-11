@@ -64,6 +64,58 @@
       baseline: first.summary.lineup.pre_total, week: first.baseline.week, season: first.baseline.season};
   }
 
+  function readCapital(record, scope) {
+    try {
+      if (!record || !Array.isArray(record.parts) || record.parts.length > 8 ||
+          !record.parts.every(p => typeof p === 'string' && p.length <= 1400)) return null;
+      const text = record.parts.join('');
+      if (text.length !== record.characters || text.length > 10000) return null;
+      const r = JSON.parse(text);
+      if (r.schema !== 1 || r.league !== scope.league || r.roster !== scope.roster) return null;
+      const valid = rows => Array.isArray(rows) && rows.length <= 2048 && rows.every(k =>
+        Array.isArray(k) && k.length === 3 && k.every(n => Number.isSafeInteger(n) && n > 0));
+      if (!valid(r.sent || []) || !valid(r.received || []) || !valid(r.before || [])) return null;
+      const keys = rows => rows.map(k => k.join(':'));
+      if (new Set(keys((r.sent || []).concat(r.received || []))).size !== (r.sent || []).length + (r.received || []).length ||
+          new Set(keys(r.before || [])).size !== (r.before || []).length) return null;
+      if (r.complete && (!r.generation || !Array.isArray(r.seasons) || !Number.isSafeInteger(r.rounds) || r.rounds < 1 || r.rounds > 20 ||
+          r.seasons.some(y => !Number.isSafeInteger(y)) || r.before.concat(r.sent, r.received).some(k => !r.seasons.includes(k[0]) || k[1] > r.rounds) ||
+          r.sent.some(k => !keys(r.before).includes(k.join(':'))) || r.received.some(k => keys(r.before).includes(k.join(':'))))) return null;
+      return r;
+    } catch (_) { return null; }
+  }
+  function capitalView(record, node, scope, retained = true, keep = false) {
+    const box = node('section', null, 'tw-draft-capital'); box.setAttribute('aria-label', 'Your draft capital after this trade');
+    box.append(node('h5', keep ? 'Your draft capital · keep the roster' : 'Your draft capital after this trade'));
+    const r = readCapital(record, scope);
+    if (!r) { box.append(node('p', 'Recorded compatible pick inventory was not retained. Remaining totals are unknown; today’s inventory is not substituted.')); return box; }
+    box.append(node('small', retained ? 'Recorded ownership · NOT REVALIDATED. No current inventory is substituted.' : 'Ownership recorded with this assessment. Only retained seasons and configured rounds are covered.'));
+    const label = k => `${k[0]} round ${k[1]} · Original franchise: ${r.names?.[String(k[2])] || k[2]}${k[2] === r.roster ? ' · Your own pick' : ' · Acquired franchise pick'} · Exact ${k[0]}-R${k[1]}-${k[2]}`;
+    const sent = keep ? [] : r.sent || [], received = keep ? [] : r.received || [];
+    if (r.complete) {
+      const after = r.before.filter(k => !sent.some(s => s.join(':') === k.join(':'))).concat(received);
+      for (const year of r.seasons) {
+        const lines = [];
+        for (let round = 1; round <= r.rounds; round++) {
+          const before = r.before.filter(k => k[0] === year && k[1] === round), next = after.filter(k => k[0] === year && k[1] === round);
+          lines.push(`R${round}: ${before.length} → ${next.length}` + (round === 1 ? ` (own firsts ${before.filter(k => k[2] === r.roster).length} → ${next.filter(k => k[2] === r.roster).length}; other firsts ${before.filter(k => k[2] !== r.roster).length} → ${next.filter(k => k[2] !== r.roster).length})` : ''));
+        }
+        box.append(node('p', year + ' · ' + lines.join(' · ')));
+      }
+      const details = node('details'); details.append(node('summary', 'Exact owned picks · before and after'));
+      for (const [title, rows] of [['Before', r.before], ['After', after]]) {
+        details.append(node('h6', title)); const list = node('ul'); for (const k of rows) list.append(node('li', label(k))); details.append(list);
+      }
+      box.append(details);
+    } else box.append(node('p', r.reason || 'Complete inventory unavailable; remaining totals are unknown.'));
+    const moves = node('details'); moves.append(node('summary', 'Exact picks sent and acquired'));
+    for (const [title, rows] of [['Sent', sent], ['Acquired', received]]) {
+      moves.append(node('h6', title)); const list = node('ul'); for (const k of rows) list.append(node('li', label(k)));
+      if (!rows.length) list.append(node('li', r.invalid ? 'Unverified movement' : 'None in this recorded exchange')); moves.append(list);
+    }
+    box.append(moves); return box;
+  }
+
   function create(options) {
     const {node, points, market, panel, tray, getEntries, setEntries, environment, details} = options;
     let returnFocus = null, returnScroll = 0;
@@ -78,6 +130,7 @@
     }
     function offer(entry, index, comparison) {
       const out = node('article', null, 'tw-comparison-offer'); out.dataset.comparisonSlot = String(index + 1);
+      out.append(capitalView(entry.context?.draft_capital_record, node, environment().scope, true));
       const s = entry.summary, depth = s.depth || {}, capacity = s.capacity || {};
       out.append(node('h4', 'Offer ' + (index + 1) + ' · ' + s.verdict),
         node('p', 'Counterparty: ' + s.partner), node('p', 'Assessment strategy: ' + (s.strategy || 'No selected goal')));
@@ -132,6 +185,10 @@
       const grid = node('div', null, 'tw-comparison-grid'), keep = node('section', null, 'tw-comparison-keep');
       keep.append(node('h4', 'Keep the roster · no trade'), node('p', 'No players or picks exchanged. Existing depth and roster spots are unchanged by a trade.'));
       keep.append(node('p', result.supported ? 'Season ' + result.season + ' · week ' + result.week + ': ' + points(result.baseline) + ' recorded optimal-lineup points; 0.00 trade-related change.' : 'A shared supported lineup total is unavailable. No zero projection is inferred.'));
+      const capitals = rows.map(row => readCapital(row.context?.draft_capital_record, environment().scope));
+      if (capitals.length && capitals.every(c => c?.complete && c.generation === capitals[0].generation))
+        keep.append(capitalView(rows[0].context.draft_capital_record, node, environment().scope, true, true));
+      else keep.append(node('p', 'A shared recorded draft-capital baseline is unavailable; each offer’s supported inventory stays separate.'));
       grid.append(keep); rows.forEach((row, i) => grid.append(offer(row, i, result))); panel.append(grid);
       if (!rows.length) panel.append(node('p', 'Add a completed assessment from this Trade workspace. Your draft has not changed.'));
     }
@@ -166,7 +223,7 @@
     refresh();
     return {add, refresh};
   }
-  const api = {compatibility, sameScope, wellFormed, create};
+  const api = {compatibility, sameScope, wellFormed, create, readCapital, capitalView};
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else globalThis.DTOSOfferComparison = api;
 })();

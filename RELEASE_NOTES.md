@@ -1,3 +1,11 @@
+# v1.22.32 / build 2247 — Your draft capital after this trade
+
+Prepared Trade assessments show owned picks before and after the exact exchange, grouped by retained season and the league's configured draft rounds. Own firsts remain distinct from acquired firsts; expandable identities include the original franchise. The existing two-offer comparison shows each recorded inventory alongside keeping the roster.
+
+Counts require the canonical pick ledger, native Sleeper transfers and team-owned picks to reconcile into a complete inventory for the retained seasons. Partial evidence preserves verified exchange movements with unknown remaining totals. Conflicting ownership and duplicate identities are withheld. Retained offers never substitute today's inventory and remain NOT REVALIDATED. Ownership support is independent of missing projections. Viewing or expanding the panel starts no evaluation, source request or synchronization.
+
+Scoring, Sleeper results/projections, Market/Custom values, capital policy, bilateral qualification, saved preferences, submitted lineups and resource safeguards are unchanged. See docs/audits/DRAFT_CAPITAL_2247.md for the evidence boundary and reproducible controls.
+
 # v1.22.31 / build 2246 — Follow through on a supported front-office action
 
 Home carries the existing current, prepared roster need into Trade Center's editable position filter, with the reason visible and starter needs distinguished from depth needs. The existing saved-goal priorities remain in force. Missing preparation is explained as missing evidence, rather than a weak roster or proof that no opportunity exists. Opening the action never starts a search.

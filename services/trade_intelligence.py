@@ -384,6 +384,8 @@ def build_trade_workspace(data: dict[str, Any], active_roster_id: int | None = N
         context = AssetContext(manager.league_id, identifier, data.get('league') or {}) if market_only else _context(decisions[identifier])
         pools[identifier] = build_asset_pool(data, team, context, market_values, market_facts=market_facts)
     pools = apply_positional_ranks(pools)
+    from services.trade_capital_inventory import inventory_baseline
+    capital_inventory = inventory_baseline(data, roster_id)
     windows = {str(identifier): {'classification': decision.competitive_window.classification.value,
                                 'confidence': decision.competitive_window.confidence,
                                 'generation': (decision.competitive_window.production_profile or {}).get('generation')}
@@ -391,7 +393,7 @@ def build_trade_workspace(data: dict[str, Any], active_roster_id: int | None = N
     from src.core.projection_intelligence.service import canonical_projection_identity
     projection_identity = canonical_projection_identity(_trade_projection_service(data).snapshot(), manager.league_id)
     return {"active_roster_id": roster_id, "manager_context": manager, "teams": teams, "pools": pools, "workflows": WORKFLOWS, "player_ownership": PlayerOwnershipIndex(data),
-            'projection_evidence': projection_identity,
+            'projection_evidence': projection_identity, 'capital_inventory': capital_inventory,
             'competitive_windows': windows, 'canonical_market_facts': market_facts}
 
 
@@ -523,6 +525,8 @@ def evaluate_trade_request(
     evaluation["provenance"]["evaluation_id"] = sha256(json.dumps(identity_input, sort_keys=True, separators=(",", ":")).encode()).hexdigest()[:24]
     evaluation["provenance"]["inputs"] = identity_input
     from services.trade_decision import assessment_state, decision_context, selected_player_facts
+    from services.trade_capital_inventory import capital_record, inventory_baseline
+    evaluation['draft_capital_record'] = capital_record(workspace.get('capital_inventory') or inventory_baseline(data, active_id), proposal)
     evaluation['decision_context'] = decision_context(evaluation, incoming=proposal.assets_received, outgoing=proposal.assets_sent)
     evaluation['assessment_state'] = assessment_state(evaluation)
     player_facts = selected_player_facts(data, (*proposal.assets_sent, *proposal.assets_received), projections,

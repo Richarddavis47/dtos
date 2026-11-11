@@ -695,7 +695,7 @@
     } catch (_) { return null; }
   }
   function restoreContext(value, includePrevious = true) {
-    return {schema: 1, identity: boundedEvidence(value.identity || {}), exploration: value.exploration === true,
+    return {schema: 1, draft_capital_record: boundedEvidence(value.draft_capital_record), identity: boundedEvidence(value.identity || {}), exploration: value.exploration === true,
       search_result_type: boundedEvidence(value.search_result_type), stale_reason: boundedEvidence(value.stale_reason), restored: true,
       attempt_state: value.attempt_state || value.evaluation?.assessment_state?.state || 'fresh_incomplete',
       previous_assessment: includePrevious && value.previous_assessment ? restoreContext(value.previous_assessment, false) : null,
@@ -778,7 +778,10 @@
     if (row.proposal?.preview_context) return row.proposal.preview_context;
     const e = row.evaluation || row.proposal?.preview_assessment || {};
     const keys = ['personalization', 'personal_value_evidence', 'neutral_assessment', 'recommendation', 'dominant_reason', 'major_drawback', 'why_you_would_do_it', 'why_they_would_do_it', 'counterparty_summary', 'provenance', 'major_risks', 'major_limitations', 'recommendation_trace', 'legality', 'decision_context', 'market_evidence', 'dimensions', 'assessment_state', 'reserve_evidence', 'personalization', 'personal_value_evidence', 'neutral_assessment', 'neutral_values', 'personal_preference_warnings', 'personal_preference_conflicts'];
-    const context = {schema: 1, evaluation: boundedEvidence(compactRetainedEvaluation(Object.fromEntries(keys.filter(key => key in e).map(key => [key, e[key]])))),
+    // Independently bounded ownership evidence must survive even when the
+    // existing 512-node analytical disclosure is full. The 64k context and
+    // 100k offer limits remain unchanged; truncation never implies zero.
+    const context = {schema: 1, draft_capital_record: boundedEvidence(e.draft_capital_record), evaluation: boundedEvidence(compactRetainedEvaluation(Object.fromEntries(keys.filter(key => key in e).map(key => [key, e[key]])))),
       exploration: row.exploration === true, search_result_type: row.search_result_type || null,
       opportunity: boundedEvidence(row.opportunity || null),
       identity: {personalization: JSON.stringify(personalPayload()), package: packageIdentity(row.proposal || selected), strategy: row.home_assessment_strategy ?? el('trade-strategy').value,
@@ -790,6 +793,7 @@
       // Retain primary meaning and provenance even for unusually deep evidence.
       context.evaluation.dimensions = boundedEvidence({confidence: {assessment: e.dimensions?.confidence?.assessment, explanation: e.dimensions?.confidence?.explanation}, counterparty_plausibility: {assessment: e.dimensions?.counterparty_plausibility?.assessment, explanation: e.dimensions?.counterparty_plausibility?.explanation}});
       context.opportunity = null;
+      context.draft_capital_record = null;
       context.identity.package = context.identity.package.slice(0, 16000);
       context.evaluation.major_limitations = [...(context.evaluation.major_limitations || []), 'Additional evidence omitted from temporary preview; reevaluate for full details.'].slice(-32);
     }
@@ -965,6 +969,7 @@
     out.dataset.assessment = 'true';
     const retained = Boolean(previousContainer || contextQualification(context));
     out.dataset.assessmentFreshness = retained ? 'retained' : 'current';
+    out.append(window.DTOSOfferComparison.capitalView(context?.draft_capital_record || e.draft_capital_record, node, comparisonScope(), retained));
     const attemptState = context?.attempt_state || e.assessment_state?.state || 'fresh_incomplete';
     out.dataset.assessmentState = retained ? 'retained' : attemptState;
     if (!previousContainer) addComparisonControl(out, {evaluation: e, proposal: {
@@ -1295,6 +1300,7 @@
     card.append(node('p', (retained ? 'Retained assessment · NOT REVALIDATED: ' : e.personalization?.mode === 'custom' ? 'Separate Custom DTOS personal assessment: ' : 'Separate DTOS assessment: ') + finalVerdict(e)));
     if (decision.qualification) card.append(node('p', decision.qualification, 'tw-verdict-qualification'));
     appendDecisionSummary(card, decision);
+    card.append(window.DTOSOfferComparison.capitalView(context?.draft_capital_record || e.draft_capital_record, node, comparisonScope(), retained));
     const unfavorable = ['REJECT', 'NOT WORTH IT'].includes(e.recommendation);
     const reason = unfavorable ? 'Closer current Market terms do not make this a recommended trade.' : decision.lineup?.explanation || e.why_you_would_do_it || 'Market balance is separate from strategic fit; no supported positive roster case is established.';
     card.append(node('p', 'Why consider: ' + reason),
@@ -1322,6 +1328,7 @@
   }
   function offerCard(row, preview = false) {
     const context = assessmentContext(row);
+    const retained = Boolean(contextQualification(context, row.proposal));
     assessedOfferContexts.set(row, context);
     const card = node('article', null, 'tw-offer');
     const e = row.evaluation || row.proposal.preview_assessment || {};
@@ -1355,6 +1362,7 @@
       ...(!decision.their_side_summary ? [node('p', 'Counterparty: ' + (decision.partner_summary || e.counterparty_summary || e.why_they_would_do_it || e.dimensions?.counterparty_plausibility?.explanation || 'Review the separate bilateral evidence.'))] : []));
     if (!preview) { const b = node('button', 'Open editable offer: preview'); b.type = 'button'; b.className = 'tw-next-action primary'; b.onclick = () => previewOffer(row); card.append(b); }
     appendDecisionSummary(card, decision);
+    card.append(window.DTOSOfferComparison.capitalView(context?.draft_capital_record || e.draft_capital_record, node, comparisonScope(), retained));
     addComparisonControl(card, row, context);
     for (const id of [...row.proposal.assets_sent, ...row.proposal.assets_received]) { const protection = lockDetail(id); if (protection) card.append(protection); }
     for (const pick of e.dimensions?.strategic_fit?.active?.future_capital?.sent || []) {
