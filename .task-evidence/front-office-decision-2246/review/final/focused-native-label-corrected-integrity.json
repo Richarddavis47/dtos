@@ -1,0 +1,42 @@
+{
+  "passed": true,
+  "native_archive_sha256": "c48911235d42ac7dcf737cb8524a6950241302307bd80abb48d3b152fa0a2cdf",
+  "native_source": {
+    "baseline": "abbe723a0566cf84a8fff947cf7320cb66567a77",
+    "candidate": "3a19eec0a00def82418d9658414f13e090d11b14",
+    "tree": "041cfe403ca499c99b2be93a67d8e440c304be6b",
+    "branch": "fix/activation-deferral-2246",
+    "version": "1.22.31",
+    "build": 2246,
+    "pr": 335,
+    "expected_test_count": 4364
+  },
+  "receipt": {
+    "passed": true,
+    "head": "3a19eec0a00def82418d9658414f13e090d11b14",
+    "tree": "041cfe403ca499c99b2be93a67d8e440c304be6b",
+    "scope": "Disposable native prepared 1QB/K/DEF and Superflex workflows; no qualified-discovery, live owner or physical Safari claim"
+  },
+  "publisher_files": {
+    "tools/release/publish.py": {
+      "changed_existing_blocks": [
+        "collect"
+      ],
+      "added_blocks": [
+        "verify_front_office_workflow"
+      ],
+      "sha256": "669ddffb07216631e0acf7347f1d6ed02b10476b5805dfcadac45dd475275679"
+    },
+    "tests/test_release_publisher.py": {
+      "changed_existing_blocks": [],
+      "added_blocks": [
+        "FrontOfficeWorkflowIntegrityTests"
+      ],
+      "sha256": "638d862fff88f110ddf43d71d144a190fdf4f8e8af0746f365853533914e6ca2"
+    }
+  },
+  "prefix": "front-office-workflow/",
+  "captures_modified": false,
+  "publisher_unit_tests": 102,
+  "publisher_unit_passed": true
+}

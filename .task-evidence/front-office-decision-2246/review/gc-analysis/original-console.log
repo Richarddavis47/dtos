@@ -1,0 +1,110 @@
+/usr/local/lib/python3.14/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+  from starlette.testclient import TestClient as TestClient  # noqa
+Loaded 4358 RSS 134594560
+Rooted graph 2450000 RSS 707186688
+........{"timestamp":"2026-11-11T08:05:42.600691+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/probe \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T08:05:42.603208+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"known-id","event":"request_complete","duration_ms":6.791,"status_code":200,"method":"GET","path":"/probe"}
+{"timestamp":"2026-11-11T08:05:42.619244+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/probe \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T08:05:42.619815+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"d0519fcfc92c4b2e9e61395f6a613c0e","event":"request_complete","duration_ms":1.564,"status_code":200,"method":"GET","path":"/probe"}
+....
+----------------------------------------------------------------------
+Ran 12 tests in 2.188s
+
+OK
+test_complete_total_preserves_zero_and_decimal_precision (test_projection_audit.ProjectionAuditTests.test_complete_total_preserves_zero_and_decimal_precision) ... ok
+test_export_is_read_only_complete_and_reconciled (test_projection_audit.ProjectionAuditTests.test_export_is_read_only_complete_and_reconciled) ... ok
+test_missing_projection_cannot_become_zero_total_or_margin (test_projection_audit.ProjectionAuditTests.test_missing_projection_cannot_become_zero_total_or_margin) ... ok
+test_missing_retained_market_fails_without_starting_one (test_projection_audit.ProjectionAuditTests.test_missing_retained_market_fails_without_starting_one) ... {"timestamp":"2026-11-11T08:05:43.686476+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/audit/projections/current \"HTTP/1.1 503 Service Unavailable\"","request_id":"system"}
+ok
+test_player_calibration_restores_team_separation_without_copying_sleeper (test_projection_audit.ProjectionAuditTests.test_player_calibration_restores_team_separation_without_copying_sleeper) ... ok
+test_projection_audit_does_not_block_lightweight_request (test_projection_audit.ProjectionAuditTests.test_projection_audit_does_not_block_lightweight_request) ... {"timestamp":"2026-11-11T08:05:43.892621+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://test/lightweight \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T08:05:43.893781+00:00","level":"WARNING","logger":"asyncio","message":"Executing <Task pending name='Task-31' coro=<ProjectionAuditTests.test_projection_audit_does_not_block_lightweight_request() running at /app/tests/test_projection_audit.py:322> wait_for=<Task pending name='Task-32' coro=<AsyncClient.get() running at /output/observer.py:85> wait_for=<Future pending cb=[_chain_future.<locals>._call_check_cancel() at /usr/local/lib/python3.14/asyncio/futures.py:393, Task.task_wakeup()] created at /usr/local/lib/python3.14/asyncio/base_events.py:459> cb=[Task.task_wakeup()] created at /usr/local/lib/python3.14/asyncio/tasks.py:395> cb=[_run_until_complete_cb() at /usr/local/lib/python3.14/asyncio/base_events.py:181] created at /usr/local/lib/python3.14/asyncio/runners.py:109> took 0.187 seconds","request_id":"system"}
+{"timestamp":"2026-11-11T08:05:43.898654+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://test/api/audit/projections/current \"HTTP/1.1 200 OK\"","request_id":"system"}
+FAIL
+
+======================================================================
+FAIL: test_projection_audit_does_not_block_lightweight_request (test_projection_audit.ProjectionAuditTests.test_projection_audit_does_not_block_lightweight_request)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.14/asyncio/runners.py", line 127, in run
+    return self._loop.run_until_complete(task)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "/usr/local/lib/python3.14/asyncio/base_events.py", line 719, in run_until_complete
+    return future.result()
+           ~~~~~~~~~~~~~^^
+  File "/app/tests/test_projection_audit.py", line 327, in test_projection_audit_does_not_block_lightweight_request
+    self.assertLess(latency_ms, 100)
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+AssertionError: 186.369219009066 not less than 100
+
+----------------------------------------------------------------------
+Ran 6 tests in 0.235s
+
+FAILED (failures=1)
+Case original failures [{'test': 'test_projection_audit.ProjectionAuditTests.test_projection_audit_does_not_block_lightweight_request', 'type': 'AssertionError', 'text': '186.369219009066 not less than 100'}] errors []
+........{"timestamp":"2026-11-11T08:05:46.253241+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/probe \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T08:05:46.253814+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"known-id","event":"request_complete","duration_ms":2.264,"status_code":200,"method":"GET","path":"/probe"}
+{"timestamp":"2026-11-11T08:05:46.273160+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/probe \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T08:05:46.276279+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"3bb53abe417c4c6f8467f99e2800125f","event":"request_complete","duration_ms":9.326,"status_code":200,"method":"GET","path":"/probe"}
+....
+----------------------------------------------------------------------
+Ran 12 tests in 2.886s
+
+OK
+test_complete_total_preserves_zero_and_decimal_precision (projection_audit_precollect.ProjectionAuditTests.test_complete_total_preserves_zero_and_decimal_precision) ... ok
+test_export_is_read_only_complete_and_reconciled (projection_audit_precollect.ProjectionAuditTests.test_export_is_read_only_complete_and_reconciled) ... ok
+test_missing_projection_cannot_become_zero_total_or_margin (projection_audit_precollect.ProjectionAuditTests.test_missing_projection_cannot_become_zero_total_or_margin) ... ok
+test_missing_retained_market_fails_without_starting_one (projection_audit_precollect.ProjectionAuditTests.test_missing_retained_market_fails_without_starting_one) ... {"timestamp":"2026-11-11T08:05:47.586928+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/audit/projections/current \"HTTP/1.1 503 Service Unavailable\"","request_id":"system"}
+ok
+test_player_calibration_restores_team_separation_without_copying_sleeper (projection_audit_precollect.ProjectionAuditTests.test_player_calibration_restores_team_separation_without_copying_sleeper) ... ok
+test_projection_audit_does_not_block_lightweight_request (projection_audit_precollect.ProjectionAuditTests.test_projection_audit_does_not_block_lightweight_request) ... {"timestamp":"2026-11-11T08:05:48.033426+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://test/lightweight \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T08:05:48.033833+00:00","level":"WARNING","logger":"asyncio","message":"Executing <Task pending name='Task-66' coro=<ProjectionAuditTests.test_projection_audit_does_not_block_lightweight_request() running at /output/projection_audit_precollect.py:323> wait_for=<Task pending name='Task-67' coro=<AsyncClient.get() running at /output/observer.py:85> wait_for=<Future pending cb=[_chain_future.<locals>._call_check_cancel() at /usr/local/lib/python3.14/asyncio/futures.py:393, Task.task_wakeup()] created at /usr/local/lib/python3.14/asyncio/base_events.py:459> cb=[Task.task_wakeup()] created at /usr/local/lib/python3.14/asyncio/tasks.py:395> cb=[_run_until_complete_cb() at /usr/local/lib/python3.14/asyncio/base_events.py:181] created at /usr/local/lib/python3.14/asyncio/runners.py:109> took 0.431 seconds","request_id":"system"}
+{"timestamp":"2026-11-11T08:05:48.037618+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://test/api/audit/projections/current \"HTTP/1.1 200 OK\"","request_id":"system"}
+ok
+
+----------------------------------------------------------------------
+Ran 6 tests in 0.481s
+
+OK
+Case precollect failures [] errors []
+........{"timestamp":"2026-11-11T08:05:49.275659+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/probe \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T08:05:49.276187+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"known-id","event":"request_complete","duration_ms":1.424,"status_code":200,"method":"GET","path":"/probe"}
+{"timestamp":"2026-11-11T08:05:49.280513+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/probe \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T08:05:49.281223+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"5087a389afdf4ce9bd72c901888388d5","event":"request_complete","duration_ms":1.213,"status_code":200,"method":"GET","path":"/probe"}
+....
+----------------------------------------------------------------------
+Ran 12 tests in 1.280s
+
+OK
+test_complete_total_preserves_zero_and_decimal_precision (projection_audit_negative.ProjectionAuditTests.test_complete_total_preserves_zero_and_decimal_precision) ... ok
+test_export_is_read_only_complete_and_reconciled (projection_audit_negative.ProjectionAuditTests.test_export_is_read_only_complete_and_reconciled) ... ok
+test_missing_projection_cannot_become_zero_total_or_margin (projection_audit_negative.ProjectionAuditTests.test_missing_projection_cannot_become_zero_total_or_margin) ... ok
+test_missing_retained_market_fails_without_starting_one (projection_audit_negative.ProjectionAuditTests.test_missing_retained_market_fails_without_starting_one) ... {"timestamp":"2026-11-11T08:05:50.346865+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/audit/projections/current \"HTTP/1.1 503 Service Unavailable\"","request_id":"system"}
+ok
+test_player_calibration_restores_team_separation_without_copying_sleeper (projection_audit_negative.ProjectionAuditTests.test_player_calibration_restores_team_separation_without_copying_sleeper) ... ok
+test_projection_audit_does_not_block_lightweight_request (projection_audit_negative.ProjectionAuditTests.test_projection_audit_does_not_block_lightweight_request) ... {"timestamp":"2026-11-11T08:05:50.870830+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://test/lightweight \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T08:05:50.871265+00:00","level":"WARNING","logger":"asyncio","message":"Executing <Task pending name='Task-101' coro=<ProjectionAuditTests.test_projection_audit_does_not_block_lightweight_request() running at /output/projection_audit_negative.py:324> wait_for=<Task pending name='Task-102' coro=<AsyncClient.get() running at /output/observer.py:85> wait_for=<Future pending cb=[_chain_future.<locals>._call_check_cancel() at /usr/local/lib/python3.14/asyncio/futures.py:393, Task.task_wakeup()] created at /usr/local/lib/python3.14/asyncio/base_events.py:459> cb=[Task.task_wakeup()] created at /usr/local/lib/python3.14/asyncio/tasks.py:395> cb=[_run_until_complete_cb() at /usr/local/lib/python3.14/asyncio/base_events.py:181] created at /usr/local/lib/python3.14/asyncio/runners.py:109> took 0.512 seconds","request_id":"system"}
+{"timestamp":"2026-11-11T08:05:50.875955+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://test/api/audit/projections/current \"HTTP/1.1 200 OK\"","request_id":"system"}
+FAIL
+
+======================================================================
+FAIL: test_projection_audit_does_not_block_lightweight_request (projection_audit_negative.ProjectionAuditTests.test_projection_audit_does_not_block_lightweight_request)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.14/asyncio/runners.py", line 127, in run
+    return self._loop.run_until_complete(task)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "/usr/local/lib/python3.14/asyncio/base_events.py", line 719, in run_until_complete
+    return future.result()
+           ~~~~~~~~~~~~~^^
+  File "/output/projection_audit_negative.py", line 329, in test_projection_audit_does_not_block_lightweight_request
+    self.assertLess(latency_ms, 100)
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+AssertionError: 121.96510900685098 not less than 100
+
+----------------------------------------------------------------------
+Ran 6 tests in 0.543s
+
+FAILED (failures=1)
+Case foreground_120ms_negative failures [{'test': 'projection_audit_negative.ProjectionAuditTests.test_projection_audit_does_not_block_lightweight_request', 'type': 'AssertionError', 'text': '121.96510900685098 not less than 100'}] errors []
+{"cases": [{"name": "original", "failures": [{"test": "test_projection_audit.ProjectionAuditTests.test_projection_audit_does_not_block_lightweight_request", "type": "AssertionError", "text": "186.369219009066 not less than 100"}], "errors": [], "before": {"rss_bytes": 716693504, "vms_bytes": 896294912, "system_available_bytes": 16978059264, "memory_accounting_scope": "cgroup", "cgroup_current_bytes": 691736576, "cgroup_limit_bytes": 2147483648, "cgroup_inactive_file_bytes": 372736, "cgroup_anonymous_bytes": 688865280, "cgroup_memory_events": {"low": 0, "high": 0, "max": 0, "oom": 0, "oom_kill": 0, "oom_group_kill": 0}}, "gc_counts": [310, 0, 0], "prelude": {"tests": 12, "failures": 0, "errors": 0}, "tests": 6, "target_started": 1794384343.6673243, "target_finished": 1794384343.9020882, "after": {"rss_bytes": 721903616, "vms_bytes": 1128161280, "system_available_bytes": 16977752064, "memory_accounting_scope": "cgroup", "cgroup_current_bytes": 697090048, "cgroup_limit_bytes": 2147483648, "cgroup_inactive_file_bytes": 380928, "cgroup_anonymous_bytes": 693776384, "cgroup_memory_events": {"low": 0, "high": 0, "max": 0, "oom": 0, "oom_kill": 0, "oom_group_kill": 0}}, "gc_counts_after": [7, 0, 0], "gc_enabled": true, "expected": "latency failure diagnostic"}, {"name": "precollect", "failures": [], "errors": [], "before": {"rss_bytes": 721903616, "vms_bytes": 1128161280, "system_available_bytes": 16977752064, "memory_accounting_scope": "cgroup", "cgroup_current_bytes": 697352192, "cgroup_limit_bytes": 2147483648, "cgroup_inactive_file_bytes": 380928, "cgroup_anonymous_bytes": 693776384, "cgroup_memory_events": {"low": 0, "high": 0, "max": 0, "oom": 0, "oom_kill": 0, "oom_group_kill": 0}}, "gc_counts": [12, 0, 0], "prelude": {"tests": 12, "failures": 0, "errors": 0}, "tests": 6, "target_started": 1794384347.5618696, "target_finished": 1794384348.0429192, "after": {"rss_bytes": 723755008, "vms_bytes": 1130795008, "system_available_bytes": 17004052480, "memory_accounting_scope": "cgroup", "cgroup_current_bytes": 699219968, "cgroup_limit_bytes": 2147483648, "cgroup_inactive_file_bytes": 372736, "cgroup_anonymous_bytes": 695549952, "cgroup_memory_events": {"low": 0, "high": 0, "max": 0, "oom": 0, "oom_kill": 0, "oom_group_kill": 0}}, "gc_counts_after": [2, 0, 0], "gc_enabled": true, "expected": "all original assertions pass"}, {"name": "foreground_120ms_negative", "failures": [{"test": "projection_audit_negative.ProjectionAuditTests.test_projection_audit_does_not_block_lightweight_request", "type": "AssertionError", "text": "121.96510900685098 not less than 100"}], "errors": [], "before": {"rss_bytes": 723755008, "vms_bytes": 1130795008, "system_available_bytes": 17004052480, "memory_accounting_scope": "cgroup", "cgroup_current_bytes": 699215872, "cgroup_limit_bytes": 2147483648, "cgroup_inactive_file_bytes": 372736, "cgroup_anonymous_bytes": 695549952, "cgroup_memory_events": {"low": 0, "high": 0, "max": 0, "oom": 0, "oom_kill": 0, "oom_group_kill": 0}}, "gc_counts": [7, 0, 0], "prelude": {"tests": 12, "failures": 0, "errors": 0}, "tests": 6, "target_started": 1794384350.3362842, "target_finished": 1794384350.8792448, "after": {"rss_bytes": 723922944, "vms_bytes": 1131327488, "system_available_bytes": 16987955200, "memory_accounting_scope": "cgroup", "cgroup_current_bytes": 699133952, "cgroup_limit_bytes": 2147483648, "cgroup_inactive_file_bytes": 364544, "cgroup_anonymous_bytes": 695713792, "cgroup_memory_events": {"low": 0, "high": 0, "max": 0, "oom": 0, "oom_kill": 0, "oom_group_kill": 0}}, "gc_counts_after": [2, 0, 0], "gc_enabled": true, "expected": "latency failure diagnostic"}], "elapsed_seconds": 19.302748203277588}

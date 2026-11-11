@@ -1,0 +1,59 @@
+{
+  "source": {
+    "baseline": "abbe723a0566cf84a8fff947cf7320cb66567a77",
+    "candidate": "3a19eec0a00def82418d9658414f13e090d11b14",
+    "tree": "041cfe403ca499c99b2be93a67d8e440c304be6b",
+    "branch": "fix/activation-deferral-2246",
+    "version": "1.22.31",
+    "build": 2246,
+    "pr": 335,
+    "expected_test_count": 4364
+  },
+  "publisher_guard": {
+    "path": "/workspace/dtos-publisher-2246/tools/release/publish.py",
+    "sha256": "669ddffb07216631e0acf7347f1d6ed02b10476b5805dfcadac45dd475275679"
+  },
+  "all_native_guards_passed": true,
+  "receipts": [
+    {
+      "name": "local-preflight",
+      "guard": "verify_preflight",
+      "passed": true,
+      "archive": "/workspace/2246-granite-activation/expansion/final/local-resource-native-archives/local-preflight.zip",
+      "archive_sha256": "52d3e77cffea749db6a55310c86a6487d0d92fdf98c96aa4b8151651ac5a3bdf",
+      "archive_bytes": 3728,
+      "members": {
+        "result.json": "a4a04ca4c539e663061148333939ed9e008d1ac4d8d7c434ef4c0f1ad8e0cf6a",
+        "raw.log": "b2dac62c2d72526ddbf6ba522d647f3c2ffb1034a8fb9a5f2d7fa218c5152b66",
+        "SHA256SUMS": "69b034eba4867c0da8c38910186a6fa3c6d0d045ff790c17b41837f61662cc81"
+      }
+    },
+    {
+      "name": "local-restoration-unused",
+      "guard": "verify_actuals_restoration",
+      "passed": true,
+      "archive": "/workspace/2246-granite-activation/expansion/final/local-resource-native-archives/local-restoration-unused.zip",
+      "archive_sha256": "a85e023315dac323d48fa226c81c46592a24b16d3ae0bdf09b02ecfe62e7447a",
+      "archive_bytes": 7285431,
+      "members": {
+        "evidence/result.json": "b94f94e1ff4bcb9a9b0421f145478add5d8e2c02f694358cd79bddd5524c057d",
+        "raw.log": "4075497d5a96af15eaa52bb5506fd18598965a469c7547f73ed119e53360d2e3",
+        "prior-study.zip": "df5c88eda13a0671104c76a943b05032d7adfa089d11e738785b11e35a932439",
+        "SHA256SUMS": "d86584815badab40c3eaad59a3901e66aee2219f9ddf8357872054dea736a5b6"
+      }
+    },
+    {
+      "name": "local-resident-refresh",
+      "guard": "verify_resident_refresh",
+      "passed": true,
+      "archive": "/workspace/2246-granite-activation/expansion/final/local-resource-native-archives/local-resident-refresh.zip",
+      "archive_sha256": "9ffb4b5a393d90aef07c9cf1267aff83394bd91b5f65c9da1a354743a7a58203",
+      "archive_bytes": 5730,
+      "members": {
+        "evidence/result.json": "2f43a47c655f835fc41205f96561b440a139c6a41b2bce8610948833b56f10aa",
+        "raw.log": "de3a1c1089b6145724833db73034c819c78db69735513d6769017376a47e10dc",
+        "SHA256SUMS": "a34f76cb283f02d28a5d92fe9dd7b4d7d58209df82d859aa8bdc922e3d68f212"
+      }
+    }
+  ]
+}

@@ -1,0 +1,195 @@
+{
+  "scope": "Fixed original/GC-precondition/120ms-foreground-block diagnostic; modeled retained graph, no gate replacement.",
+  "loaded_suite_tests": 4358,
+  "graph_rows": 2450000,
+  "graph_after_build_rss_bytes": 707186688,
+  "same_graph_retained": true,
+  "gc_thresholds": [
+    2000,
+    10,
+    0
+  ],
+  "events_dropped": 0,
+  "cases": [
+    {
+      "name": "original",
+      "prelude": {
+        "tests": 12,
+        "failures": 0,
+        "errors": 0
+      },
+      "actual_prior_and_target_tests": 6,
+      "assertion_failures": [
+        {
+          "test": "test_projection_audit.ProjectionAuditTests.test_projection_audit_does_not_block_lightweight_request",
+          "type": "AssertionError",
+          "text": "186.369219009066 not less than 100"
+        }
+      ],
+      "errors": [],
+      "gc_enabled": true,
+      "rss_before": 716693504,
+      "rss_after": 721903616,
+      "lightweight_client_get_ms": 185.75904800673015,
+      "lightweight_client_get_thread_cpu_ms": 185.73542400000065,
+      "in_lightweight_gc": [
+        {
+          "case": "original",
+          "generation": 1,
+          "duration_ms": 184.08772900875192,
+          "cpu_ms": 184.06869999999918,
+          "start": 1794384343.707329,
+          "stop": 1794384343.8914156,
+          "thread": 140410087717760,
+          "collected": 0,
+          "frames": [
+            [
+              "/output/observer.py",
+              "gc_event",
+              62
+            ],
+            [
+              "/usr/local/lib/python3.14/site-packages/httpx/_client.py",
+              "_send_single_request",
+              1717
+            ],
+            [
+              "/usr/local/lib/python3.14/site-packages/httpx/_client.py",
+              "_send_handling_redirects",
+              1694
+            ],
+            [
+              "/usr/local/lib/python3.14/site-packages/httpx/_client.py",
+              "_send_handling_auth",
+              1657
+            ],
+            [
+              "/usr/local/lib/python3.14/site-packages/httpx/_client.py",
+              "send",
+              1629
+            ],
+            [
+              "/usr/local/lib/python3.14/site-packages/httpx/_client.py",
+              "request",
+              1540
+            ],
+            [
+              "/usr/local/lib/python3.14/site-packages/httpx/_client.py",
+              "get",
+              1768
+            ],
+            [
+              "/output/observer.py",
+              "measured",
+              85
+            ],
+            [
+              "/usr/local/lib/python3.14/asyncio/tasks.py",
+              "wait_for",
+              488
+            ],
+            [
+              "/app/tests/test_projection_audit.py",
+              "test_projection_audit_does_not_block_lightweight_request",
+              318
+            ],
+            [
+              "/usr/local/lib/python3.14/asyncio/events.py",
+              "_run",
+              94
+            ],
+            [
+              "/usr/local/lib/python3.14/asyncio/base_events.py",
+              "_run_once",
+              2038
+            ],
+            [
+              "/usr/local/lib/python3.14/asyncio/base_events.py",
+              "run_forever",
+              677
+            ],
+            [
+              "/usr/local/lib/python3.14/asyncio/base_events.py",
+              "run_until_complete",
+              706
+            ],
+            [
+              "/usr/local/lib/python3.14/asyncio/runners.py",
+              "run",
+              127
+            ],
+            [
+              "/usr/local/lib/python3.14/unittest/async_case.py",
+              "_callMaybeAsync",
+              128
+            ],
+            [
+              "/usr/local/lib/python3.14/unittest/async_case.py",
+              "_callTestMethod",
+              102
+            ],
+            [
+              "/usr/local/lib/python3.14/unittest/case.py",
+              "run",
+              669
+            ],
+            [
+              "/usr/local/lib/python3.14/unittest/async_case.py",
+              "run",
+              147
+            ],
+            [
+              "/usr/local/lib/python3.14/unittest/case.py",
+              "__call__",
+              725
+            ]
+          ]
+        }
+      ],
+      "last_setup_gc_ms": 387.89179699961096
+    },
+    {
+      "name": "precollect",
+      "prelude": {
+        "tests": 12,
+        "failures": 0,
+        "errors": 0
+      },
+      "actual_prior_and_target_tests": 6,
+      "assertion_failures": [],
+      "errors": [],
+      "gc_enabled": true,
+      "rss_before": 721903616,
+      "rss_after": 723755008,
+      "lightweight_client_get_ms": 1.474652992328629,
+      "lightweight_client_get_thread_cpu_ms": 1.4745440000005772,
+      "in_lightweight_gc": [],
+      "last_setup_gc_ms": 429.14021099568345
+    },
+    {
+      "name": "foreground_120ms_negative",
+      "prelude": {
+        "tests": 12,
+        "failures": 0,
+        "errors": 0
+      },
+      "actual_prior_and_target_tests": 6,
+      "assertion_failures": [
+        {
+          "test": "projection_audit_negative.ProjectionAuditTests.test_projection_audit_does_not_block_lightweight_request",
+          "type": "AssertionError",
+          "text": "121.96510900685098 not less than 100"
+        }
+      ],
+      "errors": [],
+      "gc_enabled": true,
+      "rss_before": 723755008,
+      "rss_after": 723922944,
+      "lightweight_client_get_ms": 121.71511699853,
+      "lightweight_client_get_thread_cpu_ms": 1.6524380000007,
+      "in_lightweight_gc": [],
+      "last_setup_gc_ms": 389.64100599696394
+    }
+  ],
+  "exact_original_failure_attribution_limit": "Original failed full-suite run did not capture per-GC samples; this is a matched synthetic retained-heap reproduction, not retrospective direct attribution or a release gate pass."
+}

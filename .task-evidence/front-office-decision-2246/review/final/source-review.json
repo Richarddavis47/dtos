@@ -1,0 +1,84 @@
+{
+  "reviewed_at_utc": "2026-11-11T08:39:59.348133+00:00",
+  "head": "3a19eec0a00def82418d9658414f13e090d11b14",
+  "tree": "041cfe403ca499c99b2be93a67d8e440c304be6b",
+  "baseline": "abbe723a0566cf84a8fff947cf7320cb66567a77",
+  "source_working_tree_clean": true,
+  "method": "Independent read-only review of the full diff and directly relevant producer/consumer dependency paths; separate delegated read-only JS review. No tests, containers or application source writes performed during the active canonical run.",
+  "result": "No concrete new blocking defect found in the reviewed changes.",
+  "findings": [],
+  "checks": [
+    {
+      "area": "Home prepared need qualification",
+      "result": "Existing prepared_diagnostics rekeys by current diagnostic inputs and requalifies age/refresh state. prepared_need requires matching authenticated membership, league, roster, week and nonempty diagnostic/projection generations, a supported position and current conclusion. Its fingerprint includes account/session binding, ownership generation and both evidence generations. Home only promotes the matching current position; provisional positions retain inspection links.",
+      "source": [
+        "services/front_office_brief.py:15",
+        "services/front_office_brief.py:65",
+        "services/team_trade_need.py:34",
+        "src/core/intelligence/roster_diagnostics.py:781"
+      ]
+    },
+    {
+      "area": "Destination and source fence",
+      "result": "Recommended recomputes prepared_need from currently prepared diagnostics and admits the hint only if the fingerprint matches. Home retains its authenticated workspace authorization and before/after generation/source-publication fences.",
+      "source": [
+        "routes/trades.py:171",
+        "routes/trades.py:228",
+        "routes/trades.py:280",
+        "services/trade_workspace_context.py:39"
+      ]
+    },
+    {
+      "area": "Missing preparation",
+      "result": "The new fallback appears only when assessment, prepared diagnostics and compatible strength profile are all absent. It is informational, links to existing My Team, and calls no analysis, solver, search or goal setter. Existing independently prepared evidence remains usable.",
+      "source": [
+        "services/front_office_brief.py:156",
+        "tests/test_front_office_brief.py:29"
+      ]
+    },
+    {
+      "area": "Exact Recommended protections/manual draft",
+      "result": "Recommended already submits recommendationProtectedAssets and retains the applied exact IDs separately. The new generate/recommended guard prevents response protections from entering legacy manual Evaluate/Shop locks. It does not clear existing manual locks, modify the draft proposal or broaden protected identity matching.",
+      "source": [
+        "static/js/trade_workspace.js:1532",
+        "static/js/trade_workspace.js:1591",
+        "tests/test_recommended_protections_browser.py"
+      ]
+    },
+    {
+      "area": "BFcache comparison restoration",
+      "result": "Existing verify, workspace/history binding and reset-generation fences execute first. The new map preserves ordered snapshots and marks them retained/restored; refresh renders those local snapshots under existing compatibility checks, with no POST or analytical recomputation.",
+      "source": [
+        "static/js/trade_workspace.js:1767",
+        "static/js/trade_workspace.js:1780",
+        "static/js/trade_comparison.js:156",
+        "tests/test_offer_comparison_browser.py"
+      ]
+    },
+    {
+      "area": "Math, providers, goals and admission",
+      "result": "No numerical evaluation/projection/lineup engine or provider implementation changes appear in the diff. Source changes only select/present prepared evidence, preserve typed activation deferral, and log fixed fields from the existing restoration plan. Restoration predicates, expansion factor, reserves, cap and rechecks remain unchanged. No goal/ranking persistence setter is added to Home or the JS restoration path.",
+      "source": [
+        "services/league_preparation.py:74",
+        "services/league_preparation.py:114",
+        "src/platform/runtime_errors.py:60",
+        "routes/accounts.py:174"
+      ]
+    },
+    {
+      "area": "100ms fixture integrity",
+      "result": "Only setup gc.collect was added before the timer. The 100ms assertion, 250ms timeout, two-second held-worker wait, pending request, response and context checks remain. The earlier fixed old-heap control retained failures and showed that a real 120ms foreground block still fails.",
+      "source": [
+        "tests/test_projection_audit.py:300",
+        "tests/test_projection_audit.py:317",
+        "tests/test_projection_audit.py:333",
+        "/workspace/2246-granite-activation/expansion/gc-analysis/ANALYSIS.md"
+      ]
+    }
+  ],
+  "limits": [
+    "Static review is not a test result. The final complete canonical validator on this exact integrated tree remains mandatory; its active status was not polled or changed by this review.",
+    "Pre-timer collection deliberately excludes incidental setup/ASGI-client heap collection from this scheduling test. It is not a general application latency guarantee or production GC fix. The historical 157.623ms failure remains a failed observation; the modeled reproduction does not retrospectively prove an unrecorded GC event.",
+    "No claim of physical Safari/iPhone validation or live-owner acceptance is made by this source review."
+  ]
+}

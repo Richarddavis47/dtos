@@ -1,0 +1,36 @@
+{"timestamp":"2026-11-11T08:17:39.553123+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/strategy_session.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T08:17:39.556995+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/trade_comparison.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T08:17:39.557827+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/trade_workspace.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T08:17:39.563472+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T08:17:39.696950+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":667492352,"limit_bytes":2147483648,"raw_headroom_bytes":1479991296,"clean_inactive_file_bytes":958464,"conditional_file_credit_bytes":479232,"admission_headroom_bytes":1480470528,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-11T08:17:39.702180+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/workspace?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+ERROR
+
+======================================================================
+ERROR: test_1qb_k_def_normal_front_office_journey (tests.test_front_office_workflow_browser.FrontOfficeWorkflowBrowserTests.test_1qb_k_def_normal_front_office_journey)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_front_office_workflow_browser.py", line 384, in test_1qb_k_def_normal_front_office_journey
+    self.journey(superflex=False)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/app/tests/test_front_office_workflow_browser.py", line 352, in journey
+    self.assertIsNone(cleared['recommendedSearch'])
+                      ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+KeyError: 'recommendedSearch'
+
+======================================================================
+ERROR: test_superflex_normal_front_office_journey (tests.test_front_office_workflow_browser.FrontOfficeWorkflowBrowserTests.test_superflex_normal_front_office_journey)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_front_office_workflow_browser.py", line 387, in test_superflex_normal_front_office_journey
+    self.journey(superflex=True)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "/app/tests/test_front_office_workflow_browser.py", line 352, in journey
+    self.assertIsNone(cleared['recommendedSearch'])
+                      ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+KeyError: 'recommendedSearch'
+
+----------------------------------------------------------------------
+Ran 2 tests in 44.461s
+
+FAILED (errors=2)

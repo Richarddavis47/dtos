@@ -1,0 +1,253 @@
+{
+  "cases": [
+    {
+      "name": "original",
+      "failures": [
+        {
+          "test": "test_projection_audit.ProjectionAuditTests.test_projection_audit_does_not_block_lightweight_request",
+          "type": "AssertionError",
+          "text": "186.369219009066 not less than 100"
+        }
+      ],
+      "errors": [],
+      "before": {
+        "rss_bytes": 716693504,
+        "vms_bytes": 896294912,
+        "system_available_bytes": 16978059264,
+        "memory_accounting_scope": "cgroup",
+        "cgroup_current_bytes": 691736576,
+        "cgroup_limit_bytes": 2147483648,
+        "cgroup_inactive_file_bytes": 372736,
+        "cgroup_anonymous_bytes": 688865280,
+        "cgroup_memory_events": {
+          "low": 0,
+          "high": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_kill": 0,
+          "oom_group_kill": 0
+        }
+      },
+      "gc_counts": [
+        310,
+        0,
+        0
+      ],
+      "prelude": {
+        "tests": 12,
+        "failures": 0,
+        "errors": 0
+      },
+      "tests": 6,
+      "target_started": 1794384343.6673243,
+      "target_finished": 1794384343.9020882,
+      "after": {
+        "rss_bytes": 721903616,
+        "vms_bytes": 1128161280,
+        "system_available_bytes": 16977752064,
+        "memory_accounting_scope": "cgroup",
+        "cgroup_current_bytes": 697090048,
+        "cgroup_limit_bytes": 2147483648,
+        "cgroup_inactive_file_bytes": 380928,
+        "cgroup_anonymous_bytes": 693776384,
+        "cgroup_memory_events": {
+          "low": 0,
+          "high": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_kill": 0,
+          "oom_group_kill": 0
+        }
+      },
+      "gc_counts_after": [
+        7,
+        0,
+        0
+      ],
+      "gc_enabled": true,
+      "expected": "latency failure diagnostic"
+    },
+    {
+      "name": "precollect",
+      "failures": [],
+      "errors": [],
+      "before": {
+        "rss_bytes": 721903616,
+        "vms_bytes": 1128161280,
+        "system_available_bytes": 16977752064,
+        "memory_accounting_scope": "cgroup",
+        "cgroup_current_bytes": 697352192,
+        "cgroup_limit_bytes": 2147483648,
+        "cgroup_inactive_file_bytes": 380928,
+        "cgroup_anonymous_bytes": 693776384,
+        "cgroup_memory_events": {
+          "low": 0,
+          "high": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_kill": 0,
+          "oom_group_kill": 0
+        }
+      },
+      "gc_counts": [
+        12,
+        0,
+        0
+      ],
+      "prelude": {
+        "tests": 12,
+        "failures": 0,
+        "errors": 0
+      },
+      "tests": 6,
+      "target_started": 1794384347.5618696,
+      "target_finished": 1794384348.0429192,
+      "after": {
+        "rss_bytes": 723755008,
+        "vms_bytes": 1130795008,
+        "system_available_bytes": 17004052480,
+        "memory_accounting_scope": "cgroup",
+        "cgroup_current_bytes": 699219968,
+        "cgroup_limit_bytes": 2147483648,
+        "cgroup_inactive_file_bytes": 372736,
+        "cgroup_anonymous_bytes": 695549952,
+        "cgroup_memory_events": {
+          "low": 0,
+          "high": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_kill": 0,
+          "oom_group_kill": 0
+        }
+      },
+      "gc_counts_after": [
+        2,
+        0,
+        0
+      ],
+      "gc_enabled": true,
+      "expected": "all original assertions pass"
+    },
+    {
+      "name": "foreground_120ms_negative",
+      "failures": [
+        {
+          "test": "projection_audit_negative.ProjectionAuditTests.test_projection_audit_does_not_block_lightweight_request",
+          "type": "AssertionError",
+          "text": "121.96510900685098 not less than 100"
+        }
+      ],
+      "errors": [],
+      "before": {
+        "rss_bytes": 723755008,
+        "vms_bytes": 1130795008,
+        "system_available_bytes": 17004052480,
+        "memory_accounting_scope": "cgroup",
+        "cgroup_current_bytes": 699215872,
+        "cgroup_limit_bytes": 2147483648,
+        "cgroup_inactive_file_bytes": 372736,
+        "cgroup_anonymous_bytes": 695549952,
+        "cgroup_memory_events": {
+          "low": 0,
+          "high": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_kill": 0,
+          "oom_group_kill": 0
+        }
+      },
+      "gc_counts": [
+        7,
+        0,
+        0
+      ],
+      "prelude": {
+        "tests": 12,
+        "failures": 0,
+        "errors": 0
+      },
+      "tests": 6,
+      "target_started": 1794384350.3362842,
+      "target_finished": 1794384350.8792448,
+      "after": {
+        "rss_bytes": 723922944,
+        "vms_bytes": 1131327488,
+        "system_available_bytes": 16987955200,
+        "memory_accounting_scope": "cgroup",
+        "cgroup_current_bytes": 699133952,
+        "cgroup_limit_bytes": 2147483648,
+        "cgroup_inactive_file_bytes": 364544,
+        "cgroup_anonymous_bytes": 695713792,
+        "cgroup_memory_events": {
+          "low": 0,
+          "high": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_kill": 0,
+          "oom_group_kill": 0
+        }
+      },
+      "gc_counts_after": [
+        2,
+        0,
+        0
+      ],
+      "gc_enabled": true,
+      "expected": "latency failure diagnostic"
+    }
+  ],
+  "started": 1794384331.5880299,
+  "scope": "Fixed original/GC-precondition/120ms-foreground-block diagnostic; modeled retained graph, no gate replacement.",
+  "loaded_tests": 4358,
+  "after_import": {
+    "rss_bytes": 134594560,
+    "vms_bytes": 305283072,
+    "system_available_bytes": 17596932096,
+    "memory_accounting_scope": "cgroup",
+    "cgroup_current_bytes": 108400640,
+    "cgroup_limit_bytes": 2147483648,
+    "cgroup_inactive_file_bytes": 339968,
+    "cgroup_anonymous_bytes": 106766336,
+    "cgroup_memory_events": {
+      "low": 0,
+      "high": 0,
+      "max": 0,
+      "oom": 0,
+      "oom_kill": 0,
+      "oom_group_kill": 0
+    }
+  },
+  "gc_thresholds": [
+    2000,
+    10,
+    0
+  ],
+  "graph": {
+    "rows": 2450000,
+    "target_rss": 705581056,
+    "after_build": {
+      "rss_bytes": 707186688,
+      "vms_bytes": 886857728,
+      "system_available_bytes": 16988266496,
+      "memory_accounting_scope": "cgroup",
+      "cgroup_current_bytes": 682209280,
+      "cgroup_limit_bytes": 2147483648,
+      "cgroup_inactive_file_bytes": 372736,
+      "cgroup_anonymous_bytes": 679346176,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0
+      }
+    },
+    "build_seconds": 3.854053647010005,
+    "description": "Rooted list of tracked dicts, each dict points to common anchor; anchor points to complete list."
+  },
+  "finished": 1794384350.8907766,
+  "elapsed_seconds": 19.302748203277588,
+  "max_rss_kib": 709588,
+  "same_graph_retained": true
+}

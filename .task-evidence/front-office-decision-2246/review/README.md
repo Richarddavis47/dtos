@@ -1,0 +1,35 @@
+# Front Office decision2246 — review checkpoint
+
+This is sanitized REVIEW evidence for unreleased **v1.22.31 / build2246**, PR[335](https://github.com/Richarddavis47/dtos/pull/335). It is not a release or deployment certificate. Final application source is `3a19eec0a00def82418d9658414f13e090d11b14`, tree `041cfe403ca499c99b2be93a67d8e440c304be6b`, against production baseline `abbe723a0566cf84a8fff947cf7320cb66567a77` / build2245. See [source](final/source.json), [patch](final/candidate.patch), [independent source review](final/source-review.md), and [payload manifest](publication-manifest.json).
+
+## What changed
+
+| Before | Current candidate |
+| --- | --- |
+| Home roster needs all led to Depth; source position order could lead with backup cover. | A current authenticated prepared need leads within its existing goal family and opens the existing editable Recommended Trades position filter. The destination rechecks the existing fingerprint. Provisional concerns retain Depth inspection. |
+| A selected goal and absent prepared sources could produce a generic empty brief. | An informational My Team action distinguishes missing preparation from roster weakness. No automatic analysis or trade search is added to Home. |
+| A Recommended response could copy request-only protections into independent Evaluate/Shop locks. | Exact player/pick controls stay attached to their completed search; saved goals, rankings and entered ordered drafts remain independent. |
+| BFcache comparison restoration could omit the retained qualification. | Existing authorization/reset fences run first; ordered comparison snapshots become retained and local presentation refreshes without POST, solver or repricing. |
+
+Numerical Trade, projection, lineup and admission rules remain unchanged. The only scheduling-test correction collects incidental setup garbage before its unchanged100ms timer. The fixed old-heap positive and120ms-blocking negative controls, actual failures and limitations are in [GC analysis](gc-analysis/ANALYSIS.md). This does not retroactively prove the cause of the historical157.623ms sample or promise production latency.
+
+## Completed evidence and current limits
+
+- [52 focused tests](final/focused/result.json) passed on the clean candidate, with the source-bound [strict readiness receipt](final/focused-ready.json), native activation and complete front-office guard. The[expected4364](final/focused/expected-tests.json) is discovery for the final source, not an executed full-suite pass.
+- [Three native resource controls](final/resource-native-guards.json) and their[combined source-bound receipt](final/resource-preservation-verified.json) passed. Their original results, invocation receipts and raw logs are under `resources/`. Frozen input payloads, database files and duplicate profiling ZIPs are omitted. Original native sidecars may name those deliberately omitted binary inputs; the publication manifest verifies only this delivered payload.
+- Clean current [1QB/K/DEF journey](final/focused/front-office-workflow/1qb-k-def-journey.json) and [Superflex journey](final/focused/front-office-workflow/superflex-journey.json) use actual source/evaluator/search outcomes. Both searches yielded zero qualified and zero exploratory offers, with three near misses. Two independent manual assessments supply supported+4/+8 projected lineup changes while preserving unavailable overall recommendation/Market qualifications where reported. No favorable verdict was seeded.
+- At recorded status time `2026-11-11T08:43:12.174309+00:00`, **11/13 hosted jobs passed**; local full canonical and remaining hosted jobs are **RUNNING**. [The timestamped progress snapshot](RUNNING-SNAPSHOT.json) and[current full invocation](running/canonical-invocation.json) are progress only. The active full console and changing partial manifests are intentionally absent. All final local/hosted canonical, source-policy, publication and production gates remain required.
+
+The retained initial native-verifier calls failed on the rendered action-label suffix and then an incorrect archive prefix. Their original failed logs remain under `final/`. The label-corrected integrity receipt records unchanged native capture bytes; the final receipt uses the actual `front-office-workflow/` archive prefix and passes. These reader-call corrections are not a new application or discovery run. The duplicate focused ZIP is omitted because its selected JSON/photo payloads are delivered directly.
+
+## Presentation and interaction evidence
+
+Current Home and comparison screenshots exist at320×432,375×667,390×844 and1280×900 for both league configurations. [1QB Home320](final/focused/front-office-workflow/1qb-k-def-home-320.png),[1QB comparison390](final/focused/front-office-workflow/1qb-k-def-comparison-390.png),[Superflex Home320](final/focused/front-office-workflow/superflex-home-320.png),[Superflex comparison390](final/focused/front-office-workflow/superflex-comparison-390.png). All current Home/error/loading/expired and activation photos are included under[focused](final/focused/). Journey records cover keyboard/touch emulation, existing filter reason/edit/clear, own exact2029-R1-1 plus player`a` protections, eligible distinct2029-R1-3, real Generate pool/POST receipts, applied-search snapshot, ordered comparisons/Keep roster, partner-history Back, retained reload, replacement/removal and nonempty controls cleared on league switch.
+
+These are disposable authenticated fixture workflows in Chromium, not live owner acceptance, physical iPhone/Safari testing or newly verified Granite access. Reliable live-owner entry/cache/search remains unverified. No private reports, environment files, full Docker configuration, raw owner data or provider cache/database payloads are published here.
+
+The retained `gc-analysis/sha256.json` is the original source checksum inventory: `derived-analysis.json` and `partial-result.json` are intentionally omitted duplicate/partial observations; this publication manifest covers the selected delivered originals and readable parts.
+
+Earlier author focused failures remain under[prior-author-focused](prior-author-focused/README.md). Earlier failed full runs retain their original665/667 populations at unchanged[ba102d1 validation-held](https://github.com/Richarddavis47/dtos/tree/ba102d1eb9f9bc90679d7b4f1fafc30cb76c1efd/.task-evidence/activation-deferral-2246/validation-held);[archive URLs, sizes and SHA256](PRIOR-HELD-ARCHIVES.json) are preserved without recopying or replacing either archive. Old-source successes and failures are not final-source gate acceptance.
+
+`readable/` contains byte-preserving UTF8 parts no larger than60000bytes for long logs/data/patches. Its indexes bind each original complete byte stream. `SHA256SUMS` covers every delivered payload file plus its publication manifest; the external publication receipt is written only after every published byte is HTTPS-downloaded and checksum matched. Final release handoff is separate and can be prepared only after its gates complete.

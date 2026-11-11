@@ -1,0 +1,2573 @@
+{
+  "events": [
+    {
+      "kind": "case",
+      "name": "original",
+      "wall_time": 1794384340.7252398,
+      "monotonic": 90953.143306827,
+      "thread_cpu": 9.734118998,
+      "thread": 140410087717760,
+      "detail": null,
+      "frame_count": null,
+      "reserved": null
+    },
+    {
+      "kind": "gc_start",
+      "name": 2,
+      "wall_time": 1794384340.7254746,
+      "monotonic": 90953.143539719,
+      "thread_cpu": 9.734350034,
+      "thread": 140410087717760,
+      "detail": 0,
+      "frame_count": 3,
+      "reserved": null,
+      "frames": [
+        [
+          "/output/observer.py",
+          "gc_event",
+          62
+        ],
+        [
+          "/harness/fixture_cleanup.py",
+          "reclaim_completed_fixtures",
+          13
+        ],
+        [
+          "/output/run.py",
+          "<module>",
+          94
+        ]
+      ]
+    },
+    {
+      "kind": "gc_stop",
+      "name": 2,
+      "wall_time": 1794384341.0778008,
+      "monotonic": 90953.495867656,
+      "thread_cpu": 10.086660014,
+      "thread": 140410087717760,
+      "detail": 0,
+      "frame_count": null,
+      "reserved": null
+    },
+    {
+      "kind": "gc_start",
+      "name": 1,
+      "wall_time": 1794384342.166074,
+      "monotonic": 90954.584139898,
+      "thread_cpu": 0.014430306,
+      "thread": 140409222915776,
+      "detail": 0,
+      "frame_count": 20,
+      "reserved": null,
+      "frames": [
+        [
+          "/output/observer.py",
+          "gc_event",
+          62
+        ],
+        [
+          "<frozen abc>",
+          "__new__",
+          107
+        ],
+        [
+          "/usr/local/lib/python3.14/site-packages/anyio/abc/_sockets.py",
+          "<module>",
+          180
+        ],
+        [
+          "<frozen importlib._bootstrap>",
+          "_call_with_frames_removed",
+          491
+        ],
+        [
+          "<frozen importlib._bootstrap_external>",
+          "exec_module",
+          759
+        ],
+        [
+          "<frozen importlib._bootstrap>",
+          "_load_unlocked",
+          938
+        ],
+        [
+          "<frozen importlib._bootstrap>",
+          "_find_and_load_unlocked",
+          1342
+        ],
+        [
+          "<frozen importlib._bootstrap>",
+          "_find_and_load",
+          1371
+        ],
+        [
+          "<frozen importlib._bootstrap>",
+          "_gcd_import",
+          1398
+        ],
+        [
+          "/usr/local/lib/python3.14/importlib/__init__.py",
+          "import_module",
+          88
+        ],
+        [
+          "/usr/local/lib/python3.14/site-packages/anyio/_lazyimport.py",
+          "__getattr__",
+          47
+        ],
+        [
+          "<frozen importlib._bootstrap>",
+          "_handle_fromlist",
+          1423
+        ],
+        [
+          "/usr/local/lib/python3.14/site-packages/anyio/_core/_sockets.py",
+          "<module>",
+          17
+        ],
+        [
+          "<frozen importlib._bootstrap>",
+          "_call_with_frames_removed",
+          491
+        ],
+        [
+          "<frozen importlib._bootstrap_external>",
+          "exec_module",
+          759
+        ],
+        [
+          "<frozen importlib._bootstrap>",
+          "_load_unlocked",
+          938
+        ],
+        [
+          "<frozen importlib._bootstrap>",
+          "_find_and_load_unlocked",
+          1342
+        ],
+        [
+          "<frozen importlib._bootstrap>",
+          "_find_and_load",
+          1371
+        ],
+        [
+          "/usr/local/lib/python3.14/site-packages/anyio/_backends/_asyncio.py",
+          "<module>",
+          81
+        ],
+        [
+          "<frozen importlib._bootstrap>",
+          "_call_with_frames_removed",
+          491
+        ]
+      ]
+    },
+    {
+      "kind": "gc_stop",
+      "name": 1,
+      "wall_time": 1794384342.5507505,
+      "monotonic": 90954.968817825,
+      "thread_cpu": 0.398600679,
+      "thread": 140409222915776,
+      "detail": 0,
+      "frame_count": null,
+      "reserved": null
+    },
+    {
+      "kind": "gc_start",
+      "name": 1,
+      "wall_time": 1794384342.5851395,
+      "monotonic": 90955.003205302,
+      "thread_cpu": 0.432986252,
+      "thread": 140409222915776,
+      "detail": 0,
+      "frame_count": 20,
+      "reserved": null,
+      "frames": [
+        [
+          "/output/observer.py",
+          "gc_event",
+          62
+        ],
+        [
+          "<frozen importlib._bootstrap>",
+          "__init__",
+          602
+        ],
+        [
+          "<frozen importlib._bootstrap_external>",
+          "spec_from_file_location",
+          596
+        ],
+        [
+          "<frozen importlib._bootstrap_external>",
+          "_get_spec",
+          1354
+        ],
+        [
+          "<frozen importlib._bootstrap_external>",
+          "find_spec",
+          1399
+        ],
+        [
+          "<frozen importlib._bootstrap_external>",
+          "_get_spec",
+          1266
+        ],
+        [
+          "<frozen importlib._bootstrap_external>",
+          "find_spec",
+          1292
+        ],
+        [
+          "<frozen importlib._bootstrap>",
+          "_find_spec",
+          1267
+        ],
+        [
+          "<frozen importlib._bootstrap>",
+          "_find_and_load_unlocked",
+          1333
+        ],
+        [
+          "<frozen importlib._bootstrap>",
+          "_find_and_load",
+          1371
+        ],
+        [
+          "<frozen importlib._bootstrap>",
+          "_gcd_import",
+          1398
+        ],
+        [
+          "/usr/local/lib/python3.14/importlib/__init__.py",
+          "import_module",
+          88
+        ],
+        [
+          "/usr/local/lib/python3.14/site-packages/anyio/_lazyimport.py",
+          "__getattr__",
+          47
+        ],
+        [
+          "/usr/local/lib/python3.14/site-packages/anyio/_backends/_asyncio.py",
+          "<module>",
+          2393
+        ],
+        [
+          "<frozen importlib._bootstrap>",
+          "_call_with_frames_removed",
+          491
+        ],
+        [
+          "<frozen importlib._bootstrap_external>",
+          "exec_module",
+          759
+        ],
+        [
+          "<frozen importlib._bootstrap>",
+          "_load_unlocked",
+          938
+        ],
+        [
+          "<frozen importlib._bootstrap>",
+          "_find_and_load_unlocked",
+          1342
+        ],
+        [
+          "<frozen importlib._bootstrap>",
+          "_find_and_load",
+          1371
+        ],
+        [
+          "<frozen importlib._bootstrap>",
+          "_gcd_import",
+          1398
+        ]
+      ]
+    },
+    {
+      "kind": "gc_stop",
+      "name": 1,
+      "wall_time": 1794384342.585178,
+      "monotonic": 90955.003243145,
+      "thread_cpu": 0.433021899,
+      "thread": 140409222915776,
+      "detail": 0,
+      "frame_count": null,
+      "reserved": null
+    },
+    {
+      "kind": "enter",
+      "name": "endpoint_context",
+      "wall_time": 1794384342.5966716,
+      "monotonic": 90955.014736732,
+      "thread_cpu": 0.441113313,
+      "thread": 140409222915776,
+      "detail": null,
+      "frame_count": null,
+      "reserved": null
+    },
+    {
+      "kind": "leave",
+      "name": "endpoint_context",
+      "wall_time": 1794384342.5993533,
+      "monotonic": 90955.017419215,
+      "thread_cpu": 0.441592702,
+      "thread": 140409222915776,
+      "detail": null,
+      "frame_count": null,
+      "reserved": null
+    },
+    {
+      "kind": "enter",
+      "name": "response_serialization",
+      "wall_time": 1794384342.5994976,
+      "monotonic": 90955.017562759,
+      "thread_cpu": 0.441735054,
+      "thread": 140409222915776,
+      "detail": null,
+      "frame_count": null,
+      "reserved": null
+    },
+    {
+      "kind": "leave",
+      "name": "response_serialization",
+      "wall_time": 1794384342.5996876,
+      "monotonic": 90955.01775298,
+      "thread_cpu": 0.44192587,
+      "thread": 140409222915776,
+      "detail": null,
+      "frame_count": null,
+      "reserved": null
+    },
+    {
+      "kind": "enter",
+      "name": "logging_handler",
+      "wall_time": 1794384342.6007457,
+      "monotonic": 90955.018811221,
+      "thread_cpu": 10.119833679,
+      "thread": 140410087717760,
+      "detail": null,
+      "frame_count": null,
+      "reserved": null
+    },
+    {
+      "kind": "leave",
+      "name": "logging_handler",
+      "wall_time": 1794384342.6008456,
+      "monotonic": 90955.018910758,
+      "thread_cpu": 10.119931705,
+      "thread": 140410087717760,
+      "detail": null,
+      "frame_count": null,
+      "reserved": null
+    },
+    {
+      "kind": "enter",
+      "name": "logging_handler",
+      "wall_time": 1794384342.6032758,
+      "monotonic": 90955.021341231,
+      "thread_cpu": 0.444612883,
+      "thread": 140409222915776,
+      "detail": null,
+      "frame_count": null,
+      "reserved": null
+    },
+    {
+      "kind": "leave",
+      "name": "logging_handler",
+      "wall_time": 1794384342.603447,
+      "monotonic": 90955.021512338,
+      "thread_cpu": 0.444784207,
+      "thread": 140409222915776,
+      "detail": null,
+      "frame_count": null,
+      "reserved": null
+    },
+    {
+      "kind": "enter",
+      "name": "logging_handler",
+      "wall_time": 1794384342.609889,
+      "monotonic": 90955.027954438,
+      "thread_cpu": 0.002731417,
+      "thread": 140409933874880,
+      "detail": null,
+      "frame_count": null,
+      "reserved": null
+    },
+    {
+      "kind": "leave",
+      "name": "logging_handler",
+      "wall_time": 1794384342.6100316,
+      "monotonic": 90955.028096737,
+      "thread_cpu": 0.002872611,
+      "thread": 140409933874880,
+      "detail": null,
+      "frame_count": null,
+      "reserved": null
+    },
+    {
+      "kind": "enter",
+      "name": "endpoint_context",
+      "wall_time": 1794384342.618426,
+      "monotonic": 90955.03649145,
+      "thread_cpu": 0.00366326,
+      "thread": 140409222915776,
+      "detail": null,
+      "frame_count": null,
+      "reserved": null
+    },
+    {
+      "kind": "leave",
+      "name": "endpoint_context",
+      "wall_time": 1794384342.618432,
+      "monotonic": 90955.036497176,
+      "thread_cpu": 0.003668735,
+      "thread": 140409222915776,
+      "detail": null,
+      "frame_count": null,
+      "reserved": null
+    },
+    {
+      "kind": "enter",
+      "name": "response_serialization",
+      "wall_time": 1794384342.618593,
+      "monotonic": 90955.036658183,
+      "thread_cpu": 0.003829921,
+      "thread": 140409222915776,
+      "detail": null,
+      "frame_count": null,
+      "reserved": null
+    },
+    {
+      "kind": "leave",
+      "name": "response_serialization",
+      "wall_time": 1794384342.6186194,
+      "monotonic": 90955.036684768,
+      "thread_cpu": 0.00385633,
+      "thread": 140409222915776,
+      "detail": null,
+      "frame_count": null,
+      "reserved": null
+    },
+    {
+      "kind": "enter",
+      "name": "logging_handler",
+      "wall_time": 1794384342.6193004,
+      "monotonic": 90955.037365758,
+      "thread_cpu": 10.122178719,
+      "thread": 140410087717760,
+      "detail": null,
+      "frame_count": null,
+      "reserved": null
+    },
+    {
+      "kind": "leave",
+      "name": "logging_handler",
+      "wall_time": 1794384342.6193783,
+      "monotonic": 90955.03744355,
+      "thread_cpu": 10.122255357,
+      "thread": 140410087717760,
+      "detail": null,
+      "frame_count": null,
+      "reserved": null
+    },
+    {
+      "kind": "enter",
+      "name": "logging_handler",
+      "wall_time": 1794384342.6198604,
+      "monotonic": 90955.037925755,
+      "thread_cpu": 0.004611213,
+      "thread": 140409222915776,
+      "detail": null,
+      "frame_count": null,
+      "reserved": null
+    },
+    {
+      "kind": "leave",
+      "name": "logging_handler",
+      "wall_time": 1794384342.6199374,
+      "monotonic": 90955.038002904,
+      "thread_cpu": 0.004688304,
+      "thread": 140409222915776,
+      "detail": null,
+      "frame_count": null,
+      "reserved": null
+    },
+    {
+      "kind": "enter",
+      "name": "logging_handler",
+      "wall_time": 1794384342.6202023,
+      "monotonic": 90955.038267896,
+      "thread_cpu": 0.002936804,
+      "thread": 140409933874880,
+      "detail": null,
+      "frame_count": null,
+      "reserved": null
+    },
+    {
+      "kind": "enter",
+      "name": "logging_handler",
+      "wall_time": 1794384342.6225214,
+      "monotonic": 90955.040586518,
+      "thread_cpu": 10.122975776,
+      "thread": 140410087717760,
+      "detail": null,
+      "frame_count": null,
+      "reserved": null
+    },
+    {
+      "kind": "leave",
+      "name": "logging_handler",
+      "wall_time": 1794384342.622603,
+      "monotonic": 90955.040668125,
+      "thread_cpu": 10.123056794,
+      "thread": 140410087717760,
+      "detail": null,
+      "frame_count": null,
+      "reserved": null
+    },
+    {
+      "kind": "gc_start",
+      "name": 1,
+      "wall_time": 1794384342.6276002,
+      "monotonic": 90955.045665615,
+      "thread_cpu": 10.128055936,
+      "thread": 140410087717760,
+      "detail": 0,
+      "frame_count": 17,
+      "reserved": null,
+      "frames": [
+        [
+          "/output/observer.py",
+          "gc_event",
+          62
+        ],
+        [
+          "/app/src/core/projection_intelligence/service.py",
+          "player_availability",
+          38
+        ],
+        [
+          "/app/src/core/intelligence/roster_diagnostics.py",
+          "diagnostic_inputs",
+          242
+        ],
+        [
+          "/app/src/core/intelligence/roster_diagnostics.py",
+          "diagnostic_identity",
+          301
+        ],
+        [
+          "/app/src/core/intelligence/context.py",
+          "build_context",
+          80
+        ],
+        [
+          "/app/src/core/intelligence/orchestrator.py",
+          "context",
+          98
+        ],
+        [
+          "/app/src/core/intelligence/orchestrator.py",
+          "analyze",
+          101
+        ],
+        [
+          "/app/tests/test_production_readiness.py",
+          "test_large_league_repeated_requests_remain_bounded",
+          171
+        ],
+        [
+          "/usr/local/lib/python3.14/unittest/case.py",
+          "_callTestMethod",
+          615
+        ],
+        [
+          "/usr/local/lib/python3.14/unittest/case.py",
+          "run",
+          669
+        ],
+        [
+          "/usr/local/lib/python3.14/unittest/case.py",
+          "__call__",
+          725
+        ],
+        [
+          "/usr/local/lib/python3.14/unittest/suite.py",
+          "run",
+          122
+        ],
+        [
+          "/usr/local/lib/python3.14/unittest/suite.py",
+          "__call__",
+          84
+        ],
+        [
+          "/usr/local/lib/python3.14/unittest/suite.py",
+          "run",
+          122
+        ],
+        [
+          "/usr/local/lib/python3.14/unittest/suite.py",
+          "__call__",
+          84
+        ],
+        [
+          "/usr/local/lib/python3.14/unittest/runner.py",
+          "run",
+          257
+        ],
+        [
+          "/output/run.py",
+          "<module>",
+          95
+        ]
+      ]
+    },
+    {
+      "kind": "gc_stop",
+      "name": 1,
+      "wall_time": 1794384342.6276493,
+      "monotonic": 90955.045714491,
+      "thread_cpu": 10.128102909,
+      "thread": 140410087717760,
+      "detail": 0,
+      "frame_count": null,
+      "reserved": null
+    },
+    {
+      "kind": "leave",
+      "name": "logging_handler",
+      "wall_time": 1794384342.629233,
+      "monotonic": 90955.047298923,
+      "thread_cpu": 0.003126496,
+      "thread": 140409933874880,
+      "detail": null,
+      "frame_count": null,
+      "reserved": null
+    },
+    {
+      "kind": "gc_start",
+      "name": 1,
+      "wall_time": 1794384342.6612983,
+      "monotonic": 90955.079363878,
+      "thread_cpu": 10.149154229,
+      "thread": 140410087717760,
+      "detail": 0,
+      "frame_count": 20,
+      "reserved": null,
+      "frames": [
+        [
+          "/output/observer.py",
+          "gc_event",
+          62
+        ],
+        [
+          "/usr/local/lib/python3.14/json/decoder.py",
+          "raw_decode",
+          361
+        ],
+        [
+          "/usr/local/lib/python3.14/json/decoder.py",
+          "decode",
+          345
+        ],
+        [
+          "/usr/local/lib/python3.14/json/__init__.py",
+          "loads",
+          352
+        ],
+        [
+          "/app/src/core/intelligence/roster_diagnostics.py",
+          "_diagnose_inputs",
+          806
+        ],
+        [
+          "/app/src/core/intelligence/roster_diagnostics.py",
+          "diagnose_league",
+          795
+        ],
+        [
+          "/app/src/core/intelligence/roster_diagnostics.py",
+          "team_diagnostics",
+          816
+        ],
+        [
+          "/app/src/core/decision_engine/team/team_evaluator.py",
+          "evaluate_team",
+          91
+        ],
+        [
+          "/app/src/core/intelligence/orchestrator.py",
+          "_decision_provider",
+          33
+        ],
+        [
+          "/app/src/core/intelligence/orchestrator.py",
+          "<lambda>",
+          112
+        ],
+        [
+          "/app/src/core/intelligence/cache.py",
+          "get_or_create",
+          42
+        ],
+        [
+          "/app/src/core/intelligence/pipeline.py",
+          "run",
+          14
+        ],
+        [
+          "/app/src/core/intelligence/orchestrator.py",
+          "execute",
+          112
+        ],
+        [
+          "/app/src/core/intelligence/cache.py",
+          "get_or_create",
+          42
+        ],
+        [
+          "/app/src/core/intelligence/orchestrator.py",
+          "analyze",
+          175
+        ],
+        [
+          "/app/tests/test_production_readiness.py",
+          "test_large_league_repeated_requests_remain_bounded",
+          171
+        ],
+        [
+          "/usr/local/lib/python3.14/unittest/case.py",
+          "_callTestMethod",
+          615
+        ],
+        [
+          "/usr/local/lib/python3.14/unittest/case.py",
+          "run",
+          669
+        ],
+        [
+          "/usr/local/lib/python3.14/unittest/case.py",
+          "__call__",
+          725
+        ],
+        [
+          "/usr/local/lib/python3.14/unittest/suite.py",
+          "run",
+          122
+        ]
+      ]
+    },
+    {
+      "kind": "gc_stop",
+      "name": 1,
+      "wall_time": 1794384342.6613379,
+      "monotonic": 90955.079403099,
+      "thread_cpu": 10.149191669,
+      "thread": 140410087717760,
+      "detail": 0,
+      "frame_count": null,
+      "reserved": null
+    },
+    {
+      "kind": "gc_start",
+      "name": 1,
+      "wall_time": 1794384342.669395,
+      "monotonic": 90955.087460818,
+      "thread_cpu": 10.157251703,
+      "thread": 140410087717760,
+      "detail": 0,
+      "frame_count": 20,
+      "reserved": null,
+      "frames": [
+        [
+          "/output/observer.py",
+          "gc_event",
+          62
+        ],
+        [
+          "/usr/local/lib/python3.14/json/decoder.py",
+          "raw_decode",
+          361
+        ],
+        [
+          "/usr/local/lib/python3.14/json/decoder.py",
+          "decode",
+          345
+        ],
+        [
+          "/usr/local/lib/python3.14/json/__init__.py",
+          "loads",
+          352
+        ],
+        [
+          "/app/src/core/intelligence/roster_diagnostics.py",
+          "_diagnose_inputs",
+          806
+        ],
+        [
+          "/app/src/core/intelligence/roster_diagnostics.py",
+          "diagnose_league",
+          795
+        ],
+        [
+          "/app/src/core/intelligence/roster_diagnostics.py",
+          "team_diagnostics",
+          816
+        ],
+        [
+          "/app/src/core/decision_engine/team/team_evaluator.py",
+          "evaluate_team",
+          91
+        ],
+        [
+          "/app/src/core/intelligence/orchestrator.py",
+          "_decision_provider",
+          33
+        ],
+        [
+          "/app/src/core/intelligence/orchestrator.py",
+          "<lambda>",
+          112
+        ],
+        [
+          "/app/src/core/intelligence/cache.py",
+          "get_or_create",
+          42
+        ],
+        [
+          "/app/src/core/intelligence/pipeline.py",
+          "run",
+          14
+        ],
+        [
+          "/app/src/core/intelligence/orchestrator.py",
+          "execute",
+          112
+        ],
+        [
+          "/app/src/core/intelligence/cache.py",
+          "get_or_create",
+          42
+        ],
+        [
+          "/app/src/core/intelligence/orchestrator.py",
+          "analyze",
+          175
+        ],
+        [
+          "/app/tests/test_production_readiness.py",
+          "test_large_league_repeated_requests_remain_bounded",
+          171
+        ],
+        [
+          "/usr/local/lib/python3.14/unittest/case.py",
+          "_callTestMethod",
+          615
+        ],
+        [
+          "/usr/local/lib/python3.14/unittest/case.py",
+          "run",
+          669
+        ],
+        [
+          "/usr/local/lib/python3.14/unittest/case.py",
+          "__call__",
+          725
+        ],
+        [
+          "/usr/local/lib/python3.14/unittest/suite.py",
+          "run",
+          122
+        ]
+      ]
+    },
+    {
+      "kind": "gc_stop",
+      "name": 1,
+      "wall_time": 1794384342.6694322,
+      "monotonic": 90955.087497294,
+      "thread_cpu": 10.157285972,
+      "thread": 140410087717760,
+      "detail": 0,
+      "frame_count": null,
+      "reserved": null
+    },
+    {
+      "kind": "gc_start",
+      "name": 1,
+      "wall_time": 1794384342.6770992,
+      "monotonic": 90955.095165108,
+      "thread_cpu": 10.164956287,
+      "thread": 140410087717760,
+      "detail": 0,
+      "frame_count": 20,
+      "reserved": null,
+      "frames": [
+        [
+          "/output/observer.py",
+          "gc_event",
+          62
+        ],
+        [
+          "/usr/local/lib/python3.14/json/decoder.py",
+          "raw_decode",
+          361
+        ],
+        [
+          "/usr/local/lib/python3.14/json/decoder.py",
+          "decode",
+          345
+        ],
+        [
+          "/usr/local/lib/python3.14/json/__init__.py",
+          "loads",
+          352
+        ],
+        [
+          "/app/src/core/intelligence/roster_diagnostics.py",
+          "_diagnose_inputs",
+          806
+        ],
+        [
+          "/app/src/core/intelligence/roster_diagnostics.py",
+          "diagnose_league",
+          795
+        ],
+        [
+          "/app/src/core/intelligence/roster_diagnostics.py",
+          "team_diagnostics",
+          816
+        ],
+        [
+          "/app/src/core/decision_engine/team/team_evaluator.py",
+          "evaluate_team",
+          91
+        ],
+        [
+          "/app/src/core/intelligence/orchestrator.py",
+          "_decision_provider",
+          33
+        ],
+        [
+          "/app/src/core/intelligence/orchestrator.py",
+          "<lambda>",
+          112
+        ],
+        [
+          "/app/src/core/intelligence/cache.py",
+          "get_or_create",
+          42
+        ],
+        [
+          "/app/src/core/intelligence/pipeline.py",
+          "run",
+          14
+        ],
+        [
+          "/app/src/core/intelligence/orchestrator.py",
+          "execute",
+          112
+        ],
+        [
+          "/app/src/core/intelligence/cache.py",
+          "get_or_create",
+          42
+        ],
+        [
+          "/app/src/core/intelligence/orchestrator.py",
+          "analyze",
+          175
+        ],
+        [
+          "/app/tests/test_production_readiness.py",
+          "test_large_league_repeated_requests_remain_bounded",
+          171
+        ],
+        [
+          "/usr/local/lib/python3.14/unittest/case.py",
+          "_callTestMethod",
+          615
+        ],
+        [
+          "/usr/local/lib/python3.14/unittest/case.py",
+          "run",
+          669
+        ],
+        [
+          "/usr/local/lib/python3.14/unittest/case.py",
+          "__call__",
+          725
+        ],
+        [
+          "/usr/local/lib/python3.14/unittest/suite.py",
+          "run",
+          122
+        ]
+      ]
+    },
+    {
+      "kind": "gc_stop",
+      "name": 1,
+      "wall_time": 1794384342.6771343,
+      "monotonic": 90955.095199542,
+      "thread_cpu": 10.164988297,
+      "thread": 140410087717760,
+      "detail": 0,
+      "frame_count": null,
+      "reserved": null
+    },
+    {
+      "kind": "gc_start",
+      "name": 1,
+      "wall_time": 1794384342.6845806,
+      "monotonic": 90955.102646109,
+      "thread_cpu": 10.172437282,
+      "thread": 140410087717760,
+      "detail": 0,
+      "frame_count": 20,
+      "reserved": null,
+      "frames": [
+        [
+          "/output/observer.py",
+          "gc_event",
+          62
+        ],
+        [
+          "/usr/local/lib/python3.14/json/decoder.py",
+          "raw_decode",
+          361
+        ],
+        [
+          "/usr/local/lib/python3.14/json/decoder.py",
+          "decode",
+          345
+        ],
+        [
+          "/usr/local/lib/python3.14/json/__init__.py",
+          "loads",
+          352
+        ],
+        [
+          "/app/src/core/intelligence/roster_diagnostics.py",
+          "_diagnose_inputs",
+          806
+        ],
+        [
+          "/app/src/core/intelligence/roster_diagnostics.py",
+          "diagnose_league",
+          795
+        ],
+        [
+          "/app/src/core/intelligence/roster_diagnostics.py",
+          "team_diagnostics",
+          816
+        ],
+        [
+          "/app/src/core/decision_engine/team/team_evaluator.py",
+          "evaluate_team",
+          91
+        ],
+        [
+          "/app/src/core/intelligence/orchestrator.py",
+          "_decision_provider",
+          33
+        ],
+        [
+          "/app/src/core/intelligence/orchestrator.py",
+          "<lambda>",
+          112
+        ],
+        [
+          "/app/src/core/intelligence/cache.py",
+          "get_or_create",
+          42
+        ],
+        [
+          "/app/src/core/intelligence/pipeline.py",
+          "run",
+          14
+        ],
+        [
+          "/app/src/core/intelligence/orchestrator.py",
+          "execute",
+          112
+        ],
+        [
+          "/app/src/core/intelligence/cache.py",
+          "get_or_create",
+          42
+        ],
+        [
+          "/app/src/core/intelligence/orchestrator.py",
+          "analyze",
+          175
+        ],
+        [
+          "/app/tests/test_production_readiness.py",
+          "test_large_league_repeated_requests_remain_bounded",
+          171
+        ],
+        [
+          "/usr/local/lib/python3.14/unittest/case.py",
+          "_callTestMethod",
+          615
+        ],
+        [
+          "/usr/local/lib/python3.14/unittest/case.py",
+          "run",
+          669
+        ],
+        [
+          "/usr/local/lib/python3.14/unittest/case.py",
+          "__call__",
+          725
+        ],
+        [
+          "/usr/local/lib/python3.14/unittest/suite.py",
+          "run",
+          122
+        ]
+      ]
+    },
+    {
+      "kind": "gc_stop",
+      "name": 1,
+      "wall_time": 1794384342.6846147,
+      "monotonic": 90955.102679794,
+      "thread_cpu": 10.172468708,
+      "thread": 140410087717760,
+      "detail": 0,
+      "frame_count": null,
+      "reserved": null
+    },
+    {
+      "kind": "gc_start",
+      "name": 1,
+      "wall_time": 1794384342.6916623,
+      "monotonic": 90955.109728219,
+      "thread_cpu": 10.17951932,
+      "thread": 140410087717760,
+      "detail": 0,
+      "frame_count": 20,
+      "reserved": null,
+      "frames": [
+        [
+          "/output/observer.py",
+          "gc_event",
+          62
+        ],
+        [
+          "/usr/local/lib/python3.14/json/decoder.py",
+          "raw_decode",
+          361
+        ],
+        [
+          "/usr/local/lib/python3.14/json/decoder.py",
+          "decode",
+          345
+        ],
+        [
+          "/usr/local/lib/python3.14/json/__init__.py",
+          "loads",
+          352
+        ],
+        [
+          "/app/src/core/intelligence/roster_diagnostics.py",
+          "_diagnose_inputs",
+          806
+        ],
+        [
+          "/app/src/core/intelligence/roster_diagnostics.py",
+          "diagnose_league",
+          795
+        ],
+        [
+          "/app/src/core/intelligence/roster_diagnostics.py",
+          "team_diagnostics",
+          816
+        ],
+        [
+          "/app/src/core/decision_engine/team/team_evaluator.py",
+          "evaluate_team",
+          91
+        ],
+        [
+          "/app/src/core/intelligence/orchestrator.py",
+          "_decision_provider",
+          33
+        ],
+        [
+          "/app/src/core/intelligence/orchestrator.py",
+          "<lambda>",
+          112
+        ],
+        [
+          "/app/src/core/intelligence/cache.py",
+          "get_or_create",
+          42
+        ],
+        [
+          "/app/src/core/intelligence/pipeline.py",
+          "run",
+          14
+        ],
+        [
+          "/app/src/core/intelligence/orchestrator.py",
+          "execute",
+          112
+        ],
+        [
+          "/app/src/core/intelligence/cache.py",
+          "get_or_create",
+          42
+        ],
+        [
+          "/app/src/core/intelligence/orchestrator.py",
+          "analyze",
+          175
+        ],
+        [
+          "/app/tests/test_production_readiness.py",
+          "test_large_league_repeated_requests_remain_bounded",
+          171
+        ],
+        [
+          "/usr/local/lib/python3.14/unittest/case.py",
+          "_callTestMethod",
+          615
+        ],
+        [
+          "/usr/local/lib/python3.14/unittest/case.py",
+          "run",
+          669
+        ],
+        [
+          "/usr/local/lib/python3.14/unittest/case.py",
+          "__call__",
+          725
+        ],
+        [
+          "/usr/local/lib/python3.14/unittest/suite.py",
+          "run",
+          122
+        ]
+      ]
+    },
+    {
+      "kind": "gc_stop",
+      "name": 1,
+      "wall_time": 1794384342.691697,
+      "monotonic": 90955.109762078,
+      "thread_cpu": 10.179551054,
+      "thread": 140410087717760,
+      "detail": 0,
+      "frame_count": null,
+      "reserved": null
+    },
+    {
+      "kind": "gc_start",
+      "name": 1,
+      "wall_time": 1794384342.698032,
+      "monotonic": 90955.116097381,
+      "thread_cpu": 10.185888287,
+      "thread": 140410087717760,
+      "detail": 0,
+      "frame_count": 20,
+      "reserved": null,
+      "frames": [
+        [
+          "/output/observer.py",
+          "gc_event",
+          62
+        ],
+        [
+          "/usr/local/lib/python3.14/json/decoder.py",
+          "raw_decode",
+          361
+        ],
+        [
+          "/usr/local/lib/python3.14/json/decoder.py",
+          "decode",
+          345
+        ],
+        [
+          "/usr/local/lib/python3.14/json/__init__.py",
+          "loads",
+          352
+        ],
+        [
+          "/app/src/core/intelligence/roster_diagnostics.py",
+          "_diagnose_inputs",
+          806
+        ],
+        [
+          "/app/src/core/intelligence/roster_diagnostics.py",
+          "diagnose_league",
+          795
+        ],
+        [
+          "/app/src/core/intelligence/roster_diagnostics.py",
+          "team_diagnostics",
+          816
+        ],
+        [
+          "/app/src/core/decision_engine/team/team_evaluator.py",
+          "evaluate_team",
+          91
+        ],
+        [
+          "/app/src/core/intelligence/orchestrator.py",
+          "_decision_provider",
+          33
+        ],
+        [
+          "/app/src/core/intelligence/orchestrator.py",
+          "<lambda>",
+          112
+        ],
+        [
+          "/app/src/core/intelligence/cache.py",
+          "get_or_create",
+          42
+        ],
+        [
+          "/app/src/core/intelligence/pipeline.py",
+          "run",
+          14
+        ],
+        [
+          "/app/src/core/intelligence/orchestrator.py",
+          "execute",
+          112
+        ],
+        [
+          "/app/src/core/intelligence/cache.py",
+          "get_or_create",
+          42
+        ],
+        [
+          "/app/src/core/intelligence/orchestrator.py",
+          "analyze",
+          175
+        ],
+        [
+          "/app/tests/test_production_readiness.py",
+          "test_large_league_repeated_requests_remain_bounded",
+          171
+        ],
+        [
+          "/usr/local/lib/python3.14/unittest/case.py",
+          "_callTestMethod",
+          615
+        ],
+        [
+          "/usr/local/lib/python3.14/unittest/case.py",
+          "run",
+          669
+        ],
+        [
+          "/usr/local/lib/python3.14/unittest/case.py",
+          "__call__",
+          725
+        ],
+        [
+          "/usr/local/lib/python3.14/unittest/suite.py",
+          "run",
+          122
+        ]
+      ]
+    },
+    {
+      "kind": "gc_stop",
+      "name": 1,
+      "wall_time": 1794384342.6980634,
+      "monotonic": 90955.116128417,
+      "thread_cpu": 10.185917502,
+      "thread": 140410087717760,
+      "detail": 0,
+      "frame_count": null,
+      "reserved": null
+    },
+    {
+      "kind": "gc_start",
+      "name": 1,
+      "wall_time": 1794384342.7037473,
+      "monotonic": 90955.121812699,
+      "thread_cpu": 10.191603951,
+      "thread": 140410087717760,
+      "detail": 0,
+      "frame_count": 20,
+      "reserved": null,
+      "frames": [
+        [
+          "/output/observer.py",
+          "gc_event",
+          62
+        ],
+        [
+          "/usr/local/lib/python3.14/json/decoder.py",
+          "raw_decode",
+          361
+        ],
+        [
+          "/usr/local/lib/python3.14/json/decoder.py",
+          "decode",
+          345
+        ],
+        [
+          "/usr/local/lib/python3.14/json/__init__.py",
+          "loads",
+          352
+        ],
+        [
+          "/app/src/core/intelligence/roster_diagnostics.py",
+          "_diagnose_inputs",
+          806
+        ],
+        [
+          "/app/src/core/intelligence/roster_diagnostics.py",
+          "diagnose_league",
+          795
+        ],
+        [
+          "/app/src/core/intelligence/roster_diagnostics.py",
+          "team_diagnostics",
+          816
+        ],
+        [
+          "/app/src/core/decision_engine/team/team_evaluator.py",
+          "evaluate_team",
+          91
+        ],
+        [
+          "/app/src/core/intelligence/orchestrator.py",
+          "_decision_provider",
+          33
+        ],
+        [
+          "/app/src/core/intelligence/orchestrator.py",
+          "<lambda>",
+          112
+        ],
+        [
+          "/app/src/core/intelligence/cache.py",
+          "get_or_create",
+          42
+        ],
+        [
+          "/app/src/core/intelligence/pipeline.py",
+          "run",
+          14
+        ],
+        [
+          "/app/src/core/intelligence/orchestrator.py",
+          "execute",
+          112
+        ],
+        [
+          "/app/src/core/intelligence/cache.py",
+          "get_or_create",
+          42
+        ],
+        [
+          "/app/src/core/intelligence/orchestrator.py",
+          "analyze",
+          175
+        ],
+        [
+          "/app/tests/test_production_readiness.py",
+          "test_large_league_repeated_requests_remain_bounded",
+          171
+        ],
+        [
+          "/usr/local/lib/python3.14/unittest/case.py",
+          "_callTestMethod",
+          615
+        ],
+        [
+          "/usr/local/lib/python3.14/unittest/case.py",
+          "run",
+          669
+        ],
+        [
+          "/usr/local/lib/python3.14/unittest/case.py",
+          "__call__",
+          725
+        ],
+        [
+          "/usr/local/lib/python3.14/unittest/suite.py",
+          "run",
+          122
+        ]
+      ]
+    },
+    {
+      "kind": "gc_stop",
+      "name": 1,
+      "wall_time": 1794384342.7037787,
+      "monotonic": 90955.121843882,
+      "thread_cpu": 10.191633009,
+      "thread": 140410087717760,
+      "detail": 0,
+      "frame_count": null,
+      "reserved": null
+    },
+    {
+      "kind": "gc_start",
+      "name": 1,
+      "wall_time": 1794384342.7107139,
+      "monotonic": 90955.128779318,
+      "thread_cpu": 10.198570549,
+      "thread": 140410087717760,
+      "detail": 0,
+      "frame_count": 20,
+      "reserved": null,
+      "frames": [
+        [
+          "/output/observer.py",
+          "gc_event",
+          62
+        ],
+        [
+          "/usr/local/lib/python3.14/json/decoder.py",
+          "raw_decode",
+          361
+        ],
+        [
+          "/usr/local/lib/python3.14/json/decoder.py",
+          "decode",
+          345
+        ],
+        [
+          "/usr/local/lib/python3.14/json/__init__.py",
+          "loads",
+          352
+        ],
+        [
+          "/app/src/core/intelligence/roster_diagnostics.py",
+          "_diagnose_inputs",
+          806
+        ],
+        [
+          "/app/src/core/intelligence/roster_diagnostics.py",
+          "diagnose_league",
+          795
+        ],
+        [
+          "/app/src/core/intelligence/roster_diagnostics.py",
+          "team_diagnostics",
+          816
+        ],
+        [
+          "/app/src/core/decision_engine/team/team_evaluator.py",
+          "evaluate_team",
+          91
+        ],
+        [
+          "/app/src/core/intelligence/orchestrator.py",
+          "_decision_provider",
+          33
+        ],
+        [
+          "/app/src/core/intelligence/orchestrator.py",
+          "<lambda>",
+          112
+        ],
+        [
+          "/app/src/core/intelligence/cache.py",
+          "get_or_create",
+          42
+        ],
+        [
+          "/app/src/core/intelligence/pipeline.py",
+          "run",
+          14
+        ],
+        [
+          "/app/src/core/intelligence/orchestrator.py",
+          "execute",
+          112
+        ],
+        [
+          "/app/src/core/intelligence/cache.py",
+          "get_or_create",
+          42
+        ],
+        [
+          "/app/src/core/intelligence/orchestrator.py",
+          "analyze",
+          175
+        ],
+        [
+          "/app/tests/test_production_readiness.py",
+          "test_large_league_repeated_requests_remain_bounded",
+          171
+        ],
+        [
+          "/usr/local/lib/python3.14/unittest/case.py",
+          "_callTestMethod",
+          615
+        ],
+        [
+          "/usr/local/lib/python3.14/unittest/case.py",
+          "run",
+          669
+        ],
+        [
+          "/usr/local/lib/python3.14/unittest/case.py",
+          "__call__",
+          725
+        ],
+        [
+          "/usr/local/lib/python3.14/unittest/suite.py",
+          "run",
+          122
+        ]
+      ]
+    },
+    {
+      "kind": "gc_stop",
+      "name": 1,
+      "wall_time": 1794384342.710745,
+      "monotonic": 90955.12881014,
+      "thread_cpu": 10.198599355,
+      "thread": 140410087717760,
+      "detail": 0,
+      "frame_count": null,
+      "reserved": null
+    },
+    {
+      "kind": "gc_start",
+      "name": 1,
+      "wall_time": 1794384342.717122,
+      "monotonic": 90955.135187603,
+      "thread_cpu": 10.204978964,
+      "thread": 140410087717760,
+      "detail": 0,
+      "frame_count": 20,
+      "reserved": null,
+      "frames": [
+        [
+          "/output/observer.py",
+          "gc_event",
+          62
+        ],
+        [
+          "/usr/local/lib/python3.14/json/decoder.py",
+          "raw_decode",
+          361
+        ],
+        [
+          "/usr/local/lib/python3.14/json/decoder.py",
+          "decode",
+          345
+        ],
+        [
+          "/usr/local/lib/python3.14/json/__init__.py",
+          "loads",
+          352
+        ],
+        [
+          "/app/src/core/intelligence/roster_diagnostics.py",
+          "_diagnose_inputs",
+          806
+        ],
+        [
+          "/app/src/core/intelligence/roster_diagnostics.py",
+          "diagnose_league",
+          795
+        ],
+        [
+          "/app/src/core/intelligence/roster_diagnostics.py",
+          "team_diagnostics",
+          816
+        ],
+        [
+          "/app/src/core/decision_engine/team/team_evaluator.py",
+          "evaluate_team",
+          91
+        ],
+        [
+          "/app/src/core/intelligence/orchestrator.py",
+          "_decision_provider",
+          33
+        ],
+        [
+          "/app/src/core/intelligence/orchestrator.py",
+          "<lambda>",
+          112
+        ],
+        [
+          "/app/src/core/intelligence/cache.py",
+          "get_or_create",
+          42
+        ],
+        [
+          "/app/src/core/intelligence/pipeline.py",
+          "run",
+          14
+        ],
+        [
+          "/app/src/core/intelligence/orchestrator.py",
+          "execute",
+          112
+        ],
+        [
+          "/app/src/core/intelligence/cache.py",
+          "get_or_create",
+          42
+        ],
+        [
+          "/app/src/core/intelligence/orchestrator.py",
+          "analyze",
+          175
+        ],
+        [
+          "/app/tests/test_production_readiness.py",
+          "test_large_league_repeated_requests_remain_bounded",
+          171
+        ],
+        [
+          "/usr/local/lib/python3.14/unittest/case.py",
+          "_callTestMethod",
+          615
+        ],
+        [
+          "/usr/local/lib/python3.14/unittest/case.py",
+          "run",
+          669
+        ],
+        [
+          "/usr/local/lib/python3.14/unittest/case.py",
+          "__call__",
+          725
+        ],
+        [
+          "/usr/local/lib/python3.14/unittest/suite.py",
+          "run",
+          122
+        ]
+      ]
+    },
+    {
+      "kind": "gc_stop",
+      "name": 1,
+      "wall_time": 1794384342.7171566,
+      "monotonic": 90955.135221797,
+      "thread_cpu": 10.205011044,
+      "thread": 140410087717760,
+      "detail": 0,
+      "frame_count": null,
+      "reserved": null
+    },
+    {
+      "kind": "gc_start",
+      "name": 1,
+      "wall_time": 1794384342.7228115,
+      "monotonic": 90955.140876796,
+      "thread_cpu": 10.210667909,
+      "thread": 140410087717760,
+      "detail": 0,
+      "frame_count": 20,
+      "reserved": null,
+      "frames": [
+        [
+          "/output/observer.py",
+          "gc_event",
+          62
+        ],
+        [
+          "/usr/local/lib/python3.14/json/decoder.py",
+          "raw_decode",
+          361
+        ],
+        [
+          "/usr/local/lib/python3.14/json/decoder.py",
+          "decode",
+          345
+        ],
+        [
+          "/usr/local/lib/python3.14/json/__init__.py",
+          "loads",
+          352
+        ],
+        [
+          "/app/src/core/intelligence/roster_diagnostics.py",
+          "_diagnose_inputs",
+          806
+        ],
+        [
+          "/app/src/core/intelligence/roster_diagnostics.py",
+          "diagnose_league",
+          795
+        ],
+        [
+          "/app/src/core/intelligence/roster_diagnostics.py",
+          "team_diagnostics",
+          816
+        ],
+        [
+          "/app/src/core/decision_engine/team/team_evaluator.py",
+          "evaluate_team",
+          91
+        ],
+        [
+          "/app/src/core/intelligence/orchestrator.py",
+          "_decision_provider",
+          33
+        ],
+        [
+          "/app/src/core/intelligence/orchestrator.py",
+          "<lambda>",
+          112
+        ],
+        [
+          "/app/src/core/intelligence/cache.py",
+          "get_or_create",
+          42
+        ],
+        [
+          "/app/src/core/intelligence/pipeline.py",
+          "run",
+          14
+        ],
+        [
+          "/app/src/core/intelligence/orchestrator.py",
+          "execute",
+          112
+        ],
+        [
+          "/app/src/core/intelligence/cache.py",
+          "get_or_create",
+          42
+        ],
+        [
+          "/app/src/core/intelligence/orchestrator.py",
+          "analyze",
+          175
+        ],
+        [
+          "/app/tests/test_production_readiness.py",
+          "test_large_league_repeated_requests_remain_bounded",
+          171
+        ],
+        [
+          "/usr/local/lib/python3.14/unittest/case.py",
+          "_callTestMethod",
+          615
+        ],
+        [
+          "/usr/local/lib/python3.14/unittest/case.py",
+          "run",
+          669
+        ],
+        [
+          "/usr/local/lib/python3.14/unittest/case.py",
+          "__call__",
+          725
+        ],
+        [
+          "/usr/local/lib/python3.14/unittest/suite.py",
+          "run",
+          122
+        ]
+      ]
+    },
+    {
+      "kind": "gc_stop",
+      "name": 1,
+      "wall_time": 1794384342.7228422,
+      "monotonic": 90955.140907309,
+      "thread_cpu": 10.210696616,
+      "thread": 140410087717760,
+      "detail": 0,
+      "frame_count": null,
+      "reserved": null
+    },
+    {
+      "kind": "gc_start",
+      "name": 1,
+      "wall_time": 1794384342.7297943,
+      "monotonic": 90955.14785992,
+      "thread_cpu": 10.217651425,
+      "thread": 140410087717760,
+      "detail": 0,
+      "frame_count": 20,
+      "reserved": null,
+      "frames": [
+        [
+          "/output/observer.py",
+          "gc_event",
+          62
+        ],
+        [
+          "/usr/local/lib/python3.14/json/decoder.py",
+          "raw_decode",
+          361
+        ],
+        [
+          "/usr/local/lib/python3.14/json/decoder.py",
+          "decode",
+          345
+        ],
+        [
+          "/usr/local/lib/python3.14/json/__init__.py",
+          "loads",
+          352
+        ],
+        [
+          "/app/src/core/intelligence/roster_diagnostics.py",
+          "_diagnose_inputs",
+          806
+        ],
+        [
+          "/app/src/core/intelligence/roster_diagnostics.py",
+          "diagnose_league",
+          795
+        ],
+        [
+          "/app/src/core/intelligence/roster_diagnostics.py",
+          "team_diagnostics",
+          816
+        ],
+        [
+          "/app/src/core/decision_engine/team/team_evaluator.py",
+          "evaluate_team",
+          91
+        ],
+        [
+          "/app/src/core/intelligence/orchestrator.py",
+          "_decision_provider",
+          33
+        ],
+        [
+          "/app/src/core/intelligence/orchestrator.py",
+          "<lambda>",
+          112
+        ],
+        [
+          "/app/src/core/intelligence/cache.py",
+          "get_or_create",
+          42
+        ],
+        [
+          "/app/src/core/intelligence/pipeline.py",
+          "run",
+          14
+        ],
+        [
+          "/app/src/core/intelligence/orchestrator.py",
+          "execute",
+          112
+        ],
+        [
+          "/app/src/core/intelligence/cache.py",
+          "get_or_create",
+          42
+        ],
+        [
+          "/app/src/core/intelligence/orchestrator.py",
+          "analyze",
+          175
+        ],
+        [
+          "/app/tests/test_production_readiness.py",
+          "test_large_league_repeated_requests_remain_bounded",
+          171
+        ],
+        [
+          "/usr/local/lib/python3.14/unittest/case.py",
+          "_callTestMethod",
+          615
+        ],
+        [
+          "/usr/local/lib/python3.14/unittest/case.py",
+          "run",
+          669
+        ],
+        [
+          "/usr/local/lib/python3.14/unittest/case.py",
+          "__call__",
+          725
+        ],
+        [
+          "/usr/local/lib/python3.14/unittest/suite.py",
+          "run",
+          122
+        ]
+      ]
+    },
+    {
+      "kind": "gc_stop",
+      "name": 1,
+      "wall_time": 1794384342.7298265,
+      "monotonic": 90955.147891722,
+      "thread_cpu": 10.217681143,
+      "thread": 140410087717760,
+      "detail": 0,
+      "frame_count": null,
+      "reserved": null
+    },
+    {
+      "kind": "gc_start",
+      "name": 1,
+      "wall_time": 1794384342.7380757,
+      "monotonic": 90955.15614147,
+      "thread_cpu": 10.225932694,
+      "thread": 140410087717760,
+      "detail": 0,
+      "frame_count": 20,
+      "reserved": null,
+      "frames": [
+        [
+          "/output/observer.py",
+          "gc_event",
+          62
+        ],
+        [
+          "/usr/local/lib/python3.14/json/decoder.py",
+          "raw_decode",
+          361
+        ],
+        [
+          "/usr/local/lib/python3.14/json/decoder.py",
+          "decode",
+          345
+        ],
+        [
+          "/usr/local/lib/python3.14/json/__init__.py",
+          "loads",
+          352
+        ],
+        [
+          "/app/src/core/intelligence/roster_diagnostics.py",
+          "_diagnose_inputs",
+          806
+        ],
+        [
+          "/app/src/core/intelligence/roster_diagnostics.py",
+          "diagnose_league",
+          795
+        ],
+        [
+          "/app/src/core/intelligence/roster_diagnostics.py",
+          "team_diagnostics",
+          816
+        ],
+        [
+          "/app/src/core/decision_engine/team/team_evaluator.py",
+          "evaluate_team",
+          91
+        ],
+        [
+          "/app/src/core/intelligence/orchestrator.py",
+          "_decision_provider",
+          33
+        ],
+        [
+          "/app/src/core/intelligence/orchestrator.py",
+          "<lambda>",
+          112
+        ],
+        [
+          "/app/src/core/intelligence/cache.py",
+          "get_or_create",
+          42
+        ],
+        [
+          "/app/src/core/intelligence/pipeline.py",
+          "run",
+          14
+        ],
+        [
+          "/app/src/core/intelligence/orchestrator.py",
+          "execute",
+          112
+        ],
+        [
+          "/app/src/core/intelligence/cache.py",
+          "get_or_create",
+          42
+        ],
+        [
+          "/app/src/core/intelligence/orchestrator.py",
+          "analyze",
+          175
+        ],
+        [
+          "/app/tests/test_production_readiness.py",
+          "test_large_league_repeated_requests_remain_bounded",
+          171
+        ],
+        [
+          "/usr/local/lib/python3.14/unittest/case.py",
+          "_callTestMethod",
+          615
+        ],
+        [
+          "/usr/local/lib/python3.14/unittest/case.py",
+          "run",
+          669
+        ],
+        [
+          "/usr/local/lib/python3.14/unittest/case.py",
+          "__call__",
+          725
+        ],
+        [
+          "/usr/local/lib/python3.14/unittest/suite.py",
+          "run",
+          122
+        ]
+      ]
+    },
+    {
+      "kind": "gc_stop",
+      "name": 1,
+      "wall_time": 1794384342.7381084,
+      "monotonic": 90955.156173627,
+      "thread_cpu": 10.225963107,
+      "thread": 140410087717760,
+      "detail": 0,
+      "frame_count": null,
+      "reserved": null
+    },
+    {
+      "kind": "gc_start",
+      "name": 1,
+      "wall_time": 1794384342.7453942,
+      "monotonic": 90955.163459847,
+      "thread_cpu": 10.233251824,
+      "thread": 140410087717760,
+      "detail": 0,
+      "frame_count": 20,
+      "reserved": null,
+      "frames": [
+        [
+          "/output/observer.py",
+          "gc_event",
+          62
+        ],
+        [
+          "/usr/local/lib/python3.14/json/decoder.py",
+          "raw_decode",
+          361
+        ],
+        [
+          "/usr/local/lib/python3.14/json/decoder.py",
+          "decode",
+          345
+        ],
+        [
+          "/usr/local/lib/python3.14/json/__init__.py",
+          "loads",
+          352
+        ],
+        [
+          "/app/src/core/intelligence/roster_diagnostics.py",
+          "_diagnose_inputs",
+          806
+        ],
+        [
+          "/app/src/core/intelligence/roster_diagnostics.py",
+          "diagnose_league",
+          795
+        ],
+        [
+          "/app/src/core/intelligence/roster_diagnostics.py",
+          "team_diagnostics",
+          816
+        ],
+        [
+          "/app/src/core/decision_engine/team/team_evaluator.py",
+          "evaluate_team",
+          91
+        ],
+        [
+          "/app/src/core/intelligence/orchestrator.py",
+          "_decision_provider",
+          33
+        ],
+        [
+          "/app/src/core/intelligence/orchestrator.py",
+          "<lambda>",
+          112
+        ],
+        [
+          "/app/src/core/intelligence/cache.py",
+          "get_or_create",
+          42
+        ],
+        [
+          "/app/src/core/intelligence/pipeline.py",
+          "run",
+          14
+        ],
+        [
+          "/app/src/core/intelligence/orchestrator.py",
+          "execute",
+          112
+        ],
+        [
+          "/app/src/core/intelligence/cache.py",
+          "get_or_create",
+          42
+        ],
+        [
+          "/app/src/core/intelligence/orchestrator.py",
+          "analyze",
+          175
+        ],
+        [
+          "/app/tests/test_production_readiness.py",
+          "test_large_league_repeated_requests_remain_bounded",
+          171
+        ],
+        [
+          "/usr/local/lib/python3.14/unittest/case.py",
+          "_callTestMethod",
+          615
+        ],
+        [
+          "/usr/local/lib/python3.14/unittest/case.py",
+          "run",
+          669
+        ],
+        [
+          "/usr/local/lib/python3.14/unittest/case.py",
+          "__call__",
+          725
+        ],
+        [
+          "/usr/local/lib/python3.14/unittest/suite.py",
+          "run",
+          122
+        ]
+      ]
+    },
+    {
+      "kind": "gc_stop",
+      "name": 1,
+      "wall_time": 1794384342.7454271,
+      "monotonic": 90955.163492421,
+      "thread_cpu": 10.233282011,
+      "thread": 140410087717760,
+      "detail": 0,
+      "frame_count": null,
+      "reserved": null
+    },
+    {
+      "kind": "gc_start",
+      "name": 1,
+      "wall_time": 1794384342.7511954,
+      "monotonic": 90955.169261068,
+      "thread_cpu": 10.23905306,
+      "thread": 140410087717760,
+      "detail": 0,
+      "frame_count": 20,
+      "reserved": null,
+      "frames": [
+        [
+          "/output/observer.py",
+          "gc_event",
+          62
+        ],
+        [
+          "/usr/local/lib/python3.14/json/decoder.py",
+          "raw_decode",
+          361
+        ],
+        [
+          "/usr/local/lib/python3.14/json/decoder.py",
+          "decode",
+          345
+        ],
+        [
+          "/usr/local/lib/python3.14/json/__init__.py",
+          "loads",
+          352
+        ],
+        [
+          "/app/src/core/intelligence/roster_diagnostics.py",
+          "_diagnose_inputs",
+          806
+        ],
+        [
+          "/app/src/core/intelligence/roster_diagnostics.py",
+          "diagnose_league",
+          795
+        ],
+        [
+          "/app/src/core/intelligence/roster_diagnostics.py",
+          "team_diagnostics",
+          816
+        ],
+        [
+          "/app/src/core/decision_engine/team/team_evaluator.py",
+          "evaluate_team",
+          91
+        ],
+        [
+          "/app/src/core/intelligence/orchestrator.py",
+          "_decision_provider",
+          33
+        ],
+        [
+          "/app/src/core/intelligence/orchestrator.py",
+          "<lambda>",
+          112
+        ],
+        [
+          "/app/src/core/intelligence/cache.py",
+          "get_or_create",
+          42
+        ],
+        [
+          "/app/src/core/intelligence/pipeline.py",
+          "run",
+          14
+        ],
+        [
+          "/app/src/core/intelligence/orchestrator.py",
+          "execute",
+          112
+        ],
+        [
+          "/app/src/core/intelligence/cache.py",
+          "get_or_create",
+          42
+        ],
+        [
+          "/app/src/core/intelligence/orchestrator.py",
+          "analyze",
+          175
+        ],
+        [
+          "/app/tests/test_production_readiness.py",
+          "test_large_league_repeated_requests_remain_bounded",
+          171
+        ],
+        [
+          "/usr/local/lib/python3.14/unittest/case.py",
+          "_callTestMethod",
+          615
+        ],
+        [
+          "/usr/local/lib/python3.14/unittest/case.py",
+          "run",
+          669
+        ],
+        [
+          "/usr/local/lib/python3.14/unittest/case.py",
+          "__call__",
+          725
+        ],
+        [
+          "/usr/local/lib/python3.14/unittest/suite.py",
+          "run",
+          122
+        ]
+      ]
+    },
+    {
+      "kind": "gc_stop",
+      "name": 1,
+      "wall_time": 1794384342.7512417,
+      "monotonic": 90955.169306919,
+      "thread_cpu": 10.23909676,
+      "thread": 140410087717760,
+      "detail": 0,
+      "frame_count": null,
+      "reserved": null
+    },
+    {
+      "kind": "gc_start",
+      "name": 1,
+      "wall_time": 1794384342.7570806,
+      "monotonic": 90955.175146061,
+      "thread_cpu": 10.244937945,
+      "thread": 140410087717760,
+      "detail": 0,
+      "frame_count": 20,
+      "reserved": null,
+      "frames": [
+        [
+          "/output/observer.py",
+          "gc_event",
+          62
+        ],
+        [
+          "/usr/local/lib/python3.14/json/decoder.py",
+          "raw_decode",
+          361
+        ],
+        [
+          "/usr/local/lib/python3.14/json/decoder.py",
+          "decode",
+          345
+        ],
+        [
+          "/usr/local/lib/python3.14/json/__init__.py",
+          "loads",
+          352
+        ],
+        [
+          "/app/src/core/intelligence/roster_diagnostics.py",
+          "_diagnose_inputs",
+          806
+        ],
+        [
+          "/app/src/core/intelligence/roster_diagnostics.py",
+          "diagnose_league",
+          795
+        ],
+        [
+          "/app/src/core/intelligence/roster_diagnostics.py",
+          "team_diagnostics",
+          816
+        ],
+        [
+          "/app/src/core/decision_engine/team/team_evaluator.py",
+          "evaluate_team",
+          91
+        ],
+        [
+          "/app/src/core/intelligence/orchestrator.py",
+          "_decision_provider",
+          33
+        ],
+        [
+          "/app/src/core/intelligence/orchestrator.py",
+          "<lambda>",
+          112
+        ],
+        [
+          "/app/src/core/intelligence/cache.py",
+          "get_or_create",
+          42
+        ],
+        [
+          "/app/src/core/intelligence/pipeline.py",
+          "run",
+          14
+        ],
+        [
+          "/app/src/core/intelligence/orchestrator.py",
+          "execute",
+          112
+        ],
+        [
+          "/app/src/core/intelligence/cache.py",
+          "get_or_create",
+          42
+        ],
+        [
+          "/app/src/core/intelligence/orchestrator.py",
+          "analyze",
+          175
+        ],
+        [
+          "/app/tests/test_production_readiness.py",
+          "test_large_league_repeated_requests_remain_bounded",
+          171
+        ],
+        [
+          "/usr/local/lib/python3.14/unittest/case.py",
+          "_callTestMethod",
+          615
+        ],
+        [
+          "/usr/local/lib/python3.14/unittest/case.py",
+          "run",
+          669
+        ],
+        [
+          "/usr/local/lib/python3.14/unittest/case.py",
+          "__call__",
+          725
+        ],
+        [
+          "/usr/local/lib/python3.14/unittest/suite.py",
+          "run",
+          122
+        ]
+      ]
+    },
+    {
+      "kind": "gc_stop",
+      "name": 1,
+      "wall_time": 1794384342.7571123,
+      "monotonic": 90955.1751774,
+      "thread_cpu": 10.244967102,
+      "thread": 140410087717760,
+      "detail": 0,
+      "frame_count": null,
+      "reserved": null
+    },
+    {
+      "kind": "gc_start",
+      "name": 1,
+      "wall_time": 1794384342.7643247,
+      "monotonic": 90955.182390218,
+      "thread_cpu": 10.252182196,
+      "thread": 140410087717760,
+      "detail": 0,
+      "frame_count": 20,
+      "reserved": null,
+      "frames": [
+        [
+          "/output/observer.py",
+          "gc_event",
+          62
+        ],
+        [
+          "/usr/local/lib/python3.14/json/decoder.py",
+          "raw_decode",
+          361
+        ],
+        [
+          "/usr/local/lib/python3.14/json/decoder.py",
+          "decode",
+          345
+        ],
+        [
+          "/usr/local/lib/python3.14/json/__init__.py",
+          "loads",
+          352
+        ],
+        [
+          "/app/src/core/intelligence/roster_diagnostics.py",
+          "_diagnose_inputs",
+          806
+        ],
+        [
+          "/app/src/core/intelligence/roster_diagnostics.py",
+          "diagnose_league",
+          795
+        ],
+        [
+          "/app/src/core/intelligence/roster_diagnostics.py",
+          "team_diagnostics",
+          816
+        ],
+        [
+          "/app/src/core/decision_engine/team/team_evaluator.py",
+          "evaluate_team",
+          91
+        ],
+        [
+          "/app/src/core/intelligence/orchestrator.py",
+          "_decision_provider",
+          33
+        ],
+        [
+          "/app/src/core/intelligence/orchestrator.py",
+          "<lambda>",
+          112
+        ],
+        [
