@@ -1,0 +1,111 @@
+{
+  "at": "2026-11-11T10:04:36.892345+00:00",
+  "candidate": "b602d6acd03cc1c95d85ee734d2d7f28658885cf",
+  "tree": "8a687ea0256d6e0031b57e08e2a1a38a90a1a535",
+  "container": "8b0c12edebc84b4ea30e56a7547b7e8f4078c1011dc34b83feb8d05d9cfe4e50",
+  "validator_host_pid": 894430,
+  "validator_group": 894430,
+  "reason": "Hosted full canonical executed4364 and failed the actual held-audit-worker two-second setup precondition before the unchanged100ms assertion. A pending focused fixture-order correction will supersede this source. Intentional cancellation preserves the current incomplete local run; no new full run starts until meaningful focused controls pass. Exact historical GC duration is not established.",
+  "state_before": {
+    "Status": "running",
+    "Running": true,
+    "Paused": false,
+    "Restarting": false,
+    "OOMKilled": false,
+    "Dead": false,
+    "Pid": 894408,
+    "ExitCode": 0,
+    "Error": "",
+    "StartedAt": "2026-11-11T09:12:23.527027917Z",
+    "FinishedAt": "0001-01-01T00:00:00Z"
+  },
+  "processes_before": [
+    {
+      "pid": 894408,
+      "ppid": 894384,
+      "name": "docker-init"
+    },
+    {
+      "pid": 894420,
+      "ppid": 894408,
+      "name": "python"
+    },
+    {
+      "pid": 894430,
+      "ppid": 894420,
+      "name": "python"
+    },
+    {
+      "pid": 894446,
+      "ppid": 894430,
+      "name": "python"
+    },
+    {
+      "pid": 936563,
+      "ppid": 894446,
+      "name": "python"
+    },
+    {
+      "pid": 977498,
+      "ppid": 894446,
+      "name": "MainThread"
+    },
+    {
+      "pid": 977510,
+      "ppid": 977498,
+      "name": "chromium"
+    },
+    {
+      "pid": 977526,
+      "ppid": 894408,
+      "name": "chrome_crashpad"
+    },
+    {
+      "pid": 977529,
+      "ppid": 977510,
+      "name": "chromium"
+    },
+    {
+      "pid": 977530,
+      "ppid": 894408,
+      "name": "chrome_crashpad"
+    },
+    {
+      "pid": 977531,
+      "ppid": 977510,
+      "name": "chromium"
+    },
+    {
+      "pid": 977552,
+      "ppid": 977529,
+      "name": "chromium"
+    },
+    {
+      "pid": 977553,
+      "ppid": 977510,
+      "name": "chromium"
+    },
+    {
+      "pid": 977563,
+      "ppid": 977531,
+      "name": "chromium"
+    },
+    {
+      "pid": 977612,
+      "ppid": 977531,
+      "name": "chromium"
+    },
+    {
+      "pid": 977623,
+      "ppid": 977531,
+      "name": "chromium"
+    },
+    {
+      "pid": 977628,
+      "ppid": 977531,
+      "name": "chromium"
+    }
+  ],
+  "intentional_superseded_cancellation": true,
+  "not_a_passing_gate": true
+}

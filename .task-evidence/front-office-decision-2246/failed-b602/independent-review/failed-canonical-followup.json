@@ -1,0 +1,128 @@
+{
+  "schema": "dtos-failed-canonical-source-followup-v1",
+  "reviewed_at_utc": "2026-11-11T10:06:08.927181+00:00",
+  "reviewer": "/root/final_source_review",
+  "scope": "Independent read-only original trace/test/source analysis; no source edits, network/MCP, Docker or test/validator launches. The running local full suite was untouched.",
+  "head": "b602d6acd03cc1c95d85ee734d2d7f28658885cf",
+  "tree": "8a687ea0256d6e0031b57e08e2a1a38a90a1a535",
+  "run": 42991843827,
+  "attempt": 1,
+  "job": 130426505856,
+  "native_result": "failed; not accepted",
+  "artifact": {
+    "id": 13845218233,
+    "path": "/workspace/2246-granite-activation/expansion/final-r2/failed-final-canonical/failed-canonical-original.zip",
+    "bytes": 93758581,
+    "sha256": "9a51b7ffb0b4c4e07112e59d2f393ffb37489f5afe75563f661c9ae1ea766e9d",
+    "integrity_receipt": "/workspace/2246-granite-activation/expansion/final-r2/failed-final-canonical/artifact-integrity.json",
+    "integrity_scope": "Original archive/API/manifest integrity verified by release_scope_audit; this reviewer read extracted originals and did not re-run archive integrity."
+  },
+  "test_events": [
+    {
+      "event": "start",
+      "test": "test_projection_audit.ProjectionAuditTests.test_projection_audit_does_not_block_lightweight_request",
+      "time": 1794389975.460524,
+      "pid": 33,
+      "rss": 1003225088,
+      "cgroup": 1173340160
+    },
+    {
+      "event": "failure",
+      "test": "test_projection_audit.ProjectionAuditTests.test_projection_audit_does_not_block_lightweight_request",
+      "time": 1794389978.1809235,
+      "pid": 33,
+      "rss": 1003229184,
+      "cgroup": 1173331968,
+      "error_type": "AssertionError",
+      "error_text": "False is not true"
+    },
+    {
+      "event": "stop",
+      "test": "test_projection_audit.ProjectionAuditTests.test_projection_audit_does_not_block_lightweight_request",
+      "time": 1794389978.1837668,
+      "pid": 33,
+      "rss": 1003229184,
+      "cgroup": 1173331968
+    }
+  ],
+  "direct_findings": [
+    {
+      "classification": "failed fixture-held-worker deadline",
+      "evidence": "The sole failure is self.assertTrue(release.wait(2.0)) returning False in slow_builder at test_projection_audit.py:302, propagated when awaiting audit_request at 328. The failure is not at latency assertion333.",
+      "references": [
+        "/workspace/2246-granite-activation/expansion/final-r2/failed-final-canonical/core-originals/unittest-console.log:34410",
+        "/workspace/2246-granite-activation/expansion/final-r2/failed-final-canonical/core-originals/unittest-console.log:34419",
+        "/workspace/2246-granite-activation/expansion/final-r2/failed-final-canonical/core-originals/tests.jsonl:5889"
+      ]
+    },
+    {
+      "classification": "production offload remains in trace",
+      "evidence": "Trace enters routes/audit.py48, run_manager_read and asyncio.to_thread before the patched slow_builder raises. It establishes worker-thread execution for the recorded path. It does not show the native builder blocking the event loop.",
+      "references": [
+        "routes/audit.py:48",
+        "src/core/request_execution.py:14",
+        "/workspace/2246-granite-activation/expansion/final-r2/failed-final-canonical/job-console-original.log:2331"
+      ]
+    },
+    {
+      "classification": "long synchronous fixture turn",
+      "evidence": "Original console records /lightweight 200 at09:39:38.179927 and an asyncio warning of one 2.712s test event-loop turn at await 328. Source starts the held worker, waits for started, and then runs explicit gc.collect at 322 before request timer323. Collection is therefore inside the worker 2 s deadline. Original evidence has no per-call GC duration, so all2.712s cannot be assigned to GC.",
+      "references": [
+        "/workspace/2246-granite-activation/expansion/final-r2/failed-final-canonical/core-originals/unittest-console.log:24775",
+        "/workspace/2246-granite-activation/expansion/final-r2/failed-final-canonical/core-originals/unittest-console.log:24776",
+        "tests/test_projection_audit.py:299",
+        "tests/test_projection_audit.py:310",
+        "tests/test_projection_audit.py:322"
+      ]
+    },
+    {
+      "classification": "not outer timeout or transport failure",
+      "evidence": "All 4364 test starts/stops completed with one failure. Runner exit 1, timeout_triggered=false, validator_reaped=true; container exited 1 with OOMKilled=false. Six initial gates succeeded; unit/regression gate failed and last three canonical gates did not execute. Artifact transfer/integrity succeeds separately and cannot turn this into a passing run.",
+      "references": [
+        "/workspace/2246-granite-activation/expansion/final-r2/failed-final-canonical/core-originals/result.json",
+        "/workspace/2246-granite-activation/expansion/final-r2/failed-final-canonical/core-originals/container-state.json",
+        "/workspace/2246-granite-activation/expansion/final-r2/failed-final-canonical/core-originals/canonical-trace.jsonl",
+        "/workspace/2246-granite-activation/expansion/final-r2/failed-final-canonical/artifact-integrity.json"
+      ]
+    }
+  ],
+  "case_resource_samples": {
+    "sample_count": 5,
+    "time_first": 1794389975.9030168,
+    "time_last": 1794389978.0063684,
+    "raw_cgroup_current_min": 1173331968,
+    "raw_cgroup_current_max": 1173340160,
+    "cgroup_limit": 2147483648,
+    "minimum_sampled_raw_headroom_bytes": 974143488,
+    "minimum_sampled_raw_headroom_mib": 929.015625,
+    "all_sampled_memory_event_counts_zero": true,
+    "sampled_window_ms_min": 22.835440999642742,
+    "sampled_window_ms_max": 30.349979999755305,
+    "whole_run_kernel_peak": 2122092544,
+    "interpretation": "Five sequential samples during this test show about 929MiB raw headroom and no max/OOM events. They are not an atomic event-wait or GC measurement. The whole-run peak belongs to the full suite, not the failed test window; no capacity/admission policy change follows from this trace."
+  },
+  "minimum_safe_correction": {
+    "change": "Relocate the existing explicit setup gc.collect and its explanatory comment to immediately before asyncio.create_task at 310, before the held audit worker exists.",
+    "reason": "Setup collection then cannot consume this worker 2 s Event.wait deadline. This addresses the concrete source ordering defect without treating the aggregate2.712s as an isolated GC timing.",
+    "must_preserve": [
+      "GC enabled/default behavior",
+      "release.wait(2.0)",
+      "existing worker-start polling and started assertion",
+      "asyncio.wait_for lightweight timeout 0.25",
+      "pending audit_request assertion",
+      "latency_ms<100 assertion",
+      "lightweight/audit response checks",
+      "contextvars check",
+      "unchanged application source, memory cap, reserves and admission policy"
+    ],
+    "status": "Recommendation only; no source edits performed by this reviewer; no passing result claimed.",
+    "independent_review": "/root/final_source_review/browser_diff_review independently inspected originals/source and found no flaw in this minimum relocation; agrees exact GC duration remains unproven.",
+    "validation_required": "Preserve the failed exact-b602 originals. Obtain targeted original/relocated deadline controls and blocking-handler negative control as appropriate, then complete full canonical and all required hosted gates on any corrected exact source. A focused pass or unchanged local b602 pass does not erase this hosted failure."
+  },
+  "limits": [
+    "The less-than100 ms assertion was never reached, so this record establishes neither a 100 ms pass nor breach.",
+    "No application defect, exact GC duration, sustained resource shortage or missing safe admission is established by this test failure.",
+    "Relocation is source-supported but cannot guarantee the corrected test or complete suite will pass.",
+    "Earlier static source review remains scoped to its original observations and is not a substitute for this failed gate."
+  ]
+}

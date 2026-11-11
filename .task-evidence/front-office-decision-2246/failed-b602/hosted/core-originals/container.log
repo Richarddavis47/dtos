@@ -1,0 +1,166 @@
+{"head": "b602d6acd03cc1c95d85ee734d2d7f28658885cf", "tree": "8a687ea0256d6e0031b57e08e2a1a38a90a1a535", "python": "3.14.3 (main, Apr  7 2026, 02:23:36) [GCC 12.2.0]", "started_at": 1794387861.9588509, "finished_at": 1794391224.4051929, "elapsed_seconds": 3362.4463427066803, "exit_code": 1, "passed": false, "error": null, "process_cleanup": {"timeout_triggered": false, "validator_pid": 17, "validator_reaped": true}, "cgroup_limit": 2147483648, "cpus": 2, "network": "none", "final_memory": {"rss_bytes": 47423488, "vms_bytes": 137162752, "system_available_bytes": 15437574144, "memory_accounting_scope": "cgroup", "cgroup_current_bytes": 236920832, "cgroup_limit_bytes": 2147483648, "cgroup_inactive_file_bytes": 186744832, "cgroup_anonymous_bytes": 33722368, "cgroup_memory_events": {"low": 0, "high": 0, "max": 0, "oom": 0, "oom_kill": 0, "oom_group_kill": 0, "sock_throttled": 0}}, "kernel_peak": 2122092544, "fixture": "250 asset prepared sanitized foundation; disposable authenticated test transports"}
+":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/valuation/evidence/not-real \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-11T10:00:16.850182+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/valuation/explanation?asset_id=not-real \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+.............{"timestamp":"2026-11-11T10:00:17.875439+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/valuation \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T10:00:17.880612+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/valuation/assets?limit=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T10:00:17.891376+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/valuation/assets/player:1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T10:00:17.895998+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/valuation/assets/missing \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-11T10:00:17.900350+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/valuation/status \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T10:00:17.905524+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/valuation/export.json \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T10:00:17.921186+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/valuation/export.csv \"HTTP/1.1 200 OK\"","request_id":"system"}
+...................{"timestamp":"2026-11-11T10:00:20.898094+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/pages/missing \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-11T10:00:20.899804+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/visual/pages/home/watch \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+.{"timestamp":"2026-11-11T10:00:20.915434+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/schema \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T10:00:20.917398+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/site-map \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T10:00:20.921830+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/health \"HTTP/1.1 200 OK\"","request_id":"system"}
+...{"timestamp":"2026-11-11T10:00:21.831608+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/health \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T10:00:21.832919+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/visual \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-11T10:00:21.833965+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/releases/current \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-11T10:00:21.834882+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/current-visual/manifest \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-11T10:00:21.835778+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/live/visual \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+.
+======================================================================
+FAIL: test_projection_audit_does_not_block_lightweight_request (test_projection_audit.ProjectionAuditTests.test_projection_audit_does_not_block_lightweight_request)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.14/asyncio/runners.py", line 127, in run
+    return self._loop.run_until_complete(task)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "/usr/local/lib/python3.14/asyncio/base_events.py", line 719, in run_until_complete
+    return future.result()
+           ~~~~~~~~~~~~~^^
+  File "/app/tests/test_projection_audit.py", line 328, in test_projection_audit_does_not_block_lightweight_request
+    audit_response = await audit_request
+                     ^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/httpx/_client.py", line 1768, in get
+    return await self.request(
+           ^^^^^^^^^^^^^^^^^^^
+    ...<9 lines>...
+    )
+    ^
+  File "/usr/local/lib/python3.14/site-packages/httpx/_client.py", line 1540, in request
+    return await self.send(request, auth=auth, follow_redirects=follow_redirects)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/httpx/_client.py", line 1629, in send
+    response = await self._send_handling_auth(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<4 lines>...
+    )
+    ^
+  File "/usr/local/lib/python3.14/site-packages/httpx/_client.py", line 1657, in _send_handling_auth
+    response = await self._send_handling_redirects(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    )
+    ^
+  File "/usr/local/lib/python3.14/site-packages/httpx/_client.py", line 1694, in _send_handling_redirects
+    response = await self._send_single_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/httpx/_client.py", line 1730, in _send_single_request
+    response = await transport.handle_async_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/httpx/_transports/asgi.py", line 170, in handle_async_request
+    await self.app(scope, receive, send)
+  File "/usr/local/lib/python3.14/site-packages/fastapi/applications.py", line 1194, in __call__
+    await super().__call__(scope, receive, send)
+  File "/usr/local/lib/python3.14/site-packages/starlette/applications.py", line 96, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/usr/local/lib/python3.14/site-packages/starlette/middleware/errors.py", line 186, in __call__
+    raise exc
+  File "/usr/local/lib/python3.14/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "/usr/local/lib/python3.14/site-packages/fastapi/telemetry/_asgi.py", line 151, in __call__
+    await self.app(scope, receive, send)
+  File "/usr/local/lib/python3.14/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "/usr/local/lib/python3.14/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/usr/local/lib/python3.14/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/usr/local/lib/python3.14/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
+    await self.app(scope, receive, send)
+  File "/usr/local/lib/python3.14/site-packages/starlette/routing.py", line 683, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/usr/local/lib/python3.14/site-packages/fastapi/routing.py", line 2811, in app
+    await route.handle(scope, receive, send)
+  File "/usr/local/lib/python3.14/site-packages/fastapi/routing.py", line 1839, in handle
+    await self.original_router.handle(scope, receive, send)
+  File "/usr/local/lib/python3.14/site-packages/fastapi/routing.py", line 2894, in handle
+    await included_router._handle_selected(scope, receive, send)
+  File "/usr/local/lib/python3.14/site-packages/fastapi/routing.py", line 1865, in _handle_selected
+    await original_route.handle(scope, receive, send)
+  File "/usr/local/lib/python3.14/site-packages/fastapi/routing.py", line 1328, in handle
+    await effective_context.app(scope, receive, send)
+  File "/usr/local/lib/python3.14/site-packages/fastapi/routing.py", line 166, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "/usr/local/lib/python3.14/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/usr/local/lib/python3.14/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/usr/local/lib/python3.14/site-packages/fastapi/routing.py", line 152, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/fastapi/routing.py", line 745, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    )
+    ^
+  File "/usr/local/lib/python3.14/site-packages/fastapi/routing.py", line 372, in run_endpoint_function
+    return await dependant.call(**values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/routes/audit.py", line 48, in projections_current
+    return await run_manager_read(
+           ^^^^^^^^^^^^^^^^^^^^^^^
+        lambda: JSONResponse(jsonable_encoder(current())),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/app/src/core/request_execution.py", line 14, in run_manager_read
+    return await asyncio.to_thread(operation)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/asyncio/threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/concurrent/futures/thread.py", line 86, in run
+    result = ctx.run(self.task)
+  File "/usr/local/lib/python3.14/concurrent/futures/thread.py", line 73, in run
+    return fn(*args, **kwargs)
+  File "/app/routes/audit.py", line 49, in <lambda>
+    lambda: JSONResponse(jsonable_encoder(current())),
+                                          ~~~~~~~^^
+  File "/app/routes/audit.py", line 37, in current
+    return build_projection_audit(
+        data=data, projection_snapshot=projection,
+        projection_health=projections.health(include_accuracy=False), market=market,
+        fois_scores=scores,
+    )
+  File "/usr/local/lib/python3.14/unittest/mock.py", line 1175, in __call__
+    return self._mock_call(*args, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/unittest/mock.py", line 1179, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/unittest/mock.py", line 1240, in _execute_mock_call
+    result = effect(*args, **kwargs)
+  File "/app/tests/test_projection_audit.py", line 302, in slow_builder
+    self.assertTrue(release.wait(2.0))
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+AssertionError: False is not true
+
+----------------------------------------------------------------------
+Ran 4364 tests in 3348.835s
+
+FAILED (failures=1)
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/app/tools/validation/validate_release.py", line 44, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/app/tools/validation/validate_release.py", line 30, in main
+    results = run_release_validation(ROOT, run_id)
+  File "/app/src/platform/validation/release.py", line 138, in run_release_validation
+    raise subprocess.CalledProcessError(completed.returncode, step.command)
+subprocess.CalledProcessError: Command '('/usr/local/bin/python', '-m', 'unittest', 'discover', '-s', 'tests')' returned non-zero exit status 1.
+

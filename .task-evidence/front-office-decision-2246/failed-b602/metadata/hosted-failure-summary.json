@@ -1,0 +1,42 @@
+{
+  "observed_at": "2026-11-11T10:01:51.283197+00:00",
+  "candidate": "b602d6acd03cc1c95d85ee734d2d7f28658885cf",
+  "tree": "8a687ea0256d6e0031b57e08e2a1a38a90a1a535",
+  "expected_test_count": 4364,
+  "status": "STOPPED_REQUIRED_HOSTED_FAILURE",
+  "required_passed": 12,
+  "failed_job": {
+    "id": 130426505856,
+    "name": "canonical-release",
+    "status": "completed",
+    "conclusion": "failure",
+    "started_at": "2026-11-11T09:03:03Z",
+    "completed_at": "2026-11-11T10:00:31Z",
+    "output": {
+      "title": null,
+      "summary": null,
+      "text": null,
+      "annotations_count": 2,
+      "annotations_url": "https://api.github.com/repos/Richarddavis47/dtos/check-runs/130426505856/annotations"
+    }
+  },
+  "original": {
+    "file": "hosted-monitor/checks-057.json",
+    "bytes": 49379,
+    "sha256": "b71e969edd98c12358e998b528913dbacec31e1ff85e053094baf30f30f4866c"
+  },
+  "monitor_exit_code": 2,
+  "failure_scope": "Canonical job failed. Original job console and artifact have not been fetched by this monitor; test/setup/resource/timeout/artifact cause remains unestablished.",
+  "further_work_stopped": [
+    "No fresh strictallpassed queue",
+    "No final15archive batch",
+    "No finalsource nativecompletion/extraction",
+    "No rerun/dispatch",
+    "No localexecutor/source/harness/publisher changes"
+  ],
+  "separate_retained_proof": {
+    "product_total": 861,
+    "product_decoded_console_sha256": "8da3e3734982b8a84732cb3c28c6a45c466b191c44a12adaf11fe989c5a8c543",
+    "prior_3a19": "prior-3a19/hosted-canonical-cancelled-receipt.json"
+  }
+}

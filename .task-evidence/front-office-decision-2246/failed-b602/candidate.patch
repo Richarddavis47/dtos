@@ -1,0 +1,1372 @@
+diff --git a/.github/workflows/canonical-release-recovery.yml b/.github/workflows/canonical-release-recovery.yml
+index 6501978..e87f5b6 100644
+--- a/.github/workflows/canonical-release-recovery.yml
++++ b/.github/workflows/canonical-release-recovery.yml
+@@ -95,6 +95,8 @@ jobs:
+               DTOS_CONTEXTUAL_BACK_EVIDENCE="/output/contextual-back",
+               DTOS_FOIS_BROWSER_EVIDENCE="/output/fois-browser.json",
+               DTOS_PREPARATION_BROWSER_EVIDENCE="/output/preparation-browser.json",
++              DTOS_ACTIVATION_EVIDENCE="/output/activation",
++              DTOS_FRONT_OFFICE_WORKFLOW_EVIDENCE="/output/front-office-workflow",
+               PYTHONPATH="/output/observer:/app")
+           git_n = int(os.environ.get("GIT_CONFIG_COUNT", "0"))
+           os.environ["GIT_CONFIG_COUNT"] = str(git_n + 1)
+diff --git a/.github/workflows/product-browser.yml b/.github/workflows/product-browser.yml
+index 3f32524..9ab6f12 100644
+--- a/.github/workflows/product-browser.yml
++++ b/.github/workflows/product-browser.yml
+@@ -35,7 +35,7 @@ jobs:
+         # This bounded CI allowance does not change any application timeout.
+         timeout-minutes: 25
+         run: |
+-          docker run --rm --memory=2g --memory-swap=2g --cpus=2 --network=none -e NODE_OPTIONS -e DTOS_TRADE_RESOURCE_BROWSER_EVIDENCE=.validation/trade-resource/evidence/browser -e DTOS_LINEUP_DETAIL_EVIDENCE=.validation/trade-resource/evidence/browser/lineups -e DTOS_TEAM_NEED_EVIDENCE=.validation/trade-resource/evidence/browser/team-need -e DTOS_PROTECTIONS_EVIDENCE=.validation/trade-resource/evidence/browser/protections -e DTOS_COMPARE_EVIDENCE=.validation/trade-resource/evidence/browser/offer-comparison -v "$PWD:$PWD" -w "$PWD" -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0="$PWD" dtos-browser-validation python -m unittest -v tests.test_recommended_protections_browser tests.test_offer_comparison tests.test_offer_comparison_browser tests.test_team_trade_need tests.test_team_trade_need_browser tests.test_00_trade_simple_browser tests.test_trade_actionability tests.test_trade_actionability_browser tests.test_trade_conditional_summary tests.test_trade_recommendation_clarity tests.test_batch5_recommended_browser tests.test_franchise_timeline_coverage tests.test_franchise_timeline_browser tests.test_trade_reserve_evidence tests.test_trade_lineup_detail tests.test_trade_lineup_detail_browser tests.test_trade_resource_admission tests.test_trade_resource_browser tests.test_multileague_projection_browser tests.test_relative_personal_values tests.test_relative_personal_browser tests.test_decision_history_continuity_browser tests.test_personal_rankings_compatibility tests.test_personal_rankings_recovery_storage tests.test_personal_rankings_recovery_trade tests.test_personal_rankings_recovery_browser tests.test_personal_rankings_recovery_trade_browser tests.test_personal_rankings_partial_browser tests.test_dossier_plain_english tests.test_plain_english_home_depth tests.test_builder_plain_english tests.test_plain_english_preservation_final tests.test_plain_english_final_browser tests.test_plain_english_decisions tests.test_plain_english_browser tests.test_personal_rankings_availability tests.test_personal_rankings_availability_browser tests.test_personal_rankings tests.test_personal_rankings_store tests.test_personal_rankings_integration tests.test_personal_trade_workflows tests.test_personal_rankings_browser tests.test_personal_rankings_accessibility_browser tests.test_personal_trade_browser tests.test_market_trend_current_browser tests.test_standings_positioning tests.test_standings_positioning_browser tests.test_matchup_portraits_browser tests.test_matchups_phone tests.test_matchups_phone_browser tests.test_trade_projection_freshness tests.test_trade_projection_freshness_browser tests.test_trade_preview_scope_browser tests.test_trade_simple_discovery tests.test_fois_final_trust_browser tests.test_fois_evidence_integrity tests.test_fois_trust_browser tests.test_proposal_tray_browser tests.test_journey_evidence tests.test_journey_corrections_browser tests.test_dossier_status_browser tests.test_phone_visual_corrections_browser tests.test_phone_design_semantics tests.test_phone_design_browser tests.test_trade_calculator tests.test_trade_calculator_browser tests.test_calculator_balance_feedback_browser tests.test_calculator_stale_feedback_browser tests.test_trade_explicit_navigation_browser tests.test_trade_navigation_identity tests.test_trade_navigation_browser tests.test_player_actions tests.test_player_actions_browser tests.test_trade_performance tests.test_trade_construction_performance tests.test_trade_performance_browser tests.test_technical_details_browser tests.test_canonical_asset_facts tests.test_canonical_asset_facts_browser tests.test_product_browser_journey tests.test_matchup_browser_contract tests.test_trade_center_browser tests.test_trade_scout_state_browser tests.test_make_it_cheaper_browser tests.test_trade_center_accessibility tests.test_trade_workspace_browser tests.test_trade_workspace_batch1 tests.test_live_inspection tests.test_browser_fixture_images tests.test_visual_retirement tests.test_trade_decision_experience tests.test_trade_decision_browser tests.test_trade_decision_http_browser tests.test_trade_decision_standings_browser tests.test_batch6_trade_ux tests.test_trade_p2_browser tests.test_trade_final_evidence_browser tests.test_trade_endorsement_integrity tests.test_trade_missing_market_presentation tests.test_batch6_trade_explanation tests.test_league_entry_coordination
++          docker run --rm --memory=2g --memory-swap=2g --cpus=2 --network=none -e NODE_OPTIONS -e DTOS_TRADE_RESOURCE_BROWSER_EVIDENCE=.validation/trade-resource/evidence/browser -e DTOS_LINEUP_DETAIL_EVIDENCE=.validation/trade-resource/evidence/browser/lineups -e DTOS_TEAM_NEED_EVIDENCE=.validation/trade-resource/evidence/browser/team-need -e DTOS_ACTIVATION_EVIDENCE=.validation/trade-resource/evidence/browser/activation -e DTOS_FRONT_OFFICE_WORKFLOW_EVIDENCE=.validation/trade-resource/evidence/browser/front-office-workflow -e DTOS_PROTECTIONS_EVIDENCE=.validation/trade-resource/evidence/browser/protections -e DTOS_COMPARE_EVIDENCE=.validation/trade-resource/evidence/browser/offer-comparison -v "$PWD:$PWD" -w "$PWD" -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0="$PWD" dtos-browser-validation python -m unittest -v tests.test_account_activation_deferral tests.test_front_office_workflow_browser tests.test_recommended_protections_browser tests.test_offer_comparison tests.test_offer_comparison_browser tests.test_team_trade_need tests.test_team_trade_need_browser tests.test_00_trade_simple_browser tests.test_trade_actionability tests.test_trade_actionability_browser tests.test_trade_conditional_summary tests.test_trade_recommendation_clarity tests.test_batch5_recommended_browser tests.test_franchise_timeline_coverage tests.test_franchise_timeline_browser tests.test_trade_reserve_evidence tests.test_trade_lineup_detail tests.test_trade_lineup_detail_browser tests.test_trade_resource_admission tests.test_trade_resource_browser tests.test_multileague_projection_browser tests.test_relative_personal_values tests.test_relative_personal_browser tests.test_decision_history_continuity_browser tests.test_personal_rankings_compatibility tests.test_personal_rankings_recovery_storage tests.test_personal_rankings_recovery_trade tests.test_personal_rankings_recovery_browser tests.test_personal_rankings_recovery_trade_browser tests.test_personal_rankings_partial_browser tests.test_dossier_plain_english tests.test_plain_english_home_depth tests.test_builder_plain_english tests.test_plain_english_preservation_final tests.test_plain_english_final_browser tests.test_plain_english_decisions tests.test_plain_english_browser tests.test_personal_rankings_availability tests.test_personal_rankings_availability_browser tests.test_personal_rankings tests.test_personal_rankings_store tests.test_personal_rankings_integration tests.test_personal_trade_workflows tests.test_personal_rankings_browser tests.test_personal_rankings_accessibility_browser tests.test_personal_trade_browser tests.test_market_trend_current_browser tests.test_standings_positioning tests.test_standings_positioning_browser tests.test_matchup_portraits_browser tests.test_matchups_phone tests.test_matchups_phone_browser tests.test_trade_projection_freshness tests.test_trade_projection_freshness_browser tests.test_trade_preview_scope_browser tests.test_trade_simple_discovery tests.test_fois_final_trust_browser tests.test_fois_evidence_integrity tests.test_fois_trust_browser tests.test_proposal_tray_browser tests.test_journey_evidence tests.test_journey_corrections_browser tests.test_dossier_status_browser tests.test_phone_visual_corrections_browser tests.test_phone_design_semantics tests.test_phone_design_browser tests.test_trade_calculator tests.test_trade_calculator_browser tests.test_calculator_balance_feedback_browser tests.test_calculator_stale_feedback_browser tests.test_trade_explicit_navigation_browser tests.test_trade_navigation_identity tests.test_trade_navigation_browser tests.test_player_actions tests.test_player_actions_browser tests.test_trade_performance tests.test_trade_construction_performance tests.test_trade_performance_browser tests.test_technical_details_browser tests.test_canonical_asset_facts tests.test_canonical_asset_facts_browser tests.test_product_browser_journey tests.test_matchup_browser_contract tests.test_trade_center_browser tests.test_trade_scout_state_browser tests.test_make_it_cheaper_browser tests.test_trade_center_accessibility tests.test_trade_workspace_browser tests.test_trade_workspace_batch1 tests.test_live_inspection tests.test_browser_fixture_images tests.test_visual_retirement tests.test_trade_decision_experience tests.test_trade_decision_browser tests.test_trade_decision_http_browser tests.test_trade_decision_standings_browser tests.test_batch6_trade_ux tests.test_trade_p2_browser tests.test_trade_final_evidence_browser tests.test_trade_endorsement_integrity tests.test_trade_missing_market_presentation tests.test_batch6_trade_explanation tests.test_league_entry_coordination
+           docker run --rm --memory=2g --memory-swap=2g --cpus=2 --network=none -e NODE_OPTIONS -v "$PWD:$PWD" -w "$PWD" -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0="$PWD" dtos-browser-validation python -m unittest -v tests.test_historical_evidence_weeks tests.test_fois_final_trust tests.test_trade_time_market_evidence tests.test_trade_time_market_evidence_browser
+ 
+ 
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index 2cbed51..3cd0086 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -1,3 +1,15 @@
++# v1.22.31 / build 2246 — Follow through on a supported front-office action
++
++Home carries the existing current, prepared roster need into Trade Center's editable position filter, with the reason visible and starter needs distinguished from depth needs. The existing saved-goal priorities remain in force. Missing preparation is explained as missing evidence, rather than a weak roster or proof that no opportunity exists. Opening the action never starts a search.
++
++A completed Recommended search keeps its temporary exact-asset protections separate from the Evaluate draft. The displayed results retain the settings that produced them when controls change. Returning through browser Back restores selected comparison evidence as retained, with its original ordered packages and qualifications; viewing comparisons or a partner's completed-trade history does not recalculate an offer.
++
++Connected-league activation also preserves typed capacity deferral, private/no-store HTTP 503, Retry-After and manual retry guidance. Bounded authorized logs record already-calculated admission and cleanup facts without private payloads or extra preparation. This creates no additional capacity and does not establish Granite recovery or reconstruct earlier unlogged failures.
++
++The responsiveness test prepares its allocated fixture graph before the unchanged 100 ms request measurement. GC stays enabled, the real audit worker remains pending, and an actual blocking-request control still fails. Production GC, resource reserves, scoring, Sleeper-only fantasy results/projections, valuation formulas, Trade qualification, saved preferences and submitted lineups are unchanged.
++
++See docs/audits/FRONT_OFFICE_DECISION_2246.md and docs/audits/ACTIVATION_DEFERRAL_2246.md for source, fixture and live-evidence boundaries.
++
+ # v1.22.30 / build 2245 — Protect assets in Recommended Trades
+ 
+ Recommended Trades adds an editable, removable list of owned players and exact picks to protect before an explicit Generate action. The existing exact-identity constraint excludes these assets from outgoing packages, including exploratory offers. Another pick from the same year and round remains eligible. No search is started by opening or editing the controls.
+diff --git a/RELEASE_NOTES.md b/RELEASE_NOTES.md
+index 4c33b5c..1379649 100644
+--- a/RELEASE_NOTES.md
++++ b/RELEASE_NOTES.md
+@@ -1,3 +1,15 @@
++# v1.22.31 / build 2246 — Follow through on a supported front-office action
++
++Home carries the existing current, prepared roster need into Trade Center's editable position filter, with the reason visible and starter needs distinguished from depth needs. The existing saved-goal priorities remain in force. Missing preparation is explained as missing evidence, rather than a weak roster or proof that no opportunity exists. Opening the action never starts a search.
++
++A completed Recommended search keeps its temporary exact-asset protections separate from the Evaluate draft. The displayed results retain the settings that produced them when controls change. Returning through browser Back restores selected comparison evidence as retained, with its original ordered packages and qualifications; viewing comparisons or a partner's completed-trade history does not recalculate an offer.
++
++Connected-league activation also preserves typed capacity deferral, private/no-store HTTP 503, Retry-After and manual retry guidance. Bounded authorized logs record already-calculated admission and cleanup facts without private payloads or extra preparation. This creates no additional capacity and does not establish Granite recovery or reconstruct earlier unlogged failures.
++
++The responsiveness test prepares its allocated fixture graph before the unchanged 100 ms request measurement. GC stays enabled, the real audit worker remains pending, and an actual blocking-request control still fails. Production GC, resource reserves, scoring, Sleeper-only fantasy results/projections, valuation formulas, Trade qualification, saved preferences and submitted lineups are unchanged.
++
++See docs/audits/FRONT_OFFICE_DECISION_2246.md and docs/audits/ACTIVATION_DEFERRAL_2246.md for source, fixture and live-evidence boundaries.
++
+ # v1.22.30 / build 2245 — Protect assets in Recommended Trades
+ 
+ Recommended Trades adds an editable, removable list of owned players and exact picks to protect before an explicit Generate action. The existing exact-identity constraint excludes these assets from outgoing packages, including exploratory offers. Another pick from the same year and round remains eligible. No search is started by opening or editing the controls.
+diff --git a/app_metadata.py b/app_metadata.py
+index cb17e15..b15bf0d 100644
+--- a/app_metadata.py
++++ b/app_metadata.py
+@@ -7,10 +7,10 @@ from datetime import datetime, timezone
+ from pathlib import Path
+ 
+ APPLICATION_NAME = "DTOS"
+-VERSION = "1.22.30"
+-PRODUCT_VERSION = "1.22.30"
+-BUILD_NUMBER = 2245
+-RELEASE_CODENAME = "Temporary Search Protections"
++VERSION = "1.22.31"
++PRODUCT_VERSION = "1.22.31"
++BUILD_NUMBER = 2246
++RELEASE_CODENAME = "Truthful League Preparation"
+ APPLICATION_STARTED_AT = datetime.now(timezone.utc).isoformat()
+ 
+ _REPOSITORY_ROOT = Path(__file__).resolve().parent
+diff --git a/docs/audits/ACTIVATION_DEFERRAL_2246.md b/docs/audits/ACTIVATION_DEFERRAL_2246.md
+new file mode 100644
+index 0000000..cdb3c63
+--- /dev/null
++++ b/docs/audits/ACTIVATION_DEFERRAL_2246.md
+@@ -0,0 +1,27 @@
++# Connected-league activation deferral — build 2246
++
++## Verified baseline and incident evidence
++
++Production v1.22.30/build2245 at commit abbe723a0566cf84a8fff947cf7320cb66567a77, tree cf649ee06ec3228d51d251ce7afbdbb15866f398, was ready at the initial read-only check. Existing authorized Render logs for three November 10 activation failures show restoration starting, acquisition of cache_persistence and failure before meaningful restoration. The retained runtime status is DEFERRED. In the deployed manager, HeavyWorkDeferred and LeagueRuntimeDeferred take that path; other exceptions mark FAILED. Acquiring the cache phase excludes a lease conflict at that acquisition, but does not prove all other processes idle.
++
++Nearby queued serving-process samples report raw container usage about 1.50GB of 2GiB, inactive-file about599MB and anonymous about875MB. Those samples occurred after the request and are not the exact original guard inputs. The hosting working-set metric about902MB excludes memory included in raw cgroup usage and must not be substituted. No OOM was recorded. One intentionally pinned warm runtime and the deferred target were observed; nine source-generation keys do not imply nine resident copies. No eligible production runtime eviction or allocator leak is established.
++
++The supplied earlier cache size35,839,104bytes requires707,643,392bytes with the unchanged16x allowance and128MiB safety margin, before any FOIS outstanding demand. Applying that file size to a nearby raw sample gives a roughly60MiB deficit; this is an illustration using non-atomic historical inputs, not a recovered original admission decision or measured restoration peak. The retained logs do not expose the original exception traceback, guard inputs, cleanup count or reclaimed bytes. The existing private preflight is current advisory metadata, not historical reconstruction. New logging cannot retroactively fill these gaps.
++
++## Confirmed shared defect and narrow correction
++
++The activation handler caught the deferred subtype with all LeagueRuntimeError failures and returned a generic preparation-failed page/API status. It discarded existing deferral and cooldown semantics. Catching the subtype first retains the existing manager decision and safe retry path. The saved account selection is changed only after preparation succeeds, through the unchanged authorized/revision-checked store operation. Deferred requests neither activate the requested league nor run Trade searches. No automatic retry is introduced.
++
++A single prospective bounded log event records the already-calculated final restoration plan and already-performed cleanup counts. It reads no extra telemetry or source data, does not change the predicate, and is not an admission grant. Missing inputs remain unknown, negative measured headroom is preserved, and optional sink failure cannot authorize or abort restoration. Exception logs use the existing safe type/location helper without messages, locals or payloads. No file paths, account/player identifiers or private cache contents are logged by the new event.
++
++## Deterministic acceptance and limitations
++
++Disposable authenticated route controls reproduce the original misleading response and verify the corrected HTML/API result, sixty-second retry guidance, cooldown, no duplicate hydration, unknown-memory deferral, real lease contention, actual guarded safe retry, incompatible publication failure, authorization and unchanged account selection. Phone controls submit the actual league form at320x432,375x667,390x844 and1280x900, verify no overflow, visible feedback, focus and return navigation. Modelled telemetry controls are not measured production pressure. A small compatible real restore proves execution but is not the private Granite payload or a representative restoration demand study.
++
++The existing enforced2GiB lifecycle suites still require actual safe restoration, unsafe pressure deferral, FOIS outstanding-reserve protection, recovery, worker exit, scratch cleanup and server liveness. Full canonical and hosted results, exact source tree, original logs and checksums are recorded externally. Failed commands and earlier assertions remain distinct. Physical iPhone/Safari and owner authenticated live entry/search are not implied by fixture controls.
++
++## Preserved policy and customer outcome
++
++No memory optimization or reserve reduction is made:2GiB effective cap,16x restoration allowance,FOIS768MiB,Trade256+128MiB, raw cgroup accounting, admission rechecks, lifecycle ownership and bounded cleanup are unchanged. Pinned or active contexts are not evicted; inactive-file memory is not arbitrarily credited. Cache compatibility, Sleeper-only scores/projections, explicit zero/negative/missing values, exact picks, neutral/Custom valuations, Trade bilateral thresholds, saved settings and submitted lineups retain their existing behavior.
++
++This release makes a deferred attempt truthful and diagnosable. It does not resolve sustained capacity pressure, establish the original exact allocation, or promise Granite entry. Read-only live entry/search require fresh safe admission and an existing authorized session; stop on deferral. No forced sync, cache clear, restart, FOIS rebuild, Trade search or production preference mutation is performed for publication.
+diff --git a/docs/audits/FRONT_OFFICE_DECISION_2246.md b/docs/audits/FRONT_OFFICE_DECISION_2246.md
+new file mode 100644
+index 0000000..e60ae45
+--- /dev/null
++++ b/docs/audits/FRONT_OFFICE_DECISION_2246.md
+@@ -0,0 +1,29 @@
++# Front office decision follow-through — build 2246
++
++This update extends the existing Front Office Brief, prepared My Team need handoff, Trade workspace, exact protections, comparisons and franchise-history view. It adds no parallel navigation or recommendation engine.
++
++## Confirmed boundaries and corrections
++
++- Home previously sent every diagnosed position to Depth and followed dictionary insertion order within needs. The existing `prepared_need` selector already admits a matching current league/franchise/week/generation and prioritizes a starter need before depth. Reuse its fingerprinted handoff and editable filter; provisional or unmatched evidence keeps the ordinary inspection link.
++- A saved goal with no prepared sources previously yielded an empty brief indistinguishable from no actionable opportunities. An informational preparation action names the evidence gap without converting it into roster weakness or starting preparation on Home.
++- Recommended's completed response previously copied search-only protected assets into the legacy draft constraint list. Clearing search controls could leave an unrelated Evaluate offer blocked. Preserve the applied search snapshot while keeping these two state boundaries separate.
++- Reload qualified comparison snapshots as retained, but persisted-page Back did not. Restore each context and retained label on that path too; preserve ordered packages and refresh only the existing display.
++- Existing account activation caught the deferred subtype as a generic preparation error. Preserve typed waiting and already-supported retry semantics; prospective logs use only the guard plan/cleanup values already calculated.
++
++## Responsiveness validation
++
++The earlier complete local run failed its unchanged 100 ms lightweight-request assertion at 157.623 ms. It remains failed; an isolated passing rerun is not release acceptance. A matched rooted, GC-tracked old-heap control reproduced a 186.369 ms failure including 184.088 ms automatic generation-1 collection before the lightweight ASGI handler. Explicit setup collection before the timer yielded a 1.475 ms request with the same retained graph, enabled/default GC and genuinely pending audit worker. A real 120 ms blocking handler still failed at 121.965 ms. No timeout, worker wait or threshold changed. This demonstrates a causal fixture mechanism; it cannot retroactively prove an unrecorded GC event in the historical 157.623 ms sample.
++
++The narrow test change settles setup allocations outside the measured request. It does not change production garbage collection, claim general application latency improved or replace the required final full local canonical run. Original failing traces, setup/negative controls and full-suite results remain separately identified.
++
++## Required final acceptance
++
++Exercise the complete existing Home → editable Trade need → explicit protected search → two independently prepared evaluations/keep-roster comparison → partner history → contextual return journey in one-QB/FLEX/K/DEF and Superflex fixtures. Record actual outgoing identities and qualified versus exploratory outcomes. No results is legitimate and cannot prove protection exclusion. Check controls, changed/applied settings, reload, Back, replacement/removal, league switching, keyboard/touch and 320×432, 375×667, 390×844 and desktop layouts. Opening pages or disclosures must not start unrequested heavy work.
++
++A release requires the full canonical ten-gate validator, all required hosted jobs, native resource/lifecycle controls, exact source/tree and original artifact integrity, and the guarded Actions publisher. Counts and outcomes belong in the completed evidence, not inferred from this document.
++
++## Live limits and preserved contracts
++
++Use only existing authorized owner access and fresh resource evidence for one conditional normal league entry and one explicit protected search. Stop on deferral. Do not force synchronization, clear caches, restart services or manufacture a returned offer. Fixture/replay behavior is separate from live owner acceptance and physical iPhone/Safari testing.
++
++The effective 2 GiB cap, 16× restoration allowance, FOIS 768 MiB and Trade 256+128 MiB reserves, lifecycle ownership and admission rechecks remain unchanged. Preserve source identity, exact pick/original-franchise ownership, account scope, saved rankings/goals/method, Neutral/Custom independence, independent legal pre/post analytical lineups, submitted Sleeper lineups and historical FOIS qualifications. Historical tendencies describe observed records, not present private intent.
+diff --git a/routes/accounts.py b/routes/accounts.py
+index 45a759c..f721a37 100644
+--- a/routes/accounts.py
++++ b/routes/accounts.py
+@@ -13,8 +13,9 @@ from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, Resp
+ 
+ from config import SESSION_COOKIE_SECURE, SESSION_TTL_HOURS
+ from src.core.accounts import AccountService
+-from src.core.league_runtime import LeagueRuntimeError
++from src.core.league_runtime import LeagueRuntimeDeferred, LeagueRuntimeError
+ from src.platform.account_context import SESSION_COOKIE, current_account
++from src.platform.runtime_errors import PRIVATE_HEADERS, log_runtime_failure, runtime_error_response
+ from src.ui.design_system import DESIGN_SYSTEM_CSS, account_page_header
+ 
+ 
+@@ -50,6 +51,15 @@ def _preparation_unavailable() -> HTMLResponse:
+     return _shell("League preparation unavailable", '<section class="card"><h2>League preparation did not finish.</h2><p>Your saved account and active league are unchanged. Return to your leagues and try again shortly.</p><a class="btn" href="/account/leagues">Your leagues</a></section>', status_code=503)
+ 
+ 
++def _preparation_waiting() -> HTMLResponse:
++    response = _shell("League preparation waiting", '<section class="card"><h2>League preparation is waiting</h2>'
++                      '<p>DTOS is waiting for safe capacity before preparing this league. Another preparation task may still be active.</p>'
++                      '<p>Your saved choices were not changed by this attempt. Wait about a minute, then retry from Your leagues. Capacity is checked again on each manual attempt.</p>'
++                      '<p>No Trade search has run.</p><a class="btn" href="/account/leagues">Your leagues</a></section>', status_code=503)
++    response.headers.update({**PRIVATE_HEADERS, "Retry-After": "60"})
++    return response
++
++
+ def _unmatched_franchise() -> HTMLResponse:
+     return _shell("Review team mapping", '<section class="card"><h1>We found the league, but could not confidently match your team.</h1><p>DTOS did not guess or create ownership. Your saved leagues and active league are unchanged.</p><p>Return to your connected leagues, or review the linked Sleeper identity. You can retry the import after the identity or Sleeper league membership is corrected.</p><div class="grid"><a class="btn" href="/account/leagues">Your leagues</a><a class="btn" href="/account/sleeper">Review Sleeper identity</a></div></section>')
+ 
+@@ -173,7 +183,13 @@ def create_accounts_router(*, service: AccountService, runtime_manager: Any) ->
+             return JSONResponse({"status": "unauthorized_league"}, status_code=403)
+         try:
+             await runtime_manager.get(league_id)
+-        except (httpx.HTTPError, LeagueRuntimeError):
++        except LeagueRuntimeDeferred as exc:
++            # Preserve the existing manager's typed outcome, cooldown and
++            # admission policy. The safe logger records locations, not messages.
++            log_runtime_failure(exc.__cause__ or exc, operation="activation_deferred", status=503)
++            return runtime_error_response(503, deferred=True) if api else _preparation_waiting()
++        except (httpx.HTTPError, LeagueRuntimeError) as exc:
++            log_runtime_failure(exc, operation="activation_preparation", status=503)
+             if api:
+                 return JSONResponse({"status": "league_preparation_unavailable", "message": "League preparation did not finish. Your active league is unchanged. Try again shortly."}, status_code=503)
+             return _preparation_unavailable()
+diff --git a/services/front_office_brief.py b/services/front_office_brief.py
+index d79fd0d..c74409d 100644
+--- a/services/front_office_brief.py
++++ b/services/front_office_brief.py
+@@ -5,6 +5,7 @@ across goals. Each family admits its own evidence, independently of Market.
+ """
+ from math import isfinite
+ 
++from services.team_trade_need import prepared_need
+ from src.core.intelligence import intelligence_orchestrator
+ from src.core.intelligence.roster_diagnostics import prepared_diagnostics
+ from src.core.intelligence.team_strength import compatible_profile
+@@ -23,10 +24,12 @@ def prepared_evidence(data, roster_id, strategy, *, market_compatible=False):
+                        or assessment.generation != context.evidence_generation):
+         assessment = None
+     diagnostics = prepared_diagnostics(data, context.projection_snapshot)
++    trade_need = prepared_need(data, roster_id, diagnostics) if diagnostics else None
+     return {'league_id': context.league_id, 'roster_id': roster_id,
+             'strategy': strategy if strategy in {'WIN NOW', 'REBUILD', 'RETOOL'} else '',
+             'generation': context.evidence_generation, 'assessment': assessment,
+             'market_compatible': market_compatible,
++            'trade_need': trade_need,
+             'diagnostics': diagnostics, 'strength': compatible_profile(data, context.projection_snapshot),
+             'week': data.get('week'), 'league_name': context.league.get('name') or 'Selected league'}
+ 
+@@ -52,6 +55,7 @@ def select_insights(facts, attention, offers):
+     diagnostics = facts.get('diagnostics') or {}
+     own = (diagnostics.get('teams') or {}).get(str(rid)) or {}
+     positions = own.get('positions') or {}
++    trade_need = facts.get('trade_need') or {}
+     profile = facts.get('strength') or {}
+     strength = (profile.get('teams') or {}).get(str(rid)) or {}
+     weekly = (strength.get('weekly') or {}).get(str(facts['week'])) or (strength.get('weekly') or {}).get(facts['week']) or {}
+@@ -65,17 +69,21 @@ def select_insights(facts, attention, offers):
+         provisional = d.get('conclusion_state') != 'current'
+         qualifier = 'Provisional: ' if provisional else ''
+         issue = f'position:{pos}'
++        starter = d.get('starter_need')
+         quality = d.get('quality_depth_need')
+-        if quality or d.get('resilience_need') or d.get('starter_need'):
+-            title = (f'{pos} replacement production needs review' if quality else
+-                     f'{pos} backup cover needs review' if d.get('resilience_need') else
+-                     f'A supported {pos} addition could improve the lineup')
++        if quality or d.get('resilience_need') or starter:
++            title = (f'A supported {pos} addition could improve the lineup' if starter else
++                     f'{pos} replacement production needs review' if quality else
++                     f'{pos} backup cover needs review')
+             reason = context + (d.get('base_reason') or 'Supported starting-lineup and backup comparisons show room to improve.')
+             drawback = ('This is a current production gap, not evidence to buy an aging starter under REBUILD.'
+                         if goal == 'REBUILD' else
+                         'An upgrade has a Market and capital cost; this is not an endorsed trade.')
++            handoff = not provisional and trade_need.get('position') == pos
+             candidates.append(_item(issue, 'need', qualifier + title, reason, drawback,
+-                'Review replacement depth', team_url + '#positional-depth', issues=[issue],
++                f'Explore {pos} trades' if handoff else 'Review replacement depth',
++                trade_need['href'] if handoff else team_url + '#positional-depth', issues=[issue],
++                priority=0 if handoff else 1 if starter and not provisional else 2 if not provisional else 3,
+                 details=[*own.get('limitations', []), *evidence.get('limitations', [])]))
+         elif d.get('disjoint_reserve_ids') and any(_number(v) for v in d.get('observed_replacement_points') or []):
+             # Useful reserve evidence is not permission to sell; use supported
+@@ -150,11 +158,16 @@ def select_insights(facts, attention, offers):
+             'DTOS cannot determine whether to contend, retool or rebuild from the available evidence. Choose your goal to guide trade suggestions.',
+             'Market prices and projected starting-lineup points remain unchanged when you choose a goal.',
+             'Choose your goal', team_url + '#my-team-strategy'))
+-    precedence = {'WIN NOW': ['need', 'offer', 'attention', 'depth', 'capital'],
+-                  'REBUILD': ['capital', 'offer', 'attention', 'need', 'depth'],
+-                  'RETOOL': ['need', 'offer', 'depth', 'capital', 'attention'],
+-                  '': ['attention', 'goal', 'need', 'capital', 'depth', 'offer']}[goal]
+-    ordered = sorted(candidates + trade_items, key=lambda i: precedence.index(i['family']))
++    if assessment is None and not diagnostics and not profile:
++        candidates.append(_item('preparation', 'preparation', 'Prepare your current roster assessment',
++            'A compatible roster assessment has not been prepared for this league, week and goal. Open My Team to prepare the evidence.',
++            'Missing preparation is not evidence of roster weakness or a lack of opportunities. Opening My Team does not start a trade search or change your goal.',
++            'Open My Team', team_url))
++    precedence = {'WIN NOW': ['need', 'offer', 'attention', 'depth', 'capital', 'preparation'],
++                  'REBUILD': ['capital', 'offer', 'attention', 'need', 'depth', 'preparation'],
++                  'RETOOL': ['need', 'offer', 'depth', 'capital', 'attention', 'preparation'],
++                  '': ['attention', 'goal', 'need', 'capital', 'depth', 'offer', 'preparation']}[goal]
++    ordered = sorted(candidates + trade_items, key=lambda i: (precedence.index(i['family']), i.get('priority', 0)))
+     selected, seen, concerns = [], set(), set()
+     for item in ordered:
+         if item['key'] in seen or (item['issues'] and set(item['issues']).issubset(concerns)):
+diff --git a/services/league_preparation.py b/services/league_preparation.py
+index 8d0397b..c62312f 100644
+--- a/services/league_preparation.py
++++ b/services/league_preparation.py
+@@ -18,6 +18,7 @@ from src.platform.cache_budget import JSON_BUDGET, reusable
+ from src.platform.cache_json import load_cache_json
+ from src.platform.lifecycle import HeavyWorkDeferred, lifecycle_coordinator, memory_snapshot
+ from src.platform.memory_reclamation import reclaim_unused_analytical_memory
++from src.platform.runtime_errors import log_restoration_admission
+ from src.platform.fois_admission import (
+     WORKING_RESERVE_BYTES as FOIS_WORKING, SAFETY_MARGIN_BYTES as FOIS_SAFETY,
+ )
+@@ -70,6 +71,7 @@ def restore_cached_runtime(runtime: LeagueRuntime, publish: Callable[[LeagueRunt
+                         or not 0 <= time.time() - stat.st_mtime <= JSON_BUDGET.maximum_age_seconds):
+                     raise ValueError('Saved publication outside retention policy')
+                 sample = memory_snapshot()
++                recovery = None
+                 # Existing FOIS allocations are already in cgroup current, but
+                 # its outstanding demand is not. Do not spend the analytical
+                 # owner's reserve on a newly decoded league. No RSS subtraction
+@@ -109,6 +111,8 @@ def restore_cached_runtime(runtime: LeagueRuntime, publish: Callable[[LeagueRunt
+                                     required_bytes=plan['required_bytes'],
+                                     would_admit=plan['would_admit'])
+                     runtime.lifecycle['cache_restore_memory_recovery'] = recovery
++                log_restoration_admission(file_bytes=stat.st_size, memory=sample,
++                                          plan=plan, recovery=recovery)
+                 if plan['would_admit'] is not True:
+                     raise HeavyWorkDeferred('Saved league preparation is waiting for safe memory headroom.')
+                 payload = load_cache_json(handle)
+diff --git a/src/platform/runtime_errors.py b/src/platform/runtime_errors.py
+index 945252a..34a0ebe 100644
+--- a/src/platform/runtime_errors.py
++++ b/src/platform/runtime_errors.py
+@@ -2,6 +2,7 @@
+ from __future__ import annotations
+ 
+ from collections import deque
++from collections.abc import Mapping
+ import logging
+ from pathlib import PurePath
+ import traceback
+@@ -56,6 +57,66 @@ def log_sync_failure(exc: Exception, *, operation: str) -> None:
+     _log_failure(exc, event="synchronization_failure", operation=operation)
+ 
+ 
++def log_restoration_admission(*, file_bytes: Any, memory: Any, plan: Any,
++                              recovery: Any = None) -> None:
++    """One best-effort bounded record of existing guard inputs, never a guard.
++
++    No new measurement, source read, path, identifier or exception message.
++    Missing records (including a full logging queue) establish nothing about
++    admission or cleanup. Only the caller's unchanged predicate grants work.
++    """
++    from src.platform.observability import request_id_context
++
++    sample = memory if isinstance(memory, Mapping) else {}
++    decision = plan if isinstance(plan, Mapping) else {}
++    reclaimed = recovery if isinstance(recovery, Mapping) else {}
++
++    def number(value):
++        return value if type(value) is int and value >= 0 else None
++
++    def boolean(value):
++        return value if type(value) is bool else None
++
++    reason = decision.get('reason')
++    diagnostic = {
++        'schema': 'cache-restoration-admission-v1',
++        'scope': 'existing_guard_inputs_not_atomic',
++        'file_bytes': number(file_bytes),
++        'current_bytes': number(sample.get('cgroup_current_bytes')),
++        'limit_bytes': number(sample.get('cgroup_limit_bytes')),
++        'anonymous_bytes': number(sample.get('cgroup_anonymous_bytes')),
++        'inactive_file_bytes': number(sample.get('cgroup_inactive_file_bytes')),
++        'reason': reason if isinstance(reason, str) and reason in {
++            'sufficient_headroom', 'insufficient_headroom', 'unknown_file_size',
++            'unknown_reservation', 'unknown_memory',
++        } else None,
++        'would_admit': boolean(decision.get('would_admit')),
++        'headroom_bytes': decision.get('headroom_bytes') if type(decision.get('headroom_bytes')) is int else None,
++        **{key: number(decision.get(key)) for key in (
++            'effective_limit_bytes', 'working_bytes',
++            'safety_bytes', 'fois_working_bytes', 'fois_safety_bytes', 'required_bytes',
++        )},
++        'cleanup': {
++            'attempted': reclaimed.get('attempted') is True,
++            **{key: number(reclaimed.get(key)) for key in (
++                'before_bytes', 'after_bytes', 'expired_entries',
++            )},
++            **{key: boolean(reclaimed.get(key)) for key in (
++                'idle_worker_retired', 'allocator_trimmed', 'cleanup_unavailable',
++            )},
++        },
++    }
++    try:
++        logging.getLogger('dtos.request').info('cache_restoration_admission', extra={
++            'event': 'cache_restoration_admission', 'request_id': request_id_context.get(),
++            'diagnostic': diagnostic,
++        })
++    except (OSError, ValueError, TypeError, RuntimeError):
++        # Optional telemetry must not turn a capacity deferral into a source
++        # failure/fallback. The caller still executes its exact existing guard.
++        pass
++
++
+ def customer_runtime_health(payload: dict[str, Any]) -> dict[str, Any]:
+     """Preserve health facts without reflecting a cached acquisition exception."""
+     result = dict(payload)
+diff --git a/src/ui/front_office_brief.py b/src/ui/front_office_brief.py
+index 337e258..5f5342f 100644
+--- a/src/ui/front_office_brief.py
++++ b/src/ui/front_office_brief.py
+@@ -15,7 +15,8 @@ def cards(items):
+             output.append(offer_cards([row], item['roster_id']))
+             continue
+         details = ''.join('<p>' + escape(str(line)) + '</p>' for line in item['details'] if line)
+-        label = 'Evidence limit' if item['family'] == 'attention' else 'Keep in mind'
++        label = ('Evidence limit' if item['family'] == 'attention' else
++                 'Cost and uncertainty' if item['family'] in {'need', 'depth', 'capital'} else 'Keep in mind')
+         output.append(f'''<article class="home-brief-insight" data-brief-family="{escape(item['family'])}"><h3>{escape(item['title'])}</h3><p><b>Why:</b> {escape(item['reason'])}</p><p><b>{label}:</b> {escape(item['drawback'])}</p><a class="ds-action" href="{escape(item['href'], quote=True)}">{escape(item['action'])} →</a>''' +
+                       (f'<details><summary>Supporting evidence</summary>{details}</details>' if details else '') + '</article>')
+     return ''.join(output[:2]) + ('<details class="ds-home-detail" id="home-brief-more"><summary>More Front Office insights</summary>' + ''.join(output[2:]) + '</details>' if len(output) > 2 else '')
+diff --git a/static/js/trade_workspace.js b/static/js/trade_workspace.js
+index 13d847c..16b105e 100644
+--- a/static/js/trade_workspace.js
++++ b/static/js/trade_workspace.js
+@@ -1586,7 +1586,10 @@
+       if (path === 'generate' && flow === 'recommended') hasDiscovered = true;
+       observeEvidence(body);
+       if (path === 'evaluate' && !body.evaluation?.recommendation && !body.evaluation?.explanation_html) throw new Error('Evaluation incomplete. Retained assessment is not revalidated; try Reevaluate Trade again.');
+-      for (const id of body.constraints?.protected_assets || []) addLock('protectedAssets', id);
++      // Recommended search protections belong to that search's retained
++      // settings, not to the independent Evaluate/Shop adjustment locks.
++      if (!(path === 'generate' && flow === 'recommended'))
++        for (const id of body.constraints?.protected_assets || []) addLock('protectedAssets', id);
+       for (const id of body.constraints?.excluded_assets || []) if (!temporaryPickExclusions.has(id)) addLock('excludedAssets', id);
+       if (path === 'assist') {
+         const lostTarget = body.results?.some(row => selected.received.some(id => !row.proposal.assets_received.includes(id)));
+@@ -1774,6 +1777,8 @@
+         }
+         if (session.currentAssessment) { session.currentAssessment = restoreContext(session.currentAssessment); showEvaluation(session.currentAssessment.evaluation || {}, session.currentAssessment.opportunity, session.currentAssessment); }
+         if (session.previewProposal) { if (session.previewProposal.preview_context) session.previewProposal.preview_context = restoreContext(session.previewProposal.preview_context); previewOffer({proposal: session.previewProposal}); }
++        session.comparisonOffers = session.comparisonOffers.map(row => ({...row, retained: true, context: restoreContext(row.context || {})}));
++        comparison?.refresh();
+         persist();
+       }
+     }
+diff --git a/tests/test_account_activation_deferral.py b/tests/test_account_activation_deferral.py
+new file mode 100644
+index 0000000..940a2b1
+--- /dev/null
++++ b/tests/test_account_activation_deferral.py
+@@ -0,0 +1,242 @@
++"""Typed activation outcomes through real routes, restoration and ownership."""
++from datetime import datetime, timezone
++import json
++import logging
++import os
++from pathlib import Path
++import subprocess
++from time import monotonic
++import unittest
++from unittest.mock import Mock, patch
++
++from services import league_preparation as preparation
++from src.core.league_runtime import LeagueRuntime, LeagueRuntimeError, RuntimeState
++from src.platform import runtime_errors
++from src.platform.lifecycle import HeavyWorkDeferred, lifecycle_coordinator
++from tests import test_cold_league_recovery as cold
++from tests.test_import_commissioner_integrity import snapshot
++from tests.test_league_runtime import league_data
++
++LIMIT = 2 * 1024**3
++
++
++def record(name, observations, page=None):
++    target = os.environ.get('DTOS_ACTIVATION_EVIDENCE')
++    if not target:
++        return
++    path = Path(target)
++    path.mkdir(parents=True, exist_ok=True)
++    meta = dict(commit=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),
++                tree=subprocess.check_output(['git','rev-parse','HEAD^{tree}'],text=True).strip(),
++                working_tree_clean=not subprocess.check_output(['git','status','--porcelain'],text=True).strip(),
++                physical_safari_tested=False, scope='Disposable authenticated native route/manager/guard controls; modeled telemetry identified, not live Granite',
++                observations=observations)
++    (path/(name+'.json')).write_text(json.dumps(meta,indent=2)+'\n')
++    if page:
++        page.screenshot(path=str(path/(name+'.png')),full_page=True)
++
++
++class ActivationDeferralHTTPTests(unittest.TestCase):
++    upstream = cold.ColdLeagueRecoveryTests.upstream
++
++    def setUp(self):
++        cold.ColdLeagueRecoveryTests.setUp(self)
++        self.store.activate(self.account,'100')
++        self.path = Path(self.folder.name)/'prepared.json'
++        self.path.write_text(json.dumps({'data':league_data('200'),'last_sync':datetime.now(timezone.utc).isoformat()}))
++        self.enterContext(patch.object(preparation,'league_cache_file',return_value=self.path))
++        self.hydrations = []
++        async def hydrate(runtime):
++            self.hydrations.append(runtime.league_id)
++            if not await preparation.restore_cached_runtime_owned(runtime,lambda _:None,expected_season=2026):
++                raise LeagueRuntimeError('private incompatible publication details')
++            return runtime.state['data']
++        self.manager._hydrator = hydrate
++
++    def post(self,api=False):
++        if api:
++            return self.client.post('/api/account/active-league',json={'league_id':'200'},headers={'X-CSRF-Token':self.csrf})
++        return self.client.post('/account/leagues/200/activate',data={'csrf_token':self.csrf},follow_redirects=False)
++
++    def test_memory_deferral_stays_typed_in_html_and_api(self):
++        before = snapshot(self.store)
++        with patch.object(preparation,'memory_snapshot',return_value={'cgroup_current_bytes':LIMIT-200*1024**2,'cgroup_limit_bytes':LIMIT}), patch.object(preparation,'load_cache_json') as decode:
++            html,api = self.post(),self.post(True)
++            decode.assert_not_called()
++        self.assertEqual((html.status_code,api.status_code),(503,503))
++        self.assertIn('League preparation is waiting',html.text)
++        self.assertNotIn('League preparation did not finish',html.text)
++        self.assertIn('minute',html.text)
++        self.assertIn('No Trade search',html.text)
++        self.assertEqual((api.json()['status'],api.json()['code']),('deferred','league_preparation_waiting'))
++        for response in (html,api):
++            self.assertEqual(response.headers['retry-after'],'60')
++            self.assertIn('no-store',response.headers['cache-control'])
++            self.assertIn('private',response.headers['cache-control'])
++        self.assertEqual(snapshot(self.store),before)
++        self.assertEqual(self.hydrations,['200'])
++        self.assertEqual(self.manager.resident('200').status,RuntimeState.DEFERRED)
++        self.assertEqual(self.source_requests,[])
++        record('typed-capacity',dict(html=503,api=api.json(),retry_after='60',modeled_headroom_bytes=200*1024**2,
++               account_unchanged=True,source_requests=0,actual_hydrations=1))
++
++    def test_cooldown_never_repeats_restoration_or_changes_account(self):
++        before = snapshot(self.store)
++        with patch.object(preparation,'memory_snapshot',return_value={'cgroup_current_bytes':LIMIT-200*1024**2,'cgroup_limit_bytes':LIMIT}), patch.object(preparation,'reclaim_unused_analytical_memory',return_value={}) as cleanup:
++            first,second = self.post(),self.post()
++        self.assertEqual((first.status_code,second.status_code),(503,503))
++        self.assertEqual(second.headers.get('retry-after'),'60')
++        self.assertEqual(self.hydrations,['200'])
++        cleanup.assert_called_once_with()
++        self.assertEqual(snapshot(self.store),before)
++
++    def test_unknown_memory_and_real_lease_conflict_remain_deferred(self):
++        before = snapshot(self.store)
++        with patch.object(preparation,'memory_snapshot',return_value={}), patch.object(preparation,'load_cache_json') as decode, patch.object(preparation,'reclaim_unused_analytical_memory') as cleanup:
++            response = self.post(True)
++            decode.assert_not_called()
++            cleanup.assert_not_called()
++        self.assertEqual(response.json()['status'],'deferred')
++        with patch('src.core.league_runtime.manager.monotonic',return_value=monotonic()+61), lifecycle_coordinator.phase('sleeper_sync'), patch.object(preparation,'load_cache_json') as decode:
++            response = self.post(True)
++            decode.assert_not_called()
++        self.assertEqual(response.json()['status'],'deferred')
++        self.assertEqual(self.manager.resident('200').status,RuntimeState.DEFERRED)
++        self.assertEqual(snapshot(self.store),before)
++
++    def test_real_safe_restore_and_explicit_retry_can_activate(self):
++        with lifecycle_coordinator.phase('sleeper_sync'):
++            self.assertEqual(self.post().status_code,503)
++        with patch('src.core.league_runtime.manager.monotonic',return_value=monotonic()+61):
++            response = self.post()
++        self.assertEqual(response.status_code,303,response.text)
++        self.assertEqual(self.store.context_for_session(self.token).active_league_id,'200')
++        self.assertEqual(self.manager.resident('200').status,RuntimeState.WARM)
++        self.assertEqual(self.manager.resident('200').state['data'],league_data('200'))
++        self.assertEqual(self.hydrations,['200','200'])
++        self.assertEqual(self.source_requests,[])
++        record('real-recovery',dict(initial=503,explicit_retry=303,warm=True,source_values_preserved=True,source_requests=0,
++               limitation='Small compatible fixture, actual enforced memory telemetry; not private Granite payload or live acceptance'))
++
++    def test_incompatible_failure_stays_distinct_and_private(self):
++        payload = json.loads(self.path.read_text())
++        payload['data']['league']['league_id'] = '300'
++        self.path.write_text(json.dumps(payload))
++        before = snapshot(self.store)
++        response = self.post(True)
++        self.assertEqual(response.status_code,503)
++        self.assertNotEqual(response.json()['status'],'deferred')
++        self.assertNotIn('private incompatible',response.text)
++        self.assertNotIn('retry-after',response.headers)
++        self.assertEqual(self.manager.resident('200').status,RuntimeState.FAILED)
++        self.assertEqual(snapshot(self.store),before)
++        self.assertEqual(self.source_requests,[])
++
++    def test_foreign_league_rejected_before_preparation(self):
++        before = snapshot(self.store)
++        response = self.client.post('/account/leagues/999/activate',data={'csrf_token':self.csrf})
++        self.assertEqual(response.status_code,403)
++        self.assertEqual(self.hydrations,[])
++        self.assertEqual(snapshot(self.store),before)
++
++    def test_cause_location_is_logged_without_exception_message(self):
++        with patch.object(preparation,'memory_snapshot',return_value={}), self.assertLogs('dtos.request',level='WARNING') as logs:
++            self.post()
++        failures = [r for r in logs.records if getattr(r,'event',None)=='league_runtime_failure']
++        self.assertEqual(len(failures),1)
++        diag = failures[0].diagnostic
++        self.assertEqual((diag['operation'],diag['exception_type']),('activation_deferred','HeavyWorkDeferred'))
++        self.assertTrue(any(r['file']=='league_preparation.py' and r['function']=='restore_cached_runtime' for r in diag['frames']))
++        self.assertNotIn('Saved league preparation',str(diag))
++        self.assertNotIn(self.token,str(diag))
++
++
++class AdmissionLogTests(unittest.TestCase):
++    def test_final_existing_plan_and_actual_cleanup_counts_are_bounded(self):
++        from src.platform.cache_restoration_admission import restoration_admission
++        from src.platform.fois_admission import WORKING_RESERVE_BYTES,SAFETY_MARGIN_BYTES
++        memory = dict(cgroup_current_bytes=1502986240,cgroup_limit_bytes=LIMIT,cgroup_anonymous_bytes=875569152,
++                      cgroup_inactive_file_bytes=599330816,secret='private source payload')
++        plan = restoration_admission(35839104,memory,False,fois_working_bytes=WORKING_RESERVE_BYTES,fois_safety_bytes=SAFETY_MARGIN_BYTES)
++        recovery = dict(attempted=True,before_bytes=1503500000,after_bytes=1502986240,expired_entries=0,
++                        idle_worker_retired=False,allocator_trimmed=True,secret='private cleanup detail')
++        with self.assertLogs('dtos.request',level='INFO') as logs:
++            runtime_errors.log_restoration_admission(file_bytes=35839104,memory=memory,plan=plan,recovery=recovery)
++        self.assertEqual(len(logs.records),1)
++        diag = logs.records[0].diagnostic
++        self.assertEqual(diag['reason'],'insufficient_headroom')
++        self.assertEqual(diag['required_bytes'],707643392)
++        self.assertEqual(diag['headroom_bytes'],LIMIT-memory['cgroup_current_bytes'])
++        self.assertEqual(diag['cleanup']['expired_entries'],0)
++        self.assertEqual(diag['cleanup']['before_bytes'],recovery['before_bytes'])
++        self.assertEqual(diag['cleanup']['after_bytes'],recovery['after_bytes'])
++        self.assertFalse(diag['would_admit'])
++        self.assertNotIn('private',json.dumps(diag))
++        self.assertNotIn('secret',json.dumps(diag))
++        self.assertLess(len(json.dumps(diag)),2048)
++
++    def test_unknown_inputs_remain_unknown(self):
++        with self.assertLogs('dtos.request',level='INFO') as logs:
++            runtime_errors.log_restoration_admission(file_bytes=True,memory={'cgroup_current_bytes':True},plan={'reason':'private reason'})
++        diag = logs.records[0].diagnostic
++        for key in ['file_bytes','current_bytes','would_admit','reason']:
++            self.assertIsNone(diag[key])
++        self.assertFalse(diag['cleanup']['attempted'])
++        self.assertIsNone(diag['cleanup']['expired_entries'])
++
++    def test_known_negative_headroom_is_preserved(self):
++        with self.assertLogs('dtos.request',level='INFO') as logs:
++            runtime_errors.log_restoration_admission(file_bytes=0,memory={},plan={'headroom_bytes':-1,'reason':'insufficient_headroom','would_admit':False})
++        self.assertEqual(logs.records[0].diagnostic['headroom_bytes'],-1)
++
++    def test_optional_sink_failure_cannot_change_admission(self):
++        from tests import test_league_entry_coordination as entry
++        helper = entry.CachedPublicationTests()
++        helper.setUp()
++        self.addCleanup(helper.doCleanups)
++        with patch.object(preparation,'memory_snapshot',return_value={}), patch.object(logging.getLogger('dtos.request'),'info',side_effect=OSError('sink unavailable')), patch.object(preparation,'load_cache_json') as decode:
++            with self.assertRaises(HeavyWorkDeferred):
++                preparation.restore_cached_runtime(LeagueRuntime('200'),Mock())
++            decode.assert_not_called()
++
++
++class ActivationDeferralPhoneTests(unittest.TestCase):
++    setUp = cold.ColdLeagueRecoveryTests.setUp
++    upstream = cold.ColdLeagueRecoveryTests.upstream
++
++    def test_normal_form_is_accessible_and_never_retries_automatically(self):
++        self.store.activate(self.account,'100')
++        self.discovery_failed = True
++        path = Path(self.folder.name)/'phone-cache.json'
++        path.write_text(json.dumps({'data':league_data('200'),'last_sync':datetime.now(timezone.utc).isoformat()}))
++        self.enterContext(patch.object(preparation,'league_cache_file',return_value=path))
++        before = snapshot(self.store)
++        rows = []
++        with lifecycle_coordinator.phase('sleeper_sync'):
++            for width,height in ((320,432),(375,667),(390,844),(1280,900)):
++                with cold.onboarding.PublicOnboardingTests.browser(self,width,height) as page:
++                    page.goto(self.origin+'/account/leagues',wait_until='networkidle')
++                    requests_before = list(self.source_requests)
++                    with page.expect_response(lambda r:'/account/leagues/200/activate' in r.url and r.request.method=='POST') as posted:
++                        page.locator('form[action="/account/leagues/200/activate"] button').click()
++                    page.wait_for_load_state('networkidle')
++                    self.assertEqual(posted.value.status,503)
++                    self.assertEqual(posted.value.headers.get('retry-after'),'60')
++                    self.assertTrue(page.get_by_role('heading',name='League preparation is waiting').is_visible())
++                    self.assertNotIn('League preparation did not finish',page.locator('body').inner_text())
++                    self.assertIn('No Trade search',page.locator('body').inner_text())
++                    link = page.get_by_role('link',name='Your leagues',exact=True)
++                    self.assertGreaterEqual(link.bounding_box()['height'],44)
++                    link.focus()
++                    self.assertNotEqual(link.evaluate('e=>getComputedStyle(e).outlineStyle'),'none')
++                    self.assertLessEqual(page.evaluate('document.documentElement.scrollWidth'),width)
++                    self.assertEqual(self.source_requests,requests_before)
++                    self.assertEqual(snapshot(self.store),before)
++                    row=dict(viewport=[width,height],status=503,retry_after='60',no_overflow=True,no_new_source_requests=True,account_unchanged=True)
++                    rows.append(row)
++                    record('phone-'+str(width),row,page)
++                    link.press('Enter')
++                    page.wait_for_load_state('networkidle')
++                    self.assertTrue(page.get_by_role('heading', name='Your leagues', exact=True).is_visible())
++                    self.assertEqual(snapshot(self.store),before)
++        record('browser',rows)
+diff --git a/tests/test_front_office_brief.py b/tests/test_front_office_brief.py
+index 19b912e..9c06590 100644
+--- a/tests/test_front_office_brief.py
++++ b/tests/test_front_office_brief.py
+@@ -23,9 +23,68 @@ class FrontOfficeBriefTests(unittest.TestCase):
+             facts = prepared_evidence(self.f.data, 1, '')
+         self.assertIsNone(facts['assessment'])
+         items = select_insights(facts, [], [])
+-        self.assertEqual([i['family'] for i in items], ['goal'])
++        self.assertEqual([i['family'] for i in items], ['goal', 'preparation'])
+         self.assertIn('unchanged', items[0]['drawback'])
+ 
++    def test_saved_goal_with_cold_evidence_has_preparation_action_without_a_factory(self):
++        from services.front_office_brief import prepared_evidence, select_insights
++        from src.ui.front_office_brief import cards
++        for goal in ('WIN NOW', 'RETOOL', 'REBUILD'):
++            with self.subTest(goal=goal), \
++                 patch('services.front_office_brief.intelligence_orchestrator', self.f.engine), \
++                 patch.object(self.f.engine.cache, 'peek', return_value=None), \
++                 patch.object(self.f.engine, 'analyze', side_effect=AssertionError('factory')), \
++                 patch('services.front_office_brief.prepared_diagnostics', return_value=None), \
++                 patch('services.front_office_brief.compatible_profile', return_value=None), \
++                 patch('services.front_office_brief.prepared_need', side_effect=AssertionError('missing diagnostic')):
++                facts = prepared_evidence(self.f.data, 1, goal)
++                items = select_insights(facts, [], [])
++            self.assertEqual([item['family'] for item in items], ['preparation'])
++            self.assertEqual(items[0]['href'], '/teams/1')
++            self.assertEqual(facts['strategy'], goal)
++            rendered = cards(items)
++            self.assertIn('not evidence of roster weakness', rendered)
++            self.assertIn('does not start a trade search or change your goal', rendered)
++            self.assertNotIn('Choose your goal', rendered)
++
++    def test_existing_qualified_need_leads_and_hands_off_only_its_current_position(self):
++        from services.front_office_brief import select_insights
++        from src.ui.front_office_brief import cards
++        facts = self.prepared('WIN NOW')
++        def diagnostic(**flags):
++            return dict(evidence={'calculation_supported': True}, conclusion_state='current',
++                        base_reason='Supported current legal-lineup evidence.', **flags)
++        facts = {**facts, 'diagnostics': {'teams': {'1': {'positions': {
++            'QB': diagnostic(resilience_need=True),
++            'WR': diagnostic(starter_need=True, quality_depth_need=True),
++        }}}}, 'trade_need': {'position': 'WR', 'kind': 'starter',
++                           'href': '/trades/recommended?front_office=1&team_need=exact-current-fingerprint'}}
++        before = deepcopy(facts)
++        items = select_insights(facts, [], [])
++        self.assertEqual(items[0]['key'], 'position:WR')
++        self.assertIn('improve the lineup', items[0]['title'])
++        self.assertEqual(items[0]['action'], 'Explore WR trades')
++        self.assertEqual(items[0]['href'], facts['trade_need']['href'])
++        qb = next(item for item in items if item['key'] == 'position:QB')
++        self.assertEqual(qb['href'], '/teams/1#positional-depth')
++        self.assertIn('Cost and uncertainty', cards(items))
++        self.assertEqual(facts, before)
++        # A presentation hint cannot promote provisional findings to a search action.
++        facts['diagnostics']['teams']['1']['positions']['WR']['conclusion_state'] = 'provisional'
++        items = select_insights(facts, [], [])
++        wr = next(item for item in items if item['key'] == 'position:WR')
++        self.assertEqual(items[0]['key'], 'position:QB')
++        self.assertEqual(wr['href'], '/teams/1#positional-depth')
++        self.assertTrue(wr['title'].startswith('Provisional:'))
++
++    def test_missing_assessment_keeps_independently_prepared_diagnostics(self):
++        from services.front_office_brief import select_insights
++        facts = self.prepared('REBUILD')
++        facts['assessment'] = None
++        items = select_insights(facts, [], [])
++        self.assertTrue(any(item['family'] in {'need', 'depth'} for item in items))
++        self.assertFalse(any(item['family'] == 'preparation' for item in items))
++
+     def test_exact_goal_cache_hit_and_source_transition_miss(self):
+         from services.front_office_brief import prepared_evidence
+         prepared = self.f.engine.analyze(self.f.data, 1, {'strategy':'REBUILD'}, include_trade_opportunities=False)
+diff --git a/tests/test_front_office_brief_browser.py b/tests/test_front_office_brief_browser.py
+index cd55cb1..b8d5268 100644
+--- a/tests/test_front_office_brief_browser.py
++++ b/tests/test_front_office_brief_browser.py
+@@ -210,14 +210,16 @@ class FrontOfficeBriefBrowserTests(unittest.TestCase):
+                 page.go_back()
+                 page.get_by_role('heading', name='Front Office Brief').wait_for()
+                 page.close()
+-                # Real prepared RB replacement concern links into existing Depth and back.
++                # A current RB concern reuses the existing editable Trade filter.
+                 import base64
+                 data = f.f.f.data
+                 data['league']['roster_positions'] = ['RB'] + ['BN'] * 4
+                 for team in data['teams']:
+                     for player in team['players']:
+                         player['position'] = 'RB'
++                        player['status'] = 'Active'
+                         data['players'][player['id']]['position'] = 'RB'
++                        data['players'][player['id']]['status'] = 'Active'
+                 f.f.source.points.update(a=40, b=1, e=1, c=30, d=20, f=20)
+                 ctx = f.f.workspace['workspace_context']
+                 f.f.cookie = base64.urlsafe_b64encode(json.dumps({'scope':ctx['strategy_scope'], 'rows':[['league-1:1','WIN NOW']]}).encode()).decode().rstrip('=')
+@@ -226,9 +228,15 @@ class FrontOfficeBriefBrowserTests(unittest.TestCase):
+                 f.f.f.client.get('/teams/1')
+                 page = f.f.browser_page(browser, 375, 667)
+                 page.goto('https://dtos.test/')
+-                page.get_by_role('link', name='Review replacement depth').click()
+-                self.assertIn('/teams/1#positional-depth', page.url)
+-                self.assertTrue(page.locator('#positional-depth').is_visible())
++                generated = []
++                page.on('request', lambda request: generated.append(request.url) if request.method == 'POST' and '/api/trades/' in request.url else None)
++                page.get_by_role('link', name='Explore RB trades').click()
++                self.assertIn('/trades/recommended?', page.url)
++                self.assertIn('team_need=', page.url)
++                page.wait_for_function("document.querySelector('#trade-context') && !document.querySelector('#trade-context').textContent.includes('Loading')")
++                self.assertEqual(page.locator('#recommendation-position').input_value(), 'RB')
++                self.assertIn('depth need, not a starter-upgrade', page.locator('#recommendation-position-origin').inner_text())
++                self.assertEqual(generated, [])
+                 page.go_back()
+                 page.get_by_role('heading', name='Front Office Brief').wait_for()
+                 page.close()
+diff --git a/tests/test_front_office_brief_http.py b/tests/test_front_office_brief_http.py
+index 769a629..2a6840c 100644
+--- a/tests/test_front_office_brief_http.py
++++ b/tests/test_front_office_brief_http.py
+@@ -2,7 +2,9 @@
+ from contextlib import ExitStack
+ from datetime import datetime, timezone
+ from hashlib import sha256
++from html import unescape
+ from pathlib import Path
++import re
+ import unittest
+ from unittest.mock import patch
+ 
+@@ -103,3 +105,38 @@ class FrontOfficeBriefHTTPTests(unittest.TestCase):
+         self.assertEqual(response.status_code, 200)
+         self.assertEqual(response.json()['workspace_context']['roster_id'], 1)
+         self.assertNotIn('/teams/2', response.json()['brief_html'])
++
++    def test_home_reuses_current_my_team_need_and_destination_requalifies_it(self):
++        for team in self.data['teams']:
++            for player in team['players']:
++                player['status'] = 'Active'
++                self.data['players'][player['id']]['status'] = 'Active'
++        self.f.f.source.points = {key: 40 - value for key, value in self.f.f.source.points.items()}
++        self.f.publish(datetime.now(timezone.utc).isoformat())
++        context = self.client.get('/api/trades/workspace?front_office=1').json()['workspace_context']
++        saved = self.client.post('/account/franchise-goal', data={
++            'strategy': 'WIN NOW', 'expected_revision': '0', 'league_id': context['league_id'],
++            'roster_id': '1', 'csrf_token': self.f.f.f.csrf, 'strategy_scope': context['strategy_scope'],
++        }, follow_redirects=False)
++        self.assertEqual(saved.status_code, 303, saved.text)
++        team = self.client.get('/teams/1')
++        match = re.search(r'id="my-team-trade-need"[^>]*href="([^"]+)"', team.text)
++        self.assertIsNotNone(match)
++        href = unescape(match[1])
++        from services.front_office_brief import prepared_need
++        with patch('services.front_office_brief.prepared_need', wraps=prepared_need) as admission:
++            meta = self.read()
++        admission.assert_called_once()
++        self.assertEqual(meta['strategy'], 'WIN NOW')
++        self.assertIn('Explore QB trades', meta['brief_html'])
++        self.assertIn(match[1], meta['brief_html'])
++        self.assertIn('Cost and uncertainty', meta['brief_html'])
++        destination = self.client.get(href)
++        self.assertEqual(destination.status_code, 200)
++        self.assertIn('&quot;kind&quot;: &quot;starter&quot;', destination.text)
++        self.assertIn('Incoming player position', destination.text)
++        # Source degradation invalidates the hint; the underlying Depth remains readable.
++        self.f.publish('2020-01-01T00:00:00+00:00')
++        expired = self.client.get(href)
++        self.assertIn('No roster-need filter was applied', expired.text)
++        self.assertNotIn('Explore QB trades', self.read()['brief_html'])
+diff --git a/tests/test_front_office_workflow_browser.py b/tests/test_front_office_workflow_browser.py
+new file mode 100644
+index 0000000..6a88b2d
+--- /dev/null
++++ b/tests/test_front_office_workflow_browser.py
+@@ -0,0 +1,411 @@
++"""One prepared Home -> real search -> evaluation/comparison/history journey.
++
++Disposable authenticated 1QB/K/DEF and Superflex leagues; native evaluator and
++search outcomes, including zero qualified offers. Chromium touch emulation is
++not physical Safari evidence.
++"""
++from copy import deepcopy
++from html import unescape
++import json
++import os
++from pathlib import Path
++import re
++import subprocess
++import tempfile
++import unittest
++from unittest.mock import patch
++from urllib.parse import urlsplit
++
++from playwright.sync_api import sync_playwright
++
++from tests import test_offer_comparison_browser as comparison
++from tools.validation.browser_runtime import launch_chromium
++
++
++VIEWPORTS = ((320, 432), (375, 667), (390, 844), (1280, 900))
++
++
++class FrontOfficeWorkflowBrowserTests(unittest.TestCase):
++    def fixture(self, *, superflex):
++        from routes.history import create_history_router
++        from src.core.history_context.season_cache import SleeperSeasonCache
++        from src.core.history_context.store import CanonicalHistoryStore
++        import dtos_app
++
++        offers = comparison.OfferComparisonBrowserTests()
++        self.addCleanup(offers.doCleanups)
++        source, helper, f = offers.fixture(superflex=superflex)
++        for original in (1, 3):
++            f.editor.data['teams'][0]['picks_owned'].append(dict(
++                year=2029, round=1, original_roster_id=original, current_owner_id=1))
++        quote = dict(f.editor.data['market_data']['pick_quotes']['FantasyCalc'][0], year=2029, value=334 * 12)
++        quote['normalization_reference'] = dict(quote['normalization_reference'], raw_value=334 * 12, normalized_value=334)
++        f.editor.data['market_data']['pick_quotes']['FantasyCalc'].append(quote)
++        f.capital.publish()
++        source.publish(f)
++        directory = self.enterContext(tempfile.TemporaryDirectory())
++        cache = SleeperSeasonCache(Path(directory))
++        store = CanonicalHistoryStore()
++        self.enterContext(patch('src.core.history_context.store.sleeper_season_cache', cache))
++        self.enterContext(patch('services.history.historical_store', store))
++        self.enterContext(patch('services.history.canonical_history_store', store))
++        store.update_current('league-1', f.editor.data)
++        f.editor.app.include_router(create_history_router(
++            league_id='league-1', page=dtos_app.page, require_data=lambda: f.editor.data,
++            league_resolver=lambda: f.editor.data['league']['league_id']))
++
++        # Use the existing explicit preference save; temporary Trade intent must
++        # not become a second way to change the saved franchise goal.
++        context = f.editor.client.get('/api/trades/workspace?front_office=1').json()['workspace_context']
++        saved = f.editor.client.post('/account/franchise-goal', data={
++            'strategy': 'WIN NOW', 'expected_revision': str(context['franchise_goal_revision']),
++            'league_id': context['league_id'], 'roster_id': '1', 'csrf_token': f.editor.csrf,
++            'strategy_scope': context['strategy_scope'],
++        }, follow_redirects=False)
++        self.assertEqual(saved.status_code, 303, saved.text)
++        team = f.editor.client.get('/teams/1')
++        match = re.search(r'id="my-team-trade-need"[^>]*href="([^"]+)"[^>]*>Explore (QB|RB|WR|TE) trades', team.text)
++        self.assertIsNotNone(match)
++        return offers, source, helper, f, unescape(match[1]), match[2]
++
++    def record(self, name, observations, page=None):
++        folder = os.environ.get('DTOS_FRONT_OFFICE_WORKFLOW_EVIDENCE')
++        if not folder:
++            return
++        destination = Path(folder)
++        destination.mkdir(parents=True, exist_ok=True)
++        report = dict(
++            commit=subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip(),
++            tree=subprocess.check_output(['git', 'rev-parse', 'HEAD^{tree}'], text=True).strip(),
++            working_tree_clean=not subprocess.check_output(['git', 'status', '--porcelain'], text=True).strip(),
++            source='Disposable authenticated prepared Sleeper fixture; native search and canonical evaluator',
++            physical_safari_tested=False, observations=observations)
++        (destination / (name + '.json')).write_text(json.dumps(report, indent=2) + '\n')
++        if page:
++            page.screenshot(path=str(destination / (name + '.png')), full_page=True)
++
++    def screenshot(self, name, page):
++        folder = os.environ.get('DTOS_FRONT_OFFICE_WORKFLOW_EVIDENCE')
++        if folder:
++            destination = Path(folder)
++            destination.mkdir(parents=True, exist_ok=True)
++            page.screenshot(path=str(destination / (name + '.png')), full_page=True)
++
++    def protect(self, page, exact_id):
++        options = page.locator('#trade-search-options')
++        if not options.evaluate('e=>e.open'):
++            options.locator('summary').press('Enter')
++        page.select_option('#recommendation-protection-asset', exact_id)
++        page.locator('#recommendation-protection-add').press('Enter')
++
++    def touch(self, page, locator):
++        locator.scroll_into_view_if_needed()
++        box = locator.bounding_box()
++        self.assertGreaterEqual(box['height'], 44)
++        cdp = page.context.new_cdp_session(page)
++        try:
++            cdp.send('Emulation.setTouchEmulationEnabled', {'enabled': True})
++            cdp.send('Input.dispatchTouchEvent', {'type': 'touchStart', 'touchPoints': [
++                {'x': box['x'] + box['width']/2, 'y': box['y'] + box['height']/2}]})
++            cdp.send('Input.dispatchTouchEvent', {'type': 'touchEnd', 'touchPoints': []})
++            cdp.send('Emulation.setTouchEmulationEnabled', {'enabled': False})
++        finally:
++            cdp.detach()
++
++    def evaluate(self, page, helper, target, *, with_pick=False):
++        """Use Calculator's visible asset boards; phone side tabs are absent."""
++        if page.locator('#trade-board').is_hidden():
++            page.locator('#trade-edit').click()
++        page.select_option('#trade-partner', '2')
++        page.select_option('#trade-strategy', 'WIN NOW')
++        for side, selected, desired in (
++            ('sent', 'sent', ['2028-R1-3', 'a'] if with_pick else ['a']),
++            ('received', 'received', [target]),
++        ):
++            switch = page.locator(f'[data-side={side}]')
++            if switch.is_visible():
++                switch.click()
++            current = helper.draft(page)['currentProposal']
++            for asset_id in list(current[selected]):
++                page.locator(f'#trade-{side}-board button[data-asset-id="{asset_id}"]').click()
++            for asset_id in desired:
++                page.locator(f'#trade-{side}-board button[data-asset-id="{asset_id}"]').click()
++        with page.expect_response(lambda response: response.url.endswith('/api/trades/evaluate') and response.request.method == 'POST') as evaluated:
++            page.locator('#trade-run').click()
++        self.assertEqual(evaluated.value.status, 200, evaluated.value.text())
++        body = evaluated.value.json()
++        self.assertIn('evaluation', body, body)
++        self.assertEqual(evaluated.value.request.post_data_json['protected_assets'], [])
++        page.locator('#trade-result > .tw-compare-add').wait_for()
++        return body['evaluation']
++
++    def history_return(self, helper, page, requests, *, touch):
++        """Native History and Back preserve Calculator's normal query context."""
++        link = page.locator('#trade-result .tw-partner-history').first
++        self.assertEqual(link.inner_text(), 'See franchise trade history')
++        self.assertIn('league-1%3Afranchise%3A2', link.get_attribute('href'))
++        before = [row for row in requests if row[0] == 'POST']
++        if touch:
++            self.touch(page, link)
++        else:
++            page.keyboard.press('Tab')
++            link.focus()
++            self.assertNotEqual(link.evaluate('e=>getComputedStyle(e).outlineStyle'), 'none')
++            link.press('Enter')
++        page.wait_for_url('**/history/team/league-1%3Afranchise%3A2')
++        self.assertIn('Completed trade observations', page.locator('body').inner_text())
++        self.assertIn('totals are unknown', page.locator('body').inner_text())
++        self.assertLessEqual(page.evaluate('document.documentElement.scrollWidth'), page.viewport_size['width'])
++        helper.back(page, '/trades/calculator?front_office=1')
++        page.wait_for_function("!document.querySelector('#trade-context').textContent.includes('Loading')")
++        page.locator('#trade-result .tw-partner-history').first.wait_for()
++        self.assertEqual([row for row in requests if row[0] == 'POST'], before)
++        self.assertLessEqual(page.evaluate('document.documentElement.scrollWidth'), page.viewport_size['width'])
++
++    def journey(self, *, superflex):
++        offers, _source, helper, f, need_href, position = self.fixture(superflex=superflex)
++        label = 'superflex' if superflex else '1qb-k-def'
++        baseline = deepcopy(f.editor.state())
++        pw = self.enterContext(sync_playwright())
++        browser = launch_chromium(pw, headless=True)
++        self.addCleanup(browser.close)
++        page, requests, _, _, errors = helper.page(browser, f)
++        self.addCleanup(page.close)
++        post_ledger = []
++        def observed(response):
++            request = response.request
++            path = urlsplit(response.url).path
++            if request.method == 'POST' and path.startswith('/api/trades/'):
++                post_ledger.append(dict(path=path, status=response.status, payload=request.post_data_json))
++        page.on('response', observed)
++        def posts():
++            return [request for request in requests if request[0] == 'POST']
++        page.goto(helper.origin + '/')
++        page.locator('#home-opportunity-cards article').first.wait_for()
++        leading = page.locator('#home-opportunity-cards article').first
++        action = leading.get_by_role('link', name=f'Explore {position} trades')
++        self.assertEqual(action.get_attribute('href'), need_href)
++        self.assertIn('Cost and uncertainty', leading.inner_text())
++        home_views = []
++        for width, height in VIEWPORTS:
++            page.set_viewport_size(dict(width=width, height=height))
++            action.scroll_into_view_if_needed()
++            action.focus()
++            self.assertNotEqual(action.evaluate('e=>getComputedStyle(e).outlineStyle'), 'none')
++            self.assertGreaterEqual(action.bounding_box()['height'], 44)
++            self.assertLessEqual(page.evaluate('document.documentElement.scrollWidth'), width)
++            home_views.append(dict(width=width, height=height, title=leading.locator('h3').inner_text(),
++                                   action=action.inner_text(), href=action.get_attribute('href')))
++            self.screenshot(f'{label}-home-{width}', page)
++        self.assertEqual(posts(), [])
++        action.press('Enter')
++        page.wait_for_function("document.querySelector('#trade-context') && !document.querySelector('#trade-context').textContent.includes('Loading')")
++        self.assertEqual(page.locator('#recommendation-position').input_value(), position)
++        origin = page.locator('#recommendation-position-origin').inner_text()
++        self.assertIn(f'{position} addition', origin)
++        self.assertIn('Change or clear, then Generate', origin)
++        self.assertEqual(posts(), [])
++        initial = helper.draft(page)
++        self.protect(page, '2029-R1-1')
++        self.protect(page, 'a')
++        self.assertIn('2029-R1-3', page.locator('#recommendation-protection-asset option').evaluate_all('es=>es.map(e=>e.value)'))
++        protection_views = []
++        for width, height in VIEWPORTS:
++            page.set_viewport_size(dict(width=width, height=height))
++            selected = page.locator('#recommendation-protection-list')
++            self.assertIn('2029-R1-1', selected.inner_text())
++            self.assertIn('Exact asset: a', selected.inner_text())
++            self.assertIn('Original franchise:', selected.inner_text())
++            self.assertLessEqual(page.evaluate('document.documentElement.scrollWidth'), width)
++            protection_views.append(dict(width=width, height=height, exact_ids=helper.draft(page)['recommendationProtectedAssets']))
++            if width == 390:
++                self.touch(page, page.locator('[data-protected-asset="a"]'))
++                self.assertEqual(helper.draft(page)['recommendationProtectedAssets'], ['2029-R1-1'])
++                self.protect(page, 'a')
++        self.assertEqual(posts(), [])
++
++        # Observe the actual outgoing pools; no generated response or verdict is
++        # substituted. Zero qualified offers remain a successful completed read.
++        import services.recommended_trade_search as search
++        original_generate = search.generate_proposals
++        outgoing_pools = []
++        def observe(*args, **kwargs):
++            outgoing_pools.append([asset.asset_id for asset in args[2]])
++            return original_generate(*args, **kwargs)
++        with patch.object(search, 'generate_proposals', side_effect=observe):
++            with page.expect_response(lambda response: response.url.endswith('/api/trades/generate') and response.request.method == 'POST') as generated:
++                page.locator('#trade-find').press('Enter')
++            self.assertEqual(generated.value.status, 200, generated.value.text())
++            payload, body = generated.value.request.post_data_json, generated.value.json()
++        page.wait_for_function("document.querySelector('#recommendation-status').dataset.state==='complete'")
++        self.assertEqual(payload['recommendation_position'], position)
++        self.assertEqual(set(payload['protected_assets']), {'2029-R1-1', 'a'})
++        self.assertEqual(set(body['constraints']['protected_assets']), {'2029-R1-1', 'a'})
++        self.assertTrue(outgoing_pools, 'Native candidate construction must run')
++        self.assertTrue(any('2029-R1-3' in pool for pool in outgoing_pools))
++        for pool in outgoing_pools:
++            self.assertTrue(set(pool).isdisjoint({'2029-R1-1', 'a'}))
++        native = []
++        for family in ('results', 'exploratory_results', 'near_misses'):
++            for row in body.get(family, []):
++                proposal, evaluation = row['proposal'], row['evaluation']
++                self.assertTrue(set(proposal['assets_sent']).isdisjoint({'2029-R1-1', 'a'}))
++                native.append(dict(family=family, proposal=proposal,
++                                   recommendation=evaluation.get('recommendation'),
++                                   generated_trade_eligible=evaluation.get('generated_trade_eligible'),
++                                   exploration=row.get('exploration', False)))
++        if not any(row['family'] == 'results' and row['generated_trade_eligible'] is True for row in native):
++            self.assertIn('No qualified recommendations', page.locator('#trade-result').inner_text())
++        self.assertEqual(len(posts()), 1)
++        prior = deepcopy(helper.draft(page)['recommendedSearch'])
++        self.assertEqual(prior['position'], position)
++        self.assertEqual({row['id'] for row in prior['protections']}, {'2029-R1-1', 'a'})
++        self.assertIn('2029-R1-1', page.locator('#trade-result .tw-applied-protections').inner_text())
++        page.locator('#recommendation-protection-clear').press('Enter')
++        page.locator('#recommendation-position-clear').press('Enter')
++        edited_choice = deepcopy(helper.draft(page)['teamNeedChoice'])
++        self.assertEqual(helper.draft(page)['recommendedSearch'], prior)
++        self.assertTrue(page.locator('#trade-result').is_hidden())
++        previous = page.locator('#recommendation-previous')
++        previous.locator('summary').press('Enter')
++        self.assertIn(f'Earlier search: {position}', previous.inner_text())
++        self.assertIn('2029-R1-1', previous.inner_text())
++        self.assertEqual(len(posts()), 1)
++        self.assertEqual(helper.draft(page)['currentProposal'], initial['currentProposal'])
++
++        # These two independent native assessments do not depend on discovery
++        # finding two qualified offers under the real position/pricing evidence.
++        page.locator('.tw-intent-nav a[href*="/trades/calculator"]').press('Enter')
++        page.wait_for_url('**/trades/calculator?front_office=1')
++        page.wait_for_function("!document.querySelector('#trade-context').textContent.includes('Loading')")
++        first = self.evaluate(page, helper, 'd')
++        page.locator('#trade-result > .tw-compare-add').press('Enter')
++        second = self.evaluate(page, helper, 'c', with_pick=True)
++        page.locator('#trade-result > .tw-compare-add').press('Enter')
++        draft = helper.draft(page)
++        self.assertEqual(draft['currentProposal']['sent'], ['2028-R1-3', 'a'])
++        self.assertEqual(draft['currentProposal']['received'], ['c'])
++        self.assertEqual([row['proposal']['assets_received'] for row in draft['comparisonOffers']], [['d'], ['c']])
++        self.assertEqual(len([request for request in posts() if request[1] == '/api/trades/evaluate']), 2)
++        after_evaluations = list(posts())
++        comparison_views = []
++        with patch('services.sleeper.sleeper_get', side_effect=AssertionError('Navigation must reuse prepared evidence')):
++            for width, height in VIEWPORTS:
++                page.set_viewport_size(dict(width=width, height=height))
++                offers.open_readonly(page, requests)
++                panel = page.locator('#trade-comparison')
++                self.assertIn('Keep the roster', panel.inner_text())
++                keep_option = panel.locator('.tw-comparison-keep h4').inner_text()
++                panel_state = panel.get_attribute('data-comparison-state')
++                self.assertEqual(panel.locator('.tw-comparison-offer').count(), 2)
++                self.assertEqual(panel.locator('[data-comparison-slot="2"] ol').first.locator('small').all_text_contents(),
++                                 ['Exact asset: 2028-R1-3', 'Exact asset: a'])
++                self.assertLessEqual(page.evaluate('document.documentElement.scrollWidth'), width)
++                self.screenshot(f'{label}-comparison-{width}', page)
++                close = page.get_by_role('button', name='Return to my offer or draft', exact=True)
++                if width == 390:
++                    self.touch(page, close)
++                else:
++                    page.keyboard.press('Tab')
++                    close.focus()
++                    self.assertNotEqual(close.evaluate('e=>getComputedStyle(e).outlineStyle'), 'none')
++                    close.press('Enter')
++                self.history_return(helper, page, requests, touch=width == 390)
++                restored = helper.draft(page)
++                for key in ('currentProposal', 'valuationMode', 'strategy'):
++                    self.assertEqual(restored[key], draft[key])
++                self.assertEqual([row['proposal'] for row in restored['comparisonOffers']],
++                                 [row['proposal'] for row in draft['comparisonOffers']])
++                self.assertEqual(restored['currentAssessment']['identity']['package'], draft['currentAssessment']['identity']['package'])
++                self.assertIn('not revalidated', page.locator('#trade-result').inner_text().lower())
++                self.assertEqual(posts(), after_evaluations)
++                comparison_views.append(dict(width=width, height=height, exact_draft=restored['currentProposal'],
++                                             panel_state=panel_state, keep_option=keep_option,
++                                             comparison_retained=restored['comparisonOffers'][0].get('retained'),
++                                             history_qualification=page.locator('#trade-result').get_attribute('data-assessment-freshness'),
++                                             history_return_without_post=True))
++
++        page.reload()
++        page.wait_for_function("!document.querySelector('#trade-context').textContent.includes('Loading')")
++        offers.open_readonly(page, requests)
++        reload_state = page.locator('#trade-comparison').get_attribute('data-comparison-state')
++        self.assertEqual(reload_state, 'retained')
++        self.assertIn('NOT REVALIDATED', page.locator('#trade-comparison').inner_text())
++        self.assertEqual(posts(), after_evaluations)
++        page.get_by_role('button', name='Return to my offer or draft', exact=True).press('Enter')
++        self.evaluate(page, helper, 'f')
++        page.locator('#trade-result > .tw-compare-add').press('Enter')
++        self.assertIn('Two offers are selected', page.locator('.tw-comparison-replace').inner_text())
++        page.get_by_role('button', name='Replace offer 1', exact=True).press('Enter')
++        self.assertEqual(helper.draft(page)['comparisonOffers'][0]['proposal']['assets_received'], ['f'])
++        replaced = [deepcopy(row['proposal']) for row in helper.draft(page)['comparisonOffers']]
++        last_draft = helper.draft(page)['currentProposal']
++        offers.open_readonly(page, requests)
++        page.get_by_role('button', name='Remove offer 1', exact=True).press('Enter')
++        self.assertEqual(len(helper.draft(page)['comparisonOffers']), 1)
++        remaining = [deepcopy(row['proposal']) for row in helper.draft(page)['comparisonOffers']]
++        self.assertEqual(helper.draft(page)['currentProposal'], last_draft)
++        self.assertEqual(f.editor.state(), baseline)
++        goal = f.editor.client.get('/api/trades/workspace?front_office=1').json()['workspace_context']
++        self.assertEqual(goal['franchise_goal'], 'WIN NOW')
++        old_binding = goal['binding']
++        posts_before_scope = list(posts())
++        page.get_by_role('button', name='Return to my offer or draft', exact=True).press('Enter')
++        page.locator('.tw-intent-nav a[href*="/trades/recommended"]').press('Enter')
++        page.wait_for_url('**/trades/recommended?front_office=1')
++        page.wait_for_function("document.querySelector('#trade-context') && !document.querySelector('#trade-context').textContent.includes('Loading')")
++        self.protect(page, '2029-R1-1')
++        self.protect(page, 'a')
++        page.locator('#recommendation-position').select_option('QB')
++        before_scope = helper.draft(page)
++        self.assertEqual(before_scope['recommendationProtectedAssets'], ['2029-R1-1', 'a'])
++        self.assertEqual(len(before_scope['comparisonOffers']), 1)
++        self.assertEqual(before_scope['currentProposal'], last_draft)
++        self.assertEqual(posts(), posts_before_scope)
++        f.editor.store.upsert_membership('account-a', {'league_id': 'league-2', 'name': 'Other'},
++                                         'account-a', 1, 'Other', 'active')
++        f.editor.store.activate('account-a', 'league-2')
++        f.editor.data['league']['league_id'] = 'league-2'
++        helper.ready(page, '/trades/recommended?front_office=1')
++        cleared = helper.draft(page)
++        self.assertEqual(cleared['comparisonOffers'], [])
++        self.assertEqual(cleared['recommendationProtectedAssets'], [])
++        self.assertIsNone(cleared.get('recommendedSearch'))
++        self.assertFalse(cleared['currentProposal']['sent'])
++        self.assertFalse(cleared['currentProposal']['received'])
++        self.assertEqual(page.locator('#recommendation-position').input_value(), '')
++        current = f.editor.client.get('/api/trades/workspace?front_office=1').json()['workspace_context']
++        self.assertNotEqual(current['binding'], old_binding)
++        self.assertEqual(posts(), posts_before_scope)
++        self.assertEqual(len(post_ledger), 4)
++        self.assertEqual([row['path'] for row in post_ledger], ['/api/trades/generate'] + ['/api/trades/evaluate'] * 3)
++        self.assertFalse(errors, errors)
++        self.record(label + '-journey', dict(
++            league_slots=f.editor.data['league']['roster_positions'], home=home_views,
++            handoff=dict(position=position, href=need_href, explanation=origin, existing_my_team_reused=True,
++                         initial_choice=initial['teamNeedChoice'], edited_choice=edited_choice),
++            protection_views=protection_views, generation_payload=payload,
++            applied_constraints=body['constraints'], outgoing_pools=outgoing_pools,
++            exact_protected_ids=['2029-R1-1', 'a'], distinct_same_round_pick='2029-R1-3',
++            distinct_pick_remained_eligible=any('2029-R1-3' in pool for pool in outgoing_pools), native_offers=native,
++            search_evidence=body.get('search_evidence'),
++            prior_search={key: prior[key] for key in ('position', 'type', 'count', 'protections')},
++            actual_evaluations=[dict(recommendation=e.get('recommendation'),
++                                     lineup=e.get('decision_context', {}).get('lineup'),
++                                     market=e.get('market_evidence')) for e in (first, second)],
++            comparison_offers=[{key: row[key] for key in ('scope', 'baseline', 'proposal', 'summary')}
++                               | {'identity': row['context']['identity']} for row in draft['comparisonOffers']],
++            comparison_and_history=comparison_views, post_requests=posts(), post_ledger=post_ledger,
++            reload_retained=reload_state == 'retained',
++            replacement=dict(selected_proposals=replaced, remaining_proposals=remaining, draft=last_draft),
++            scope_change=dict(old=old_binding, current=current['binding'], temporary_state_cleared=True,
++                              before_protections=before_scope['recommendationProtectedAssets'],
++                              before_position=before_scope['teamNeedChoice']['position'],
++                              before_draft=before_scope['currentProposal']),
++            saved_goal_and_rankings_unchanged=True), page)
++
++    def test_1qb_k_def_normal_front_office_journey(self):
++        self.journey(superflex=False)
++
++    def test_superflex_normal_front_office_journey(self):
++        self.journey(superflex=True)
+diff --git a/tests/test_offer_comparison_browser.py b/tests/test_offer_comparison_browser.py
+index dc5e723..fd4ed7e 100644
+--- a/tests/test_offer_comparison_browser.py
++++ b/tests/test_offer_comparison_browser.py
+@@ -144,6 +144,33 @@ class OfferComparisonBrowserTests(unittest.TestCase):
+         self.assertFalse(errors, errors)
+         self.assertEqual(f.editor.state(), saved)
+         self.record('phone-round-trips', rows)
++        self.open_readonly(page, requests)
++        before_posts = [request for request in requests if request[0] == 'POST']
++        with (patch('routes.trades.compare_trade_requests', side_effect=AssertionError('No recomparison')),
++              patch('routes.trades.evaluate_trade_request', side_effect=AssertionError('No reevaluation')),
++              patch('routes.trades.generate_trade_workflow', side_effect=AssertionError('No search'))):
++            page.evaluate('dispatchEvent(new PageTransitionEvent("pagehide", {persisted: true}))')
++            page.evaluate('dispatchEvent(new PageTransitionEvent("pageshow", {persisted: true}))')
++            page.wait_for_function("document.querySelector('#trade-comparison').dataset.comparisonState==='retained'")
++            panel = page.locator('#trade-comparison')
++            self.assertTrue(panel.is_visible())
++            self.assertEqual(panel.get_by_text('Retained assessment · NOT REVALIDATED', exact=True).count(), 2)
++            restored = helper.draft(page)
++            self.assertEqual(len(restored['comparisonOffers']), 2)
++            for before, retained in zip(offers, restored['comparisonOffers']):
++                for key in ['id', 'scope', 'baseline', 'assets', 'proposal', 'summary']:
++                    self.assertEqual(retained[key], before[key])
++                self.assertTrue(retained['retained'])
++                self.assertTrue(retained['context']['restored'])
++            self.assertEqual(panel.locator('[data-comparison-slot="2"] ol').first.locator('small').all_text_contents(),
++                             ['Exact asset: 2028-R1-3', 'Exact asset: a'])
++            for key in ['currentProposal', 'valuationMode', 'strategy']:
++                self.assertEqual(restored[key], original[key])
++            self.assertEqual([request for request in requests if request[0] == 'POST'], before_posts)
++        self.assertFalse(errors, errors)
++        self.assertEqual(f.editor.state(), saved)
++        self.record('retained-bfcache', dict(selected_offers=2, exact_snapshots=True,
++                    retained_qualification_visible=True, exact_draft=True, no_trade_http=True), page)
+         page.reload()
+         page.wait_for_function("!document.querySelector('#trade-context').textContent.includes('Loading')")
+         count = self.open_readonly(page, requests)
+diff --git a/tests/test_projection_audit.py b/tests/test_projection_audit.py
+index 2248adb..ef9c5a7 100644
+--- a/tests/test_projection_audit.py
++++ b/tests/test_projection_audit.py
+@@ -3,6 +3,7 @@ from __future__ import annotations
+ import copy
+ import asyncio
+ import contextvars
++import gc
+ import threading
+ import time
+ import unittest
+@@ -314,6 +315,11 @@ class ProjectionAuditTests(unittest.IsolatedAsyncioTestCase):
+                             break
+                         await asyncio.sleep(0.005)
+                     self.assertTrue(started.is_set())
++                    # This measures whether the pending audit blocks a separate
++                    # request, not collection of earlier test/HTTP fixture graphs.
++                    # Keep GC enabled, but settle setup allocations before the
++                    # unchanged request timer (important in the full 3.14 suite).
++                    gc.collect()
+                     began = time.perf_counter()
+                     response = await asyncio.wait_for(client.get("/lightweight"), 0.25)
+                     latency_ms = (time.perf_counter() - began) * 1000
+diff --git a/tests/test_recommended_protections_browser.py b/tests/test_recommended_protections_browser.py
+index c4d2842..df4ddf4 100644
+--- a/tests/test_recommended_protections_browser.py
++++ b/tests/test_recommended_protections_browser.py
+@@ -78,6 +78,7 @@ class RecommendedProtectionBrowserTests(unittest.TestCase):
+         rows = []
+         for width, height in [(320,432), (375,667), (390,844), (1280,900)]:
+             page.set_viewport_size(dict(width=width, height=height))
++            page.evaluate('()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))')
+             selected = page.locator('#recommendation-protection-list')
+             self.assertIn('2029-R1-1', selected.inner_text())
+             self.assertIn('Original franchise:', selected.inner_text())
+@@ -159,6 +160,14 @@ class RecommendedProtectionBrowserTests(unittest.TestCase):
+         page.wait_for_function("!document.querySelector('#trade-context').textContent.includes('Loading')")
+         self.protect(page, '2029-R1-1')
+         self.protect(page, 'a')
++        payload, generated = self.generate(page)
++        self.assertEqual(payload['protected_assets'], ['2029-R1-1','a'])
++        self.assertEqual(set(generated['constraints']['protected_assets']), {'2029-R1-1','a'})
++        searched = helper.draft(page)
++        self.assertEqual(searched['protectedAssets'], original['protectedAssets'])
++        self.assertEqual(searched['currentProposal'], original['currentProposal'])
++        self.assertIn('a', searched['currentProposal']['sent'])
++        self.assertIn('2029-R1-1', page.locator('#trade-result .tw-applied-protections').inner_text())
+         helper.back(page, '/trades/create')
+         page.wait_for_function("!document.querySelector('#trade-context').textContent.includes('Loading')")
+         restored = helper.draft(page)
+@@ -166,10 +175,13 @@ class RecommendedProtectionBrowserTests(unittest.TestCase):
+             self.assertEqual(restored[key], original[key], key)
+         self.assertEqual(restored['currentAssessment']['evaluation'], original['currentAssessment']['evaluation'])
+         self.assertEqual([r['proposal'] for r in restored['comparisonOffers']], [r['proposal'] for r in original['comparisonOffers']])
++        self.assertEqual(restored['protectedAssets'], original['protectedAssets'])
+         with page.expect_response(lambda r: r.url.endswith('/api/trades/evaluate') and r.request.method == 'POST') as evaluated:
+             page.locator('#trade-run').click()
+         self.assertEqual(evaluated.value.status, 200)
+         self.assertEqual(evaluated.value.request.post_data_json['protected_assets'], [])
++        self.assertEqual(evaluated.value.request.post_data_json['assets_sent'], original['currentProposal']['sent'])
++        self.assertEqual(evaluated.value.request.post_data_json['assets_received'], original['currentProposal']['received'])
+         helper.ready(page, '/trades/recommended')
+         self.assertEqual(helper.draft(page)['recommendationProtectedAssets'], ['2029-R1-1','a'])
+         page.reload()
+@@ -182,6 +194,7 @@ class RecommendedProtectionBrowserTests(unittest.TestCase):
+         self.assertEqual(helper.draft(page)['recommendationProtectedAssets'], [])
+         self.assertEqual(helper.draft(page)['comparisonOffers'], [])
+         self.record('draft-and-scope', dict(real_evaluations=2, recommended_controls_not_applied_to_evaluate=True,
++                    completed_search_not_applied_to_evaluate=True,
+                     original_draft_retained=True, comparison_proposals_retained=True, reload_retained=True, league_switch_cleared=True))
+ 
+     def test_no_qualified_offers_keeps_applied_restrictions_and_real_completion(self):

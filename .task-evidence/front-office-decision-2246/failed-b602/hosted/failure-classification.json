@@ -1,0 +1,65 @@
+{
+  "candidate": "b602d6acd03cc1c95d85ee734d2d7f28658885cf",
+  "tree": "8a687ea0256d6e0031b57e08e2a1a38a90a1a535",
+  "run": 42991843827,
+  "job": 130426505856,
+  "classification": "FAILED_CANONICAL_UNIT_GATE_WITH_COMPLETE_FAILED_ORIGINALS",
+  "failed_steps": [
+    {
+      "number": 5,
+      "name": "Run unchanged ten-gate validator under actual 2 GiB",
+      "status": "completed",
+      "conclusion": "failure",
+      "started_at": "2026-11-11T09:04:21Z",
+      "completed_at": "2026-11-11T10:00:24Z"
+    }
+  ],
+  "test": "test_projection_audit.ProjectionAuditTests.test_projection_audit_does_not_block_lightweight_request",
+  "decisive_assertion": {
+    "file": "tests/test_projection_audit.py",
+    "line": 302,
+    "function": "slow_builder",
+    "code": "self.assertTrue(release.wait(2.0))",
+    "exception": "AssertionError: False is not true",
+    "propagated_at_line": 328
+  },
+  "test_execution": {
+    "start": 4364,
+    "stop": 4364,
+    "failure": 1
+  },
+  "gates": {
+    "first_six": "passed",
+    "unit_regression": "failed",
+    "last_three": "not executed"
+  },
+  "test_elapsed_seconds": 2.72324275970459,
+  "memory_at_test_start": 1173340160,
+  "artifact_integrity": {
+    "bytes": 93758581,
+    "sha256": "9a51b7ffb0b4c4e07112e59d2f393ffb37489f5afe75563f661c9ae1ea766e9d",
+    "crc_verified": true,
+    "manifest_entries": 689,
+    "all_manifest_bytes_verified": true,
+    "native_pass_guard_applied": false
+  },
+  "decoded_outer_console": {
+    "original_bytes": 235671,
+    "original_sha256": "61a4b11bffd272a41dd38ba644dc85096ff7aee4a5e0aecb87751b131718db58",
+    "utf16_length": 235023,
+    "part_count": 6
+  },
+  "observed_failure_cause": "The held worker fixture wait returnedFalse after its2second deadline. The error propagated while awaiting the audit request. This is the failing assertion actually recorded; no100ms assertion failure, capacity deferral or OOM is established here.",
+  "remaining_causal_limit": "No original per-call GC timing is emitted. Source-order review may identify blocking setup work while the worker is held; exact delay attribution is independent review work, not invented telemetry.",
+  "local_executor_touched": false,
+  "source_or_publisher_changed": false,
+  "rerun_or_dispatch": false,
+  "receipt_files": {
+    "job-api.json": "9e84af34ec707ca47658b62b67d615d1872f30c9ee06a16d94156fbd22ffd41c",
+    "run-api.json": "74cd680e9640fc98ec210562cfc620758f8e3b680a155a0f037b6564f6f759e7",
+    "artifacts-api.json": "a1058da03335609aea2a4973b52444a08e44d1c670432a57a162b997c2eb375d",
+    "artifact-integrity.json": "eb4ce32d889fbd5a8f589d3e6f11b4bd4f67ec564485e2efe3bd3aad63cfe8aa",
+    "projection-audit-failure-window.json": "c299bfde5c1ec5c494e9213c14e3c3e50dfcd066840e67778d2d0bd5a831cb02",
+    "job-log-transfer.json": "c051e05089387659201db175110fb7abd4dc61647384b2e1556bbb2f2bee21d7"
+  }
+}
