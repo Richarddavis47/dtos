@@ -210,14 +210,16 @@ class FrontOfficeBriefBrowserTests(unittest.TestCase):
                 page.go_back()
                 page.get_by_role('heading', name='Front Office Brief').wait_for()
                 page.close()
-                # Real prepared RB replacement concern links into existing Depth and back.
+                # A current RB concern reuses the existing editable Trade filter.
                 import base64
                 data = f.f.f.data
                 data['league']['roster_positions'] = ['RB'] + ['BN'] * 4
                 for team in data['teams']:
                     for player in team['players']:
                         player['position'] = 'RB'
+                        player['status'] = 'Active'
                         data['players'][player['id']]['position'] = 'RB'
+                        data['players'][player['id']]['status'] = 'Active'
                 f.f.source.points.update(a=40, b=1, e=1, c=30, d=20, f=20)
                 ctx = f.f.workspace['workspace_context']
                 f.f.cookie = base64.urlsafe_b64encode(json.dumps({'scope':ctx['strategy_scope'], 'rows':[['league-1:1','WIN NOW']]}).encode()).decode().rstrip('=')
@@ -226,9 +228,15 @@ class FrontOfficeBriefBrowserTests(unittest.TestCase):
                 f.f.f.client.get('/teams/1')
                 page = f.f.browser_page(browser, 375, 667)
                 page.goto('https://dtos.test/')
-                page.get_by_role('link', name='Review replacement depth').click()
-                self.assertIn('/teams/1#positional-depth', page.url)
-                self.assertTrue(page.locator('#positional-depth').is_visible())
+                generated = []
+                page.on('request', lambda request: generated.append(request.url) if request.method == 'POST' and '/api/trades/' in request.url else None)
+                page.get_by_role('link', name='Explore RB trades').click()
+                self.assertIn('/trades/recommended?', page.url)
+                self.assertIn('team_need=', page.url)
+                page.wait_for_function("document.querySelector('#trade-context') && !document.querySelector('#trade-context').textContent.includes('Loading')")
+                self.assertEqual(page.locator('#recommendation-position').input_value(), 'RB')
+                self.assertIn('depth need, not a starter-upgrade', page.locator('#recommendation-position-origin').inner_text())
+                self.assertEqual(generated, [])
                 page.go_back()
                 page.get_by_role('heading', name='Front Office Brief').wait_for()
                 page.close()

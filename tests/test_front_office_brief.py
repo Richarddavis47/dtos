@@ -23,8 +23,67 @@ class FrontOfficeBriefTests(unittest.TestCase):
             facts = prepared_evidence(self.f.data, 1, '')
         self.assertIsNone(facts['assessment'])
         items = select_insights(facts, [], [])
-        self.assertEqual([i['family'] for i in items], ['goal'])
+        self.assertEqual([i['family'] for i in items], ['goal', 'preparation'])
         self.assertIn('unchanged', items[0]['drawback'])
+
+    def test_saved_goal_with_cold_evidence_has_preparation_action_without_a_factory(self):
+        from services.front_office_brief import prepared_evidence, select_insights
+        from src.ui.front_office_brief import cards
+        for goal in ('WIN NOW', 'RETOOL', 'REBUILD'):
+            with self.subTest(goal=goal), \
+                 patch('services.front_office_brief.intelligence_orchestrator', self.f.engine), \
+                 patch.object(self.f.engine.cache, 'peek', return_value=None), \
+                 patch.object(self.f.engine, 'analyze', side_effect=AssertionError('factory')), \
+                 patch('services.front_office_brief.prepared_diagnostics', return_value=None), \
+                 patch('services.front_office_brief.compatible_profile', return_value=None), \
+                 patch('services.front_office_brief.prepared_need', side_effect=AssertionError('missing diagnostic')):
+                facts = prepared_evidence(self.f.data, 1, goal)
+                items = select_insights(facts, [], [])
+            self.assertEqual([item['family'] for item in items], ['preparation'])
+            self.assertEqual(items[0]['href'], '/teams/1')
+            self.assertEqual(facts['strategy'], goal)
+            rendered = cards(items)
+            self.assertIn('not evidence of roster weakness', rendered)
+            self.assertIn('does not start a trade search or change your goal', rendered)
+            self.assertNotIn('Choose your goal', rendered)
+
+    def test_existing_qualified_need_leads_and_hands_off_only_its_current_position(self):
+        from services.front_office_brief import select_insights
+        from src.ui.front_office_brief import cards
+        facts = self.prepared('WIN NOW')
+        def diagnostic(**flags):
+            return dict(evidence={'calculation_supported': True}, conclusion_state='current',
+                        base_reason='Supported current legal-lineup evidence.', **flags)
+        facts = {**facts, 'diagnostics': {'teams': {'1': {'positions': {
+            'QB': diagnostic(resilience_need=True),
+            'WR': diagnostic(starter_need=True, quality_depth_need=True),
+        }}}}, 'trade_need': {'position': 'WR', 'kind': 'starter',
+                           'href': '/trades/recommended?front_office=1&team_need=exact-current-fingerprint'}}
+        before = deepcopy(facts)
+        items = select_insights(facts, [], [])
+        self.assertEqual(items[0]['key'], 'position:WR')
+        self.assertIn('improve the lineup', items[0]['title'])
+        self.assertEqual(items[0]['action'], 'Explore WR trades')
+        self.assertEqual(items[0]['href'], facts['trade_need']['href'])
+        qb = next(item for item in items if item['key'] == 'position:QB')
+        self.assertEqual(qb['href'], '/teams/1#positional-depth')
+        self.assertIn('Cost and uncertainty', cards(items))
+        self.assertEqual(facts, before)
+        # A presentation hint cannot promote provisional findings to a search action.
+        facts['diagnostics']['teams']['1']['positions']['WR']['conclusion_state'] = 'provisional'
+        items = select_insights(facts, [], [])
+        wr = next(item for item in items if item['key'] == 'position:WR')
+        self.assertEqual(items[0]['key'], 'position:QB')
+        self.assertEqual(wr['href'], '/teams/1#positional-depth')
+        self.assertTrue(wr['title'].startswith('Provisional:'))
+
+    def test_missing_assessment_keeps_independently_prepared_diagnostics(self):
+        from services.front_office_brief import select_insights
+        facts = self.prepared('REBUILD')
+        facts['assessment'] = None
+        items = select_insights(facts, [], [])
+        self.assertTrue(any(item['family'] in {'need', 'depth'} for item in items))
+        self.assertFalse(any(item['family'] == 'preparation' for item in items))
 
     def test_exact_goal_cache_hit_and_source_transition_miss(self):
         from services.front_office_brief import prepared_evidence

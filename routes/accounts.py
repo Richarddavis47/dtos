@@ -13,8 +13,9 @@ from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, Resp
 
 from config import SESSION_COOKIE_SECURE, SESSION_TTL_HOURS
 from src.core.accounts import AccountService
-from src.core.league_runtime import LeagueRuntimeError
+from src.core.league_runtime import LeagueRuntimeDeferred, LeagueRuntimeError
 from src.platform.account_context import SESSION_COOKIE, current_account
+from src.platform.runtime_errors import PRIVATE_HEADERS, log_runtime_failure, runtime_error_response
 from src.ui.design_system import DESIGN_SYSTEM_CSS, account_page_header
 
 
@@ -48,6 +49,15 @@ def _source_unavailable(*, identity: bool = False) -> HTMLResponse:
 
 def _preparation_unavailable() -> HTMLResponse:
     return _shell("League preparation unavailable", '<section class="card"><h2>League preparation did not finish.</h2><p>Your saved account and active league are unchanged. Return to your leagues and try again shortly.</p><a class="btn" href="/account/leagues">Your leagues</a></section>', status_code=503)
+
+
+def _preparation_waiting() -> HTMLResponse:
+    response = _shell("League preparation waiting", '<section class="card"><h2>League preparation is waiting</h2>'
+                      '<p>DTOS is waiting for safe capacity before preparing this league. Another preparation task may still be active.</p>'
+                      '<p>Your saved choices were not changed by this attempt. Wait about a minute, then retry from Your leagues. Capacity is checked again on each manual attempt.</p>'
+                      '<p>No Trade search has run.</p><a class="btn" href="/account/leagues">Your leagues</a></section>', status_code=503)
+    response.headers.update({**PRIVATE_HEADERS, "Retry-After": "60"})
+    return response
 
 
 def _unmatched_franchise() -> HTMLResponse:
@@ -173,7 +183,13 @@ def create_accounts_router(*, service: AccountService, runtime_manager: Any) -> 
             return JSONResponse({"status": "unauthorized_league"}, status_code=403)
         try:
             await runtime_manager.get(league_id)
-        except (httpx.HTTPError, LeagueRuntimeError):
+        except LeagueRuntimeDeferred as exc:
+            # Preserve the existing manager's typed outcome, cooldown and
+            # admission policy. The safe logger records locations, not messages.
+            log_runtime_failure(exc.__cause__ or exc, operation="activation_deferred", status=503)
+            return runtime_error_response(503, deferred=True) if api else _preparation_waiting()
+        except (httpx.HTTPError, LeagueRuntimeError) as exc:
+            log_runtime_failure(exc, operation="activation_preparation", status=503)
             if api:
                 return JSONResponse({"status": "league_preparation_unavailable", "message": "League preparation did not finish. Your active league is unchanged. Try again shortly."}, status_code=503)
             return _preparation_unavailable()
