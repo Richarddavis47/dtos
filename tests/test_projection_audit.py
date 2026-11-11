@@ -3,6 +3,7 @@ from __future__ import annotations
 import copy
 import asyncio
 import contextvars
+import gc
 import threading
 import time
 import unittest
@@ -314,6 +315,11 @@ class ProjectionAuditTests(unittest.IsolatedAsyncioTestCase):
                             break
                         await asyncio.sleep(0.005)
                     self.assertTrue(started.is_set())
+                    # This measures whether the pending audit blocks a separate
+                    # request, not collection of earlier test/HTTP fixture graphs.
+                    # Keep GC enabled, but settle setup allocations before the
+                    # unchanged request timer (important in the full 3.14 suite).
+                    gc.collect()
                     began = time.perf_counter()
                     response = await asyncio.wait_for(client.get("/lightweight"), 0.25)
                     latency_ms = (time.perf_counter() - began) * 1000
