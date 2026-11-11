@@ -1,0 +1,83 @@
+{
+  "passed": true,
+  "enforced_limit": 2147483648,
+  "live_fixture_preserved": true,
+  "unreachable_fixture_reclaimed_bytes": 87855104,
+  "unsafe": {
+    "admitted": false,
+    "reason": "capacity",
+    "current_bytes": 1941381120,
+    "limit_bytes": 2147483648,
+    "raw_headroom_bytes": 206102528,
+    "clean_inactive_file_bytes": 0,
+    "conditional_file_credit_bytes": 0,
+    "admission_headroom_bytes": 206102528,
+    "working_bytes": 268435456,
+    "safety_bytes": 134217728,
+    "events": {
+      "oom": 0,
+      "oom_kill": 0
+    }
+  },
+  "healthy": {
+    "admitted": true,
+    "reason": "ready",
+    "current_bytes": 60489728,
+    "limit_bytes": 2147483648,
+    "raw_headroom_bytes": 2086993920,
+    "clean_inactive_file_bytes": 180224,
+    "conditional_file_credit_bytes": 90112,
+    "admission_headroom_bytes": 2087084032,
+    "working_bytes": 268435456,
+    "safety_bytes": 134217728,
+    "events": {
+      "oom": 0,
+      "oom_kill": 0
+    }
+  },
+  "unsafe_operation_calls": 0,
+  "recovery": {
+    "scope": "Between completed unittest modules only: unreachable Python fixtures and free native allocator pages; no cache eviction, worker retirement, admission override or live reference removal",
+    "module": "released_pressure",
+    "collected": 104,
+    "allocator_trimmed": true,
+    "elapsed_seconds": 0.014124147986876778,
+    "before": {
+      "rss_bytes": 69603328,
+      "vms_bytes": 225062912,
+      "system_available_bytes": 17620525056,
+      "memory_accounting_scope": "cgroup",
+      "cgroup_current_bytes": 60514304,
+      "cgroup_limit_bytes": 2147483648,
+      "cgroup_inactive_file_bytes": 217088,
+      "cgroup_anonymous_bytes": 54853632,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0
+      }
+    },
+    "after": {
+      "rss_bytes": 69578752,
+      "vms_bytes": 225062912,
+      "system_available_bytes": 17620385792,
+      "memory_accounting_scope": "cgroup",
+      "cgroup_current_bytes": 60489728,
+      "cgroup_limit_bytes": 2147483648,
+      "cgroup_inactive_file_bytes": 217088,
+      "cgroup_anonymous_bytes": 54853632,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0
+      }
+    }
+  },
+  "scope": "Test-harness cycle/allocator control only; not a production Granite memory profile or app optimization"
+}

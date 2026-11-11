@@ -1,0 +1,595 @@
+{
+  "failure": {
+    "event": "failure",
+    "test": "test_projection_audit.ProjectionAuditTests.test_projection_audit_does_not_block_lightweight_request",
+    "time": 1794363964.9468553,
+    "pid": 32,
+    "rss": 705675264,
+    "cgroup": 869289984,
+    "error_type": "AssertionError",
+    "error_text": "157.62257899041288 not less than 100"
+  },
+  "test_events": [
+    {
+      "event": "start",
+      "test": "test_projection_audit.ProjectionAuditTests.test_projection_audit_does_not_block_lightweight_request",
+      "time": 1794363964.7768798,
+      "pid": 32,
+      "rss": 705581056,
+      "cgroup": 869392384
+    },
+    {
+      "event": "failure",
+      "test": "test_projection_audit.ProjectionAuditTests.test_projection_audit_does_not_block_lightweight_request",
+      "time": 1794363964.9468553,
+      "pid": 32,
+      "rss": 705675264,
+      "cgroup": 869289984,
+      "error_type": "AssertionError",
+      "error_text": "157.62257899041288 not less than 100"
+    },
+    {
+      "event": "stop",
+      "test": "test_projection_audit.ProjectionAuditTests.test_projection_audit_does_not_block_lightweight_request",
+      "time": 1794363964.9485283,
+      "pid": 32,
+      "rss": 705675264,
+      "cgroup": 869289984
+    }
+  ],
+  "resource_samples": [
+    {
+      "time": 1794363963.2416062,
+      "monotonic": 70575.659668208,
+      "memory": {
+        "rss_bytes": 47689728,
+        "vms_bytes": 128372736,
+        "system_available_bytes": 17022259200,
+        "memory_accounting_scope": "cgroup",
+        "cgroup_current_bytes": 883445760,
+        "cgroup_limit_bytes": 2147483648,
+        "cgroup_inactive_file_bytes": 86933504,
+        "cgroup_anonymous_bytes": 763129856,
+        "cgroup_memory_events": {
+          "low": 0,
+          "high": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_kill": 0,
+          "oom_group_kill": 0
+        }
+      },
+      "processes": [
+        {
+          "pid": 7,
+          "ppid": 1,
+          "name": "python",
+          "rss": 47689728,
+          "pss": 38361088,
+          "uss": 33452032
+        },
+        {
+          "pid": 16,
+          "ppid": 7,
+          "name": "python",
+          "rss": 35573760,
+          "pss": 29376512,
+          "uss": 27598848
+        },
+        {
+          "pid": 32,
+          "ppid": 16,
+          "name": "python",
+          "rss": 704950272,
+          "pss": 695511040,
+          "uss": 690495488
+        },
+        {
+          "pid": 39780,
+          "ppid": 32,
+          "name": "python",
+          "rss": 22487040,
+          "pss": 16964608,
+          "uss": 15474688
+        },
+        {
+          "pid": 102162,
+          "ppid": 32,
+          "name": "python",
+          "rss": 21590016,
+          "pss": 16347136,
+          "uss": 15020032
+        }
+      ],
+      "fixture_free_bytes": 12637237248,
+      "anon": 763129856,
+      "file": 102572032,
+      "shmem": 0,
+      "inactive_file": 86933504,
+      "active_file": 15634432,
+      "kernel": 17076224,
+      "kernel_peak": 1500327936,
+      "process_samples_truncated": false,
+      "zombies": 0,
+      "sampling_window_ms": 14.432069001486525
+    },
+    {
+      "time": 1794363963.7563097,
+      "monotonic": 70576.174372071,
+      "memory": {
+        "rss_bytes": 47689728,
+        "vms_bytes": 128372736,
+        "system_available_bytes": 17041657856,
+        "memory_accounting_scope": "cgroup",
+        "cgroup_current_bytes": 874446848,
+        "cgroup_limit_bytes": 2147483648,
+        "cgroup_inactive_file_bytes": 86941696,
+        "cgroup_anonymous_bytes": 754421760,
+        "cgroup_memory_events": {
+          "low": 0,
+          "high": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_kill": 0,
+          "oom_group_kill": 0
+        }
+      },
+      "processes": [
+        {
+          "pid": 7,
+          "ppid": 1,
+          "name": "python",
+          "rss": 47689728,
+          "pss": 38688768,
+          "uss": 33452032
+        },
+        {
+          "pid": 16,
+          "ppid": 7,
+          "name": "python",
+          "rss": 35573760,
+          "pss": 29711360,
+          "uss": 27598848
+        },
+        {
+          "pid": 32,
+          "ppid": 16,
+          "name": "python",
+          "rss": 711254016,
+          "pss": 702142464,
+          "uss": 696799232
+        },
+        {
+          "pid": 39780,
+          "ppid": 32,
+          "name": "python",
+          "rss": 22487040,
+          "pss": 17301504,
+          "uss": 15474688
+        }
+      ],
+      "fixture_free_bytes": 12637233152,
+      "anon": 754421760,
+      "file": 102576128,
+      "shmem": 0,
+      "inactive_file": 86941696,
+      "active_file": 15634432,
+      "kernel": 16928768,
+      "kernel_peak": 1500327936,
+      "process_samples_truncated": false,
+      "zombies": 0,
+      "sampling_window_ms": 13.945046011940576
+    },
+    {
+      "time": 1794363964.2705324,
+      "monotonic": 70576.688594347,
+      "memory": {
+        "rss_bytes": 47689728,
+        "vms_bytes": 128372736,
+        "system_available_bytes": 17041399808,
+        "memory_accounting_scope": "cgroup",
+        "cgroup_current_bytes": 876097536,
+        "cgroup_limit_bytes": 2147483648,
+        "cgroup_inactive_file_bytes": 86941696,
+        "cgroup_anonymous_bytes": 755396608,
+        "cgroup_memory_events": {
+          "low": 0,
+          "high": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_kill": 0,
+          "oom_group_kill": 0
+        }
+      },
+      "processes": [
+        {
+          "pid": 7,
+          "ppid": 1,
+          "name": "python",
+          "rss": 47689728,
+          "pss": 38688768,
+          "uss": 33452032
+        },
+        {
+          "pid": 16,
+          "ppid": 7,
+          "name": "python",
+          "rss": 35573760,
+          "pss": 29711360,
+          "uss": 27598848
+        },
+        {
+          "pid": 32,
+          "ppid": 16,
+          "name": "python",
+          "rss": 712228864,
+          "pss": 703117312,
+          "uss": 697774080
+        },
+        {
+          "pid": 39780,
+          "ppid": 32,
+          "name": "python",
+          "rss": 22487040,
+          "pss": 17301504,
+          "uss": 15474688
+        }
+      ],
+      "fixture_free_bytes": 12637229056,
+      "anon": 755396608,
+      "file": 102580224,
+      "shmem": 0,
+      "inactive_file": 86941696,
+      "active_file": 15634432,
+      "kernel": 16941056,
+      "kernel_peak": 1500327936,
+      "process_samples_truncated": false,
+      "zombies": 0,
+      "sampling_window_ms": 14.00060299783945
+    },
+    {
+      "time": 1794363964.7847795,
+      "monotonic": 70577.202842306,
+      "memory": {
+        "rss_bytes": 47689728,
+        "vms_bytes": 128372736,
+        "system_available_bytes": 17043308544,
+        "memory_accounting_scope": "cgroup",
+        "cgroup_current_bytes": 869392384,
+        "cgroup_limit_bytes": 2147483648,
+        "cgroup_inactive_file_bytes": 86941696,
+        "cgroup_anonymous_bytes": 748699648,
+        "cgroup_memory_events": {
+          "low": 0,
+          "high": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_kill": 0,
+          "oom_group_kill": 0
+        }
+      },
+      "processes": [
+        {
+          "pid": 7,
+          "ppid": 1,
+          "name": "python",
+          "rss": 47689728,
+          "pss": 38688768,
+          "uss": 33452032
+        },
+        {
+          "pid": 16,
+          "ppid": 7,
+          "name": "python",
+          "rss": 35573760,
+          "pss": 29711360,
+          "uss": 27598848
+        },
+        {
+          "pid": 32,
+          "ppid": 16,
+          "name": "python",
+          "rss": 705626112,
+          "pss": 696514560,
+          "uss": 691171328
+        },
+        {
+          "pid": 39780,
+          "ppid": 32,
+          "name": "python",
+          "rss": 22487040,
+          "pss": 17301504,
+          "uss": 15474688
+        }
+      ],
+      "fixture_free_bytes": 12637220864,
+      "anon": 748699648,
+      "file": 102580224,
+      "shmem": 0,
+      "inactive_file": 86941696,
+      "active_file": 15634432,
+      "kernel": 16932864,
+      "kernel_peak": 1500327936,
+      "process_samples_truncated": false,
+      "zombies": 0,
+      "sampling_window_ms": 13.302266001119278
+    },
+    {
+      "time": 1794363965.2983503,
+      "monotonic": 70577.716412077,
+      "memory": {
+        "rss_bytes": 47689728,
+        "vms_bytes": 128372736,
+        "system_available_bytes": 17045811200,
+        "memory_accounting_scope": "cgroup",
+        "cgroup_current_bytes": 869535744,
+        "cgroup_limit_bytes": 2147483648,
+        "cgroup_inactive_file_bytes": 86941696,
+        "cgroup_anonymous_bytes": 748896256,
+        "cgroup_memory_events": {
+          "low": 0,
+          "high": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_kill": 0,
+          "oom_group_kill": 0
+        }
+      },
+      "processes": [
+        {
+          "pid": 7,
+          "ppid": 1,
+          "name": "python",
+          "rss": 47689728,
+          "pss": 38688768,
+          "uss": 33452032
+        },
+        {
+          "pid": 16,
+          "ppid": 7,
+          "name": "python",
+          "rss": 35577856,
+          "pss": 29715456,
+          "uss": 27602944
+        },
+        {
+          "pid": 32,
+          "ppid": 16,
+          "name": "python",
+          "rss": 705724416,
+          "pss": 696612864,
+          "uss": 691269632
+        },
+        {
+          "pid": 39780,
+          "ppid": 32,
+          "name": "python",
+          "rss": 22487040,
+          "pss": 17301504,
+          "uss": 15474688
+        }
+      ],
+      "fixture_free_bytes": 12637220864,
+      "anon": 748896256,
+      "file": 102588416,
+      "shmem": 0,
+      "inactive_file": 86941696,
+      "active_file": 15634432,
+      "kernel": 16994304,
+      "kernel_peak": 1500327936,
+      "process_samples_truncated": false,
+      "zombies": 0,
+      "sampling_window_ms": 13.307917994097807
+    },
+    {
+      "time": 1794363965.8119414,
+      "monotonic": 70578.230002924,
+      "memory": {
+        "rss_bytes": 47689728,
+        "vms_bytes": 128372736,
+        "system_available_bytes": 17047597056,
+        "memory_accounting_scope": "cgroup",
+        "cgroup_current_bytes": 869437440,
+        "cgroup_limit_bytes": 2147483648,
+        "cgroup_inactive_file_bytes": 86949888,
+        "cgroup_anonymous_bytes": 748716032,
+        "cgroup_memory_events": {
+          "low": 0,
+          "high": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_kill": 0,
+          "oom_group_kill": 0
+        }
+      },
+      "processes": [
+        {
+          "pid": 7,
+          "ppid": 1,
+          "name": "python",
+          "rss": 47689728,
+          "pss": 38688768,
+          "uss": 33452032
+        },
+        {
+          "pid": 16,
+          "ppid": 7,
+          "name": "python",
+          "rss": 35577856,
+          "pss": 29715456,
+          "uss": 27602944
+        },
+        {
+          "pid": 32,
+          "ppid": 16,
+          "name": "python",
+          "rss": 705544192,
+          "pss": 696432640,
+          "uss": 691089408
+        },
+        {
+          "pid": 39780,
+          "ppid": 32,
+          "name": "python",
+          "rss": 22487040,
+          "pss": 17301504,
+          "uss": 15474688
+        }
+      ],
+      "fixture_free_bytes": 12637220864,
+      "anon": 748716032,
+      "file": 102588416,
+      "shmem": 0,
+      "inactive_file": 86949888,
+      "active_file": 15634432,
+      "kernel": 16916480,
+      "kernel_peak": 1500327936,
+      "process_samples_truncated": false,
+      "zombies": 0,
+      "sampling_window_ms": 14.18481400469318
+    },
+    {
+      "time": 1794363966.326449,
+      "monotonic": 70578.744511415,
+      "memory": {
+        "rss_bytes": 47689728,
+        "vms_bytes": 128372736,
+        "system_available_bytes": 17089605632,
+        "memory_accounting_scope": "cgroup",
+        "cgroup_current_bytes": 869584896,
+        "cgroup_limit_bytes": 2147483648,
+        "cgroup_inactive_file_bytes": 87052288,
+        "cgroup_anonymous_bytes": 748826624,
+        "cgroup_memory_events": {
+          "low": 0,
+          "high": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_kill": 0,
+          "oom_group_kill": 0
+        }
+      },
+      "processes": [
+        {
+          "pid": 7,
+          "ppid": 1,
+          "name": "python",
+          "rss": 47689728,
+          "pss": 38688768,
+          "uss": 33452032
+        },
+        {
+          "pid": 16,
+          "ppid": 7,
+          "name": "python",
+          "rss": 35577856,
+          "pss": 29715456,
+          "uss": 27602944
+        },
+        {
+          "pid": 32,
+          "ppid": 16,
+          "name": "python",
+          "rss": 705654784,
+          "pss": 696543232,
+          "uss": 691200000
+        },
+        {
+          "pid": 39780,
+          "ppid": 32,
+          "name": "python",
+          "rss": 22487040,
+          "pss": 17301504,
+          "uss": 15474688
+        }
+      ],
+      "fixture_free_bytes": 12637081600,
+      "anon": 748826624,
+      "file": 102715392,
+      "shmem": 0,
+      "inactive_file": 87052288,
+      "active_file": 15663104,
+      "kernel": 16928768,
+      "kernel_peak": 1500327936,
+      "process_samples_truncated": false,
+      "zombies": 0,
+      "sampling_window_ms": 13.936129995272495
+    },
+    {
+      "time": 1794363966.8406272,
+      "monotonic": 70579.258689499,
+      "memory": {
+        "rss_bytes": 47689728,
+        "vms_bytes": 128372736,
+        "system_available_bytes": 17061654528,
+        "memory_accounting_scope": "cgroup",
+        "cgroup_current_bytes": 907370496,
+        "cgroup_limit_bytes": 2147483648,
+        "cgroup_inactive_file_bytes": 87252992,
+        "cgroup_anonymous_bytes": 785973248,
+        "cgroup_memory_events": {
+          "low": 0,
+          "high": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_kill": 0,
+          "oom_group_kill": 0
+        }
+      },
+      "processes": [
+        {
+          "pid": 7,
+          "ppid": 1,
+          "name": "python",
+          "rss": 47689728,
+          "pss": 38550528,
+          "uss": 33452032
+        },
+        {
+          "pid": 16,
+          "ppid": 7,
+          "name": "python",
+          "rss": 35581952,
+          "pss": 29614080,
+          "uss": 27607040
+        },
+        {
+          "pid": 32,
+          "ppid": 16,
+          "name": "python",
+          "rss": 711471104,
+          "pss": 701697024,
+          "uss": 695967744
+        },
+        {
+          "pid": 39780,
+          "ppid": 32,
+          "name": "python",
+          "rss": 22487040,
+          "pss": 17193984,
+          "uss": 15474688
+        },
+        {
+          "pid": 102246,
+          "ppid": 32,
+          "name": "MainThread",
+          "rss": 74326016,
+          "pss": 71964672,
+          "uss": 70950912
+        }
+      ],
+      "fixture_free_bytes": 12636766208,
+      "anon": 785973248,
+      "file": 103022592,
+      "shmem": 0,
+      "inactive_file": 87252992,
+      "active_file": 15769600,
+      "kernel": 17993728,
+      "kernel_peak": 1500327936,
+      "process_samples_truncated": false,
+      "zombies": 0,
+      "sampling_window_ms": 18.692230005399324
+    }
+  ],
+  "scope": "Original failed local assertion; current cgroup CPU counters are not a sample from the exact failure instant. The async audit remained pending and the source score route returned200 before only the100ms latency assertion failed."
+}

@@ -1,0 +1,7 @@
+Traceback (most recent call last):
+  File "<stdin>", line 6, in <module>
+  File "/workspace/dtos-publisher-2246/tools/release/publish.py", line 845, in verify_prior_evidence
+    require(digest(path) == plan['prior_evidence_sha256'], 'Prior evidence archive changed')
+  File "/workspace/dtos-publisher-2246/tools/release/publish.py", line 32, in require
+    raise RuntimeError(message)
+RuntimeError: Prior evidence archive changed
