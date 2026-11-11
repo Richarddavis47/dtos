@@ -1,0 +1,60 @@
+{
+  "source": {
+    "baseline": "8c051475524e2fa46dbad05fb94c65bc8b1e5310",
+    "candidate": "d01acbe65f28a509457524a5e481558cf24d4b2a",
+    "tree": "1b282fe3e29a76efbbdab08b8dbd42ff9e1d0846",
+    "branch": "feat/draft-capital-2247",
+    "version": "1.22.32",
+    "build": 2247,
+    "recorded_at": "2026-11-11T17:14:41.381557+00:00",
+    "expected_test_count": 4378,
+    "pr": 336
+  },
+  "publisher_guard": {
+    "path": "/workspace/dtos-publisher-2246/tools/release/publish.py",
+    "sha256": "91370b6d38c3be5c212e057e5cd8a33b4361b68926bdf9b899bff8a0baba6830"
+  },
+  "all_native_guards_passed": true,
+  "receipts": [
+    {
+      "name": "local-preflight",
+      "guard": "verify_preflight",
+      "passed": true,
+      "archive": "/workspace/2247-draft-capital/local-resource-native-archives/local-preflight.zip",
+      "archive_sha256": "fe9bc167fcc3a3d06ae989a06e5d1a6c947d4e79d3840d6198919813afa1bcc0",
+      "archive_bytes": 3718,
+      "members": {
+        "result.json": "1437a312192147240809364c25175f510ab94fe7641db1b67daae7f2284cc89c",
+        "raw.log": "c2334463fe08e3509bdedc6223e368985a53b4c8110e00e18c2e64e1fd4095e5",
+        "SHA256SUMS": "a79c6f379a5f6b7ce2824a0461f79f1e3b6e348f69c860eb8ce4543b31670ebb"
+      }
+    },
+    {
+      "name": "local-restoration-unused",
+      "guard": "verify_actuals_restoration",
+      "passed": true,
+      "archive": "/workspace/2247-draft-capital/local-resource-native-archives/local-restoration-unused.zip",
+      "archive_sha256": "62e359745627973cb044056bddb6330d25f50d0b72a0f90781bd609c2712cab2",
+      "archive_bytes": 7285492,
+      "members": {
+        "evidence/result.json": "8f9623452bc4629fd3412bf60a863f569072dafae299f9a460555c3d547030d5",
+        "raw.log": "ca3f92605a4d7a0409c8f9167902ad6e9324d9f88972a158c599b218e8950531",
+        "prior-study.zip": "df5c88eda13a0671104c76a943b05032d7adfa089d11e738785b11e35a932439",
+        "SHA256SUMS": "71d68701e0bd61f41623721b20deba7b3cf6aa3a085dede256985b6e8b846754"
+      }
+    },
+    {
+      "name": "local-resident-refresh",
+      "guard": "verify_resident_refresh",
+      "passed": true,
+      "archive": "/workspace/2247-draft-capital/local-resource-native-archives/local-resident-refresh.zip",
+      "archive_sha256": "71952a473d3046da7f87587955c137e5dbd4a1787c02f02df3b58e421d1a6d18",
+      "archive_bytes": 5743,
+      "members": {
+        "evidence/result.json": "3870319f003033283180458e36015e2c2084a961b550f59f9216e2ecba57a4eb",
+        "raw.log": "02f5b8ce9e418d4df90b5522343e2138b2ea0e53b84bb111255450a629da6c5d",
+        "SHA256SUMS": "407b2ac57852e605a72ea755127a450e5f4113963985969c02b4b8c67ffebc81"
+      }
+    }
+  ]
+}

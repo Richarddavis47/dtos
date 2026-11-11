@@ -1,0 +1,974 @@
+diff --git a/.github/workflows/product-browser.yml b/.github/workflows/product-browser.yml
+index 9ab6f12..873602c 100644
+--- a/.github/workflows/product-browser.yml
++++ b/.github/workflows/product-browser.yml
+@@ -35,7 +35,7 @@ jobs:
+         # This bounded CI allowance does not change any application timeout.
+         timeout-minutes: 25
+         run: |
+-          docker run --rm --memory=2g --memory-swap=2g --cpus=2 --network=none -e NODE_OPTIONS -e DTOS_TRADE_RESOURCE_BROWSER_EVIDENCE=.validation/trade-resource/evidence/browser -e DTOS_LINEUP_DETAIL_EVIDENCE=.validation/trade-resource/evidence/browser/lineups -e DTOS_TEAM_NEED_EVIDENCE=.validation/trade-resource/evidence/browser/team-need -e DTOS_ACTIVATION_EVIDENCE=.validation/trade-resource/evidence/browser/activation -e DTOS_FRONT_OFFICE_WORKFLOW_EVIDENCE=.validation/trade-resource/evidence/browser/front-office-workflow -e DTOS_PROTECTIONS_EVIDENCE=.validation/trade-resource/evidence/browser/protections -e DTOS_COMPARE_EVIDENCE=.validation/trade-resource/evidence/browser/offer-comparison -v "$PWD:$PWD" -w "$PWD" -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0="$PWD" dtos-browser-validation python -m unittest -v tests.test_account_activation_deferral tests.test_front_office_workflow_browser tests.test_recommended_protections_browser tests.test_offer_comparison tests.test_offer_comparison_browser tests.test_team_trade_need tests.test_team_trade_need_browser tests.test_00_trade_simple_browser tests.test_trade_actionability tests.test_trade_actionability_browser tests.test_trade_conditional_summary tests.test_trade_recommendation_clarity tests.test_batch5_recommended_browser tests.test_franchise_timeline_coverage tests.test_franchise_timeline_browser tests.test_trade_reserve_evidence tests.test_trade_lineup_detail tests.test_trade_lineup_detail_browser tests.test_trade_resource_admission tests.test_trade_resource_browser tests.test_multileague_projection_browser tests.test_relative_personal_values tests.test_relative_personal_browser tests.test_decision_history_continuity_browser tests.test_personal_rankings_compatibility tests.test_personal_rankings_recovery_storage tests.test_personal_rankings_recovery_trade tests.test_personal_rankings_recovery_browser tests.test_personal_rankings_recovery_trade_browser tests.test_personal_rankings_partial_browser tests.test_dossier_plain_english tests.test_plain_english_home_depth tests.test_builder_plain_english tests.test_plain_english_preservation_final tests.test_plain_english_final_browser tests.test_plain_english_decisions tests.test_plain_english_browser tests.test_personal_rankings_availability tests.test_personal_rankings_availability_browser tests.test_personal_rankings tests.test_personal_rankings_store tests.test_personal_rankings_integration tests.test_personal_trade_workflows tests.test_personal_rankings_browser tests.test_personal_rankings_accessibility_browser tests.test_personal_trade_browser tests.test_market_trend_current_browser tests.test_standings_positioning tests.test_standings_positioning_browser tests.test_matchup_portraits_browser tests.test_matchups_phone tests.test_matchups_phone_browser tests.test_trade_projection_freshness tests.test_trade_projection_freshness_browser tests.test_trade_preview_scope_browser tests.test_trade_simple_discovery tests.test_fois_final_trust_browser tests.test_fois_evidence_integrity tests.test_fois_trust_browser tests.test_proposal_tray_browser tests.test_journey_evidence tests.test_journey_corrections_browser tests.test_dossier_status_browser tests.test_phone_visual_corrections_browser tests.test_phone_design_semantics tests.test_phone_design_browser tests.test_trade_calculator tests.test_trade_calculator_browser tests.test_calculator_balance_feedback_browser tests.test_calculator_stale_feedback_browser tests.test_trade_explicit_navigation_browser tests.test_trade_navigation_identity tests.test_trade_navigation_browser tests.test_player_actions tests.test_player_actions_browser tests.test_trade_performance tests.test_trade_construction_performance tests.test_trade_performance_browser tests.test_technical_details_browser tests.test_canonical_asset_facts tests.test_canonical_asset_facts_browser tests.test_product_browser_journey tests.test_matchup_browser_contract tests.test_trade_center_browser tests.test_trade_scout_state_browser tests.test_make_it_cheaper_browser tests.test_trade_center_accessibility tests.test_trade_workspace_browser tests.test_trade_workspace_batch1 tests.test_live_inspection tests.test_browser_fixture_images tests.test_visual_retirement tests.test_trade_decision_experience tests.test_trade_decision_browser tests.test_trade_decision_http_browser tests.test_trade_decision_standings_browser tests.test_batch6_trade_ux tests.test_trade_p2_browser tests.test_trade_final_evidence_browser tests.test_trade_endorsement_integrity tests.test_trade_missing_market_presentation tests.test_batch6_trade_explanation tests.test_league_entry_coordination
++          docker run --rm --memory=2g --memory-swap=2g --cpus=2 --network=none -e NODE_OPTIONS -e DTOS_TRADE_RESOURCE_BROWSER_EVIDENCE=.validation/trade-resource/evidence/browser -e DTOS_LINEUP_DETAIL_EVIDENCE=.validation/trade-resource/evidence/browser/lineups -e DTOS_TEAM_NEED_EVIDENCE=.validation/trade-resource/evidence/browser/team-need -e DTOS_ACTIVATION_EVIDENCE=.validation/trade-resource/evidence/browser/activation -e DTOS_FRONT_OFFICE_WORKFLOW_EVIDENCE=.validation/trade-resource/evidence/browser/front-office-workflow -e DTOS_PROTECTIONS_EVIDENCE=.validation/trade-resource/evidence/browser/protections -e DTOS_COMPARE_EVIDENCE=.validation/trade-resource/evidence/browser/offer-comparison -v "$PWD:$PWD" -w "$PWD" -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0="$PWD" dtos-browser-validation python -m unittest -v tests.test_trade_capital_inventory tests.test_trade_capital_browser tests.test_account_activation_deferral tests.test_front_office_workflow_browser tests.test_recommended_protections_browser tests.test_offer_comparison tests.test_offer_comparison_browser tests.test_team_trade_need tests.test_team_trade_need_browser tests.test_00_trade_simple_browser tests.test_trade_actionability tests.test_trade_actionability_browser tests.test_trade_conditional_summary tests.test_trade_recommendation_clarity tests.test_batch5_recommended_browser tests.test_franchise_timeline_coverage tests.test_franchise_timeline_browser tests.test_trade_reserve_evidence tests.test_trade_lineup_detail tests.test_trade_lineup_detail_browser tests.test_trade_resource_admission tests.test_trade_resource_browser tests.test_multileague_projection_browser tests.test_relative_personal_values tests.test_relative_personal_browser tests.test_decision_history_continuity_browser tests.test_personal_rankings_compatibility tests.test_personal_rankings_recovery_storage tests.test_personal_rankings_recovery_trade tests.test_personal_rankings_recovery_browser tests.test_personal_rankings_recovery_trade_browser tests.test_personal_rankings_partial_browser tests.test_dossier_plain_english tests.test_plain_english_home_depth tests.test_builder_plain_english tests.test_plain_english_preservation_final tests.test_plain_english_final_browser tests.test_plain_english_decisions tests.test_plain_english_browser tests.test_personal_rankings_availability tests.test_personal_rankings_availability_browser tests.test_personal_rankings tests.test_personal_rankings_store tests.test_personal_rankings_integration tests.test_personal_trade_workflows tests.test_personal_rankings_browser tests.test_personal_rankings_accessibility_browser tests.test_personal_trade_browser tests.test_market_trend_current_browser tests.test_standings_positioning tests.test_standings_positioning_browser tests.test_matchup_portraits_browser tests.test_matchups_phone tests.test_matchups_phone_browser tests.test_trade_projection_freshness tests.test_trade_projection_freshness_browser tests.test_trade_preview_scope_browser tests.test_trade_simple_discovery tests.test_fois_final_trust_browser tests.test_fois_evidence_integrity tests.test_fois_trust_browser tests.test_proposal_tray_browser tests.test_journey_evidence tests.test_journey_corrections_browser tests.test_dossier_status_browser tests.test_phone_visual_corrections_browser tests.test_phone_design_semantics tests.test_phone_design_browser tests.test_trade_calculator tests.test_trade_calculator_browser tests.test_calculator_balance_feedback_browser tests.test_calculator_stale_feedback_browser tests.test_trade_explicit_navigation_browser tests.test_trade_navigation_identity tests.test_trade_navigation_browser tests.test_player_actions tests.test_player_actions_browser tests.test_trade_performance tests.test_trade_construction_performance tests.test_trade_performance_browser tests.test_technical_details_browser tests.test_canonical_asset_facts tests.test_canonical_asset_facts_browser tests.test_product_browser_journey tests.test_matchup_browser_contract tests.test_trade_center_browser tests.test_trade_scout_state_browser tests.test_make_it_cheaper_browser tests.test_trade_center_accessibility tests.test_trade_workspace_browser tests.test_trade_workspace_batch1 tests.test_live_inspection tests.test_browser_fixture_images tests.test_visual_retirement tests.test_trade_decision_experience tests.test_trade_decision_browser tests.test_trade_decision_http_browser tests.test_trade_decision_standings_browser tests.test_batch6_trade_ux tests.test_trade_p2_browser tests.test_trade_final_evidence_browser tests.test_trade_endorsement_integrity tests.test_trade_missing_market_presentation tests.test_batch6_trade_explanation tests.test_league_entry_coordination
+           docker run --rm --memory=2g --memory-swap=2g --cpus=2 --network=none -e NODE_OPTIONS -v "$PWD:$PWD" -w "$PWD" -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0="$PWD" dtos-browser-validation python -m unittest -v tests.test_historical_evidence_weeks tests.test_fois_final_trust tests.test_trade_time_market_evidence tests.test_trade_time_market_evidence_browser
+ 
+ 
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index 3cd0086..414bedc 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -1,3 +1,11 @@
++# v1.22.32 / build 2247 — Your draft capital after this trade
++
++Prepared Trade assessments show owned picks before and after the exact exchange, grouped by retained season and the league's configured draft rounds. Own firsts remain distinct from acquired firsts; expandable identities include the original franchise. The existing two-offer comparison shows each recorded inventory alongside keeping the roster.
++
++Counts require the canonical pick ledger, native Sleeper transfers and team-owned picks to reconcile into a complete inventory for the retained seasons. Partial evidence preserves verified exchange movements with unknown remaining totals. Conflicting ownership and duplicate identities are withheld. Retained offers never substitute today's inventory and remain NOT REVALIDATED. Ownership support is independent of missing projections. Viewing or expanding the panel starts no evaluation, source request or synchronization.
++
++Scoring, Sleeper results/projections, Market/Custom values, capital policy, bilateral qualification, saved preferences, submitted lineups and resource safeguards are unchanged. See docs/audits/DRAFT_CAPITAL_2247.md for the evidence boundary and reproducible controls.
++
+ # v1.22.31 / build 2246 — Follow through on a supported front-office action
+ 
+ Home carries the existing current, prepared roster need into Trade Center's editable position filter, with the reason visible and starter needs distinguished from depth needs. The existing saved-goal priorities remain in force. Missing preparation is explained as missing evidence, rather than a weak roster or proof that no opportunity exists. Opening the action never starts a search.
+diff --git a/RELEASE_NOTES.md b/RELEASE_NOTES.md
+index 1379649..996532c 100644
+--- a/RELEASE_NOTES.md
++++ b/RELEASE_NOTES.md
+@@ -1,3 +1,11 @@
++# v1.22.32 / build 2247 — Your draft capital after this trade
++
++Prepared Trade assessments show owned picks before and after the exact exchange, grouped by retained season and the league's configured draft rounds. Own firsts remain distinct from acquired firsts; expandable identities include the original franchise. The existing two-offer comparison shows each recorded inventory alongside keeping the roster.
++
++Counts require the canonical pick ledger, native Sleeper transfers and team-owned picks to reconcile into a complete inventory for the retained seasons. Partial evidence preserves verified exchange movements with unknown remaining totals. Conflicting ownership and duplicate identities are withheld. Retained offers never substitute today's inventory and remain NOT REVALIDATED. Ownership support is independent of missing projections. Viewing or expanding the panel starts no evaluation, source request or synchronization.
++
++Scoring, Sleeper results/projections, Market/Custom values, capital policy, bilateral qualification, saved preferences, submitted lineups and resource safeguards are unchanged. See docs/audits/DRAFT_CAPITAL_2247.md for the evidence boundary and reproducible controls.
++
+ # v1.22.31 / build 2246 — Follow through on a supported front-office action
+ 
+ Home carries the existing current, prepared roster need into Trade Center's editable position filter, with the reason visible and starter needs distinguished from depth needs. The existing saved-goal priorities remain in force. Missing preparation is explained as missing evidence, rather than a weak roster or proof that no opportunity exists. Opening the action never starts a search.
+diff --git a/app_metadata.py b/app_metadata.py
+index b15bf0d..64b97ac 100644
+--- a/app_metadata.py
++++ b/app_metadata.py
+@@ -7,10 +7,10 @@ from datetime import datetime, timezone
+ from pathlib import Path
+ 
+ APPLICATION_NAME = "DTOS"
+-VERSION = "1.22.31"
+-PRODUCT_VERSION = "1.22.31"
+-BUILD_NUMBER = 2246
+-RELEASE_CODENAME = "Truthful League Preparation"
++VERSION = "1.22.32"
++PRODUCT_VERSION = "1.22.32"
++BUILD_NUMBER = 2247
++RELEASE_CODENAME = "Draft Capital After the Trade"
+ APPLICATION_STARTED_AT = datetime.now(timezone.utc).isoformat()
+ 
+ _REPOSITORY_ROOT = Path(__file__).resolve().parent
+diff --git a/docs/audits/DRAFT_CAPITAL_2247.md b/docs/audits/DRAFT_CAPITAL_2247.md
+new file mode 100644
+index 0000000..95e3640
+--- /dev/null
++++ b/docs/audits/DRAFT_CAPITAL_2247.md
+@@ -0,0 +1,21 @@
++# Draft capital after a prepared exchange — build 2247
++
++## Boundary
++
++The existing Trade evaluator already admits exact canonical pick assets and capital-policy evidence. This extension adds ownership-only presentation, not a new capital assessment or recommendation rule. `services/trade_capital_inventory.py` reconciles retained canonical ledger tuples `(season, round, original roster)` with native Sleeper transfers and each franchise's owned-pick view. A complete inventory must cover every configured round/original franchise for every season actually in that ledger. No absent season is created. Native historical transfers outside the retained future ledger are not converted into new picks.
++
++A bounded recorded snapshot contains the active franchise's exact inventory, exchange movements, configured rounds, observed seasons, franchise labels, and a deterministic ownership digest. Missing inventory/configuration withholds counts while otherwise verified proposal movements remain available. Duplicate, conflicting, foreign-league or incorrectly owned evidence withholds ambiguous movements as well. Complete empty inventory supports zero; missing evidence never does.
++
++## Recorded comparisons
++
++Both Evaluate and generated offers use the same snapshot producer after existing bilateral evaluation. The two-offer comparison reads each assessment's captured snapshot. It does not consult today's inventory, optimize another lineup or issue HTTP requests. A shared keep-roster inventory is displayed only when both recorded ownership generations agree; incompatible individual inventories remain separate. Projection/Market compatibility continues to govern lineup/value comparisons independently of ownership.
++
++The existing 12k/512-node analytical disclosure bound remains unchanged. Ownership has its own bounded envelope (10k serialized characters, at most eight 1400-character chunks) within the unchanged 64k context/100k offer/200k selected-offer limits. Missing/truncated snapshots produce unknown inventory, never reconstructed counts. No permanent price/source store or account preference is added.
++
++## Verification plan and limits
++
++`tests/test_trade_capital_inventory.py` covers exact same-round original franchises, native ownership, own/acquired firsts, player-only exchanges, complete zero, partial/legacy evidence, invalid identities, isolated leagues and recorded ownership changes. An authenticated prepared Evaluate route proves supported inventory survives missing projections.
++
++`tests/test_trade_capital_browser.py` uses real authenticated disposable one-QB/K/DEF and Superflex evaluations, two alternatives, exact disclosure identities, four viewports, keyboard disclosure, reload, changed ownership and league switching. Existing comparison journeys additionally cover touch, replacement/removal and contextual return. The hosted Product workflow includes the new controls; canonical discovery includes them in full regression. Source-pinned original logs and screenshots, not this plan, establish final outcomes.
++
++Fixtures do not establish live owner acceptance. No production Trade search, synchronization, preference update or real exchange is performed by validation. Historical attempt logs are retained separately, including development fixture/rendering failures. Physical iPhone/Safari acceptance is not claimed.
+diff --git a/services/trade_capital_inventory.py b/services/trade_capital_inventory.py
+new file mode 100644
+index 0000000..1a20df2
+--- /dev/null
++++ b/services/trade_capital_inventory.py
+@@ -0,0 +1,212 @@
++"""Bounded ownership-only presentation. No capital scoring or source acquisition."""
++
++import hashlib
++import json
++
++
++def _integer(value):
++    if isinstance(value, bool) or not str(value).isdigit() or int(value) <= 0:
++        raise ValueError("Ambiguous pick identity")
++    return int(value)
++
++
++def _pick(row, league_id, rounds, rosters):
++    if row.get("league_id") not in (None, league_id):
++        raise ValueError("Incompatible pick league")
++    year = _integer(row.get("year", row.get("season")))
++    if (
++        row.get("year") is not None
++        and row.get("season") is not None
++        and _integer(row["season"]) != year
++    ):
++        raise ValueError("Conflicting pick season")
++    round_number = _integer(row.get("round"))
++    original, owner = (
++        _integer(row.get("original_roster_id")),
++        _integer(row.get("current_owner_id")),
++    )
++    if round_number > rounds or original not in rosters or owner not in rosters:
++        raise ValueError("Pick identity or configured round unavailable")
++    return (year, round_number, original), owner
++
++
++def inventory_baseline(data, active):
++    """Reconcile the existing canonical ledger with native transfers and team views.
++
++    Completeness is limited to seasons actually retained in that ledger. Never
++    mint a pick/season to fill its grid. Legacy/partial publications stay unknown.
++    """
++    league = data.get("league") or {}
++    result = dict(
++        schema=1,
++        league=str(league.get("league_id") or ""),
++        roster=active,
++        complete=False,
++        before=[],
++        seasons=[],
++        rounds=0,
++        names={},
++        generation=None,
++        reason="Compatible complete pick inventory is unavailable; remaining totals are unknown.",
++    )
++    try:
++        teams = data.get("teams") or []
++        rosters = {_integer(t.get("roster_id")): t for t in teams}
++        if len(rosters) != len(teams):
++            raise ValueError("Duplicate franchise identity")
++        result["names"] = {
++            str(r): str(t.get("team_name") or r)[:100] for r, t in rosters.items()
++        }
++        configured_rounds = (league.get("settings") or {}).get("draft_rounds")
++        if configured_rounds is None:
++            return result
++        rounds = _integer(configured_rounds)
++        if not result["league"] or active not in rosters or rounds > 20:
++            return result
++        ledger, native = data.get("pick_ledger"), data.get("traded_picks")
++        if (
++            not isinstance(ledger, list)
++            or not ledger
++            or len(ledger) > 2048
++            or not isinstance(native, list)
++            or len(native) > 2048
++        ):
++            return result
++        entries, transfers = {}, {}
++        for row in ledger:
++            key, owner = _pick(row, result["league"], rounds, rosters)
++            if key in entries:
++                raise ValueError("Duplicate or conflicting pick inventory")
++            entries[key] = owner
++        for row in native:
++            if _integer(row.get("season")) <= _integer(league.get("season")):
++                continue  # Historical transfers are outside this retained future inventory.
++            key, owner = _pick(
++                dict(
++                    row,
++                    original_roster_id=row.get("roster_id"),
++                    current_owner_id=row.get("owner_id"),
++                ),
++                result["league"],
++                rounds,
++                rosters,
++            )
++            if key in transfers or key not in entries:
++                raise ValueError("Duplicate or unavailable transfer identity")
++            transfers[key] = owner
++        if any(owner != transfers.get(key, key[2]) for key, owner in entries.items()):
++            raise ValueError("Canonical/native pick ownership conflicts")
++        owned = {}
++        for roster, team in rosters.items():
++            if not isinstance(team.get("picks_owned"), list):
++                return result
++            for row in team["picks_owned"]:
++                key, owner = _pick(row, result["league"], rounds, rosters)
++                if owner != roster or key in owned or entries.get(key) != owner:
++                    raise ValueError("Duplicate or conflicting team pick ownership")
++                owned[key] = owner
++        seasons = sorted({key[0] for key in entries})
++        complete = owned == entries and len(entries) == len(seasons) * rounds * len(
++            rosters
++        )
++        body = [
++            result["league"],
++            rounds,
++            sorted(entries.items()),
++            sorted((r, str(t.get("team_name") or r)) for r, t in rosters.items()),
++        ]
++        result["_owners"] = {
++            f"{k[0]}-R{k[1]}-{k[2]}": owner for k, owner in entries.items()
++        }
++        result.update(
++            generation=hashlib.sha256(
++                json.dumps(body, separators=(",", ":")).encode()
++            ).hexdigest(),
++            complete=complete,
++            before=[
++                list(key) for key, owner in sorted(entries.items()) if owner == active
++            ],
++            seasons=seasons,
++            rounds=rounds,
++            names={
++                str(r): str(t.get("team_name") or r)[:100] for r, t in rosters.items()
++            },
++            reason="Counts cover only the retained seasons and configured rounds."
++            if complete
++            else result["reason"],
++        )
++    except (ValueError, TypeError, AttributeError):
++        result.update(
++            complete=False,
++            before=[],
++            generation=None,
++            reason="Pick identities or ownership conflict; remaining totals and ambiguous movements are withheld.",
++            invalid=True,
++        )
++    return result
++
++
++def capital_record(baseline, proposal):
++    row = {k: v for k, v in baseline.items() if not k.startswith("_")}
++    sent, received = [], []
++    try:
++        for assets, owner, target in [
++            (proposal.assets_sent, proposal.active_roster_id, sent),
++            (proposal.assets_received, proposal.partner_roster_id, received),
++        ]:
++            for asset in assets:
++                if asset.kind != "pick":
++                    continue
++                key = [
++                    _integer(asset.season),
++                    _integer(asset.round),
++                    _integer(asset.original_roster_id),
++                ]
++                if (
++                    (
++                        asset.asset_id in baseline.get("_owners", {})
++                        and baseline["_owners"][asset.asset_id] != owner
++                    )
++                    or asset.current_owner_id != owner
++                    or asset.source_roster_id != owner
++                    or asset.asset_id != f"{key[0]}-R{key[1]}-{key[2]}"
++                ):
++                    raise ValueError("Unverified exchanged pick")
++                target.append(key)
++        keys = sent + received
++        if len({tuple(k) for k in keys}) != len(keys) or row.get("invalid"):
++            raise ValueError("Ambiguous exchanged pick")
++        if row["complete"] and (
++            any(k not in row["before"] for k in sent)
++            or any(k in row["before"] for k in received)
++            or any(k[0] not in row["seasons"] or k[1] > row["rounds"] for k in keys)
++        ):
++            raise ValueError("Exchanged pick conflicts with recorded inventory")
++        row.update(sent=sent, received=received)
++    except (ValueError, TypeError):
++        row.update(
++            complete=False,
++            before=[],
++            sent=[],
++            received=[],
++            invalid=True,
++            reason="Exchanged pick ownership or identity cannot be reconciled; remaining totals are unknown.",
++        )
++    text = json.dumps(row, separators=(",", ":"))
++    if len(text) > 10000:
++        text = json.dumps(
++            dict(
++                schema=1,
++                league=row["league"],
++                roster=row["roster"],
++                complete=False,
++                sent=row.get("sent", []),
++                received=row.get("received", []),
++                invalid=row.get("invalid", False),
++                reason="The inventory exceeds the bounded recorded-evidence size; totals are unknown.",
++            )
++        )
++    return dict(
++        characters=len(text),
++        parts=[text[i : i + 1400] for i in range(0, len(text), 1400)],
++    )
+diff --git a/services/trade_intelligence.py b/services/trade_intelligence.py
+index 727cb6b..9e837f7 100644
+--- a/services/trade_intelligence.py
++++ b/services/trade_intelligence.py
+@@ -384,6 +384,8 @@ def build_trade_workspace(data: dict[str, Any], active_roster_id: int | None = N
+         context = AssetContext(manager.league_id, identifier, data.get('league') or {}) if market_only else _context(decisions[identifier])
+         pools[identifier] = build_asset_pool(data, team, context, market_values, market_facts=market_facts)
+     pools = apply_positional_ranks(pools)
++    from services.trade_capital_inventory import inventory_baseline
++    capital_inventory = inventory_baseline(data, roster_id)
+     windows = {str(identifier): {'classification': decision.competitive_window.classification.value,
+                                 'confidence': decision.competitive_window.confidence,
+                                 'generation': (decision.competitive_window.production_profile or {}).get('generation')}
+@@ -391,7 +393,7 @@ def build_trade_workspace(data: dict[str, Any], active_roster_id: int | None = N
+     from src.core.projection_intelligence.service import canonical_projection_identity
+     projection_identity = canonical_projection_identity(_trade_projection_service(data).snapshot(), manager.league_id)
+     return {"active_roster_id": roster_id, "manager_context": manager, "teams": teams, "pools": pools, "workflows": WORKFLOWS, "player_ownership": PlayerOwnershipIndex(data),
+-            'projection_evidence': projection_identity,
++            'projection_evidence': projection_identity, 'capital_inventory': capital_inventory,
+             'competitive_windows': windows, 'canonical_market_facts': market_facts}
+ 
+ 
+@@ -523,6 +525,8 @@ def evaluate_trade_request(
+     evaluation["provenance"]["evaluation_id"] = sha256(json.dumps(identity_input, sort_keys=True, separators=(",", ":")).encode()).hexdigest()[:24]
+     evaluation["provenance"]["inputs"] = identity_input
+     from services.trade_decision import assessment_state, decision_context, selected_player_facts
++    from services.trade_capital_inventory import capital_record, inventory_baseline
++    evaluation['draft_capital_record'] = capital_record(workspace.get('capital_inventory') or inventory_baseline(data, active_id), proposal)
+     evaluation['decision_context'] = decision_context(evaluation, incoming=proposal.assets_received, outgoing=proposal.assets_sent)
+     evaluation['assessment_state'] = assessment_state(evaluation)
+     player_facts = selected_player_facts(data, (*proposal.assets_sent, *proposal.assets_received), projections,
+diff --git a/static/js/trade_comparison.js b/static/js/trade_comparison.js
+index 2f27f85..cbed2f8 100644
+--- a/static/js/trade_comparison.js
++++ b/static/js/trade_comparison.js
+@@ -64,6 +64,58 @@
+       baseline: first.summary.lineup.pre_total, week: first.baseline.week, season: first.baseline.season};
+   }
+ 
++  function readCapital(record, scope) {
++    try {
++      if (!record || !Array.isArray(record.parts) || record.parts.length > 8 ||
++          !record.parts.every(p => typeof p === 'string' && p.length <= 1400)) return null;
++      const text = record.parts.join('');
++      if (text.length !== record.characters || text.length > 10000) return null;
++      const r = JSON.parse(text);
++      if (r.schema !== 1 || r.league !== scope.league || r.roster !== scope.roster) return null;
++      const valid = rows => Array.isArray(rows) && rows.length <= 2048 && rows.every(k =>
++        Array.isArray(k) && k.length === 3 && k.every(n => Number.isSafeInteger(n) && n > 0));
++      if (!valid(r.sent || []) || !valid(r.received || []) || !valid(r.before || [])) return null;
++      const keys = rows => rows.map(k => k.join(':'));
++      if (new Set(keys((r.sent || []).concat(r.received || []))).size !== (r.sent || []).length + (r.received || []).length ||
++          new Set(keys(r.before || [])).size !== (r.before || []).length) return null;
++      if (r.complete && (!r.generation || !Array.isArray(r.seasons) || !Number.isSafeInteger(r.rounds) || r.rounds < 1 || r.rounds > 20 ||
++          r.seasons.some(y => !Number.isSafeInteger(y)) || r.before.concat(r.sent, r.received).some(k => !r.seasons.includes(k[0]) || k[1] > r.rounds) ||
++          r.sent.some(k => !keys(r.before).includes(k.join(':'))) || r.received.some(k => keys(r.before).includes(k.join(':'))))) return null;
++      return r;
++    } catch (_) { return null; }
++  }
++  function capitalView(record, node, scope, retained = true, keep = false) {
++    const box = node('section', null, 'tw-draft-capital'); box.setAttribute('aria-label', 'Your draft capital after this trade');
++    box.append(node('h5', keep ? 'Your draft capital · keep the roster' : 'Your draft capital after this trade'));
++    const r = readCapital(record, scope);
++    if (!r) { box.append(node('p', 'Recorded compatible pick inventory was not retained. Remaining totals are unknown; today’s inventory is not substituted.')); return box; }
++    box.append(node('small', retained ? 'Recorded ownership · NOT REVALIDATED. No current inventory is substituted.' : 'Ownership recorded with this assessment. Only retained seasons and configured rounds are covered.'));
++    const label = k => `${k[0]} round ${k[1]} · Original franchise: ${r.names?.[String(k[2])] || k[2]}${k[2] === r.roster ? ' · Your own pick' : ' · Acquired franchise pick'} · Exact ${k[0]}-R${k[1]}-${k[2]}`;
++    const sent = keep ? [] : r.sent || [], received = keep ? [] : r.received || [];
++    if (r.complete) {
++      const after = r.before.filter(k => !sent.some(s => s.join(':') === k.join(':'))).concat(received);
++      for (const year of r.seasons) {
++        const lines = [];
++        for (let round = 1; round <= r.rounds; round++) {
++          const before = r.before.filter(k => k[0] === year && k[1] === round), next = after.filter(k => k[0] === year && k[1] === round);
++          lines.push(`R${round}: ${before.length} → ${next.length}` + (round === 1 ? ` (own firsts ${before.filter(k => k[2] === r.roster).length} → ${next.filter(k => k[2] === r.roster).length}; other firsts ${before.filter(k => k[2] !== r.roster).length} → ${next.filter(k => k[2] !== r.roster).length})` : ''));
++        }
++        box.append(node('p', year + ' · ' + lines.join(' · ')));
++      }
++      const details = node('details'); details.append(node('summary', 'Exact owned picks · before and after'));
++      for (const [title, rows] of [['Before', r.before], ['After', after]]) {
++        details.append(node('h6', title)); const list = node('ul'); for (const k of rows) list.append(node('li', label(k))); details.append(list);
++      }
++      box.append(details);
++    } else box.append(node('p', r.reason || 'Complete inventory unavailable; remaining totals are unknown.'));
++    const moves = node('details'); moves.append(node('summary', 'Exact picks sent and acquired'));
++    for (const [title, rows] of [['Sent', sent], ['Acquired', received]]) {
++      moves.append(node('h6', title)); const list = node('ul'); for (const k of rows) list.append(node('li', label(k)));
++      if (!rows.length) list.append(node('li', r.invalid ? 'Unverified movement' : 'None in this recorded exchange')); moves.append(list);
++    }
++    box.append(moves); return box;
++  }
++
+   function create(options) {
+     const {node, points, market, panel, tray, getEntries, setEntries, environment, details} = options;
+     let returnFocus = null, returnScroll = 0;
+@@ -78,6 +130,7 @@
+     }
+     function offer(entry, index, comparison) {
+       const out = node('article', null, 'tw-comparison-offer'); out.dataset.comparisonSlot = String(index + 1);
++      out.append(capitalView(entry.context?.draft_capital_record, node, environment().scope, true));
+       const s = entry.summary, depth = s.depth || {}, capacity = s.capacity || {};
+       out.append(node('h4', 'Offer ' + (index + 1) + ' · ' + s.verdict),
+         node('p', 'Counterparty: ' + s.partner), node('p', 'Assessment strategy: ' + (s.strategy || 'No selected goal')));
+@@ -132,6 +185,10 @@
+       const grid = node('div', null, 'tw-comparison-grid'), keep = node('section', null, 'tw-comparison-keep');
+       keep.append(node('h4', 'Keep the roster · no trade'), node('p', 'No players or picks exchanged. Existing depth and roster spots are unchanged by a trade.'));
+       keep.append(node('p', result.supported ? 'Season ' + result.season + ' · week ' + result.week + ': ' + points(result.baseline) + ' recorded optimal-lineup points; 0.00 trade-related change.' : 'A shared supported lineup total is unavailable. No zero projection is inferred.'));
++      const capitals = rows.map(row => readCapital(row.context?.draft_capital_record, environment().scope));
++      if (capitals.length && capitals.every(c => c?.complete && c.generation === capitals[0].generation))
++        keep.append(capitalView(rows[0].context.draft_capital_record, node, environment().scope, true, true));
++      else keep.append(node('p', 'A shared recorded draft-capital baseline is unavailable; each offer’s supported inventory stays separate.'));
+       grid.append(keep); rows.forEach((row, i) => grid.append(offer(row, i, result))); panel.append(grid);
+       if (!rows.length) panel.append(node('p', 'Add a completed assessment from this Trade workspace. Your draft has not changed.'));
+     }
+@@ -166,7 +223,7 @@
+     refresh();
+     return {add, refresh};
+   }
+-  const api = {compatibility, sameScope, wellFormed, create};
++  const api = {compatibility, sameScope, wellFormed, create, readCapital, capitalView};
+   if (typeof module !== 'undefined' && module.exports) module.exports = api;
+   else globalThis.DTOSOfferComparison = api;
+ })();
+diff --git a/static/js/trade_workspace.js b/static/js/trade_workspace.js
+index 16b105e..ca770f8 100644
+--- a/static/js/trade_workspace.js
++++ b/static/js/trade_workspace.js
+@@ -695,7 +695,7 @@
+     } catch (_) { return null; }
+   }
+   function restoreContext(value, includePrevious = true) {
+-    return {schema: 1, identity: boundedEvidence(value.identity || {}), exploration: value.exploration === true,
++    return {schema: 1, draft_capital_record: boundedEvidence(value.draft_capital_record), identity: boundedEvidence(value.identity || {}), exploration: value.exploration === true,
+       search_result_type: boundedEvidence(value.search_result_type), stale_reason: boundedEvidence(value.stale_reason), restored: true,
+       attempt_state: value.attempt_state || value.evaluation?.assessment_state?.state || 'fresh_incomplete',
+       previous_assessment: includePrevious && value.previous_assessment ? restoreContext(value.previous_assessment, false) : null,
+@@ -778,7 +778,10 @@
+     if (row.proposal?.preview_context) return row.proposal.preview_context;
+     const e = row.evaluation || row.proposal?.preview_assessment || {};
+     const keys = ['personalization', 'personal_value_evidence', 'neutral_assessment', 'recommendation', 'dominant_reason', 'major_drawback', 'why_you_would_do_it', 'why_they_would_do_it', 'counterparty_summary', 'provenance', 'major_risks', 'major_limitations', 'recommendation_trace', 'legality', 'decision_context', 'market_evidence', 'dimensions', 'assessment_state', 'reserve_evidence', 'personalization', 'personal_value_evidence', 'neutral_assessment', 'neutral_values', 'personal_preference_warnings', 'personal_preference_conflicts'];
+-    const context = {schema: 1, evaluation: boundedEvidence(compactRetainedEvaluation(Object.fromEntries(keys.filter(key => key in e).map(key => [key, e[key]])))),
++    // Independently bounded ownership evidence must survive even when the
++    // existing 512-node analytical disclosure is full. The 64k context and
++    // 100k offer limits remain unchanged; truncation never implies zero.
++    const context = {schema: 1, draft_capital_record: boundedEvidence(e.draft_capital_record), evaluation: boundedEvidence(compactRetainedEvaluation(Object.fromEntries(keys.filter(key => key in e).map(key => [key, e[key]])))),
+       exploration: row.exploration === true, search_result_type: row.search_result_type || null,
+       opportunity: boundedEvidence(row.opportunity || null),
+       identity: {personalization: JSON.stringify(personalPayload()), package: packageIdentity(row.proposal || selected), strategy: row.home_assessment_strategy ?? el('trade-strategy').value,
+@@ -790,6 +793,7 @@
+       // Retain primary meaning and provenance even for unusually deep evidence.
+       context.evaluation.dimensions = boundedEvidence({confidence: {assessment: e.dimensions?.confidence?.assessment, explanation: e.dimensions?.confidence?.explanation}, counterparty_plausibility: {assessment: e.dimensions?.counterparty_plausibility?.assessment, explanation: e.dimensions?.counterparty_plausibility?.explanation}});
+       context.opportunity = null;
++      context.draft_capital_record = null;
+       context.identity.package = context.identity.package.slice(0, 16000);
+       context.evaluation.major_limitations = [...(context.evaluation.major_limitations || []), 'Additional evidence omitted from temporary preview; reevaluate for full details.'].slice(-32);
+     }
+@@ -965,6 +969,7 @@
+     out.dataset.assessment = 'true';
+     const retained = Boolean(previousContainer || contextQualification(context));
+     out.dataset.assessmentFreshness = retained ? 'retained' : 'current';
++    out.append(window.DTOSOfferComparison.capitalView(context?.draft_capital_record || e.draft_capital_record, node, comparisonScope(), retained));
+     const attemptState = context?.attempt_state || e.assessment_state?.state || 'fresh_incomplete';
+     out.dataset.assessmentState = retained ? 'retained' : attemptState;
+     if (!previousContainer) addComparisonControl(out, {evaluation: e, proposal: {
+@@ -1295,6 +1300,7 @@
+     card.append(node('p', (retained ? 'Retained assessment · NOT REVALIDATED: ' : e.personalization?.mode === 'custom' ? 'Separate Custom DTOS personal assessment: ' : 'Separate DTOS assessment: ') + finalVerdict(e)));
+     if (decision.qualification) card.append(node('p', decision.qualification, 'tw-verdict-qualification'));
+     appendDecisionSummary(card, decision);
++    card.append(window.DTOSOfferComparison.capitalView(context?.draft_capital_record || e.draft_capital_record, node, comparisonScope(), retained));
+     const unfavorable = ['REJECT', 'NOT WORTH IT'].includes(e.recommendation);
+     const reason = unfavorable ? 'Closer current Market terms do not make this a recommended trade.' : decision.lineup?.explanation || e.why_you_would_do_it || 'Market balance is separate from strategic fit; no supported positive roster case is established.';
+     card.append(node('p', 'Why consider: ' + reason),
+@@ -1322,6 +1328,7 @@
+   }
+   function offerCard(row, preview = false) {
+     const context = assessmentContext(row);
++    const retained = Boolean(contextQualification(context, row.proposal));
+     assessedOfferContexts.set(row, context);
+     const card = node('article', null, 'tw-offer');
+     const e = row.evaluation || row.proposal.preview_assessment || {};
+@@ -1355,6 +1362,7 @@
+       ...(!decision.their_side_summary ? [node('p', 'Counterparty: ' + (decision.partner_summary || e.counterparty_summary || e.why_they_would_do_it || e.dimensions?.counterparty_plausibility?.explanation || 'Review the separate bilateral evidence.'))] : []));
+     if (!preview) { const b = node('button', 'Open editable offer: preview'); b.type = 'button'; b.className = 'tw-next-action primary'; b.onclick = () => previewOffer(row); card.append(b); }
+     appendDecisionSummary(card, decision);
++    card.append(window.DTOSOfferComparison.capitalView(context?.draft_capital_record || e.draft_capital_record, node, comparisonScope(), retained));
+     addComparisonControl(card, row, context);
+     for (const id of [...row.proposal.assets_sent, ...row.proposal.assets_received]) { const protection = lockDetail(id); if (protection) card.append(protection); }
+     for (const pick of e.dimensions?.strategic_fit?.active?.future_capital?.sent || []) {
+diff --git a/tests/test_trade_capital_browser.py b/tests/test_trade_capital_browser.py
+new file mode 100644
+index 0000000..95df78f
+--- /dev/null
++++ b/tests/test_trade_capital_browser.py
+@@ -0,0 +1,251 @@
++"""Prepared evaluator -> recorded inventory -> phone comparison, without reads on expand."""
++
++from copy import deepcopy
++import unittest
++
++from playwright.sync_api import sync_playwright
++from tools.validation.browser_runtime import launch_chromium
++from tests import test_offer_comparison_browser as comparison_fixture
++
++
++class CapitalBrowserTests(unittest.TestCase):
++    def test_actual_offers_two_alternatives_reload_and_scope_at_four_sizes(self):
++        for superflex in (False, True):
++            with self.subTest(superflex=superflex):
++                control = comparison_fixture.OfferComparisonBrowserTests()
++                self.addCleanup(control.doCleanups)
++                source, helper, f = control.fixture(superflex)
++                data = f.editor.data
++                owners = {
++                    (
++                        int(p.get("year", p.get("season"))),
++                        int(p["round"]),
++                        int(p["original_roster_id"]),
++                    ): int(t["roster_id"])
++                    for t in data["teams"]
++                    for p in t.get("picks_owned", [])
++                }
++                for original in sorted(
++                    {k[2] for k in owners}
++                    - {int(t["roster_id"]) for t in data["teams"]}
++                ):
++                    data["teams"].append(
++                        dict(
++                            roster_id=original,
++                            team_name=f"Original {original}",
++                            players=[],
++                            picks_owned=[],
++                        )
++                    )
++                years = sorted({k[0] for k in owners})
++                roster_ids = sorted(int(t["roster_id"]) for t in data["teams"])
++                data["league"].setdefault("settings", {})["draft_rounds"] = 4
++                data["league"]["season"] = "2026"
++                ledger = [
++                    dict(
++                        season=y,
++                        round=r,
++                        original_roster_id=o,
++                        current_owner_id=owners.get((y, r, o), o),
++                    )
++                    for y in years
++                    for r in range(1, 5)
++                    for o in roster_ids
++                ]
++                data["pick_ledger"] = ledger
++                data["traded_picks"] = [
++                    dict(
++                        season=str(p["season"]),
++                        round=p["round"],
++                        roster_id=p["original_roster_id"],
++                        owner_id=p["current_owner_id"],
++                    )
++                    for p in ledger
++                    if p["original_roster_id"] != p["current_owner_id"]
++                ]
++                for t in data["teams"]:
++                    t["picks_owned"] = [
++                        p for p in ledger if p["current_owner_id"] == t["roster_id"]
++                    ]
++                source.publish(f)
++                saved = deepcopy(f.editor.state())
++                with sync_playwright() as pw:
++                    browser = launch_chromium(pw, headless=True)
++                    try:
++                        page, requests, _, _, errors = helper.page(browser, f)
++                        helper.ready(page)
++                        control.evaluate(page, helper, "d", with_pick=True)
++                        box = page.locator("#trade-result .tw-draft-capital").first
++                        self.assertIn(
++                            "Your draft capital after this trade", box.inner_text()
++                        )
++                        self.assertIn("own firsts", box.inner_text())
++                        box.locator("summary").first.press("Enter")
++                        self.assertIn("2028-R1-3", box.inner_text())
++                        self.assertIn("2028-R1-1", box.inner_text())
++                        page.locator("#trade-result > .tw-compare-add").click()
++                        control.evaluate(page, helper, "c")
++                        page.locator("#trade-result > .tw-compare-add").click()
++                        control.open_readonly(page, requests)
++                        self.assertEqual(
++                            page.locator("#trade-comparison .tw-draft-capital").count(),
++                            3,
++                        )
++                        before = [r for r in requests if r[0] == "POST"]
++                        for width, height in [
++                            (320, 432),
++                            (375, 667),
++                            (390, 844),
++                            (1280, 900),
++                        ]:
++                            page.set_viewport_size(dict(width=width, height=height))
++                            page.evaluate(
++                                "() => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)))"
++                            )
++                            self.assertLessEqual(
++                                page.evaluate("document.documentElement.scrollWidth"),
++                                width,
++                            )
++                            self.assertIn(
++                                "other firsts",
++                                page.locator("#trade-comparison").inner_text(),
++                            )
++                            control.record(
++                                "draft-capital-" + str(superflex) + "-" + str(width),
++                                dict(
++                                    complete_recorded_inventories=3,
++                                    four_viewports=True,
++                                    exact_originals=[1, 3],
++                                    no_comparison_http=True,
++                                    capital_records=[
++                                        x["context"]["draft_capital_record"]
++                                        for x in helper.draft(page)["comparisonOffers"]
++                                    ],
++                                ),
++                                page,
++                            )
++                        page.locator(
++                            "#trade-comparison button",
++                            has_text="Return to my offer or draft",
++                        ).click()
++                        page.reload()
++                        helper.ready(page)
++                        control.open_readonly(page, requests)
++                        self.assertIn(
++                            "NOT REVALIDATED",
++                            page.locator("#trade-comparison").inner_text(),
++                        )
++                        self.assertEqual(
++                            [r for r in requests if r[0] == "POST"], before
++                        )
++                        # Ownership changes cannot replace either original offer's inventory.
++                        recorded = [
++                            x["context"]["draft_capital_record"]
++                            for x in helper.draft(page)["comparisonOffers"]
++                        ]
++                        changed = next(
++                            p
++                            for p in ledger
++                            if p["original_roster_id"] == 1 and p["round"] == 2
++                        )
++                        changed["current_owner_id"] = 2
++                        data["traded_picks"].append(
++                            dict(
++                                season=str(changed["season"]),
++                                round=2,
++                                roster_id=1,
++                                owner_id=2,
++                            )
++                        )
++                        for t in data["teams"]:
++                            t["picks_owned"] = [
++                                p
++                                for p in ledger
++                                if p["current_owner_id"] == t["roster_id"]
++                            ]
++                        source.publish(f)
++                        page.reload()
++                        helper.ready(page)
++                        control.open_readonly(page, requests)
++                        self.assertEqual(
++                            [
++                                x["context"]["draft_capital_record"]
++                                for x in helper.draft(page)["comparisonOffers"]
++                            ],
++                            recorded,
++                        )
++                        self.assertEqual(
++                            page.locator("#trade-comparison").get_attribute(
++                                "data-comparison-state"
++                            ),
++                            "stale",
++                        )
++                        self.assertEqual(
++                            page.locator("#trade-comparison .tw-draft-capital").count(),
++                            3,
++                        )
++                        self.assertIn(
++                            "NOT REVALIDATED",
++                            page.locator("#trade-comparison").inner_text(),
++                        )
++                        self.assertEqual(f.editor.state(), saved)
++                        # A different league discards all contextual comparison state.
++                        f.editor.store.upsert_membership(
++                            "account-a",
++                            {"league_id": "league-2", "name": "Other"},
++                            "account-a",
++                            1,
++                            "Other",
++                            "active",
++                        )
++                        f.editor.store.activate("account-a", "league-2")
++                        data["league"]["league_id"] = "league-2"
++                        helper.ready(page)
++                        self.assertTrue(
++                            page.locator("#trade-comparison-tray").is_hidden()
++                        )
++                        self.assertEqual(helper.draft(page)["comparisonOffers"], [])
++                        self.assertEqual(
++                            [r for r in requests if r[0] == "POST"], before
++                        )
++                        self.assertFalse(errors, errors)
++                        # Original-league Market evidence must not cross into the new league.
++                        self.assertEqual(
++                            f.editor.client.get("/api/my-dtos").status_code, 409
++                        )
++                    finally:
++                        browser.close()
++
++    def test_partial_truncated_and_cross_league_records_render_unknown(self):
++        from tests.test_trade_capital_inventory import fixture, record
++
++        data = fixture()
++        data.pop("traded_picks")
++        partial = record(data)
++        complete = record(fixture())
++        from pathlib import Path
++
++        script = Path("static/js/trade_comparison.js").read_text()
++        with sync_playwright() as pw:
++            browser = launch_chromium(pw, headless=True)
++            try:
++                page = browser.new_page(viewport=dict(width=320, height=432))
++                page.set_content("<main></main>")
++                page.add_script_tag(content=script)
++                for row, scope in [
++                    (partial, dict(league="league", roster=1)),
++                    (complete, dict(league="other", roster=1)),
++                    (
++                        dict(complete, characters=complete["characters"] + 1),
++                        dict(league="league", roster=1),
++                    ),
++                ]:
++                    text = page.evaluate(
++                        """([record, scope]) => { const node=(tag,text,cls)=>{const e=document.createElement(tag);if(text)e.textContent=text;return e;};
++                      const view=window.DTOSOfferComparison.capitalView(record,node,scope,true);document.querySelector('main').replaceChildren(view);return view.textContent;}""",
++                        [row, scope],
++                    )
++                    self.assertIn("unknown", text)
++                    self.assertNotIn("own firsts", text)
++            finally:
++                browser.close()
+diff --git a/tests/test_trade_capital_inventory.py b/tests/test_trade_capital_inventory.py
+new file mode 100644
+index 0000000..5e2bcdb
+--- /dev/null
++++ b/tests/test_trade_capital_inventory.py
+@@ -0,0 +1,215 @@
++"""Exact ownership deltas, without capital-policy or projection substitutions."""
++
++from copy import deepcopy
++from types import SimpleNamespace as N
++import unittest
++
++from services.trade_capital_inventory import capital_record, inventory_baseline
++import json
++
++
++def fixture():
++    picks = [
++        dict(
++            season=2029,
++            round=r,
++            original_roster_id=o,
++            current_owner_id=1 if o in (1, 3) else 2,
++        )
++        for r in (1, 2)
++        for o in (1, 2, 3)
++    ]
++    return dict(
++        league=dict(league_id="league", season="2026", settings=dict(draft_rounds=2)),
++        pick_ledger=picks,
++        traded_picks=[
++            dict(season="2029", round=r, roster_id=3, owner_id=1) for r in (1, 2)
++        ],
++        teams=[
++            dict(
++                roster_id=o,
++                team_name=f"Franchise {o}",
++                picks_owned=[p for p in picks if p["current_owner_id"] == o],
++            )
++            for o in (1, 2, 3)
++        ],
++    )
++
++
++def asset(original, owner, round_number=1):
++    return N(
++        kind="pick",
++        season=2029,
++        round=round_number,
++        original_roster_id=original,
++        current_owner_id=owner,
++        source_roster_id=owner,
++        asset_id=f"2029-R{round_number}-{original}",
++    )
++
++
++def record(data, sent=(), received=()):
++    return capital_record(
++        inventory_baseline(data, 1),
++        N(
++            active_roster_id=1,
++            partner_roster_id=2,
++            assets_sent=sent,
++            assets_received=received,
++        ),
++    )
++
++
++def decode(r):
++    return json.loads("".join(r["parts"]))
++
++
++class CapitalInventoryTests(unittest.TestCase):
++    def test_exact_same_round_originals_and_native_inventory(self):
++        data = fixture()
++        saved = deepcopy(data)
++        row = decode(record(data, [asset(1, 1)], [asset(2, 2)]))
++        self.assertTrue(row["complete"])
++        self.assertIn([2029, 1, 1], row["before"])
++        self.assertIn([2029, 1, 3], row["before"])
++        self.assertEqual(row["sent"], [[2029, 1, 1]])
++        self.assertEqual(row["received"], [[2029, 1, 2]])
++        self.assertEqual(data, saved)
++
++    def test_player_only_is_not_missing_inventory(self):
++        row = decode(record(fixture(), [N(kind="player")], [N(kind="player")]))
++        self.assertTrue(row["complete"])
++        self.assertEqual(row["sent"], [])
++        self.assertEqual(row["received"], [])
++
++    def test_missing_native_inventory_keeps_exact_movements_not_totals(self):
++        data = fixture()
++        data.pop("traded_picks")
++        row = decode(record(data, [asset(1, 1)], [asset(2, 2)]))
++        self.assertFalse(row["complete"])
++        self.assertEqual(row["sent"], [[2029, 1, 1]])
++        self.assertIn("unknown", row["reason"])
++
++    def test_duplicate_conflict_bad_round_cross_league_rejected(self):
++        for mode in ("duplicate", "conflict", "round", "league"):
++            data = fixture()
++            if mode == "duplicate":
++                data["pick_ledger"].append(dict(data["pick_ledger"][0]))
++            if mode == "conflict":
++                data["pick_ledger"][0]["current_owner_id"] = 2
++            if mode == "round":
++                data["pick_ledger"][0]["round"] = 3
++            if mode == "league":
++                data["pick_ledger"][0]["league_id"] = "other"
++            with self.subTest(mode=mode):
++                row = decode(record(data, [asset(1, 1)]))
++                self.assertFalse(row["complete"])
++                self.assertTrue(row["invalid"])
++                self.assertEqual(row["sent"], [])
++
++    def test_partial_grid_never_supplies_zero(self):
++        data = fixture()
++        data["pick_ledger"].pop()
++        data["teams"][0]["picks_owned"].pop()
++        self.assertFalse(decode(record(data))["complete"])
++
++    def test_incorrect_exchange_owner_and_duplicates_rejected(self):
++        for sent in ([asset(2, 1)], [asset(1, 1), asset(1, 1)]):
++            row = decode(record(fixture(), sent))
++            self.assertFalse(row["complete"])
++            self.assertTrue(row["invalid"])
++
++    def test_recorded_baseline_survives_ownership_and_league_changes(self):
++        data = fixture()
++        prior = record(data, [asset(1, 1)])
++        old = deepcopy(prior)
++        data["pick_ledger"][0]["current_owner_id"] = 2
++        self.assertNotEqual(
++            decode(record(data))["generation"], decode(old)["generation"]
++        )
++        data["league"]["league_id"] = "other"
++        self.assertEqual(prior, old)
++
++    def test_observed_zero_and_round_configuration(self):
++        row = decode(
++            capital_record(
++                inventory_baseline(fixture(), 3),
++                N(
++                    active_roster_id=3,
++                    partner_roster_id=2,
++                    assets_sent=(),
++                    assets_received=(),
++                ),
++            )
++        )
++        self.assertTrue(row["complete"])
++        self.assertEqual(row["before"], [])
++        self.assertEqual(row["rounds"], 2)
++        self.assertEqual(row["seasons"], [2029])
++
++    def test_bounded_record_keeps_supported_exchange_when_inventory_is_too_large(self):
++        picks = [
++            dict(season=2029, round=r, original_roster_id=o, current_owner_id=o)
++            for r in (1, 2)
++            for o in range(1, 21)
++        ]
++        data = dict(
++            league=dict(
++                league_id="league", season="2026", settings=dict(draft_rounds=2)
++            ),
++            pick_ledger=picks,
++            traded_picks=[],
++            teams=[
++                dict(
++                    roster_id=o,
++                    team_name="\U0001f3c8" * 100,
++                    picks_owned=[p for p in picks if p["current_owner_id"] == o],
++                )
++                for o in range(1, 21)
++            ],
++        )
++        envelope = record(data, [asset(1, 1)], [asset(2, 2)])
++        row = decode(envelope)
++        self.assertFalse(row["complete"])
++        self.assertEqual(row["sent"], [[2029, 1, 1]])
++        self.assertEqual(row["received"], [[2029, 1, 2]])
++        self.assertIn("unknown", row["reason"])
++        self.assertLess(envelope["characters"], 10000)
++
++    def test_native_scope_ambiguity_and_duplicate_roster_are_rejected(self):
++        for change in ("league", "season", "roster"):
++            data = fixture()
++            if change == "league":
++                data["traded_picks"][0]["league_id"] = "other"
++            if change == "season":
++                data["traded_picks"][0]["year"] = 2030
++            if change == "roster":
++                data["teams"].append(deepcopy(data["teams"][0]))
++            with self.subTest(change=change):
++                self.assertTrue(decode(record(data))["invalid"])
++
++    def test_bounded_unicode_and_legacy_missing_rounds(self):
++        data = fixture()
++        data["teams"][0]["team_name"] = "Manager \U0001f3c8"
++        self.assertEqual(decode(record(data))["names"]["1"], "Manager \U0001f3c8")
++        data["league"]["settings"].pop("draft_rounds")
++        row = decode(record(data, [asset(1, 1)]))
++        self.assertFalse(row["complete"])
++        self.assertEqual(row["sent"], [[2029, 1, 1]])
++
++
++class CapitalHTTPTests(unittest.TestCase):
++    def test_actual_prepared_route_keeps_capital_when_projections_missing(self):
++        from tests.test_trade_workspace_batch1 import AuthenticatedTradeBoundaryTests
++
++        helper = AuthenticatedTradeBoundaryTests()
++        helper.setUp()
++        self.addCleanup(helper.doCleanups)
++        data = helper.data
++        data["league"].update(season="2026", settings=dict(draft_rounds=4))
++        data["pick_ledger"] = [p for t in data["teams"] for p in t["picks_owned"]]
++        response = helper._post()
++        self.assertEqual(response.status_code, 200, response.text)
++        evaluation = response.json()["evaluation"]
++        self.assertTrue(decode(evaluation["draft_capital_record"])["complete"])
++        self.assertIsNone(evaluation.get("recommendation"))

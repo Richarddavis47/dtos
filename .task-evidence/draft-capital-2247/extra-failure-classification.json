@@ -1,0 +1,60 @@
+{
+  "source": {
+    "baseline": "8c051475524e2fa46dbad05fb94c65bc8b1e5310",
+    "candidate": "d01acbe65f28a509457524a5e481558cf24d4b2a",
+    "tree": "1b282fe3e29a76efbbdab08b8dbd42ff9e1d0846",
+    "branch": "feat/draft-capital-2247",
+    "version": "1.22.32",
+    "build": 2247,
+    "recorded_at": "2026-11-11T17:14:41.381557+00:00",
+    "expected_test_count": 4378,
+    "pr": 336
+  },
+  "observed_at": "2026-11-11T18:20:18.018632+00:00",
+  "logs": [
+    {
+      "file": "prior-fc9-my-team-original-decoded.log",
+      "job_id": 130679470984,
+      "utf16_length": 82998,
+      "bytes": 83720,
+      "sha256": "50a233bfc60b88c08f4518265f8fd9aeea9f7c21967750695cf3ea389b8bed3b"
+    },
+    {
+      "file": "prior-fc9-welcome-original-decoded.log",
+      "job_id": 130679471072,
+      "utf16_length": 86112,
+      "bytes": 86834,
+      "sha256": "67fa1bb983089cbecf1a4267e4155979af0d44bed0e35966fcae5412302b3d66"
+    },
+    {
+      "file": "prior-fc9-resident-original-decoded.log",
+      "job_id": 130679471083,
+      "utf16_length": 82872,
+      "bytes": 83594,
+      "sha256": "9e8ed77168b6315b4a24c6b4d4d047c6d0fc6481a7bf4900f2ead7a64c3e7936"
+    },
+    {
+      "file": "prior-d409-canonical-original-decoded.log",
+      "job_id": 130677431406,
+      "utf16_length": 237404,
+      "bytes": 238074,
+      "sha256": "29c82289ab65b82b92f63e4a37a8590f291e7c36f6458882c5921d49c2025f6f"
+    }
+  ],
+  "causes": [
+    {
+      "candidate": "d4093aae3368080a13385df8d49a22618a8bf80d",
+      "job": 130677431406,
+      "cause": "Mandatory Ruff gate failed34 formatting errors; later gates did not execute. Formatting corrected with AST equivalence; final complete source passed."
+    },
+    {
+      "candidate": "fc9f0ba8850f1b8f4fcd9aab740e62f152972adf",
+      "jobs": [
+        130679470984,
+        130679471072,
+        130679471083
+      ],
+      "cause": "Validation image apt-get could not resolve security.ubuntu.com / azure.archive.ubuntu.com; exit100 before tests. Missing artifacts are downstream consequences, not passed or completed tests. Final new candidate built and completed these jobs; no application fix to DNS is claimed."
+    }
+  ]
+}
