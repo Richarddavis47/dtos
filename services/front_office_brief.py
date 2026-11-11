@@ -5,6 +5,7 @@ across goals. Each family admits its own evidence, independently of Market.
 """
 from math import isfinite
 
+from services.team_trade_need import prepared_need
 from src.core.intelligence import intelligence_orchestrator
 from src.core.intelligence.roster_diagnostics import prepared_diagnostics
 from src.core.intelligence.team_strength import compatible_profile
@@ -23,10 +24,12 @@ def prepared_evidence(data, roster_id, strategy, *, market_compatible=False):
                        or assessment.generation != context.evidence_generation):
         assessment = None
     diagnostics = prepared_diagnostics(data, context.projection_snapshot)
+    trade_need = prepared_need(data, roster_id, diagnostics) if diagnostics else None
     return {'league_id': context.league_id, 'roster_id': roster_id,
             'strategy': strategy if strategy in {'WIN NOW', 'REBUILD', 'RETOOL'} else '',
             'generation': context.evidence_generation, 'assessment': assessment,
             'market_compatible': market_compatible,
+            'trade_need': trade_need,
             'diagnostics': diagnostics, 'strength': compatible_profile(data, context.projection_snapshot),
             'week': data.get('week'), 'league_name': context.league.get('name') or 'Selected league'}
 
@@ -52,6 +55,7 @@ def select_insights(facts, attention, offers):
     diagnostics = facts.get('diagnostics') or {}
     own = (diagnostics.get('teams') or {}).get(str(rid)) or {}
     positions = own.get('positions') or {}
+    trade_need = facts.get('trade_need') or {}
     profile = facts.get('strength') or {}
     strength = (profile.get('teams') or {}).get(str(rid)) or {}
     weekly = (strength.get('weekly') or {}).get(str(facts['week'])) or (strength.get('weekly') or {}).get(facts['week']) or {}
@@ -65,17 +69,21 @@ def select_insights(facts, attention, offers):
         provisional = d.get('conclusion_state') != 'current'
         qualifier = 'Provisional: ' if provisional else ''
         issue = f'position:{pos}'
+        starter = d.get('starter_need')
         quality = d.get('quality_depth_need')
-        if quality or d.get('resilience_need') or d.get('starter_need'):
-            title = (f'{pos} replacement production needs review' if quality else
-                     f'{pos} backup cover needs review' if d.get('resilience_need') else
-                     f'A supported {pos} addition could improve the lineup')
+        if quality or d.get('resilience_need') or starter:
+            title = (f'A supported {pos} addition could improve the lineup' if starter else
+                     f'{pos} replacement production needs review' if quality else
+                     f'{pos} backup cover needs review')
             reason = context + (d.get('base_reason') or 'Supported starting-lineup and backup comparisons show room to improve.')
             drawback = ('This is a current production gap, not evidence to buy an aging starter under REBUILD.'
                         if goal == 'REBUILD' else
                         'An upgrade has a Market and capital cost; this is not an endorsed trade.')
+            handoff = not provisional and trade_need.get('position') == pos
             candidates.append(_item(issue, 'need', qualifier + title, reason, drawback,
-                'Review replacement depth', team_url + '#positional-depth', issues=[issue],
+                f'Explore {pos} trades' if handoff else 'Review replacement depth',
+                trade_need['href'] if handoff else team_url + '#positional-depth', issues=[issue],
+                priority=0 if handoff else 1 if starter and not provisional else 2 if not provisional else 3,
                 details=[*own.get('limitations', []), *evidence.get('limitations', [])]))
         elif d.get('disjoint_reserve_ids') and any(_number(v) for v in d.get('observed_replacement_points') or []):
             # Useful reserve evidence is not permission to sell; use supported
@@ -150,11 +158,16 @@ def select_insights(facts, attention, offers):
             'DTOS cannot determine whether to contend, retool or rebuild from the available evidence. Choose your goal to guide trade suggestions.',
             'Market prices and projected starting-lineup points remain unchanged when you choose a goal.',
             'Choose your goal', team_url + '#my-team-strategy'))
-    precedence = {'WIN NOW': ['need', 'offer', 'attention', 'depth', 'capital'],
-                  'REBUILD': ['capital', 'offer', 'attention', 'need', 'depth'],
-                  'RETOOL': ['need', 'offer', 'depth', 'capital', 'attention'],
-                  '': ['attention', 'goal', 'need', 'capital', 'depth', 'offer']}[goal]
-    ordered = sorted(candidates + trade_items, key=lambda i: precedence.index(i['family']))
+    if assessment is None and not diagnostics and not profile:
+        candidates.append(_item('preparation', 'preparation', 'Prepare your current roster assessment',
+            'A compatible roster assessment has not been prepared for this league, week and goal. Open My Team to prepare the evidence.',
+            'Missing preparation is not evidence of roster weakness or a lack of opportunities. Opening My Team does not start a trade search or change your goal.',
+            'Open My Team', team_url))
+    precedence = {'WIN NOW': ['need', 'offer', 'attention', 'depth', 'capital', 'preparation'],
+                  'REBUILD': ['capital', 'offer', 'attention', 'need', 'depth', 'preparation'],
+                  'RETOOL': ['need', 'offer', 'depth', 'capital', 'attention', 'preparation'],
+                  '': ['attention', 'goal', 'need', 'capital', 'depth', 'offer', 'preparation']}[goal]
+    ordered = sorted(candidates + trade_items, key=lambda i: (precedence.index(i['family']), i.get('priority', 0)))
     selected, seen, concerns = [], set(), set()
     for item in ordered:
         if item['key'] in seen or (item['issues'] and set(item['issues']).issubset(concerns)):
