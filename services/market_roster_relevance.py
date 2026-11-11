@@ -15,6 +15,7 @@ from src.core.intelligence.roster_diagnostics import prepared_diagnostics
 from src.core.market_trends.current import current_comparison
 from src.core.player_ownership import PlayerOwnershipIndex
 from src.platform.account_context import current_account
+from src.platform.league_context import current_league_context
 
 SAMPLE_LIMIT = 10
 CARD_LIMIT = 3
@@ -40,6 +41,26 @@ def need_context(data, roster_id, *, snapshot=None, reader=None):
         return (
             None,
             "Personal relevance needs your authorized active franchise. Neutral Market information remains available.",
+        )
+    # Market can remain usable without a prepared analytical publication.
+    # Do not ask diagnostics to resolve an absent runtime projection owner.
+    from src.core.projection_intelligence import projection_service
+
+    runtime = current_league_context()
+    runtime_reader = (
+        getattr(runtime, "projection", None) if runtime else projection_service
+    )
+    if runtime_reader is None:
+        return (
+            None,
+            "Compatible prepared roster projections are unavailable for this league. Neutral Market information remains available.",
+        )
+    reader = reader or runtime_reader
+    snapshot = reader.snapshot() if snapshot is None else snapshot
+    if snapshot is None:
+        return (
+            None,
+            "Compatible prepared roster projections are unavailable for this league. Neutral Market information remains available.",
         )
     diagnostic = prepared_diagnostics(data, snapshot, projection_reader=reader)
     need = prepared_need(data, roster_id, diagnostic)
@@ -119,6 +140,50 @@ def _age(stamp):
         return "Observation age unknown"
 
 
+def movement_inputs(rows):
+    """Neutral, bounded DTO alongside the existing cached page; no runtime owner."""
+    fields = (
+        "asset_id",
+        "magnitude",
+        "comparison_reasons",
+        "comparison_units",
+        "comparison_start_at",
+        "comparison_end_at",
+        "checkpoint_count",
+        "comparison_scope",
+        "current_qualification",
+    )
+    result = []
+    for row in rows[:SAMPLE_LIMIT]:
+        trend = row.get("market_trend") or {}
+        provenance = trend.get("provenance") or {}
+        result.append(
+            dict(
+                asset_id=row.get("asset_id"),
+                display_name=row.get("display_name"),
+                position=row.get("position"),
+                values={"market_value": (row.get("values") or {}).get("market_value")},
+                market_trend={
+                    **{key: trend.get(key) for key in fields},
+                    "provenance": {
+                        "current_endpoint_comparable": provenance.get(
+                            "current_endpoint_comparable"
+                        ),
+                        "current_evidence": {
+                            "providers": (
+                                (provenance.get("current_evidence") or {}).get(
+                                    "providers"
+                                )
+                                or []
+                            )[:5]
+                        },
+                    },
+                },
+            )
+        )
+    return result
+
+
 def movement_view(
     data, rows, roster_id, ownership, *, market_data=None, snapshot=None, reader=None
 ):
@@ -145,6 +210,8 @@ def movement_view(
         )
         related = bool(
             need
+            and (trend.get("provenance") or {}).get("current_endpoint_comparable")
+            is True
             and row.get("position") == need["position"]
             and "TRADE_FOR" in resolved.get("actions", ())
         )

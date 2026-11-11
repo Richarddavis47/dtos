@@ -4,6 +4,7 @@ from __future__ import annotations
 from src.ui.market_facts import market_fact_html
 
 import re
+import json
 from math import isfinite
 from datetime import datetime
 from html import escape
@@ -457,18 +458,17 @@ def create_market_router(
             direction, front_office, selected, offset, limit, projection_key, ownership.generation, trend_revision, bool(selected_state.get("last_error")),
         )
 
-        directory_limit = limit
-        result = market.search(q, limit, offset=offset, sort=sort, direction=direction,
-                               position=position or None, availability=availability or None,
-                               availability_asset_ids=availability_ids(ownership, availability, q)) if q else market.directory(
-            offset=offset, limit=directory_limit, sort=sort, direction=direction,
-            position=position or None, availability=availability or None,
-            availability_asset_ids=availability_ids(ownership, availability),
-        )
-        rows = [ownership_row(row, ownership, front_office) for row in (result.get("assets") or result.get("results") or [])]
-        add_trends(market, rows, selected_league, compact=False)
-
         def render_body() -> bytes:
+            directory_limit = limit
+            result = market.search(q, limit, offset=offset, sort=sort, direction=direction,
+                                   position=position or None, availability=availability or None,
+                                   availability_asset_ids=availability_ids(ownership, availability, q)) if q else market.directory(
+                offset=offset, limit=directory_limit, sort=sort, direction=direction,
+                position=position or None, availability=availability or None,
+                availability_asset_ids=availability_ids(ownership, availability),
+            )
+            rows = [ownership_row(row, ownership, front_office) for row in (result.get("assets") or result.get("results") or [])]
+            add_trends(market, rows, selected_league, compact=False)
             card_projections = player_projection_views(data,
                 [str(row.get('asset_id', '')).split(':', 1)[1] for row in rows
                  if str(row.get('asset_id', '')).startswith('player:')], pinned_reader)
@@ -619,7 +619,10 @@ def create_market_router(
                 f"<p>Dataset <code>{escape(market.dataset_version[:12])}</code> · "
                 "stable tie-break: canonical asset ID</p></details>"
             )
-            return body.encode("utf-8")
+            # Keep a tiny neutral sample with the existing bounded byte cache.
+            # No extra directory/trend read or personalized state on cache hits.
+            from services.market_roster_relevance import movement_inputs
+            return json.dumps([body, movement_inputs(rows)], separators=(",", ":")).encode("utf-8")
 
         def render() -> bytes:
             return body_cache.get_or_build(
@@ -627,12 +630,12 @@ def create_market_router(
             )
 
         # Shared caches must never retain account chrome or session CSRF fields.
-        body = render_cache.get_or_build(key, generation, render).decode("utf-8")
+        body, movement_rows = json.loads(render_cache.get_or_build(key, generation, render))
         # Personalized reasons and evidence tokens never enter shared HTML caches.
-        # Reuse the one bounded prepared directory/trend read; no catalog clone.
+        # Reuse the cached neutral sample; no catalog clone or new runtime owner.
         from services.market_roster_relevance import movement_view
         from src.ui.market_roster_relevance import movement_panel
-        relevance = movement_view(data, rows, front_office, ownership,
+        relevance = movement_view(data, movement_rows, front_office, ownership,
             market_data=getattr(market, 'data', data), snapshot=pinned_projection,
             reader=projection_reader)
         body = body.replace('<!--market-roster-movement-slot-->', movement_panel(relevance,

@@ -133,9 +133,9 @@ class MarketNeedFixture:
         )
         self.client = self.f.editor.client
 
-    def add_point(self, raw, *, incompatible=False):
+    def add_point(self, raw, *, incompatible=False, days=2, name="need-old"):
         data = deepcopy(self.data)
-        stamp = (self.stamp - timedelta(days=2)).isoformat()
+        stamp = (self.stamp - timedelta(days=days)).isoformat()
         data["market_data"]["providers"]["FantasyCalc"][self.player_id].update(
             value=raw, retrieved_at=stamp
         )
@@ -169,9 +169,7 @@ class MarketNeedFixture:
         )
         assert observations
         self.old_value = observations[0].normalized_value
-        point = replace(
-            checkpoint("need-old", self.old_value, stamp), asset_id=self.asset_id
-        )
+        point = replace(checkpoint(name, self.old_value, stamp), asset_id=self.asset_id)
         self.memory.put_sparse(
             point,
             market_context_id="source-compatible-fixture",
@@ -222,6 +220,58 @@ class MarketRosterRelevanceTests(unittest.TestCase):
                     for body in cache._entries.values()
                 )
             )
+
+    def test_market_only_runtime_without_projection_owner_keeps_neutral_movement(self):
+        from src.platform.league_context import _CURRENT_CONTEXT
+
+        f = MarketNeedFixture(self)
+        marker = _CURRENT_CONTEXT.set(
+            SimpleNamespace(league_id="league-1", state=f.state, data=f.data)
+        )
+        try:
+            response = f.f.editor.client.get("/market?q=2-RB-0")
+            self.assertEqual(response.status_code, 200)
+            self.assertIn(
+                "Compatible prepared roster projections are unavailable", response.text
+            )
+            self.assertIn("Observed change: +150.00 Market points", response.text)
+            self.assertNotIn("Explore in Trade For", response.text)
+        finally:
+            _CURRENT_CONTEXT.reset(marker)
+
+    def test_warm_market_reuses_directory_and_trend_batch(self):
+        f = MarketNeedFixture(self)
+        with patch.object(f.market, "search", wraps=f.market.search) as search:
+            first, _ = f.panel()
+            second, _ = f.panel()
+        self.assertEqual(search.call_count, 1)
+        self.assertIn("Observed change: +150.00 Market points", first)
+        self.assertIn("Observed change: +150.00 Market points", second)
+
+    def test_old_format_movement_cannot_become_a_current_personal_lead(self):
+        f = MarketNeedFixture(self)
+        f.add_point(2400, days=1, name="need-second")
+        for quote in f.data["market_data"]["providers"]["FantasyCalc"].values():
+            quote.update(
+                format="dynasty_1qb",
+                format_details={"num_teams": 12, "num_qbs": 1, "ppr": 1},
+            )
+        prepare_market_normalization(f.data["market_data"])
+        universe = ValuationUniverse(f.data, f.state)
+        f.data["valuation_intelligence"] = {
+            "assets": {
+                key: _score_asset(row, [], {}, None)
+                for key, row in universe.by_id.items()
+            }
+        }
+        f.cache.clear()
+        f.market = f.cache.get(f.data, f.state, f.history, "league-1")
+        html, _ = f.panel()
+        self.assertNotIn("Explore in Trade For", html)
+        self.assertNotIn("Position matches your supported", html)
+        # Keep only comparisons admitted by the existing canonical reader.
+        # A format boundary may leave neutral history or withhold the change.
+        self.assertTrue("Neutral observation" in html or "Movement is unknown" in html)
 
     def test_zero_movement_is_supported_not_missing(self):
         f = MarketNeedFixture(self, old_raw=3600)
