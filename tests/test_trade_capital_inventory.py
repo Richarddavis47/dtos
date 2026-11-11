@@ -147,6 +147,35 @@ class CapitalInventoryTests(unittest.TestCase):
         self.assertEqual(row["rounds"], 2)
         self.assertEqual(row["seasons"], [2029])
 
+    def test_bounded_record_keeps_supported_exchange_when_inventory_is_too_large(self):
+        picks = [
+            dict(season=2029, round=r, original_roster_id=o, current_owner_id=o)
+            for r in (1, 2)
+            for o in range(1, 21)
+        ]
+        data = dict(
+            league=dict(
+                league_id="league", season="2026", settings=dict(draft_rounds=2)
+            ),
+            pick_ledger=picks,
+            traded_picks=[],
+            teams=[
+                dict(
+                    roster_id=o,
+                    team_name="\U0001f3c8" * 100,
+                    picks_owned=[p for p in picks if p["current_owner_id"] == o],
+                )
+                for o in range(1, 21)
+            ],
+        )
+        envelope = record(data, [asset(1, 1)], [asset(2, 2)])
+        row = decode(envelope)
+        self.assertFalse(row["complete"])
+        self.assertEqual(row["sent"], [[2029, 1, 1]])
+        self.assertEqual(row["received"], [[2029, 1, 2]])
+        self.assertIn("unknown", row["reason"])
+        self.assertLess(envelope["characters"], 10000)
+
     def test_native_scope_ambiguity_and_duplicate_roster_are_rejected(self):
         for change in ("league", "season", "roster"):
             data = fixture()

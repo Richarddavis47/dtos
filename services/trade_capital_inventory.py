@@ -200,6 +200,9 @@ def capital_record(baseline, proposal):
                 league=row["league"],
                 roster=row["roster"],
                 complete=False,
+                sent=row.get("sent", []),
+                received=row.get("received", []),
+                invalid=row.get("invalid", False),
                 reason="The inventory exceeds the bounded recorded-evidence size; totals are unknown.",
             )
         )
