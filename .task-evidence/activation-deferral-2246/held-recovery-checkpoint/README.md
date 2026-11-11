@@ -1,0 +1,7 @@
+# Held recovery checkpoint
+
+The original executor and workspace are accessible. Resume the same PR335/candidate836d036/treeD35; read NEXT_ACTIONS.md and WORK_STATUS.json. The second full local run is complete and FAILED one100ms latency assertion; it is not still running. All13hostedjobs/all10hostedgatespassed. Original firstcapacity-deferral failure is separate. Nine unchanged local gate commands havepassingoutcomes, butthefullunitgate remainsfailed. No merge,tag,release draft,publisherdispatch ordeployment occurred. Production remains1.22.30/build2245. The unfinishedpublisher/sourcework andoriginalstoppedcontainers/artifacts remain intact.
+
+[Complete held report and original archives](https://github.com/Richarddavis47/dtos/tree/ba102d1eb9f9bc90679d7b4f1fafc30cb76c1efd/.task-evidence/activation-deferral-2246/validation-held). All622publishedpayloadfiles/273,973,316bytes plusmanifest/SHA sidecar were remotely downloaded andchecksum-matched. ThisreceiptisnotindependentScoutacceptance orGranite recovery. MainChat'soldRender-localtoken200remains suppliedevidence; no freshsafe preflight/ownerentry/search wasobtained.
+
+Resolve the exact full-run latency cause without lowering100ms ormemorysafeguards before anotherrequiredlocalcanonicalattempt. Do not rerunpassinghostedwork ordiscard/overwritefailedlocalcanonical. No credential, infrastructure orownerdata actionwasperformed orisrequired torecoverthisexecutor.
