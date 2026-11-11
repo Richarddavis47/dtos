@@ -78,6 +78,7 @@ class RecommendedProtectionBrowserTests(unittest.TestCase):
         rows = []
         for width, height in [(320,432), (375,667), (390,844), (1280,900)]:
             page.set_viewport_size(dict(width=width, height=height))
+            page.evaluate('()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))')
             selected = page.locator('#recommendation-protection-list')
             self.assertIn('2029-R1-1', selected.inner_text())
             self.assertIn('Original franchise:', selected.inner_text())
