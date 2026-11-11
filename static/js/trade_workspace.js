@@ -1586,7 +1586,10 @@
       if (path === 'generate' && flow === 'recommended') hasDiscovered = true;
       observeEvidence(body);
       if (path === 'evaluate' && !body.evaluation?.recommendation && !body.evaluation?.explanation_html) throw new Error('Evaluation incomplete. Retained assessment is not revalidated; try Reevaluate Trade again.');
-      for (const id of body.constraints?.protected_assets || []) addLock('protectedAssets', id);
+      // Recommended search protections belong to that search's retained
+      // settings, not to the independent Evaluate/Shop adjustment locks.
+      if (!(path === 'generate' && flow === 'recommended'))
+        for (const id of body.constraints?.protected_assets || []) addLock('protectedAssets', id);
       for (const id of body.constraints?.excluded_assets || []) if (!temporaryPickExclusions.has(id)) addLock('excludedAssets', id);
       if (path === 'assist') {
         const lostTarget = body.results?.some(row => selected.received.some(id => !row.proposal.assets_received.includes(id)));
@@ -1774,6 +1777,8 @@
         }
         if (session.currentAssessment) { session.currentAssessment = restoreContext(session.currentAssessment); showEvaluation(session.currentAssessment.evaluation || {}, session.currentAssessment.opportunity, session.currentAssessment); }
         if (session.previewProposal) { if (session.previewProposal.preview_context) session.previewProposal.preview_context = restoreContext(session.previewProposal.preview_context); previewOffer({proposal: session.previewProposal}); }
+        session.comparisonOffers = session.comparisonOffers.map(row => ({...row, retained: true, context: restoreContext(row.context || {})}));
+        comparison?.refresh();
         persist();
       }
     }

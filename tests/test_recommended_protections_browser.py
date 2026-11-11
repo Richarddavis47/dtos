@@ -159,6 +159,14 @@ class RecommendedProtectionBrowserTests(unittest.TestCase):
         page.wait_for_function("!document.querySelector('#trade-context').textContent.includes('Loading')")
         self.protect(page, '2029-R1-1')
         self.protect(page, 'a')
+        payload, generated = self.generate(page)
+        self.assertEqual(payload['protected_assets'], ['2029-R1-1','a'])
+        self.assertEqual(set(generated['constraints']['protected_assets']), {'2029-R1-1','a'})
+        searched = helper.draft(page)
+        self.assertEqual(searched['protectedAssets'], original['protectedAssets'])
+        self.assertEqual(searched['currentProposal'], original['currentProposal'])
+        self.assertIn('a', searched['currentProposal']['sent'])
+        self.assertIn('2029-R1-1', page.locator('#trade-result .tw-applied-protections').inner_text())
         helper.back(page, '/trades/create')
         page.wait_for_function("!document.querySelector('#trade-context').textContent.includes('Loading')")
         restored = helper.draft(page)
@@ -166,10 +174,13 @@ class RecommendedProtectionBrowserTests(unittest.TestCase):
             self.assertEqual(restored[key], original[key], key)
         self.assertEqual(restored['currentAssessment']['evaluation'], original['currentAssessment']['evaluation'])
         self.assertEqual([r['proposal'] for r in restored['comparisonOffers']], [r['proposal'] for r in original['comparisonOffers']])
+        self.assertEqual(restored['protectedAssets'], original['protectedAssets'])
         with page.expect_response(lambda r: r.url.endswith('/api/trades/evaluate') and r.request.method == 'POST') as evaluated:
             page.locator('#trade-run').click()
         self.assertEqual(evaluated.value.status, 200)
         self.assertEqual(evaluated.value.request.post_data_json['protected_assets'], [])
+        self.assertEqual(evaluated.value.request.post_data_json['assets_sent'], original['currentProposal']['sent'])
+        self.assertEqual(evaluated.value.request.post_data_json['assets_received'], original['currentProposal']['received'])
         helper.ready(page, '/trades/recommended')
         self.assertEqual(helper.draft(page)['recommendationProtectedAssets'], ['2029-R1-1','a'])
         page.reload()
@@ -182,6 +193,7 @@ class RecommendedProtectionBrowserTests(unittest.TestCase):
         self.assertEqual(helper.draft(page)['recommendationProtectedAssets'], [])
         self.assertEqual(helper.draft(page)['comparisonOffers'], [])
         self.record('draft-and-scope', dict(real_evaluations=2, recommended_controls_not_applied_to_evaluate=True,
+                    completed_search_not_applied_to_evaluate=True,
                     original_draft_retained=True, comparison_proposals_retained=True, reload_retained=True, league_switch_cleared=True))
 
     def test_no_qualified_offers_keeps_applied_restrictions_and_real_completion(self):

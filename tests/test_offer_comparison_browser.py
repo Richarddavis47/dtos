@@ -144,6 +144,33 @@ class OfferComparisonBrowserTests(unittest.TestCase):
         self.assertFalse(errors, errors)
         self.assertEqual(f.editor.state(), saved)
         self.record('phone-round-trips', rows)
+        self.open_readonly(page, requests)
+        before_posts = [request for request in requests if request[0] == 'POST']
+        with (patch('routes.trades.compare_trade_requests', side_effect=AssertionError('No recomparison')),
+              patch('routes.trades.evaluate_trade_request', side_effect=AssertionError('No reevaluation')),
+              patch('routes.trades.generate_trade_workflow', side_effect=AssertionError('No search'))):
+            page.evaluate('dispatchEvent(new PageTransitionEvent("pagehide", {persisted: true}))')
+            page.evaluate('dispatchEvent(new PageTransitionEvent("pageshow", {persisted: true}))')
+            page.wait_for_function("document.querySelector('#trade-comparison').dataset.comparisonState==='retained'")
+            panel = page.locator('#trade-comparison')
+            self.assertTrue(panel.is_visible())
+            self.assertEqual(panel.get_by_text('Retained assessment · NOT REVALIDATED', exact=True).count(), 2)
+            restored = helper.draft(page)
+            self.assertEqual(len(restored['comparisonOffers']), 2)
+            for before, retained in zip(offers, restored['comparisonOffers']):
+                for key in ['id', 'scope', 'baseline', 'assets', 'proposal', 'summary']:
+                    self.assertEqual(retained[key], before[key])
+                self.assertTrue(retained['retained'])
+                self.assertTrue(retained['context']['restored'])
+            self.assertEqual(panel.locator('[data-comparison-slot="2"] ol').first.locator('small').all_text_contents(),
+                             ['Exact asset: 2028-R1-3', 'Exact asset: a'])
+            for key in ['currentProposal', 'valuationMode', 'strategy']:
+                self.assertEqual(restored[key], original[key])
+            self.assertEqual([request for request in requests if request[0] == 'POST'], before_posts)
+        self.assertFalse(errors, errors)
+        self.assertEqual(f.editor.state(), saved)
+        self.record('retained-bfcache', dict(selected_offers=2, exact_snapshots=True,
+                    retained_qualification_visible=True, exact_draft=True, no_trade_http=True), page)
         page.reload()
         page.wait_for_function("!document.querySelector('#trade-context').textContent.includes('Loading')")
         count = self.open_readonly(page, requests)
