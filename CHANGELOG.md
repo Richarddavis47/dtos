@@ -1,10 +1,14 @@
-# v1.22.31 / build 2246 — Distinguish deferred league preparation
+# v1.22.31 / build 2246 — Follow through on a supported front-office action
 
-Connected-league activation preserves the existing typed capacity deferral instead of presenting it as an unexplained preparation failure. The page explains manual retry, keeps the saved league unchanged and makes clear that no Trade search ran. API clients receive the existing private, no-store deferred response and Retry-After guidance.
+Home carries the existing current, prepared roster need into Trade Center's editable position filter, with the reason visible and starter needs distinguished from depth needs. The existing saved-goal priorities remain in force. Missing preparation is explained as missing evidence, rather than a weak roster or proof that no opportunity exists. Opening the action never starts a search.
 
-Bounded authorized logs record the existing restoration guard inputs and the actual bounded cleanup outcome without payloads, account identifiers or exception messages. They add no telemetry sampling, restoration, provider calls or heavyweight work. Earlier unrecorded guard inputs cannot be recovered by this change.
+A completed Recommended search keeps its temporary exact-asset protections separate from the Evaluate draft. The displayed results retain the settings that produced them when controls change. Returning through browser Back restores selected comparison evidence as retained, with its original ordered packages and qualifications; viewing comparisons or a partner's completed-trade history does not recalculate an offer.
 
-Memory policy and analytical calculations are unchanged. This corrects error handling; it does not create additional capacity or establish Granite recovery. See docs/audits/ACTIVATION_DEFERRAL_2246.md for source, fixture and live evidence boundaries.
+Connected-league activation also preserves typed capacity deferral, private/no-store HTTP 503, Retry-After and manual retry guidance. Bounded authorized logs record already-calculated admission and cleanup facts without private payloads or extra preparation. This creates no additional capacity and does not establish Granite recovery or reconstruct earlier unlogged failures.
+
+The responsiveness test prepares its allocated fixture graph before the unchanged 100 ms request measurement. GC stays enabled, the real audit worker remains pending, and an actual blocking-request control still fails. Production GC, resource reserves, scoring, Sleeper-only fantasy results/projections, valuation formulas, Trade qualification, saved preferences and submitted lineups are unchanged.
+
+See docs/audits/FRONT_OFFICE_DECISION_2246.md and docs/audits/ACTIVATION_DEFERRAL_2246.md for source, fixture and live-evidence boundaries.
 
 # v1.22.30 / build 2245 — Protect assets in Recommended Trades
 
