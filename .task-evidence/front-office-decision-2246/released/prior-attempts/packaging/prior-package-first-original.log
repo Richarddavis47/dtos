@@ -1,0 +1,13 @@
+Traceback (most recent call last):
+  File "/workspace/2246-granite-activation/expansion/final-r3/package-prior.py", line 356, in <module>
+    main()
+  File "/workspace/2246-granite-activation/expansion/final-r3/package-prior.py", line 294, in main
+    b602_history = b602_supplement.append_b602_history(BASE, source, add, guards)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/2246-granite-activation/expansion/final-r3/prior-b602-additions.py", line 196, in append_b602_history
+    original(hosted / 'core-originals', name, 'superseded-b602/hosted/core-originals/' + name)
+  File "/workspace/2246-granite-activation/expansion/final-r3/prior-b602-additions.py", line 152, in original
+    require(not SIGNED.search(raw), 'Signed URL excluded from prior supplement')
+  File "/workspace/2246-granite-activation/expansion/final-r3/prior-b602-additions.py", line 37, in require
+    raise RuntimeError(message)
+RuntimeError: Signed URL excluded from prior supplement

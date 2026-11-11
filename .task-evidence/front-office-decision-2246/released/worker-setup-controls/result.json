@@ -1,0 +1,440 @@
+{
+  "scope": "Disposable actual audit worker/request controls. Explicit 2.1s setup delay models placement only; it is not measured historical GC duration or a substitute for fresh full validation.",
+  "started": 1794391816.849322,
+  "cases": [
+    {
+      "name": "old_placement_controlled_2.1s_setup",
+      "failures": [
+        {
+          "test": "projection_worker_old_placement.ProjectionAuditTests.test_projection_audit_does_not_block_lightweight_request",
+          "type": "AssertionError",
+          "text": "False is not true"
+        }
+      ],
+      "errors": [],
+      "worker_holds": [
+        {
+          "timeout": 2.0,
+          "released": false,
+          "elapsed_ms": 2000.209770994843,
+          "observed_context": [
+            "projection-audit-request"
+          ]
+        }
+      ],
+      "requests": [
+        {
+          "path": "/lightweight",
+          "began": 98443.011750178,
+          "status": 200,
+          "elapsed_ms": 2.939042999059893
+        },
+        {
+          "path": "/api/audit/projections/current",
+          "began": 98440.592955259,
+          "error_type": "AssertionError",
+          "elapsed_ms": 2423.1062970065977
+        }
+      ],
+      "collections": [
+        {
+          "worker_started": true,
+          "audit_task_created": true,
+          "gc_enabled": true,
+          "collected": 0,
+          "actual_gc_ms": 296.69072199612856,
+          "controlled_setup_delay_seconds": 2.1,
+          "setup_total_ms": 2396.836843996425,
+          "gc_enabled_after": true
+        }
+      ],
+      "memory_before": {
+        "rss_bytes": 707837952,
+        "vms_bytes": 887222272,
+        "system_available_bytes": 17192554496,
+        "memory_accounting_scope": "cgroup",
+        "cgroup_current_bytes": 683098112,
+        "cgroup_limit_bytes": 2147483648,
+        "cgroup_inactive_file_bytes": 380928,
+        "cgroup_anonymous_bytes": 679804928,
+        "cgroup_memory_events": {
+          "low": 0,
+          "high": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_kill": 0,
+          "oom_group_kill": 0
+        }
+      },
+      "gc_enabled": true,
+      "passed": false,
+      "tests": 1,
+      "elapsed_ms": 2449.631155002862,
+      "memory_after": {
+        "rss_bytes": 710311936,
+        "vms_bytes": 1040322560,
+        "system_available_bytes": 17190957056,
+        "memory_accounting_scope": "cgroup",
+        "cgroup_current_bytes": 685391872,
+        "cgroup_limit_bytes": 2147483648,
+        "cgroup_inactive_file_bytes": 360448,
+        "cgroup_anonymous_bytes": 681750528,
+        "cgroup_memory_events": {
+          "low": 0,
+          "high": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_kill": 0,
+          "oom_group_kill": 0
+        }
+      },
+      "gc_enabled_after": true
+    },
+    {
+      "name": "new_placement_controlled_2.1s_setup",
+      "failures": [],
+      "errors": [],
+      "worker_holds": [
+        {
+          "timeout": 2.0,
+          "released": true,
+          "elapsed_ms": 10.311145000741817,
+          "observed_context": [
+            "projection-audit-request"
+          ]
+        }
+      ],
+      "requests": [
+        {
+          "path": "/lightweight",
+          "began": 98445.763595012,
+          "status": 200,
+          "elapsed_ms": 7.515281991800293
+        },
+        {
+          "path": "/api/audit/projections/current",
+          "began": 98445.610824307,
+          "status": 200,
+          "elapsed_ms": 169.60648399253841
+        }
+      ],
+      "collections": [
+        {
+          "worker_started": false,
+          "audit_task_created": false,
+          "gc_enabled": true,
+          "collected": 844,
+          "actual_gc_ms": 448.5258330096258,
+          "controlled_setup_delay_seconds": 2.1,
+          "setup_total_ms": 2550.6241530092666,
+          "gc_enabled_after": true
+        }
+      ],
+      "memory_before": {
+        "rss_bytes": 710311936,
+        "vms_bytes": 1040322560,
+        "system_available_bytes": 17191358464,
+        "memory_accounting_scope": "cgroup",
+        "cgroup_current_bytes": 685404160,
+        "cgroup_limit_bytes": 2147483648,
+        "cgroup_inactive_file_bytes": 360448,
+        "cgroup_anonymous_bytes": 681750528,
+        "cgroup_memory_events": {
+          "low": 0,
+          "high": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_kill": 0,
+          "oom_group_kill": 0
+        }
+      },
+      "gc_enabled": true,
+      "passed": true,
+      "tests": 1,
+      "elapsed_ms": 2754.5656340080313,
+      "memory_after": {
+        "rss_bytes": 710483968,
+        "vms_bytes": 1040322560,
+        "system_available_bytes": 17191260160,
+        "memory_accounting_scope": "cgroup",
+        "cgroup_current_bytes": 685510656,
+        "cgroup_limit_bytes": 2147483648,
+        "cgroup_inactive_file_bytes": 360448,
+        "cgroup_anonymous_bytes": 682115072,
+        "cgroup_memory_events": {
+          "low": 0,
+          "high": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_kill": 0,
+          "oom_group_kill": 0
+        }
+      },
+      "gc_enabled_after": true
+    },
+    {
+      "name": "new_placement_actual_gc_same_graph",
+      "failures": [],
+      "errors": [],
+      "worker_holds": [
+        {
+          "timeout": 2.0,
+          "released": true,
+          "elapsed_ms": 5.014480993850157,
+          "observed_context": [
+            "projection-audit-request"
+          ]
+        }
+      ],
+      "requests": [
+        {
+          "path": "/lightweight",
+          "began": 98446.271156032,
+          "status": 200,
+          "elapsed_ms": 1.430140997399576
+        },
+        {
+          "path": "/api/audit/projections/current",
+          "began": 98446.265518198,
+          "status": 200,
+          "elapsed_ms": 10.668289003660902
+        }
+      ],
+      "collections": [
+        {
+          "worker_started": false,
+          "audit_task_created": false,
+          "gc_enabled": true,
+          "collected": 498,
+          "actual_gc_ms": 467.75830499245785,
+          "controlled_setup_delay_seconds": 0,
+          "setup_total_ms": 467.7634989930084,
+          "gc_enabled_after": true
+        }
+      ],
+      "memory_before": {
+        "rss_bytes": 710483968,
+        "vms_bytes": 1040322560,
+        "system_available_bytes": 17191260160,
+        "memory_accounting_scope": "cgroup",
+        "cgroup_current_bytes": 685510656,
+        "cgroup_limit_bytes": 2147483648,
+        "cgroup_inactive_file_bytes": 360448,
+        "cgroup_anonymous_bytes": 682115072,
+        "cgroup_memory_events": {
+          "low": 0,
+          "high": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_kill": 0,
+          "oom_group_kill": 0
+        }
+      },
+      "gc_enabled": true,
+      "passed": true,
+      "tests": 1,
+      "elapsed_ms": 487.94927599374205,
+      "memory_after": {
+        "rss_bytes": 710549504,
+        "vms_bytes": 1040322560,
+        "system_available_bytes": 17191202816,
+        "memory_accounting_scope": "cgroup",
+        "cgroup_current_bytes": 685543424,
+        "cgroup_limit_bytes": 2147483648,
+        "cgroup_inactive_file_bytes": 368640,
+        "cgroup_anonymous_bytes": 682225664,
+        "cgroup_memory_events": {
+          "low": 0,
+          "high": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_kill": 0,
+          "oom_group_kill": 0
+        }
+      },
+      "gc_enabled_after": true
+    },
+    {
+      "name": "new_placement_real_120ms_foreground_negative",
+      "failures": [
+        {
+          "test": "projection_worker_foreground_negative.ProjectionAuditTests.test_projection_audit_does_not_block_lightweight_request",
+          "type": "AssertionError",
+          "text": "122.23272099799942 not less than 100"
+        }
+      ],
+      "errors": [],
+      "worker_holds": [
+        {
+          "timeout": 2.0,
+          "released": true,
+          "elapsed_ms": 125.62651599000674,
+          "observed_context": [
+            "projection-audit-request"
+          ]
+        }
+      ],
+      "requests": [
+        {
+          "path": "/lightweight",
+          "began": 98446.661537101,
+          "status": 200,
+          "elapsed_ms": 122.04359899624251
+        },
+        {
+          "path": "/api/audit/projections/current",
+          "began": 98446.656379976,
+          "status": 200,
+          "elapsed_ms": 131.30211699171923
+        }
+      ],
+      "collections": [
+        {
+          "worker_started": false,
+          "audit_task_created": false,
+          "gc_enabled": true,
+          "collected": 498,
+          "actual_gc_ms": 372.77376200654544,
+          "controlled_setup_delay_seconds": 0,
+          "setup_total_ms": 372.7793669968378,
+          "gc_enabled_after": true
+        }
+      ],
+      "memory_before": {
+        "rss_bytes": 710549504,
+        "vms_bytes": 1040322560,
+        "system_available_bytes": 17191202816,
+        "memory_accounting_scope": "cgroup",
+        "cgroup_current_bytes": 685543424,
+        "cgroup_limit_bytes": 2147483648,
+        "cgroup_inactive_file_bytes": 368640,
+        "cgroup_anonymous_bytes": 682225664,
+        "cgroup_memory_events": {
+          "low": 0,
+          "high": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_kill": 0,
+          "oom_group_kill": 0
+        }
+      },
+      "gc_enabled": true,
+      "passed": false,
+      "tests": 1,
+      "elapsed_ms": 511.2430669978494,
+      "memory_after": {
+        "rss_bytes": 710598656,
+        "vms_bytes": 1040322560,
+        "system_available_bytes": 17191206912,
+        "memory_accounting_scope": "cgroup",
+        "cgroup_current_bytes": 685617152,
+        "cgroup_limit_bytes": 2147483648,
+        "cgroup_inactive_file_bytes": 368640,
+        "cgroup_anonymous_bytes": 682225664,
+        "cgroup_memory_events": {
+          "low": 0,
+          "high": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_kill": 0,
+          "oom_group_kill": 0
+        }
+      },
+      "gc_enabled_after": true
+    }
+  ],
+  "gc_thresholds": [
+    2000,
+    10,
+    0
+  ],
+  "source": {
+    "head": "b602d6acd03cc1c95d85ee734d2d7f28658885cf",
+    "tree": "8a687ea0256d6e0031b57e08e2a1a38a90a1a535",
+    "status": " M tests/test_projection_audit.py\n",
+    "candidate_file_sha256": "eb8b90a68e73ac45e622aae3f5b0e08bb070145197c6f29f97b00e53d6a508cc"
+  },
+  "environment": {
+    "python": "3.14.3 (main, Apr  7 2026, 02:23:36) [GCC 12.2.0]",
+    "cgroup_limit": "2147483648",
+    "swap_max": "0",
+    "cpu_max": "200000 100000",
+    "network": "none"
+  },
+  "loaded_suite_tests": 4364,
+  "after_all_module_imports": {
+    "rss_bytes": 135241728,
+    "vms_bytes": 305643520,
+    "system_available_bytes": 17798795264,
+    "memory_accounting_scope": "cgroup",
+    "cgroup_current_bytes": 109264896,
+    "cgroup_limit_bytes": 2147483648,
+    "cgroup_inactive_file_bytes": 339968,
+    "cgroup_anonymous_bytes": 107212800,
+    "cgroup_memory_events": {
+      "low": 0,
+      "high": 0,
+      "max": 0,
+      "oom": 0,
+      "oom_kill": 0,
+      "oom_group_kill": 0
+    }
+  },
+  "baseline_file_sha256": "55874200afd5cfa1c4da60146a938b0b0f6ae7d381991a611ebe87bd0cf78a22",
+  "negative_file_sha256": "032adf289d10d85ab25d6755b2b71d2bc47125e5c1328725cf1cdb2d06d9635c",
+  "graph": {
+    "rows": 2450000,
+    "build_seconds": 6.1820336829987355,
+    "retained_rooted_shape": "2.45M tracked dicts point to common anchor; anchor points to complete list",
+    "memory": {
+      "rss_bytes": 707837952,
+      "vms_bytes": 887222272,
+      "system_available_bytes": 17192554496,
+      "memory_accounting_scope": "cgroup",
+      "cgroup_current_bytes": 683098112,
+      "cgroup_limit_bytes": 2147483648,
+      "cgroup_inactive_file_bytes": 380928,
+      "cgroup_anonymous_bytes": 679804928,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0
+      }
+    },
+    "gc_enabled": true
+  },
+  "actual_audit_module": {
+    "tests": 9,
+    "passed": true,
+    "failures": 0,
+    "errors": 0,
+    "gc_enabled": true,
+    "retained_same_graph": true
+  },
+  "finished": 1794391834.9209058,
+  "max_rss_kib": 694872,
+  "final_memory": {
+    "rss_bytes": 711905280,
+    "vms_bytes": 1116872704,
+    "system_available_bytes": 17190985728,
+    "memory_accounting_scope": "cgroup",
+    "cgroup_current_bytes": 686739456,
+    "cgroup_limit_bytes": 2147483648,
+    "cgroup_inactive_file_bytes": 352256,
+    "cgroup_anonymous_bytes": 683638784,
+    "cgroup_memory_events": {
+      "low": 0,
+      "high": 0,
+      "max": 0,
+      "oom": 0,
+      "oom_kill": 0,
+      "oom_group_kill": 0
+    }
+  },
+  "same_graph_retained": true,
+  "gc_enabled": true,
+  "gc_thresholds_unchanged": true
+}

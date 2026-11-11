@@ -1,0 +1,361 @@
+diff --git a/method-revisions/pre-fixture-url-classifier/prior-b602-additions.py b/prior-b602-additions.py
+index cfb24de..bb1da70 100644
+--- a/method-revisions/pre-fixture-url-classifier/prior-b602-additions.py
++++ b/prior-b602-additions.py
+@@ -12,6 +12,7 @@ from pathlib import Path, PurePosixPath
+ import re
+ from urllib.parse import quote
+ import zipfile
++from fixture_url import has_disallowed_sensitive_url
+ 
+ R2 = Path('/workspace/2246-granite-activation/expansion/final-r2')
+ PUBLIC_REPO = Path('/workspace/cache-sharing-handoff')
+@@ -149,7 +150,7 @@ def append_b602_history(base, source, add, guards):
+     def original(root, relative, member):
+         raw = raw_file(root, relative)
+         require(PurePosixPath(relative).suffix.lower() not in {'.zip', '.db', '.sqlite3', '.env'}, 'Never embed full ZIP/database/env in b602 supplement')
+-        require(not SIGNED.search(raw), 'Signed URL excluded from prior supplement')
++        require(not has_disallowed_sensitive_url(raw, legacy_pattern=SIGNED), 'Signed URL excluded from prior supplement')
+         if relative.endswith('.json'):
+             value = json.loads(raw)
+             values = value if isinstance(value, list) else [value]
+diff --git a/method-revisions/pre-fixture-url-classifier/build-released-evidence.py b/build-released-evidence.py
+index a964b2a..518779f 100644
+--- a/method-revisions/pre-fixture-url-classifier/build-released-evidence.py
++++ b/build-released-evidence.py
+@@ -17,10 +17,11 @@ import re
+ import stat
+ import subprocess
+ import tempfile
+-from urllib.parse import parse_qsl, quote, urlsplit
++from urllib.parse import quote, urlsplit
+ import zipfile
+ 
+ from common import verify_worker_setup_controls
++from fixture_url import has_disallowed_sensitive_url
+ from worker_evidence import collect_worker_setup_evidence, verify_worker_setup_evidence
+ 
+ BASE = Path(__file__).resolve().parent
+@@ -121,14 +122,10 @@ def sanitize(name, raw):
+         require(raw.startswith(b'\x89PNG\r\n\x1a\n'), 'Invalid PNG: ' + name)
+         return
+     text = raw.decode('utf-8')
++    require(not has_disallowed_sensitive_url(raw), 'Signed/token URL excluded: ' + name)
+     for url in re.findall(r'https?://[^\s<>\"\x27]+', text):
+         parsed = urlsplit(url)
+         require(parsed.username is None and parsed.password is None, 'URL userinfo excluded: ' + name)
+-        keys = {key.lower() for key, _ in parse_qsl(parsed.query)}
+-        require(not keys.intersection({'sig', 'signature', 'token', 'access_token', 'x-amz-signature',
+-                                      'x-amz-credential', 'x-amz-security-token', 'x-goog-signature',
+-                                      'x-goog-credential', 'googleaccessid', 'jwt'}),
+-                'Signed/token URL excluded: ' + name)
+     if name.endswith('.json'):
+         def inspect(value):
+             if isinstance(value, dict):
+@@ -392,6 +389,14 @@ def main():
+              'retained-history-feature.json', 'retained-history-probe-original.log', 'retained-history-probe-invocation.json')
+     for relative in fixed:
+         copy(relative)
++    for name in ('prior-url-scan-false-positive.json', 'fixture-url-controls-v5-final.json',
++                 'fixture-url-logged-matches-v5.json', 'fixture-url-classifier-revision-v5.json',
++                 'fixture-url-classifier-changes-v5.patch'):
++        copy(name, 'methods/fixture-url-classification/' + name)
++    copy('prior-package-original.log', 'prior-attempts/packaging/prior-package-first-original.log')
++    for name in ('prior-b602-additions.py', 'build-released-evidence.py'):
++        copy('method-revisions/pre-fixture-url-classifier/' + name,
++             'methods/history/prior-fixture-url-scan-before/' + name)
+     copy(args.reviewed_additions, 'selection/reviewed-additions.json')
+     local_root = BASE / 'local-canonical'
+     def local_read(name):
+diff --git a/method-revisions/pre-fixture-url-classifier/make-recovery.py b/make-recovery.py
+index b8b07eb..c3a7674 100644
+--- a/method-revisions/pre-fixture-url-classifier/make-recovery.py
++++ b/make-recovery.py
+@@ -44,6 +44,8 @@ required = [
+     "local-container-state-original.json", "local-container-stdout-original.log", "local-canonical-integrity-original.log",
+     "retained-history-probe-original.log", "retained-history-probe-invocation.json", "prior-package.json",
+     "resource-methods.md", "README.md", "harness-origins.json", "worker-setup-verified.json",
++    "prior-url-scan-false-positive.json", "fixture-url-controls-v5-final.json", "fixture-url-logged-matches-v5.json",
++    "fixture-url-classifier-revision-v5.json", "fixture-url-classifier-changes-v5.patch", "prior-package-original.log",
+ ]
+ for name in required:
+     path = BASE / name
+@@ -51,6 +53,8 @@ for name in required:
+     files[name] = path
+ for path in BASE.glob("*.py"):
+     files["methods/" + path.name] = path
++for name in ('prior-b602-additions.py', 'build-released-evidence.py'):
++    files['methods/history/prior-fixture-url-scan-before/' + name] = BASE / 'method-revisions/pre-fixture-url-classifier' / name
+ for name in ("methods-manifest.json", "SHA256SUMS"):
+     if (BASE / name).exists():
+         files["methods/" + name] = BASE / name
+diff --git a/method-revisions/pre-fixture-url-classifier/RELEASED_EVIDENCE_METHODS.md b/RELEASED_EVIDENCE_METHODS.md
+index c9c0c70..97cfd91 100644
+--- a/method-revisions/pre-fixture-url-classifier/RELEASED_EVIDENCE_METHODS.md
++++ b/RELEASED_EVIDENCE_METHODS.md
+@@ -1,5 +1,7 @@
+ # Future released-evidence methods — prepared source only
+ 
++The shared `fixture_url.py` metadata classifier permits only the exact disposable in-process negative-authentication test URL reconstructed from hash-pinned public source AST constants. It proves `TestClient(app)` uses its default origin and verifies the imported endpoint prefix source; it makes no app import, request or authentication change. Both scanners continue to reject every other sensitive URL and examine every match independently. The final22 pure positive/negative controls, two already-public original-log metadata matches and source-chain proof are selected explicitly, with the preserved first Prior packaging failure and before-method sources. All original log bytes remain unchanged; no fixture values are emitted in the metadata receipts. This narrow evidence exception is not production authentication or release acceptance.
++
+ `build-released-evidence.py` and `verify-released-evidence-https.py` are prepared methods. Their creation does not run them, establish a gate result, create a public prefix, commit, push or publish a release. Root review and actual release/deployment inputs remain required. Existing `.task-evidence/front-office-decision-2246/review` stays unchanged.
+ 
+ The builder creates only the previously absent `.task-evidence/front-office-decision-2246/released` in the clean `evidence/cache-string-sharing-2237` worktree. It requires an explicitly reviewed current evidence HEAD and the reviewed SHA256 of the actual root-authored R3 `source.json`. Final candidate/tree are loaded from those actual bytes at invocation; no new candidate is inferred from the preparation templates. The input must identify the new source superseding historical b602. It reads local originals and Git objects, uses no network or Docker, touches no source or controller files, and performs no commit/push. Missing, failed, stale or inconsistent mandatory inputs stop preparation. All checks precede atomic creation of the new prefix.
+diff --git a/fixture_url.py b/fixture_url.py
+new file mode 100644
+index 0000000..61e6b3d
+--- /dev/null
++++ b/fixture_url.py
+@@ -0,0 +1,155 @@
++"""Source-pinned disposable in-process test URL classifier; no app/HTTP imports.
++
++This permits evidence bytes only. It changes no request authorization and reads
++no production configuration or credentials. Errors never print fixture values.
++"""
++import ast
++from functools import lru_cache
++import hashlib
++from pathlib import Path
++import re
++import subprocess
++from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
++
++REPOSITORY = Path('/workspace/dtos')
++COMMITS = ('b602d6acd03cc1c95d85ee734d2d7f28658885cf', '4cf524c488efb36c77defd78bfd7acf84a3f6ddd')
++TEST_FILE = 'tests/test_restoration_preflight_http.py'
++TEST_SHA256 = '07b81fcfb222d43d27c84957e62ed7bcac757a906b0af195f20917195ec5ec9c'
++PREFIX_FILE = 'src/platform/inspection_security.py'
++PREFIX_SHA256 = '9385cd34ff31a10dbd162bbb489298535510395b0f27e4e879421fe76b7cfe5a'
++TARGET_TEST = 'test_cookie_bearer_and_query_values_cannot_authorize'
++SENSITIVE_KEYS = frozenset({'sig', 'signature', 'token', 'access_token', 'x-amz-signature', 'x-amz-credential',
++    'x-amz-security-token', 'x-goog-signature', 'x-goog-credential', 'googleaccessid', 'jwt'})
++URL = re.compile(rb'[A-Za-z][A-Za-z0-9+.-]*://[^\s<>"\x27]+')
++LEGACY = re.compile(rb'https?://[^\s"<>]*[?&](?:sig|signature|token|access_token|X-Amz-Signature|X-Amz-Credential|X-Goog-Signature|X-Goog-Credential)=', re.I)
++
++
++def require(condition):
++    if not condition:
++        raise RuntimeError('Pinned public fixture URL source contract changed; no URL/value exception is granted')
++
++
++def read_source(commit, name):
++    return subprocess.check_output(['git', 'show', commit + ':' + name], cwd=REPOSITORY)
++
++
++def _function(tree, name):
++    matches = [node for node in ast.walk(tree) if isinstance(node, ast.FunctionDef) and node.name == name]
++    require(len(matches) == 1)
++    return matches[0]
++
++
++def _constant(tree, name):
++    rows = [node for node in tree.body if isinstance(node, ast.Assign) and len(node.targets) == 1
++            and isinstance(node.targets[0], ast.Name) and node.targets[0].id == name]
++    require(len(rows) == 1)
++    value = ast.literal_eval(rows[0].value)
++    require(isinstance(value, str))
++    return value
++
++
++def _spec_from_sources(test_raw, prefix_raw):
++    require(hashlib.sha256(test_raw).hexdigest() == TEST_SHA256 and hashlib.sha256(prefix_raw).hexdigest() == PREFIX_SHA256)
++    tree, prefix_tree = ast.parse(test_raw), ast.parse(prefix_raw)
++    imports = {(node.module, alias.name, alias.asname) for node in tree.body if isinstance(node, ast.ImportFrom) for alias in node.names}
++    require(('fastapi.testclient', 'TestClient', None) in imports and ('fastapi', 'FastAPI', None) in imports
++            and ('src.platform.inspection_security', 'PREFIX', None) in imports)
++    require(not any(isinstance(node, ast.Name) and node.id == 'TestClient' and isinstance(node.ctx, ast.Store) for node in ast.walk(tree)))
++    require(not any(isinstance(node, ast.Attribute) and node.attr == 'base_url' for node in ast.walk(tree)))
++    require(not any(isinstance(node, ast.keyword) and node.arg == 'base_url' for node in ast.walk(tree)))
++    factory = _function(tree, 'make_client')
++    client_calls = [node for node in ast.walk(tree) if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == 'TestClient']
++    require(len(client_calls) == 1 and client_calls[0] in list(ast.walk(factory))
++            and len(client_calls[0].args) == 1 and isinstance(client_calls[0].args[0], ast.Name)
++            and client_calls[0].args[0].id == 'app' and not client_calls[0].keywords)
++    require(any(isinstance(node, ast.Assign) and any(isinstance(target, ast.Name) and target.id == 'app' for target in node.targets)
++                and isinstance(node.value, ast.Call) and isinstance(node.value.func, ast.Name) and node.value.func.id == 'FastAPI'
++                and not node.value.args and not node.value.keywords for node in factory.body))
++    endpoint_rows = [node for node in tree.body if isinstance(node, ast.Assign) and len(node.targets) == 1
++                    and isinstance(node.targets[0], ast.Name) and node.targets[0].id == 'ENDPOINT']
++    require(len(endpoint_rows) == 1)
++    endpoint = endpoint_rows[0].value
++    require(isinstance(endpoint, ast.BinOp) and isinstance(endpoint.op, ast.Add)
++            and isinstance(endpoint.left, ast.Name) and endpoint.left.id == 'PREFIX'
++            and isinstance(endpoint.right, ast.Constant) and endpoint.right.value == '/restoration-preflight')
++    path = _constant(prefix_tree, 'PREFIX') + endpoint.right.value
++    require(path == '/api/inspect/operations/restoration-preflight')
++    granite, token = _constant(tree, 'GRANITE'), _constant(tree, 'TOKEN')
++    require(len(granite) == 19 and len(token) == 36 and 'disposable' in token.lower())
++    target = _function(tree, TARGET_TEST)
++    parameter_dicts = [node for node in ast.walk(target) if isinstance(node, ast.Dict)
++                       and [key.value if isinstance(key, ast.Constant) else None for key in node.keys] == ['league_id', 'token']]
++    require(len(parameter_dicts) == 1 and all(isinstance(node, ast.Name) for node in parameter_dicts[0].values)
++            and [node.id for node in parameter_dicts[0].values] == ['GRANITE', 'TOKEN'])
++    require(any(isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute) and node.func.attr == 'assertEqual'
++                and len(node.args) == 2 and isinstance(node.args[0], ast.Attribute) and node.args[0].attr == 'status_code'
++                and isinstance(node.args[1], ast.Constant) and node.args[1].value == 401 for node in ast.walk(target)))
++    getter = _function(tree, 'get')
++    require(any(isinstance(node, ast.Return) and isinstance(node.value, ast.Call)
++                and isinstance(node.value.func, ast.Attribute) and node.value.func.attr == 'get'
++                and isinstance(node.value.func.value, ast.Attribute) and node.value.func.value.attr == 'client'
++                and len(node.value.args) == 1 and isinstance(node.value.args[0], ast.Name) and node.value.args[0].id == 'ENDPOINT'
++                for node in ast.walk(getter)))
++    return granite, token, path
++
++
++@lru_cache(maxsize=1)
++def _fixture_spec():
++    sources = [(read_source(commit, TEST_FILE), read_source(commit, PREFIX_FILE)) for commit in COMMITS]
++    require(sources[0] == sources[1])
++    return _spec_from_sources(*sources[0])
++
++
++def canonical_fixture_url_for_controls():
++    """Pure metadata control input derived from public constants; never log it."""
++    granite, token, path = _fixture_spec()
++    return urlunsplit(('http', 'testserver', path, urlencode([('league_id', granite), ('token', token)]), ''))
++
++
++def is_exact_disposable_fixture_url(value):
++    """Allow only the exact source-backed canonical URL, never a whole file."""
++    if not isinstance(value, str):
++        return False
++    granite, token, path = _fixture_spec()
++    try:
++        parts = urlsplit(value)
++        pairs = parse_qsl(parts.query, keep_blank_values=True, strict_parsing=True)
++    except ValueError:
++        return False
++    expected_pairs = [('league_id', granite), ('token', token)]
++    return (parts.scheme == 'http' and parts.netloc == 'testserver' and parts.path == path and not parts.fragment
++            and pairs == expected_pairs and value == urlunsplit(('http', 'testserver', path, urlencode(expected_pairs), '')))
++
++
++def has_disallowed_sensitive_url(raw, legacy_pattern=LEGACY):
++    """Reject every other sensitive URL; retain legacy scanner coverage too."""
++    matches = list(URL.finditer(raw))
++    for match in matches:
++        data = match.group()
++        try:
++            value = data.decode('utf-8')
++            query = value.partition('?')[2].partition('#')[0]
++            keys = {key.lower() for key, _ in parse_qsl(query, keep_blank_values=True)}
++        except UnicodeDecodeError:
++            if legacy_pattern.search(data):
++                return True
++            continue
++        if (keys & SENSITIVE_KEYS or legacy_pattern.search(data)) and not is_exact_disposable_fixture_url(value):
++            return True
++    # A malformed/quoted legacy match must never evade full-URL extraction.
++    for legacy in legacy_pattern.finditer(raw):
++        if not any(match.start() <= legacy.start() and legacy.end() <= match.end() for match in matches):
++            return True
++    return False
++
++
++def fixture_provenance():
++    granite, token, path = _fixture_spec()
++    return {'scope': 'Metadata-only exception for one public disposable in-process test URL; no request/authentication change',
++            'source_commits': list(COMMITS), 'test_file': TEST_FILE, 'test_file_sha256': TEST_SHA256,
++            'prefix_file': PREFIX_FILE, 'prefix_file_sha256': PREFIX_SHA256, 'source_test': TARGET_TEST,
++            'inprocess_TestClient_without_base_url_override': True, 'origin': 'http://testserver', 'path': path,
++            'query_keys': ['league_id', 'token'], 'fixture_values_emitted': False,
++            'public_fixture_token_length': len(token), 'public_fixture_token_sha256': hashlib.sha256(token.encode()).hexdigest(),
++            'public_fixture_league_sha256': hashlib.sha256(granite.encode()).hexdigest(),
++            'expected_authentication_result': 401}
+diff --git a/verify-fixture-url-classifier.py b/verify-fixture-url-classifier.py
+new file mode 100644
+index 0000000..bd7470c
+--- /dev/null
++++ b/verify-fixture-url-classifier.py
+@@ -0,0 +1,91 @@
++"""Meaningful PURE metadata controls; no app imports or HTTP/auth requests."""
++import argparse
++import hashlib
++import json
++from pathlib import Path
++from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
++
++import fixture_url as classifier
++
++
++def main():
++    parser = argparse.ArgumentParser(description=__doc__)
++    parser.add_argument('--output', required=True)
++    args = parser.parse_args()
++    canonical = classifier.canonical_fixture_url_for_controls()
++    parts = urlsplit(canonical)
++    pairs = parse_qsl(parts.query)
++    def url(scheme=parts.scheme, host=parts.netloc, path=parts.path, query=parts.query, fragment=''):
++        return urlunsplit((scheme, host, path, query, fragment))
++    cases = [('exact_public_fixture', canonical, True)]
++    cases.extend((name, value, False) for name, value in (
++        ('changed_token', url(query=urlencode([pairs[0], ('token', pairs[1][1] + 'changed')]))),
++        ('changed_league', url(query=urlencode([('league_id', pairs[0][1] + 'changed'), pairs[1]]))),
++        ('changed_path', url(path=parts.path + '/other')),
++        ('external_host', url(host='metadata-negative.invalid')),
++        ('subdomain_host', url(host='testserver.metadata-negative.invalid')),
++        ('port', url(host='testserver:80')),
++        ('userinfo', url(host='synthetic@testserver')),
++        ('https_scheme', url(scheme='https')),
++        ('ftp_scheme', url(scheme='ftp')),
++        ('extra_query', url(query=parts.query + '&extra=metadata-only')),
++        ('signature_query', url(query=parts.query + '&sig=metadata-only')),
++        ('amz_signature', url(query=parts.query + '&X-Amz-Signature=metadata-only')),
++        ('duplicate_query', url(query=parts.query + '&token=metadata-only')),
++        ('reordered_query', url(query=urlencode(list(reversed(pairs))))),
++        ('percent_encoded_value', url(query='league_id=' + pairs[0][1] + '&token=%' + format(ord(pairs[1][1][0]), '02X') + pairs[1][1][1:])),
++        ('fragment', url(fragment='metadata-only')),
++    ))
++    results = []
++    for name, value, expected in cases:
++        allowed = classifier.is_exact_disposable_fixture_url(value)
++        blocked = classifier.has_disallowed_sensitive_url(value.encode())
++        passed = allowed is expected and blocked is (not expected)
++        results.append({'name': name, 'expected_fixture_allowed': expected, 'fixture_allowed': allowed,
++                        'sensitive_url_blocked': blocked, 'passed': passed})
++        if not passed:
++            raise RuntimeError('Pure metadata classifier control failed: ' + name)
++    quoted = ('HTTP Request: GET ' + canonical + ' "HTTP/1.1 401 Unauthorized"').encode()
++    additional_unknown = urlunsplit(('https', 'metadata-negative.invalid', '/path',
++                                    urlencode([('token', 'synthetic-metadata-negative')]), '')).encode()
++    mixed = quoted + b' ' + additional_unknown
++    extras = [
++        ('quoted_original_log_form', not classifier.has_disallowed_sensitive_url(quoted)),
++        ('exact_fixture_does_not_exempt_other_url', classifier.has_disallowed_sensitive_url(mixed)),
++        ('ordinary_public_source_url_allowed', not classifier.has_disallowed_sensitive_url(b'https://github.com/example/repo/commit/metadata-only')),
++    ]
++    for name, passed in extras:
++        results.append({'name': name, 'passed': passed})
++        if not passed:
++            raise RuntimeError('Pure metadata scanner control failed: ' + name)
++    test_raw = classifier.read_source(classifier.COMMITS[0], classifier.TEST_FILE)
++    prefix_raw = classifier.read_source(classifier.COMMITS[0], classifier.PREFIX_FILE)
++    try:
++        classifier._spec_from_sources(test_raw + b'\n', prefix_raw)
++    except RuntimeError:
++        results.append({'name': 'changed_pinned_source_rejected', 'passed': True})
++    else:
++        raise RuntimeError('Changed pinned source was not rejected')
++    try:
++        classifier._spec_from_sources(test_raw, prefix_raw + b'\n')
++    except RuntimeError:
++        results.append({'name': 'changed_pinned_prefix_source_rejected', 'passed': True})
++    else:
++        raise RuntimeError('Changed pinned prefix source was not rejected')
++    output = Path(args.output)
++    if output.exists() or output.is_symlink():
++        raise RuntimeError('Preserve the existing metadata-control output')
++    report = {'schema': 'dtos-disposable-fixture-url-metadata-controls-v1', 'all_controls_passed': True,
++              'controls': results, 'provenance': classifier.fixture_provenance(),
++              'classifier_sha256': hashlib.sha256(Path(classifier.__file__).read_bytes()).hexdigest(),
++              'controls_method_sha256': hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
++              'authority': 'Pure URL/source-metadata controls only. No request authorization, app import, HTTP call, production credential read, Docker, original-log rewrite, full test or release-gate execution.',
++              'fixture_values_emitted': False}
++    with output.open('x') as stream:
++        stream.write(json.dumps(report, indent=2) + '\n')
++    print(json.dumps({'all_controls_passed': True, 'controls': len(results), 'fixture_values_emitted': False,
++                      'http_requests': 0, 'app_imports': 0, 'report': str(output)}))
++
++
++if __name__ == '__main__':
++    main()

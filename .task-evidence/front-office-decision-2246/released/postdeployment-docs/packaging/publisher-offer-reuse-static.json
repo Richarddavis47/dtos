@@ -1,0 +1,88 @@
+{
+  "at": "2026-11-11T12:07:40.150824+00:00",
+  "source": {
+    "baseline": "abbe723a0566cf84a8fff947cf7320cb66567a77",
+    "candidate": "4cf524c488efb36c77defd78bfd7acf84a3f6ddd",
+    "tree": "79fe9268fb3394604559bbcbe1119616a080b71b",
+    "branch": "fix/activation-deferral-2246",
+    "version": "1.22.31",
+    "build": 2246,
+    "pr": 335,
+    "expected_test_count": 4364,
+    "expected_publisher_test_count": 102,
+    "supersedes": "b602d6acd03cc1c95d85ee734d2d7f28658885cf"
+  },
+  "scope": "Static source/AST proof only; no tests, module imports, Docker, network, commit, push, dispatch, application or packaging operations. Actual sealed102tests and native offline/Actions evidence remain mandatory.",
+  "reason": "Reuse the real native comparison guard proof from the already-required source/checksum-verified Trade artifact. Do not duplicate its identical26capture members in Recovery.",
+  "audit_file": "recovery-offer-reuse-readonly-audit.json",
+  "audit_sha256": "3e4cd099aa7165839e61014e94511969b96f3ff7f4a4757b49b1038e52ee27b9",
+  "changed_publisher_functions": [
+    "collect"
+  ],
+  "publisher_exact_change_reversible_to_before": true,
+  "semantic_and_resource_verifiers": {
+    "verify_preflight": {
+      "source_sha256": "8a6da7e1d3fa7e68eee6952912afd4e719fb5d78150720d63ccbd33805ed6c10",
+      "ast_sha256": "7499ba31282c08b116570d1d016bce495ab6abc4c54722e026092ac63ff7ae4b",
+      "byte_identical": true
+    },
+    "verify_actuals_restoration": {
+      "source_sha256": "8ae03ae7b4fb528295c46b118aaa6963674c3bd5a784347b25783d53f0ebb1ce",
+      "ast_sha256": "08eadbfe4db974ed6e9409c19cf4bae7d3f63cd290239d145af1cb0e9aac667a",
+      "byte_identical": true
+    },
+    "verify_restoration_unused": {
+      "source_sha256": "dc8da43e2d5195a39d8707f1a3833474e6534050ec4650ba799d6da91fd8ab70",
+      "ast_sha256": "4c330be8e0d94afaa3aa4d0145d82d96c168777837d47e0094c7a2a62bd72c4d",
+      "byte_identical": true
+    },
+    "verify_resident_refresh": {
+      "source_sha256": "c37eb30993f53eb52c08af56951f564c2ac34db461e68fec79bc089c7d7b7f2c",
+      "ast_sha256": "14dcc664f9d333797d03c2840c2fb463ce45bd7cb2811c778bdb86fcea3426ba",
+      "byte_identical": true
+    },
+    "verify_offer_comparison": {
+      "source_sha256": "19b81b1b81d08f70dc83331139431b4833d2e2cca36b4291f7c7af79ba4f2014",
+      "ast_sha256": "2480eeeb42272a42df94cef7d4b56d22ea2e7f7298bbcbab9497425dc4685fab",
+      "byte_identical": true
+    }
+  },
+  "canonical_steps_byte_identical_to_candidate": true,
+  "canonical_steps_sha256": "8923a43957542de13f856bb8c634195c693b66dd3c8b8d0c275b7f429a29fd4e",
+  "existing_test_method_count": 102,
+  "existing_test_methods_and_order_unchanged": true,
+  "changed_test_class": "OfferComparisonEvidenceTests",
+  "new_non_test_helper": "assert_native_collection_boundary",
+  "added_existing_test_subcases": [
+    "complete native comparison reaches Recovery boundary without duplicate family",
+    "absent native Trade proof stops before Recovery",
+    "incompatible native source stops before Recovery without fallback"
+  ],
+  "other_existing_test_bodies_unchanged": true,
+  "current_workflow_sha256": "a1090302faa0b6c6e40eb582e9a555210cc377fb60be28e2ff645cd7ee43b9a2",
+  "files": [
+    {
+      "name": "tools/release/publish.py",
+      "before_sha256": "ad7215119c0799014d05edc640ec1525913d768382c2c9f497535ae32ab55646",
+      "after_sha256": "91370b6d38c3be5c212e057e5cd8a33b4361b68926bdf9b899bff8a0baba6830",
+      "before_bytes": 109783,
+      "after_bytes": 109821
+    },
+    {
+      "name": "tests/test_release_publisher.py",
+      "before_sha256": "1bbeec8fd1e53e5720ad78a0b56142234af1d66ab6d85c2dea2bf7993bdb6f87",
+      "after_sha256": "6f2ac9d08fb4e784d3f917d62fb4bb645024d367fe47ce25932412e8a31efcc6",
+      "before_bytes": 104649,
+      "after_bytes": 108685
+    },
+    {
+      "name": ".github/release-plans/README.md",
+      "before_sha256": "04161f439e9c289693d82f4bf76395b535f2b76804b94a5c735b533aedc7df9a",
+      "after_sha256": "73203ee46e38028a6fc9e2b339d1ce7fb7a82b38a6b811553df3240f576e843a",
+      "before_bytes": 2102,
+      "after_bytes": 2701
+    }
+  ],
+  "diff_sha256": "4ae1bb889f656af96e9e5c7a941d97ca940236eb6cdd47986f91fe6708bcaa78",
+  "tests_executed": false
+}

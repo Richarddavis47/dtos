@@ -1,0 +1,1272 @@
+{
+  "status": "HOSTED_FAILED__LOCAL_CANCELLED_INCOMPLETE__PRIOR_ONLY",
+  "source": {
+    "baseline": "abbe723a0566cf84a8fff947cf7320cb66567a77",
+    "candidate": "b602d6acd03cc1c95d85ee734d2d7f28658885cf",
+    "tree": "8a687ea0256d6e0031b57e08e2a1a38a90a1a535",
+    "branch": "fix/activation-deferral-2246",
+    "version": "1.22.31",
+    "build": 2246,
+    "pr": 335,
+    "expected_test_count": 4364,
+    "supersedes": "3a19eec0a00def82418d9658414f13e090d11b14"
+  },
+  "prepared_at_utc": "2026-11-11T10:13:19.934455+00:00",
+  "prefix": ".task-evidence/front-office-decision-2246/failed-b602",
+  "publication_state": "PREPARED ONLY \u2014 no commit, push or HTTPS readback by this method",
+  "payload_files": 1056,
+  "payload_bytes": 250148077,
+  "original_failed_hosted_archive": {
+    "name": "hosted/failed-canonical-original.zip",
+    "bytes": 93758581,
+    "sha256": "9a51b7ffb0b4c4e07112e59d2f393ffb37489f5afe75563f661c9ae1ea766e9d",
+    "manifest_entries": 689,
+    "passed": false
+  },
+  "local_cancelled_scope": {
+    "original_manifest_members_verified": 258,
+    "full_replica_delivered": true,
+    "events": {
+      "start": 2555,
+      "stop": 2554
+    },
+    "passed": false,
+    "delivery": "Newly authored complete original-members ZIP, not a runtime-native archive",
+    "later_stopped_layer_retirement_recorded": true
+  },
+  "files": [
+    {
+      "name": "LOCAL-CANCELLED-SCOPE.json",
+      "bytes": 2403,
+      "sha256": "52ec2dec9d0a16246b9851fb1776e6b2cec632c73564a7018197c1bac47d9241",
+      "origin": "Updated unpublished authored presentation; raw captured receipts remain unchanged",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "README.md",
+      "bytes": 7361,
+      "sha256": "e252be1a0b1a23ce917ed45c96cbff7fe7e13d8b427e366baf5fcb785aef6229",
+      "origin": "Updated unpublished authored presentation; raw captured receipts remain unchanged",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "candidate.patch",
+      "bytes": 105255,
+      "sha256": "9ca65b181349b50ccb786c3ca2fe277417150bf9d2af4845f4097637fd0bd12d",
+      "origin": "/workspace/2246-granite-activation/expansion/final-r2/candidate.patch",
+      "original_bytes_preserved": true
+    },
+    {
+      "name": "hosted/artifact-integrity.json",
+      "bytes": 4193,
+      "sha256": "eb4ce32d889fbd5a8f589d3e6f11b4bd4f67ec564485e2efe3bd3aad63cfe8aa",
+      "origin": "/workspace/2246-granite-activation/expansion/final-r2/failed-final-canonical/artifact-integrity.json",
+      "original_bytes_preserved": true
+    },
+    {
+      "name": "hosted/artifacts-api.json",
+      "bytes": 754,
+      "sha256": "a1058da03335609aea2a4973b52444a08e44d1c670432a57a162b997c2eb375d",
+      "origin": "/workspace/2246-granite-activation/expansion/final-r2/failed-final-canonical/artifacts-api.json",
+      "original_bytes_preserved": true
+    },
+    {
+      "name": "hosted/core-originals/SHA256SUMS",
+      "bytes": 74846,
+      "sha256": "cd2afc10145d63f8e5f8ba48f08f49b4eb57e68c1c838f1a42368ae844cd91e2",
+      "origin": "/workspace/2246-granite-activation/expansion/final-r2/failed-final-canonical/core-originals/SHA256SUMS",
+      "original_bytes_preserved": true
+    },
+    {
+      "name": "hosted/core-originals/canonical-trace.jsonl",
+      "bytes": 5307,
+      "sha256": "050dc522a4f06dd28956943ca3a3c0b4cac111e449b74af87dd71cdf646f78f4",
+      "origin": "/workspace/2246-granite-activation/expansion/final-r2/failed-final-canonical/core-originals/canonical-trace.jsonl",
+      "original_bytes_preserved": true
+    },
+    {
+      "name": "hosted/core-originals/canonical.log",
+      "bytes": 13161193,
+      "sha256": "75125d82228a7711fd3bae70cf4592197953666ae3551938332137f5ff73434b",
+      "origin": "/workspace/2246-granite-activation/expansion/final-r2/failed-final-canonical/core-originals/canonical.log",
+      "original_bytes_preserved": true
+    },
+    {
+      "name": "hosted/core-originals/container-state.json",
+      "bytes": 223,
+      "sha256": "6d0e5c2ebef65db5c4e99a21b93615dd04d74a5af6aa5ad0d0e106ebb8bbfb40",
+      "origin": "/workspace/2246-granite-activation/expansion/final-r2/failed-final-canonical/core-originals/container-state.json",
+      "original_bytes_preserved": true
+    },
+    {
+      "name": "hosted/core-originals/container.log",
+      "bytes": 13013,
+      "sha256": "15131e30cf91b81017c685bb0c46ba6ff396370d592a23114d15064c1a62ced9",
+      "origin": "/workspace/2246-granite-activation/expansion/final-r2/failed-final-canonical/core-originals/container.log",
+      "original_bytes_preserved": true
+    },
+    {
+      "name": "hosted/core-originals/manifest.json",
+      "bytes": 115421,
+      "sha256": "b062dfffd7d05208495e51fd7ccefdcfe6e9dd7639fd998f641ac0bf372ea4f4",
+      "origin": "/workspace/2246-granite-activation/expansion/final-r2/failed-final-canonical/core-originals/manifest.json",
+      "original_bytes_preserved": true
+    },
+    {
+      "name": "hosted/core-originals/memory.jsonl",
+      "bytes": 9486886,
+      "sha256": "1990c7901a6c53b27fbb1f40c9d73d864c54bc6b0c21f47e0b071b719a85099e",
+      "origin": "/workspace/2246-granite-activation/expansion/final-r2/failed-final-canonical/core-originals/memory.jsonl",
+      "original_bytes_preserved": true
+    },
+    {
+      "name": "hosted/core-originals/result.json",
+      "bytes": 1149,
+      "sha256": "f0b830263a214cee67d08409965958956fc195918f7908f9fb8cfac196c08856",
+      "origin": "/workspace/2246-granite-activation/expansion/final-r2/failed-final-canonical/core-originals/result.json",
+      "original_bytes_preserved": true
+    },
+    {
+      "name": "hosted/core-originals/tests.jsonl",
+      "bytes": 1919693,
+      "sha256": "f8f66d448a7583dfef869659927df41e0bb3bb05403a4a55fda45b1c728930ef",
+      "origin": "/workspace/2246-granite-activation/expansion/final-r2/failed-final-canonical/core-originals/tests.jsonl",
+      "original_bytes_preserved": true
+    },
+    {
+      "name": "hosted/core-originals/unittest-console.log",
+      "bytes": 13159443,
+      "sha256": "c2a9b01237af173afa124e97e7802791378948d4c99b63d9e3622feea14091d0",
+      "origin": "/workspace/2246-granite-activation/expansion/final-r2/failed-final-canonical/core-originals/unittest-console.log",
+      "original_bytes_preserved": true
+    },
+    {
+      "name": "hosted/failed-canonical-original.zip",
+      "bytes": 93758581,
+      "sha256": "9a51b7ffb0b4c4e07112e59d2f393ffb37489f5afe75563f661c9ae1ea766e9d",
+      "origin": "/workspace/2246-granite-activation/expansion/final-r2/failed-final-canonical/failed-canonical-original.zip",
+      "original_bytes_preserved": true
+    },
+    {
+      "name": "hosted/failure-classification.json",
+      "bytes": 2852,
+      "sha256": "ca617d4d03b675fa1d6335ddee158c006d7c46792d8c9477dc0ffcf6852d40d3",
+      "origin": "/workspace/2246-granite-activation/expansion/final-r2/failed-final-canonical/failure-classification.json",
+      "original_bytes_preserved": true
+    },
+    {
+      "name": "hosted/job-api.json",
+      "bytes": 2658,
+      "sha256": "9e84af34ec707ca47658b62b67d615d1872f30c9ee06a16d94156fbd22ffd41c",
+      "origin": "/workspace/2246-granite-activation/expansion/final-r2/failed-final-canonical/job-api.json",
+      "original_bytes_preserved": true
+    },
+    {
+      "name": "hosted/job-console-original.log",
+      "bytes": 235671,
+      "sha256": "61a4b11bffd272a41dd38ba644dc85096ff7aee4a5e0aecb87751b131718db58",
+      "origin": "/workspace/2246-granite-activation/expansion/final-r2/failed-final-canonical/job-console-original.log",
+      "original_bytes_preserved": true
+    },
+    {
+      "name": "hosted/job-console.parts/SHA256SUMS",
+      "bytes": 480,
+      "sha256": "de958aaa9a3dde6fb1b6227a7ae643ced2b46c754ab8930199ff494a071b48d6",
+      "origin": "/workspace/2246-granite-activation/expansion/final-r2/failed-final-canonical/job-console.parts/SHA256SUMS",
+      "original_bytes_preserved": true
+    },
+    {
+      "name": "hosted/job-console.parts/part-0001.log",
+      "bytes": 40002,
+      "sha256": "8c306d6bc4fed13e92a3509092caf3b9c34177198afdb0933d69b6acce423013",
+      "origin": "/workspace/2246-granite-activation/expansion/final-r2/failed-final-canonical/job-console.parts/part-0001.log",
+      "original_bytes_preserved": true
+    },
+    {
+      "name": "hosted/job-console.parts/part-0002.log",
+      "bytes": 40000,
+      "sha256": "fbb047ba88823f8f9aca5e1f624734df71cdf30160a22d8247f3725ad94d9f0b",
+      "origin": "/workspace/2246-granite-activation/expansion/final-r2/failed-final-canonical/job-console.parts/part-0002.log",
+      "original_bytes_preserved": true
+    },
+    {
+      "name": "hosted/job-console.parts/part-0003.log",
+      "bytes": 40000,
+      "sha256": "0253bac14d2d7fc31879f92417138fad255af08c578e88ed95de0c6aa4518a23",
+      "origin": "/workspace/2246-granite-activation/expansion/final-r2/failed-final-canonical/job-console.parts/part-0003.log",
+      "original_bytes_preserved": true
+    },
+    {
+      "name": "hosted/job-console.parts/part-0004.log",
+      "bytes": 40006,
+      "sha256": "d61aa038cc584b86cd26d8c57683f120bd526dfe317ab8324b891d28fca6814b",
+      "origin": "/workspace/2246-granite-activation/expansion/final-r2/failed-final-canonical/job-console.parts/part-0004.log",
+      "original_bytes_preserved": true
+    },
+    {
+      "name": "hosted/job-console.parts/part-0005.log",
+      "bytes": 40000,
+      "sha256": "9c6d9507b8cad4f7b74570b1b8d9aa954dc23374ab2abb3d49b50699c5d5552c",
+      "origin": "/workspace/2246-granite-activation/expansion/final-r2/failed-final-canonical/job-console.parts/part-0005.log",
+      "original_bytes_preserved": true
+    },
+    {
+      "name": "hosted/job-console.parts/part-0006.log",
+      "bytes": 35663,
+      "sha256": "fab2bad083ccf42b6867ff5f828b260524fde4a3215b7463125134c84fe0aee7",
+      "origin": "/workspace/2246-granite-activation/expansion/final-r2/failed-final-canonical/job-console.parts/part-0006.log",
+      "original_bytes_preserved": true
+    },
+    {
+      "name": "hosted/job-log-transfer.json",
+      "bytes": 1408,
+      "sha256": "c051e05089387659201db175110fb7abd4dc61647384b2e1556bbb2f2bee21d7",
+      "origin": "/workspace/2246-granite-activation/expansion/final-r2/failed-final-canonical/job-log-transfer.json",
+      "original_bytes_preserved": true
+    },
+    {
+      "name": "hosted/projection-audit-failure-window.json",
+      "bytes": 12164,
+      "sha256": "c299bfde5c1ec5c494e9213c14e3c3e50dfcd066840e67778d2d0bd5a831cb02",
+      "origin": "/workspace/2246-granite-activation/expansion/final-r2/failed-final-canonical/projection-audit-failure-window.json",
+      "original_bytes_preserved": true
+    },
+    {
+      "name": "hosted/run-api.json",
+      "bytes": 12852,
+      "sha256": "74cd680e9640fc98ec210562cfc620758f8e3b680a155a0f037b6564f6f759e7",
+      "origin": "/workspace/2246-granite-activation/expansion/final-r2/failed-final-canonical/run-api.json",
+      "original_bytes_preserved": true
+    },
+    {
+      "name": "independent-review/FAILED_CANONICAL_SHA256SUMS",
+      "bytes": 192,
+      "sha256": "c1be741de2b0b51e0317c63d21359aa39e132355713e244a67f63f61454dab75",
+      "origin": "/workspace/2246-granite-activation/expansion/final-r2/source-review/FAILED_CANONICAL_SHA256SUMS",
+      "original_bytes_preserved": true
+    },
+    {
+      "name": "independent-review/failed-canonical-followup.json",
+      "bytes": 8034,
+      "sha256": "751bb03e57adfdd88831f385a7d4cc17b71bc924fa502c6c27a4b5cca3e9aa7a",
+      "origin": "/workspace/2246-granite-activation/expansion/final-r2/source-review/failed-canonical-followup.json",
+      "original_bytes_preserved": true
+    },
+    {
+      "name": "independent-review/failed-canonical-followup.md",
+      "bytes": 2410,
+      "sha256": "bf753608fc11a44da30609ef51eff2714aa61cbb371ada0d653103771a0664ff",
+      "origin": "/workspace/2246-granite-activation/expansion/final-r2/source-review/failed-canonical-followup.md",
+      "original_bytes_preserved": true
+    },
+    {
+      "name": "later-container-retirement/final-r2/container-state-selected-original.json",
+      "bytes": 944,
+      "sha256": "a56ccb1e34d010ac6037d35aea9c044f35ca775f6521c88163983d458b4f17c3",
+      "origin": "/workspace/2246-granite-activation/expansion/superseded-r1-r2-layer-preservation/final-r2/container-state-selected-original.json",
+      "original_bytes_preserved": true
+    },
+    {
+      "name": "later-container-retirement/final-r2/container-stdout-original.log",
+      "bytes": 1359,
+      "sha256": "16e546668cf6074de0b56568cec09dbd7e4db4753923bf459a27c7286eb88815",
+      "origin": "/workspace/2246-granite-activation/expansion/superseded-r1-r2-layer-preservation/final-r2/container-stdout-original.log",
+      "original_bytes_preserved": true
+    },
+    {
+      "name": "later-container-retirement/final-r2/preservation.json",
+      "bytes": 956,
+      "sha256": "2cbf508b0aa1ddf9d17abd924c0901f5de3084a38499a5e39fcc9475345b28a2",
+      "origin": "/workspace/2246-granite-activation/expansion/superseded-r1-r2-layer-preservation/final-r2/preservation.json",
+      "original_bytes_preserved": true
+    },
+    {
+      "name": "later-container-retirement/final/container-state-selected-original.json",
+      "bytes": 936,
+      "sha256": "a4e250f597daedeaafa2e6677ce72b0ef3eae8f5086466f592c7181b610e6d0c",
+      "origin": "/workspace/2246-granite-activation/expansion/superseded-r1-r2-layer-preservation/final/container-state-selected-original.json",
+      "original_bytes_preserved": true
+    },
+    {
+      "name": "later-container-retirement/final/container-stdout-original.log",
+      "bytes": 1345,
+      "sha256": "f7194a02ab3c14238eb07a512860fc174220c09bef3b50afd74f161c0df4f727",
+      "origin": "/workspace/2246-granite-activation/expansion/superseded-r1-r2-layer-preservation/final/container-stdout-original.log",
+      "original_bytes_preserved": true
+    },
+    {
+      "name": "later-container-retirement/final/preservation.json",
+      "bytes": 947,
+      "sha256": "329db085f8147081a902a150ac84aa9b16c685338992cb777ea1eb93c0147ced",
+      "origin": "/workspace/2246-granite-activation/expansion/superseded-r1-r2-layer-preservation/final/preservation.json",
+      "original_bytes_preserved": true
+    },
+    {
+      "name": "later-container-retirement/preservation.json",
+      "bytes": 2491,
+      "sha256": "af0f5973c0552638dc1ae0f5d7c3641122327c1807e9d01a21051203f65e4136",
+      "origin": "/workspace/2246-granite-activation/expansion/superseded-r1-r2-layer-preservation/preservation.json",
+      "original_bytes_preserved": true
+    },
+    {
+      "name": "local-cancelled/canonical-invocation.json",
+      "bytes": 2463,
+      "sha256": "bf2289520da4344e5c56290c7f815afd73f3e134d25559d1f5160a857cd5b451",
+      "origin": "/workspace/2246-granite-activation/expansion/final-r2/canonical-invocation.json",
+      "original_bytes_preserved": true
+    },
+    {
+      "name": "local-cancelled/canonical-launch-original.log",
+      "bytes": 2283,
+      "sha256": "1b8a42cc01de34c285db35096586ce6bec1e89e6f28806b9ecc3ad8cfcf7a08d",
+      "origin": "/workspace/2246-granite-activation/expansion/final-r2/canonical-launch-original.log",
+      "original_bytes_preserved": true
+    },
+    {
+      "name": "local-cancelled/core-originals/SHA256SUMS",
+      "bytes": 29109,
+      "sha256": "01347f2bd050355563469cb4d0372b3e2f9c558d133874aee51f8387a060d20d",
+      "origin": "/workspace/2246-granite-activation/expansion/final-r2/local-canonical/SHA256SUMS",
+      "original_bytes_preserved": true
+    },
+    {
+      "name": "local-cancelled/core-originals/canonical-trace.jsonl",
+      "bytes": 4256,
+      "sha256": "6afa8360947bc4d7029edb8867af5a842ac086b48b928e968c865a3e78eec642",
+      "origin": "/workspace/2246-granite-activation/expansion/final-r2/local-canonical/canonical-trace.jsonl",
+      "original_bytes_preserved": true
+    },
+    {
+      "name": "local-cancelled/core-originals/canonical.log",
+      "bytes": 317,
+      "sha256": "c9edb284145a2a1e8e4eda0f19dd2ff6ba0ad9207aab13e7c5f072f486c1d0b4",
+      "origin": "/workspace/2246-granite-activation/expansion/final-r2/local-canonical/canonical.log",
+      "original_bytes_preserved": true
+    },
+    {
+      "name": "local-cancelled/core-originals/manifest.json",
+      "bytes": 44367,
+      "sha256": "24a267382d151b9f7069e424c44cf907ddf9fedff876ff97e50e2ce6abf9a941",
+      "origin": "/workspace/2246-granite-activation/expansion/final-r2/local-canonical/manifest.json",
+      "original_bytes_preserved": true
+    },
+    {
+      "name": "local-cancelled/core-originals/memory.jsonl",
+      "bytes": 8917850,
+      "sha256": "9e82543836447ace2ca6dd6783029c33d24f35f2db255b402006caf37ae8a878",
+      "origin": "/workspace/2246-granite-activation/expansion/final-r2/local-canonical/memory.jsonl",
+      "original_bytes_preserved": true
+    },
+    {
+      "name": "local-cancelled/core-originals/module-cleanup.jsonl",
+      "bytes": 309865,
+      "sha256": "55296ac5da1e1f44382c743fd291b20a26046b79a46a5a65ce0dee6399b5208a",
+      "origin": "/workspace/2246-granite-activation/expansion/final-r2/local-canonical/module-cleanup.jsonl",
+      "original_bytes_preserved": true
+    },
+    {
+      "name": "local-cancelled/core-originals/observer/fixture_cleanup.py",
+      "bytes": 1000,
+      "sha256": "a4e580694aedbaad13fd4120daca25abd8052fe44c8bd7dd96fd5e83be03f749",
+      "origin": "/workspace/2246-granite-activation/expansion/final-r2/local-canonical/observer/fixture_cleanup.py",
+      "original_bytes_preserved": true
+    },
+    {
+      "name": "local-cancelled/core-originals/observer/sitecustomize.py",
+      "bytes": 2434,
+      "sha256": "1cb7f5f31ef6ebf16f7367c42235692d6f70959815e9dcd0c7f4da8bbea4a660",
+      "origin": "/workspace/2246-granite-activation/expansion/final-r2/local-canonical/observer/sitecustomize.py",
+      "original_bytes_preserved": true
+    },
+    {
+      "name": "local-cancelled/core-originals/result.json",
+      "bytes": 1154,
+      "sha256": "9575c4e07dd64f686bfa2ad1e23954ece6cbe2c5ff5bd359e95c77eddadc274f",
+      "origin": "/workspace/2246-granite-activation/expansion/final-r2/local-canonical/result.json",
+      "original_bytes_preserved": true
+    },
+    {
+      "name": "local-cancelled/core-originals/runner.py",
+      "bytes": 10119,
+      "sha256": "cce930e419827fc9e19af0428130a79e2f7d3e7455a229076ccc0b022ff011f3",
+      "origin": "/workspace/2246-granite-activation/expansion/final-r2/local-canonical/runner.py",
+      "original_bytes_preserved": true
+    },
+    {
+      "name": "local-cancelled/core-originals/tests.jsonl",
+      "bytes": 1114198,
+      "sha256": "e885dc8bec2b0dda190c84203ebbc30d51b8fbd90cae17fee2334af7a9e252f5",
+      "origin": "/workspace/2246-granite-activation/expansion/final-r2/local-canonical/tests.jsonl",
+      "original_bytes_preserved": true
+    },
+    {
+      "name": "local-cancelled/core-originals/unittest-console.log",
+      "bytes": 9010411,
+      "sha256": "98504d0520dc55cfbc08234b8d3fb2e33a0a1dfd0a9119c553b282b4823c2db2",
+      "origin": "/workspace/2246-granite-activation/expansion/final-r2/local-canonical/unittest-console.log",
+      "original_bytes_preserved": true
+    },
+    {
+      "name": "local-cancelled/local-cancelled-original-members-authored-receipt.json",
+      "bytes": 48257,
+      "sha256": "ef285813c158457fbc747101e6d76a0a5e514714ace496fc3b17f3fbd7efb913",
+      "origin": "New authored ZIP verification; every underlying original byte was checked before and after packaging",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "local-cancelled/local-cancelled-original-members.zip",
+      "bytes": 30054461,
+      "sha256": "bfd2288e7acc85439995c26ae95644b02ca9657397e85227aad77e4af5b49ec8",
+      "origin": "ZIP/deflate level1, fixed1980 metadata/regular0600 entries, native relative names at root; exact original manifest population plus original manifest.json/SHA256SUMS. Original directory: /workspace/2246-granite-activation/expansion/final-r2/local-canonical",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "local-cancelled/superseded-cancellation-request.json",
+      "bytes": 2513,
+      "sha256": "fec5c116f6dd80cbd855b2aa88b2d547c5f680f33f7fa783baecf6650d975c41",
+      "origin": "/workspace/2246-granite-activation/expansion/final-r2/superseded-cancellation-request.json",
+      "original_bytes_preserved": true
+    },
+    {
+      "name": "local-cancelled/superseded-cancellation-result.json",
+      "bytes": 2861,
+      "sha256": "b1a467c37d3beb2df16cb2e9e2db293c2987947b9666cfba65ecd693d3821b13",
+      "origin": "/workspace/2246-granite-activation/expansion/final-r2/superseded-cancellation-result.json",
+      "original_bytes_preserved": true
+    },
+    {
+      "name": "local-cancelled/superseded-container-state-original.json",
+      "bytes": 623,
+      "sha256": "282b289064106d98e5feb147d1a025de01369ce40f744d8183fbc36fe20a0de2",
+      "origin": "/workspace/2246-granite-activation/expansion/final-r2/superseded-container-state-original.json",
+      "original_bytes_preserved": true
+    },
+    {
+      "name": "local-cancelled/superseded-container-stdout-original.log",
+      "bytes": 1359,
+      "sha256": "16e546668cf6074de0b56568cec09dbd7e4db4753923bf459a27c7286eb88815",
+      "origin": "/workspace/2246-granite-activation/expansion/final-r2/superseded-container-stdout-original.log",
+      "original_bytes_preserved": true
+    },
+    {
+      "name": "local-cancelled/superseded-local-original-verified.json",
+      "bytes": 695,
+      "sha256": "ff1d95c16f9e0f9414570ad19407390aade479f0cc4ce33475924f26af88a95e",
+      "origin": "/workspace/2246-granite-activation/expansion/final-r2/superseded-local-original-verified.json",
+      "original_bytes_preserved": true
+    },
+    {
+      "name": "metadata/focused-ready.json",
+      "bytes": 1153,
+      "sha256": "2f6f72c1441445930030ee2df40d1832349a69f530630e2414622ad53dd263b8",
+      "origin": "/workspace/2246-granite-activation/expansion/final-r2/focused-ready.json",
+      "original_bytes_preserved": true
+    },
+    {
+      "name": "metadata/hosted-failure-summary.json",
+      "bytes": 1571,
+      "sha256": "e4d9688ee4393172992dc7b4b1d4ea52c5613c5fa7b48495bacec0014c674b38",
+      "origin": "/workspace/2246-granite-activation/expansion/final-r2/hosted-failure-summary.json",
+      "original_bytes_preserved": true
+    },
+    {
+      "name": "metadata/hosted-jobs-api-original.json",
+      "bytes": 49379,
+      "sha256": "b71e969edd98c12358e998b528913dbacec31e1ff85e053094baf30f30f4866c",
+      "origin": "/workspace/2246-granite-activation/expansion/final-r2/hosted-monitor/checks-057.json",
+      "original_bytes_preserved": true
+    },
+    {
+      "name": "metadata/hosted-monitor-status.json",
+      "bytes": 3719,
+      "sha256": "498ee9d71263ba80831ced75c1f7f15b87f5560d7ae50f8fd187be99518e7284",
+      "origin": "/workspace/2246-granite-activation/expansion/final-r2/hosted-monitor-status.json",
+      "original_bytes_preserved": true
+    },
+    {
+      "name": "metadata/product-test-counts.json",
+      "bytes": 776,
+      "sha256": "749d2309f45fdf9d2845e10e9e6e1317934e4196383b3bbf7ce16238b652d025",
+      "origin": "/workspace/2246-granite-activation/expansion/final-r2/product-test-counts.json",
+      "original_bytes_preserved": true
+    },
+    {
+      "name": "metadata/production-baseline-reconfirmed.json",
+      "bytes": 394,
+      "sha256": "037533a98ffefb10e7197d487155b9d7afff72ca7a1ccad8d66e03f217a50d11",
+      "origin": "/workspace/2246-granite-activation/expansion/final-r2/production-baseline-reconfirmed.json",
+      "original_bytes_preserved": true
+    },
+    {
+      "name": "metadata/resource-native-guards.json",
+      "bytes": 2729,
+      "sha256": "c65db89643bb1b67a70793e1b60b0d341ecd1949e0e4e031786ef0ff956fbdce",
+      "origin": "/workspace/2246-granite-activation/expansion/final-r2/resource-native-guards.json",
+      "original_bytes_preserved": true
+    },
+    {
+      "name": "prior-3a19/local-cancelled-original-members-authored-receipt.json",
+      "bytes": 26264,
+      "sha256": "e65a45eb94d355c3c406c9b70cf6dd3b65bf49e4fbcb4ec950c38c1b04b1c9dd",
+      "origin": "New authored ZIP verification; every underlying original byte was checked before and after packaging",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "prior-3a19/local-cancelled-original-members.zip",
+      "bytes": 10327792,
+      "sha256": "b444f0e98cd998de8323372c078952054b9a22d4b262ed50466f83f3605510f2",
+      "origin": "ZIP/deflate level1, fixed1980 metadata/regular0600 entries, native relative names at root; exact original manifest population plus original manifest.json/SHA256SUMS. Original directory: /workspace/2246-granite-activation/expansion/final/local-canonical",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/candidate_patch/index.json",
+      "bytes": 638,
+      "sha256": "d909f1aeaa33fea49832bd82af0eb846a2717797031d9a22338d95fd83e562db",
+      "origin": "Authored failure presentation or derived bounded metadata",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/candidate_patch/part-0001.txt",
+      "bytes": 59871,
+      "sha256": "60576f879472352a510a043914a5aecf1af7fee0c3ce60f0bc1733b533cc8aa5",
+      "origin": "Contiguous unmodified UTF8 bytes from candidate.patch",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/candidate_patch/part-0002.txt",
+      "bytes": 45384,
+      "sha256": "f17884fead38b26f0b72c9bbec35a5c2e6a74145dcf80ed7f2a05dcfdbe1a7fc",
+      "origin": "Contiguous unmodified UTF8 bytes from candidate.patch",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__SHA256SUMS/index.json",
+      "bytes": 692,
+      "sha256": "76dc6cc13746547649258dfb42b985590dda4c334bfcbaad3c74b9b2f0cfa081",
+      "origin": "Authored failure presentation or derived bounded metadata",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__SHA256SUMS/part-0001.txt",
+      "bytes": 59939,
+      "sha256": "b7662825329932c89f65de8e29fe03e0d0a7f8a1d2d376962779ff90fb7cc2e3",
+      "origin": "Contiguous unmodified UTF8 bytes from hosted/core-originals/SHA256SUMS",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__SHA256SUMS/part-0002.txt",
+      "bytes": 14907,
+      "sha256": "9af99b9c200efc047b17db0db3b61a4603d857258414572bc64c776b7dc11eef",
+      "origin": "Contiguous unmodified UTF8 bytes from hosted/core-originals/SHA256SUMS",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__canonical_log/index.json",
+      "bytes": 49141,
+      "sha256": "7a93052b1db1622b237b353e226d0b7b5c2130e0079784a5f37b66562cf857ad",
+      "origin": "Authored failure presentation or derived bounded metadata",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__canonical_log/part-0001.txt",
+      "bytes": 59963,
+      "sha256": "51a641608f21529e199a66b54c19a896461a88b1cc0672684024cdb646a4b776",
+      "origin": "Contiguous unmodified UTF8 bytes from hosted/core-originals/canonical.log",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__canonical_log/part-0002.txt",
+      "bytes": 59813,
+      "sha256": "e80292f6a587f81ff9e120bf94ea8fb78ec6ea381ee7edad9b7e5cff5b7874dd",
+      "origin": "Contiguous unmodified UTF8 bytes from hosted/core-originals/canonical.log",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__canonical_log/part-0003.txt",
+      "bytes": 59942,
+      "sha256": "ba49a51541d333c8e75c05c30b84b1c8bb5046dc0f1c18d55b4ef7b37e7edb7b",
+      "origin": "Contiguous unmodified UTF8 bytes from hosted/core-originals/canonical.log",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__canonical_log/part-0004.txt",
+      "bytes": 59874,
+      "sha256": "9dda7615709e637386da2aaea128d5f393213c4a1133a1683130c31b3e6f2cfb",
+      "origin": "Contiguous unmodified UTF8 bytes from hosted/core-originals/canonical.log",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__canonical_log/part-0005.txt",
+      "bytes": 59939,
+      "sha256": "d5051c5a2547a69d19ae00a7fe9c26f2511d9ab9f6514292174fb58b7d0c639f",
+      "origin": "Contiguous unmodified UTF8 bytes from hosted/core-originals/canonical.log",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__canonical_log/part-0006.txt",
+      "bytes": 58498,
+      "sha256": "edf72e4cb100f2b341eb384fd6e0df650fdf2030117cb61bbdada70c22965d0d",
+      "origin": "Contiguous unmodified UTF8 bytes from hosted/core-originals/canonical.log",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__canonical_log/part-0007.txt",
+      "bytes": 58392,
+      "sha256": "5ee7a2291725261d58b3823ae44b394f30a4f72ae8e4be0fd37cb384d71d4f4f",
+      "origin": "Contiguous unmodified UTF8 bytes from hosted/core-originals/canonical.log",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__canonical_log/part-0008.txt",
+      "bytes": 59768,
+      "sha256": "f8d06876d877550cfb5560d2d626569937c9c1c9fb39977ab129c681e2da97e9",
+      "origin": "Contiguous unmodified UTF8 bytes from hosted/core-originals/canonical.log",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__canonical_log/part-0009.txt",
+      "bytes": 59734,
+      "sha256": "730e02a1983b90d2ad7b78ab30df5fca0fbb72beb01673340be1d9773278e22d",
+      "origin": "Contiguous unmodified UTF8 bytes from hosted/core-originals/canonical.log",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__canonical_log/part-0010.txt",
+      "bytes": 59162,
+      "sha256": "680fdc1e23786c3be80c746ac818794ee1383a633b96e97f20cb25068218982c",
+      "origin": "Contiguous unmodified UTF8 bytes from hosted/core-originals/canonical.log",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__canonical_log/part-0011.txt",
+      "bytes": 57977,
+      "sha256": "547a9ac3b87c6b7aeff2ac90aa71d764d0d94c2e99d603f66f292c27d4099106",
+      "origin": "Contiguous unmodified UTF8 bytes from hosted/core-originals/canonical.log",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__canonical_log/part-0012.txt",
+      "bytes": 59157,
+      "sha256": "69877544ea1fd2ed89ad5539c0d4eb1b55a6e9be8e224e7712eabb38dcce6122",
+      "origin": "Contiguous unmodified UTF8 bytes from hosted/core-originals/canonical.log",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__canonical_log/part-0013.txt",
+      "bytes": 59154,
+      "sha256": "b19246879a75e03a51755a1c99d3508865a9d999854be1383331b54cd83b2253",
+      "origin": "Contiguous unmodified UTF8 bytes from hosted/core-originals/canonical.log",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__canonical_log/part-0014.txt",
+      "bytes": 59153,
+      "sha256": "4e0100a538d4c45f183c4732242091fa5943b8dded08fff229aad7ecc098ef33",
+      "origin": "Contiguous unmodified UTF8 bytes from hosted/core-originals/canonical.log",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__canonical_log/part-0015.txt",
+      "bytes": 59155,
+      "sha256": "d2a76ecc7b3f941673eeaca4b425c8b104f97eeaf1577c04e0d5ff8fea48eff1",
+      "origin": "Contiguous unmodified UTF8 bytes from hosted/core-originals/canonical.log",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__canonical_log/part-0016.txt",
+      "bytes": 59404,
+      "sha256": "f0c64ad58ba970cdbfb2ae2d5caa6e83a6835a94afcd510af2d2f9a2f3a805cf",
+      "origin": "Contiguous unmodified UTF8 bytes from hosted/core-originals/canonical.log",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__canonical_log/part-0017.txt",
+      "bytes": 59931,
+      "sha256": "260fbb0446453e4e00232d8ba6c7db46035dccdef776f67943345ea4eeedcc3e",
+      "origin": "Contiguous unmodified UTF8 bytes from hosted/core-originals/canonical.log",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__canonical_log/part-0018.txt",
+      "bytes": 59884,
+      "sha256": "be2ff10bd10d671df7a0f61064c0912214a41514fe7d3a82036d70e037568834",
+      "origin": "Contiguous unmodified UTF8 bytes from hosted/core-originals/canonical.log",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__canonical_log/part-0019.txt",
+      "bytes": 59920,
+      "sha256": "2360815104bcdea43088c0f3f68c8c9d1029c481befa1d70448002fe308ddd48",
+      "origin": "Contiguous unmodified UTF8 bytes from hosted/core-originals/canonical.log",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__canonical_log/part-0020.txt",
+      "bytes": 59922,
+      "sha256": "b337da69d639ee82a49c4bfba4844dd91ae0d11221c68e2085097f2ac8308df5",
+      "origin": "Contiguous unmodified UTF8 bytes from hosted/core-originals/canonical.log",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__canonical_log/part-0021.txt",
+      "bytes": 59568,
+      "sha256": "830fe7af43ea9656f9841c95bbea12469980ec7cfd21ad7b9c739fe73efd3971",
+      "origin": "Contiguous unmodified UTF8 bytes from hosted/core-originals/canonical.log",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__canonical_log/part-0022.txt",
+      "bytes": 59822,
+      "sha256": "0affd9598b161d6258abc540cbd64713faa845477e9843111b7035be6e6fb17d",
+      "origin": "Contiguous unmodified UTF8 bytes from hosted/core-originals/canonical.log",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__canonical_log/part-0023.txt",
+      "bytes": 59829,
+      "sha256": "fb8227381e214bb1d2969e4c72750b3c93d61710fa2709ab9046fc7333fd3319",
+      "origin": "Contiguous unmodified UTF8 bytes from hosted/core-originals/canonical.log",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__canonical_log/part-0024.txt",
+      "bytes": 59907,
+      "sha256": "cca02c27af23c2395850c9a3dba06f9f263df120fd7144b4fcd96f3ab427addf",
+      "origin": "Contiguous unmodified UTF8 bytes from hosted/core-originals/canonical.log",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__canonical_log/part-0025.txt",
+      "bytes": 59924,
+      "sha256": "f059eaea74791c06063b059742664b61d839a71eca2ecf897a44e73fb3dd49d8",
+      "origin": "Contiguous unmodified UTF8 bytes from hosted/core-originals/canonical.log",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__canonical_log/part-0026.txt",
+      "bytes": 59969,
+      "sha256": "0bd42a2d80f8f7b2e4104e85692d9c2ae6e16a58838de512b1e4911d3f0e8739",
+      "origin": "Contiguous unmodified UTF8 bytes from hosted/core-originals/canonical.log",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__canonical_log/part-0027.txt",
+      "bytes": 59836,
+      "sha256": "065f1f4b569501788ba16900913034c9e540d83fecc45abd42f6b1732434a257",
+      "origin": "Contiguous unmodified UTF8 bytes from hosted/core-originals/canonical.log",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__canonical_log/part-0028.txt",
+      "bytes": 59885,
+      "sha256": "cf0337f7cb4ef9a7daf2bf976d443e434dd3fbc063f4ce7dc69b4cc6a40969c7",
+      "origin": "Contiguous unmodified UTF8 bytes from hosted/core-originals/canonical.log",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__canonical_log/part-0029.txt",
+      "bytes": 58214,
+      "sha256": "3173a249c616f1f2a89848da032862c6cb1b79286e549dbd835fc08860ac38c7",
+      "origin": "Contiguous unmodified UTF8 bytes from hosted/core-originals/canonical.log",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__canonical_log/part-0030.txt",
+      "bytes": 59880,
+      "sha256": "405fccb21d99e5a3a1f603c38f4457a078e9111e2eaa9d139049fda59974fac7",
+      "origin": "Contiguous unmodified UTF8 bytes from hosted/core-originals/canonical.log",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__canonical_log/part-0031.txt",
+      "bytes": 59732,
+      "sha256": "5bc834c8ec97c305ec761519ec3d836594073bfd9b6ab63cb65a999aff5bb28a",
+      "origin": "Contiguous unmodified UTF8 bytes from hosted/core-originals/canonical.log",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__canonical_log/part-0032.txt",
+      "bytes": 59901,
+      "sha256": "9b69cc8bdefc2f5230d31cb087c55156058482c178b75a7db5d218d64740a15d",
+      "origin": "Contiguous unmodified UTF8 bytes from hosted/core-originals/canonical.log",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__canonical_log/part-0033.txt",
+      "bytes": 59969,
+      "sha256": "6e6ba1f6b106bdde19da48c657bb68f6bb044d00246f03d3f55cf365d8e0eb09",
+      "origin": "Contiguous unmodified UTF8 bytes from hosted/core-originals/canonical.log",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__canonical_log/part-0034.txt",
+      "bytes": 58999,
+      "sha256": "5320a68382d79a9d4cfc31dd297c840debbddd7dc4c2261449ccee0cfe64951f",
+      "origin": "Contiguous unmodified UTF8 bytes from hosted/core-originals/canonical.log",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__canonical_log/part-0035.txt",
+      "bytes": 58190,
+      "sha256": "d06a4f6da462d16e6fc9f3a623f785680973d2ed2137cbd8e38f031d83deafa3",
+      "origin": "Contiguous unmodified UTF8 bytes from hosted/core-originals/canonical.log",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__canonical_log/part-0036.txt",
+      "bytes": 59958,
+      "sha256": "cedf2909cd74fcc7d36c49e959ce5fd0f298d7a5694765b580759a28503b5067",
+      "origin": "Contiguous unmodified UTF8 bytes from hosted/core-originals/canonical.log",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__canonical_log/part-0037.txt",
+      "bytes": 59977,
+      "sha256": "9dcfe07ad64c2eb8ac2ac05e6100781b559174bfb6a3288d963da5f6ac5b058f",
+      "origin": "Contiguous unmodified UTF8 bytes from hosted/core-originals/canonical.log",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__canonical_log/part-0038.txt",
+      "bytes": 59554,
+      "sha256": "6a6f8e22f5fb38210bdbf36d5a70f00465494ef1304c22a984e271c235b81429",
+      "origin": "Contiguous unmodified UTF8 bytes from hosted/core-originals/canonical.log",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__canonical_log/part-0039.txt",
+      "bytes": 59476,
+      "sha256": "795a333fb1e4f62f56bfd8f7f85757fee1a4053c50d6be253f495aea6993049f",
+      "origin": "Contiguous unmodified UTF8 bytes from hosted/core-originals/canonical.log",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__canonical_log/part-0040.txt",
+      "bytes": 59887,
+      "sha256": "1a5cd3e26f4dfd2104dc0006b895c94ac7cfe19b11a4c21a8fe751bf4d141c99",
+      "origin": "Contiguous unmodified UTF8 bytes from hosted/core-originals/canonical.log",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__canonical_log/part-0041.txt",
+      "bytes": 58059,
+      "sha256": "637ab084a8efb9ccebb50d8ddd75b52b5fdd212970812d0b9492c0f0f80d4f18",
+      "origin": "Contiguous unmodified UTF8 bytes from hosted/core-originals/canonical.log",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__canonical_log/part-0042.txt",
+      "bytes": 59842,
+      "sha256": "1d322a3da5d13e952a52a509c32b86b9c480b063f4d5063fe1a1c4322bb93354",
+      "origin": "Contiguous unmodified UTF8 bytes from hosted/core-originals/canonical.log",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__canonical_log/part-0043.txt",
+      "bytes": 59918,
+      "sha256": "270c7a0feebb4369f79b0983dfa10f38af4bd15f58a6e3a7f9c5ef023a19f187",
+      "origin": "Contiguous unmodified UTF8 bytes from hosted/core-originals/canonical.log",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__canonical_log/part-0044.txt",
+      "bytes": 59893,
+      "sha256": "c75f695bfb1224fb33e0655b670b6056a72e023d6183d937e83e42b1ff348526",
+      "origin": "Contiguous unmodified UTF8 bytes from hosted/core-originals/canonical.log",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__canonical_log/part-0045.txt",
+      "bytes": 59745,
+      "sha256": "102eecafd995ea4b484882360a63c2fbc0e1bda41c540b304f4824481048f3ca",
+      "origin": "Contiguous unmodified UTF8 bytes from hosted/core-originals/canonical.log",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__canonical_log/part-0046.txt",
+      "bytes": 59958,
+      "sha256": "07f4e2985327a1c7f7ac2a00ec9a175d3d83f13d06c78ec16cd75faa1476b4c1",
+      "origin": "Contiguous unmodified UTF8 bytes from hosted/core-originals/canonical.log",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__canonical_log/part-0047.txt",
+      "bytes": 59869,
+      "sha256": "a614e89b812164ab91973a2e1a8f5119863b4ab84e35fad242a041675566a8c9",
+      "origin": "Contiguous unmodified UTF8 bytes from hosted/core-originals/canonical.log",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__canonical_log/part-0048.txt",
+      "bytes": 59895,
+      "sha256": "0790cbf6c07f503648c9ed3c6d71e41ac2fd89c6868c3a9c1cb948edabd3c1f0",
+      "origin": "Contiguous unmodified UTF8 bytes from hosted/core-originals/canonical.log",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__canonical_log/part-0049.txt",
+      "bytes": 59939,
+      "sha256": "ed6665147535f3e3ed2b1d3479c2ed63e4d05583c64db1734944a44dc0f8e11e",
+      "origin": "Contiguous unmodified UTF8 bytes from hosted/core-originals/canonical.log",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__canonical_log/part-0050.txt",
+      "bytes": 57918,
+      "sha256": "38d7651abff8040e2d840dbb9b9ca1322d2f66c4233de0237848bbb36e58ad9c",
+      "origin": "Contiguous unmodified UTF8 bytes from hosted/core-originals/canonical.log",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__canonical_log/part-0051.txt",
+      "bytes": 58866,
+      "sha256": "b0bc7d7cef5c90639e43f668c27d95592359b3cc6842915047cfb2b40cd1a261",
+      "origin": "Contiguous unmodified UTF8 bytes from hosted/core-originals/canonical.log",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__canonical_log/part-0052.txt",
+      "bytes": 59684,
+      "sha256": "c10bdbb33eb59b7391df85da62c77f54f927e28728e538e17c9262ce6b0c2a61",
+      "origin": "Contiguous unmodified UTF8 bytes from hosted/core-originals/canonical.log",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__canonical_log/part-0053.txt",
+      "bytes": 59997,
+      "sha256": "51b3839f834ec8b0c672be1f12538877e8749c102486273061d8f9e7ffc3c549",
+      "origin": "Contiguous unmodified UTF8 bytes from hosted/core-originals/canonical.log",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__canonical_log/part-0054.txt",
+      "bytes": 59692,
+      "sha256": "08e733fd79f22a67b9bdcd1f9fe7e55bbfd3b421ac7f3c154c34d07d43669446",
+      "origin": "Contiguous unmodified UTF8 bytes from hosted/core-originals/canonical.log",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__canonical_log/part-0055.txt",
+      "bytes": 59787,
+      "sha256": "7f832ad46df52625fa6357712bd897e2f5cc603996a6cdb7b7aea69d3bd49d5d",
+      "origin": "Contiguous unmodified UTF8 bytes from hosted/core-originals/canonical.log",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__canonical_log/part-0056.txt",
+      "bytes": 59965,
+      "sha256": "aaac686581f3f024de6f48af46c4773fc8a1fddb2a9b598d6fc53beafd149c04",
+      "origin": "Contiguous unmodified UTF8 bytes from hosted/core-originals/canonical.log",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__canonical_log/part-0057.txt",
+      "bytes": 59987,
+      "sha256": "4bd39bbd8b6c528c86e6036f70a415935c8502d10308769c8deb30b28e6a7f8b",
+      "origin": "Contiguous unmodified UTF8 bytes from hosted/core-originals/canonical.log",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__canonical_log/part-0058.txt",
+      "bytes": 59031,
+      "sha256": "70e19ee02a128b573e808a88a0f7a8df18269b5a2a7246c282338a9735c94cd2",
+      "origin": "Contiguous unmodified UTF8 bytes from hosted/core-originals/canonical.log",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__canonical_log/part-0059.txt",
+      "bytes": 58804,
+      "sha256": "35cb2d2c5ab5f61802549cf0d07dc1b89b6001eebe62616393f014d6079dd502",
+      "origin": "Contiguous unmodified UTF8 bytes from hosted/core-originals/canonical.log",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__canonical_log/part-0060.txt",
+      "bytes": 59328,
+      "sha256": "02ad24d786440a79f4ee2c34a8686b703642b753f2f68e193cac85d2fac94779",
+      "origin": "Contiguous unmodified UTF8 bytes from hosted/core-originals/canonical.log",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__canonical_log/part-0061.txt",
+      "bytes": 59516,
+      "sha256": "1e1a8c2855d2ed4098bf1aa3b8fa69d66d717da75663a285b811a70ee3285b78",
+      "origin": "Contiguous unmodified UTF8 bytes from hosted/core-originals/canonical.log",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__canonical_log/part-0062.txt",
+      "bytes": 59941,
+      "sha256": "66c88addf044d546df05db6f98d321fdd525ca7462e0467f5b47b4fd5dc77612",
+      "origin": "Contiguous unmodified UTF8 bytes from hosted/core-originals/canonical.log",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__canonical_log/part-0063.txt",
+      "bytes": 59799,
+      "sha256": "0d815fdd3a31a3ee27e6bd48c7089a23e153e166ad1d261be8d0725212692608",
+      "origin": "Contiguous unmodified UTF8 bytes from hosted/core-originals/canonical.log",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__canonical_log/part-0064.txt",
+      "bytes": 59906,
+      "sha256": "ec4d907236bcd152e84f63613e158a02ff9c3fb95bb5ae1a467faa9b1c1de46f",
+      "origin": "Contiguous unmodified UTF8 bytes from hosted/core-originals/canonical.log",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__canonical_log/part-0065.txt",
+      "bytes": 59746,
+      "sha256": "1a26b258bc3fb8e40b8b4d542b1771ce818656d741ee1d05192b2291296b762b",
+      "origin": "Contiguous unmodified UTF8 bytes from hosted/core-originals/canonical.log",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__canonical_log/part-0066.txt",
+      "bytes": 59903,
+      "sha256": "b884e1ccb90fd75aa63238ffef59036a09bb140c077af652be374cb3fd5b8c79",
+      "origin": "Contiguous unmodified UTF8 bytes from hosted/core-originals/canonical.log",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__canonical_log/part-0067.txt",
+      "bytes": 59574,
+      "sha256": "4a740b20adb00f2b45d2a4202faf4f112af8c11d817f28f932e77d2fc65f049e",
+      "origin": "Contiguous unmodified UTF8 bytes from hosted/core-originals/canonical.log",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__canonical_log/part-0068.txt",
+      "bytes": 59964,
+      "sha256": "600905de8a98231fd761a57141abd1e18f2cd9840d665c4c7f5f4ad5dc6ff012",
+      "origin": "Contiguous unmodified UTF8 bytes from hosted/core-originals/canonical.log",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__canonical_log/part-0069.txt",
+      "bytes": 59808,
+      "sha256": "7b57fe96ba4daddeeb51abbf745908f288c6837a123e53e7eec08173e598cd34",
+      "origin": "Contiguous unmodified UTF8 bytes from hosted/core-originals/canonical.log",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__canonical_log/part-0070.txt",
+      "bytes": 59428,
+      "sha256": "24488f51959176747e257e6acd85d9e8c36765636bcf22855562305e24be44f9",
+      "origin": "Contiguous unmodified UTF8 bytes from hosted/core-originals/canonical.log",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__canonical_log/part-0071.txt",
+      "bytes": 57878,
+      "sha256": "d4039a553c833dba72c8014b885ee94956c38029ee5fe4e6b19b80da5883278b",
+      "origin": "Contiguous unmodified UTF8 bytes from hosted/core-originals/canonical.log",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__canonical_log/part-0072.txt",
+      "bytes": 58143,
+      "sha256": "3dd6ddffc4d7a04f10fb119160e35e32d4d27580347d7aeb918693837706a900",
+      "origin": "Contiguous unmodified UTF8 bytes from hosted/core-originals/canonical.log",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__canonical_log/part-0073.txt",
+      "bytes": 58103,
+      "sha256": "be2d25f640c77eea0169972c9721f450d253e95961a6fcf7a886ed645c9fd079",
+      "origin": "Contiguous unmodified UTF8 bytes from hosted/core-originals/canonical.log",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__canonical_log/part-0074.txt",
+      "bytes": 59910,
+      "sha256": "ea971845c947398b7ff8f2cd42253f90d099dd3f7722b1923a3474eb2cb2e20b",
+      "origin": "Contiguous unmodified UTF8 bytes from hosted/core-originals/canonical.log",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__canonical_log/part-0075.txt",
+      "bytes": 59553,
+      "sha256": "a84c41c790cbec7770626ad994e3b643da25581c5df79cccad2ec860ced4f367",
+      "origin": "Contiguous unmodified UTF8 bytes from hosted/core-originals/canonical.log",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__canonical_log/part-0076.txt",
+      "bytes": 59823,
+      "sha256": "31b8a8c383e7609b882c456a81c1b8980e0bbea38dc2dbbaac829988cdd16320",
+      "origin": "Contiguous unmodified UTF8 bytes from hosted/core-originals/canonical.log",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__canonical_log/part-0077.txt",
+      "bytes": 59767,
+      "sha256": "ce46fd2b1be9aa2f1e8d62df0940d4fbbb2608a3cb06d3a4708d016c5a80bf4e",
+      "origin": "Contiguous unmodified UTF8 bytes from hosted/core-originals/canonical.log",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__canonical_log/part-0078.txt",
+      "bytes": 59524,
+      "sha256": "37dce5864e2207d429fe472b03e1bd419b27bb25c6647d71dcd546db561955b7",
+      "origin": "Contiguous unmodified UTF8 bytes from hosted/core-originals/canonical.log",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__canonical_log/part-0079.txt",
+      "bytes": 59694,
+      "sha256": "2e9a90176c9aa95e374960d60d2092a98fcba346f1807f9bf97f22773b86e2be",
+      "origin": "Contiguous unmodified UTF8 bytes from hosted/core-originals/canonical.log",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__canonical_log/part-0080.txt",
+      "bytes": 59367,
+      "sha256": "e3846bd3ef3f15dc31c7b0acbcd5496d9029b7c2673f87e6b941e7e7490cb588",
+      "origin": "Contiguous unmodified UTF8 bytes from hosted/core-originals/canonical.log",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__canonical_log/part-0081.txt",
+      "bytes": 59775,
+      "sha256": "e4cbe016be261895cccf386ce9865cc552ef059f71e2b00bbafa82da7f2b3fe8",
+      "origin": "Contiguous unmodified UTF8 bytes from hosted/core-originals/canonical.log",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__canonical_log/part-0082.txt",
+      "bytes": 59838,
+      "sha256": "72a0fc86fcba0abf7d0656e5c4e86ec4fa652d96d52d7b6f5a78a921122ff482",
+      "origin": "Contiguous unmodified UTF8 bytes from hosted/core-originals/canonical.log",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__canonical_log/part-0083.txt",
+      "bytes": 59431,
+      "sha256": "69ca7aa2a3ebae7e62343a709069b349fcb4b80e08160dfe5dbacae70a337299",
+      "origin": "Contiguous unmodified UTF8 bytes from hosted/core-originals/canonical.log",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__canonical_log/part-0084.txt",
+      "bytes": 59581,
+      "sha256": "58ba58370ce502acc009fc99c929af4b445a780300405d3fd64f780b3eacd407",
+      "origin": "Contiguous unmodified UTF8 bytes from hosted/core-originals/canonical.log",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__canonical_log/part-0085.txt",
+      "bytes": 59659,
+      "sha256": "2a85c8112a630c8a44fa0f9587454abe68b4d6324f8e3ea0feded60e20e67045",
+      "origin": "Contiguous unmodified UTF8 bytes from hosted/core-originals/canonical.log",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__canonical_log/part-0086.txt",
+      "bytes": 59849,
+      "sha256": "da39d28a8922e243d88be268437fd6b636a6394219faa68261ee1ca54b86d60d",
+      "origin": "Contiguous unmodified UTF8 bytes from hosted/core-originals/canonical.log",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__canonical_log/part-0087.txt",
+      "bytes": 59885,
+      "sha256": "f7f9f845c6e41204ef905714d3369352e9a6130b984376788f43363ad2260ad3",
+      "origin": "Contiguous unmodified UTF8 bytes from hosted/core-originals/canonical.log",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__canonical_log/part-0088.txt",
+      "bytes": 59965,
+      "sha256": "de3df6a3ee64d6b40714746fa74ffb23e04780b00094ea2e7279cabf5fb0d96a",
+      "origin": "Contiguous unmodified UTF8 bytes from hosted/core-originals/canonical.log",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__canonical_log/part-0089.txt",
+      "bytes": 59802,
+      "sha256": "a15e893718ffe52f9eee9b1efaaddb4bd328cd934e6220ccd1dd2922fed548f6",
+      "origin": "Contiguous unmodified UTF8 bytes from hosted/core-originals/canonical.log",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__canonical_log/part-0090.txt",
+      "bytes": 59951,
+      "sha256": "d5a309e7a046582e3e6d686367e1a22963c978545aaa851b223c58c8b3d1ff0c",
+      "origin": "Contiguous unmodified UTF8 bytes from hosted/core-originals/canonical.log",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__canonical_log/part-0091.txt",
+      "bytes": 59581,
+      "sha256": "d837f93ab60dfd267195f782dd1858d881e1dbe6d9747e44ab0cd66156adf7b3",
+      "origin": "Contiguous unmodified UTF8 bytes from hosted/core-originals/canonical.log",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__canonical_log/part-0092.txt",
+      "bytes": 59613,
+      "sha256": "3378c4b850eb689aaa1dfc0be21fae6dcee7cb735be64c318ec9974f4ba7da7e",
+      "origin": "Contiguous unmodified UTF8 bytes from hosted/core-originals/canonical.log",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__canonical_log/part-0093.txt",
+      "bytes": 59638,
+      "sha256": "6e80eef776c38ee47b76eaf9dd79cda55738e02b03d1c1d66540ea0980e4f1d4",
+      "origin": "Contiguous unmodified UTF8 bytes from hosted/core-originals/canonical.log",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__canonical_log/part-0094.txt",
+      "bytes": 59641,
+      "sha256": "4a47b3566eb07bbe84d59d9f342d74aa43ca78ccb31a44a9bec6aecf978ac493",
+      "origin": "Contiguous unmodified UTF8 bytes from hosted/core-originals/canonical.log",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__canonical_log/part-0095.txt",
+      "bytes": 59796,
+      "sha256": "1bf4df3054a7a2e39cc056e7123bc86762d0928c65872b1c5a36c22db3e96dee",
+      "origin": "Contiguous unmodified UTF8 bytes from hosted/core-originals/canonical.log",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__canonical_log/part-0096.txt",
+      "bytes": 57887,
+      "sha256": "cee60847fd0d039034398df21e5b7e5594a77476ab41fbc4c9d1ac752f090646",
+      "origin": "Contiguous unmodified UTF8 bytes from hosted/core-originals/canonical.log",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__canonical_log/part-0097.txt",
+      "bytes": 59527,
+      "sha256": "e0529d14014bfb132b54db057009e0b47b7bfcb953254b313433fd94192a28a7",
+      "origin": "Contiguous unmodified UTF8 bytes from hosted/core-originals/canonical.log",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__canonical_log/part-0098.txt",
+      "bytes": 59838,
+      "sha256": "f074107a5e87a454976c5e33f3a7a8f1ebbbd9ead472c064eb0feeff3b267246",
+      "origin": "Contiguous unmodified UTF8 bytes from hosted/core-originals/canonical.log",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__canonical_log/part-0099.txt",
+      "bytes": 59599,
+      "sha256": "ac16201cdb9daf2c812bfb74e86c691deb67e9c0288456a4abbeeb6a2075cf7d",
+      "origin": "Contiguous unmodified UTF8 bytes from hosted/core-originals/canonical.log",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__canonical_log/part-0100.txt",
+      "bytes": 59617,
+      "sha256": "65aa6b8e1ae40dfd73568c0dc76f83964b20a649989721b50181277bb52cf59c",
+      "origin": "Contiguous unmodified UTF8 bytes from hosted/core-originals/canonical.log",
+      "original_bytes_preserved": false
+    },
+    {
+      "name": "readable/hosted__core-originals__canonical_log/part-0101.txt",
+      "bytes": 59802,

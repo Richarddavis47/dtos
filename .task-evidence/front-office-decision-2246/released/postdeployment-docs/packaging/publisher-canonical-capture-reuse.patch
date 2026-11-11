@@ -1,0 +1,218 @@
+--- before/tools/release/publish.py
++++ after/tools/release/publish.py
+@@ -1325,8 +1325,8 @@
+     team_need_handoff = verify_team_need_handoff(recovery, plan, prefix="team-need/")
+     offer_comparison = verify_offer_comparison(recovery, plan, prefix="offer-comparison/")
+     recommended_protections = verify_recommended_protections(recovery, plan, prefix="protections/")
+-    activation_deferral = verify_activation_deferral(recovery, plan, prefix="activation/")
+-    front_office_workflow = verify_front_office_workflow(recovery, plan, prefix="front-office-workflow/")
++    activation_deferral = verify_activation_deferral(recovery, plan, prefix="local-canonical/activation/")
++    front_office_workflow = verify_front_office_workflow(recovery, plan, prefix="local-canonical/front-office-workflow/")
+     completed_trade_observations = verify_completed_trade_browser(recovery, plan, prefix="feature/")
+     completed_trade_observations["matched_cases"] = verify_completed_trade_cases(recovery, plan)
+     with zipfile.ZipFile(recovery) as archive:
+--- before/tests/test_release_publisher.py
++++ after/tests/test_release_publisher.py
+@@ -1436,6 +1436,8 @@
+ 
+ 
+ class ActivationEvidenceIntegrityTests(unittest.TestCase):
++    PREFIXES = ('browser/activation/', 'local-canonical/activation/')
++
+     def setUp(self):
+         self.folder = tempfile.TemporaryDirectory()
+         self.addCleanup(self.folder.cleanup)
+@@ -1460,9 +1462,10 @@
+                 no_new_source_requests=True, account_unchanged=True))
+             self.files['browser/activation/phone-' + str(width) + '.png'] = b'\x89PNG\r\n\x1a\n'
+ 
+-    def verify(self):
+-        p.make_zip(self.path, self.files)
+-        return p.verify_activation_deferral(self.path, self.plan)
++    def verify(self, prefix='browser/activation/'):
++        files = {prefix + name.removeprefix('browser/activation/'): raw for name, raw in self.files.items()}
++        p.make_zip(self.path, files)
++        return p.verify_activation_deferral(self.path, self.plan, prefix=prefix)
+ 
+     def alter(self, name, key, value, observations=True):
+         path = 'browser/activation/' + name + '.json'
+@@ -1471,41 +1474,65 @@
+         self.files[path] = json.dumps(row).encode()
+ 
+     def test_complete_typed_and_actual_retry_controls(self):
+-        self.assertTrue(self.verify()['passed'])
++        for prefix in self.PREFIXES:
++            with self.subTest(prefix=prefix):
++                self.assertTrue(self.verify(prefix=prefix)['passed'])
++                wrong = next(value for value in self.PREFIXES if value != prefix)
++                with self.assertRaises(KeyError):
++                    p.verify_activation_deferral(self.path, self.plan, prefix=wrong)
+ 
+     def test_deferred_retry_is_not_completion(self):
+         self.alter('real-recovery','explicit_retry',503)
+-        with self.assertRaisesRegex(RuntimeError,'retry completion'):
+-            self.verify()
++        for prefix in self.PREFIXES:
++            with self.subTest(prefix=prefix), self.assertRaisesRegex(RuntimeError,'retry completion'):
++                self.verify(prefix=prefix)
+ 
+     def test_generic_error_is_not_typed_deferral(self):
+         self.alter('typed-capacity','api',dict(status='failed'))
+-        with self.assertRaisesRegex(RuntimeError,'Typed activation'):
+-            self.verify()
++        for prefix in self.PREFIXES:
++            with self.subTest(prefix=prefix), self.assertRaisesRegex(RuntimeError,'Typed activation'):
++                self.verify(prefix=prefix)
+ 
+     def test_wrong_source_cannot_pass(self):
+-        self.alter('phone-320','commit','c' * 40,False)
+-        with self.assertRaisesRegex(RuntimeError,'source mismatch'):
+-            self.verify()
++        original = copy.deepcopy(self.files)
++        for key, value in [('commit', 'c' * 40), ('tree', 'd' * 40), ('working_tree_clean', False)]:
++            self.files = copy.deepcopy(original)
++            self.alter('phone-320',key,value,False)
++            for prefix in self.PREFIXES:
++                with self.subTest(key=key, prefix=prefix), self.assertRaisesRegex(RuntimeError,'source mismatch'):
++                    self.verify(prefix=prefix)
+ 
+     def test_missing_phone_or_changed_account_cannot_pass(self):
+         original = copy.deepcopy(self.files)
+         del self.files['browser/activation/phone-390.png']
+-        with self.assertRaises(KeyError):
+-            self.verify()
++        for prefix in self.PREFIXES:
++            with self.subTest(prefix=prefix, invalid='missing image'), self.assertRaises(KeyError):
++                self.verify(prefix=prefix)
++        self.files = copy.deepcopy(original)
++        self.files['browser/activation/phone-390.png'] = b'not a PNG'
++        for prefix in self.PREFIXES:
++            with self.subTest(prefix=prefix, invalid='image signature'), self.assertRaisesRegex(RuntimeError,'image missing'):
++                self.verify(prefix=prefix)
+         self.files = original
+         self.alter('phone-375','account_unchanged',False)
+-        with self.assertRaisesRegex(RuntimeError,'phone coverage'):
+-            self.verify()
++        for prefix in self.PREFIXES:
++            with self.subTest(prefix=prefix, invalid='account changed'), self.assertRaisesRegex(RuntimeError,'phone coverage'):
++                self.verify(prefix=prefix)
+ 
+     def test_fixture_cannot_claim_live_access(self):
+-        self.alter('real-recovery','scope','Live Granite recovery',False)
+-        with self.assertRaisesRegex(RuntimeError,'scope mismatch'):
+-            self.verify()
++        original = copy.deepcopy(self.files)
++        for key, value in [('scope', 'Live Granite recovery'), ('physical_safari_tested', True)]:
++            self.files = copy.deepcopy(original)
++            self.alter('real-recovery',key,value,False)
++            for prefix in self.PREFIXES:
++                with self.subTest(key=key, prefix=prefix), self.assertRaisesRegex(RuntimeError,'scope mismatch'):
++                    self.verify(prefix=prefix)
+ 
+ 
+ class FrontOfficeWorkflowIntegrityTests(unittest.TestCase):
+     """Verifier-only records; native candidate captures supply execution proof."""
++
++    PREFIXES = ('browser/front-office-workflow/', 'local-canonical/front-office-workflow/')
+ 
+     def setUp(self):
+         self.folder = tempfile.TemporaryDirectory()
+@@ -1591,41 +1618,57 @@
+         original = copy.deepcopy(self.rows)
+         try:
+             change(self.rows['1qb-k-def-journey'])
+-            with self.assertRaisesRegex(RuntimeError, message):
+-                self.verify()
++            for prefix in self.PREFIXES:
++                with self.subTest(prefix=prefix), self.assertRaisesRegex(RuntimeError, message):
++                    self.verify(prefix=prefix)
+         finally:
+             self.rows = original
+ 
+     def test_native_qualification_is_preserved_without_requiring_endorsement(self):
+-        self.assertTrue(self.verify()['passed'])
++        for prefix in self.PREFIXES:
++            with self.subTest(prefix=prefix):
++                self.assertTrue(self.verify(prefix=prefix)['passed'])
++                wrong = next(value for value in self.PREFIXES if value != prefix)
++                with self.assertRaises(KeyError):
++                    p.verify_front_office_workflow(self.path, self.plan, prefix=wrong)
+ 
+     def test_zero_offers_are_valid_with_actual_nonempty_exclusion_pools(self):
+         for row in self.rows.values():
+             row['native_offers'] = []
+             row['prior_search']['count'] = 0
+-        self.assertTrue(self.verify()['passed'])
++        for prefix in self.PREFIXES:
++            with self.subTest(prefix=prefix):
++                self.assertTrue(self.verify(prefix=prefix)['passed'])
+ 
+     def test_missing_near_miss_verdict_is_retained_without_becoming_an_offer(self):
+         for row in self.rows.values():
+             row['native_offers'][0].update(family='near_misses', recommendation=None, exploration=False)
+             row['prior_search']['count'] = 0
+-        self.assertTrue(self.verify()['passed'])
++        for prefix in self.PREFIXES:
++            with self.subTest(prefix=prefix):
++                self.assertTrue(self.verify(prefix=prefix)['passed'])
+ 
+     def test_explicit_zero_lineup_change_remains_supported_recorded_evidence(self):
+         for row in self.rows.values():
+             row['comparison_offers'][0]['summary']['lineup'].update(post_total=100, delta=0)
+             row['actual_evaluations'][0]['lineup'].update(post_total=100, delta=0)
+-        self.assertTrue(self.verify()['passed'])
++        for prefix in self.PREFIXES:
++            with self.subTest(prefix=prefix):
++                self.assertTrue(self.verify(prefix=prefix)['passed'])
+ 
+     def test_missing_overall_verdict_and_partial_market_do_not_erase_supported_lineup(self):
+         for row in self.rows.values():
+             row['actual_evaluations'][0].update(recommendation=None,
+                 market=dict(availability='partial', sent=dict(total=None), received=dict(total=104)))
+             row['comparison_offers'][0]['summary']['neutral'].update(availability='partial', sent=None)
+-        self.assertTrue(self.verify()['passed'])
++        for prefix in self.PREFIXES:
++            with self.subTest(prefix=prefix):
++                self.assertTrue(self.verify(prefix=prefix)['passed'])
+ 
+     def test_recovery_uses_the_same_guard(self):
+-        self.assertTrue(self.verify(prefix='front-office-workflow/')['passed'])
++        for prefix in ('front-office-workflow/', 'local-canonical/front-office-workflow/'):
++            with self.subTest(prefix=prefix):
++                self.assertTrue(self.verify(prefix=prefix)['passed'])
+ 
+     def test_foreign_or_dirty_source_and_claimed_live_scope_block(self):
+         for key, value in [('commit', 'c' * 40), ('tree', 'd' * 40), ('working_tree_clean', False),
+@@ -1633,8 +1676,9 @@
+             with self.subTest(key=key):
+                 original = self.metadata[key]
+                 self.metadata[key] = value
+-                with self.assertRaisesRegex(RuntimeError, 'source mismatch|scope mismatch'):
+-                    self.verify()
++                for prefix in self.PREFIXES:
++                    with self.subTest(prefix=prefix), self.assertRaisesRegex(RuntimeError, 'source mismatch|scope mismatch'):
++                        self.verify(prefix=prefix)
+                 self.metadata[key] = original
+ 
+     def test_all_four_distinct_viewports_and_images_are_required(self):
+@@ -1642,14 +1686,16 @@
+             with self.subTest(name=name):
+                 self.reject(lambda row: row[name].pop(), 'viewport coverage')
+                 self.reject(lambda row: row[name].__setitem__(3, copy.deepcopy(row[name][0])), 'viewport coverage')
+-        with self.assertRaises(KeyError):
+-            self.verify(omit='superflex-journey.png')
++        for prefix in self.PREFIXES:
++            with self.subTest(prefix=prefix), self.assertRaises(KeyError):
++                self.verify(prefix=prefix, omit='superflex-journey.png')
+ 
+     def test_distinct_actual_league_configurations_are_required(self):
+         self.reject(lambda row: row.update(league_slots=['QB', 'SUPER_FLEX']), 'league configuration')
+         self.rows['superflex-journey']['league_slots'] = ['QB', 'RB', 'K', 'DEF']
+-        with self.assertRaisesRegex(RuntimeError, 'league configuration'):
+-            self.verify()
++        for prefix in self.PREFIXES:
++            with self.subTest(prefix=prefix), self.assertRaisesRegex(RuntimeError, 'league configuration'):
++                self.verify(prefix=prefix)
+ 
+     def test_missing_null_empty_or_malformed_pools_never_prove_exclusion(self):
+         for pools in (None, [], {}, '2029-R1-3', [None], [['b', '2029-R1-3'], []], [['2029-R1-3', None]],

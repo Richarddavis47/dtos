@@ -1,0 +1,63 @@
+{
+  "schema": "dtos-post-seal-unused-public-builder-revision-v6",
+  "authority": "Separate, unused post-seal documentation/evidence-builder source revision. Not a sealed publisher, Recovery/Prior, application or deployment change.",
+  "actual_application_source": {
+    "candidate": "4cf524c488efb36c77defd78bfd7acf84a3f6ddd",
+    "tree": "79fe9268fb3394604559bbcbe1119616a080b71b",
+    "source_json_sha256": "d37eaebcf27f68280dc379f6a750c1af3dfbe429529e55259e102eb9b7b60b57"
+  },
+  "change": {
+    "file": "build-released-evidence.py",
+    "removed_only": "R3 fixed-list literal patch-packaging-controls.json",
+    "reason": "R2-only historical packaging control is absent from R3; current-source patch bytes are already independently bound to actual committed source by unchanged builder checks.",
+    "before_copy": "method-history/post-seal-stale-control-v6/build-released-evidence.before.py",
+    "before_sha256": "8ce449af5c439aade267404f0cf3ea1f1653b192b7487bbf63d883230feb62db",
+    "after_sha256": "2501bcc240d98cce9245a6da925d5a5d89e467da4b517c32a2ff0996c1b5f8c4",
+    "diff": "method-history/post-seal-stale-control-v6/change.patch",
+    "diff_sha256": "7be313e53c800e92d7407eefe75ad22a73666a347e595a0f0f4b63f0d4324e02"
+  },
+  "historical_control": {
+    "source": "/workspace/2246-granite-activation/expansion/final-r2/patch-packaging-controls.json",
+    "bytes": 1039,
+    "sha256": "5adc5d84ba6ff2d26f7955408ce1b70371797998600f279dcfe1c2f27a07d9e9",
+    "prior_member": "minor-tooling/r2-patch-packaging-controls.json",
+    "prior_manifest_row_verified": true,
+    "selected_original_member_bytes_equal_R2_source": true,
+    "scope": "prior-attempts-only; not R3 validation",
+    "copied_or_relabeled_as_R3_control": false
+  },
+  "unchanged_sealed_release_inputs": {
+    "recovery": {
+      "bytes": 103292843,
+      "sha256_from_existing_receipt": "822656619024a3fbff0f7ec5b2021123c4677b6a4021b5a31e01aeebf1ab1d49",
+      "original_builder_member": "methods/build-released-evidence.py",
+      "original_builder_sha256": "8ce449af5c439aade267404f0cf3ea1f1653b192b7487bbf63d883230feb62db",
+      "selected_member_matches_before_copy": true,
+      "repacked": false
+    },
+    "prior": {
+      "bytes": 65073292,
+      "sha256_from_existing_receipt": "58270cf47a7de12f1b6fcdfee2b7e677b870682f39496f534969a0b2c8d63162",
+      "repacked": false
+    },
+    "sealed_current_methods_manifest_sha256": "60ce318a3596d849fb08a8556c0678eb4d2b5a257814b53ccfff5e0a47522c9e",
+    "frozen_publisher_from_existing_receipt": {
+      "commit": "e80da255d63c23156ccfbd396feae53728e9b6db",
+      "tree": "d3631015a5152a027afa3a2e5074beb9076e0c70"
+    },
+    "plan_source_controller_publisher_unchanged": true,
+    "whole_package_hashes_recomputed": false
+  },
+  "verification": {
+    "AST_parse_passed": true,
+    "exact_AST_delta": "Exactly one matching Constant removed from the fixed tuple; complete remaining AST including every security predicate is identical.",
+    "independent_static_review": "Sole textual diff and hashes confirmed; no blocker.",
+    "project_app_helper_imports": 0,
+    "tests_or_builder_execution": false,
+    "package_creation_or_rebuild": false,
+    "network_or_Docker": false,
+    "selected_metadata_read_only": "Original Prior manifest/control member and sealed Recovery builder member read with standard-library tooling; no original bytes written."
+  },
+  "scope_limits": "Current sealed R3 methods-manifest.json/source/plan/Recovery/Prior/publisher remain untouched and retain the old prepared builder hash. Root must review this separate tool revision before its later postdeployment use. No publication/deployment inputs or acceptance are invented.",
+  "optional_future_handoff": "If selected for the later handoff, use the existing explicit reviewed-additions mechanism for this JSON, diff and before snapshot; do not repackage frozen release assets."
+}

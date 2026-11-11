@@ -1,0 +1,114 @@
+{
+  "schema": "dtos-r3-source-pinned-fixture-url-revision-v5",
+  "scope": "Authorized metadata-only exception and pure metadata controls; no Prior retry, ZIP/package execution, app import, authentication/HTTP request, private production credential read, Docker or full test by this preparation",
+  "source_chain": {
+    "commits": [
+      "b602d6acd03cc1c95d85ee734d2d7f28658885cf",
+      "4cf524c488efb36c77defd78bfd7acf84a3f6ddd"
+    ],
+    "test_file": "tests/test_restoration_preflight_http.py",
+    "test_file_sha256": "07b81fcfb222d43d27c84957e62ed7bcac757a906b0af195f20917195ec5ec9c",
+    "prefix_file": "src/platform/inspection_security.py",
+    "prefix_file_sha256": "9385cd34ff31a10dbd162bbb489298535510395b0f27e4e879421fe76b7cfe5a",
+    "AST_proof": "Exact public constants and imported PREFIX+suffix; default in-process TestClient(app) without base_url override or rebinding; target public negative-authentication test asserts401.",
+    "classifier_sha256": "1fb9d68094873c1374ff047c5a112e4ac49528731339dc768cf65862cde512dc",
+    "fixture_values_emitted": false
+  },
+  "exception": "Only exact canonical http/testserver/path/query-key/order/value bytes derived from pinned public disposable fixture constants. This permits unchanged evidence bytes only; no request or production authentication behavior changes.",
+  "scanner_guarantees": [
+    "Shared classifier in Prior and public sanitizer",
+    "Every extracted URL examined independently; exact known fixture never exempts another URL in the file",
+    "Original Prior SIGNED regexp passed unchanged as legacy coverage; uncovered legacy matches reject",
+    "All other sensitive query values/origins/paths/schemes/extra/duplicate/signature variants reject"
+  ],
+  "controls": {
+    "pure_metadata": {
+      "file": "fixture-url-controls-v5-final.json",
+      "sha256": "97e6e5d658433f36807acac3da44ea2b4b0a5869d972c350b0ca6582fccb2517",
+      "all_controls_passed": true,
+      "cases": 22
+    },
+    "original_public_logs": {
+      "file": "fixture-url-logged-matches-v5.json",
+      "sha256": "c86ac759714878086a2f8649df224fba68bd0f6a210e12602836f27ff2ecfb12",
+      "all_controls_passed": true,
+      "cases": 2,
+      "original_bytes_unchanged": true
+    },
+    "selected_method_and_evidence_scan": {
+      "files": 43,
+      "passed": true,
+      "scope": "Shared sensitive-URL scanner only; no package build or app/authentication test"
+    }
+  },
+  "first_failed_attempt": {
+    "file": "prior-package-original.log",
+    "sha256": "b77bb66f4122c534ab69a3b222c6eae023b61468d9f3f33591fc824590e9b1d7",
+    "observed_exit_code": 1,
+    "stage": "Scanner false-positive before ZIP creation",
+    "rewritten": false,
+    "retried_by_this_preparation": false,
+    "source_proof": "prior-url-scan-false-positive.json",
+    "source_proof_sha256": "37c8d3ff5e6bf346785062829fa34f4738efc8e98f32cddbe724b9f745c48481"
+  },
+  "review_diff": {
+    "file": "fixture-url-classifier-changes-v5.patch",
+    "sha256": "c6dfc0bc43178339da3530b6db3fcb27c38382b4ff65e7369ef293ba92d96e4c"
+  },
+  "before_methods": [
+    {
+      "name": "build-released-evidence.py",
+      "path": "method-revisions/pre-fixture-url-classifier/build-released-evidence.py",
+      "before_sha256": "6814dd8312f73fb6ca0b0fb63cfdb3b7c3ebda8fca2e4989302cdca74f11d432",
+      "after_sha256": "8ce449af5c439aade267404f0cf3ea1f1653b192b7487bbf63d883230feb62db"
+    },
+    {
+      "name": "make-recovery.py",
+      "path": "method-revisions/pre-fixture-url-classifier/make-recovery.py",
+      "before_sha256": "a23ab28ed66dcf31fc6d76cbe5d36ba185d7dbe0884b87037b0bafa8d37f10d3",
+      "after_sha256": "0bc7acfc2edb105a6d6e4c1afe35e97952d6def9d94f1bb61902a7c3935bf665"
+    },
+    {
+      "name": "prior-b602-additions.py",
+      "path": "method-revisions/pre-fixture-url-classifier/prior-b602-additions.py",
+      "before_sha256": "60590d50e2d0e37482d0d2a3eec97604e8c54cdd3c45da6fac5f403fa9815246",
+      "after_sha256": "57f225f0023f7a47d17b4f57b6a32cd5375796736a5891a782c66f0466eaae8c"
+    },
+    {
+      "name": "RELEASED_EVIDENCE_METHODS.md",
+      "path": "method-revisions/pre-fixture-url-classifier/RELEASED_EVIDENCE_METHODS.md",
+      "before_sha256": "4444446fee5ee47cbf90c7d17ac57c3ce83f9bea42f7b0de4926313f0bd2d90d",
+      "after_sha256": "6ebba51502c368da5b2a4c71ccb8fb8d59f81f8d560bc06e48172c800dd04434"
+    }
+  ],
+  "new_methods": [
+    "fixture_url.py",
+    "verify-fixture-url-classifier.py"
+  ],
+  "explicit_delivery": "Recovery/public selection includes shared helper/control method sources, source-chain proof, final22-control receipt, two original-log metadata controls, this revision/diff, preserved first packaging failure log and before Prior/public method sources. Original logs remain byte-identical.",
+  "syntax_check": {
+    "method": "AST parsing only",
+    "files": [
+      "fixture_url.py",
+      "verify-fixture-url-classifier.py",
+      "prior-b602-additions.py",
+      "build-released-evidence.py",
+      "make-recovery.py"
+    ],
+    "passed": true
+  },
+  "review": "Independent static peer found no remaining blocker; root separately reviewed actual diff and22-control receipt. No current release-gate acceptance inferred.",
+  "frozen_files_unchanged": [
+    "common.py",
+    "run-local-canonical.py",
+    "worker_evidence.py",
+    "harness/",
+    "controller",
+    "application source4cf"
+  ],
+  "previous_manifest": {
+    "path": "method-revisions/pre-fixture-url-classifier/methods-manifest.json",
+    "sha256": "34b844032ae9b4cd7ebc72fb4bf94833983134c03aabd5804de63777d8659bda"
+  },
+  "recommended_new_retry_log": "prior-package-retry-fixture-url-original.log"
+}

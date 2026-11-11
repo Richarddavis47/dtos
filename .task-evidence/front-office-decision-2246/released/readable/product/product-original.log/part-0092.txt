@@ -1,0 +1,39 @@
+2026-11-11T10:51:14.0776072Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib/pkgconfig
+2026-11-11T10:51:14.0777387Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-11T10:51:14.0778698Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-11T10:51:14.0780022Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-11T10:51:14.0781209Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib
+2026-11-11T10:51:14.0782194Z ##[endgroup]
+2026-11-11T10:51:14.2556859Z (node:61162) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-11-11T10:51:14.2558316Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-11-11T10:51:14.2648591Z With the provided path, there will be 4 files uploaded
+2026-11-11T10:51:14.2650185Z Artifact name is valid!
+2026-11-11T10:51:14.2652089Z Root directory input is valid!
+2026-11-11T10:51:14.4928937Z Beginning upload of artifact content to blob storage
+2026-11-11T10:51:14.7916672Z (node:61162) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+2026-11-11T10:51:14.9789423Z Uploaded bytes 7341379
+2026-11-11T10:51:14.9973811Z Finished uploading artifact content to blob storage!
+2026-11-11T10:51:14.9975110Z SHA256 digest of uploaded artifact zip is 43a2ed589f5abcb1c3c8996049d0dcfd7d54f4e8f6f17fab6ca0a7db3d2dd0fe
+2026-11-11T10:51:14.9976426Z Finalizing artifact upload
+2026-11-11T10:51:15.3369020Z Artifact actuals-restoration-2g.zip successfully finalized. Artifact ID 13847804086
+2026-11-11T10:51:15.3370980Z Artifact actuals-restoration-2g has been successfully uploaded! Final size is 7341379 bytes. Artifact ID is 13847804086
+2026-11-11T10:51:15.3374529Z Artifact download URL: https://github.com/Richarddavis47/dtos/actions/runs/43002908291/artifacts/13847804086
+2026-11-11T10:51:15.3593711Z Post job cleanup.
+2026-11-11T10:51:15.4875377Z (node:61174) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-11-11T10:51:15.4876349Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-11-11T10:51:15.5090765Z Post job cleanup.
+2026-11-11T10:51:15.6112936Z [command]/usr/bin/git version
+2026-11-11T10:51:15.6157261Z git version 2.56.0
+2026-11-11T10:51:15.6197493Z Temporarily overriding HOME='/home/runner/work/_temp/1485ba81-4850-42b4-8983-ab4914c5af26' before making global git config changes
+2026-11-11T10:51:15.6199123Z Adding repository directory to the temporary git global config as a safe directory
+2026-11-11T10:51:15.6204463Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/dtos/dtos
+2026-11-11T10:51:15.6252056Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-11-11T10:51:15.6293290Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-11-11T10:51:15.6608034Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-11-11T10:51:15.6636269Z http.https://github.com/.extraheader
+2026-11-11T10:51:15.6649612Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+2026-11-11T10:51:15.6689897Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-11-11T10:51:15.6985276Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-11-11T10:51:15.7040115Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-11-11T10:51:15.7476686Z Cleaning up orphan processes
+2026-11-11T10:51:15.7897538Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5, actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

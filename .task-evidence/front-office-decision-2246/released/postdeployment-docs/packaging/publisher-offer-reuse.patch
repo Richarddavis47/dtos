@@ -1,0 +1,126 @@
+--- before/tools/release/publish.py
++++ after/tools/release/publish.py
+@@ -1274,6 +1274,7 @@
+     assets.mkdir(parents=True, exist_ok=True)
+     records, product_job = verify_runs(plan)
+     canonical = None
++    offer_comparison = None
+     for expected in plan['artifacts']:
+         metadata = api(repo + '/actions/artifacts/' + str(expected['id']))
+         require(not metadata['expired'] and metadata['name'] == expected['name'], 'Artifact unavailable or renamed')
+@@ -1294,7 +1295,7 @@
+         if expected['file'] == 'trade-resource-original.zip':
+             verify_trade_resource(path, plan)
+             verify_team_need_handoff(path, plan)
+-            verify_offer_comparison(path, plan)
++            offer_comparison = verify_offer_comparison(path, plan)
+             verify_recommended_protections(path, plan)
+             verify_activation_deferral(path, plan)
+             verify_front_office_workflow(path, plan)
+@@ -1318,12 +1319,12 @@
+                 result = json.loads(archive.read('summary.json'))
+             require(result['passed'] is True and result['completed'] is True and result['exit_code'] == 0 and result['memory_max'] == 2147483648, 'Lifecycle acceptance missing')
+     require(canonical is not None, 'Canonical artifact absent')
++    require(offer_comparison is not None, 'Hosted offer comparison proof absent')
+     recovery = Path(plan['recovery_file'])
+     require(digest(recovery) == plan['recovery_sha256'], 'Recovery evidence changed')
+     local_canonical = verify_local_recovery(recovery, plan)
+     partner_history_links = verify_partner_history_links(recovery, plan, prefix="partner-history/")
+     team_need_handoff = verify_team_need_handoff(recovery, plan, prefix="team-need/")
+-    offer_comparison = verify_offer_comparison(recovery, plan, prefix="offer-comparison/")
+     recommended_protections = verify_recommended_protections(recovery, plan, prefix="protections/")
+     activation_deferral = verify_activation_deferral(recovery, plan, prefix="local-canonical/activation/")
+     front_office_workflow = verify_front_office_workflow(recovery, plan, prefix="local-canonical/front-office-workflow/")
+--- before/tests/test_release_publisher.py
++++ after/tests/test_release_publisher.py
+@@ -1,5 +1,6 @@
+ """Fail-closed release admission and byte integrity, without remote mutations."""
+ import copy
++from contextlib import ExitStack
+ import hashlib
+ import json
+ import os
+@@ -1320,6 +1321,75 @@
+ 
+     def test_complete_source_bound_native_controls(self):
+         self.assertTrue(self.verify()['passed'])
++        for mode in ('complete', 'absent', 'foreign-source'):
++            with self.subTest(native_comparison=mode):
++                self.assert_native_collection_boundary(mode)
++
++    def assert_native_collection_boundary(self, mode):
++        """Recovery never substitutes for a missing or incompatible native proof."""
++        class ReachedRecovery(Exception):
++            pass
++
++        root = Path(self.folder.name) / ('collect-' + mode)
++        root.mkdir()
++        canonical = root / 'canonical.zip'
++        p.make_zip(canonical, {'fixture.txt': b'Canonical guard is covered independently.'})
++        native = root / 'native.zip'
++        with zipfile.ZipFile(self.path) as archive:
++            files = {name: archive.read(name) for name in archive.namelist()}
++        if mode == 'foreign-source':
++            for name, raw in list(files.items()):
++                if name.endswith('.json'):
++                    row = json.loads(raw)
++                    row['commit'] = 'c' * 40
++                    files[name] = json.dumps(row).encode()
++        p.make_zip(native, files)
++        recovery = root / 'recovery.zip'
++        p.make_zip(recovery, {'fixture.txt': b'No duplicate offer-comparison family.'})
++        originals = {'canonical-original.zip': canonical}
++        if mode != 'absent':
++            originals['trade-resource-original.zip'] = native
++        artifacts = [dict(id=index, run=100, file=name, name=name, sha256=p.digest(path))
++                     for index, (name, path) in enumerate(originals.items(), 1)]
++        by_id = {row['id']: row for row in artifacts}
++        plan = self.plan | dict(repository='fixture/repository', artifacts=artifacts,
++                                recovery_file=str(recovery), recovery_sha256=p.digest(recovery))
++
++        def metadata(endpoint):
++            row = by_id[int(endpoint.rsplit('/', 1)[1])]
++            return dict(expired=False, name=row['name'], digest='sha256:' + row['sha256'],
++                        size_in_bytes=originals[row['file']].stat().st_size,
++                        workflow_run=dict(id=row['run'], head_sha=plan['candidate']))
++
++        def download(endpoint, target):
++            row = by_id[int(endpoint.split('/')[-2])]
++            target.write_bytes(originals[row['file']].read_bytes())
++
++        with ExitStack() as stack:
++            stack.enter_context(patch.object(p, 'verify_runs', return_value=([], 1)))
++            stack.enter_context(patch.object(p, 'api', side_effect=metadata))
++            stack.enter_context(patch.object(p, 'download', side_effect=download))
++            stack.enter_context(patch.object(p, 'verify_canonical', return_value={'passed': True}))
++            for name in ('verify_trade_resource', 'verify_team_need_handoff', 'verify_recommended_protections',
++                         'verify_activation_deferral', 'verify_front_office_workflow'):
++                stack.enter_context(patch.object(p, name, return_value={'passed': True}))
++            comparison = stack.enter_context(patch.object(p, 'verify_offer_comparison', wraps=p.verify_offer_comparison))
++            local = stack.enter_context(patch.object(p, 'verify_local_recovery', side_effect=ReachedRecovery))
++            if mode == 'complete':
++                with self.assertRaises(ReachedRecovery):
++                    p.collect(plan, root / 'output')
++                comparison.assert_called_once_with(root / 'output/assets/trade-resource-original.zip', plan)
++                local.assert_called_once_with(recovery, plan)
++            elif mode == 'absent':
++                with self.assertRaisesRegex(RuntimeError, 'Hosted offer comparison proof absent'):
++                    p.collect(plan, root / 'output')
++                comparison.assert_not_called()
++                local.assert_not_called()
++            else:
++                with self.assertRaisesRegex(RuntimeError, 'source mismatch'):
++                    p.collect(plan, root / 'output')
++                comparison.assert_called_once()
++                local.assert_not_called()
+ 
+     def test_source_revision_or_dirty_tree_cannot_pass(self):
+         for key, bad in [('commit','c'*40),('tree','d'*40),('working_tree_clean',False)]:
+--- before/.github/release-plans/README.md
++++ after/.github/release-plans/README.md
+@@ -7,3 +7,5 @@
+ The Front Office workflow guard also requires both one-QB/K/DEF and Superflex journeys on the exact candidate/tree, four responsive layouts, the existing authenticated editable need handoff, exact temporary player/pick protections, actual nonempty outgoing pools and returned packages, independent prepared comparison effects, and history/reload/replace/scope-reset evidence. It accepts the evaluator's truthful verdict; a zero-qualified search is not substituted for protection evidence and no favorable recommendation is fabricated.
+ 
+ The finalized plan pins candidate, tree, source branch, PR, version, unused tag, prior immutable release, draft ID, original run/artifact identities and recovery/prior archive hashes. The Actions prepare phase reads every attachment back before application merge; publish requires that approved PR merged at main with the identical validated tree and verifies immutable release/production identity. Preserve failed and incomplete attempts distinctly. Canonical validation steps must exactly match the application candidate. No Cloud asset-upload credential, new authentication path or application/memory policy change.
++
++Recovery preserves every local canonical manifest payload. The comparison proof comes from the already-required, source/checksum-verified `trade-resource-original.zip` at `browser/offer-comparison/`; its native guard result is required before Recovery is admitted and is retained in `VALIDATION.json`. A redundant copy of those same hosted comparison captures is omitted only from Recovery to keep the existing 100 MiB limit. The original archive, source/semantic predicates, remaining Recovery guards, fifteen native originals and twenty-three attachment population remain required and unchanged.

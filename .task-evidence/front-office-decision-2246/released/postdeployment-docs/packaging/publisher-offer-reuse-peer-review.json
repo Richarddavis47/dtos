@@ -1,0 +1,21 @@
+{
+  "at": "2026-11-11T12:08:48.383539+00:00",
+  "reviewer": "/root/publisher_offer_evidence_reuse/offer_reuse_static_peer",
+  "result": "No static blocker found",
+  "source_proof_sha256": "78611f7630080d9713aed5bde9ac4a1042977e6a1271c0411e8add496cd926e0",
+  "diff_sha256": "4ae1bb889f656af96e9e5c7a941d97ca940236eb6cdd47986f91fe6708bcaa78",
+  "reviewed_files": {
+    "tools/release/publish.py": "91370b6d38c3be5c212e057e5cd8a33b4361b68926bdf9b899bff8a0baba6830",
+    "tests/test_release_publisher.py": "6f2ac9d08fb4e784d3f917d62fb4bb645024d367fe47ce25932412e8a31efcc6",
+    ".github/release-plans/README.md": "73203ee46e38028a6fc9e2b339d1ce7fb7a82b38a6b811553df3240f576e843a"
+  },
+  "findings": [],
+  "confirmed": [
+    "Only collect changed in publisher; actual verified native comparison proof is mandatory before Recovery and retained in VALIDATION",
+    "No missing/incompatible native comparison fallback",
+    "Semantic and four resource verifier bodies unchanged",
+    "102 test names and order preserved",
+    "Added three boundary subcases logically executable and meaningful"
+  ],
+  "limits": "Read-only static review; no tests, source imports, Docker, network, commit or dispatch. Positive collection unit deliberately stops at Recovery boundary and is not full publisher completion. Actual sealed102/native offline/Actions still mandatory."
+}

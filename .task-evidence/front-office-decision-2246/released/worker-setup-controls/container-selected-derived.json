@@ -1,0 +1,43 @@
+{
+  "completion_from_original_records": {
+    "auto_removed_after_exit": true,
+    "exit_code": 0,
+    "sources": {
+      "exit.json": "e89df0eae5ec7db81135aed16463968955c578bcc4f2ec43172eff351f080c17",
+      "summary.json": "43e4235eb7b9e47ca6a199bc4fc4e09eb30f92d6bf7b800521aff5eaff82226d"
+    }
+  },
+  "derived": true,
+  "kind": "DERIVED_SELECTED_DOCKER_METADATA",
+  "omitted": "Full Config including Env (except selected User), Args, mounts, network configuration, Health/log/error bodies and all other inspection fields.",
+  "original": {
+    "capture": "Original running-container inspection, not a post-exit inspection",
+    "included": false,
+    "name": "container-inspect-running-original.json",
+    "sha256": "6f7ecf6211cc00f25dcc830231592de2fe34e4424bcf05f1014060468dabcae7"
+  },
+  "scope": "New DERIVED selected metadata, not byte-identical to the full original inspection. Running-state capture and later completion/auto-removal records are distinct. No fresh Docker observation, rerun, historical GC-duration attribution or new full-suite acceptance is asserted.",
+  "selected_metadata": {
+    "HostConfig": {
+      "Memory": 2147483648,
+      "MemorySwap": 2147483648,
+      "NanoCpus": 2000000000,
+      "NetworkMode": "none"
+    },
+    "Id": "fac80dc379337fc4505224ee3f6e8f258da177fb9420b32c89638f701f2ff660",
+    "Image": "sha256:f70a0c6402700dfb954c99d8163d4164926f74435c34d2e7e462407151663ae6",
+    "State": {
+      "Dead": false,
+      "ExitCode": 0,
+      "FinishedAt": "0001-01-01T00:00:00Z",
+      "OOMKilled": false,
+      "Paused": false,
+      "Pid": 980075,
+      "Restarting": false,
+      "Running": true,
+      "StartedAt": "2026-11-11T10:10:15.738335499Z",
+      "Status": "running"
+    },
+    "User": "1000:1000"
+  }
+}

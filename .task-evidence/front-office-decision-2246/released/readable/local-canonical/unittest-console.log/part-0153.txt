@@ -1,0 +1,384 @@
+{"timestamp":"2026-11-11T11:09:06.552464+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/fois-storage \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:06.559299+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/projection-inventory \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:06.563287+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/storage \"HTTP/1.1 200 OK\"","request_id":"system"}
+..{"timestamp":"2026-11-11T11:09:06.658774+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/identity \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:06.665805+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/retention \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:06.672493+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/projection-reachability \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:06.677724+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/fois-storage \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:06.685381+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/projection-inventory \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:06.690593+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/storage \"HTTP/1.1 200 OK\"","request_id":"system"}
+.{"timestamp":"2026-11-11T11:09:06.738696+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/fois-storage \"HTTP/1.1 503 Service Unavailable\"","request_id":"system"}
+..{"timestamp":"2026-11-11T11:09:07.932738+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/projection-inventory?limit=0 \"HTTP/1.1 400 Bad Request\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:07.938605+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/projection-inventory?limit=101 \"HTTP/1.1 400 Bad Request\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:07.943145+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/projection-inventory?offset=-1 \"HTTP/1.1 400 Bad Request\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:07.947657+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/projection-inventory?offset=4097 \"HTTP/1.1 400 Bad Request\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:07.952796+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/projection-inventory?limit=foo \"HTTP/1.1 400 Bad Request\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:07.957281+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/projection-inventory?offset=1.5 \"HTTP/1.1 400 Bad Request\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:07.962033+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/projection-inventory?limit=1&limit=2 \"HTTP/1.1 400 Bad Request\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:07.967424+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/projection-inventory?offset=4096 \"HTTP/1.1 200 OK\"","request_id":"system"}
+.{"timestamp":"2026-11-11T11:09:08.016399+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/projection-inventory?limit=2&offset=2 \"HTTP/1.1 200 OK\"","request_id":"system"}
+.{"timestamp":"2026-11-11T11:09:08.066574+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/projection-inventory \"HTTP/1.1 200 OK\"","request_id":"system"}
+.{"timestamp":"2026-11-11T11:09:08.115122+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/projection-inventory \"HTTP/1.1 503 Service Unavailable\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:08.126699+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/retention \"HTTP/1.1 503 Service Unavailable\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:08.130261+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/identity?unknown=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx \"HTTP/1.1 400 Bad Request\"","request_id":"system"}
+.{"timestamp":"2026-11-11T11:09:08.177874+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/projection-reachability \"HTTP/1.1 503 Service Unavailable\"","request_id":"system"}
+.{"timestamp":"2026-11-11T11:09:08.219161+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/identity \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:08.222700+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/identity \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:08.227189+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/identity \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:08.230904+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/identity \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:08.234010+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/identity \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:08.236790+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/identity \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:08.240461+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/identity \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+.{"timestamp":"2026-11-11T11:09:08.296115+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/projection-reachability \"HTTP/1.1 200 OK\"","request_id":"system"}
+.{"timestamp":"2026-11-11T11:09:08.338505+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/identity \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:08.342510+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/identity \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:08.346453+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/identity \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+.{"timestamp":"2026-11-11T11:09:08.401227+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/fois-storage \"HTTP/1.1 503 Service Unavailable\"","request_id":"system"}
+.{"timestamp":"2026-11-11T11:09:08.455763+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/retention \"HTTP/1.1 200 OK\"","request_id":"system"}
+.{"timestamp":"2026-11-11T11:09:08.506354+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/projection-reachability \"HTTP/1.1 200 OK\"","request_id":"system"}
+.{"timestamp":"2026-11-11T11:09:08.553349+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/identity \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:08.559820+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/retention \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:08.566046+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/projection-reachability \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:08.571175+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/fois-storage \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:08.577920+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/projection-inventory \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:08.582667+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/storage \"HTTP/1.1 200 OK\"","request_id":"system"}
+..{"timestamp":"2026-11-11T11:09:08.675334+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/restoration-preflight \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:08.678796+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/inspect/operations/restoration-preflight \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:08.682087+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: DELETE http://testserver/api/inspect/operations/restoration-preflight \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:08.685368+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: OPTIONS http://testserver/api/inspect/operations/restoration-preflight \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:08.688700+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/projection-reachability \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:08.692059+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/inspect/operations/projection-reachability \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:08.695464+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: DELETE http://testserver/api/inspect/operations/projection-reachability \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:08.698866+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: OPTIONS http://testserver/api/inspect/operations/projection-reachability \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:08.701904+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/identity \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:08.705397+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/inspect/operations/identity \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:08.709688+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: DELETE http://testserver/api/inspect/operations/identity \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:08.714733+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: OPTIONS http://testserver/api/inspect/operations/identity \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:08.717903+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/fois-storage \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:08.721473+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/inspect/operations/fois-storage \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:08.725104+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: DELETE http://testserver/api/inspect/operations/fois-storage \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:08.728368+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: OPTIONS http://testserver/api/inspect/operations/fois-storage \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:08.731441+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/storage \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:08.734561+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/inspect/operations/storage \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:08.738576+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: DELETE http://testserver/api/inspect/operations/storage \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:08.742131+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: OPTIONS http://testserver/api/inspect/operations/storage \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:08.746209+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/projection-inventory \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:08.750661+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/inspect/operations/projection-inventory \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:08.753826+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: DELETE http://testserver/api/inspect/operations/projection-inventory \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:08.757396+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: OPTIONS http://testserver/api/inspect/operations/projection-inventory \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:08.761427+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/retention \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:08.765272+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/inspect/operations/retention \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:08.769689+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: DELETE http://testserver/api/inspect/operations/retention \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:08.772973+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: OPTIONS http://testserver/api/inspect/operations/retention \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:08.776396+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/unsupported \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:08.779748+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/inspect/operations/unsupported \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:08.782850+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: DELETE http://testserver/api/inspect/operations/unsupported \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:08.785919+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: OPTIONS http://testserver/api/inspect/operations/unsupported \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:08.789315+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/%2e%2e%2fsecrets \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:08.792791+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/inspect/operations/%2e%2e%2fsecrets \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:08.795778+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: DELETE http://testserver/api/inspect/operations/%2e%2e%2fsecrets \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:08.799767+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: OPTIONS http://testserver/api/inspect/operations/%2e%2e%2fsecrets \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:08.803579+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/nested/unknown \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:08.806631+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/inspect/operations/nested/unknown \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:08.809281+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: DELETE http://testserver/api/inspect/operations/nested/unknown \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:08.812404+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: OPTIONS http://testserver/api/inspect/operations/nested/unknown \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+.{"timestamp":"2026-11-11T11:09:08.860002+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/fois-storage \"HTTP/1.1 503 Service Unavailable\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:08.865021+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/projection-reachability \"HTTP/1.1 503 Service Unavailable\"","request_id":"system"}
+./output/observer/fixture_cleanup.py:13: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f1e41e3fe20>
+  collected = gc.collect()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/output/observer/fixture_cleanup.py:13: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f1e41e3e2f0>
+  collected = gc.collect()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/output/observer/fixture_cleanup.py:13: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f1e41e3ff10>
+  collected = gc.collect()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/output/observer/fixture_cleanup.py:13: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f1e41e3e980>
+  collected = gc.collect()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/output/observer/fixture_cleanup.py:13: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f1e45294310>
+  collected = gc.collect()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/output/observer/fixture_cleanup.py:13: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f1e452945e0>
+  collected = gc.collect()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/output/observer/fixture_cleanup.py:13: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f1e45296b60>
+  collected = gc.collect()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/output/observer/fixture_cleanup.py:13: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f1e45294d60>
+  collected = gc.collect()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/output/observer/fixture_cleanup.py:13: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f1e4c494e50>
+  collected = gc.collect()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/output/observer/fixture_cleanup.py:13: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f1e4c497970>
+  collected = gc.collect()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/output/observer/fixture_cleanup.py:13: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f1e29984d60>
+  collected = gc.collect()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/output/observer/fixture_cleanup.py:13: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f1e29986b60>
+  collected = gc.collect()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/output/observer/fixture_cleanup.py:13: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f1e29985e40>
+  collected = gc.collect()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/output/observer/fixture_cleanup.py:13: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f1e29987c40>
+  collected = gc.collect()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/output/observer/fixture_cleanup.py:13: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f1e29984b80>
+  collected = gc.collect()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/output/observer/fixture_cleanup.py:13: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f1e42036890>
+  collected = gc.collect()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/output/observer/fixture_cleanup.py:13: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f1e420353f0>
+  collected = gc.collect()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/output/observer/fixture_cleanup.py:13: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f1e42034400>
+  collected = gc.collect()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/output/observer/fixture_cleanup.py:13: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f1e42036a70>
+  collected = gc.collect()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/output/observer/fixture_cleanup.py:13: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f1e420344f0>
+  collected = gc.collect()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/output/observer/fixture_cleanup.py:13: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f1e4c6b5d50>
+  collected = gc.collect()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/output/observer/fixture_cleanup.py:13: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f1e43d87d30>
+  collected = gc.collect()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/output/observer/fixture_cleanup.py:13: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f1e43d85990>
+  collected = gc.collect()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/output/observer/fixture_cleanup.py:13: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f1e43d85030>
+  collected = gc.collect()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/output/observer/fixture_cleanup.py:13: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f1e43d865c0>
+  collected = gc.collect()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/output/observer/fixture_cleanup.py:13: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f1e43d85b70>
+  collected = gc.collect()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/output/observer/fixture_cleanup.py:13: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f1e43d86a70>
+  collected = gc.collect()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/output/observer/fixture_cleanup.py:13: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f1e43d862f0>
+  collected = gc.collect()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/output/observer/fixture_cleanup.py:13: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f1e43d846d0>
+  collected = gc.collect()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/output/observer/fixture_cleanup.py:13: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f1e0dc85030>
+  collected = gc.collect()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/output/observer/fixture_cleanup.py:13: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f1e0dc856c0>
+  collected = gc.collect()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/output/observer/fixture_cleanup.py:13: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f1e0dc85e40>
+  collected = gc.collect()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/output/observer/fixture_cleanup.py:13: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f1e4738ef20>
+  collected = gc.collect()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/output/observer/fixture_cleanup.py:13: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f1e4738fa60>
+  collected = gc.collect()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/output/observer/fixture_cleanup.py:13: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f1e4738d7b0>
+  collected = gc.collect()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/output/observer/fixture_cleanup.py:13: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f1e4738cd60>
+  collected = gc.collect()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/output/observer/fixture_cleanup.py:13: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f1e4738fb50>
+  collected = gc.collect()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/output/observer/fixture_cleanup.py:13: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f1e4738e890>
+  collected = gc.collect()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/output/observer/fixture_cleanup.py:13: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f1e4738e200>
+  collected = gc.collect()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/output/observer/fixture_cleanup.py:13: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f1e4738d120>
+  collected = gc.collect()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/output/observer/fixture_cleanup.py:13: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f1e46051f30>
+  collected = gc.collect()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/output/observer/fixture_cleanup.py:13: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f1e46050130>
+  collected = gc.collect()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/output/observer/fixture_cleanup.py:13: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f1e468f2e30>
+  collected = gc.collect()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/output/observer/fixture_cleanup.py:13: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f1e460532e0>
+  collected = gc.collect()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/output/observer/fixture_cleanup.py:13: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f1e468f32e0>
+  collected = gc.collect()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/output/observer/fixture_cleanup.py:13: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f1e468f1210>
+  collected = gc.collect()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/output/observer/fixture_cleanup.py:13: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f1e468f3b50>
+  collected = gc.collect()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/output/observer/fixture_cleanup.py:13: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f1e0e2a2e30>
+  collected = gc.collect()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/output/observer/fixture_cleanup.py:13: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f1e4610a020>
+  collected = gc.collect()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/output/observer/fixture_cleanup.py:13: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f1e46109a80>
+  collected = gc.collect()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/output/observer/fixture_cleanup.py:13: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f1e4610b010>
+  collected = gc.collect()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/output/observer/fixture_cleanup.py:13: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f1e47593c40>
+  collected = gc.collect()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+.Validation Chromium: /usr/bin/chromium
+Validation Chromium version: 156.0.8078.79
+{"timestamp":"2026-11-11T11:09:10.459176+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://dtos.test/account/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:10.620214+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://dtos.test/static/css/contextual_navigation.css \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:10.632185+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://dtos.test/static/js/contextual_navigation.js \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:10.641679+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://dtos.test/static/css/personal_rankings.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:10.660679+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://dtos.test/static/js/personal_rankings.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:10.820706+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://dtos.test/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:11.665341+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://dtos.test/account/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:11.764992+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://dtos.test/static/css/contextual_navigation.css \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:11.828090+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://dtos.test/static/js/contextual_navigation.js \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:11.841630+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://dtos.test/static/css/personal_rankings.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:11.861669+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://dtos.test/static/js/personal_rankings.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:11.959256+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://dtos.test/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:12.829172+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://dtos.test/account/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:12.930974+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://dtos.test/static/css/contextual_navigation.css \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:12.939681+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://dtos.test/static/js/contextual_navigation.js \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:12.954501+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://dtos.test/static/css/personal_rankings.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:12.965376+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://dtos.test/static/js/personal_rankings.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:13.064818+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://dtos.test/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:14.022495+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://dtos.test/account/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:14.120113+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://dtos.test/static/css/contextual_navigation.css \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:14.129109+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://dtos.test/static/js/contextual_navigation.js \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:14.138229+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://dtos.test/static/css/personal_rankings.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:14.144961+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://dtos.test/static/js/personal_rankings.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:14.234858+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://dtos.test/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+.{"timestamp":"2026-11-11T11:09:15.531367+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/platform/health \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:15.532228+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"1c0f495daf1d47f287f9bd40d55d724e","event":"request_complete","duration_ms":24.638,"status_code":200,"method":"GET","path":"/api/platform/health"}
+.{"timestamp":"2026-11-11T11:09:15.782130+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://dtos.test/account/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:15.790370+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://dtos.test/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:15.797335+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://dtos.test/account/my-dtos \"HTTP/1.1 409 Conflict\"","request_id":"system"}
+.{"timestamp":"2026-11-11T11:09:15.963838+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://dtos.test/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:15.978214+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST https://dtos.test/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:15.984408+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://dtos.test/account/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:15.991607+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://dtos.test/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:15.997341+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://dtos.test/account/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:16.004412+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://dtos.test/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:16.015774+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://dtos.test/account/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:16.021512+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://dtos.test/api/my-dtos \"HTTP/1.1 403 Forbidden\"","request_id":"system"}
+.{"timestamp":"2026-11-11T11:09:16.175009+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://dtos.test/account/my-dtos \"HTTP/1.1 409 Conflict\"","request_id":"system"}
+..{"timestamp":"2026-11-11T11:09:16.961825+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:16.974697+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:16.980966+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/my-dtos \"HTTP/1.1 403 Forbidden\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:16.986719+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/my-dtos \"HTTP/1.1 403 Forbidden\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:16.994698+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:17.005494+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:17.014202+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/my-dtos \"HTTP/1.1 409 Conflict\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:17.174603+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:17.183099+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/my-dtos \"HTTP/1.1 409 Conflict\"","request_id":"system"}
+..{"timestamp":"2026-11-11T11:09:17.290006+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:17.299903+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:17.311011+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:17.319250+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:17.327151+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+...{"timestamp":"2026-11-11T11:09:17.478883+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:17.490821+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:17.498230+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:17.505442+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:17.515478+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+.{"timestamp":"2026-11-11T11:09:17.577581+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:17.589052+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:17.597024+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:17.607926+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:17.615648+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:17.622885+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/my-dtos \"HTTP/1.1 422 Unprocessable Entity\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:17.634739+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:17.642254+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/my-dtos \"HTTP/1.1 422 Unprocessable Entity\"","request_id":"system"}
+.{"timestamp":"2026-11-11T11:09:17.712128+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:17.723366+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:17.730297+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:17.737863+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:17.750517+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:17.757509+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:17.768506+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:17.776373+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:17.788190+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:17.795768+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:17.803393+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:17.815619+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:17.823971+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:17.834747+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:17.843013+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:17.856137+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:17.863719+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:17.872407+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:17.883446+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:17.891275+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:17.902420+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:17.909606+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:17.922777+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+.{"timestamp":"2026-11-11T11:09:17.984373+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:17.996401+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:18.007603+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:18.015668+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:18.028438+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+.{"timestamp":"2026-11-11T11:09:18.085359+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:18.100133+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:18.108952+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:18.120585+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:18.127878+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:18.141703+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:18.157588+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:18.170278+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:18.178199+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:18.186163+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/my-dtos \"HTTP/1.1 422 Unprocessable Entity\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:18.194389+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:18.205196+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+.{"timestamp":"2026-11-11T11:09:18.261847+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:18.273462+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:18.280783+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:18.292616+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:18.299710+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:18.307285+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:18.320758+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:18.327910+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:18.338965+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+.{"timestamp":"2026-11-11T11:09:18.467996+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:18.480624+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:18.495019+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:18.506765+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:18.514502+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:18.553264+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":804986880,"limit_bytes":2147483648,"raw_headroom_bytes":1342496768,"clean_inactive_file_bytes":62996480,"conditional_file_credit_bytes":31498240,"admission_headroom_bytes":1373995008,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-11T11:09:18.555462+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/workspace \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:18.568399+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/trades/calculate \"HTTP/1.1 200 OK\"","request_id":"system"}
+.{"timestamp":"2026-11-11T11:09:18.697760+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:18.709609+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:18.718050+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:18.756958+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":804958208,"limit_bytes":2147483648,"raw_headroom_bytes":1342525440,"clean_inactive_file_bytes":62992384,"conditional_file_credit_bytes":31496192,"admission_headroom_bytes":1374021632,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-11T11:09:18.759469+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/workspace \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:18.766033+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/trades/evaluate \"HTTP/1.1 422 Unprocessable Entity\"","request_id":"system"}
+.{"timestamp":"2026-11-11T11:09:18.890216+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:18.902296+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:18.910219+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:18.948626+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":805191680,"limit_bytes":2147483648,"raw_headroom_bytes":1342291968,"clean_inactive_file_bytes":62992384,"conditional_file_credit_bytes":31496192,"admission_headroom_bytes":1373788160,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-11T11:09:18.951013+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/workspace \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:18.960099+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_admission","request_id":"system","event":"trade_admission","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":805191680,"limit_bytes":2147483648,"raw_headroom_bytes":1342291968,"clean_inactive_file_bytes":62992384,"conditional_file_credit_bytes":31496192,"admission_headroom_bytes":1373788160,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"recovery":null}}
+{"timestamp":"2026-11-11T11:09:19.002660+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_execution_finished","request_id":"system","event":"trade_execution_finished","duration_ms":43.097,"diagnostic":{"schema":"trade-resource-v1","outcome":"failed"}}
+{"timestamp":"2026-11-11T11:09:19.003519+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/trades/evaluate \"HTTP/1.1 409 Conflict\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:19.011157+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:19.039084+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":805797888,"limit_bytes":2147483648,"raw_headroom_bytes":1341685760,"clean_inactive_file_bytes":62980096,"conditional_file_credit_bytes":31490048,"admission_headroom_bytes":1373175808,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-11T11:09:19.041199+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/workspace \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T11:09:19.048271+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_admission","request_id":"system","event":"trade_admission","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":805957632,"limit_bytes":2147483648,"raw_headroom_bytes":1341526016,"clean_inactive_file_bytes":62980096,"conditional_file_credit_bytes":31490048,"admission_headroom_bytes":1373016064,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"recovery":null}}

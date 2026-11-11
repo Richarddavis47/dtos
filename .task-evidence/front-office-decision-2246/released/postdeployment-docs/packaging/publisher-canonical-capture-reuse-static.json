@@ -1,0 +1,63 @@
+{
+  "source": {
+    "baseline": "abbe723a0566cf84a8fff947cf7320cb66567a77",
+    "candidate": "4cf524c488efb36c77defd78bfd7acf84a3f6ddd",
+    "tree": "79fe9268fb3394604559bbcbe1119616a080b71b",
+    "branch": "fix/activation-deferral-2246",
+    "version": "1.22.31",
+    "build": 2246,
+    "pr": 335,
+    "expected_test_count": 4364,
+    "expected_publisher_test_count": 102,
+    "supersedes": "b602d6acd03cc1c95d85ee734d2d7f28658885cf"
+  },
+  "before_publisher_sha256": "669ddffb07216631e0acf7347f1d6ed02b10476b5805dfcadac45dd475275679",
+  "after_publisher_sha256": "ad7215119c0799014d05edc640ec1525913d768382c2c9f497535ae32ab55646",
+  "after_tests_sha256": "1bbeec8fd1e53e5720ad78a0b56142234af1d66ab6d85c2dea2bf7993bdb6f87",
+  "changed_publisher_function": [
+    "collect"
+  ],
+  "exact_change": "Only two Recovery capture namespace literals; hosted calls/defaults and every verifier function body remain unchanged.",
+  "resource_function_bridge": {
+    "verify_preflight": {
+      "source_sha256_before": "8a6da7e1d3fa7e68eee6952912afd4e719fb5d78150720d63ccbd33805ed6c10",
+      "source_sha256_after": "8a6da7e1d3fa7e68eee6952912afd4e719fb5d78150720d63ccbd33805ed6c10",
+      "ast_sha256": "7df1dd32e0d09cda73742f6720ba8bd5f4f026473fd8d54541447899c0762a6e",
+      "byte_identical": true
+    },
+    "verify_actuals_restoration": {
+      "source_sha256_before": "8ae03ae7b4fb528295c46b118aaa6963674c3bd5a784347b25783d53f0ebb1ce",
+      "source_sha256_after": "8ae03ae7b4fb528295c46b118aaa6963674c3bd5a784347b25783d53f0ebb1ce",
+      "ast_sha256": "5ce4232f50e18e9e533db0da544a7b6fc175f9c4213d7e2e2f37055fd25f6d67",
+      "byte_identical": true
+    },
+    "verify_restoration_unused": {
+      "source_sha256_before": "dc8da43e2d5195a39d8707f1a3833474e6534050ec4650ba799d6da91fd8ab70",
+      "source_sha256_after": "dc8da43e2d5195a39d8707f1a3833474e6534050ec4650ba799d6da91fd8ab70",
+      "ast_sha256": "19140cffa5d6f51acf567d9810b08ebc273f950720f85e4bb845062fd54db251",
+      "byte_identical": true
+    },
+    "verify_resident_refresh": {
+      "source_sha256_before": "c37eb30993f53eb52c08af56951f564c2ac34db461e68fec79bc089c7d7b7f2c",
+      "source_sha256_after": "c37eb30993f53eb52c08af56951f564c2ac34db461e68fec79bc089c7d7b7f2c",
+      "ast_sha256": "925c814bac85010c57f60b63e1abb0796bb10de830ad555a7b5843d0833cba1d",
+      "byte_identical": true
+    }
+  },
+  "original_resource_receipt_sha256": "2868aff3bcb1af4f49d5ea14fda9ce0094b18937dab580dc13955e177d1f2ca5",
+  "original_resource_receipt_unchanged": true,
+  "existing_test_methods_preserved": 102,
+  "changed_test_classes": [
+    "ActivationEvidenceIntegrityTests",
+    "FrontOfficeWorkflowIntegrityTests"
+  ],
+  "checks": {
+    "ast_parse": true,
+    "whitespace": true,
+    "tests_executed": false,
+    "docker_or_network_used": false
+  },
+  "limitations": "Static source/AST review only. Actual sealed 102-test run, native Recovery reproof, and final package size measurement remain required. Local canonical and hosted captures remain independent; no byte-identity or provisional fit claim.",
+  "original_resource_receipt_module_matches_before_snapshot": true,
+  "static_peer_review": "Independent source-only review found no error or weakened expectation in either prefix factory or subtest mutation/reset flow; no imports, tests, Ruff, Docker, or network used."
+}

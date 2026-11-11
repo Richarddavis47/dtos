@@ -1,0 +1,187 @@
+{
+  "schema": "dtos-static-source-review-v1",
+  "reviewed_at_utc": "2026-11-11T09:34:17.148206+00:00",
+  "reviewer": "/root/final_source_review",
+  "release": {
+    "version": "1.22.31",
+    "build": 2246,
+    "pr": 335,
+    "task": "cohesiveFrontOfficeDecision"
+  },
+  "source": {
+    "path": "/workspace/dtos-2246-investigation",
+    "head": "b602d6acd03cc1c95d85ee734d2d7f28658885cf",
+    "tree": "8a687ea0256d6e0031b57e08e2a1a38a90a1a535",
+    "baseline": "abbe723a0566cf84a8fff947cf7320cb66567a77",
+    "baseline_tree": "cf649ee06ec3228d51d251ce7afbdbb15866f398",
+    "working_tree_clean_at_review": true
+  },
+  "prior_review": {
+    "head": "3a19eec0a00def82418d9658414f13e090d11b14",
+    "tree": "041cfe403ca499c99b2be93a67d8e440c304be6b",
+    "json": "/workspace/2246-granite-activation/expansion/final/source-review.json",
+    "markdown": "/workspace/2246-granite-activation/expansion/final/source-review.md",
+    "relationship": "Prior review remains associated with 3a19. This is an independent final-source review, not a retitled prior result.",
+    "direct_prior_to_final_diff": "tests/test_recommended_protections_browser.py",
+    "application_source_byte_equivalent_to_prior": true,
+    "observed_final_only_change": "One added double-requestAnimationFrame settle line at tests/test_recommended_protections_browser.py:81; all original geometry/focus/overflow assertions remain."
+  },
+  "method": "Read AGENTS.md, inspect baseline-to-final git diff, directly relevant producer/consumer source and added/changed controls; separate delegated read-only browser-source review. Only read-only shell/git operations and writing this report outside the source checkout were performed. No network, tests, Docker, application imports, server or validator launches.",
+  "scope": {
+    "application_files": [
+      "services/front_office_brief.py",
+      "src/ui/front_office_brief.py",
+      "static/js/trade_workspace.js",
+      "routes/accounts.py",
+      "services/league_preparation.py",
+      "src/platform/runtime_errors.py"
+    ],
+    "control_files": [
+      "tests/test_account_activation_deferral.py",
+      "tests/test_front_office_brief.py",
+      "tests/test_front_office_brief_http.py",
+      "tests/test_front_office_brief_browser.py",
+      "tests/test_front_office_workflow_browser.py",
+      "tests/test_offer_comparison_browser.py",
+      "tests/test_recommended_protections_browser.py",
+      "tests/test_projection_audit.py"
+    ],
+    "source_file_sha256": {
+      "services/front_office_brief.py": "e5d3cdec00c42086858c4d59231788a615ce4e44b738b154714f7cb70f461565",
+      "src/ui/front_office_brief.py": "f50a383c63117a82ede1bda0dfcbd1e8a0be8bc8a397d9d6e260fad1dc80bef2",
+      "static/js/trade_workspace.js": "ea8594fdade4ff1ab7304e2ed4cb7077f0bc2cb7aba32b23765ebaa304790a9e",
+      "routes/accounts.py": "7ae4ef8515e1c3f0812beca1cadaba9cef76a2dfd20b5df7caa7fae16a6b933a",
+      "services/league_preparation.py": "e4b97ff3cc50b852a096e4fe4fb8d41df241481aa48211bbe73354171914bc98",
+      "src/platform/runtime_errors.py": "b491731754567e2553a18ea60634644162d5f32305b33160a3b97c3044f56504",
+      "tests/test_account_activation_deferral.py": "93b5bf8e6e27cc625892aafb7e3afd439720762d0c6f0510580e3ef131ff426a",
+      "tests/test_front_office_brief.py": "6e68ab749ba6f592861ee1c0279bd9de31befdddd06dff5f3cdc9633b44a47de",
+      "tests/test_front_office_brief_http.py": "736e6630e7a9c4dffdbf0c9a11744544199d69531733d7cedb4b99074c192766",
+      "tests/test_front_office_brief_browser.py": "5c812588289673d1c4f7b5ad5b55afd7981b448d9b29f27b82456dc3fdd0ccbb",
+      "tests/test_front_office_workflow_browser.py": "79abbc204387d6d04ecd99e181ec394180f2b6dd9874ecc8ef714a095547e404",
+      "tests/test_offer_comparison_browser.py": "a772c280bd4e5c1166e9a3221360b0c0a9671cb1339e94fbdc1f8bde6447ea03",
+      "tests/test_recommended_protections_browser.py": "586e0a6ba06928ee7904fc6a1c55df45ee9d0c747deb48b96b6572bdd7be89f3",
+      "tests/test_projection_audit.py": "55874200afd5cfa1c4da60146a938b0b0f6ae7d381991a611ebe87bd0cf78a22"
+    }
+  },
+  "result": "No concrete new blocking defect found in the reviewed source changes.",
+  "blocker_count": 0,
+  "findings": [],
+  "observations": [
+    {
+      "area": "Account, league, franchise and current prepared handoff",
+      "observation": "Home now calls the existing prepared_need only after a prepared diagnostic read. That helper requires authenticated membership matching the current league and roster, matching diagnostic league/week, both diagnostic generations, supported position, calculation_supported and current conclusion. The fingerprint includes account/session binding, exact ownership generation and both evidence generations. The new Home action is used only for the matching current position; provisional or other positions retain their inspection link.",
+      "source": [
+        "services/front_office_brief.py:15",
+        "services/front_office_brief.py:65",
+        "services/team_trade_need.py:34",
+        "services/trade_workspace_context.py:10",
+        "src/core/intelligence/roster_diagnostics.py:781"
+      ]
+    },
+    {
+      "area": "Freshness, readiness and destination requalification",
+      "observation": "prepared_diagnostics reads a cache identity derived from current inputs and reapplies qualification; compatible_profile checks current league/season/week/projection/scoring/roster. Recommended recomputes prepared_need and accepts the supplied hint only when the fingerprint matches. Existing Home workspace authorization, prepared-generation comparison and before/after source-publication fences remain in place. No factory is added on a Home cache miss.",
+      "source": [
+        "src/core/intelligence/roster_diagnostics.py:781",
+        "src/core/intelligence/team_strength.py:348",
+        "src/core/intelligence/context.py:79",
+        "routes/trades.py:181",
+        "routes/trades.py:228",
+        "routes/trades.py:244",
+        "routes/trades.py:280"
+      ]
+    },
+    {
+      "area": "Missing preparation and saved preferences",
+      "observation": "The new preparation item requires assessment, diagnostics and compatible strength profile all to be absent. It explicitly distinguishes missing preparation from roster weakness and links to the existing team page. New Home composition contains no goal/ranking/method setter, no search/analysis/lineup computation and no provider call. UI text and href continue through HTML escaping. Newly added controls include unchanged saved preference and saved goal assertions; this review inspected those assertions without running them.",
+      "source": [
+        "services/front_office_brief.py:161",
+        "src/ui/front_office_brief.py:15",
+        "tests/test_front_office_brief.py:29",
+        "tests/test_front_office_workflow_browser.py:348",
+        "tests/test_front_office_workflow_browser.py:350"
+      ]
+    },
+    {
+      "area": "Recommended protections versus Evaluate/Shop locks",
+      "observation": "The request builder already substitutes recommendationProtectedAssets only for generate/recommended. The new response guard prevents only that completed Recommended response from copying its protections into independent session.protectedAssets. Existing manual locks and currentProposal are not cleared or rewritten by this guard. Excluded assets follow their unchanged branch. New browser controls inspect native payloads/candidate pools and assert Evaluate protected_assets remains empty after a protected Recommended search.",
+      "source": [
+        "static/js/trade_workspace.js:207",
+        "static/js/trade_workspace.js:1532",
+        "static/js/trade_workspace.js:1589",
+        "tests/test_recommended_protections_browser.py:149",
+        "tests/test_recommended_protections_browser.py:182",
+        "tests/test_front_office_workflow_browser.py:236"
+      ]
+    },
+    {
+      "area": "BFcache comparison restoration and exact identity",
+      "observation": "The new comparison map runs after existing navigation verification, history binding and reset-generation checks. It preserves each ordered snapshot, marks it retained and restores its context before refreshing existing local presentation. comparison.refresh contains DOM operations, no HTTP or evaluation. Existing comparison scope and asset ID checks remain. Controls retain distinct exact same-year/round picks, original-franchise labels and exact ordered comparison package checks; neither production change broadens identity matching.",
+      "source": [
+        "static/js/trade_workspace.js:1767",
+        "static/js/trade_workspace.js:1780",
+        "static/js/trade_workspace.js:255",
+        "static/js/trade_workspace.js:1862",
+        "static/js/trade_comparison.js:6",
+        "static/js/trade_comparison.js:143",
+        "tests/test_front_office_workflow_browser.py:242",
+        "tests/test_front_office_workflow_browser.py:245",
+        "tests/test_front_office_workflow_browser.py:302"
+      ]
+    },
+    {
+      "area": "Typed activation deferral and authorization",
+      "observation": "The deferred subtype is caught before generic LeagueRuntimeError and returns the existing deferred public payload or explicit waiting HTML, private/no-store headers and Retry-After 60. Eligibility is checked before runtime preparation. The manager retains its existing DEFERRED state and cooldown; saved activation remains after successful preparation and uses the existing expected revision. No automatic retry or Trade search is introduced. Failure logging uses type and bounded traceback locations without exception messages/locals.",
+      "source": [
+        "routes/accounts.py:54",
+        "routes/accounts.py:174",
+        "routes/accounts.py:185",
+        "routes/accounts.py:486",
+        "src/core/league_runtime/manager.py:223",
+        "src/core/league_runtime/manager.py:324",
+        "src/platform/runtime_errors.py:17",
+        "src/platform/runtime_errors.py:35",
+        "tests/test_account_activation_deferral.py:59"
+      ]
+    },
+    {
+      "area": "Restoration telemetry and unchanged math/admission",
+      "observation": "Restoration adds recovery initialization and one log of already computed final sample/plan/recovery. The existing admission calls, decode guard, cleanup conditions, effective cap, expansion factor, reserves and rechecks have no diff changes. The new diagnostic uses a fixed field/reason whitelist and numeric/boolean type filters, carries no path/account/player/cache payload and catches optional logging sink failures. Existing request logging uses a bounded nonblocking queue. No numerical evaluator, valuation, projection, lineup, provider or search engine implementation is changed in the full baseline-to-head file list.",
+      "source": [
+        "services/league_preparation.py:73",
+        "services/league_preparation.py:79",
+        "services/league_preparation.py:103",
+        "services/league_preparation.py:114",
+        "src/platform/runtime_errors.py:60",
+        "src/platform/observability.py:31",
+        "src/platform/observability.py:95"
+      ]
+    },
+    {
+      "area": "100 ms responsiveness assertion and browser resize control",
+      "observation": "The responsiveness assertion remains latency_ms < 100; the 250 ms request timeout, two-second worker wait, pending-audit assertion, response checks and captured context check remain. The diff adds gc.collect before the measured request timer, so it changes the fixture precondition and provides no general production latency claim. The final-only resize line awaits two requestAnimationFrame callbacks after viewport resize and before reacquiring locators; the 44 px geometry assertion remains unchanged. This review did not execute timing or resize controls and does not relabel historical failures.",
+      "source": [
+        "tests/test_projection_audit.py:302",
+        "tests/test_projection_audit.py:322",
+        "tests/test_projection_audit.py:324",
+        "tests/test_projection_audit.py:326",
+        "tests/test_projection_audit.py:333",
+        "tests/test_recommended_protections_browser.py:79",
+        "tests/test_recommended_protections_browser.py:87"
+      ]
+    }
+  ],
+  "delegated_browser_review": {
+    "reviewer": "/root/final_source_review/browser_diff_review",
+    "source_head": "b602d6acd03cc1c95d85ee734d2d7f28658885cf",
+    "source_tree": "8a687ea0256d6e0031b57e08e2a1a38a90a1a535",
+    "result": "No concrete blockers found; protection lock separation, BFcache scope/DOM refresh, exact identities, 44 px control and unchanged 100 ms assertion independently inspected."
+  },
+  "limits": [
+    "Static source review only: not a canonical/hosted test pass, resource proof gate, deployment/publisher approval, or release acceptance.",
+    "The running full validator was not polled, stopped, restarted or otherwise changed by this review. Exact-final-source validation results must come from their original receipts.",
+    "Test code and asserted controls were inspected, not executed. No runtime guarantee follows from their presence.",
+    "No owner-authenticated live entry/search, private Granite payload, production capacity restoration or physical iPhone/Safari validation is established.",
+    "Historical failed or incomplete runs and prior-source review evidence retain their original source/outcome identities."
+  ]
+}

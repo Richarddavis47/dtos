@@ -1,0 +1,29 @@
+{
+  "scope": "Metadata-only scanner false-positive classification. No authentication request or credential recovery. Original logs remain unchanged.",
+  "source_commit": "b602d6acd03cc1c95d85ee734d2d7f28658885cf",
+  "public_fixture_file": "tests/test_restoration_preflight_http.py",
+  "fixture_file_sha256": "07b81fcfb222d43d27c84957e62ed7bcac757a906b0af195f20917195ec5ec9c",
+  "public_fixture_token_is_explicitly_disposable": true,
+  "inprocess_TestClient_without_base_url_override": true,
+  "source_test": "test_cookie_bearer_and_query_values_cannot_authorize",
+  "matches": [
+    {
+      "file": "unittest-console.log",
+      "line": 27345,
+      "matches_public_inprocess_testclient_default_and_exact_disposable_query": true,
+      "status": 401,
+      "original_sha256": "c2a9b01237af173afa124e97e7802791378948d4c99b63d9e3622feea14091d0",
+      "url_values_not_emitted": true
+    },
+    {
+      "file": "canonical.log",
+      "line": 27927,
+      "matches_public_inprocess_testclient_default_and_exact_disposable_query": true,
+      "status": 401,
+      "original_sha256": "75125d82228a7711fd3bae70cf4592197953666ae3551938332137f5ff73434b",
+      "url_values_not_emitted": true
+    }
+  ],
+  "private_credential_or_signed_external_url_established": false,
+  "first_metadata_lookup_limitation": "Source has no explicit base_url; classification required recognizing and checking the in-process TestClient default origin, not guessing a production host."
+}

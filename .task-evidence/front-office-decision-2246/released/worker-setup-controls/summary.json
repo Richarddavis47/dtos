@@ -1,0 +1,224 @@
+{
+  "all_controls_matched_expected": true,
+  "loaded_source_tests": 4364,
+  "actual_audit_module": {
+    "tests": 9,
+    "passed": true,
+    "failures": 0,
+    "errors": 0,
+    "gc_enabled": true,
+    "retained_same_graph": true
+  },
+  "baseline_reference": {
+    "head": "b602d6acd03cc1c95d85ee734d2d7f28658885cf",
+    "tree": "8a687ea0256d6e0031b57e08e2a1a38a90a1a535",
+    "status": " M tests/test_projection_audit.py\n",
+    "candidate_file_sha256": "eb8b90a68e73ac45e622aae3f5b0e08bb070145197c6f29f97b00e53d6a508cc"
+  },
+  "gc_enabled": true,
+  "gc_thresholds_unchanged": true,
+  "retained_graph_rows": 2450000,
+  "same_graph_retained": true,
+  "cases": [
+    {
+      "name": "old_placement_controlled_2.1s_setup",
+      "actual_passed": false,
+      "failures": [
+        {
+          "test": "projection_worker_old_placement.ProjectionAuditTests.test_projection_audit_does_not_block_lightweight_request",
+          "type": "AssertionError",
+          "text": "False is not true"
+        }
+      ],
+      "errors": [],
+      "collection": [
+        {
+          "worker_started": true,
+          "audit_task_created": true,
+          "gc_enabled": true,
+          "collected": 0,
+          "actual_gc_ms": 296.69072199612856,
+          "controlled_setup_delay_seconds": 2.1,
+          "setup_total_ms": 2396.836843996425,
+          "gc_enabled_after": true
+        }
+      ],
+      "worker_holds": [
+        {
+          "timeout": 2.0,
+          "released": false,
+          "elapsed_ms": 2000.209770994843,
+          "observed_context": [
+            "projection-audit-request"
+          ]
+        }
+      ],
+      "requests": [
+        {
+          "path": "/lightweight",
+          "began": 98443.011750178,
+          "status": 200,
+          "elapsed_ms": 2.939042999059893
+        },
+        {
+          "path": "/api/audit/projections/current",
+          "began": 98440.592955259,
+          "error_type": "AssertionError",
+          "elapsed_ms": 2423.1062970065977
+        }
+      ]
+    },
+    {
+      "name": "new_placement_controlled_2.1s_setup",
+      "actual_passed": true,
+      "failures": [],
+      "errors": [],
+      "collection": [
+        {
+          "worker_started": false,
+          "audit_task_created": false,
+          "gc_enabled": true,
+          "collected": 844,
+          "actual_gc_ms": 448.5258330096258,
+          "controlled_setup_delay_seconds": 2.1,
+          "setup_total_ms": 2550.6241530092666,
+          "gc_enabled_after": true
+        }
+      ],
+      "worker_holds": [
+        {
+          "timeout": 2.0,
+          "released": true,
+          "elapsed_ms": 10.311145000741817,
+          "observed_context": [
+            "projection-audit-request"
+          ]
+        }
+      ],
+      "requests": [
+        {
+          "path": "/lightweight",
+          "began": 98445.763595012,
+          "status": 200,
+          "elapsed_ms": 7.515281991800293
+        },
+        {
+          "path": "/api/audit/projections/current",
+          "began": 98445.610824307,
+          "status": 200,
+          "elapsed_ms": 169.60648399253841
+        }
+      ]
+    },
+    {
+      "name": "new_placement_actual_gc_same_graph",
+      "actual_passed": true,
+      "failures": [],
+      "errors": [],
+      "collection": [
+        {
+          "worker_started": false,
+          "audit_task_created": false,
+          "gc_enabled": true,
+          "collected": 498,
+          "actual_gc_ms": 467.75830499245785,
+          "controlled_setup_delay_seconds": 0,
+          "setup_total_ms": 467.7634989930084,
+          "gc_enabled_after": true
+        }
+      ],
+      "worker_holds": [
+        {
+          "timeout": 2.0,
+          "released": true,
+          "elapsed_ms": 5.014480993850157,
+          "observed_context": [
+            "projection-audit-request"
+          ]
+        }
+      ],
+      "requests": [
+        {
+          "path": "/lightweight",
+          "began": 98446.271156032,
+          "status": 200,
+          "elapsed_ms": 1.430140997399576
+        },
+        {
+          "path": "/api/audit/projections/current",
+          "began": 98446.265518198,
+          "status": 200,
+          "elapsed_ms": 10.668289003660902
+        }
+      ]
+    },
+    {
+      "name": "new_placement_real_120ms_foreground_negative",
+      "actual_passed": false,
+      "failures": [
+        {
+          "test": "projection_worker_foreground_negative.ProjectionAuditTests.test_projection_audit_does_not_block_lightweight_request",
+          "type": "AssertionError",
+          "text": "122.23272099799942 not less than 100"
+        }
+      ],
+      "errors": [],
+      "collection": [
+        {
+          "worker_started": false,
+          "audit_task_created": false,
+          "gc_enabled": true,
+          "collected": 498,
+          "actual_gc_ms": 372.77376200654544,
+          "controlled_setup_delay_seconds": 0,
+          "setup_total_ms": 372.7793669968378,
+          "gc_enabled_after": true
+        }
+      ],
+      "worker_holds": [
+        {
+          "timeout": 2.0,
+          "released": true,
+          "elapsed_ms": 125.62651599000674,
+          "observed_context": [
+            "projection-audit-request"
+          ]
+        }
+      ],
+      "requests": [
+        {
+          "path": "/lightweight",
+          "began": 98446.661537101,
+          "status": 200,
+          "elapsed_ms": 122.04359899624251
+        },
+        {
+          "path": "/api/audit/projections/current",
+          "began": 98446.656379976,
+          "status": 200,
+          "elapsed_ms": 131.30211699171923
+        }
+      ]
+    }
+  ],
+  "resources": {
+    "memory_bytes": 2147483648,
+    "total_memory_and_swap_bytes": 2147483648,
+    "extra_swap_bytes": 0,
+    "cpus": 2,
+    "network": "none",
+    "user": "1000:1000",
+    "runtime_image": "sha256:f70a0c6402700dfb954c99d8163d4164926f74435c34d2e7e462407151663ae6",
+    "exit_code": 0,
+    "auto_removed_after_exit": true,
+    "cgroup_events": {
+      "low": 0,
+      "high": 0,
+      "max": 0,
+      "oom": 0,
+      "oom_kill": 0,
+      "oom_group_kill": 0
+    }
+  },
+  "limitation": "The explicit 2.1s setup delay is a controlled placement model. Historical hosted per-GC duration remains unmeasured; these controls are not final full-suite release acceptance."
+}

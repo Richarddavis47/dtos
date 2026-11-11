@@ -1,0 +1,45 @@
+{
+  "candidate": "3a19eec0a00def82418d9658414f13e090d11b14",
+  "tree": "041cfe403ca499c99b2be93a67d8e440c304be6b",
+  "scope": "PRIOR ONLY: exact GitHub attempt-specific read-only API metadata. Failed Product and canceled Canonical are not passing final-source gates. No signed download URL or environment export retained.",
+  "prior_attempts": [
+    {
+      "id": 42986949235,
+      "attempt": 1
+    },
+    {
+      "id": 42986949262,
+      "attempt": 1
+    }
+  ],
+  "files": [
+    {
+      "name": "product-attempt-1-api-original.json",
+      "bytes": 12839,
+      "sha256": "395aa5e5e71d7c6fae5f6324bd570f5ca06a1fc7ecf37214c87780975d95887c",
+      "observed_at": "2026-11-11T09:32:10.357626+00:00",
+      "id": 42986949235,
+      "attempt": 1,
+      "job_id": 130410273016,
+      "head_sha": "3a19eec0a00def82418d9658414f13e090d11b14",
+      "status": "completed",
+      "conclusion": "failure",
+      "path": ".github/workflows/product-browser.yml",
+      "event": "pull_request"
+    },
+    {
+      "name": "canonical-attempt-1-api-original.json",
+      "bytes": 12854,
+      "sha256": "28a2360a47f84d5cd6f2a7475517b84f10473afe1cea58f2233a1c2515f06860",
+      "observed_at": "2026-11-11T09:32:11.003200+00:00",
+      "id": 42986949262,
+      "attempt": 1,
+      "job_id": 130410273395,
+      "head_sha": "3a19eec0a00def82418d9658414f13e090d11b14",
+      "status": "completed",
+      "conclusion": "cancelled",
+      "path": ".github/workflows/canonical-release-recovery.yml",
+      "event": "pull_request"
+    }
+  ]
+}

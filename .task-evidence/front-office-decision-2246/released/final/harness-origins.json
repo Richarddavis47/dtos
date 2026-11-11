@@ -1,0 +1,58 @@
+{
+  "schema": "dtos-r3-harness-origin-reconciliation-v1",
+  "authored_at": "2026-11-11T12:01:28.015839+00:00",
+  "candidate": "4cf524c488efb36c77defd78bfd7acf84a3f6ddd",
+  "tree": "79fe9268fb3394604559bbcbe1119616a080b71b",
+  "scope": "Newly authored metadata reconciliation after successful validation, not a contemporaneous original log or recreated execution. Original invocation, relocation, three executed harness sources and completed native manifest remain unchanged. No tests rerun.",
+  "reason": "Prepared Recovery method required the predecessor harness-origins filename; R3 had retained its equivalent prelaunch hashes in relocation-method.json and canonical-invocation.json. All original sources and measured results exist.",
+  "files": [
+    {
+      "name": "runner.py",
+      "sha256": "cce930e419827fc9e19af0428130a79e2f7d3e7455a229076ccc0b022ff011f3",
+      "bytes": 10119,
+      "r3_template": "/workspace/2246-granite-activation/expansion/final-r3/harness/runner.py",
+      "r2_template": "/workspace/2246-granite-activation/expansion/final-r2/harness/runner.py",
+      "executed_original": "/workspace/2246-granite-activation/expansion/final-r3/local-canonical/runner.py",
+      "matches_original_invocation": true,
+      "matches_prelaunch_relocation": true,
+      "matches_completed_canonical_manifest": true
+    },
+    {
+      "name": "observer/sitecustomize.py",
+      "sha256": "1cb7f5f31ef6ebf16f7367c42235692d6f70959815e9dcd0c7f4da8bbea4a660",
+      "bytes": 2434,
+      "r3_template": "/workspace/2246-granite-activation/expansion/final-r3/harness/observer/sitecustomize.py",
+      "r2_template": "/workspace/2246-granite-activation/expansion/final-r2/harness/observer/sitecustomize.py",
+      "executed_original": "/workspace/2246-granite-activation/expansion/final-r3/local-canonical/observer/sitecustomize.py",
+      "matches_original_invocation": true,
+      "matches_prelaunch_relocation": true,
+      "matches_completed_canonical_manifest": true
+    },
+    {
+      "name": "observer/fixture_cleanup.py",
+      "sha256": "a4e580694aedbaad13fd4120daca25abd8052fe44c8bd7dd96fd5e83be03f749",
+      "bytes": 1000,
+      "r3_template": "/workspace/2246-granite-activation/expansion/final-r3/harness/observer/fixture_cleanup.py",
+      "r2_template": "/workspace/2246-granite-activation/expansion/final-r2/harness/observer/fixture_cleanup.py",
+      "executed_original": "/workspace/2246-granite-activation/expansion/final-r3/local-canonical/observer/fixture_cleanup.py",
+      "matches_original_invocation": true,
+      "matches_prelaunch_relocation": true,
+      "matches_completed_canonical_manifest": true
+    }
+  ],
+  "original_invocation_sha256": "9f1f7e0c0870648d9c71d00f5e6df2d7ab6ae8b015e19dae4460d63beb063f39",
+  "original_relocation_sha256": "4c407651eee94fa73c9300fed5b580c703adc57298cdd8b73aa97283535ccfac",
+  "original_canonical_manifest_sha256": "2cbbd8f5dabcbd6fe58c5013c28d6f9b73e27a08f324f60d158262b664f198f5",
+  "historical_r2_origin_original": {
+    "source": "/workspace/2246-granite-activation/expansion/final-r2/harness-origins.json",
+    "retained_copy": "inherited-harness-origins-original.json",
+    "sha256": "f1f675e5fc68247e8cea901dc186930d8e75eed3ed18fb17e31d4917274181b6",
+    "scope": "Unchanged predecessor origin record; not relabeled as R3 execution."
+  },
+  "first_packaging_failure": {
+    "file": "recovery-seal-original.log",
+    "sha256": "93208c4f4ab0f18af2bf6cd936ca403db74ccd2d1438152762dd43bb69e06391",
+    "no_archive_created": true
+  },
+  "validation_changed": false
+}

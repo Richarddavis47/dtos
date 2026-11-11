@@ -1,0 +1,54 @@
+{
+  "schema": "dtos-evidence-packaging-revision-v6",
+  "at": "2026-11-11T12:07:45.086744+00:00",
+  "candidate": "4cf524c488efb36c77defd78bfd7acf84a3f6ddd",
+  "tree": "79fe9268fb3394604559bbcbe1119616a080b71b",
+  "scope": "Metadata/package source reuse only. All current application/local/hosted tests retain their exact source/results; no application or policy changes. Actual resized sealing and native/publisher checks remain required.",
+  "changed": [
+    {
+      "name": "make-recovery.py",
+      "before_sha256": "0bc7acfc2edb105a6d6e4c1afe35e97952d6def9d94f1bb61902a7c3935bf665",
+      "after_sha256": "9ab21deebb333274497c04266c6631a2d215f04a0759ab903707ab620451d883"
+    },
+    {
+      "name": "verify-recovery-offline.py",
+      "before_sha256": "41e9b78e5b34c42351ade4a46d1cd560163749658c2c789fe6983bcff9faad22",
+      "after_sha256": "20671d28def4ec7da082a23ef50cbab1641370c927b2e65b652fd041b3f94ea1"
+    },
+    {
+      "name": "PACKAGING_AND_PUBLICATION.md",
+      "before_sha256": "67b8a80daa5f29df39490a0f3b0082370e5b56955e54e90634fce64cb2fb0233",
+      "after_sha256": "ed7b084d2fbc2381d070e226c114d7d9347b854be68de29ec55765e489111e87"
+    }
+  ],
+  "preserved_oversized_original": {
+    "at": "2026-11-11T12:05:56.185049+00:00",
+    "original_file": "recovery-package.zip",
+    "retained_file": "packaging-failures/recovery-size-114866370-original.zip",
+    "bytes": 114866370,
+    "sha256": "5548273f038280b792c9b392d480ba979ed8639e683f84b033ddfd88ba4c62a3",
+    "outcome": "Failed unchanged100MiB packaging cap; not a release input. Every byte preserved by rename.",
+    "failure_logs": {
+      "recovery-seal-original.log": {
+        "bytes": 317,
+        "sha256": "93208c4f4ab0f18af2bf6cd936ca403db74ccd2d1438152762dd43bb69e06391"
+      },
+      "recovery-seal-reconciled-provenance-original.log": {
+        "bytes": 404,
+        "sha256": "8721f5f89806e5337ac209fae27c4db3b8b419168894e34c42e9d73e8ebb5663"
+      }
+    },
+    "application_validation_unchanged": true
+  },
+  "reused_comparison_index_sha256": "ad8b95e8adab3c9219b1417a895c8d1b449f9fdedb26f8927fefd75eb6c194db",
+  "read_only_audit_sha256": "3e4cd099aa7165839e61014e94511969b96f3ff7f4a4757b49b1038e52ee27b9",
+  "peer_review_sha256": "cac68ec3844f5c12c49f0120e3a58cea05b44fda85da8802c1d9d06b74fbb203",
+  "all_687_local_members_preserved": true,
+  "archive_cap_unchanged_bytes": 104857600,
+  "required_originals_jobs_assets": [
+    15,
+    13,
+    23
+  ],
+  "prior_harness_index": "harness-origins.json is an explicitly late-authored hash reconciliation, not a reconstructed original log."
+}

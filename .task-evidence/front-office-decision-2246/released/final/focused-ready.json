@@ -1,0 +1,67 @@
+{
+  "candidate": "4cf524c488efb36c77defd78bfd7acf84a3f6ddd",
+  "tree": "79fe9268fb3394604559bbcbe1119616a080b71b",
+  "tests": 53,
+  "expected_test_count": 4364,
+  "passed": true,
+  "native_guards": {
+    "activation": {
+      "passed": true,
+      "head": "4cf524c488efb36c77defd78bfd7acf84a3f6ddd",
+      "tree": "79fe9268fb3394604559bbcbe1119616a080b71b",
+      "scope": "Disposable native activation routes with guarded actual retry; live Granite access unverified"
+    },
+    "front_office_workflow": {
+      "passed": true,
+      "head": "4cf524c488efb36c77defd78bfd7acf84a3f6ddd",
+      "tree": "79fe9268fb3394604559bbcbe1119616a080b71b",
+      "scope": "Disposable native prepared 1QB/K/DEF and Superflex workflows; no qualified-discovery, live owner or physical Safari claim"
+    }
+  },
+  "worker_setup_controls": {
+    "passed": true,
+    "candidate": "4cf524c488efb36c77defd78bfd7acf84a3f6ddd",
+    "tree": "79fe9268fb3394604559bbcbe1119616a080b71b",
+    "test_file": "tests/test_projection_audit.py",
+    "candidate_file_sha256": "eb8b90a68e73ac45e622aae3f5b0e08bb070145197c6f29f97b00e53d6a508cc",
+    "historical_execution_source": {
+      "head": "b602d6acd03cc1c95d85ee734d2d7f28658885cf",
+      "tree": "8a687ea0256d6e0031b57e08e2a1a38a90a1a535",
+      "status": " M tests/test_projection_audit.py\n",
+      "candidate_file_sha256": "eb8b90a68e73ac45e622aae3f5b0e08bb070145197c6f29f97b00e53d6a508cc"
+    },
+    "originals_path": "/workspace/2246-granite-activation/expansion/worker-setup-reconciliation",
+    "original_sha256": {
+      "result.json": "f4e913e6e8cc3170c9036d3aec488f1e2f5fdbe8132b00a1c304265deda8e030",
+      "summary.json": "43e4235eb7b9e47ca6a199bc4fc4e09eb30f92d6bf7b800521aff5eaff82226d",
+      "source-predicate-proof.json": "3289b1a4850e3dcf498634787f8c5e373fa92c7ddf0b22041f0125f1ae8d16e1",
+      "commit-provenance.json": "660282db4cbdd5a1f69cfcf6e595940251c10f101b3acc1d7647d47d932298bc",
+      "SHA256SUMS": "b2b9ade101ac762210b43cfd0f1f0ab9f0f522a302c43d94185a65234254168a"
+    },
+    "controls": {
+      "old_placement_controlled_2.1s_setup": false,
+      "new_placement_controlled_2.1s_setup": true,
+      "new_placement_actual_gc_same_graph": true,
+      "new_placement_real_120ms_foreground_negative": false
+    },
+    "loaded_suite_tests": 4364,
+    "actual_audit_tests": 9,
+    "strict_predicates": {
+      "worker_wait_seconds": 2.0,
+      "request_timeout_seconds": 0.25,
+      "latency_bound_ms": 100
+    },
+    "resource_limits": {
+      "memory_bytes": 2147483648,
+      "extra_swap_bytes": 0,
+      "cpu_max": "200000 100000",
+      "network": "none"
+    },
+    "scope": "Original dirty-b602 fixture controls bridged by exact file bytes to actual committed replacement. Controlled setup delay is a model; no historical GC-duration attribution or fresh full-suite pass is inferred."
+  },
+  "original_console_sha256": "1a1b12a136a9402d069e2772db5ddc7b809b12dfbf03e8116e3cd9b3ec0ccc94",
+  "native_archive_sha256": "25e786a5b6369e4955b3fcf271a8c2490ed80120abf55930b70576a90e042ed4",
+  "scope": "Actual clean finalsource53focusedpasses, strict native activation/frontoffice guards, matched worker-setup controls and3fresh2GiBresourceguards. No fullcanonical pass inferred.",
+  "native_resource_receipt_sha256": "cba491ecc6ab9b16bc429f161245d2984c3bcd7072ba990eae4da446b5fe9299",
+  "source_resource_guards": 3
+}

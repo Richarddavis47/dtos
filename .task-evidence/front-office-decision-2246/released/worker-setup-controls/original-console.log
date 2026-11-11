@@ -1,0 +1,199 @@
+/usr/local/lib/python3.14/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+  from starlette.testclient import TestClient as TestClient  # noqa
+Imported complete source suite: 4364
+Fixed same rooted graph: 2450000 RSS 707837952
+test_projection_audit_does_not_block_lightweight_request (projection_worker_old_placement.ProjectionAuditTests.test_projection_audit_does_not_block_lightweight_request) ... {"timestamp":"2026-11-11T10:10:30.596116+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://test/lightweight \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T10:10:30.597151+00:00","level":"WARNING","logger":"asyncio","message":"Executing <Task pending name='Task-2' coro=<ProjectionAuditTests.test_projection_audit_does_not_block_lightweight_request() running at /output/projection_worker_old_placement.py:328> wait_for=<Task pending name='Task-3' coro=<observed_get() running at /output/protocol.py:120> wait_for=<Future pending cb=[_chain_future.<locals>._call_check_cancel() at /usr/local/lib/python3.14/asyncio/futures.py:393, Task.task_wakeup()] created at /usr/local/lib/python3.14/asyncio/base_events.py:459> cb=[Task.task_wakeup()] created at /usr/local/lib/python3.14/asyncio/tasks.py:395> cb=[_run_until_complete_cb() at /usr/local/lib/python3.14/asyncio/base_events.py:181] created at /usr/local/lib/python3.14/asyncio/runners.py:109> took 2.401 seconds","request_id":"system"}
+FAIL
+
+======================================================================
+FAIL: test_projection_audit_does_not_block_lightweight_request (projection_worker_old_placement.ProjectionAuditTests.test_projection_audit_does_not_block_lightweight_request)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.14/asyncio/runners.py", line 127, in run
+    return self._loop.run_until_complete(task)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "/usr/local/lib/python3.14/asyncio/base_events.py", line 719, in run_until_complete
+    return future.result()
+           ~~~~~~~~~~~~~^^
+  File "/output/projection_worker_old_placement.py", line 328, in test_projection_audit_does_not_block_lightweight_request
+    audit_response = await audit_request
+                     ^^^^^^^^^^^^^^^^^^^
+  File "/output/protocol.py", line 120, in observed_get
+    response = await real_get(client, url, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/httpx/_client.py", line 1768, in get
+    return await self.request(
+           ^^^^^^^^^^^^^^^^^^^
+    ...<9 lines>...
+    )
+    ^
+  File "/usr/local/lib/python3.14/site-packages/httpx/_client.py", line 1540, in request
+    return await self.send(request, auth=auth, follow_redirects=follow_redirects)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/httpx/_client.py", line 1629, in send
+    response = await self._send_handling_auth(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<4 lines>...
+    )
+    ^
+  File "/usr/local/lib/python3.14/site-packages/httpx/_client.py", line 1657, in _send_handling_auth
+    response = await self._send_handling_redirects(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    )
+    ^
+  File "/usr/local/lib/python3.14/site-packages/httpx/_client.py", line 1694, in _send_handling_redirects
+    response = await self._send_single_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/httpx/_client.py", line 1730, in _send_single_request
+    response = await transport.handle_async_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/httpx/_transports/asgi.py", line 170, in handle_async_request
+    await self.app(scope, receive, send)
+  File "/usr/local/lib/python3.14/site-packages/fastapi/applications.py", line 1194, in __call__
+    await super().__call__(scope, receive, send)
+  File "/usr/local/lib/python3.14/site-packages/starlette/applications.py", line 96, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/usr/local/lib/python3.14/site-packages/starlette/middleware/errors.py", line 186, in __call__
+    raise exc
+  File "/usr/local/lib/python3.14/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "/usr/local/lib/python3.14/site-packages/fastapi/telemetry/_asgi.py", line 151, in __call__
+    await self.app(scope, receive, send)
+  File "/usr/local/lib/python3.14/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "/usr/local/lib/python3.14/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/usr/local/lib/python3.14/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/usr/local/lib/python3.14/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
+    await self.app(scope, receive, send)
+  File "/usr/local/lib/python3.14/site-packages/starlette/routing.py", line 683, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/usr/local/lib/python3.14/site-packages/fastapi/routing.py", line 2811, in app
+    await route.handle(scope, receive, send)
+  File "/usr/local/lib/python3.14/site-packages/fastapi/routing.py", line 1839, in handle
+    await self.original_router.handle(scope, receive, send)
+  File "/usr/local/lib/python3.14/site-packages/fastapi/routing.py", line 2894, in handle
+    await included_router._handle_selected(scope, receive, send)
+  File "/usr/local/lib/python3.14/site-packages/fastapi/routing.py", line 1865, in _handle_selected
+    await original_route.handle(scope, receive, send)
+  File "/usr/local/lib/python3.14/site-packages/fastapi/routing.py", line 1328, in handle
+    await effective_context.app(scope, receive, send)
+  File "/usr/local/lib/python3.14/site-packages/fastapi/routing.py", line 166, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "/usr/local/lib/python3.14/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/usr/local/lib/python3.14/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/usr/local/lib/python3.14/site-packages/fastapi/routing.py", line 152, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/fastapi/routing.py", line 745, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    )
+    ^
+  File "/usr/local/lib/python3.14/site-packages/fastapi/routing.py", line 372, in run_endpoint_function
+    return await dependant.call(**values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/routes/audit.py", line 48, in projections_current
+    return await run_manager_read(
+           ^^^^^^^^^^^^^^^^^^^^^^^
+        lambda: JSONResponse(jsonable_encoder(current())),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/app/src/core/request_execution.py", line 14, in run_manager_read
+    return await asyncio.to_thread(operation)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/asyncio/threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/concurrent/futures/thread.py", line 86, in run
+    result = ctx.run(self.task)
+  File "/usr/local/lib/python3.14/concurrent/futures/thread.py", line 73, in run
+    return fn(*args, **kwargs)
+  File "/app/routes/audit.py", line 49, in <lambda>
+    lambda: JSONResponse(jsonable_encoder(current())),
+                                          ~~~~~~~^^
+  File "/app/routes/audit.py", line 37, in current
+    return build_projection_audit(
+        data=data, projection_snapshot=projection,
+        projection_health=projections.health(include_accuracy=False), market=market,
+        fois_scores=scores,
+    )
+  File "/usr/local/lib/python3.14/unittest/mock.py", line 1175, in __call__
+    return self._mock_call(*args, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/unittest/mock.py", line 1179, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/unittest/mock.py", line 1240, in _execute_mock_call
+    result = effect(*args, **kwargs)
+  File "/output/projection_worker_old_placement.py", line 302, in slow_builder
+    self.assertTrue(release.wait(2.0))
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+AssertionError: False is not true
+
+----------------------------------------------------------------------
+Ran 1 test in 2.449s
+
+FAILED (failures=1)
+{"name": "old_placement_controlled_2.1s_setup", "failures": [{"test": "projection_worker_old_placement.ProjectionAuditTests.test_projection_audit_does_not_block_lightweight_request", "type": "AssertionError", "text": "False is not true"}], "errors": [], "worker_holds": [{"timeout": 2.0, "released": false, "elapsed_ms": 2000.209770994843, "observed_context": ["projection-audit-request"]}], "requests": [{"path": "/lightweight", "began": 98443.011750178, "status": 200, "elapsed_ms": 2.939042999059893}, {"path": "/api/audit/projections/current", "began": 98440.592955259, "error_type": "AssertionError", "elapsed_ms": 2423.1062970065977}], "collections": [{"worker_started": true, "audit_task_created": true, "gc_enabled": true, "collected": 0, "actual_gc_ms": 296.69072199612856, "controlled_setup_delay_seconds": 2.1, "setup_total_ms": 2396.836843996425, "gc_enabled_after": true}], "memory_before": {"rss_bytes": 707837952, "vms_bytes": 887222272, "system_available_bytes": 17192554496, "memory_accounting_scope": "cgroup", "cgroup_current_bytes": 683098112, "cgroup_limit_bytes": 2147483648, "cgroup_inactive_file_bytes": 380928, "cgroup_anonymous_bytes": 679804928, "cgroup_memory_events": {"low": 0, "high": 0, "max": 0, "oom": 0, "oom_kill": 0, "oom_group_kill": 0}}, "gc_enabled": true, "passed": false, "tests": 1, "elapsed_ms": 2449.631155002862, "memory_after": {"rss_bytes": 710311936, "vms_bytes": 1040322560, "system_available_bytes": 17190957056, "memory_accounting_scope": "cgroup", "cgroup_current_bytes": 685391872, "cgroup_limit_bytes": 2147483648, "cgroup_inactive_file_bytes": 360448, "cgroup_anonymous_bytes": 681750528, "cgroup_memory_events": {"low": 0, "high": 0, "max": 0, "oom": 0, "oom_kill": 0, "oom_group_kill": 0}}, "gc_enabled_after": true}
+test_projection_audit_does_not_block_lightweight_request (test_projection_audit.ProjectionAuditTests.test_projection_audit_does_not_block_lightweight_request) ... {"timestamp":"2026-11-11T10:10:33.189735+00:00","level":"WARNING","logger":"asyncio","message":"Executing <Task pending name='Task-9' coro=<ProjectionAuditTests.test_projection_audit_does_not_block_lightweight_request() running at /app/tests/test_projection_audit.py:319> wait_for=<Future pending cb=[Task.task_wakeup()] created at /usr/local/lib/python3.14/asyncio/base_events.py:459> cb=[_run_until_complete_cb() at /usr/local/lib/python3.14/asyncio/base_events.py:181] created at /usr/local/lib/python3.14/asyncio/runners.py:109> took 2.572 seconds","request_id":"system"}
+{"timestamp":"2026-11-11T10:10:33.344851+00:00","level":"WARNING","logger":"asyncio","message":"Executing <Task pending name='Task-10' coro=<observed_get() running at /output/protocol.py:120> wait_for=<Future pending cb=[_chain_future.<locals>._call_check_cancel() at /usr/local/lib/python3.14/asyncio/futures.py:393, Task.task_wakeup()] created at /usr/local/lib/python3.14/asyncio/base_events.py:459> created at /usr/local/lib/python3.14/asyncio/tasks.py:395> took 0.152 seconds","request_id":"system"}
+{"timestamp":"2026-11-11T10:10:33.352118+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://test/lightweight \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T10:10:33.362188+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://test/api/audit/projections/current \"HTTP/1.1 200 OK\"","request_id":"system"}
+ok
+
+----------------------------------------------------------------------
+Ran 1 test in 2.753s
+
+OK
+{"name": "new_placement_controlled_2.1s_setup", "failures": [], "errors": [], "worker_holds": [{"timeout": 2.0, "released": true, "elapsed_ms": 10.311145000741817, "observed_context": ["projection-audit-request"]}], "requests": [{"path": "/lightweight", "began": 98445.763595012, "status": 200, "elapsed_ms": 7.515281991800293}, {"path": "/api/audit/projections/current", "began": 98445.610824307, "status": 200, "elapsed_ms": 169.60648399253841}], "collections": [{"worker_started": false, "audit_task_created": false, "gc_enabled": true, "collected": 844, "actual_gc_ms": 448.5258330096258, "controlled_setup_delay_seconds": 2.1, "setup_total_ms": 2550.6241530092666, "gc_enabled_after": true}], "memory_before": {"rss_bytes": 710311936, "vms_bytes": 1040322560, "system_available_bytes": 17191358464, "memory_accounting_scope": "cgroup", "cgroup_current_bytes": 685404160, "cgroup_limit_bytes": 2147483648, "cgroup_inactive_file_bytes": 360448, "cgroup_anonymous_bytes": 681750528, "cgroup_memory_events": {"low": 0, "high": 0, "max": 0, "oom": 0, "oom_kill": 0, "oom_group_kill": 0}}, "gc_enabled": true, "passed": true, "tests": 1, "elapsed_ms": 2754.5656340080313, "memory_after": {"rss_bytes": 710483968, "vms_bytes": 1040322560, "system_available_bytes": 17191260160, "memory_accounting_scope": "cgroup", "cgroup_current_bytes": 685510656, "cgroup_limit_bytes": 2147483648, "cgroup_inactive_file_bytes": 360448, "cgroup_anonymous_bytes": 682115072, "cgroup_memory_events": {"low": 0, "high": 0, "max": 0, "oom": 0, "oom_kill": 0, "oom_group_kill": 0}}, "gc_enabled_after": true}
+test_projection_audit_does_not_block_lightweight_request (test_projection_audit.ProjectionAuditTests.test_projection_audit_does_not_block_lightweight_request) ... {"timestamp":"2026-11-11T10:10:33.847296+00:00","level":"WARNING","logger":"asyncio","message":"Executing <Task pending name='Task-15' coro=<ProjectionAuditTests.test_projection_audit_does_not_block_lightweight_request() running at /app/tests/test_projection_audit.py:319> wait_for=<Future pending cb=[Task.task_wakeup()] created at /usr/local/lib/python3.14/asyncio/base_events.py:459> cb=[_run_until_complete_cb() at /usr/local/lib/python3.14/asyncio/base_events.py:181] created at /usr/local/lib/python3.14/asyncio/runners.py:109> took 0.474 seconds","request_id":"system"}
+{"timestamp":"2026-11-11T10:10:33.854343+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://test/lightweight \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T10:10:33.857904+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://test/api/audit/projections/current \"HTTP/1.1 200 OK\"","request_id":"system"}
+ok
+
+----------------------------------------------------------------------
+Ran 1 test in 0.488s
+
+OK
+{"name": "new_placement_actual_gc_same_graph", "failures": [], "errors": [], "worker_holds": [{"timeout": 2.0, "released": true, "elapsed_ms": 5.014480993850157, "observed_context": ["projection-audit-request"]}], "requests": [{"path": "/lightweight", "began": 98446.271156032, "status": 200, "elapsed_ms": 1.430140997399576}, {"path": "/api/audit/projections/current", "began": 98446.265518198, "status": 200, "elapsed_ms": 10.668289003660902}], "collections": [{"worker_started": false, "audit_task_created": false, "gc_enabled": true, "collected": 498, "actual_gc_ms": 467.75830499245785, "controlled_setup_delay_seconds": 0, "setup_total_ms": 467.7634989930084, "gc_enabled_after": true}], "memory_before": {"rss_bytes": 710483968, "vms_bytes": 1040322560, "system_available_bytes": 17191260160, "memory_accounting_scope": "cgroup", "cgroup_current_bytes": 685510656, "cgroup_limit_bytes": 2147483648, "cgroup_inactive_file_bytes": 360448, "cgroup_anonymous_bytes": 682115072, "cgroup_memory_events": {"low": 0, "high": 0, "max": 0, "oom": 0, "oom_kill": 0, "oom_group_kill": 0}}, "gc_enabled": true, "passed": true, "tests": 1, "elapsed_ms": 487.94927599374205, "memory_after": {"rss_bytes": 710549504, "vms_bytes": 1040322560, "system_available_bytes": 17191202816, "memory_accounting_scope": "cgroup", "cgroup_current_bytes": 685543424, "cgroup_limit_bytes": 2147483648, "cgroup_inactive_file_bytes": 368640, "cgroup_anonymous_bytes": 682225664, "cgroup_memory_events": {"low": 0, "high": 0, "max": 0, "oom": 0, "oom_kill": 0, "oom_group_kill": 0}}, "gc_enabled_after": true}
+test_projection_audit_does_not_block_lightweight_request (projection_worker_foreground_negative.ProjectionAuditTests.test_projection_audit_does_not_block_lightweight_request) ... {"timestamp":"2026-11-11T10:10:34.238165+00:00","level":"WARNING","logger":"asyncio","message":"Executing <Task pending name='Task-21' coro=<ProjectionAuditTests.test_projection_audit_does_not_block_lightweight_request() running at /output/projection_worker_foreground_negative.py:320> wait_for=<Future pending cb=[Task.task_wakeup()] created at /usr/local/lib/python3.14/asyncio/base_events.py:459> cb=[_run_until_complete_cb() at /usr/local/lib/python3.14/asyncio/base_events.py:181] created at /usr/local/lib/python3.14/asyncio/runners.py:109> took 0.375 seconds","request_id":"system"}
+{"timestamp":"2026-11-11T10:10:34.364948+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://test/lightweight \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T10:10:34.365745+00:00","level":"WARNING","logger":"asyncio","message":"Executing <Task pending name='Task-21' coro=<ProjectionAuditTests.test_projection_audit_does_not_block_lightweight_request() running at /output/projection_worker_foreground_negative.py:329> wait_for=<Task pending name='Task-22' coro=<observed_get() running at /output/protocol.py:120> wait_for=<Future pending cb=[_chain_future.<locals>._call_check_cancel() at /usr/local/lib/python3.14/asyncio/futures.py:393, Task.task_wakeup()] created at /usr/local/lib/python3.14/asyncio/base_events.py:459> cb=[Task.task_wakeup()] created at /usr/local/lib/python3.14/asyncio/tasks.py:395> cb=[_run_until_complete_cb() at /usr/local/lib/python3.14/asyncio/base_events.py:181] created at /usr/local/lib/python3.14/asyncio/runners.py:109> took 0.122 seconds","request_id":"system"}
+{"timestamp":"2026-11-11T10:10:34.369192+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://test/api/audit/projections/current \"HTTP/1.1 200 OK\"","request_id":"system"}
+FAIL
+
+======================================================================
+FAIL: test_projection_audit_does_not_block_lightweight_request (projection_worker_foreground_negative.ProjectionAuditTests.test_projection_audit_does_not_block_lightweight_request)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.14/asyncio/runners.py", line 127, in run
+    return self._loop.run_until_complete(task)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "/usr/local/lib/python3.14/asyncio/base_events.py", line 719, in run_until_complete
+    return future.result()
+           ~~~~~~~~~~~~~^^
+  File "/output/projection_worker_foreground_negative.py", line 334, in test_projection_audit_does_not_block_lightweight_request
+    self.assertLess(latency_ms, 100)
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+AssertionError: 122.23272099799942 not less than 100
+
+----------------------------------------------------------------------
+Ran 1 test in 0.511s
+
+FAILED (failures=1)
+{"name": "new_placement_real_120ms_foreground_negative", "failures": [{"test": "projection_worker_foreground_negative.ProjectionAuditTests.test_projection_audit_does_not_block_lightweight_request", "type": "AssertionError", "text": "122.23272099799942 not less than 100"}], "errors": [], "worker_holds": [{"timeout": 2.0, "released": true, "elapsed_ms": 125.62651599000674, "observed_context": ["projection-audit-request"]}], "requests": [{"path": "/lightweight", "began": 98446.661537101, "status": 200, "elapsed_ms": 122.04359899624251}, {"path": "/api/audit/projections/current", "began": 98446.656379976, "status": 200, "elapsed_ms": 131.30211699171923}], "collections": [{"worker_started": false, "audit_task_created": false, "gc_enabled": true, "collected": 498, "actual_gc_ms": 372.77376200654544, "controlled_setup_delay_seconds": 0, "setup_total_ms": 372.7793669968378, "gc_enabled_after": true}], "memory_before": {"rss_bytes": 710549504, "vms_bytes": 1040322560, "system_available_bytes": 17191202816, "memory_accounting_scope": "cgroup", "cgroup_current_bytes": 685543424, "cgroup_limit_bytes": 2147483648, "cgroup_inactive_file_bytes": 368640, "cgroup_anonymous_bytes": 682225664, "cgroup_memory_events": {"low": 0, "high": 0, "max": 0, "oom": 0, "oom_kill": 0, "oom_group_kill": 0}}, "gc_enabled": true, "passed": false, "tests": 1, "elapsed_ms": 511.2430669978494, "memory_after": {"rss_bytes": 710598656, "vms_bytes": 1040322560, "system_available_bytes": 17191206912, "memory_accounting_scope": "cgroup", "cgroup_current_bytes": 685617152, "cgroup_limit_bytes": 2147483648, "cgroup_inactive_file_bytes": 368640, "cgroup_anonymous_bytes": 682225664, "cgroup_memory_events": {"low": 0, "high": 0, "max": 0, "oom": 0, "oom_kill": 0, "oom_group_kill": 0}}, "gc_enabled_after": true}
+{"timestamp":"2026-11-11T10:10:34.531980+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/audit/projections/current \"HTTP/1.1 503 Service Unavailable\"","request_id":"system"}
+{"timestamp":"2026-11-11T10:10:34.881787+00:00","level":"WARNING","logger":"asyncio","message":"Executing <Task pending name='Task-50' coro=<ProjectionAuditTests.test_projection_audit_does_not_block_lightweight_request() running at /app/tests/test_projection_audit.py:319> wait_for=<Future pending cb=[Task.task_wakeup()] created at /usr/local/lib/python3.14/asyncio/base_events.py:459> cb=[_run_until_complete_cb() at /usr/local/lib/python3.14/asyncio/base_events.py:181] created at /usr/local/lib/python3.14/asyncio/runners.py:109> took 0.341 seconds","request_id":"system"}
+{"timestamp":"2026-11-11T10:10:34.888369+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://test/lightweight \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T10:10:34.891383+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://test/api/audit/projections/current \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T10:10:34.907204+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/audit/projections/current \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-11T10:10:34.915220+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/audit/projections/current.csv \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"actual_audit_module": {"tests": 9, "passed": true, "failures": 0, "errors": 0, "gc_enabled": true, "retained_same_graph": true}, "all_controls_matched_expected": true, "gc_enabled": true, "same_graph_retained": true}

@@ -1,0 +1,249 @@
+{
+  "schema": "dtos-static-source-review-v1",
+  "reviewed_at_utc": "2026-11-11T10:20:39.946387+00:00",
+  "reviewer": "/root/final_source_review",
+  "release": {
+    "version": "1.22.31",
+    "build": 2246,
+    "pr": 335,
+    "task": "cohesiveFrontOfficeDecision"
+  },
+  "source": {
+    "path": "/workspace/dtos-frontoffice-local-2246-r3",
+    "head": "4cf524c488efb36c77defd78bfd7acf84a3f6ddd",
+    "tree": "79fe9268fb3394604559bbcbe1119616a080b71b",
+    "baseline": "abbe723a0566cf84a8fff947cf7320cb66567a77",
+    "baseline_tree": "cf649ee06ec3228d51d251ce7afbdbb15866f398",
+    "working_tree_clean_at_review": true,
+    "checkout": "detached HEAD"
+  },
+  "method": "Read current AGENTS.md, exact source identity/clean status, b602-to-4cf Git diff, byte identity of six previously reviewed application files, fresh fixture source/whole-module AST and recorded control bridge; separate delegated fresh read-only fixture review. Wrote artifacts only to R3/source-review. No application/controller edits, network/MCP, Docker, tests, application imports, server or validator launches.",
+  "review_relationship": {
+    "inherited_head": "b602d6acd03cc1c95d85ee734d2d7f28658885cf",
+    "inherited_tree": "8a687ea0256d6e0031b57e08e2a1a38a90a1a535",
+    "inherited_baseline": "abbe723a0566cf84a8fff947cf7320cb66567a77",
+    "prior_json": {
+      "path": "/workspace/2246-granite-activation/expansion/final-r2/source-review/source-review.json",
+      "sha256": "5f17ea38f508aef93c6da2adaa0ca9bd6d2384702fb48e29c115c7db7ef9c431"
+    },
+    "prior_markdown": {
+      "path": "/workspace/2246-granite-activation/expansion/final-r2/source-review/source-review.md",
+      "sha256": "663ade347e09de3b0c5764ce68032d3331c32e4ee3c815fcf9a08165223d7ed1"
+    },
+    "inherited_application_files": [
+      "services/front_office_brief.py",
+      "src/ui/front_office_brief.py",
+      "static/js/trade_workspace.js",
+      "routes/accounts.py",
+      "services/league_preparation.py",
+      "src/platform/runtime_errors.py"
+    ],
+    "fresh_review_files": [
+      "tests/test_projection_audit.py"
+    ],
+    "prior_report_preserved_unchanged": true,
+    "boundary": "Prior application observations are inherited only through explicit byte equivalence; the prior full review is not relabeled as an R3 full review. This report freshly reviews the fixture correction and evidence bridge."
+  },
+  "scope": {
+    "application_files": [
+      "services/front_office_brief.py",
+      "src/ui/front_office_brief.py",
+      "static/js/trade_workspace.js",
+      "routes/accounts.py",
+      "services/league_preparation.py",
+      "src/platform/runtime_errors.py"
+    ],
+    "control_files": [
+      "tests/test_projection_audit.py"
+    ],
+    "source_file_sha256": {
+      "services/front_office_brief.py": "e5d3cdec00c42086858c4d59231788a615ce4e44b738b154714f7cb70f461565",
+      "src/ui/front_office_brief.py": "f50a383c63117a82ede1bda0dfcbd1e8a0be8bc8a397d9d6e260fad1dc80bef2",
+      "static/js/trade_workspace.js": "ea8594fdade4ff1ab7304e2ed4cb7077f0bc2cb7aba32b23765ebaa304790a9e",
+      "routes/accounts.py": "7ae4ef8515e1c3f0812beca1cadaba9cef76a2dfd20b5df7caa7fae16a6b933a",
+      "services/league_preparation.py": "e4b97ff3cc50b852a096e4fe4fb8d41df241481aa48211bbe73354171914bc98",
+      "src/platform/runtime_errors.py": "b491731754567e2553a18ea60634644162d5f32305b33160a3b97c3044f56504",
+      "tests/test_projection_audit.py": "eb8b90a68e73ac45e622aae3f5b0e08bb070145197c6f29f97b00e53d6a508cc"
+    },
+    "application_git_byte_equivalence": {
+      "services/front_office_brief.py": {
+        "byte_equal": true,
+        "prior_blob": "c74409d441ff0a9053d26b1cc377a268104d104d",
+        "final_blob": "c74409d441ff0a9053d26b1cc377a268104d104d",
+        "prior_sha256": "e5d3cdec00c42086858c4d59231788a615ce4e44b738b154714f7cb70f461565",
+        "final_sha256": "e5d3cdec00c42086858c4d59231788a615ce4e44b738b154714f7cb70f461565"
+      },
+      "src/ui/front_office_brief.py": {
+        "byte_equal": true,
+        "prior_blob": "5f5342f5e546955b94b14ee498d069d3747b3489",
+        "final_blob": "5f5342f5e546955b94b14ee498d069d3747b3489",
+        "prior_sha256": "f50a383c63117a82ede1bda0dfcbd1e8a0be8bc8a397d9d6e260fad1dc80bef2",
+        "final_sha256": "f50a383c63117a82ede1bda0dfcbd1e8a0be8bc8a397d9d6e260fad1dc80bef2"
+      },
+      "static/js/trade_workspace.js": {
+        "byte_equal": true,
+        "prior_blob": "16b105ea97bd426579ce0f93f0fc76ddd7b549f4",
+        "final_blob": "16b105ea97bd426579ce0f93f0fc76ddd7b549f4",
+        "prior_sha256": "ea8594fdade4ff1ab7304e2ed4cb7077f0bc2cb7aba32b23765ebaa304790a9e",
+        "final_sha256": "ea8594fdade4ff1ab7304e2ed4cb7077f0bc2cb7aba32b23765ebaa304790a9e"
+      },
+      "routes/accounts.py": {
+        "byte_equal": true,
+        "prior_blob": "f721a37d81709d91cb5b88d8090ed3194b70308d",
+        "final_blob": "f721a37d81709d91cb5b88d8090ed3194b70308d",
+        "prior_sha256": "7ae4ef8515e1c3f0812beca1cadaba9cef76a2dfd20b5df7caa7fae16a6b933a",
+        "final_sha256": "7ae4ef8515e1c3f0812beca1cadaba9cef76a2dfd20b5df7caa7fae16a6b933a"
+      },
+      "services/league_preparation.py": {
+        "byte_equal": true,
+        "prior_blob": "c62312f985dba38fe1b958d0ba5b49d97dbab89b",
+        "final_blob": "c62312f985dba38fe1b958d0ba5b49d97dbab89b",
+        "prior_sha256": "e4b97ff3cc50b852a096e4fe4fb8d41df241481aa48211bbe73354171914bc98",
+        "final_sha256": "e4b97ff3cc50b852a096e4fe4fb8d41df241481aa48211bbe73354171914bc98"
+      },
+      "src/platform/runtime_errors.py": {
+        "byte_equal": true,
+        "prior_blob": "34a0ebec9d5535db8e048f1387efb7521704251d",
+        "final_blob": "34a0ebec9d5535db8e048f1387efb7521704251d",
+        "prior_sha256": "b491731754567e2553a18ea60634644162d5f32305b33160a3b97c3044f56504",
+        "final_sha256": "b491731754567e2553a18ea60634644162d5f32305b33160a3b97c3044f56504"
+      }
+    },
+    "changed_since_inherited_source": [
+      "tests/test_projection_audit.py"
+    ],
+    "diff_numstat": {
+      "added": 3,
+      "removed": 3
+    }
+  },
+  "result": "No concrete new blocking source defect found in the fixture correction; inherited identical application review has no unresolved findings.",
+  "blocker_count": 0,
+  "findings": [],
+  "observations": [
+    {
+      "area": "Explicit inherited application review by Git byte equivalence",
+      "scope": "Inherited b602 application observations, not a new full baseline-to-final application review.",
+      "observation": "All six application files reviewed under b602 have identical Git blobs, SHA256 and local committed bytes at 4cf. The prior report remains unchanged and identified by its original head/tree and SHA256. Its account/league/franchise, freshness/handoff, missing-preparation, saved-preference, exact-protection, BFcache comparison, typed-deferral, telemetry and unchanged math/admission observations are inherited only for these identical bytes.",
+      "source": [
+        "services/front_office_brief.py",
+        "src/ui/front_office_brief.py",
+        "static/js/trade_workspace.js",
+        "routes/accounts.py",
+        "services/league_preparation.py",
+        "src/platform/runtime_errors.py"
+      ]
+    },
+    {
+      "area": "Fresh R3 fixture source and AST review",
+      "scope": "Fresh review of the sole b602-to-4cf change.",
+      "observation": "Exactly one file has a 3-line addition/3-line removal diff. Only the gc.collect statement placement and explanatory comments move. Independent whole-module AST comparison is equal after removing the one explicit gc.collect expression from each version. Collection now precedes task creation, so it cannot consume this not-yet-created worker two-second deadline. The 2.0s wait, 0.25s request timeout, less than 100 ms assertion, start/pending assertions, responses and context checks are unchanged. The change adds no GC disable/threshold modification and no application/controller change.",
+      "source": [
+        "tests/test_projection_audit.py:302",
+        "tests/test_projection_audit.py:310",
+        "tests/test_projection_audit.py:313",
+        "tests/test_projection_audit.py:320",
+        "tests/test_projection_audit.py:324",
+        "tests/test_projection_audit.py:326",
+        "tests/test_projection_audit.py:330",
+        "tests/test_projection_audit.py:333",
+        "tests/test_projection_audit.py:335"
+      ]
+    },
+    {
+      "area": "Historical focused-control bridge to actual committed R3 bytes",
+      "scope": "Read and hash-check recorded controls; no execution by this reviewer and no new full-gate claim.",
+      "observation": "R3 worker-setup-verified identifies historical dirty-b602 execution honestly. Its candidate test-file SHA256 exactly equals the committed R3 file. All five recorded original hashes match reconciliation files; source-predicate proof and commit provenance bind baseline/final bytes to 4cf. Recorded 2.1s modeled setup fails at the old worker deadline and passes before worker creation; actual-GC retained-graph control passes; real 120 ms foreground blocking still fails the unchanged 100 ms assertion. Nine actual audit-module tests are recorded passing; 4364 is a loaded-suite count, not a completed full-suite result.",
+      "source": [
+        "/workspace/2246-granite-activation/expansion/final-r3/worker-setup-verified.json",
+        "/workspace/2246-granite-activation/expansion/worker-setup-reconciliation/source-predicate-proof.json",
+        "/workspace/2246-granite-activation/expansion/worker-setup-reconciliation/result.json",
+        "/workspace/2246-granite-activation/expansion/worker-setup-reconciliation/commit-provenance.json"
+      ]
+    }
+  ],
+  "fixture_ast_proof": {
+    "method": "Read and parse Git-committed modules with Python stdlib ast only; no application imports, compilation or tests.",
+    "old_fixture_sha256": "55874200afd5cfa1c4da60146a938b0b0f6ae7d381991a611ebe87bd0cf78a22",
+    "final_fixture_sha256": "eb8b90a68e73ac45e622aae3f5b0e08bb070145197c6f29f97b00e53d6a508cc",
+    "whole_module_ast_equal_after_removing_only_one_gc_collect_expression_each": true,
+    "normalized_ast_sha256": "b9cbbea0f7e55fc404206f7d0a604da626668b81c7b7291462d2d51cbfc86b5f",
+    "old_gc_collect_line": 322,
+    "final_gc_collect_line": 312,
+    "final_create_task_line": 313,
+    "collection_before_audit_task_creation": true,
+    "gc_disable_or_threshold_change_added": false,
+    "unchanged_strict_calls_and_final_lines": {
+      "self.assertTrue(release.wait(2.0))": 302,
+      "self.assertTrue(started.is_set())": 320,
+      "asyncio.wait_for(client.get('/lightweight'), 0.25)": 324,
+      "self.assertFalse(audit_request.done())": 326,
+      "request_context.reset(token)": 330,
+      "self.assertEqual(response.status_code, 200)": 332,
+      "self.assertLess(latency_ms, 100)": 333,
+      "self.assertEqual(audit_response.status_code, 200)": 334,
+      "self.assertEqual(observed_context, ['projection-audit-request'])": 335
+    },
+    "worker_wait_seconds": 2.0,
+    "request_timeout_seconds": 0.25,
+    "latency_bound_ms": 100
+  },
+  "recorded_control_bridge": {
+    "root_receipt": {
+      "path": "/workspace/2246-granite-activation/expansion/final-r3/worker-setup-verified.json",
+      "sha256": "b7fd3b9e8b6d221a4db7b1ffac212df3b3db0d7a796a186bfeb35d51a1088d12"
+    },
+    "recorded_source": {
+      "head": "b602d6acd03cc1c95d85ee734d2d7f28658885cf",
+      "tree": "8a687ea0256d6e0031b57e08e2a1a38a90a1a535",
+      "status": " M tests/test_projection_audit.py\n",
+      "candidate_file_sha256": "eb8b90a68e73ac45e622aae3f5b0e08bb070145197c6f29f97b00e53d6a508cc"
+    },
+    "final_candidate_file_sha256": "eb8b90a68e73ac45e622aae3f5b0e08bb070145197c6f29f97b00e53d6a508cc",
+    "original_files_hash_verified": {
+      "result.json": "f4e913e6e8cc3170c9036d3aec488f1e2f5fdbe8132b00a1c304265deda8e030",
+      "summary.json": "43e4235eb7b9e47ca6a199bc4fc4e09eb30f92d6bf7b800521aff5eaff82226d",
+      "source-predicate-proof.json": "3289b1a4850e3dcf498634787f8c5e373fa92c7ddf0b22041f0125f1ae8d16e1",
+      "commit-provenance.json": "660282db4cbdd5a1f69cfcf6e595940251c10f101b3acc1d7647d47d932298bc",
+      "SHA256SUMS": "b2b9ade101ac762210b43cfd0f1f0ab9f0f522a302c43d94185a65234254168a"
+    },
+    "source_predicate_proof": {
+      "path": "/workspace/2246-granite-activation/expansion/worker-setup-reconciliation/source-predicate-proof.json",
+      "sha256": "3289b1a4850e3dcf498634787f8c5e373fa92c7ddf0b22041f0125f1ae8d16e1"
+    },
+    "commit_provenance": {
+      "path": "/workspace/2246-granite-activation/expansion/worker-setup-reconciliation/commit-provenance.json",
+      "sha256": "660282db4cbdd5a1f69cfcf6e595940251c10f101b3acc1d7647d47d932298bc"
+    },
+    "expected_recorded_control_outcomes": {
+      "old_placement_controlled_2.1s_setup": false,
+      "new_placement_controlled_2.1s_setup": true,
+      "new_placement_actual_gc_same_graph": true,
+      "new_placement_real_120ms_foreground_negative": false
+    },
+    "actual_audit_module": {
+      "tests": 9,
+      "passed": true,
+      "failures": 0,
+      "errors": 0,
+      "gc_enabled": true,
+      "retained_same_graph": true
+    },
+    "loaded_suite_count": 4364,
+    "interpretation": "Recorded focused original executions at dirty b602 use exactly the later committed R3 test-file bytes. They are not executions of the complete committed R3 source tree, full release gates, or evidence of historical per-call GC duration."
+  },
+  "delegated_fixture_review": {
+    "reviewer": "/root/final_source_review/browser_diff_review",
+    "head": "4cf524c488efb36c77defd78bfd7acf84a3f6ddd",
+    "tree": "79fe9268fb3394604559bbcbe1119616a080b71b",
+    "result": "No concrete blockers. Independently confirmed AST equality after removing relocated collection, strict predicates, final file hash, all five original hashes and focused-only provenance boundary."
+  },
+  "limits": [
+    "Static source-policy review only. blocker_count 0 does not authorize release or override any failed/incomplete gate.",
+    "Fresh complete local canonical validation and all 13 required hosted jobs remain mandatory on the exact new source; this review claims no such pass. The separately running focused validation was not inspected or changed.",
+    "Historical failed hosted b602 canonical evidence remains failed; no prior source result is retroactively converted into an R3 gate.",
+    "The controlled 2.1s setup delay proves a placement mechanism, not the duration of an uninstrumented historical GC call. Focused controls do not guarantee full-suite success or general production latency.",
+    "Production remains build 2245 per parent task context; this read-only review did not access or change production.",
+    "No live owner entry/search, private Granite payload/capacity restoration, or physical iPhone/Safari acceptance is established."
+  ]
+}

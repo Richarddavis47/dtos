@@ -1,0 +1,634 @@
+{
+  "source": {
+    "baseline": "abbe723a0566cf84a8fff947cf7320cb66567a77",
+    "candidate": "4cf524c488efb36c77defd78bfd7acf84a3f6ddd",
+    "tree": "79fe9268fb3394604559bbcbe1119616a080b71b",
+    "branch": "fix/activation-deferral-2246",
+    "version": "1.22.31",
+    "build": 2246,
+    "pr": 335,
+    "expected_test_count": 4364,
+    "expected_publisher_test_count": 102,
+    "supersedes": "b602d6acd03cc1c95d85ee734d2d7f28658885cf"
+  },
+  "file": "/workspace/2246-granite-activation/expansion/final-r3/prior-package.zip",
+  "files": 275,
+  "bytes": 65073292,
+  "sha256": "58270cf47a7de12f1b6fcdfee2b7e677b870682f39496f534969a0b2c8d63162",
+  "native_prior_guard_passed": true,
+  "embedded_original_bytes_verified": true,
+  "embedded_original_bytes_verified_scope": "Byte-original entries checked against original manifests/receipts. Derived indexes and sanitized Docker metadata are explicitly labeled and are not byte-identical full Docker originals.",
+  "both_complete_original_archives_linked_not_rebuilt": true,
+  "linked_originals": [
+    {
+      "attempt": "first-failed-local-plus-earlier-originals",
+      "file": "prior-attempts-original.zip",
+      "bytes": 81491689,
+      "sha256": "39f794f9f825c3d26766239c6d3906e6f4f3d3a24c2e3f2101c31b3b6b39cb78",
+      "commit": "ba102d1eb9f9bc90679d7b4f1fafc30cb76c1efd",
+      "prefix": ".task-evidence/activation-deferral-2246/validation-held",
+      "raw_url": "https://raw.githubusercontent.com/Richarddavis47/dtos/ba102d1eb9f9bc90679d7b4f1fafc30cb76c1efd/.task-evidence/activation-deferral-2246/validation-held/prior-attempts-original.zip",
+      "browser_url": "https://github.com/Richarddavis47/dtos/blob/ba102d1eb9f9bc90679d7b4f1fafc30cb76c1efd/.task-evidence/activation-deferral-2246/validation-held/prior-attempts-original.zip",
+      "original_archive_rebuilt": false,
+      "complete_original_archive_embedded": false,
+      "original_archive_verified_locally": true,
+      "original_remote_readback_receipt": "public-held-originals/held-evidence-public-readback.json",
+      "historical_source": {
+        "candidate": "836d036464bfb1e13cf350e44635620b0978f05d",
+        "tree": "d35a21d697d603d4eb4b4f46cf88e8a514c50d77"
+      },
+      "canonical_outcome": {
+        "candidate": "836d036464bfb1e13cf350e44635620b0978f05d",
+        "tree": "d35a21d697d603d4eb4b4f46cf88e8a514c50d77",
+        "passed": false,
+        "canonical_manifest_entries": 665,
+        "original_manifest_bytes_verified": true,
+        "events": {
+          "start": 4358,
+          "stop": 4358,
+          "error": 1
+        },
+        "scope": "Historical failed run; never final-source validation"
+      }
+    },
+    {
+      "attempt": "second-failed-local",
+      "file": "local-isolated-failed-original.zip",
+      "bytes": 81042922,
+      "sha256": "cca0b7f4d239fc1338618458594b60da747e8ca3aa4988b28413c8b0a07e7da6",
+      "commit": "ba102d1eb9f9bc90679d7b4f1fafc30cb76c1efd",
+      "prefix": ".task-evidence/activation-deferral-2246/validation-held",
+      "raw_url": "https://raw.githubusercontent.com/Richarddavis47/dtos/ba102d1eb9f9bc90679d7b4f1fafc30cb76c1efd/.task-evidence/activation-deferral-2246/validation-held/local-isolated-failed-original.zip",
+      "browser_url": "https://github.com/Richarddavis47/dtos/blob/ba102d1eb9f9bc90679d7b4f1fafc30cb76c1efd/.task-evidence/activation-deferral-2246/validation-held/local-isolated-failed-original.zip",
+      "original_archive_rebuilt": false,
+      "complete_original_archive_embedded": false,
+      "original_archive_verified_locally": true,
+      "original_remote_readback_receipt": "public-held-originals/held-evidence-public-readback.json",
+      "historical_source": {
+        "candidate": "836d036464bfb1e13cf350e44635620b0978f05d",
+        "tree": "d35a21d697d603d4eb4b4f46cf88e8a514c50d77"
+      },
+      "canonical_outcome": {
+        "candidate": "836d036464bfb1e13cf350e44635620b0978f05d",
+        "tree": "d35a21d697d603d4eb4b4f46cf88e8a514c50d77",
+        "passed": false,
+        "canonical_manifest_entries": 667,
+        "original_manifest_bytes_verified": true,
+        "events": {
+          "start": 4358,
+          "stop": 4358,
+          "failure": 1
+        },
+        "scope": "Historical failed run; never final-source validation"
+      }
+    },
+    {
+      "attempt": "failed-hosted-b602-canonical",
+      "file": "hosted/failed-canonical-original.zip",
+      "bytes": 93758581,
+      "sha256": "9a51b7ffb0b4c4e07112e59d2f393ffb37489f5afe75563f661c9ae1ea766e9d",
+      "commit": "0b88822e9da91205f092dcce07afe0200e0546a8",
+      "prefix": ".task-evidence/front-office-decision-2246/failed-b602",
+      "raw_url": "https://raw.githubusercontent.com/Richarddavis47/dtos/0b88822e9da91205f092dcce07afe0200e0546a8/.task-evidence/front-office-decision-2246/failed-b602/hosted/failed-canonical-original.zip",
+      "browser_url": "https://github.com/Richarddavis47/dtos/blob/0b88822e9da91205f092dcce07afe0200e0546a8/.task-evidence/front-office-decision-2246/failed-b602/hosted/failed-canonical-original.zip",
+      "original_archive_rebuilt": false,
+      "complete_original_archive_embedded": false,
+      "original_archive_verified_locally": true,
+      "original_remote_readback_receipt": "superseded-b602/publication-readback-receipt.json",
+      "historical_source": {
+        "candidate": "b602d6acd03cc1c95d85ee734d2d7f28658885cf",
+        "tree": "8a687ea0256d6e0031b57e08e2a1a38a90a1a535"
+      },
+      "canonical_outcome": {
+        "passed": false,
+        "canonical_manifest_entries": 689,
+        "events": {
+          "start": 4364,
+          "stop": 4364,
+          "failure": 1
+        },
+        "native_success_guard_applied": false,
+        "scope": "Prior failed run; not R3 acceptance"
+      }
+    },
+    {
+      "attempt": "canceled-local-member-container-b602",
+      "file": "local-cancelled/local-cancelled-original-members.zip",
+      "member": "local-cancelled/local-cancelled-original-members.zip",
+      "bytes": 30054461,
+      "sha256": "bfd2288e7acc85439995c26ae95644b02ca9657397e85227aad77e4af5b49ec8",
+      "commit": "0b88822e9da91205f092dcce07afe0200e0546a8",
+      "prefix": ".task-evidence/front-office-decision-2246/failed-b602",
+      "raw_url": "https://raw.githubusercontent.com/Richarddavis47/dtos/0b88822e9da91205f092dcce07afe0200e0546a8/.task-evidence/front-office-decision-2246/failed-b602/local-cancelled/local-cancelled-original-members.zip",
+      "browser_url": "https://github.com/Richarddavis47/dtos/blob/0b88822e9da91205f092dcce07afe0200e0546a8/.task-evidence/front-office-decision-2246/failed-b602/local-cancelled/local-cancelled-original-members.zip",
+      "historical_source": {
+        "candidate": "b602d6acd03cc1c95d85ee734d2d7f28658885cf",
+        "tree": "8a687ea0256d6e0031b57e08e2a1a38a90a1a535"
+      },
+      "newly_authored": true,
+      "original_runtime_archive": false,
+      "all_original_member_bytes_verified": true,
+      "original_manifest_entries": 258,
+      "original_archive_rebuilt": false,
+      "complete_original_archive_embedded": false,
+      "original_archive_verified_locally": true,
+      "original_remote_readback_receipt": "superseded-b602/publication-readback-receipt.json",
+      "canonical_outcome": {
+        "passed": false,
+        "incomplete": true,
+        "canonical_manifest_entries": 258,
+        "events": {
+          "start": 2555,
+          "stop": 2554
+        },
+        "validator_exit": -15,
+        "native_success_guard_applied": false
+      },
+      "scope": "Newly authored ZIP container of complete byte-original native members, not an original runtime ZIP. Incomplete cancellation remains incomplete."
+    },
+    {
+      "attempt": "canceled-local-member-container-3a19",
+      "file": "prior-3a19/local-cancelled-original-members.zip",
+      "member": "prior-3a19/local-cancelled-original-members.zip",
+      "bytes": 10327792,
+      "sha256": "b444f0e98cd998de8323372c078952054b9a22d4b262ed50466f83f3605510f2",
+      "commit": "0b88822e9da91205f092dcce07afe0200e0546a8",
+      "prefix": ".task-evidence/front-office-decision-2246/failed-b602",
+      "raw_url": "https://raw.githubusercontent.com/Richarddavis47/dtos/0b88822e9da91205f092dcce07afe0200e0546a8/.task-evidence/front-office-decision-2246/failed-b602/prior-3a19/local-cancelled-original-members.zip",
+      "browser_url": "https://github.com/Richarddavis47/dtos/blob/0b88822e9da91205f092dcce07afe0200e0546a8/.task-evidence/front-office-decision-2246/failed-b602/prior-3a19/local-cancelled-original-members.zip",
+      "historical_source": {
+        "candidate": "3a19eec0a00def82418d9658414f13e090d11b14",
+        "tree": "041cfe403ca499c99b2be93a67d8e440c304be6b"
+      },
+      "newly_authored": true,
+      "original_runtime_archive": false,
+      "all_original_member_bytes_verified": true,
+      "original_manifest_entries": 138,
+      "original_archive_rebuilt": false,
+      "complete_original_archive_embedded": false,
+      "original_archive_verified_locally": true,
+      "original_remote_readback_receipt": "superseded-b602/publication-readback-receipt.json",
+      "canonical_outcome": {
+        "passed": false,
+        "incomplete": true,
+        "canonical_manifest_entries": 138,
+        "events": {
+          "start": 1145,
+          "stop": 1144
+        },
+        "validator_exit": -15,
+        "native_success_guard_applied": false
+      },
+      "scope": "Newly authored ZIP container of complete byte-original native members, not an original runtime ZIP. Incomplete cancellation remains incomplete."
+    }
+  ],
+  "historical_public_readback_verified": true,
+  "b602_publication_readback_verified": true,
+  "fresh_remote_readback_performed": false,
+  "private_production_reports_excluded": true,
+  "publisher_guard": {
+    "path": "/workspace/dtos-publisher-2246/tools/release/publish.py",
+    "sha256": "ad7215119c0799014d05edc640ec1525913d768382c2c9f497535ae32ab55646"
+  },
+  "runner": {
+    "path": "/workspace/2246-granite-activation/expansion/final-r3/package-prior.py",
+    "sha256": "7c05c95b0a4e489c171371ce9ec744d870706f94c23c2477527bd2114c57457c"
+  },
+  "supplement_runner": {
+    "path": "/workspace/2246-granite-activation/expansion/final-r3/prior-r2-additions.py",
+    "sha256": "8f65963a53b9b4178649d883da0150c8aaf91d8ea0ca2d132236802245b8a2f3"
+  },
+  "b602_supplement_runner": {
+    "path": "/workspace/2246-granite-activation/expansion/final-r3/prior-b602-additions.py",
+    "sha256": "57f225f0023f7a47d17b4f57b6a32cd5375796736a5891a782c66f0466eaae8c"
+  },
+  "historical_r2_source": {
+    "path": "/workspace/2246-granite-activation/expansion/final-r2/source.json",
+    "sha256": "1025aa8c0f40ce4213db22966ea783321cbf82b088d8c1ad4e268f3c65f49441"
+  },
+  "additional_historical_sources": [
+    {
+      "candidate": "3a19eec0a00def82418d9658414f13e090d11b14",
+      "tree": "041cfe403ca499c99b2be93a67d8e440c304be6b",
+      "scope": "prior-attempts-only",
+      "product_status": "failed",
+      "local_canonical_status": "CANCELLED_SUPERSEDED_INCOMPLETE",
+      "hosted_canonical_status": "cancelled",
+      "hosted_artifact_available": true,
+      "supplement_index": "PRIOR_SUPPLEMENT_INDEX.json"
+    },
+    {
+      "scope": "prior-attempts-only",
+      "candidate": "b602d6acd03cc1c95d85ee734d2d7f28658885cf",
+      "tree": "8a687ea0256d6e0031b57e08e2a1a38a90a1a535",
+      "hosted_run": 42991843827,
+      "hosted_job": 130426505856,
+      "hosted_tests": 4364,
+      "hosted_failures": 1,
+      "hosted_manifest_members": 689,
+      "full_hosted_zip_linked_not_embedded": true,
+      "local_status": "CANCELLED_SUPERSEDED_INCOMPLETE",
+      "local_manifest_members_verified": 258,
+      "local_events": {
+        "start": 2555,
+        "stop": 2554
+      },
+      "local_validator_exit": -15,
+      "local_container_exit": 241,
+      "b602_publication_readback_verified": true,
+      "linked_original": {
+        "attempt": "failed-hosted-b602-canonical",
+        "file": "hosted/failed-canonical-original.zip",
+        "bytes": 93758581,
+        "sha256": "9a51b7ffb0b4c4e07112e59d2f393ffb37489f5afe75563f661c9ae1ea766e9d",
+        "commit": "0b88822e9da91205f092dcce07afe0200e0546a8",
+        "prefix": ".task-evidence/front-office-decision-2246/failed-b602",
+        "raw_url": "https://raw.githubusercontent.com/Richarddavis47/dtos/0b88822e9da91205f092dcce07afe0200e0546a8/.task-evidence/front-office-decision-2246/failed-b602/hosted/failed-canonical-original.zip",
+        "browser_url": "https://github.com/Richarddavis47/dtos/blob/0b88822e9da91205f092dcce07afe0200e0546a8/.task-evidence/front-office-decision-2246/failed-b602/hosted/failed-canonical-original.zip",
+        "original_archive_rebuilt": false,
+        "complete_original_archive_embedded": false,
+        "original_archive_verified_locally": true,
+        "original_remote_readback_receipt": "superseded-b602/publication-readback-receipt.json",
+        "historical_source": {
+          "candidate": "b602d6acd03cc1c95d85ee734d2d7f28658885cf",
+          "tree": "8a687ea0256d6e0031b57e08e2a1a38a90a1a535"
+        },
+        "canonical_outcome": {
+          "passed": false,
+          "canonical_manifest_entries": 689,
+          "events": {
+            "start": 4364,
+            "stop": 4364,
+            "failure": 1
+          },
+          "native_success_guard_applied": false,
+          "scope": "Prior failed run; not R3 acceptance"
+        }
+      },
+      "linked_originals": [
+        {
+          "attempt": "failed-hosted-b602-canonical",
+          "file": "hosted/failed-canonical-original.zip",
+          "bytes": 93758581,
+          "sha256": "9a51b7ffb0b4c4e07112e59d2f393ffb37489f5afe75563f661c9ae1ea766e9d",
+          "commit": "0b88822e9da91205f092dcce07afe0200e0546a8",
+          "prefix": ".task-evidence/front-office-decision-2246/failed-b602",
+          "raw_url": "https://raw.githubusercontent.com/Richarddavis47/dtos/0b88822e9da91205f092dcce07afe0200e0546a8/.task-evidence/front-office-decision-2246/failed-b602/hosted/failed-canonical-original.zip",
+          "browser_url": "https://github.com/Richarddavis47/dtos/blob/0b88822e9da91205f092dcce07afe0200e0546a8/.task-evidence/front-office-decision-2246/failed-b602/hosted/failed-canonical-original.zip",
+          "original_archive_rebuilt": false,
+          "complete_original_archive_embedded": false,
+          "original_archive_verified_locally": true,
+          "original_remote_readback_receipt": "superseded-b602/publication-readback-receipt.json",
+          "historical_source": {
+            "candidate": "b602d6acd03cc1c95d85ee734d2d7f28658885cf",
+            "tree": "8a687ea0256d6e0031b57e08e2a1a38a90a1a535"
+          },
+          "canonical_outcome": {
+            "passed": false,
+            "canonical_manifest_entries": 689,
+            "events": {
+              "start": 4364,
+              "stop": 4364,
+              "failure": 1
+            },
+            "native_success_guard_applied": false,
+            "scope": "Prior failed run; not R3 acceptance"
+          }
+        },
+        {
+          "attempt": "canceled-local-member-container-b602",
+          "file": "local-cancelled/local-cancelled-original-members.zip",
+          "member": "local-cancelled/local-cancelled-original-members.zip",
+          "bytes": 30054461,
+          "sha256": "bfd2288e7acc85439995c26ae95644b02ca9657397e85227aad77e4af5b49ec8",
+          "commit": "0b88822e9da91205f092dcce07afe0200e0546a8",
+          "prefix": ".task-evidence/front-office-decision-2246/failed-b602",
+          "raw_url": "https://raw.githubusercontent.com/Richarddavis47/dtos/0b88822e9da91205f092dcce07afe0200e0546a8/.task-evidence/front-office-decision-2246/failed-b602/local-cancelled/local-cancelled-original-members.zip",
+          "browser_url": "https://github.com/Richarddavis47/dtos/blob/0b88822e9da91205f092dcce07afe0200e0546a8/.task-evidence/front-office-decision-2246/failed-b602/local-cancelled/local-cancelled-original-members.zip",
+          "historical_source": {
+            "candidate": "b602d6acd03cc1c95d85ee734d2d7f28658885cf",
+            "tree": "8a687ea0256d6e0031b57e08e2a1a38a90a1a535"
+          },
+          "newly_authored": true,
+          "original_runtime_archive": false,
+          "all_original_member_bytes_verified": true,
+          "original_manifest_entries": 258,
+          "original_archive_rebuilt": false,
+          "complete_original_archive_embedded": false,
+          "original_archive_verified_locally": true,
+          "original_remote_readback_receipt": "superseded-b602/publication-readback-receipt.json",
+          "canonical_outcome": {
+            "passed": false,
+            "incomplete": true,
+            "canonical_manifest_entries": 258,
+            "events": {
+              "start": 2555,
+              "stop": 2554
+            },
+            "validator_exit": -15,
+            "native_success_guard_applied": false
+          },
+          "scope": "Newly authored ZIP container of complete byte-original native members, not an original runtime ZIP. Incomplete cancellation remains incomplete."
+        },
+        {
+          "attempt": "canceled-local-member-container-3a19",
+          "file": "prior-3a19/local-cancelled-original-members.zip",
+          "member": "prior-3a19/local-cancelled-original-members.zip",
+          "bytes": 10327792,
+          "sha256": "b444f0e98cd998de8323372c078952054b9a22d4b262ed50466f83f3605510f2",
+          "commit": "0b88822e9da91205f092dcce07afe0200e0546a8",
+          "prefix": ".task-evidence/front-office-decision-2246/failed-b602",
+          "raw_url": "https://raw.githubusercontent.com/Richarddavis47/dtos/0b88822e9da91205f092dcce07afe0200e0546a8/.task-evidence/front-office-decision-2246/failed-b602/prior-3a19/local-cancelled-original-members.zip",
+          "browser_url": "https://github.com/Richarddavis47/dtos/blob/0b88822e9da91205f092dcce07afe0200e0546a8/.task-evidence/front-office-decision-2246/failed-b602/prior-3a19/local-cancelled-original-members.zip",
+          "historical_source": {
+            "candidate": "3a19eec0a00def82418d9658414f13e090d11b14",
+            "tree": "041cfe403ca499c99b2be93a67d8e440c304be6b"
+          },
+          "newly_authored": true,
+          "original_runtime_archive": false,
+          "all_original_member_bytes_verified": true,
+          "original_manifest_entries": 138,
+          "original_archive_rebuilt": false,
+          "complete_original_archive_embedded": false,
+          "original_archive_verified_locally": true,
+          "original_remote_readback_receipt": "superseded-b602/publication-readback-receipt.json",
+          "canonical_outcome": {
+            "passed": false,
+            "incomplete": true,
+            "canonical_manifest_entries": 138,
+            "events": {
+              "start": 1145,
+              "stop": 1144
+            },
+            "validator_exit": -15,
+            "native_success_guard_applied": false
+          },
+          "scope": "Newly authored ZIP container of complete byte-original native members, not an original runtime ZIP. Incomplete cancellation remains incomplete."
+        }
+      ],
+      "failure_scope": "Actual held-worker release.wait(2.0) setup precondition failed; unchanged100ms latency assertion was not reached. Exact GC duration is unproven.",
+      "files": [
+        {
+          "name": "superseded-b602/hosted/core-originals/result.json",
+          "bytes": 1149,
+          "sha256": "f0b830263a214cee67d08409965958956fc195918f7908f9fb8cfac196c08856",
+          "source_file": "/workspace/2246-granite-activation/expansion/final-r2/failed-final-canonical/core-originals/result.json"
+        },
+        {
+          "name": "superseded-b602/hosted/core-originals/manifest.json",
+          "bytes": 115421,
+          "sha256": "b062dfffd7d05208495e51fd7ccefdcfe6e9dd7639fd998f641ac0bf372ea4f4",
+          "source_file": "/workspace/2246-granite-activation/expansion/final-r2/failed-final-canonical/core-originals/manifest.json"
+        },
+        {
+          "name": "superseded-b602/hosted/core-originals/SHA256SUMS",
+          "bytes": 74846,
+          "sha256": "cd2afc10145d63f8e5f8ba48f08f49b4eb57e68c1c838f1a42368ae844cd91e2",
+          "source_file": "/workspace/2246-granite-activation/expansion/final-r2/failed-final-canonical/core-originals/SHA256SUMS"
+        },
+        {
+          "name": "superseded-b602/hosted/core-originals/tests.jsonl",
+          "bytes": 1919693,
+          "sha256": "f8f66d448a7583dfef869659927df41e0bb3bb05403a4a55fda45b1c728930ef",
+          "source_file": "/workspace/2246-granite-activation/expansion/final-r2/failed-final-canonical/core-originals/tests.jsonl"
+        },
+        {
+          "name": "superseded-b602/hosted/core-originals/canonical-trace.jsonl",
+          "bytes": 5307,
+          "sha256": "050dc522a4f06dd28956943ca3a3c0b4cac111e449b74af87dd71cdf646f78f4",
+          "source_file": "/workspace/2246-granite-activation/expansion/final-r2/failed-final-canonical/core-originals/canonical-trace.jsonl"
+        },
+        {
+          "name": "superseded-b602/hosted/core-originals/canonical.log",
+          "bytes": 13161193,
+          "sha256": "75125d82228a7711fd3bae70cf4592197953666ae3551938332137f5ff73434b",
+          "source_file": "/workspace/2246-granite-activation/expansion/final-r2/failed-final-canonical/core-originals/canonical.log"
+        },
+        {
+          "name": "superseded-b602/hosted/core-originals/unittest-console.log",
+          "bytes": 13159443,
+          "sha256": "c2a9b01237af173afa124e97e7802791378948d4c99b63d9e3622feea14091d0",
+          "source_file": "/workspace/2246-granite-activation/expansion/final-r2/failed-final-canonical/core-originals/unittest-console.log"
+        },
+        {
+          "name": "superseded-b602/hosted/core-originals/memory.jsonl",
+          "bytes": 9486886,
+          "sha256": "1990c7901a6c53b27fbb1f40c9d73d864c54bc6b0c21f47e0b071b719a85099e",
+          "source_file": "/workspace/2246-granite-activation/expansion/final-r2/failed-final-canonical/core-originals/memory.jsonl"
+        },
+        {
+          "name": "superseded-b602/hosted/artifact-integrity.json",
+          "bytes": 4193,
+          "sha256": "eb4ce32d889fbd5a8f589d3e6f11b4bd4f67ec564485e2efe3bd3aad63cfe8aa",
+          "source_file": "/workspace/2246-granite-activation/expansion/final-r2/failed-final-canonical/artifact-integrity.json"
+        },
+        {
+          "name": "superseded-b602/hosted/artifacts-api.json",
+          "bytes": 754,
+          "sha256": "a1058da03335609aea2a4973b52444a08e44d1c670432a57a162b997c2eb375d",
+          "source_file": "/workspace/2246-granite-activation/expansion/final-r2/failed-final-canonical/artifacts-api.json"
+        },
+        {
+          "name": "superseded-b602/hosted/run-api.json",
+          "bytes": 12852,
+          "sha256": "74cd680e9640fc98ec210562cfc620758f8e3b680a155a0f037b6564f6f759e7",
+          "source_file": "/workspace/2246-granite-activation/expansion/final-r2/failed-final-canonical/run-api.json"
+        },
+        {
+          "name": "superseded-b602/hosted/job-api.json",
+          "bytes": 2658,
+          "sha256": "9e84af34ec707ca47658b62b67d615d1872f30c9ee06a16d94156fbd22ffd41c",
+          "source_file": "/workspace/2246-granite-activation/expansion/final-r2/failed-final-canonical/job-api.json"
+        },
+        {
+          "name": "superseded-b602/hosted/failure-classification.json",
+          "bytes": 2852,
+          "sha256": "ca617d4d03b675fa1d6335ddee158c006d7c46792d8c9477dc0ffcf6852d40d3",
+          "source_file": "/workspace/2246-granite-activation/expansion/final-r2/failed-final-canonical/failure-classification.json"
+        },
+        {
+          "name": "superseded-b602/hosted/projection-audit-failure-window.json",
+          "bytes": 12164,
+          "sha256": "c299bfde5c1ec5c494e9213c14e3c3e50dfcd066840e67778d2d0bd5a831cb02",
+          "source_file": "/workspace/2246-granite-activation/expansion/final-r2/failed-final-canonical/projection-audit-failure-window.json"
+        },
+        {
+          "name": "superseded-b602/hosted/job-log-transfer.json",
+          "bytes": 1408,
+          "sha256": "c051e05089387659201db175110fb7abd4dc61647384b2e1556bbb2f2bee21d7",
+          "source_file": "/workspace/2246-granite-activation/expansion/final-r2/failed-final-canonical/job-log-transfer.json"
+        },
+        {
+          "name": "superseded-b602/hosted/job-console-original.log",
+          "bytes": 235671,
+          "sha256": "61a4b11bffd272a41dd38ba644dc85096ff7aee4a5e0aecb87751b131718db58",
+          "source_file": "/workspace/2246-granite-activation/expansion/final-r2/failed-final-canonical/job-console-original.log"
+        },
+        {
+          "name": "superseded-b602/local-cancelled/core-originals/result.json",
+          "bytes": 1154,
+          "sha256": "9575c4e07dd64f686bfa2ad1e23954ece6cbe2c5ff5bd359e95c77eddadc274f",
+          "source_file": "/workspace/2246-granite-activation/expansion/final-r2/local-canonical/result.json"
+        },
+        {
+          "name": "superseded-b602/local-cancelled/core-originals/manifest.json",
+          "bytes": 44367,
+          "sha256": "24a267382d151b9f7069e424c44cf907ddf9fedff876ff97e50e2ce6abf9a941",
+          "source_file": "/workspace/2246-granite-activation/expansion/final-r2/local-canonical/manifest.json"
+        },
+        {
+          "name": "superseded-b602/local-cancelled/core-originals/SHA256SUMS",
+          "bytes": 29109,
+          "sha256": "01347f2bd050355563469cb4d0372b3e2f9c558d133874aee51f8387a060d20d",
+          "source_file": "/workspace/2246-granite-activation/expansion/final-r2/local-canonical/SHA256SUMS"
+        },
+        {
+          "name": "superseded-b602/local-cancelled/core-originals/tests.jsonl",
+          "bytes": 1114198,
+          "sha256": "e885dc8bec2b0dda190c84203ebbc30d51b8fbd90cae17fee2334af7a9e252f5",
+          "source_file": "/workspace/2246-granite-activation/expansion/final-r2/local-canonical/tests.jsonl"
+        },
+        {
+          "name": "superseded-b602/local-cancelled/core-originals/canonical-trace.jsonl",
+          "bytes": 4256,
+          "sha256": "6afa8360947bc4d7029edb8867af5a842ac086b48b928e968c865a3e78eec642",
+          "source_file": "/workspace/2246-granite-activation/expansion/final-r2/local-canonical/canonical-trace.jsonl"
+        },
+        {
+          "name": "superseded-b602/local-cancelled/core-originals/canonical.log",
+          "bytes": 317,
+          "sha256": "c9edb284145a2a1e8e4eda0f19dd2ff6ba0ad9207aab13e7c5f072f486c1d0b4",
+          "source_file": "/workspace/2246-granite-activation/expansion/final-r2/local-canonical/canonical.log"
+        },
+        {
+          "name": "superseded-b602/local-cancelled/core-originals/unittest-console.log",
+          "bytes": 9010411,
+          "sha256": "98504d0520dc55cfbc08234b8d3fb2e33a0a1dfd0a9119c553b282b4823c2db2",
+          "source_file": "/workspace/2246-granite-activation/expansion/final-r2/local-canonical/unittest-console.log"
+        },
+        {
+          "name": "superseded-b602/local-cancelled/core-originals/memory.jsonl",
+          "bytes": 8917850,
+          "sha256": "9e82543836447ace2ca6dd6783029c33d24f35f2db255b402006caf37ae8a878",
+          "source_file": "/workspace/2246-granite-activation/expansion/final-r2/local-canonical/memory.jsonl"
+        },
+        {
+          "name": "superseded-b602/local-cancelled/core-originals/module-cleanup.jsonl",
+          "bytes": 309865,
+          "sha256": "55296ac5da1e1f44382c743fd291b20a26046b79a46a5a65ce0dee6399b5208a",
+          "source_file": "/workspace/2246-granite-activation/expansion/final-r2/local-canonical/module-cleanup.jsonl"
+        },
+        {
+          "name": "superseded-b602/local-cancelled/core-originals/runner.py",
+          "bytes": 10119,
+          "sha256": "cce930e419827fc9e19af0428130a79e2f7d3e7455a229076ccc0b022ff011f3",
+          "source_file": "/workspace/2246-granite-activation/expansion/final-r2/local-canonical/runner.py"
+        },
+        {
+          "name": "superseded-b602/local-cancelled/core-originals/observer/sitecustomize.py",
+          "bytes": 2434,
+          "sha256": "1cb7f5f31ef6ebf16f7367c42235692d6f70959815e9dcd0c7f4da8bbea4a660",
+          "source_file": "/workspace/2246-granite-activation/expansion/final-r2/local-canonical/observer/sitecustomize.py"
+        },
+        {
+          "name": "superseded-b602/local-cancelled/core-originals/observer/fixture_cleanup.py",
+          "bytes": 1000,
+          "sha256": "a4e580694aedbaad13fd4120daca25abd8052fe44c8bd7dd96fd5e83be03f749",
+          "source_file": "/workspace/2246-granite-activation/expansion/final-r2/local-canonical/observer/fixture_cleanup.py"
+        },
+        {
+          "name": "superseded-b602/source.json",
+          "bytes": 363,
+          "sha256": "1025aa8c0f40ce4213db22966ea783321cbf82b088d8c1ad4e268f3c65f49441",
+          "source_file": "/workspace/2246-granite-activation/expansion/final-r2/source.json"
+        },
+        {
+          "name": "superseded-b602/canonical-invocation.json",
+          "bytes": 2463,
+          "sha256": "bf2289520da4344e5c56290c7f815afd73f3e134d25559d1f5160a857cd5b451",
+          "source_file": "/workspace/2246-granite-activation/expansion/final-r2/canonical-invocation.json"
+        },
+        {
+          "name": "superseded-b602/superseded-cancellation-request.json",
+          "bytes": 2513,
+          "sha256": "fec5c116f6dd80cbd855b2aa88b2d547c5f680f33f7fa783baecf6650d975c41",
+          "source_file": "/workspace/2246-granite-activation/expansion/final-r2/superseded-cancellation-request.json"
+        },
+        {
+          "name": "superseded-b602/superseded-cancellation-result.json",
+          "bytes": 2861,
+          "sha256": "b1a467c37d3beb2df16cb2e9e2db293c2987947b9666cfba65ecd693d3821b13",
+          "source_file": "/workspace/2246-granite-activation/expansion/final-r2/superseded-cancellation-result.json"
+        },
+        {
+          "name": "superseded-b602/superseded-container-state-original.json",
+          "bytes": 623,
+          "sha256": "282b289064106d98e5feb147d1a025de01369ce40f744d8183fbc36fe20a0de2",
+          "source_file": "/workspace/2246-granite-activation/expansion/final-r2/superseded-container-state-original.json"
+        },
+        {
+          "name": "superseded-b602/superseded-container-stdout-original.log",
+          "bytes": 1359,
+          "sha256": "16e546668cf6074de0b56568cec09dbd7e4db4753923bf459a27c7286eb88815",
+          "source_file": "/workspace/2246-granite-activation/expansion/final-r2/superseded-container-stdout-original.log"
+        },
+        {
+          "name": "superseded-b602/superseded-local-original-verified.json",
+          "bytes": 695,
+          "sha256": "ff1d95c16f9e0f9414570ad19407390aade479f0cc4ce33475924f26af88a95e",
+          "source_file": "/workspace/2246-granite-activation/expansion/final-r2/superseded-local-original-verified.json"
+        },
+        {
+          "name": "superseded-b602/hosted-reconciliation-stopped.json",
+          "bytes": 3766,
+          "sha256": "f2f28f9da24295d387fb8ce1fdcc97339eb3199104e07e8e1dfe17038a560540",
+          "source_file": "/workspace/2246-granite-activation/expansion/final-r2/hosted-reconciliation-stopped.json"
+        },
+        {
+          "name": "superseded-b602/hosted-failure-summary.json",
+          "bytes": 1571,
+          "sha256": "e4d9688ee4393172992dc7b4b1d4ea52c5613c5fa7b48495bacec0014c674b38",
+          "source_file": "/workspace/2246-granite-activation/expansion/final-r2/hosted-failure-summary.json"
+        },
+        {
+          "name": "superseded-b602/source-review/failed-canonical-followup.json",
+          "bytes": 8034,
+          "sha256": "751bb03e57adfdd88831f385a7d4cc17b71bc924fa502c6c27a4b5cca3e9aa7a",
+          "source_file": "/workspace/2246-granite-activation/expansion/final-r2/source-review/failed-canonical-followup.json"
+        },
+        {
+          "name": "superseded-b602/source-review/failed-canonical-followup.md",
+          "bytes": 2410,
+          "sha256": "bf753608fc11a44da30609ef51eff2714aa61cbb371ada0d653103771a0664ff",
+          "source_file": "/workspace/2246-granite-activation/expansion/final-r2/source-review/failed-canonical-followup.md"
+        },
+        {
+          "name": "superseded-b602/publication-readback-receipt.json",
+          "bytes": 761987,
+          "sha256": "e0335816d41c8ad6bdc3ee6c49762c8efeb2e99149a58cf91464753cd94aa5b7",
+          "source_file": "/workspace/2246-granite-activation/expansion/final-r2/failed-b602-publication-receipt.json"
+        },
+        {
+          "name": "superseded-b602/publication-links.json",
+          "bytes": 4468,
+          "sha256": "c8e70eb8aef41c54a423e6530b22fa20b1ea5cb4efb5a9ec11f449df91b3432a",
+          "source_file": "/workspace/2246-granite-activation/expansion/final-r2/failed-b602-publication-links.json"
+        },
+        {
+          "name": "superseded-b602/publication-manifest.json",
+          "bytes": 362540,
+          "sha256": "c9c688ef6e706ac5afad56d2eb25c7f70d0b8ccc65365e1ce8a518fd030146dd",
+          "source_file": "/workspace/cache-sharing-handoff/.task-evidence/front-office-decision-2246/failed-b602/publication-manifest.json"
+        },
+        {
+          "name": "superseded-b602/publication-SHA256SUMS",
+          "bytes": 138026,
+          "sha256": "66ac9750b7eb05f067c67b7ade64234e499ed968bd7824355b49b1d9b00e3d49",
+          "source_file": "/workspace/cache-sharing-handoff/.task-evidence/front-office-decision-2246/failed-b602/SHA256SUMS"
+        }
+      ]
+    }
+  ],
+  "packaged_at": "2026-11-11T11:44:27.930767+00:00",
+  "scope": "Prior attempts integrity only; not final validation or application release"
+}
