@@ -1,0 +1,60 @@
+{
+  "source": {
+    "baseline": "55351c8e4062dc7d74ceb7748eab2179d1bfd92a",
+    "candidate": "99947bf0bd762133403cc667d9346837f9274221",
+    "tree": "e1535b101d0780b2277e57642dca0d9147ecf3ff",
+    "branch": "feat/market-roster-2248",
+    "version": "1.22.33",
+    "build": 2248,
+    "recorded_at": "2026-11-11T23:25:00Z",
+    "expected_test_count": 4399,
+    "pr": 337
+  },
+  "publisher_guard": {
+    "path": "/workspace/dtos-publisher-2246/tools/release/publish.py",
+    "sha256": "91370b6d38c3be5c212e057e5cd8a33b4361b68926bdf9b899bff8a0baba6830"
+  },
+  "all_native_guards_passed": true,
+  "receipts": [
+    {
+      "name": "local-preflight",
+      "guard": "verify_preflight",
+      "passed": true,
+      "archive": "/workspace/2248-market-needs-final/local-resource-native-archives/local-preflight.zip",
+      "archive_sha256": "446d16f001177af339886f8caead8a5c4eafb4eadb6b6c507ac296c7660afe64",
+      "archive_bytes": 3721,
+      "members": {
+        "result.json": "28635d0e6f9837df63186d98cbf8cc65ffe78216c029865a860eca76f19899eb",
+        "raw.log": "604c992909ce1e81a9f31785e2b999d739bceb1fd3fc3f91415431da121f2df5",
+        "SHA256SUMS": "fb7e84532f0a25ba867d7e843f9c8c389c5fed846ef9c49c69bf56c2ea18034f"
+      }
+    },
+    {
+      "name": "local-restoration-unused",
+      "guard": "verify_actuals_restoration",
+      "passed": true,
+      "archive": "/workspace/2248-market-needs-final/local-resource-native-archives/local-restoration-unused.zip",
+      "archive_sha256": "071cc115dd777178e5d33f52da4f49807a7b4a5d8f66ca5a3e932c94ce1ea57e",
+      "archive_bytes": 7285517,
+      "members": {
+        "evidence/result.json": "b5522c1a4d7bee241eebede202c8553fea964594b6f75c455b677bc78e5cf36d",
+        "raw.log": "31af20d9171f367750fa4c904d6ee4e26e144ca3b10c454b87fd4b54a7a8b0d2",
+        "prior-study.zip": "df5c88eda13a0671104c76a943b05032d7adfa089d11e738785b11e35a932439",
+        "SHA256SUMS": "f8bf479bb94a3a94b7340690e7058d76e518f0731309c5a85772a3df6e6963fa"
+      }
+    },
+    {
+      "name": "local-resident-refresh",
+      "guard": "verify_resident_refresh",
+      "passed": true,
+      "archive": "/workspace/2248-market-needs-final/local-resource-native-archives/local-resident-refresh.zip",
+      "archive_sha256": "60ceb7ad3b658c209261a2e285d0e6ca168ea00baf17f052d0d6d88659db2273",
+      "archive_bytes": 5731,
+      "members": {
+        "evidence/result.json": "0cc9475b6bd486ade7843967e8660ee21f13a47ced40d9b7a930613736a47164",
+        "raw.log": "ef553be49fb5ed547d81ce9434c81d45d319b56e2ec41e18c7065435f631a8f0",
+        "SHA256SUMS": "39a66e11dc2019a746eca03589871e89b724dd7d82cee65ba955cfe2fff1d2de"
+      }
+    }
+  ]
+}
