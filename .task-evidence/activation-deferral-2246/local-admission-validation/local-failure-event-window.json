@@ -1,0 +1,187 @@
+{
+  "source": "Original completed failed local console, exact test start-stop observer interval",
+  "test": "test_trade_workflow_experience.TradeWorkflowExperienceTests.test_unseeded_goals_and_exact_pick_exclusions_are_request_only",
+  "start": 1794359352.223975,
+  "stop": 1794359372.5927422,
+  "records": [
+    {
+      "timestamp": "2026-11-11T01:09:12.457786+00:00",
+      "logger": "httpx",
+      "message": "HTTP Request: GET http://testserver/api/trades/workspace?front_office=1 \"HTTP/1.1 200 OK\""
+    },
+    {
+      "timestamp": "2026-11-11T01:09:12.465237+00:00",
+      "logger": "dtos.trade_resources",
+      "event": "trade_admission",
+      "admitted": true,
+      "headroom": 768925696
+    },
+    {
+      "timestamp": "2026-11-11T01:09:12.515053+00:00",
+      "logger": "dtos.trade_resources",
+      "event": "trade_execution_finished",
+      "duration_ms": 50.527,
+      "outcome": "complete"
+    },
+    {
+      "timestamp": "2026-11-11T01:09:12.516175+00:00",
+      "logger": "httpx",
+      "message": "HTTP Request: POST http://testserver/api/trades/evaluate \"HTTP/1.1 200 OK\""
+    },
+    {
+      "timestamp": "2026-11-11T01:09:12.533673+00:00",
+      "logger": "httpx",
+      "message": "HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\""
+    },
+    {
+      "timestamp": "2026-11-11T01:09:12.553771+00:00",
+      "logger": "httpx",
+      "message": "HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\""
+    },
+    {
+      "timestamp": "2026-11-11T01:09:13.462263+00:00",
+      "logger": "httpx",
+      "message": "HTTP Request: GET http://testserver/trades/recommended?front_office=1 \"HTTP/1.1 200 OK\""
+    },
+    {
+      "timestamp": "2026-11-11T01:09:13.547480+00:00",
+      "logger": "httpx",
+      "message": "HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 404 Not Found\""
+    },
+    {
+      "timestamp": "2026-11-11T01:09:13.556882+00:00",
+      "logger": "httpx",
+      "message": "HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\""
+    },
+    {
+      "timestamp": "2026-11-11T01:09:13.566312+00:00",
+      "logger": "httpx",
+      "message": "HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 404 Not Found\""
+    },
+    {
+      "timestamp": "2026-11-11T01:09:13.625532+00:00",
+      "logger": "httpx",
+      "message": "HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\""
+    },
+    {
+      "timestamp": "2026-11-11T01:09:13.637851+00:00",
+      "logger": "httpx",
+      "message": "HTTP Request: GET http://testserver/static/css/trade_workspace.css \"HTTP/1.1 200 OK\""
+    },
+    {
+      "timestamp": "2026-11-11T01:09:13.651288+00:00",
+      "logger": "httpx",
+      "message": "HTTP Request: GET http://testserver/static/js/strategy_session.js \"HTTP/1.1 200 OK\""
+    },
+    {
+      "timestamp": "2026-11-11T01:09:13.720252+00:00",
+      "logger": "httpx",
+      "message": "HTTP Request: GET http://testserver/static/js/trade_comparison.js \"HTTP/1.1 200 OK\""
+    },
+    {
+      "timestamp": "2026-11-11T01:09:13.762127+00:00",
+      "logger": "httpx",
+      "message": "HTTP Request: GET http://testserver/static/js/trade_workspace.js \"HTTP/1.1 200 OK\""
+    },
+    {
+      "timestamp": "2026-11-11T01:09:13.956651+00:00",
+      "logger": "httpx",
+      "message": "HTTP Request: GET http://testserver/api/trades/workspace?front_office=1 \"HTTP/1.1 200 OK\""
+    },
+    {
+      "timestamp": "2026-11-11T01:09:14.267049+00:00",
+      "logger": "dtos.trade_resources",
+      "event": "trade_admission",
+      "admitted": true,
+      "headroom": 489664512
+    },
+    {
+      "timestamp": "2026-11-11T01:09:16.154850+00:00",
+      "logger": "dtos.trade_resources",
+      "event": "trade_execution_finished",
+      "duration_ms": 1888.622,
+      "outcome": "complete"
+    },
+    {
+      "timestamp": "2026-11-11T01:09:16.156246+00:00",
+      "logger": "httpx",
+      "message": "HTTP Request: POST http://testserver/api/trades/generate \"HTTP/1.1 200 OK\""
+    },
+    {
+      "timestamp": "2026-11-11T01:09:16.739503+00:00",
+      "logger": "dtos.trade_resources",
+      "event": "trade_admission",
+      "admitted": true,
+      "headroom": 510420992
+    },
+    {
+      "timestamp": "2026-11-11T01:09:18.138210+00:00",
+      "logger": "dtos.trade_resources",
+      "event": "trade_execution_finished",
+      "duration_ms": 1416.98,
+      "outcome": "complete"
+    },
+    {
+      "timestamp": "2026-11-11T01:09:18.139641+00:00",
+      "logger": "httpx",
+      "message": "HTTP Request: POST http://testserver/api/trades/generate \"HTTP/1.1 200 OK\""
+    },
+    {
+      "timestamp": "2026-11-11T01:09:18.505632+00:00",
+      "logger": "dtos.trade_resources",
+      "event": "trade_admission",
+      "admitted": true,
+      "headroom": 416782336
+    },
+    {
+      "timestamp": "2026-11-11T01:09:19.833289+00:00",
+      "logger": "dtos.trade_resources",
+      "event": "trade_execution_finished",
+      "duration_ms": 1328.597,
+      "outcome": "complete"
+    },
+    {
+      "timestamp": "2026-11-11T01:09:19.834798+00:00",
+      "logger": "httpx",
+      "message": "HTTP Request: POST http://testserver/api/trades/generate \"HTTP/1.1 200 OK\""
+    },
+    {
+      "timestamp": "2026-11-11T01:09:20.204874+00:00",
+      "logger": "dtos.trade_resources",
+      "event": "trade_admission",
+      "admitted": true,
+      "headroom": 416069632
+    },
+    {
+      "timestamp": "2026-11-11T01:09:21.744753+00:00",
+      "logger": "dtos.trade_resources",
+      "event": "trade_execution_finished",
+      "duration_ms": 1549.787,
+      "outcome": "complete"
+    },
+    {
+      "timestamp": "2026-11-11T01:09:21.745995+00:00",
+      "logger": "httpx",
+      "message": "HTTP Request: POST http://testserver/api/trades/generate \"HTTP/1.1 200 OK\""
+    },
+    {
+      "timestamp": "2026-11-11T01:09:22.389528+00:00",
+      "logger": "dtos.trade_resources",
+      "event": "trade_admission",
+      "admitted": false,
+      "headroom": 384509952
+    },
+    {
+      "timestamp": "2026-11-11T01:09:22.389722+00:00",
+      "logger": "dtos.trade_resources",
+      "event": "trade_execution_finished",
+      "duration_ms": 7.502,
+      "outcome": "deferred"
+    },
+    {
+      "timestamp": "2026-11-11T01:09:22.390468+00:00",
+      "logger": "httpx",
+      "message": "HTTP Request: POST http://testserver/api/trades/generate \"HTTP/1.1 503 Service Unavailable\""
+    }
+  ]
+}

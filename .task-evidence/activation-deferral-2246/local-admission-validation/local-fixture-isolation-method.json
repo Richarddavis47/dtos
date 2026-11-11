@@ -1,0 +1,31 @@
+{
+  "source": {
+    "baseline": "abbe723a0566cf84a8fff947cf7320cb66567a77",
+    "candidate": "836d036464bfb1e13cf350e44635620b0978f05d",
+    "tree": "d35a21d697d603d4eb4b4f46cf88e8a514c50d77",
+    "branch": "fix/activation-deferral-2246",
+    "version": "1.22.31",
+    "build": 2246
+  },
+  "previous": {
+    "scope": "Original completed local canonical",
+    "tests": 4358,
+    "errors": 1,
+    "gate_results": "6passed;unit/regression failed;remaining3notexecuted",
+    "available_search_bytes": 384509952,
+    "required_search_bytes": 402653184,
+    "reason": "Correct fifth-search capacity deferral under accumulated validation-process memory; no OOM or engine error"
+  },
+  "focused": {
+    "exact_unmodified_test_passed": true,
+    "real_generate_searches": 7,
+    "initial_evaluation_completed": true,
+    "complete_module_tests": 8,
+    "unchanged_ui_wait_seconds": 10,
+    "controlled_cleanup_proof": "Reachable live data preserved; ~84MiB unreachable fixture cycle collected; held unsafe pressure still refused actual execution; pressure removal restored capacity"
+  },
+  "correction": "External validation observer collects unreachable completed fixture graphs and releases free allocator pages only between test modules. No cache invalidation, worker retirement, active reference removal, production changes or admission bypass.",
+  "commands": "Official canonical CLI has no gate selection/resume; rerun only failed local mandatory canonical scope, not passing hosted workflows.",
+  "observer_sha256": "1cb7f5f31ef6ebf16f7367c42235692d6f70959815e9dcd0c7f4da8bbea4a660",
+  "helper_sha256": "a4e580694aedbaad13fd4120daca25abd8052fe44c8bd7dd96fd5e83be03f749"
+}
