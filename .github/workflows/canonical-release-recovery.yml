@@ -4,6 +4,17 @@ on:
   pull_request:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      release_operation:
+        description: Validate normally or run the separately guarded publisher
+        type: choice
+        options: [validate, audit, prepare, publish]
+        default: validate
+        required: true
+      preparation_run_id:
+        description: Required only for publish; successful preparation on this tooling revision
+        type: string
+        default: ''
   push:
     branches: [main]
     paths: ['.github/workflows/canonical-release-recovery.yml']
@@ -13,14 +24,14 @@ permissions:
 
 concurrency:
   group: canonical-release-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name != 'workflow_dispatch' || inputs.release_operation == '' || inputs.release_operation == 'validate' }}
 
 env:
   NODE_OPTIONS: --max-old-space-size=256
 
 jobs:
   canonical-release:
-    if: github.event_name != 'push'
+    if: github.event_name != 'push' && (github.event_name != 'workflow_dispatch' || inputs.release_operation == '' || inputs.release_operation == 'validate')
     runs-on: ubuntu-24.04
     # Preserve the complete growing regression suite and artifact cleanup time.
     # Source0a4 completed4116/4261tests without errors before the70minCI
@@ -346,6 +357,62 @@ jobs:
         if: always()
         run: |
           if docker inspect dtos-canonical-release >/dev/null 2>&1; then docker rm -f dtos-canonical-release; fi
+
+  guarded-release-publisher:
+    if: github.event_name == 'workflow_dispatch' && contains(fromJSON('["audit","prepare","publish"]'), inputs.release_operation)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    permissions:
+      contents: write
+      checks: read
+      pull-requests: read
+      actions: read
+    concurrency:
+      group: dtos-guarded-release-2247
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Publisher guard regression and compilation
+        run: |
+          python -m unittest -v tests.test_release_publisher
+          python -m compileall -q tools/release tests/test_release_publisher.py
+          git diff --check
+      - name: Verify pinned evidence and execute the authorized release phase
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_OPERATION: ${{ inputs.release_operation }}
+          PREPARATION_RUN_ID: ${{ inputs.preparation_run_id }}
+        run: |
+          arguments=()
+          if [ "$RELEASE_OPERATION" = publish ]; then
+            test -n "$PREPARATION_RUN_ID"
+            arguments+=(--prepared-run "$PREPARATION_RUN_ID")
+          fi
+          python -m tools.release.publish --plan .github/release-plans/2247.json --operation "$RELEASE_OPERATION" "${arguments[@]}"
+      - name: Preserve release admission and outcome
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: guarded-release-2247-${{ inputs.release_operation }}-${{ github.run_id }}
+          path: |
+            .validation/guarded-release/outcome.json
+            .validation/guarded-release/publication.json
+            .validation/guarded-release/readiness.json
+            .validation/guarded-release/production-smoke.json
+            .validation/guarded-release/assets/VALIDATION.json
+            .validation/guarded-release/assets/evidence-manifest.json
+            .validation/guarded-release/assets/SHA256SUMS
+            .validation/guarded-release/assets/prior-attempts.json
+          if-no-files-found: error
+          retention-days: 14
+
 
   publish-2191:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, 'v1.21.91')
