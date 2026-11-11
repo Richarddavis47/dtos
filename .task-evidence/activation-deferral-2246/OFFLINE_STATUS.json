@@ -1,0 +1,138 @@
+{
+  "schema": 1,
+  "observed_at": "2026-11-11 00:08:23 UTC",
+  "status": "HELD",
+  "source": {
+    "baseline": "abbe723a0566cf84a8fff947cf7320cb66567a77",
+    "candidate": "836d036464bfb1e13cf350e44635620b0978f05d",
+    "tree": "d35a21d697d603d4eb4b4f46cf88e8a514c50d77",
+    "pr": 335,
+    "draft": true,
+    "merged": false
+  },
+  "production": {
+    "version": "1.22.30",
+    "build": 2245,
+    "last_render_live_commit": "abbe723a0566cf84a8fff947cf7320cb66567a77",
+    "new_deployment_performed": false,
+    "fresh_readiness_not_obtained_after_disconnect": true
+  },
+  "hosted": {
+    "passed_required_jobs": 12,
+    "required_jobs": 13,
+    "product_jobs": [
+      {
+        "id": 130208848714,
+        "name": "historical-trade-timeline",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 130208848929,
+        "name": "beginner-navigation",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 130208848987,
+        "name": "resident-refresh-memory",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 130208849084,
+        "name": "projection-display-cross-version",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 130208849099,
+        "name": "my-team-browser",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 130208849176,
+        "name": "public-welcome-browser",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 130208849186,
+        "name": "product-browser",
+        "status": "completed",
+        "conclusion": "success"
+      }
+    ],
+    "canonical": [
+      {
+        "id": 130208848729,
+        "name": "canonical-release",
+        "status": "in_progress",
+        "conclusion": null
+      },
+      {
+        "id": 130208850139,
+        "name": "publish-2191",
+        "status": "completed",
+        "conclusion": "skipped"
+      }
+    ],
+    "tooling_run": 42924917333,
+    "linux_lifecycle_run": 42924917339,
+    "note": "All Product jobs, two tooling and three Linux lifecycle jobs passed on exact candidate. Canonical remains running. Optional legacy publisher skipped, never counted as required."
+  },
+  "local": {
+    "focused_passed": 47,
+    "full_regression": "Uncollected/incomplete after execution transport loss; expected4358 is not a result",
+    "ten_canonical_gates": "Not established",
+    "enforced_2GiB_native_resource_controls": "Passed before disconnect; fixture-only",
+    "publisher_unfrozen_guard_tests": 85,
+    "final_sealed_publisher": "Not run"
+  },
+  "blocker": {
+    "execution": "Selected managed Codex environment explicitly unavailable; status offline; exec-server transport disconnected",
+    "reconnect_control_available": false,
+    "retained_environment_diagnostics": "Metadata list not_found/no capture; no cause established",
+    "required_action": "Restore/reattach the existing authorized Codex execution environment, recover running results and uncommitted controller/evidence before any fresh checkout. No production change or credential required."
+  },
+  "checksums": {
+    "checkpoint": {
+      "commit": "bc390491abfac96e05f5917ae340f6df35e9cfa9",
+      "path": ".task-evidence/activation-deferral-2246/OFFLINE_CHECKPOINT.md",
+      "bytes": 13449,
+      "sha256": "e0f441ee61992b83da9d535e4bfe6f12921dd8c73f984caddb3ca804420395d3",
+      "readback_matches": true
+    },
+    "product_log": {
+      "run": 42924917416,
+      "job": 130208849186,
+      "bytes": 5332398,
+      "sha256": "2b5d922c6956dafd72d6283e8555877d532f6d5f83b6fd266d0d6542778487ae",
+      "counts": [
+        {
+          "tests": 685,
+          "seconds": 1120.371
+        },
+        {
+          "tests": 35,
+          "seconds": 27.613
+        },
+        {
+          "tests": 139,
+          "seconds": 186.741
+        }
+      ],
+      "total": 859,
+      "failed_marker": false,
+      "representation": "Original GitHub MCP decoded UTF-8 job log; not a raw-wire ZIP hash. Original remains readable on the GitHub Actions job; filesystem copy unavailable while environment is offline."
+    }
+  },
+  "live_acceptance": {
+    "fresh_preflight": false,
+    "granite_entry": false,
+    "protected_search": false,
+    "reliable_access_established": false
+  },
+  "preservation": "No new tag/release/merge/deploy, production user-data mutation, sync, restart, eviction, safeguard change or forced source operation. Original failures and partial publication retained separately."
+}
