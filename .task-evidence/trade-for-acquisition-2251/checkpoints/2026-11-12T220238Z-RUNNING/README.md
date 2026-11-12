@@ -1,0 +1,11 @@
+# Trade For cost and fit — running checkpoint
+
+PR340 is draft/unmerged; production remainsv1.22.35/build2250. Finalcandidate39fa61fef9b943591b593835f07686b7db88bba1, treee46dff664b0051d99bef08a2a1095600f8af8edc; proposedv1.22.36/build2251.
+
+Focused123 andall3freshnativeprotocols passed underenforced2GiB. Full local4455/all10gates andhostedcanonicalremainRUNNING, not passed.11of13hostedjobspassed atlastquery; mainProductandcanonicalpending. No releaseorproductionchange.
+
+Initial671sourcefailedhostedarchitecturebefore regression. Public canonicalMarketAPI importscorrected; originalfailedlogpreservedhere. Matchedpreparedselection shows100 outgoingcosthiddenbehind500/1000/1500beforefix;4unchangedevaluations. These aredisposablefixtures,notlivequalifiedoffers.
+
+Existinglocalfullcontainer2bb59967ef263a0c55687c316759de04ddb65a2cde11a070b2384a38c8da2c0c started2026-11-12T21:45:34.070716647Z andsurvivedenvironmenttransition. Outerobserverreattached via26594;neverrestartfulltests. Originalcallbacks/logs/resultsremainin/workspace/2251-trade-for-cost.
+
+SeeNEXT_ACTIONS.mdforremaininggates, guardedActionsreleaseandhonestlive/Safariboundaries. MainChat/Scouthandoffandreadablefullconsoleareunfinisheduntilallgatescomplete. Allcore/platform/calculation/source/scoringandmemorypolicybytesunchanged. Noownerdata/settingsmutations.
