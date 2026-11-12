@@ -23,3 +23,20 @@ Beginning/end roster and capital inventories are explicitly not established by t
 ## Acceptance and publication
 
 Final validation must use the exact candidate commit/tree: focused controls, rendered phone journeys (320×432, 375×667, 390×844 and desktop), complete canonical regression/all ten gates, and all required hosted jobs. Keyboard/touch browser emulation does not establish physical iPhone/Safari acceptance. Source replay, disposable fixtures and fresh authorized live observations must be reported separately. No full-suite result or deployment is claimed by this design record.
+## Full-suite validation isolation
+
+The first local full-suite attempt failed the existing FOIS 500 ms heartbeat
+control at 542.77 ms. It was not an admission deferral or OOM; the failed original
+console and the deliberately interrupted remainder are retained separately.
+A diagnostic replay of the preceding 1,211 methods found 940,075 unreachable
+objects from earlier fixtures; explicit collection took 1.806 seconds. Both real
+worker runs in that diagnostic completed two records, with maximum heartbeat gaps
+of 114.12 ms before collection and 78.62 ms afterward. The original stall did not
+reproduce, so its exact cause remains unproven.
+
+The responsiveness fixture now collects earlier unreachable fixture state before
+constructing its 50,000-player workload or starting the heartbeat. Garbage
+collection remains enabled throughout execution. The actual worker, payload,
+memory admission and 500 ms assertion remain unchanged, with explicit assertions
+that generation completed two records. This is test isolation, not a production
+memory correction or a substitute for a passing complete final-source suite.

@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 import concurrent.futures
 import copy
+import gc
 import os
 import signal
 import subprocess
@@ -332,6 +333,11 @@ class FOISProcessExecutionTests(unittest.IsolatedAsyncioTestCase):
             self.assertFalse(psutil.pid_exists(worker_pid))
 
     async def test_prewarmed_worker_keeps_event_loop_responsive_with_large_irrelevant_data(self) -> None:
+        # Previous browser fixtures leave unreachable cycles in a full discovery
+        # run. Establish this workload's baseline before constructing its data or
+        # starting the heartbeat; keep collection enabled throughout real work.
+        gc.collect()
+        self.assertTrue(gc.isenabled())
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             service = FOISService(
@@ -368,6 +374,8 @@ class FOISProcessExecutionTests(unittest.IsolatedAsyncioTestCase):
 
             self.assertTrue(gaps)
             self.assertLess(max(gaps), 500)
+            self.assertEqual(service.status()["state"], "complete")
+            self.assertEqual(service.status()["records"], 2)
             self.assertLess(service.status()["execution"]["input_bytes"], 1_000_000)
             self.assertGreater(service.status()["execution"]["source_bytes"], 0)
 
