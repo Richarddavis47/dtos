@@ -1,0 +1,114 @@
+{
+  "jobs": [
+    {
+      "id": 131462204065,
+      "run_id": 43298245909,
+      "name": "guarded-release-publisher",
+      "head_sha": "26d54f1277fa719f5e32c5219e2dcdfb878967a6",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-11-12T20:14:12Z",
+      "completed_at": "2026-11-12T20:16:45Z",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-12T20:14:12Z",
+          "completed_at": "2026-11-12T20:14:13Z"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-12T20:14:13Z",
+          "completed_at": "2026-11-12T20:15:09Z"
+        },
+        {
+          "name": "Run actions/setup-python@v5",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-12T20:15:09Z",
+          "completed_at": "2026-11-12T20:15:09Z"
+        },
+        {
+          "name": "Publisher guard regression and compilation",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-11-12T20:15:09Z",
+          "completed_at": "2026-11-12T20:15:12Z"
+        },
+        {
+          "name": "Verify pinned evidence and execute the authorized release phase",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-11-12T20:15:12Z",
+          "completed_at": "2026-11-12T20:16:42Z"
+        },
+        {
+          "name": "Preserve release admission and outcome",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-11-12T20:16:42Z",
+          "completed_at": "2026-11-12T20:16:43Z"
+        },
+        {
+          "name": "Post Run actions/setup-python@v5",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 11,
+          "started_at": "2026-11-12T20:16:43Z",
+          "completed_at": "2026-11-12T20:16:43Z"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 12,
+          "started_at": "2026-11-12T20:16:43Z",
+          "completed_at": "2026-11-12T20:16:44Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 13,
+          "started_at": "2026-11-12T20:16:44Z",
+          "completed_at": "2026-11-12T20:16:44Z"
+        }
+      ],
+      "html_url": "https://github.com/Richarddavis47/dtos/actions/runs/43298245909/job/131462204065"
+    },
+    {
+      "id": 131462206022,
+      "run_id": 43298245909,
+      "name": "publish-2191",
+      "head_sha": "26d54f1277fa719f5e32c5219e2dcdfb878967a6",
+      "status": "completed",
+      "conclusion": "skipped",
+      "started_at": "2026-11-12T20:14:09Z",
+      "completed_at": "2026-11-12T20:14:08Z",
+      "steps": [],
+      "html_url": "https://github.com/Richarddavis47/dtos/actions/runs/43298245909/job/131462206022"
+    },
+    {
+      "id": 131462280984,
+      "run_id": 43298245909,
+      "name": "canonical-release",
+      "head_sha": "26d54f1277fa719f5e32c5219e2dcdfb878967a6",
+      "status": "completed",
+      "conclusion": "skipped",
+      "started_at": "2026-11-12T20:14:16Z",
+      "completed_at": "2026-11-12T20:14:08Z",
+      "steps": [],
+      "html_url": "https://github.com/Richarddavis47/dtos/actions/runs/43298245909/job/131462280984"
+    }
+  ],
+  "scope": "Whitelisted unchanged original GitHub API facts; actor/runner/contact metadata omitted."
+}
