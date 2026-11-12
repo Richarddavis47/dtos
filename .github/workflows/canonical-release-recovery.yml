@@ -22,11 +22,11 @@ jobs:
   canonical-release:
     if: github.event_name != 'push'
     runs-on: ubuntu-24.04
-    # The full 4399-test corpus reached4272 completions without test errors
-    # before the80-minute runner deadline (run43107670445). Preserve all tests
-    # and resource limits; allow110minutes plus bounded artifact/cleanup time.
-    # Earlier full-local4378 controls took106.9minutes on enforced two CPUs.
-    timeout-minutes: 120
+    # Preserve the growing4399-test corpus after the measured80-minute
+    # timeout. Full-local controls took99.3-106.9minutes; identical Product
+    # application suites varied1.319x acrossCI runners (43124548703).
+    # Bound execution at150minutes plus cleanup/setup; all2GiB/CPU/assertions stay.
+    timeout-minutes: 160
     steps:
       - uses: actions/checkout@v4
         with:
@@ -212,7 +212,7 @@ jobs:
                   # The two-CPU/2GiB/network-none and assertions are unchanged.
                   result = run_canonical_process(
                       [sys.executable, "-m", "tools.validation.validate_release"],
-                      stream, timeout=6600, cleanup=process_cleanup)
+                      stream, timeout=9000, cleanup=process_cleanup)
               code = result.returncode
           except BaseException as exc:
               error = type(exc).__name__ + ": " + str(exc)
@@ -318,7 +318,7 @@ jobs:
           docker build --file .validation/canonical-build/Dockerfile --tag dtos-canonical-release:validation .validation/canonical-build 2>&1 | tee .validation/canonical-release/image-build.log
           docker run --rm dtos-canonical-release:validation sh -c 'python --version && chromium --version && python -m pip check' | tee .validation/canonical-release/environment.txt
       - name: Run unchanged ten-gate validator under actual 2 GiB
-        timeout-minutes: 112
+        timeout-minutes: 152
         env:
           DTOS_EXPECTED_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
         run: |

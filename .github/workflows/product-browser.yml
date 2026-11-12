@@ -15,9 +15,10 @@ env:
 jobs:
   product-browser:
     runs-on: ubuntu-24.04
-    # The unchanged 539-test list exceeded 16 minutes after 505 cases. Keep
-    # every assertion and allow bounded runtime variance plus setup/cleanup.
-    timeout-minutes: 30
+    # Run43124548703 passed757main tests, then hit the30-minute job cap
+    # during retainedhistory after255seconds of checkout. Preserve every
+    # step/2GiB assertion and allow the measured complete sequence to finish.
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
         with:
