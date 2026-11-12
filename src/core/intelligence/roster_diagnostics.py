@@ -91,7 +91,19 @@ def _qualification(data, snapshot, slots, *, projection_reader=None):
         slot in BENCH_SLOTS or slot in (*POSITIONS, "K", "DEF") or slot in FLEX_ELIGIBILITY
         for slot in slots
     )
-    rows = (snapshot or {}).get("players") or {}
+    all_rows = (snapshot or {}).get("players") or {}
+    # Freshness belongs to the roster comparison, not catalog completeness.
+    # Unrostered assets and explicitly stored IR/taxi/reserve players cannot
+    # enter these current legal assignments or their peer references. Keep all
+    # other roster references, including missing/uncertain eligible reserves.
+    source_ids = {
+        str(player.get("id") or player.get("player_id") or "")
+        for team in data.get("teams") or []
+        for player in team.get("players") or []
+        if str(player.get("roster_slot") or "").upper() not in {"IR", "TAXI", "RESERVE"}
+        and player.get("lineup_eligible") is not False
+    }
+    rows = {pid: row for pid, row in all_rows.items() if pid in source_ids}
     now = _now()
     states = sorted(
         {freshness_state(row.get("source_timestamp"), now=now) for row in rows.values()}
@@ -119,8 +131,15 @@ def _qualification(data, snapshot, slots, *, projection_reader=None):
     if not isinstance(refresh, dict):
         refresh = {}
     from src.core.projection_intelligence.service import projection_row_compatible
-    mixed = any(not projection_row_compatible(snapshot, pid, row)
-                for pid, row in rows.items()) if snapshot else False
+    # Publication compatibility remains atomic even for an unused leaf.
+    mixed = (
+        any(
+            not projection_row_compatible(snapshot, pid, row)
+            for pid, row in all_rows.items()
+        )
+        if snapshot
+        else False
+    )
     limitations = []
     if not valid:
         limitations.append(
@@ -152,8 +171,9 @@ def _qualification(data, snapshot, slots, *, projection_reader=None):
         "retained": retained,
         "refresh": refresh,
         "source_observations": sorted(
-            {str(row.get("source_timestamp") or "Unavailable") for row in rows.values()}
+            {str(row.get("source_timestamp") or "Unavailable") for row in all_rows.values()}
         ),
+        "freshness_source_scope": "league_rosters_excluding_explicit_reserve_storage",
         "conclusion_state": "unavailable"
         if not valid or not supported_slots or mixed
         else "provisional"
@@ -953,6 +973,9 @@ def package_diagnostics(
     qualification = _qualification(
         data, snapshot, slots, projection_reader=projection_reader
     )
+    post_source_qualification = _qualification(
+        post_data, snapshot, slots, projection_reader=projection_reader
+    )
     # A failed refresh can qualify an unchanged publication during assembly.
     # Keep both pre-views at this latest qualification boundary, without
     # decoding/rebuilding the same league inputs separately for each team.
@@ -1007,9 +1030,7 @@ def package_diagnostics(
             data, rid, snapshot, strategies.get(rid) or teams[rid].get("strategy"), baseline
         )
         pool = post_pools[rid]
-        post_evidence = deepcopy(
-            {key: value for key, value in qualification.items() if key != "eligibility"}
-        )
+        post_evidence = deepcopy(post_source_qualification)
         post_eligibility = post_qualification["eligibility"][rid]
         if any(not e["excluded"] and e["status"] != "active" for e in post_eligibility):
             post_evidence["conclusion_state"] = "provisional"
