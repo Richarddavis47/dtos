@@ -20,6 +20,10 @@ class _CompletedTradeObservations:
         self.receiving_trades = self.sending_trades = 0
         self.earliest = self.latest = None
         self.references = []
+        self.movements = {}
+        self.movement_counts = {kind: {'acquired': 0, 'sent': 0, 'covered_trades': 0}
+                                for kind in ('player', 'pick')}
+        self.details_limited = False
 
     def observe(self, row, raw, *, identity_observed):
         if row['kind'] != 'trade' or not row['completed']:
@@ -35,6 +39,33 @@ class _CompletedTradeObservations:
             return
         self.trades += 1
         self.pick_covered += int(categories.get('pick') is True)
+        for kind, counts in self.movement_counts.items():
+            counts['covered_trades'] += int(categories.get(kind) is True)
+        labels = {(a['kind'], str(a['id'])): a['label'] for a in row['assets'] if a.get('id')}
+        for kind, identity, sender, receiver, _ in sorted(movements):
+            if kind not in self.movement_counts:
+                continue
+            direction = 'acquired' if receiver == self.roster_id else 'sent' if sender == self.roster_id else None
+            if direction is None:
+                continue
+            self.movement_counts[kind][direction] += 1
+            key = (kind, identity)
+            if key not in self.movements:
+                if len(self.movements) >= 256:
+                    self.details_limited = True
+                    continue
+                asset = {'kind': kind, 'id': identity, 'label': labels.get(key, identity),
+                         'acquired': 0, 'sent': 0, 'references': []}
+                if kind == 'pick':
+                    _, year, round_, original = identity.split('-')
+                    asset.update(season=int(year), round=int(round_[1:]), original_roster=original[4:],
+                                 own=original[4:] == self.roster_id)
+                self.movements[key] = asset
+            asset = self.movements[key]
+            asset[direction] += 1
+            if row['detail_url'] and len(asset['references']) < 4:
+                asset['references'].append({'url': row['detail_url'], 'transaction_id': row['id'],
+                                            'season': row['season'], 'direction': direction})
         clock = _clock(raw, datetime.now(timezone.utc))
         if clock:
             self.dated += 1
@@ -62,7 +93,22 @@ class _CompletedTradeObservations:
         complete = complete and not earlier_gap and not self.unattributed
         known = stable and (self.trades > 0 or complete)
         picks_known = known and self.pick_covered == self.trades
+        movement_counts = {}
+        for kind, counts in self.movement_counts.items():
+            supported = known and counts['covered_trades'] == self.trades
+            movement_counts[kind] = {
+                direction: value if known and (supported or value) else None
+                for direction, value in counts.items() if direction in ('acquired', 'sent')}
+            movement_counts[kind].update(complete_in_sample=supported,
+                net=counts['acquired'] - counts['sent'] if supported else None)
+        assets = []
+        for _, asset in sorted(self.movements.items()):
+            complete_kind = movement_counts[asset['kind']]['complete_in_sample']
+            assets.append({**asset, 'complete_in_sample': complete_kind,
+                           'net': asset['acquired'] - asset['sent'] if complete_kind else None})
         return {'state': 'complete' if known and complete else 'partial' if known else 'unknown',
+            'movements': movement_counts, 'assets': assets if known else [],
+            'details_limited': self.details_limited if known else False,
             'completed_trades': self.trades if known else None,
             'firsts_received': self.firsts_received if known and (picks_known or self.firsts_received) else None,
             'firsts_sent': self.firsts_sent if known and (picks_known or self.firsts_sent) else None,
@@ -82,7 +128,7 @@ class _CompletedTradeObservations:
             'attribution': 'Franchise history. These observations do not establish the current manager’s past decisions, present intent or willingness to trade.'}
 
 
-def franchise_timeline(graph, roster_id, *, page=1, per_page=25):
+def franchise_timeline(graph, roster_id, *, page=1, per_page=25, season=None):
     roster_id = str(roster_id)
     target = f'{graph.league_id}:franchise:{roster_id}'
     version = graph.store.dataset_version(graph.league_id)
@@ -194,7 +240,6 @@ def franchise_timeline(graph, roster_id, *, page=1, per_page=25):
                 row['incomplete_pick_identity'] = True
                 row['reason'] = ((row['reason'] + ' ') if row['reason'] else '') + 'Exact draft-pick identity is incomplete; known movement fields remain visible, but no missing year, round or original franchise is inferred.'
                 row['detail_url'] = None
-        trade_observations.observe(row, r['raw'], identity_observed=any(r['season'] == year for r in own))
         (events if admitted else attempts).append(row)
 
     drafts = retained('draft_pick')
@@ -244,16 +289,28 @@ def franchise_timeline(graph, roster_id, *, page=1, per_page=25):
             'no_activity_supported': summary['state'] == 'complete' and observed_identity and not movements,
             'draft_note': 'Observed individual selections; transaction-period coverage does not establish complete draft coverage.',
             'continuity': 'source-linked roster-slot continuity' if str(context.get('source_league_id')) in linked else 'franchise continuity unconfirmed'})
+    available_seasons = sorted(years, reverse=True)
+    if season is not None:
+        # Unknown selections stay unknown, rather than falling back to another
+        # season or using today's roster as historical evidence.
+        events = [r for r in events if r['season'] == season]
+        attempts = [r for r in attempts if r['season'] == season]
+        seasons = [s for s in seasons if s['season'] == season]
+    events.sort(key=lambda r: (r['season'], r['occurred_at'] or '', str(r['source_league_id']), r['id']), reverse=True)
+    for row in events:
+        if row['kind'] == 'trade':
+            raw = unique[(row['source_league_id'], row['id'])][1]['raw']
+            trade_observations.observe(row, raw, identity_observed=any(r['season'] == row['season'] for r in own))
     stable = graph.store.dataset_version(graph.league_id) == version
     if not stable:
         for s in seasons:
             s.update(state='unknown', no_activity_supported=False, reason='Retained source changed while this page was assembled; reload to review coherent coverage.')
-    events.sort(key=lambda r: (r['season'], r['occurred_at'] or '', r['id']), reverse=True)
     per_page = per_page if per_page in (10, 25, 50) else 25
     pages = max(1, (len(events) + per_page - 1) // per_page)
     page = min(max(1, page), pages)
     return {'franchise_id': target, 'seasons': seasons, 'events': events[(page - 1) * per_page:page * per_page],
-        'completed_trade_observations': trade_observations.result(seasons=seasons, stable=stable, earlier_gap=bool(cursor)),
+        'selected_season': season, 'available_seasons': available_seasons,
+        'completed_trade_observations': trade_observations.result(seasons=seasons, stable=stable, earlier_gap=bool(cursor) if season is None else False),
         'attempts': attempts[:50], 'attempts_total': len(attempts), 'total': len(events), 'page': page,
         'pages': pages, 'per_page': per_page, 'ownership': ownership, 'stable_source': stable,
         'earlier_link_gap': bool(cursor), 'provider_calls': 0,
