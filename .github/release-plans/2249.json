@@ -1,0 +1,85 @@
+{
+  "schema": 1,
+  "repository": "Richarddavis47/dtos",
+  "actor": "Richarddavis47",
+  "publisher_ref": "refs/heads/release/2249-actions-publisher",
+  "baseline": "98030d6af189fe7d023bc36251800ab754a24f05",
+  "candidate": "36fc76784d968fcd0917ce91821840649da1a7a4",
+  "tree": "c60f914d2a0b6b34c2d3e87cdce8eae4560d0b49",
+  "pr": 338,
+  "source_branch": "fix/sleeper-relevance-2249",
+  "version": "1.22.34",
+  "build": 2249,
+  "draft_id": 0,
+  "prior_immutable_tag": "v1.22.33",
+  "canonical_tests": 4419,
+  "canonical_entries": 0,
+  "local_canonical_entries": 0,
+  "product_tests": 916,
+  "python_version": "3.14.3",
+  "capital_tests": 14,
+  "market_roster_tests": 21,
+  "recovery_file": ".github/release-plans/2249-recovery.zip",
+  "recovery_sha256": "",
+  "recovery_parts": [],
+  "prior_evidence_file": ".github/release-plans/2249-prior.zip",
+  "prior_evidence_sha256": "",
+  "runs": [
+    {
+      "name": "Canonical release recovery",
+      "path": ".github/workflows/canonical-release-recovery.yml",
+      "jobs": [
+        "canonical-release"
+      ],
+      "id": 43151950613
+    },
+    {
+      "name": "Product browser journeys",
+      "path": ".github/workflows/product-browser.yml",
+      "jobs": [
+        "product-browser",
+        "my-team-browser",
+        "beginner-navigation",
+        "public-welcome-browser",
+        "historical-trade-timeline",
+        "projection-display-cross-version",
+        "resident-refresh-memory"
+      ],
+      "id": 43151950540
+    },
+    {
+      "name": "Validation tooling",
+      "path": ".github/workflows/validation-tooling.yml",
+      "jobs": [
+        "tooling (ubuntu-24.04)",
+        "tooling (windows-latest)"
+      ],
+      "id": 43151950549
+    },
+    {
+      "name": "Linux Asset Market lifecycle",
+      "path": ".github/workflows/linux-market-lifecycle.yml",
+      "jobs": [
+        "cgroup-lifecycle (ordinary)",
+        "cgroup-lifecycle (archive-warmed)",
+        "cgroup-lifecycle (combined-read)"
+      ],
+      "id": 43151950531
+    }
+  ],
+  "artifacts": [],
+  "prior_runs": [
+    43149667688,
+    43149667725,
+    43149667697,
+    43149667665
+  ],
+  "prior_jobs": [
+    130805795739,
+    130805794693,
+    130805794782
+  ],
+  "prior_attempts": [],
+  "finalized": false,
+  "roster_source_scope_tests": 20
+}
