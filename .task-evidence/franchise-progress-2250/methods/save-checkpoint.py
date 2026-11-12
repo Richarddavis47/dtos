@@ -1,0 +1,23 @@
+"""Publish source-bound recovery metadata; running work is explicitly incomplete."""
+import datetime,hashlib,json,shutil,subprocess
+from pathlib import Path
+B=Path(__file__).resolve().parent;E=Path('/workspace/cache-sharing-handoff');S=Path('/workspace/dtos-franchise-progress-2250');source=json.loads((B/'source.json').read_text());now=datetime.datetime.now(datetime.timezone.utc);slug=now.strftime('%Y-%m-%dT%H%MZ');prefix=Path('.task-evidence/franchise-progress-2250/checkpoints')/slug;out=E/prefix
+status=dict(source=source,status='LOCAL_AND_HOSTED_MANDATORY_VALIDATION_IN_PROGRESS',updated_at=now.isoformat(),production_unchanged=True,focused={'tests':88,'passed':True,'exact_source':True,'limit':2147483648},native_resources='THREE_NATIVE_GUARDS_PASSED',publisher_controls={'tests':141,'passed':True,'earlier_attempt':'publisher-controls-original.log contains3newguard/isolatedfixture errors; preserved separately'},local_canonical='RUNNING_NOT_SUCCESS',hosted='FOUR_WORKFLOWS_RUNNING_NOT_SUCCESS',release='NOT_CREATED',next_actions='NEXT_ACTIONS.md')
+(B/'WORK_STATUS.json').write_text(json.dumps(status,indent=2)+'\n')
+for path in ['WORK_STATUS.json','NEXT_ACTIONS.md','source.json','candidate.patch','baseline.json','baseline-probe.json','baseline-probe-original.log','baseline-probe.py','baseline-probe-invocation.json','production-baseline-and-access.json','pre-commit-baseline.json','focused-ready.json','focused-exact/result.json','focused-exact/original-console.log','focused-exact-invocation.json','resource-preservation-verified.json','resource-invocation.json','resource-inputs.json','resource-native-guards.json','canonical-invocation.json','canonical-launch-original.log','canonical-runner-extraction.json','hosted-started.json','publisher-controls-original.log','publisher-controls-final-original.log','publisher-ruff-original.log']:
+ p=B/path;assert p.is_file(),path
+subprocess.run(['git','sparse-checkout','add','/.task-evidence/franchise-progress-2250/'],cwd=E,check=True)
+assert not out.exists();out.mkdir(parents=True)
+paths=['WORK_STATUS.json','NEXT_ACTIONS.md','source.json','candidate.patch','baseline.json','baseline-probe.json','baseline-probe-original.log','baseline-probe.py','baseline-probe-invocation.json','production-baseline-and-access.json','pre-commit-baseline.json','focused-ready.json','focused-exact/result.json','focused-exact/original-console.log','focused-exact-invocation.json','resource-preservation-verified.json','resource-invocation.json','resource-inputs.json','resource-native-guards.json','canonical-invocation.json','canonical-launch-original.log','canonical-runner-extraction.json','hosted-started.json','publisher-controls-original.log','publisher-controls-final-original.log','publisher-ruff-original.log']
+for name in paths:
+ p=out/name;p.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(B/name,p)
+(out/'README.md').write_text('Recovery checkpoint only. Exact application source and focused/native results are retained; mandatory full local and hosted workflows are RUNNING, not passed. PR339 remains draft and production unchanged. Publisher self-test failed-original and corrected passing logs are separate. Do not reuse prior build2249 gates for2250. Original final full logs and immutable release evidence will be additive after completion.\n')
+rows=[dict(path=str(p.relative_to(out)),bytes=p.stat().st_size,sha256=hashlib.sha256(p.read_bytes()).hexdigest()) for p in sorted(out.rglob('*')) if p.is_file()]
+(out/'manifest.json').write_text(json.dumps(dict(source=source,status='INCOMPLETE_RECOVERY_CHECKPOINT',files=rows),indent=2)+'\n');(out/'SHA256SUMS').write_text(''.join(r['sha256']+'  '+r['path']+'\n' for r in rows))
+subprocess.run(['git','-c','core.autocrlf=false','add','-f','--sparse','--',str(prefix)],cwd=E,check=True)
+for p in out.rglob('*'):
+ if p.is_file():
+  raw=p.read_bytes();oid=hashlib.sha1(b'blob '+str(len(raw)).encode()+b'\0'+raw).hexdigest();assert subprocess.check_output(['git','rev-parse',':'+str(p.relative_to(E))],cwd=E,text=True).strip()==oid
+subprocess.run(['git','commit','-m','Preserve build2250 source and in-progress validation checkpoint'],cwd=E,check=True);subprocess.run(['git','push','origin','HEAD'],cwd=E,check=True)
+commit=subprocess.check_output(['git','rev-parse','HEAD'],cwd=E,text=True).strip();record=dict(commit=commit,prefix=str(prefix),url='https://github.com/Richarddavis47/dtos/tree/'+commit+'/'+str(prefix),manifest_sha256=hashlib.sha256((out/'manifest.json').read_bytes()).hexdigest(),source=source,status='INCOMPLETE_RECOVERY_CHECKPOINT')
+(B/'checkpoint-published.json').write_text(json.dumps(record,indent=2)+'\n');print(json.dumps(record))

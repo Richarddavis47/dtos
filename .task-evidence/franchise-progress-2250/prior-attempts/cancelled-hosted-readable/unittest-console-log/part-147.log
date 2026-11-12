@@ -1,0 +1,302 @@
+ Service Unavailable\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:17.405502+00:00","level":"INFO","logger":"dtos.attribution","message":"diagnostic_boundary","request_id":"request-1","event":"diagnostic_boundary","diagnostic":{"schema":"request-attribution-v1","event_index":3,"event_limit":512,"dropped_so_far":0,"origin_request_id":null,"name":"request","span_id":1,"parent_span_id":null,"boundary":"response_body_handoff","timestamp":"2026-11-12T17:31:17.405482+00:00","elapsed_from_trace_ms":1.343,"duration_ms":1.333,"status_code":503,"queue_dropped_record_count":0}}
+{"timestamp":"2026-11-12T17:31:17.406325+00:00","level":"INFO","logger":"dtos.attribution","message":"diagnostic_boundary","request_id":"request-1","event":"diagnostic_boundary","diagnostic":{"schema":"request-attribution-v1","event_index":4,"event_limit":512,"dropped_so_far":0,"origin_request_id":null,"name":"request","span_id":1,"parent_span_id":null,"boundary":"finished","timestamp":"2026-11-12T17:31:17.406307+00:00","elapsed_from_trace_ms":2.168,"duration_ms":2.159,"status":"complete","calling_thread_cpu_ms":1.21,"dropped_diagnostic_events":0,"queue_dropped_record_count":0}}
+{"timestamp":"2026-11-12T17:31:17.406400+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"request-1","event":"request_complete","duration_ms":2.374,"status_code":503,"method":"GET","path":"/market"}
+{"timestamp":"2026-11-12T17:31:17.408781+00:00","level":"INFO","logger":"dtos.request","message":"request_accepted","request_id":"request-1","event":"request_accepted","method":"GET","path":"/api/market/assets"}
+{"timestamp":"2026-11-12T17:31:17.408834+00:00","level":"INFO","logger":"dtos.request","message":"handler_scheduled","request_id":"request-1","event":"handler_scheduled","method":"GET","path":"/api/market/assets"}
+{"timestamp":"2026-11-12T17:31:17.408891+00:00","level":"INFO","logger":"dtos.attribution","message":"diagnostic_boundary","request_id":"request-1","event":"diagnostic_boundary","diagnostic":{"schema":"request-attribution-v1","event_index":1,"event_limit":512,"dropped_so_far":0,"origin_request_id":null,"name":"request","span_id":1,"parent_span_id":null,"boundary":"started","timestamp":"2026-11-12T17:31:17.408875+00:00","elapsed_from_trace_ms":0.012,"duration_ms":0.003,"queue_dropped_record_count":0}}
+{"timestamp":"2026-11-12T17:31:17.409027+00:00","level":"INFO","logger":"dtos.attribution","message":"diagnostic_boundary","request_id":"request-1","event":"diagnostic_boundary","diagnostic":{"schema":"request-attribution-v1","event_index":2,"event_limit":512,"dropped_so_far":0,"origin_request_id":null,"name":"request","span_id":1,"parent_span_id":null,"boundary":"response_headers","timestamp":"2026-11-12T17:31:17.409011+00:00","elapsed_from_trace_ms":0.149,"duration_ms":0.14,"status_code":503,"queue_dropped_record_count":0}}
+{"timestamp":"2026-11-12T17:31:17.409467+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/market/assets?limit=50 \"HTTP/1.1 503 Service Unavailable\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:17.409999+00:00","level":"INFO","logger":"dtos.attribution","message":"diagnostic_boundary","request_id":"request-1","event":"diagnostic_boundary","diagnostic":{"schema":"request-attribution-v1","event_index":3,"event_limit":512,"dropped_so_far":0,"origin_request_id":null,"name":"request","span_id":1,"parent_span_id":null,"boundary":"response_body_handoff","timestamp":"2026-11-12T17:31:17.409980+00:00","elapsed_from_trace_ms":1.117,"duration_ms":1.108,"status_code":503,"queue_dropped_record_count":0}}
+{"timestamp":"2026-11-12T17:31:17.410759+00:00","level":"INFO","logger":"dtos.attribution","message":"diagnostic_boundary","request_id":"request-1","event":"diagnostic_boundary","diagnostic":{"schema":"request-attribution-v1","event_index":4,"event_limit":512,"dropped_so_far":0,"origin_request_id":null,"name":"request","span_id":1,"parent_span_id":null,"boundary":"finished","timestamp":"2026-11-12T17:31:17.410741+00:00","elapsed_from_trace_ms":1.879,"duration_ms":1.869,"status":"complete","calling_thread_cpu_ms":1.039,"dropped_diagnostic_events":0,"queue_dropped_record_count":0}}
+{"timestamp":"2026-11-12T17:31:17.410833+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"request-1","event":"request_complete","duration_ms":2.056,"status_code":503,"method":"GET","path":"/api/market/assets"}
+{"timestamp":"2026-11-12T17:31:17.413832+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: HEAD http://testserver/api/market/assets \"HTTP/1.1 503 Service Unavailable\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:17.417126+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"a5bbfa474fd0415495d331f6f6372ddb","event":"request_complete","duration_ms":3.923,"status_code":503,"method":"HEAD","path":"/api/market/assets"}
+.{"timestamp":"2026-11-12T17:31:17.434741+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/market/assets?league_id=secondary&limit=7 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:17.435303+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"d6228d70a83c4c8c9636e86420c0d2ee","event":"request_complete","duration_ms":1.598,"status_code":200,"method":"GET","path":"/api/market/assets"}
+.{"timestamp":"2026-11-12T17:31:17.440989+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/market/assets?limit=50 \"HTTP/1.1 503 Service Unavailable\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:17.441438+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"7fc82fd5641941578a7699f01e0b8eaf","event":"request_complete","duration_ms":0.877,"status_code":503,"method":"GET","path":"/api/market/assets"}
+.{"timestamp":"2026-11-12T17:31:17.446439+00:00","level":"INFO","logger":"dtos.request","message":"request_accepted","request_id":"9a28a9c9de25471587754a53131898ea","event":"request_accepted","method":"GET","path":"/"}
+{"timestamp":"2026-11-12T17:31:17.446508+00:00","level":"INFO","logger":"dtos.request","message":"handler_scheduled","request_id":"9a28a9c9de25471587754a53131898ea","event":"handler_scheduled","method":"GET","path":"/"}
+{"timestamp":"2026-11-12T17:31:17.447408+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/ \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:17.447750+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"9a28a9c9de25471587754a53131898ea","event":"request_complete","duration_ms":1.326,"status_code":200,"method":"GET","path":"/"}
+.{"timestamp":"2026-11-12T17:31:17.453246+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/market/assets?limit=7 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:17.453606+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"f83656139ba049639329ed7d063a8e29","event":"request_complete","duration_ms":1.111,"status_code":200,"method":"GET","path":"/api/market/assets"}
+{"timestamp":"2026-11-12T17:31:17.456461+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/market/assets?limit=bad \"HTTP/1.1 422 Unprocessable Entity\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:17.456810+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"506da38940984fc8b6705d8b9dcd153c","event":"request_complete","duration_ms":0.916,"status_code":422,"method":"GET","path":"/api/market/assets"}
+.{"timestamp":"2026-11-12T17:31:17.462309+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/market/assets?limit=bad \"HTTP/1.1 422 Unprocessable Entity\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:17.462684+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"40aa20afe89c4e3387695f1749de601c","event":"request_complete","duration_ms":1.116,"status_code":422,"method":"GET","path":"/api/market/assets"}
+.{"timestamp":"2026-11-12T17:31:17.466679+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"4f157ac770a342ffa750ac54ae6cb32b","event":"request_complete","duration_ms":0.526,"status_code":503,"method":"GET","path":"/api/market/assets"}
+.Asset Market warming completed: path=/market duration=0.500s attempts=2 final_status=200 generation=published-page-contract
+.Asset Market warming completed: path=/market duration=0.500s attempts=2 final_status=200 generation=published-page-contract
+.......Asset Market warming completed: path=/market duration=1.000s attempts=3 final_status=200 generation=published-page-contract
+.Asset Market warming completed: path=/market duration=0.000s attempts=2 final_status=200 generation=generation-1
+.Asset Market warming completed: path=/market duration=1.000s attempts=3 final_status=200 generation=published-page-contract
+..Asset Market warming completed: path=/market duration=0.500s attempts=2 final_status=200 generation=published-page-contract
+..{"timestamp":"2026-11-12T17:31:17.482690+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups/1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+Validation Chromium: /usr/bin/chromium
+Validation Chromium version: 156.0.8078.79
+..{"timestamp":"2026-11-12T17:31:22.627982+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups/1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:22.638662+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups/1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+..{"timestamp":"2026-11-12T17:31:22.650011+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups/1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+...{"timestamp":"2026-11-12T17:31:22.661160+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups/1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+.{"timestamp":"2026-11-12T17:31:22.670728+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups/1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:22.680660+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups/1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:22.689792+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups/1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+.{"timestamp":"2026-11-12T17:31:22.699462+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups/1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+.{"timestamp":"2026-11-12T17:31:22.709671+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups/1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+..Validation Chromium: /usr/bin/chromium
+Validation Chromium version: 156.0.8078.79
+{"timestamp":"2026-11-12T17:31:23.666777+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups/2?week=2 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:23.798719+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:23.806459+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/lineup-review.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:24.547860+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups/2?week=2 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:24.593303+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:24.599140+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/lineup-review.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:24.995989+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups/2?week=2 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:25.050123+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:25.058509+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/lineup-review.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:25.857854+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups/2?week=2 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:25.906760+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:25.912895+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/lineup-review.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:26.312298+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups/2?week=2 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:26.363706+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:26.398172+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/lineup-review.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:27.156119+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups/2?week=2 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:27.206084+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:27.213746+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/lineup-review.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:27.590997+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups/2?week=2 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:27.648700+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:27.660836+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/lineup-review.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:28.434579+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups/2?week=2 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:28.497611+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:28.502942+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/lineup-review.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:28.858911+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups/2?week=2 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:28.950283+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:28.956262+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/lineup-review.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:29.775578+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups/2?week=2 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:29.810262+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:29.815581+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/lineup-review.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:30.223012+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups/2?week=2 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:30.315768+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:30.321393+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/lineup-review.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:31.064544+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups/2?week=2 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:31.104499+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:31.111357+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/lineup-review.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:31.519960+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups/2?week=2 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:31.618247+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:31.625612+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/lineup-review.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:32.366605+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups/2?week=2 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:32.403982+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:32.409916+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/lineup-review.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+......{"timestamp":"2026-11-12T17:31:32.987710+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/teams \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:32.997980+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/teams/1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+.{"timestamp":"2026-11-12T17:31:33.044849+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups \"HTTP/1.1 200 OK\"","request_id":"system"}
+..{"timestamp":"2026-11-12T17:31:33.148546+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:33.152203+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups?week=19 \"HTTP/1.1 422 Unprocessable Entity\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:33.157930+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups/2?week=3 \"HTTP/1.1 200 OK\"","request_id":"system"}
+......Validation Chromium: /usr/bin/chromium
+Validation Chromium version: 156.0.8078.79
+{"timestamp":"2026-11-12T17:31:34.262117+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:34.331244+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:34.339257+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/lineup-review.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:34.798302+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups/2?week=2 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:34.911767+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:34.917574+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/lineup-review.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:35.311050+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/players/bench2?week=2&matchup=2 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:35.353412+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:35.360934+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/player-projections.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:35.537746+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups/2?week=2 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:35.568144+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:35.575493+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/lineup-review.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:35.855544+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups?week=2 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:35.884279+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:35.890350+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/lineup-review.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:35.972098+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups?week=3 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:36.001003+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:36.017494+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/lineup-review.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:36.162181+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups?week=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:36.191516+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:36.272693+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups/2?week=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:36.299872+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:36.314597+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups?week=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:36.344266+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:36.398495+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/ \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:36.429386+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/strategy_session.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:36.436603+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/home-opportunities.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:36.443779+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:36.450273+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/trade_workspace.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:36.459481+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1&protected=%5B%5D&excluded=%5B%5D \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:36.637279+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/league \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:36.666418+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:37.017900+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:37.105843+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:37.114896+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/lineup-review.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:37.519864+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups/2?week=2 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:37.612898+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:37.622429+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/lineup-review.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:38.045944+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/players/bench2?week=2&matchup=2 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:38.077306+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:38.084392+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/player-projections.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:38.219670+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups/2?week=2 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:38.248767+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:38.256691+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/lineup-review.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:38.537966+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups?week=2 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:38.566734+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:38.575363+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/lineup-review.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:38.672592+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups?week=3 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:38.702007+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:38.708716+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/lineup-review.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:38.798949+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups?week=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:38.827355+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:38.905241+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups/2?week=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:38.932805+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:38.949270+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups?week=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:39.009052+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:39.058299+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/ \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:39.131807+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/strategy_session.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:39.150619+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/home-opportunities.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:39.157007+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:39.162992+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/trade_workspace.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:39.192018+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1&protected=%5B%5D&excluded=%5B%5D \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:39.308761+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/league \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:39.342133+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:39.722049+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:39.805903+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:39.813334+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/lineup-review.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:40.213464+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups/2?week=2 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:40.305762+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:40.312893+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/lineup-review.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:40.743149+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/players/bench2?week=2&matchup=2 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:40.778977+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:40.799610+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/player-projections.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:40.938120+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups/2?week=2 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:40.997257+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:41.003950+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/lineup-review.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:41.287452+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups?week=2 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:41.317475+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:41.325386+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/lineup-review.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:41.405073+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups?week=3 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:41.432478+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:41.438420+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/lineup-review.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:41.530631+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups?week=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:41.590799+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:41.671980+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups/2?week=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:41.698054+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:41.715110+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups?week=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:41.744167+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:41.806637+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/ \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:41.839338+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/strategy_session.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:41.849467+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/home-opportunities.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:41.855648+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:41.862618+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/trade_workspace.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:41.872012+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1&protected=%5B%5D&excluded=%5B%5D \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:42.009741+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/league \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:42.043261+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:42.434593+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:42.521918+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:42.535607+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/lineup-review.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:42.990933+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups/2?week=2 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:43.025765+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:43.031933+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/lineup-review.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:43.420615+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/players/bench2?week=2&matchup=2 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:43.457306+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:43.462663+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/player-projections.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:43.638580+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups/2?week=2 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:43.668146+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:43.673642+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/lineup-review.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:43.946097+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups?week=2 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:43.996076+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:44.002014+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/lineup-review.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:44.089318+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups?week=3 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:44.118745+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:44.124411+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/lineup-review.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:44.214387+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups?week=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:44.243400+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:44.321542+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups/2?week=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:44.350294+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:44.364499+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups?week=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:44.407424+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:44.434789+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/ \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:44.465068+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/strategy_session.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:44.499786+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/home-opportunities.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:44.526514+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:44.533364+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/trade_workspace.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:44.549186+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1&protected=%5B%5D&excluded=%5B%5D \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:44.712003+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/league \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:44.740870+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:45.097428+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:45.210703+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:45.221970+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/lineup-review.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:45.631446+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups/2?week=2 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:45.703199+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:45.711764+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/lineup-review.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:46.110199+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/players/bench2?week=2&matchup=2 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:46.145393+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:46.150570+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/player-projections.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:46.302647+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups/2?week=2 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:46.335112+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:46.342321+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/lineup-review.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:46.668977+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups?week=2 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:46.704858+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:46.711304+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/lineup-review.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:46.788748+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups?week=3 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:46.818355+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:46.823874+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/lineup-review.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:46.914821+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups?week=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:46.942600+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:47.029717+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups/2?week=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:47.094718+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:47.110428+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups?week=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:47.205651+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:47.233421+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/ \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:47.260735+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/strategy_session.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:47.270035+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/home-opportunities.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:47.276516+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:47.298474+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/trade_workspace.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:47.308097+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1&protected=%5B%5D&excluded=%5B%5D \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:47.430632+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/league \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:47.463553+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:47.830029+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:47.904843+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:47.917188+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/lineup-review.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:48.332876+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups/2?week=2 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:48.413429+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:48.448148+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/lineup-review.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:48.802041+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/players/bench2?week=2&matchup=2 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:48.837903+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:48.844328+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/player-projections.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:49.019879+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups/2?week=2 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:49.048683+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:49.054277+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/lineup-review.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:49.337576+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups?week=2 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:49.390631+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:49.396469+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/lineup-review.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:49.487399+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups?week=3 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:49.513119+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:49.519414+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/lineup-review.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:49.613671+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups?week=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:49.642441+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:49.718279+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups/2?week=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:49.744771+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:50.505042+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups?week=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:50.597526+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:50.625194+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/ \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:50.659646+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/strategy_session.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:50.669315+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/home-opportunities.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:50.674903+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:50.698496+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/trade_workspace.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:50.709871+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1&protected=%5B%5D&excluded=%5B%5D \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:50.862744+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/league \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:50.905560+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:51.256429+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:51.336417+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:51.345248+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/lineup-review.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:51.801456+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups/2?week=2 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:51.893673+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:51.899627+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/lineup-review.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:52.323909+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/players/bench2?week=2&matchup=2 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:52.354187+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:52.361513+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/player-projections.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:52.518754+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups/2?week=2 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T17:31:52.551148+00:00","level":"INFO","logger":"httpx","message":"HTTP Req

@@ -1,0 +1,9 @@
+{
+  "observed_at": "2026-11-12T18:10:16.756097+00:00",
+  "candidate": "b5229081f3a1c0eb9cf96d34803fd68d6c9b2cd1",
+  "tests": 103,
+  "failures": 1,
+  "errors": 5,
+  "root_cause": "Adding real spawned-worker controls to an earlier browser-only runner exposed its missing __main__ guard: spawned import executed root.mkdir() again, causing FileExistsError. BrokenProcessPool errors and one expected-exception mismatch followed. Not memory deferral, no OOM. Original console/source/invocation retained.",
+  "correction": "Guard runner initialization/test execution with __main__; no application/test assertion or threshold change."
+}

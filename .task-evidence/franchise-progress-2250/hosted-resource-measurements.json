@@ -1,0 +1,33 @@
+{
+  "source": {
+    "baseline": "05c717e50b47683963ed40d66946e9f6eea76694",
+    "candidate": "b5229081f3a1c0eb9cf96d34803fd68d6c9b2cd1",
+    "tree": "d1894a91d826ef5bdbd6d0a16b0d0860ec758c14",
+    "branch": "feat/franchise-trade-progress-2250",
+    "version": "1.22.35",
+    "build": 2250,
+    "recorded_at": "2026-11-12T18:06:29.525750+00:00",
+    "expected_test_count": 4435,
+    "pr": 339
+  },
+  "kernel_peak": 2147483648,
+  "limit": 2147483648,
+  "final_memory_events": {
+    "low": 0,
+    "high": 0,
+    "max": 406,
+    "oom": 0,
+    "oom_kill": 0,
+    "oom_group_kill": 0,
+    "sock_throttled": 0
+  },
+  "interpretation": "Actual kernel cumulative peak reached enforced2GiB cap; noOOM/oomkill. This is not a claim that allwork stayed comfortably belowcapacity or proof of production headroom. Source/admission/reserves unchanged; native healthy/defer/recovery guards independently passed.",
+  "first_observer_peak_context": {
+    "test": "test_trade_strategy_state_browser.StrategyStateBrowserTests.test_discovery_scope_and_explicit_save_controls_at_four_viewports",
+    "sample_current": 2092490752,
+    "anonymous": 1857478656,
+    "file": 199856128,
+    "max_events": 406,
+    "scope": "Active case at first cumulative-peak sample, not exact allocation attribution"
+  }
+}

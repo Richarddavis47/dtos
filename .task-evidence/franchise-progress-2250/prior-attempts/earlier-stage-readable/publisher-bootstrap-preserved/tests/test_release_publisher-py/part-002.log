@@ -1,0 +1,1470 @@
+lusion="failure",
+            html_url="https://github.com/owner/repo/actions/runs/123/attempts/1",
+        )
+        with patch.object(p, "api", return_value=record) as reader:
+            self.assertEqual(
+                p.prior_attempt_record("repos/owner/repo", dict(id=123, attempt=1)),
+                record,
+            )
+        reader.assert_called_once_with("repos/owner/repo/actions/runs/123/attempts/1")
+
+    def test_history_cannot_substitute_latest_success_for_failed_attempt(self):
+        with patch.object(
+            p, "api", return_value=dict(id=123, run_attempt=2, conclusion="success")
+        ):
+            with self.assertRaisesRegex(RuntimeError, "identity mismatch"):
+                p.prior_attempt_record("repos/owner/repo", dict(id=123, attempt=1))
+
+    def test_invalid_history_reference_does_not_issue_a_request(self):
+        for value in (
+            dict(id=True, attempt=1),
+            dict(id=1, attempt=0),
+            dict(id="1", attempt=1),
+            dict(id=1, attempt=1, path="untrusted"),
+            123,
+        ):
+            with self.subTest(value=value), patch.object(p, "api") as reader:
+                with self.assertRaises(RuntimeError):
+                    p.prior_attempt_record("repos/owner/repo", value)
+                reader.assert_not_called()
+
+
+class ResidentRefreshIntegrityTests(unittest.TestCase):
+    def test_resource_source_cleanup_execution_and_checksums_are_required(self):
+        plan = dict(candidate="a" * 40, tree="b" * 40)
+        cases = [
+            dict(
+                name=name,
+                failed_refresh=failed,
+                reader=reader,
+                completed=True,
+                invalid_restore_preserved_current=True,
+                repeated_switches=3,
+                cancellation_writer_drained=True,
+                old_released_without_reader=not reader,
+                source_digest="c" * 64,
+            )
+            for name, failed, reader in [
+                ("oneqb", False, False),
+                ("oneqb", True, False),
+                ("superflex", False, True),
+            ]
+        ]
+        cases[-1].update(
+            pressure_deferred=True,
+            fois_protected=True,
+            recovery_completed=True,
+            relieved_fixture_bytes=64 * 1024**2,
+            owner_release_plan=dict(telemetry_valid=True),
+            recovery_plan=dict(would_admit=True),
+        )
+        cases.append(
+            dict(
+                name="global-evidence",
+                completed=True,
+                old_released_without_reader=True,
+                source_acquisition_mocked=True,
+                source_restoration_completed=True,
+                scheduler_cancelled=True,
+                source_digest="c" * 64,
+            )
+        )
+        good = dict(
+            schema="resident-refresh-ownership-v2",
+            head=plan["candidate"],
+            tree=plan["tree"],
+            passed=True,
+            working_tree_clean=True,
+            cgroup_limit=2147483648,
+            swap_limit=0,
+            cpus=2,
+            network="none",
+            children_after=[],
+            scratch_removed=True,
+            source_values_preserved=True,
+            cases=cases,
+            samples=[
+                dict(
+                    cgroup_limit_bytes=2147483648, cgroup_memory_events=dict(oom_kill=0)
+                )
+            ],
+            liveness=[dict(server_ms=4.0, client_ms=8.0)],
+        )
+        mutations = {
+            "none": lambda r: None,
+            "source": lambda r: r.update(head="wrong"),
+            "tree": lambda r: r.update(tree="wrong"),
+            "limit": lambda r: r.update(cgroup_limit=1),
+            "child": lambda r: r.update(children_after=[123]),
+            "scratch": lambda r: r.update(scratch_removed=False),
+            "values": lambda r: r.update(source_values_preserved=False),
+            "case": lambda r: r["cases"].pop(),
+            "deferred-as-complete": lambda r: r["cases"][0].update(completed=False),
+            "writer": lambda r: r["cases"][1].update(cancellation_writer_drained=False),
+            "reader": lambda r: r["cases"][2].update(old_released_without_reader=True),
+            "recovery": lambda r: r["cases"][2].update(recovery_completed=False),
+            "fois": lambda r: r["cases"][2].update(fois_protected=False),
+            "oom": lambda r: r["samples"][0]["cgroup_memory_events"].update(oom_kill=1),
+            "live": lambda r: r["liveness"][0].update(server_ms=501),
+            "global": lambda r: r["cases"][3].update(old_released_without_reader=False),
+            "global-restoration": lambda r: r["cases"][3].update(
+                source_restoration_completed=False
+            ),
+            "sums": lambda r: None,
+            "incomplete-sums": lambda r: None,
+        }
+        with tempfile.TemporaryDirectory() as folder:
+            for name, change in mutations.items():
+                with self.subTest(name=name):
+                    result = copy.deepcopy(good)
+                    change(result)
+                    data = json.dumps(result).encode()
+                    files = {"evidence/result.json": data, "raw.log": b"original log"}
+                    files["SHA256SUMS"] = "".join(
+                        hashlib.sha256(b).hexdigest() + "  " + n + "\n"
+                        for n, b in files.items()
+                    ).encode()
+                    if name == "sums":
+                        files["raw.log"] += b"changed"
+                    if name == "incomplete-sums":
+                        files["SHA256SUMS"] = b""
+                    target = Path(folder) / "resident.zip"
+                    p.make_zip(target, files)
+                    if name == "none":
+                        self.assertTrue(
+                            p.verify_resident_refresh(target, plan)["passed"]
+                        )
+                    else:
+                        with self.assertRaises(RuntimeError):
+                            p.verify_resident_refresh(target, plan)
+
+
+class TradeTimeMarketPublisherTests(unittest.TestCase):
+    def test_feature_source_phone_and_package_boundaries(self):
+        import copy
+        import tempfile
+        import zipfile
+        from pathlib import Path
+
+        plan = {"candidate": "candidate", "tree": "tree"}
+        phone = dict(
+            head="candidate",
+            tree="tree",
+            working_tree_clean=True,
+            records=[
+                dict(
+                    width=w,
+                    height=h,
+                    keyboard=True,
+                    overflow=False,
+                    touch_emulated=w < 500,
+                    source_value=321,
+                    age_seconds=3600,
+                    extra_disclosure_requests=0,
+                    errors=[],
+                )
+                for w, h in [(320, 432), (375, 667), (390, 844), (1280, 900)]
+            ],
+        )
+        feature = dict(
+            head="candidate",
+            tree="tree",
+            working_tree_clean=True,
+            cases=[
+                dict(
+                    case=k,
+                    selected_value=v,
+                    package_totals_displayed=False,
+                    retained_fixture_values=[{"value": v}],
+                )
+                for k, v in {
+                    "newer_incompatible": 400,
+                    "newer_foreign": 400,
+                    "partial_old": 275,
+                    "zero": 0,
+                    "conflicting": None,
+                }.items()
+            ],
+        )
+        supplied = dict(
+            provenance="Supplied Main Chat observation",
+            exhaustive=False,
+            complete_package_coverage="Not established",
+            historical_league_format_parity="Not established",
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "feature.zip"
+
+            def write(ph, fe, sp):
+                with zipfile.ZipFile(path, "w") as z:
+                    z.writestr("feature/browser.json", json.dumps(ph))
+                    z.writestr("feature/feature.json", json.dumps(fe))
+                    z.writestr("supplied-screen.json", json.dumps(sp))
+
+            write(phone, feature, supplied)
+            self.assertTrue(p.verify_trade_time_market(path, plan)["passed"])
+            for field, value in [
+                ("head", "other"),
+                ("tree", "other"),
+                ("working_tree_clean", False),
+            ]:
+                bad = copy.deepcopy(feature)
+                bad[field] = value
+                write(phone, bad, supplied)
+                with self.assertRaises(RuntimeError):
+                    p.verify_trade_time_market(path, plan)
+            bad = copy.deepcopy(phone)
+            bad["records"][0]["extra_disclosure_requests"] = 1
+            write(bad, feature, supplied)
+            with self.assertRaises(RuntimeError):
+                p.verify_trade_time_market(path, plan)
+            bad = copy.deepcopy(feature)
+            bad["cases"][0]["package_totals_displayed"] = True
+            write(phone, bad, supplied)
+            with self.assertRaises(RuntimeError):
+                p.verify_trade_time_market(path, plan)
+            bad = copy.deepcopy(supplied)
+            bad["exhaustive"] = True
+            write(phone, feature, bad)
+            with self.assertRaises(RuntimeError):
+                p.verify_trade_time_market(path, plan)
+
+
+class CompletedTradePublisherTests(unittest.TestCase):
+    def fixture(self):
+        plan = {"candidate": "a" * 40, "tree": "b" * 40}
+        controls = (
+            "Day retained trades; disposable waiver pagination",
+            "Arkham sparse retained source",
+        )
+        report = dict(
+            head=plan["candidate"],
+            tree=plan["tree"],
+            working_tree_clean=True,
+            errors=[],
+            server_thread_reaped=True,
+            scope="Retained source replay; no fresh production observation",
+            records=[],
+        )
+        for control in controls:
+            for w, h in ((320, 432), (375, 667), (390, 844), (1280, 900)):
+                known = control == controls[0]
+                report["records"].append(
+                    dict(
+                        control=control,
+                        width=w,
+                        height=h,
+                        supported_trades=2 if known else None,
+                        firsts_received=3 if known else None,
+                        firsts_sent=1 if known else None,
+                        keyboard=known,
+                        contextual_back=known,
+                        touch_emulated=known and w < 1000,
+                        overflow=False,
+                    )
+                )
+        fields = (
+            "completed_trades",
+            "firsts_received",
+            "firsts_sent",
+            "receiving_trades",
+            "sending_trades",
+        )
+        expected = {
+            "retained_day": (2, 3, 1, 1, 1),
+            "multi_team": (1, 2, 1, 1, 1),
+            "partial_pick": (1, 1, None, 1, None),
+            "supported_zero": (1, 0, 0, 0, 0),
+            "unknown": (None, None, None, None, None),
+        }
+        feature = dict(
+            head=plan["candidate"],
+            tree=plan["tree"],
+            working_tree_clean=True,
+            live_observation=False,
+            source_fixture_sha256="012de53aeefa4cfb4cb7de717910fa829f399b23d6f6ad7962598afe8c76833f",
+            raw_retained_expectations=dict(zip(fields, expected["retained_day"])),
+            cases=[],
+        )
+        for name, values in expected.items():
+            row = {
+                **dict(zip(fields, values)),
+                "state": "unknown" if name == "unknown" else "partial",
+                "references": [],
+                "pick_counts_complete_in_sample": name != "partial_pick",
+            }
+            if name == "retained_day":
+                row.update(
+                    dated_trades=2,
+                    first_completion_at="2026-03-01T14:01:05Z",
+                    last_completion_at="2026-10-11T15:05:21Z",
+                    references=[
+                        dict(
+                            firsts_received=[
+                                "PICK-2026-R1-ORIG8",
+                                "PICK-2027-R1-ORIG7",
+                                "PICK-2028-R1-ORIG7",
+                            ],
+                            firsts_sent=["PICK-2026-R1-ORIG5"],
+                        )
+                    ],
+                )
+            feature["cases"].append(dict(case=name, summary=row))
+        return plan, report, feature
+
+    def test_completed_feature_fail_closed_source_counts_unknown_and_interaction(self):
+        for change in (
+            "control",
+            "source",
+            "dirty",
+            "live",
+            "unknown_zero",
+            "unknown_omitted",
+            "overcount",
+            "back",
+            "touch",
+            "errors",
+            "cleanup",
+            "coverage",
+            "pick_direction",
+            "raw",
+            "partial_zero",
+            "screenshots",
+        ):
+            with (
+                self.subTest(change=change),
+                tempfile.TemporaryDirectory() as directory,
+            ):
+                plan, phone, feature = self.fixture()
+                if change == "source":
+                    phone["head"] = "c" * 40
+                if change == "dirty":
+                    feature["working_tree_clean"] = False
+                if change == "live":
+                    feature["live_observation"] = True
+                if change == "unknown_zero":
+                    phone["records"][-1]["supported_trades"] = 0
+                if change == "unknown_omitted":
+                    del feature["cases"][-1]["summary"]["firsts_sent"]
+                if change == "overcount":
+                    feature["cases"][1]["summary"]["completed_trades"] = 2
+                if change == "back":
+                    phone["records"][0]["contextual_back"] = False
+                if change == "touch":
+                    phone["records"][0]["touch_emulated"] = False
+                if change == "errors":
+                    phone["errors"] = ["failed"]
+                if change == "cleanup":
+                    phone["server_thread_reaped"] = False
+                if change == "coverage":
+                    feature["cases"][0]["summary"]["state"] = "complete"
+                if change == "pick_direction":
+                    feature["cases"][0]["summary"]["references"][0]["firsts_sent"] = [
+                        "PICK-2026-R1-ORIG4"
+                    ]
+                if change == "raw":
+                    feature["raw_retained_expectations"]["firsts_received"] = 9
+                if change == "partial_zero":
+                    feature["cases"][2]["summary"]["firsts_sent"] = 0
+                files = {
+                    "feature/browser.json": json.dumps(phone).encode(),
+                    "feature/feature.json": json.dumps(feature).encode(),
+                }
+                files.update(
+                    {
+                        "feature/" + str(i) + ".png": b"\x89PNG\r\n\x1a\n"
+                        for i in range(7 if change == "screenshots" else 8)
+                    }
+                )
+                path = Path(directory) / "feature.zip"
+                p.make_zip(path, files)
+
+                def verify():
+                    p.verify_completed_trade_browser(path, plan, prefix="feature/")
+                    return p.verify_completed_trade_cases(path, plan)
+
+                if change == "control":
+                    self.assertTrue(verify()["passed"])
+                else:
+                    with self.assertRaises(RuntimeError):
+                        verify()
+
+    def test_new_browser_namespace_does_not_replace_original_history_screenshots(self):
+        with tempfile.TemporaryDirectory() as directory:
+            plan, phone, _ = self.fixture()
+            prefix = "completed-trade-observations/"
+            files = {prefix + "browser.json": json.dumps(phone).encode()}
+            files.update(
+                {prefix + str(i) + ".png": b"\x89PNG\r\n\x1a\n" for i in range(8)}
+            )
+            files.update({str(i) + ".png": b"\x89PNG\r\n\x1a\n" for i in range(8)})
+            path = Path(directory) / "browser.zip"
+            p.make_zip(path, files)
+            self.assertTrue(p.verify_completed_trade_browser(path, plan)["passed"])
+            del files["0.png"]
+            p.make_zip(path, files)
+            with self.assertRaises(RuntimeError):
+                p.verify_completed_trade_browser(path, plan)
+            files["0.png"] = b"\x89PNG\r\n\x1a\n"
+            files["unapproved/extra.png"] = b"\x89PNG\r\n\x1a\n"
+            p.make_zip(path, files)
+            with self.assertRaises(RuntimeError):
+                p.verify_completed_trade_browser(path, plan)
+
+
+class PartnerHistoryLinkIntegrityTests(unittest.TestCase):
+    def reports(self):
+        identity = dict(
+            commit="a" * 40,
+            tree="b" * 40,
+            source="disposable prepared league; real authenticated HTTP and evaluator",
+            physical_safari_tested=False,
+        )
+        evaluation = dict(
+            identity,
+            checks=[
+                dict(
+                    viewport=[w, h],
+                    mode="custom",
+                    draft=dict(sent=["a"], received=["2028-R1-4"], partner=2),
+                    filters=dict(
+                        sent=dict(q="a", pos="ALL"), received=dict(q="", pos="ALL")
+                    ),
+                    post_requests=[["POST", "/api/trades/evaluate", 200]],
+                )
+                for w, h in ((320, 432), (375, 667), (390, 844), (1280, 900))
+            ],
+        )
+        recommendation = dict(
+            identity,
+            checks=[
+                dict(
+                    viewport=[w, h],
+                    draft=dict(sent=[], received=[], partner=0),
+                    preview=dict(
+                        partner_roster_id=2,
+                        assets_sent=["a"],
+                        assets_received=["2028-R1-4"],
+                    ),
+                    post_requests=[["POST", "/api/trades/generate", 200]],
+                )
+                for w, h in ((320, 432), (375, 667), (390, 844), (1280, 900))
+            ],
+        )
+        return evaluation, recommendation
+
+    def verify(self, alter=None):
+        evaluation, recommendation = self.reports()
+        if alter:
+            alter(evaluation, recommendation)
+        files = {
+            "trade-partner-history/" + name + "-round-trip.json": json.dumps(
+                report
+            ).encode()
+            for name, report in [
+                ("evaluation", evaluation),
+                ("recommendation", recommendation),
+            ]
+        }
+        files.update(
+            {
+                "trade-partner-history/"
+                + flow
+                + "-"
+                + str(width)
+                + "-"
+                + stage
+                + ".png": b"\x89PNG\r\n\x1a\n"
+                for flow in ("create", "recommended")
+                for width in (320, 375, 390, 1280)
+                for stage in ("history", "returned")
+            }
+        )
+        with tempfile.TemporaryDirectory() as folder:
+            target = Path(folder) / "fixture.zip"
+            p.make_zip(target, files)
+            return p.verify_partner_history_links(
+                target, dict(candidate="a" * 40, tree="b" * 40)
+            )
+
+    def test_two_source_bound_four_viewport_round_trips_are_required(self):
+        self.assertTrue(self.verify()["passed"])
+        for key, value in [
+            ("commit", "x" * 40),
+            ("tree", "x" * 40),
+            ("physical_safari_tested", True),
+            ("source", "live"),
+        ]:
+            with self.subTest(key=key), self.assertRaises(RuntimeError):
+                self.verify(lambda e, r: e.update({key: value}))
+        with self.assertRaises(RuntimeError):
+            self.verify(lambda e, r: r["checks"].pop())
+
+    def test_extra_work_lost_draft_filters_preview_or_exact_picks_block_publication(
+        self,
+    ):
+        changes = [
+            lambda e, r: e["checks"][0]["post_requests"].append(
+                ["POST", "/api/trades/evaluate", 200]
+            ),
+            lambda e, r: e["checks"][0].update(mode="neutral"),
+            lambda e, r: e["checks"][0]["filters"]["sent"].update(q="lost"),
+            lambda e, r: e["checks"][0]["draft"].update(received=["2028-R1-2"]),
+            lambda e, r: r["checks"][0]["draft"].update(sent=["a"]),
+            lambda e, r: r["checks"][0]["preview"].update(partner_roster_id=3),
+        ]
+        for change in changes:
+            with self.subTest(change=change), self.assertRaises(RuntimeError):
+                self.verify(change)
+
+
+if __name__ == "__main__":
+    unittest.main()
+
+
+class TeamNeedHandoffGuardTests(unittest.TestCase):
+    def setUp(self):
+        self.folder = tempfile.TemporaryDirectory()
+        self.addCleanup(self.folder.cleanup)
+        self.path = Path(self.folder.name) / "team-need.zip"
+        self.plan = {"candidate": "a" * 40, "tree": "b" * 40}
+        self.reports = {
+            "phone-round-trips": [
+                {
+                    "width": w,
+                    "height": h,
+                    "handoff": "RB starter",
+                    "draft_and_custom_preserved": True,
+                    "changed_and_cleared_after_reload": True,
+                    "no_automatic_search": True,
+                    "position_visible_on_entry": True,
+                    "position_clear_of_back_bar": True,
+                    "type_filter_preserves_need_reason": True,
+                    "back": "My Team",
+                    "overflow": 0,
+                }
+                for w, h in ((320, 432), (375, 667), (390, 844), (1280, 900))
+            ],
+            "superflex-depth-and-stale": {
+                "depth_distinct": True,
+                "stale_hint_rejected": True,
+                "general_shortcut": True,
+                "no_automatic_search": True,
+                "stale_manual_filter_preserved": True,
+            },
+            "real-search-and-prior-context": {
+                "real_evaluations": True,
+                "prior_contexts": 2,
+                "position_applied_only_on_generate": True,
+                "old_results_separate": True,
+                "explicit_reset_clears_prior_context": True,
+            },
+            "league-switch": {
+                "hint_discarded": True,
+                "old_draft_not_loaded": True,
+                "no_automatic_search": True,
+            },
+        }
+
+    def verify(self, *, source=None, omit=None):
+        files = {
+            "browser/team-need/" + name + ".json": json.dumps(
+                {
+                    "commit": source or self.plan["candidate"],
+                    "tree": self.plan["tree"],
+                    "source": "disposable authenticated prepared Sleeper fixture",
+                    "physical_safari_tested": False,
+                    "observations": rows,
+                }
+            ).encode()
+            for name, rows in self.reports.items()
+            if name != omit
+        }
+        p.make_zip(self.path, files)
+        return p.verify_team_need_handoff(self.path, self.plan)
+
+    def test_complete_source_bound_fixture_passes(self):
+        self.assertTrue(self.verify()["passed"])
+
+    def test_wrong_candidate_is_blocked(self):
+        with self.assertRaisesRegex(RuntimeError, "source mismatch"):
+            self.verify(source="c" * 40)
+
+    def test_missing_report_is_blocked(self):
+        with self.assertRaises(KeyError):
+            self.verify(omit="league-switch")
+
+    def test_missing_phone_is_blocked(self):
+        self.reports["phone-round-trips"].pop()
+        with self.assertRaisesRegex(RuntimeError, "phone controls"):
+            self.verify()
+
+    def test_lost_draft_or_custom_blocks_publication(self):
+        self.reports["phone-round-trips"][0]["draft_and_custom_preserved"] = False
+        with self.assertRaisesRegex(RuntimeError, "draft or explicit"):
+            self.verify()
+
+    def test_deferred_does_not_count_as_real_execution(self):
+        self.reports["real-search-and-prior-context"]["real_evaluations"] = False
+        with self.assertRaisesRegex(RuntimeError, "completed evaluation absent"):
+            self.verify()
+
+    def test_auto_search_blocks_publication(self):
+        self.reports["superflex-depth-and-stale"]["no_automatic_search"] = False
+        with self.assertRaisesRegex(RuntimeError, "depth or stale"):
+            self.verify()
+
+    def test_stale_league_hint_blocks_publication(self):
+        self.reports["league-switch"]["hint_discarded"] = False
+        with self.assertRaisesRegex(RuntimeError, "league isolation"):
+            self.verify()
+
+    def test_hidden_position_blocks_publication(self):
+        self.reports["phone-round-trips"][0]["position_visible_on_entry"] = False
+        with self.assertRaisesRegex(RuntimeError, "draft or explicit"):
+            self.verify()
+
+    def test_obscured_label_blocks_publication(self):
+        self.reports["phone-round-trips"][0]["position_clear_of_back_bar"] = False
+        with self.assertRaisesRegex(RuntimeError, "draft or explicit"):
+            self.verify()
+
+    def test_type_change_losing_reason_blocks_publication(self):
+        self.reports["phone-round-trips"][0]["type_filter_preserves_need_reason"] = (
+            False
+        )
+        with self.assertRaisesRegex(RuntimeError, "draft or explicit"):
+            self.verify()
+
+    def test_stale_manual_override_lost_blocks_publication(self):
+        self.reports["superflex-depth-and-stale"]["stale_manual_filter_preserved"] = (
+            False
+        )
+        with self.assertRaisesRegex(RuntimeError, "depth or stale"):
+            self.verify()
+
+    def test_explicit_reset_retaining_context_blocks_publication(self):
+        self.reports["real-search-and-prior-context"][
+            "explicit_reset_clears_prior_context"
+        ] = False
+        with self.assertRaisesRegex(RuntimeError, "completed evaluation absent"):
+            self.verify()
+
+
+class OfferComparisonEvidenceTests(unittest.TestCase):
+    def setUp(self):
+        self.folder = tempfile.TemporaryDirectory()
+        self.addCleanup(self.folder.cleanup)
+        self.path = Path(self.folder.name) / "comparison.zip"
+        self.plan = dict(candidate="a" * 40, tree="b" * 40)
+        self.observations = {
+            "phone-round-trips": [
+                dict(width=w, height=h, preserved_draft=True, no_http=True)
+                for w, h in ((320, 432), (375, 667), (390, 844), (1280, 900))
+            ],
+            "superflex-depth-replace-remove": dict(
+                missing_depth_qualified=True,
+                counterparty_attached=True,
+                explicit_replacement=True,
+                no_http=True,
+            ),
+            "neutral-custom": dict(
+                actual_evaluations=2,
+                neutral_values_match_originals=True,
+                custom_values_match_original=True,
+                modes_separate=True,
+                no_http=True,
+            ),
+            "partial-pair": dict(
+                actual_evaluations=2,
+                supported_individual_delta_preserved=True,
+                incomplete_other_lineup_unknown=True,
+                no_http=True,
+            ),
+            "two-generations": dict(
+                actual_evaluations=2,
+                incompatible_generations_withheld=True,
+                original_packages_retained=True,
+                no_http=True,
+            ),
+            "aged-incompatible": dict(
+                shared_numbers_withheld=True, retained_offer_visible=True, no_http=True
+            ),
+            "retained-reload": dict(
+                same_prepared_generation=True,
+                retained_qualification_visible=True,
+                exact_draft=True,
+                no_http=True,
+            ),
+            "custom-incomplete-reload": dict(
+                same_prepared_generation=True,
+                original_incomplete_lineup_preserved=True,
+                draft_mode_does_not_mutate_selected_assessment=True,
+                retained_qualification_visible=True,
+                exact_draft=True,
+                no_http=True,
+            ),
+            "recommendation-league-scope": dict(
+                real_searches=1,
+                qualified_source_offers=1,
+                no_comparison_search=True,
+                no_adoption=True,
+                league_switch_discards_comparison=True,
+            ),
+        }
+        for w, h in ((320, 432), (375, 667), (390, 844), (1280, 900)):
+            self.observations["phone-" + str(w)] = dict(
+                width=w,
+                height=h,
+                independent_evaluations=2,
+                no_http=True,
+                higher_gain_higher_cost=True,
+                asset_order_preserved=True,
+                native_deltas=[4.0, 8.0],
+                native_sent_market=[250.0, 500.0],
+            )
+        self.metadata = dict(
+            commit=self.plan["candidate"],
+            tree=self.plan["tree"],
+            working_tree_clean=True,
+            source="Disposable authenticated prepared Sleeper fixture; actual canonical evaluator",
+            physical_safari_tested=False,
+        )
+
+    def verify(self, drop_image=False):
+        files = {
+            "browser/offer-comparison/" + name + ".json": json.dumps(
+                dict(self.metadata, observations=row)
+            ).encode()
+            for name, row in self.observations.items()
+        }
+        for width in (320, 375, 390, 1280):
+            if not drop_image or width != 320:
+                files["browser/offer-comparison/phone-" + str(width) + ".png"] = (
+                    b"\x89PNG\r\n\x1a\nfixture"
+                )
+        p.make_zip(self.path, files)
+        return p.verify_offer_comparison(self.path, self.plan)
+
+    def test_complete_source_bound_native_controls(self):
+        self.assertTrue(self.verify()["passed"])
+        for mode in ("complete", "absent", "foreign-source"):
+            with self.subTest(native_comparison=mode):
+                self.assert_native_collection_boundary(mode)
+
+    def assert_native_collection_boundary(self, mode):
+        """Recovery never substitutes for a missing or incompatible native proof."""
+
+        class ReachedRecovery(Exception):
+            pass
+
+        root = Path(self.folder.name) / ("collect-" + mode)
+        root.mkdir()
+        canonical = root / "canonical.zip"
+        p.make_zip(
+            canonical, {"fixture.txt": b"Canonical guard is covered independently."}
+        )
+        native = root / "native.zip"
+        with zipfile.ZipFile(self.path) as archive:
+            files = {name: archive.read(name) for name in archive.namelist()}
+        if mode == "foreign-source":
+            for name, raw in list(files.items()):
+                if name.endswith(".json"):
+                    row = json.loads(raw)
+                    row["commit"] = "c" * 40
+                    files[name] = json.dumps(row).encode()
+        p.make_zip(native, files)
+        recovery = root / "recovery.zip"
+        p.make_zip(recovery, {"fixture.txt": b"No duplicate offer-comparison family."})
+        originals = {"canonical-original.zip": canonical}
+        if mode != "absent":
+            originals["trade-resource-original.zip"] = native
+        artifacts = [
+            dict(id=index, run=100, file=name, name=name, sha256=p.digest(path))
+            for index, (name, path) in enumerate(originals.items(), 1)
+        ]
+        by_id = {row["id"]: row for row in artifacts}
+        plan = self.plan | dict(
+            repository="fixture/repository",
+            artifacts=artifacts,
+            recovery_file=str(recovery),
+            recovery_sha256=p.digest(recovery),
+        )
+
+        def metadata(endpoint):
+            row = by_id[int(endpoint.rsplit("/", 1)[1])]
+            return dict(
+                expired=False,
+                name=row["name"],
+                digest="sha256:" + row["sha256"],
+                size_in_bytes=originals[row["file"]].stat().st_size,
+                workflow_run=dict(id=row["run"], head_sha=plan["candidate"]),
+            )
+
+        def download(endpoint, target):
+            row = by_id[int(endpoint.split("/")[-2])]
+            target.write_bytes(originals[row["file"]].read_bytes())
+
+        with ExitStack() as stack:
+            stack.enter_context(patch.object(p, "verify_runs", return_value=([], 1)))
+            stack.enter_context(patch.object(p, "api", side_effect=metadata))
+            stack.enter_context(patch.object(p, "download", side_effect=download))
+            stack.enter_context(
+                patch.object(p, "verify_canonical", return_value={"passed": True})
+            )
+            for name in (
+                "verify_trade_resource",
+                "verify_team_need_handoff",
+                "verify_recommended_protections",
+                "verify_activation_deferral",
+                "verify_front_office_workflow",
+                "verify_capital_test_execution",
+                "verify_market_roster_tests",
+                "verify_roster_source_scope_tests",
+                "verify_roster_source_scope",
+                "verify_market_roster",
+                "verify_draft_capital",
+            ):
+                stack.enter_context(
+                    patch.object(p, name, return_value={"passed": True})
+                )
+            comparison = stack.enter_context(
+                patch.object(
+                    p, "verify_offer_comparison", wraps=p.verify_offer_comparison
+                )
+            )
+            stack.enter_context(
+                patch.object(p, "materialize_recovery", return_value=recovery)
+            )
+            local = stack.enter_context(
+                patch.object(p, "verify_local_recovery", side_effect=ReachedRecovery)
+            )
+            if mode == "complete":
+                with self.assertRaises(ReachedRecovery):
+                    p.collect(plan, root / "output")
+                comparison.assert_called_once_with(
+                    root / "output/assets/trade-resource-original.zip", plan
+                )
+                local.assert_called_once_with(recovery, plan)
+            elif mode == "absent":
+                with self.assertRaisesRegex(
+                    RuntimeError, "Hosted offer comparison proof absent"
+                ):
+                    p.collect(plan, root / "output")
+                comparison.assert_not_called()
+                local.assert_not_called()
+            else:
+                with self.assertRaisesRegex(RuntimeError, "source mismatch"):
+                    p.collect(plan, root / "output")
+                comparison.assert_called_once()
+                local.assert_not_called()
+
+    def test_source_revision_or_dirty_tree_cannot_pass(self):
+        for key, bad in [
+            ("commit", "c" * 40),
+            ("tree", "d" * 40),
+            ("working_tree_clean", False),
+        ]:
+            with self.subTest(key=key):
+                saved = self.metadata[key]
+                self.metadata[key] = bad
+                with self.assertRaisesRegex(RuntimeError, "source mismatch"):
+                    self.verify()
+                self.metadata[key] = saved
+
+    def test_fixture_cannot_claim_physical_or_live_scope(self):
+        self.metadata["physical_safari_tested"] = True
+        with self.assertRaisesRegex(RuntimeError, "scope"):
+            self.verify()
+
+    def test_missing_viewport_or_screenshot_blocks(self):
+        with self.assertRaises(KeyError):
+            self.verify(drop_image=True)
+        self.observations["phone-round-trips"].pop()
+        with self.assertRaisesRegex(RuntimeError, "phone round trip"):
+            self.verify()
+
+    def test_extra_http_or_mutated_draft_blocks(self):
+        for key in ["preserved_draft", "no_http"]:
+            self.observations["phone-round-trips"][0][key] = False
+            with self.assertRaisesRegex(RuntimeError, "phone round trip"):
+                self.verify()
+            self.observations["phone-round-trips"][0][key] = True
+
+    def test_fabricated_gain_or_cost_controls_block(self):
+        for values in ([4, 4], [4, float("nan")], [4, None]):
+            self.observations["phone-320"]["native_deltas"] = values
+            with self.assertRaisesRegex(RuntimeError, "gain/cost"):
+                self.verify()
+
+    def test_missing_depth_stale_scope_and_custom_controls_block(self):
+        for name, key in [
+            ("superflex-depth-replace-remove", "counterparty_attached"),
+            ("partial-pair", "incomplete_other_lineup_unknown"),
+            ("two-generations", "incompatible_generations_withheld"),
+            ("aged-incompatible", "shared_numbers_withheld"),
+            ("neutral-custom", "modes_separate"),
+            ("retained-reload", "retained_qualification_visible"),
+            (
+                "custom-incomplete-reload",
+                "draft_mode_does_not_mutate_selected_assessment",
+            ),
+            ("recommendation-league-scope", "league_switch_discards_comparison"),
+        ]:
+            with self.subTest(name=name):
+                self.observations[name][key] = False
+                with self.assertRaisesRegex(RuntimeError, "control missing"):
+                    self.verify()
+                self.observations[name][key] = True
+
+    def test_missing_real_evaluation_or_qualified_control_blocks(self):
+        self.observations["neutral-custom"]["actual_evaluations"] = 0
+        with self.assertRaisesRegex(RuntimeError, "actual evaluation count"):
+            self.verify()
+        self.observations["neutral-custom"]["actual_evaluations"] = 2
+        self.observations["recommendation-league-scope"]["qualified_source_offers"] = 0
+        with self.assertRaisesRegex(RuntimeError, "qualified native control"):
+            self.verify()
+
+
+class RecommendedProtectionIntegrityTests(unittest.TestCase):
+    def fixture(self):
+        plan = dict(candidate="a" * 40, tree="b" * 40)
+        # Verifier-only synthetic records. Real canonical captures are verified
+        # independently against the actual candidate before preparation.
+        observations = {
+            "exact-native-search": dict(
+                payload={"protected_assets": ["2029-R1-1", "a"]},
+                constraints={"protected_assets": ["2029-R1-1", "a"]},
+                candidate_pools=[["b", "2029-R1-3"]],
+                offers=[{"proposal": {"assets_sent": ["b"]}}],
+                saved_preferences_unchanged=True,
+            ),
+            "clear-and-prior-results": dict(
+                old_results_not_relabeled=True,
+                clearing_did_not_search=True,
+                first_constraints={"protected_assets": ["2029-R1-1"]},
+                second_constraints={"protected_assets": []},
+            ),
+            "draft-and-scope": dict(
+                real_evaluations=2,
+                recommended_controls_not_applied_to_evaluate=True,
+                original_draft_retained=True,
+                comparison_proposals_retained=True,
+                reload_retained=True,
+                league_switch_cleared=True,
+            ),
+            "completed-zero-result": dict(
+                completed=True,
+                no_protection_causality_claim=True,
+                payload={"protected_assets": ["a"]},
+                body={"results": [], "exploratory_results": []},
+            ),
+        }
+        for width, height in [(320, 432), (375, 667), (390, 844), (1280, 900)]:
+            observations["phone-" + str(width)] = dict(
+                width=width,
+                height=height,
+                exact_ids=["2029-R1-1", "a"],
+                no_search_from_controls=True,
+            )
+        files = {}
+        for name, facts in observations.items():
+            row = dict(
+                commit=plan["candidate"],
+                tree=plan["tree"],
+                working_tree_clean=True,
+                source="Disposable prepared Sleeper fixture; actual authenticated routes, canonical search and admission",
+                physical_safari_tested=False,
+                observations=facts,
+            )
+            files["browser/protections/" + name + ".json"] = json.dumps(row).encode()
+            if name.startswith("phone-"):
+                files["browser/protections/" + name + ".png"] = b"\x89PNG\r\n\x1a\n"
+        return plan, files
+
+    def check(self, change=None):
+        plan, files = self.fixture()
+        if change:
+            change(plan, files)
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / "proof.zip"
+            p.make_zip(path, files)
+            return p.verify_recommended_protections(path, plan)
+
+    def test_complete_native_contract(self):
+        self.assertTrue(self.check()["passed"])
+
+    def test_protected_asset_in_result_is_rejected(self):
+        def change(plan, files):
+            key = "browser/protections/exact-native-search.json"
+            row = json.loads(files[key])
+            row["observations"]["offers"][0]["proposal"]["assets_sent"].append(
+                "2029-R1-1"
+            )
+            files[key] = json.dumps(row).encode()
+
+        with self.assertRaisesRegex(RuntimeError, "escaped"):
+            self.check(change)
+
+    def test_foreign_source_and_missing_phone_are_rejected(self):
+        for change in [
+            lambda plan, files: plan.update(tree="c" * 40),
+            lambda plan, files: files.pop("browser/protections/phone-320.png"),
+        ]:
+            with self.assertRaises((RuntimeError, KeyError)):
+                self.check(change)
+
+
+class ActivationEvidenceIntegrityTests(unittest.TestCase):
+    PREFIXES = ("browser/activation/", "local-canonical/activation/")
+
+    def setUp(self):
+        self.folder = tempfile.TemporaryDirectory()
+        self.addCleanup(self.folder.cleanup)
+        self.path = Path(self.folder.name) / "activation.zip"
+        self.plan = dict(candidate="a" * 40, tree="b" * 40)
+
+        def record(observations):
+            return json.dumps(
+                dict(
+                    commit=self.plan["candidate"],
+                    tree=self.plan["tree"],
+                    working_tree_clean=True,
+                    physical_safari_tested=False,
+                    scope="Disposable authenticated native route/manager/guard controls; modeled telemetry identified, not live Granite",
+                    observations=observations,
+                )
+            ).encode()
+
+        self.files = {
+            "browser/activation/typed-capacity.json": record(
+                dict(
+                    html=503,
+                    api=dict(status="deferred", code="league_preparation_waiting"),
+                    retry_after="60",
+                    account_unchanged=True,
+                    source_requests=0,
+                    actual_hydrations=1,
+                )
+            ),
+            "browser/activation/real-recovery.json": record(
+                dict(
+                    initial=503,
+                    explicit_retry=303,
+                    warm=True,
+                    source_values_preserved=True,
+                    source_requests=0,
+                    limitation="Small compatible fixture, actual enforced memory telemetry; not private Granite payload or live acceptance",
+                )
+            ),
+        }
+        for width, height in ((320, 432), (375, 667), (390, 844), (1280, 900)):
+            self.files["browser/activation/phone-" + str(width) + ".json"] = record(
+                dict(
+                    viewport=[width, height],
+                    status=503,
+                    retry_after="60",
+                    no_overflow=True,
+                    no_new_source_requests=True,
+                    account_unchanged=True,
+                )
+            )
+            self.files["browser/activation/phone-" + str(width) + ".png"] = (
+                b"\x89PNG\r\n\x1a\n"
+            )
+
+    def verify(self, prefix="browser/activation/"):
+        files = {
+            prefix + name.removeprefix("browser/activation/"): raw
+            for name, raw in self.files.items()
+        }
+        p.make_zip(self.path, files)
+        return p.verify_activation_deferral(self.path, self.plan, prefix=prefix)
+
+    def alter(self, name, key, value, observations=True):
+        path = "browser/activation/" + name + ".json"
+        row = json.loads(self.files[path])
+        (row["observations"] if observations else row)[key] = value
+        self.files[path] = json.dumps(row).encode()
+
+    def test_complete_typed_and_actual_retry_controls(self):
+        for prefix in self.PREFIXES:
+            with self.subTest(prefix=prefix):
+                self.assertTrue(self.verify(prefix=prefix)["passed"])
+                wrong = next(value for value in self.PREFIXES if value != prefix)
+                with self.assertRaises(KeyError):
+                    p.verify_activation_deferral(self.path, self.plan, prefix=wrong)
+
+    def test_deferred_retry_is_not_completion(self):
+        self.alter("real-recovery", "explicit_retry", 503)
+        for prefix in self.PREFIXES:
+            with (
+                self.subTest(prefix=prefix),
+                self.assertRaisesRegex(RuntimeError, "retry completion"),
+            ):
+                self.verify(prefix=prefix)
+
+    def test_generic_error_is_not_typed_deferral(self):
+        self.alter("typed-capacity", "api", dict(status="failed"))
+        for prefix in self.PREFIXES:
+            with (
+                self.subTest(prefix=prefix),
+                self.assertRaisesRegex(RuntimeError, "Typed activation"),
+            ):
+                self.verify(prefix=prefix)
+
+    def test_wrong_source_cannot_pass(self):
+        original = copy.deepcopy(self.files)
+        for key, value in [
+            ("commit", "c" * 40),
+            ("tree", "d" * 40),
+            ("working_tree_clean", False),
+        ]:
+            self.files = copy.deepcopy(original)
+            self.alter("phone-320", key, value, False)
+            for prefix in self.PREFIXES:
+                with (
+                    self.subTest(key=key, prefix=prefix),
+                    self.assertRaisesRegex(RuntimeError, "source mismatch"),
+                ):
+                    self.verify(prefix=prefix)
+
+    def test_missing_phone_or_changed_account_cannot_pass(self):
+        original = copy.deepcopy(self.files)
+        del self.files["browser/activation/phone-390.png"]
+        for prefix in self.PREFIXES:
+            with (
+                self.subTest(prefix=prefix, invalid="missing image"),
+                self.assertRaises(KeyError),
+            ):
+                self.verify(prefix=prefix)
+        self.files = copy.deepcopy(original)
+        self.files["browser/activation/phone-390.png"] = b"not a PNG"
+        for prefix in self.PREFIXES:
+            with (
+                self.subTest(prefix=prefix, invalid="image signature"),
+                self.assertRaisesRegex(RuntimeError, "image missing"),
+            ):
+                self.verify(prefix=prefix)
+        self.files = original
+        self.alter("phone-375", "account_unchanged", False)
+        for prefix in self.PREFIXES:
+            with (
+                self.subTest(prefix=prefix, invalid="account changed"),
+                self.assertRaisesRegex(RuntimeError, "phone coverage"),
+            ):
+                self.verify(prefix=prefix)
+
+    def test_fixture_cannot_claim_live_access(self):
+        original = copy.deepcopy(self.files)
+        for key, value in [
+            ("scope", "Live Granite recovery"),
+            ("physical_safari_tested", True),
+        ]:
+            self.files = copy.deepcopy(original)
+            self.alter("real-recovery", key, value, False)
+            for prefix in self.PREFIXES:
+                with (
+                    self.subTest(key=key, prefix=prefix),
+                    self.assertRaisesRegex(RuntimeError, "scope mismatch"),
+                ):
+                    self.verify(prefix=prefix)
+
+
+class FrontOfficeWorkflowIntegrityTests(unittest.TestCase):
+    """Verifier-only records; native candidate captures supply execution proof."""
+
+    PREFIXES = (
+        "browser/front-office-workflow/",
+        "local-canonical/front-office-workflow/",
+    )
+
+    def setUp(self):
+        self.folder = tempfile.TemporaryDirectory()
+        self.addCleanup(self.folder.cleanup)
+        self.path = Path(self.folder.name) / "front-office.zip"
+        self.plan = dict(candidate="a" * 40, tree="b" * 40)
+        self.metadata = dict(
+            commit=self.plan["candidate"],
+            tree=self.plan["tree"],
+            working_tree_clean=True,
+            source="Disposable authenticated prepared Sleeper fixture; native search and canonical evaluator",
+            physical_safari_tested=False,
+        )
+        fingerprint = "f" * 64
+        href = "/trades/recommended?front_office=1&team_need=" + fingerprint
+        views = ((320, 432), (375, 667), (390, 844), (1280, 900))
+        context = dict(
+            binding="account-session-league-1",
+            league_id="league-1",
+            roster_id=1,
+            ownership_generation="ownership-a",
+        )
+        payload = dict(
+            workflow="recommended",
+            active_roster_id=1,
+            partner_roster_id=0,
+            recommendation_position="RB",
+            recommendation_filter="all",
+            protected_assets=["2029-R1-1", "a"],
+            workspace_context=context,
+        )
+        evaluations = [
+            dict(
+                active_roster_id=1,
+                partner_roster_id=2,
+                assets_sent=sent,
+                assets_received=[target],
+                protected_assets=[],
+                workspace_context=copy.deepcopy(context),
+            )
+            for sent, target in ((["a"], "d"), (["2028-R1-3", "a"], "c"), (["a"], "f"))
+        ]
+        proposals = [
+            {
+                key: value[key]
+                for key in (
+                    "active_roster_id",
+                    "partner_roster_id",
+                    "assets_sent",
+                    "assets_received",
+                )
+            }
+            for value in evaluations
+        ]
+        base = dict(
+            league="league-1",
+            roster=1,
+            ownership="ownership-a",
+            lineup="lineup-a",
+            season=2026,
+            week=2,
+            scoring="scoring-a",
+            projection="projection-a",
+            provider="Sleeper",
+        )
+        selected, actual = [], []
+        for index, proposal in enumerate(proposals[:2]):
+            market = dict(
+                availability="full",
+                sent=dict(total=100 + index),
+                received=dict(total=104 + index),
+            )
+            selected.append(
+                dict(
+                    scope=dict(binding=context["binding"], league="league-1", roster=1),
+                    baseline=copy.deepcopy(base),
+                    proposal=copy.deepcopy(proposal),
+                    identity=dict(
+                        binding=context["binding"],
+                        ownership="ownership-a",
+                        market="market-a",
+                        package=json.dumps(
+                            [
+                                2,
+                                sorted(proposal["assets_sent"]),
+                                proposal["assets_received"],
+                            ]
+                        ),
+                    ),
+                    summary=dict(
+                        verdict="NOT WORTH IT",
+                        mode="neutral",
+                        neutral=dict(
+                            availability="full", sent=100 + index, received=104 + index
+                        ),
+                        lineup=dict(
+                            state="supported",
+                            pre_total=100,
+                            post_total=104 + index,
+                            delta=4 + index,
+                            weeks=[2],
+                            season=2026,
+                            league_id="league-1",
+                            scoring_profile_id="scoring-a",
+                            projection_generation="projection-a",
+                        ),
+                    ),
+                )
+            )
+            actual.append(
+                dict(
+                    recommendation="NOT WORTH IT",
+                    market=market,
+                    lineup=dict(
+                        selected[-1]["summary"]["lineup"],
+                        season=2026,
+                        league_id="league-1",
+                        scoring_profile_id="scoring-a",
+                        projection_generation="projection-a",
+                    ),
+                )
+            )
+        row = dict(
+            league_slots=["QB", "RB", "WR", "FLEX", "K", "DEF", "BN"],
+            home=[
+                dict(
+                    width=w,
+                    height=h,
+                    title="RB starter need",
+                    action="Explore RB trades →",
+                    href=href,
+                )
+                for w, h in views
+            ],
+            handoff=dict(
+                position="RB",
+                href=href,
+                explanation="Week 2: a supported RB addition. Change or clear, then Generate.",
+                existing_my_team_reused=True,
+                initial_choice=dict(
+                    fingerprint=fingerprint, position="RB", manual=False
+                ),
+                edited_choice=dict(fingerprint=fingerprint, position="", manual=True),
+            ),
+            protection_views=[
+                dict(width=w, height=h, exact_ids=["2029-R1-1", "a"]) for w, h in views
+            ],
+            generation_payload=payload,
+            applied_constraints=dict(protected_assets=["2029-R1-1", "a"]),
+            outgoing_pools=[["b", "2029-R1-3"]],
+            exact_protected_ids=["2029-R1-1", "a"],
+            distinct_same_round_pick="2029-R1-3",
+            distinct_pick_remained_eligible=True,
+            native_offers=[
+                dict(
+                    family="exploratory_results",
+                    proposal=dict(
+                        active_roster_id=1,
+                        partner_roster_id=2,
+                        assets_sent=["b"],
+                        assets_received=["c"],
+                    ),
+                    recommendation="NOT WORTH IT",
+                    generated_trade_eligible=False,
+                    exploration=True,
+                )
+            ],
+            prior_search=dict(
+                position="RB",
+                type="all",
+                count=1,
+                protections=[
+                    dict(id="2029-R1-1", label="Own first"),
+                    dict(id="a", label="Player a"),
+                ],
+            ),
+            actual_evaluations=actual,
+            comparison_offers=selected,
+            comparison_and_history=[
+                dict(
+                    width=w,
+                    height=h,
+                    exact_draft=dict(
+                        partner=2, sent=["2028-R1-3", "a"], received=["c"]
+                    ),
+                    panel_state="retained",
+                    keep_option="Keep the roster · no trade",
+                    comparison_retained=True,
+                    history_qualification="retained",
+                    history_return_without_post=True,
+                )
+                for w, h in views
+            ],
+            post_requests=[["POST", "/api/trades/generate", 200]]
+            + [["POST", "/api/trades/evaluate", 200]] * 3,
+            post_ledger=[
+                dict(
+                    path="/api/trades/generate",
+                    status=200,
+                    payload=copy.deepcopy(payload),
+                )
+            ]
+            + [
+                dict(path="/api/trades/evaluate", status=200, payload=value)
+                for value in evaluations
+            ],
+            reload_retained=True,
+            replacement=dict(
+                selected_proposals=[proposals[2], proposals[1]],
+                remaining_proposals=[proposals[1]],
+                draft=dict(partner=2, sent=["a"], received=["f"]),
+            ),
+            scope_change=dict(
+                old=context["binding"],
+                current="account-session-league-2",
+                temporary_state_cleared=True,
+                before_protections=["2029-R1-1", "a"],
+                before_position="QB",
+                before_draft=dict(partner=2, sent=["a"], received=["f"]),
+            ),
+            saved_goal_and_rankings_unchanged=True,
+        )
+        self.rows = {"1qb-k-def-journey": row, "superflex-journey": copy.deepcopy(row)}
+        self.rows["superflex-journey"]["league_slots"] = [
+            "QB",
+            "SUPER_FLEX",
+            "RB",
+            "WR",
+            "FLEX",
+            "BN",
+        ]
+
+    def verify(self, prefix="browser/front-office-workflow/", omit=None):
+        files = {}
+        for name, row in self.rows.items():
+            files[prefix + name + ".json"] = json.dumps(
+                dict(self.metadata, observations=row)
+            ).encode()
+            files[prefix + name + ".png"] = b"\x89PNG\r\n\x1a\nfixture"
+        if omit:
+            del files[prefix + omit]
+        p.make_zip(self.path, files)
+        return p.verify_front_office_workflow(self.path, self.plan, prefix=prefix)
+
+    def reject(self, change, message):
+        original = copy.deepcopy(self.rows)
+        try:
+            change(self.rows["1qb-k-def-journey"])
+            for prefix in self.PREFIXES:
+                with (
+                    self.subTest(prefix=prefix),
+                    self.assertRaisesRegex(RuntimeError, message),
+                ):
+                    self.verify(prefix=prefix)
+        finally:
+            self.rows = original
+
+    def test_native_qualification_is_preserved_without_requiring_endorsement(self):
+        for prefix in self.PREFIXES:
+            with self.subTest(prefix=prefix):
+                self.assertTrue(self.verify(prefix=prefix)["passed"])
+                wrong = next(value for value in self.PREFIXES if value != prefix)
+                with self.assertRaises(KeyError):
+                    p.verify_front_office_workflow(self.path, self.plan, prefix=wrong)
+
+    def test_zero_offers_are_valid_with_actual_nonempty_exclusion_pools(self):
+        for row in self.rows.values():
+            row["native_offers"] = []
+            row["prior_search"]["count"] = 0
+        for prefix in self.PREFIXES:
+            with self.subTest(prefix=prefix):
+                self.assertTrue(self.verify(prefix=prefix)["passed"])
+
+    def test_missing_near_miss_verdict_is_retained_without_becoming_an_offer(self):
+        for row in self.rows.values():
+            row["native_offers"][0].update(
+                family="near_misses", recommendation=None, exploration=False
+            )
+            row["prior_search"]["count"] = 0
+        for prefix in self.PREFIXES:
+            with self.subTest(prefix=prefix):
+                self.assertTrue(self.verify(prefix=prefix)["passed"])
+
+    def test_explicit_zero_lineup_change_remains_supported_recorded_evidence(self):
+        for row in self.rows.values():
+            row["comparison_offers"][0]["summary"]["lineup"].update(
+                post_total=100, delta=0
+            )
+            row["actual_evaluations"][0]["lineup"].update(post_total=100,

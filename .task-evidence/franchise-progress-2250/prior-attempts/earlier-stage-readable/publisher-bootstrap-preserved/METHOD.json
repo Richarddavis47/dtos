@@ -1,0 +1,9 @@
+{
+  "reason": "New --no-checkout publisher worktree initially has an empty index. Sparse configuration alone did not populate it. Preserve all four newly introduced files, initialize only this newly created worktree from its exact candidate, then restore tooling bytes. No original application or previous workspace is reset.",
+  "preserved": [
+    ".github/workflows/canonical-release-recovery.yml",
+    "tests/test_release_publisher.py",
+    "tools/release/publish.py",
+    "tools/release/__init__.py"
+  ]
+}

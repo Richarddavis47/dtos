@@ -1,0 +1,56 @@
+Final focused exit 1
+m/request_diagnostics.py", line 195, in synchronous
+    return function(*args, **kwargs)
+  File "/app/src/core/fois/process_execution.py", line 155, in warm_fois_executor_sync
+    return _submit(_worker_ready).result(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        timeout=FOIS_PROCESS_TIMEOUT_SECONDS,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/usr/local/lib/python3.14/concurrent/futures/_base.py", line 450, in result
+    return self.__get_result()
+           ~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/concurrent/futures/_base.py", line 395, in __get_result
+    raise self._exception
+concurrent.futures.process.BrokenProcessPool: A process in the process pool was terminated abruptly while the future was running or pending.
+
+======================================================================
+FAIL: test_missing_or_cross_league_cache_fails_without_publication (tests.test_fois_process_execution.FOISProcessExecutionTests.test_missing_or_cross_league_cache_fails_without_publication)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/src/core/fois/process_execution.py", line 452, in generate_fois_isolated
+    result = await asyncio.wait_for(
+             ^^^^^^^^^^^^^^^^^^^^^^^
+    ...<2 lines>...
+    )
+    ^
+  File "/usr/local/lib/python3.14/asyncio/tasks.py", line 488, in wait_for
+    return await fut
+           ^^^^^^^^^
+concurrent.futures.process.BrokenProcessPool: A process in the process pool was terminated abruptly while the future was running or pending.
+
+The above exception was the direct cause of the following exception:
+
+RuntimeError: FOIS compute process failed.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.14/asyncio/runners.py", line 127, in run
+    return self._loop.run_until_complete(task)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "/usr/local/lib/python3.14/asyncio/base_events.py", line 719, in run_until_complete
+    return future.result()
+           ~~~~~~~~~~~~~^^
+  File "/app/tests/test_fois_process_execution.py", line 425, in test_missing_or_cross_league_cache_fails_without_publication
+    with self.assertRaisesRegex(RuntimeError, "league identity mismatch"):
+         ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: "league identity mismatch" does not match "FOIS compute process failed."
+
+----------------------------------------------------------------------
+Ran 103 tests in 175.928s
+
+FAILED (failures=1, errors=5)
+{"commit": "b5229081f3a1c0eb9cf96d34803fd68d6c9b2cd1", "tree": "d1894a91d826ef5bdbd6d0a16b0d0860ec758c14", "dirty": [], "observed_at": "2026-11-12T18:09:49.745700+00:00", "tests": 103, "failures": 1, "errors": 5, "skipped": 0, "passed": false, "memory_limit": 2147483648, "peak": 742060032, "events": {"low": "0", "high": "0", "max": "0", "oom": "0", "oom_kill": "0", "oom_group_kill": "0"}}
+

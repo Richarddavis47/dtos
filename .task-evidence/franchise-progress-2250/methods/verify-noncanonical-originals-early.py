@@ -1,0 +1,68 @@
+"""Apply every existing and integrated front-office native guard to final-source archives."""
+import importlib.util
+import json
+from pathlib import Path
+import sys
+import zipfile
+
+from common import BASE, digest, load_source, write_json
+
+sys.dont_write_bytecode = True
+publisher_path = Path("/workspace/dtos-publisher-2250/tools/release/publish.py")
+spec = importlib.util.spec_from_file_location("final_readonly_native_guard", publisher_path)
+guard = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(guard)
+source = load_source()
+plan=dict(source, canonical_tests=source['expected_test_count'], python_version='3.14.3', capital_tests=14, market_roster_tests=21, roster_source_scope_tests=20, franchise_progress_tests=16)
+front_office_guard = getattr(guard, "verify_front_office_workflow", None)
+assert callable(front_office_guard), "Agreed front-office publisher verifier is required; never skip new acceptance"
+queue = json.loads((BASE / "noncanonical-artifact-queue.json").read_text())
+assert len(queue) == 14
+checks = {
+    "actuals-restoration-original.zip": guard.verify_actuals_restoration,
+    "restoration-unused-original.zip": guard.verify_restoration_unused,
+    "resident-refresh-original.zip": guard.verify_resident_refresh,
+    "trade-resource-original.zip": guard.verify_trade_resource,
+    "league-entry-original.zip": guard.verify_league_entry,
+    "preflight-original.zip": guard.verify_preflight,
+    "current-history-original.zip": guard.verify_current_history,
+    "current-production-coverage-original.zip": guard.verify_current_production,
+    "market-history-coverage-original.zip": guard.verify_market_history,
+    "history-followthrough-original.zip": guard.verify_history_followthrough,
+}
+rows = []
+for item in queue:
+    path = BASE / "hosted-originals" / item["file"]
+    assert path.stat().st_size == item["bytes"] and digest(path) == item["sha256"]
+    guard.verify_zip(path)
+    if item["file"] in checks:
+        checks[item["file"]](path, plan)
+    if item["file"] == "canonical-original.zip":
+        guard.verify_canonical(path, plan)
+        guard.verify_capital_test_execution(path, plan)
+        guard.verify_market_roster_tests(path, plan)
+        guard.verify_roster_source_scope_tests(path, plan)
+        guard.verify_franchise_progress_tests(path, plan)
+    if item["file"] == "trade-resource-original.zip":
+        guard.verify_team_need_handoff(path, plan)
+        guard.verify_offer_comparison(path, plan)
+        guard.verify_recommended_protections(path, plan)
+        guard.verify_activation_deferral(path, plan)
+        front_office_guard(path, plan, prefix="browser/front-office-workflow/")
+        guard.verify_draft_capital(path, plan)
+        guard.verify_market_roster(path, plan)
+        guard.verify_roster_source_scope(path, plan)
+    if item["file"] == "history-followthrough-original.zip":
+        guard.verify_completed_trade_browser(path, plan)
+        guard.verify_franchise_progress_browser(path, plan)
+    if item["file"] == "public-welcome-security.zip":
+        guard.verify_partner_history_links(path, plan)
+    if item["file"].startswith("lifecycle-"):
+        with zipfile.ZipFile(path) as archive:
+            result = json.loads(archive.read("summary.json"))
+        assert result["passed"] and result["completed"] and result["exit_code"] == 0 and result["memory_max"] == 2147483648
+    rows.append(dict(item, original_bytes_verified=True, specialized_guards_verified=True))
+write_json(BASE / "hosted-noncanonical-artifacts-verified.json", dict(candidate=source["candidate"], tree=source["tree"], passed=True, originals=rows,
+    publisher_guard_file=str(publisher_path), publisher_guard_sha256=digest(publisher_path)))
+print("All fourteen NONCANONICAL native guards passed. Full local/hosted canonical is still required; no release signoff.")
+

@@ -1,0 +1,834 @@
+ delta=0)
+        for prefix in self.PREFIXES:
+            with self.subTest(prefix=prefix):
+                self.assertTrue(self.verify(prefix=prefix)["passed"])
+
+    def test_missing_overall_verdict_and_partial_market_do_not_erase_supported_lineup(
+        self,
+    ):
+        for row in self.rows.values():
+            row["actual_evaluations"][0].update(
+                recommendation=None,
+                market=dict(
+                    availability="partial",
+                    sent=dict(total=None),
+                    received=dict(total=104),
+                ),
+            )
+            row["comparison_offers"][0]["summary"]["neutral"].update(
+                availability="partial", sent=None
+            )
+        for prefix in self.PREFIXES:
+            with self.subTest(prefix=prefix):
+                self.assertTrue(self.verify(prefix=prefix)["passed"])
+
+    def test_recovery_uses_the_same_guard(self):
+        for prefix in (
+            "front-office-workflow/",
+            "local-canonical/front-office-workflow/",
+        ):
+            with self.subTest(prefix=prefix):
+                self.assertTrue(self.verify(prefix=prefix)["passed"])
+
+    def test_foreign_or_dirty_source_and_claimed_live_scope_block(self):
+        for key, value in [
+            ("commit", "c" * 40),
+            ("tree", "d" * 40),
+            ("working_tree_clean", False),
+            ("physical_safari_tested", True),
+            ("source", "Live owner acceptance"),
+        ]:
+            with self.subTest(key=key):
+                original = self.metadata[key]
+                self.metadata[key] = value
+                for prefix in self.PREFIXES:
+                    with (
+                        self.subTest(prefix=prefix),
+                        self.assertRaisesRegex(
+                            RuntimeError, "source mismatch|scope mismatch"
+                        ),
+                    ):
+                        self.verify(prefix=prefix)
+                self.metadata[key] = original
+
+    def test_all_four_distinct_viewports_and_images_are_required(self):
+        for name in ("home", "protection_views", "comparison_and_history"):
+            with self.subTest(name=name):
+                self.reject(lambda row: row[name].pop(), "viewport coverage")
+                self.reject(
+                    lambda row: row[name].__setitem__(3, copy.deepcopy(row[name][0])),
+                    "viewport coverage",
+                )
+        for prefix in self.PREFIXES:
+            with self.subTest(prefix=prefix), self.assertRaises(KeyError):
+                self.verify(prefix=prefix, omit="superflex-journey.png")
+
+    def test_distinct_actual_league_configurations_are_required(self):
+        self.reject(
+            lambda row: row.update(league_slots=["QB", "SUPER_FLEX"]),
+            "league configuration",
+        )
+        self.rows["superflex-journey"]["league_slots"] = ["QB", "RB", "K", "DEF"]
+        for prefix in self.PREFIXES:
+            with (
+                self.subTest(prefix=prefix),
+                self.assertRaisesRegex(RuntimeError, "league configuration"),
+            ):
+                self.verify(prefix=prefix)
+
+    def test_missing_null_empty_or_malformed_pools_never_prove_exclusion(self):
+        for pools in (
+            None,
+            [],
+            {},
+            "2029-R1-3",
+            [None],
+            [["b", "2029-R1-3"], []],
+            [["2029-R1-3", None]],
+            [["b", "2029-R1-3", "a"]],
+            [["b", "2029-R1-3", "2029-R1-1"]],
+            [["b"]],
+        ):
+            with self.subTest(pools=pools):
+                self.reject(
+                    lambda row: row.update(outgoing_pools=pools),
+                    "construction isolation",
+                )
+        self.reject(lambda row: row.pop("outgoing_pools"), "construction isolation")
+
+    def test_missing_native_population_and_leaked_or_promoted_offers_block(self):
+        self.reject(
+            lambda row: row.update(native_offers=None), "native offer population"
+        )
+        self.reject(lambda row: row.pop("native_offers"), "native offer population")
+        self.reject(
+            lambda row: row["native_offers"][0]["proposal"]["assets_sent"].append(
+                "2029-R1-1"
+            ),
+            "escaped",
+        )
+        self.reject(
+            lambda row: row["native_offers"][0].update(generated_trade_eligible=True),
+            "qualification",
+        )
+        self.reject(
+            lambda row: row["native_offers"][0].update(
+                exploration=False, generated_trade_eligible=True
+            ),
+            "qualification",
+        )
+
+    def test_fingerprint_reason_and_editable_choice_are_bound(self):
+        self.reject(
+            lambda row: row["home"][0].update(action="Explore WR trades →"),
+            "Home handoff",
+        )
+        self.reject(
+            lambda row: row["handoff"].update(
+                href="/trades/recommended?front_office=2&team_need=" + "f" * 64
+            ),
+            "fingerprint",
+        )
+        self.reject(
+            lambda row: row["handoff"]["initial_choice"].update(fingerprint="e" * 64),
+            "editable need",
+        )
+        self.reject(
+            lambda row: row["handoff"]["edited_choice"].update(manual=False),
+            "editable need",
+        )
+        self.reject(
+            lambda row: row["handoff"].update(
+                explanation="Unqualified roster weakness"
+            ),
+            "editable need",
+        )
+
+    def test_effective_and_prior_protections_cannot_be_relabelled(self):
+        self.reject(
+            lambda row: row["applied_constraints"].update(protected_assets=[]),
+            "applied protection",
+        )
+        self.reject(
+            lambda row: row["prior_search"].update(protections=[]), "prior applied"
+        )
+        self.reject(
+            lambda row: row["prior_search"].update(position="WR"), "prior applied"
+        )
+
+    def test_extra_search_or_comparison_and_missing_replacement_requests_block(self):
+        for path in ("/api/trades/generate", "/api/trades/compare"):
+            with self.subTest(path=path):
+
+                def change(row):
+                    row["post_requests"].append(["POST", path, 200])
+                    row["post_ledger"].append(dict(path=path, status=200, payload={}))
+
+                self.reject(change, "POST ledger")
+        self.reject(lambda row: row["post_ledger"].pop(), "POST ledger")
+
+    def test_independent_evaluate_locks_and_authorized_scope_are_required(self):
+        self.reject(
+            lambda row: row["post_ledger"][1]["payload"].update(protected_assets=["a"]),
+            "independent Evaluate",
+        )
+        self.reject(
+            lambda row: row["post_ledger"][1]["payload"]["workspace_context"].update(
+                binding="other-tab"
+            ),
+            "independent Evaluate",
+        )
+        self.reject(
+            lambda row: row["generation_payload"]["workspace_context"].update(
+                league_id="foreign-league"
+            ),
+            "generation scope",
+        )
+
+    def test_comparison_source_package_order_and_supported_numbers_are_required(self):
+        self.reject(
+            lambda row: row["comparison_offers"][0]["baseline"].update(projection=None),
+            "source-qualified",
+        )
+        self.reject(
+            lambda row: row["comparison_offers"][1]["baseline"].update(
+                projection="other-source"
+            ),
+            "original lineup",
+        )
+        self.reject(
+            lambda row: row["comparison_offers"][1]["proposal"][
+                "assets_sent"
+            ].reverse(),
+            "package/order",
+        )
+        self.reject(
+            lambda row: row["comparison_offers"][0]["identity"].update(package="null"),
+            "package identity",
+        )
+        for delta in (None, float("nan"), 0):
+            self.reject(
+                lambda row: row["comparison_offers"][0]["summary"]["lineup"].update(
+                    delta=delta
+                ),
+                "supported comparison",
+            )
+        self.reject(
+            lambda row: row["comparison_offers"][0]["summary"]["neutral"].update(
+                sent=999
+            ),
+            "Market values",
+        )
+        self.reject(
+            lambda row: row["comparison_offers"][0]["summary"]["lineup"].update(
+                post_total=105, delta=5
+            ),
+            "original lineup",
+        )
+        self.reject(
+            lambda row: row["actual_evaluations"][0]["lineup"].update(
+                projection_generation="foreign-source"
+            ),
+            "original lineup",
+        )
+        self.reject(
+            lambda row: row["comparison_offers"][0]["summary"]["lineup"].update(
+                projection_generation="foreign-source"
+            ),
+            "original lineup",
+        )
+
+    def test_history_reload_replacement_and_league_clearing_are_required(self):
+        self.reject(
+            lambda row: row["comparison_and_history"][0].update(
+                history_return_without_post=False
+            ),
+            "comparison/history",
+        )
+        self.reject(
+            lambda row: row["comparison_and_history"][0].update(
+                history_qualification="current"
+            ),
+            "comparison/history",
+        )
+        self.reject(
+            lambda row: row.update(reload_retained=False), "reload or replacement"
+        )
+        self.reject(
+            lambda row: row["replacement"].update(remaining_proposals=[]),
+            "reload or replacement",
+        )
+        self.reject(
+            lambda row: row["scope_change"].update(old="foreign-binding"),
+            "league clearing",
+        )
+        self.reject(
+            lambda row: row["scope_change"].update(before_protections=[]),
+            "league clearing",
+        )
+        self.reject(
+            lambda row: row["scope_change"].update(before_position=""),
+            "league clearing",
+        )
+        self.reject(
+            lambda row: row.update(saved_goal_and_rankings_unchanged=False),
+            "saved preferences",
+        )
+
+
+class DraftCapitalEvidenceTests(unittest.TestCase):
+    def setUp(self):
+        self.folder = tempfile.TemporaryDirectory()
+        self.addCleanup(self.folder.cleanup)
+        self.root = Path(self.folder.name)
+        self.plan = dict(candidate="a" * 40, tree="b" * 40, capital_tests=14)
+        self.files = {}
+        for sf in ("False", "True"):
+            for width, height in ((320, 432), (375, 667), (390, 844), (1280, 900)):
+                name = "browser/offer-comparison/draft-capital-" + sf + "-" + str(width)
+                captures = []
+                for index in (0, 1):
+                    body = dict(
+                        schema=1,
+                        league="league-1",
+                        roster=1,
+                        complete=True,
+                        rounds=4,
+                        seasons=[2028],
+                        before=[[2028, 1, 1], [2028, 1, 3]],
+                        generation="c" * 64,
+                        sent=[[2028, 1, 3]] if index == 0 else [],
+                        received=[],
+                    )
+                    text = json.dumps(body)
+                    captures.append(dict(characters=len(text), parts=[text]))
+                self.files[name + ".json"] = json.dumps(
+                    dict(
+                        commit=self.plan["candidate"],
+                        tree=self.plan["tree"],
+                        working_tree_clean=True,
+                        physical_safari_tested=False,
+                        observations=dict(
+                            complete_recorded_inventories=3,
+                            four_viewports=True,
+                            exact_originals=[1, 3],
+                            no_comparison_http=True,
+                            capital_records=captures,
+                        ),
+                    )
+                ).encode()
+                self.files[name + ".png"] = (
+                    b"\x89PNG\r\n\x1a\n"
+                    + b"\0" * 8
+                    + width.to_bytes(4, "big")
+                    + height.to_bytes(4, "big")
+                )
+
+    def archive(self):
+        path = self.root / "capital.zip"
+        p.make_zip(path, self.files)
+        return path
+
+    def mutate(self, fn):
+        key = "browser/offer-comparison/draft-capital-False-320.json"
+        row = json.loads(self.files[key])
+        fn(row)
+        self.files[key] = json.dumps(row).encode()
+
+    def test_complete_two_alternatives_at_both_league_shapes_and_four_sizes(self):
+        self.assertEqual(
+            len(p.verify_draft_capital(self.archive(), self.plan)["cases"]), 8
+        )
+
+    def test_foreign_source_is_rejected(self):
+        self.mutate(lambda r: r.update(commit="f" * 40))
+        with self.assertRaisesRegex(RuntimeError, "source mismatch"):
+            p.verify_draft_capital(self.archive(), self.plan)
+
+    def test_disclosure_requests_are_rejected(self):
+        self.mutate(lambda r: r["observations"].update(no_comparison_http=False))
+        with self.assertRaisesRegex(RuntimeError, "control failed"):
+            p.verify_draft_capital(self.archive(), self.plan)
+
+    def test_truncated_record_is_rejected(self):
+        self.mutate(
+            lambda r: r["observations"]["capital_records"][0].update(characters=1)
+        )
+        with self.assertRaisesRegex(RuntimeError, "Truncated"):
+            p.verify_draft_capital(self.archive(), self.plan)
+
+    def test_distinct_original_firsts_cannot_be_replaced_by_another_scope(self):
+        def change(r):
+            envelope = r["observations"]["capital_records"][0]
+            row = json.loads("".join(envelope["parts"]))
+            row["league"] = "another"
+            text = json.dumps(row)
+            envelope.update(characters=len(text), parts=[text])
+
+        self.mutate(change)
+        with self.assertRaisesRegex(RuntimeError, "scope"):
+            p.verify_draft_capital(self.archive(), self.plan)
+
+    def test_mismatched_phone_capture_is_rejected(self):
+        name = "browser/offer-comparison/draft-capital-False-320.png"
+        self.files[name] = (
+            self.files[name][:16] + (390).to_bytes(4, "big") + self.files[name][20:]
+        )
+        with self.assertRaisesRegex(RuntimeError, "width"):
+            p.verify_draft_capital(self.archive(), self.plan)
+
+    def test_missing_alternative_is_rejected(self):
+        self.mutate(lambda r: r["observations"]["capital_records"].pop())
+        with self.assertRaisesRegex(RuntimeError, "Both"):
+            p.verify_draft_capital(self.archive(), self.plan)
+
+    def test_actual_regression_population_and_required_bound_case(self):
+        names = [
+            "test_trade_capital_inventory.CapitalInventoryTests.test_case_" + str(i)
+            for i in range(13)
+        ]
+        names.append(
+            "test_trade_capital_inventory.CapitalInventoryTests.test_bounded_record_keeps_supported_exchange_when_inventory_is_too_large"
+        )
+        rows = [
+            dict(event=event, test=name)
+            for name in names
+            for event in ("start", "stop")
+        ]
+        path = self.root / "events.zip"
+        p.make_zip(path, {"tests.jsonl": "\n".join(map(json.dumps, rows)).encode()})
+        self.assertEqual(p.verify_capital_test_execution(path, self.plan), names)
+        rows.pop()
+        p.make_zip(path, {"tests.jsonl": "\n".join(map(json.dumps, rows)).encode()})
+        with self.assertRaisesRegex(RuntimeError, "population"):
+            p.verify_capital_test_execution(path, self.plan)
+
+
+class RecoveryTransportTests(unittest.TestCase):
+    def setUp(self):
+        self.directory = tempfile.TemporaryDirectory()
+        self.addCleanup(self.directory.cleanup)
+        self.repo = Path(self.directory.name)
+        folder = self.repo / ".github/release-plans"
+        folder.mkdir(parents=True)
+        archive = self.repo / "original.zip"
+        p.make_zip(archive, {"fixture.txt": b"All original bytes retained."})
+        raw = archive.read_bytes()
+        pivot = len(raw) // 2
+        self.plan = dict(
+            recovery_file=".github/release-plans/2249-recovery.zip",
+            recovery_sha256=p.digest(archive),
+            recovery_parts=[],
+        )
+        for index, part in enumerate((raw[:pivot], raw[pivot:]), 1):
+            path = (
+                ".github/release-plans/2249-recovery-" + str(index).zfill(3) + ".part"
+            )
+            (self.repo / path).write_bytes(part)
+            self.plan["recovery_parts"].append(
+                dict(
+                    path=path, bytes=len(part), sha256=hashlib.sha256(part).hexdigest()
+                )
+            )
+
+    def materialize(self):
+        return p.materialize_recovery(
+            self.plan, self.repo / "output", repository=self.repo
+        )
+
+    def test_original_archive_bytes_are_reassembled_before_existing_guards(self):
+        result = self.materialize()
+        self.assertEqual(result.read_bytes(), (self.repo / "original.zip").read_bytes())
+
+    def test_reversed_or_duplicate_parts_are_rejected(self):
+        for rows in (
+            list(reversed(self.plan["recovery_parts"])),
+            [self.plan["recovery_parts"][0]] * 2,
+        ):
+            with self.assertRaisesRegex(RuntimeError, "unordered"):
+                p.validate_recovery_parts(self.plan | dict(recovery_parts=rows))
+
+    def test_missing_part_is_rejected(self):
+        (self.repo / self.plan["recovery_parts"][1]["path"]).unlink()
+        with self.assertRaisesRegex(RuntimeError, "Missing"):
+            self.materialize()
+
+    def test_bad_part_bytes_are_rejected(self):
+        (self.repo / self.plan["recovery_parts"][1]["path"]).write_bytes(b"wrong")
+        with self.assertRaisesRegex(RuntimeError, "checksum"):
+            self.materialize()
+
+    def test_bad_full_archive_checksum_is_rejected(self):
+        self.plan["recovery_sha256"] = "0" * 64
+        with self.assertRaisesRegex(RuntimeError, "Assembled"):
+            self.materialize()
+
+    def test_symlink_part_is_rejected(self):
+        path = self.repo / self.plan["recovery_parts"][0]["path"]
+        original = path.read_bytes()
+        path.unlink()
+        real = self.repo / "outside"
+        real.write_bytes(original)
+        path.symlink_to(real)
+        with self.assertRaisesRegex(RuntimeError, "nonregular"):
+            self.materialize()
+
+    def test_path_traversal_is_rejected(self):
+        self.plan["recovery_parts"][0]["path"] = "../elsewhere"
+        with self.assertRaisesRegex(RuntimeError, "unordered"):
+            self.materialize()
+
+    def test_part_size_bound_and_existing_output_are_rejected(self):
+        with self.assertRaisesRegex(RuntimeError, "size"):
+            p.validate_recovery_parts(
+                self.plan
+                | dict(
+                    recovery_parts=[
+                        dict(
+                            path=".github/release-plans/2249-recovery-001.part",
+                            bytes=64 * 1024**2 + 1,
+                            sha256="a" * 64,
+                        )
+                    ]
+                )
+            )
+        self.materialize()
+        with self.assertRaisesRegex(RuntimeError, "already exists"):
+            self.materialize()
+
+
+class MarketRosterEvidenceGuards(unittest.TestCase):
+    def setUp(self):
+        import copy
+
+        self.copy = copy.deepcopy
+        self.directory = tempfile.TemporaryDirectory()
+        self.addCleanup(self.directory.cleanup)
+        self.path = Path(self.directory.name) / "market.zip"
+        self.plan = {"candidate": "a" * 40, "tree": "b" * 40, "market_roster_tests": 21}
+        self.prefix = "browser/market-needs/"
+        self.files = {}
+        rows = []
+
+        def put(name, observations):
+            self.files[self.prefix + name + ".json"] = json.dumps(
+                {
+                    "commit": self.plan["candidate"],
+                    "tree": self.plan["tree"],
+                    "scope": "Disposable fixture; not owner live or physical Safari",
+                    "observations": observations,
+                }
+            ).encode()
+
+        for shape in ("oneqb-kdef", "superflex"):
+            for width, height in ((320, 432), (375, 667), (390, 844), (1280, 900)):
+                rows.append(
+                    dict(
+                        shape=shape,
+                        viewport=[width, height],
+                        **{
+                            k: True
+                            for k in (
+                                "roundtrip",
+                                "exact_asset",
+                                "draft_preserved",
+                                "protections_preserved",
+                                "comparison_preserved",
+                                "retained_result",
+                                "no_extra_posts",
+                                "no_solver_on_navigation",
+                            )
+                        },
+                        errors=[],
+                    )
+                )
+                stem = shape + "-" + str(width)
+                put(
+                    stem,
+                    [
+                        dict(
+                            viewport=[width, height],
+                            exact_target="player:2-RB-0",
+                            neutral_movement=150,
+                            keyboard_disclosure=True,
+                            touch_emulation=width < 1000,
+                            overflow=False,
+                        )
+                    ],
+                )
+                put("market-" + stem, [dict(no_search=True)])
+                for capture in (stem, "market-" + stem):
+                    self.files[self.prefix + capture + ".png"] = (
+                        b"\x89PNG\r\n\x1a\n"
+                        + b"\0" * 8
+                        + width.to_bytes(4, "big")
+                        + height.to_bytes(4, "big")
+                    )
+        put("roundtrip", rows)
+        put(
+            "stale-and-league",
+            [
+                {
+                    **{
+                        k: True
+                        for k in (
+                            "stale_link_withheld",
+                            "new_target_not_applied",
+                            "existing_draft_preserved",
+                            "league_switch_cleared_scope",
+                            "no_posts",
+                        )
+                    },
+                    "errors": [],
+                }
+            ],
+        )
+
+    def mutate(self, name, fn):
+        key = self.prefix + name + ".json"
+        row = json.loads(self.files[key])
+        fn(row)
+        self.files[key] = json.dumps(row).encode()
+
+    def verify(self):
+        p.make_zip(self.path, self.files)
+        return p.verify_market_roster(self.path, self.plan)
+
+    def test_complete_source_bound_roundtrip_required(self):
+        self.assertEqual(self.verify()["cases"], 8)
+
+    def test_wrong_source_rejected(self):
+        self.mutate("roundtrip", lambda r: r.update(commit="c" * 40))
+        with self.assertRaisesRegex(RuntimeError, "source"):
+            self.verify()
+
+    def test_partial_viewport_population_rejected(self):
+        self.mutate("roundtrip", lambda r: r["observations"].pop())
+        with self.assertRaisesRegex(RuntimeError, "coverage"):
+            self.verify()
+
+    def test_implicit_search_or_lost_state_rejected(self):
+        self.mutate(
+            "roundtrip", lambda r: r["observations"][0].update(no_extra_posts=False)
+        )
+        with self.assertRaisesRegex(RuntimeError, "no-work"):
+            self.verify()
+
+    def test_touch_and_keyboard_proof_required(self):
+        self.mutate(
+            "oneqb-kdef-320",
+            lambda r: r["observations"][0].update(touch_emulation=False),
+        )
+        with self.assertRaisesRegex(RuntimeError, "accessibility"):
+            self.verify()
+
+    def test_missing_stale_protection_rejected(self):
+        self.mutate(
+            "stale-and-league", lambda r: r["observations"][0].update(no_posts=False)
+        )
+        with self.assertRaisesRegex(RuntimeError, "Stale"):
+            self.verify()
+
+    def test_mismatched_phone_capture_rejected(self):
+        self.files[self.prefix + "market-oneqb-kdef-320.png"] = b"bad"
+        with self.assertRaisesRegex(RuntimeError, "phone"):
+            self.verify()
+
+
+class MarketRosterTestPopulationGuards(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.path = Path(self.tmp.name) / "tests.zip"
+        self.names = [
+            "tests.test_market_roster_relevance.Control.test_" + str(i)
+            for i in range(21)
+        ]
+        self.rows = [
+            dict(event=event, test=name)
+            for name in self.names
+            for event in ("start", "stop")
+        ]
+
+    def verify(self):
+        p.make_zip(
+            self.path,
+            {"tests.jsonl": "\n".join(json.dumps(r) for r in self.rows).encode()},
+        )
+        return p.verify_market_roster_tests(self.path, {"market_roster_tests": 21})
+
+    def test_complete_execution_population(self):
+        self.assertEqual(self.verify(), self.names)
+
+    def test_missing_completion_rejected(self):
+        self.rows.pop()
+        with self.assertRaisesRegex(RuntimeError, "population"):
+            self.verify()
+
+    def test_duplicate_execution_rejected(self):
+        self.rows.extend(self.rows[:2])
+        with self.assertRaisesRegex(RuntimeError, "population"):
+            self.verify()
+
+    def test_unrelated_tests_do_not_fill_population(self):
+        self.rows[-2:] = [
+            dict(event=e, test="unrelated.Control.test") for e in ("start", "stop")
+        ]
+        with self.assertRaisesRegex(RuntimeError, "population"):
+            self.verify()
+
+
+class WorkflowPublisherWiringTests(unittest.TestCase):
+    def test_manual_scoped_publisher_is_present_with_the_verified_plan(self):
+        workflow = (
+            Path(__file__).resolve().parents[1]
+            / ".github/workflows/canonical-release-recovery.yml"
+        ).read_text()
+        self.assertEqual(workflow.count("\n  guarded-release-publisher:\n"), 1)
+        block = workflow.split("\n  guarded-release-publisher:\n", 1)[1].split(
+            "\n  publish-2191:\n", 1
+        )[0]
+        for required in [
+            "if: github.event_name == 'workflow_dispatch'",
+            'contains(fromJSON(\'["audit","prepare","publish"]\')',
+            "timeout-minutes: 25",
+            "contents: write",
+            "checks: read",
+            "pull-requests: read",
+            "actions: read",
+            "group: dtos-guarded-release-2249",
+            "cancel-in-progress: false",
+            "ref: ${{ github.sha }}",
+            "persist-credentials: false",
+            "python -m unittest -v tests.test_release_publisher",
+            "GH_TOKEN: ${{ github.token }}",
+            "PREPARATION_RUN_ID: ${{ inputs.preparation_run_id }}",
+            "--plan .github/release-plans/2249.json",
+            'arguments+=(--prepared-run "$PREPARATION_RUN_ID")',
+            "name: guarded-release-2249-${{ inputs.release_operation }}-${{ github.run_id }}",
+            "if-no-files-found: error",
+        ]:
+            with self.subTest(required=required):
+                self.assertIn(required, block)
+        self.assertNotIn("2247", block)
+
+
+class RosterSourceScopePublicationTests(unittest.TestCase):
+    def setUp(self):
+        self.folder = tempfile.TemporaryDirectory()
+        self.addCleanup(self.folder.cleanup)
+        self.path = Path(self.folder.name) / "source-scope.zip"
+        self.plan = dict(
+            candidate="a" * 40, tree="b" * 40, roster_source_scope_tests=20
+        )
+        self.files = {}
+        prefix = "browser/roster-source-scope/"
+        for shape in ("oneqb-kdef", "sf"):
+            for width, height in ((320, 432), (375, 667), (390, 844), (1280, 900)):
+                stem = prefix + shape + "-" + str(width)
+                row = dict(
+                    commit=self.plan["candidate"],
+                    tree=self.plan["tree"],
+                    viewport=[width, height],
+                    exact_target="player:2-RB-0",
+                    unrostered_missing_projection=True,
+                    my_team_supported=True,
+                    explicit_generate_required=True,
+                    keyboard=True,
+                    no_navigation_solver=True,
+                    touch_emulation=width < 1000,
+                    scope="Disposable fixture, not owner live",
+                    working_tree_clean=True,
+                )
+                self.files[stem + ".json"] = json.dumps(row).encode()
+                self.files[stem + ".png"] = b"\x89PNG\r\n\x1a\nfixture"
+        for reason in (
+            "unknown-k",
+            "unknown-def",
+            "eligible-missing",
+            "aging",
+            "failed-refresh",
+        ):
+            stem = prefix + reason
+            self.files[stem + ".json"] = json.dumps(
+                dict(
+                    commit=self.plan["candidate"],
+                    tree=self.plan["tree"],
+                    reason=reason,
+                    neutral_preserved=True,
+                    personalized_action_withheld=True,
+                    no_posts=True,
+                    working_tree_clean=True,
+                )
+            ).encode()
+            self.files[stem + ".png"] = b"\x89PNG\r\n\x1a\nfixture"
+
+    def verify(self):
+        p.make_zip(self.path, self.files)
+        return p.verify_roster_source_scope(self.path, self.plan)
+
+    def change(self, suffix, **fields):
+        name = "browser/roster-source-scope/" + suffix + ".json"
+        row = json.loads(self.files[name])
+        row.update(fields)
+        self.files[name] = json.dumps(row).encode()
+
+    def test_native_supported_and_withheld_controls_are_both_required(self):
+        result = self.verify()
+        self.assertEqual(result["supported_roundtrips"], 8)
+        self.assertEqual(result["withheld_cases"], 5)
+        self.assertTrue(result["passed"])
+
+    def test_missing_image_cannot_be_replaced_by_a_summary(self):
+        self.files.pop("browser/roster-source-scope/oneqb-kdef-320.png")
+        with self.assertRaises((RuntimeError, KeyError)):
+            self.verify()
+
+    def test_foreign_source_is_rejected(self):
+        self.change("sf-390", tree="c" * 40)
+        with self.assertRaisesRegex(RuntimeError, "source mismatch"):
+            self.verify()
+
+    def test_automatic_generation_or_wrong_target_is_rejected(self):
+        self.change("oneqb-kdef-320", explicit_generate_required=False)
+        with self.assertRaisesRegex(RuntimeError, "journey incomplete"):
+            self.verify()
+
+    def test_genuine_uncertainty_cannot_be_promoted(self):
+        self.change("unknown-def", personalized_action_withheld=False)
+        with self.assertRaisesRegex(RuntimeError, "limitations were not preserved"):
+            self.verify()
+
+    def population(self, ids):
+        rows = [
+            {"event": event, "test": test}
+            for test in ids
+            for event in ("start", "stop")
+        ]
+        p.make_zip(
+            self.path, {"tests.jsonl": "\n".join(map(json.dumps, rows)).encode()}
+        )
+        return p.verify_roster_source_scope_tests(self.path, self.plan)
+
+    def test_exact_new_population_is_required(self):
+        ids = [
+            "tests.test_roster_source_scope.Control.test_" + str(i) for i in range(18)
+        ]
+        ids += [
+            "tests.test_roster_source_scope_browser.Control.test_" + str(i)
+            for i in range(2)
+        ]
+        self.assertEqual(self.population(ids), ids)
+        with self.assertRaisesRegex(RuntimeError, "population incomplete"):
+            self.population(ids[:-1])
+
+    def test_duplicate_execution_does_not_replace_a_missing_case(self):
+        ids = [
+            "tests.test_roster_source_scope.Control.test_" + str(i) for i in range(19)
+        ]
+        with self.assertRaisesRegex(RuntimeError, "population incomplete"):
+            self.population(ids + [ids[-1]])
+
+    def test_plan_cannot_omit_the_new_population(self):
+        with self.assertRaisesRegex(RuntimeError, "population missing"):
+            p.verify_plan(dict(finalized=True))

@@ -1,0 +1,191 @@
+{
+  "commit": "05c717e50b47683963ed40d66946e9f6eea76694",
+  "tree": "c60f914d2a0b6b34c2d3e87cdce8eae4560d0b49",
+  "working_tree_clean": true,
+  "source_fixture_sha256": "012de53aeefa4cfb4cb7de717910fa829f399b23d6f6ad7962598afe8c76833f",
+  "scope": "Retained source replay, partial acquisition and bounded samples; not live or exhaustive league coverage. No current ownership/price/score is used as historical evidence.",
+  "cases": [
+    {
+      "control": "retained Day Traders",
+      "source_seasons": [
+        2026,
+        2023
+      ],
+      "coverage": [
+        {
+          "season": 2026,
+          "state": "partial"
+        },
+        {
+          "season": 2023,
+          "state": "partial"
+        }
+      ],
+      "existing_observations": {
+        "state": "partial",
+        "completed_trades": 2,
+        "firsts_received": 3,
+        "firsts_sent": 1,
+        "receiving_trades": 1,
+        "sending_trades": 1,
+        "pick_covered_trades": 2,
+        "pick_counts_complete_in_sample": true,
+        "dated_trades": 2,
+        "first_completion_at": "2026-03-01T14:01:05.246000Z",
+        "last_completion_at": "2026-10-11T15:05:21.347000Z",
+        "source_seasons": [
+          2026,
+          2023
+        ],
+        "unattributed_source_trades": 0,
+        "references": [
+          {
+            "url": "/trades/history/1414718106177122304",
+            "transaction_id": "1414718106177122304",
+            "season": 2026,
+            "completion_at": "2026-10-11T15:05:21.347000Z",
+            "firsts_received": [],
+            "firsts_sent": []
+          },
+          {
+            "url": "/trades/history/1333655835015942144",
+            "transaction_id": "1333655835015942144",
+            "season": 2026,
+            "completion_at": "2026-03-01T14:01:05.246000Z",
+            "firsts_received": [
+              "PICK-2027-R1-ORIG7",
+              "PICK-2028-R1-ORIG7",
+              "PICK-2026-R1-ORIG8"
+            ],
+            "firsts_sent": [
+              "PICK-2026-R1-ORIG5"
+            ]
+          }
+        ],
+        "reason": "Only supported retained trades are counted. Missing periods and unconfirmed franchise continuity remain unknown.",
+        "attribution": "Franchise history. These observations do not establish the current manager\u2019s past decisions, present intent or willingness to trade."
+      },
+      "direct_retained_movements": [
+        {
+          "transaction_id": "1414718106177122304",
+          "season": 2026,
+          "incoming": [
+            {
+              "kind": "player",
+              "exact_asset": "13417"
+            },
+            {
+              "kind": "pick",
+              "exact_asset": "PICK-2029-R2-ORIG1"
+            }
+          ],
+          "outgoing": [
+            {
+              "kind": "player",
+              "exact_asset": "13346"
+            }
+          ],
+          "category_support": {
+            "player": true,
+            "pick": true,
+            "faab": true
+          }
+        },
+        {
+          "transaction_id": "1333655835015942144",
+          "season": 2026,
+          "incoming": [
+            {
+              "kind": "pick",
+              "exact_asset": "PICK-2026-R2-ORIG7"
+            },
+            {
+              "kind": "pick",
+              "exact_asset": "PICK-2027-R1-ORIG7"
+            },
+            {
+              "kind": "pick",
+              "exact_asset": "PICK-2028-R1-ORIG7"
+            },
+            {
+              "kind": "pick",
+              "exact_asset": "PICK-2026-R1-ORIG8"
+            }
+          ],
+          "outgoing": [
+            {
+              "kind": "player",
+              "exact_asset": "12506"
+            },
+            {
+              "kind": "player",
+              "exact_asset": "12508"
+            },
+            {
+              "kind": "pick",
+              "exact_asset": "PICK-2026-R1-ORIG5"
+            },
+            {
+              "kind": "pick",
+              "exact_asset": "PICK-2026-R2-ORIG6"
+            }
+          ],
+          "category_support": {
+            "player": true,
+            "pick": true,
+            "faab": true
+          }
+        }
+      ],
+      "has_franchise_change_summary": false,
+      "has_season_selector": false,
+      "has_observed_net_summary": false
+    },
+    {
+      "control": "retained Arkham",
+      "source_seasons": [
+        2026
+      ],
+      "coverage": [
+        {
+          "season": 2026,
+          "state": "partial"
+        }
+      ],
+      "existing_observations": {
+        "state": "unknown",
+        "completed_trades": null,
+        "firsts_received": null,
+        "firsts_sent": null,
+        "receiving_trades": null,
+        "sending_trades": null,
+        "pick_covered_trades": null,
+        "pick_counts_complete_in_sample": false,
+        "dated_trades": null,
+        "first_completion_at": null,
+        "last_completion_at": null,
+        "source_seasons": [
+          2026
+        ],
+        "unattributed_source_trades": 0,
+        "references": [],
+        "reason": "Only supported retained trades are counted. Missing periods and unconfirmed franchise continuity remain unknown.",
+        "attribution": "Franchise history. These observations do not establish the current manager\u2019s past decisions, present intent or willingness to trade."
+      },
+      "direct_retained_movements": [],
+      "has_franchise_change_summary": false,
+      "has_season_selector": false,
+      "has_observed_net_summary": false
+    }
+  ],
+  "memory_limit": 2147483648,
+  "kernel_peak": 70615040,
+  "events": {
+    "low": "0",
+    "high": "0",
+    "max": "0",
+    "oom": "0",
+    "oom_kill": "0",
+    "oom_group_kill": "0"
+  }
+}

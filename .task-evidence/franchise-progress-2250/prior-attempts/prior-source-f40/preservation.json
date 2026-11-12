@@ -1,0 +1,83 @@
+{
+  "source": {
+    "baseline": "05c717e50b47683963ed40d66946e9f6eea76694",
+    "candidate": "f40bf83c1abcb3b9763182f0a23e16374a12b404",
+    "tree": "21b31e05f255834fd2946f4b4e412cfd17bbb45a",
+    "branch": "feat/franchise-trade-progress-2250",
+    "version": "1.22.35",
+    "build": 2250,
+    "recorded_at": "2026-11-12T16:50:52.026222+00:00",
+    "expected_test_count": 4435,
+    "pr": 339
+  },
+  "checked_at": "2026-11-12T17:02:54.514106+00:00",
+  "unchanged": [
+    {
+      "path": "src/core",
+      "baseline_git_object": "9ab71c84c0da029da22612dc4cdff28f841c8ae6",
+      "candidate_git_object": "9ab71c84c0da029da22612dc4cdff28f841c8ae6",
+      "unchanged": true
+    },
+    {
+      "path": "src/platform",
+      "baseline_git_object": "a3be834279fab69157ba4217a25f378d250683c5",
+      "candidate_git_object": "a3be834279fab69157ba4217a25f378d250683c5",
+      "unchanged": true
+    },
+    {
+      "path": "static/js",
+      "baseline_git_object": "fbadefadd4fc0b7918157de01bb6acfb17ea4ce0",
+      "candidate_git_object": "fbadefadd4fc0b7918157de01bb6acfb17ea4ce0",
+      "unchanged": true
+    },
+    {
+      "path": "services/sleeper.py",
+      "baseline_git_object": "b13f1e522522ef5c874f82285ce60ea37a85f050",
+      "candidate_git_object": "b13f1e522522ef5c874f82285ce60ea37a85f050",
+      "unchanged": true
+    },
+    {
+      "path": "services/player_evidence.py",
+      "baseline_git_object": "bf974e79d7093ee0dafcc1a8c3b1f101b7b31730",
+      "candidate_git_object": "bf974e79d7093ee0dafcc1a8c3b1f101b7b31730",
+      "unchanged": true
+    },
+    {
+      "path": "services/league_preparation.py",
+      "baseline_git_object": "c62312f985dba38fe1b958d0ba5b49d97dbab89b",
+      "candidate_git_object": "c62312f985dba38fe1b958d0ba5b49d97dbab89b",
+      "unchanged": true
+    },
+    {
+      "path": "services/team_headquarters.py",
+      "baseline_git_object": "94620a554e49958ee34cc39f5b0a1f0b35c85355",
+      "candidate_git_object": "94620a554e49958ee34cc39f5b0a1f0b35c85355",
+      "unchanged": true
+    },
+    {
+      "path": "routes/accounts.py",
+      "baseline_git_object": "f721a37d81709d91cb5b88d8090ed3194b70308d",
+      "candidate_git_object": "f721a37d81709d91cb5b88d8090ed3194b70308d",
+      "unchanged": true
+    },
+    {
+      "path": "routes/trades.py",
+      "baseline_git_object": "8944636cb2db1791ef275e3c100767568fee6ed9",
+      "candidate_git_object": "8944636cb2db1791ef275e3c100767568fee6ed9",
+      "unchanged": true
+    }
+  ],
+  "all_changed_paths": [
+    ".github/workflows/product-browser.yml",
+    "CHANGELOG.md",
+    "RELEASE_NOTES.md",
+    "app_metadata.py",
+    "docs/audits/FRANCHISE_TRADE_PROGRESS_2250.md",
+    "routes/history.py",
+    "services/franchise_timeline.py",
+    "src/ui/franchise_timeline.py",
+    "tests/test_completed_trade_observations_browser.py",
+    "tests/test_franchise_trade_progress.py"
+  ],
+  "scope": "Exact Git identity, not an assertion that immutable past grades were revalidated. Source/account/Trade/valuation/scoring/admission modules and navigation state code are unchanged; only factual history aggregation/rendering, tests, metadata/docs and existing hosted test inclusion change."
+}

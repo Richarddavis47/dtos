@@ -1,0 +1,1449 @@
+"""Two-phase Actions publisher. Never merges PRs or updates a branch ref."""
+
+from __future__ import annotations
+
+import argparse
+import ast
+from collections import Counter
+import hashlib
+import json
+import math
+import os
+from pathlib import Path, PurePosixPath
+import re
+import shutil
+import subprocess
+import tempfile
+import urllib.error
+from urllib.parse import parse_qs, urlsplit
+import urllib.request
+import zipfile
+
+ALLOWED_PATHS = {
+    ".github/workflows/canonical-release-recovery.yml",
+    ".github/release-plans/2249.json",
+    ".github/release-plans/2249-recovery-001.part",
+    ".github/release-plans/2249-recovery-002.part",
+    ".github/release-plans/2249-recovery-003.part",
+    ".github/release-plans/2249-recovery-004.part",
+    ".github/release-plans/2249-prior.zip",
+    ".github/release-plans/README.md",
+    "tools/release/__init__.py",
+    "tools/release/publish.py",
+    "tests/test_release_publisher.py",
+}
+TOKEN = re.compile(
+    rb"(?:gh[pousr]_[A-Za-z0-9]{30,}|github_pat_[A-Za-z0-9_]{60,}|-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----)"
+)
+
+
+def require(condition, message):
+    if not condition:
+        raise RuntimeError(message)
+
+
+def command(*args):
+    return subprocess.check_output(args, text=True).strip()
+
+
+def api(path, body=None):
+    args = ["gh", "api", path]
+    if body is None:
+        return json.loads(command(*args))
+    # A structured input file preserves literal strings and never exposes GH_TOKEN.
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".json") as stream:
+        json.dump(body, stream)
+        stream.flush()
+        return json.loads(
+            command(
+                *args,
+                "--method",
+                "POST" if path.endswith(("/tags", "/refs")) else "PATCH",
+                "--input",
+                stream.name,
+            )
+        )
+
+
+def download(path, destination):
+    args = ["gh", "api", path]
+    if path.endswith("/logs"):
+        # Match the established publisher: retain ANSI bytes in a file, never
+        # render downloaded logs directly in the terminal.
+        args.append("--allow-escape-sequences")
+    with destination.open("wb") as stream:
+        subprocess.run(args, stdout=stream, check=True)
+
+
+def digest(path):
+    with path.open("rb") as stream:
+        return hashlib.file_digest(stream, "sha256").hexdigest()
+
+
+def write_json(path, data):
+    path.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n")
+
+
+def verify_zip(path):
+    """Reject paths/symlinks/duplicates before reading any artifact member."""
+    with zipfile.ZipFile(path) as archive:
+        names = archive.namelist()
+        require(len(names) == len(set(names)), "Duplicate archive member")
+        require(
+            sum(x.file_size for x in archive.infolist()) < 512 * 1024**2,
+            "Oversized archive",
+        )
+        for item in archive.infolist():
+            name = PurePosixPath(item.filename)
+            require(
+                not name.is_absolute()
+                and ".." not in name.parts
+                and "\\" not in item.filename,
+                "Unsafe archive member",
+            )
+            require(
+                (item.external_attr >> 16) & 0o170000 != 0o120000, "Archive symlink"
+            )
+            if not item.is_dir() and name.suffix in {
+                ".log",
+                ".json",
+                ".jsonl",
+                ".md",
+                ".txt",
+                ".py",
+                ".html",
+                ".js",
+            }:
+                require(
+                    not TOKEN.search(archive.read(item)),
+                    "Credential-shaped material in evidence; manual review required",
+                )
+        require(archive.testzip() is None, "Archive CRC mismatch")
+
+
+def verify_canonical_sums(archive, manifest, prefix=""):
+    name = prefix + "SHA256SUMS"
+    require(name in archive.namelist(), "Canonical checksum list missing")
+    entries = [line.split("  ", 1) for line in archive.read(name).decode().splitlines()]
+    require(all(len(row) == 2 for row in entries), "Malformed canonical checksum list")
+    expected = {row["name"]: row["sha256"] for row in manifest}
+    require(
+        len(entries) == len(expected) and {row[1] for row in entries} == set(expected),
+        "Canonical checksum population mismatch",
+    )
+    for sha, member in entries:
+        require(
+            sha == expected[member]
+            and hashlib.sha256(archive.read(prefix + member)).hexdigest() == sha,
+            "Canonical checksum list mismatch",
+        )
+
+
+def verify_canonical(path, plan):
+    verify_zip(path)
+    with zipfile.ZipFile(path) as archive:
+        result = json.loads(archive.read("result.json"))
+        require(
+            result["head"] == plan["candidate"] and result["tree"] == plan["tree"],
+            "Canonical source mismatch",
+        )
+        require(
+            result["passed"] is True and result["exit_code"] == 0,
+            "Canonical did not pass",
+        )
+        require(
+            str(result.get("python", "")).split(" ", 1)[0] == plan["python_version"],
+            "Canonical Python runtime mismatch",
+        )
+        require(
+            result["cgroup_limit"] == 2147483648
+            and result["cpus"] == 2
+            and result["network"] == "none",
+            "Canonical resource contract mismatch",
+        )
+        require(
+            not result["final_memory"]["cgroup_memory_events"].get("oom_kill"),
+            "Canonical OOM event",
+        )
+        manifest = json.loads(archive.read("manifest.json"))
+        require(
+            len(manifest) == plan["canonical_entries"],
+            "Canonical manifest population mismatch",
+        )
+        names = set()
+        for entry in manifest:
+            require(entry["name"] not in names, "Duplicate canonical manifest row")
+            names.add(entry["name"])
+            data = archive.read(entry["name"])
+            require(
+                len(data) == entry["bytes"]
+                and hashlib.sha256(data).hexdigest() == entry["sha256"],
+                "Canonical payload checksum mismatch",
+            )
+        verify_canonical_sums(archive, manifest)
+        events = Counter(
+            json.loads(line)["event"]
+            for line in archive.read("tests.jsonl").splitlines()
+        )
+        require(
+            events["start"] == events["stop"] == plan["canonical_tests"]
+            and not any(events[x] for x in ("failure", "error", "skip")),
+            "Incomplete/failed canonical tests",
+        )
+        trace = [
+            json.loads(line)
+            for line in archive.read("canonical-trace.jsonl").splitlines()
+        ]
+        require(
+            any(
+                x.get("event") == "validator_final_summary" and x.get("gates") == 10
+                for x in trace
+            ),
+            "Ten-gate final summary missing",
+        )
+        completed = [x for x in trace if x.get("event") == "validation_child_completed"]
+        require(
+            len(completed) == 10 and all(x["return_code"] == 0 for x in completed),
+            "Incomplete canonical gate execution",
+        )
+        return result
+
+
+def verify_current_history(path, plan):
+    """Verify source-pinned restored-history browser controls, never live proof."""
+    verify_zip(path)
+    with zipfile.ZipFile(path) as archive:
+        report = json.loads(archive.read("browser.json"))
+        require(
+            report.get("head") == plan["candidate"]
+            and report.get("tree") == plan["tree"]
+            and report.get("working_tree_clean") is True,
+            "Current history source mismatch",
+        )
+        rows = report.get("records", [])
+        expected = {
+            (league, width, height)
+            for league in ("Granite-shaped", "Day-shaped", "Arkham-shaped")
+            for width, height in ((320, 432), (375, 667), (390, 844), (1280, 900))
+        }
+        require(
+            len(rows) == 12
+            and {(r["league_control"], r["width"], r["height"]) for r in rows}
+            == expected,
+            "Current history browser population incomplete",
+        )
+        require(
+            all(
+                r.get("retrieved") == [1, 2, 3, 5, 6, 7, 8]
+                and r.get("failed") == [4]
+                and r.get("keyboard") is True
+                and r.get("overflow") is False
+                and r.get("extra_disclosure_requests") == 0
+                and r.get("touch_emulated") is (r["width"] < 1000)
+                for r in rows
+            ),
+            "Current history lifecycle or accessibility control failed",
+        )
+        pngs = [n for n in archive.namelist() if n.endswith(".png")]
+        require(
+            len(pngs) == 12
+            and all(archive.read(n).startswith(b"\x89PNG\r\n\x1a\n") for n in pngs),
+            "Current history screenshots missing",
+        )
+    return report
+
+
+def verify_history_followthrough(path, plan):
+    """Validate the actual origin/branch/Back sequence on the pinned source."""
+    verify_zip(path)
+    with zipfile.ZipFile(path) as archive:
+        report = json.loads(archive.read("browser.json"))
+        require(
+            report.get("head") == plan["candidate"]
+            and report.get("tree") == plan["tree"]
+            and report.get("working_tree_clean") is True,
+            "History follow-through source mismatch",
+        )
+        rows = report.get("records", [])
+        controls = (
+            "Day retained chain plus disposable pagination",
+            "Arkham retained history and scope reset",
+        )
+        expected = {
+            (control, w, h)
+            for control in controls
+            for w, h in ((320, 432), (375, 667), (390, 844), (1280, 900))
+        }
+        require(
+            len(rows) == 8
+            and {(r["control"], r["width"], r["height"]) for r in rows} == expected,
+            "History follow-through browser population incomplete",
+        )
+        require(
+            report.get("errors") == [] and report.get("server_thread_reaped") is True,
+            "History browser error or server cleanup failed",
+        )
+        for row in rows:
+            require(row.get("overflow") is False, "History browser overflow")
+            if row["control"] == controls[1]:
+                require(
+                    row.get("source_qualified") is True
+                    and row.get("old_league_replay") is False,
+                    "History selected-league qualification failed",
+                )
+                continue
+            chain = row.get("chain", [])
+            require(
+                len(chain) == 16 and chain[0].startswith("/history/team/"),
+                "History journey incomplete",
+            )
+            history, player = chain[0], chain[4]
+            root = "/trades/history/" + row["original"]
+            pick = "/picks/" + row["pick"] + "?from_trade=" + row["original"]
+            later = "/trades/history/" + row["later"] + "?from_trade=" + row["original"]
+            require(
+                player.startswith("/players/")
+                and player.endswith("?from_trade=" + row["original"]),
+                "History player origin missing",
+            )
+            require(
+                chain[:15]
+                == [
+                    history,
+                    history + "?events_page=2",
+                    root,
+                    pick,
+                    player,
+                    later,
+                    root,
+                    later,
+                    player,
+                    pick,
+                    root,
+                    history + "?events_page=2",
+                    history,
+                    history + "?events_page=2",
+                    history + "?events_page=2",
+                ]
+                and chain[15].startswith("/history/team/")
+                and chain[15] != history,
+                "History branch, origin, pagination or Forward/reload sequence changed",
+            )
+            require(
+                row.get("pagination_return") is True
+                and row.get("forward_reload") is True
+                and row.get("keyboard") is True
+                and row.get("touch_emulated") is (row["width"] < 500)
+                and row.get("extra_disclosure_requests") == 0,
+                "History interaction control failed",
+            )
+        requests = report.get("requests", [])
+        require(
+            requests
+            and any(
+                r["path"] == "/api/account/navigation-context" and r["status"] == 200
+                for r in requests
+            )
+            and not any(
+                "/sync" in r["path"] or "/trades/recommended" in r["path"]
+                for r in requests
+            ),
+            "History verified context missing or unexpected heavyweight request",
+        )
+        pngs = [n for n in archive.namelist() if n.endswith(".png") and "/" not in n]
+        require(
+            len(pngs) == 8
+            and all(archive.read(n).startswith(b"\x89PNG\r\n\x1a\n") for n in pngs),
+            "History follow-through screenshots missing",
+        )
+    return report
+
+
+def verify_market_history(path, plan):
+    """Require actual cache transitions on the pinned source, never live proof."""
+    verify_zip(path)
+    with zipfile.ZipFile(path) as archive:
+        report = json.loads(archive.read("browser.json"))
+        require(
+            report.get("head") == plan["candidate"]
+            and report.get("tree") == plan["tree"]
+            and report.get("working_tree_clean") is True,
+            "Market history source mismatch",
+        )
+        rows = report.get("records", [])
+        expected = {
+            (league, w, h)
+            for league in ("1314695233040052224", "1319750579458686976")
+            for w, h in ((320, 432), (375, 667), (390, 844), (1280, 900))
+        }
+        require(
+            len(rows) == 8
+            and {(r["league"], *r["viewport"]) for r in rows} == expected,
+            "Market history browser population incomplete",
+        )
+        require(
+            report.get("errors") == [] and report.get("browser_closed") is True,
+            "Market history browser errors or cleanup failed",
+        )
+        for row in rows:
+            require(
+                row.get("before") == dict(magnitude=100, checkpoint_count=2),
+                "Market baseline changed",
+            )
+            updated, boundary = row.get("updated", {}), row.get("boundary", {})
+            require(
+                updated.get("magnitude") == 120
+                and updated.get("checkpoint_count") == 3
+                and updated.get("comparison_start_at") == "2026-06-01T12:00:00Z"
+                and updated.get("comparison_end_at") == "2026-08-31T12:00:00+00:00"
+                and updated.get("comparison_scope") == "historical_to_current"
+                and updated.get("comparison_units") == "0-1000"
+                and updated.get("confidence") == "low",
+                "Market comparison evidence mismatch",
+            )
+            require(
+                boundary.get("magnitude") is None
+                and boundary.get("checkpoint_count") == 4
+                and boundary.get("direction") == "not_comparable"
+                and boundary.get("comparison_reasons")
+                == ["INCOMPATIBLE_OBSERVATION_BOUNDARY"],
+                "Market compatibility boundary lost",
+            )
+            require(
+                row.get("price_publication_unchanged") is True
+                and row.get("overflow") is False
+                and row.get("keyboard") is True
+                and row.get("disclosure_extra_requests") == 0
+                and row.get("source_catalogue_not_participation") is True,
+                "Market cache, provider or accessibility control failed",
+            )
+        for key in ("before_memory", "after_memory"):
+            memory = report.get(key, {})
+            require(
+                memory.get("cgroup_limit_bytes") == 2147483648
+                and not memory.get("cgroup_memory_events", {}).get("oom")
+                and not memory.get("cgroup_memory_events", {}).get("oom_kill"),
+                "Market constrained memory evidence failed",
+            )
+        requests = report.get("requests", [])
+        require(
+            requests
+            and not any(
+                "/sync" in r["path"]
+                or "/trades/recommended" in r["path"]
+                or "/fois/rebuild" in r["path"]
+                for r in requests
+            ),
+            "Unexpected heavyweight Market request",
+        )
+        pngs = [n for n in archive.namelist() if n.endswith(".png")]
+        require(
+            len(pngs) == 24
+            and all(archive.read(n).startswith(b"\x89PNG\r\n\x1a\n") for n in pngs),
+            "Market history screenshots missing",
+        )
+    return report
+
+
+def verify_current_production(path, plan):
+    """Pinned source-to-screen evidence, not a claim of live league recovery."""
+    verify_zip(path)
+    with zipfile.ZipFile(path) as archive:
+        report = json.loads(archive.read("browser.json"))
+        require(
+            report.get("head") == plan["candidate"]
+            and report.get("tree") == plan["tree"]
+            and report.get("working_tree_clean") is True,
+            "Production coverage source mismatch",
+        )
+        rows = report.get("records", [])
+        expected = {
+            (league, w, h)
+            for league in ("1314695233040052224", "1319750579458686976")
+            for w, h in ((320, 432), (375, 667), (390, 844), (1280, 900))
+        }
+        require(
+            len(rows) == 8
+            and {(r["league"], *r["viewport"]) for r in rows} == expected,
+            "Production coverage browser population incomplete",
+        )
+        require(
+            report.get("errors") == [] and report.get("browser_closed") is True,
+            "Production coverage browser errors or cleanup failed",
+        )
+        for row in rows:
+            complete, partial = row.get("complete", {}), row.get("partial", {})
+            require(
+                complete.get("fantasy_points") == 18
+                and complete.get("observation_count") == 8
+                and complete.get("scored_count") == 8
+                and complete.get("season") == 2026
+                and complete.get("weeks") == list(range(1, 9)),
+                "Complete production evidence mismatch",
+            )
+            require(
+                partial.get("fantasy_points") is None
+                and partial.get("observation_count") == 8
+                and partial.get("scored_count") == 7
+                and partial.get("missing_components") == ["conflicting_sleeper_scores"],
+                "Missing production incorrectly calculated",
+            )
+            require(
+                row.get("retained_failure") is True
+                and row.get("keyboard") is True
+                and row.get("overflow") is False
+                and row.get("extra_disclosure_requests") == 0
+                and row.get("touch_emulated") is (row["viewport"][0] < 1000),
+                "Production retained-data or accessibility control failed",
+            )
+        for key in ("before_memory", "after_memory"):
+            memory = report.get(key, {})
+            require(
+                memory.get("cgroup_limit_bytes") == 2147483648
+                and not memory.get("cgroup_memory_events", {}).get("oom")
+                and not memory.get("cgroup_memory_events", {}).get("oom_kill"),
+                "Production constrained memory evidence failed",
+            )
+        requests = report.get("requests", [])
+        require(
+            requests
+            and not any(
+                "/sync" in r["path"]
+                or "/trades/recommended" in r["path"]
+                or "/fois/rebuild" in r["path"]
+                for r in requests
+            ),
+            "Unexpected heavyweight production request",
+        )
+        pngs = [n for n in archive.namelist() if n.endswith(".png")]
+        require(
+            len(pngs) == 24
+            and all(archive.read(n).startswith(b"\x89PNG\r\n\x1a\n") for n in pngs),
+            "Production coverage screenshots missing",
+        )
+    return report
+
+
+def verify_trade_resource(path, plan):
+    verify_zip(path)
+    with zipfile.ZipFile(path) as archive:
+        result = json.loads(archive.read("result.json"))
+        require(
+            result["head"] == plan["candidate"] and result["tree"] == plan["tree"],
+            "Trade resource source mismatch",
+        )
+        require(
+            result.get("passed") is True
+            and result.get("complete") is True
+            and result.get("working_tree_clean") is True,
+            "Trade resource acceptance incomplete or dirty",
+        )
+        require(
+            result.get("cleanup", {}).get("harness_scratch_exists_after") is False
+            and result.get("cleanup", {}).get("trade_lease_available") is True,
+            "Trade scratch/lease cleanup missing",
+        )
+        require(
+            result["kernel_peak"] <= 2147483648
+            and result["one_qb_http_evaluation"]["passed"] is True,
+            "Trade enforced memory or one-QB control failed",
+        )
+        require(
+            len(result["operations"]) >= 2
+            and all(x["full_evaluations"] == 180 for x in result["operations"]),
+            "Real Trade execution missing",
+        )
+        require(
+            len({x["business_digest"] for x in result["operations"]}) == 1,
+            "Trade recovery changed intelligence",
+        )
+        require(
+            result["actual_cancel"]["evaluations_started"] > 0
+            and result["file_cache_recovery"]["completed_evaluations"] == 180
+            and result["file_cache_recovery"]["content_still_valid"] is True,
+            "Trade cleanup/reclaim evidence missing",
+        )
+        require(
+            result["states"]
+            and all(
+                x["cgroup_limit_bytes"] == 2147483648
+                and not x["cgroup_memory_events"].get("oom")
+                and not x["cgroup_memory_events"].get("oom_kill")
+                for x in result["states"]
+            ),
+            "Trade container or OOM evidence failed",
+        )
+        require(
+            result["liveness"]
+            and all(
+                type(x.get("server_duration_ms")) in (int, float)
+                and x["server_duration_ms"] == x.get("milliseconds")
+                and x["server_duration_ms"] < 500
+                and type(x.get("client_elapsed_ms")) in (int, float)
+                and x["client_elapsed_ms"] >= 0
+                for x in result["liveness"]
+            ),
+            "Trade overlapping server liveness failed",
+        )
+        for line in archive.read("SHA256SUMS").decode().splitlines():
+            expected, name = line.split("  ", 1)
+            require(
+                name in {"result.json", "raw.log", "preparation.log"}
+                and hashlib.sha256(archive.read(name)).hexdigest() == expected,
+                "Trade artifact checksum mismatch",
+            )
+        require(
+            {
+                line.split("  ", 1)[1]
+                for line in archive.read("SHA256SUMS").decode().splitlines()
+            }
+            == {"result.json", "raw.log", "preparation.log"},
+            "Trade attachment manifest incomplete",
+        )
+    return result
+
+
+def verify_restoration_unused(path, plan):
+    """Exact-source completion and deferral; no private Granite recovery claim."""
+    verify_zip(path)
+    with zipfile.ZipFile(path) as archive:
+        result = json.loads(archive.read("evidence/result.json"))
+        require(
+            result.get("head") == plan["candidate"]
+            and result.get("tree") == plan["tree"]
+            and result.get("working_tree_clean") is True,
+            "Restoration source mismatch",
+        )
+        require(
+            result.get("passed") is True
+            and result.get("scratch_removed") is True
+            and result.get("explicit_retry_completed") is True
+            and result.get("expired_released_active_and_fresh_preserved") is True
+            and result.get("fois_reserve_preserved") is True,
+            "Restoration execution or ownership incomplete",
+        )
+        before, after = result["before_plan"], result["recovery"]
+        require(
+            before["would_admit"] is False
+            and after["would_admit"] is True
+            and before["required_bytes"] == after["required_bytes"]
+            and after["expired_entries"] == 3
+            and result["raw_bytes_released"] > 0,
+            "Restoration guard or unused-reference recovery not established",
+        )
+        require(
+            result["unsafe_pressure_deferred"]["would_admit"] is False
+            and result["fois_reserved_plan"]["would_admit"] is False
+            and result["fois_reserved_plan"]["required_bytes"]
+            > before["required_bytes"],
+            "Restoration pressure or FOIS safeguards incomplete",
+        )
+        require(
+            0 < result["kernel_lifetime_peak_bytes"] <= 2147483648
+            and result["samples"]
+            and all(
+                x["cgroup_limit_bytes"] == 2147483648
+                and not x["cgroup_memory_events"].get("oom")
+                and not x["cgroup_memory_events"].get("oom_kill")
+                for x in result["samples"]
+            ),
+            "Restoration constrained memory evidence failed",
+        )
+        require(
+            all(x.get("resource_tracker") is True for x in result["cleanup_processes"]),
+            "Restoration retained application workers",
+        )
+        require(
+            len(result["liveness"]) == 4
+            and all(
+                0 <= x["server_ms"] < 500 and x["client_ms"] >= 0
+                for x in result["liveness"]
+            ),
+            "Restoration liveness failed",
+        )
+        checks = [
+            line.split("  ", 1)
+            for line in archive.read("SHA256SUMS").decode().splitlines()
+        ]
+        require(
+            len(checks) == 3
+            and {n for _, n in checks}
+            == {"evidence/result.json", "raw.log", "prior-study.zip"},
+            "Restoration checksum manifest incomplete",
+        )
+        for expected, name in checks:
+            require(
+                hashlib.sha256(archive.read(name)).hexdigest() == expected,
+                "Restoration checksum mismatch",
+            )
+        require(
+            hashlib.sha256(archive.read("prior-study.zip")).hexdigest()
+            == "df5c88eda13a0671104c76a943b05032d7adfa089d11e738785b11e35a932439"
+            == result["prior_archive_sha256"],
+            "Restoration prior input changed",
+        )
+    return result
+
+
+def verify_actuals_restoration(path, plan):
+    result = verify_restoration_unused(path, plan)
+    actual = result.get("native_actuals") or {}
+    require(
+        actual.get("passed") is True
+        and actual.get("method") == "sleeper-matchup-actuals-v1"
+        and actual.get("source_generation")
+        and actual["source_generation"] == actual.get("admitted_generation")
+        and actual.get("expected_first_scores") == [0, -2.125]
+        and actual.get("admitted_first_scores") == actual["expected_first_scores"]
+        and actual.get("league_id")
+        and actual.get("season")
+        and actual.get("scoring_fingerprint")
+        and type(actual.get("observations")) is int
+        and actual["observations"] > 0,
+        "Native actuals restoration parity or source identity missing",
+    )
+    return result
+
+
+def verify_resident_refresh(path, plan):
+    """Real terminal ownership, active readers and capacity recovery; not live parity."""
+    verify_zip(path)
+    with zipfile.ZipFile(path) as archive:
+        result = json.loads(archive.read("evidence/result.json"))
+        require(
+            result.get("schema") == "resident-refresh-ownership-v2"
+            and result.get("passed") is True
+            and result.get("head") == plan["candidate"]
+            and result.get("tree") == plan["tree"]
+            and result.get("working_tree_clean") is True,
+            "Resident refresh source or completion mismatch",
+        )
+        require(
+            result.get("cgroup_limit") == 2147483648
+            and result.get("swap_limit") == 0
+            and result.get("cpus") == 2
+            and result.get("network") == "none"
+            and result.get("children_after") == []
+            and result.get("scratch_removed") is True
+            and result.get("source_values_preserved") is True,
+            "Resident refresh resource/cleanup proof missing",
+        )
+        cases = result.get("cases", [])
+        require(
+            len(cases) == 4
+            and [
+                (x.get("name"), x.get("failed_refresh"), x.get("reader"))
+                for x in cases[:3]
+            ]
+            == [
+                ("oneqb", False, False),
+                ("oneqb", True, False),
+                ("superflex", False, True),
+            ],
+            "Resident refresh case population mismatch",
+        )
+        for case in cases[:3]:
+            require(
+                case.get("completed") is True
+                and case.get("invalid_restore_preserved_current") is True
+                and case.get("repeated_switches") == 3
+                and case.get("cancellation_writer_drained") is True
+                and case.get("old_released_without_reader") is (not case["reader"])
+                and re.fullmatch("[0-9a-f]{64}", case.get("source_digest", "")),
+                "Resident refresh real execution/ownership missing",
+            )
+        reader = cases[2]
+        require(
+            all(
+                reader.get(k) is True
+                for k in ("pressure_deferred", "fois_protected", "recovery_completed")
+            )
+            and type(reader.get("relieved_fixture_bytes")) is int
+            and reader["relieved_fixture_bytes"] > 0
+            and reader.get("owner_release_plan", {}).get("telemetry_valid") is True
+            and reader.get("recovery_plan", {}).get("would_admit") is True,
+            "Resident refresh deferral/FOIS/recovery missing",
+        )
+        global_owner = cases[3]
+        require(
+            global_owner.get("name") == "global-evidence"
+            and all(
+                global_owner.get(k) is True
+                for k in (
+                    "completed",
+                    "old_released_without_reader",
+                    "source_acquisition_mocked",
+                    "source_restoration_completed",
+                    "scheduler_cancelled",
+                )
+            )
+            and re.fullmatch("[0-9a-f]{64}", global_owner.get("source_digest", "")),
+            "Global scheduler ownership/restoration proof missing",
+        )
+        samples = result.get("samples", [])
+        require(
+            samples
+            and all(
+                x.get("cgroup_limit_bytes") == 2147483648
+                and not x.get("cgroup_memory_events", {}).get("oom_kill")
+                for x in samples
+            ),
+            "Resident refresh cgroup evidence missing",
+        )
+        require(
+            result.get("liveness")
+            and all(
+                isinstance(x.get("server_ms"), (int, float))
+                and 0 <= x["server_ms"] < 500
+                for x in result["liveness"]
+            ),
+            "Resident refresh liveness failed",
+        )
+        for line in archive.read("SHA256SUMS").decode().splitlines():
+            expected, name = line.split("  ", 1)
+            require(
+                name in {"evidence/result.json", "raw.log"}
+                and hashlib.sha256(archive.read(name)).hexdigest() == expected,
+                "Resident refresh checksum mismatch",
+            )
+        require(
+            {
+                line.split("  ", 1)[1]
+                for line in archive.read("SHA256SUMS").decode().splitlines()
+            }
+            == {"evidence/result.json", "raw.log"},
+            "Resident refresh checksum population missing",
+        )
+    return result
+
+
+def verify_local_recovery(path, plan):
+    verify_zip(path)
+    with zipfile.ZipFile(path) as archive:
+        result = json.loads(archive.read("local-canonical/result.json"))
+        require(
+            result["head"] == plan["candidate"] and result["tree"] == plan["tree"],
+            "Local canonical source mismatch",
+        )
+        require(
+            result["passed"] is True
+            and result["exit_code"] == 0
+            and result["cgroup_limit"] == 2147483648
+            and result["cpus"] == 2
+            and result["network"] == "none",
+            "Local canonical acceptance missing",
+        )
+        require(
+            str(result.get("python", "")).split(" ", 1)[0] == plan["python_version"],
+            "Local canonical Python runtime mismatch",
+        )
+        require(
+            not result["final_memory"]["cgroup_memory_events"].get("oom_kill"),
+            "Local canonical OOM",
+        )
+        events = Counter(
+            json.loads(line)["event"]
+            for line in archive.read("local-canonical/tests.jsonl").splitlines()
+        )
+        require(
+            events["start"] == events["stop"] == plan["canonical_tests"]
+            and not any(events[x] for x in ("failure", "error", "skip")),
+            "Local regression incomplete",
+        )
+        trace = [
+            json.loads(line)
+            for line in archive.read(
+                "local-canonical/canonical-trace.jsonl"
+            ).splitlines()
+        ]
+        completed = [x for x in trace if x.get("event") == "validation_child_completed"]
+        require(
+            len(completed) == 10
+            and all(x["return_code"] == 0 for x in completed)
+            and any(
+                x.get("event") == "validator_final_summary" and x.get("gates") == 10
+                for x in trace
+            ),
+            "Local canonical gates incomplete",
+        )
+        require(
+            "local-canonical/manifest.json" in archive.namelist(),
+            "Local canonical manifest missing",
+        )
+        manifest = json.loads(archive.read("local-canonical/manifest.json"))
+        require(
+            len(manifest) == plan["local_canonical_entries"],
+            "Local canonical manifest population mismatch",
+        )
+        names = set()
+        for entry in manifest:
+            require(
+                entry["name"] not in names, "Duplicate local canonical manifest row"
+            )
+            names.add(entry["name"])
+            payload = archive.read("local-canonical/" + entry["name"])
+            require(
+                len(payload) == entry["bytes"]
+                and hashlib.sha256(payload).hexdigest() == entry["sha256"],
+                "Local canonical payload checksum mismatch",
+            )
+        verify_canonical_sums(archive, manifest, "local-canonical/")
+    return result
+
+
+def verify_trade_time_market(path, plan):
+    """Per-asset feature evidence; supplied live counts are never fixture parity."""
+    with zipfile.ZipFile(path) as archive:
+        phone = json.loads(archive.read("feature/browser.json"))
+        feature = json.loads(archive.read("feature/feature.json"))
+        supplied = json.loads(archive.read("supplied-screen.json"))
+    require(
+        phone.get("head") == feature.get("head") == plan["candidate"]
+        and phone.get("tree") == feature.get("tree") == plan["tree"]
+        and phone.get("working_tree_clean") is True
+        and feature.get("working_tree_clean") is True,
+        "Trade-time feature source mismatch",
+    )
+    records = phone.get("records", [])
+    require(
+        len(records) == 4
+        and {(r.get("width"), r.get("height")) for r in records}
+        == {(320, 432), (375, 667), (390, 844), (1280, 900)},
+        "Trade-time phone coverage missing",
+    )
+    require(
+        all(
+            r.get("keyboard") is True
+            and r.get("overflow") is False
+            and r.get("touch_emulated") is (r["width"] < 500)
+            and r.get("source_value") == 321
+            and r.get("age_seconds") == 3600
+            and r.get("extra_disclosure_requests") == 0
+            and r.get("errors") == []
+            for r in records
+        ),
+        "Trade-time disclosure evidence failed",
+    )
+    cases = feature.get("cases", [])
+    expected = {
+        "newer_incompatible": 400,
+        "newer_foreign": 400,
+        "partial_old": 275,
+        "zero": 0,
+        "conflicting": None,
+    }
+    require(
+        len(cases) == len(expected) and {r.get("case") for r in cases} == set(expected),
+        "Trade-time matched population missing",
+    )
+    require(
+        all(
+            r.get("selected_value") == expected[r["case"]]
+            and r.get("package_totals_displayed") is False
+            and r.get("retained_fixture_values")
+            for r in cases
+        ),
+        "Trade-time quote selection mismatch",
+    )
+    require(
+        supplied.get("provenance", "").startswith("Supplied Main Chat")
+        and supplied.get("exhaustive") is False
+        and supplied.get("complete_package_coverage") == "Not established"
+        and supplied.get("historical_league_format_parity") == "Not established",
+        "Supplied coverage overstated",
+    )
+    return {
+        "passed": True,
+        "head": plan["candidate"],
+        "tree": plan["tree"],
+        "scope": "Disposable per-asset feature and phone controls; live coverage attributed to Main Chat",
+    }
+
+
+def verify_activation_deferral(path, plan, prefix="browser/activation/"):
+    """Require typed deferral and a real explicit retry, never a live-access claim."""
+    verify_zip(path)
+    with zipfile.ZipFile(path) as archive:
+
+        def report(name):
+            row = json.loads(archive.read(prefix + name + ".json"))
+            require(
+                row.get("commit") == plan["candidate"]
+                and row.get("tree") == plan["tree"]
+                and row.get("working_tree_clean") is True,
+                "Activation source mismatch",
+            )
+            require(
+                row.get("physical_safari_tested") is False
+                and row.get("scope")
+                == "Disposable authenticated native route/manager/guard controls; modeled telemetry identified, not live Granite",
+                "Activation scope mismatch",
+            )
+            return row["observations"]
+
+        deferred = report("typed-capacity")
+        require(
+            deferred.get("html") == 503
+            and deferred.get("api", {}).get("status") == "deferred"
+            and deferred["api"].get("code") == "league_preparation_waiting"
+            and deferred.get("retry_after") == "60"
+            and deferred.get("account_unchanged") is True
+            and deferred.get("source_requests") == 0
+            and deferred.get("actual_hydrations") == 1,
+            "Typed activation deferral missing",
+        )
+        retry = report("real-recovery")
+        require(
+            retry.get("initial") == 503
+            and retry.get("explicit_retry") == 303
+            and retry.get("warm") is True
+            and retry.get("source_values_preserved") is True
+            and retry.get("source_requests") == 0
+            and retry.get("limitation")
+            == "Small compatible fixture, actual enforced memory telemetry; not private Granite payload or live acceptance",
+            "Actual activation retry completion missing",
+        )
+        for width, height in ((320, 432), (375, 667), (390, 844), (1280, 900)):
+            row = report("phone-" + str(width))
+            require(
+                row.get("viewport") == [width, height]
+                and row.get("status") == 503
+                and row.get("retry_after") == "60"
+                and all(
+                    row.get(k) is True
+                    for k in (
+                        "no_overflow",
+                        "no_new_source_requests",
+                        "account_unchanged",
+                    )
+                ),
+                "Activation phone coverage missing",
+            )
+            require(
+                archive.read(prefix + "phone-" + str(width) + ".png").startswith(
+                    b"\x89PNG\r\n\x1a\n"
+                ),
+                "Activation phone image missing",
+            )
+    return dict(
+        passed=True,
+        head=plan["candidate"],
+        tree=plan["tree"],
+        scope="Disposable native activation routes with guarded actual retry; live Granite access unverified",
+    )
+
+
+def verify_front_office_workflow(path, plan, prefix="browser/front-office-workflow/"):
+    """Pin native workflow evidence without requiring discovery to endorse an offer."""
+    verify_zip(path)
+    views = {(320, 432), (375, 667), (390, 844), (1280, 900)}
+    protected = {"2029-R1-1", "a"}
+
+    def text(value):
+        return isinstance(value, str) and bool(value.strip())
+
+    def ids(value):
+        return (
+            isinstance(value, list)
+            and bool(value)
+            and all(text(x) for x in value)
+            and len(value) == len(set(value))
+        )
+
+    def finite(value):
+        return type(value) in (int, float) and math.isfinite(value)
+
+    def view_rows(value, name):
+        require(
+            isinstance(value, list)
+            and len(value) == 4
+            and all(isinstance(r, dict) for r in value)
+            and {(r.get("width"), r.get("height")) for r in value} == views,
+            "Front office viewport coverage missing: " + name,
+        )
+        return value
+
+    with zipfile.ZipFile(path) as archive:
+        for name in ("1qb-k-def-journey", "superflex-journey"):
+            report = json.loads(archive.read(prefix + name + ".json"))
+            require(
+                isinstance(report, dict)
+                and report.get("commit") == plan["candidate"]
+                and report.get("tree") == plan["tree"]
+                and report.get("working_tree_clean") is True,
+                "Front office source mismatch",
+            )
+            require(
+                report.get("source")
+                == "Disposable authenticated prepared Sleeper fixture; native search and canonical evaluator"
+                and report.get("physical_safari_tested") is False,
+                "Front office scope mismatch",
+            )
+            row = report.get("observations")
+            require(isinstance(row, dict), "Front office observations missing")
+            require(
+                archive.read(prefix + name + ".png").startswith(b"\x89PNG\r\n\x1a\n"),
+                "Front office journey image missing",
+            )
+            slots = row.get("league_slots")
+            require(
+                isinstance(slots, list)
+                and all(text(s) for s in slots)
+                and slots.count("QB") == 1
+                and (
+                    slots.count("SUPER_FLEX") == 1
+                    and "K" not in slots
+                    and "DEF" not in slots
+                    if name == "superflex-journey"
+                    else "SUPER_FLEX" not in slots
+                    and slots.count("K") == slots.count("DEF") == 1
+                ),
+                "Front office league configuration missing",
+            )
+            handoff, payload = row.get("handoff"), row.get("generation_payload")
+            require(
+                isinstance(handoff, dict) and isinstance(payload, dict),
+                "Front office handoff/request missing",
+            )
+            position, href = handoff.get("position"), handoff.get("href")
+            require(
+                position in ("QB", "RB", "WR", "TE") and text(href),
+                "Front office need identity missing",
+            )
+            url = urlsplit(href)
+            query = parse_qs(url.query, keep_blank_values=True)
+            fingerprint = query.get("team_need", [None])[0]
+            require(
+                not url.scheme
+                and not url.netloc
+                and url.path == "/trades/recommended"
+                and query == {"front_office": ["1"], "team_need": [fingerprint]}
+                and isinstance(fingerprint, str)
+                and re.fullmatch("[0-9a-f]{64}", fingerprint),
+                "Front office need fingerprint mismatch",
+            )
+            require(
+                handoff.get("existing_my_team_reused") is True
+                and text(handoff.get("explanation"))
+                and position + " addition" in handoff["explanation"]
+                and "Change or clear, then Generate" in handoff["explanation"]
+                and handoff.get("initial_choice")
+                == dict(fingerprint=fingerprint, position=position, manual=False)
+                and handoff.get("edited_choice")
+                == dict(fingerprint=fingerprint, position="", manual=True),
+                "Front office editable need reason missing",
+            )
+            for view in view_rows(row.get("home"), "home"):
+                require(
+                    text(view.get("title"))
+                    and view.get("href") == href
+                    and view.get("action") == f"Explore {position} trades →",
+                    "Front office Home handoff mismatch",
+                )
+            for view in view_rows(row.get("protection_views"), "protections"):
+                require(
+                    ids(view.get("exact_ids")) and set(view["exact_ids"]) == protected,
+                    "Front office protected viewport identity mismatch",
+                )
+            context = payload.get("workspace_context")
+            require(
+                isinstance(context, dict)
+                and text(context.get("binding"))
+                and context.get("league_id") == "league-1"
+                and context.get("roster_id") == payload.get("active_roster_id") == 1
+                and payload.get("workflow") == "recommended"
+                and payload.get("partner_roster_id") == 0
+                and payload.get("recommendation_position") == position
+                and ids(payload.get("protected_assets"))
+                and set(payload["protected_assets"]) == protected,
+                "Front office authorized generation scope mismatch",
+            )
+            constraints = row.get("applied_constraints")
+            require(
+                isinstance(constraints, dict)
+                and ids(constraints.get("protected_assets"))
+                and set(constraints["protected_assets"]) == protected
+                and ids(row.get("exact_protected_ids"))
+                and set(row["exact_protected_ids"]) == protected,
+                "Front office applied protection snapshot mismatch",
+            )
+            pools = row.get("outgoing_pools")
+            require(
+                isinstance(pools, list)
+                and bool(pools)
+                and all(ids(pool) for pool in pools)
+                and any("2029-R1-3" in pool for pool in pools)
+                and all(protected.isdisjoint(pool) for pool in pools)
+                and row.get("distinct_same_round_pick") == "2029-R1-3"
+                and row.get("distinct_pick_remained_eligible") is True,
+                "Front office actual construction isolation missing",
+            )
+            native = row.get("native_offers")
+            require(
+                isinstance(native, list), "Front office native offer population missing"
+            )
+            for offer in native:
+                require(
+                    isinstance(offer, dict)
+                    and offer.get("family")
+                    in ("results", "exploratory_results", "near_misses")
+                    and isinstance(offer.get("proposal"), dict),
+                    "Front office native offer malformed",
+                )
+                proposal = offer["proposal"]
+                require(
+                    proposal.get("active_roster_id") == 1
+                    and type(proposal.get("partner_roster_id")) is int
+                    and proposal["partner_roster_id"] > 1
+                    and ids(proposal.get("assets_sent"))
+                    and ids(proposal.get("assets_received"))
+                    and protected.isdisjoint(proposal["assets_sent"]),
+                    "Front office protected asset escaped to native offer",
+                )
+                require(
+                    "recommendation" in offer
+                    and (
+                        text(offer["recommendation"])
+                        or offer["family"] == "near_misses"
+                        and offer["recommendation"] is None
+                    )
+                    and type(offer.get("exploration")) is bool
+                    and (
+                        offer.get("generated_trade_eligible") is None
+                        or type(offer.get("generated_trade_eligible")) is bool
+                    )
+                    and (
+                        offer["family"] != "exploratory_results"
+                        or offer["exploration"] is True
+                    )
+                    and (
+                        offer.get("generated_trade_eligible") is not True
+                        or offer["family"] == "results"
+                        and offer["exploration"] is False
+                    ),
+                    "Front office native offer qualification missing",
+                )
+            prior = row.get("prior_search")
+            require(
+                isinstance(prior, dict)
+                and prior.get("position") == position
+                and prior.get("type") == payload.get("recommendation_filter")
+                and type(prior.get("count")) is int
+                and prior["count"]
+                == sum(offer["family"] != "near_misses" for offer in native)
+                and isinstance(prior.get("protections"), list)
+                and len(prior["protections"]) == 2
+                and all(
+                    isinstance(fact, dict) and text(fact.get("label"))
+                    for fact in prior["protections"]
+                )
+                and {fact.get("id") for fact in prior["protections"]} == protected,
+                "Front office prior applied settings missing",
+            )
+            ledger, requests = row.get("post_ledger"), row.get("post_requests")
+            paths = ["/api/trades/generate"] + ["/api/trades/evaluate"] * 3
+            require(
+                isinstance(ledger, list)
+                and len(ledger) == 4
+                and all(isinstance(r, dict) for r in ledger)
+                and [r.get("path") for r in ledger] == paths
+                and all(
+                    r.get("status") == 200 and isinstance(r.get("payload"), dict)
+                    for r in ledger
+                )
+                and requests == [["POST", route, 200] for route in paths]
+                and ledger[0]["payload"] == payload,
+                "Front office unexpected or incomplete POST ledger",
+            )
+            for index, entry in enumerate(ledger[1:]):
+                request = entry["payload"]
+                bound = request.get("workspace_context")
+                require(
+                    isinstance(bound, dict)
+                    and bound.get("binding") == context["binding"]
+                    and bound.get("league_id") == context["league_id"]
+                    and bound.get("roster_id") == 1
+                    and request.get("active_roster_id") == 1
+                    and request.get("partner_roster_id") == 2
+                    and request.get("protected_assets") == []
+                    and request.get("assets_sent")
+                    == (["2028-R1-3", "a"] if index == 1 else ["a"])
+                    and request.get("assets_received") == [["d"], ["c"], ["f"]][index],
+                    "Front office independent Evaluate or replacement scope mismatch",
+                )
+            evaluations, selected = (
+                row.get("actual_evaluations"),
+                row.get("comparison_offers"),
+            )
+            require(
+                isinstance(evaluations, list)
+                and len(evaluations) == 2
+                and all(
+                    isinstance(e, dict)
+                    and "recommendation" in e
+                    and (e["recommendation"] is None or text(e["recommendation"]))
+                    and isinstance(e.get("market"), dict)
+                    for e in evaluations
+                )
+                and isinstance(selected, list)
+                and len(selected) == 2
+                and all(isinstance(e, dict) for e in selected),
+                "Front office two native assessments missing",
+            )
+            baselines = []
+            for index, offer in enumerate(selected):
+                base, summary, identity = (
+                    offer.get("baseline"),
+                    offer.get("summary"),
+                    offer.get("identity"),
+                )
+                require(
+                    isinstance(base, dict)
+                    and isinstance(summary, dict)
+                    and isinstance(identity, dict)
+                    and offer.get("scope")
+                    == dict(
+                        binding=context["binding"],
+                        league=context["league_id"],
+                        roster=1,
+                    )
+                    and base.get("league") == context["league_id"]
+                    and base.get("roster") == 1
+                    and base.get("ownership") == context.get("ownership_generation")
+                    and all(
+                        text(base.get(k))
+                        for k in ("ownership", "lineup", "scoring", "projection")
+                    )
+                    and type(base.get("season")) is int
+                    and base["season"] > 0
+                    and type(base.get("week")) is int
+                    and base["week"] > 0
+                    and base.get("provider") == "Sleeper"
+                    and identity.get("binding") == context["binding"]
+                    and identity.get("ownership") == base["ownership"]
+                    and text(identity.get("market"))
+                    and text(summary.get("verdict"))
+                    and summary.get("mode") in ("neutral", "custom"),
+                    "Front office source-qualified comparison missing",
+                )
+                proposal = {
+                    key: ledger[index + 1]["payload"][key]
+                    for key in (
+                        "active_roster_id",
+                        "partner_roster_id",
+                        "assets_sent",
+                        "assets_received",
+                    )
+                }
+                require(
+                    offer.get("proposal") == proposal,
+                    "Front office comparison package/order mismatch",
+                )
+                try:
+                    package = json.loads(identity.get("package", "null"))
+                except (TypeError, ValueError):
+                    package = None
+                require(
+                    package
+                    == [
+                        proposal["partner_roster_id"],
+                        sorted(proposal["assets_sent"]),
+                        sorted(proposal["assets_received"]),
+                    ],
+                    "Front office assessment package identity mismatch",
+                )
+                market = evaluations[index]["market"]
+                require(
+                    isinstance(market.get("sent"), dict)
+                    and isinstance(market.get("received"), dict)
+                    and summary.get("neutral")
+                    == dict(
+                        availability=market.get("availability"),
+                        sent=market["sent"].get("total"),
+                        received=market["received"].get("total"),
+                    ),
+                    "Front office recorded Market values changed",
+                )
+                lineup = summary.get("lineup")
+                require(
+                    isinstance(lineup, dict)
+                    and lineup.get("state") == "supported"
+                    and all(
+                        finite(lineup.get(k))
+                        for k in ("pre_total", "post_total", "delta")
+                    )
+                    and lineup.get("weeks") == [base["week"]]
+                    and math.isclose(
+                        lineup["post_total"] - lineup["pre_total"],
+                        lineup["delta"],
+                        rel_tol=0,
+                        abs_tol=1e-8,
+                    ),
+                    "Front office supported comparison numbers missing",
+                )
+                native_lineup = evaluations[index].get("lineup")
+                require(
+                    isinstance(native_lineup, dict)
+                    and all(
+                        native_lineup.get(k) == lineup.get(k)
+                        for k in ("state", "weeks", "pre_total", "post_total", "delta")
+                    )
+                    and all(
+                        native_lineup.get(source) == lineup.get(source) == base[stored]
+                        for source, stored in (
+                            ("season", "season"),
+                            ("league_id", "league"),
+                            ("scoring_profile_id", "scoring"),
+                            ("projection_generation", "projection"),
+                        )
+                    ),
+                    "Front office original lineup evidence changed",
+                )
+                baselines.append(base)
+            require(
+                baselines[0] == baselines[1]
+                and selected[0]["summary"]["lineup"]["pre_total"]
+                == selected[1]["summary"]["lineup"]["pre_total"]
+                and selected[0]["identity"]["market"]
+                == selected[1]["identity"]["market"],
+                "Front office shared comparison source mismatch",
+            )
+            expected_draft = dict(partner=2, sent=["2028-R1-3", "a"], received=["c"])
+            for view in view_rows(
+                row.get("comparison_and_history"), "comparison/history"
+            ):
+                require(
+                    view.get("exact_draft") == expected_draft
+                    and view.get("panel_state") in ("recorded", "retained")
+                    and view.get("keep_option") == "Keep the roster · no trade"
+                    and view.get("comparison_retained") is True
+                    and view.get("history_qualification") == "retained"
+                    and view.get("history_return_without_post") is True,
+                    "Front office retained comparison/history control missing",
+                )
+            replacement = row.get("replacement")
+            require(
+                isinstance(replacement, dict)
+                and row.get("reload_retained") is True
+                and replacement.get("selected_proposals")
+                == [
+                    {
+                        key: ledger[3]["payload"][key]
+                        for key in (
+                            "active_roster_id",
+                            "partner_roster_id",
+                            "assets_sent",
+                            "assets_received",
+                        )
+                    },
+                    selected[1]["proposal"],
+                ]
+                and replacement.get("remaining_proposals") == [selected[1]["proposal"]]
+                and replacement.get("draft")
+                == dict(partner=2, sent=["a"], received=["f"]),
+                "Front office reload or replacement/removal missing",
+            )
+            scope = row.get("scope_change")
+            require(
+                isinstance(scope, dict)
+                and scope.get("old") == context["binding

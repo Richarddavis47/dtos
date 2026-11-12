@@ -1,0 +1,544 @@
+{
+  "head": "b5229081f3a1c0eb9cf96d34803fd68d6c9b2cd1",
+  "tree": "d1894a91d826ef5bdbd6d0a16b0d0860ec758c14",
+  "python": "3.14.3",
+  "enforced_limit": 2147483648,
+  "swap_limit": 0,
+  "scope": "Disposable metadata-only HTTP; not actual Granite cache, restoration, FOIS rebuild or live acceptance.",
+  "cases": [
+    {
+      "name": "healthy",
+      "elapsed_ms": 125.10115301120095,
+      "harness_padding_bytes": 0,
+      "response": {
+        "schema_version": "restoration-preflight-v1",
+        "observation_started_at": "2026-11-12T18:14:21.237849+00:00",
+        "observation_completed_at": "2026-11-12T18:14:21.238852+00:00",
+        "league_id": "1314695233040052224",
+        "advisory_only": true,
+        "non_atomic": true,
+        "recheck_required": true,
+        "assessment_scope": "saved_cache_resource_and_coordination_admission_only",
+        "process": {
+          "pid": 7,
+          "lifecycle_scope": "serving_process_only",
+          "other_worker_idleness": "not_established"
+        },
+        "deployment": {
+          "application": "DTOS",
+          "version": "1.22.35",
+          "build": 2250,
+          "commit": null,
+          "ready": false
+        },
+        "runtime": {
+          "resident": false,
+          "status": "cold",
+          "cooldown_remaining_seconds": 0.0,
+          "cooldown_valid": true
+        },
+        "cache": {
+          "exists": true,
+          "regular_file": true,
+          "size_bytes": 23048708,
+          "modified_at_unix_ns": 1794507261116327766,
+          "age_seconds": 0.121918,
+          "age_scope": "file_modification_time_only",
+          "retention_eligible": true,
+          "generation_pinned": true,
+          "path_matches_pinned_generation_at_end": true,
+          "payload_readability": "not_checked",
+          "content_compatibility": "not_evaluated"
+        },
+        "lifecycle": {
+          "available": true,
+          "phase": "idle",
+          "heavy_work": {
+            "fois_generation": false,
+            "trade_search": false,
+            "historical_response": false,
+            "market_critical": false,
+            "market_build_active": false
+          },
+          "cache_lease_conflict": false
+        },
+        "memory": {
+          "cgroup_current_bytes": 68710400,
+          "cgroup_limit_bytes": 2147483648,
+          "cgroup_inactive_file_bytes": 360448,
+          "cgroup_anonymous_bytes": 66445312,
+          "rss_bytes": 84930560,
+          "vms_bytes": 317853696,
+          "memory_accounting_scope": "cgroup",
+          "scope": "shared_container",
+          "memory_events": {
+            "low": 0,
+            "high": 0,
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0,
+            "oom_group_kill": 0
+          }
+        },
+        "capacity": {
+          "telemetry_valid": true,
+          "file_size_valid": true,
+          "reservation_valid": true,
+          "working_bytes": 368779328,
+          "cache_safety_bytes": 134217728,
+          "safety_bytes": 134217728,
+          "fois_working_bytes": 0,
+          "fois_safety_bytes": 0,
+          "required_bytes": 502997056,
+          "service_limit_bytes": 2147483648,
+          "effective_limit_bytes": 2147483648,
+          "headroom_bytes": 2078773248,
+          "would_admit": true,
+          "reason": "sufficient_headroom"
+        },
+        "unknown_fields": [],
+        "verdict": "would_admit",
+        "reason": "sufficient_headroom"
+      }
+    },
+    {
+      "name": "capacity_deferred",
+      "elapsed_ms": 13.634450995596126,
+      "harness_padding_bytes": 1711403008,
+      "response": {
+        "schema_version": "restoration-preflight-v1",
+        "observation_started_at": "2026-11-12T18:14:24.078338+00:00",
+        "observation_completed_at": "2026-11-12T18:14:24.080002+00:00",
+        "league_id": "1314695233040052224",
+        "advisory_only": true,
+        "non_atomic": true,
+        "recheck_required": true,
+        "assessment_scope": "saved_cache_resource_and_coordination_admission_only",
+        "process": {
+          "pid": 7,
+          "lifecycle_scope": "serving_process_only",
+          "other_worker_idleness": "not_established"
+        },
+        "deployment": {
+          "application": "DTOS",
+          "version": "1.22.35",
+          "build": 2250,
+          "commit": null,
+          "ready": false
+        },
+        "runtime": {
+          "resident": false,
+          "status": "cold",
+          "cooldown_remaining_seconds": 0.0,
+          "cooldown_valid": true
+        },
+        "cache": {
+          "exists": true,
+          "regular_file": true,
+          "size_bytes": 23048708,
+          "modified_at_unix_ns": 1794507261116327766,
+          "age_seconds": 2.962449,
+          "age_scope": "file_modification_time_only",
+          "retention_eligible": true,
+          "generation_pinned": true,
+          "path_matches_pinned_generation_at_end": true,
+          "payload_readability": "not_checked",
+          "content_compatibility": "not_evaluated"
+        },
+        "lifecycle": {
+          "available": true,
+          "phase": "idle",
+          "heavy_work": {
+            "fois_generation": false,
+            "trade_search": false,
+            "historical_response": false,
+            "market_critical": false,
+            "market_build_active": false
+          },
+          "cache_lease_conflict": false
+        },
+        "memory": {
+          "cgroup_current_bytes": 1783693312,
+          "cgroup_limit_bytes": 2147483648,
+          "cgroup_inactive_file_bytes": 360448,
+          "cgroup_anonymous_bytes": 1778380800,
+          "rss_bytes": 1797173248,
+          "vms_bytes": 2031104000,
+          "memory_accounting_scope": "cgroup",
+          "scope": "shared_container",
+          "memory_events": {
+            "low": 0,
+            "high": 0,
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0,
+            "oom_group_kill": 0
+          }
+        },
+        "capacity": {
+          "telemetry_valid": true,
+          "file_size_valid": true,
+          "reservation_valid": true,
+          "working_bytes": 368779328,
+          "cache_safety_bytes": 134217728,
+          "safety_bytes": 134217728,
+          "fois_working_bytes": 0,
+          "fois_safety_bytes": 0,
+          "required_bytes": 502997056,
+          "service_limit_bytes": 2147483648,
+          "effective_limit_bytes": 2147483648,
+          "headroom_bytes": 363790336,
+          "would_admit": false,
+          "reason": "insufficient_headroom"
+        },
+        "unknown_fields": [],
+        "verdict": "would_defer",
+        "reason": "insufficient_headroom"
+      }
+    },
+    {
+      "name": "pressure_relieved",
+      "elapsed_ms": 9.039086988195777,
+      "harness_padding_bytes": 0,
+      "response": {
+        "schema_version": "restoration-preflight-v1",
+        "observation_started_at": "2026-11-12T18:14:24.241189+00:00",
+        "observation_completed_at": "2026-11-12T18:14:24.241912+00:00",
+        "league_id": "1314695233040052224",
+        "advisory_only": true,
+        "non_atomic": true,
+        "recheck_required": true,
+        "assessment_scope": "saved_cache_resource_and_coordination_admission_only",
+        "process": {
+          "pid": 7,
+          "lifecycle_scope": "serving_process_only",
+          "other_worker_idleness": "not_established"
+        },
+        "deployment": {
+          "application": "DTOS",
+          "version": "1.22.35",
+          "build": 2250,
+          "commit": null,
+          "ready": false
+        },
+        "runtime": {
+          "resident": false,
+          "status": "cold",
+          "cooldown_remaining_seconds": 0.0,
+          "cooldown_valid": true
+        },
+        "cache": {
+          "exists": true,
+          "regular_file": true,
+          "size_bytes": 23048708,
+          "modified_at_unix_ns": 1794507261116327766,
+          "age_seconds": 3.125046,
+          "age_scope": "file_modification_time_only",
+          "retention_eligible": true,
+          "generation_pinned": true,
+          "path_matches_pinned_generation_at_end": true,
+          "payload_readability": "not_checked",
+          "content_compatibility": "not_evaluated"
+        },
+        "lifecycle": {
+          "available": true,
+          "phase": "idle",
+          "heavy_work": {
+            "fois_generation": false,
+            "trade_search": false,
+            "historical_response": false,
+            "market_critical": false,
+            "market_build_active": false
+          },
+          "cache_lease_conflict": false
+        },
+        "memory": {
+          "cgroup_current_bytes": 69369856,
+          "cgroup_limit_bytes": 2147483648,
+          "cgroup_inactive_file_bytes": 360448,
+          "cgroup_anonymous_bytes": 66957312,
+          "rss_bytes": 85749760,
+          "vms_bytes": 319696896,
+          "memory_accounting_scope": "cgroup",
+          "scope": "shared_container",
+          "memory_events": {
+            "low": 0,
+            "high": 0,
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0,
+            "oom_group_kill": 0
+          }
+        },
+        "capacity": {
+          "telemetry_valid": true,
+          "file_size_valid": true,
+          "reservation_valid": true,
+          "working_bytes": 368779328,
+          "cache_safety_bytes": 134217728,
+          "safety_bytes": 134217728,
+          "fois_working_bytes": 0,
+          "fois_safety_bytes": 0,
+          "required_bytes": 502997056,
+          "service_limit_bytes": 2147483648,
+          "effective_limit_bytes": 2147483648,
+          "headroom_bytes": 2078113792,
+          "would_admit": true,
+          "reason": "sufficient_headroom"
+        },
+        "unknown_fields": [],
+        "verdict": "would_admit",
+        "reason": "sufficient_headroom"
+      }
+    },
+    {
+      "name": "fois_reserve_protected",
+      "elapsed_ms": 10.755313007393852,
+      "harness_padding_bytes": 1134788608,
+      "response": {
+        "schema_version": "restoration-preflight-v1",
+        "observation_started_at": "2026-11-12T18:14:24.940300+00:00",
+        "observation_completed_at": "2026-11-12T18:14:24.941008+00:00",
+        "league_id": "1314695233040052224",
+        "advisory_only": true,
+        "non_atomic": true,
+        "recheck_required": true,
+        "assessment_scope": "saved_cache_resource_and_coordination_admission_only",
+        "process": {
+          "pid": 7,
+          "lifecycle_scope": "serving_process_only",
+          "other_worker_idleness": "not_established"
+        },
+        "deployment": {
+          "application": "DTOS",
+          "version": "1.22.35",
+          "build": 2250,
+          "commit": null,
+          "ready": false
+        },
+        "runtime": {
+          "resident": false,
+          "status": "cold",
+          "cooldown_remaining_seconds": 0.0,
+          "cooldown_valid": true
+        },
+        "cache": {
+          "exists": true,
+          "regular_file": true,
+          "size_bytes": 23048708,
+          "modified_at_unix_ns": 1794507261116327766,
+          "age_seconds": 3.824164,
+          "age_scope": "file_modification_time_only",
+          "retention_eligible": true,
+          "generation_pinned": true,
+          "path_matches_pinned_generation_at_end": true,
+          "payload_readability": "not_checked",
+          "content_compatibility": "not_evaluated"
+        },
+        "lifecycle": {
+          "available": true,
+          "phase": "idle",
+          "heavy_work": {
+            "fois_generation": true,
+            "trade_search": false,
+            "historical_response": false,
+            "market_critical": false,
+            "market_build_active": false
+          },
+          "cache_lease_conflict": false
+        },
+        "memory": {
+          "cgroup_current_bytes": 1206419456,
+          "cgroup_limit_bytes": 2147483648,
+          "cgroup_inactive_file_bytes": 360448,
+          "cgroup_anonymous_bytes": 1201770496,
+          "rss_bytes": 1220562944,
+          "vms_bytes": 1454489600,
+          "memory_accounting_scope": "cgroup",
+          "scope": "shared_container",
+          "memory_events": {
+            "low": 0,
+            "high": 0,
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0,
+            "oom_group_kill": 0
+          }
+        },
+        "capacity": {
+          "telemetry_valid": true,
+          "file_size_valid": true,
+          "reservation_valid": true,
+          "working_bytes": 368779328,
+          "cache_safety_bytes": 134217728,
+          "safety_bytes": 268435456,
+          "fois_working_bytes": 536870912,
+          "fois_safety_bytes": 268435456,
+          "required_bytes": 1174085696,
+          "service_limit_bytes": 2147483648,
+          "effective_limit_bytes": 2147483648,
+          "headroom_bytes": 941064192,
+          "would_admit": false,
+          "reason": "insufficient_headroom"
+        },
+        "unknown_fields": [],
+        "verdict": "would_defer",
+        "reason": "insufficient_headroom"
+      }
+    },
+    {
+      "name": "fois_released_same_pressure",
+      "elapsed_ms": 8.533215994248167,
+      "harness_padding_bytes": 1134788608,
+      "response": {
+        "schema_version": "restoration-preflight-v1",
+        "observation_started_at": "2026-11-12T18:14:24.957129+00:00",
+        "observation_completed_at": "2026-11-12T18:14:24.957852+00:00",
+        "league_id": "1314695233040052224",
+        "advisory_only": true,
+        "non_atomic": true,
+        "recheck_required": true,
+        "assessment_scope": "saved_cache_resource_and_coordination_admission_only",
+        "process": {
+          "pid": 7,
+          "lifecycle_scope": "serving_process_only",
+          "other_worker_idleness": "not_established"
+        },
+        "deployment": {
+          "application": "DTOS",
+          "version": "1.22.35",
+          "build": 2250,
+          "commit": null,
+          "ready": false
+        },
+        "runtime": {
+          "resident": false,
+          "status": "cold",
+          "cooldown_remaining_seconds": 0.0,
+          "cooldown_valid": true
+        },
+        "cache": {
+          "exists": true,
+          "regular_file": true,
+          "size_bytes": 23048708,
+          "modified_at_unix_ns": 1794507261116327766,
+          "age_seconds": 3.840961,
+          "age_scope": "file_modification_time_only",
+          "retention_eligible": true,
+          "generation_pinned": true,
+          "path_matches_pinned_generation_at_end": true,
+          "payload_readability": "not_checked",
+          "content_compatibility": "not_evaluated"
+        },
+        "lifecycle": {
+          "available": true,
+          "phase": "idle",
+          "heavy_work": {
+            "fois_generation": false,
+            "trade_search": false,
+            "historical_response": false,
+            "market_critical": false,
+            "market_build_active": false
+          },
+          "cache_lease_conflict": false
+        },
+        "memory": {
+          "cgroup_current_bytes": 1206140928,
+          "cgroup_limit_bytes": 2147483648,
+          "cgroup_inactive_file_bytes": 360448,
+          "cgroup_anonymous_bytes": 1201770496,
+          "rss_bytes": 1220567040,
+          "vms_bytes": 1454489600,
+          "memory_accounting_scope": "cgroup",
+          "scope": "shared_container",
+          "memory_events": {
+            "low": 0,
+            "high": 0,
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0,
+            "oom_group_kill": 0
+          }
+        },
+        "capacity": {
+          "telemetry_valid": true,
+          "file_size_valid": true,
+          "reservation_valid": true,
+          "working_bytes": 368779328,
+          "cache_safety_bytes": 134217728,
+          "safety_bytes": 134217728,
+          "fois_working_bytes": 0,
+          "fois_safety_bytes": 0,
+          "required_bytes": 502997056,
+          "service_limit_bytes": 2147483648,
+          "effective_limit_bytes": 2147483648,
+          "headroom_bytes": 941342720,
+          "would_admit": true,
+          "reason": "sufficient_headroom"
+        },
+        "unknown_fields": [],
+        "verdict": "would_admit",
+        "reason": "sufficient_headroom"
+      }
+    }
+  ],
+  "liveness": [
+    {
+      "case": "healthy",
+      "server_ms": 4.339,
+      "client_ms": 8.340102998772636
+    },
+    {
+      "case": "capacity_deferred",
+      "server_ms": 3.751,
+      "client_ms": 9.16810700437054
+    },
+    {
+      "case": "pressure_relieved",
+      "server_ms": 1.913,
+      "client_ms": 5.457296996610239
+    },
+    {
+      "case": "fois_reserve_protected",
+      "server_ms": 4.119,
+      "client_ms": 7.633139000972733
+    },
+    {
+      "case": "fois_released_same_pressure",
+      "server_ms": 2.083,
+      "client_ms": 4.829042998608202
+    }
+  ],
+  "complete": true,
+  "passed": true,
+  "guarded_operation_calls": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "final_memory": {
+    "rss_bytes": 85782528,
+    "vms_bytes": 319664128,
+    "system_available_bytes": 17468137472,
+    "memory_accounting_scope": "cgroup",
+    "cgroup_current_bytes": 69218304,
+    "cgroup_limit_bytes": 2147483648,
+    "cgroup_inactive_file_bytes": 360448,
+    "cgroup_anonymous_bytes": 66990080,
+    "cgroup_memory_events": {
+      "low": 0,
+      "high": 0,
+      "max": 0,
+      "oom": 0,
+      "oom_kill": 0,
+      "oom_group_kill": 0
+    }
+  },
+  "kernel_peak_bytes": 1783988224,
+  "children_after": [],
+  "runtime_population_unchanged": true,
+  "no_private_payload_decoded": true,
+  "scratch_removed": true
+}

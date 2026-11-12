@@ -1,0 +1,79 @@
+{
+  "source": {
+    "baseline": "05c717e50b47683963ed40d66946e9f6eea76694",
+    "candidate": "f40bf83c1abcb3b9763182f0a23e16374a12b404",
+    "tree": "21b31e05f255834fd2946f4b4e412cfd17bbb45a",
+    "branch": "feat/franchise-trade-progress-2250",
+    "version": "1.22.35",
+    "build": 2250,
+    "recorded_at": "2026-11-12T16:50:52.026222+00:00",
+    "expected_test_count": 4435,
+    "pr": 339
+  },
+  "at": "2026-11-12T18:05:17.724627+00:00",
+  "prefix": {
+    "tests": 1211,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "unconditioned": {
+    "tests": 1,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "conditioned": {
+    "tests": 1,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "gc_collection": {
+    "collected": 940075,
+    "elapsed_ms": 1805.8526990062091,
+    "rss": 659382272,
+    "gc_enabled": true
+  },
+  "measurements": [
+    {
+      "phase": "unclean-after-actual-prefix",
+      "max_gap_ms": 114.11928001325577,
+      "records": 2,
+      "state": "complete",
+      "rss": 659386368,
+      "gc_enabled": true,
+      "execution": {
+        "worker_pid": 42717,
+        "execution": "spawned_subprocess",
+        "process_model": "persistent_spawn_pool",
+        "input_bytes": 374,
+        "source_bytes": 1092,
+        "exit_status": 0
+      }
+    },
+    {
+      "phase": "after-fixture-collection",
+      "max_gap_ms": 78.62154999747872,
+      "records": 2,
+      "state": "complete",
+      "rss": 659386368,
+      "gc_enabled": true,
+      "execution": {
+        "worker_pid": 42723,
+        "execution": "spawned_subprocess",
+        "process_model": "persistent_spawn_pool",
+        "input_bytes": 374,
+        "source_bytes": 1092,
+        "exit_status": 0
+      }
+    }
+  ],
+  "kernel_peak": 1107304448,
+  "limitation": "Original 542.77ms stall did not reproduce. Collection proves cross-fixture unreachable objects exist; it does not establish the cause of that unobserved original stall. Diagnostic results are not full mandatory acceptance.",
+  "archive": {
+    "file": "contextual-diagnostic-f40-original.zip",
+    "bytes": 10543013,
+    "sha256": "677026bbdc7293d8639bc3f597b6d6ef5ec45187b36deeca556074646afbdbef"
+  }
+}

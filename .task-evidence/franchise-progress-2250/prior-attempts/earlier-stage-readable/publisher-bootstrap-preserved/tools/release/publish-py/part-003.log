@@ -1,0 +1,736 @@
+024 * 1024)
+    require(
+        temporary.stat().st_size == sum(x["bytes"] for x in parts)
+        and digest(temporary) == plan["recovery_sha256"],
+        "Assembled recovery checksum mismatch",
+    )
+    verify_zip(temporary)
+    temporary.rename(target)
+    return target
+
+
+def collect(plan, root):
+    repo = "repos/" + plan["repository"]
+    assets = root / "assets"
+    assets.mkdir(parents=True, exist_ok=True)
+    records, product_job = verify_runs(plan)
+    canonical = None
+    offer_comparison = None
+    draft_capital = None
+    market_roster = None
+    roster_source_scope = None
+    for expected in plan["artifacts"]:
+        metadata = api(repo + "/actions/artifacts/" + str(expected["id"]))
+        require(
+            not metadata["expired"] and metadata["name"] == expected["name"],
+            "Artifact unavailable or renamed",
+        )
+        require(
+            metadata["workflow_run"]["id"] == expected["run"]
+            and metadata["workflow_run"]["head_sha"] == plan["candidate"],
+            "Artifact run mismatch",
+        )
+        require(
+            metadata["digest"] == "sha256:" + expected["sha256"],
+            "Artifact API digest mismatch",
+        )
+        path = assets / expected["file"]
+        download(repo + "/actions/artifacts/" + str(expected["id"]) + "/zip", path)
+        require(
+            digest(path) == expected["sha256"]
+            and path.stat().st_size == metadata["size_in_bytes"],
+            "Original artifact checksum mismatch",
+        )
+        verify_zip(path)
+        if expected["file"] == "canonical-original.zip":
+            canonical = verify_canonical(path, plan)
+            verify_capital_test_execution(path, plan)
+            verify_market_roster_tests(path, plan)
+            verify_roster_source_scope_tests(path, plan)
+        if expected["file"] == "actuals-restoration-original.zip":
+            verify_actuals_restoration(path, plan)
+        if expected["file"] == "restoration-unused-original.zip":
+            verify_restoration_unused(path, plan)
+        if expected["file"] == "resident-refresh-original.zip":
+            verify_resident_refresh(path, plan)
+        if expected["file"] == "trade-resource-original.zip":
+            verify_trade_resource(path, plan)
+            verify_team_need_handoff(path, plan)
+            offer_comparison = verify_offer_comparison(path, plan)
+            verify_recommended_protections(path, plan)
+            verify_activation_deferral(path, plan)
+            verify_front_office_workflow(path, plan)
+            draft_capital = verify_draft_capital(path, plan)
+            market_roster = verify_market_roster(path, plan)
+            roster_source_scope = verify_roster_source_scope(path, plan)
+        if expected["file"] == "league-entry-original.zip":
+            verify_league_entry(path, plan)
+        if expected["file"] == "preflight-original.zip":
+            verify_preflight(path, plan)
+        if expected["file"] == "current-history-original.zip":
+            verify_current_history(path, plan)
+        if expected["file"] == "current-production-coverage-original.zip":
+            verify_current_production(path, plan)
+        if expected["file"] == "market-history-coverage-original.zip":
+            verify_market_history(path, plan)
+        if expected["file"] == "history-followthrough-original.zip":
+            verify_history_followthrough(path, plan)
+            verify_completed_trade_browser(path, plan)
+        if expected["file"] == "public-welcome-security.zip":
+            verify_partner_history_links(path, plan)
+        if expected["file"].startswith("lifecycle-"):
+            with zipfile.ZipFile(path) as archive:
+                result = json.loads(archive.read("summary.json"))
+            require(
+                result["passed"] is True
+                and result["completed"] is True
+                and result["exit_code"] == 0
+                and result["memory_max"] == 2147483648,
+                "Lifecycle acceptance missing",
+            )
+    require(canonical is not None, "Canonical artifact absent")
+    require(offer_comparison is not None, "Hosted offer comparison proof absent")
+    require(draft_capital is not None, "Hosted draft-capital proof absent")
+    require(market_roster is not None, "Hosted Market roster proof absent")
+    require(roster_source_scope is not None, "Hosted roster source-scope proof absent")
+    recovery = materialize_recovery(plan, root)
+    require(digest(recovery) == plan["recovery_sha256"], "Recovery evidence changed")
+    local_canonical = verify_local_recovery(recovery, plan)
+    local_draft_capital = verify_draft_capital(
+        recovery, plan, prefix="local-capital-capture/"
+    )
+    local_draft_capital["evidence_origin"] = (
+        "Supplemental two-method local browser capture on the final source under enforced 2 GiB; "
+        "the original full canonical manifest is unchanged."
+    )
+    local_market_roster = verify_market_roster(
+        recovery, plan, prefix="local-canonical/market-needs/"
+    )
+    local_roster_source_scope = verify_roster_source_scope(
+        recovery, plan, prefix="local-canonical/roster-source-scope/"
+    )
+    partner_history_links = verify_partner_history_links(
+        recovery, plan, prefix="partner-history/"
+    )
+    team_need_handoff = verify_team_need_handoff(recovery, plan, prefix="team-need/")
+    recommended_protections = verify_recommended_protections(
+        recovery, plan, prefix="protections/"
+    )
+    activation_deferral = verify_activation_deferral(
+        recovery, plan, prefix="local-canonical/activation/"
+    )
+    front_office_workflow = verify_front_office_workflow(
+        recovery, plan, prefix="local-canonical/front-office-workflow/"
+    )
+    completed_trade_observations = verify_completed_trade_browser(
+        recovery, plan, prefix="feature/"
+    )
+    completed_trade_observations["matched_cases"] = verify_completed_trade_cases(
+        recovery, plan
+    )
+    with zipfile.ZipFile(recovery) as archive:
+        local_preflight = root / "local-preflight.zip"
+        make_zip(
+            local_preflight,
+            {
+                name: archive.read("local-preflight/" + name)
+                for name in ("result.json", "raw.log", "SHA256SUMS")
+            },
+        )
+        (assets / "SCOUT_HANDOFF.md").write_bytes(
+            verify_handoff(archive.read("SCOUT_HANDOFF.md"), plan)
+        )
+        local_unused = root / "local-restoration-unused.zip"
+        make_zip(
+            local_unused,
+            {
+                name: archive.read("local-restoration-unused/" + name)
+                for name in (
+                    "evidence/result.json",
+                    "raw.log",
+                    "prior-study.zip",
+                    "SHA256SUMS",
+                )
+            },
+        )
+    local_preflight_result = verify_preflight(local_preflight, plan)
+    local_unused_result = verify_actuals_restoration(local_unused, plan)
+    with zipfile.ZipFile(recovery) as archive:
+        local_resident = root / "local-resident-refresh.zip"
+        make_zip(
+            local_resident,
+            {
+                name: archive.read("local-resident-refresh/" + name)
+                for name in ("evidence/result.json", "raw.log", "SHA256SUMS")
+            },
+        )
+    local_resident_result = verify_resident_refresh(local_resident, plan)
+    require(
+        any(x["file"] == "preflight-original.zip" for x in plan["artifacts"]),
+        "Hosted preflight proof absent",
+    )
+    require(
+        any(x["file"] == "trade-resource-original.zip" for x in plan["artifacts"])
+        and any(x["file"] == "league-entry-original.zip" for x in plan["artifacts"]),
+        "Existing hosted Trade or league-entry acceptance absent",
+    )
+    require(
+        any(x["file"] == "actuals-restoration-original.zip" for x in plan["artifacts"]),
+        "Native restoration acceptance absent",
+    )
+    require(
+        any(x["file"] == "restoration-unused-original.zip" for x in plan["artifacts"]),
+        "Hosted restoration recovery proof absent",
+    )
+    require(
+        any(x["file"] == "resident-refresh-original.zip" for x in plan["artifacts"]),
+        "Hosted resident ownership proof absent",
+    )
+    shutil.copyfile(recovery, assets / "Market-Roster-Handoff.zip")
+    prior_evidence = Path(plan["prior_evidence_file"])
+    require(
+        str(prior_evidence) == ".github/release-plans/2249-prior.zip",
+        "Unexpected prior archive path",
+    )
+    verify_prior_evidence(prior_evidence, plan)
+    shutil.copyfile(prior_evidence, assets / "Prior-attempts.zip")
+    logs = {}
+    for job in [product_job, *plan["prior_jobs"]]:
+        path = root / (str(job) + ".log")
+        download(repo + "/actions/jobs/" + str(job) + "/logs", path)
+        data = path.read_bytes()
+        require(not TOKEN.search(data), "Credential-shaped material in job log")
+        logs[str(job) + ".log"] = data
+    counts = [
+        int(n)
+        for n in re.findall(rb"Ran (\d+) tests? in", logs[str(product_job) + ".log"])
+    ]
+    require(
+        sum(counts) == plan["product_tests"]
+        and b"FAILED (" not in logs[str(product_job) + ".log"],
+        "Product test evidence mismatch",
+    )
+    make_zip(assets / "product-and-prior-job-logs.zip", logs)
+    prior = []
+    for run_id in plan["prior_runs"]:
+        run = api(repo + "/actions/runs/" + str(run_id))
+        prior.append(
+            {
+                key: run[key]
+                for key in (
+                    "id",
+                    "name",
+                    "head_sha",
+                    "status",
+                    "conclusion",
+                    "html_url",
+                )
+            }
+        )
+    prior.extend(
+        prior_attempt_record(repo, reference)
+        for reference in plan.get("prior_attempts", [])
+    )
+    write_json(assets / "prior-attempts.json", prior)
+    write_json(
+        assets / "VALIDATION.json",
+        dict(
+            candidate=plan["candidate"],
+            tree=plan["tree"],
+            version=plan["version"],
+            build=plan["build"],
+            canonical=canonical,
+            local_canonical=local_canonical,
+            market_roster=market_roster,
+            local_market_roster=local_market_roster,
+            roster_source_scope=roster_source_scope,
+            local_roster_source_scope=local_roster_source_scope,
+            draft_capital=draft_capital,
+            local_draft_capital=local_draft_capital,
+            activation_deferral=activation_deferral,
+            front_office_workflow=front_office_workflow,
+            partner_history_links=partner_history_links,
+            team_need_handoff=team_need_handoff,
+            offer_comparison=offer_comparison,
+            recommended_protections=recommended_protections,
+            completed_trade_observations=completed_trade_observations,
+            local_preflight=local_preflight_result,
+            local_restoration_unused=local_unused_result,
+            local_resident_refresh=local_resident_result,
+            required_jobs=records,
+            product_test_executions=sum(counts),
+            original_artifacts=plan["artifacts"],
+            recovery_sha256=plan["recovery_sha256"],
+            prior_evidence_sha256=plan["prior_evidence_sha256"],
+            limitations="Market movement is joined only to a current prepared franchise need; incompatible current endpoints remain neutral. Market handoffs apply an exact target only after current account/league/ownership checks and start no automatic search or evaluation. Prior drafts, protections, comparisons and retained results remain preserved. Earlier failed/incomplete source attempts stay separate. Draft-capital inventory is captured from compatible recorded ownership evidence; absent or incomplete inventory withholds remaining totals and preserves verified movements. Capital coverage is independent of projections/Market. Keeping the roster uses a common baseline only for matching recorded ownership generations. No new price, class-quality, eligibility, valuation, qualification or admission calculation. No owner authenticated live offer was observed in this session. Typed activation status and bounded existing-plan logging do not create capacity or establish Granite recovery. Historical exact guard inputs/cleanup are not recoverable. No reserve, allowance, admission predicate or pinned-runtime ownership changes. Temporary exact Recommended Trades protections do not change Evaluate or saved preferences. Three native assessed fixture offers respect exclusions; own and acquired same-round picks stay distinct. Old searches retain original settings; no-result restrictions imply no causality. No search from control edits. Two compact recorded offers inside the Trade workspace. Comparison performs no search, reevaluation or refresh; original package order, counterparty, verdict and separate Neutral/Custom values remain. Shared lineup numbers require matching admitted source identities; incomplete/stale evidence stays qualified. Disposable 1QB/K/DEF, Superflex and four-view controls; owner live acceptance and physical Safari unverified. Existing source/history/resource guards remain. No Trade thresholds, scoring, valuation, source acquisition or memory-policy change.",
+        ),
+    )
+    files = [
+        {"name": p.name, "bytes": p.stat().st_size, "sha256": digest(p)}
+        for p in sorted(assets.iterdir())
+        if p.is_file()
+    ]
+    require(
+        sum(x["bytes"] for x in files) < 512 * 1024**2,
+        "Unexpected attachment population size",
+    )
+    write_json(
+        assets / "evidence-manifest.json",
+        dict(candidate=plan["candidate"], tree=plan["tree"], files=files),
+    )
+    files.append(
+        {
+            "name": "evidence-manifest.json",
+            "bytes": (assets / "evidence-manifest.json").stat().st_size,
+            "sha256": digest(assets / "evidence-manifest.json"),
+        }
+    )
+    (assets / "SHA256SUMS").write_text(
+        "".join(x["sha256"] + "  " + x["name"] + "\n" for x in files)
+    )
+    return assets
+
+
+def expected_assets(assets):
+    manifest = json.loads((assets / "evidence-manifest.json").read_text())
+    for item in manifest["files"]:
+        p = assets / item["name"]
+        require(
+            p.parent == assets
+            and p.is_file()
+            and not p.is_symlink()
+            and p.stat().st_size == item["bytes"]
+            and digest(p) == item["sha256"],
+            "Attachment manifest mismatch",
+        )
+    expected = {x["name"] for x in manifest["files"]} | {
+        "evidence-manifest.json",
+        "SHA256SUMS",
+    }
+    require(
+        {p.name for p in assets.iterdir()} == expected, "Unmanifested local attachment"
+    )
+    sums = "".join(
+        digest(assets / name) + "  " + name + "\n"
+        for name in sorted(expected - {"SHA256SUMS"})
+    )
+    # Manifest rows are name-sorted, with the manifest's own digest appended.
+    listed = dict(
+        line.split("  ", 1)[::-1]
+        for line in (assets / "SHA256SUMS").read_text().splitlines()
+    )
+    require(
+        listed == dict(line.split("  ", 1)[::-1] for line in sums.splitlines()),
+        "Attachment checksum list mismatch",
+    )
+    return {p.name: (p.stat().st_size, digest(p)) for p in assets.iterdir()}
+
+
+def verify_remote_assets(release, expected, complete):
+    remote = {x["name"]: x for x in release["assets"]}
+    require(
+        len(remote) == len(release["assets"]) and set(remote) <= set(expected),
+        "Unexpected/duplicate draft asset",
+    )
+    if complete:
+        require(set(remote) == set(expected), "Missing release attachment")
+    for name, item in remote.items():
+        require(
+            item["state"] == "uploaded"
+            and item["size"] == expected[name][0]
+            and item["digest"] == "sha256:" + expected[name][1],
+            "Remote attachment mismatch: " + name,
+        )
+    return remote
+
+
+def verify_remote_bytes(plan, root, expected):
+    with tempfile.TemporaryDirectory(dir=root) as directory:
+        subprocess.run(
+            [
+                "gh",
+                "release",
+                "download",
+                "v" + plan["version"],
+                "--repo",
+                plan["repository"],
+                "--dir",
+                directory,
+            ],
+            check=True,
+        )
+        paths = {p.name: p for p in Path(directory).iterdir()}
+        require(
+            set(paths) == set(expected),
+            "Release attachment readback population mismatch",
+        )
+        for name, (size, sha) in expected.items():
+            require(
+                paths[name].stat().st_size == size and digest(paths[name]) == sha,
+                "Release attachment readback mismatch: " + name,
+            )
+
+
+def verify_preparation(plan, root, expected, run_id):
+    require(run_id, "Publish requires an explicit successful preparation run")
+    repo = "repos/" + plan["repository"]
+    run = api(repo + "/actions/runs/" + str(run_id))
+    require(
+        run["head_sha"] == os.environ["GITHUB_SHA"]
+        and run["event"] == "workflow_dispatch"
+        and run["path"] == ".github/workflows/canonical-release-recovery.yml"
+        and run["conclusion"] == "success"
+        and run["status"] == "completed",
+        "Preparation was not successful on this publisher source",
+    )
+    artifacts = api(repo + "/actions/runs/" + str(run_id) + "/artifacts?per_page=100")[
+        "artifacts"
+    ]
+    found = [
+        x
+        for x in artifacts
+        if x["name"] == "guarded-release-2249-prepare-" + str(run_id)
+        and not x["expired"]
+    ]
+    require(len(found) == 1, "Preparation certificate missing")
+    path = root / "preparation-certificate.zip"
+    download(repo + "/actions/artifacts/" + str(found[0]["id"]) + "/zip", path)
+    require(
+        "sha256:" + digest(path) == found[0]["digest"],
+        "Preparation certificate checksum mismatch",
+    )
+    verify_zip(path)
+    with zipfile.ZipFile(path) as archive:
+        certificate = json.loads(archive.read("publication.json"))
+    require(
+        certificate["operation"] == "prepare"
+        and certificate["publisher"] == os.environ["GITHUB_SHA"]
+        and certificate["candidate"] == plan["candidate"]
+        and certificate["tree"] == plan["tree"]
+        and certificate["main"] == plan["baseline"]
+        and certificate["release_id"] == plan["draft_id"]
+        and certificate["draft"] is True,
+        "Wrong preparation admission certificate",
+    )
+    actual = {x["name"]: (x["bytes"], x["sha256"]) for x in certificate["attachments"]}
+    require(
+        actual == expected, "Prepared evidence differs from current release evidence"
+    )
+
+
+def prepare_or_publish(plan, root, operation, prepared_run=None):
+    pr, main = verify_context(plan, operation)
+    assets = collect(plan, root)
+    expected = expected_assets(assets)
+    repo = "repos/" + plan["repository"]
+    release_path = repo + "/releases/" + str(plan["draft_id"])
+    release = api(release_path)
+    require(release["tag_name"] == "v" + plan["version"], "Wrong existing release tag")
+    require(
+        release["target_commitish"] in {plan["candidate"], main},
+        "Wrong existing release target",
+    )
+    existing = verify_remote_assets(release, expected, complete=operation == "publish")
+    if operation == "audit":
+        require(
+            release["draft"] and not release["immutable"],
+            "Audit requires existing draft",
+        )
+    elif operation == "prepare":
+        require(
+            release["draft"] and not release["immutable"],
+            "Preparation requires existing draft",
+        )
+        for name in sorted(set(expected) - set(existing)):
+            # The Actions GITHUB_TOKEN is used by the standard GitHub CLI only.
+            subprocess.run(
+                [
+                    "gh",
+                    "release",
+                    "upload",
+                    "v" + plan["version"],
+                    str(assets / name),
+                    "--repo",
+                    plan["repository"],
+                ],
+                check=True,
+            )
+        release = api(release_path)
+        verify_remote_assets(release, expected, complete=True)
+        verify_remote_bytes(plan, root, expected)
+    elif operation == "publish":
+        verify_preparation(plan, root, expected, prepared_run)
+        # Recheck main/PR after downloads, before touching any tag/release metadata.
+        _, latest = verify_context(plan, operation)
+        require(
+            latest == main and pr["merge_commit_sha"] == main,
+            "Main moved during publication",
+        )
+        if release["draft"]:
+            notes = command(
+                "git", "show", plan["candidate"] + ":RELEASE_NOTES.md"
+            ).split("\n# ", 1)[0]
+            notes += (
+                "\n\nReleased merge: "
+                + main
+                + "\nValidated source: "
+                + plan["candidate"]
+                + "\nSource tree: "
+                + plan["tree"]
+                + "\nAll 13 required hosted jobs and all ten canonical gates passed; "
+                + str(plan["canonical_tests"])
+                + " canonical tests and "
+                + str(plan["product_tests"])
+                + " Product tests. Prior failures and resource qualifications remain in attached evidence.\n"
+            )
+            api(
+                release_path,
+                {
+                    "tag_name": "v" + plan["version"],
+                    "target_commitish": main,
+                    "name": "DTOS v"
+                    + plan["version"]
+                    + " / build "
+                    + str(plan["build"]),
+                    "body": notes,
+                },
+            )
+            release = api(release_path)
+            require(
+                release["draft"] and release["target_commitish"] == main,
+                "Draft target was not updated to approved merge",
+            )
+        tag_ref_path = repo + "/git/ref/tags/v" + plan["version"]
+        lookup = subprocess.run(
+            ["gh", "api", tag_ref_path], capture_output=True, text=True
+        )
+        if lookup.returncode:
+            require(
+                "HTTP 404" in lookup.stderr, "Tag lookup failed; not confirmed absent"
+            )
+            require(
+                release["draft"] and not release["immutable"],
+                "Missing tag on published release",
+            )
+            tag = api(
+                repo + "/git/tags",
+                {
+                    "tag": "v" + plan["version"],
+                    "message": "DTOS v"
+                    + plan["version"]
+                    + " / build "
+                    + str(plan["build"]),
+                    "object": main,
+                    "type": "commit",
+                },
+            )
+            api(
+                repo + "/git/refs",
+                {"ref": "refs/tags/v" + plan["version"], "sha": tag["sha"]},
+            )
+        tag = api(tag_ref_path)["object"]
+        if tag["type"] == "tag":
+            tag = api(repo + "/git/tags/" + tag["sha"])["object"]
+        require(
+            tag["type"] == "commit" and tag["sha"] == main,
+            "Version tag does not resolve to approved merge",
+        )
+        if release["draft"]:
+            _, latest = verify_context(plan, operation)
+            require(latest == main, "Main changed before immutable publication")
+            verify_remote_assets(api(release_path), expected, complete=True)
+            api(release_path, {"draft": False})
+        release = api(release_path)
+        require(
+            not release["draft"]
+            and release.get("immutable") is True
+            and release["target_commitish"] == main,
+            "Published release is not immutable or targets wrong merge",
+        )
+        verify_remote_assets(release, expected, complete=True)
+        verify_remote_bytes(plan, root, expected)
+        verify_production(plan, main, root)
+    write_json(
+        root / "publication.json",
+        dict(
+            operation=operation,
+            publisher=os.environ["GITHUB_SHA"],
+            candidate=plan["candidate"],
+            tree=plan["tree"],
+            main=main,
+            release_id=release["id"],
+            draft=release["draft"],
+            immutable=release.get("immutable"),
+            url=release["html_url"],
+            attachments=[
+                {"name": n, "bytes": s, "sha256": h}
+                for n, (s, h) in sorted(expected.items())
+            ],
+        ),
+    )
+
+
+def verify_production(plan, sha, root):
+    import time
+
+    attempts = []
+    ready = None
+    for _ in range(60):
+        try:
+            request = urllib.request.Request(
+                "https://dtos.onrender.com/health/ready",
+                headers={"Cache-Control": "no-cache"},
+            )
+            with urllib.request.urlopen(request, timeout=10) as response:
+                data = json.load(response)
+            attempts.append(data)
+            if (
+                data.get("status") == "ready"
+                and data.get("version") == plan["version"]
+                and data.get("build") == plan["build"]
+                and data.get("deployment", {}).get("commit") == sha
+            ):
+                ready = data
+                break
+        except (urllib.error.URLError, TimeoutError) as exc:
+            attempts.append({"error_type": type(exc).__name__})
+        finally:
+            write_json(root / "readiness.json", attempts)
+        time.sleep(10)
+    require(
+        ready is not None,
+        "Approved production identity not ready in bounded observation",
+    )
+    results = []
+    for path, expected in [
+        ("/health/live", 200),
+        ("/welcome", 200),
+        ("/account/sign-in", 200),
+        ("/api/my-dtos", 401),
+        ("/api/inspect/live/teams", 401),
+    ]:
+        try:
+            with urllib.request.urlopen(
+                "https://dtos.onrender.com" + path, timeout=15
+            ) as response:
+                code = response.status
+                response.read()
+        except urllib.error.HTTPError as exc:
+            code = exc.code
+        require(code == expected, "Production read-only smoke failed: " + path)
+        results.append({"path": path, "status": code})
+    write_json(
+        root / "production-smoke.json",
+        {
+            "readiness": ready,
+            "reads": results,
+            "scope": "Bounded public read-only requests; no private-account mutations or heavy production workloads.",
+        },
+    )
+
+
+def verify_plan(plan):
+    require(plan.get("finalized") is True, "Release plan is not finalized")
+    require(
+        plan.get("roster_source_scope_tests") == 20,
+        "Roster source-scope population missing",
+    )
+    require(
+        plan.get("market_roster_tests") == 21,
+        "Market roster regression population missing",
+    )
+    require(
+        plan.get("capital_tests") == 14, "Draft-capital regression population missing"
+    )
+    validate_recovery_parts(plan)
+    for field in (
+        "draft_id",
+        "canonical_tests",
+        "canonical_entries",
+        "local_canonical_entries",
+        "product_tests",
+    ):
+        require(
+            type(plan.get(field)) is int and plan[field] > 0,
+            "Missing final release evidence: " + field,
+        )
+    for field in ("candidate", "tree", "baseline"):
+        require(
+            isinstance(plan.get(field), str)
+            and re.fullmatch("[0-9a-f]{40}", plan[field]),
+            "Invalid source identity: " + field,
+        )
+    for field in ("recovery_sha256", "prior_evidence_sha256"):
+        require(
+            isinstance(plan.get(field), str)
+            and re.fullmatch("[0-9a-f]{64}", plan[field]),
+            "Missing evidence checksum: " + field,
+        )
+    required = {
+        "current-production-coverage-original.zip",
+        "market-history-coverage-original.zip",
+        "canonical-original.zip",
+        "current-history-original.zip",
+        "history-followthrough-original.zip",
+        "preflight-original.zip",
+        "trade-resource-original.zip",
+        "league-entry-original.zip",
+        "actuals-restoration-original.zip",
+        "restoration-unused-original.zip",
+        "resident-refresh-original.zip",
+        "lifecycle-ordinary.zip",
+        "lifecycle-archive-warmed.zip",
+        "lifecycle-combined-read.zip",
+        "public-welcome-security.zip",
+    }
+    files = [x.get("file") for x in plan.get("artifacts", [])]
+    require(required <= set(files), "Missing mandatory release artifacts")
+    require(
+        len(files) == len(set(files)) == len(required),
+        "Unexpected or duplicate release artifact population",
+    )
+    require(
+        sum(len(x.get("jobs", [])) for x in plan.get("runs", [])) == 13,
+        "Required thirteen-job population missing",
+    )
+    require(
+        all(type(run.get("id")) is int and run["id"] > 0 for run in plan["runs"]),
+        "Final validation run identities missing",
+    )
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--operation", choices=["audit", "prepare", "publish"], required=True
+    )
+    parser.add_argument("--plan", type=Path, required=True)
+    parser.add_argument(
+        "--output", type=Path, default=Path(".validation/guarded-release")
+    )
+    parser.add_argument("--prepared-run", type=int)
+    args = parser.parse_args()
+    plan = json.loads(args.plan.read_text())
+    args.output.mkdir(parents=True, exist_ok=True)
+    outcome = dict(
+        operation=args.operation,
+        publisher=os.environ.get("GITHUB_SHA"),
+        candidate=plan["candidate"],
+        passed=False,
+    )
+    try:
+        verify_plan(plan)
+        prepare_or_publish(plan, args.output, args.operation, args.prepared_run)
+        outcome["passed"] = True
+    except Exception as exc:
+        outcome["error_type"] = type(exc).__name__
+        if isinstance(exc, RuntimeError):
+            outcome["reason"] = str(exc)
+        raise
+    finally:
+        write_json(args.output / "outcome.json", outcome)
+    print("Verified guarded release " + args.operation + " completed.")
+
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,472 @@
+/usr/local/lib/python3.14/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+  from starlette.testclient import TestClient as TestClient  # noqa
+test_running_optional_work_is_reaped_within_shutdown_bound (tests.test_fois_process_execution.AbandonedComputeShutdownTests.test_running_optional_work_is_reaped_within_shutdown_bound) ... ok
+test_cancel_during_scratch_preparation_drains_writer_before_cleanup (tests.test_fois_process_execution.FOISProcessExecutionTests.test_cancel_during_scratch_preparation_drains_writer_before_cleanup) ... INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+ok
+INFO:dtos.attribution:diagnostic_boundary
+test_cancelled_generation_stops_writer_before_removing_scratch (tests.test_fois_process_execution.FOISProcessExecutionTests.test_cancelled_generation_stops_writer_before_removing_scratch) ... INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    from multiprocessing.spawn import spawn_main; spawn_main(tracker_fd=12, pipe_handle=15)
+                                                  ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/multiprocessing/spawn.py", line 122, in spawn_main
+    exitcode = _main(fd, parent_sentinel)
+  File "/usr/local/lib/python3.14/multiprocessing/spawn.py", line 131, in _main
+    prepare(preparation_data)
+    ~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/multiprocessing/spawn.py", line 246, in prepare
+    _fixup_main_from_path(data['init_main_from_path'])
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/multiprocessing/spawn.py", line 297, in _fixup_main_from_path
+    main_content = runpy.run_path(main_path,
+                                  run_name="__mp_main__")
+  File "<frozen runpy>", line 287, in run_path
+  File "<frozen runpy>", line 98, in _run_module_code
+  File "<frozen runpy>", line 88, in _run_code
+  File "/runner.py", line 10, in <module>
+    root.mkdir()
+    ~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/pathlib/__init__.py", line 1011, in mkdir
+    os.mkdir(self, mode)
+    ~~~~~~~~^^^^^^^^^^^^
+FileExistsError: [Errno 17] File exists: '/tmp/relevance-focused'
+INFO:dtos.attribution:diagnostic_boundary
+ERROR
+INFO:dtos.attribution:diagnostic_boundary
+test_compact_input_retains_only_owned_brain_assets (tests.test_fois_process_execution.FOISProcessExecutionTests.test_compact_input_retains_only_owned_brain_assets) ... ok
+test_idle_retirement_preserves_full_warm_interval (tests.test_fois_process_execution.FOISProcessExecutionTests.test_idle_retirement_preserves_full_warm_interval) ... INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+ok
+test_idle_retirement_reaps_process_and_recreates_identical_scores (tests.test_fois_process_execution.FOISProcessExecutionTests.test_idle_retirement_reaps_process_and_recreates_identical_scores) ... INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+ERROR
+INFO:dtos.attribution:diagnostic_boundary
+test_idle_worker_can_be_reaped_and_restored_around_visual_work (tests.test_fois_process_execution.FOISProcessExecutionTests.test_idle_worker_can_be_reaped_and_restored_around_visual_work) ... INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+ok
+test_membership_count_does_not_create_compute_processes (tests.test_fois_process_execution.FOISProcessExecutionTests.test_membership_count_does_not_create_compute_processes) ... INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.fois:FOIS generation complete: model=5.1 records=0 duration_ms=2.122
+ok
+test_missing_or_cross_league_cache_fails_without_publication (tests.test_fois_process_execution.FOISProcessExecutionTests.test_missing_or_cross_league_cache_fails_without_publication) ... INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+ERROR:dtos.fois:FOIS generation failed: model=5.1
+Traceback (most recent call last):
+  File "/app/src/core/fois/service.py", line 101, in generate
+    scores, canonical, execution_metrics = await self._isolated_executor(
+                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        data, self.repository,
+        ^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/app/src/core/fois/process_execution.py", line 419, in generate_fois_isolated
+    raise RuntimeError("FOIS canonical cache input is unavailable.")
+RuntimeError: FOIS canonical cache input is unavailable.
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    from multiprocessing.spawn import spawn_main; spawn_main(tracker_fd=12, pipe_handle=15)
+                                                  ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/multiprocessing/spawn.py", line 122, in spawn_main
+    exitcode = _main(fd, parent_sentinel)
+  File "/usr/local/lib/python3.14/multiprocessing/spawn.py", line 131, in _main
+    prepare(preparation_data)
+    ~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/multiprocessing/spawn.py", line 246, in prepare
+    _fixup_main_from_path(data['init_main_from_path'])
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/multiprocessing/spawn.py", line 297, in _fixup_main_from_path
+    main_content = runpy.run_path(main_path,
+                                  run_name="__mp_main__")
+  File "<frozen runpy>", line 287, in run_path
+  File "<frozen runpy>", line 98, in _run_module_code
+  File "<frozen runpy>", line 88, in _run_code
+  File "/runner.py", line 10, in <module>
+    root.mkdir()
+    ~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/pathlib/__init__.py", line 1011, in mkdir
+    os.mkdir(self, mode)
+    ~~~~~~~~^^^^^^^^^^^^
+FileExistsError: [Errno 17] File exists: '/tmp/relevance-focused'
+INFO:dtos.attribution:diagnostic_boundary
+ERROR:dtos.fois:FOIS generation failed: model=5.1
+Traceback (most recent call last):
+  File "/app/src/core/fois/process_execution.py", line 452, in generate_fois_isolated
+    result = await asyncio.wait_for(
+             ^^^^^^^^^^^^^^^^^^^^^^^
+    ...<2 lines>...
+    )
+    ^
+  File "/usr/local/lib/python3.14/asyncio/tasks.py", line 488, in wait_for
+    return await fut
+           ^^^^^^^^^
+concurrent.futures.process.BrokenProcessPool: A process in the process pool was terminated abruptly while the future was running or pending.
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/app/src/core/fois/service.py", line 101, in generate
+    scores, canonical, execution_metrics = await self._isolated_executor(
+                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        data, self.repository,
+        ^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/app/src/core/fois/process_execution.py", line 462, in generate_fois_isolated
+    raise RuntimeError("FOIS compute process failed.") from exc
+RuntimeError: FOIS compute process failed.
+FAIL
+test_parent_sends_only_bounded_cache_control_contract (tests.test_fois_process_execution.FOISProcessExecutionTests.test_parent_sends_only_bounded_cache_control_contract) ... INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+WARNING:asyncio:Executing <Task pending name='Task-48' coro=<FOISProcessExecutionTests.test_parent_sends_only_bounded_cache_control_contract() running at /app/tests/test_fois_process_execution.py:395> wait_for=<Future pending cb=[shield.<locals>._outer_done_callback() at /usr/local/lib/python3.14/asyncio/tasks.py:991, Task.task_wakeup()] created at /usr/local/lib/python3.14/asyncio/base_events.py:459> cb=[_run_until_complete_cb() at /usr/local/lib/python3.14/asyncio/base_events.py:181] created at /usr/local/lib/python3.14/asyncio/runners.py:109> took 0.227 seconds
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    from multiprocessing.spawn import spawn_main; spawn_main(tracker_fd=12, pipe_handle=15)
+                                                  ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/multiprocessing/spawn.py", line 122, in spawn_main
+    exitcode = _main(fd, parent_sentinel)
+  File "/usr/local/lib/python3.14/multiprocessing/spawn.py", line 131, in _main
+    prepare(preparation_data)
+    ~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/multiprocessing/spawn.py", line 246, in prepare
+    _fixup_main_from_path(data['init_main_from_path'])
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/multiprocessing/spawn.py", line 297, in _fixup_main_from_path
+    main_content = runpy.run_path(main_path,
+                                  run_name="__mp_main__")
+  File "<frozen runpy>", line 287, in run_path
+  File "<frozen runpy>", line 98, in _run_module_code
+  File "<frozen runpy>", line 88, in _run_code
+  File "/runner.py", line 10, in <module>
+    root.mkdir()
+    ~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/pathlib/__init__.py", line 1011, in mkdir
+    os.mkdir(self, mode)
+    ~~~~~~~~^^^^^^^^^^^^
+FileExistsError: [Errno 17] File exists: '/tmp/relevance-focused'
+INFO:dtos.attribution:diagnostic_boundary
+ERROR:dtos.fois:FOIS generation failed: model=5.1
+Traceback (most recent call last):
+  File "/app/src/core/fois/process_execution.py", line 452, in generate_fois_isolated
+    result = await asyncio.wait_for(
+             ^^^^^^^^^^^^^^^^^^^^^^^
+    ...<2 lines>...
+    )
+    ^
+  File "/usr/local/lib/python3.14/asyncio/tasks.py", line 488, in wait_for
+    return await fut
+           ^^^^^^^^^
+concurrent.futures.process.BrokenProcessPool: A process in the process pool was terminated abruptly while the future was running or pending.
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/app/src/core/fois/service.py", line 101, in generate
+    scores, canonical, execution_metrics = await self._isolated_executor(
+                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        data, self.repository,
+        ^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/app/src/core/fois/process_execution.py", line 462, in generate_fois_isolated
+    raise RuntimeError("FOIS compute process failed.") from exc
+RuntimeError: FOIS compute process failed.
+ERROR
+INFO:dtos.attribution:diagnostic_boundary
+test_pending_running_failed_and_cancelled_jobs_are_accounted (tests.test_fois_process_execution.FOISProcessExecutionTests.test_pending_running_failed_and_cancelled_jobs_are_accounted) ... INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+ok
+test_persistent_worker_matches_thread_semantics_and_is_reaped_on_shutdown (tests.test_fois_process_execution.FOISProcessExecutionTests.test_persistent_worker_matches_thread_semantics_and_is_reaped_on_shutdown) ... INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.fois:FOIS franchise evaluated: model=5.1 league=fois-process-fixture franchise=fois-process-fixture:franchise:1 window=0-0 status=provisional
+INFO:dtos.fois:FOIS franchise evaluated: model=5.1 league=fois-process-fixture franchise=fois-process-fixture:franchise:2 window=0-0 status=provisional
+INFO:dtos.fois:FOIS generation complete: model=5.1 records=2 duration_ms=37.919
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    from multiprocessing.spawn import spawn_main; spawn_main(tracker_fd=12, pipe_handle=15)
+                                                  ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/multiprocessing/spawn.py", line 122, in spawn_main
+    exitcode = _main(fd, parent_sentinel)
+  File "/usr/local/lib/python3.14/multiprocessing/spawn.py", line 131, in _main
+    prepare(preparation_data)
+    ~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/multiprocessing/spawn.py", line 246, in prepare
+    _fixup_main_from_path(data['init_main_from_path'])
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/multiprocessing/spawn.py", line 297, in _fixup_main_from_path
+    main_content = runpy.run_path(main_path,
+                                  run_name="__mp_main__")
+  File "<frozen runpy>", line 287, in run_path
+  File "<frozen runpy>", line 98, in _run_module_code
+  File "<frozen runpy>", line 88, in _run_code
+  File "/runner.py", line 10, in <module>
+    root.mkdir()
+    ~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/pathlib/__init__.py", line 1011, in mkdir
+    os.mkdir(self, mode)
+    ~~~~~~~~^^^^^^^^^^^^
+FileExistsError: [Errno 17] File exists: '/tmp/relevance-focused'
+INFO:dtos.attribution:diagnostic_boundary
+ERROR:dtos.fois:FOIS generation failed: model=5.1
+Traceback (most recent call last):
+  File "/app/src/core/fois/process_execution.py", line 452, in generate_fois_isolated
+    result = await asyncio.wait_for(
+             ^^^^^^^^^^^^^^^^^^^^^^^
+    ...<2 lines>...
+    )
+    ^
+  File "/usr/local/lib/python3.14/asyncio/tasks.py", line 488, in wait_for
+    return await fut
+           ^^^^^^^^^
+concurrent.futures.process.BrokenProcessPool: A process in the process pool was terminated abruptly while the future was running or pending.
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/app/src/core/fois/service.py", line 101, in generate
+    scores, canonical, execution_metrics = await self._isolated_executor(
+                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        data, self.repository,
+        ^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/app/src/core/fois/process_execution.py", line 462, in generate_fois_isolated
+    raise RuntimeError("FOIS compute process failed.") from exc
+RuntimeError: FOIS compute process failed.
+ERROR
+test_prewarmed_worker_keeps_event_loop_responsive_with_large_irrelevant_data (tests.test_fois_process_execution.FOISProcessExecutionTests.test_prewarmed_worker_keeps_event_loop_responsive_with_large_irrelevant_data) ... INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+WARNING:asyncio:Executing <Task pending name='Task-68' coro=<FOISProcessExecutionTests.test_prewarmed_worker_keeps_event_loop_responsive_with_large_irrelevant_data() running at /app/tests/test_fois_process_execution.py:355> wait_for=<Future pending cb=[_chain_future.<locals>._call_check_cancel() at /usr/local/lib/python3.14/asyncio/futures.py:393, Task.task_wakeup()] created at /usr/local/lib/python3.14/asyncio/base_events.py:459> cb=[_run_until_complete_cb() at /usr/local/lib/python3.14/asyncio/base_events.py:181] created at /usr/local/lib/python3.14/asyncio/runners.py:109> took 0.306 seconds
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    from multiprocessing.spawn import spawn_main; spawn_main(tracker_fd=12, pipe_handle=15)
+                                                  ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/multiprocessing/spawn.py", line 122, in spawn_main
+    exitcode = _main(fd, parent_sentinel)
+  File "/usr/local/lib/python3.14/multiprocessing/spawn.py", line 131, in _main
+    prepare(preparation_data)
+    ~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/multiprocessing/spawn.py", line 246, in prepare
+    _fixup_main_from_path(data['init_main_from_path'])
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/multiprocessing/spawn.py", line 297, in _fixup_main_from_path
+    main_content = runpy.run_path(main_path,
+                                  run_name="__mp_main__")
+  File "<frozen runpy>", line 287, in run_path
+  File "<frozen runpy>", line 98, in _run_module_code
+  File "<frozen runpy>", line 88, in _run_code
+  File "/runner.py", line 10, in <module>
+    root.mkdir()
+    ~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/pathlib/__init__.py", line 1011, in mkdir
+    os.mkdir(self, mode)
+    ~~~~~~~~^^^^^^^^^^^^
+FileExistsError: [Errno 17] File exists: '/tmp/relevance-focused'
+INFO:dtos.attribution:diagnostic_boundary
+ERROR
+INFO:dtos.attribution:diagnostic_boundary
+test_process_failure_preserves_failed_state (tests.test_fois_process_execution.FOISProcessExecutionTests.test_process_failure_preserves_failed_state) ... ERROR:dtos.fois:FOIS generation failed: model=5.1
+Traceback (most recent call last):
+  File "/app/src/core/fois/service.py", line 101, in generate
+    scores, canonical, execution_metrics = await self._isolated_executor(
+                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        data, self.repository,
+        ^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/app/tests/test_fois_process_execution.py", line 432, in broken
+    raise RuntimeError("isolated failure")
+RuntimeError: isolated failure
+ok
+test_validation_progress_io_cannot_block_request_event_loop (tests.test_fois_process_execution.FOISProcessExecutionTests.test_validation_progress_io_cannot_block_request_event_loop) ... INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+ok
+test_bounded_output_and_deterministic_order_without_new_state_owners (tests.test_franchise_trade_progress.FranchiseTradeProgressTests.test_bounded_output_and_deterministic_order_without_new_state_owners) ... ok
+test_complete_empty_selected_period_supports_zero_despite_earlier_chain_gap (tests.test_franchise_trade_progress.FranchiseTradeProgressTests.test_complete_empty_selected_period_supports_zero_despite_earlier_chain_gap) ... ok
+test_completed_empty_helper_remains_backwards_compatible (tests.test_franchise_trade_progress.FranchiseTradeProgressTests.test_completed_empty_helper_remains_backwards_compatible) ... ok
+test_detail_cap_is_bounded_without_changing_transfer_totals (tests.test_franchise_trade_progress.FranchiseTradeProgressTests.test_detail_cap_is_bounded_without_changing_transfer_totals) ... ok
+test_duplicate_events_and_duplicate_pick_legs_are_not_recounted (tests.test_franchise_trade_progress.FranchiseTradeProgressTests.test_duplicate_events_and_duplicate_pick_legs_are_not_recounted) ... ok
+test_manager_change_cannot_change_franchise_trade_summary (tests.test_franchise_trade_progress.FranchiseTradeProgressTests.test_manager_change_cannot_change_franchise_trade_summary) ... ok
+test_other_league_cannot_receive_day_movements (tests.test_franchise_trade_progress.FranchiseTradeProgressTests.test_other_league_cannot_receive_day_movements) ... ok
+test_partial_empty_and_absent_selected_periods_remain_unknown (tests.test_franchise_trade_progress.FranchiseTradeProgressTests.test_partial_empty_and_absent_selected_periods_remain_unknown) ... ok
+test_partial_pick_evidence_does_not_hide_supported_players (tests.test_franchise_trade_progress.FranchiseTradeProgressTests.test_partial_pick_evidence_does_not_hide_supported_players) ... ok
+test_repeated_player_and_pick_movements_remain_in_both_gross_directions (tests.test_franchise_trade_progress.FranchiseTradeProgressTests.test_repeated_player_and_pick_movements_remain_in_both_gross_directions) ... ok
+test_retained_source_replay_all_movements_and_conversion_boundary (tests.test_franchise_trade_progress.FranchiseTradeProgressTests.test_retained_source_replay_all_movements_and_conversion_boundary) ... ok
+test_same_round_exact_picks_keep_own_and_acquired_origins_separate (tests.test_franchise_trade_progress.FranchiseTradeProgressTests.test_same_round_exact_picks_keep_own_and_acquired_origins_separate) ... ok
+test_season_selection_and_pagination_agree_and_preserve_scope (tests.test_franchise_trade_progress.FranchiseTradeProgressTests.test_season_selection_and_pagination_agree_and_preserve_scope) ... INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:2?season=2024 "HTTP/1.1 200 OK"
+ok
+test_source_change_withholds_every_movement_family (tests.test_franchise_trade_progress.FranchiseTradeProgressTests.test_source_change_withholds_every_movement_family) ... ok
+test_statuses_waivers_and_corrections_never_enter_trade_movements (tests.test_franchise_trade_progress.FranchiseTradeProgressTests.test_statuses_waivers_and_corrections_never_enter_trade_movements) ... ok
+test_unknown_completion_date_does_not_exclude_supported_season_movements (tests.test_franchise_trade_progress.FranchiseTradeProgressTests.test_unknown_completion_date_does_not_exclude_supported_season_movements) ... ok
+test_complete_observed_empty_scope_can_support_zero (tests.test_completed_trade_observations.CompletedTradeObservationTests.test_complete_observed_empty_scope_can_support_zero) ... ok
+test_conflicting_exact_pick_directions_do_not_invent_a_transfer (tests.test_completed_trade_observations.CompletedTradeObservationTests.test_conflicting_exact_pick_directions_do_not_invent_a_transfer) ... ok
+test_empty_partial_history_is_unknown_not_a_zero (tests.test_completed_trade_observations.CompletedTradeObservationTests.test_empty_partial_history_is_unknown_not_a_zero) ... INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:2 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:2 "HTTP/1.1 200 OK"
+ok
+test_future_completion_cannot_establish_an_observed_completed_trade (tests.test_completed_trade_observations.CompletedTradeObservationTests.test_future_completion_cannot_establish_an_observed_completed_trade) ... ok
+test_incomplete_exact_pick_identity_keeps_only_supported_lower_bounds (tests.test_completed_trade_observations.CompletedTradeObservationTests.test_incomplete_exact_pick_identity_keeps_only_supported_lower_bounds) ... INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:2 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:2 "HTTP/1.1 200 OK"
+ok
+test_manager_change_never_backdates_counts_to_current_manager (tests.test_completed_trade_observations.CompletedTradeObservationTests.test_manager_change_never_backdates_counts_to_current_manager) ... INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:2 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:2 "HTTP/1.1 200 OK"
+ok
+test_multiple_firsts_and_multiteam_directions_count_assets_and_deals_separately (tests.test_completed_trade_observations.CompletedTradeObservationTests.test_multiple_firsts_and_multiteam_directions_count_assets_and_deals_separately) ... INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:2 "HTTP/1.1 200 OK"
+ok
+test_other_league_never_receives_day_trade_references (tests.test_completed_trade_observations.CompletedTradeObservationTests.test_other_league_never_receives_day_trade_references) ... INFO:httpx:HTTP Request: GET http://testserver/history/team/1319750579458686976:franchise:4 "HTTP/1.1 200 OK"
+ok
+test_pagination_does_not_recount_a_visible_page_as_the_sample (tests.test_completed_trade_observations.CompletedTradeObservationTests.test_pagination_does_not_recount_a_visible_page_as_the_sample) ... ok
+test_pending_rejected_waivers_and_corrections_are_not_completed_trades (tests.test_completed_trade_observations.CompletedTradeObservationTests.test_pending_rejected_waivers_and_corrections_are_not_completed_trades) ... ok
+test_reads_do_not_build_intelligence_or_write_history (tests.test_completed_trade_observations.CompletedTradeObservationTests.test_reads_do_not_build_intelligence_or_write_history) ... INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:4 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:4 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:4 "HTTP/1.1 200 OK"
+ok
+test_retained_day_counts_match_original_directed_consideration (tests.test_completed_trade_observations.CompletedTradeObservationTests.test_retained_day_counts_match_original_directed_consideration) ... INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:4 "HTTP/1.1 200 OK"
+ok
+test_same_exact_pick_in_later_trade_counts_a_separate_directed_transfer (tests.test_completed_trade_observations.CompletedTradeObservationTests.test_same_exact_pick_in_later_trade_counts_a_separate_directed_transfer) ... ok
+test_source_change_withholds_the_whole_numeric_summary (tests.test_completed_trade_observations.CompletedTradeObservationTests.test_source_change_withholds_the_whole_numeric_summary) ... ok
+test_supported_zero_is_only_a_zero_within_observed_trades (tests.test_completed_trade_observations.CompletedTradeObservationTests.test_supported_zero_is_only_a_zero_within_observed_trades) ... INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:2 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:2 "HTTP/1.1 200 OK"
+ok
+test_undated_completed_trade_is_not_given_a_creation_based_window (tests.test_completed_trade_observations.CompletedTradeObservationTests.test_undated_completed_trade_is_not_given_a_creation_based_window) ... INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:2 "HTTP/1.1 200 OK"
+ok
+test_unlinked_source_season_is_not_current_franchise_behavior (tests.test_completed_trade_observations.CompletedTradeObservationTests.test_unlinked_source_season_is_not_current_franchise_behavior) ... INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:2 "HTTP/1.1 200 OK"
+ok
+test_checkpoint_retains_events_without_claiming_acquired_weeks (tests.test_franchise_timeline_coverage.FranchiseTimelineCoverageTests.test_checkpoint_retains_events_without_claiming_acquired_weeks) ... INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:1 "HTTP/1.1 200 OK"
+ok
+test_complete_closed_season_can_support_no_completed_transactions (tests.test_franchise_timeline_coverage.FranchiseTimelineCoverageTests.test_complete_closed_season_can_support_no_completed_transactions) ... INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:1 "HTTP/1.1 200 OK"
+ok
+test_completed_waiver_add_drop_and_zero_faab_transfer_remain_factual (tests.test_franchise_timeline_coverage.FranchiseTimelineCoverageTests.test_completed_waiver_add_drop_and_zero_faab_transfer_remain_factual) ... INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:1 "HTTP/1.1 200 OK"
+ok
+test_conflicting_retained_identities_withhold_movements (tests.test_franchise_timeline_coverage.FranchiseTimelineCoverageTests.test_conflicting_retained_identities_withhold_movements) ... ok
+test_current_activity_list_is_not_full_season_acquisition (tests.test_franchise_timeline_coverage.FranchiseTimelineCoverageTests.test_current_activity_list_is_not_full_season_acquisition) ... ok
+test_current_or_old_calendar_age_does_not_imply_complete (tests.test_franchise_timeline_coverage.FranchiseTimelineCoverageTests.test_current_or_old_calendar_age_does_not_imply_complete) ... INFO:httpx:HTTP Request: GET http://testserver/api/history/franchises/1 "HTTP/1.1 200 OK"
+ok
+test_discovered_uncached_season_is_unknown_not_empty (tests.test_franchise_timeline_coverage.FranchiseTimelineCoverageTests.test_discovered_uncached_season_is_unknown_not_empty) ... INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:1 "HTTP/1.1 200 OK"
+ok
+test_draft_selection_preserves_original_distinct_from_selecting_roster (tests.test_franchise_timeline_coverage.FranchiseTimelineCoverageTests.test_draft_selection_preserves_original_distinct_from_selecting_roster) ... INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:1 "HTTP/1.1 200 OK"
+ok
+test_duplicate_transactions_are_shown_once (tests.test_franchise_timeline_coverage.FranchiseTimelineCoverageTests.test_duplicate_transactions_are_shown_once) ... INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:1 "HTTP/1.1 200 OK"
+ok
+test_failed_rejected_pending_and_unknown_are_not_completed_movements (tests.test_franchise_timeline_coverage.FranchiseTimelineCoverageTests.test_failed_rejected_pending_and_unknown_are_not_completed_movements) ... INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:1 "HTTP/1.1 200 OK"
+ok
+test_foreign_league_context_and_invalid_roster_never_leak (tests.test_franchise_timeline_coverage.FranchiseTimelineCoverageTests.test_foreign_league_context_and_invalid_roster_never_leak) ... INFO:httpx:HTTP Request: GET http://testserver/history/team/1319750579458686976:franchise:1 "HTTP/1.1 404 Not Found"
+INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:invalid "HTTP/1.1 404 Not Found"
+INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:1 "HTTP/1.1 200 OK"
+ok
+test_malformed_consideration_does_not_crash_or_become_a_movement (tests.test_franchise_timeline_coverage.FranchiseTimelineCoverageTests.test_malformed_consideration_does_not_crash_or_become_a_movement) ... INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/transactions?scope=all_history&season=2024&team=1 "HTTP/1.1 200 OK"
+ok
+test_missing_and_malformed_source_periods_have_specific_reasons (tests.test_franchise_timeline_coverage.FranchiseTimelineCoverageTests.test_missing_and_malformed_source_periods_have_specific_reasons) ... INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:1 "HTTP/1.1 200 OK"
+ok
+test_missing_continuation_keeps_completed_source_facts_without_attribution (tests.test_franchise_timeline_coverage.FranchiseTimelineCoverageTests.test_missing_continuation_keeps_completed_source_facts_without_attribution) ... INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:1 "HTTP/1.1 200 OK"
+ok
+test_missing_historical_identity_does_not_hide_supported_transactions (tests.test_franchise_timeline_coverage.FranchiseTimelineCoverageTests.test_missing_historical_identity_does_not_hide_supported_transactions) ... INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:1 "HTTP/1.1 200 OK"
+ok
+test_missing_traded_pick_year_never_uses_transaction_season (tests.test_franchise_timeline_coverage.FranchiseTimelineCoverageTests.test_missing_traded_pick_year_never_uses_transaction_season) ... INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/transactions?scope=all_history&season=2024 "HTTP/1.1 200 OK"
+ok
+test_ordinary_reads_do_not_build_asset_graph_call_provider_or_regrade (tests.test_franchise_timeline_coverage.FranchiseTimelineCoverageTests.test_ordinary_reads_do_not_build_asset_graph_call_provider_or_regrade) ... ok
+test_ownership_changes_are_season_observations_not_current_manager_credit (tests.test_franchise_timeline_coverage.FranchiseTimelineCoverageTests.test_ownership_changes_are_season_observations_not_current_manager_credit) ... INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:1 "HTTP/1.1 200 OK"
+ok
+test_partial_day_and_arkham_retained_events_reach_rendered_page (tests.test_franchise_timeline_coverage.FranchiseTimelineCoverageTests.test_partial_day_and_arkham_retained_events_reach_rendered_page) ... INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:3 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/history/team/1319750579458686976:franchise:1 "HTTP/1.1 200 OK"
+ok
+test_pick_original_franchise_is_not_its_owner_or_a_participant (tests.test_franchise_timeline_coverage.FranchiseTimelineCoverageTests.test_pick_original_franchise_is_not_its_owner_or_a_participant) ... INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:1 "HTTP/1.1 200 OK"
+ok
+test_prepared_current_buckets_are_admitted_but_activity_lists_are_not (tests.test_franchise_timeline_coverage.FranchiseTimelineCoverageTests.test_prepared_current_buckets_are_admitted_but_activity_lists_are_not) ... ok
+test_source_change_withholds_complete_coverage_and_empty_conclusion (tests.test_franchise_timeline_coverage.FranchiseTimelineCoverageTests.test_source_change_withholds_complete_coverage_and_empty_conclusion) ... ok
+test_unparsed_or_unknown_records_cannot_establish_no_activity (tests.test_franchise_timeline_coverage.FranchiseTimelineCoverageTests.test_unparsed_or_unknown_records_cannot_establish_no_activity) ... INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:1 "HTTP/1.1 200 OK"
+ok
+test_wrong_declared_source_season_is_unknown_without_hiding_other_seasons (tests.test_franchise_timeline_coverage.FranchiseTimelineCoverageTests.test_wrong_declared_source_season_is_unknown_without_hiding_other_seasons) ... INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:1 "HTTP/1.1 200 OK"
+ok
+test_current_cache_restore_and_eviction_reopening_preserve_followthrough (tests.test_history_followthrough.CurrentHistoryFollowThroughTests.test_current_cache_restore_and_eviction_reopening_preserve_followthrough) ... {"timestamp":"2026-11-12T18:07:55.189270+00:00","level":"INFO","logger":"dtos.attribution","message":"diagnostic_boundary","request_id":"activity-37c4b0cf127940be9ed5a28ae4ea6682","event":"diagnostic_boundary","diagnostic":{"schema":"request-attribution-v1","event_index":1,"event_limit":512,"dropped_so_far":0,"origin_request_id":null,"name":"runtime_hydration","span_id":1,"parent_span_id":null,"boundary":"started","timestamp":"2026-11-12T18:07:55.189211+00:00","elapsed_from_trace_ms":0.019,"duration_ms":0.006,"queue_dropped_record_count":0}}
+{"timestamp":"2026-11-12T18:07:55.200402+00:00","level":"INFO","logger":"dtos.attribution","message":"diagnostic_boundary","request_id":"activity-37c4b0cf127940be9ed5a28ae4ea6682","event":"diagnostic_boundary","diagnostic":{"schema":"request-attribution-v1","event_index":2,"event_limit":512,"dropped_so_far":0,"origin_request_id":null,"name":"lifecycle_phase","span_id":2,"parent_span_id":1,"boundary":"started","timestamp":"2026-11-12T18:07:55.200353+00:00","elapsed_from_trace_ms":11.161,"duration_ms":0.004,"queue_dropped_record_count":0}}
+{"timestamp":"2026-11-12T18:07:55.202987+00:00","level":"INFO","logger":"dtos.attribution","message":"diagnostic_boundary","request_id":"activity-37c4b0cf127940be9ed5a28ae4ea6682","event":"diagnostic_boundary","diagnostic":{"schema":"request-attribution-v1","event_index":3,"event_limit":512,"dropped_so_far":0,"origin_request_id":null,"name":"lifecycle_phase","span_id":2,"parent_span_id":1,"boundary":"phase_acquired","timestamp":"2026-11-12T18:07:55.202953+00:00","elapsed_from_trace_ms":13.761,"duration_ms":2.604,"phase_name":"cache_persistence","queue_dropped_record_count":0}}
+{"timestamp":"2026-11-12T18:07:55.203773+00:00","level":"INFO","logger":"dtos.attribution","message":"diagnostic_boundary","request_id":"activity-37c4b0cf127940be9ed5a28ae4ea6682","event":"diagnostic_boundary","diagnostic":{"schema":"request-attribution-v1","event_index":4,"event_limit":512,"dropped_so_far":0,"origin_request_id":null,"name":"memory_sample","boundary":"captured","timestamp":"2026-11-12T18:07:55.203742+00:00","sample_id":1,"span_id":1,"requested_boundaries":[{"name":"runtime_hydration","boundary":"started","span_id":1,"request_id":"activity-37c4b0cf127940be9ed5a28ae4ea6682","requested_at":"2026-11-12T18:07:55.189445+00:00"}],"active_activities":[{"request_id":"activity-37c4b0cf127940be9ed5a28ae4ea6682","name":"runtime_hydration","span_id":1}],"dropped_activity_or_boundary_count":0,"memory":{"rss_bytes":237264896,"vms_bytes":542416896,"system_available_bytes":17715048448,"memory_accounting_scope":"cgroup","cgroup_current_bytes":232095744,"cgroup_limit_bytes":2147483648,"cgroup_inactive_file_bytes":421888,"cgroup_anonymous_bytes":229539840,"cgroup_memory_events":{"low":0,"high":0,"max":0,"oom":0,"oom_kill":0,"oom_group_kill":0},"anonymous_bytes":229539840,"file_bytes":512000,"kernel_bytes":1396736,"shmem_bytes":20480,"cgroup_lifetime_peak_bytes":232120320,"observer_pid":7,"observer_kind":"main_process","active_process_count":2,"zombie_count":0,"process_samples_truncated":false,"process_samples_are_sequential":true,"processes":[{"pid":7,"role":"application","rss_bytes":237502464,"pss_bytes":234045440,"uss_bytes":230617088,"sample_offset_ms":2.347,"sample_duration_ms":9.643},{"pid":28,"role":"child","rss_bytes":18857984,"pss_bytes":15425536,"uss_bytes":11997184,"sample_offset_ms":11.992,"sample_duration_ms":0.852}],"capture_duration_ms":12.847,"pss_requested":true,"runtime_residency":{"resident_count":1,"warm_limit":2,"hydrating_count":0,"warm_count":0,"runtime_samples_truncated":false,"runtimes":[{"scope":"c9adb23a3e8be7a1","state":"cold","active_requests":0,"pinned":true,"owns_state":false,"background_tasks":0,"source_generation_count":0,"source_generation_identity":"4f53cda18c2baa0c","market_cache_owned":true,"projection_cache_owned":false}]},"sample_total_duration_ms":12.953},"queue_dropped_record_count":0}}
+{"timestamp":"2026-11-12T18:07:55.204437+00:00","level":"INFO","logger":"dtos.request","message":"cache_restoration_admission","request_id":"system","event":"cache_restoration_admission","diagnostic":{"schema":"cache-restoration-admission-v1","scope":"existing_guard_inputs_not_atomic","file_bytes":1480,"current_bytes":232357888,"limit_bytes":2147483648,"anonymous_bytes":229756928,"inactive_file_bytes":425984,"reason":"sufficient_headroom","would_admit":true,"headroom_bytes":1915125760,"effective_limit_bytes":2147483648,"working_bytes":134217728,"safety_bytes":134217728,"fois_working_bytes":0,"fois_safety_bytes":0,"required_bytes":268435456,"cleanup":{"attempted":false,"before_bytes":null,"after_bytes":null,"expired_entries":null,"idle_worker_retired":null,"allocator_trimmed":null,"cleanup_unavailable":null},"queue_dropped_record_count":0}}
+{"timestamp":"2026-11-12T18:07:55.218153+00:00","level":"INFO","logger":"dtos.attribution","message":"diagnostic_boundary","request_id":"activity-37c4b0cf127940be9ed5a28ae4ea6682","event":"diagnostic_boundary","diagnostic":{"schema":"request-attribution-v1","event_index":5,"event_limit":512,"dropped_so_far":0,"origin_request_id":null,"name":"runtime_publication","span_id":3,"parent_span_id":2,"boundary":"started","timestamp":"2026-11-12T18:07:55.218126+00:00","elapsed_from_trace_ms":28.935,"duration_ms":0.005,"queue_dropped_record_count":0}}
+{"timestamp":"2026-11-12T18:07:55.250873+00:00","level":"INFO","logger":"dtos.attribution","message":"diagnostic_boundary","request_id":"activity-37c4b0cf127940be9ed5a28ae4ea6682","event":"diagnostic_boundary","diagnostic":{"schema":"request-attribution-v1","event_index":6,"event_limit":512,"dropped_so_far":0,"origin_request_id":null,"name":"runtime_publication","span_id":3,"parent_span_id":2,"boundary":"finished","timestamp":"2026-11-12T18:07:55.250843+00:00","elapsed_from_trace_ms":61.651,"duration_ms":32.721,"status":"complete","calling_thread_cpu_ms":10.435,"queue_dropped_record_count":0}}
+{"timestamp":"2026-11-12T18:07:55.251676+00:00","level":"INFO","logger":"dtos.attribution","message":"diagnostic_boundary","request_id":"activity-37c4b0cf127940be9ed5a28ae4ea6682","event":"diagnostic_boundary","diagnostic":{"schema":"request-attribution-v1","event_index":7,"event_limit":512,"dropped_so_far":0,"origin_request_id":null,"name":"lifecycle_phase","span_id":2,"parent_span_id":1,"boundary":"finished","timestamp":"2026-11-12T18:07:55.251655+00:00","elapsed_from_trace_ms":62.465,"duration_ms":51.308,"status":"complete","calling_thread_cpu_ms":27.125,"queue_dropped_record_count":0}}
+{"timestamp":"2026-11-12T18:07:55.253384+00:00","level":"INFO","logger":"dtos.attribution","message":"diagnostic_boundary","request_id":"activity-37c4b0cf127940be9ed5a28ae4ea6682","event":"diagnostic_boundary","diagnostic":{"schema":"request-attribution-v1","event_index":8,"event_limit":512,"dropped_so_far":0,"origin_request_id":null,"name":"runtime_hydration","span_id":1,"parent_span_id":null,"boundary":"finished","timestamp":"2026-11-12T18:07:55.253343+00:00","elapsed_from_trace_ms":64.15,"duration_ms":64.136,"status":"complete","calling_thread_cpu_ms":5.7,"queue_dropped_record_count":0}}
+{"timestamp":"2026-11-12T18:07:55.271519+00:00","level":"INFO","logger":"dtos.attribution","message":"diagnostic_boundary","request_id":"activity-37c4b0cf127940be9ed5a28ae4ea6682","event":"diagnostic_boundary","diagnostic":{"schema":"request-attribution-v1","event_index":9,"event_limit":512,"dropped_so_far":0,"origin_request_id":null,"name":"memory_sample","boundary":"captured","timestamp":"2026-11-12T18:07:55.271486+00:00","sample_id":2,"span_id":1,"requested_boundaries":[{"name":"runtime_hydration","boundary":"finished","span_id":1,"request_id":"activity-37c4b0cf127940be9ed5a28ae4ea6682","requested_at":"2026-11-12T18:07:55.253523+00:00"}],"active_activities":[],"dropped_activity_or_boundary_count":0,"memory":{"rss_bytes":237793280,"vms_bytes":550842368,"system_available_bytes":17713606656,"memory_accounting_scope":"cgroup","cgroup_current_bytes":232968192,"cgroup_limit_bytes":2147483648,"cgroup_inactive_file_bytes":528384,"cgroup_anonymous_bytes":230027264,"cgroup_memory_events":{"low":0,"high":0,"max":0,"oom":0,"oom_kill":0,"oom_group_kill":0},"anonymous_bytes":230027264,"file_bytes":659456,"kernel_bytes":1462272,"shmem_bytes":20480,"cgroup_lifetime_peak_bytes":233422848,"observer_pid":7,"observer_kind":"main_process","active_process_count":2,"zombie_count":0,"process_samples_truncated":false,"process_samples_are_sequential":true,"processes":[{"pid":7,"role":"application","rss_bytes":238071808,"pss_bytes":234622976,"uss_bytes":231194624,"sample_offset_ms":11.809,"sample_duration_ms":3.817},{"pid":28,"role":"child","rss_bytes":18857984,"pss_bytes":15425536,"uss_bytes":11997184,"sample_offset_ms":15.629,"sample_duration_ms":0.518}],"capture_duration_ms":16.149,"pss_requested":true,"runtime_residency":{"resident_count":1,"warm_limit":2,"hydrating_count":0,"warm_count":0,"runtime_samples_truncated":false,"runtimes":[{"scope":"c9adb23a3e8be7a1","state":"cold","active_requests":0,"pinned":true,"owns_state":false,"background_tasks":0,"source_generation_count":0,"source_generation_identity":"4f53cda18c2baa0c","market_cache_owned":true,"projection_cache_owned":false}]},"sample_total_duration_ms":16.212},"queue_dropped_record_count":0}}
+{"timestamp":"2026-11-12T18:07:55.281187+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/team/2100000000000000001:franchise:1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T18:07:55.310861+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/history/1700000000000000001 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T18:07:55.319515+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/history/1700000000000000002?from_trade=1700000000000000001 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T18:07:55.322126+00:00","level":"INFO","logger":"dtos.attribution","message":"diagnostic_boundary","request_id":"activity-7512f1d92ee1475198ee70032afdd7c6","event":"diagnostic_boundary","diagnostic":{"schema":"request-attribution-v1","event_index":1,"event_limit":512,"dropped_so_far":0,"origin_request_id":null,"name":"runtime_hydration","span_id":1,"parent_span_id":null,"boundary":"started","timestamp":"2026-11-12T18:07:55.322097+00:00","elapsed_from_trace_ms":0.016,"duration_ms":0.004,"queue_dropped_record_count":0}}
+{"timestamp":"2026-11-12T18:07:55.324823+00:00","level":"INFO","logger":"dtos.attribution","message":"diagnostic_boundary","request_id":"activity-7512f1d92ee1475198ee70032afdd7c6","event":"diagnostic_boundary","diagnostic":{"schema":"request-attribution-v1","event_index":2,"event_limit":512,"dropped_so_far":0,"origin_request_id":null,"name":"lifecycle_phase","span_id":2,"parent_span_id":1,"boundary":"started","timestamp":"2026-11-12T18:07:55.324785+00:00","elapsed_from_trace_ms":2.703,"duration_ms":0.004,"queue_dropped_record_count":0}}
+{"timestamp":"2026-11-12T18:07:55.326117+00:00","level":"INFO","logger":"dtos.attribution","message":"diagnostic_boundary","request_id":"activity-7512f1d92ee1475198ee70032afdd7c6","event":"diagnostic_boundary","diagnostic":{"schema":"request-attribution-v1","event_index":3,"event_limit":512,"dropped_so_far":0,"origin_request_id":null,"name":"lifecycle_phase","span_id":2,"parent_span_id":1,"boundary":"phase_acquired","timestamp":"2026-11-12T18:07:55.326084+00:00","elapsed_from_trace_ms":4.002,"duration_ms":1.303,"phase_name":"cache_persistence","queue_dropped_record_count":0}}
+{"timestamp":"2026-11-12T18:07:55.327110+00:00","level":"INFO","logger":"dtos.request","message":"cache_restoration_admission","request_id":"system","event":"cache_restoration_admission","diagnostic":{"schema":"cache-restoration-admission-v1","scope":"existing_guard_inputs_not_atomic","file_bytes":1480,"current_bytes":233648128,"limit_bytes":2147483648,"anonymous_bytes":230760448,"inactive_file_bytes":512000,"reason":"sufficient_headroom","would_admit":true,"headroom_bytes":1913835520,"effective_limit_bytes":2147483648,"working_bytes":134217728,"safety_bytes":134217728,"fois_working_bytes":0,"fois_safety_bytes":0,"required_bytes":268435456,"cleanup":{"attempted":false,"before_bytes":null,"after_bytes":null,"expired_entries":null,"idle_worker_retired":null,"allocator_trimmed":null,"cleanup_unavailable":null},"queue_dropped_record_count":0}}
+{"timestamp":"2026-11-12T18:07:55.327690+00:00","level":"INFO","logger":"dtos.attribution","message":"diagnostic_boundary","request_id":"activity-7512f1d92ee1475198ee70032afdd7c6","event":"diagnostic_boundary","diagnostic":{"schema":"request-attribution-v1","event_index":4,"event_limit":512,"dropped_so_far":0,"origin_request_id":null,"name":"runtime_publication","span_id":3,"parent_span_id":2,"boundary":"started","timestamp":"2026-11-12T18:07:55.327664+00:00","elapsed_from_trace_ms":5.584,"duration_ms":0.004,"queue_dropped_record_count":0}}
+{"timestamp":"2026-11-12T18:07:55.337703+00:00","level":"INFO","logger":"dtos.attribution","message":"diagnostic_boundary","request_id":"activity-7512f1d92ee1475198ee70032afdd7c6","event":"diagnostic_boundary","diagnostic":{"schema":"request-attribution-v1","event_index":5,"event_limit":512,"dropped_so_far":0,"origin_request_id":null,"name":"memory_sample","boundary":"captured","timestamp":"2026-11-12T18:07:55.337672+00:00","sample_id":1,"span_id":1,"requested_boundaries":[{"name":"runtime_hydration","boundary":"started","span_id":1,"request_id":"activity-7512f1d92ee1475198ee70032afdd7c6","requested_at":"2026-11-12T18:07:55.322261+00:00"}],"active_activities":[{"request_id":"activity-7512f1d92ee1475198ee70032afdd7c6","name":"runtime_hydration","span_id":1}],"dropped_activity_or_boundary_count":0,"memory":{"rss_bytes":238501888,"vms_bytes":550825984,"system_available_bytes":17713606656,"memory_accounting_scope":"cgroup","cgroup_current_bytes":233652224,"cgroup_limit_bytes":2147483648,"cgroup_inactive_file_bytes":512000,"cgroup_anonymous_bytes":230760448,"cgroup_memory_events":{"low":0,"high":0,"max":0,"oom":0,"oom_kill":0,"oom_group_kill":0},"anonymous_bytes":230760448,"file_bytes":659456,"kernel_bytes":1470464,"shmem_bytes":20480,"cgroup_lifetime_peak_bytes":233873408,"observer_pid":7,"observer_kind":"main_process","active_process_count":2,"zombie_count":0,"process_samples_truncated":false,"process_samples_are_sequential":true,"processes":[{"pid":7,"role":"application","rss_bytes":238534656,"pss_bytes":235074560,"uss_bytes":231645184,"sample_offset_ms":3.915,"sample_duration_ms":9.92},{"pid":28,"role":"child","rss_bytes":18857984,"pss_bytes":15425536,"uss_bytes":11997184,"sample_offset_ms":13.838,"sample_duration_ms":0.954}],"capture_duration_ms":14.795,"pss_requested":true,"runtime_residency":{"resident_count":1,"warm_limit":2,"hydrating_count":0,"warm_count":0,"runtime_samples_truncated":false,"runtimes":[{"scope":"c9adb23a3e8be7a1","state":"cold","active_requests":0,"pinned":true,"owns_state":false,"background_tasks":0,"source_generation_count":0,"source_generation_identity":"4f53cda18c2baa0c","market_cache_owned":true,"projection_cache_owned":false}]},"sample_total_duration_ms":14.843},"queue_dropped_record_count":0}}
+{"timestamp":"2026-11-12T18:07:55.338821+00:00","level":"INFO","logger":"dtos.attribution","message":"diagnostic_boundary","request_id":"activity-7512f1d92ee1475198ee70032afdd7c6","event":"diagnostic_boundary","diagnostic":{"schema":"request-attribution-v1","event_index":6,"event_limit":512,"dropped_so_far":0,"origin_request_id":null,"name":"runtime_publication","span_id":3,"parent_span_id":2,"boundary":"finished","timestamp":"2026-11-12T18:07:55.338794+00:00","elapsed_from_trace_ms":16.712,"duration_ms":11.133,"status":"complete","calling_thread_cpu_ms":3.292,"queue_dropped_record_count":0}}
+{"timestamp":"2026-11-12T18:07:55.339767+00:00","level":"INFO","logger":"dtos.attribution","message":"diagnostic_boundary","request_id":"activity-7512f1d92ee1475198ee70032afdd7c6","event":"diagnostic_boundary","diagnostic":{"schema":"request-attribution-v1","event_index":7,"event_limit":512,"dropped_so_far":0,"origin_request_id":null,"name":"lifecycle_phase","span_id":2,"parent_span_id":1,"boundary":"finished","timestamp":"2026-11-12T18:07:55.339744+00:00","elapsed_from_trace_ms":17.663,"duration_ms":14.964,"status":"complete","calling_thread_cpu_ms":6.033,"queue_dropped_record_count":0}}
+{"timestamp":"2026-11-12T18:07:55.340878+00:00","level":"INFO","logger":"dtos.attribution","message":"diagnostic_boundary","request_id":"activity-7512f1d92ee1475198ee70032afdd7c6","event":"diagnostic_boundary","diagnostic":{"schema":"request-attribution-v1","event_index":8,"event_limit":512,"dropped_so_far":0,"origin_request_id":null,"name":"runtime_hydration","span_id":1,"parent_span_id":null,"boundary":"finished","timestamp":"2026-11-12T18:07:55.340848+00:00","elapsed_from_trace_ms":18.766,"duration_ms":18.755,"status":"complete","calling_thread_cpu_ms":1.968,"queue_dropped_record_count":0}}
+{"timestamp":"2026-11-12T18:07:55.351538+00:00","level":"INFO","logger":"dtos.attribution","message":"diagnostic_boundary","request_id":"activity-7512f1d92ee1475198ee70032afdd7c6","event":"diagnostic_boundary","diagnostic":{"schema":"request-attribution-v1","event_index":9,"event_limit":512,"dropped_so_far":0,"origin_request_id":null,"name":"memory_sample","boundary":"captured","timestamp":"2026-11-12T18:07:55.351506+00:00","sample_id":2,"span_id":1,"requested_boundaries":[{"name":"runtime_hydration","boundary":"finished","span_id":1,"request_id":"activity-7512f1d92ee1475198ee70032afdd7c6","requested_at":"2026-11-12T18:07:55.340977+00:00"}],"active_activities":[],"dropped_activity_or_boundary_count":0,"memory":{"rss_bytes":238563328,"vms_bytes":550842368,"system_available_bytes":17713606656,"memory_accounting_scope":"cgroup","cgroup_current_bytes":234070016,"cgroup_limit_bytes":2147483648,"cgroup_inactive_file_bytes":512000,"cgroup_anonymous_bytes":230793216,"cgroup_memory_events":{"low":0,"high":0,"max":0,"oom":0,"oom_kill":0,"oom_group_kill":0},"anonymous_bytes":230793216,"file_bytes":659456,"kernel_bytes":1589248,"shmem_bytes":20480,"cgroup_lifetime_peak_bytes":234450944,"observer_pid":7,"observer_kind":"main_process","active_process_count":2,"zombie_count":0,"process_samples_truncated":false,"process_samples_are_sequential":true,"processes":[{"pid":7,"role":"application","rss_bytes":238579712,"pss_bytes":235180032,"uss_bytes":231751680,"sample_offset_ms":3.982,"sample_duration_ms":4.43},{"pid":28,"role":"child","rss_bytes":18857984,"pss_bytes":15425536,"uss_bytes":11997184,"sample_offset_ms":8.415,"sample_duration_ms":0.836}],"capture_duration_ms":9.253,"pss_requested":true,"runtime_residency":{"resident_count":1,"warm_limit":2,"hydrating_count":0,"warm_count":0,"runtime_samples_truncated":false,"runtimes":[{"scope":"c9adb23a3e8be7a1","state":"cold","active_requests":0,"pinned":true,"owns_state":false,"background_tasks":0,"source_generation_count":0,"source_generation_identity":"4f53cda18c2baa0c","market_cache_owned":true,"projection_cache_owned":false}]},"sample_total_duration_ms":9.296},"queue_dropped_record_count":0}}
+{"timestamp":"2026-11-12T18:07:55.354542+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/team/2100000000000000001:franchise:1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T18:07:55.367754+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/history/1700000000000000001 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T18:07:55.375873+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/history/1700000000000000002?from_trade=1700000000000000001 \"HTTP/1.1 200 OK\"","request_id":"system"}
+ok
+test_current_fresh_owned_publication_preserves_followthrough (tests.test_history_followthrough.CurrentHistoryFollowThroughTests.test_current_fresh_owned_publication_preserves_followthrough) ... {"timestamp":"2026-11-12T18:07:55.593853+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/team/2100000000000000001:franchise:1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T18:07:55.710493+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/history/1700000000000000001 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T18:07:55.720394+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/history/1700000000000000002?from_trade=1700000000000000001 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T18:07:55.722822+00:00","level":"WARNING","logger":"asyncio","message":"Executing <Task finished name='Task-411' coro=<CurrentHistoryFollowThroughTests.test_current_fresh_owned_publication_preserves_followthrough() done, defined at /app/tests/test_history_followthrough.py:190> result=None created at /usr/local/lib/python3.14/asyncio/runners.py:109> took 0.180 seconds","request_id":"system"}
+ok
+test_franchise_original_pick_conversion_player_and_later_package_reuse_canonical_evidence (tests.test_history_followthrough.HistoryFollowThroughTests.test_franchise_original_pick_conversion_player_and_later_package_reuse_canonical_evidence) ... {"timestamp":"2026-11-12T18:07:56.669983+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:4?events_page=2 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T18:07:56.796234+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/history/1333655835015942144 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T18:07:56.805852+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/picks/PICK-2026-R2-ORIG7 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T18:07:56.820141+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/picks/PICK-2026-R2-ORIG7?from_trade=1333655835015942144 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T18:07:57.017630+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/players/13346?from_trade=1333655835015942144 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T18:07:57.030113+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/player/13346?from_trade=1333655835015942144 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T18:07:57.050076+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/history/1414718106177122304?from_trade=1333655835015942144 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T18:07:57.066511+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/players/13346?from_trade=1333655835015942144 \"HTTP/1.1 200 OK\"","request_id":"system"}
+ok
+test_missing_chronology_preserves_original_exchange_but_withholds_continuation (tests.test_history_followthrough.HistoryFollowThroughTests.test_missing_chronology_preserves_original_exchange_but_withholds_continuation) ... {"timestamp":"2026-11-12T18:07:58.002615+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/history/1333655835015942144 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T18:07:58.015320+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/history/1333655835015942144 \"HTTP/1.1 200 OK\"","request_id":"system"}
+ok
+test_pending_and_rejected_records_never_open_as_completed_trade_movements (tests.test_history_followthrough.HistoryFollowThroughTests.test_pending_and_rejected_records_never_open_as_completed_trade_movements) ... {"timestamp":"2026-11-12T18:07:58.942868+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/history/1700000000000000003 \"HT

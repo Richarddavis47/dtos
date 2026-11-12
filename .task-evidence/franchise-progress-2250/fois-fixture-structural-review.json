@@ -1,0 +1,29 @@
+{
+  "source": {
+    "baseline": "05c717e50b47683963ed40d66946e9f6eea76694",
+    "candidate": "b5229081f3a1c0eb9cf96d34803fd68d6c9b2cd1",
+    "tree": "d1894a91d826ef5bdbd6d0a16b0d0860ec758c14",
+    "branch": "feat/franchise-trade-progress-2250",
+    "version": "1.22.35",
+    "build": 2250,
+    "recorded_at": "2026-11-12T18:06:29.525750+00:00",
+    "expected_test_count": 4435,
+    "pr": 339
+  },
+  "observed_at": "2026-11-12T18:52:42.787650+00:00",
+  "baseline_fixture_commit": "f40bf83c1abcb3b9763182f0a23e16374a12b404",
+  "original_ast_sha256": "aaed10ae9120997b7968b11bb20c4f0f34a27f63225f6079e5b768f7b3449df2",
+  "candidate_ast_sha256": "f38ccd24c09c3f63459c057bb4f02c8f557cde78419ad6704e7f53b397d25df9",
+  "original_method_exact_after_removing_only_added_precondition_and_completion_assertions": true,
+  "changes": [
+    "Before any fixture construction:gc.collect() and assert gc.isenabled().",
+    "After real generation and unchanged finally-shutdown: assert state complete and records2."
+  ],
+  "conclusion": "Legitimate prior-fixture isolation: no original representative allocation/work moved outside its original measured boundary. Collection enabled during actual workload;500ms, real native execution, input/source bounds and cleanup remain. Production FOIS code unchanged.",
+  "limitations": [
+    "The original542.77ms failure did not reproduce; GC cannot be claimed as its proven cause.",
+    "A later pass does not establish production improvement or replace full mandatory validation.",
+    "Current final-source full-local run is still ongoing; its heartbeat case passed, not yet all ten gates."
+  ],
+  "diagnostic_attribution_limit": "The940075-object collection occurred after the1211-method prefix AND its first worker operation. Allocation origins were not attributed; it does not prove that every object came from an earlier browser fixture. Isolation is justified by collection before this test constructs its own workload and exact preservation of the original method, not by assigning the count or inferring the original stall cause."
+}

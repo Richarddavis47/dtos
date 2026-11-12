@@ -1,0 +1,20 @@
+{
+  "observed_at": "2026-11-12T17:04:32.064287+00:00",
+  "failed_original": {
+    "path": "publisher-controls-original.log",
+    "tests": 141,
+    "errors": 3,
+    "reason": "Existing collector-wiring fixture used a deliberately noncanonical placeholder ZIP and independently mocked all older guards, but had not mocked the newly added canonical family guard. No application failure or release action occurred.",
+    "sha256": "534f1e3b2ffadfaedad538f54e7c3e3d85405184d9c1c5c9a65d856cbbce8dc7"
+  },
+  "correction": "Add the new family guard to this isolated collector-wiring fixture, while independent positive/negative controls exercise the real new guards. Preserve source, unknown/partial, conversion, gross/net, period-return and count rejection cases. Actual release collection still invokes real guards.",
+  "passing_final": {
+    "path": "publisher-controls-final-original.log",
+    "tests": 141,
+    "failures": 0,
+    "errors": 0,
+    "sha256": "10aedd54fe4db2be5e2b887bb161f62dc2084754478e111902f6f224a5a13c37"
+  },
+  "ruff": "publisher-ruff-original.log",
+  "scope": "Tooling branch only; application candidate f40bf83/tree21b31e05 unchanged. Final metadata/parts must be source-verified and unit-tested again before freezing Actions publisher."
+}

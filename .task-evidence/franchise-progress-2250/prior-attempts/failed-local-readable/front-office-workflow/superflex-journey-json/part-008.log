@@ -1,0 +1,824 @@
+          "assets_sent": [
+                    "b",
+                    "2028-R2-3"
+                  ],
+                  "assets_received": [
+                    "2028-R4-4"
+                  ],
+                  "selection": "selected_before_exact_deduplication",
+                  "quality": "not_assessed"
+                },
+                {
+                  "raw_market_distance": 230,
+                  "assets_sent": [
+                    "b",
+                    "2028-R1-3"
+                  ],
+                  "assets_received": [
+                    "2028-R4-4"
+                  ],
+                  "selection": "selected_before_exact_deduplication",
+                  "quality": "not_assessed"
+                }
+              ]
+            },
+            {
+              "shape": "Pick Package",
+              "candidate_count": 0,
+              "nearest_constructions": []
+            },
+            {
+              "shape": "Multi-Asset",
+              "candidate_count": 20,
+              "nearest_constructions": [
+                {
+                  "raw_market_distance": 20,
+                  "assets_sent": [
+                    "b",
+                    "2028-R1-3"
+                  ],
+                  "assets_received": [
+                    "2028-R4-4",
+                    "2028-R1-4"
+                  ],
+                  "selection": "selected_before_exact_deduplication",
+                  "quality": "not_assessed"
+                },
+                {
+                  "raw_market_distance": 20,
+                  "assets_sent": [
+                    "b",
+                    "2028-R1-3"
+                  ],
+                  "assets_received": [
+                    "2028-R4-4",
+                    "f"
+                  ],
+                  "selection": "selected_before_exact_deduplication",
+                  "quality": "not_assessed"
+                },
+                {
+                  "raw_market_distance": 20,
+                  "assets_sent": [
+                    "b",
+                    "2028-R2-3"
+                  ],
+                  "assets_received": [
+                    "2028-R4-4",
+                    "2028-R2-4"
+                  ],
+                  "selection": "selected_before_exact_deduplication",
+                  "quality": "not_assessed"
+                }
+              ]
+            },
+            {
+              "shape": "1-for-2",
+              "candidate_count": 5,
+              "nearest_constructions": [
+                {
+                  "raw_market_distance": 120,
+                  "assets_sent": [
+                    "b"
+                  ],
+                  "assets_received": [
+                    "2028-R4-4",
+                    "2028-R2-4"
+                  ],
+                  "selection": "selected_before_exact_deduplication",
+                  "quality": "not_assessed"
+                },
+                {
+                  "raw_market_distance": 270,
+                  "assets_sent": [
+                    "b"
+                  ],
+                  "assets_received": [
+                    "2028-R4-4",
+                    "2028-R1-4"
+                  ],
+                  "selection": "selected_before_exact_deduplication",
+                  "quality": "not_assessed"
+                },
+                {
+                  "raw_market_distance": 270,
+                  "assets_sent": [
+                    "b"
+                  ],
+                  "assets_received": [
+                    "2028-R4-4",
+                    "f"
+                  ],
+                  "selection": "selected_before_exact_deduplication",
+                  "quality": "not_assessed"
+                }
+              ]
+            },
+            {
+              "shape": "3-for-1",
+              "candidate_count": 6,
+              "nearest_constructions": [
+                {
+                  "raw_market_distance": 100,
+                  "assets_sent": [
+                    "2028-R4-3",
+                    "b",
+                    "2028-R2-3"
+                  ],
+                  "assets_received": [
+                    "2028-R4-4"
+                  ],
+                  "selection": "selected_before_exact_deduplication",
+                  "quality": "not_assessed"
+                },
+                {
+                  "raw_market_distance": 250,
+                  "assets_sent": [
+                    "2028-R4-3",
+                    "b",
+                    "2028-R1-3"
+                  ],
+                  "assets_received": [
+                    "2028-R4-4"
+                  ],
+                  "selection": "selected_before_exact_deduplication",
+                  "quality": "not_assessed"
+                },
+                {
+                  "raw_market_distance": 250,
+                  "assets_sent": [
+                    "2028-R4-3",
+                    "b",
+                    "e"
+                  ],
+                  "assets_received": [
+                    "2028-R4-4"
+                  ],
+                  "selection": "selected_before_exact_deduplication",
+                  "quality": "not_assessed"
+                }
+              ]
+            }
+          ],
+          "pruning": "position/type diversification then raw Market proximity; not a recommendation",
+          "exhaustive": false,
+          "required_thesis_outgoing": "b"
+        }
+      ],
+      "phases": 3,
+      "construction_admission": {
+        "ownership_rejected_assets": 0,
+        "ownership_rejection_reasons": {},
+        "capacity_evidence_supported": true,
+        "roster_capacity_checks": 2598,
+        "roster_capacity_rejected_checks": 0,
+        "counting": "construction checks including repeated phase/shape candidates; not distinct evaluated offers",
+        "implicit_drops": 0,
+        "provider_calls": 0,
+        "solver_calls": 0
+      },
+      "full_evaluations": 102,
+      "packages_constructed": 267,
+      "qualifying_before_session_filter": 0,
+      "timings_seconds": {
+        "preparation": 0.06120644600014202,
+        "discovery": 0.0011920869874302298,
+        "candidate_generation": 0.01830347508075647,
+        "shared_evaluation": 1.7133125059772283,
+        "reason_derivation": 0.0045793738681823015,
+        "publication_verification": 0.0017209259967785329,
+        "total_workflow": 1.8460853609722108
+      },
+      "projection_weeks_read": 4,
+      "provider_requests": 0,
+      "reuse": {
+        "lineup_hits": 1535,
+        "lineup_misses": 97,
+        "lineup_seconds": 0.17700460701598786,
+        "lineup_cache": {
+          "entries": 949,
+          "retained_bytes": 2834101,
+          "maximum_bytes": 33554432,
+          "maximum_entries": 8192,
+          "ttl_seconds": 180
+        },
+        "scope": "account_session_league_generation_and_exact_math_inputs",
+        "candidate_results_retained": 0,
+        "workers_created": 0
+      },
+      "raw_history_scans": 0,
+      "durable_writes": 0
+    },
+    "prior_search": {
+      "position": "QB",
+      "type": "all",
+      "count": 0,
+      "protections": [
+        {
+          "id": "2029-R1-1",
+          "label": "2029 Round 1 (Unknown) \u00b7 2029 round 1 \u00b7 Original franchise: Team 1"
+        },
+        {
+          "id": "a",
+          "label": "a"
+        }
+      ]
+    },
+    "actual_evaluations": [
+      {
+        "recommendation": null,
+        "lineup": {
+          "season": 2026,
+          "league_id": "league-1",
+          "scoring_profile_id": "b7799ccb7806beda77e5f10387a5aba41d474c52401d7a16a463b8243e9d882a",
+          "projection_generation": "158e47d83a5076c03951c655604f9a5ede52d8528532a0c3c67f2af3a2b80d5f",
+          "delta": 4.0,
+          "pre_total": 82.0,
+          "post_total": 86.0,
+          "state": "supported",
+          "weeks": [
+            2
+          ],
+          "coverage": "complete",
+          "availability_state": "supported",
+          "subtotal": 4.0,
+          "comparable_weeks": [
+            2
+          ],
+          "explanation": "current-week optimal legal-lineup gain (Season 2026, week 2): 4.00 projected points."
+        },
+        "market": {
+          "availability": "full",
+          "sent": {
+            "availability": "full",
+            "total": 250.0,
+            "known_subtotal": 250.0,
+            "priced_assets": 1,
+            "missing_asset_ids": [],
+            "asset_count": 1
+          },
+          "received": {
+            "availability": "full",
+            "total": 300.0,
+            "known_subtotal": 300.0,
+            "priced_assets": 1,
+            "missing_asset_ids": [],
+            "asset_count": 1
+          },
+          "difference": 50.0,
+          "ratio": 1.2,
+          "unit": "canonical_acquisition_market_price",
+          "package_adjustments": false
+        }
+      },
+      {
+        "recommendation": null,
+        "lineup": {
+          "season": 2026,
+          "league_id": "league-1",
+          "scoring_profile_id": "b7799ccb7806beda77e5f10387a5aba41d474c52401d7a16a463b8243e9d882a",
+          "projection_generation": "158e47d83a5076c03951c655604f9a5ede52d8528532a0c3c67f2af3a2b80d5f",
+          "delta": 8.0,
+          "pre_total": 82.0,
+          "post_total": 90.0,
+          "state": "supported",
+          "weeks": [
+            2
+          ],
+          "coverage": "complete",
+          "availability_state": "supported",
+          "subtotal": 8.0,
+          "comparable_weeks": [
+            2
+          ],
+          "explanation": "current-week optimal legal-lineup gain (Season 2026, week 2): 8.00 projected points."
+        },
+        "market": {
+          "availability": "full",
+          "sent": {
+            "availability": "full",
+            "total": 500.0,
+            "known_subtotal": 500.0,
+            "priced_assets": 2,
+            "missing_asset_ids": [],
+            "asset_count": 2
+          },
+          "received": {
+            "availability": "full",
+            "total": 500.0,
+            "known_subtotal": 500.0,
+            "priced_assets": 1,
+            "missing_asset_ids": [],
+            "asset_count": 1
+          },
+          "difference": 0.0,
+          "ratio": 1.0,
+          "unit": "canonical_acquisition_market_price",
+          "package_adjustments": false
+        }
+      }
+    ],
+    "comparison_offers": [
+      {
+        "scope": {
+          "binding": "c8e9b6bef1293503ae160a9f3a4839826241fdc3bbd0331d6494354f30ce944b",
+          "league": "league-1",
+          "roster": 1
+        },
+        "baseline": {
+          "league": "league-1",
+          "roster": 1,
+          "ownership": "19dd2d259d36532be8071875cf5a8a7a4eb29192d5ce31be8d8f12132956fda9",
+          "lineup": "0689de19243010f9eea35ae634c5f6baf43b49944ddd7d4572b9d291c9eedda9",
+          "season": 2026,
+          "week": 2,
+          "scoring": "b7799ccb7806beda77e5f10387a5aba41d474c52401d7a16a463b8243e9d882a",
+          "projection": "158e47d83a5076c03951c655604f9a5ede52d8528532a0c3c67f2af3a2b80d5f",
+          "provider": "Sleeper"
+        },
+        "proposal": {
+          "active_roster_id": 1,
+          "partner_roster_id": 2,
+          "assets_sent": [
+            "a"
+          ],
+          "assets_received": [
+            "d"
+          ]
+        },
+        "summary": {
+          "verdict": "Recommendation unavailable",
+          "strategy": "WIN NOW",
+          "partner": "Team 2",
+          "mode": "custom",
+          "method": "personal-current-market-slot-curve-v1",
+          "personalContext": {
+            "revision": 1,
+            "market": "873769c2fe956e9f3766d1e57834350df7026e7ace0a4d53e6b665d978babeb3",
+            "baseline": "873769c2fe956e9f3766d1e57834350df7026e7ace0a4d53e6b665d978babeb3",
+            "method": "personal-current-market-slot-curve-v1"
+          },
+          "methodLabel": "Custom method not retained",
+          "neutral": {
+            "availability": "full",
+            "sent": 250,
+            "received": 300
+          },
+          "personal": {
+            "availability": "full",
+            "sent": 250,
+            "received": 300
+          },
+          "lineup": {
+            "season": 2026,
+            "league_id": "league-1",
+            "scoring_profile_id": "b7799ccb7806beda77e5f10387a5aba41d474c52401d7a16a463b8243e9d882a",
+            "projection_generation": "158e47d83a5076c03951c655604f9a5ede52d8528532a0c3c67f2af3a2b80d5f",
+            "delta": 4,
+            "pre_total": 82,
+            "post_total": 86,
+            "state": "supported",
+            "weeks": [
+              2
+            ],
+            "coverage": "complete",
+            "availability_state": "supported",
+            "subtotal": 4,
+            "comparable_weeks": [
+              2
+            ]
+          },
+          "depth": {
+            "active": "Useful replacement-depth coverage is incomplete; a missing reserve effect is not zero.",
+            "partner": "Useful replacement-depth coverage is incomplete; a missing reserve effect is not zero."
+          },
+          "capacity": {
+            "active": 0,
+            "partner": 0
+          },
+          "cost": "Neutral DTOS: unavailable. Neutral Market cost remains separate. Reserve replacement production is unavailable for some requested weeks",
+          "partnerReason": "Supported counterparty effects; not a prediction of manager behavior. Costs: Optimal legal-lineup production falls 4.00 points per supported week; Market overpay of 50 units; Reserve replacement production is unavailable for some requested weeks. Limited manager-history evidence. Package optimal lineup: 86 \u2192 82 Sleeper-projected points. Replacement support is recalculated after all player movements. ",
+          "conditions": "Their recorded direction is WIN NOW; it does not prove willingness to accept this offer.\nThey give up supported projected production. The offer makes sense only if they prefer the supported asset or capital compensation to that loss; confirm that motivation before treating it as actionable.\nMarket fairness and receiving a pick do not establish rebuilding intent or predict acceptance.",
+          "limitation": null
+        },
+        "identity": {
+          "personalization": "{\"override_saved_protections\":[],\"valuation_mode\":\"custom\",\"personal_revision\":1,\"personal_market_generation\":\"873769c2fe956e9f3766d1e57834350df7026e7ace0a4d53e6b665d978babeb3\",\"personal_baseline_generation\":\"873769c2fe956e9f3766d1e57834350df7026e7ace0a4d53e6b665d978babeb3\"}",
+          "package": "[2,[\"a\"],[\"d\"]]",
+          "strategy": "WIN NOW",
+          "source": "8c36161084c9f01ab497307761f1d543e986d3a156e496528e5d2d57a6cf0bac",
+          "workflow": "create",
+          "binding": "c8e9b6bef1293503ae160a9f3a4839826241fdc3bbd0331d6494354f30ce944b",
+          "ownership": "19dd2d259d36532be8071875cf5a8a7a4eb29192d5ce31be8d8f12132956fda9",
+          "market": "0f94f110a1a96d23249b0cdaf393cf13c20e2d85343387aa2a76d2da453fcb8f",
+          "captured_at": "2026-11-12T17:25:45.189Z",
+          "counterparty": "Team 2"
+        }
+      },
+      {
+        "scope": {
+          "binding": "c8e9b6bef1293503ae160a9f3a4839826241fdc3bbd0331d6494354f30ce944b",
+          "league": "league-1",
+          "roster": 1
+        },
+        "baseline": {
+          "league": "league-1",
+          "roster": 1,
+          "ownership": "19dd2d259d36532be8071875cf5a8a7a4eb29192d5ce31be8d8f12132956fda9",
+          "lineup": "0689de19243010f9eea35ae634c5f6baf43b49944ddd7d4572b9d291c9eedda9",
+          "season": 2026,
+          "week": 2,
+          "scoring": "b7799ccb7806beda77e5f10387a5aba41d474c52401d7a16a463b8243e9d882a",
+          "projection": "158e47d83a5076c03951c655604f9a5ede52d8528532a0c3c67f2af3a2b80d5f",
+          "provider": "Sleeper"
+        },
+        "proposal": {
+          "active_roster_id": 1,
+          "partner_roster_id": 2,
+          "assets_sent": [
+            "2028-R1-3",
+            "a"
+          ],
+          "assets_received": [
+            "c"
+          ]
+        },
+        "summary": {
+          "verdict": "Recommendation unavailable",
+          "strategy": "WIN NOW",
+          "partner": "Team 2",
+          "mode": "custom",
+          "method": "personal-current-market-slot-curve-v1",
+          "personalContext": {
+            "revision": 1,
+            "market": "873769c2fe956e9f3766d1e57834350df7026e7ace0a4d53e6b665d978babeb3",
+            "baseline": "873769c2fe956e9f3766d1e57834350df7026e7ace0a4d53e6b665d978babeb3",
+            "method": "personal-current-market-slot-curve-v1"
+          },
+          "methodLabel": "Custom method not retained",
+          "neutral": {
+            "availability": "full",
+            "sent": 500,
+            "received": 500
+          },
+          "personal": {
+            "availability": "full",
+            "sent": 500,
+            "received": 500
+          },
+          "lineup": {
+            "season": 2026,
+            "league_id": "league-1",
+            "scoring_profile_id": "b7799ccb7806beda77e5f10387a5aba41d474c52401d7a16a463b8243e9d882a",
+            "projection_generation": "158e47d83a5076c03951c655604f9a5ede52d8528532a0c3c67f2af3a2b80d5f",
+            "delta": 8,
+            "pre_total": 82,
+            "post_total": 90,
+            "state": "supported",
+            "weeks": [
+              2
+            ],
+            "coverage": "complete",
+            "availability_state": "supported",
+            "subtotal": 8,
+            "comparable_weeks": [
+              2
+            ]
+          },
+          "depth": {
+            "active": "Useful replacement-depth coverage is incomplete; a missing reserve effect is not zero.",
+            "partner": "Useful replacement-depth coverage is incomplete; a missing reserve effect is not zero."
+          },
+          "capacity": {
+            "active": 0,
+            "partner": 0
+          },
+          "cost": "Neutral DTOS: unavailable. Neutral Market cost remains separate. Spends 250 personal valuation units of future capital; Reserve replacement production is unavailable for some requested weeks",
+          "partnerReason": "Required capital, Market, legal-lineup or strategy evidence is unavailable. Costs: Optimal legal-lineup production falls 8.00 points per supported week; Reserve replacement production is unavailable for some requested weeks. Limited manager-history evidence. Package optimal lineup: 86 \u2192 78 Sleeper-projected points. Replacement support is recalculated after all player movements. ",
+          "conditions": "Their recorded direction is WIN NOW; it does not prove willingness to accept this offer.\nThey give up supported projected production. The offer makes sense only if they prefer the supported asset or capital compensation to that loss; confirm that motivation before treating it as actionable.\nMarket fairness and receiving a pick do not establish rebuilding intent or predict acceptance.",
+          "limitation": null
+        },
+        "identity": {
+          "personalization": "{\"override_saved_protections\":[],\"valuation_mode\":\"custom\",\"personal_revision\":1,\"personal_market_generation\":\"873769c2fe956e9f3766d1e57834350df7026e7ace0a4d53e6b665d978babeb3\",\"personal_baseline_generation\":\"873769c2fe956e9f3766d1e57834350df7026e7ace0a4d53e6b665d978babeb3\"}",
+          "package": "[2,[\"2028-R1-3\",\"a\"],[\"c\"]]",
+          "strategy": "WIN NOW",
+          "source": "8c36161084c9f01ab497307761f1d543e986d3a156e496528e5d2d57a6cf0bac",
+          "workflow": "create",
+          "binding": "c8e9b6bef1293503ae160a9f3a4839826241fdc3bbd0331d6494354f30ce944b",
+          "ownership": "19dd2d259d36532be8071875cf5a8a7a4eb29192d5ce31be8d8f12132956fda9",
+          "market": "0f94f110a1a96d23249b0cdaf393cf13c20e2d85343387aa2a76d2da453fcb8f",
+          "captured_at": "2026-11-12T17:25:46.647Z",
+          "counterparty": "Team 2"
+        }
+      }
+    ],
+    "comparison_and_history": [
+      {
+        "width": 320,
+        "height": 432,
+        "exact_draft": {
+          "sent": [
+            "2028-R1-3",
+            "a"
+          ],
+          "received": [
+            "c"
+          ],
+          "partner": 2
+        },
+        "panel_state": "recorded",
+        "keep_option": "Keep the roster \u00b7 no trade",
+        "comparison_retained": true,
+        "history_qualification": "retained",
+        "history_return_without_post": true
+      },
+      {
+        "width": 375,
+        "height": 667,
+        "exact_draft": {
+          "sent": [
+            "2028-R1-3",
+            "a"
+          ],
+          "received": [
+            "c"
+          ],
+          "partner": 2
+        },
+        "panel_state": "retained",
+        "keep_option": "Keep the roster \u00b7 no trade",
+        "comparison_retained": true,
+        "history_qualification": "retained",
+        "history_return_without_post": true
+      },
+      {
+        "width": 390,
+        "height": 844,
+        "exact_draft": {
+          "sent": [
+            "2028-R1-3",
+            "a"
+          ],
+          "received": [
+            "c"
+          ],
+          "partner": 2
+        },
+        "panel_state": "retained",
+        "keep_option": "Keep the roster \u00b7 no trade",
+        "comparison_retained": true,
+        "history_qualification": "retained",
+        "history_return_without_post": true
+      },
+      {
+        "width": 1280,
+        "height": 900,
+        "exact_draft": {
+          "sent": [
+            "2028-R1-3",
+            "a"
+          ],
+          "received": [
+            "c"
+          ],
+          "partner": 2
+        },
+        "panel_state": "retained",
+        "keep_option": "Keep the roster \u00b7 no trade",
+        "comparison_retained": true,
+        "history_qualification": "retained",
+        "history_return_without_post": true
+      }
+    ],
+    "post_requests": [
+      [
+        "POST",
+        "/api/trades/generate",
+        200
+      ],
+      [
+        "POST",
+        "/api/trades/evaluate",
+        200
+      ],
+      [
+        "POST",
+        "/api/trades/evaluate",
+        200
+      ],
+      [
+        "POST",
+        "/api/trades/evaluate",
+        200
+      ]
+    ],
+    "post_ledger": [
+      {
+        "path": "/api/trades/generate",
+        "status": 200,
+        "payload": {
+          "override_saved_protections": [],
+          "valuation_mode": "custom",
+          "personal_revision": 1,
+          "personal_market_generation": "873769c2fe956e9f3766d1e57834350df7026e7ace0a4d53e6b665d978babeb3",
+          "personal_baseline_generation": "873769c2fe956e9f3766d1e57834350df7026e7ace0a4d53e6b665d978babeb3",
+          "workflow": "recommended",
+          "strategy": "WIN NOW",
+          "active_roster_id": 1,
+          "partner_roster_id": 0,
+          "assets_sent": [],
+          "assets_received": [],
+          "protected_assets": [
+            "2029-R1-1",
+            "a"
+          ],
+          "excluded_assets": [],
+          "asset_id": null,
+          "workspace_context": {
+            "league_id": "league-1",
+            "roster_id": 1,
+            "binding": "c8e9b6bef1293503ae160a9f3a4839826241fdc3bbd0331d6494354f30ce944b",
+            "ownership_generation": "19dd2d259d36532be8071875cf5a8a7a4eb29192d5ce31be8d8f12132956fda9",
+            "schema": 1,
+            "strategy_scope": "2591e5fb41c11d73b28be0b4def213fceaf7e46bb2ea2544193be849192a2a57",
+            "franchise_goal": "WIN NOW",
+            "franchise_goal_revision": 1
+          },
+          "recommendation_filter": "all",
+          "recommendation_position": "QB",
+          "excluded_recommendation_families": []
+        }
+      },
+      {
+        "path": "/api/trades/evaluate",
+        "status": 200,
+        "payload": {
+          "override_saved_protections": [],
+          "valuation_mode": "custom",
+          "personal_revision": 1,
+          "personal_market_generation": "873769c2fe956e9f3766d1e57834350df7026e7ace0a4d53e6b665d978babeb3",
+          "personal_baseline_generation": "873769c2fe956e9f3766d1e57834350df7026e7ace0a4d53e6b665d978babeb3",
+          "workflow": "create",
+          "strategy": "WIN NOW",
+          "active_roster_id": 1,
+          "partner_roster_id": 2,
+          "assets_sent": [
+            "a"
+          ],
+          "assets_received": [
+            "d"
+          ],
+          "protected_assets": [],
+          "excluded_assets": [],
+          "asset_id": "d",
+          "workspace_context": {
+            "league_id": "league-1",
+            "roster_id": 1,
+            "binding": "c8e9b6bef1293503ae160a9f3a4839826241fdc3bbd0331d6494354f30ce944b",
+            "ownership_generation": "19dd2d259d36532be8071875cf5a8a7a4eb29192d5ce31be8d8f12132956fda9",
+            "schema": 1,
+            "strategy_scope": "2591e5fb41c11d73b28be0b4def213fceaf7e46bb2ea2544193be849192a2a57",
+            "franchise_goal": "WIN NOW",
+            "franchise_goal_revision": 1
+          }
+        }
+      },
+      {
+        "path": "/api/trades/evaluate",
+        "status": 200,
+        "payload": {
+          "override_saved_protections": [],
+          "valuation_mode": "custom",
+          "personal_revision": 1,
+          "personal_market_generation": "873769c2fe956e9f3766d1e57834350df7026e7ace0a4d53e6b665d978babeb3",
+          "personal_baseline_generation": "873769c2fe956e9f3766d1e57834350df7026e7ace0a4d53e6b665d978babeb3",
+          "workflow": "create",
+          "strategy": "WIN NOW",
+          "active_roster_id": 1,
+          "partner_roster_id": 2,
+          "assets_sent": [
+            "2028-R1-3",
+            "a"
+          ],
+          "assets_received": [
+            "c"
+          ],
+          "protected_assets": [],
+          "excluded_assets": [],
+          "asset_id": "c",
+          "workspace_context": {
+            "league_id": "league-1",
+            "roster_id": 1,
+            "binding": "c8e9b6bef1293503ae160a9f3a4839826241fdc3bbd0331d6494354f30ce944b",
+            "ownership_generation": "19dd2d259d36532be8071875cf5a8a7a4eb29192d5ce31be8d8f12132956fda9",
+            "schema": 1,
+            "strategy_scope": "2591e5fb41c11d73b28be0b4def213fceaf7e46bb2ea2544193be849192a2a57",
+            "franchise_goal": "WIN NOW",
+            "franchise_goal_revision": 1
+          }
+        }
+      },
+      {
+        "path": "/api/trades/evaluate",
+        "status": 200,
+        "payload": {
+          "override_saved_protections": [],
+          "valuation_mode": "custom",
+          "personal_revision": 1,
+          "personal_market_generation": "873769c2fe956e9f3766d1e57834350df7026e7ace0a4d53e6b665d978babeb3",
+          "personal_baseline_generation": "873769c2fe956e9f3766d1e57834350df7026e7ace0a4d53e6b665d978babeb3",
+          "workflow": "create",
+          "strategy": "WIN NOW",
+          "active_roster_id": 1,
+          "partner_roster_id": 2,
+          "assets_sent": [
+            "a"
+          ],
+          "assets_received": [
+            "f"
+          ],
+          "protected_assets": [],
+          "excluded_assets": [],
+          "asset_id": "f",
+          "workspace_context": {
+            "league_id": "league-1",
+            "roster_id": 1,
+            "binding": "c8e9b6bef1293503ae160a9f3a4839826241fdc3bbd0331d6494354f30ce944b",
+            "ownership_generation": "19dd2d259d36532be8071875cf5a8a7a4eb29192d5ce31be8d8f12132956fda9",
+            "schema": 1,
+            "strategy_scope": "2591e5fb41c11d73b28be0b4def213fceaf7e46bb2ea2544193be849192a2a57",
+            "franchise_goal": "WIN NOW",
+            "franchise_goal_revision": 1
+          }
+        }
+      }
+    ],
+    "reload_retained": true,
+    "replacement": {
+      "selected_proposals": [
+        {
+          "active_roster_id": 1,
+          "partner_roster_id": 2,
+          "assets_sent": [
+            "a"
+          ],
+          "assets_received": [
+            "f"
+          ]
+        },
+        {
+          "active_roster_id": 1,
+          "partner_roster_id": 2,
+          "assets_sent": [
+            "2028-R1-3",
+            "a"
+          ],
+          "assets_received": [
+            "c"
+          ]
+        }
+      ],
+      "remaining_proposals": [
+        {
+          "active_roster_id": 1,
+          "partner_roster_id": 2,
+          "assets_sent": [
+            "2028-R1-3",
+            "a"
+          ],
+          "assets_received": [
+            "c"
+          ]
+        }
+      ],
+      "draft": {
+        "sent": [
+          "a"
+        ],
+        "received": [
+          "f"
+        ],
+        "partner": 2
+      }
+    },
+    "scope_change": {
+      "old": "c8e9b6bef1293503ae160a9f3a4839826241fdc3bbd0331d6494354f30ce944b",
+      "current": "862b43b8c43a6eaaf960a148cf980749091cecbfdaea42f7cba947a31d06b75b",
+      "temporary_state_cleared": true,
+      "before_protections": [
+        "2029-R1-1",
+        "a"
+      ],
+      "before_position": "QB",
+      "before_draft": {
+        "sent": [
+          "a"
+        ],
+        "received": [
+          "f"
+        ],
+        "partner": 2
+      }
+    },
+    "saved_goal_and_rankings_unchanged": true
+  }
+}

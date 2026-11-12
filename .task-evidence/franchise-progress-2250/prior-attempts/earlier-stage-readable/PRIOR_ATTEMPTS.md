@@ -1,0 +1,11 @@
+# Earlier attempts and boundaries
+
+The baseline replay ran on clean production source05c717e50b47683963ed40d66946e9f6eea76694/treec60f914d2a0b6b34c2d3e87cdce8eae4560d0b49. It establishes a retained-source customer gap, not live or exhaustive franchise coverage.
+
+Development controls passed86 methods on an uncommitted working tree. Their original HEAD/tree were the baseline; the dirty paths are recorded. The exact working-tree contents were not sealed at every edit, so this is not final-candidate proof. Final88 controls on f40bf83/tree21b31e05 are separate.
+
+The first publisher control run executed141 methods with3 subtest errors in the existing collector-wiring fixture: it intentionally supplied a noncanonical placeholder ZIP and mocked older independent guards, but did not yet mock the new family guard. The original console is preserved. The failed publisher working tree was not committed or byte-sealed before formatting; its exact original source snapshot is unavailable. The diagnosis is supported by the original traceback and the final one-line fixture correction; no reconstructed source or log is described as original. Real release collection still executes the new guards, which have independent positive/negative tests. Corrected141-method consoles remain distinct, including the later version with clearer attachment naming and validation receipt fields.
+
+A newly created --no-checkout publisher worktree initially had an empty index. Its four new tooling files were preserved before index initialization. The controller was then aligned to production application bytes, as required by the existing allowlist; the application feature worktree/commit were never reset. Tooling and metadata probes (including a missing global Ruff module) were not application gates. Existing repository Ruff completed successfully. No credentials, source policy or production data changed.
+
+No mandatory application validation was failed, cancelled or skipped at the time of this prior-stage seal. Running local/hosted validation is not passing evidence. Any later failed/cancelled attempt must be separately retained and incorporated before publication. Older releases' immutable evidence remains untouched.
