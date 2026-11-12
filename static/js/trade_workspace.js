@@ -696,7 +696,7 @@
     } catch (_) { return null; }
   }
   function restoreContext(value, includePrevious = true) {
-    return {schema: 1, draft_capital_record: boundedEvidence(value.draft_capital_record), identity: boundedEvidence(value.identity || {}), exploration: value.exploration === true,
+    return {schema: 1, acquisition_comparison: boundedEvidence(value.acquisition_comparison), draft_capital_record: boundedEvidence(value.draft_capital_record), identity: boundedEvidence(value.identity || {}), exploration: value.exploration === true,
       search_result_type: boundedEvidence(value.search_result_type), stale_reason: boundedEvidence(value.stale_reason), restored: true,
       attempt_state: value.attempt_state || value.evaluation?.assessment_state?.state || 'fresh_incomplete',
       previous_assessment: includePrevious && value.previous_assessment ? restoreContext(value.previous_assessment, false) : null,
@@ -760,6 +760,7 @@
             baseline: e.personalization?.baseline_generation, method: e.personalization?.method},
           methodLabel: String(e.personalization?.method || '').includes('relative') ? 'Relative priced order' :
             String(e.personalization?.method || '').includes('absolute') ? 'Absolute slot' : 'Custom method not retained',
+          acquisition: boundedEvidence(context?.acquisition_comparison),
           neutral: {availability: evidence.availability, sent: evidence.sent?.total, received: evidence.received?.total},
           personal: {availability: personal.availability, sent: personal.sent?.total, received: personal.received?.total},
           lineup: d.lineup_comparisons.current_week || {}, depth, capacity,
@@ -782,7 +783,7 @@
     // Independently bounded ownership evidence must survive even when the
     // existing 512-node analytical disclosure is full. The 64k context and
     // 100k offer limits remain unchanged; truncation never implies zero.
-    const context = {schema: 1, draft_capital_record: boundedEvidence(e.draft_capital_record), evaluation: boundedEvidence(compactRetainedEvaluation(Object.fromEntries(keys.filter(key => key in e).map(key => [key, e[key]])))),
+    const context = {schema: 1, acquisition_comparison: boundedEvidence(row.acquisition_comparison), draft_capital_record: boundedEvidence(e.draft_capital_record), evaluation: boundedEvidence(compactRetainedEvaluation(Object.fromEntries(keys.filter(key => key in e).map(key => [key, e[key]])))),
       exploration: row.exploration === true, search_result_type: row.search_result_type || null,
       opportunity: boundedEvidence(row.opportunity || null),
       identity: {personalization: JSON.stringify(personalPayload()), package: packageIdentity(row.proposal || selected), strategy: row.home_assessment_strategy ?? el('trade-strategy').value,
@@ -1348,6 +1349,7 @@
     const decision = decisionPresentation(e);
     if (decision.qualification) card.append(node('p', decision.qualification, 'tw-verdict-qualification'));
     appendDecisionLead(card, decision);
+    window.DTOSOfferComparison.acquisitionView(card, context?.acquisition_comparison, node, displayMarket, retained);
     if (row.repair_type) card.append(node('p', row.repair_type));
     if (row.adjustment_evidence?.concept === 'strictly_lower_canonical_outgoing_market_cost') {
       const cost = row.adjustment_evidence;
