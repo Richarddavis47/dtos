@@ -3,14 +3,56 @@ from html import escape
 from urllib.parse import quote
 
 
+def _movement_details(row):
+    parts = ['<h4>Players acquired and sent</h4><p>Gross transfers retain every supported event. Net below means acquired minus sent in these observed trades only; it is not a roster or capital inventory.</p>']
+    assets = row.get('assets') or []
+    def render_asset(asset):
+        links = ''.join('<a href="' + escape(ref['url']) + '">' + escape(str(ref['season']))
+                        + ' · ' + escape(ref['direction']) + ' · trade ' + escape(ref['transaction_id']) + '</a>'
+                        for ref in asset['references'])
+        label = escape(asset['label'])
+        if asset['kind'] == 'pick':
+            origin = asset['references'][0]['transaction_id'] if asset['references'] else None
+            url = '/picks/' + quote(asset['id'], safe='')
+            if origin:
+                url += '?from_trade=' + quote(origin, safe='')
+            label = '<a href="' + escape(url) + '">' + label + ' · ' + ('Own pick (original franchise)' if asset['own'] else 'Another franchise’s original pick') + '</a>'
+        net = ('{:+d}'.format(asset['net']) if asset['net'] is not None else 'unknown; consideration is incomplete')
+        def gross(direction):
+            n = asset[direction]
+            return str(n) if asset['complete_in_sample'] else 'at least ' + str(n) if n else 'unknown'
+        return '<li><b>' + label + '</b><p>Acquired ' + gross('acquired') + ' · sent ' + gross('sent') + ' · observed net ' + net + '.</p><p>Exact identity: ' + escape(asset['id']) + '</p>' + links + '</li>'
+    players = [a for a in assets if a['kind'] == 'player']
+    parts.append('<ul>' + ''.join(render_asset(a) for a in players) + '</ul>' if players else '<p>No supported player identities are listed; see the sample coverage above.</p>')
+    groups = {}
+    for asset in assets:
+        if asset['kind'] == 'pick':
+            groups.setdefault((asset['season'], asset['round']), []).append(asset)
+    parts.append('<h4>Exact draft picks acquired and sent</h4>')
+    for (year, round_), picks in sorted(groups.items()):
+        parts.append('<h5>' + str(year) + ' · round ' + str(round_) + '</h5><ul>' + ''.join(render_asset(a) for a in picks) + '</ul>')
+    if not groups:
+        parts.append('<p>No supported exact pick identities are listed; see the sample coverage above.</p>')
+    if row.get('details_limited'):
+        parts.append('<p>Exact identity detail is limited to 256 assets. The transfer counts cover the admitted sample; use the paginated timeline for further supporting events.</p>')
+    parts.append('<p>At most four supporting deals per identity are linked. Pick links open existing subsequent-trade and observed conversion evidence. A draft conversion is not another trade acquisition. Package links do not imply one-to-one player lineage.</p>')
+    return ''.join(parts)
+
+
 def _completed_trade_observations(view):
     """A factual sample, independent of every manager/Trade/FOIS score."""
     row = view.get('completed_trade_observations') or {}
     count = row.get('completed_trades')
-    heading = '<section class="card franchise-trades fh-trades" aria-labelledby="fh-trades-title"><h3 id="fh-trades-title">Completed trade observations</h3>'
+    heading = '<section class="card franchise-trades fh-trades" aria-labelledby="fh-trades-title"><h3 id="fh-trades-title">How this franchise changed</h3><p>Completed trade observations · ' + escape(str(view.get('selected_season') or 'all retained source seasons')) + '.</p>'
+    if view.get('franchise_id') and view.get('available_seasons'):
+        options = '<option value="0">All retained source seasons</option>'
+        options += ''.join('<option value="' + str(year) + '"' + (' selected' if year == view.get('selected_season') else '') + '>' + str(year) + '</option>' for year in view['available_seasons'])
+        if view.get('selected_season') and view['selected_season'] not in view['available_seasons']:
+            options += '<option selected value="' + str(view['selected_season']) + '">' + str(view['selected_season']) + ' · not retained</option>'
+        heading += '<form method="get" action="/history/team/' + quote(view['franchise_id'], safe=':') + '"><label for="fh-season">Source season</label><select id="fh-season" name="season">' + options + '</select><button type="submit">Show period</button></form>'
     if count is None:
         excluded = ('<p>' + str(row['unattributed_source_trades']) + ' source-season trades are excluded because franchise continuity or identity is unconfirmed.</p>') if row.get('unattributed_source_trades') else ''
-        return heading + '<p>Completed trade counts and first-round pick totals are unknown from the available compatible history.</p><p>' + escape(row.get('reason') or 'Review the source-season coverage below; missing history is not no activity.') + '</p>' + excluded + '</section>'
+        return heading + '<p>Completed trade counts and asset transfer totals are unknown from the available compatible history.</p><p>' + escape(row.get('reason') or 'Review the source-season coverage below; missing history is not no activity.') + '</p>' + excluded + '</section>'
     def metric(direction, deals, label):
         value = row.get(direction)
         if value is None:
@@ -18,14 +60,24 @@ def _completed_trade_observations(view):
         prefix = '' if row['pick_counts_complete_in_sample'] else 'At least '
         return '<p><b>' + label + ':</b> ' + prefix + str(value) + (' pick transfer' if value == 1 else ' pick transfers') + ' across ' + prefix.lower() + str(row[deals]) + (' completed trade' if row[deals] == 1 else ' completed trades') + '.</p>'
     body = heading + '<p><b>' + str(count) + ' completed trades observed from retained Sleeper records.</b></p>'
-    body += metric('firsts_received', 'receiving_trades', 'First-round picks acquired')
-    body += metric('firsts_sent', 'sending_trades', 'First-round picks sent')
+    for kind, label in (('player', 'Player'), ('pick', 'Draft-pick')):
+        counts = (row.get('movements') or {}).get(kind)
+        if counts is None:
+            continue
+        def number(key):
+            value = counts[key]
+            return 'unknown' if value is None else ('' if counts['complete_in_sample'] else 'at least ') + str(value)
+        body += '<p><b>' + label + ' transfers:</b> ' + number('acquired') + ' acquired · ' + number('sent') + ' sent. Observed net: ' + ('{:+d}'.format(counts['net']) if counts['net'] is not None else 'unknown; consideration is incomplete') + '.</p>'
+    body += '<p>Observed trades only; other roster activity is separate. Remaining holdings are unknown.</p>'
     first, last = row.get('first_completion_at'), row.get('last_completion_at')
     body += ('<p>Observed completion dates: <time datetime="' + escape(first) + '">' + escape(first[:10])
              + '</time> to <time datetime="' + escape(last) + '">' + escape(last[:10]) + '</time> UTC.</p>') if first and last else '<p>Completion date window unknown; no supported completion times are retained.</p>'
-    body += '<p>Coverage: ' + escape(row['state']) + '. ' + escape(row['reason']) + '</p>'
-    body += '<p>Franchise history. Current managerial intent is unconfirmed.</p>'
-    body += '<details><summary>Coverage and supporting completed trades · up to 12</summary><p>Each transaction is counted once for this franchise; pick transfers count assets separately.</p><p>' + escape(row['attribution']) + '</p>'
+    body += '<p>Franchise history · Coverage: ' + escape(row['state']) + '. Missing periods remain unknown.</p>'
+    body += '<details><summary>Exact movements, coverage and supporting trades</summary><p>Each transaction is counted once for this franchise; pick transfers count assets separately.</p><p>' + escape(row['attribution']) + '</p><p>' + escape(row['reason']) + '</p>'
+    body += '<p>Trade movement only. Waivers, drafts, drops and other activity also change a franchise. Beginning/end roster and capital totals are not established by these observations.</p>'
+    body += metric('firsts_received', 'receiving_trades', 'First-round picks acquired')
+    body += metric('firsts_sent', 'sending_trades', 'First-round picks sent')
+    body += _movement_details(row)
     body += '<p>' + str(row['dated_trades']) + ' of ' + str(count) + ' trades have supported completion times. Undated trades contribute only to the observed season sample.</p>'
     body += '<p>Source seasons: ' + escape(', '.join(map(str, row['source_seasons']))) + '.</p>'
     body += '<p>' + str(row['pick_covered_trades']) + ' of ' + str(count) + ' trades have complete exact-pick consideration. Counts apply to this observed sample; unacquired periods are not zero activity.</p>'
@@ -98,5 +150,5 @@ def render_franchise_timeline(view):
     links = []
     for n, label in ((view['page'] - 1, 'Previous events'), (view['page'] + 1, 'Next events')):
         if 1 <= n <= view['pages']:
-            links.append('<a class="ds-action" href="/history/team/' + quote(view['franchise_id'], safe=':') + '?events_page=' + str(n) + '">' + label + '</a>')
-    return '''<style>.franchise-timeline{min-width:0;overflow-wrap:anywhere}.franchise-timeline .grid{grid-template-columns:repeat(auto-fit,minmax(min(260px,100%),1fr))}.franchise-timeline article{min-width:0}.franchise-timeline summary,.franchise-timeline a{min-height:44px;padding:10px 0;display:block}.franchise-timeline summary{cursor:pointer}.franchise-timeline :focus-visible{outline:2px solid #86efac;outline-offset:3px}.franchise-timeline ul{padding-left:20px}.franchise-trades{min-width:0;overflow-wrap:anywhere}.franchise-trades summary,.franchise-trades a{min-height:44px;padding:10px 0;display:block}.franchise-trades summary{cursor:pointer}.franchise-trades :focus-visible{outline:2px solid #86efac;outline-offset:3px}.franchise-trades ul{padding-left:20px}</style>''' + _completed_trade_observations(view) + '<section class="franchise-timeline"><h3>Franchise transaction timeline</h3><p>' + text(view['qualification']) + '</p>' + changes + ('<p>Earlier linked source-season metadata is unavailable; earlier history remains unknown.</p>' if view['earlier_link_gap'] else '') + '<p>Historical FOIS grades remain RETAINED / NOT REVALIDATED. This factual timeline does not calculate retrospective grades or historical Market values.</p><div class="grid fh-coverage">' + ''.join(cards) + '</div><h3>Completed movements and observed draft selections</h3><p>' + str(view['total']) + ' supported events · page ' + str(view['page']) + ' of ' + str(view['pages']) + '. Undated events are grouped by source identity, not a proven chronological sequence.</p><div class="fh-events">' + ''.join(events) + '</div>' + ''.join(links) + attempts + '</section>'
+            links.append('<a class="ds-action" href="/history/team/' + quote(view['franchise_id'], safe=':') + '?events_page=' + str(n) + ('&amp;season=' + str(view['selected_season']) if view.get('selected_season') else '') + '">' + label + '</a>')
+    return '''<style>.franchise-timeline{min-width:0;overflow-wrap:anywhere}.franchise-timeline .grid{grid-template-columns:repeat(auto-fit,minmax(min(260px,100%),1fr))}.franchise-timeline article{min-width:0}.franchise-timeline summary,.franchise-timeline a{min-height:44px;padding:10px 0;display:block}.franchise-timeline summary{cursor:pointer}.franchise-timeline :focus-visible{outline:2px solid #86efac;outline-offset:3px}.franchise-timeline ul{padding-left:20px}.franchise-trades{min-width:0;overflow-wrap:anywhere}.franchise-trades summary,.franchise-trades a{min-height:44px;padding:10px 0;display:block}.franchise-trades summary{cursor:pointer}.franchise-trades :focus-visible{outline:2px solid #86efac;outline-offset:3px}.franchise-trades ul{padding-left:20px}.franchise-trades form{display:flex;flex-wrap:wrap;gap:8px;align-items:center}.franchise-trades select,.franchise-trades button{min-height:44px;max-width:100%;font:inherit}.franchise-trades select{min-width:0}</style>''' + _completed_trade_observations(view) + '<section class="franchise-timeline"><h3>Franchise transaction timeline</h3><p>' + text(view['qualification']) + '</p>' + changes + ('<p>Earlier linked source-season metadata is unavailable; earlier history remains unknown.</p>' if view['earlier_link_gap'] else '') + '<p>Historical FOIS grades remain RETAINED / NOT REVALIDATED. This factual timeline does not calculate retrospective grades or historical Market values.</p><div class="grid fh-coverage">' + ''.join(cards) + '</div><h3>Completed movements and observed draft selections</h3><p>' + str(view['total']) + ' supported events · page ' + str(view['page']) + ' of ' + str(view['pages']) + '. Undated events are grouped by source identity, not a proven chronological sequence.</p><div class="fh-events">' + ''.join(events) + '</div>' + ''.join(links) + attempts + '</section>'

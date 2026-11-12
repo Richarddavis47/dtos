@@ -1,3 +1,9 @@
+# v1.22.35 / build 2250 — Franchise changes from completed trades
+
+Franchise History extends its existing completed-trade observations with source-season selection, gross player and exact-pick acquisitions/disposals, and net transfers within the observed trade sample. Expandable identities group picks by draft year and round, distinguish original own picks, and link existing supporting deals, subsequent movements and pick conversions. Acquired-and-later-sent assets remain visible in both events.
+
+Coverage, franchise continuity and incomplete consideration remain qualified. Empty incomplete history stays unknown; beginning/end holdings are not inferred from trade movement, and other roster activity is explicitly separate. No current prices, ownership or manager intent are substituted for historical evidence. Existing source, valuation, Trade, FOIS and memory policies are unchanged. See docs/audits/FRANCHISE_TRADE_PROGRESS_2250.md.
+
 # v1.22.34 / build 2249 — Roster evidence within its actual scope
 
 Prepared roster comparisons now assess projection freshness against the league roster references used by the analysis. An unrelated unrostered catalog entry, or an explicitly stored IR/taxi/reserve asset, no longer makes an otherwise supported current finding provisional solely because its unused projection is absent or stale. The source row remains unchanged and missing values remain missing. Complete publication source clocks remain inspectable, separately from the narrower roster freshness assessment. Eligible reserves, unknown availability, legal-slot limitations, aging, failed refreshes and atomic source compatibility still qualify results.
