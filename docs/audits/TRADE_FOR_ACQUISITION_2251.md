@@ -63,3 +63,6 @@ published separately; this document does not assert an unfinished gate passed.
 No source provider, store, runtime owner, optimizer, Trade/FOIS policy, scoring,
 submitted lineup, preference, 2 GiB cap, 16x restoration allowance or FOIS/Trade
 reservation changes.
+
+
+Validation recovery: the first exact-source full local run encountered two existing Rebuild browser timeouts after real capacity deferral. One admission had 394,358,784 usable bytes against 402,653,184 required. Six earlier gates passed; the already-failed remainder was deliberately interrupted, so regression and the three later gates were not complete. No OOM occurred. A planned two-method matched fresh-container control completed with and without explicit collection; it recovered unreachable retired-fixture objects at setup boundaries, but did not demonstrate a lower overall peak or prove the original objects responsible. The shared browser fixture now collects only unreachable prior-fixture cycles before constructing its normal fixture/viewport and reports process/container measurements. GC stays enabled; every real search, exclusion, viewport, timeout and assertion remains. Admission, reserves and application cleanup are unchanged. Final-source full local and hosted validation remain mandatory.

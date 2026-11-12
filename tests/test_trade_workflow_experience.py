@@ -3,6 +3,7 @@
 No production account writes. Held responses simulate transfer delays, not
 fabricated recommendation results. Chromium/CDP is not physical Safari.
 """
+import gc
 import json
 import os
 from pathlib import Path
@@ -15,14 +16,41 @@ from tests import test_home_opportunity_integrity as fixtures
 from tools.validation.browser_runtime import launch_chromium
 
 
+def _collect_retired_fixture_objects(phase):
+    """Isolate normal browser scenarios from unreachable earlier fixture cycles.
+
+    Live publications, active requests and current fixtures keep their strong
+    references. Do not trim allocators, clear caches or change admission. The
+    whole test still includes collection and the real workload with GC enabled.
+    """
+    from src.platform.lifecycle import memory_snapshot
+
+    if not gc.isenabled():
+        raise AssertionError("Normal-execution browser controls require enabled GC")
+    before = memory_snapshot()
+    collected = gc.collect()
+    after = memory_snapshot()
+    print(json.dumps(dict(
+        event='retired_fixture_cleanup', phase=phase, collected=collected,
+        gc_enabled=gc.isenabled(), process_rss_before=before['rss_bytes'],
+        process_rss_after=after['rss_bytes'],
+        container_before=before.get('cgroup_current_bytes'),
+        container_after=after.get('cgroup_current_bytes'),
+        limit=after.get('cgroup_limit_bytes'),
+        scope='Unreachable test objects only; container delta may include asynchronous browser exit.'
+    )), flush=True)
+
+
 class TradeWorkflowExperienceTests(unittest.TestCase):
     def fixture(self):
+        _collect_retired_fixture_objects('before_fixture')
         f = fixtures.OpportunityIntegrityTests()
         f.setUp()
         self.addCleanup(f.doCleanups)
         return f
 
     def page(self, browser, f, width=375, height=667):
+        _collect_retired_fixture_objects('before_viewport')
         page = browser.new_page(viewport=dict(width=width, height=height))
         page.set_default_timeout(10000)
         records, held, errors = [], [], []
