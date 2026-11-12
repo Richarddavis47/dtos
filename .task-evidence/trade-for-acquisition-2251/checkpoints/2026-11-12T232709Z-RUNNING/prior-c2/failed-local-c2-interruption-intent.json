@@ -1,0 +1,36 @@
+{
+  "at": "2026-11-12T22:59:06.933605+00:00",
+  "candidate": "39fa61fef9b943591b593835f07686b7db88bba1",
+  "tree": "e46dff664b0051d99bef08a2a1095600f8af8edc",
+  "container": "2bb59967ef263a0c55687c316759de04ddb65a2cde11a070b2384a38c8da2c0c",
+  "validator_pid_namespace": 15,
+  "signal": "SIGINT to existing validator process group",
+  "reason": "Full-local unit gate already failed two normal-execution browser journeys after real capacity deferral. Preserve failed prefix and deliberately interrupt remaining failed-run work for targeted fixture isolation. No pass is credited; remaining gates are unexecuted. Source remains unchanged until stopped/manifest sealed.",
+  "counts_before": {
+    "start": 3355,
+    "stop": 3354,
+    "error": 2
+  },
+  "errors": [
+    {
+      "event": "error",
+      "test": "test_rebuild_discovery_browser.RebuildDiscoveryBrowserTests.test_real_unseeded_generation_and_zero_results_at_four_viewports",
+      "time": 1794524152.7964103,
+      "pid": 31,
+      "rss": 948396032,
+      "cgroup": 1227190272,
+      "error_type": "TimeoutError",
+      "error_text": "Page.wait_for_function: Timeout 10000ms exceeded."
+    },
+    {
+      "event": "error",
+      "test": "test_rebuild_roster_space_browser.RebuildRosterSpaceBrowserTests.test_full_rosters_unseeded_strategies_and_qualified_zero_states_at_four_sizes",
+      "time": 1794524255.9176323,
+      "pid": 31,
+      "rss": 951361536,
+      "cgroup": 1238614016,
+      "error_type": "TimeoutError",
+      "error_text": "Page.wait_for_function: Timeout 10000ms exceeded."
+    }
+  ]
+}

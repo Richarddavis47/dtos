@@ -1,0 +1,131 @@
+{
+  "at": "2026-11-12T22:59:27.753864+00:00",
+  "candidate": "39fa61fef9b943591b593835f07686b7db88bba1",
+  "tree": "e46dff664b0051d99bef08a2a1095600f8af8edc",
+  "result": {
+    "head": "39fa61fef9b943591b593835f07686b7db88bba1",
+    "tree": "e46dff664b0051d99bef08a2a1095600f8af8edc",
+    "python": "3.14.3 (main, Apr  7 2026, 02:23:36) [GCC 12.2.0]",
+    "started_at": 1794519934.6018498,
+    "finished_at": 1794524347.8124082,
+    "elapsed_seconds": 4413.210559606552,
+    "exit_code": -2,
+    "passed": false,
+    "error": null,
+    "process_cleanup": {
+      "timeout_triggered": false,
+      "validator_pid": 15,
+      "validator_reaped": true
+    },
+    "cgroup_limit": 2147483648,
+    "cpus": 2,
+    "network": "none",
+    "final_memory": {
+      "rss_bytes": 46735360,
+      "vms_bytes": 128749568,
+      "system_available_bytes": 16591474688,
+      "memory_accounting_scope": "cgroup",
+      "cgroup_current_bytes": 1336528896,
+      "cgroup_limit_bytes": 2147483648,
+      "cgroup_inactive_file_bytes": 121409536,
+      "cgroup_anonymous_bytes": 1092575232,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0
+      }
+    },
+    "kernel_peak": 1971900416,
+    "fixture": "250 asset prepared sanitized foundation; disposable authenticated test transports"
+  },
+  "events": {
+    "start": 3356,
+    "stop": 3356,
+    "error": 2
+  },
+  "errors": [
+    {
+      "event": "error",
+      "test": "test_rebuild_discovery_browser.RebuildDiscoveryBrowserTests.test_real_unseeded_generation_and_zero_results_at_four_viewports",
+      "time": 1794524152.7964103,
+      "pid": 31,
+      "rss": 948396032,
+      "cgroup": 1227190272,
+      "error_type": "TimeoutError",
+      "error_text": "Page.wait_for_function: Timeout 10000ms exceeded."
+    },
+    {
+      "event": "error",
+      "test": "test_rebuild_roster_space_browser.RebuildRosterSpaceBrowserTests.test_full_rosters_unseeded_strategies_and_qualified_zero_states_at_four_sizes",
+      "time": 1794524255.9176323,
+      "pid": 31,
+      "rss": 951361536,
+      "cgroup": 1238614016,
+      "error_type": "TimeoutError",
+      "error_text": "Page.wait_for_function: Timeout 10000ms exceeded."
+    }
+  ],
+  "manifest_entries": 668,
+  "manifest_sha256": "c44dcc106ecabeaf4de545481dee9c810baf3d4ae01533225c32314bb50b43aa",
+  "original_members_verified": true,
+  "completed_gate_events": [
+    {
+      "timestamp": "2026-11-12T21:45:48.207600+00:00",
+      "event": "validation_child_completed",
+      "pid": 15,
+      "parent_pid": 6,
+      "step": "Committed whitespace",
+      "child_pid": 16,
+      "return_code": 0
+    },
+    {
+      "timestamp": "2026-11-12T21:45:48.217295+00:00",
+      "event": "validation_child_completed",
+      "pid": 15,
+      "parent_pid": 6,
+      "step": "Working-tree whitespace",
+      "child_pid": 17,
+      "return_code": 0
+    },
+    {
+      "timestamp": "2026-11-12T21:45:48.221174+00:00",
+      "event": "validation_child_completed",
+      "pid": 15,
+      "parent_pid": 6,
+      "step": "Staged whitespace",
+      "child_pid": 23,
+      "return_code": 0
+    },
+    {
+      "timestamp": "2026-11-12T21:45:51.991083+00:00",
+      "event": "validation_child_completed",
+      "pid": 15,
+      "parent_pid": 6,
+      "step": "Python compilation",
+      "child_pid": 24,
+      "return_code": 0
+    },
+    {
+      "timestamp": "2026-11-12T21:45:52.552066+00:00",
+      "event": "validation_child_completed",
+      "pid": 15,
+      "parent_pid": 6,
+      "step": "Ruff",
+      "child_pid": 25,
+      "return_code": 0
+    },
+    {
+      "timestamp": "2026-11-12T21:45:54.034908+00:00",
+      "event": "validation_child_completed",
+      "pid": 15,
+      "parent_pid": 6,
+      "step": "Dependency integrity",
+      "child_pid": 30,
+      "return_code": 0
+    }
+  ],
+  "scope": "Known-failed unit gate; remaining work deliberately interrupted. Stop events are not a passing-test count. Six pre-regression gates passed; unit gate did not complete, subsequent three gates unexecuted. Original bytes sealed before source changes."
+}
