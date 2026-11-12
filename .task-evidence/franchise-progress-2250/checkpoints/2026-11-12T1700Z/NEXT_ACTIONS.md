@@ -1,0 +1,10 @@
+# Continue existing build 2250 work
+
+1. Preserve candidate f40bf83c1abcb3b9763182f0a23e16374a12b404 / tree 21b31e05f255834fd2946f4b4e412cfd17bbb45a in /workspace/dtos-franchise-progress-2250. Do not duplicate source implementation or reset it.
+2. Final focused run is shell session 50106; original console/result in focused-exact/. It must actually finish 88 controls with no failures/errors/skips, exact source and enforced 2 GiB. Development run86 passed separately in focus-working/; not final-source proof.
+3. Push/open draft PR only after final focused passes, then fresh mandatory hosted four workflows/all13 jobs; never reuse 2249 passing results for2250.
+4. New common.py and copied native/verifier methods in this directory are not yet executed (except final focus). Run source-bound local preflight/restoration-unused/resident-refresh using run-local-resource.py with original retained fixture bytes. Preserve any failures.
+5. Extract exact official canonical runner/sitecustomize from candidate workflow. Preserve original runner hashes. Start one clean complete local canonical only after focused/native passes and actual >8 GiB scratch AFTER creation. Expected corpus4435 = baseline4419 +16 added tests. No reserve, responsiveness or scratch threshold changes.
+6. Use established Actions publisher copied from frozen2249 tooling only on NEW release/2250-actions-publisher branch; never merge tooling branch or dispatch2249 plan. No direct Cloud asset upload, credentials export or live heavy work.
+7. Package source-bound originals, readable console parts/checksums, prior attempts separately, source patch, feature proof and complete Scout handoff. Fresh all gates/evidence readback -> guarded Actions prepare -> CAS squash merge tree equality -> publish same frozen publisher -> immutable v1.22.35/build2250 -> exact Render/public smokes.
+8. Owner browser/Render Shell is not exposed in current session (capabilities[]). Do not claim authenticated franchise live acceptance or retry old external401. New production-baseline-and-access.json verifies live2249M via authorized Render metadata. No owner preferences/settings/lineups/transactions changed.
