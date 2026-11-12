@@ -38,9 +38,12 @@ def source_presentation(evidence, identity=None, *, now=None):
             unknown += 1
         else:
             valid.append(parsed)
+    scoped = evidence.get("freshness_source_scope") == "league_rosters_excluding_explicit_reserve_storage"
     parts = [
-        "Projection updates: " + projection_timing_text(evidence).rstrip("."),
-        f"{len(valid)} distinct source observations",
+        "Projection updates: "
+        + projection_timing_text(evidence).rstrip(".")
+        + (" (this roster comparison)" if scoped else ""),
+        f"{len(valid)} distinct source observations" + (" across the full publication" if scoped else ""),
     ]
     if valid:
 
@@ -54,7 +57,8 @@ def source_presentation(evidence, identity=None, *, now=None):
         )
     if unknown or not original:
         parts.append(
-            "Some source update times cannot be verified; provenance is incomplete"
+            ("Some source update times in the full publication cannot be verified; provenance is incomplete"
+             if scoped else "Some source update times cannot be verified; provenance is incomplete")
         )
     if evidence.get("refresh", {}).get("retained_publication"):
         parts.append(
@@ -82,7 +86,8 @@ def source_presentation(evidence, identity=None, *, now=None):
     # no internal solver objects or player dictionaries are dumped here.
     details = (
         '<details class="diagnostic-source-provenance"><summary>Detailed source provenance</summary>'
-        "<p>Original source observations; retrieval and refresh attempts do not reset source age. Fresh before 1 hour; Aging from 1 hour; Stale from 6 hours.</p>"
+        + ("<p>Freshness for this roster comparison uses its eligible roster references. The full publication clocks below also include assets outside that comparison.</p>" if scoped else "")
+        + "<p>Original source observations; retrieval and refresh attempts do not reset source age. Fresh before 1 hour; Aging from 1 hour; Stale from 6 hours.</p>"
         '<div style="max-height:24rem;overflow:auto;overflow-wrap:anywhere" tabindex="0" role="region" aria-label="Complete source observations">'
         + (
             "<ul>" + clocks + "</ul>"

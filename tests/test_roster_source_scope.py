@@ -106,6 +106,12 @@ class RosterSourceScopeTests(unittest.TestCase):
         self.assertEqual(source["source_freshness"], "Stale")
         self.assertEqual(source["canonical_projection"], 500)
         self.assertEqual(row["evidence"]["projection_freshness"], ["Fresh"])
+        self.assertIn(
+            "2020-01-01T00:00:00+00:00", row["evidence"]["source_observations"]
+        )
+        team, market = self.rendered(f)
+        self.assertIn("across the full publication", team)
+        self.assertIn("eligible roster references", team)
         self.assertIn("Explore in Trade For", self.rendered(f)[1])
 
     def test_explicit_reserve_storage_is_not_current_lineup_source_dependency(self):

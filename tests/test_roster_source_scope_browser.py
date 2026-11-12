@@ -37,6 +37,9 @@ class RosterSourceScopeBrowserTests(unittest.TestCase):
             tree=subprocess.check_output(
                 ["git", "rev-parse", "HEAD^{tree}"], text=True
             ).strip(),
+            working_tree_clean=not subprocess.check_output(
+                ["git", "status", "--porcelain"], text=True
+            ).strip(),
             scope="Disposable retained Sleeper-source fixture; Chromium emulation, not owner live or physical Safari.",
         )
         (root / (name + ".json")).write_text(json.dumps(record, indent=2) + "\n")

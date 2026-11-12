@@ -171,9 +171,9 @@ def _qualification(data, snapshot, slots, *, projection_reader=None):
         "retained": retained,
         "refresh": refresh,
         "source_observations": sorted(
-            {str(row.get("source_timestamp") or "Unavailable") for row in rows.values()}
+            {str(row.get("source_timestamp") or "Unavailable") for row in all_rows.values()}
         ),
-        "source_scope": "league_rosters_excluding_explicit_reserve_storage",
+        "freshness_source_scope": "league_rosters_excluding_explicit_reserve_storage",
         "conclusion_state": "unavailable"
         if not valid or not supported_slots or mixed
         else "provisional"

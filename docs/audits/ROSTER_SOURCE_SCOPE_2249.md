@@ -8,7 +8,7 @@ Production source `98030d6af189fe7d023bc36251800ab754a24f05` evaluated every can
 
 Freshness references all league rostered assets except explicitly stored IR/taxi/reserve or explicitly ineligible rows. Other eligible reserves and other teams remain dependencies of the existing legal lineup and peer reference analysis. This is not a position-specific availability shortcut. In particular, an uncertain K/DEF or FLEX candidate is not promoted to observed participation. A positive projection, roster label or absent injury designation does not prove participation.
 
-All canonical rows still undergo atomic generation compatibility checks. No row is dropped, revalued, filled or relabeled at the source. Post-trade evidence separately qualifies the actual resulting rosters, including assets moved out of storage. Existing read-time aging and failed-refresh qualifications remain effective without a new solver or source request.
+The complete original source-clock disclosure remains intact, including clocks for unused catalog assets. The presentation distinguishes full-publication provenance from the narrower freshness dependency. All canonical rows still undergo atomic generation compatibility checks. No row is dropped, revalued, filled or relabeled at the source. Post-trade evidence separately qualifies the actual resulting rosters, including assets moved out of storage. Existing read-time aging and failed-refresh qualifications remain effective without a new solver or source request.
 
 ## Preserved boundaries
 
