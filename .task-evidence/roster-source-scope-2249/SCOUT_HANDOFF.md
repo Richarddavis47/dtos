@@ -1,4 +1,14 @@
+# Released acceptance handoff
+
+Released **v1.22.34 / build 2249**, deployed `05c717e50b47683963ed40d66946e9f6eea76694`, validated tree `c60f914d2a0b6b34c2d3e87cdce8eae4560d0b49`. [Immutable release](https://github.com/Richarddavis47/dtos/releases/tag/v1.22.34). The original unbound plan and corrected source-bound plan are preserved separately, with the failed preparation record. Owner-authenticated Granite and physical Safari acceptance remain unverified.
+
 # Independent acceptance — scoped roster evidence
+
+Validated candidate: `36fc76784d968fcd0917ce91821840649da1a7a4`.
+
+Validated source tree: `c60f914d2a0b6b34c2d3e87cdce8eae4560d0b49`.
+
+Target v1.22.34 / build2249. Publication/deployment and owner-live acceptance must be verified separately.
 
 Verify final release identity from the final handoff and immutable release record; this file is a plan, not a claim that publication or owner live acceptance has completed.
 

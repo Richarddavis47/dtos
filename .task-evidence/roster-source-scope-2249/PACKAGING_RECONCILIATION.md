@@ -1,0 +1,13 @@
+# Packaging reconciliation — released build2249
+
+Application source stayed `36fc76784d968fcd0917ce91821840649da1a7a4`, tree `c60f914d2a0b6b34c2d3e87cdce8eae4560d0b49`, throughout this resumed task. Original4,419-test local/hosted results and all ten gates were rechecked, not recreated or rerun.
+
+The published pre-publication records at9d244fd8 preserve the first locally verified177,803,406-byte archive (`a1172316196d4c062216b2d3da6a01b2a6f8d03772c7d73dcefbacacc4a628b5`). Root recovery-verified.json and recovery-build-original.log remain those historical records. Actions43177742523 subsequently rejected its Scout document because full candidate/tree identity strings were missing. This was a document-binding failure, not an application, credential or test failure; zero release attachments were uploaded. The original failed outcome317-byte ZIP, decodedjoblog, oldplan/controller/document are preserved underprior-publisher-attempts/43177742523/.
+
+The corrected source-bound document passed the same unchanged guard. Finalrecovery186,489,262bytes, SHA256`c57cc14cc41270c452bb456a2ef9898968011de0d53a7d42dd12a3b670e2838b`, is the immutable Market-Roster-Handoff.zip attachment. [Final proof](recovery-final-verified.json) supersedes the earlier archive for release purposes. Standard ZIP_DEFLATED changed compression only; exact original member bytes,256MiBtransport/512MiBuncompressed bounds, source checks and all other guards remained intact.
+
+Prepared43179152239 and published43180042759 used the same frozen controller34307d75b2fbe0fa5739bed412d9b6583c913954. Both certificates verify all23attachments, digests and actualActionsbytereadback. [Immutable release](https://github.com/Richarddavis47/dtos/releases/tag/v1.22.34) targets deployed`05c717e50b47683963ed40d66946e9f6eea76694` with the exact validatedtree.
+
+Earlier first-candidate source-clock failures/cancellations, browser-fixture failures, prior-archive scope-label mismatch, absent capital sidecars, interrupted archive and missing Ruff module remain separately classified and preserved. No deferred execution was called completed. Two unchanged local browser methods generated only absent sidecars under an actual2GiB limit; complete canonical originals stayed unchanged. The failed module invocation did not evaluate lint; installed repository Ruff then passed. No source-policy guard, admission reserve, mathematical formula or application assertion was weakened.
+
+Stable pre-publication files remain byte-identical and their original checksum manifest still verifies. New release/deployment receipts and the source-bound Scout plan are additive; old unbound plan remains in SCOUT_HANDOFF_PREPUBLICATION.md. PhysicalSafari and owner-authenticatedGranite acceptance remain unverified.
