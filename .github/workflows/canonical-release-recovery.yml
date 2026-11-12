@@ -98,6 +98,7 @@ jobs:
               DTOS_ACTIVATION_EVIDENCE="/output/activation",
               DTOS_FRONT_OFFICE_WORKFLOW_EVIDENCE="/output/front-office-workflow",
               DTOS_MARKET_NEED_EVIDENCE="/output/market-needs",
+              DTOS_ROSTER_SOURCE_SCOPE_EVIDENCE="/output/roster-source-scope",
               PYTHONPATH="/output/observer:/app")
           git_n = int(os.environ.get("GIT_CONFIG_COUNT", "0"))
           os.environ["GIT_CONFIG_COUNT"] = str(git_n + 1)

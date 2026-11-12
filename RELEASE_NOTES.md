@@ -1,3 +1,9 @@
+# v1.22.34 / build 2249 — Roster evidence within its actual scope
+
+Prepared roster comparisons now assess projection freshness against the league roster references used by the analysis. An unrelated unrostered catalog entry, or an explicitly stored IR/taxi/reserve asset, no longer makes an otherwise supported current finding provisional solely because its unused projection is absent or stale. The source row remains unchanged and missing values remain missing. Eligible reserves, unknown availability, legal-slot limitations, aging, failed refreshes and atomic source compatibility still qualify results.
+
+Post-trade roster evidence independently checks the resulting roster's source freshness. Moving an asset out of explicit storage does not reuse its old exclusion. No projection, actual score, optimizer, price, qualification threshold or saved preference changes. My Team and Market reuse the existing scoped prepared finding and exact-player Trade For handoff; opening it starts no search. See docs/audits/ROSTER_SOURCE_SCOPE_2249.md for the reproduced defect and live-evidence limitations.
+
 # v1.22.33 / build 2248 — Market movement and your roster
 
 Market's existing movement section now connects compatible sparse canonical observations to the active franchise's current prepared starter or depth need. Up to three assets from the first ten results retain the existing Market order, comparison dates, source, observation age and coverage limits. Unsupported roster relevance leaves neutral observations available. Current neutral cost is separate from an asking price, lineup improvement or evaluated recommendation.
