@@ -1,0 +1,738 @@
+{
+  "method": {
+    "child_source_sha256": "504f9ba0e5443fe319d4b69d4d0579859856cfa18c696d6cac5ed1d1def0558d",
+    "source_file_sha256": "45289b5530346e808eb12ef496f98fc139e277f658620e5660b5a08f9e0f3001",
+    "original_method_sha256": "310999c4731ccc60422a01fc88082c2d1158f71773c72dc917b17ede454c417f",
+    "instrumented_ast_sha256": "80e340b01f250d8091e743f5039c5a3458f3fb37edd77530dd01d030ee8be666",
+    "prefix_methods": 1211,
+    "total_source_methods": 4435,
+    "scope": "Diagnostic only. Actual original source prefix/fixtures and native worker. One post-measurement record inserted; original500ms/input assertions unchanged. No admission mock, GC disable or source mutation."
+  },
+  "prefix": {
+    "tests": 1211,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "unclean": {
+    "tests": 1,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "collection": {
+    "collected": 940075,
+    "elapsed_ms": 1805.8526990062091,
+    "rss": 659382272,
+    "gc_enabled": true
+  },
+  "after_collection": {
+    "tests": 1,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "records": [
+    {
+      "phase": "unclean-after-actual-prefix",
+      "heartbeat_windows": [
+        [
+          213295.031915347,
+          213295.043127258
+        ],
+        [
+          213295.043127258,
+          213295.055751216
+        ],
+        [
+          213295.055751216,
+          213295.06719834
+        ],
+        [
+          213295.06719834,
+          213295.077896551
+        ],
+        [
+          213295.077896551,
+          213295.088413055
+        ],
+        [
+          213295.088413055,
+          213295.098842026
+        ],
+        [
+          213295.098842026,
+          213295.109335711
+        ],
+        [
+          213295.109335711,
+          213295.119860896
+        ],
+        [
+          213295.119860896,
+          213295.13036605
+        ],
+        [
+          213295.13036605,
+          213295.141788753
+        ],
+        [
+          213295.141788753,
+          213295.15310931
+        ],
+        [
+          213295.15310931,
+          213295.165442995
+        ],
+        [
+          213295.165442995,
+          213295.279562275
+        ]
+      ],
+      "measured_at": 213295.351242987,
+      "gaps_ms": [
+        11.211910983547568,
+        12.623957998584956,
+        11.447124008554965,
+        10.698211000999436,
+        10.516504000406712,
+        10.428970999782905,
+        10.493684996617958,
+        10.525185003643855,
+        10.505154001293704,
+        11.42270301352255,
+        11.320556979626417,
+        12.33368500834331,
+        114.11928001325577
+      ],
+      "max_gap_ms": 114.11928001325577,
+      "records": 2,
+      "state": "complete",
+      "execution": {
+        "worker_pid": 42717,
+        "execution": "spawned_subprocess",
+        "process_model": "persistent_spawn_pool",
+        "input_bytes": 374,
+        "source_bytes": 1092,
+        "exit_status": 0
+      },
+      "rss": 659386368,
+      "gc_enabled": true,
+      "gc_count": [
+        3,
+        0,
+        0
+      ]
+    },
+    {
+      "phase": "after-fixture-collection",
+      "heartbeat_windows": [
+        [
+          213298.520463463,
+          213298.531928601
+        ],
+        [
+          213298.531928601,
+          213298.542882865
+        ],
+        [
+          213298.542882865,
+          213298.553920907
+        ],
+        [
+          213298.553920907,
+          213298.564274771
+        ],
+        [
+          213298.564274771,
+          213298.57472234
+        ],
+        [
+          213298.57472234,
+          213298.585169301
+        ],
+        [
+          213298.585169301,
+          213298.595762857
+        ],
+        [
+          213298.595762857,
+          213298.606886539
+        ],
+        [
+          213298.606886539,
+          213298.621558196
+        ],
+        [
+          213298.621558196,
+          213298.700179746
+        ]
+      ],
+      "measured_at": 213298.773774697,
+      "gaps_ms": [
+        11.465137999039143,
+        10.95426399842836,
+        11.038041993742809,
+        10.353863995987922,
+        10.447569016832858,
+        10.446960979606956,
+        10.593556013191119,
+        11.123681993922219,
+        14.67165700159967,
+        78.62154999747872
+      ],
+      "max_gap_ms": 78.62154999747872,
+      "records": 2,
+      "state": "complete",
+      "execution": {
+        "worker_pid": 42723,
+        "execution": "spawned_subprocess",
+        "process_model": "persistent_spawn_pool",
+        "input_bytes": 374,
+        "source_bytes": 1092,
+        "exit_status": 0
+      },
+      "rss": 659386368,
+      "gc_enabled": true,
+      "gc_count": [
+        3,
+        0,
+        0
+      ]
+    }
+  ],
+  "gc_events": [
+    {
+      "phase": "unclean-after-actual-prefix",
+      "generation": 1,
+      "elapsed_ms": 0.004606990842148662,
+      "collected": 0,
+      "uncollectable": 0,
+      "at": 213293.798896517
+    },
+    {
+      "phase": "unclean-after-actual-prefix",
+      "generation": 1,
+      "elapsed_ms": 0.0030479859560728073,
+      "collected": 0,
+      "uncollectable": 0,
+      "at": 213293.800205218
+    },
+    {
+      "phase": "unclean-after-actual-prefix",
+      "generation": 1,
+      "elapsed_ms": 0.0020129955373704433,
+      "collected": 0,
+      "uncollectable": 0,
+      "at": 213293.801381278
+    },
+    {
+      "phase": "unclean-after-actual-prefix",
+      "generation": 1,
+      "elapsed_ms": 0.0014129909686744213,
+      "collected": 0,
+      "uncollectable": 0,
+      "at": 213293.802407455
+    },
+    {
+      "phase": "unclean-after-actual-prefix",
+      "generation": 1,
+      "elapsed_ms": 0.0016579870134592056,
+      "collected": 0,
+      "uncollectable": 0,
+      "at": 213293.803859799
+    },
+    {
+      "phase": "unclean-after-actual-prefix",
+      "generation": 1,
+      "elapsed_ms": 0.0020609877537935972,
+      "collected": 0,
+      "uncollectable": 0,
+      "at": 213293.805728274
+    },
+    {
+      "phase": "unclean-after-actual-prefix",
+      "generation": 1,
+      "elapsed_ms": 0.0016310077626258135,
+      "collected": 0,
+      "uncollectable": 0,
+      "at": 213293.807396582
+    },
+    {
+      "phase": "unclean-after-actual-prefix",
+      "generation": 1,
+      "elapsed_ms": 0.0014769902918487787,
+      "collected": 0,
+      "uncollectable": 0,
+      "at": 213293.809178809
+    },
+    {
+      "phase": "unclean-after-actual-prefix",
+      "generation": 1,
+      "elapsed_ms": 0.0013519893400371075,
+      "collected": 0,
+      "uncollectable": 0,
+      "at": 213293.810822674
+    },
+    {
+      "phase": "unclean-after-actual-prefix",
+      "generation": 1,
+      "elapsed_ms": 0.0015049881767481565,
+      "collected": 0,
+      "uncollectable": 0,
+      "at": 213293.812739224
+    },
+    {
+      "phase": "unclean-after-actual-prefix",
+      "generation": 1,
+      "elapsed_ms": 0.0020779843907803297,
+      "collected": 0,
+      "uncollectable": 0,
+      "at": 213293.814667298
+    },
+    {
+      "phase": "unclean-after-actual-prefix",
+      "generation": 1,
+      "elapsed_ms": 0.001895008608698845,
+      "collected": 0,
+      "uncollectable": 0,
+      "at": 213293.816609823
+    },
+    {
+      "phase": "unclean-after-actual-prefix",
+      "generation": 1,
+      "elapsed_ms": 0.0012099917512387037,
+      "collected": 0,
+      "uncollectable": 0,
+      "at": 213293.817761414
+    },
+    {
+      "phase": "unclean-after-actual-prefix",
+      "generation": 1,
+      "elapsed_ms": 0.001307984348386526,
+      "collected": 0,
+      "uncollectable": 0,
+      "at": 213293.819164914
+    },
+    {
+      "phase": "unclean-after-actual-prefix",
+      "generation": 1,
+      "elapsed_ms": 0.0012350210454314947,
+      "collected": 0,
+      "uncollectable": 0,
+      "at": 213293.820440798
+    },
+    {
+      "phase": "unclean-after-actual-prefix",
+      "generation": 1,
+      "elapsed_ms": 0.0015709956642240286,
+      "collected": 0,
+      "uncollectable": 0,
+      "at": 213293.821981419
+    },
+    {
+      "phase": "unclean-after-actual-prefix",
+      "generation": 1,
+      "elapsed_ms": 0.0014190154615789652,
+      "collected": 0,
+      "uncollectable": 0,
+      "at": 213293.823550539
+    },
+    {
+      "phase": "unclean-after-actual-prefix",
+      "generation": 1,
+      "elapsed_ms": 0.0013259996194392443,
+      "collected": 0,
+      "uncollectable": 0,
+      "at": 213293.8248719
+    },
+    {
+      "phase": "unclean-after-actual-prefix",
+      "generation": 1,
+      "elapsed_ms": 0.0010390067473053932,
+      "collected": 0,
+      "uncollectable": 0,
+      "at": 213293.826053802
+    },
+    {
+      "phase": "unclean-after-actual-prefix",
+      "generation": 1,
+      "elapsed_ms": 0.0011599913705140352,
+      "collected": 0,
+      "uncollectable": 0,
+      "at": 213293.827419946
+    },
+    {
+      "phase": "unclean-after-actual-prefix",
+      "generation": 1,
+      "elapsed_ms": 0.0014750112313777208,
+      "collected": 0,
+      "uncollectable": 0,
+      "at": 213293.82845907
+    },
+    {
+      "phase": "unclean-after-actual-prefix",
+      "generation": 1,
+      "elapsed_ms": 0.001828011590987444,
+      "collected": 0,
+      "uncollectable": 0,
+      "at": 213293.830242738
+    },
+    {
+      "phase": "unclean-after-actual-prefix",
+      "generation": 1,
+      "elapsed_ms": 0.0012399978004395962,
+      "collected": 0,
+      "uncollectable": 0,
+      "at": 213293.831100466
+    },
+    {
+      "phase": "unclean-after-actual-prefix",
+      "generation": 1,
+      "elapsed_ms": 0.0009069917723536491,
+      "collected": 0,
+      "uncollectable": 0,
+      "at": 213293.831908823
+    },
+    {
+      "phase": "unclean-after-actual-prefix",
+      "generation": 1,
+      "elapsed_ms": 0.0013590033631771803,
+      "collected": 0,
+      "uncollectable": 0,
+      "at": 213293.833094445
+    },
+    {
+      "phase": "unclean-after-actual-prefix",
+      "generation": 1,
+      "elapsed_ms": 0.004556990461423993,
+      "collected": 0,
+      "uncollectable": 0,
+      "at": 213294.993424011
+    },
+    {
+      "phase": "unclean-after-actual-prefix",
+      "generation": 1,
+      "elapsed_ms": 0.005361012881621718,
+      "collected": 0,
+      "uncollectable": 0,
+      "at": 213295.182791605
+    },
+    {
+      "phase": "unclean-after-actual-prefix",
+      "generation": 1,
+      "elapsed_ms": 9.78545201360248,
+      "collected": 442,
+      "uncollectable": 0,
+      "at": 213295.243904744
+    },
+    {
+      "phase": "precondition-collection",
+      "generation": 2,
+      "elapsed_ms": 1805.836179992184,
+      "collected": 940075,
+      "uncollectable": 0,
+      "at": 213297.17302082
+    },
+    {
+      "phase": "after-fixture-collection",
+      "generation": 1,
+      "elapsed_ms": 83.24207697296515,
+      "collected": 0,
+      "uncollectable": 0,
+      "at": 213297.277122104
+    },
+    {
+      "phase": "after-fixture-collection",
+      "generation": 1,
+      "elapsed_ms": 0.002643006155267358,
+      "collected": 0,
+      "uncollectable": 0,
+      "at": 213297.277922576
+    },
+    {
+      "phase": "after-fixture-collection",
+      "generation": 1,
+      "elapsed_ms": 0.001648004399612546,
+      "collected": 0,
+      "uncollectable": 0,
+      "at": 213297.278797999
+    },
+    {
+      "phase": "after-fixture-collection",
+      "generation": 1,
+      "elapsed_ms": 0.0013429962564259768,
+      "collected": 0,
+      "uncollectable": 0,
+      "at": 213297.279550423
+    },
+    {
+      "phase": "after-fixture-collection",
+      "generation": 1,
+      "elapsed_ms": 0.0009909854270517826,
+      "collected": 0,
+      "uncollectable": 0,
+      "at": 213297.280433399
+    },
+    {
+      "phase": "after-fixture-collection",
+      "generation": 1,
+      "elapsed_ms": 0.0019079889170825481,
+      "collected": 0,
+      "uncollectable": 0,
+      "at": 213297.281429292
+    },
+    {
+      "phase": "after-fixture-collection",
+      "generation": 1,
+      "elapsed_ms": 0.0013139797374606133,
+      "collected": 0,
+      "uncollectable": 0,
+      "at": 213297.282171129
+    },
+    {
+      "phase": "after-fixture-collection",
+      "generation": 1,
+      "elapsed_ms": 0.0010179937817156315,
+      "collected": 0,
+      "uncollectable": 0,
+      "at": 213297.282984792
+    },
+    {
+      "phase": "after-fixture-collection",
+      "generation": 1,
+      "elapsed_ms": 0.0010189833119511604,
+      "collected": 0,
+      "uncollectable": 0,
+      "at": 213297.284085125
+    },
+    {
+      "phase": "after-fixture-collection",
+      "generation": 1,
+      "elapsed_ms": 0.0008789938874542713,
+      "collected": 0,
+      "uncollectable": 0,
+      "at": 213297.285059496
+    },
+    {
+      "phase": "after-fixture-collection",
+      "generation": 1,
+      "elapsed_ms": 0.0008360075298696756,
+      "collected": 0,
+      "uncollectable": 0,
+      "at": 213297.285981235
+    },
+    {
+      "phase": "after-fixture-collection",
+      "generation": 1,
+      "elapsed_ms": 0.001580017851665616,
+      "collected": 0,
+      "uncollectable": 0,
+      "at": 213297.287100437
+    },
+    {
+      "phase": "after-fixture-collection",
+      "generation": 1,
+      "elapsed_ms": 0.001401000190526247,
+      "collected": 0,
+      "uncollectable": 0,
+      "at": 213297.288231483
+    },
+    {
+      "phase": "after-fixture-collection",
+      "generation": 1,
+      "elapsed_ms": 0.0010280054993927479,
+      "collected": 0,
+      "uncollectable": 0,
+      "at": 213297.289223216
+    },
+    {
+      "phase": "after-fixture-collection",
+      "generation": 1,
+      "elapsed_ms": 0.0010320218279957771,
+      "collected": 0,
+      "uncollectable": 0,
+      "at": 213297.290155474
+    },
+    {
+      "phase": "after-fixture-collection",
+      "generation": 1,
+      "elapsed_ms": 0.0008619972504675388,
+      "collected": 0,
+      "uncollectable": 0,
+      "at": 213297.291088744
+    },
+    {
+      "phase": "after-fixture-collection",
+      "generation": 1,
+      "elapsed_ms": 0.0013059761840850115,
+      "collected": 0,
+      "uncollectable": 0,
+      "at": 213297.292093412
+    },
+    {
+      "phase": "after-fixture-collection",
+      "generation": 1,
+      "elapsed_ms": 0.001047999830916524,
+      "collected": 0,
+      "uncollectable": 0,
+      "at": 213297.293070078
+    },
+    {
+      "phase": "after-fixture-collection",
+      "generation": 1,
+      "elapsed_ms": 0.0008909846656024456,
+      "collected": 0,
+      "uncollectable": 0,
+      "at": 213297.294018577
+    },
+    {
+      "phase": "after-fixture-collection",
+      "generation": 1,
+      "elapsed_ms": 0.0010700023267418146,
+      "collected": 0,
+      "uncollectable": 0,
+      "at": 213297.294987052
+    },
+    {
+      "phase": "after-fixture-collection",
+      "generation": 1,
+      "elapsed_ms": 0.00104197533801198,
+      "collected": 0,
+      "uncollectable": 0,
+      "at": 213297.295971739
+    },
+    {
+      "phase": "after-fixture-collection",
+      "generation": 1,
+      "elapsed_ms": 0.0019500148482620716,
+      "collected": 0,
+      "uncollectable": 0,
+      "at": 213297.29768111
+    },
+    {
+      "phase": "after-fixture-collection",
+      "generation": 1,
+      "elapsed_ms": 0.0007759954314678907,
+      "collected": 0,
+      "uncollectable": 0,
+      "at": 213297.298531818
+    },
+    {
+      "phase": "after-fixture-collection",
+      "generation": 1,
+      "elapsed_ms": 0.0010399962775409222,
+      "collected": 0,
+      "uncollectable": 0,
+      "at": 213297.299442966
+    },
+    {
+      "phase": "after-fixture-collection",
+      "generation": 1,
+      "elapsed_ms": 0.0011250085663050413,
+      "collected": 0,
+      "uncollectable": 0,
+      "at": 213297.300419345
+    },
+    {
+      "phase": "after-fixture-collection",
+      "generation": 1,
+      "elapsed_ms": 0.004132016329094768,
+      "collected": 0,
+      "uncollectable": 0,
+      "at": 213298.486883703
+    },
+    {
+      "phase": "after-fixture-collection",
+      "generation": 1,
+      "elapsed_ms": 0.005498004611581564,
+      "collected": 0,
+      "uncollectable": 0,
+      "at": 213298.639685787
+    },
+    {
+      "phase": "after-fixture-collection",
+      "generation": 1,
+      "elapsed_ms": 0.002615997800603509,
+      "collected": 0,
+      "uncollectable": 0,
+      "at": 213298.672305436
+    }
+  ],
+  "source_hash_times": [
+    {
+      "phase": "unclean-after-actual-prefix",
+      "started": 213294.981239571,
+      "finished": 213295.02905859,
+      "thread_cpu_ms": 47.11298600000191,
+      "thread": 140248199875456
+    },
+    {
+      "phase": "unclean-after-actual-prefix",
+      "started": 213295.170183153,
+      "finished": 213295.228141281,
+      "thread_cpu_ms": 55.97281400002885,
+      "thread": 140248199875456
+    },
+    {
+      "phase": "unclean-after-actual-prefix",
+      "started": 213295.228255396,
+      "finished": 213295.278518404,
+      "thread_cpu_ms": 49.61483700003555,
+      "thread": 140248199875456
+    },
+    {
+      "phase": "after-fixture-collection",
+      "started": 213298.477081661,
+      "finished": 213298.516884841,
+      "thread_cpu_ms": 39.200282000024345,
+      "thread": 140248199875456
+    },
+    {
+      "phase": "after-fixture-collection",
+      "started": 213298.631710643,
+      "finished": 213298.666991549,
+      "thread_cpu_ms": 34.73449000000528,
+      "thread": 140248199875456
+    },
+    {
+      "phase": "after-fixture-collection",
+      "started": 213298.667103036,
+      "finished": 213298.699068832,
+      "thread_cpu_ms": 31.419980000009673,
+      "thread": 140248199875456
+    }
+  ],
+  "publication_times": [
+    {
+      "phase": "unclean-after-actual-prefix",
+      "started": 213295.170170808,
+      "finished": 213295.228247247,
+      "thread_cpu_ms": 56.08833200000163,
+      "thread": 140248199875456
+    },
+    {
+      "phase": "unclean-after-actual-prefix",
+      "started": 213295.228252131,
+      "finished": 213295.278824383,
+      "thread_cpu_ms": 49.92151900000863,
+      "thread": 140248199875456
+    },
+    {
+      "phase": "after-fixture-collection",
+      "started": 213298.631695437,
+      "finished": 213298.667096052,
+      "thread_cpu_ms": 34.85094399997024,
+      "thread": 140248199875456
+    },
+    {
+      "phase": "after-fixture-collection",
+      "started": 213298.667099819,
+      "finished": 213298.699353307,
+      "thread_cpu_ms": 31.705326999997396,
+      "thread": 140248199875456
+    }
+  ],
+  "held_future_test_cases": 3223,
+  "scope": "Not mandatory full regression or proof of the original unobserved GC event. Both native operations and any assertion failures are retained. Prefix replay plus controlled GC preconditioning is for causal diagnosis only."
+}

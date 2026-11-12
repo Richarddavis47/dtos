@@ -1,0 +1,386 @@
+/usr/local/lib/python3.14/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+  from starlette.testclient import TestClient as TestClient  # noqa
+test_running_optional_work_is_reaped_within_shutdown_bound (tests.test_fois_process_execution.AbandonedComputeShutdownTests.test_running_optional_work_is_reaped_within_shutdown_bound) ... ok
+test_cancel_during_scratch_preparation_drains_writer_before_cleanup (tests.test_fois_process_execution.FOISProcessExecutionTests.test_cancel_during_scratch_preparation_drains_writer_before_cleanup) ... INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+ok
+INFO:dtos.attribution:diagnostic_boundary
+test_cancelled_generation_stops_writer_before_removing_scratch (tests.test_fois_process_execution.FOISProcessExecutionTests.test_cancelled_generation_stops_writer_before_removing_scratch) ... INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+ok
+test_compact_input_retains_only_owned_brain_assets (tests.test_fois_process_execution.FOISProcessExecutionTests.test_compact_input_retains_only_owned_brain_assets) ... ok
+test_idle_retirement_preserves_full_warm_interval (tests.test_fois_process_execution.FOISProcessExecutionTests.test_idle_retirement_preserves_full_warm_interval) ... INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+ok
+test_idle_retirement_reaps_process_and_recreates_identical_scores (tests.test_fois_process_execution.FOISProcessExecutionTests.test_idle_retirement_reaps_process_and_recreates_identical_scores) ... INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+ok
+test_idle_worker_can_be_reaped_and_restored_around_visual_work (tests.test_fois_process_execution.FOISProcessExecutionTests.test_idle_worker_can_be_reaped_and_restored_around_visual_work) ... INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+ok
+test_membership_count_does_not_create_compute_processes (tests.test_fois_process_execution.FOISProcessExecutionTests.test_membership_count_does_not_create_compute_processes) ... INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.fois:FOIS generation complete: model=5.1 records=0 duration_ms=2.262
+ok
+test_missing_or_cross_league_cache_fails_without_publication (tests.test_fois_process_execution.FOISProcessExecutionTests.test_missing_or_cross_league_cache_fails_without_publication) ... INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+ERROR:dtos.fois:FOIS generation failed: model=5.1
+Traceback (most recent call last):
+  File "/app/src/core/fois/service.py", line 101, in generate
+    scores, canonical, execution_metrics = await self._isolated_executor(
+                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        data, self.repository,
+        ^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/app/src/core/fois/process_execution.py", line 419, in generate_fois_isolated
+    raise RuntimeError("FOIS canonical cache input is unavailable.")
+RuntimeError: FOIS canonical cache input is unavailable.
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+ERROR:dtos.fois:FOIS generation failed: model=5.1
+concurrent.futures.process._RemoteTraceback: 
+"""
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.14/concurrent/futures/process.py", line 254, in _process_worker
+    r = call_item.fn(*call_item.args, **call_item.kwargs)
+  File "/app/src/core/fois/process_execution.py", line 289, in _compute_fois_payload
+    data, source_bytes = _load_compact_fois_input(
+                         ~~~~~~~~~~~~~~~~~~~~~~~~^
+        Path(payload["cache_file"]), league_id,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/app/src/core/fois/process_execution.py", line 271, in _load_compact_fois_input
+    raise RuntimeError("FOIS canonical cache league identity mismatch.")
+RuntimeError: FOIS canonical cache league identity mismatch.
+"""
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/app/src/core/fois/service.py", line 101, in generate
+    scores, canonical, execution_metrics = await self._isolated_executor(
+                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        data, self.repository,
+        ^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/app/src/core/fois/process_execution.py", line 452, in generate_fois_isolated
+    result = await asyncio.wait_for(
+             ^^^^^^^^^^^^^^^^^^^^^^^
+    ...<2 lines>...
+    )
+    ^
+  File "/usr/local/lib/python3.14/asyncio/tasks.py", line 488, in wait_for
+    return await fut
+           ^^^^^^^^^
+RuntimeError: FOIS canonical cache league identity mismatch.
+INFO:dtos.attribution:diagnostic_boundary
+ok
+test_parent_sends_only_bounded_cache_control_contract (tests.test_fois_process_execution.FOISProcessExecutionTests.test_parent_sends_only_bounded_cache_control_contract) ... INFO:dtos.attribution:diagnostic_boundary
+WARNING:asyncio:Executing <Task pending name='Task-57' coro=<FOISProcessExecutionTests.test_parent_sends_only_bounded_cache_control_contract() running at /app/tests/test_fois_process_execution.py:395> wait_for=<Future pending cb=[shield.<locals>._outer_done_callback() at /usr/local/lib/python3.14/asyncio/tasks.py:991, Task.task_wakeup()] created at /usr/local/lib/python3.14/asyncio/base_events.py:459> cb=[_run_until_complete_cb() at /usr/local/lib/python3.14/asyncio/base_events.py:181] created at /usr/local/lib/python3.14/asyncio/runners.py:109> took 0.234 seconds
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.fois:FOIS generation complete: model=5.1 records=2 duration_ms=1459.122
+INFO:dtos.attribution:diagnostic_boundary
+ok
+test_pending_running_failed_and_cancelled_jobs_are_accounted (tests.test_fois_process_execution.FOISProcessExecutionTests.test_pending_running_failed_and_cancelled_jobs_are_accounted) ... INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+ok
+test_persistent_worker_matches_thread_semantics_and_is_reaped_on_shutdown (tests.test_fois_process_execution.FOISProcessExecutionTests.test_persistent_worker_matches_thread_semantics_and_is_reaped_on_shutdown) ... INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.fois:FOIS franchise evaluated: model=5.1 league=fois-process-fixture franchise=fois-process-fixture:franchise:1 window=0-0 status=provisional
+INFO:dtos.fois:FOIS franchise evaluated: model=5.1 league=fois-process-fixture franchise=fois-process-fixture:franchise:2 window=0-0 status=provisional
+INFO:dtos.fois:FOIS generation complete: model=5.1 records=2 duration_ms=28.477
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.fois:FOIS generation complete: model=5.1 records=2 duration_ms=1210.286
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.fois:FOIS generation complete: model=5.1 records=2 duration_ms=71.164
+INFO:dtos.attribution:diagnostic_boundary
+ok
+test_prewarmed_worker_keeps_event_loop_responsive_with_large_irrelevant_data (tests.test_fois_process_execution.FOISProcessExecutionTests.test_prewarmed_worker_keeps_event_loop_responsive_with_large_irrelevant_data) ... INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.fois:FOIS generation complete: model=5.1 records=2 duration_ms=131.166
+INFO:dtos.attribution:diagnostic_boundary
+ok
+test_process_failure_preserves_failed_state (tests.test_fois_process_execution.FOISProcessExecutionTests.test_process_failure_preserves_failed_state) ... ERROR:dtos.fois:FOIS generation failed: model=5.1
+Traceback (most recent call last):
+  File "/app/src/core/fois/service.py", line 101, in generate
+    scores, canonical, execution_metrics = await self._isolated_executor(
+                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        data, self.repository,
+        ^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/app/tests/test_fois_process_execution.py", line 432, in broken
+    raise RuntimeError("isolated failure")
+RuntimeError: isolated failure
+ok
+test_validation_progress_io_cannot_block_request_event_loop (tests.test_fois_process_execution.FOISProcessExecutionTests.test_validation_progress_io_cannot_block_request_event_loop) ... INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+INFO:dtos.attribution:diagnostic_boundary
+ok
+INFO:dtos.attribution:diagnostic_boundary
+test_bounded_output_and_deterministic_order_without_new_state_owners (tests.test_franchise_trade_progress.FranchiseTradeProgressTests.test_bounded_output_and_deterministic_order_without_new_state_owners) ... ok
+test_complete_empty_selected_period_supports_zero_despite_earlier_chain_gap (tests.test_franchise_trade_progress.FranchiseTradeProgressTests.test_complete_empty_selected_period_supports_zero_despite_earlier_chain_gap) ... ok
+test_completed_empty_helper_remains_backwards_compatible (tests.test_franchise_trade_progress.FranchiseTradeProgressTests.test_completed_empty_helper_remains_backwards_compatible) ... ok
+test_detail_cap_is_bounded_without_changing_transfer_totals (tests.test_franchise_trade_progress.FranchiseTradeProgressTests.test_detail_cap_is_bounded_without_changing_transfer_totals) ... ok
+test_duplicate_events_and_duplicate_pick_legs_are_not_recounted (tests.test_franchise_trade_progress.FranchiseTradeProgressTests.test_duplicate_events_and_duplicate_pick_legs_are_not_recounted) ... ok
+test_manager_change_cannot_change_franchise_trade_summary (tests.test_franchise_trade_progress.FranchiseTradeProgressTests.test_manager_change_cannot_change_franchise_trade_summary) ... ok
+test_other_league_cannot_receive_day_movements (tests.test_franchise_trade_progress.FranchiseTradeProgressTests.test_other_league_cannot_receive_day_movements) ... ok
+test_partial_empty_and_absent_selected_periods_remain_unknown (tests.test_franchise_trade_progress.FranchiseTradeProgressTests.test_partial_empty_and_absent_selected_periods_remain_unknown) ... ok
+test_partial_pick_evidence_does_not_hide_supported_players (tests.test_franchise_trade_progress.FranchiseTradeProgressTests.test_partial_pick_evidence_does_not_hide_supported_players) ... ok
+test_repeated_player_and_pick_movements_remain_in_both_gross_directions (tests.test_franchise_trade_progress.FranchiseTradeProgressTests.test_repeated_player_and_pick_movements_remain_in_both_gross_directions) ... ok
+test_retained_source_replay_all_movements_and_conversion_boundary (tests.test_franchise_trade_progress.FranchiseTradeProgressTests.test_retained_source_replay_all_movements_and_conversion_boundary) ... ok
+test_same_round_exact_picks_keep_own_and_acquired_origins_separate (tests.test_franchise_trade_progress.FranchiseTradeProgressTests.test_same_round_exact_picks_keep_own_and_acquired_origins_separate) ... ok
+test_season_selection_and_pagination_agree_and_preserve_scope (tests.test_franchise_trade_progress.FranchiseTradeProgressTests.test_season_selection_and_pagination_agree_and_preserve_scope) ... INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:2?season=2024 "HTTP/1.1 200 OK"
+ok
+test_source_change_withholds_every_movement_family (tests.test_franchise_trade_progress.FranchiseTradeProgressTests.test_source_change_withholds_every_movement_family) ... ok
+test_statuses_waivers_and_corrections_never_enter_trade_movements (tests.test_franchise_trade_progress.FranchiseTradeProgressTests.test_statuses_waivers_and_corrections_never_enter_trade_movements) ... ok
+test_unknown_completion_date_does_not_exclude_supported_season_movements (tests.test_franchise_trade_progress.FranchiseTradeProgressTests.test_unknown_completion_date_does_not_exclude_supported_season_movements) ... ok
+test_complete_observed_empty_scope_can_support_zero (tests.test_completed_trade_observations.CompletedTradeObservationTests.test_complete_observed_empty_scope_can_support_zero) ... ok
+test_conflicting_exact_pick_directions_do_not_invent_a_transfer (tests.test_completed_trade_observations.CompletedTradeObservationTests.test_conflicting_exact_pick_directions_do_not_invent_a_transfer) ... ok
+test_empty_partial_history_is_unknown_not_a_zero (tests.test_completed_trade_observations.CompletedTradeObservationTests.test_empty_partial_history_is_unknown_not_a_zero) ... INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:2 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:2 "HTTP/1.1 200 OK"
+ok
+test_future_completion_cannot_establish_an_observed_completed_trade (tests.test_completed_trade_observations.CompletedTradeObservationTests.test_future_completion_cannot_establish_an_observed_completed_trade) ... ok
+test_incomplete_exact_pick_identity_keeps_only_supported_lower_bounds (tests.test_completed_trade_observations.CompletedTradeObservationTests.test_incomplete_exact_pick_identity_keeps_only_supported_lower_bounds) ... INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:2 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:2 "HTTP/1.1 200 OK"
+ok
+test_manager_change_never_backdates_counts_to_current_manager (tests.test_completed_trade_observations.CompletedTradeObservationTests.test_manager_change_never_backdates_counts_to_current_manager) ... INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:2 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:2 "HTTP/1.1 200 OK"
+ok
+test_multiple_firsts_and_multiteam_directions_count_assets_and_deals_separately (tests.test_completed_trade_observations.CompletedTradeObservationTests.test_multiple_firsts_and_multiteam_directions_count_assets_and_deals_separately) ... INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:2 "HTTP/1.1 200 OK"
+ok
+test_other_league_never_receives_day_trade_references (tests.test_completed_trade_observations.CompletedTradeObservationTests.test_other_league_never_receives_day_trade_references) ... INFO:httpx:HTTP Request: GET http://testserver/history/team/1319750579458686976:franchise:4 "HTTP/1.1 200 OK"
+ok
+test_pagination_does_not_recount_a_visible_page_as_the_sample (tests.test_completed_trade_observations.CompletedTradeObservationTests.test_pagination_does_not_recount_a_visible_page_as_the_sample) ... ok
+test_pending_rejected_waivers_and_corrections_are_not_completed_trades (tests.test_completed_trade_observations.CompletedTradeObservationTests.test_pending_rejected_waivers_and_corrections_are_not_completed_trades) ... ok
+test_reads_do_not_build_intelligence_or_write_history (tests.test_completed_trade_observations.CompletedTradeObservationTests.test_reads_do_not_build_intelligence_or_write_history) ... INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:4 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:4 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:4 "HTTP/1.1 200 OK"
+ok
+test_retained_day_counts_match_original_directed_consideration (tests.test_completed_trade_observations.CompletedTradeObservationTests.test_retained_day_counts_match_original_directed_consideration) ... INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:4 "HTTP/1.1 200 OK"
+ok
+test_same_exact_pick_in_later_trade_counts_a_separate_directed_transfer (tests.test_completed_trade_observations.CompletedTradeObservationTests.test_same_exact_pick_in_later_trade_counts_a_separate_directed_transfer) ... ok
+test_source_change_withholds_the_whole_numeric_summary (tests.test_completed_trade_observations.CompletedTradeObservationTests.test_source_change_withholds_the_whole_numeric_summary) ... ok
+test_supported_zero_is_only_a_zero_within_observed_trades (tests.test_completed_trade_observations.CompletedTradeObservationTests.test_supported_zero_is_only_a_zero_within_observed_trades) ... INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:2 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:2 "HTTP/1.1 200 OK"
+ok
+test_undated_completed_trade_is_not_given_a_creation_based_window (tests.test_completed_trade_observations.CompletedTradeObservationTests.test_undated_completed_trade_is_not_given_a_creation_based_window) ... INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:2 "HTTP/1.1 200 OK"
+ok
+test_unlinked_source_season_is_not_current_franchise_behavior (tests.test_completed_trade_observations.CompletedTradeObservationTests.test_unlinked_source_season_is_not_current_franchise_behavior) ... INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:2 "HTTP/1.1 200 OK"
+ok
+test_checkpoint_retains_events_without_claiming_acquired_weeks (tests.test_franchise_timeline_coverage.FranchiseTimelineCoverageTests.test_checkpoint_retains_events_without_claiming_acquired_weeks) ... INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:1 "HTTP/1.1 200 OK"
+ok
+test_complete_closed_season_can_support_no_completed_transactions (tests.test_franchise_timeline_coverage.FranchiseTimelineCoverageTests.test_complete_closed_season_can_support_no_completed_transactions) ... INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:1 "HTTP/1.1 200 OK"
+ok
+test_completed_waiver_add_drop_and_zero_faab_transfer_remain_factual (tests.test_franchise_timeline_coverage.FranchiseTimelineCoverageTests.test_completed_waiver_add_drop_and_zero_faab_transfer_remain_factual) ... INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:1 "HTTP/1.1 200 OK"
+ok
+test_conflicting_retained_identities_withhold_movements (tests.test_franchise_timeline_coverage.FranchiseTimelineCoverageTests.test_conflicting_retained_identities_withhold_movements) ... ok
+test_current_activity_list_is_not_full_season_acquisition (tests.test_franchise_timeline_coverage.FranchiseTimelineCoverageTests.test_current_activity_list_is_not_full_season_acquisition) ... ok
+test_current_or_old_calendar_age_does_not_imply_complete (tests.test_franchise_timeline_coverage.FranchiseTimelineCoverageTests.test_current_or_old_calendar_age_does_not_imply_complete) ... INFO:httpx:HTTP Request: GET http://testserver/api/history/franchises/1 "HTTP/1.1 200 OK"
+ok
+test_discovered_uncached_season_is_unknown_not_empty (tests.test_franchise_timeline_coverage.FranchiseTimelineCoverageTests.test_discovered_uncached_season_is_unknown_not_empty) ... INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:1 "HTTP/1.1 200 OK"
+ok
+test_draft_selection_preserves_original_distinct_from_selecting_roster (tests.test_franchise_timeline_coverage.FranchiseTimelineCoverageTests.test_draft_selection_preserves_original_distinct_from_selecting_roster) ... INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:1 "HTTP/1.1 200 OK"
+ok
+test_duplicate_transactions_are_shown_once (tests.test_franchise_timeline_coverage.FranchiseTimelineCoverageTests.test_duplicate_transactions_are_shown_once) ... INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:1 "HTTP/1.1 200 OK"
+ok
+test_failed_rejected_pending_and_unknown_are_not_completed_movements (tests.test_franchise_timeline_coverage.FranchiseTimelineCoverageTests.test_failed_rejected_pending_and_unknown_are_not_completed_movements) ... INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:1 "HTTP/1.1 200 OK"
+ok
+test_foreign_league_context_and_invalid_roster_never_leak (tests.test_franchise_timeline_coverage.FranchiseTimelineCoverageTests.test_foreign_league_context_and_invalid_roster_never_leak) ... INFO:httpx:HTTP Request: GET http://testserver/history/team/1319750579458686976:franchise:1 "HTTP/1.1 404 Not Found"
+INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:invalid "HTTP/1.1 404 Not Found"
+INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:1 "HTTP/1.1 200 OK"
+ok
+test_malformed_consideration_does_not_crash_or_become_a_movement (tests.test_franchise_timeline_coverage.FranchiseTimelineCoverageTests.test_malformed_consideration_does_not_crash_or_become_a_movement) ... INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/transactions?scope=all_history&season=2024&team=1 "HTTP/1.1 200 OK"
+ok
+test_missing_and_malformed_source_periods_have_specific_reasons (tests.test_franchise_timeline_coverage.FranchiseTimelineCoverageTests.test_missing_and_malformed_source_periods_have_specific_reasons) ... INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:1 "HTTP/1.1 200 OK"
+ok
+test_missing_continuation_keeps_completed_source_facts_without_attribution (tests.test_franchise_timeline_coverage.FranchiseTimelineCoverageTests.test_missing_continuation_keeps_completed_source_facts_without_attribution) ... INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:1 "HTTP/1.1 200 OK"
+ok
+test_missing_historical_identity_does_not_hide_supported_transactions (tests.test_franchise_timeline_coverage.FranchiseTimelineCoverageTests.test_missing_historical_identity_does_not_hide_supported_transactions) ... INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:1 "HTTP/1.1 200 OK"
+ok
+test_missing_traded_pick_year_never_uses_transaction_season (tests.test_franchise_timeline_coverage.FranchiseTimelineCoverageTests.test_missing_traded_pick_year_never_uses_transaction_season) ... INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/transactions?scope=all_history&season=2024 "HTTP/1.1 200 OK"
+ok
+test_ordinary_reads_do_not_build_asset_graph_call_provider_or_regrade (tests.test_franchise_timeline_coverage.FranchiseTimelineCoverageTests.test_ordinary_reads_do_not_build_asset_graph_call_provider_or_regrade) ... ok
+test_ownership_changes_are_season_observations_not_current_manager_credit (tests.test_franchise_timeline_coverage.FranchiseTimelineCoverageTests.test_ownership_changes_are_season_observations_not_current_manager_credit) ... INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:1 "HTTP/1.1 200 OK"
+ok
+test_partial_day_and_arkham_retained_events_reach_rendered_page (tests.test_franchise_timeline_coverage.FranchiseTimelineCoverageTests.test_partial_day_and_arkham_retained_events_reach_rendered_page) ... INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:3 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/history/team/1319750579458686976:franchise:1 "HTTP/1.1 200 OK"
+ok
+test_pick_original_franchise_is_not_its_owner_or_a_participant (tests.test_franchise_timeline_coverage.FranchiseTimelineCoverageTests.test_pick_original_franchise_is_not_its_owner_or_a_participant) ... INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:1 "HTTP/1.1 200 OK"
+ok
+test_prepared_current_buckets_are_admitted_but_activity_lists_are_not (tests.test_franchise_timeline_coverage.FranchiseTimelineCoverageTests.test_prepared_current_buckets_are_admitted_but_activity_lists_are_not) ... ok
+test_source_change_withholds_complete_coverage_and_empty_conclusion (tests.test_franchise_timeline_coverage.FranchiseTimelineCoverageTests.test_source_change_withholds_complete_coverage_and_empty_conclusion) ... ok
+test_unparsed_or_unknown_records_cannot_establish_no_activity (tests.test_franchise_timeline_coverage.FranchiseTimelineCoverageTests.test_unparsed_or_unknown_records_cannot_establish_no_activity) ... INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:1 "HTTP/1.1 200 OK"
+ok
+test_wrong_declared_source_season_is_unknown_without_hiding_other_seasons (tests.test_franchise_timeline_coverage.FranchiseTimelineCoverageTests.test_wrong_declared_source_season_is_unknown_without_hiding_other_seasons) ... INFO:httpx:HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:1 "HTTP/1.1 200 OK"
+ok
+test_current_cache_restore_and_eviction_reopening_preserve_followthrough (tests.test_history_followthrough.CurrentHistoryFollowThroughTests.test_current_cache_restore_and_eviction_reopening_preserve_followthrough) ... {"timestamp":"2026-11-12T18:11:49.675803+00:00","level":"INFO","logger":"dtos.attribution","message":"diagnostic_boundary","request_id":"activity-ebd5d90eea184e99996372007fe700a7","event":"diagnostic_boundary","diagnostic":{"schema":"request-attribution-v1","event_index":1,"event_limit":512,"dropped_so_far":0,"origin_request_id":null,"name":"runtime_hydration","span_id":1,"parent_span_id":null,"boundary":"started","timestamp":"2026-11-12T18:11:49.675754+00:00","elapsed_from_trace_ms":0.058,"duration_ms":0.019,"queue_dropped_record_count":0}}
+{"timestamp":"2026-11-12T18:11:49.683002+00:00","level":"INFO","logger":"dtos.attribution","message":"diagnostic_boundary","request_id":"activity-ebd5d90eea184e99996372007fe700a7","event":"diagnostic_boundary","diagnostic":{"schema":"request-attribution-v1","event_index":2,"event_limit":512,"dropped_so_far":0,"origin_request_id":null,"name":"lifecycle_phase","span_id":2,"parent_span_id":1,"boundary":"started","timestamp":"2026-11-12T18:11:49.682965+00:00","elapsed_from_trace_ms":7.268,"duration_ms":0.003,"queue_dropped_record_count":0}}
+{"timestamp":"2026-11-12T18:11:49.684786+00:00","level":"INFO","logger":"dtos.attribution","message":"diagnostic_boundary","request_id":"activity-ebd5d90eea184e99996372007fe700a7","event":"diagnostic_boundary","diagnostic":{"schema":"request-attribution-v1","event_index":3,"event_limit":512,"dropped_so_far":0,"origin_request_id":null,"name":"lifecycle_phase","span_id":2,"parent_span_id":1,"boundary":"phase_acquired","timestamp":"2026-11-12T18:11:49.684762+00:00","elapsed_from_trace_ms":9.065,"duration_ms":1.8,"phase_name":"cache_persistence","queue_dropped_record_count":0}}
+{"timestamp":"2026-11-12T18:11:49.685980+00:00","level":"INFO","logger":"dtos.attribution","message":"diagnostic_boundary","request_id":"activity-ebd5d90eea184e99996372007fe700a7","event":"diagnostic_boundary","diagnostic":{"schema":"request-attribution-v1","event_index":4,"event_limit":512,"dropped_so_far":0,"origin_request_id":null,"name":"memory_sample","boundary":"captured","timestamp":"2026-11-12T18:11:49.685898+00:00","sample_id":1,"span_id":1,"requested_boundaries":[{"name":"runtime_hydration","boundary":"started","span_id":1,"request_id":"activity-ebd5d90eea184e99996372007fe700a7","requested_at":"2026-11-12T18:11:49.675983+00:00"}],"active_activities":[{"request_id":"activity-ebd5d90eea184e99996372007fe700a7","name":"runtime_hydration","span_id":1}],"dropped_activity_or_boundary_count":0,"memory":{"rss_bytes":239570944,"vms_bytes":542965760,"system_available_bytes":17698889728,"memory_accounting_scope":"cgroup","cgroup_current_bytes":234426368,"cgroup_limit_bytes":2147483648,"cgroup_inactive_file_bytes":380928,"cgroup_anonymous_bytes":231583744,"cgroup_memory_events":{"low":0,"high":0,"max":0,"oom":0,"oom_kill":0,"oom_group_kill":0},"anonymous_bytes":231583744,"file_bytes":729088,"kernel_bytes":1376256,"shmem_bytes":0,"cgroup_lifetime_peak_bytes":234450944,"observer_pid":7,"observer_kind":"main_process","active_process_count":2,"zombie_count":0,"process_samples_truncated":false,"process_samples_are_sequential":true,"processes":[{"pid":7,"role":"application","rss_bytes":239828992,"pss_bytes":236367872,"uss_bytes":233000960,"sample_offset_ms":2.248,"sample_duration_ms":5.282},{"pid":28,"role":"child","rss_bytes":18780160,"pss_bytes":15409152,"uss_bytes":12042240,"sample_offset_ms":7.532,"sample_duration_ms":0.837}],"capture_duration_ms":8.375,"pss_requested":true,"runtime_residency":{"resident_count":1,"warm_limit":2,"hydrating_count":0,"warm_count":0,"runtime_samples_truncated":false,"runtimes":[{"scope":"c9adb23a3e8be7a1","state":"cold","active_requests":0,"pinned":true,"owns_state":false,"background_tasks":0,"source_generation_count":0,"source_generation_identity":"4f53cda18c2baa0c","market_cache_owned":true,"projection_cache_owned":false}]},"sample_total_duration_ms":8.503},"queue_dropped_record_count":0}}
+{"timestamp":"2026-11-12T18:11:49.686750+00:00","level":"INFO","logger":"dtos.request","message":"cache_restoration_admission","request_id":"system","event":"cache_restoration_admission","diagnostic":{"schema":"cache-restoration-admission-v1","scope":"existing_guard_inputs_not_atomic","file_bytes":1480,"current_bytes":234684416,"limit_bytes":2147483648,"anonymous_bytes":231845888,"inactive_file_bytes":385024,"reason":"sufficient_headroom","would_admit":true,"headroom_bytes":1912799232,"effective_limit_bytes":2147483648,"working_bytes":134217728,"safety_bytes":134217728,"fois_working_bytes":0,"fois_safety_bytes":0,"required_bytes":268435456,"cleanup":{"attempted":false,"before_bytes":null,"after_bytes":null,"expired_entries":null,"idle_worker_retired":null,"allocator_trimmed":null,"cleanup_unavailable":null},"queue_dropped_record_count":0}}
+{"timestamp":"2026-11-12T18:11:49.693517+00:00","level":"INFO","logger":"dtos.attribution","message":"diagnostic_boundary","request_id":"activity-ebd5d90eea184e99996372007fe700a7","event":"diagnostic_boundary","diagnostic":{"schema":"request-attribution-v1","event_index":5,"event_limit":512,"dropped_so_far":0,"origin_request_id":null,"name":"runtime_publication","span_id":3,"parent_span_id":2,"boundary":"started","timestamp":"2026-11-12T18:11:49.693452+00:00","elapsed_from_trace_ms":17.756,"duration_ms":0.005,"queue_dropped_record_count":0}}
+{"timestamp":"2026-11-12T18:11:49.729803+00:00","level":"INFO","logger":"dtos.attribution","message":"diagnostic_boundary","request_id":"activity-ebd5d90eea184e99996372007fe700a7","event":"diagnostic_boundary","diagnostic":{"schema":"request-attribution-v1","event_index":6,"event_limit":512,"dropped_so_far":0,"origin_request_id":null,"name":"runtime_publication","span_id":3,"parent_span_id":2,"boundary":"finished","timestamp":"2026-11-12T18:11:49.729772+00:00","elapsed_from_trace_ms":54.075,"duration_ms":36.324,"status":"complete","calling_thread_cpu_ms":13.159,"queue_dropped_record_count":0}}
+{"timestamp":"2026-11-12T18:11:49.730850+00:00","level":"INFO","logger":"dtos.attribution","message":"diagnostic_boundary","request_id":"activity-ebd5d90eea184e99996372007fe700a7","event":"diagnostic_boundary","diagnostic":{"schema":"request-attribution-v1","event_index":7,"event_limit":512,"dropped_so_far":0,"origin_request_id":null,"name":"lifecycle_phase","span_id":2,"parent_span_id":1,"boundary":"finished","timestamp":"2026-11-12T18:11:49.730829+00:00","elapsed_from_trace_ms":55.133,"duration_ms":47.868,"status":"complete","calling_thread_cpu_ms":22.519,"queue_dropped_record_count":0}}
+{"timestamp":"2026-11-12T18:11:49.732097+00:00","level":"INFO","logger":"dtos.attribution","message":"diagnostic_boundary","request_id":"activity-ebd5d90eea184e99996372007fe700a7","event":"diagnostic_boundary","diagnostic":{"schema":"request-attribution-v1","event_index":8,"event_limit":512,"dropped_so_far":0,"origin_request_id":null,"name":"runtime_hydration","span_id":1,"parent_span_id":null,"boundary":"finished","timestamp":"2026-11-12T18:11:49.732068+00:00","elapsed_from_trace_ms":56.371,"duration_ms":56.333,"status":"complete","calling_thread_cpu_ms":4.655,"queue_dropped_record_count":0}}
+{"timestamp":"2026-11-12T18:11:49.751465+00:00","level":"INFO","logger":"dtos.attribution","message":"diagnostic_boundary","request_id":"activity-ebd5d90eea184e99996372007fe700a7","event":"diagnostic_boundary","diagnostic":{"schema":"request-attribution-v1","event_index":9,"event_limit":512,"dropped_so_far":0,"origin_request_id":null,"name":"memory_sample","boundary":"captured","timestamp":"2026-11-12T18:11:49.751422+00:00","sample_id":2,"span_id":1,"requested_boundaries":[{"name":"runtime_hydration","boundary":"finished","span_id":1,"request_id":"activity-ebd5d90eea184e99996372007fe700a7","requested_at":"2026-11-12T18:11:49.732180+00:00"}],"active_activities":[],"dropped_activity_or_boundary_count":0,"memory":{"rss_bytes":240087040,"vms_bytes":542998528,"system_available_bytes":17697439744,"memory_accounting_scope":"cgroup","cgroup_current_bytes":235208704,"cgroup_limit_bytes":2147483648,"cgroup_inactive_file_bytes":487424,"cgroup_anonymous_bytes":232079360,"cgroup_memory_events":{"low":0,"high":0,"max":0,"oom":0,"oom_kill":0,"oom_group_kill":0},"anonymous_bytes":232079360,"file_bytes":831488,"kernel_bytes":1449984,"shmem_bytes":0,"cgroup_lifetime_peak_bytes":235651072,"observer_pid":7,"observer_kind":"main_process","active_process_count":2,"zombie_count":0,"process_samples_truncated":false,"process_samples_are_sequential":true,"processes":[{"pid":7,"role":"application","rss_bytes":240189440,"pss_bytes":236818432,"uss_bytes":233451520,"sample_offset_ms":14.288,"sample_duration_ms":3.507},{"pid":28,"role":"child","rss_bytes":18780160,"pss_bytes":15409152,"uss_bytes":12042240,"sample_offset_ms":17.798,"sample_duration_ms":0.253}],"capture_duration_ms":18.054,"pss_requested":true,"runtime_residency":{"resident_count":1,"warm_limit":2,"hydrating_count":0,"warm_count":0,"runtime_samples_truncated":false,"runtimes":[{"scope":"c9adb23a3e8be7a1","state":"cold","active_requests":0,"pinned":true,"owns_state":false,"background_tasks":0,"source_generation_count":0,"source_generation_identity":"4f53cda18c2baa0c","market_cache_owned":true,"projection_cache_owned":false}]},"sample_total_duration_ms":18.165},"queue_dropped_record_count":0}}
+{"timestamp":"2026-11-12T18:11:49.755967+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/team/2100000000000000001:franchise:1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T18:11:49.783307+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/history/1700000000000000001 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T18:11:49.793991+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/history/1700000000000000002?from_trade=1700000000000000001 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T18:11:49.796271+00:00","level":"INFO","logger":"dtos.attribution","message":"diagnostic_boundary","request_id":"activity-3328950570674d1f9e8380c27e3e489d","event":"diagnostic_boundary","diagnostic":{"schema":"request-attribution-v1","event_index":1,"event_limit":512,"dropped_so_far":0,"origin_request_id":null,"name":"runtime_hydration","span_id":1,"parent_span_id":null,"boundary":"started","timestamp":"2026-11-12T18:11:49.796215+00:00","elapsed_from_trace_ms":0.018,"duration_ms":0.006,"queue_dropped_record_count":0}}
+{"timestamp":"2026-11-12T18:11:49.798612+00:00","level":"INFO","logger":"dtos.attribution","message":"diagnostic_boundary","request_id":"activity-3328950570674d1f9e8380c27e3e489d","event":"diagnostic_boundary","diagnostic":{"schema":"request-attribution-v1","event_index":2,"event_limit":512,"dropped_so_far":0,"origin_request_id":null,"name":"lifecycle_phase","span_id":2,"parent_span_id":1,"boundary":"started","timestamp":"2026-11-12T18:11:49.798576+00:00","elapsed_from_trace_ms":2.379,"duration_ms":0.003,"queue_dropped_record_count":0}}
+{"timestamp":"2026-11-12T18:11:49.799924+00:00","level":"INFO","logger":"dtos.attribution","message":"diagnostic_boundary","request_id":"activity-3328950570674d1f9e8380c27e3e489d","event":"diagnostic_boundary","diagnostic":{"schema":"request-attribution-v1","event_index":3,"event_limit":512,"dropped_so_far":0,"origin_request_id":null,"name":"lifecycle_phase","span_id":2,"parent_span_id":1,"boundary":"phase_acquired","timestamp":"2026-11-12T18:11:49.799896+00:00","elapsed_from_trace_ms":3.699,"duration_ms":1.322,"phase_name":"cache_persistence","queue_dropped_record_count":0}}
+{"timestamp":"2026-11-12T18:11:49.801469+00:00","level":"INFO","logger":"dtos.request","message":"cache_restoration_admission","request_id":"system","event":"cache_restoration_admission","diagnostic":{"schema":"cache-restoration-admission-v1","scope":"existing_guard_inputs_not_atomic","file_bytes":1480,"current_bytes":235753472,"limit_bytes":2147483648,"anonymous_bytes":232476672,"inactive_file_bytes":471040,"reason":"sufficient_headroom","would_admit":true,"headroom_bytes":1911730176,"effective_limit_bytes":2147483648,"working_bytes":134217728,"safety_bytes":134217728,"fois_working_bytes":0,"fois_safety_bytes":0,"required_bytes":268435456,"cleanup":{"attempted":false,"before_bytes":null,"after_bytes":null,"expired_entries":null,"idle_worker_retired":null,"allocator_trimmed":null,"cleanup_unavailable":null},"queue_dropped_record_count":0}}
+{"timestamp":"2026-11-12T18:11:49.802256+00:00","level":"INFO","logger":"dtos.attribution","message":"diagnostic_boundary","request_id":"activity-3328950570674d1f9e8380c27e3e489d","event":"diagnostic_boundary","diagnostic":{"schema":"request-attribution-v1","event_index":4,"event_limit":512,"dropped_so_far":0,"origin_request_id":null,"name":"runtime_publication","span_id":3,"parent_span_id":2,"boundary":"started","timestamp":"2026-11-12T18:11:49.802231+00:00","elapsed_from_trace_ms":6.035,"duration_ms":0.003,"queue_dropped_record_count":0}}
+{"timestamp":"2026-11-12T18:11:49.808727+00:00","level":"INFO","logger":"dtos.attribution","message":"diagnostic_boundary","request_id":"activity-3328950570674d1f9e8380c27e3e489d","event":"diagnostic_boundary","diagnostic":{"schema":"request-attribution-v1","event_index":5,"event_limit":512,"dropped_so_far":0,"origin_request_id":null,"name":"memory_sample","boundary":"captured","timestamp":"2026-11-12T18:11:49.808697+00:00","sample_id":1,"span_id":1,"requested_boundaries":[{"name":"runtime_hydration","boundary":"started","span_id":1,"request_id":"activity-3328950570674d1f9e8380c27e3e489d","requested_at":"2026-11-12T18:11:49.796399+00:00"}],"active_activities":[{"request_id":"activity-3328950570674d1f9e8380c27e3e489d","name":"runtime_hydration","span_id":1}],"dropped_activity_or_boundary_count":0,"memory":{"rss_bytes":240467968,"vms_bytes":544030720,"system_available_bytes":17695490048,"memory_accounting_scope":"cgroup","cgroup_current_bytes":235757568,"cgroup_limit_bytes":2147483648,"cgroup_inactive_file_bytes":471040,"cgroup_anonymous_bytes":232476672,"cgroup_memory_events":{"low":0,"high":0,"max":0,"oom":0,"oom_kill":0,"oom_group_kill":0},"anonymous_bytes":232476672,"file_bytes":831488,"kernel_bytes":1478656,"shmem_bytes":0,"cgroup_lifetime_peak_bytes":235843584,"observer_pid":7,"observer_kind":"main_process","active_process_count":2,"zombie_count":0,"process_samples_truncated":false,"process_samples_are_sequential":true,"processes":[{"pid":7,"role":"application","rss_bytes":240484352,"pss_bytes":236738560,"uss_bytes":233648128,"sample_offset_ms":6.119,"sample_duration_ms":4.445},{"pid":28,"role":"child","rss_bytes":18780160,"pss_bytes":15083520,"uss_bytes":12038144,"sample_offset_ms":10.568,"sample_duration_ms":0.279}],"capture_duration_ms":10.849,"pss_requested":true,"runtime_residency":{"resident_count":1,"warm_limit":2,"hydrating_count":0,"warm_count":0,"runtime_samples_truncated":false,"runtimes":[{"scope":"c9adb23a3e8be7a1","state":"cold","active_requests":0,"pinned":true,"owns_state":false,"background_tasks":0,"source_generation_count":0,"source_generation_identity":"4f53cda18c2baa0c","market_cache_owned":true,"projection_cache_owned":false}]},"sample_total_duration_ms":10.892},"queue_dropped_record_count":0}}
+{"timestamp":"2026-11-12T18:11:49.810390+00:00","level":"INFO","logger":"dtos.attribution","message":"diagnostic_boundary","request_id":"activity-3328950570674d1f9e8380c27e3e489d","event":"diagnostic_boundary","diagnostic":{"schema":"request-attribution-v1","event_index":6,"event_limit":512,"dropped_so_far":0,"origin_request_id":null,"name":"runtime_publication","span_id":3,"parent_span_id":2,"boundary":"finished","timestamp":"2026-11-12T18:11:49.810366+00:00","elapsed_from_trace_ms":14.169,"duration_ms":8.137,"status":"complete","calling_thread_cpu_ms":2.654,"queue_dropped_record_count":0}}
+{"timestamp":"2026-11-12T18:11:49.811076+00:00","level":"INFO","logger":"dtos.attribution","message":"diagnostic_boundary","request_id":"activity-3328950570674d1f9e8380c27e3e489d","event":"diagnostic_boundary","diagnostic":{"schema":"request-attribution-v1","event_index":7,"event_limit":512,"dropped_so_far":0,"origin_request_id":null,"name":"lifecycle_phase","span_id":2,"parent_span_id":1,"boundary":"finished","timestamp":"2026-11-12T18:11:49.811058+00:00","elapsed_from_trace_ms":14.862,"duration_ms":12.485,"status":"complete","calling_thread_cpu_ms":5.614,"queue_dropped_record_count":0}}
+{"timestamp":"2026-11-12T18:11:49.812127+00:00","level":"INFO","logger":"dtos.attribution","message":"diagnostic_boundary","request_id":"activity-3328950570674d1f9e8380c27e3e489d","event":"diagnostic_boundary","diagnostic":{"schema":"request-attribution-v1","event_index":8,"event_limit":512,"dropped_so_far":0,"origin_request_id":null,"name":"runtime_hydration","span_id":1,"parent_span_id":null,"boundary":"finished","timestamp":"2026-11-12T18:11:49.812102+00:00","elapsed_from_trace_ms":15.905,"duration_ms":15.893,"status":"complete","calling_thread_cpu_ms":2.086,"queue_dropped_record_count":0}}
+{"timestamp":"2026-11-12T18:11:49.821576+00:00","level":"INFO","logger":"dtos.attribution","message":"diagnostic_boundary","request_id":"activity-3328950570674d1f9e8380c27e3e489d","event":"diagnostic_boundary","diagnostic":{"schema":"request-attribution-v1","event_index":9,"event_limit":512,"dropped_so_far":0,"origin_request_id":null,"name":"memory_sample","boundary":"captured","timestamp":"2026-11-12T18:11:49.821520+00:00","sample_id":2,"span_id":1,"requested_boundaries":[{"name":"runtime_hydration","boundary":"finished","span_id":1,"request_id":"activity-3328950570674d1f9e8380c27e3e489d","requested_at":"2026-11-12T18:11:49.812198+00:00"}],"active_activities":[],"dropped_activity_or_boundary_count":0,"memory":{"rss_bytes":240500736,"vms_bytes":544047104,"system_available_bytes":17695494144,"memory_accounting_scope":"cgroup","cgroup_current_bytes":235917312,"cgroup_limit_bytes":2147483648,"cgroup_inactive_file_bytes":471040,"cgroup_anonymous_bytes":232493056,"cgroup_memory_events":{"low":0,"high":0,"max":0,"oom":0,"oom_kill":0,"oom_group_kill":0},"anonymous_bytes":232493056,"file_bytes":831488,"kernel_bytes":1585152,"shmem_bytes":0,"cgroup_lifetime_peak_bytes":236290048,"observer_pid":7,"observer_kind":"main_process","active_process_count":2,"zombie_count":0,"process_samples_truncated":false,"process_samples_are_sequential":true,"processes":[{"pid":7,"role":"application","rss_bytes":240525312,"pss_bytes":237187072,"uss_bytes":233820160,"sample_offset_ms":4.643,"sample_duration_ms":3.495},{"pid":28,"role":"child","rss_bytes":18780160,"pss_bytes":15409152,"uss_bytes":12042240,"sample_offset_ms":8.141,"sample_duration_ms":0.718}],"capture_duration_ms":8.862,"pss_requested":true,"runtime_residency":{"resident_count":1,"warm_limit":2,"hydrating_count":0,"warm_count":0,"runtime_samples_truncated":false,"runtimes":[{"scope":"c9adb23a3e8be7a1","state":"cold","active_requests":0,"pinned":true,"owns_state":false,"background_tasks":0,"source_generation_count":0,"source_generation_identity":"4f53cda18c2baa0c","market_cache_owned":true,"projection_cache_owned":false}]},"sample_total_duration_ms":8.908},"queue_dropped_record_count":0}}
+{"timestamp":"2026-11-12T18:11:49.824807+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/team/2100000000000000001:franchise:1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T18:11:49.835600+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/history/1700000000000000001 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T18:11:49.844008+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/history/1700000000000000002?from_trade=1700000000000000001 \"HTTP/1.1 200 OK\"","request_id":"system"}
+ok
+test_current_fresh_owned_publication_preserves_followthrough (tests.test_history_followthrough.CurrentHistoryFollowThroughTests.test_current_fresh_owned_publication_preserves_followthrough) ... {"timestamp":"2026-11-12T18:11:49.910946+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/team/2100000000000000001:franchise:1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T18:11:49.937646+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/history/1700000000000000001 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T18:11:49.946723+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/history/1700000000000000002?from_trade=1700000000000000001 \"HTTP/1.1 200 OK\"","request_id":"system"}
+ok
+test_franchise_original_pick_conversion_player_and_later_package_reuse_canonical_evidence (tests.test_history_followthrough.HistoryFollowThroughTests.test_franchise_original_pick_conversion_player_and_later_package_reuse_canonical_evidence) ... {"timestamp":"2026-11-12T18:11:51.078640+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:4?events_page=2 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T18:11:51.187712+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/history/1333655835015942144 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T18:11:51.210901+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/picks/PICK-2026-R2-ORIG7 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T18:11:51.226491+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/picks/PICK-2026-R2-ORIG7?from_trade=1333655835015942144 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T18:11:51.425295+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/players/13346?from_trade=1333655835015942144 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T18:11:51.437323+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/player/13346?from_trade=1333655835015942144 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T18:11:51.454866+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/history/1414718106177122304?from_trade=1333655835015942144 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T18:11:51.472009+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/players/13346?from_trade=1333655835015942144 \"HTTP/1.1 200 OK\"","request_id":"system"}
+ok
+test_missing_chronology_preserves_original_exchange_but_withholds_continuation (tests.test_history_followthrough.HistoryFollowThroughTests.test_missing_chronology_preserves_original_exchange_but_withholds_continuation) ... {"timestamp":"2026-11-12T18:11:52.523366+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/history/1333655835015942144 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T18:11:52.532961+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/history/1333655835015942144 \"HTTP/1.1 200 OK\"","request_id":"system"}
+ok
+test_pending_and_rejected_records_never_open_as_completed_trade_movements (tests.test_history_followthrough.HistoryFollowThroughTests.test_pending_and_rejected_records_never_open_as_completed_trade_movements) ... {"timestamp":"2026-11-12T18:11:53.592484+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/history/1700000000000000003 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T18:11:53.601636+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/history/1700000000000000003 \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-12T18:11:53.622955+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/history/1700000000000000004 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T18:11:53.630004+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/history/1700000000000000004 \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-12T18:11:53.704803+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:4 \"HTTP/1.1 200 OK\"","request_id":"system"}
+ok
+test_real_sessions_selected_leagues_and_foreign_origins_remain_isolated (tests.test_history_followthrough.HistoryFollowThroughTests.test_real_sessions_selected_leagues_and_foreign_origins_remain_isolated) ... {"timestamp":"2026-11-12T18:11:54.691120+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/account/navigation-context \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T18:11:54.769766+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/picks/PICK-2026-R2-ORIG7?from_trade=TRADE-1319750579458686976-1333655835015942144 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T18:11:54.775627+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/account/navigation-context \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T18:11:54.781200+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/team/1313066632158924800:franchise:4 \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-12T18:11:54.811728+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/history/1333655835015942144 \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-12T18:11:54.904047+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/team/1319750579458686976:franchise:1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T18:11:54.912309+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/account/navigation-context \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T18:11:54.919158+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/history/1333655835015942144 \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+ok
+test_acquisition_metadata_is_bounded_and_unknown_dates_stay_unknown (tests.test_current_season_franchise_history.CurrentSeasonAcquisitionTests.test_acquisition_metadata_is_bounded_and_unknown_dates_stay_unknown) ... ok
+test_empty_failed_unavailable_and_unacquired_are_distinct (tests.test_current_season_franchise_history.CurrentSeasonAcquisitionTests.test_empty_failed_unavailable_and_unacquired_are_distinct) ... {"timestamp":"2026-11-12T18:11:54.950045+00:00","level":"INFO","logger":"dtos.attribution","message":"diagnostic_boundary","request_id":"activity-b1056546478346ed864404c830de3039","event":"diagnostic_boundary","diagnostic":{"schema":"request-attribution-v1","event_index":1,"event_limit":512,"dropped_so_far":0,"origin_request_id":null,"name":"runtime_hydration","span_id":1,"parent_span_id":null,"boundary":"started","timestamp":"2026-11-12T18:11:54.950018+00:00","elapsed_from_trace_ms":0.016,"duration_ms":0.005,"queue_dropped_record_count":0}}
+{"timestamp":"2026-11-12T18:11:54.952630+00:00","level":"INFO","logger":"dtos.attribution","message":"diagnostic_boundary","request_id":"activity-b1056546478346ed864404c830de3039","event":"diagnostic_boundary","diagnostic":{"schema":"request-attribution-v1","event_index":2,"event_limit":512,"dropped_so_far":0,"origin_request_id":null,"name":"lifecycle_phase","span_id":2,"parent_span_id":1,"boundary":"started","timestamp":"2026-11-12T18:11:54.952595+00:00","elapsed_from_trace_ms":2.593,"duration_ms":0.003,"queue_dropped_record_count":0}}
+{"timestamp":"2026-11-12T18:11:54.954717+00:00","level":"INFO","logger":"dtos.attribution","message":"diagnostic_boundary","request_id":"activity-b1056546478346ed864404c830de3039","event":"diagnostic_boundary","diagnostic":{"schema":"request-attribution-v1","event_index":3,"event_limit":512,"dropped_so_far":0,"origin_request_id":null,"name":"lifecycle_phase","span_id":2,"parent_span_id":1,"boundary":"phase_acquired","timestamp":"2026-11-12T18:11:54.954694+00:00","elapsed_from_trace_ms":4.692,"duration_ms":2.102,"phase_name":"cache_persistence","queue_dropped_record_count":0}}
+{"timestamp":"2026-11-12T18:11:54.955874+00:00","level":"INFO","logger":"dtos.request","message":"cache_restoration_admission","request_id":"system","event":"cache_restoration_admission","diagnostic":{"schema":"cache-restoration-admission-v1","scope":"existing_guard_inputs_not_atomic","file_bytes":2554,"current_bytes":261885952,"limit_bytes":2147483648,"anonymous_bytes":258994176,"inactive_file_bytes":368640,"reason":"sufficient_headroom","would_admit":true,"headroom_bytes":1885597696,"effective_limit_bytes":2147483648,"working_bytes":134217728,"safety_bytes":134217728,"fois_working_bytes":0,"fois_safety_bytes":0,"required_bytes":268435456,"cleanup":{"attempted":false,"before_bytes":null,"after_bytes":null,"expired_entries":null,"idle_worker_retired":null,"allocator_trimmed":null,"cleanup_unavailable":null},"queue_dropped_record_count":0}}
+{"timestamp":"2026-11-12T18:11:54.956470+00:00","level":"INFO","logger":"dtos.attribution","message":"diagnostic_boundary","request_id":"activity-b1056546478346ed864404c830de3039","event":"diagnostic_boundary","diagnostic":{"schema":"request-attribution-v1","event_index":4,"event_limit":512,"dropped_so_far":0,"origin_request_id":null,"name":"runtime_publication","span_id":3,"parent_span_id":2,"boundary":"started","timestamp":"2026-11-12T18:11:54.956448+00:00","elapsed_from_trace_ms":6.448,"duration_ms":0.005,"queue_dropped_record_count":0}}
+{"timestamp":"2026-11-12T18:11:54.960140+00:00","level":"INFO","logger":"dtos.attribution","message":"diagnostic_boundary","request_id":"activity-b1056546478346ed864404c830de3039","event":"diagnostic_boundary","diagnostic":{"schema":"request-attribution-v1","event_index":5,"event_limit":512,"dropped_so_far":0,"origin_request_id":null,"name":"memory_sample","boundary":"captured","timestamp":"2026-11-12T18:11:54.960106+00:00","sample_id":1,"span_id":1,"requested_boundaries":[{"name":"runtime_hydration

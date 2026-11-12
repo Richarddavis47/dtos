@@ -1,0 +1,1461 @@
+{
+  "source": {
+    "baseline": "05c717e50b47683963ed40d66946e9f6eea76694",
+    "candidate": "b5229081f3a1c0eb9cf96d34803fd68d6c9b2cd1",
+    "tree": "d1894a91d826ef5bdbd6d0a16b0d0860ec758c14",
+    "branch": "feat/franchise-trade-progress-2250",
+    "version": "1.22.35",
+    "build": 2250,
+    "recorded_at": "2026-11-12T18:06:29.525750+00:00",
+    "expected_test_count": 4435,
+    "pr": 339
+  },
+  "status": "RECONCILING_NOT_RELEASED",
+  "files": [
+    {
+      "path": "NEXT_ACTIONS.md",
+      "bytes": 6007,
+      "sha256": "f02deff2918faa506328a0b8d82f24c43ecf172bf8f1196c35598d939425f62f"
+    },
+    {
+      "path": "README.md",
+      "bytes": 1167,
+      "sha256": "1ba4a57e5424152e15563c4ccf19bd6a59835f89fe88cfd4a9d3d491d1a0744f"
+    },
+    {
+      "path": "WORK_STATUS.json",
+      "bytes": 1663,
+      "sha256": "158229bfa2c1dc697ea6085208f3f7e7a0534d18e065c1e75d255d8dd31778cf"
+    },
+    {
+      "path": "candidate.patch",
+      "bytes": 54851,
+      "sha256": "97ef1a3ed0de8509883af266d47d9a08f6d50b962bb024b25d891c0ca5b75599"
+    },
+    {
+      "path": "canonical-invocation.json",
+      "bytes": 1776,
+      "sha256": "52f392ed9b189eac82fbff815df285ee773c600913d4cbe4888b44342cd9f15a"
+    },
+    {
+      "path": "contextual-diagnostic-f40-original.zip",
+      "bytes": 10543013,
+      "sha256": "677026bbdc7293d8639bc3f597b6d6ef5ec45187b36deeca556074646afbdbef"
+    },
+    {
+      "path": "contextual-diagnostic-reconciled.json",
+      "bytes": 2006,
+      "sha256": "7ae3e21a9de399ccec82e727b6c35f082db606db5fb2cdbc36b75206219e0115"
+    },
+    {
+      "path": "contextual-diagnostic-sealed.json",
+      "bytes": 2184,
+      "sha256": "7f6eb27dc9cbc5399b3fdd84e845f7ad6d37ed02780460e2b958d84627549ccf"
+    },
+    {
+      "path": "focused-exact/result.json",
+      "bytes": 445,
+      "sha256": "11cb073abedc47e61034c6f52e55f4f11664d52e04169eba1ad532115a93238e"
+    },
+    {
+      "path": "focused-ready.json",
+      "bytes": 400,
+      "sha256": "e71b715be7f6dc684cdec026d1de1b185342bf9fc4202cfd4d89ef1fb7c0b757"
+    },
+    {
+      "path": "input-relocation-reconciliation.json",
+      "bytes": 641,
+      "sha256": "c7eb1bd0e0a77bd16956f43d198c97a2705c85b9f33961cf2fb5f517039f5387"
+    },
+    {
+      "path": "preservation.json",
+      "bytes": 3114,
+      "sha256": "3a3be795053aaf49ae69b67a947100833b29710a8af0efa78f3cf61d0f812798"
+    },
+    {
+      "path": "prior-focused-b522-unspawn-safe/HARNESS_FAILURE.json",
+      "bytes": 630,
+      "sha256": "371fd0907773e7a807eabc2c006f2c22596232fb60172c389a7d45ee02835b6f"
+    },
+    {
+      "path": "prior-source-f40/hosted-canonical-cancelled-reconciled.json",
+      "bytes": 1282,
+      "sha256": "c92a42ee9d5bb2a71c45a478b0765b3f5d4b0afeea474dcc3236eadeb85bc06e"
+    },
+    {
+      "path": "prior-source-f40/hosted-originals/prior-canonical-f40-original.zip",
+      "bytes": 80234443,
+      "sha256": "6cadb9aae834d00f4429ad7908b85270948f268a081e6668394c095021d06a97"
+    },
+    {
+      "path": "prior-source-f40/hosted-originals/prior-canonical-f40-original.zip.delivery.json",
+      "bytes": 336,
+      "sha256": "c9d8608602bdd7428be7c3314ae51c7d5e3aa8547c541c46cd1f9006e1f51fc6"
+    },
+    {
+      "path": "prior-source-f40/hosted-outcome-at-source-transition.json",
+      "bytes": 33499,
+      "sha256": "4093e6e0a594ff65acc6966436a6e9b4c6e7b7e17303d118a72cd1b40e510ecc"
+    },
+    {
+      "path": "profile-prefix-3/diagnostic-prefix-result.json",
+      "bytes": 18453,
+      "sha256": "a806b740c64aada95030518413ffcddf3f08aa8bbbc2c667c4d13a52978f96f7"
+    },
+    {
+      "path": "profile-prefix-child-3.py",
+      "bytes": 6948,
+      "sha256": "504f9ba0e5443fe319d4b69d4d0579859856cfa18c696d6cac5ed1d1def0558d"
+    },
+    {
+      "path": "profile-prefix-invocation.json",
+      "bytes": 2105,
+      "sha256": "bcb1cf41faf0e8e0abdf1b32f852c1abaacdaa008ad70f32cf65802c2e90af33"
+    },
+    {
+      "path": "readable/focused-exact/original-console-log/README.md",
+      "bytes": 311,
+      "sha256": "7ed25788338c7291175683039a075f34127471e2fff222b403e3566c4991d837"
+    },
+    {
+      "path": "readable/focused-exact/original-console-log/part-001.log",
+      "bytes": 60000,
+      "sha256": "c81add5de6b63122137574ed02c2bf1a4c5c027a67e280fb80a6bd2e2f0ae108"
+    },
+    {
+      "path": "readable/focused-exact/original-console-log/part-002.log",
+      "bytes": 60000,
+      "sha256": "bfe4b95d25ce8ff3b7666fdfbf8256604c526ff2376af2b3d901cd4a88591ead"
+    },
+    {
+      "path": "readable/focused-exact/original-console-log/part-003.log",
+      "bytes": 60000,
+      "sha256": "c6df75fb608fa48f0eeb9736ebad8efd40a688bbee0294cefc9b49a8f21a6869"
+    },
+    {
+      "path": "readable/focused-exact/original-console-log/part-004.log",
+      "bytes": 60000,
+      "sha256": "25ba0c5d7ab58a1af25b0765138ce82d3c2c8fb772d5f715288c3a7edeb5f971"
+    },
+    {
+      "path": "readable/focused-exact/original-console-log/part-005.log",
+      "bytes": 60000,
+      "sha256": "5654080c5c3eff7ab35358a9cb401383121716684500931ceb70e95e7d007c4a"
+    },
+    {
+      "path": "readable/focused-exact/original-console-log/part-006.log",
+      "bytes": 60000,
+      "sha256": "11f8086fd2eb4a28765ec0d67b1b295bcb0f634309fa4d9208a0215d632bee49"
+    },
+    {
+      "path": "readable/focused-exact/original-console-log/part-007.log",
+      "bytes": 60000,
+      "sha256": "0a989cfb8250a0e7077e0f1b328c8e47108a3c4762a172a9e4e6f75a3dc2218c"
+    },
+    {
+      "path": "readable/focused-exact/original-console-log/part-008.log",
+      "bytes": 30585,
+      "sha256": "a46967952412d9020e5e957711306223479616b27cf4847bfda0630369681ce2"
+    },
+    {
+      "path": "readable/focused-exact/original-console-log/parts.json",
+      "bytes": 1439,
+      "sha256": "da04ba952e86ba0b493f7d7df3e18dda28302b21a89e7d0d22a38b5eaa080703"
+    },
+    {
+      "path": "readable/prior-focused-b522-unspawn-safe/focused-exact/original-console-log/README.md",
+      "bytes": 343,
+      "sha256": "026d58f20a2ec1454293818f2b80dcd10961520e8f61f8d2c5e2a40939b4a53e"
+    },
+    {
+      "path": "readable/prior-focused-b522-unspawn-safe/focused-exact/original-console-log/part-001.log",
+      "bytes": 60000,
+      "sha256": "efaf2703c1eafbe3a1f2911bf702d005769a6a9d14e6eb550757b06d0e2f5fab"
+    },
+    {
+      "path": "readable/prior-focused-b522-unspawn-safe/focused-exact/original-console-log/part-002.log",
+      "bytes": 60000,
+      "sha256": "7fc9f36c814a877692481f72ac55154942463eb5287fef17849627729b877906"
+    },
+    {
+      "path": "readable/prior-focused-b522-unspawn-safe/focused-exact/original-console-log/part-003.log",
+      "bytes": 60000,
+      "sha256": "7b681bdb4787912c815cc157951213395413c6a58d89481b1f361e33838fda0c"
+    },
+    {
+      "path": "readable/prior-focused-b522-unspawn-safe/focused-exact/original-console-log/part-004.log",
+      "bytes": 60000,
+      "sha256": "2afcb29b49ac8afce818b73648e3be12d089f50df644e403cd0f2152d0516877"
+    },
+    {
+      "path": "readable/prior-focused-b522-unspawn-safe/focused-exact/original-console-log/part-005.log",
+      "bytes": 60000,
+      "sha256": "48ad567da7a607819d1e7e5de9bf4ee2e9a7bf01de756eb44afbf5a0981da2e8"
+    },
+    {
+      "path": "readable/prior-focused-b522-unspawn-safe/focused-exact/original-console-log/part-006.log",
+      "bytes": 60000,
+      "sha256": "3bd864d952d69bcb686f144b04f8a2db0d2d5c9d6b22e61e546ff470fa5741b9"
+    },
+    {
+      "path": "readable/prior-focused-b522-unspawn-safe/focused-exact/original-console-log/part-007.log",
+      "bytes": 60000,
+      "sha256": "9aa9d8a5a7d46e635adef0acb3b4e4a79e52ba4af6ae84b0ea6c50a16fbfac45"
+    },
+    {
+      "path": "readable/prior-focused-b522-unspawn-safe/focused-exact/original-console-log/part-008.log",
+      "bytes": 55939,
+      "sha256": "c3992f463e923c9f41ae0837b7dd87a805db57f54e6bd0b6a4607a5b36430d86"
+    },
+    {
+      "path": "readable/prior-focused-b522-unspawn-safe/focused-exact/original-console-log/parts.json",
+      "bytes": 1471,
+      "sha256": "e4430b1d645065c909320196757ac73f28275f21fd4c5b0f8011c7bded126bc3"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/tests-jsonl/README.md",
+      "bytes": 993,
+      "sha256": "802d67a1f8ad1b12f933d8ba3d3824db214dc1ac754ce4c88d54c3fee3d33295"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/tests-jsonl/part-001.log",
+      "bytes": 60000,
+      "sha256": "ca8a138922df648ca0cbabee3046838291d95353286810ba754fad0417dbc9a1"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/tests-jsonl/part-002.log",
+      "bytes": 60000,
+      "sha256": "f0fa2ee5c17aa67708264d6585cd3a30f213a01f32598b4f87ecc3f30ce25e8a"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/tests-jsonl/part-003.log",
+      "bytes": 60000,
+      "sha256": "8458c6116fdd93dc67e1ee8520c9b27b4882e12d65c9dc79632c16f932754216"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/tests-jsonl/part-004.log",
+      "bytes": 60000,
+      "sha256": "95128c28addb019b4631b408c234699ad5472932758f4a7a4925143e7a380cb0"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/tests-jsonl/part-005.log",
+      "bytes": 60000,
+      "sha256": "e073f6b9b7eab2401b4306a3e1bf777c82547f5d6b74ed93e6f320a0de534a60"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/tests-jsonl/part-006.log",
+      "bytes": 60000,
+      "sha256": "cd6b0b9c0cde71723c7b5993c6eef2f004d561d7657cba111e3508a6586387eb"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/tests-jsonl/part-007.log",
+      "bytes": 60000,
+      "sha256": "402721224acb10610ce7f5b10bc18d433b4cfd12e1d07965e9f97b8ffaaf6874"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/tests-jsonl/part-008.log",
+      "bytes": 60000,
+      "sha256": "6dcbdfe831ab864110e47ac359bdbdb9e1387cdcc179e89283eb0e0101860e01"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/tests-jsonl/part-009.log",
+      "bytes": 60000,
+      "sha256": "a7c78ca7701a46d4879f96e58a17fb3cd8c833f9974106909cb4a6ab81ba5ba8"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/tests-jsonl/part-010.log",
+      "bytes": 60000,
+      "sha256": "784c41d66574aa62162b2d5d1aae8ab552cdc107b5e8a1d86e8ab4db13053a4a"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/tests-jsonl/part-011.log",
+      "bytes": 60000,
+      "sha256": "ecb1d0617d8c50f77e4a296a6f008821b876c3c37b0c929682971e9af113c2c3"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/tests-jsonl/part-012.log",
+      "bytes": 60000,
+      "sha256": "4db8ca0cc210ef641d21bad3dc70521fa84e3f075e6f2757de02195df4b80178"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/tests-jsonl/part-013.log",
+      "bytes": 60000,
+      "sha256": "64f648094770cdc93209007c40f80271852047d810960368e3e867bb37a5b882"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/tests-jsonl/part-014.log",
+      "bytes": 60000,
+      "sha256": "0a746fca67693412769c0281775fe23e2ef8f77c19fd208ad1077149d7afbe91"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/tests-jsonl/part-015.log",
+      "bytes": 60000,
+      "sha256": "78ebbce71a1516e15035b799d686f514a9a3e8d6e85f7c8f0dab550f52096c47"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/tests-jsonl/part-016.log",
+      "bytes": 60000,
+      "sha256": "6a418b7e7e102e9489e662e94959f3db91c4dd571d40e4df85155939eba9251d"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/tests-jsonl/part-017.log",
+      "bytes": 60000,
+      "sha256": "0558f3d514db2152b9eee0a8286bd6b015660757d9513fa95fbbddbdf6ad3e96"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/tests-jsonl/part-018.log",
+      "bytes": 60000,
+      "sha256": "3999a58e610e1c7dfdc4c5229402c8aafd11deb7ed388fb82fb4171522ab1884"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/tests-jsonl/part-019.log",
+      "bytes": 60000,
+      "sha256": "4b7fb48d35ae51b7686445407b3d0b938812ab0f7a983c17f5ec96d808024821"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/tests-jsonl/part-020.log",
+      "bytes": 60000,
+      "sha256": "ad6b55e7b5d33811ae196a4dc707584d73f4ea043795445d8aad694db8068d1e"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/tests-jsonl/part-021.log",
+      "bytes": 60000,
+      "sha256": "e3f9c0d518fc05cc1dfbf850d3d653c71119a9c1554756530033713239b845f9"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/tests-jsonl/part-022.log",
+      "bytes": 60000,
+      "sha256": "c1f7d2db372aa942a5760e9da1a2d4117ceff7220c7b8d0b9aa979607ca61c40"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/tests-jsonl/part-023.log",
+      "bytes": 60000,
+      "sha256": "b71de799cc3bc096e973fff447a127005cb41e351ec053b39fe4521c3929a01f"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/tests-jsonl/part-024.log",
+      "bytes": 60000,
+      "sha256": "ed2d994a6b8d3bdb045d36f07178c106236ef9b71ad6cc8cc316b62892204914"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/tests-jsonl/part-025.log",
+      "bytes": 60000,
+      "sha256": "914e2d249fcc51bad92fed0894537cb039f515ae574921860decfbd13bc7ecb7"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/tests-jsonl/part-026.log",
+      "bytes": 60000,
+      "sha256": "7e51686ae390919018c94e02c550d2a8c1789e239287b99e42a042937ed15b4d"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/tests-jsonl/part-027.log",
+      "bytes": 60000,
+      "sha256": "dcaff71a30cc93500b4032fcfb6e724b597109afc25c7380964acae3265f60c8"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/tests-jsonl/part-028.log",
+      "bytes": 60000,
+      "sha256": "9e53db69f74326fb1b71a4b61af9cfbe9b1dc5d307c1b68dd8a5e931315ab30a"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/tests-jsonl/part-029.log",
+      "bytes": 516,
+      "sha256": "dacdcb15a5c59f5544ead40f872ab39db6e5c9c43ee7dda79f0c112e91b0047e"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/tests-jsonl/parts.json",
+      "bytes": 4577,
+      "sha256": "bd8c69f6d215a6bc8197a6268ea2a11971e044beeeec1224e804de562078ca1d"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/README.md",
+      "bytes": 6706,
+      "sha256": "d32f5c6f1392a125a55485ee3dea3e16fedc45908b7c50f90def4378ece6943f"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-001.log",
+      "bytes": 60000,
+      "sha256": "55bfd2d9e60503003a788f6ac9c4f5b6d1833cdc572d9f20ef6f5392bf9db9f6"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-002.log",
+      "bytes": 60000,
+      "sha256": "f9edf9dd156cfef07491aa0a2160e01b138555496a374dde2be725dfdc5556a2"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-003.log",
+      "bytes": 60000,
+      "sha256": "0ca0eeba83544793bf4ec098935766481dddf27ec53e1f5f636ed80bae0472d6"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-004.log",
+      "bytes": 60000,
+      "sha256": "58fde27f9dd8da11c8fa2ae97510256a70002b858506fc30269b58157c519c09"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-005.log",
+      "bytes": 60000,
+      "sha256": "d962fcf950b288cc810c27e845b67b591b6b29ea7cb902d2d05ecdb529d1532c"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-006.log",
+      "bytes": 60000,
+      "sha256": "7957334f140e3962115599e29166921f668ed27b9da18a54fc7cd401f19bd9f4"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-007.log",
+      "bytes": 60000,
+      "sha256": "9369df19e3643950ff051678e225eec56c2d2a27a49d03f185687cd8a7d9151c"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-008.log",
+      "bytes": 60000,
+      "sha256": "1e6a42a8a30aa73a388068dd943c3bdbdddccf5f49c874e392ac212ec7361cec"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-009.log",
+      "bytes": 60000,
+      "sha256": "6ebb9683c9bc17ac564ac5995106f15f374cf6c6a4748d69b657acaf4bbec974"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-010.log",
+      "bytes": 60000,
+      "sha256": "f83d018feceeb0a5105e18b85129eccf24f3d36d1a8eafb46db082e40cc96869"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-011.log",
+      "bytes": 60000,
+      "sha256": "92aa2a798549196279145820a2bc1d735feeb775b5ec354b80831dc5b0fa9f73"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-012.log",
+      "bytes": 60000,
+      "sha256": "aa0dc6e69c38e1e641a42928ba31b4fd21b0cad2d90eda959b45b468147c323c"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-013.log",
+      "bytes": 60000,
+      "sha256": "ac16748de207b4693533f6ed541656f5759a28f1d1bc7ca05480299e03bc1f10"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-014.log",
+      "bytes": 60000,
+      "sha256": "9c1a1cfa3e88792ff4527792e56df5ab1c112a1a44d03c883ba21063597bbd11"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-015.log",
+      "bytes": 60000,
+      "sha256": "f0b4528c0095258606ab1d63fb72365cbf06d6f64997015f979b22de73b1da1d"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-016.log",
+      "bytes": 60000,
+      "sha256": "1995fdcda6f078a2bcae6ece24de02d421fa73789c13ccd6e82dac553d32d684"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-017.log",
+      "bytes": 60000,
+      "sha256": "552eebed679c7a2e3d48173a3825680b4f6429c28863a0c2eb99b6b93a411d27"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-018.log",
+      "bytes": 60000,
+      "sha256": "a68a9f41eb07bd3a10597c999c8e5094aba254109b8e8de02d9a3dccf9548503"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-019.log",
+      "bytes": 60000,
+      "sha256": "dd2aaece0c548bc6f8a9368e534600a75c8820093ccad3e6e2b800a67f91eb02"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-020.log",
+      "bytes": 60000,
+      "sha256": "d0173d9b59a17e543ead029f231ac9ad3d9039fe909a9bf58fd5cd65f9b5a8a7"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-021.log",
+      "bytes": 60000,
+      "sha256": "369f206357e6c212dc7f9332cd731b41c72c907a9afcb6cbd4166ae939f2fbf5"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-022.log",
+      "bytes": 60000,
+      "sha256": "001cb49b465a7c9e292478515006438821848257f0bd1813360e0cc3d1a4b76d"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-023.log",
+      "bytes": 60000,
+      "sha256": "b25b4f26de366e89c4d64cdd31618c46beccff5bae61c5dbd7fbce0dff0e3f47"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-024.log",
+      "bytes": 60000,
+      "sha256": "6cdb3e85f2959e94c9536b8aa25ac00bc3e93c63f553bf580ea73c43e4adee50"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-025.log",
+      "bytes": 60000,
+      "sha256": "cc1279ff0295370a5ae7aa549d4e4dd4186afa1b95dd56b6de48ec095b71f2ef"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-026.log",
+      "bytes": 60000,
+      "sha256": "1156ec565917d9409b2f98d320b00ac7e20da3fd0fbd1eb8db5fc6ce8a3d3cd3"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-027.log",
+      "bytes": 60000,
+      "sha256": "5d0571143290fab8a8aeae5a94c70c44a6b4b8f42106dd9bee5d298cd5382faf"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-028.log",
+      "bytes": 60000,
+      "sha256": "421b8bac8e0adb64433570c1eb57033ad5b7849deb2ef29d8a65a1220c45e023"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-029.log",
+      "bytes": 60000,
+      "sha256": "bf337a286606c39f6335a82833173913c80e153c8887762d1c1c9a581cc4b16e"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-030.log",
+      "bytes": 60000,
+      "sha256": "94f0fd7f844d4cf2390684aca48a64a9522ebb3dbcdd738c7f32d5ea0a148bf7"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-031.log",
+      "bytes": 60000,
+      "sha256": "7cb26ef93ff1a2b87731fbedd9a6b09fa760728af9368057cceb48f02e3c30cf"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-032.log",
+      "bytes": 60000,
+      "sha256": "66691738e9925390696b4ce2f4b8f09ecc7c3eadea5757b9540c9817266ab430"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-033.log",
+      "bytes": 60000,
+      "sha256": "8cb0e277919f5fc3bfcada43a3f45b4e61ff6f513a83c8a498dbc3b7ec33eae3"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-034.log",
+      "bytes": 60000,
+      "sha256": "01e891e090a3f099e5331d8c705b1d7238dd7220cf0c3b934e9ec2d753deeade"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-035.log",
+      "bytes": 60000,
+      "sha256": "6d7cf405bf6541863a863ccde5d0540fb781334894b73a58b3af60471e9ac011"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-036.log",
+      "bytes": 60000,
+      "sha256": "c9c2f564d08a2b11ff4138d260fdae56de09e3c77f59acbcfaf702fee478105b"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-037.log",
+      "bytes": 60000,
+      "sha256": "28c4cff31cbe84c2f9843a9ab8a5471912511b62cb7fd6e478673cb3282ac78a"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-038.log",
+      "bytes": 60000,
+      "sha256": "c3255ba303d4a1a9e85e108ca54c8b4fec45e2e4a48ffe95c932913729b6ccf7"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-039.log",
+      "bytes": 60000,
+      "sha256": "0d3d3f88675242492f4746f76fbca2a219f96809ac6cd73c6617c8886d636c3a"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-040.log",
+      "bytes": 60000,
+      "sha256": "9eb3578dc97e095260e405b73c28a462b55bcb0e0b29b12b8b4414915dab707c"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-041.log",
+      "bytes": 60000,
+      "sha256": "b2e6acc2330cba40abb416dcd391b7be971c3d4f833e4181cccbafc1db0d4d03"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-042.log",
+      "bytes": 60000,
+      "sha256": "c8042cd9a36bdc1ab4a95bd938c4ed1888f24a9097a9f4a2b66b14a62b367c4c"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-043.log",
+      "bytes": 60000,
+      "sha256": "a7488257eedc76000306382d62767f91cb3bf366a61be1983ed1c8e796e40aee"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-044.log",
+      "bytes": 60000,
+      "sha256": "c8c1cc0dbef28e6d2235cb83a954020f8142146ef8ce2255abae048bb76a608f"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-045.log",
+      "bytes": 60000,
+      "sha256": "9b7355801b5cc153ca4afbc55b679afa0b4074a3f25bc9393df7e1f71d4bc306"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-046.log",
+      "bytes": 60000,
+      "sha256": "028b47f48ebe5a6f8add6b469ef4b7de7e1cbcc2c88811c1a352be0f1a4b57d1"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-047.log",
+      "bytes": 60000,
+      "sha256": "7c935a8a800d2b55b05eee21f5c36f99b01e7c4e5c4a19670dcc3f2263d265cf"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-048.log",
+      "bytes": 60000,
+      "sha256": "36122d269232f64a349929c6b91b36bff97795fcdfbbaecfad4b5e4a87ba0789"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-049.log",
+      "bytes": 60000,
+      "sha256": "cd85bfdcc52207e3d38a50e0cdb2b08b5b37754653da8e7dce2120b6357d53a9"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-050.log",
+      "bytes": 60000,
+      "sha256": "45eac238574afaf3aaf29581f367eaade2f00d7b52f03bc69180587f7546e0d3"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-051.log",
+      "bytes": 60000,
+      "sha256": "49f2f304b9e2593a5ca2fa2c9e20e29d7f11dfaedc5a673ffe4e005b0f729116"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-052.log",
+      "bytes": 60000,
+      "sha256": "2d17166089b7540f24427c8f2942b8350d24ea63869e7bd54804195b1721b8c2"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-053.log",
+      "bytes": 60000,
+      "sha256": "353dbeff89ad9d426a50bbdec7f37a80c3946563efa0889e1e710a2e6411abc5"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-054.log",
+      "bytes": 60000,
+      "sha256": "e6a8f982287404c9f947206fcf325aa3a227c3714f8534fda96e0f40ea2389b6"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-055.log",
+      "bytes": 60000,
+      "sha256": "f54ccf1c1381980fb58ff74eef45b2c9eb9c0f1b06220e79032adf7782ced624"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-056.log",
+      "bytes": 60000,
+      "sha256": "a1421bf829bd78fc48f7284acbbbf6f1dd48c7ef44ecb239409df1ca92453750"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-057.log",
+      "bytes": 60000,
+      "sha256": "0de864448808273be470ec555b7f0009b6f555b2ed7313fa035529fe924c0f6a"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-058.log",
+      "bytes": 60000,
+      "sha256": "fc103457ad628473caee871fade8b419aa5e42dd26ef2111a10531c36d68fa95"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-059.log",
+      "bytes": 60000,
+      "sha256": "01efcc6e90a9c6d6d78442ff540a35377cd4804c0c2fa3714f2fd764ac812220"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-060.log",
+      "bytes": 60000,
+      "sha256": "86dcd94f27236fd5a8967e78305da7d45f967db26cc8a2edb8b501f8d61e6482"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-061.log",
+      "bytes": 60000,
+      "sha256": "e67b34d0a34c30c79197711a8edff87df95e321d2e7e8bbbfd051629e32c7dd0"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-062.log",
+      "bytes": 60000,
+      "sha256": "2ba8d1df2630d7ca0417bf7eda62eebf908662e2909181ca5e8f1d8908cc127c"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-063.log",
+      "bytes": 60000,
+      "sha256": "355925597b1dfcea41322614ebac3416a87da470065cf7610e02faab747baa8e"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-064.log",
+      "bytes": 60000,
+      "sha256": "68ec3b97e3e453d2634c132c105edf36156855ffea1675876fc56eec139507e1"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-065.log",
+      "bytes": 60000,
+      "sha256": "a005e7834db85ed6e261748fc747d86492f9c5dfb89c25d25db50b215018124e"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-066.log",
+      "bytes": 60000,
+      "sha256": "872b3a687cd591a7fb3a88c87d14e5e20dd3f656261429881a87020ad405e3ca"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-067.log",
+      "bytes": 60000,
+      "sha256": "586e67103978e8c7309c52dd302d439f32437b3c55df53b8e378863ab678d518"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-068.log",
+      "bytes": 60000,
+      "sha256": "c599af34bad5bf933c334aabbe70a2b367edf49b7e309e4f3d40dbe908e015ee"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-069.log",
+      "bytes": 60000,
+      "sha256": "b7b2d43eb28b62212d26af517d229d5e127818dc2d7bdeed8a6ce2a29da09e5c"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-070.log",
+      "bytes": 60000,
+      "sha256": "ae45a37ebd14987d28ad91a5f56ea7d0040b87fe87cab294e5a425c90589463b"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-071.log",
+      "bytes": 60000,
+      "sha256": "cfa522467a232ce806fb1729630e9b964ca7579a7ee529c32a03ce47372725e8"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-072.log",
+      "bytes": 60000,
+      "sha256": "a13953c4a3c68b89be48b33479993e94df4eea6525a13218cdc05e7d018023d3"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-073.log",
+      "bytes": 60000,
+      "sha256": "6c42ee697adbacb09edd5f01f3ddb08082a6a8a0a5236aa879b032f12e3b2d5d"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-074.log",
+      "bytes": 60000,
+      "sha256": "6a61bea56ae8aa2b544c9b20849ffa911d5aa09628e8778151dcbbdce2afe6a7"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-075.log",
+      "bytes": 60000,
+      "sha256": "d5cfcb83b0a59911e83e18809b85dcc7ea88783c80c5ff10427c64ddeef685de"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-076.log",
+      "bytes": 60000,
+      "sha256": "b03560796d431623d26a0eb25cfd2c6ddc8b19da1bc45940c18e215bc2cd3375"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-077.log",
+      "bytes": 60000,
+      "sha256": "250aba0be3144d55d0871bd0bdbe92f1cb3e35627a5bf4d201acf4029e7b5097"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-078.log",
+      "bytes": 60000,
+      "sha256": "49e168b6e0c527d78ad715663e3d855d976a4b8ab0083f91c20361ddef605c47"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-079.log",
+      "bytes": 60000,
+      "sha256": "4f41e2d7c3c8c11758e9e1a9b49fd2b9b2dc5257d3c6fe51c2766d689ecaff45"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-080.log",
+      "bytes": 60000,
+      "sha256": "692b917b6f719866e0e82219c910caa65e26a5ca7d04c20421df474ba86f0b7c"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-081.log",
+      "bytes": 60000,
+      "sha256": "75a4f1a227d49b9ccf33a89f68c2d1063534e95489270078e972f8d9cbb63deb"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-082.log",
+      "bytes": 60000,
+      "sha256": "15d1f99b4f9122489f092d23ab977253e7dd1059147ca2638a98c382c908f6d2"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-083.log",
+      "bytes": 60000,
+      "sha256": "d30c71091ee1f8abc7ec67641573556938c8f62244019e4a768a445d57db1123"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-084.log",
+      "bytes": 60000,
+      "sha256": "eb2e582c8b52af86124d6489a08d70cad7034390a76519c4e2fceb62f802f76d"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-085.log",
+      "bytes": 60000,
+      "sha256": "00cecd36be4dad9ea5b067a8884c04cefc441b5ccc754bcb1ec63e404e50e2f8"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-086.log",
+      "bytes": 60000,
+      "sha256": "9e8b48d40744ed320a340a2b978d8896a8794318afc6d31b2207660d5776e326"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-087.log",
+      "bytes": 60000,
+      "sha256": "deb1e458994fad0c744d4377d39ef3b721ed611d16ed4dff27fa1773b9f39978"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-088.log",
+      "bytes": 60000,
+      "sha256": "db6ed2633648a3e37cdc02cdd776849a76e718660eb1639ff9ca90faec163ba6"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-089.log",
+      "bytes": 60000,
+      "sha256": "d0f78b2dcde2ef69e02ae051abdd72add534ac4d2d1b242f9550e139f11212d2"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-090.log",
+      "bytes": 60000,
+      "sha256": "4e974234bc64de9315baf7687238d06f3c0b01ccc85dd7742c57d707fd694fd9"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-091.log",
+      "bytes": 60000,
+      "sha256": "15de9cea34196cc4d4164475d2ba5fafc357e7c5c85524d5a27e7a39802d86a1"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-092.log",
+      "bytes": 60000,
+      "sha256": "df60305423a22fdf48fffc42a27054add91cc0870a083f4fb35c5b2d49088203"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-093.log",
+      "bytes": 60000,
+      "sha256": "a2fd27c7941f51d0007206699863dc3596a6c11bd32290ea9b153bdedf1038e0"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-094.log",
+      "bytes": 60000,
+      "sha256": "d61df9c4c348967223509ab4781143935003eaacc1800ca8e54938ee566ffd2a"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-095.log",
+      "bytes": 60000,
+      "sha256": "12fb945c638e2264c13530f5783ccfd225f56333f7d8ed448a2872ed41279e96"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-096.log",
+      "bytes": 60000,
+      "sha256": "a0bb2c7e42a6d78f3f111e91b97e1d76dde49e6fda1e8c40a8c71691f44dcd4f"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-097.log",
+      "bytes": 60000,
+      "sha256": "9f3a835364a8e03aa482bbcfc371779c4650c49787ffb0dd14e58ea3aeb46aaa"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-098.log",
+      "bytes": 60000,
+      "sha256": "3ff110154a460c8da1f1cb748ae2a474dece987a623ee277a5f993be675dac6a"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-099.log",
+      "bytes": 60000,
+      "sha256": "3e14619a3d04c14dc12f4d19c2983a39489b648aa30f53705f4ac70e21ce9a4d"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-100.log",
+      "bytes": 60000,
+      "sha256": "c4b9ab32670bf748af1e5864609ff397e8f46140bef110bc5ada789c553cbfa4"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-101.log",
+      "bytes": 60000,
+      "sha256": "fbc7735602b52552064ab5bace414eaf3bc545b4667672798645d73ff3efc8a6"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-102.log",
+      "bytes": 60000,
+      "sha256": "49c158393850e3708f430d34776f3c47513d1149e4a73c4e830978d82fd82b80"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-103.log",
+      "bytes": 60000,
+      "sha256": "91fc93138feaa9ef05d375f913bdba71076bf1425420499f874b13ca0c8f5477"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-104.log",
+      "bytes": 60000,
+      "sha256": "4a25155a3df78934880347cb9c29f6e137020147075fba777eac874733ea2c79"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-105.log",
+      "bytes": 60000,
+      "sha256": "bb9a3335c2600d8b60ed0e9c96dca986a7eb5bf3855b33d858d9ca7f7aa26d2c"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-106.log",
+      "bytes": 60000,
+      "sha256": "9e0aa37ae2e6bbf71845f718d667ffb29376e6fc99cfc11c532a6ff420006a5d"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-107.log",
+      "bytes": 60000,
+      "sha256": "61c54ffff1e37c385f107bd27e0d5202130d4a91f348b6b48bda5ccb835b5a13"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-108.log",
+      "bytes": 60000,
+      "sha256": "6756994812ed6f7141d8c1396cb4011716e9d788db4ddc68236545e0b15a5eb8"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-109.log",
+      "bytes": 60000,
+      "sha256": "e16ea8febda7d364c0921697901bd67460c585e05fc8de0e962ff70db71ab100"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-110.log",
+      "bytes": 60000,
+      "sha256": "897cee71217bcbc93e30214257440b3acb4f1df517efa438ad046053d60cf9bc"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-111.log",
+      "bytes": 60000,
+      "sha256": "f6583315d0b96d0ecd0fa0ff6172f71fe0e8473fb9e7711bcd78dd89a0621c03"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-112.log",
+      "bytes": 60000,
+      "sha256": "5fff3ab1b95461545f7745e50627ce41aab2d89037b01c12851f8811e05fd030"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-113.log",
+      "bytes": 60000,
+      "sha256": "c73c52898ac4cc6d9d15d7b763b599aae3eea295751d0cf0b4a0d19947c3a62c"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-114.log",
+      "bytes": 60000,
+      "sha256": "7a6d31e0574805a6690cbdcf183fa1be0ecb6140f19362df2776a85dab0e13ef"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-115.log",
+      "bytes": 60000,
+      "sha256": "689342496f8c878220c5ecad63459922c85beaff0b4cb70b80fbc5811b4d1373"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-116.log",
+      "bytes": 60000,
+      "sha256": "a28b5ab393618948f59b9e42f9cedc90ea6588c9154d4bcc6735cab5f7ef4c43"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-117.log",
+      "bytes": 60000,
+      "sha256": "2a3de27a90ef35ec36696e3c4e8c666d162f84495f7e4b0f763380c26510a08e"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-118.log",
+      "bytes": 60000,
+      "sha256": "78943388e51929621b63f5113c93f6666f39086971ea0c70320456715a9c826d"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-119.log",
+      "bytes": 60000,
+      "sha256": "ecf7a2496f11d8fb02a8b1b7e64c0e198f94408d2660c55929ad83d8371f1c1c"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-120.log",
+      "bytes": 60000,
+      "sha256": "8f343f4f41f850075e5b5b355ae8aceffba82ba3ee4fb8b20306adefd5bdd39c"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-121.log",
+      "bytes": 60000,
+      "sha256": "436ed6e4a89988906cf20f92a18cbc87541bfdc6aace50a0c6e11fade4998380"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-122.log",
+      "bytes": 60000,
+      "sha256": "953b8282d03a54972098314fb63aca3370a8816bb8709856b0a78641c683e2be"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-123.log",
+      "bytes": 60000,
+      "sha256": "8ba7ecddd655ccf6c57a7188a91bfe10ac41bb426adec75e952fb71caa9f4018"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-124.log",
+      "bytes": 60000,
+      "sha256": "3f34a6e53b1a0cdc764c817d19b507271fe1852bc06d69a85fcfaa3d4fe743b2"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-125.log",
+      "bytes": 60000,
+      "sha256": "548e18b7d0b094433674966008bc1a4e04f9e6830be81888a82ca204dff205df"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-126.log",
+      "bytes": 60000,
+      "sha256": "dd8a1ce7f1c384b80c165766426a6bc47075970f9fc61fb3159a912ab283100b"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-127.log",
+      "bytes": 60000,
+      "sha256": "d31ab74ee0f9af740804d977fe03839ee47c82c2b69700bbcf46a56af73c48c1"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-128.log",
+      "bytes": 60000,
+      "sha256": "f86c1c12ea0866fbf90083274cda0b456266654671741e41a9dcbc199cb42faf"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-129.log",
+      "bytes": 60000,
+      "sha256": "d6783547a6670893463bc9588ff010fe955041d5d4140ecc99fad283f71d922f"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-130.log",
+      "bytes": 60000,
+      "sha256": "2e4c0c5850ad377653f5ecfeccd18b9d1aa4b3aa3422e36dca25517bba3de953"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-131.log",
+      "bytes": 60000,
+      "sha256": "864e3431581731c01a9ff09674dd9ede65add6144ecf088aa98c7a6148970c77"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-132.log",
+      "bytes": 60000,
+      "sha256": "cfb3d2c892f07d885d0554d3463bab04310e8ac9010ff96ece1846b79de3fec8"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-133.log",
+      "bytes": 60000,
+      "sha256": "5669ee1f32a4ca74d3cbe7777acba95f598eadebc5873553301becff32716c66"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-134.log",
+      "bytes": 60000,
+      "sha256": "39c42222bba8e7761c1e5d5d4ce48665f739e98d7dd316922d1b92208c279b3d"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-135.log",
+      "bytes": 60000,
+      "sha256": "70c93dacb77cd126872af41577a4e1a3a86856ce1c6e94ab94ef4956e135a55c"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-136.log",
+      "bytes": 60000,
+      "sha256": "f658db3bd1812fb4f013418e96840c33d538b62158508e2c2181bc06a344f61c"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-137.log",
+      "bytes": 60000,
+      "sha256": "be8d4c8f81666bb3b96b4a37d6ac5b799e78ee6440f9974857da723fe737c2c4"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-138.log",
+      "bytes": 60000,
+      "sha256": "891a2a2f5cd5176fc684a80cbd395b1bc270aaec720ea5ffd32082b8f7195eb3"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-139.log",
+      "bytes": 60000,
+      "sha256": "330c83a17b1ec0ae18a036b1f85bb6f1ba8c19e78f85ad8538aa09f5047bd4a1"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-140.log",
+      "bytes": 60000,
+      "sha256": "08e2cb130da3430ef4d5e8ef038dc1f5f9cab6ee7b4c446a20ca1a8f979900c1"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-141.log",
+      "bytes": 60000,
+      "sha256": "320f8da489489df139e85e90a46d0145c96d13c177e56d49b3a082ca645aebf2"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-142.log",
+      "bytes": 60000,
+      "sha256": "c0bae4546648e293fb2137d45108672c3c7a9c4be9a3eb196578f984a60fd8b3"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-143.log",
+      "bytes": 60000,
+      "sha256": "99e65cef703a0ec54b660a6758f24516eaddced97da6ad3057680f166f87ba91"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-144.log",
+      "bytes": 60000,
+      "sha256": "313c2d61c45152d721701898a7d30ddc676e76053ff927f69d9f7d8b4d3bdc1e"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-145.log",
+      "bytes": 60000,
+      "sha256": "160bed1d992dd1be16f6ec9823608f03af3c3685ffa3d4a07f44d642d019e3fe"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-146.log",
+      "bytes": 60000,
+      "sha256": "456cd0a7b1a05be80ebec30e1f173034444edf23e3e98297c0d48930c85d255f"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-147.log",
+      "bytes": 60000,
+      "sha256": "2d0494f354fdec2851977c36f5d034ad087f55d253997756fccc1305ef13480e"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-148.log",
+      "bytes": 60000,
+      "sha256": "ca62619e18c59a6030cdc6966ad3652570535306beb4f6272b4818682bb593b7"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-149.log",
+      "bytes": 60000,
+      "sha256": "ddfa3f53c14fdc799b266d3d3f67474815350d65a8f6ef1ae9a3745627d45ee6"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-150.log",
+      "bytes": 60000,
+      "sha256": "237d915e1f834541eea1605965bfeaeea37e0afeddc9c92582df10ca5c211996"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-151.log",
+      "bytes": 60000,
+      "sha256": "2e24bc4e72b6c4f0558600487a3713cddb8ae9d2b8f172e3270ce78b762b677a"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-152.log",
+      "bytes": 60000,
+      "sha256": "649b3f83c4c2ce41426800e5fa065fac097f3ae77a13532a145395280577f6cb"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-153.log",
+      "bytes": 60000,
+      "sha256": "e50592b4be3479303ceea9ead319715430fba0386fcb34ffc42c2c3ced2e937a"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-154.log",
+      "bytes": 60000,
+      "sha256": "0b5cdb47aa980ce15caf1c3e87d31973dbc37e883accb7ebba64c0f34f528d9d"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-155.log",
+      "bytes": 60000,
+      "sha256": "45b82ff7ba529763d7364762740b240a537f00a6dd45880d05399195b8388879"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-156.log",
+      "bytes": 60000,
+      "sha256": "917ab081cef214410d4acf8d1ca773c135fd56dbaf203b65051ffbf6790576e4"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-157.log",
+      "bytes": 60000,
+      "sha256": "39d53a620f134180d5d7aa1b1e60caa636da8a780fcb3810f3eadb627f1e87b5"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-158.log",
+      "bytes": 60000,
+      "sha256": "bce2365f1faa56cea0651ddc290be3b0841ba1e3835fa4a420ea4456b18e0668"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-159.log",
+      "bytes": 60000,
+      "sha256": "8d14bb618512cecd1589f30efa77c3b81fbaf5b930a84ea00bd772893a1a18cb"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-160.log",
+      "bytes": 60000,
+      "sha256": "ae7d1c46e2a2f6f4bbcc9c027826aebd2d1d91b15d56779d7302dcc9e0758ca5"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-161.log",
+      "bytes": 60000,
+      "sha256": "1ad174192d90a975b581ecbffc3eab1af88cec3c576b87b02da4b24a5b393a0b"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-162.log",
+      "bytes": 60000,
+      "sha256": "680e7b1da0f2c75d49650307537a2e4b78428fda1d6f664de3cde78d3cb675e1"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-163.log",
+      "bytes": 60000,
+      "sha256": "9a3d7a4053644d9410f8ba314eac4af14121ba946cab9f56d6e2503e67915a28"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-164.log",
+      "bytes": 60000,
+      "sha256": "f5baca6138e9b090bdfdf5750abc55b2f63f719e918aa48ce19fc523451899ec"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-165.log",
+      "bytes": 60000,
+      "sha256": "b3330fd124d2c9c8a000b3dbb797cfed8b0b7d438c941e824391b612435b5309"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-166.log",
+      "bytes": 60000,
+      "sha256": "b504034c92496195e17f55585b87c86a581dc66bfa6026d12e814eed1268453e"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-167.log",
+      "bytes": 60000,
+      "sha256": "54e87cb83baecfe25ef37d516e7cb1a657021f20efc88c5bc595615e2ad35742"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-168.log",
+      "bytes": 60000,
+      "sha256": "611c65faf7133a6dde61d041b24d35ce2ae79fcd48c7b123495697caae5ca5df"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-169.log",
+      "bytes": 60000,
+      "sha256": "e5b6d151a6ba1a1b26d61a5dd6de743793243d9f3f3771efe53593a670303b67"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-170.log",
+      "bytes": 60000,
+      "sha256": "ee023f290d658b62cf612f6ea5e00f748c11475e1ef04456071e2d399b78654d"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-171.log",
+      "bytes": 60000,
+      "sha256": "ec6539cdd664070213ebdffc6fd0d5d5dd10e0c066df1433970786ab46766c01"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-172.log",
+      "bytes": 60000,
+      "sha256": "5105048a059cf4b7f94a1365fc0f21b3aa435bca1e32f22f89240bcc591bb21e"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-173.log",
+      "bytes": 60000,
+      "sha256": "eb69fbea00bedc3532fb91cf8e8252e892f8b5fd94f42eb1e7d99e12938141a9"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-174.log",
+      "bytes": 60000,
+      "sha256": "4284923cacc385b9a8b252246532eed7a3fa1bb2e676d9b118b923688ee74f37"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-175.log",
+      "bytes": 60000,
+      "sha256": "debe1b323d7a2338afe21a46cc1843a8b0e83e9a355015bf3a197bf9bb01f218"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-176.log",
+      "bytes": 60000,
+      "sha256": "8751212730531c8a3e51a58ac1578acd0997c415861248d69cc824a8f8a2eceb"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-177.log",
+      "bytes": 60000,
+      "sha256": "310649a99e1ec0320f9e82f1e148a841f23c1401e827f653684b224d22507ba9"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-178.log",
+      "bytes": 60000,
+      "sha256": "9c5197da7d9b1f244fd52d2f87133ba5669218a9b72c9edb795b2f43f2ca363d"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-179.log",
+      "bytes": 60000,
+      "sha256": "bcf42c7d6b83615d1b169406014428610c73cffc49de588c607265cfc6653036"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-180.log",
+      "bytes": 60000,
+      "sha256": "c96d4cb5ff3a9a7017b9dfec8302206998599f3788862a924b908020a2933be8"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-181.log",
+      "bytes": 60000,
+      "sha256": "bdaddeaf771f9cda0857f51f4367e7c9379ca22378d509e57cbccc4bed645a9a"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-182.log",
+      "bytes": 60000,
+      "sha256": "5412a883dda78b6ef0bfcee17fd95fe8531cbeceee22c16a1023de788bb9af01"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-183.log",
+      "bytes": 60000,
+      "sha256": "38db1bc2fb1107ba4a0f6850a86f531263935e7b60ea425fa638e092048cd117"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-184.log",
+      "bytes": 60000,
+      "sha256": "af0c2e78427e2ff3c19aafaeb12b52b874c9d48dab118deabfffd0b85ee7aad0"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-185.log",
+      "bytes": 60000,
+      "sha256": "829cc062e0b4c8dd54d51c8fc5b71af88fca43ff3650b18120b01361858de89d"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-186.log",
+      "bytes": 60000,
+      "sha256": "259ac7987e933783e27aad2f7b34a05ab90d8d41262682330c9bc1f9e791ac5c"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-187.log",
+      "bytes": 60000,
+      "sha256": "61b5a729d0f091a6a968312c14f81be095fb0c1b80994c3c3b1c72c0ba560641"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-188.log",
+      "bytes": 60000,
+      "sha256": "7a8718c6e4985aae4e2fd6cffe42c8d0fba46fe0a5c00cacfe631e505d287c9c"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-189.log",
+      "bytes": 60000,
+      "sha256": "4e8653d80e955932af630e49fba88387672d04f4f1760d4abebd490a880960ab"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-190.log",
+      "bytes": 60000,
+      "sha256": "1b7a9f7410ff811036ed13811fade721a143a03fd79f93fa01fdf36d9336ac16"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-191.log",
+      "bytes": 60000,
+      "sha256": "8f518b85437a0a231abccfd90d93ec55e41afa32cb009170638d590e64064ee1"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-192.log",
+      "bytes": 60000,
+      "sha256": "24b7b2c17544fa2ba921d9bf35832b6af2c8838110da6bb69fe82038cb2979ca"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-193.log",
+      "bytes": 60000,
+      "sha256": "e40d1f0edef342c32b4bb92d29857723a19e866bd9c352feee2bfe7d2e02442d"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-194.log",
+      "bytes": 60000,
+      "sha256": "863e99f7088a22345f28cb8afc106f377e5f5e8b99f4847a93c4d21bc39ef729"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-195.log",
+      "bytes": 60000,
+      "sha256": "436b3efd1333c25f0538dc2ae8ec7e72e69d5b9e8e07d261c0d54b2b995c707b"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-196.log",
+      "bytes": 60000,
+      "sha256": "b650bdf0967b5b6f1c744ad96b50dcded128e0a67b67f6de1357eeaf0eed8021"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-197.log",
+      "bytes": 60000,
+      "sha256": "c4bf3d9b62a78ce831faa81b28c950e094ba472ffd57f794c459963953c44e20"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-198.log",
+      "bytes": 60000,
+      "sha256": "4836fb5d9ef3e9467ed9ffca4c12d9dea69713454b2b84a10db7c9a9fc146ed7"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-199.log",
+      "bytes": 60000,
+      "sha256": "92335b91c66195cae8ff49a0946920a5e65af2b04d6f521435a11bd0daad8718"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-200.log",
+      "bytes": 60000,
+      "sha256": "f3499aaaaa07f1a773e5d9a746f8b40c07cb3665f092a5ab5133cde9eb333de9"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-201.log",
+      "bytes": 60000,
+      "sha256": "213e15fd8e835d55e0da0829fe57acd7a2da667683b1daab063235f26b36fdcc"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-202.log",
+      "bytes": 60000,
+      "sha256": "ceb0eca01a8f1da4902fc35821a4b3a59cc156c7d270a7f029f34c5a13359408"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-203.log",
+      "bytes": 60000,
+      "sha256": "3035a6dcad1e6c1d02e38d5092ad145911bdd63e2631658b97e404efa8207275"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-204.log",
+      "bytes": 60000,
+      "sha256": "f792f3c8a98d3db63e4c7352867bf70b77c010ec7ae0b4b33493dbe8d92ebf49"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-205.log",
+      "bytes": 60000,
+      "sha256": "451a41ce08833f95d65c2bba034cc5e86e1173d1c80796210e56b5bff9647220"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-206.log",
+      "bytes": 60000,
+      "sha256": "0e0459359257c9c8c6c7760b979560a25d288482835a61ad653339839c73f66e"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-207.log",
+      "bytes": 60000,
+      "sha256": "43dae8dbefb454ff1b835ff514902c57b2ae618f01f08583db6ffb9255a8ea1b"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-208.log",
+      "bytes": 60000,
+      "sha256": "823c05a1317c286248aa8715bb55cca53438ef6d6bbea911ae4490d47324df0a"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-209.log",
+      "bytes": 60000,
+      "sha256": "1164e19a1fef464d01e6e6adf86cd3e15b98d93f26120a10e1594f59e7c850a0"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-210.log",
+      "bytes": 60000,
+      "sha256": "75feebdf47bb408ec7c5aba79baaf055448c8b372103e6e7ce2569ba9e24542c"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-211.log",
+      "bytes": 60000,
+      "sha256": "0b22aa5603c699f8f7c8f0b05e9e3414e1be0f471d0f07935de15bbc81cf95a7"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-212.log",
+      "bytes": 60000,
+      "sha256": "971a520130a3a1011f4d416e4d7d49fa1d37b66d46e6203bd06790d920ceacba"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/part-213.log",
+      "bytes": 24951,
+      "sha256": "257ba4311ed13dd4bad4771e89720e10666ba41d58a5c57dd98eb605d3554884"
+    },
+    {
+      "path": "readable/prior-source-f40/hosted-canonical-cancelled-originals/unittest-console-log/parts.json",
+      "bytes": 31821,
+      "sha256": "ba582f29b933b40f92d7a50f443732271e4c0ee03d40c015e9218e2e62df30b9"
+    },
+    {
+      "path": "resource-native-guards.json",
+      "bytes": 2671,
+      "sha256": "70e9586e443982174c472cea7983be23667ac877497a766265f9cf92b7260d13"
+    },
+    {
+      "path": "source-transition-f40-to-b522.json",
+      "bytes": 1149,
+      "sha256": "2b5b327c0cd7d58f48ad00dab7a458873a28fa9df84c476cb7a3573e4b197834"
+    },
+    {
+      "path": "source.json",
+      "bytes": 362,
+      "sha256": "6472e25acf7b78bd5e673cd688b0bcc063acc6d82a324b52abd2e50eac847143"
+    }
+  ]
+}
