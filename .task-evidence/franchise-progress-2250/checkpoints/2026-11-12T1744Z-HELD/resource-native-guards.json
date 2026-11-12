@@ -1,0 +1,60 @@
+{
+  "source": {
+    "baseline": "05c717e50b47683963ed40d66946e9f6eea76694",
+    "candidate": "f40bf83c1abcb3b9763182f0a23e16374a12b404",
+    "tree": "21b31e05f255834fd2946f4b4e412cfd17bbb45a",
+    "branch": "feat/franchise-trade-progress-2250",
+    "version": "1.22.35",
+    "build": 2250,
+    "recorded_at": "2026-11-12T16:50:52.026222+00:00",
+    "expected_test_count": 4435,
+    "pr": 339
+  },
+  "publisher_guard": {
+    "path": "/workspace/dtos-publisher-2246/tools/release/publish.py",
+    "sha256": "91370b6d38c3be5c212e057e5cd8a33b4361b68926bdf9b899bff8a0baba6830"
+  },
+  "all_native_guards_passed": true,
+  "receipts": [
+    {
+      "name": "local-preflight",
+      "guard": "verify_preflight",
+      "passed": true,
+      "archive": "/workspace/2250-franchise-progress/local-resource-native-archives/local-preflight.zip",
+      "archive_sha256": "b56468d87907bd5f6e38ff2b18f726783c16e9b2d5250e3f92dfa46b3a70dfb7",
+      "archive_bytes": 3690,
+      "members": {
+        "result.json": "425ba017c7b493d0c19146f80adde955e41d11ae8497fe69df12cf98a7ed0d31",
+        "raw.log": "6c87e91255793f13b2eec1354dbf42c8d89dceb379ace6bcc870ed5d63223278",
+        "SHA256SUMS": "ac1d4ab2908e4d1bfd3354ba45c2e37a6992ab1c41edfcb568651325c35ddb5c"
+      }
+    },
+    {
+      "name": "local-restoration-unused",
+      "guard": "verify_actuals_restoration",
+      "passed": true,
+      "archive": "/workspace/2250-franchise-progress/local-resource-native-archives/local-restoration-unused.zip",
+      "archive_sha256": "51a75a5d8c5a4e45ecd057e3c07e05899ccc480e875d380bcddf195343e02cbc",
+      "archive_bytes": 7285515,
+      "members": {
+        "evidence/result.json": "a76c9313197a33f39e84b938ed5a25f67161a2796884386954b7d8eb51246a14",
+        "raw.log": "b7ba7e04c22939a24a3e0e5d6ce74ae52719061712bd35bda544613ce2f0c39b",
+        "prior-study.zip": "df5c88eda13a0671104c76a943b05032d7adfa089d11e738785b11e35a932439",
+        "SHA256SUMS": "6d36312fe76623ec4e4317a0488ac84a04eaf00179bbddfdcffdf62533f48c1c"
+      }
+    },
+    {
+      "name": "local-resident-refresh",
+      "guard": "verify_resident_refresh",
+      "passed": true,
+      "archive": "/workspace/2250-franchise-progress/local-resource-native-archives/local-resident-refresh.zip",
+      "archive_sha256": "b6750a91688451db2ecc7d8e5234c00040b9488b7af1f3d3a856fa9f4d721ac8",
+      "archive_bytes": 5833,
+      "members": {
+        "evidence/result.json": "393819699bbcf5009bb89559a16535736db8add02b46f258aa55b6ded32f947e",
+        "raw.log": "fe0ba262d24da3d5d80482d020a5434500b5859c88d0a2b092a69f5f92aa02ca",
+        "SHA256SUMS": "c7d88c90278aa4ede112b4ab4d685b16fe04c7981b052acdc33b906441ddff38"
+      }
+    }
+  ]
+}

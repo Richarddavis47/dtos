@@ -1,0 +1,29 @@
+{
+  "source": {
+    "baseline": "05c717e50b47683963ed40d66946e9f6eea76694",
+    "candidate": "f40bf83c1abcb3b9763182f0a23e16374a12b404",
+    "tree": "21b31e05f255834fd2946f4b4e412cfd17bbb45a",
+    "branch": "feat/franchise-trade-progress-2250",
+    "version": "1.22.35",
+    "build": 2250,
+    "recorded_at": "2026-11-12T16:50:52.026222+00:00",
+    "expected_test_count": 4435,
+    "pr": 339
+  },
+  "observed_at": "2026-11-12T17:30:21.564833+00:00",
+  "status": "CONFIRMED_500MS_FAILURE_CANCELLING_REMAINDER_NOT_A_COMPLETE_REGRESSION",
+  "failure": {
+    "event": "failure",
+    "test": "test_fois_process_execution.FOISProcessExecutionTests.test_prewarmed_worker_keeps_event_loop_responsive_with_large_irrelevant_data",
+    "time": 1794504181.6563835,
+    "pid": 32,
+    "rss": 679309312,
+    "cgroup": 784863232,
+    "error_type": "AssertionError",
+    "error_text": "542.7701490116306 not less than 500"
+  },
+  "completed_so_far": 1839,
+  "planned_tests": 4435,
+  "actual_cause": "Unresolved. Existing trace shows worker-generation completion at17:23:01.043571Z, then parent completion17:23:01.580787Z and an asyncio0.538s callback warning. The recorded loop gap542.770149ms exceeds500ms. No OOM/admission deferral; do not attribute the exact delay to GC or contention without measurement.",
+  "action": "SIGINT only the owned disposable unittest process32, allowing the unchanged validator/runner to record nonzero gate/exit and original manifest. No production process or data is affected."
+}

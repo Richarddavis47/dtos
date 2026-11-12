@@ -1,0 +1,22 @@
+{
+  "source": {
+    "baseline": "05c717e50b47683963ed40d66946e9f6eea76694",
+    "candidate": "f40bf83c1abcb3b9763182f0a23e16374a12b404",
+    "tree": "21b31e05f255834fd2946f4b4e412cfd17bbb45a",
+    "branch": "feat/franchise-trade-progress-2250",
+    "version": "1.22.35",
+    "build": 2250,
+    "recorded_at": "2026-11-12T16:50:52.026222+00:00",
+    "expected_test_count": 4435,
+    "pr": 339
+  },
+  "command": [
+    "docker",
+    "exec",
+    "c8a36b7f6bc22263402b83525310aae56143b5c5551ebc0babdd30964e818f67",
+    "python",
+    "-c",
+    "import os,signal; raw=open('/proc/32/cmdline','rb').read(); assert b'unittest' in raw; os.kill(32,signal.SIGINT)"
+  ],
+  "scope": "Cancellation of an already-failed disposable attempt; not normal-execution acceptance or an application-policy change"
+}
