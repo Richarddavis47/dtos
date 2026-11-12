@@ -8,6 +8,18 @@ def trade_workspace(view: dict, workflow: str, asset_id=None, owner_roster_id=No
     league = getattr(view.get("manager_context"), "league_id", "")
     titles = {"calculator": "Trade Calculator", "create": "Build a Trade", "trade-for": "Trade For", "shop": "Shop Asset", "recommended": "Generate Trades"}
     title = titles[workflow]
+    market_origin = ''
+    if view.get('market_need'):
+        need = view['market_need']
+        market_origin = ('<aside class="card" id="market-trade-origin" aria-label="Original Market context">'
+            '<b>Opened from Market for ' + escape(need['name']) + '</b><p>'
+            + escape(need['reason']) + '</p><p>This link supplies position relevance, not a trade evaluation. '
+            'Market movement is not revalidated here. This note describes the original target, not later edits. '
+            'Controls remain editable; explicitly run the search when ready.</p></aside>')
+    elif view.get('market_need_expired'):
+        market_origin = ('<aside class="card" id="market-trade-origin" role="status"><b>Market handoff needs review.</b>'
+            '<p>Its need, ownership or quote evidence changed or is unavailable. No new target was applied. '
+            'Existing Trade work is preserved; return to Market for current evidence. No new search or evaluation was started by this handoff.</p></aside>')
     calculator = workflow == 'calculator'
     market_editor = workflow in ('create', 'calculator')
     strategy_open = '<section class="tw-strategy-detail" aria-label="Team strategy">'
@@ -65,6 +77,7 @@ def trade_workspace(view: dict, workflow: str, asset_id=None, owner_roster_id=No
         )
     )
     return f'''<link rel="stylesheet" href="/static/css/trade_workspace.css">
+{market_origin}
 <section id="trade-builder" class="card tw-workspace" data-trade-workflow="{workflow}" data-front-office="{active}" data-league="{escape(league, quote=True)}" data-preload-asset="{escape(str(asset_id or ''), quote=True)}" data-owner-roster="{int(owner_roster_id or 0)}" data-team-need="{escape(json.dumps(view.get('team_need')), quote=True)}" data-team-need-expired="{str(bool(view.get('team_need_expired'))).lower()}">
 {heading}
 {intent_nav}

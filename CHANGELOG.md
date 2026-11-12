@@ -1,3 +1,11 @@
+# v1.22.33 / build 2248 — Market movement and your roster
+
+Market's existing movement section now connects compatible sparse canonical observations to the active franchise's current prepared starter or depth need. Up to three assets from the first ten results retain the existing Market order, comparison dates, source, observation age and coverage limits. Unsupported roster relevance leaves neutral observations available. Current neutral cost is separate from an asking price, lineup improvement or evaluated recommendation.
+
+An exact other-owned player can open Trade For after the existing account, league, franchise, ownership and evidence checks. The original reason remains visible and the controls stay editable. This Market handoff starts no search or evaluation; the manager explicitly chooses Generate. Changed need, quote or ownership evidence withholds the new target and preserves prior work. Personalized reasons and handoff identifiers never enter shared Market HTML caches.
+
+Sleeper results/projections, scoring, Neutral/Custom methods, exact picks, bilateral qualification, saved settings, submitted lineups and resource admission are unchanged. See docs/audits/MARKET_ROSTER_RELEVANCE_2248.md for scope and validation boundaries.
+
 # v1.22.32 / build 2247 — Your draft capital after this trade
 
 Prepared Trade assessments show owned picks before and after the exact exchange, grouped by retained season and the league's configured draft rounds. Own firsts remain distinct from acquired firsts; expandable identities include the original franchise. The existing two-offer comparison shows each recorded inventory alongside keeping the roster.

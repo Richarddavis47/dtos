@@ -86,6 +86,7 @@
     } catch (_) { button.textContent = 'Unable to open this proposal. Refresh the page and try again.'; button.disabled = false; }
   });
   const root = document.getElementById('trade-builder');
+  const manualMarketEntry = Boolean(document.getElementById('market-trade-origin'));
   if (!root) return;
   const tabOwner = tradeTabOwner();
   const replacePage = url => window.dtosNavigation ? window.dtosNavigation.replace(url) : location.replace(url);
@@ -322,7 +323,7 @@
     previousSearch(); persist(); paint();
     searchStatus('Search filter changed. Earlier offers are separate; no new search has run.', 'ready');
   }
-  function toggle(which, id) { if (busy) return; const required = which === 'sent' ? session.requiredOutgoingAsset : session.requiredIncomingAsset; if (id === required && selected[which].includes(id)) return message('The required target stays fixed. Choose Build My Own to change the trade objective.', true); if (selected[which].includes(id)) selected[which] = selected[which].filter(x => x !== id); else if (!selected.sent.includes(id) && !selected.received.includes(id)) selected[which].push(id); changed(); if ((flow === 'shop' && which === 'sent' && selected.sent.length === 1) || (flow === 'trade_for' && which === 'received' && selected.received.length === 1)) run('generate'); }
+  function toggle(which, id) { if (busy) return; const required = which === 'sent' ? session.requiredOutgoingAsset : session.requiredIncomingAsset; if (id === required && selected[which].includes(id)) return message('The required target stays fixed. Choose Build My Own to change the trade objective.', true); if (selected[which].includes(id)) selected[which] = selected[which].filter(x => x !== id); else if (!selected.sent.includes(id) && !selected.received.includes(id)) selected[which].push(id); changed(); if (!manualMarketEntry && ((flow === 'shop' && which === 'sent' && selected.sent.length === 1) || (flow === 'trade_for' && which === 'received' && selected.received.length === 1))) run('generate'); }
   function lockDetail(id) {
     const meanings = [];
     const kind = asset(id)?.kind || id.split(':')[0];
@@ -2039,7 +2040,8 @@
         previewOffer(row);
       }).catch(error => { if (!departed && revision === navigationRevision) message(error.message, true); });
     }
-    if (startTargetSearch && !entryBlocked && !departed) { run('generate', {}, {focusOnCompletion: flow !== 'shop'}); if (flow === 'shop') searchStatus('Searching automatically for this newly selected asset… Your proposal stays intact.', 'loading'); }
+    if (startTargetSearch && !entryBlocked && !departed && !manualMarketEntry) { run('generate', {}, {focusOnCompletion: flow !== 'shop'}); if (flow === 'shop') searchStatus('Searching automatically for this newly selected asset… Your proposal stays intact.', 'loading'); }
+    else if (startTargetSearch && !entryBlocked && !departed && manualMarketEntry) searchStatus('Market target ready. Edit the controls, then explicitly choose Generate to search. No search has run for this new Market entry.', 'ready');
   }).catch(error => {
     operationStatus('Current league assets could not be prepared. Your saved workspace has not been reset.', 'error');
     message(error.message, true);

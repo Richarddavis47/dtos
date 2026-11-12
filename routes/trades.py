@@ -286,6 +286,14 @@ def create_trades_router(*, ensure_fresh: EnsureFresh, require_data: RequireData
                     context['team_need'] = need if (need and need['fingerprint'] == team_need
                         and front_office == int(context['active_team']['roster_id'])) else None
                     context['team_need_expired'] = not context['team_need']
+            if workflow == 'trade-for' and team_need:
+                from services.market_roster_relevance import admitted_handoff
+                context['market_need'] = admitted_handoff(require_data(),
+                    int(context['active_team']['roster_id']), asset_id, team_need)
+                context['market_need_expired'] = not context['market_need']
+                if context['market_need_expired']:
+                    # Do not silently retarget a stale ownership/source handoff.
+                    asset_id, owner_roster_id = None, None
             if asset_id and workflow in {"shop", "trade-for"}:
                 ownership = validate_targeted_player_action(require_data(), asset_id, int(context["active_team"]["roster_id"]), workflow)
                 if ownership:
@@ -310,8 +318,8 @@ def create_trades_router(*, ensure_fresh: EnsureFresh, require_data: RequireData
         return await workflow_page("calculator", front_office)
 
     @router.get("/trades/trade-for", response_class=HTMLResponse)
-    async def trade_for_page(front_office: int | None = None, asset_id: str | None = None, owner_roster_id: int | None = None) -> HTMLResponse:
-        return await workflow_page("trade-for", front_office, asset_id, owner_roster_id)
+    async def trade_for_page(front_office: int | None = None, asset_id: str | None = None, owner_roster_id: int | None = None, team_need: str | None = None) -> HTMLResponse:
+        return await workflow_page("trade-for", front_office, asset_id, owner_roster_id, team_need)
 
     @router.get("/trades/shop", response_class=HTMLResponse)
     async def shop_asset_page(front_office: int | None = None, asset_id: str | None = None, owner_roster_id: int | None = None) -> HTMLResponse:

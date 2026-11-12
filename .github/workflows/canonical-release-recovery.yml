@@ -22,11 +22,11 @@ jobs:
   canonical-release:
     if: github.event_name != 'push'
     runs-on: ubuntu-24.04
-    # Preserve the complete growing regression suite and artifact cleanup time.
-    # Source0a4 completed4116/4261tests without errors before the70minCI
-    # deadline; matched substantial tests ran1.66x local. Allow75min, bounded.
-    # The 2 GiB / two-CPU / network-none controls and assertions stay unchanged.
-    timeout-minutes: 85
+    # Preserve the growing4399-test corpus after the measured80-minute
+    # timeout. Full-local controls took99.3-106.9minutes; identical Product
+    # application suites varied1.319x acrossCI runners (43124548703).
+    # Bound execution at150minutes plus cleanup/setup; all2GiB/CPU/assertions stay.
+    timeout-minutes: 160
     steps:
       - uses: actions/checkout@v4
         with:
@@ -97,6 +97,7 @@ jobs:
               DTOS_PREPARATION_BROWSER_EVIDENCE="/output/preparation-browser.json",
               DTOS_ACTIVATION_EVIDENCE="/output/activation",
               DTOS_FRONT_OFFICE_WORKFLOW_EVIDENCE="/output/front-office-workflow",
+              DTOS_MARKET_NEED_EVIDENCE="/output/market-needs",
               PYTHONPATH="/output/observer:/app")
           git_n = int(os.environ.get("GIT_CONFIG_COUNT", "0"))
           os.environ["GIT_CONFIG_COUNT"] = str(git_n + 1)
@@ -206,12 +207,12 @@ jobs:
               seed.seed_fixture_projection(data, FIXTURE / "projections.sqlite3")
               seed._canonical_history_fixture(FIXTURE)
               with (OUTPUT / "canonical.log").open("w") as stream:
-                  # Matched CI evidence completed4188/4326tests at75min, with
-                  # no assertion failures; remaining local work was38seconds.
-                  # Keep every test/cap/performance assertion, within the85min job.
+                  # Preserve every gate after the measured80-minute corpus
+                  # timeout; cleanup remains bounded and kills descendants.
+                  # The two-CPU/2GiB/network-none and assertions are unchanged.
                   result = run_canonical_process(
                       [sys.executable, "-m", "tools.validation.validate_release"],
-                      stream, timeout=4800, cleanup=process_cleanup)
+                      stream, timeout=9000, cleanup=process_cleanup)
               code = result.returncode
           except BaseException as exc:
               error = type(exc).__name__ + ": " + str(exc)
@@ -317,7 +318,7 @@ jobs:
           docker build --file .validation/canonical-build/Dockerfile --tag dtos-canonical-release:validation .validation/canonical-build 2>&1 | tee .validation/canonical-release/image-build.log
           docker run --rm dtos-canonical-release:validation sh -c 'python --version && chromium --version && python -m pip check' | tee .validation/canonical-release/environment.txt
       - name: Run unchanged ten-gate validator under actual 2 GiB
-        timeout-minutes: 82
+        timeout-minutes: 152
         env:
           DTOS_EXPECTED_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
         run: |

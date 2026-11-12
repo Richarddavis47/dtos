@@ -81,11 +81,17 @@ class CanonicalHarnessLifecycleTests(unittest.TestCase):
 
     def test_ci_budget_and_resource_contract_remain_bounded(self):
         source = WORKFLOW.read_text()
-        self.assertIn('timeout-minutes: 85', source)
-        self.assertIn('timeout-minutes: 82', source)
-        self.assertIn('stream, timeout=4800, cleanup=process_cleanup', source)
+        self.assertIn('    timeout-minutes: 160\n', source)
+        self.assertIn('        timeout-minutes: 152\n', source)
+        self.assertIn('stream, timeout=9000, cleanup=process_cleanup', source)
+        self.assertLess(9000, 152 * 60, 'Runner cleanup fits inside step budget')
+        self.assertLess(152, 160, 'Job retains bounded setup/artifact time')
         self.assertIn('[sys.executable, "-m", "tools.validation.validate_release"]', source)
         self.assertIn('--memory 2g --memory-swap 2g --cpus 2 --network none', source)
+        product = WORKFLOW.with_name('product-browser.yml').read_text()
+        self.assertIn('    timeout-minutes: 45\n', product)
+        self.assertIn('        timeout-minutes: 25\n', product)
+        self.assertIn('--memory=2g --memory-swap=2g --cpus=2 --network=none', product)
 
 
 if __name__ == '__main__':
