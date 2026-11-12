@@ -3039,7 +3039,11 @@ def collect(plan, root):
     require(digest(recovery) == plan["recovery_sha256"], "Recovery evidence changed")
     local_canonical = verify_local_recovery(recovery, plan)
     local_draft_capital = verify_draft_capital(
-        recovery, plan, prefix="local-canonical/offer-comparison/"
+        recovery, plan, prefix="local-capital-capture/"
+    )
+    local_draft_capital["evidence_origin"] = (
+        "Supplemental two-method local browser capture on the final source under enforced 2 GiB; "
+        "the original full canonical manifest is unchanged."
     )
     local_market_roster = verify_market_roster(
         recovery, plan, prefix="local-canonical/market-needs/"
