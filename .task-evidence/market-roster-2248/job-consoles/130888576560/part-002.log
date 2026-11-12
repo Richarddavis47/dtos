@@ -1,0 +1,454 @@
+requirements.txt (line 1))
+2026-11-12T00:42:30.2636935Z   Downloading opentelemetry_api-1.45.2-py3-none-any.whl.metadata (1.4 kB)
+2026-11-12T00:42:30.2832108Z Collecting click>=7.0 (from uvicorn<1.0,>=0.35->uvicorn[standard]<1.0,>=0.35->-r /home/runner/work/dtos/dtos/requirements.txt (line 2))
+2026-11-12T00:42:30.2906123Z   Downloading click-8.5.1-py3-none-any.whl.metadata (2.6 kB)
+2026-11-12T00:42:30.3038630Z Collecting h11>=0.8 (from uvicorn<1.0,>=0.35->uvicorn[standard]<1.0,>=0.35->-r /home/runner/work/dtos/dtos/requirements.txt (line 2))
+2026-11-12T00:42:30.3118060Z   Downloading h11-0.16.0-py3-none-any.whl.metadata (8.3 kB)
+2026-11-12T00:42:30.3315759Z Collecting certifi (from httpx<1.0,>=0.28->-r /home/runner/work/dtos/dtos/requirements.txt (line 3))
+2026-11-12T00:42:30.3424377Z   Downloading certifi-2026.10.23-py3-none-any.whl.metadata (2.5 kB)
+2026-11-12T00:42:30.3579577Z Collecting httpcore==1.* (from httpx<1.0,>=0.28->-r /home/runner/work/dtos/dtos/requirements.txt (line 3))
+2026-11-12T00:42:30.3719396Z   Downloading httpcore-1.0.9-py3-none-any.whl.metadata (21 kB)
+2026-11-12T00:42:30.3888832Z Collecting idna (from httpx<1.0,>=0.28->-r /home/runner/work/dtos/dtos/requirements.txt (line 3))
+2026-11-12T00:42:30.3962129Z   Downloading idna-3.20-py3-none-any.whl.metadata (7.2 kB)
+2026-11-12T00:42:30.4790225Z Collecting cffi>=2.0.0 (from cryptography<51,>=43->-r /home/runner/work/dtos/dtos/requirements.txt (line 7))
+2026-11-12T00:42:30.4869208Z   Downloading cffi-2.1.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (2.5 kB)
+2026-11-12T00:42:30.5094506Z Collecting argon2-cffi>=23.1.0 (from pwdlib[argon2]<1.0,>=0.2->-r /home/runner/work/dtos/dtos/requirements.txt (line 5))
+2026-11-12T00:42:30.5177773Z   Downloading argon2_cffi-25.1.0-py3-none-any.whl.metadata (4.1 kB)
+2026-11-12T00:42:30.5521968Z Collecting httptools>=0.8.0 (from uvicorn[standard]<1.0,>=0.35->-r /home/runner/work/dtos/dtos/requirements.txt (line 2))
+2026-11-12T00:42:30.5597409Z   Downloading httptools-0.9.0-cp312-cp312-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl.metadata (3.5 kB)
+2026-11-12T00:42:30.5834526Z Collecting python-dotenv>=0.13 (from uvicorn[standard]<1.0,>=0.35->-r /home/runner/work/dtos/dtos/requirements.txt (line 2))
+2026-11-12T00:42:30.5932101Z   Downloading python_dotenv-1.2.4-py3-none-any.whl.metadata (29 kB)
+2026-11-12T00:42:30.6255685Z Collecting pyyaml>=5.1 (from uvicorn[standard]<1.0,>=0.35->-r /home/runner/work/dtos/dtos/requirements.txt (line 2))
+2026-11-12T00:42:30.6332922Z   Downloading pyyaml-6.0.3-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (2.4 kB)
+2026-11-12T00:42:30.7224587Z Collecting uvloop>=0.15.1 (from uvicorn[standard]<1.0,>=0.35->-r /home/runner/work/dtos/dtos/requirements.txt (line 2))
+2026-11-12T00:42:30.7305721Z   Downloading uvloop-0.23.0-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (5.1 kB)
+2026-11-12T00:42:30.8171666Z Collecting watchfiles>=0.20 (from uvicorn[standard]<1.0,>=0.35->-r /home/runner/work/dtos/dtos/requirements.txt (line 2))
+2026-11-12T00:42:30.8248677Z   Downloading watchfiles-1.3.0-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (4.9 kB)
+2026-11-12T00:42:30.9335036Z Collecting websockets>=13.0 (from uvicorn[standard]<1.0,>=0.35->-r /home/runner/work/dtos/dtos/requirements.txt (line 2))
+2026-11-12T00:42:30.9416701Z   Downloading websockets-17.4-cp312-cp312-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl.metadata (6.3 kB)
+2026-11-12T00:42:30.9775083Z Collecting argon2-cffi-bindings (from argon2-cffi>=23.1.0->pwdlib[argon2]<1.0,>=0.2->-r /home/runner/work/dtos/dtos/requirements.txt (line 5))
+2026-11-12T00:42:30.9858971Z   Downloading argon2_cffi_bindings-26.1.0-cp310-abi3-manylinux_2_26_x86_64.manylinux_2_28_x86_64.whl.metadata (7.5 kB)
+2026-11-12T00:42:31.0009319Z Collecting pycparser (from cffi>=2.0.0->cryptography<51,>=43->-r /home/runner/work/dtos/dtos/requirements.txt (line 7))
+2026-11-12T00:42:31.0085584Z   Downloading pycparser-3.12-py3-none-any.whl.metadata (9.7 kB)
+2026-11-12T00:42:31.0251216Z Collecting annotated-types>=0.6.0 (from pydantic>=2.9.0->fastapi<1.0,>=0.116->-r /home/runner/work/dtos/dtos/requirements.txt (line 1))
+2026-11-12T00:42:31.0334973Z   Downloading annotated_types-0.8.0-py3-none-any.whl.metadata (15 kB)
+2026-11-12T00:42:31.6167339Z Collecting pydantic-core==2.50.4 (from pydantic>=2.9.0->fastapi<1.0,>=0.116->-r /home/runner/work/dtos/dtos/requirements.txt (line 1))
+2026-11-12T00:42:31.6242990Z   Downloading pydantic_core-2.50.4-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (6.6 kB)
+2026-11-12T00:42:31.6477400Z Downloading playwright-1.63.0-py3-none-manylinux1_x86_64.whl (48.2 MB)
+2026-11-12T00:42:32.2883133Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 48.2/48.2 MB 75.9 MB/s  0:00:00
+2026-11-12T00:42:32.2965189Z Downloading ruff-0.16.9-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (10.4 MB)
+2026-11-12T00:42:32.5716642Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 10.4/10.4 MB 37.2 MB/s  0:00:00
+2026-11-12T00:42:32.5808089Z Downloading fastapi-0.162.5-py3-none-any.whl (151 kB)
+2026-11-12T00:42:32.5908803Z Downloading uvicorn-0.54.0-py3-none-any.whl (87 kB)
+2026-11-12T00:42:32.6015111Z Downloading httpx-0.28.1-py3-none-any.whl (73 kB)
+2026-11-12T00:42:32.6109818Z Downloading psutil-7.2.2-cp36-abi3-manylinux2010_x86_64.manylinux_2_12_x86_64.manylinux_2_28_x86_64.whl (155 kB)
+2026-11-12T00:42:32.6221260Z Downloading pwdlib-0.3.1-py3-none-any.whl (9.3 kB)
+2026-11-12T00:42:32.6318615Z Downloading cryptography-50.0.2-cp311-abi3-manylinux_2_34_x86_64.whl (4.8 MB)
+2026-11-12T00:42:32.6766312Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.8/4.8 MB 107.9 MB/s  0:00:00
+2026-11-12T00:42:32.6843751Z Downloading pillow-12.3.0-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (6.9 MB)
+2026-11-12T00:42:32.7407499Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 6.9/6.9 MB 123.7 MB/s  0:00:00
+2026-11-12T00:42:32.7486749Z Downloading greenlet-3.5.6-cp312-cp312-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl (621 kB)
+2026-11-12T00:42:32.7533764Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 621.4/621.4 kB 131.3 MB/s  0:00:00
+2026-11-12T00:42:32.7608268Z Downloading httpcore-1.0.9-py3-none-any.whl (78 kB)
+2026-11-12T00:42:32.7707178Z Downloading pyee-13.0.1-py3-none-any.whl (15 kB)
+2026-11-12T00:42:32.7799201Z Downloading tzdata-2026.6-py2.py3-none-any.whl (348 kB)
+2026-11-12T00:42:32.7898865Z Downloading annotated_doc-0.0.6-py3-none-any.whl (5.3 kB)
+2026-11-12T00:42:32.7991545Z Downloading anyio-4.16.0-py3-none-any.whl (134 kB)
+2026-11-12T00:42:32.8404014Z Downloading argon2_cffi-25.1.0-py3-none-any.whl (14 kB)
+2026-11-12T00:42:32.8503491Z Downloading cffi-2.1.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (221 kB)
+2026-11-12T00:42:32.8602745Z Downloading click-8.5.1-py3-none-any.whl (126 kB)
+2026-11-12T00:42:32.9056291Z Downloading h11-0.16.0-py3-none-any.whl (37 kB)
+2026-11-12T00:42:32.9169912Z Downloading httptools-0.9.0-cp312-cp312-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl (552 kB)
+2026-11-12T00:42:32.9280063Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 552.8/552.8 kB 33.1 MB/s  0:00:00
+2026-11-12T00:42:32.9384477Z Downloading idna-3.20-py3-none-any.whl (69 kB)
+2026-11-12T00:42:32.9483415Z Downloading opentelemetry_api-1.45.2-py3-none-any.whl (60 kB)
+2026-11-12T00:42:32.9576641Z Downloading pydantic-2.14.3-py3-none-any.whl (494 kB)
+2026-11-12T00:42:32.9701202Z Downloading pydantic_core-2.50.4-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (2.3 MB)
+2026-11-12T00:42:32.9874934Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.3/2.3 MB 133.8 MB/s  0:00:00
+2026-11-12T00:42:32.9958048Z Downloading annotated_types-0.8.0-py3-none-any.whl (13 kB)
+2026-11-12T00:42:33.0051589Z Downloading python_dotenv-1.2.4-py3-none-any.whl (23 kB)
+2026-11-12T00:42:33.0148354Z Downloading pyyaml-6.0.3-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (807 kB)
+2026-11-12T00:42:33.0236525Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 807.9/807.9 kB 86.6 MB/s  0:00:00
+2026-11-12T00:42:33.0319669Z Downloading starlette-1.10.0-py3-none-any.whl (80 kB)
+2026-11-12T00:42:33.0421144Z Downloading typing_extensions-4.16.0-py3-none-any.whl (45 kB)
+2026-11-12T00:42:33.0523962Z Downloading typing_inspection-0.4.5-py3-none-any.whl (14 kB)
+2026-11-12T00:42:33.0622699Z Downloading uvloop-0.23.0-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (4.5 MB)
+2026-11-12T00:42:33.1040917Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.5/4.5 MB 107.8 MB/s  0:00:00
+2026-11-12T00:42:33.1119212Z Downloading watchfiles-1.3.0-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (458 kB)
+2026-11-12T00:42:33.1238569Z Downloading websockets-17.4-cp312-cp312-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl (226 kB)
+2026-11-12T00:42:33.1335471Z Downloading argon2_cffi_bindings-26.1.0-cp310-abi3-manylinux_2_26_x86_64.manylinux_2_28_x86_64.whl (26 kB)
+2026-11-12T00:42:33.1428521Z Downloading certifi-2026.10.23-py3-none-any.whl (135 kB)
+2026-11-12T00:42:33.1527566Z Downloading pycparser-3.12-py3-none-any.whl (62 kB)
+2026-11-12T00:42:33.3981628Z Installing collected packages: websockets, uvloop, tzdata, typing-extensions, ruff, pyyaml, python-dotenv, pycparser, pwdlib, psutil, Pillow, idna, httptools, h11, greenlet, click, certifi, annotated-types, annotated-doc, uvicorn, typing-inspection, pyee, pydantic-core, opentelemetry-api, httpcore, cffi, anyio, watchfiles, starlette, pydantic, playwright, httpx, cryptography, argon2-cffi-bindings, fastapi, argon2-cffi
+2026-11-12T00:42:36.6235612Z 
+2026-11-12T00:42:36.6262128Z Successfully installed Pillow-12.3.0 annotated-doc-0.0.6 annotated-types-0.8.0 anyio-4.16.0 argon2-cffi-25.1.0 argon2-cffi-bindings-26.1.0 certifi-2026.10.23 cffi-2.1.1 click-8.5.1 cryptography-50.0.2 fastapi-0.162.5 greenlet-3.5.6 h11-0.16.0 httpcore-1.0.9 httptools-0.9.0 httpx-0.28.1 idna-3.20 opentelemetry-api-1.45.2 playwright-1.63.0 psutil-7.2.2 pwdlib-0.3.1 pycparser-3.12 pydantic-2.14.3 pydantic-core-2.50.4 pyee-13.0.1 python-dotenv-1.2.4 pyyaml-6.0.3 ruff-0.16.9 starlette-1.10.0 typing-extensions-4.16.0 typing-inspection-0.4.5 tzdata-2026.6 uvicorn-0.54.0 uvloop-0.23.0 watchfiles-1.3.0 websockets-17.4
+2026-11-12T00:42:36.6270367Z 
+2026-11-12T00:42:36.6270918Z [notice] A new release of pip is available: 26.2.2 -> 26.3
+2026-11-12T00:42:36.6271483Z [notice] To update, run: pip install --upgrade pip
+2026-11-12T00:42:36.8022095Z ##[group]Run # Keep the same signed packages; Azure transfers repeatedly exhausted setup time.
+2026-11-12T00:42:36.8022695Z [36;1m# Keep the same signed packages; Azure transfers repeatedly exhausted setup time.[0m
+2026-11-12T00:42:36.8023077Z [36;1mif [ -f /etc/apt/apt-mirrors.txt ]; then[0m
+2026-11-12T00:42:36.8023582Z [36;1m  sudo sed -E -i 's|https?://azure.archive.ubuntu.com/ubuntu|https://archive.ubuntu.com/ubuntu|g' /etc/apt/apt-mirrors.txt[0m
+2026-11-12T00:42:36.8024032Z [36;1mfi[0m
+2026-11-12T00:42:36.8024479Z [36;1mpython -m playwright install --with-deps chromium[0m
+2026-11-12T00:42:36.8043522Z shell: /usr/bin/bash -e {0}
+2026-11-12T00:42:36.8043746Z env:
+2026-11-12T00:42:36.8043943Z   NODE_OPTIONS: --max-old-space-size=256
+2026-11-12T00:42:36.8044409Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-12T00:42:36.8044751Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib/pkgconfig
+2026-11-12T00:42:36.8045142Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-12T00:42:36.8045451Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-12T00:42:36.8045756Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-12T00:42:36.8046056Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib
+2026-11-12T00:42:36.8046320Z ##[endgroup]
+2026-11-12T00:42:37.1148618Z Installing dependencies...
+2026-11-12T00:42:37.1211701Z Switching to root user to install dependencies...
+2026-11-12T00:42:37.2196590Z Get:1 file:/etc/apt/apt-mirrors.txt Mirrorlist [139 B]
+2026-11-12T00:42:37.2445245Z Get:6 https://packages.microsoft.com/ubuntu/24.04/prod noble InRelease [3600 B]
+2026-11-12T00:42:37.5466228Z Get:7 https://packages.microsoft.com/ubuntu/24.04/prod noble/main amd64 Packages [764 kB]
+2026-11-12T00:42:37.5605366Z Get:8 https://packages.microsoft.com/ubuntu/24.04/prod noble/main armhf Packages [12.6 kB]
+2026-11-12T00:42:37.5632351Z Get:9 https://packages.microsoft.com/ubuntu/24.04/prod noble/main arm64 Packages [694 kB]
+2026-11-12T00:42:37.6870727Z Hit:2 https://archive.ubuntu.com/ubuntu noble InRelease
+2026-11-12T00:42:37.7604686Z Get:3 https://archive.ubuntu.com/ubuntu noble-updates InRelease [126 kB]
+2026-11-12T00:42:38.0198719Z Get:4 https://archive.ubuntu.com/ubuntu noble-backports InRelease [126 kB]
+2026-11-12T00:42:38.1350503Z Get:5 https://archive.ubuntu.com/ubuntu noble-security InRelease [126 kB]
+2026-11-12T00:42:38.2438243Z Get:10 https://archive.ubuntu.com/ubuntu noble-updates/main amd64 Packages [1450 kB]
+2026-11-12T00:42:38.5410792Z Get:11 https://archive.ubuntu.com/ubuntu noble-updates/main Translation-en [315 kB]
+2026-11-12T00:42:38.6190711Z Get:12 https://archive.ubuntu.com/ubuntu noble-updates/universe amd64 Packages [1711 kB]
+2026-11-12T00:42:38.7435787Z Get:13 https://archive.ubuntu.com/ubuntu noble-updates/universe Translation-en [344 kB]
+2026-11-12T00:42:38.8200157Z Get:14 https://archive.ubuntu.com/ubuntu noble-updates/restricted amd64 Packages [1883 kB]
+2026-11-12T00:42:38.9355364Z Get:15 https://archive.ubuntu.com/ubuntu noble-updates/restricted Translation-en [430 kB]
+2026-11-12T00:42:39.0121122Z Get:16 https://archive.ubuntu.com/ubuntu noble-updates/multiverse amd64 Packages [50.7 kB]
+2026-11-12T00:42:39.0809830Z Get:17 https://archive.ubuntu.com/ubuntu noble-updates/multiverse Translation-en [14.3 kB]
+2026-11-12T00:42:39.1492760Z Get:18 https://archive.ubuntu.com/ubuntu noble-security/main amd64 Packages [1186 kB]
+2026-11-12T00:42:39.2425640Z Get:19 https://archive.ubuntu.com/ubuntu noble-security/main Translation-en [237 kB]
+2026-11-12T00:42:39.4382038Z Get:20 https://archive.ubuntu.com/ubuntu noble-security/universe amd64 Packages [1228 kB]
+2026-11-12T00:42:39.5546124Z Get:21 https://archive.ubuntu.com/ubuntu noble-security/universe Translation-en [248 kB]
+2026-11-12T00:42:39.6271609Z Get:22 https://archive.ubuntu.com/ubuntu noble-security/restricted amd64 Packages [1779 kB]
+2026-11-12T00:42:39.7333172Z Get:23 https://archive.ubuntu.com/ubuntu noble-security/restricted Translation-en [409 kB]
+2026-11-12T00:42:39.8090775Z Get:24 https://archive.ubuntu.com/ubuntu noble-security/multiverse amd64 Packages [45.4 kB]
+2026-11-12T00:42:39.8778480Z Get:25 https://archive.ubuntu.com/ubuntu noble-security/multiverse Translation-en [12.4 kB]
+2026-11-12T00:42:43.1670426Z Fetched 13.2 MB in 3s (4931 kB/s)
+2026-11-12T00:42:44.1437585Z Reading package lists...
+2026-11-12T00:42:44.1709403Z Reading package lists...
+2026-11-12T00:42:44.4235803Z Building dependency tree...
+2026-11-12T00:42:44.4242565Z Reading state information...
+2026-11-12T00:42:44.5863779Z libasound2t64 is already the newest version (1.2.11-1ubuntu0.3).
+2026-11-12T00:42:44.5864900Z libasound2t64 set to manually installed.
+2026-11-12T00:42:44.5865388Z libatk-bridge2.0-0t64 is already the newest version (2.52.0-1build1).
+2026-11-12T00:42:44.5865910Z libatk-bridge2.0-0t64 set to manually installed.
+2026-11-12T00:42:44.5866391Z libatk1.0-0t64 is already the newest version (2.52.0-1build1).
+2026-11-12T00:42:44.5866890Z libatk1.0-0t64 set to manually installed.
+2026-11-12T00:42:44.5867333Z libatspi2.0-0t64 is already the newest version (2.52.0-1build1).
+2026-11-12T00:42:44.5867809Z libatspi2.0-0t64 set to manually installed.
+2026-11-12T00:42:44.5868209Z libcairo2 is already the newest version (1.18.0-3build1).
+2026-11-12T00:42:44.5868581Z libcairo2 set to manually installed.
+2026-11-12T00:42:44.5868954Z libcups2t64 is already the newest version (2.4.7-1.2ubuntu7.14).
+2026-11-12T00:42:44.5869346Z libcups2t64 set to manually installed.
+2026-11-12T00:42:44.5869637Z libdbus-1-3 is already the newest version (1.14.10-4ubuntu4.1).
+2026-11-12T00:42:44.5869916Z libdbus-1-3 set to manually installed.
+2026-11-12T00:42:44.5870188Z libdrm2 is already the newest version (2.4.125-1ubuntu0.1~24.04.2).
+2026-11-12T00:42:44.5870474Z libdrm2 set to manually installed.
+2026-11-12T00:42:44.5870800Z libgbm1 is already the newest version (25.2.8-0ubuntu0.24.04.4).
+2026-11-12T00:42:44.5871187Z libgbm1 set to manually installed.
+2026-11-12T00:42:44.5871467Z libglib2.0-0t64 is already the newest version (2.80.0-6ubuntu3.10).
+2026-11-12T00:42:44.5871763Z libglib2.0-0t64 set to manually installed.
+2026-11-12T00:42:44.5872030Z libnspr4 is already the newest version (2:4.35-1.1build1).
+2026-11-12T00:42:44.5872298Z libnspr4 set to manually installed.
+2026-11-12T00:42:44.5872611Z libnss3 is already the newest version (2:3.98-1ubuntu0.3).
+2026-11-12T00:42:44.5872936Z libnss3 set to manually installed.
+2026-11-12T00:42:44.5873202Z libpango-1.0-0 is already the newest version (1.52.1+ds-1build1).
+2026-11-12T00:42:44.5873499Z libpango-1.0-0 set to manually installed.
+2026-11-12T00:42:44.5873769Z libx11-6 is already the newest version (2:1.8.7-1ubuntu0.1).
+2026-11-12T00:42:44.5874290Z libx11-6 set to manually installed.
+2026-11-12T00:42:44.5874632Z libxcb1 is already the newest version (1.15-1ubuntu2).
+2026-11-12T00:42:44.5874987Z libxcb1 set to manually installed.
+2026-11-12T00:42:44.5875366Z libxcomposite1 is already the newest version (1:0.4.5-1build3).
+2026-11-12T00:42:44.5875836Z libxcomposite1 set to manually installed.
+2026-11-12T00:42:44.5876229Z libxdamage1 is already the newest version (1:1.1.6-1build1).
+2026-11-12T00:42:44.5877023Z libxdamage1 set to manually installed.
+2026-11-12T00:42:44.5877344Z libxext6 is already the newest version (2:1.3.4-1build2).
+2026-11-12T00:42:44.5877601Z libxext6 set to manually installed.
+2026-11-12T00:42:44.5877857Z libxfixes3 is already the newest version (1:6.0.0-2build1).
+2026-11-12T00:42:44.5878121Z libxfixes3 set to manually installed.
+2026-11-12T00:42:44.5878387Z libxkbcommon0 is already the newest version (1.6.0-1build1).
+2026-11-12T00:42:44.5878761Z libxkbcommon0 set to manually installed.
+2026-11-12T00:42:44.5879155Z libxrandr2 is already the newest version (2:1.5.2-2build1).
+2026-11-12T00:42:44.5879567Z libxrandr2 set to manually installed.
+2026-11-12T00:42:44.5879948Z xvfb is already the newest version (2:21.1.12-1ubuntu1.9).
+2026-11-12T00:42:44.5880439Z fonts-noto-color-emoji is already the newest version (2.047-0ubuntu0.24.04.1).
+2026-11-12T00:42:44.5880994Z libfontconfig1 is already the newest version (2.15.0-1.1ubuntu2).
+2026-11-12T00:42:44.5881303Z libfontconfig1 set to manually installed.
+2026-11-12T00:42:44.5881591Z libfreetype6 is already the newest version (2.13.2+dfsg-1ubuntu0.2).
+2026-11-12T00:42:44.5882044Z libfreetype6 set to manually installed.
+2026-11-12T00:42:44.5882445Z fonts-liberation is already the newest version (1:2.1.5-3).
+2026-11-12T00:42:44.5882888Z fonts-liberation set to manually installed.
+2026-11-12T00:42:44.5883312Z The following additional packages will be installed:
+2026-11-12T00:42:44.5883712Z   xfonts-encodings xfonts-utils
+2026-11-12T00:42:44.5884059Z Recommended packages:
+2026-11-12T00:42:44.5884527Z   fonts-ipafont-mincho fonts-tlwg-loma
+2026-11-12T00:42:44.6065097Z The following NEW packages will be installed:
+2026-11-12T00:42:44.6065800Z   fonts-freefont-ttf fonts-ipafont-gothic fonts-tlwg-loma-otf fonts-unifont
+2026-11-12T00:42:44.6077391Z   fonts-wqy-zenhei xfonts-cyrillic xfonts-encodings xfonts-scalable
+2026-11-12T00:42:44.6077893Z   xfonts-utils
+2026-11-12T00:42:44.6265107Z 0 upgraded, 9 newly installed, 0 to remove and 48 not upgraded.
+2026-11-12T00:42:44.6265650Z Need to get 21.1 MB of archives.
+2026-11-12T00:42:44.6266091Z After this operation, 79.5 MB of additional disk space will be used.
+2026-11-12T00:42:44.6266594Z Get:1 file:/etc/apt/apt-mirrors.txt Mirrorlist [139 B]
+2026-11-12T00:42:45.3474497Z Get:2 https://archive.ubuntu.com/ubuntu noble/universe amd64 fonts-ipafont-gothic all 00303-21ubuntu1 [3513 kB]
+2026-11-12T00:42:46.7482740Z Get:3 https://archive.ubuntu.com/ubuntu noble/main amd64 fonts-freefont-ttf all 20211204+svn4273-2 [5641 kB]
+2026-11-12T00:42:47.1388256Z Get:4 https://archive.ubuntu.com/ubuntu noble/universe amd64 fonts-tlwg-loma-otf all 1:0.7.3-1 [107 kB]
+2026-11-12T00:42:47.3017605Z Get:5 https://archive.ubuntu.com/ubuntu noble/universe amd64 fonts-unifont all 1:15.1.01-1build1 [2993 kB]
+2026-11-12T00:42:47.5104556Z Get:6 https://archive.ubuntu.com/ubuntu noble/universe amd64 fonts-wqy-zenhei all 0.9.45-8 [7472 kB]
+2026-11-12T00:42:47.7902320Z Get:7 https://archive.ubuntu.com/ubuntu noble/main amd64 xfonts-encodings all 1:1.0.5-0ubuntu2 [578 kB]
+2026-11-12T00:42:47.9589660Z Get:8 https://archive.ubuntu.com/ubuntu noble/main amd64 xfonts-utils amd64 1:7.7+6build3 [94.4 kB]
+2026-11-12T00:42:48.1216757Z Get:9 https://archive.ubuntu.com/ubuntu noble/universe amd64 xfonts-cyrillic all 1:1.0.5+nmu1 [384 kB]
+2026-11-12T00:42:48.2880933Z Get:10 https://archive.ubuntu.com/ubuntu noble/main amd64 xfonts-scalable all 1:1.0.3-1.3 [304 kB]
+2026-11-12T00:42:48.5763914Z Fetched 21.1 MB in 4s (5736 kB/s)
+2026-11-12T00:42:48.5965598Z Selecting previously unselected package fonts-ipafont-gothic.
+2026-11-12T00:42:48.6151852Z (Reading database ... 
+2026-11-12T00:42:48.6152138Z (Reading database ... 5%
+2026-11-12T00:42:48.6152357Z (Reading database ... 10%
+2026-11-12T00:42:48.6152555Z (Reading database ... 15%
+2026-11-12T00:42:48.6152760Z (Reading database ... 20%
+2026-11-12T00:42:48.6152971Z (Reading database ... 25%
+2026-11-12T00:42:48.6153174Z (Reading database ... 30%
+2026-11-12T00:42:48.6153972Z (Reading database ... 35%
+2026-11-12T00:42:48.6154532Z (Reading database ... 40%
+2026-11-12T00:42:48.6154840Z (Reading database ... 45%
+2026-11-12T00:42:48.6155034Z (Reading database ... 50%
+2026-11-12T00:42:48.6233456Z (Reading database ... 55%
+2026-11-12T00:42:48.8175523Z (Reading database ... 60%
+2026-11-12T00:42:49.4385235Z (Reading database ... 65%
+2026-11-12T00:42:49.8984750Z (Reading database ... 70%
+2026-11-12T00:42:50.2296306Z (Reading database ... 75%
+2026-11-12T00:42:50.4115189Z (Reading database ... 80%
+2026-11-12T00:42:50.6185879Z (Reading database ... 85%
+2026-11-12T00:42:50.8525212Z (Reading database ... 90%
+2026-11-12T00:42:50.9359259Z (Reading database ... 95%
+2026-11-12T00:42:50.9359626Z (Reading database ... 100%
+2026-11-12T00:42:50.9360050Z (Reading database ... 215960 files and directories currently installed.)
+2026-11-12T00:42:50.9405033Z Preparing to unpack .../0-fonts-ipafont-gothic_00303-21ubuntu1_all.deb ...
+2026-11-12T00:42:50.9576589Z Unpacking fonts-ipafont-gothic (00303-21ubuntu1) ...
+2026-11-12T00:42:51.2280435Z Selecting previously unselected package fonts-freefont-ttf.
+2026-11-12T00:42:51.2407027Z Preparing to unpack .../1-fonts-freefont-ttf_20211204+svn4273-2_all.deb ...
+2026-11-12T00:42:51.2414021Z Unpacking fonts-freefont-ttf (20211204+svn4273-2) ...
+2026-11-12T00:42:51.3726528Z Selecting previously unselected package fonts-tlwg-loma-otf.
+2026-11-12T00:42:51.3850556Z Preparing to unpack .../2-fonts-tlwg-loma-otf_1%3a0.7.3-1_all.deb ...
+2026-11-12T00:42:51.3856954Z Unpacking fonts-tlwg-loma-otf (1:0.7.3-1) ...
+2026-11-12T00:42:51.4067720Z Selecting previously unselected package fonts-unifont.
+2026-11-12T00:42:51.4198143Z Preparing to unpack .../3-fonts-unifont_1%3a15.1.01-1build1_all.deb ...
+2026-11-12T00:42:51.4276033Z Unpacking fonts-unifont (1:15.1.01-1build1) ...
+2026-11-12T00:42:51.6383058Z Selecting previously unselected package fonts-wqy-zenhei.
+2026-11-12T00:42:51.6511250Z Preparing to unpack .../4-fonts-wqy-zenhei_0.9.45-8_all.deb ...
+2026-11-12T00:42:51.6611112Z Unpacking fonts-wqy-zenhei (0.9.45-8) ...
+2026-11-12T00:42:52.1187557Z Selecting previously unselected package xfonts-encodings.
+2026-11-12T00:42:52.1313943Z Preparing to unpack .../5-xfonts-encodings_1%3a1.0.5-0ubuntu2_all.deb ...
+2026-11-12T00:42:52.1320804Z Unpacking xfonts-encodings (1:1.0.5-0ubuntu2) ...
+2026-11-12T00:42:52.2628074Z Selecting previously unselected package xfonts-utils.
+2026-11-12T00:42:52.2754332Z Preparing to unpack .../6-xfonts-utils_1%3a7.7+6build3_amd64.deb ...
+2026-11-12T00:42:52.2761855Z Unpacking xfonts-utils (1:7.7+6build3) ...
+2026-11-12T00:42:52.7099956Z Selecting previously unselected package xfonts-cyrillic.
+2026-11-12T00:42:52.7229203Z Preparing to unpack .../7-xfonts-cyrillic_1%3a1.0.5+nmu1_all.deb ...
+2026-11-12T00:42:52.7237761Z Unpacking xfonts-cyrillic (1:1.0.5+nmu1) ...
+2026-11-12T00:42:53.0098168Z Selecting previously unselected package xfonts-scalable.
+2026-11-12T00:42:53.0227305Z Preparing to unpack .../8-xfonts-scalable_1%3a1.0.3-1.3_all.deb ...
+2026-11-12T00:42:53.0234233Z Unpacking xfonts-scalable (1:1.0.3-1.3) ...
+2026-11-12T00:42:53.0722590Z Setting up fonts-wqy-zenhei (0.9.45-8) ...
+2026-11-12T00:42:53.0836341Z Setting up fonts-freefont-ttf (20211204+svn4273-2) ...
+2026-11-12T00:42:53.0891954Z Setting up fonts-tlwg-loma-otf (1:0.7.3-1) ...
+2026-11-12T00:42:53.0919326Z Setting up xfonts-encodings (1:1.0.5-0ubuntu2) ...
+2026-11-12T00:42:53.0937581Z Setting up fonts-ipafont-gothic (00303-21ubuntu1) ...
+2026-11-12T00:42:53.1002249Z update-alternatives: using /usr/share/fonts/opentype/ipafont-gothic/ipag.ttf to provide /usr/share/fonts/truetype/fonts-japanese-gothic.ttf (fonts-japanese-gothic.ttf) in auto mode
+2026-11-12T00:42:53.1016759Z Setting up fonts-unifont (1:15.1.01-1build1) ...
+2026-11-12T00:42:53.1034314Z Setting up xfonts-utils (1:7.7+6build3) ...
+2026-11-12T00:42:53.1075125Z Setting up xfonts-cyrillic (1:1.0.5+nmu1) ...
+2026-11-12T00:42:53.1339075Z Setting up xfonts-scalable (1:1.0.3-1.3) ...
+2026-11-12T00:42:53.1602076Z Processing triggers for man-db (2.12.0-4build2) ...
+2026-11-12T00:42:53.1682830Z Not building database; man-db/auto-update is not 'true'.
+2026-11-12T00:42:53.1696848Z Processing triggers for fontconfig (2.15.0-1.1ubuntu2) ...
+2026-11-12T00:42:54.0784014Z 
+2026-11-12T00:42:54.0784629Z Running kernel seems to be up-to-date.
+2026-11-12T00:42:54.0784859Z 
+2026-11-12T00:42:54.0784954Z No services need to be restarted.
+2026-11-12T00:42:54.0785114Z 
+2026-11-12T00:42:54.0785203Z No containers need to be restarted.
+2026-11-12T00:42:54.0785357Z 
+2026-11-12T00:42:54.0785469Z No user sessions are running outdated binaries.
+2026-11-12T00:42:54.0785637Z 
+2026-11-12T00:42:54.0785799Z No VM guests are running outdated hypervisor (qemu) binaries on this host.
+2026-11-12T00:42:55.2110138Z Downloading Chrome for Testing 153.0.8010.12 (playwright chromium v1243) from https://cdn.playwright.dev/builds/cft/153.0.8010.12/linux64/chrome-linux64.zip
+2026-11-12T00:42:55.5849530Z |                                                                                |   0% of 186.8 MiB
+2026-11-12T00:42:55.7510799Z |■■■■■■■■                                                                        |  10% of 186.8 MiB
+2026-11-12T00:42:55.8313824Z |■■■■■■■■■■■■■■■■                                                                |  20% of 186.8 MiB
+2026-11-12T00:42:55.9196035Z |■■■■■■■■■■■■■■■■■■■■■■■■                                                        |  30% of 186.8 MiB
+2026-11-12T00:42:55.9778628Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                                |  40% of 186.8 MiB
+2026-11-12T00:42:56.0395021Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                        |  50% of 186.8 MiB
+2026-11-12T00:42:56.1120187Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                |  60% of 186.8 MiB
+2026-11-12T00:42:56.1922164Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                        |  70% of 186.8 MiB
+2026-11-12T00:42:56.2641120Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                |  80% of 186.8 MiB
+2026-11-12T00:42:56.3141327Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■        |  90% of 186.8 MiB
+2026-11-12T00:42:56.3826805Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■| 100% of 186.8 MiB
+2026-11-12T00:42:59.1515113Z Chrome for Testing 153.0.8010.12 (playwright chromium v1243) downloaded to /home/runner/.cache/ms-playwright/chromium-1243
+2026-11-12T00:42:59.1519865Z Downloading FFmpeg (playwright ffmpeg v1011) from https://cdn.playwright.dev/dbazure/download/playwright/builds/ffmpeg/1011/ffmpeg-linux.zip
+2026-11-12T00:42:59.5295344Z |                                                                                |   0% of 2.3 MiB
+2026-11-12T00:42:59.5787744Z |■■■■■■■■                                                                        |  10% of 2.3 MiB
+2026-11-12T00:42:59.6004496Z |■■■■■■■■■■■■■■■■                                                                |  20% of 2.3 MiB
+2026-11-12T00:42:59.6144682Z |■■■■■■■■■■■■■■■■■■■■■■■■                                                        |  30% of 2.3 MiB
+2026-11-12T00:42:59.6238655Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                                |  40% of 2.3 MiB
+2026-11-12T00:42:59.6308664Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                        |  50% of 2.3 MiB
+2026-11-12T00:42:59.6374632Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                |  60% of 2.3 MiB
+2026-11-12T00:42:59.6426977Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                        |  70% of 2.3 MiB
+2026-11-12T00:42:59.6474974Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                |  80% of 2.3 MiB
+2026-11-12T00:42:59.6513116Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■        |  90% of 2.3 MiB
+2026-11-12T00:42:59.6546754Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■| 100% of 2.3 MiB
+2026-11-12T00:42:59.7285336Z FFmpeg (playwright ffmpeg v1011) downloaded to /home/runner/.cache/ms-playwright/ffmpeg-1011
+2026-11-12T00:42:59.7289150Z Downloading Chrome Headless Shell 153.0.8010.12 (playwright chromium-headless-shell v1243) from https://cdn.playwright.dev/builds/cft/153.0.8010.12/linux64/chrome-headless-shell-linux64.zip
+2026-11-12T00:43:00.0904234Z |                                                                                |   0% of 114.3 MiB
+2026-11-12T00:43:00.1787326Z |■■■■■■■■                                                                        |  10% of 114.3 MiB
+2026-11-12T00:43:00.2638029Z |■■■■■■■■■■■■■■■■                                                                |  20% of 114.3 MiB
+2026-11-12T00:43:00.3291735Z |■■■■■■■■■■■■■■■■■■■■■■■■                                                        |  30% of 114.3 MiB
+2026-11-12T00:43:00.3787621Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                                |  40% of 114.3 MiB
+2026-11-12T00:43:00.4587027Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                        |  50% of 114.3 MiB
+2026-11-12T00:43:00.5156687Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                |  60% of 114.3 MiB
+2026-11-12T00:43:00.6048912Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                        |  70% of 114.3 MiB
+2026-11-12T00:43:00.6587594Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                |  80% of 114.3 MiB
+2026-11-12T00:43:00.7293269Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■        |  90% of 114.3 MiB
+2026-11-12T00:43:00.7959366Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■| 100% of 114.3 MiB
+2026-11-12T00:43:02.5605396Z Chrome Headless Shell 153.0.8010.12 (playwright chromium-headless-shell v1243) downloaded to /home/runner/.cache/ms-playwright/chromium_headless_shell-1243
+2026-11-12T00:43:02.5840770Z ##[group]Run python -m unittest tests.test_trade_timeline tests.test_historical_faab_conflicts tests.test_historical_tracker_phase2 tests.test_historical_tracker_phase2_browser tests.test_history_final_source tests.test_history_final_source_browser tests.test_playoff_participant_integrity tests.test_playoff_participant_browser tests.test_championship_evidence_consistency tests.test_championship_evidence_browser tests.test_trade_timeline_browser.TradeTimelineBrowserTests tests.test_historical_trade_time tests.test_fois_evidence_integrity tests.test_historical_state_integrity tests.test_historical_state_sources tests.test_fois_decision_context tests.test_historicalstore_migration tests.test_historical_player_evidence tests.test_historical_player_evidence_browser tests.test_historical_retained_admission tests.test_historical_retained_admission_browser tests.test_historical_snapshot_integrity tests.test_market_trend_current_integration tests.test_data_normalization tests.test_batch2_history_reconciliation tests.test_player_history_batch
+2026-11-12T00:43:02.5846825Z [36;1mpython -m unittest tests.test_trade_timeline tests.test_historical_faab_conflicts tests.test_historical_tracker_phase2 tests.test_historical_tracker_phase2_browser tests.test_history_final_source tests.test_history_final_source_browser tests.test_playoff_participant_integrity tests.test_playoff_participant_browser tests.test_championship_evidence_consistency tests.test_championship_evidence_browser tests.test_trade_timeline_browser.TradeTimelineBrowserTests tests.test_historical_trade_time tests.test_fois_evidence_integrity tests.test_historical_state_integrity tests.test_historical_state_sources tests.test_fois_decision_context tests.test_historicalstore_migration tests.test_historical_player_evidence tests.test_historical_player_evidence_browser tests.test_historical_retained_admission tests.test_historical_retained_admission_browser tests.test_historical_snapshot_integrity tests.test_market_trend_current_integration tests.test_data_normalization tests.test_batch2_history_reconciliation tests.test_player_history_batch[0m
+2026-11-12T00:43:02.5867700Z shell: /usr/bin/bash -e {0}
+2026-11-12T00:43:02.5867914Z env:
+2026-11-12T00:43:02.5868104Z   NODE_OPTIONS: --max-old-space-size=256
+2026-11-12T00:43:02.5868383Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-12T00:43:02.5868742Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib/pkgconfig
+2026-11-12T00:43:02.5869091Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-12T00:43:02.5869402Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-12T00:43:02.5869696Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-12T00:43:02.5869994Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib
+2026-11-12T00:43:02.5870259Z ##[endgroup]
+2026-11-12T00:43:03.0153696Z /opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+2026-11-12T00:43:03.0155083Z   from starlette.testclient import TestClient as TestClient  # noqa
+2026-11-12T00:43:12.6442129Z ...........INFO:httpx:HTTP Request: GET http://testserver/trades/history/1333655835015942144 "HTTP/1.1 200 OK"
+2026-11-12T00:43:12.6500463Z INFO:httpx:HTTP Request: GET http://testserver/picks/PICK-2026-R2-ORIG7?from_trade=1333655835015942144 "HTTP/1.1 200 OK"
+2026-11-12T00:43:12.6549931Z INFO:httpx:HTTP Request: GET http://testserver/api/trades/history/1333655835015942144 "HTTP/1.1 200 OK"
+2026-11-12T00:43:13.1800778Z .....INFO:httpx:HTTP Request: GET http://testserver/api/history/transactions "HTTP/1.1 200 OK"
+2026-11-12T00:43:13.2156614Z INFO:httpx:HTTP Request: GET http://testserver/api/history/trades/coverage "HTTP/1.1 200 OK"
+2026-11-12T00:43:13.2302229Z INFO:httpx:HTTP Request: GET http://testserver/api/history/players/13346 "HTTP/1.1 200 OK"
+2026-11-12T00:43:13.2370367Z INFO:httpx:HTTP Request: GET http://testserver/trades/history/1333655835015942144 "HTTP/1.1 200 OK"
+2026-11-12T00:43:13.2409011Z INFO:httpx:HTTP Request: GET http://testserver/trades/history/1333655835015942144 "HTTP/1.1 200 OK"
+2026-11-12T00:43:13.9794039Z ........INFO:httpx:HTTP Request: GET http://testserver/trades/history/965057520920260608 "HTTP/1.1 200 OK"
+2026-11-12T00:43:15.4890766Z ..INFO:httpx:HTTP Request: GET http://testserver/api/history/players/score/seasons "HTTP/1.1 200 OK"
+2026-11-12T00:43:15.5392378Z INFO:httpx:HTTP Request: GET http://testserver/api/history/players/score/seasons "HTTP/1.1 200 OK"
+2026-11-12T00:43:15.9856629Z .INFO:httpx:HTTP Request: GET http://testserver/api/history/franchises/1 "HTTP/1.1 200 OK"
+2026-11-12T00:43:16.3088891Z ..INFO:httpx:HTTP Request: GET http://testserver/api/history/players/score "HTTP/1.1 200 OK"
+2026-11-12T00:43:16.3696934Z INFO:httpx:HTTP Request: GET http://testserver/api/history/players/score "HTTP/1.1 200 OK"
+2026-11-12T00:43:17.0818044Z .INFO:httpx:HTTP Request: GET http://testserver/trades/history/1333655835015942144/production "HTTP/1.1 200 OK"
+2026-11-12T00:43:17.6677514Z .INFO:httpx:HTTP Request: GET http://testserver/picks/PICK-2026-R2-ORIG7?from_trade=1333655835015942144 "HTTP/1.1 200 OK"
+2026-11-12T00:43:17.8176865Z INFO:httpx:HTTP Request: GET http://testserver/players/13346?from_trade=1333655835015942144 "HTTP/1.1 200 OK"
+2026-11-12T00:43:17.8251068Z INFO:httpx:HTTP Request: GET http://testserver/history/player/13346?from_trade=1333655835015942144 "HTTP/1.1 200 OK"
+2026-11-12T00:43:17.8426373Z INFO:httpx:HTTP Request: GET http://testserver/trades/history/1414718106177122304?from_trade=1333655835015942144 "HTTP/1.1 200 OK"
+2026-11-12T00:43:18.4780046Z .INFO:httpx:HTTP Request: GET http://testserver/transactions?scope=all_history&season=2023&owner=zkobes "HTTP/1.1 200 OK"
+2026-11-12T00:43:18.4835467Z INFO:httpx:HTTP Request: GET http://testserver/transactions?scope=all_history&season=2023&owner=MikeMoss "HTTP/1.1 200 OK"
+2026-11-12T00:43:19.0261594Z .INFO:httpx:HTTP Request: GET http://testserver/transactions?scope=all_history&season=2023 "HTTP/1.1 200 OK"
+2026-11-12T00:43:19.0385083Z INFO:httpx:HTTP Request: GET http://testserver/transactions?scope=all_history&season=2023&team=2 "HTTP/1.1 200 OK"
+2026-11-12T00:43:19.0508154Z INFO:httpx:HTTP Request: GET http://testserver/transactions?scope=all_history&season=2023&draft_pick=no "HTTP/1.1 200 OK"
+2026-11-12T00:43:19.0626208Z INFO:httpx:HTTP Request: GET http://testserver/transactions?scope=all_history&season=2023&date_from=2030-01-01 "HTTP/1.1 200 OK"
+2026-11-12T00:43:19.0746121Z INFO:httpx:HTTP Request: GET http://testserver/transactions?scope=all_history&season=2023&type=trade "HTTP/1.1 200 OK"
+2026-11-12T00:43:19.0861826Z INFO:httpx:HTTP Request: GET http://testserver/transactions?scope=all_history&season=2023&q=nonexistent-audit-query "HTTP/1.1 200 OK"
+2026-11-12T00:43:19.0983578Z INFO:httpx:HTTP Request: GET http://testserver/transactions?scope=all_history&season=2023&team=2&draft_pick=no&per_page=10&page=2 "HTTP/1.1 200 OK"
+2026-11-12T00:43:19.7110040Z .INFO:httpx:HTTP Request: GET http://testserver/transactions?scope=all_history&type=trade&season=&week= "HTTP/1.1 200 OK"
+2026-11-12T00:43:19.7127483Z INFO:httpx:HTTP Request: GET http://testserver/transactions?season=wrong "HTTP/1.1 422 Unprocessable Entity"
+2026-11-12T00:43:20.2732428Z .INFO:httpx:HTTP Request: GET http://testserver/picks/PICK-2026-R1-ORIG4?front_office=4&from_trade=1333655835015942144 "HTTP/1.1 200 OK"
+2026-11-12T00:43:20.2774051Z INFO:httpx:HTTP Request: GET http://testserver/picks/PICK-2026-R2-ORIG7?front_office=4&from_trade=1333655835015942144 "HTTP/1.1 200 OK"
+2026-11-12T00:43:21.4350120Z ..INFO:httpx:HTTP Request: GET http://testserver/transactions "HTTP/1.1 200 OK"
+2026-11-12T00:43:21.9496083Z .INFO:httpx:HTTP Request: GET http://testserver/picks/PICK-2028-R3-ORIG7 "HTTP/1.1 200 OK"
+2026-11-12T00:43:24.5204031Z ....INFO:httpx:HTTP Request: GET http://testserver/trades/history/965057520920260608 "HTTP/1.1 200 OK"
+2026-11-12T00:43:24.5401719Z INFO:httpx:HTTP Request: GET http://testserver/transactions?scope=all_history&season=2023&type=trade "HTTP/1.1 200 OK"
+2026-11-12T00:43:25.0864727Z .INFO:httpx:HTTP Request: GET http://testserver/picks/PICK-2026-R2-ORIG7?from_trade=TRADE-1319750579458686976-1333655835015942144 "HTTP/1.1 200 OK"
+2026-11-12T00:43:25.2334299Z INFO:httpx:HTTP Request: GET http://testserver/players/13346?from_trade=TRADE-1319750579458686976-1333655835015942144 "HTTP/1.1 200 OK"
+2026-11-12T00:43:25.2500578Z INFO:httpx:HTTP Request: GET http://testserver/trades/history/1414718106177122304?from_trade=TRADE-1319750579458686976-1333655835015942144 "HTTP/1.1 200 OK"
+2026-11-12T00:43:26.5116758Z ..INFO:httpx:HTTP Request: GET http://testserver/trades/history/965057520920260608 "HTTP/1.1 200 OK"
+2026-11-12T00:43:27.7919272Z ..INFO:httpx:HTTP Request: GET http://testserver/players/13346 "HTTP/1.1 200 OK"
+2026-11-12T00:43:27.7955500Z INFO:httpx:HTTP Request: GET http://testserver/api/history/players/13346 "HTTP/1.1 200 OK"
+2026-11-12T00:43:27.8589285Z INFO:httpx:HTTP Request: GET http://testserver/history/2026 "HTTP/1.1 200 OK"
+2026-11-12T00:43:29.9207823Z ...INFO:httpx:HTTP Request: GET http://testserver/players/13346 "HTTP/1.1 200 OK"
+2026-11-12T00:43:29.9617370Z INFO:httpx:HTTP Request: GET http://testserver/history/2023 "HTTP/1.1 200 OK"
+2026-11-12T00:43:29.9655438Z INFO:httpx:HTTP Request: GET http://testserver/api/history/players/13346 "HTTP/1.1 200 OK"
+2026-11-12T00:43:29.9711984Z INFO:httpx:HTTP Request: GET http://testserver/api/history/seasons/2023 "HTTP/1.1 200 OK"
+2026-11-12T00:43:34.9571066Z ..INFO:httpx:HTTP Request: GET http://testserver/picks/PICK-2026-R2-ORIG7?from_trade=1333655835015942144 "HTTP/1.1 200 OK"
+2026-11-12T00:43:34.9615438Z INFO:httpx:HTTP Request: GET http://testserver/picks/PICK-2026-R2-ORIG7?from_trade=foreign-trade "HTTP/1.1 200 OK"
+2026-11-12T00:43:35.5125248Z .INFO:httpx:HTTP Request: GET http://testserver/trades/history/1333655835015942144/production?generation=ede624929f56b2f6ca1a7b2e6fd7b7e90346a6ef345312935760240da3aa17d8 "HTTP/1.1 200 OK"
+2026-11-12T00:43:35.5213201Z INFO:httpx:HTTP Request: GET http://testserver/trades/history/1333655835015942144/production?generation=ede624929f56b2f6ca1a7b2e6fd7b7e90346a6ef345312935760240da3aa17d8 "HTTP/1.1 409 Conflict"
+2026-11-12T00:43:38.6679300Z ....INFO:httpx:HTTP Request: GET http://testserver/trades/history/965057520920260608 "HTTP/1.1 200 OK"
+2026-11-12T00:43:39.2809081Z .INFO:httpx:HTTP Request: GET http://testserver/trades/history/1333655835015942144 "HTTP/1.1 200 OK"
+2026-11-12T00:43:39.2951702Z INFO:httpx:HTTP Request: GET http://testserver/trades/history/1333655835015942144/production "HTTP/1.1 200 OK"
+2026-11-12T00:43:39.3007799Z INFO:httpx:HTTP Request: GET http://testserver/picks/PICK-2026-R2-ORIG7 "HTTP/1.1 200 OK"
+2026-11-12T00:43:39.3196787Z INFO:httpx:HTTP Request: GET http://testserver/transactions?scope=all_history&type=trade "HTTP/1.1 200 OK"
+2026-11-12T00:43:39.3245219Z INFO:httpx:HTTP Request: GET http://testserver/trades/history/1333655835015942144 "HTTP/1.1 200 OK"
+2026-11-12T00:43:39.3279337Z INFO:httpx:HTTP Request: GET http://testserver/trades/history/1333655835015942144/production "HTTP/1.1 200 OK"
+2026-11-12T00:43:39.3317913Z INFO:httpx:HTTP Request: GET http://testserver/picks/PICK-2026-R2-ORIG7 "HTTP/1.1 200 OK"
+2026-11-12T00:43:39.3373220Z INFO:httpx:HTTP Request: GET http://testserver/transactions?scope=all_history&type=trade "HTTP/1.1 200 OK"
+2026-11-12T00:43:39.3414989Z INFO:httpx:HTTP Request: GET http://testserver/trades/history/1333655835015942144 "HTTP/1.1 200 OK"
+2026-11-12T00:43:39.3450452Z INFO:httpx:HTTP Request: GET http://testserver/trades/history/1333655835015942144/production "HTTP/1.1 200 OK"
+2026-11-12T00:43:39.3491861Z INFO:httpx:HTTP Request: GET http://testserver/picks/PICK-2026-R2-ORIG7 "HTTP/1.1 200 OK"
+2026-11-12T00:43:39.3552857Z INFO:httpx:HTTP Request: GET http://testserver/transactions?scope=all_history&type=trade "HTTP/1.1 200 OK"
+2026-11-12T00:43:39.3597429Z INFO:httpx:HTTP Request: GET http://testserver/trades/history/1333655835015942144 "HTTP/1.1 200 OK"
+2026-11-12T00:43:39.3632002Z INFO:httpx:HTTP Request: GET http://testserver/trades/history/1333655835015942144/production "HTTP/1.1 200 OK"
+2026-11-12T00:43:39.3672475Z INFO:httpx:HTTP Request: GET http://testserver/picks/PICK-2026-R2-ORIG7 "HTTP/1.1 200 OK"
+2026-11-12T00:43:39.3732138Z INFO:httpx:HTTP Request: GET http://testserver/transactions?scope=all_history&type=trade "HTTP/1.1 200 OK"
+2026-11-12T00:43:39.3775672Z INFO:httpx:HTTP Request: GET http://testserver/trades/history/1333655835015942144 "HTTP/1.1 200 OK"
+2026-11-12T00:43:39.3809819Z INFO:httpx:HTTP Request: GET http://testserver/trades/history/1333655835015942144/production "HTTP/1.1 200 OK"
+2026-11-12T00:43:39.3850452Z INFO:httpx:HTTP Request: GET http://testserver/picks/PICK-2026-R2-ORIG7 "HTTP/1.1 200 OK"
+2026-11-12T00:43:39.3915460Z INFO:httpx:HTTP Request: GET http://testserver/transactions?scope=all_history&type=trade "HTTP/1.1 200 OK"
+2026-11-12T00:43:39.3959037Z INFO:httpx:HTTP Request: GET http://testserver/trades/history/1333655835015942144 "HTTP/1.1 200 OK"
+2026-11-12T00:43:39.3992889Z INFO:httpx:HTTP Request: GET http://testserver/trades/history/1333655835015942144/production "HTTP/1.1 200 OK"
+2026-11-12T00:43:39.4033850Z INFO:httpx:HTTP Request: GET http://testserver/picks/PICK-2026-R2-ORIG7 "HTTP/1.1 200 OK"
+2026-11-12T00:43:39.4094540Z INFO:httpx:HTTP Request: GET http://testserver/transactions?scope=all_history&type=trade "HTTP/1.1 200 OK"
+2026-11-12T00:43:40.2572546Z .INFO:httpx:HTTP Request: GET http://testserver/trades/history/1333655835015942144 "HTTP/1.1 200 OK"
+2026-11-12T00:43:42.0114039Z Validation Chromium: /home/runner/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome
+2026-11-12T00:43:42.7016885Z Validation Chromium version: 153.0.8010.12
+2026-11-12T00:43:42.8916278Z .{"timestamp":"2026-11-12T00:43:42.891308+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/league \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-12T00:43:42.9056906Z {"timestamp":"2026-11-12T00:43:42.905376+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+2026-11-12T00:43:42.9948444Z {"timestamp":"2026-11-12T00:43:42.994594+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/transactions \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-12T00:43:43.1235797Z {"timestamp":"2026-11-12T00:43:43.123251+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/transactions?team=&owner=&type=trade&player=&draft_pick=&date_from=&date_to=&q=&per_page=25&scope=all_history&season=&week=&status=&sort=date&direction=desc \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-12T00:43:43.2699284Z {"timestamp":"2026-11-12T00:43:43.269637+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/history/1333655835015942144 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-12T00:43:43.2834837Z {"timestamp":"2026-11-12T00:43:43.283164+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/history-production.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-12T00:43:43.3588181Z {"timestamp":"2026-11-12T00:43:43.358530+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/history/1333655835015942144/production?generation=d252978b2e59a4d2cdb5f2643bb421eff5fba51ab985efbde64ba9b6a80dce5b \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-12T00:43:43.5429933Z {"timestamp":"2026-11-12T00:43:43.542668+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/picks/PICK-2026-R2-ORIG7?from_trade=1333655835015942144 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-12T00:43:43.6263879Z {"timestamp":"2026-11-12T00:43:43.626099+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/players/13346?from_trade=1333655835015942144 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-12T00:43:43.6402281Z {"timestamp":"2026-11-12T00:43:43.639895+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+2026-11-12T00:43:43.6438530Z {"timestamp":"2026-11-12T00:43:43.643581+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/player-projections.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-12T00:43:43.7387000Z {"timestamp":"2026-11-12T00:43:43.738457+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/players/13346?from_trade=1333655835015942144 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-12T00:43:43.7512200Z {"timestamp":"2026-11-12T00:43:43.750949+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+2026-11-12T00:43:43.7544653Z {"timestamp":"2026-11-12T00:43:43.754184+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/player-projections.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-12T00:43:43.8521633Z {"timestamp":"2026-11-12T00:43:43.851320+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/player/13346?from_trade=1333655835015942144 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-12T00:43:43.9228199Z {"timestamp":"2026-11-12T00:43:43.922531+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/players/13346?from_trade=1333655835015942144 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-12T00:43:43.9357980Z {"timestamp":"2026-11-12T00:43:43.935437+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+2026-11-12T00:43:43.9391560Z {"timestamp":"2026-11-12T00:43:43.938860+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/player-projections.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-12T00:43:44.0136142Z {"timestamp":"2026-11-12T00:43:44.013285+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/history/1414718106177122304?from_trade=1333655835015942144 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-12T00:43:44.0261524Z {"timestamp":"2026-11-12T00:43:44.025898+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/history-production.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-12T00:43:44.0375720Z {"timestamp":"2026-11-12T00:43:44.037251+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/history/1414718106177122304?from_trade=1333655835015942144 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-12T00:43:44.0492489Z {"timestamp":"2026-11-12T00:43:44.048927+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/history-production.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-12T00:43:44.1078931Z {"timestamp":"2026-11-12T00:43:44.107590+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/history/1333655835015942144 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-12T00:43:44.1190922Z {"timestamp":"2026-11-12T00:43:44.118820+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/history-production.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-12T00:43:44.1467900Z {"timestamp":"2026-11-12T00:43:44.146501+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/history/965057520920260608 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-12T00:43:44.1617423Z {"timestamp":"2026-11-12T00:43:44.161448+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/history-production.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-12T00:43:44.2599260Z {"timestamp":"2026-11-12T00:43:44.259633+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/2023 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-12T00:43:44.3495920Z {"timestamp":"2026-11-12T00:43:44.349272+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/league \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-12T00:43:44.3614307Z {"timestamp":"2026-11-12T00:43:44.361119+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+2026-11-12T00:43:44.4405229Z {"timestamp":"2026-11-12T00:43:44.440213+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/transactions \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-12T00:43:44.5412820Z {"timestamp":"2026-11-12T00:43:44.540976+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/transactions?team=&owner=&type=trade&player=&draft_pick=&date_from=&date_to=&q=&per_page=25&scope=all_history&season=&week=&status=&sort=date&direction=desc \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-12T00:43:44.6085769Z {"timestamp":"2026-11-12T00:43:44.608291+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/history/1333655835015942144 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-12T00:43:44.6205470Z {"timestamp":"2026-11-12T00:43:44.620232+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/history-production.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-12T00:43:44.7624778Z {"timestamp":"2026-11-12T00:43:44.762157+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/history/1333655835015942144/production?generation=d252978b2e59a4d2cdb5f2643bb421eff5fba51ab985efbde64ba9b6a80dce5b \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-12T00:43:44.8914755Z {"timestamp":"2026-11-12T00:43:44.891106+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/picks/PICK-2026-R2-ORIG7?from_trade=1333655835015942144 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-12T00:43:44.9614398Z {"timestamp":"2026-11-12T00:43:44.961125+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/players/13346?from_trade=1333655835015942144 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-12T00:43:44.9930816Z {"timestamp":"2026-11-12T00:43:44.992769+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+2026-11-12T00:43:44.9962965Z {"timestamp":"2026-11-12T00:43:44.996049+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/player-projections.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-12T00:43:45.0467420Z {"timestamp":"2026-11-12T00:43:45.046447+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/players/13346?from_trade=1333655835015942144 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-12T00:43:45.0616438Z {"timestamp":"2026-11-12T00:43:45.061326+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+2026-11-12T00:43:45.0646824Z {"timestamp":"2026-11-12T00:43:45.064461+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/player-projections.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-12T00:43:45.1401057Z {"timestamp":"2026-11-12T00:43:45.139814+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/history/player/13346?from_trade=1333655835015942144 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-12T00:43:45.2120139Z {"timestamp":"2026-11-12T00:43:45.211667+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/players/13346?from_trade=13336558350

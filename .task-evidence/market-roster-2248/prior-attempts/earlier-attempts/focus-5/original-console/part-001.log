@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "/output/runner.py", line 3, in <module>
+    base=Path('/tmp/market-needs-fixture');base.mkdir(exist_ok=True)
+                                           ~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/pathlib/__init__.py", line 1011, in mkdir
+    os.mkdir(self, mode)
+    ~~~~~~~~^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/market-needs-fixture'

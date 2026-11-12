@@ -1,0 +1,77 @@
+{
+  "at": "2026-11-11T21:34:42.903714+00:00",
+  "args": [
+    "docker",
+    "-H",
+    "unix:///var/run/docker.sock",
+    "run",
+    "--name",
+    "dtos-market-needs-focus-6",
+    "--init",
+    "--user",
+    "1000:1000",
+    "--memory=2g",
+    "--memory-swap=2g",
+    "--cpus=2",
+    "--network=none",
+    "-e",
+    "HOME=/tmp",
+    "-e",
+    "NODE_OPTIONS=--max-old-space-size=256",
+    "-e",
+    "GIT_CONFIG_COUNT=1",
+    "-e",
+    "GIT_CONFIG_KEY_0=safe.directory",
+    "-e",
+    "GIT_CONFIG_VALUE_0=/app",
+    "-e",
+    "DTOS_MARKET_NEED_EVIDENCE=/output/market-needs",
+    "-v",
+    "/workspace/dtos-market-needs-2248:/app",
+    "-v",
+    "/workspace/dtos/.git:/workspace/dtos/.git:ro",
+    "-v",
+    "/workspace/2248-market-needs/focus-6:/output",
+    "-w",
+    "/app",
+    "sha256:f70a0c6402700dfb954c99d8163d4164926f74435c34d2e7e462407151663ae6",
+    "python",
+    "/output/runner.py"
+  ],
+  "base_head": "55351c8e4062dc7d74ceb7748eab2179d1bfd92a",
+  "working_source": [
+    {
+      "path": "services/market_roster_relevance.py",
+      "sha256": "948c59fde585e3af9e77f1cff4da72f9ad4c68b0d8be61231393f5cc44b06ec6"
+    },
+    {
+      "path": "src/ui/market_roster_relevance.py",
+      "sha256": "453e13c9f0243fe55a16c6bab0349f1d04836741bf059199caf2d8ebbabb8cd6"
+    },
+    {
+      "path": "tests/test_market_roster_relevance.py",
+      "sha256": "afb88da3c9f0a6282ab2ada1c606f37ad3721aa9b48fd6d57c7d4babb9a52aa1"
+    },
+    {
+      "path": "tests/test_market_roster_relevance_browser.py",
+      "sha256": "dd12986ff14eac3eb414ef76cde894fe24174c014d6366992d9232eb5cf05746"
+    },
+    {
+      "path": "components/trade_workspace.py",
+      "sha256": "0a20333f36eeacf3690f2cbd2cc8c53bf4bd596ef901e997af7032590e695331"
+    },
+    {
+      "path": "routes/market.py",
+      "sha256": "cef1873bcba09e8c79d5d2277b524624a78cfce4a7cd883f487845b098c0f91c"
+    },
+    {
+      "path": "routes/trades.py",
+      "sha256": "d35dfe8b3cfb42e0823f41633b9ec2e47434e1c56f5b19843af3a1beeab33fb7"
+    },
+    {
+      "path": "static/js/trade_workspace.js",
+      "sha256": "aeb2d8b55a84e36c7486baf4e48db5bf8ce2a12fc5b4135b3ba2d41afc04502b"
+    }
+  ],
+  "scope": "Development source fingerprints, not frozen release acceptance"
+}

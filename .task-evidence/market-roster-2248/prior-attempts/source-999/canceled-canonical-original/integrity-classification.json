@@ -1,0 +1,30 @@
+{
+  "run": 43119456164,
+  "artifact": 13902575309,
+  "job": 130855879689,
+  "status": "CANCELED_INCOMPLETE_NOT_FINALIZED",
+  "candidate": "99947bf0bd762133403cc667d9346837f9274221",
+  "bytes": 33736026,
+  "sha256": "1f65a01080615b780f156de579de180e90f3fea1b2aef5afd56cb11aad93fb0e",
+  "api_digest_and_zip_crc_verified": true,
+  "result_present": false,
+  "manifest_present": false,
+  "test_events": {
+    "start": 2631,
+    "stop": 2630,
+    "failure": 1
+  },
+  "failures": [
+    {
+      "event": "failure",
+      "test": "test_canonical_harness_lifecycle.CanonicalHarnessLifecycleTests.test_ci_budget_and_resource_contract_remain_bounded",
+      "time": 1794439993.9866443,
+      "pid": 32,
+      "rss": 436469760,
+      "cgroup": 494456832,
+      "error_type": "AssertionError",
+      "error_text": "'timeout-minutes: 85' not found in 'name: Canonical release recovery\\n\\non:\\n  pull_request:\\n    branches: [main]\\n  workflow_dispatch:\\n  push:\\n    branches: [main]\\n    paths: [\\'.github/workflows/canonical-release-recovery.yml\\']\\n\\npermissions:\\n  contents: read\\n\\nconcurrency:\\n  group: canonical-release-${{ github.event.pull_request.number || github.ref }}\\n  cancel-in-progress: true\\n\\nenv:\\n  NODE_OPTIONS: --max-old-space-size=256\\n\\njobs:\\n  canonical-release:\\n    if: github.event_name != \\'push\\'\\n    runs-on: ubuntu-24.04\\n    # The full 4399-test corpus reached4272 completions without test errors\\n    # before the80-minute runner deadline (run43107670445). Preserve all tests\\n    # and resource limits; allow110minutes plus bounded artifact/cleanup time.\\n    # Earlier full-local4378 controls took106.9minutes on enforced two CPUs.\\n    timeout-minutes: 120\\n    steps:\\n      - uses: actions/checkout@v4\\n        with:\\n          ref: ${{ github.event.pull_request.head.sha || github.sha }}\\n          fetch-depth: 0\\n          persist-credentials: false\\n      - name: Prepare disposable validation harness\\n        run: |\\n          mkdir -p .validation/canonical-build .validation/canonical-release/observer .validation/canonical-fixture\\n          cp requirements.txt requirements-validation.txt .validation/canonical-build/\\n          cat > .validation/canonical-release/runner.py <<\\'PY\\'\\n          \"\"\"Run the unchanged canonical validator in an enforced disposable cgroup.\"\"\"\\n          import hashlib\\n          import json\\n          import os\\n          from pathlib import Path\\n          import shutil\\n          import signal\\n          import subprocess\\n          import sys\\n          import threading\\n          import time\\n\\n          import psutil\\n\\n          ROOT = Path(\"/app\")\\n          OUTPUT = Path(\"/output\")\\n          FIXTURE = Path(\"/fixture\")\\n          OUTPUT.mkdir(exist_ok=True)\\n          FIXTURE.mkdir(exist_ok=True)\\n          os.envir"
+    }
+  ],
+  "scope": "Original canceled partial evidence. No result or final manifest was produced; no complete gate/manifest/cleanup pass is claimed. First verification correctly stopped at missing result; original bytes were preserved."
+}

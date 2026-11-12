@@ -1,0 +1,60 @@
+{
+  "source": {
+    "baseline": "55351c8e4062dc7d74ceb7748eab2179d1bfd92a",
+    "candidate": "2543e27562b27e08aa6ce4d20db442dc692bd2de",
+    "tree": "9f0d9a5b8ad3927b7656888dbae18456afeca716",
+    "branch": "feat/market-roster-2248",
+    "version": "1.22.33",
+    "build": 2248,
+    "recorded_at": "2026-11-12T00:41:23.547426+00:00",
+    "expected_test_count": 4399,
+    "pr": 337
+  },
+  "publisher_guard": {
+    "path": "/workspace/dtos-publisher-2246/tools/release/publish.py",
+    "sha256": "91370b6d38c3be5c212e057e5cd8a33b4361b68926bdf9b899bff8a0baba6830"
+  },
+  "all_native_guards_passed": true,
+  "receipts": [
+    {
+      "name": "local-preflight",
+      "guard": "verify_preflight",
+      "passed": true,
+      "archive": "/workspace/2248-market-final/local-resource-native-archives/local-preflight.zip",
+      "archive_sha256": "8c0d434e929ef3a452e1ac0055e32cb8c52933281e1f4bb9414b7f0d19511c8d",
+      "archive_bytes": 3696,
+      "members": {
+        "result.json": "8377a8a126fbc3238dc4df0221336b163451166a3ef938719a8e1ae2d893ff0e",
+        "raw.log": "b961369610e437b42bc9b2968f8112337baaf7793419e8eb08b1a87af86cae67",
+        "SHA256SUMS": "31c6c58a5676dcfa799d8b8ed5822a8918c14c575c2ac6cb06fb4e6b943dd59a"
+      }
+    },
+    {
+      "name": "local-restoration-unused",
+      "guard": "verify_actuals_restoration",
+      "passed": true,
+      "archive": "/workspace/2248-market-final/local-resource-native-archives/local-restoration-unused.zip",
+      "archive_sha256": "ce0bcc689424f88826cf518e9fc1ebdb4178e46faaada11808fcddfb215f5d82",
+      "archive_bytes": 7285327,
+      "members": {
+        "evidence/result.json": "8779f8a06c75a1c3e09c226027448d3fa06a4bc683d24ed7d154db748995a647",
+        "raw.log": "4ea58e3aaa45d1f4a9729139212bc893b9c10a69f1045ff43fd491653b90f8cf",
+        "prior-study.zip": "df5c88eda13a0671104c76a943b05032d7adfa089d11e738785b11e35a932439",
+        "SHA256SUMS": "87565394d391e5d9954957ffee238a70239507bcc8b4aa2eec313dfa64886fb8"
+      }
+    },
+    {
+      "name": "local-resident-refresh",
+      "guard": "verify_resident_refresh",
+      "passed": true,
+      "archive": "/workspace/2248-market-final/local-resource-native-archives/local-resident-refresh.zip",
+      "archive_sha256": "b16fc3f938d837bb8b82b634655f9584321184434346bab312342fb609cb8dce",
+      "archive_bytes": 5732,
+      "members": {
+        "evidence/result.json": "78f46a310d37322b17379767f9234f07f60b40cc4745f9dfbee9634799a2f4b3",
+        "raw.log": "1217e5f33765ef91514053418cee129ad8e7115b0d93c088bd55c52a0a438c11",
+        "SHA256SUMS": "67f0574bd16f1cd3d174d6ec139a937a8345dc9d6bec3014a53c684b457dcf4e"
+      }
+    }
+  ]
+}

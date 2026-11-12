@@ -1,0 +1,18 @@
+# Finished earlier attempts — reconciled status
+
+This is a summary of preserved originals, not a replacement for them. It records superseded execution scopes. Final-candidate completion is established separately by source-bound validation receipts and APPLICATION_VALIDATION.md. Earlier progress notes retain their original wording and source identity.
+
+| Source | Finished scope and actual outcome |
+|---|---|
+| a38f3e7 / tree2a38336e | 61 focused controls passed. The full local run exposed the Market-only missing-projection-owner defect:66 starts,65 stops and one AttributeError. No complete full-suite pass. Hosted canonical/Product were canceled; their partial originals remain. |
+| 4373bac5bf143bad35a68719838c4fe3a0d4cab9 / b1f6dc8cb2ebca24efba40a8caf20d633262dd21 | Full local4,399/all10gates passed in5957.574seconds. Hosted canonical43107670445 hit its4800second deadline after4272 completions; no recorded failure/error/skip, but regression incomplete and finalthree gates unexecuted. It is not a hosted pass. Cleanup confirmed zero active descendants. |
+| 99947bf0bd762133403cc667d9346837f9274221 / e1535b101d0780b2277e57642dca0d9147ecf3ff | Startup scratch guard failed before tests. A subsequent full local run exposed the stale harness clock assertion:767 starts,766 stops,one failure; intentionally stopped143/PID0/noOOM. Hosted canonical43119456164 was canceled; its original has2631 starts2630 stops/one failure and no result.json or manifest. Its API SHA/CRC verifies transport, not completed validation. |
+| 90bbb7250b83abdaced37ce408e5131c20f435c7 / 90ba5109258d5a51c166f303ff7e197621015a84 | Local intentionally superseded after1958 starts1957 stops with no recorded failure/error; stopped143/PID0/noOOM. Product43124548703 passed722+35main tests, then hit its30minute outer job cap during retained history. The139test group was incomplete and later resource steps never ran. Canonical43124548695 was canceled:2521 starts2520 stops, no recorded failure; no final result/manifest. Neither partial scope is a full pass. |
+
+The final application source remains unchanged from4373; subsequent source changes align bounded validation clocks and their harness contract. Actual functional, responsiveness, memory, CPU, network and cleanup assertions were not weakened. Observed runner variation is documented in product-time-budget-reconciliation.json and is not a general performance claim.
+
+The separate tooling-only publisher review restored the established manual guarded publisher job after canonical-step copying omitted it. An added test initially had a literal syntax error before execution; its original log is publisher-wiring-controls-original.log. The corrected130-control run and Ruff passed. This did not alter or restart application validation. Final controller integrity and actual Actions publication require their own receipts.
+
+The sealed prior package is85,405,426bytes, SHA256 f4e469030c32e05f2ee3b2c71cd9ffcab557fe1c1305f691798b376d9aafaff2,497members. Its internal manifest retains original source identities and exact selected console bytes. Complete old4373 local originals and failed/canceled native archives also remain intact in the authorized workspace; GitHub artifact links are subject to retention. Redundant copies were removed only after exact archive-byte verification. No log is reconstructed or relabeled as a newer source run.
+
+Fixture setup/import/expectation errors, ENOSPC before tests, browser Back sequencing, request-bound reader and warm-cache invariant failures are preserved in the earlier-attempts originals and PRIOR_ATTEMPTS.md. They are never added to final passing counts. Cleanup and noOOM observations establish those measured runs only, not long-term leak freedom or Granite recovery.

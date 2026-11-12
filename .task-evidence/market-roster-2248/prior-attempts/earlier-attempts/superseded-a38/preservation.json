@@ -1,0 +1,77 @@
+{
+  "source": {
+    "baseline": "55351c8e4062dc7d74ceb7748eab2179d1bfd92a",
+    "candidate": "a38f3e719d84d600fcba153f57863fd0d668a0a3",
+    "tree": "2a38336e6971916886256a16dcda7b1504260532",
+    "branch": "feat/market-roster-2248",
+    "version": "1.22.33",
+    "build": 2248,
+    "recorded_at": "2026-11-11T21:39:15.905809+00:00",
+    "expected_test_count": 4396,
+    "pr": 337
+  },
+  "changed_files": [
+    ".github/workflows/canonical-release-recovery.yml",
+    ".github/workflows/product-browser.yml",
+    "CHANGELOG.md",
+    "RELEASE_NOTES.md",
+    "app_metadata.py",
+    "components/trade_workspace.py",
+    "docs/audits/MARKET_ROSTER_RELEVANCE_2248.md",
+    "routes/market.py",
+    "routes/trades.py",
+    "services/market_roster_relevance.py",
+    "src/ui/market_roster_relevance.py",
+    "static/js/trade_workspace.js",
+    "tests/test_market_roster_relevance.py",
+    "tests/test_market_roster_relevance_browser.py"
+  ],
+  "protected_boundaries": [
+    {
+      "path": "src/platform/lifecycle.py",
+      "sha256": "0f0802d3cc802a91432bee0af2753d26c21ec655414cab230398720c1a1dcd36",
+      "identical": true
+    },
+    {
+      "path": "services/league_preparation.py",
+      "sha256": "e4b97ff3cc50b852a096e4fe4fb8d41df241481aa48211bbe73354171914bc98",
+      "identical": true
+    },
+    {
+      "path": "services/player_evidence.py",
+      "sha256": "cb923f637c145dd6cd8a94330527aa11a681bd7615943e1f569af874278cd1ea",
+      "identical": true
+    },
+    {
+      "path": "services/sleeper.py",
+      "sha256": "829d4528b32c07cf0f759eab35d4b57e81d77486ada40b1095e941d3cea646d1",
+      "identical": true
+    },
+    {
+      "path": "src/core/market_trends/current.py",
+      "sha256": "6bd9f626f8b18904d20f23945be0e18c5498043272e5af659dbc8b55aa84a846",
+      "identical": true
+    },
+    {
+      "path": "src/core/market_trends/compatibility.py",
+      "sha256": "54ed4dbbbf56d081f9b04cf2b2eb86ab2453d06807e745fa08d0a1ec9a2b8c95",
+      "identical": true
+    },
+    {
+      "path": "services/team_trade_need.py",
+      "sha256": "3a6f523927f1e39e5024ec4ba73012bc12912a28ad366909a7f118efae706efb",
+      "identical": true
+    },
+    {
+      "path": "src/core/intelligence/roster_diagnostics.py",
+      "sha256": "b016e633d31e0f62dc7cc6eb28cf856d84e2fca8c59bb52bc0496334b966cddf",
+      "identical": true
+    },
+    {
+      "path": "src/core/player_ownership.py",
+      "sha256": "361eea66be8ee3b807e65fed3394cf85f9fa1415cb837d7737612ef1824cfd7b",
+      "identical": true
+    }
+  ],
+  "note": "Byte identity proves these shared policy/source/admission boundaries unchanged; full regression separately validates integration behavior."
+}

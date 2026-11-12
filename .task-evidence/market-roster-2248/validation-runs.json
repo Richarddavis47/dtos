@@ -1,0 +1,47 @@
+{
+  "candidate": "2543e27562b27e08aa6ce4d20db442dc692bd2de",
+  "tree": "9f0d9a5b8ad3927b7656888dbae18456afeca716",
+  "runs": [
+    {
+      "name": "Canonical release recovery",
+      "path": ".github/workflows/canonical-release-recovery.yml",
+      "jobs": [
+        "canonical-release"
+      ],
+      "id": 43129119787
+    },
+    {
+      "name": "Product browser journeys",
+      "path": ".github/workflows/product-browser.yml",
+      "jobs": [
+        "product-browser",
+        "my-team-browser",
+        "beginner-navigation",
+        "public-welcome-browser",
+        "historical-trade-timeline",
+        "projection-display-cross-version",
+        "resident-refresh-memory"
+      ],
+      "id": 43129119811
+    },
+    {
+      "name": "Validation tooling",
+      "path": ".github/workflows/validation-tooling.yml",
+      "jobs": [
+        "tooling (ubuntu-24.04)",
+        "tooling (windows-latest)"
+      ],
+      "id": 43129119892
+    },
+    {
+      "name": "Linux Asset Market lifecycle",
+      "path": ".github/workflows/linux-market-lifecycle.yml",
+      "jobs": [
+        "cgroup-lifecycle (ordinary)",
+        "cgroup-lifecycle (archive-warmed)",
+        "cgroup-lifecycle (combined-read)"
+      ],
+      "id": 43129119825
+    }
+  ]
+}

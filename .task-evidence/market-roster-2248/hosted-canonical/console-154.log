@@ -1,0 +1,339 @@
+-12T01:22:45.085460+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:45.316702+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":1322450944,"limit_bytes":2147483648,"raw_headroom_bytes":825032704,"clean_inactive_file_bytes":88326144,"conditional_file_credit_bytes":44163072,"admission_headroom_bytes":869195776,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-12T01:22:45.325689+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/workspace?front_office=1&mode=calculator \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:46.595234+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_admission","request_id":"system","event":"trade_admission","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":1369632768,"limit_bytes":2147483648,"raw_headroom_bytes":777850880,"clean_inactive_file_bytes":88326144,"conditional_file_credit_bytes":44163072,"admission_headroom_bytes":822013952,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"recovery":null}}
+{"timestamp":"2026-11-12T01:22:47.020112+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_execution_finished","request_id":"system","event":"trade_execution_finished","duration_ms":487.235,"diagnostic":{"schema":"trade-resource-v1","outcome":"complete"}}
+{"timestamp":"2026-11-12T01:22:47.022251+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/trades/evaluate \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:47.422629+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/create \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:47.504394+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/trade_workspace.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:47.505831+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:47.508763+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/trade_workspace.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:47.510003+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/trade_comparison.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:47.512743+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/strategy_session.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:47.514181+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:47.590955+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":1389584384,"limit_bytes":2147483648,"raw_headroom_bytes":757899264,"clean_inactive_file_bytes":88363008,"conditional_file_credit_bytes":44181504,"admission_headroom_bytes":802080768,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-12T01:22:47.596448+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/workspace?front_office=1&mode=calculator \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:48.791008+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_admission","request_id":"system","event":"trade_admission","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":1430052864,"limit_bytes":2147483648,"raw_headroom_bytes":717430784,"clean_inactive_file_bytes":88363008,"conditional_file_credit_bytes":44181504,"admission_headroom_bytes":761612288,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"recovery":null}}
+{"timestamp":"2026-11-12T01:22:49.007793+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_execution_finished","request_id":"system","event":"trade_execution_finished","duration_ms":221.146,"diagnostic":{"schema":"trade-resource-v1","outcome":"complete"}}
+{"timestamp":"2026-11-12T01:22:49.009901+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/trades/evaluate \"HTTP/1.1 200 OK\"","request_id":"system"}
+.....{"timestamp":"2026-11-12T01:22:49.872063+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/retention?sql=DROP+TABLE+projection_snapshots%3B+%2Fetc%2Fpasswd \"HTTP/1.1 400 Bad Request\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:49.876004+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/retention?path=DROP+TABLE+projection_snapshots%3B+%2Fetc%2Fpasswd \"HTTP/1.1 400 Bad Request\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:49.879622+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/retention?database=DROP+TABLE+projection_snapshots%3B+%2Fetc%2Fpasswd \"HTTP/1.1 400 Bad Request\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:49.883351+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/retention?command=DROP+TABLE+projection_snapshots%3B+%2Fetc%2Fpasswd \"HTTP/1.1 400 Bad Request\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:49.886932+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/retention?refresh=DROP+TABLE+projection_snapshots%3B+%2Fetc%2Fpasswd \"HTTP/1.1 400 Bad Request\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:49.890593+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/retention?league=DROP+TABLE+projection_snapshots%3B+%2Fetc%2Fpasswd \"HTTP/1.1 400 Bad Request\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:49.894211+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/retention?league_id=DROP+TABLE+projection_snapshots%3B+%2Fetc%2Fpasswd \"HTTP/1.1 400 Bad Request\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:49.897772+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/retention?details=DROP+TABLE+projection_snapshots%3B+%2Fetc%2Fpasswd \"HTTP/1.1 400 Bad Request\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:49.901412+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/projection-inventory?sql=DROP+TABLE+projection_snapshots%3B+%2Fetc%2Fpasswd \"HTTP/1.1 400 Bad Request\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:49.904946+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/projection-inventory?path=DROP+TABLE+projection_snapshots%3B+%2Fetc%2Fpasswd \"HTTP/1.1 400 Bad Request\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:49.908576+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/projection-inventory?database=DROP+TABLE+projection_snapshots%3B+%2Fetc%2Fpasswd \"HTTP/1.1 400 Bad Request\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:49.911978+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/projection-inventory?command=DROP+TABLE+projection_snapshots%3B+%2Fetc%2Fpasswd \"HTTP/1.1 400 Bad Request\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:49.915442+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/projection-inventory?refresh=DROP+TABLE+projection_snapshots%3B+%2Fetc%2Fpasswd \"HTTP/1.1 400 Bad Request\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:49.918845+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/projection-inventory?league=DROP+TABLE+projection_snapshots%3B+%2Fetc%2Fpasswd \"HTTP/1.1 400 Bad Request\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:49.922231+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/projection-inventory?league_id=DROP+TABLE+projection_snapshots%3B+%2Fetc%2Fpasswd \"HTTP/1.1 400 Bad Request\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:49.925590+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/projection-inventory?details=DROP+TABLE+projection_snapshots%3B+%2Fetc%2Fpasswd \"HTTP/1.1 400 Bad Request\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:49.928925+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/restoration-preflight?sql=DROP+TABLE+projection_snapshots%3B+%2Fetc%2Fpasswd \"HTTP/1.1 400 Bad Request\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:49.932349+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/restoration-preflight?path=DROP+TABLE+projection_snapshots%3B+%2Fetc%2Fpasswd \"HTTP/1.1 400 Bad Request\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:49.935783+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/restoration-preflight?database=DROP+TABLE+projection_snapshots%3B+%2Fetc%2Fpasswd \"HTTP/1.1 400 Bad Request\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:49.939244+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/restoration-preflight?command=DROP+TABLE+projection_snapshots%3B+%2Fetc%2Fpasswd \"HTTP/1.1 400 Bad Request\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:49.943330+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/restoration-preflight?refresh=DROP+TABLE+projection_snapshots%3B+%2Fetc%2Fpasswd \"HTTP/1.1 400 Bad Request\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:49.947108+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/restoration-preflight?league=DROP+TABLE+projection_snapshots%3B+%2Fetc%2Fpasswd \"HTTP/1.1 400 Bad Request\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:49.951616+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/restoration-preflight?league_id=DROP+TABLE+projection_snapshots%3B+%2Fetc%2Fpasswd \"HTTP/1.1 400 Bad Request\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:49.972708+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/restoration-preflight?details=DROP+TABLE+projection_snapshots%3B+%2Fetc%2Fpasswd \"HTTP/1.1 400 Bad Request\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:49.976837+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/identity?sql=DROP+TABLE+projection_snapshots%3B+%2Fetc%2Fpasswd \"HTTP/1.1 400 Bad Request\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:49.980816+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/identity?path=DROP+TABLE+projection_snapshots%3B+%2Fetc%2Fpasswd \"HTTP/1.1 400 Bad Request\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:49.984771+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/identity?database=DROP+TABLE+projection_snapshots%3B+%2Fetc%2Fpasswd \"HTTP/1.1 400 Bad Request\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:49.988938+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/identity?command=DROP+TABLE+projection_snapshots%3B+%2Fetc%2Fpasswd \"HTTP/1.1 400 Bad Request\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:49.993296+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/identity?refresh=DROP+TABLE+projection_snapshots%3B+%2Fetc%2Fpasswd \"HTTP/1.1 400 Bad Request\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:49.997425+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/identity?league=DROP+TABLE+projection_snapshots%3B+%2Fetc%2Fpasswd \"HTTP/1.1 400 Bad Request\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:50.001615+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/identity?league_id=DROP+TABLE+projection_snapshots%3B+%2Fetc%2Fpasswd \"HTTP/1.1 400 Bad Request\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:50.005987+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/identity?details=DROP+TABLE+projection_snapshots%3B+%2Fetc%2Fpasswd \"HTTP/1.1 400 Bad Request\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:50.009936+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/storage?sql=DROP+TABLE+projection_snapshots%3B+%2Fetc%2Fpasswd \"HTTP/1.1 400 Bad Request\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:50.014097+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/storage?path=DROP+TABLE+projection_snapshots%3B+%2Fetc%2Fpasswd \"HTTP/1.1 400 Bad Request\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:50.018178+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/storage?database=DROP+TABLE+projection_snapshots%3B+%2Fetc%2Fpasswd \"HTTP/1.1 400 Bad Request\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:50.021883+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/storage?command=DROP+TABLE+projection_snapshots%3B+%2Fetc%2Fpasswd \"HTTP/1.1 400 Bad Request\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:50.025734+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/storage?refresh=DROP+TABLE+projection_snapshots%3B+%2Fetc%2Fpasswd \"HTTP/1.1 400 Bad Request\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:50.029550+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/storage?league=DROP+TABLE+projection_snapshots%3B+%2Fetc%2Fpasswd \"HTTP/1.1 400 Bad Request\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:50.033174+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/storage?league_id=DROP+TABLE+projection_snapshots%3B+%2Fetc%2Fpasswd \"HTTP/1.1 400 Bad Request\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:50.036962+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/storage?details=DROP+TABLE+projection_snapshots%3B+%2Fetc%2Fpasswd \"HTTP/1.1 400 Bad Request\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:50.040581+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/projection-reachability?sql=DROP+TABLE+projection_snapshots%3B+%2Fetc%2Fpasswd \"HTTP/1.1 400 Bad Request\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:50.044730+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/projection-reachability?path=DROP+TABLE+projection_snapshots%3B+%2Fetc%2Fpasswd \"HTTP/1.1 400 Bad Request\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:50.048478+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/projection-reachability?database=DROP+TABLE+projection_snapshots%3B+%2Fetc%2Fpasswd \"HTTP/1.1 400 Bad Request\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:50.052237+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/projection-reachability?command=DROP+TABLE+projection_snapshots%3B+%2Fetc%2Fpasswd \"HTTP/1.1 400 Bad Request\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:50.055815+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/projection-reachability?refresh=DROP+TABLE+projection_snapshots%3B+%2Fetc%2Fpasswd \"HTTP/1.1 400 Bad Request\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:50.059682+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/projection-reachability?league=DROP+TABLE+projection_snapshots%3B+%2Fetc%2Fpasswd \"HTTP/1.1 400 Bad Request\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:50.063446+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/projection-reachability?league_id=DROP+TABLE+projection_snapshots%3B+%2Fetc%2Fpasswd \"HTTP/1.1 400 Bad Request\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:50.066910+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/projection-reachability?details=DROP+TABLE+projection_snapshots%3B+%2Fetc%2Fpasswd \"HTTP/1.1 400 Bad Request\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:50.070603+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/fois-storage?sql=DROP+TABLE+projection_snapshots%3B+%2Fetc%2Fpasswd \"HTTP/1.1 400 Bad Request\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:50.074267+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/fois-storage?path=DROP+TABLE+projection_snapshots%3B+%2Fetc%2Fpasswd \"HTTP/1.1 400 Bad Request\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:50.077905+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/fois-storage?database=DROP+TABLE+projection_snapshots%3B+%2Fetc%2Fpasswd \"HTTP/1.1 400 Bad Request\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:50.081653+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/fois-storage?command=DROP+TABLE+projection_snapshots%3B+%2Fetc%2Fpasswd \"HTTP/1.1 400 Bad Request\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:50.085308+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/fois-storage?refresh=DROP+TABLE+projection_snapshots%3B+%2Fetc%2Fpasswd \"HTTP/1.1 400 Bad Request\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:50.088749+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/fois-storage?league=DROP+TABLE+projection_snapshots%3B+%2Fetc%2Fpasswd \"HTTP/1.1 400 Bad Request\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:50.092253+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/fois-storage?league_id=DROP+TABLE+projection_snapshots%3B+%2Fetc%2Fpasswd \"HTTP/1.1 400 Bad Request\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:50.095768+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/fois-storage?details=DROP+TABLE+projection_snapshots%3B+%2Fetc%2Fpasswd \"HTTP/1.1 400 Bad Request\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:50.098478+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/shell \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:50.101022+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/sql \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:50.103524+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/files \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:50.106083+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/refresh \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:50.108596+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/restart \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:50.111083+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/deploy \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:50.113662+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/migrate \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:50.115992+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/unsupported \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:50.118512+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/inspect/operations/identity \"HTTP/1.1 405 Method Not Allowed\"","request_id":"system"}
+.{"timestamp":"2026-11-12T01:22:50.155057+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/identity \"HTTP/1.1 429 Too Many Requests\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:50.164969+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/projection-reachability \"HTTP/1.1 429 Too Many Requests\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:50.181782+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/identity \"HTTP/1.1 503 Service Unavailable\"","request_id":"system"}
+.{"timestamp":"2026-11-12T01:22:50.215070+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/identity \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:50.217920+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/identity \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:50.220759+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/identity?inspection_token=local-test-inspection-credential \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+.{"timestamp":"2026-11-12T01:22:50.259494+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/retention \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:50.265086+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/projection-inventory \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:50.268785+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/storage \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:50.273726+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/projection-reachability \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:50.277288+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/identity \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:50.282152+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/fois-storage \"HTTP/1.1 200 OK\"","request_id":"system"}
+..{"timestamp":"2026-11-12T01:22:50.352588+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/retention \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:50.358596+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/projection-inventory \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:50.362643+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/storage \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:50.367885+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/projection-reachability \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:50.371473+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/identity \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:50.376255+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/fois-storage \"HTTP/1.1 200 OK\"","request_id":"system"}
+.{"timestamp":"2026-11-12T01:22:50.419174+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/fois-storage \"HTTP/1.1 503 Service Unavailable\"","request_id":"system"}
+..{"timestamp":"2026-11-12T01:22:51.251792+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/projection-inventory?limit=0 \"HTTP/1.1 400 Bad Request\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:51.255554+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/projection-inventory?limit=101 \"HTTP/1.1 400 Bad Request\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:51.259267+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/projection-inventory?offset=-1 \"HTTP/1.1 400 Bad Request\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:51.262828+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/projection-inventory?offset=4097 \"HTTP/1.1 400 Bad Request\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:51.266572+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/projection-inventory?limit=foo \"HTTP/1.1 400 Bad Request\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:51.269996+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/projection-inventory?offset=1.5 \"HTTP/1.1 400 Bad Request\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:51.273297+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/projection-inventory?limit=1&limit=2 \"HTTP/1.1 400 Bad Request\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:51.278333+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/projection-inventory?offset=4096 \"HTTP/1.1 200 OK\"","request_id":"system"}
+.{"timestamp":"2026-11-12T01:22:51.318980+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/projection-inventory?limit=2&offset=2 \"HTTP/1.1 200 OK\"","request_id":"system"}
+.{"timestamp":"2026-11-12T01:22:51.355182+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/projection-inventory \"HTTP/1.1 200 OK\"","request_id":"system"}
+.{"timestamp":"2026-11-12T01:22:51.391634+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/projection-inventory \"HTTP/1.1 503 Service Unavailable\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:51.397636+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/retention \"HTTP/1.1 503 Service Unavailable\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:51.400949+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/identity?unknown=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx \"HTTP/1.1 400 Bad Request\"","request_id":"system"}
+.{"timestamp":"2026-11-12T01:22:51.434981+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/projection-reachability \"HTTP/1.1 503 Service Unavailable\"","request_id":"system"}
+.{"timestamp":"2026-11-12T01:22:51.467831+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/identity \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:51.470673+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/identity \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:51.473307+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/identity \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:51.475997+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/identity \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:51.478628+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/identity \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:51.481179+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/identity \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:51.483716+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/identity \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+.{"timestamp":"2026-11-12T01:22:51.523815+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/projection-reachability \"HTTP/1.1 200 OK\"","request_id":"system"}
+.{"timestamp":"2026-11-12T01:22:51.560525+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/identity \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:51.564006+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/identity \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:51.566995+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/identity \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+.{"timestamp":"2026-11-12T01:22:51.604803+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/fois-storage \"HTTP/1.1 503 Service Unavailable\"","request_id":"system"}
+.{"timestamp":"2026-11-12T01:22:51.646601+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/retention \"HTTP/1.1 200 OK\"","request_id":"system"}
+.{"timestamp":"2026-11-12T01:22:51.684630+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/projection-reachability \"HTTP/1.1 200 OK\"","request_id":"system"}
+.{"timestamp":"2026-11-12T01:22:51.727534+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/retention \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:51.733273+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/projection-inventory \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:51.737103+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/storage \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:51.742130+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/projection-reachability \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:51.746076+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/identity \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:51.750916+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/fois-storage \"HTTP/1.1 200 OK\"","request_id":"system"}
+..{"timestamp":"2026-11-12T01:22:51.812935+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/retention \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:51.815788+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/inspect/operations/retention \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:51.818482+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: DELETE http://testserver/api/inspect/operations/retention \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:51.821053+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: OPTIONS http://testserver/api/inspect/operations/retention \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:51.823887+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/projection-inventory \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:51.826478+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/inspect/operations/projection-inventory \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:51.829021+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: DELETE http://testserver/api/inspect/operations/projection-inventory \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:51.831783+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: OPTIONS http://testserver/api/inspect/operations/projection-inventory \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:51.834575+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/restoration-preflight \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:51.837065+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/inspect/operations/restoration-preflight \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:51.839518+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: DELETE http://testserver/api/inspect/operations/restoration-preflight \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:51.842160+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: OPTIONS http://testserver/api/inspect/operations/restoration-preflight \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:51.844894+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/identity \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:51.847434+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/inspect/operations/identity \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:51.849958+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: DELETE http://testserver/api/inspect/operations/identity \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:51.852432+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: OPTIONS http://testserver/api/inspect/operations/identity \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:51.854851+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/storage \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:51.857247+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/inspect/operations/storage \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:51.859712+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: DELETE http://testserver/api/inspect/operations/storage \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:51.862204+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: OPTIONS http://testserver/api/inspect/operations/storage \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:51.864714+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/projection-reachability \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:51.867667+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/inspect/operations/projection-reachability \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:51.870296+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: DELETE http://testserver/api/inspect/operations/projection-reachability \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:51.872844+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: OPTIONS http://testserver/api/inspect/operations/projection-reachability \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:51.875249+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/fois-storage \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:51.877695+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/inspect/operations/fois-storage \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:51.880128+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: DELETE http://testserver/api/inspect/operations/fois-storage \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:51.882487+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: OPTIONS http://testserver/api/inspect/operations/fois-storage \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:51.884909+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/unsupported \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:51.887217+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/inspect/operations/unsupported \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:51.889634+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: DELETE http://testserver/api/inspect/operations/unsupported \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:51.892120+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: OPTIONS http://testserver/api/inspect/operations/unsupported \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:51.894673+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/%2e%2e%2fsecrets \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:51.897135+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/inspect/operations/%2e%2e%2fsecrets \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:51.899744+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: DELETE http://testserver/api/inspect/operations/%2e%2e%2fsecrets \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:51.902262+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: OPTIONS http://testserver/api/inspect/operations/%2e%2e%2fsecrets \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:51.904731+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/nested/unknown \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:51.907097+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/inspect/operations/nested/unknown \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:51.909578+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: DELETE http://testserver/api/inspect/operations/nested/unknown \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:51.911999+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: OPTIONS http://testserver/api/inspect/operations/nested/unknown \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+.{"timestamp":"2026-11-12T01:22:51.951315+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/fois-storage \"HTTP/1.1 503 Service Unavailable\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:51.955620+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/inspect/operations/projection-reachability \"HTTP/1.1 503 Service Unavailable\"","request_id":"system"}
+../usr/local/lib/python3.14/site-packages/playwright/_impl/_local_utils.py:29: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f42fe4e16c0>
+  device["name"]: parse_device_descriptor(device["descriptor"])
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/usr/local/lib/python3.14/site-packages/playwright/_impl/_local_utils.py:29: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f42fe4e35b0>
+  device["name"]: parse_device_descriptor(device["descriptor"])
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/usr/local/lib/python3.14/site-packages/playwright/_impl/_local_utils.py:29: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f4307bf2200>
+  device["name"]: parse_device_descriptor(device["descriptor"])
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/usr/local/lib/python3.14/site-packages/playwright/_impl/_local_utils.py:29: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f43074b7b50>
+  device["name"]: parse_device_descriptor(device["descriptor"])
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/usr/local/lib/python3.14/site-packages/playwright/_impl/_local_utils.py:29: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f434bc37b50>
+  device["name"]: parse_device_descriptor(device["descriptor"])
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/usr/local/lib/python3.14/site-packages/playwright/_impl/_local_utils.py:29: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f434a44a3e0>
+  device["name"]: parse_device_descriptor(device["descriptor"])
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/usr/local/lib/python3.14/site-packages/playwright/_impl/_local_utils.py:29: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f434a44aa70>
+  device["name"]: parse_device_descriptor(device["descriptor"])
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/usr/local/lib/python3.14/site-packages/playwright/_impl/_local_utils.py:29: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f43455c4400>
+  device["name"]: parse_device_descriptor(device["descriptor"])
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/usr/local/lib/python3.14/site-packages/playwright/_impl/_local_utils.py:29: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f43455c7e20>
+  device["name"]: parse_device_descriptor(device["descriptor"])
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/usr/local/lib/python3.14/site-packages/playwright/_impl/_local_utils.py:29: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f43455c5030>
+  device["name"]: parse_device_descriptor(device["descriptor"])
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/usr/local/lib/python3.14/site-packages/playwright/_impl/_local_utils.py:29: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f4347900040>
+  device["name"]: parse_device_descriptor(device["descriptor"])
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/usr/local/lib/python3.14/site-packages/playwright/_impl/_local_utils.py:29: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f43479017b0>
+  device["name"]: parse_device_descriptor(device["descriptor"])
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/usr/local/lib/python3.14/site-packages/playwright/_impl/_local_utils.py:29: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f4347900220>
+  device["name"]: parse_device_descriptor(device["descriptor"])
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/usr/local/lib/python3.14/site-packages/playwright/_impl/_local_utils.py:29: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f4347900310>
+  device["name"]: parse_device_descriptor(device["descriptor"])
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/usr/local/lib/python3.14/site-packages/playwright/_impl/_local_utils.py:29: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f4347903880>
+  device["name"]: parse_device_descriptor(device["descriptor"])
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/usr/local/lib/python3.14/site-packages/playwright/_impl/_local_utils.py:29: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f434761c7c0>
+  device["name"]: parse_device_descriptor(device["descriptor"])
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/usr/local/lib/python3.14/site-packages/playwright/_impl/_local_utils.py:29: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f434761ca90>
+  device["name"]: parse_device_descriptor(device["descriptor"])
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/usr/local/lib/python3.14/site-packages/playwright/_impl/_local_utils.py:29: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f434761d7b0>
+  device["name"]: parse_device_descriptor(device["descriptor"])
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/usr/local/lib/python3.14/site-packages/playwright/_impl/_local_utils.py:29: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f43484458a0>
+  device["name"]: parse_device_descriptor(device["descriptor"])
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/usr/local/lib/python3.14/site-packages/playwright/_impl/_local_utils.py:29: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f43484456c0>
+  device["name"]: parse_device_descriptor(device["descriptor"])
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/usr/local/lib/python3.14/site-packages/playwright/_impl/_local_utils.py:29: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f43484cdc60>
+  device["name"]: parse_device_descriptor(device["descriptor"])
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/usr/local/lib/python3.14/site-packages/playwright/_impl/_local_utils.py:29: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f43064f16c0>
+  device["name"]: parse_device_descriptor(device["descriptor"])
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/usr/local/lib/python3.14/site-packages/playwright/_impl/_local_utils.py:29: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f43064f1c60>
+  device["name"]: parse_device_descriptor(device["descriptor"])
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/usr/local/lib/python3.14/site-packages/playwright/_impl/_local_utils.py:29: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f4355cf76a0>
+  device["name"]: parse_device_descriptor(device["descriptor"])
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/usr/local/lib/python3.14/site-packages/playwright/_impl/_local_utils.py:29: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f43064f3880>
+  device["name"]: parse_device_descriptor(device["descriptor"])
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/usr/local/lib/python3.14/site-packages/playwright/_impl/_local_utils.py:29: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f430640fb50>
+  device["name"]: parse_device_descriptor(device["descriptor"])
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/usr/local/lib/python3.14/site-packages/playwright/_impl/_local_utils.py:29: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f4355cf7b50>
+  device["name"]: parse_device_descriptor(device["descriptor"])
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/usr/local/lib/python3.14/site-packages/playwright/_impl/_local_utils.py:29: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f430640c220>
+  device["name"]: parse_device_descriptor(device["descriptor"])
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/usr/local/lib/python3.14/site-packages/playwright/_impl/_local_utils.py:29: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f430640d3f0>
+  device["name"]: parse_device_descriptor(device["descriptor"])
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/usr/local/lib/python3.14/site-packages/playwright/_impl/_local_utils.py:29: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f4320e746d0>
+  device["name"]: parse_device_descriptor(device["descriptor"])
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/usr/local/lib/python3.14/site-packages/playwright/_impl/_local_utils.py:29: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f4316e1f100>
+  device["name"]: parse_device_descriptor(device["descriptor"])
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/usr/local/lib/python3.14/site-packages/playwright/_impl/_local_utils.py:29: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f4316e1e110>
+  device["name"]: parse_device_descriptor(device["descriptor"])
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/usr/local/lib/python3.14/site-packages/playwright/_impl/_local_utils.py:29: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f4306cf7970>
+  device["name"]: parse_device_descriptor(device["descriptor"])
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/usr/local/lib/python3.14/site-packages/playwright/_impl/_local_utils.py:29: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f4314517b50>
+  device["name"]: parse_device_descriptor(device["descriptor"])
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/usr/local/lib/python3.14/site-packages/playwright/_impl/_local_utils.py:29: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f4314516980>
+  device["name"]: parse_device_descriptor(device["descriptor"])
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/usr/local/lib/python3.14/site-packages/playwright/_impl/_local_utils.py:29: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f43145167a0>
+  device["name"]: parse_device_descriptor(device["descriptor"])
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/usr/local/lib/python3.14/site-packages/playwright/_impl/_local_utils.py:29: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f4314516e30>
+  device["name"]: parse_device_descriptor(device["descriptor"])
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/usr/local/lib/python3.14/site-packages/playwright/_impl/_local_utils.py:29: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f4306cf75b0>
+  device["name"]: parse_device_descriptor(device["descriptor"])
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/usr/local/lib/python3.14/site-packages/playwright/_impl/_local_utils.py:29: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f4314517f10>
+  device["name"]: parse_device_descriptor(device["descriptor"])
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/usr/local/lib/python3.14/site-packages/playwright/_impl/_local_utils.py:29: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f4306cf57b0>
+  device["name"]: parse_device_descriptor(device["descriptor"])
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/usr/local/lib/python3.14/site-packages/playwright/_impl/_local_utils.py:29: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f431463f790>
+  device["name"]: parse_device_descriptor(device["descriptor"])
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/usr/local/lib/python3.14/site-packages/playwright/_impl/_local_utils.py:29: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f431463ff10>
+  device["name"]: parse_device_descriptor(device["descriptor"])
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/usr/local/lib/python3.14/site-packages/playwright/_impl/_local_utils.py:29: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f431463fd30>
+  device["name"]: parse_device_descriptor(device["descriptor"])
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/usr/local/lib/python3.14/site-packages/playwright/_impl/_local_utils.py:29: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f431463c130>
+  device["name"]: parse_device_descriptor(device["descriptor"])
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/usr/local/lib/python3.14/site-packages/playwright/_impl/_local_utils.py:29: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f431463f3d0>
+  device["name"]: parse_device_descriptor(device["descriptor"])
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/usr/local/lib/python3.14/site-packages/playwright/_impl/_local_utils.py:29: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f43145caf20>
+  device["name"]: parse_device_descriptor(device["descriptor"])
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/usr/local/lib/python3.14/site-packages/playwright/_impl/_local_utils.py:29: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f431463d4e0>
+  device["name"]: parse_device_descriptor(device["descriptor"])
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/usr/local/lib/python3.14/site-packages/playwright/_impl/_local_utils.py:29: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f432e427e20>
+  device["name"]: parse_device_descriptor(device["descriptor"])
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/usr/local/lib/python3.14/site-packages/playwright/_impl/_local_utils.py:29: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f43146b4a90>
+  device["name"]: parse_device_descriptor(device["descriptor"])
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/usr/local/lib/python3.14/site-packages/playwright/_impl/_local_utils.py:29: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f43146b4e50>
+  device["name"]: parse_device_descriptor(device["descriptor"])
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/usr/local/lib/python3.14/site-packages/playwright/_impl/_local_utils.py:29: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f43146b7970>
+  device["name"]: parse_device_descriptor(device["descriptor"])
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/usr/local/lib/python3.14/site-packages/playwright/_impl/_local_utils.py:29: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f430451c5e0>
+  device["name"]: parse_device_descriptor(device["descriptor"])
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+Validation Chromium: /usr/bin/chromium
+Validation Chromium version: 156.0.8078.79
+{"timestamp":"2026-11-12T01:22:53.222538+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://dtos.test/account/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:53.380863+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://dtos.test/static/css/contextual_navigation.css \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-12T01:22:53.387863+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://dtos.test/static/js/contextual_navigatio

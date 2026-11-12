@@ -1,0 +1,533 @@
+﻿2026-11-11T23:23:36.3779114Z Current runner version: '2.338.2'
+2026-11-11T23:23:36.3827140Z ##[group]Runner Image Provisioner
+2026-11-11T23:23:36.3828455Z Hosted Compute Agent
+2026-11-11T23:23:36.3829397Z Version: 20261103.629
+2026-11-11T23:23:36.3830464Z Commit: 15dbd9ccb5dbf34fae002b6ed1a2670f52df37bc
+2026-11-11T23:23:36.3832072Z Build Date: 2026-11-03T17:26:59Z
+2026-11-11T23:23:36.3833255Z Worker ID: {4525a8fa-2abe-4fc5-bd9f-2db2cc57753b}
+2026-11-11T23:23:36.3834481Z Region: southcentralus
+2026-11-11T23:23:36.3835337Z Cloud: Azure
+2026-11-11T23:23:36.3836135Z ##[endgroup]
+2026-11-11T23:23:36.3838230Z ##[group]Operating System
+2026-11-11T23:23:36.3839465Z Microsoft Windows Server 2025
+2026-11-11T23:23:36.3840612Z 10.0.26100
+2026-11-11T23:23:36.3841465Z Datacenter
+2026-11-11T23:23:36.3842292Z ##[endgroup]
+2026-11-11T23:23:36.3843078Z ##[group]Runner Image
+2026-11-11T23:23:36.3843918Z Image: windows-2025-vs2026
+2026-11-11T23:23:36.3845006Z Version: 20261103.298.1
+2026-11-11T23:23:36.3848110Z Included Software: https://github.com/actions/runner-images/blob/win25-vs2026/20261103.298/images/windows/Windows2025-VS2026-Readme.md
+2026-11-11T23:23:36.3851894Z Image Release: https://github.com/actions/runner-images/releases/tag/win25-vs2026%2F20261103.298
+2026-11-11T23:23:36.3854108Z ##[endgroup]
+2026-11-11T23:23:36.3856026Z ##[group]GITHUB_TOKEN Permissions
+2026-11-11T23:23:36.3859272Z Contents: read
+2026-11-11T23:23:36.3860133Z Metadata: read
+2026-11-11T23:23:36.3860921Z ##[endgroup]
+2026-11-11T23:23:36.3863770Z Secret source: Actions
+2026-11-11T23:23:36.3865059Z Cache mode: write
+2026-11-11T23:23:36.3866164Z Prepare workflow directory
+2026-11-11T23:23:36.4277144Z Prepare all required actions
+2026-11-11T23:23:36.4337668Z Getting action download info
+2026-11-11T23:23:36.6856099Z Download action repository 'actions/checkout@v4' (SHA:11d5960a326750d5838078e36cf38b85af677262)
+2026-11-11T23:23:36.8462093Z Download action repository 'actions/setup-python@v5' (SHA:a26af69be951a213d495a4c3e4e4022e16d87065)
+2026-11-11T23:23:37.1123778Z Complete job name: tooling (windows-latest)
+2026-11-11T23:23:37.2715502Z ##[group]Run actions/checkout@v4
+2026-11-11T23:23:37.2716510Z with:
+2026-11-11T23:23:37.2716949Z   repository: Richarddavis47/dtos
+2026-11-11T23:23:37.2721102Z   token: ***
+2026-11-11T23:23:37.2721523Z   ssh-strict: true
+2026-11-11T23:23:37.2721945Z   ssh-user: git
+2026-11-11T23:23:37.2722806Z   persist-credentials: true
+2026-11-11T23:23:37.2723291Z   clean: true
+2026-11-11T23:23:37.2723722Z   sparse-checkout-cone-mode: true
+2026-11-11T23:23:37.2724219Z   fetch-depth: 1
+2026-11-11T23:23:37.2724633Z   fetch-tags: false
+2026-11-11T23:23:37.2725056Z   show-progress: true
+2026-11-11T23:23:37.2725478Z   lfs: false
+2026-11-11T23:23:37.2725870Z   submodules: false
+2026-11-11T23:23:37.2726292Z   set-safe-directory: true
+2026-11-11T23:23:37.2726778Z   allow-unsafe-pr-checkout: false
+2026-11-11T23:23:37.2727541Z ##[endgroup]
+2026-11-11T23:23:37.4303576Z Syncing repository: Richarddavis47/dtos
+2026-11-11T23:23:37.4306626Z ##[group]Getting Git version info
+2026-11-11T23:23:37.4308075Z Working directory is 'D:\a\dtos\dtos'
+2026-11-11T23:23:37.5324373Z [command]"C:\Program Files\Git\bin\git.exe" version
+2026-11-11T23:23:37.8628606Z git version 2.56.0.windows.4
+2026-11-11T23:23:37.8686632Z ##[endgroup]
+2026-11-11T23:23:37.8708972Z Temporarily overriding HOME='D:\a\_temp\0ce0cfe3-a850-4662-aeb3-bc3ccf4603d1' before making global git config changes
+2026-11-11T23:23:37.8711432Z Adding repository directory to the temporary git global config as a safe directory
+2026-11-11T23:23:37.8721857Z [command]"C:\Program Files\Git\bin\git.exe" config --global --add safe.directory D:\a\dtos\dtos
+2026-11-11T23:23:37.9374412Z Deleting the contents of 'D:\a\dtos\dtos'
+2026-11-11T23:23:37.9381460Z ##[group]Initializing the repository
+2026-11-11T23:23:37.9391185Z [command]"C:\Program Files\Git\bin\git.exe" init D:\a\dtos\dtos
+2026-11-11T23:23:38.0186161Z Initialized empty Git repository in D:/a/dtos/dtos/.git/
+2026-11-11T23:23:38.0243730Z [command]"C:\Program Files\Git\bin\git.exe" remote add origin https://github.com/Richarddavis47/dtos
+2026-11-11T23:23:38.0957416Z ##[endgroup]
+2026-11-11T23:23:38.0959548Z ##[group]Disabling automatic garbage collection
+2026-11-11T23:23:38.0964963Z [command]"C:\Program Files\Git\bin\git.exe" config --local gc.auto 0
+2026-11-11T23:23:38.1352743Z ##[endgroup]
+2026-11-11T23:23:38.1355606Z ##[group]Setting up auth
+2026-11-11T23:23:38.1364649Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp core\.sshCommand
+2026-11-11T23:23:38.1763248Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :\""
+2026-11-11T23:23:40.3922740Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-11-11T23:23:40.4312820Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :\""
+2026-11-11T23:23:41.0058990Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-11-11T23:23:41.0478263Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "git config --local --show-origin --name-only --get-regexp remote.origin.url"
+2026-11-11T23:23:41.6688574Z [command]"C:\Program Files\Git\bin\git.exe" config --local http.https://github.com/.extraheader "AUTHORIZATION: basic ***"
+2026-11-11T23:23:41.7328330Z ##[endgroup]
+2026-11-11T23:23:41.7329607Z ##[group]Fetching the repository
+2026-11-11T23:23:41.7375058Z [command]"C:\Program Files\Git\bin\git.exe" -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +6489b311be1e462672d55f657c78b7300ce55e04:refs/remotes/pull/337/merge
+2026-11-11T23:23:44.3629080Z From https://github.com/Richarddavis47/dtos
+2026-11-11T23:23:44.3630337Z  * [new ref]         6489b311be1e462672d55f657c78b7300ce55e04 -> pull/337/merge
+2026-11-11T23:23:44.3671807Z ##[endgroup]
+2026-11-11T23:23:44.3672462Z ##[group]Determining the checkout info
+2026-11-11T23:23:44.3674356Z ##[endgroup]
+2026-11-11T23:23:44.3684185Z [command]"C:\Program Files\Git\bin\git.exe" sparse-checkout disable
+2026-11-11T23:23:44.4243113Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset-all extensions.worktreeConfig
+2026-11-11T23:23:44.4659173Z ##[group]Checking out the ref
+2026-11-11T23:23:44.4670447Z [command]"C:\Program Files\Git\bin\git.exe" checkout --progress --force refs/remotes/pull/337/merge
+2026-11-11T23:23:45.5276772Z Updating files:  57% (1506/2604)
+2026-11-11T23:23:45.5387629Z Updating files:  58% (1511/2604)
+2026-11-11T23:23:45.5542406Z Updating files:  59% (1537/2604)
+2026-11-11T23:23:45.5803964Z Updating files:  60% (1563/2604)
+2026-11-11T23:23:45.6011915Z Updating files:  61% (1589/2604)
+2026-11-11T23:23:45.6215930Z Updating files:  62% (1615/2604)
+2026-11-11T23:23:45.6476191Z Updating files:  63% (1641/2604)
+2026-11-11T23:23:45.6683258Z Updating files:  64% (1667/2604)
+2026-11-11T23:23:45.6903631Z Updating files:  65% (1693/2604)
+2026-11-11T23:23:45.7118394Z Updating files:  66% (1719/2604)
+2026-11-11T23:23:45.7451511Z Updating files:  67% (1745/2604)
+2026-11-11T23:23:45.7895468Z Updating files:  68% (1771/2604)
+2026-11-11T23:23:45.8310269Z Updating files:  69% (1797/2604)
+2026-11-11T23:23:45.8721029Z Updating files:  70% (1823/2604)
+2026-11-11T23:23:45.9098303Z Updating files:  71% (1849/2604)
+2026-11-11T23:23:45.9466793Z Updating files:  72% (1875/2604)
+2026-11-11T23:23:45.9799909Z Updating files:  73% (1901/2604)
+2026-11-11T23:23:46.0058173Z Updating files:  74% (1927/2604)
+2026-11-11T23:23:46.0165054Z Updating files:  75% (1953/2604)
+2026-11-11T23:23:46.0237323Z Updating files:  76% (1980/2604)
+2026-11-11T23:23:46.0305341Z Updating files:  77% (2006/2604)
+2026-11-11T23:23:46.0383935Z Updating files:  78% (2032/2604)
+2026-11-11T23:23:46.0454932Z Updating files:  79% (2058/2604)
+2026-11-11T23:23:46.0525911Z Updating files:  80% (2084/2604)
+2026-11-11T23:23:46.0595835Z Updating files:  81% (2110/2604)
+2026-11-11T23:23:46.0660730Z Updating files:  82% (2136/2604)
+2026-11-11T23:23:46.0726467Z Updating files:  83% (2162/2604)
+2026-11-11T23:23:46.0802047Z Updating files:  84% (2188/2604)
+2026-11-11T23:23:46.0871265Z Updating files:  85% (2214/2604)
+2026-11-11T23:23:46.0948658Z Updating files:  86% (2240/2604)
+2026-11-11T23:23:46.1019976Z Updating files:  87% (2266/2604)
+2026-11-11T23:23:46.1088183Z Updating files:  88% (2292/2604)
+2026-11-11T23:23:46.1153155Z Updating files:  89% (2318/2604)
+2026-11-11T23:23:46.1223370Z Updating files:  90% (2344/2604)
+2026-11-11T23:23:46.1287995Z Updating files:  91% (2370/2604)
+2026-11-11T23:23:46.1405275Z Updating files:  92% (2396/2604)
+2026-11-11T23:23:46.1470497Z Updating files:  93% (2422/2604)
+2026-11-11T23:23:46.1542146Z Updating files:  94% (2448/2604)
+2026-11-11T23:23:46.1624440Z Updating files:  95% (2474/2604)
+2026-11-11T23:23:46.1695146Z Updating files:  96% (2500/2604)
+2026-11-11T23:23:46.1757134Z Updating files:  97% (2526/2604)
+2026-11-11T23:23:46.1832273Z Updating files:  98% (2552/2604)
+2026-11-11T23:23:46.1899998Z Updating files:  99% (2578/2604)
+2026-11-11T23:23:46.1902982Z Updating files: 100% (2604/2604)
+2026-11-11T23:23:46.1903417Z Updating files: 100% (2604/2604), done.
+2026-11-11T23:23:46.2019196Z Note: switching to 'refs/remotes/pull/337/merge'.
+2026-11-11T23:23:46.2019631Z 
+2026-11-11T23:23:46.2019836Z You are in 'detached HEAD' state. You can look around, make experimental
+2026-11-11T23:23:46.2020591Z changes and commit them, and you can discard any commits you make in this
+2026-11-11T23:23:46.2021306Z state without impacting any branches by switching back to a branch.
+2026-11-11T23:23:46.2021790Z 
+2026-11-11T23:23:46.2022114Z If you want to create a new branch to retain commits you create, you may
+2026-11-11T23:23:46.2024528Z do so (now or later) by using -c with the switch command. Example:
+2026-11-11T23:23:46.2024907Z 
+2026-11-11T23:23:46.2025058Z   git switch -c <new-branch-name>
+2026-11-11T23:23:46.2025237Z 
+2026-11-11T23:23:46.2025321Z Or undo this operation with:
+2026-11-11T23:23:46.2025479Z 
+2026-11-11T23:23:46.2025549Z   git switch -
+2026-11-11T23:23:46.2025665Z 
+2026-11-11T23:23:46.2025873Z Turn off this advice by setting config variable advice.detachedHead to false
+2026-11-11T23:23:46.2026167Z 
+2026-11-11T23:23:46.2026500Z HEAD is now at 6489b31 Merge 99947bf0bd762133403cc667d9346837f9274221 into 55351c8e4062dc7d74ceb7748eab2179d1bfd92a
+2026-11-11T23:23:46.2307275Z ##[endgroup]
+2026-11-11T23:23:46.2817307Z [command]"C:\Program Files\Git\bin\git.exe" log -1 --format=%H
+2026-11-11T23:23:46.3157038Z 6489b311be1e462672d55f657c78b7300ce55e04
+2026-11-11T23:23:46.3691696Z ##[group]Run actions/setup-python@v5
+2026-11-11T23:23:46.3692012Z with:
+2026-11-11T23:23:46.3692219Z   python-version: 3.12
+2026-11-11T23:23:46.3692431Z   cache: pip
+2026-11-11T23:23:46.3692766Z   cache-dependency-path: requirements.txt
+requirements-validation.txt
+
+2026-11-11T23:23:46.3693145Z   check-latest: false
+2026-11-11T23:23:46.3696075Z   token: ***
+2026-11-11T23:23:46.3696266Z   update-environment: true
+2026-11-11T23:23:46.3696484Z   allow-prereleases: false
+2026-11-11T23:23:46.3696700Z   freethreaded: false
+2026-11-11T23:23:46.3696883Z ##[endgroup]
+2026-11-11T23:23:46.5291432Z ##[group]Installed versions
+2026-11-11T23:23:46.5511851Z (node:6340) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-11-11T23:23:46.5512827Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-11-11T23:23:46.5514757Z Successfully set up CPython (3.12.10)
+2026-11-11T23:23:46.5516116Z ##[endgroup]
+2026-11-11T23:23:49.3202749Z Cache hit for: setup-python-Windows-x64-python-3.12.10-pip-31093475437c38ecace233cc4cda1b776fe972ff849327fa7898e8116732ac6a
+2026-11-11T23:23:49.3320230Z (node:6340) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+2026-11-11T23:23:50.3077069Z Received 70811975 of 70811975 (100.0%), 80.4 MBs/sec
+2026-11-11T23:23:50.3081310Z Cache Size: ~68 MB (70811975 B)
+2026-11-11T23:23:50.3156259Z [command]"C:\Program Files\Git\usr\bin\tar.exe" -xf D:/a/_temp/749e7a70-09ae-4bfb-b382-21d2dfcd0869/cache.tzst -P -C D:/a/dtos/dtos --force-local --use-compress-program "zstd -d"
+2026-11-11T23:23:50.9134164Z Cache restored successfully
+2026-11-11T23:23:50.9183857Z Cache restored from key: setup-python-Windows-x64-python-3.12.10-pip-31093475437c38ecace233cc4cda1b776fe972ff849327fa7898e8116732ac6a
+2026-11-11T23:23:50.9555022Z ##[group]Run python -m pip install -r requirements-validation.txt
+2026-11-11T23:23:50.9555609Z [36;1mpython -m pip install -r requirements-validation.txt[0m
+2026-11-11T23:23:51.0536195Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-11-11T23:23:51.0536571Z env:
+2026-11-11T23:23:51.0536853Z   pythonLocation: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-11-11T23:23:51.0537377Z   PKG_CONFIG_PATH: C:\hostedtoolcache\windows\Python\3.12.10\x64/lib/pkgconfig
+2026-11-11T23:23:51.0537860Z   Python_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-11-11T23:23:51.0538282Z   Python2_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-11-11T23:23:51.0538712Z   Python3_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-11-11T23:23:51.0539058Z ##[endgroup]
+2026-11-11T23:23:54.3321200Z Collecting fastapi<1.0,>=0.116 (from -r D:\a\dtos\dtos\requirements.txt (line 1))
+2026-11-11T23:23:54.5850509Z   Downloading fastapi-0.162.5-py3-none-any.whl.metadata (27 kB)
+2026-11-11T23:23:54.7119154Z Collecting uvicorn<1.0,>=0.35 (from uvicorn[standard]<1.0,>=0.35->-r D:\a\dtos\dtos\requirements.txt (line 2))
+2026-11-11T23:23:54.7142883Z   Using cached uvicorn-0.54.0-py3-none-any.whl.metadata (6.6 kB)
+2026-11-11T23:23:54.7479492Z Collecting httpx<1.0,>=0.28 (from -r D:\a\dtos\dtos\requirements.txt (line 3))
+2026-11-11T23:23:54.7500771Z   Using cached httpx-0.28.1-py3-none-any.whl.metadata (7.1 kB)
+2026-11-11T23:23:54.8451834Z Collecting psutil<8.0,>=6.0 (from -r D:\a\dtos\dtos\requirements.txt (line 4))
+2026-11-11T23:23:54.8476154Z   Using cached psutil-7.2.2-cp37-abi3-win_amd64.whl.metadata (22 kB)
+2026-11-11T23:23:54.8783833Z Collecting pwdlib<1.0,>=0.2 (from pwdlib[argon2]<1.0,>=0.2->-r D:\a\dtos\dtos\requirements.txt (line 5))
+2026-11-11T23:23:54.8805026Z   Using cached pwdlib-0.3.1-py3-none-any.whl.metadata (5.6 kB)
+2026-11-11T23:23:54.9109835Z Collecting tzdata>=2025.1 (from -r D:\a\dtos\dtos\requirements.txt (line 6))
+2026-11-11T23:23:54.9138894Z   Using cached tzdata-2026.6-py2.py3-none-any.whl.metadata (1.4 kB)
+2026-11-11T23:23:55.1186778Z Collecting cryptography<51,>=43 (from -r D:\a\dtos\dtos\requirements.txt (line 7))
+2026-11-11T23:23:55.1211233Z   Using cached cryptography-50.0.2-cp311-abi3-win_amd64.whl.metadata (4.4 kB)
+2026-11-11T23:23:55.1736572Z Collecting playwright==1.63.0 (from -r requirements-validation.txt (line 2))
+2026-11-11T23:23:55.1758671Z   Using cached playwright-1.63.0-py3-none-win_amd64.whl.metadata (3.3 kB)
+2026-11-11T23:23:55.5602167Z Collecting ruff==0.16.9 (from -r requirements-validation.txt (line 3))
+2026-11-11T23:23:55.5625666Z   Using cached ruff-0.16.9-py3-none-win_amd64.whl.metadata (21 kB)
+2026-11-11T23:23:55.7909352Z Collecting Pillow<13.0,>=11.0 (from -r requirements-validation.txt (line 4))
+2026-11-11T23:23:55.7946726Z   Using cached pillow-12.3.0-cp312-cp312-win_amd64.whl.metadata (9.3 kB)
+2026-11-11T23:23:55.8256023Z Collecting pyee<14,>=13 (from playwright==1.63.0->-r requirements-validation.txt (line 2))
+2026-11-11T23:23:55.8275817Z   Using cached pyee-13.0.1-py3-none-any.whl.metadata (3.0 kB)
+2026-11-11T23:23:55.9970807Z Collecting greenlet<4.0.0,>=3.1.1 (from playwright==1.63.0->-r requirements-validation.txt (line 2))
+2026-11-11T23:23:55.9997062Z   Using cached greenlet-3.5.6-cp312-cp312-win_amd64.whl.metadata (3.9 kB)
+2026-11-11T23:23:56.0399858Z Collecting starlette>=0.46.0 (from fastapi<1.0,>=0.116->-r D:\a\dtos\dtos\requirements.txt (line 1))
+2026-11-11T23:23:56.0420960Z   Using cached starlette-1.10.0-py3-none-any.whl.metadata (6.6 kB)
+2026-11-11T23:23:56.0761951Z Collecting anyio>=4.1.0 (from fastapi<1.0,>=0.116->-r D:\a\dtos\dtos\requirements.txt (line 1))
+2026-11-11T23:23:56.0784259Z   Using cached anyio-4.16.0-py3-none-any.whl.metadata (4.7 kB)
+2026-11-11T23:23:56.2032179Z Collecting pydantic>=2.9.0 (from fastapi<1.0,>=0.116->-r D:\a\dtos\dtos\requirements.txt (line 1))
+2026-11-11T23:23:56.2060446Z   Using cached pydantic-2.14.3-py3-none-any.whl.metadata (141 kB)
+2026-11-11T23:23:56.2434683Z Collecting typing-extensions>=4.8.0 (from fastapi<1.0,>=0.116->-r D:\a\dtos\dtos\requirements.txt (line 1))
+2026-11-11T23:23:56.2474763Z   Using cached typing_extensions-4.16.0-py3-none-any.whl.metadata (3.3 kB)
+2026-11-11T23:23:56.2804074Z Collecting typing-inspection>=0.4.2 (from fastapi<1.0,>=0.116->-r D:\a\dtos\dtos\requirements.txt (line 1))
+2026-11-11T23:23:56.2826571Z   Using cached typing_inspection-0.4.5-py3-none-any.whl.metadata (2.6 kB)
+2026-11-11T23:23:56.3068495Z Collecting annotated-doc>=0.0.2 (from fastapi<1.0,>=0.116->-r D:\a\dtos\dtos\requirements.txt (line 1))
+2026-11-11T23:23:56.3090311Z   Using cached annotated_doc-0.0.6-py3-none-any.whl.metadata (6.5 kB)
+2026-11-11T23:23:56.3438521Z Collecting opentelemetry-api>=1.44.0 (from fastapi<1.0,>=0.116->-r D:\a\dtos\dtos\requirements.txt (line 1))
+2026-11-11T23:23:56.3459375Z   Using cached opentelemetry_api-1.45.2-py3-none-any.whl.metadata (1.4 kB)
+2026-11-11T23:23:56.3503269Z Requirement already satisfied: click>=7.0 in C:\hostedtoolcache\windows\Python\3.12.10\x64\Lib\site-packages (from uvicorn<1.0,>=0.35->uvicorn[standard]<1.0,>=0.35->-r D:\a\dtos\dtos\requirements.txt (line 2)) (8.5.0)
+2026-11-11T23:23:56.3714238Z Collecting h11>=0.8 (from uvicorn<1.0,>=0.35->uvicorn[standard]<1.0,>=0.35->-r D:\a\dtos\dtos\requirements.txt (line 2))
+2026-11-11T23:23:56.3736280Z   Using cached h11-0.16.0-py3-none-any.whl.metadata (8.3 kB)
+2026-11-11T23:23:56.4108458Z Collecting certifi (from httpx<1.0,>=0.28->-r D:\a\dtos\dtos\requirements.txt (line 3))
+2026-11-11T23:23:56.4130310Z   Using cached certifi-2026.10.23-py3-none-any.whl.metadata (2.5 kB)
+2026-11-11T23:23:56.4537245Z Collecting httpcore==1.* (from httpx<1.0,>=0.28->-r D:\a\dtos\dtos\requirements.txt (line 3))
+2026-11-11T23:23:56.4559335Z   Using cached httpcore-1.0.9-py3-none-any.whl.metadata (21 kB)
+2026-11-11T23:23:56.4875512Z Collecting idna (from httpx<1.0,>=0.28->-r D:\a\dtos\dtos\requirements.txt (line 3))
+2026-11-11T23:23:56.4897761Z   Using cached idna-3.20-py3-none-any.whl.metadata (7.2 kB)
+2026-11-11T23:23:56.6221019Z Collecting cffi>=2.0.0 (from cryptography<51,>=43->-r D:\a\dtos\dtos\requirements.txt (line 7))
+2026-11-11T23:23:56.6244343Z   Using cached cffi-2.1.1-cp312-cp312-win_amd64.whl.metadata (2.6 kB)
+2026-11-11T23:23:56.6616797Z Collecting argon2-cffi>=23.1.0 (from pwdlib[argon2]<1.0,>=0.2->-r D:\a\dtos\dtos\requirements.txt (line 5))
+2026-11-11T23:23:56.6637879Z   Using cached argon2_cffi-25.1.0-py3-none-any.whl.metadata (4.1 kB)
+2026-11-11T23:23:56.7154757Z Collecting httptools>=0.8.0 (from uvicorn[standard]<1.0,>=0.35->-r D:\a\dtos\dtos\requirements.txt (line 2))
+2026-11-11T23:23:56.7176904Z   Using cached httptools-0.9.0-cp312-cp312-win_amd64.whl.metadata (3.7 kB)
+2026-11-11T23:23:56.7469354Z Collecting python-dotenv>=0.13 (from uvicorn[standard]<1.0,>=0.35->-r D:\a\dtos\dtos\requirements.txt (line 2))
+2026-11-11T23:23:56.7490111Z   Using cached python_dotenv-1.2.4-py3-none-any.whl.metadata (29 kB)
+2026-11-11T23:23:56.8121773Z Collecting pyyaml>=5.1 (from uvicorn[standard]<1.0,>=0.35->-r D:\a\dtos\dtos\requirements.txt (line 2))
+2026-11-11T23:23:56.8144538Z   Using cached pyyaml-6.0.3-cp312-cp312-win_amd64.whl.metadata (2.4 kB)
+2026-11-11T23:23:56.9107146Z Collecting watchfiles>=0.20 (from uvicorn[standard]<1.0,>=0.35->-r D:\a\dtos\dtos\requirements.txt (line 2))
+2026-11-11T23:23:56.9135118Z   Using cached watchfiles-1.3.0-cp310-abi3-win_amd64.whl.metadata (5.0 kB)
+2026-11-11T23:23:57.0881092Z Collecting websockets>=13.0 (from uvicorn[standard]<1.0,>=0.35->-r D:\a\dtos\dtos\requirements.txt (line 2))
+2026-11-11T23:23:57.0908418Z   Using cached websockets-17.4-cp312-cp312-win_amd64.whl.metadata (6.5 kB)
+2026-11-11T23:23:57.1304538Z Collecting argon2-cffi-bindings (from argon2-cffi>=23.1.0->pwdlib[argon2]<1.0,>=0.2->-r D:\a\dtos\dtos\requirements.txt (line 5))
+2026-11-11T23:23:57.1329295Z   Using cached argon2_cffi_bindings-26.1.0-cp310-abi3-win_amd64.whl.metadata (7.5 kB)
+2026-11-11T23:23:57.1689046Z Collecting pycparser (from cffi>=2.0.0->cryptography<51,>=43->-r D:\a\dtos\dtos\requirements.txt (line 7))
+2026-11-11T23:23:57.1746132Z   Using cached pycparser-3.12-py3-none-any.whl.metadata (9.7 kB)
+2026-11-11T23:23:57.2155924Z Collecting annotated-types>=0.6.0 (from pydantic>=2.9.0->fastapi<1.0,>=0.116->-r D:\a\dtos\dtos\requirements.txt (line 1))
+2026-11-11T23:23:57.2195349Z   Using cached annotated_types-0.8.0-py3-none-any.whl.metadata (15 kB)
+2026-11-11T23:23:58.0315937Z Collecting pydantic-core==2.50.4 (from pydantic>=2.9.0->fastapi<1.0,>=0.116->-r D:\a\dtos\dtos\requirements.txt (line 1))
+2026-11-11T23:23:58.0344628Z   Using cached pydantic_core-2.50.4-cp312-cp312-win_amd64.whl.metadata (6.7 kB)
+2026-11-11T23:23:58.0509944Z Using cached playwright-1.63.0-py3-none-win_amd64.whl (38.6 MB)
+2026-11-11T23:23:58.0709830Z Using cached ruff-0.16.9-py3-none-win_amd64.whl (10.6 MB)
+2026-11-11T23:23:58.1066414Z Downloading fastapi-0.162.5-py3-none-any.whl (151 kB)
+2026-11-11T23:23:58.1658102Z Using cached uvicorn-0.54.0-py3-none-any.whl (87 kB)
+2026-11-11T23:23:58.1677603Z Using cached httpx-0.28.1-py3-none-any.whl (73 kB)
+2026-11-11T23:23:58.1696785Z Using cached psutil-7.2.2-cp37-abi3-win_amd64.whl (137 kB)
+2026-11-11T23:23:58.1719080Z Using cached pwdlib-0.3.1-py3-none-any.whl (9.3 kB)
+2026-11-11T23:23:58.1737446Z Using cached cryptography-50.0.2-cp311-abi3-win_amd64.whl (3.8 MB)
+2026-11-11T23:23:58.1774646Z Using cached pillow-12.3.0-cp312-cp312-win_amd64.whl (7.2 MB)
+2026-11-11T23:23:58.1827381Z Using cached greenlet-3.5.6-cp312-cp312-win_amd64.whl (324 kB)
+2026-11-11T23:23:58.1850905Z Using cached httpcore-1.0.9-py3-none-any.whl (78 kB)
+2026-11-11T23:23:58.1870220Z Using cached pyee-13.0.1-py3-none-any.whl (15 kB)
+2026-11-11T23:23:58.1887829Z Using cached tzdata-2026.6-py2.py3-none-any.whl (348 kB)
+2026-11-11T23:23:58.1908739Z Using cached annotated_doc-0.0.6-py3-none-any.whl (5.3 kB)
+2026-11-11T23:23:58.1930893Z Using cached anyio-4.16.0-py3-none-any.whl (134 kB)
+2026-11-11T23:23:58.1980932Z Using cached argon2_cffi-25.1.0-py3-none-any.whl (14 kB)
+2026-11-11T23:23:58.1999203Z Using cached cffi-2.1.1-cp312-cp312-win_amd64.whl (185 kB)
+2026-11-11T23:23:58.2018304Z Using cached h11-0.16.0-py3-none-any.whl (37 kB)
+2026-11-11T23:23:58.2042505Z Using cached httptools-0.9.0-cp312-cp312-win_amd64.whl (92 kB)
+2026-11-11T23:23:58.2062130Z Using cached idna-3.20-py3-none-any.whl (69 kB)
+2026-11-11T23:23:58.2081173Z Using cached opentelemetry_api-1.45.2-py3-none-any.whl (60 kB)
+2026-11-11T23:23:58.2099845Z Using cached pydantic-2.14.3-py3-none-any.whl (494 kB)
+2026-11-11T23:23:58.2124785Z Using cached pydantic_core-2.50.4-cp312-cp312-win_amd64.whl (2.3 MB)
+2026-11-11T23:23:58.2155657Z Using cached annotated_types-0.8.0-py3-none-any.whl (13 kB)
+2026-11-11T23:23:58.2174937Z Using cached python_dotenv-1.2.4-py3-none-any.whl (23 kB)
+2026-11-11T23:23:58.2197337Z Using cached pyyaml-6.0.3-cp312-cp312-win_amd64.whl (154 kB)
+2026-11-11T23:23:58.2224873Z Using cached starlette-1.10.0-py3-none-any.whl (80 kB)
+2026-11-11T23:23:58.2243936Z Using cached typing_extensions-4.16.0-py3-none-any.whl (45 kB)
+2026-11-11T23:23:58.2262578Z Using cached typing_inspection-0.4.5-py3-none-any.whl (14 kB)
+2026-11-11T23:23:58.2297469Z Using cached watchfiles-1.3.0-cp310-abi3-win_amd64.whl (290 kB)
+2026-11-11T23:23:58.2320954Z Using cached websockets-17.4-cp312-cp312-win_amd64.whl (219 kB)
+2026-11-11T23:23:58.2370801Z Using cached argon2_cffi_bindings-26.1.0-cp310-abi3-win_amd64.whl (25 kB)
+2026-11-11T23:23:58.2389665Z Using cached certifi-2026.10.23-py3-none-any.whl (135 kB)
+2026-11-11T23:23:58.2409387Z Using cached pycparser-3.12-py3-none-any.whl (62 kB)
+2026-11-11T23:23:58.7740271Z Installing collected packages: websockets, tzdata, typing-extensions, ruff, pyyaml, python-dotenv, pycparser, pwdlib, psutil, Pillow, idna, httptools, h11, greenlet, certifi, annotated-types, annotated-doc, uvicorn, typing-inspection, pyee, pydantic-core, opentelemetry-api, httpcore, cffi, anyio, watchfiles, starlette, pydantic, playwright, httpx, cryptography, argon2-cffi-bindings, fastapi, argon2-cffi
+2026-11-11T23:24:08.1218179Z 
+2026-11-11T23:24:08.1265030Z Successfully installed Pillow-12.3.0 annotated-doc-0.0.6 annotated-types-0.8.0 anyio-4.16.0 argon2-cffi-25.1.0 argon2-cffi-bindings-26.1.0 certifi-2026.10.23 cffi-2.1.1 cryptography-50.0.2 fastapi-0.162.5 greenlet-3.5.6 h11-0.16.0 httpcore-1.0.9 httptools-0.9.0 httpx-0.28.1 idna-3.20 opentelemetry-api-1.45.2 playwright-1.63.0 psutil-7.2.2 pwdlib-0.3.1 pycparser-3.12 pydantic-2.14.3 pydantic-core-2.50.4 pyee-13.0.1 python-dotenv-1.2.4 pyyaml-6.0.3 ruff-0.16.9 starlette-1.10.0 typing-extensions-4.16.0 typing-inspection-0.4.5 tzdata-2026.6 uvicorn-0.54.0 watchfiles-1.3.0 websockets-17.4
+2026-11-11T23:24:08.4164759Z ##[group]Run python -m unittest tests.test_request_attribution tests.test_cloud_tooling tests.test_server_lifecycle tests.test_process_check tests.test_validation_progress tests.test_market_warming_validation
+2026-11-11T23:24:08.4166270Z [36;1mpython -m unittest tests.test_request_attribution tests.test_cloud_tooling tests.test_server_lifecycle tests.test_process_check tests.test_validation_progress tests.test_market_warming_validation[0m
+2026-11-11T23:24:08.4238647Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-11-11T23:24:08.4239007Z env:
+2026-11-11T23:24:08.4239320Z   pythonLocation: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-11-11T23:24:08.4240192Z   PKG_CONFIG_PATH: C:\hostedtoolcache\windows\Python\3.12.10\x64/lib/pkgconfig
+2026-11-11T23:24:08.4240737Z   Python_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-11-11T23:24:08.4241151Z   Python2_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-11-11T23:24:08.4241607Z   Python3_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-11-11T23:24:08.4241922Z ##[endgroup]
+2026-11-11T23:24:10.1723229Z C:\hostedtoolcache\windows\Python\3.12.10\x64\Lib\site-packages\fastapi\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+2026-11-11T23:24:10.1724406Z   from starlette.testclient import TestClient as TestClient  # noqa
+2026-11-11T23:24:11.4392418Z ..{"timestamp":"2026-11-11T23:24:11.437101+00:00","level":"INFO","logger":"dtos.request","message":"request_accepted","request_id":"1f95f23b6aec4275a3323abb77d88905","event":"request_accepted","method":"GET","path":"/"}
+2026-11-11T23:24:11.4394883Z {"timestamp":"2026-11-11T23:24:11.437101+00:00","level":"INFO","logger":"dtos.request","message":"handler_scheduled","request_id":"1f95f23b6aec4275a3323abb77d88905","event":"handler_scheduled","method":"GET","path":"/"}
+2026-11-11T23:24:11.4411447Z {"timestamp":"2026-11-11T23:24:11.440651+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/ \"HTTP/1.1 303 See Other\"","request_id":"system"}
+2026-11-11T23:24:11.4422596Z {"timestamp":"2026-11-11T23:24:11.440651+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"1f95f23b6aec4275a3323abb77d88905","event":"request_complete","duration_ms":3.411,"status_code":303,"method":"GET","path":"/"}
+2026-11-11T23:24:11.4766768Z ......{"timestamp":"2026-11-11T23:24:11.475865+00:00","level":"INFO","logger":"dtos.request","message":"request_accepted","request_id":"body-barrier","event":"request_accepted","method":"GET","path":"/"}
+2026-11-11T23:24:11.4769093Z {"timestamp":"2026-11-11T23:24:11.475865+00:00","level":"INFO","logger":"dtos.request","message":"handler_scheduled","request_id":"body-barrier","event":"handler_scheduled","method":"GET","path":"/"}
+2026-11-11T23:24:11.4778249Z {"timestamp":"2026-11-11T23:24:11.476177+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"body-barrier","event":"request_complete","duration_ms":1.442,"status_code":200,"method":"GET","path":"/"}
+2026-11-11T23:24:11.4873787Z ..{"timestamp":"2026-11-11T23:24:11.486859+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://api.sleeper.app/players/nfl \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-11T23:24:11.4929372Z .{"timestamp":"2026-11-11T23:24:11.491774+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://api.sleeper.app/projections/nfl/2026/6?private=do-not-log-query \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-11T23:24:11.4993617Z .{"timestamp":"2026-11-11T23:24:11.497838+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET https://api.sleeper.app/state/nfl \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-11T23:24:11.7280521Z .{"timestamp":"2026-11-11T23:24:11.725675+00:00","level":"WARNING","logger":"asyncio","message":"Executing <Task pending name='Task-33' coro=<TransferClockTests.test_real_loopback_transfer_stays_pending_after_response_headers() running at D:\\a\\dtos\\dtos\\tests\\test_request_attribution.py:65> wait_for=<Future pending cb=[Task.task_wakeup()] created at C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\Lib\\asyncio\\base_events.py:448> cb=[_run_until_complete_cb() at C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\Lib\\asyncio\\base_events.py:181] created at C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\Lib\\asyncio\\runners.py:100> took 0.235 seconds","request_id":"system"}
+2026-11-11T23:24:11.7385549Z {"timestamp":"2026-11-11T23:24:11.738334+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://127.0.0.1:54981/league/100 \"HTTP/1.0 200 OK\"","request_id":"system"}
+2026-11-11T23:24:12.2518008Z Validation Chromium: C:\Users\RUNNER~1\AppData\Local\Temp\tmpnz0ggn2u\chrome
+2026-11-11T23:24:12.2549777Z Validation Chromium: /usr/bin/chromium
+2026-11-11T23:24:12.2551485Z Validation Chromium version: <Mock name='mock.launch().version' id='2243323870432'>
+2026-11-11T23:24:12.2596648Z Validation Chromium: D:\a\dtos\dtos\tmpm_whegmw\system-chrome
+2026-11-11T23:24:12.2598423Z Validation Chromium version: <Mock name='mock.launch().version' id='2243322926320'>
+2026-11-11T23:24:18.5812648Z DTOS development setup complete: C:\Users\runneradmin\AppData\Local\Temp\tmpr9jm71tl\Scripts\python.exe
+2026-11-11T23:24:18.5813979Z DTOS development setup complete: C:\Users\runneradmin\AppData\Local\Temp\tmp74vkfubm\Scripts\python.exe
+2026-11-11T23:24:18.5815433Z Asset Market warming completed: path=/market duration=0.500s attempts=2 final_status=200 generation=published-page-contract
+2026-11-11T23:24:18.5819609Z Asset Market warming completed: path=/market duration=0.500s attempts=2 final_status=200 generation=published-page-contract
+2026-11-11T23:24:18.5832705Z Asset Market warming completed: path=/market duration=1.000s attempts=3 final_status=200 generation=published-page-contract
+2026-11-11T23:24:18.5834957Z Asset Market warming completed: path=/market duration=0.000s attempts=2 final_status=200 generation=generation-1
+2026-11-11T23:24:18.5838026Z Asset Market warming completed: path=/market duration=1.000s attempts=3 final_status=200 generation=published-page-contract
+2026-11-11T23:24:18.5841844Z Asset Market warming completed: path=/market duration=0.500s attempts=2 final_status=200 generation=published-page-contract
+2026-11-11T23:24:18.5846072Z ................................................................................
+2026-11-11T23:24:18.5847107Z ----------------------------------------------------------------------
+2026-11-11T23:24:18.5847689Z Ran 93 tests in 7.498s
+2026-11-11T23:24:18.5847910Z 
+2026-11-11T23:24:18.5848025Z OK
+2026-11-11T23:24:18.7920661Z ##[group]Run if [ "Windows" = "Windows" ]; then
+2026-11-11T23:24:18.7921092Z [36;1mif [ "Windows" = "Windows" ]; then[0m
+2026-11-11T23:24:18.7921581Z [36;1m  python -m tools.validation.windows_bounded_unittest tests.test_fois_preparation_cleanup[0m
+2026-11-11T23:24:18.7922043Z [36;1melse[0m
+2026-11-11T23:24:18.7924180Z [36;1m  docker run --rm --memory=2g --memory-swap=2g --cpus=2 --network=none -e PYTHONPATH=/src -e PYTHONDONTWRITEBYTECODE=1 -v "$PWD:/src:ro" -e RUNNER_TEMP -e DTOS_CACHE_FILE -e DTOS_DATA_WAREHOUSE_FILE -e DTOS_HISTORY_DB_FILE -e DTOS_PROJECTION_DB_FILE -e DTOS_INTELLIGENCE_CHECKPOINT_FILE -e DTOS_METADATA_DB_FILE -e DTOS_ACCOUNT_DB_FILE -e DTOS_GLOBAL_EVIDENCE_FILE -e DTOS_FOIS_DB_FILE -e DTOS_SLEEPER_SEASON_CACHE_ROOT -e DTOS_HISTORY_STORAGE_ROOT -e DTOS_DURABLE_HISTORY_REQUIRED -e SLEEPER_BASE_URL -w /tmp dtos-worker-validation sh -c 'mkdir -p "$RUNNER_TEMP"; exec python -m unittest tests.test_fois_preparation_cleanup'[0m
+2026-11-11T23:24:18.7926443Z [36;1mfi[0m
+2026-11-11T23:24:18.7946120Z shell: C:\Program Files\Git\bin\bash.EXE --noprofile --norc -e -o pipefail {0}
+2026-11-11T23:24:18.7946530Z env:
+2026-11-11T23:24:18.7946812Z   pythonLocation: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-11-11T23:24:18.7947342Z   PKG_CONFIG_PATH: C:\hostedtoolcache\windows\Python\3.12.10\x64/lib/pkgconfig
+2026-11-11T23:24:18.7947789Z   Python_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-11-11T23:24:18.7948186Z   Python2_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-11-11T23:24:18.7948570Z   Python3_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-11-11T23:24:18.7948934Z   DTOS_CACHE_FILE: D:\a\_temp/preparation-cache.json
+2026-11-11T23:24:18.7949299Z   DTOS_DATA_WAREHOUSE_FILE: D:\a\_temp/preparation-warehouse.json
+2026-11-11T23:24:18.7949702Z   DTOS_HISTORY_DB_FILE: D:\a\_temp/preparation-history.sqlite3
+2026-11-11T23:24:18.7950112Z   DTOS_PROJECTION_DB_FILE: D:\a\_temp/preparation-projections.sqlite3
+2026-11-11T23:24:18.7950597Z   DTOS_INTELLIGENCE_CHECKPOINT_FILE: D:\a\_temp/preparation-checkpoint.sqlite3
+2026-11-11T23:24:18.7951060Z   DTOS_METADATA_DB_FILE: D:\a\_temp/preparation-metadata.sqlite3
+2026-11-11T23:24:18.7951461Z   DTOS_ACCOUNT_DB_FILE: D:\a\_temp/preparation-accounts.sqlite3
+2026-11-11T23:24:18.7951876Z   DTOS_GLOBAL_EVIDENCE_FILE: D:\a\_temp/preparation-global.sqlite3
+2026-11-11T23:24:18.7952259Z   DTOS_FOIS_DB_FILE: D:\a\_temp/preparation-fois.sqlite3
+2026-11-11T23:24:18.7952627Z   DTOS_SLEEPER_SEASON_CACHE_ROOT: D:\a\_temp/preparation-seasons
+2026-11-11T23:24:18.7953016Z   DTOS_HISTORY_STORAGE_ROOT: D:\a\_temp/preparation-history-root
+2026-11-11T23:24:18.7953351Z   DTOS_DURABLE_HISTORY_REQUIRED: false
+2026-11-11T23:24:18.7953625Z   SLEEPER_BASE_URL: http://127.0.0.1:9/v1
+2026-11-11T23:24:18.7953879Z ##[endgroup]
+2026-11-11T23:24:19.0613016Z ENFORCED_WINDOWS_JOB {"current": 10821632, "limit": 2147483648, "peak": 10821632}
+2026-11-11T23:24:20.0610773Z Executing <Task pending name='Task-2' coro=<PreparationCleanupTests.test_cancelled_failed_preparation_remains_cancelled_and_cleans() running at D:\a\dtos\dtos\tests\test_fois_preparation_cleanup.py:114> wait_for=<Future pending cb=[_chain_future.<locals>._call_check_cancel() at C:\hostedtoolcache\windows\Python\3.12.10\x64\Lib\asyncio\futures.py:389, Task.task_wakeup()] created at C:\hostedtoolcache\windows\Python\3.12.10\x64\Lib\asyncio\base_events.py:448> cb=[_run_until_complete_cb() at C:\hostedtoolcache\windows\Python\3.12.10\x64\Lib\asyncio\base_events.py:181] created at C:\hostedtoolcache\windows\Python\3.12.10\x64\Lib\asyncio\runners.py:100> took 0.219 seconds
+2026-11-11T23:24:20.5709902Z .ssExecuting <Task pending name='Task-9' coro=<PreparationCleanupTests.test_many_cancellations_preserve_copy_and_cancellation() running at D:\a\dtos\dtos\tests\test_fois_preparation_cleanup.py:110> wait_for=<Future pending cb=[_chain_future.<locals>._call_check_cancel() at C:\hostedtoolcache\windows\Python\3.12.10\x64\Lib\asyncio\futures.py:389, Task.task_wakeup()] created at C:\hostedtoolcache\windows\Python\3.12.10\x64\Lib\asyncio\base_events.py:448> cb=[_run_until_complete_cb() at C:\hostedtoolcache\windows\Python\3.12.10\x64\Lib\asyncio\base_events.py:181] created at C:\hostedtoolcache\windows\Python\3.12.10\x64\Lib\asyncio\runners.py:100> took 0.235 seconds
+2026-11-11T23:24:21.0870114Z .Executing <Task pending name='Task-16' coro=<PreparationCleanupTests.test_preparation_failure_cleans_without_publication() running at D:\a\dtos\dtos\tests\test_fois_preparation_cleanup.py:118> wait_for=<Future pending cb=[_chain_future.<locals>._call_check_cancel() at C:\hostedtoolcache\windows\Python\3.12.10\x64\Lib\asyncio\futures.py:389, Task.task_wakeup()] created at C:\hostedtoolcache\windows\Python\3.12.10\x64\Lib\asyncio\base_events.py:448> cb=[_run_until_complete_cb() at C:\hostedtoolcache\windows\Python\3.12.10\x64\Lib\asyncio\base_events.py:181] created at C:\hostedtoolcache\windows\Python\3.12.10\x64\Lib\asyncio\runners.py:100> took 0.234 seconds
+2026-11-11T23:24:21.5611364Z .Executing <Task pending name='Task-23' coro=<PreparationCleanupTests.test_repeated_mixed_operations_leave_no_temporary_storage_growth() running at D:\a\dtos\dtos\tests\test_fois_preparation_cleanup.py:130> wait_for=<Future pending cb=[_chain_future.<locals>._call_check_cancel() at C:\hostedtoolcache\windows\Python\3.12.10\x64\Lib\asyncio\futures.py:389, Task.task_wakeup()] created at C:\hostedtoolcache\windows\Python\3.12.10\x64\Lib\asyncio\base_events.py:448> cb=[_run_until_complete_cb() at C:\hostedtoolcache\windows\Python\3.12.10\x64\Lib\asyncio\base_events.py:181] created at C:\hostedtoolcache\windows\Python\3.12.10\x64\Lib\asyncio\runners.py:100> took 0.219 seconds
+2026-11-11T23:24:31.8029412Z .Executing <Task pending name='Task-98' coro=<PreparationCleanupTests.test_second_cancellation_does_not_remove_an_active_preparation() running at D:\a\dtos\dtos\tests\test_fois_preparation_cleanup.py:106> wait_for=<Future pending cb=[_chain_future.<locals>._call_check_cancel() at C:\hostedtoolcache\windows\Python\3.12.10\x64\Lib\asyncio\futures.py:389, Task.task_wakeup()] created at C:\hostedtoolcache\windows\Python\3.12.10\x64\Lib\asyncio\base_events.py:448> cb=[_run_until_complete_cb() at C:\hostedtoolcache\windows\Python\3.12.10\x64\Lib\asyncio\base_events.py:181] created at C:\hostedtoolcache\windows\Python\3.12.10\x64\Lib\asyncio\runners.py:100> took 0.250 seconds
+2026-11-11T23:24:32.3375467Z .Executing <Task pending name='Task-105' coro=<PreparationCleanupTests.test_success_cleans_after_real_compute_and_publication() running at D:\a\dtos\dtos\tests\test_fois_preparation_cleanup.py:122> wait_for=<Future pending cb=[_chain_future.<locals>._call_check_cancel() at C:\hostedtoolcache\windows\Python\3.12.10\x64\Lib\asyncio\futures.py:389, Task.task_wakeup()] created at C:\hostedtoolcache\windows\Python\3.12.10\x64\Lib\asyncio\base_events.py:448> cb=[_run_until_complete_cb() at C:\hostedtoolcache\windows\Python\3.12.10\x64\Lib\asyncio\base_events.py:181] created at C:\hostedtoolcache\windows\Python\3.12.10\x64\Lib\asyncio\runners.py:100> took 0.265 seconds
+2026-11-11T23:24:33.4040943Z .
+2026-11-11T23:24:33.4041297Z ----------------------------------------------------------------------
+2026-11-11T23:24:33.4041651Z Ran 8 tests in 13.573s
+2026-11-11T23:24:33.4041790Z 
+2026-11-11T23:24:33.4041871Z OK (skipped=2)
+2026-11-11T23:24:33.4042765Z {"operations": 30, "scratch_directories": 0, "scratch_bytes": 0, "abandoned_publications": 0, "canonical_unchanged_after_every_failed_or_cancelled_operation": true}
+2026-11-11T23:24:33.4653228Z ##[group]Run python -m ruff check .
+2026-11-11T23:24:33.4653599Z [36;1mpython -m ruff check .[0m
+2026-11-11T23:24:33.4725757Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-11-11T23:24:33.4726101Z env:
+2026-11-11T23:24:33.4726558Z   pythonLocation: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-11-11T23:24:33.4727020Z   PKG_CONFIG_PATH: C:\hostedtoolcache\windows\Python\3.12.10\x64/lib/pkgconfig
+2026-11-11T23:24:33.4727463Z   Python_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-11-11T23:24:33.4727868Z   Python2_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-11-11T23:24:33.4728265Z   Python3_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-11-11T23:24:33.4728584Z ##[endgroup]
+2026-11-11T23:24:33.9977011Z All checks passed!
+2026-11-11T23:24:34.1420300Z ##[group]Run if [ "Windows" = "Windows" ]; then
+2026-11-11T23:24:34.1420722Z [36;1mif [ "Windows" = "Windows" ]; then[0m
+2026-11-11T23:24:34.1421921Z [36;1m  python -m tools.validation.windows_bounded_unittest tests.test_fois_history_execution tests.test_fois_history_qualification tests.test_sleeper_history_publication tests.test_fois_history_read tests.test_fois_delta_integrity tests.test_season_cache_residency tests.test_fois_worker_residency[0m
+2026-11-11T23:24:34.1423381Z [36;1melse[0m
+2026-11-11T23:24:34.1424917Z [36;1m  docker run --rm --memory=2g --memory-swap=2g --cpus=2 --network=none -e PYTHONPATH=/src -e PYTHONDONTWRITEBYTECODE=1 -v "$PWD:/src:ro" -w /tmp dtos-worker-validation python -m unittest tests.test_fois_history_execution tests.test_fois_history_qualification tests.test_sleeper_history_publication tests.test_fois_history_read tests.test_fois_delta_integrity tests.test_season_cache_residency tests.test_fois_worker_residency[0m
+2026-11-11T23:24:34.1426524Z [36;1mfi[0m
+2026-11-11T23:24:34.1445696Z shell: C:\Program Files\Git\bin\bash.EXE --noprofile --norc -e -o pipefail {0}
+2026-11-11T23:24:34.1446082Z env:
+2026-11-11T23:24:34.1446341Z   pythonLocation: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-11-11T23:24:34.1446803Z   PKG_CONFIG_PATH: C:\hostedtoolcache\windows\Python\3.12.10\x64/lib/pkgconfig
+2026-11-11T23:24:34.1447258Z   Python_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-11-11T23:24:34.1447661Z   Python2_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-11-11T23:24:34.1448054Z   Python3_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-11-11T23:24:34.1448365Z ##[endgroup]
+2026-11-11T23:24:34.2716813Z ENFORCED_WINDOWS_JOB {"current": 10526720, "limit": 2147483648, "peak": 10526720}
+2026-11-11T23:24:34.7026370Z C:\hostedtoolcache\windows\Python\3.12.10\x64\Lib\site-packages\fastapi\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+2026-11-11T23:24:34.7027440Z   from starlette.testclient import TestClient as TestClient  # noqa
+2026-11-11T23:24:35.7197404Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T23:24:35.7213090Z INFO:httpx:HTTP Request: GET http://testserver/api/fois/leagues/A/gms/gm/timeline "HTTP/1.1 503 Service Unavailable"
+2026-11-11T23:24:35.7220114Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T23:24:35.7274315Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T23:24:35.7325166Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T23:24:35.7892797Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T23:24:35.7904425Z INFO:httpx:HTTP Request: GET http://testserver/api/fois/leagues/A/gms/gm/timeline "HTTP/1.1 503 Service Unavailable"
+2026-11-11T23:24:35.7913945Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T23:24:35.7964458Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T23:24:35.8017570Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T23:24:36.2119631Z .INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T23:24:36.2193548Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T23:24:36.6931215Z INFO:httpx:HTTP Request: GET http://testserver/api/fois/leagues/A/gms/gm/timeline "HTTP/1.1 200 OK"
+2026-11-11T23:24:36.6954798Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T23:24:36.7026721Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T23:24:36.7566637Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T23:24:36.7628823Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T23:24:37.2430615Z INFO:httpx:HTTP Request: GET http://testserver/api/fois/leagues/A/gms/gm/timeline "HTTP/1.1 200 OK"
+2026-11-11T23:24:37.2453163Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T23:24:37.2523116Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T23:24:37.3071441Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T23:24:37.3137621Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T23:24:37.7864143Z INFO:httpx:HTTP Request: GET http://testserver/api/fois/leagues/B/gms/gm/timeline "HTTP/1.1 404 Not Found"
+2026-11-11T23:24:37.7872534Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T23:24:37.7938245Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T23:24:38.1324767Z .INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T23:24:38.1382817Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T23:24:38.1421319Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T23:24:38.1466824Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T23:24:42.5088687Z .....INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T23:24:42.5145456Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T23:24:42.5174555Z INFO:httpx:HTTP Request: GET http://testserver/api/fois/leagues/A/gms/gm/timeline "HTTP/1.1 503 Service Unavailable"
+2026-11-11T23:24:42.5184763Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T23:24:42.5236038Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T23:24:42.5813158Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T23:24:42.5872948Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T23:24:43.0707604Z INFO:httpx:HTTP Request: GET http://testserver/api/fois/leagues/A/gms/gm/timeline "HTTP/1.1 200 OK"
+2026-11-11T23:24:43.0730494Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T23:24:43.0799384Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T23:24:43.5323357Z .INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T23:24:43.5384020Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T23:24:44.0397274Z INFO:httpx:HTTP Request: GET http://testserver/api/fois/leagues/A/gms/gm "HTTP/1.1 200 OK"
+2026-11-11T23:24:44.0420817Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T23:24:44.0483081Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T23:24:45.2527112Z ..INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T23:24:45.2587758Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T23:24:45.2596376Z INFO:httpx:HTTP Request: GET http://testserver/api/fois/leagues/A/gms/gm/timeline "HTTP/1.1 503 Service Unavailable"
+2026-11-11T23:24:45.2606048Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T23:24:45.2660649Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T23:24:45.6508903Z .INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T23:24:45.6531702Z INFO:httpx:HTTP Request: GET http://testserver/api/fois/leagues/A/gms/gm/timeline "HTTP/1.1 503 Service Unavailable"
+2026-11-11T23:24:45.6578082Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T23:24:45.6582904Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T23:24:45.6633319Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T23:24:46.5022378Z ..WARNING:asyncio:Executing <Task finished name='Task-146' coro=<HistoryQualificationTests.asyncSetUp() done, defined at D:\a\dtos\dtos\tests\test_fois_history_qualification.py:25> result=None created at C:\hostedtoolcache\windows\Python\3.12.10\x64\Lib\asyncio\runners.py:100> took 0.296 seconds
+2026-11-11T23:24:47.1608387Z INFO:httpx:HTTP Request: GET http://fixture/api/fois/leagues/A/gms/gm/timeline "HTTP/1.1 401 Unauthorized"
+2026-11-11T23:24:47.2308365Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T23:24:47.2364410Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T23:24:47.2419650Z WARNING:asyncio:Executing <Task pending name='Task-147' coro=<HistoryQualificationTests.test_authenticated_refresh_preserves_account_and_league_boundaries() running at D:\a\dtos\dtos\tests\test_fois_history_qualification.py:366> wait_for=<Future pending cb=[Task.task_wakeup()] created at C:\hostedtoolcache\windows\Python\3.12.10\x64\Lib\asyncio\base_events.py:448> cb=[_run_until_complete_cb() at C:\hostedtoolcache\windows\Python\3.12.10\x64\Lib\asyncio\base_events.py:181] created at C:\hostedtoolcache\windows\Python\3.12.10\x64\Lib\asyncio\runners.py:100> took 0.750 seconds
+2026-11-11T23:24:47.2492614Z INFO:asyncio:execute program 'C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\python.exe': <_WindowsSubprocessTransport pid=6232 running stdin=<_ProactorWritePipeTransport fd=668 read=<_OverlappedFuture pending cb=[_ProactorWritePipeTransport._pipe_closed()] created at C:\hostedtoolcache\windows\Python\3.12.10\x64\Lib\asyncio\windows_events.py:493>>>
+2026-11-11T23:24:47.7287379Z INFO:asyncio:<_WindowsSubprocessTransport pid=6232 running stdin=<_ProactorWritePipeTransport closed>> exited with return code 0
+2026-11-11T23:24:47.7930072Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T23:24:47.7933322Z INFO:httpx:HTTP Request: GET http://fixture/api/fois/leagues/A/gms/gm/timeline "HTTP/1.1 200 OK"
+2026-11-11T23:24:47.7998401Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T23:24:47.8008993Z INFO:httpx:HTTP Request: GET http://fixture/api/fois/leagues/A/gms/gm/timeline "HTTP/1.1 403 Forbidden"
+2026-11-11T23:24:47.8575986Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T23:24:47.8634140Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T23:24:47.8704262Z INFO:asyncio:execute program 'C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\python.exe': <_WindowsSubprocessTransport pid=7992 running stdin=<_ProactorWritePipeTransport fd=1468 read=<_OverlappedFuture pending cb=[_ProactorWritePipeTransport._pipe_closed()] created at C:\hostedtoolcache\windows\Python\3.12.10\x64\Lib\asyncio\windows_events.py:493>>>
+2026-11-11T23:24:48.3481328Z INFO:asyncio:<_WindowsSubprocessTransport pid=7992 running stdin=<_ProactorWritePipeTransport closed>> exited with return code 0
+2026-11-11T23:24:48.4097444Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T23:24:48.4100726Z INFO:httpx:HTTP Request: GET http://fixture/api/fois/leagues/A/gms/gm "HTTP/1.1 200 OK"
+2026-11-11T23:24:48.4166845Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T23:24:48.4177233Z INFO:httpx:HTTP Request: GET http://fixture/api/fois/leagues/A/gms/gm "HTTP/1.1 403 Forbidden"
+2026-11-11T23:24:48.7016110Z .WARNING:asyncio:Executing <Task finished name='Task-166' coro=<HistoryQualificationTests.asyncSetUp() done, defined at D:\a\dtos\dtos\tests\test_fois_history_qualification.py:25> result=None created at C:\hostedtoolcache\windows\Python\3.12.10\x64\Lib\asyncio\runners.py:100> took 0.282 seconds
+2026-11-11T23:24:48.7688410Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T23:24:48.7744690Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T23:24:48.7810829Z INFO:asyncio:execute program 'C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\python.exe': <_WindowsSubprocessTransport pid=7736 running stdin=<_ProactorWritePipeTransport fd=880 read=<_OverlappedFuture pending cb=[_ProactorWritePipeTransport._pipe_closed()] created at C:\hostedtoolcache\windows\Python\3.12.10\x64\Lib\asyncio\windows_events.py:493>>>
+2026-11-11T23:24:49.2533535Z INFO:asyncio:<_WindowsSubprocessTransport pid=7736 running stdin=<_ProactorWritePipeTransport closed>> exited with return code 0
+2026-11-11T23:24:49.3161896Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T23:24:49.3165215Z INFO:httpx:HTTP Request: GET http://fixture/api/fois/leagues/A/gms/gm/timeline "HTTP/1.1 200 OK"
+2026-11-11T23:24:49.3223248Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T23:24:49.5843407Z .WARNING:asyncio:Executing <Task finished name='Task-180' coro=<HistoryQualificationTests.asyncSetUp() done, defined at D:\a\dtos\dtos\tests\test_fois_history_qualification.py:25> result=None created at C:\hostedtoolcache\windows\Python\3.12.10\x64\Lib\asyncio\runners.py:100> took 0.250 seconds
+2026-11-11T23:24:49.6523232Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T23:24:49.6579333Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T23:24:49.6648710Z INFO:asyncio:execute program 'C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\python.exe': <_WindowsSubprocessTransport pid=3020 running stdin=<_ProactorWritePipeTransport fd=792 read=<_OverlappedFuture pending cb=[_ProactorWritePipeTransport._pipe_closed()] created at C:\hostedtoolcache\windows\Python\3.12.10\x64\Lib\asyncio\windows_events.py:493>>>
+2026-11-11T23:24:50.1391602Z INFO:asyncio:<_WindowsSubprocessTransport pid=3020 running stdin=<_ProactorWritePipeTransport closed>> exited with return code 0
+2026-11-11T23:24:50.1967368Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T23:24:50.2026166Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T23:24:50.2540194Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T23:24:50.2593924Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T23:24:50.2681309Z INFO:asyncio:execute program 'C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\python.exe': <_WindowsSubprocessTransport pid=4276 running stdin=<_ProactorWritePipeTransport fd=1392 read=<_OverlappedFuture pending cb=[_ProactorWritePipeTransport._pipe_closed()] created at C:\hostedtoolcache\windows\Python\3.12.10\x64\Lib\asyncio\windows_events.py:493>>>
+2026-11-11T23:24:50.7463420Z INFO:asyncio:<_WindowsSubprocessTransport pid=4276 running stdin=<_ProactorWritePipeTransport closed>> exited with return code 0
+2026-11-11T23:24:50.7538867Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T23:24:50.7542114Z INFO:httpx:HTTP Request: GET http://fixture/api/fois/leagues/A/gms/gm/timeline "HTTP/1.1 200 OK"
+2026-11-11T23:24:50.7603924Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T23:24:51.0291996Z .WARNING:asyncio:Executing <Task finished name='Task-200' coro=<HistoryQualificationTests.asyncSetUp() done, defined at D:\a\dtos\dtos\tests\test_fois_history_qualification.py:25> result=None created at C:\hostedtoolcache\windows\Python\3.12.10\x64\Lib\asyncio\runners.py:100> took 0.266 seconds
+2026-11-11T23:24:51.1025100Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T23:24:51.1085650Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T23:24:51.1154754Z INFO:asyncio:execute program 'C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\python.exe': <_WindowsSubprocessTransport pid=9184 running stdin=<_ProactorWritePipeTransport fd=1392 read=<_OverlappedFuture pending cb=[_ProactorWritePipeTransport._pipe_closed()] created at C:\hostedtoolcache\windows\Python\3.12.10\x64\Lib\asyncio\windows_events.py:493>>>
+2026-11-11T23:24:51.5865509Z INFO:asyncio:<_WindowsSubprocessTransport pid=9184 running stdin=<_ProactorWritePipeTransport closed>> exited with return code 0
+2026-11-11T23:24:51.6462555Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T23:24:51.6518060Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T23:24:51.9320609Z .WARNING:asyncio:Executing <Task finished name='Task-215' coro=<HistoryQualificationTests.asyncSetUp() done, defined at D:\a\dtos\dtos\tests\test_fois_history_qualification.py:25> result=None created at C:\hostedtoolcache\windows\Python\3.12.10\x64\Lib\asyncio\runners.py:100> took 0.281 seconds
+2026-11-11T23:24:51.9978459Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T23:24:52.0034357Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T23:24:52.0102031Z INFO:asyncio:execute program 'C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\python.exe': <_WindowsSubprocessTransport pid=6504 running stdin=<_ProactorWritePipeTransport fd=668 read=<_OverlappedFuture pending cb=[_ProactorWritePipeTransport._pipe_closed()] created at C:\hostedtoolcache\windows\Python\3.12.10\x64\Lib\asyncio\windows_events.py:493>>>
+2026-11-11T23:24:52.4835891Z INFO:asyncio:<_WindowsSubprocessTransport pid=6504 running stdin=<_ProactorWritePipeTransport closed>> exited with return code 0
+2026-11-11T23:24:52.5467245Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T23:24:52.5470538Z INFO:httpx:HTTP Request: GET http://fixture/api/fois/leagues/A/gms/gm "HTTP/1.1 200 OK"
+2026-11-11T23:24:52.5528137Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T23:24:52.8067432Z .WARNING:asyncio:Executing <Task finished name='Task-230' coro=<HistoryQualificationTests.asyncSetUp() done, defined at D:\a\dtos\dtos\tests\test_fois_history_qualification.py:25> result=None created at C:\hostedtoolcache\windows\Python\3.12.10\x64\Lib\asyncio\runners.py:100> took 0.250 seconds
+2026-11-11T23:24:52.8729232Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T23:24:52.8788383Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T23:24:52.8879216Z INFO:asyncio:execute program 'C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\python.exe': <_WindowsSubprocessTransport pid=8912 running stdin=<_ProactorWritePipeTransport fd=1184 read=<_OverlappedFuture pending cb=[_ProactorWritePipeTransport._pipe_closed()] created at C:\hostedtoolcache\windows\Python\3.12.10\x64\Lib\asyncio\windows_events.py:493>>>
+2026-11-11T23:24:53.3584538Z INFO:asyncio:<_WindowsSubprocessTransport pid=8912 running stdin=<_ProactorWritePipeTransport closed>> exited with return code 0
+2026-11-11T23:24:53.3658245Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T23:24:53.3661713Z INFO:httpx:HTTP Request: GET http://fixture/api/fois/leagues/A/gms/gm/timeline "HTTP/1.1 200 OK"
+2026-11-11T23:24:53.3732612Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T23:24:53.4251875Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T23:24:53.4304117Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T23:24:53.4374724Z INFO:asyncio:execute program 'C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\python.exe': <_WindowsSubprocessTransport pid=9420 running stdin=<_ProactorWritePipeTransport fd=1120 read=<_OverlappedFuture pending cb=[_ProactorWritePipeTransport._pipe_closed()] created at C:\hostedtoolcache\windows\Python\3.12.10\x64\Lib\asyncio\windows_events.py:493>>>
+2026-11-11T23:24:53.9295525Z INFO:asyncio:<_WindowsSubprocessTransport pid=9420 running stdin=<_ProactorWritePipeTransport closed>> exited with return code 0
+2026-11-11T23:24:53.9377280Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T23:24:53.9380751Z INFO:httpx:HTTP Request: GET http://fixture/api/fois/leagues/A/gms/gm/timeline "HTTP/1.1 200 OK"
+2026-11-11T23:24:53.9450615Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T23:24:53.9993050Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T23:24:54.0052439Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T23:24:54.0126769Z INFO:asyncio:execute program 'C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\python.exe': <_WindowsSubprocessTransport pid=10120 running stdin=<_ProactorWritePipeTransport fd=1240 re

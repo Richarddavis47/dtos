@@ -1,0 +1,57 @@
+{
+  "at": "2026-11-11T21:55:05.959055+00:00",
+  "args": [
+    "docker",
+    "-H",
+    "unix:///var/run/docker.sock",
+    "run",
+    "--name",
+    "dtos-market-needs-focus-11",
+    "--init",
+    "--user",
+    "1000:1000",
+    "--memory=2g",
+    "--memory-swap=2g",
+    "--cpus=2",
+    "--network=none",
+    "-e",
+    "HOME=/tmp",
+    "-e",
+    "NODE_OPTIONS=--max-old-space-size=256",
+    "-e",
+    "GIT_CONFIG_COUNT=1",
+    "-e",
+    "GIT_CONFIG_KEY_0=safe.directory",
+    "-e",
+    "GIT_CONFIG_VALUE_0=/app",
+    "-e",
+    "DTOS_MARKET_NEED_EVIDENCE=/output/market-needs",
+    "-v",
+    "/workspace/dtos-market-needs-2248:/app",
+    "-v",
+    "/workspace/dtos/.git:/workspace/dtos/.git:ro",
+    "-v",
+    "/workspace/2248-market-needs/focus-11:/output",
+    "-w",
+    "/app",
+    "sha256:f70a0c6402700dfb954c99d8163d4164926f74435c34d2e7e462407151663ae6",
+    "python",
+    "/output/runner.py"
+  ],
+  "base_head": "a38f3e719d84d600fcba153f57863fd0d668a0a3",
+  "working_source": [
+    {
+      "path": "routes/market.py",
+      "sha256": "06ba212d26c1f82be8624187d9f1989865bd65a796c557dd30cedbab579efdfc"
+    },
+    {
+      "path": "services/market_roster_relevance.py",
+      "sha256": "e1c3724c147cd498c7de1c98451ec5100e9a917ae18e2c51f6b9f401b2bc854a"
+    },
+    {
+      "path": "tests/test_market_roster_relevance.py",
+      "sha256": "469e69d829ff948bad62899519482e366ce01ee397dc8a571c0ff6508bd9d7f6"
+    }
+  ],
+  "scope": "Development source fingerprints, not frozen release acceptance"
+}

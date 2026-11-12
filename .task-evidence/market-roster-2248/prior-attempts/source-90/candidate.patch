@@ -1,0 +1,1469 @@
+diff --git a/.github/workflows/canonical-release-recovery.yml b/.github/workflows/canonical-release-recovery.yml
+index e87f5b6..bb5f6fa 100644
+--- a/.github/workflows/canonical-release-recovery.yml
++++ b/.github/workflows/canonical-release-recovery.yml
+@@ -22,11 +22,11 @@ jobs:
+   canonical-release:
+     if: github.event_name != 'push'
+     runs-on: ubuntu-24.04
+-    # Preserve the complete growing regression suite and artifact cleanup time.
+-    # Source0a4 completed4116/4261tests without errors before the70minCI
+-    # deadline; matched substantial tests ran1.66x local. Allow75min, bounded.
+-    # The 2 GiB / two-CPU / network-none controls and assertions stay unchanged.
+-    timeout-minutes: 85
++    # The full 4399-test corpus reached4272 completions without test errors
++    # before the80-minute runner deadline (run43107670445). Preserve all tests
++    # and resource limits; allow110minutes plus bounded artifact/cleanup time.
++    # Earlier full-local4378 controls took106.9minutes on enforced two CPUs.
++    timeout-minutes: 120
+     steps:
+       - uses: actions/checkout@v4
+         with:
+@@ -97,6 +97,7 @@ jobs:
+               DTOS_PREPARATION_BROWSER_EVIDENCE="/output/preparation-browser.json",
+               DTOS_ACTIVATION_EVIDENCE="/output/activation",
+               DTOS_FRONT_OFFICE_WORKFLOW_EVIDENCE="/output/front-office-workflow",
++              DTOS_MARKET_NEED_EVIDENCE="/output/market-needs",
+               PYTHONPATH="/output/observer:/app")
+           git_n = int(os.environ.get("GIT_CONFIG_COUNT", "0"))
+           os.environ["GIT_CONFIG_COUNT"] = str(git_n + 1)
+@@ -206,12 +207,12 @@ jobs:
+               seed.seed_fixture_projection(data, FIXTURE / "projections.sqlite3")
+               seed._canonical_history_fixture(FIXTURE)
+               with (OUTPUT / "canonical.log").open("w") as stream:
+-                  # Matched CI evidence completed4188/4326tests at75min, with
+-                  # no assertion failures; remaining local work was38seconds.
+-                  # Keep every test/cap/performance assertion, within the85min job.
++                  # Preserve every gate after the measured80-minute corpus
++                  # timeout; cleanup remains bounded and kills descendants.
++                  # The two-CPU/2GiB/network-none and assertions are unchanged.
+                   result = run_canonical_process(
+                       [sys.executable, "-m", "tools.validation.validate_release"],
+-                      stream, timeout=4800, cleanup=process_cleanup)
++                      stream, timeout=6600, cleanup=process_cleanup)
+               code = result.returncode
+           except BaseException as exc:
+               error = type(exc).__name__ + ": " + str(exc)
+@@ -317,7 +318,7 @@ jobs:
+           docker build --file .validation/canonical-build/Dockerfile --tag dtos-canonical-release:validation .validation/canonical-build 2>&1 | tee .validation/canonical-release/image-build.log
+           docker run --rm dtos-canonical-release:validation sh -c 'python --version && chromium --version && python -m pip check' | tee .validation/canonical-release/environment.txt
+       - name: Run unchanged ten-gate validator under actual 2 GiB
+-        timeout-minutes: 82
++        timeout-minutes: 112
+         env:
+           DTOS_EXPECTED_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+         run: |
+diff --git a/.github/workflows/product-browser.yml b/.github/workflows/product-browser.yml
+index 873602c..d0c5caa 100644
+--- a/.github/workflows/product-browser.yml
++++ b/.github/workflows/product-browser.yml
+@@ -35,7 +35,7 @@ jobs:
+         # This bounded CI allowance does not change any application timeout.
+         timeout-minutes: 25
+         run: |
+-          docker run --rm --memory=2g --memory-swap=2g --cpus=2 --network=none -e NODE_OPTIONS -e DTOS_TRADE_RESOURCE_BROWSER_EVIDENCE=.validation/trade-resource/evidence/browser -e DTOS_LINEUP_DETAIL_EVIDENCE=.validation/trade-resource/evidence/browser/lineups -e DTOS_TEAM_NEED_EVIDENCE=.validation/trade-resource/evidence/browser/team-need -e DTOS_ACTIVATION_EVIDENCE=.validation/trade-resource/evidence/browser/activation -e DTOS_FRONT_OFFICE_WORKFLOW_EVIDENCE=.validation/trade-resource/evidence/browser/front-office-workflow -e DTOS_PROTECTIONS_EVIDENCE=.validation/trade-resource/evidence/browser/protections -e DTOS_COMPARE_EVIDENCE=.validation/trade-resource/evidence/browser/offer-comparison -v "$PWD:$PWD" -w "$PWD" -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0="$PWD" dtos-browser-validation python -m unittest -v tests.test_trade_capital_inventory tests.test_trade_capital_browser tests.test_account_activation_deferral tests.test_front_office_workflow_browser tests.test_recommended_protections_browser tests.test_offer_comparison tests.test_offer_comparison_browser tests.test_team_trade_need tests.test_team_trade_need_browser tests.test_00_trade_simple_browser tests.test_trade_actionability tests.test_trade_actionability_browser tests.test_trade_conditional_summary tests.test_trade_recommendation_clarity tests.test_batch5_recommended_browser tests.test_franchise_timeline_coverage tests.test_franchise_timeline_browser tests.test_trade_reserve_evidence tests.test_trade_lineup_detail tests.test_trade_lineup_detail_browser tests.test_trade_resource_admission tests.test_trade_resource_browser tests.test_multileague_projection_browser tests.test_relative_personal_values tests.test_relative_personal_browser tests.test_decision_history_continuity_browser tests.test_personal_rankings_compatibility tests.test_personal_rankings_recovery_storage tests.test_personal_rankings_recovery_trade tests.test_personal_rankings_recovery_browser tests.test_personal_rankings_recovery_trade_browser tests.test_personal_rankings_partial_browser tests.test_dossier_plain_english tests.test_plain_english_home_depth tests.test_builder_plain_english tests.test_plain_english_preservation_final tests.test_plain_english_final_browser tests.test_plain_english_decisions tests.test_plain_english_browser tests.test_personal_rankings_availability tests.test_personal_rankings_availability_browser tests.test_personal_rankings tests.test_personal_rankings_store tests.test_personal_rankings_integration tests.test_personal_trade_workflows tests.test_personal_rankings_browser tests.test_personal_rankings_accessibility_browser tests.test_personal_trade_browser tests.test_market_trend_current_browser tests.test_standings_positioning tests.test_standings_positioning_browser tests.test_matchup_portraits_browser tests.test_matchups_phone tests.test_matchups_phone_browser tests.test_trade_projection_freshness tests.test_trade_projection_freshness_browser tests.test_trade_preview_scope_browser tests.test_trade_simple_discovery tests.test_fois_final_trust_browser tests.test_fois_evidence_integrity tests.test_fois_trust_browser tests.test_proposal_tray_browser tests.test_journey_evidence tests.test_journey_corrections_browser tests.test_dossier_status_browser tests.test_phone_visual_corrections_browser tests.test_phone_design_semantics tests.test_phone_design_browser tests.test_trade_calculator tests.test_trade_calculator_browser tests.test_calculator_balance_feedback_browser tests.test_calculator_stale_feedback_browser tests.test_trade_explicit_navigation_browser tests.test_trade_navigation_identity tests.test_trade_navigation_browser tests.test_player_actions tests.test_player_actions_browser tests.test_trade_performance tests.test_trade_construction_performance tests.test_trade_performance_browser tests.test_technical_details_browser tests.test_canonical_asset_facts tests.test_canonical_asset_facts_browser tests.test_product_browser_journey tests.test_matchup_browser_contract tests.test_trade_center_browser tests.test_trade_scout_state_browser tests.test_make_it_cheaper_browser tests.test_trade_center_accessibility tests.test_trade_workspace_browser tests.test_trade_workspace_batch1 tests.test_live_inspection tests.test_browser_fixture_images tests.test_visual_retirement tests.test_trade_decision_experience tests.test_trade_decision_browser tests.test_trade_decision_http_browser tests.test_trade_decision_standings_browser tests.test_batch6_trade_ux tests.test_trade_p2_browser tests.test_trade_final_evidence_browser tests.test_trade_endorsement_integrity tests.test_trade_missing_market_presentation tests.test_batch6_trade_explanation tests.test_league_entry_coordination
++          docker run --rm --memory=2g --memory-swap=2g --cpus=2 --network=none -e NODE_OPTIONS -e DTOS_TRADE_RESOURCE_BROWSER_EVIDENCE=.validation/trade-resource/evidence/browser -e DTOS_LINEUP_DETAIL_EVIDENCE=.validation/trade-resource/evidence/browser/lineups -e DTOS_TEAM_NEED_EVIDENCE=.validation/trade-resource/evidence/browser/team-need -e DTOS_ACTIVATION_EVIDENCE=.validation/trade-resource/evidence/browser/activation -e DTOS_FRONT_OFFICE_WORKFLOW_EVIDENCE=.validation/trade-resource/evidence/browser/front-office-workflow -e DTOS_PROTECTIONS_EVIDENCE=.validation/trade-resource/evidence/browser/protections -e DTOS_COMPARE_EVIDENCE=.validation/trade-resource/evidence/browser/offer-comparison -e DTOS_MARKET_NEED_EVIDENCE=.validation/trade-resource/evidence/browser/market-needs -v "$PWD:$PWD" -w "$PWD" -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0="$PWD" dtos-browser-validation python -m unittest -v tests.test_market_roster_relevance tests.test_market_roster_relevance_browser tests.test_trade_capital_inventory tests.test_trade_capital_browser tests.test_account_activation_deferral tests.test_front_office_workflow_browser tests.test_recommended_protections_browser tests.test_offer_comparison tests.test_offer_comparison_browser tests.test_team_trade_need tests.test_team_trade_need_browser tests.test_00_trade_simple_browser tests.test_trade_actionability tests.test_trade_actionability_browser tests.test_trade_conditional_summary tests.test_trade_recommendation_clarity tests.test_batch5_recommended_browser tests.test_franchise_timeline_coverage tests.test_franchise_timeline_browser tests.test_trade_reserve_evidence tests.test_trade_lineup_detail tests.test_trade_lineup_detail_browser tests.test_trade_resource_admission tests.test_trade_resource_browser tests.test_multileague_projection_browser tests.test_relative_personal_values tests.test_relative_personal_browser tests.test_decision_history_continuity_browser tests.test_personal_rankings_compatibility tests.test_personal_rankings_recovery_storage tests.test_personal_rankings_recovery_trade tests.test_personal_rankings_recovery_browser tests.test_personal_rankings_recovery_trade_browser tests.test_personal_rankings_partial_browser tests.test_dossier_plain_english tests.test_plain_english_home_depth tests.test_builder_plain_english tests.test_plain_english_preservation_final tests.test_plain_english_final_browser tests.test_plain_english_decisions tests.test_plain_english_browser tests.test_personal_rankings_availability tests.test_personal_rankings_availability_browser tests.test_personal_rankings tests.test_personal_rankings_store tests.test_personal_rankings_integration tests.test_personal_trade_workflows tests.test_personal_rankings_browser tests.test_personal_rankings_accessibility_browser tests.test_personal_trade_browser tests.test_market_trend_current_browser tests.test_standings_positioning tests.test_standings_positioning_browser tests.test_matchup_portraits_browser tests.test_matchups_phone tests.test_matchups_phone_browser tests.test_trade_projection_freshness tests.test_trade_projection_freshness_browser tests.test_trade_preview_scope_browser tests.test_trade_simple_discovery tests.test_fois_final_trust_browser tests.test_fois_evidence_integrity tests.test_fois_trust_browser tests.test_proposal_tray_browser tests.test_journey_evidence tests.test_journey_corrections_browser tests.test_dossier_status_browser tests.test_phone_visual_corrections_browser tests.test_phone_design_semantics tests.test_phone_design_browser tests.test_trade_calculator tests.test_trade_calculator_browser tests.test_calculator_balance_feedback_browser tests.test_calculator_stale_feedback_browser tests.test_trade_explicit_navigation_browser tests.test_trade_navigation_identity tests.test_trade_navigation_browser tests.test_player_actions tests.test_player_actions_browser tests.test_trade_performance tests.test_trade_construction_performance tests.test_trade_performance_browser tests.test_technical_details_browser tests.test_canonical_asset_facts tests.test_canonical_asset_facts_browser tests.test_product_browser_journey tests.test_matchup_browser_contract tests.test_trade_center_browser tests.test_trade_scout_state_browser tests.test_make_it_cheaper_browser tests.test_trade_center_accessibility tests.test_trade_workspace_browser tests.test_trade_workspace_batch1 tests.test_live_inspection tests.test_browser_fixture_images tests.test_visual_retirement tests.test_trade_decision_experience tests.test_trade_decision_browser tests.test_trade_decision_http_browser tests.test_trade_decision_standings_browser tests.test_batch6_trade_ux tests.test_trade_p2_browser tests.test_trade_final_evidence_browser tests.test_trade_endorsement_integrity tests.test_trade_missing_market_presentation tests.test_batch6_trade_explanation tests.test_league_entry_coordination
+           docker run --rm --memory=2g --memory-swap=2g --cpus=2 --network=none -e NODE_OPTIONS -v "$PWD:$PWD" -w "$PWD" -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0="$PWD" dtos-browser-validation python -m unittest -v tests.test_historical_evidence_weeks tests.test_fois_final_trust tests.test_trade_time_market_evidence tests.test_trade_time_market_evidence_browser
+ 
+ 
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index 414bedc..1645a3c 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -1,3 +1,11 @@
++# v1.22.33 / build 2248 — Market movement and your roster
++
++Market's existing movement section now connects compatible sparse canonical observations to the active franchise's current prepared starter or depth need. Up to three assets from the first ten results retain the existing Market order, comparison dates, source, observation age and coverage limits. Unsupported roster relevance leaves neutral observations available. Current neutral cost is separate from an asking price, lineup improvement or evaluated recommendation.
++
++An exact other-owned player can open Trade For after the existing account, league, franchise, ownership and evidence checks. The original reason remains visible and the controls stay editable. This Market handoff starts no search or evaluation; the manager explicitly chooses Generate. Changed need, quote or ownership evidence withholds the new target and preserves prior work. Personalized reasons and handoff identifiers never enter shared Market HTML caches.
++
++Sleeper results/projections, scoring, Neutral/Custom methods, exact picks, bilateral qualification, saved settings, submitted lineups and resource admission are unchanged. See docs/audits/MARKET_ROSTER_RELEVANCE_2248.md for scope and validation boundaries.
++
+ # v1.22.32 / build 2247 — Your draft capital after this trade
+ 
+ Prepared Trade assessments show owned picks before and after the exact exchange, grouped by retained season and the league's configured draft rounds. Own firsts remain distinct from acquired firsts; expandable identities include the original franchise. The existing two-offer comparison shows each recorded inventory alongside keeping the roster.
+diff --git a/RELEASE_NOTES.md b/RELEASE_NOTES.md
+index 996532c..ebbc1f9 100644
+--- a/RELEASE_NOTES.md
++++ b/RELEASE_NOTES.md
+@@ -1,3 +1,11 @@
++# v1.22.33 / build 2248 — Market movement and your roster
++
++Market's existing movement section now connects compatible sparse canonical observations to the active franchise's current prepared starter or depth need. Up to three assets from the first ten results retain the existing Market order, comparison dates, source, observation age and coverage limits. Unsupported roster relevance leaves neutral observations available. Current neutral cost is separate from an asking price, lineup improvement or evaluated recommendation.
++
++An exact other-owned player can open Trade For after the existing account, league, franchise, ownership and evidence checks. The original reason remains visible and the controls stay editable. This Market handoff starts no search or evaluation; the manager explicitly chooses Generate. Changed need, quote or ownership evidence withholds the new target and preserves prior work. Personalized reasons and handoff identifiers never enter shared Market HTML caches.
++
++Sleeper results/projections, scoring, Neutral/Custom methods, exact picks, bilateral qualification, saved settings, submitted lineups and resource admission are unchanged. See docs/audits/MARKET_ROSTER_RELEVANCE_2248.md for scope and validation boundaries.
++
+ # v1.22.32 / build 2247 — Your draft capital after this trade
+ 
+ Prepared Trade assessments show owned picks before and after the exact exchange, grouped by retained season and the league's configured draft rounds. Own firsts remain distinct from acquired firsts; expandable identities include the original franchise. The existing two-offer comparison shows each recorded inventory alongside keeping the roster.
+diff --git a/app_metadata.py b/app_metadata.py
+index 64b97ac..da140c2 100644
+--- a/app_metadata.py
++++ b/app_metadata.py
+@@ -7,10 +7,10 @@ from datetime import datetime, timezone
+ from pathlib import Path
+ 
+ APPLICATION_NAME = "DTOS"
+-VERSION = "1.22.32"
+-PRODUCT_VERSION = "1.22.32"
+-BUILD_NUMBER = 2247
+-RELEASE_CODENAME = "Draft Capital After the Trade"
++VERSION = "1.22.33"
++PRODUCT_VERSION = "1.22.33"
++BUILD_NUMBER = 2248
++RELEASE_CODENAME = "Market Movement and Your Roster"
+ APPLICATION_STARTED_AT = datetime.now(timezone.utc).isoformat()
+ 
+ _REPOSITORY_ROOT = Path(__file__).resolve().parent
+diff --git a/components/trade_workspace.py b/components/trade_workspace.py
+index 619903f..ebc5a5a 100644
+--- a/components/trade_workspace.py
++++ b/components/trade_workspace.py
+@@ -8,6 +8,18 @@ def trade_workspace(view: dict, workflow: str, asset_id=None, owner_roster_id=No
+     league = getattr(view.get("manager_context"), "league_id", "")
+     titles = {"calculator": "Trade Calculator", "create": "Build a Trade", "trade-for": "Trade For", "shop": "Shop Asset", "recommended": "Generate Trades"}
+     title = titles[workflow]
++    market_origin = ''
++    if view.get('market_need'):
++        need = view['market_need']
++        market_origin = ('<aside class="card" id="market-trade-origin" aria-label="Original Market context">'
++            '<b>Opened from Market for ' + escape(need['name']) + '</b><p>'
++            + escape(need['reason']) + '</p><p>This link supplies position relevance, not a trade evaluation. '
++            'Market movement is not revalidated here. This note describes the original target, not later edits. '
++            'Controls remain editable; explicitly run the search when ready.</p></aside>')
++    elif view.get('market_need_expired'):
++        market_origin = ('<aside class="card" id="market-trade-origin" role="status"><b>Market handoff needs review.</b>'
++            '<p>Its need, ownership or quote evidence changed or is unavailable. No new target was applied. '
++            'Existing Trade work is preserved; return to Market for current evidence. No new search or evaluation was started by this handoff.</p></aside>')
+     calculator = workflow == 'calculator'
+     market_editor = workflow in ('create', 'calculator')
+     strategy_open = '<section class="tw-strategy-detail" aria-label="Team strategy">'
+@@ -65,6 +77,7 @@ def trade_workspace(view: dict, workflow: str, asset_id=None, owner_roster_id=No
+         )
+     )
+     return f'''<link rel="stylesheet" href="/static/css/trade_workspace.css">
++{market_origin}
+ <section id="trade-builder" class="card tw-workspace" data-trade-workflow="{workflow}" data-front-office="{active}" data-league="{escape(league, quote=True)}" data-preload-asset="{escape(str(asset_id or ''), quote=True)}" data-owner-roster="{int(owner_roster_id or 0)}" data-team-need="{escape(json.dumps(view.get('team_need')), quote=True)}" data-team-need-expired="{str(bool(view.get('team_need_expired'))).lower()}">
+ {heading}
+ {intent_nav}
+diff --git a/docs/audits/MARKET_ROSTER_RELEVANCE_2248.md b/docs/audits/MARKET_ROSTER_RELEVANCE_2248.md
+new file mode 100644
+index 0000000..254d651
+--- /dev/null
++++ b/docs/audits/MARKET_ROSTER_RELEVANCE_2248.md
+@@ -0,0 +1,27 @@
++# Market movement linked to prepared roster needs — build 2248
++
++## Confirmed gap and existing systems
++
++Matched disposable 1-QB/K/DEF and Superflex replays on production source build2247 show canonical +150 Market movement and a current prepared RB need, but no personalized Market join. This is source-compatible fixture acceptance, not owner live coverage. The existing Market engine, CheckpointPipeline, sparse store, current_comparison, prepared_diagnostics, prepared_need, ownership resolver and Trade For workspace are reused. No new score, provider acquisition, persistent opportunity engine or runtime owner is introduced.
++
++## Evidence and bounded reads
++
++The Market page reuses its bounded prepared search/directory and canonical trend batch. The new section examines the first ten assets, shows at most three in existing order and prefers position-matched other-owned players when the current prepared need supports them. Exact finite movement zero remains supported. Missing/incompatible dated evidence stays unknown. The dates, current canonical source qualification and endpoint age describe sparse observations, never a continuous daily series or urgency.
++
++Roster diagnostics are requalified by the existing week/scoring/generation, current availability, aging and failed-refresh rules. A starter/depth position match is not a player-specific legal-lineup improvement. Provisional/missing roster evidence retains neutral information and explains why relevance cannot be established. A quote is a neutral index cost, not an acceptance probability or manager asking price. Saved franchise goals, Custom prices and Trade qualification do not change canonical movement.
++
++## Handoff and state
++
++The existing team_need query carries an evidence hash, not authorization. Trade For rechecks the existing active manager membership, exact league/franchise, prepared need, native player position, canonical quote identity and ownership. Changed or unauthorized evidence applies no new target. Existing contextual navigation and Trade workspace preserve the draft, valuation mode, exact protections, comparison selections and retained result. League/account switches invalidate the evidence binding.
++
++The new Market-origin marker suppresses automatic targeted discovery for this handoff only; the existing editable controls and explicit Generate remain. Opening Market, a disclosure or Trade For does not acquire sources, compute lineups, synchronize or evaluate. Personalized text and tokens are inserted after both shared HTML caches, avoiding account-specific retention in those caches.
++
++## Controls and limits
++
++Focused real-route tests cover positive/negative/zero movement, zero current price, incompatible/missing history, mismatched asset identity, availability changes, aging, failed refresh, quote generation and ownership changes, account/league scope and signed-out replay. Browser controls use prepared source-compatible 1-QB/K/DEF and Superflex fixtures at 320x432, 375x667, 390x844 and desktop, keyboard disclosures, touch emulation, exact target and full Back/reload draft/protection/comparison/result preservation. Provider and lineup preparation calls raise if navigation invokes them. Physical iPhone/Safari and authenticated owner live coverage require separate acceptance.
++
++All mandatory local/canonical/hosted results must be recorded for the exact final candidate before release. Development failures remain separate original logs; they are not final-source acceptance. No Trade reserve, FOIS reserve, restoration allowance, scoring/price formula, threshold, account data or submitted lineup changes.
++
++## Reconciled Market-only and warm-cache boundaries
++
++The full regression exposed a Market-only runtime with no projection owner. Personalized lookup now stops with a specific missing-preparation explanation while neutral movement remains visible. The existing multi-account/concurrent-reader control also required one directory read per warm publication; the final path caches the HTML with a small neutral sample in the same bounded byte caches. It adds no cache or runtime owner, and binds personalized context only after retrieval. A historical comparison whose current endpoint is incompatible remains neutral; it cannot supply the personalized Trade For action. Original failed and interrupted candidate evidence is retained separately.
+diff --git a/routes/market.py b/routes/market.py
+index 24c6116..63d5101 100644
+--- a/routes/market.py
++++ b/routes/market.py
+@@ -4,6 +4,7 @@ from __future__ import annotations
+ from src.ui.market_facts import market_fact_html
+ 
+ import re
++import json
+ from math import isfinite
+ from datetime import datetime
+ from html import escape
+@@ -164,14 +165,14 @@ def create_market_router(
+         ) for asset in assets[:250]}
+ 
+     def add_trends(
+-        market: Any, assets: list[dict[str, Any]], selected_league: str,
++        market: Any, assets: list[dict[str, Any]], selected_league: str, *, compact: bool = True,
+     ) -> None:
+         if not assets:
+             return
+         summaries = trend_service.summaries(
+             assets, league_id=selected_league, as_of=None,
+             generation=market.semantic_generation,
+-            current_comparisons=current_trend_evidence(market, assets),
++            current_comparisons=current_trend_evidence(market, assets), compact=compact,
+         )
+         for asset in assets:
+             asset["market_trend"] = summaries.get(str(asset.get("asset_id")))
+@@ -425,6 +426,10 @@ def create_market_router(
+             return warming_page(request.url.query, headers=exc.headers, snapshot=snapshot)
+         selected_state, selected_league, _cache = dependencies()
+         data = selected_state.get("data") or {}
++        account = current_account()
++        membership = account.membership if account else None
++        if front_office is None and membership and membership.league_id == selected_league:
++            front_office = membership.roster_id
+         ownership = PlayerOwnershipIndex(data)
+         league_name = str((data.get("league") or {}).get("name") or "Sleeper League")
+         generation = str(market.semantic_generation)
+@@ -463,10 +468,10 @@ def create_market_router(
+                 availability_asset_ids=availability_ids(ownership, availability),
+             )
+             rows = [ownership_row(row, ownership, front_office) for row in (result.get("assets") or result.get("results") or [])]
++            add_trends(market, rows, selected_league, compact=False)
+             card_projections = player_projection_views(data,
+                 [str(row.get('asset_id', '')).split(':', 1)[1] for row in rows
+                  if str(row.get('asset_id', '')).startswith('player:')], pinned_reader)
+-            add_trends(market, rows, selected_league)
+             table_rows = []
+             market_cards = []
+             for index, row in enumerate(rows, start=offset + 1):
+@@ -606,7 +611,7 @@ def create_market_router(
+             pagination_html = " · ".join(pagination)
+             empty_html = '<b>End of these results.</b>Use Previous or Browse all assets.' if total and offset >= total else '<b>No matching assets.</b>Adjust the current market filters.'
+             ownership_notice = '<p class="evidence-unavailable">Current roster evidence is incomplete; ownership and free-agent filters cannot establish complete results.</p>' if (availability or re.search(r'\b(?:free[ -]+agents?|taxi)\b', q, re.I)) and not ownership.complete else ''
+-            body = f'''<nav class="market-mode" aria-label="Valuation views"><a class="ds-action" href="/market" aria-current="page">Neutral DTOS</a><a class="ds-action" href="/account/my-dtos">Custom DTOS · Personal rankings</a></nav><form class="market-filters" method="get" action="/market" aria-label="Asset Market filters"><h3>Find your next dynasty asset</h3><label for="market-search">Player or pick<input id="market-search" name="q" value="{escape(q)}" placeholder="Josh Allen or 2028 1st"></label><div class="market-filter-field"><label for="market-position">Position</label><select id="market-position" name="position"><option value="">All assets</option>{options(((item,item) for item in ("QB","RB","WR","TE","PICK")), position)}</select></div><div class="market-filter-field"><label for="market-availability">Availability</label><select id="market-availability" name="availability"><option value="">All</option>{options((("rostered","Rostered"),("day_traders_free_agent","Free Agents"),("taxi","Taxi"),("retired","Retired"),("owned_pick","Picks")), availability)}</select></div><div class="market-filter-field"><label for="market-sort">Sort</label><select id="market-sort" name="sort">{options(((item,item.title()) for item in ("market","intrinsic","contender","rebuilder","confidence","risk","liquidity")), sort)}</select></div><input type="hidden" name="direction" value="{escape(direction if direction in {'asc', 'desc'} else 'desc')}"><input type="hidden" name="limit" value="{limit}">{front_office_input}<button class="btn" type="submit">Search market</button></form><section class="market-hero"><p>Global values. League-specific ownership and fit.</p><span><b>{result.get("total", result.get("count", 0))}</b> matching assets</span></section><details class="market-view-evidence"><summary>About Neutral and Custom values</summary><p class="muted">Market prices below remain neutral. Open Custom DTOS to view or edit your personal valuations.</p></details><section class="ux-section"><div class="ux-section-head"><h2>{'Search Results' if q else 'Market Assets'}</h2><p>{'Exact compact matches' if q else 'Player identity, rank, value, and ownership at a glance'}</p></div>{ownership_notice}<div class="market-grid">{''.join(market_cards) or '<div class="ds-empty">' + empty_html + '</div>'}</div><nav aria-label="Market pagination">{pagination_html}</nav><details class="technical-details"><summary>Full market evidence table</summary><div class="ds-table-wrap" tabindex="0" role="region" aria-label="Full Market evidence"><table><caption>Filtered asset results · order is not a dynasty rank</caption><thead><tr><th>Result</th><th>Asset</th><th>Owner</th><th>Market</th><th>Intrinsic</th><th>Contender</th><th>Rebuilder</th><th>Confidence</th><th>Agreement</th><th>Evidence</th></tr></thead><tbody>{''.join(table_rows) or '<tr><td colspan="10">No canonical assets match these filters.</td></tr>'}</tbody></table></div></details></section><section class="ux-section" id="market-movers"><div class="ux-section-head"><h2>Market Movement</h2><p>Only timestamped, meaningful comparison data receives movement treatment</p></div>{movers_html}</section>{expanded}'''
++            body = f'''<nav class="market-mode" aria-label="Valuation views"><a class="ds-action" href="/market" aria-current="page">Neutral DTOS</a><a class="ds-action" href="/account/my-dtos">Custom DTOS · Personal rankings</a></nav><form class="market-filters" method="get" action="/market" aria-label="Asset Market filters"><h3>Find your next dynasty asset</h3><label for="market-search">Player or pick<input id="market-search" name="q" value="{escape(q)}" placeholder="Josh Allen or 2028 1st"></label><div class="market-filter-field"><label for="market-position">Position</label><select id="market-position" name="position"><option value="">All assets</option>{options(((item,item) for item in ("QB","RB","WR","TE","PICK")), position)}</select></div><div class="market-filter-field"><label for="market-availability">Availability</label><select id="market-availability" name="availability"><option value="">All</option>{options((("rostered","Rostered"),("day_traders_free_agent","Free Agents"),("taxi","Taxi"),("retired","Retired"),("owned_pick","Picks")), availability)}</select></div><div class="market-filter-field"><label for="market-sort">Sort</label><select id="market-sort" name="sort">{options(((item,item.title()) for item in ("market","intrinsic","contender","rebuilder","confidence","risk","liquidity")), sort)}</select></div><input type="hidden" name="direction" value="{escape(direction if direction in {'asc', 'desc'} else 'desc')}"><input type="hidden" name="limit" value="{limit}">{front_office_input}<button class="btn" type="submit">Search market</button></form><section class="market-hero"><p>Global values. League-specific ownership and fit.</p><a class="ds-action" href="#market-roster-movement">Movement and roster relevance ↓</a><span><b>{result.get("total", result.get("count", 0))}</b> matching assets</span></section><details class="market-view-evidence"><summary>About Neutral and Custom values</summary><p class="muted">Market prices below remain neutral. Open Custom DTOS to view or edit your personal valuations.</p></details><section class="ux-section"><div class="ux-section-head"><h2>{'Search Results' if q else 'Market Assets'}</h2><p>{'Exact compact matches' if q else 'Player identity, rank, value, and ownership at a glance'}</p></div>{ownership_notice}<div class="market-grid">{''.join(market_cards) or '<div class="ds-empty">' + empty_html + '</div>'}</div><nav aria-label="Market pagination">{pagination_html}</nav><details class="technical-details"><summary>Full market evidence table</summary><div class="ds-table-wrap" tabindex="0" role="region" aria-label="Full Market evidence"><table><caption>Filtered asset results · order is not a dynasty rank</caption><thead><tr><th>Result</th><th>Asset</th><th>Owner</th><th>Market</th><th>Intrinsic</th><th>Contender</th><th>Rebuilder</th><th>Confidence</th><th>Agreement</th><th>Evidence</th></tr></thead><tbody>{''.join(table_rows) or '<tr><td colspan="10">No canonical assets match these filters.</td></tr>'}</tbody></table></div></details></section><section class="ux-section" id="market-movers"><div class="ux-section-head"><h2>Market Movement</h2><p>Only timestamped, meaningful comparison data receives movement treatment</p></div>{movers_html}<!--market-roster-movement-slot--></section>{expanded}'''
+             body += (
+                 '<p class="muted market-evidence-contract">'
+                 "Values remain separate; unavailable evidence is never substituted."
+@@ -614,7 +619,10 @@ def create_market_router(
+                 f"<p>Dataset <code>{escape(market.dataset_version[:12])}</code> · "
+                 "stable tie-break: canonical asset ID</p></details>"
+             )
+-            return body.encode("utf-8")
++            # Keep a tiny neutral sample with the existing bounded byte cache.
++            # No extra directory/trend read or personalized state on cache hits.
++            from services.market_roster_relevance import movement_inputs
++            return json.dumps([body, movement_inputs(rows)], separators=(",", ":")).encode("utf-8")
+ 
+         def render() -> bytes:
+             return body_cache.get_or_build(
+@@ -622,7 +630,17 @@ def create_market_router(
+             )
+ 
+         # Shared caches must never retain account chrome or session CSRF fields.
+-        body = render_cache.get_or_build(key, generation, render).decode("utf-8")
++        body, movement_rows = json.loads(render_cache.get_or_build(key, generation, render))
++        # Personalized reasons and evidence tokens never enter shared HTML caches.
++        # Reuse the cached neutral sample; no catalog clone or new runtime owner.
++        from services.market_roster_relevance import movement_view
++        from src.ui.market_roster_relevance import movement_panel
++        relevance = movement_view(data, movement_rows, front_office, ownership,
++            market_data=getattr(market, 'data', data), snapshot=pinned_projection,
++            reader=projection_reader)
++        body = body.replace('<!--market-roster-movement-slot-->', movement_panel(relevance,
++            dict(q=q, position=position, availability=availability, sort=sort,
++                 direction=direction, front_office=front_office, offset=offset, limit=limit)), 1)
+         selected_state, selected_league, cache = dependencies()
+         if hasattr(cache, 'preparation_status'):
+             observed = cache.preparation_status(
+diff --git a/routes/trades.py b/routes/trades.py
+index c38fe56..8944636 100644
+--- a/routes/trades.py
++++ b/routes/trades.py
+@@ -286,6 +286,14 @@ def create_trades_router(*, ensure_fresh: EnsureFresh, require_data: RequireData
+                     context['team_need'] = need if (need and need['fingerprint'] == team_need
+                         and front_office == int(context['active_team']['roster_id'])) else None
+                     context['team_need_expired'] = not context['team_need']
++            if workflow == 'trade-for' and team_need:
++                from services.market_roster_relevance import admitted_handoff
++                context['market_need'] = admitted_handoff(require_data(),
++                    int(context['active_team']['roster_id']), asset_id, team_need)
++                context['market_need_expired'] = not context['market_need']
++                if context['market_need_expired']:
++                    # Do not silently retarget a stale ownership/source handoff.
++                    asset_id, owner_roster_id = None, None
+             if asset_id and workflow in {"shop", "trade-for"}:
+                 ownership = validate_targeted_player_action(require_data(), asset_id, int(context["active_team"]["roster_id"]), workflow)
+                 if ownership:
+@@ -310,8 +318,8 @@ def create_trades_router(*, ensure_fresh: EnsureFresh, require_data: RequireData
+         return await workflow_page("calculator", front_office)
+ 
+     @router.get("/trades/trade-for", response_class=HTMLResponse)
+-    async def trade_for_page(front_office: int | None = None, asset_id: str | None = None, owner_roster_id: int | None = None) -> HTMLResponse:
+-        return await workflow_page("trade-for", front_office, asset_id, owner_roster_id)
++    async def trade_for_page(front_office: int | None = None, asset_id: str | None = None, owner_roster_id: int | None = None, team_need: str | None = None) -> HTMLResponse:
++        return await workflow_page("trade-for", front_office, asset_id, owner_roster_id, team_need)
+ 
+     @router.get("/trades/shop", response_class=HTMLResponse)
+     async def shop_asset_page(front_office: int | None = None, asset_id: str | None = None, owner_roster_id: int | None = None) -> HTMLResponse:
+diff --git a/services/market_roster_relevance.py b/services/market_roster_relevance.py
+new file mode 100644
+index 0000000..7f11821
+--- /dev/null
++++ b/services/market_roster_relevance.py
+@@ -0,0 +1,260 @@
++"""Bounded presentation join of admitted Market movement and prepared roster need.
++
++No ranking model, acquisition, lineup calculation, cache or runtime owner. Tokens
++identify evidence; existing manager membership and target ownership authorize it.
++"""
++
++from datetime import datetime, timezone
++from hashlib import sha256
++import json
++from math import isfinite
++from urllib.parse import urlencode
++
++from services.team_trade_need import prepared_need
++from src.core.intelligence.roster_diagnostics import prepared_diagnostics
++from src.core.market_trends.current import current_comparison
++from src.core.player_ownership import PlayerOwnershipIndex
++from src.platform.account_context import current_account
++from src.platform.league_context import current_league_context
++
++SAMPLE_LIMIT = 10
++CARD_LIMIT = 3
++
++
++def _number(value):
++    return (
++        isinstance(value, (int, float))
++        and not isinstance(value, bool)
++        and isfinite(value)
++    )
++
++
++def need_context(data, roster_id, *, snapshot=None, reader=None):
++    account = current_account()
++    membership = account.membership if account else None
++    league = str((data.get("league") or {}).get("league_id") or "")
++    if (
++        not membership
++        or membership.league_id != league
++        or membership.roster_id != roster_id
++    ):
++        return (
++            None,
++            "Personal relevance needs your authorized active franchise. Neutral Market information remains available.",
++        )
++    # Market can remain usable without a prepared analytical publication.
++    # Do not ask diagnostics to resolve an absent runtime projection owner.
++    from src.core.projection_intelligence import projection_service
++
++    runtime = current_league_context()
++    runtime_reader = (
++        getattr(runtime, "projection", None) if runtime else projection_service
++    )
++    if runtime_reader is None:
++        return (
++            None,
++            "Compatible prepared roster projections are unavailable for this league. Neutral Market information remains available.",
++        )
++    reader = reader or runtime_reader
++    snapshot = reader.snapshot() if snapshot is None else snapshot
++    if snapshot is None:
++        return (
++            None,
++            "Compatible prepared roster projections are unavailable for this league. Neutral Market information remains available.",
++        )
++    diagnostic = prepared_diagnostics(data, snapshot, projection_reader=reader)
++    need = prepared_need(data, roster_id, diagnostic)
++    if need:
++        return need, need["reason"]
++    if not diagnostic:
++        return (
++            None,
++            "A matching prepared roster comparison is unavailable for this league, week, scoring and availability. Neutral movement is still usable.",
++        )
++    row = (diagnostic.get("teams") or {}).get(str(roster_id)) or {}
++    evidence = row.get("evidence") or {}
++    reasons = list(dict.fromkeys(evidence.get("limitations") or []))[:2]
++    if evidence.get("conclusion_state") != "current":
++        return (
++            None,
++            "Roster evidence is provisional or incomplete; no current personalized relevance is established. "
++            + " ".join(str(r)[:240] for r in reasons),
++        )
++    return (
++        None,
++        "No current supported starter or depth need maps to this view. This does not mean no useful trades exist.",
++    )
++
++
++def handoff_token(data, need, asset_id):
++    asset = ((data.get("valuation_intelligence") or {}).get("assets") or {}).get(
++        asset_id
++    ) or {}
++    value = ((asset.get("valuation_layers") or {}).get("market_value") or {}).get(
++        "value"
++    )
++    evidence = current_comparison(data, asset_id, value)
++    if not need or not evidence:
++        return None
++    return sha256(
++        json.dumps(
++            [need["fingerprint"], asset_id, evidence],
++            sort_keys=True,
++            separators=(",", ":"),
++        ).encode()
++    ).hexdigest()
++
++
++def admitted_handoff(data, roster_id, player_id, token):
++    need, _ = need_context(data, roster_id)
++    identity = "player:" + str(player_id)
++    player = (data.get("players") or {}).get(str(player_id)) or {}
++    if not need or player.get("position") != need["position"]:
++        return None
++    ownership = PlayerOwnershipIndex(data).resolve(str(player_id), roster_id)
++    if (
++        "TRADE_FOR" not in ownership.get("actions", ())
++        or handoff_token(data, need, identity) != token
++    ):
++        return None
++    return {
++        **need,
++        "asset_id": identity,
++        "name": str(player.get("full_name") or player.get("name") or identity)[:100],
++    }
++
++
++def _age(stamp):
++    try:
++        observed = datetime.fromisoformat(str(stamp).replace("Z", "+00:00"))
++        observed = (
++            observed if observed.tzinfo else observed.replace(tzinfo=timezone.utc)
++        )
++        days = (datetime.now(timezone.utc) - observed).total_seconds() / 86400
++        return (
++            f"about {int(days)} days since the comparison endpoint"
++            if days >= 0
++            else "Observation age unknown"
++        )
++    except (ValueError, TypeError, OverflowError):
++        return "Observation age unknown"
++
++
++def movement_inputs(rows):
++    """Neutral, bounded DTO alongside the existing cached page; no runtime owner."""
++    fields = (
++        "asset_id",
++        "magnitude",
++        "comparison_reasons",
++        "comparison_units",
++        "comparison_start_at",
++        "comparison_end_at",
++        "checkpoint_count",
++        "comparison_scope",
++        "current_qualification",
++    )
++    result = []
++    for row in rows[:SAMPLE_LIMIT]:
++        trend = row.get("market_trend") or {}
++        provenance = trend.get("provenance") or {}
++        result.append(
++            dict(
++                asset_id=row.get("asset_id"),
++                display_name=row.get("display_name"),
++                position=row.get("position"),
++                values={"market_value": (row.get("values") or {}).get("market_value")},
++                market_trend={
++                    **{key: trend.get(key) for key in fields},
++                    "provenance": {
++                        "current_endpoint_comparable": provenance.get(
++                            "current_endpoint_comparable"
++                        ),
++                        "current_evidence": {
++                            "providers": (
++                                (provenance.get("current_evidence") or {}).get(
++                                    "providers"
++                                )
++                                or []
++                            )[:5]
++                        },
++                    },
++                },
++            )
++        )
++    return result
++
++
++def movement_view(
++    data, rows, roster_id, ownership, *, market_data=None, snapshot=None, reader=None
++):
++    need, reason = need_context(data, roster_id, snapshot=snapshot, reader=reader)
++    sample = rows[:SAMPLE_LIMIT]
++    candidates = []
++    for row in sample:
++        trend = row.get("market_trend") or {}
++        if (
++            not _number(trend.get("magnitude"))
++            or trend.get("comparison_reasons")
++            or trend.get("comparison_units") != "0-1000"
++            or not trend.get("comparison_start_at")
++            or not trend.get("comparison_end_at")
++        ):
++            continue
++        identity = str(row.get("asset_id") or "")
++        if trend.get("asset_id") != identity:
++            continue
++        resolved = (
++            ownership.resolve(identity[7:], roster_id)
++            if identity.startswith("player:")
++            else {}
++        )
++        related = bool(
++            need
++            and (trend.get("provenance") or {}).get("current_endpoint_comparable")
++            is True
++            and row.get("position") == need["position"]
++            and "TRADE_FOR" in resolved.get("actions", ())
++        )
++        token = handoff_token(market_data or data, need, identity) if related else None
++        providers = ((trend.get("provenance") or {}).get("current_evidence") or {}).get(
++            "providers"
++        ) or ()
++        source = (
++            "Canonical Market · " + ", ".join(str(p)[:80] for p in providers[:5])
++            if providers
++            and (trend.get("provenance") or {}).get("current_endpoint_comparable")
++            else "Retained canonical Market observations; provider identities are not included in this summary"
++        )
++        href = (
++            "/trades/trade-for?"
++            + urlencode(
++                dict(
++                    front_office=roster_id,
++                    asset_id=identity[7:],
++                    owner_roster_id=resolved["owner"]["roster_id"],
++                    team_need=token,
++                )
++            )
++            if token
++            else None
++        )
++        candidates.append(
++            dict(
++                asset_id=identity,
++                name=str(row.get("display_name") or identity)[:100],
++                trend=trend,
++                related=related,
++                href=href,
++                source=source,
++                age=_age(trend["comparison_end_at"]),
++                value=(row.get("values") or {}).get("market_value"),
++            )
++        )
++    related = [row for row in candidates if row["related"]]
++    return dict(
++        need=need,
++        reason=reason,
++        sampled=len(sample),
++        cards=(related or candidates)[:CARD_LIMIT],
++        has_related=bool(related),
++    )
+diff --git a/src/ui/market_roster_relevance.py b/src/ui/market_roster_relevance.py
+new file mode 100644
+index 0000000..7610f90
+--- /dev/null
++++ b/src/ui/market_roster_relevance.py
+@@ -0,0 +1,78 @@
++"""Phone-first disclosure over existing, independently qualified evidence."""
++
++from html import escape
++from math import isfinite
++from urllib.parse import urlencode
++
++
++def movement_panel(view, market_query):
++    def text(value):
++        return escape(str(value))
++
++    html = [
++        '<section class="card" id="market-roster-movement" style="min-width:0;overflow-wrap:anywhere" aria-labelledby="market-roster-title" tabindex="-1">',
++        '<h2 id="market-roster-title">Market movement and your roster</h2>',
++        "<p>" + text(view["reason"]) + "</p>",
++        f'<p class="muted">First {view["sampled"]} assets on this Market page; up to three observations in the existing result order. This is not a completed Trade search.</p>',
++    ]
++    if view["need"] and not view["has_related"]:
++        html.append(
++            "<p>No comparable movement in this page sample matches that need for an acquirable player. Any observations below are neutral context, not personalized leads.</p>"
++        )
++    if not view["cards"]:
++        html.append(
++            "<p>Compatible dated prices are insufficient in this page sample. Movement is unknown, not zero or evidence of no opportunities. Try the existing Market filters or review an asset’s retained observations.</p>"
++        )
++    for card in view["cards"]:
++        trend = card["trend"]
++        value = card["value"]
++        price = (
++            f"{value:,.2f} Market points"
++            if isinstance(value, (int, float))
++            and not isinstance(value, bool)
++            and isfinite(value)
++            else "Unavailable"
++        )
++        detail = (
++            "/market?"
++            + urlencode(
++                {
++                    k: v
++                    for k, v in {**market_query, "selected": card["asset_id"]}.items()
++                    if v is not None
++                }
++            )
++            + "#selected-asset"
++        )
++        html.extend(
++            [
++                f'<article class="market-roster-card" data-market-asset="{text(card["asset_id"])}">',
++                "<h3>" + text(card["name"]) + "</h3>",
++                f"<p><b>Observed change: {trend['magnitude']:+,.2f} Market points</b><br>{text(trend['comparison_start_at'])} → {text(trend['comparison_end_at'])}</p>",
++                "<p>" + text(card["source"]) + " · " + text(card["age"]) + ".</p>",
++                "<p>"
++                + (
++                    f"Position matches your supported {text(view['need']['position'])} {text(view['need']['kind'])} need. This match does not establish this player’s legal-lineup improvement."
++                    if card["related"]
++                    else "Neutral observation; personalized relevance is not established for this asset."
++                )
++                + "</p>",
++                f"<p>Current neutral Market: {text(price)}. This is not a manager’s asking price; package cost, reserve effects and bilateral fit still need evaluation.</p>",
++                "<details><summary>Comparison coverage and limits</summary>",
++                f"<p>{text(trend.get('checkpoint_count', 'Unknown'))} retained checkpoints · {text(trend.get('comparison_scope', 'Unknown'))}. Sparse observations are not continuous daily history. {text(trend.get('current_qualification') or 'Current endpoint qualification unavailable.')}</p></details>",
++                f'<div class="ds-actions"><a class="ds-action" href="{text(detail)}">Review asset evidence</a>',
++            ]
++        )
++        if card["href"]:
++            html.append(
++                f'<a class="ds-action primary" href="{text(card["href"])}">Explore in Trade For</a>'
++            )
++        elif card["related"]:
++            html.append(
++                "<p>Current compatible quote evidence cannot bind this handoff. Review the asset; no target was applied.</p>"
++            )
++        html.append("</div></article>")
++    html.append(
++        '<p class="muted">A decline does not prove buy low, and a rise does not prove sell high. A position match is not an evaluated trade recommendation. Opening these links runs no search or evaluation.</p></section>'
++    )
++    return "".join(html)
+diff --git a/static/js/trade_workspace.js b/static/js/trade_workspace.js
+index ca770f8..e2a7774 100644
+--- a/static/js/trade_workspace.js
++++ b/static/js/trade_workspace.js
+@@ -86,6 +86,7 @@
+     } catch (_) { button.textContent = 'Unable to open this proposal. Refresh the page and try again.'; button.disabled = false; }
+   });
+   const root = document.getElementById('trade-builder');
++  const manualMarketEntry = Boolean(document.getElementById('market-trade-origin'));
+   if (!root) return;
+   const tabOwner = tradeTabOwner();
+   const replacePage = url => window.dtosNavigation ? window.dtosNavigation.replace(url) : location.replace(url);
+@@ -322,7 +323,7 @@
+     previousSearch(); persist(); paint();
+     searchStatus('Search filter changed. Earlier offers are separate; no new search has run.', 'ready');
+   }
+-  function toggle(which, id) { if (busy) return; const required = which === 'sent' ? session.requiredOutgoingAsset : session.requiredIncomingAsset; if (id === required && selected[which].includes(id)) return message('The required target stays fixed. Choose Build My Own to change the trade objective.', true); if (selected[which].includes(id)) selected[which] = selected[which].filter(x => x !== id); else if (!selected.sent.includes(id) && !selected.received.includes(id)) selected[which].push(id); changed(); if ((flow === 'shop' && which === 'sent' && selected.sent.length === 1) || (flow === 'trade_for' && which === 'received' && selected.received.length === 1)) run('generate'); }
++  function toggle(which, id) { if (busy) return; const required = which === 'sent' ? session.requiredOutgoingAsset : session.requiredIncomingAsset; if (id === required && selected[which].includes(id)) return message('The required target stays fixed. Choose Build My Own to change the trade objective.', true); if (selected[which].includes(id)) selected[which] = selected[which].filter(x => x !== id); else if (!selected.sent.includes(id) && !selected.received.includes(id)) selected[which].push(id); changed(); if (!manualMarketEntry && ((flow === 'shop' && which === 'sent' && selected.sent.length === 1) || (flow === 'trade_for' && which === 'received' && selected.received.length === 1))) run('generate'); }
+   function lockDetail(id) {
+     const meanings = [];
+     const kind = asset(id)?.kind || id.split(':')[0];
+@@ -2039,7 +2040,8 @@
+         previewOffer(row);
+       }).catch(error => { if (!departed && revision === navigationRevision) message(error.message, true); });
+     }
+-    if (startTargetSearch && !entryBlocked && !departed) { run('generate', {}, {focusOnCompletion: flow !== 'shop'}); if (flow === 'shop') searchStatus('Searching automatically for this newly selected asset… Your proposal stays intact.', 'loading'); }
++    if (startTargetSearch && !entryBlocked && !departed && !manualMarketEntry) { run('generate', {}, {focusOnCompletion: flow !== 'shop'}); if (flow === 'shop') searchStatus('Searching automatically for this newly selected asset… Your proposal stays intact.', 'loading'); }
++    else if (startTargetSearch && !entryBlocked && !departed && manualMarketEntry) searchStatus('Market target ready. Edit the controls, then explicitly choose Generate to search. No search has run for this new Market entry.', 'ready');
+   }).catch(error => {
+     operationStatus('Current league assets could not be prepared. Your saved workspace has not been reset.', 'error');
+     message(error.message, true);
+diff --git a/tests/test_canonical_harness_lifecycle.py b/tests/test_canonical_harness_lifecycle.py
+index e4e1e0b..42c4b9e 100644
+--- a/tests/test_canonical_harness_lifecycle.py
++++ b/tests/test_canonical_harness_lifecycle.py
+@@ -81,9 +81,11 @@ class CanonicalHarnessLifecycleTests(unittest.TestCase):
+ 
+     def test_ci_budget_and_resource_contract_remain_bounded(self):
+         source = WORKFLOW.read_text()
+-        self.assertIn('timeout-minutes: 85', source)
+-        self.assertIn('timeout-minutes: 82', source)
+-        self.assertIn('stream, timeout=4800, cleanup=process_cleanup', source)
++        self.assertIn('    timeout-minutes: 120\n', source)
++        self.assertIn('        timeout-minutes: 112\n', source)
++        self.assertIn('stream, timeout=6600, cleanup=process_cleanup', source)
++        self.assertLess(6600, 112 * 60, 'Runner cleanup fits inside step budget')
++        self.assertLess(112, 120, 'Job retains bounded setup/artifact time')
+         self.assertIn('[sys.executable, "-m", "tools.validation.validate_release"]', source)
+         self.assertIn('--memory 2g --memory-swap 2g --cpus 2 --network none', source)
+ 
+diff --git a/tests/test_market_roster_relevance.py b/tests/test_market_roster_relevance.py
+new file mode 100644
+index 0000000..63dd232
+--- /dev/null
++++ b/tests/test_market_roster_relevance.py
+@@ -0,0 +1,423 @@
++"""Retained canonical quotes + real prepared roster diagnostics + authorized routes."""
++
++from copy import deepcopy
++from dataclasses import replace
++from datetime import datetime, timedelta, timezone
++from html import unescape
++from pathlib import Path
++import re
++import unittest
++from unittest.mock import patch
++from types import SimpleNamespace
++
++from routes.market import create_market_router
++from src.core.asset_market import AssetMarketCache
++from src.core.historical_memory.store import HistoricalStore
++from src.core.intelligence_memory.store import IntelligenceCheckpointStore
++from src.core.intelligence_memory.pipeline import CheckpointPipeline
++from src.core.valuation.normalization import prepare_market_normalization
++from src.core.valuation.universe import ValuationUniverse
++from src.core.valuation_intelligence.engine import _score_asset
++from src.ui.render_cache import GenerationRenderCache
++from tests import test_team_trade_need_browser as need_fixture
++from tests.test_market_observation_producer_identity import checkpoint
++
++
++class MarketNeedFixture:
++    def __init__(
++        self,
++        case,
++        *,
++        superflex=False,
++        depth=False,
++        history=True,
++        old_raw=1800,
++        current_raw=3600,
++    ):
++        import dtos_app
++
++        helper_case = need_fixture.TeamTradeNeedBrowserTests()
++        case.addCleanup(helper_case.doCleanups)
++        self.need_case = helper_case
++        self.helper, self.f = helper_case.fixture(superflex=superflex, depth=depth)
++        self.data = self.f.editor.data
++        self.player_id = "2-RB-0"
++        self.asset_id = "player:" + self.player_id
++        self.root = Path(self.f.capital.tmp.name)
++        self.memory = IntelligenceCheckpointStore(self.root / "market-need.sqlite3")
++        self.history = HistoricalStore(self.root / "market-history.sqlite3")
++        self.cache = AssetMarketCache()
++        case.addCleanup(self.cache.clear)
++        self.data["normalized_players"] = self.data["players"]
++        self.data["market_data"]["providers"]["FantasyCalc"][self.player_id] = {
++            "value": current_raw,
++            "confidence": 90,
++        }
++        self.stamp = datetime.now(timezone.utc)
++        for quote in self.data["market_data"]["providers"]["FantasyCalc"].values():
++            quote.update(
++                format="dynasty_2qb",
++                format_details={"num_teams": 12, "num_qbs": 2, "ppr": 1},
++                source_updated_at=None,
++                retrieved_at=self.stamp.isoformat(),
++            )
++        prepare_market_normalization(self.data["market_data"])
++        universe = ValuationUniverse(self.data, {"data": self.data})
++        self.data["valuation_intelligence"] = {
++            "assets": {
++                key: _score_asset(row, [], {}, None)
++                for key, row in universe.by_id.items()
++            }
++        }
++        self.state = {"data": self.data, "last_sync": self.stamp.isoformat()}
++        if history:
++            self.add_point(old_raw)
++        self.market = self.cache.get(self.data, self.state, self.history, "league-1")
++        # The prepared Trade fixture and real Market quote share canonical prices.
++        row = self.f.editor.market.row(
++            self.asset_id,
++            self.data["valuation_intelligence"]["assets"][self.asset_id][
++                "valuation_layers"
++            ]["market_value"]["value"],
++            "RB",
++            self.player_id,
++        )
++        self.f.editor.market.rows.append(row)
++        self.body_cache = GenerationRenderCache("market-need-test-body")
++        self.page_cache = GenerationRenderCache("market-need-test-page")
++        case.enterContext(patch("routes.market.market_render_cache", self.page_cache))
++        case.enterContext(
++            patch("routes.market.market_body_render_cache", self.body_cache)
++        )
++        case.enterContext(patch("routes.market.historical_store", self.history))
++
++        def market_route(route):
++            path = getattr(route, "path", "")
++            if path == "/market" or path.startswith("/api/market/"):
++                return True
++            original = getattr(route, "original_router", None)
++            return bool(
++                original and any(market_route(child) for child in original.routes)
++            )
++
++        self.f.editor.app.router.routes[:] = [
++            r for r in self.f.editor.app.router.routes if not market_route(r)
++        ]
++        with patch("routes.market.intelligence_checkpoint_store", self.memory):
++            self.f.editor.app.include_router(
++                create_market_router(
++                    require_data=lambda: self.data,
++                    state=self.state,
++                    league_id="league-1",
++                    page=dtos_app.page,
++                    context_resolver=lambda: SimpleNamespace(
++                        state=self.state,
++                        league_id=str(self.data["league"]["league_id"]),
++                        market=self.cache,
++                        projection=self.f.capital.reader,
++                    ),
++                )
++            )
++        case.enterContext(
++            patch(
++                "services.sleeper.sync_sleeper",
++                side_effect=AssertionError("No source synchronization on a read"),
++            )
++        )
++        case.enterContext(
++            patch.object(
++                CheckpointPipeline,
++                "ingest_runtime",
++                side_effect=AssertionError("No acquisition on a read"),
++            )
++        )
++        self.client = self.f.editor.client
++
++    def add_point(self, raw, *, incompatible=False, days=2, name="need-old"):
++        data = deepcopy(self.data)
++        stamp = (self.stamp - timedelta(days=days)).isoformat()
++        data["market_data"]["providers"]["FantasyCalc"][self.player_id].update(
++            value=raw, retrieved_at=stamp
++        )
++        prepare_market_normalization(data["market_data"])
++        universe = ValuationUniverse(data, {"data": data})
++        data["valuation_intelligence"] = {
++            "assets": {
++                self.asset_id: _score_asset(universe.by_id[self.asset_id], [], {}, None)
++            }
++        }
++        observations = CheckpointPipeline._market_observations(data, self.asset_id)
++        observations = tuple(
++            replace(
++                o,
++                observed_at=stamp,
++                metadata={
++                    **o.metadata,
++                    **(
++                        {
++                            "comparison_semantics": {
++                                **o.metadata["comparison_semantics"],
++                                "format_key": "incompatible",
++                            }
++                        }
++                        if incompatible
++                        else {}
++                    ),
++                },
++            )
++            for o in observations
++        )
++        assert observations
++        self.old_value = observations[0].normalized_value
++        point = replace(checkpoint(name, self.old_value, stamp), asset_id=self.asset_id)
++        self.memory.put_sparse(
++            point,
++            market_context_id="source-compatible-fixture",
++            provider_evidence=observations,
++        )
++
++    def panel(self, **params):
++        response = self.client.get(
++            "/market", params={"q": self.player_id, "front_office": 1, **params}
++        )
++        assert response.status_code == 200, response.text[:1000]
++        html = response.text
++        start = html.index('id="market-roster-movement"')
++        return html[start:], response
++
++    def link(self):
++        html, _ = self.panel()
++        match = re.search(r'href="([^"]+)"[^>]*>Explore in Trade For', html)
++        assert match, html[:3000]
++        return unescape(match[1])
++
++
++class MarketRosterRelevanceTests(unittest.TestCase):
++    def test_actual_prepared_movement_and_starter_need_reach_scoped_handoff(self):
++        f = MarketNeedFixture(self)
++        html, _ = f.panel()
++        self.assertIn("supported RB addition", html)
++        self.assertIn("starter need", html)
++        self.assertIn(
++            "match does not establish this player’s legal-lineup improvement", html
++        )
++        self.assertIn("FantasyCalc", html)
++        self.assertIn("days since", html)
++        current = f.data["valuation_intelligence"]["assets"][f.asset_id][
++            "valuation_layers"
++        ]["market_value"]["value"]
++        self.assertIn(f"{current - f.old_value:+,.2f} Market points", html)
++        target = f.client.get(f.link())
++        self.assertEqual(target.status_code, 200)
++        self.assertIn("Opened from Market", target.text)
++        self.assertIn('data-preload-asset="2-RB-0"', target.text)
++        self.assertIn("Market movement is not revalidated here", target.text)
++        for cache in (f.body_cache, f.page_cache):
++            self.assertTrue(cache._entries)
++            self.assertFalse(
++                any(
++                    b"Explore in Trade For" in body or b"team_need=" in body
++                    for body in cache._entries.values()
++                )
++            )
++
++    def test_market_only_runtime_without_projection_owner_keeps_neutral_movement(self):
++        from src.platform.league_context import _CURRENT_CONTEXT
++
++        f = MarketNeedFixture(self)
++        marker = _CURRENT_CONTEXT.set(
++            SimpleNamespace(league_id="league-1", state=f.state, data=f.data)
++        )
++        try:
++            response = f.f.editor.client.get("/market?q=2-RB-0")
++            self.assertEqual(response.status_code, 200)
++            self.assertIn(
++                "Compatible prepared roster projections are unavailable", response.text
++            )
++            self.assertIn("Observed change: +150.00 Market points", response.text)
++            self.assertNotIn("Explore in Trade For", response.text)
++        finally:
++            _CURRENT_CONTEXT.reset(marker)
++
++    def test_warm_market_reuses_directory_and_trend_batch(self):
++        f = MarketNeedFixture(self)
++        with patch.object(f.market, "search", wraps=f.market.search) as search:
++            first, _ = f.panel()
++            second, _ = f.panel()
++        self.assertEqual(search.call_count, 1)
++        self.assertIn("Observed change: +150.00 Market points", first)
++        self.assertIn("Observed change: +150.00 Market points", second)
++
++    def test_old_format_movement_cannot_become_a_current_personal_lead(self):
++        f = MarketNeedFixture(self)
++        f.add_point(2400, days=1, name="need-second")
++        for quote in f.data["market_data"]["providers"]["FantasyCalc"].values():
++            quote.update(
++                format="dynasty_1qb",
++                format_details={"num_teams": 12, "num_qbs": 1, "ppr": 1},
++            )
++        prepare_market_normalization(f.data["market_data"])
++        universe = ValuationUniverse(f.data, f.state)
++        f.data["valuation_intelligence"] = {
++            "assets": {
++                key: _score_asset(row, [], {}, None)
++                for key, row in universe.by_id.items()
++            }
++        }
++        f.cache.clear()
++        f.market = f.cache.get(f.data, f.state, f.history, "league-1")
++        html, _ = f.panel()
++        self.assertNotIn("Explore in Trade For", html)
++        self.assertNotIn("Position matches your supported", html)
++        # Keep only comparisons admitted by the existing canonical reader.
++        # A format boundary may leave neutral history or withhold the change.
++        self.assertTrue("Neutral observation" in html or "Movement is unknown" in html)
++
++    def test_zero_movement_is_supported_not_missing(self):
++        f = MarketNeedFixture(self, old_raw=3600)
++        html, _ = f.panel()
++        self.assertIn("+0.00 Market points", html)
++        self.assertIn("Explore in Trade For", html)
++
++    def test_missing_history_is_unknown_not_zero_or_no_opportunities(self):
++        f = MarketNeedFixture(self, history=False)
++        html, _ = f.panel()
++        self.assertIn("Movement is unknown, not zero", html)
++        self.assertNotIn("Explore in Trade For", html)
++        self.assertNotIn("Observed change: +0.00", html)
++
++    def test_incompatible_history_is_excluded_by_existing_reader(self):
++        f = MarketNeedFixture(self, history=False)
++        f.add_point(1800, incompatible=True)
++        html, _ = f.panel()
++        self.assertNotIn("Explore in Trade For", html)
++        self.assertIn("Compatible dated prices are insufficient", html)
++
++    def test_changed_availability_keeps_neutral_movement_and_expires_link(self):
++        f = MarketNeedFixture(self)
++        link = f.link()
++        f.data["teams"][0]["players"][0]["status"] = "Out"
++        f.data["players"][f.data["teams"][0]["players"][0]["id"]]["status"] = "Out"
++        html, _ = f.panel()
++        self.assertIn("Observed change:", html)
++        self.assertIn("matching prepared roster comparison is unavailable", html)
++        self.assertNotIn("Explore in Trade For", html)
++        response = f.client.get(link)
++        self.assertIn("Market handoff needs review", response.text)
++        self.assertIn('data-preload-asset=""', response.text)
++
++    def test_aged_projection_keeps_neutral_information(self):
++        f = MarketNeedFixture(self)
++        f.need_case.publish(f.f, age=75)
++        html, _ = f.panel()
++        self.assertIn("Observed change:", html)
++        self.assertIn("provisional", html)
++        self.assertNotIn("Explore in Trade For", html)
++
++    def test_changed_quote_generation_does_not_apply_stale_target(self):
++        f = MarketNeedFixture(self)
++        link = f.link()
++        f.data["valuation_intelligence"]["assets"][f.asset_id]["valuation_layers"][
++            "market_value"
++        ]["generation"] = "different-quote"
++        response = f.client.get(link)
++        self.assertEqual(response.status_code, 200)
++        self.assertIn("No new target was applied", response.text)
++        self.assertIn('data-preload-asset=""', response.text)
++
++    def test_ownership_change_does_not_silently_retarget(self):
++        f = MarketNeedFixture(self)
++        link = f.link()
++        player = next(
++            p for p in f.data["teams"][1]["players"] if p["id"] == f.player_id
++        )
++        f.data["teams"][1]["players"].remove(player)
++        f.data["teams"][0]["players"].append(player)
++        response = f.client.get(link)
++        self.assertIn("Market handoff needs review", response.text)
++        self.assertIn('data-preload-asset=""', response.text)
++
++    def test_foreign_franchise_query_is_normalized_to_authorized_context(self):
++        f = MarketNeedFixture(self)
++        response = f.client.get("/market", params={"q": f.player_id, "front_office": 2})
++        self.assertEqual(response.status_code, 200)
++        self.assertIn('name="front_office" value="1"', response.text)
++        self.assertIn("supported RB addition", response.text)
++        self.assertNotIn("front_office=2&amp;asset_id=", response.text)
++
++    def test_account_change_does_not_reuse_cached_personal_token(self):
++        f = MarketNeedFixture(self)
++        original = f.link()
++        f.f.editor.use_account("account-b")
++        other = f.link()
++        self.assertNotEqual(original, other)
++        response = f.client.get(original)
++        self.assertIn("No new target was applied", response.text)
++        self.assertNotIn("Opened from Market", response.text)
++
++    def test_signed_out_request_cannot_replay_scoped_handoff(self):
++        f = MarketNeedFixture(self)
++        href = f.link()
++        f.client.cookies.clear()
++        response = f.client.get(href, follow_redirects=False)
++        self.assertIn(response.status_code, (302, 303, 307, 401))
++        self.assertNotIn("Opened from Market", response.text)
++
++    def test_failed_refresh_keeps_prices_but_withholds_current_relevance(self):
++        f = MarketNeedFixture(self)
++        href = f.link()
++        f.f.capital.reader.begin_external_refresh()
++        f.f.capital.reader.fail_external_refresh(
++            RuntimeError("controlled fixture refresh failure")
++        )
++        html, _ = f.panel()
++        self.assertIn("Observed change:", html)
++        self.assertIn("latest refresh did not complete", html)
++        self.assertNotIn("Explore in Trade For", html)
++        self.assertIn("No new target was applied", f.client.get(href).text)
++
++    def test_superflex_depth_need_is_not_a_starter_upgrade(self):
++        f = MarketNeedFixture(self, superflex=True, depth=True)
++        html, _ = f.panel()
++        self.assertIn("RB depth need", html)
++        self.assertIn("not a starter-upgrade verdict", html)
++        self.assertIn(
++            "match does not establish this player’s legal-lineup improvement", html
++        )
++
++    def test_decline_is_observation_not_buy_low_verdict(self):
++        f = MarketNeedFixture(self, old_raw=3600, current_raw=1800)
++        html, _ = f.panel()
++        self.assertIn("-150.00 Market points", html)
++        self.assertIn("A decline does not prove buy low", html)
++
++    def test_explicit_zero_market_price_is_not_unavailable(self):
++        f = MarketNeedFixture(self, old_raw=0, current_raw=0)
++        html, _ = f.panel()
++        self.assertIn("Current neutral Market: 0.00 Market points", html)
++        self.assertIn("Observed change: +0.00 Market points", html)
++
++    def test_misjoined_asset_identity_is_not_a_movement_lead(self):
++        from services.market_roster_relevance import movement_view
++        from src.core.market_trends import MarketTrendService
++        from src.core.market_trends.current import current_comparison
++        from src.core.player_ownership import PlayerOwnershipIndex
++
++        f = MarketNeedFixture(self)
++        value = f.data["valuation_intelligence"]["assets"][f.asset_id][
++            "valuation_layers"
++        ]["market_value"]["value"]
++        trend = MarketTrendService(f.memory).trend_for_asset(
++            f.asset_id,
++            value,
++            league_id="league-1",
++            current_semantics=current_comparison(f.data, f.asset_id, value),
++        )
++        self.assertEqual(trend["magnitude"], 150)
++        view = movement_view(
++            f.data,
++            [dict(asset_id="player:wrong", position="RB", market_trend=trend)],
++            1,
++            PlayerOwnershipIndex(f.data),
++        )
++        self.assertFalse(view["cards"])
+diff --git a/tests/test_market_roster_relevance_browser.py b/tests/test_market_roster_relevance_browser.py
+new file mode 100644
+index 0000000..f040af6
+--- /dev/null
++++ b/tests/test_market_roster_relevance_browser.py
+@@ -0,0 +1,329 @@
++"""Real authenticated Market/Trade routes, prepared observations, bounded 2GiB CI.
++
++Desktop Chromium and phone keyboard/touch emulation are not physical Safari.
++"""
++
++import json
++import os
++from pathlib import Path
++import subprocess
++from types import SimpleNamespace
++import unittest
++from unittest.mock import patch
++
++from playwright.sync_api import sync_playwright
++from tools.validation.browser_runtime import launch_chromium
++from tests.test_market_roster_relevance import MarketNeedFixture
++
++
++class MarketRosterBrowserTests(unittest.TestCase):
++    def save(self, name, rows, page=None):
++        folder = os.environ.get("DTOS_MARKET_NEED_EVIDENCE")
++        if not folder:
++            return
++        root = Path(folder)
++        root.mkdir(parents=True, exist_ok=True)
++        record = dict(
++            commit=subprocess.check_output(
++                ["git", "rev-parse", "HEAD"], text=True
++            ).strip(),
++            tree=subprocess.check_output(
++                ["git", "rev-parse", "HEAD^{tree}"], text=True
++            ).strip(),
++            observations=rows,
++            scope="Disposable authenticated source/route/browser evidence; not owner live or physical Safari.",
++        )
++        (root / (name + ".json")).write_text(json.dumps(record, indent=2) + "\n")
++        if page:
++            page.screenshot(path=str(root / (name + ".png")), full_page=True)
++
++    def test_prepared_market_to_trade_and_back_preserves_existing_work(self):
++        observations = []
++        with sync_playwright() as pw:
++            browser = launch_chromium(pw, headless=True)
++            try:
++                for sf in (False, True):
++                    f = MarketNeedFixture(self, superflex=sf, depth=sf)
++                    saved = f.f.editor.state()
++                    for width, height in [
++                        (320, 432),
++                        (375, 667),
++                        (390, 844),
++                        (1280, 900),
++                    ]:
++                        touch = width < 1000
++                        device = SimpleNamespace(
++                            new_page=lambda **kwargs: browser.new_page(
++                                has_touch=touch, **kwargs
++                            )
++                        )
++                        page, requests, _, _, errors = f.helper.page(
++                            device, f.f, width, height
++                        )
++                        try:
++                            f.helper.ready(page)
++                            original_url = page.url
++                            f.helper.choose(page)
++                            page.locator("#trade-run").click()
++                            page.wait_for_function(
++                                "document.querySelector('#trade-result').dataset.assessment==='true' && document.querySelector('#trade-builder').getAttribute('aria-busy')==='false'"
++                            )
++                            page.locator("#trade-result").get_by_role(
++                                "button", name="Add to comparison", exact=True
++                            ).click()
++                            page.locator("#calculator-protect").click()
++                            page.locator("#trade-constraint-asset").select_option("b")
++                            page.locator("#calculator-lock").click()
++                            page.locator("#trade-valuation-mode").select_option(
++                                "custom"
++                            )
++                            before = f.helper.draft(page)
++                            self.assertIn("b", before["protectedAssets"])
++                            self.assertEqual(len(before["comparisonOffers"]), 1)
++                            posts = sum(m == "POST" for m, _, _ in requests)
++                            with patch(
++                                "src.core.intelligence.roster_diagnostics._compute",
++                                side_effect=AssertionError(
++                                    "No new lineup preparation while reading Market or Trade For"
++                                ),
++                            ):
++                                page.locator('.manager-nav a[href="/market"]').click()
++                                page.wait_for_url("**/market")
++                                page.locator("#market-search").fill(f.player_id)
++                                page.locator('form[action="/market"]').evaluate(
++                                    "f=>f.requestSubmit()"
++                                )
++                                page.wait_for_url("**/market?*q=2-RB-0*")
++                                panel = page.locator("#market-roster-movement")
++                                self.assertIn(
++                                    "Observed change: +150.00 Market points",
++                                    panel.inner_text(),
++                                )
++                                self.assertIn("FantasyCalc", panel.inner_text())
++                                self.assertIn(
++                                    "RB depth need" if sf else "RB starter need",
++                                    panel.inner_text(),
++                                )
++                                self.save(
++                                    f"market-{'superflex' if sf else 'oneqb-kdef'}-{width}",
++                                    [
++                                        dict(
++                                            viewport=[width, height],
++                                            source="prepared canonical sparse observations",
++                                            no_search=True,
++                                        )
++                                    ],
++                                    page,
++                                )
++                                link = panel.get_by_role(
++                                    "link", name="Explore in Trade For", exact=True
++                                )
++                                self.assertEqual(link.count(), 1)
++                                self.assertLessEqual(
++                                    page.evaluate(
++                                        "document.documentElement.scrollWidth"
++                                    ),
++                                    width,
++                                )
++                                requests_before = len(requests)
++                                summary = panel.get_by_text(
++                                    "Comparison coverage and limits", exact=True
++                                )
++                                summary.focus()
++                                summary.press("Enter")
++                                self.assertTrue(
++                                    panel.locator("details").evaluate("e=>e.open")
++                                )
++                                self.assertEqual(len(requests), requests_before)
++                                if touch:
++                                    link.tap()
++                                else:
++                                    link.focus()
++                                    link.press("Enter")
++                                page.wait_for_url("**/trades/trade-for?*")
++                                page.wait_for_function(
++                                    "document.querySelector('#trade-context') && !document.querySelector('#trade-context').textContent.includes('Loading')"
++                                )
++                                self.assertEqual(
++                                    page.locator("#trade-builder").get_attribute(
++                                        "data-preload-asset"
++                                    ),
++                                    f.player_id,
++                                )
++                                self.assertIn(
++                                    f.player_id,
++                                    page.locator("#trade-target").inner_text(),
++                                )
++                                self.assertIn(
++                                    "Opened from Market",
++                                    page.locator("#market-trade-origin").inner_text(),
++                                )
++                                self.assertTrue(
++                                    page.locator("#trade-strategy").is_enabled()
++                                )
++                                page.locator("#trade-strategy").select_option("RETOOL")
++                                self.assertEqual(
++                                    sum(m == "POST" for m, _, _ in requests), posts
++                                )
++                                self.save(
++                                    f"{'superflex' if sf else 'oneqb-kdef'}-{width}",
++                                    [
++                                        dict(
++                                            viewport=[width, height],
++                                            exact_target=f.asset_id,
++                                            neutral_movement=150,
++                                            kind="depth" if sf else "starter",
++                                            no_extra_posts=True,
++                                            no_solver_on_navigation=True,
++                                            keyboard_disclosure=True,
++                                            touch_emulation=touch,
++                                            overflow=False,
++                                        )
++                                    ],
++                                    page,
++                                )
++                                f.helper.back(page, "/market?*")
++                                self.assertIn("q=2-RB-0", page.url)
++                                # Applying a Market filter is a real history entry.
++                                f.helper.back(page, "/market")
++                                page.locator("#dtos-back").click()
++                                page.wait_for_url(original_url)
++                                page.wait_for_function(
++                                    "document.querySelector('#trade-builder') && !document.querySelector('#trade-context').textContent.includes('Loading')"
++                                )
++                                after = f.helper.draft(page)
++                                self.assertEqual(
++                                    after["currentProposal"], before["currentProposal"]
++                                )
++                                self.assertEqual(after["valuationMode"], "custom")
++                                self.assertEqual(
++                                    after["protectedAssets"], before["protectedAssets"]
++                                )
++                                self.assertEqual(
++                                    [r["proposal"] for r in after["comparisonOffers"]],
++                                    [r["proposal"] for r in before["comparisonOffers"]],
++                                )
++                                self.assertIn(
++                                    "retained",
++                                    page.locator("#trade-result").inner_text().lower(),
++                                )
++                                page.reload(wait_until="networkidle")
++                                page.wait_for_function(
++                                    "!document.querySelector('#trade-context').textContent.includes('Loading')"
++                                )
++                                self.assertEqual(
++                                    f.helper.draft(page)["currentProposal"],
++                                    before["currentProposal"],
++                                )
++                            self.assertEqual(
++                                sum(m == "POST" for m, _, _ in requests), posts
++                            )
++                            self.assertEqual(errors, [])
++                            observations.append(
++                                dict(
++                                    shape="superflex" if sf else "oneqb-kdef",
++                                    viewport=[width, height],
++                                    roundtrip=True,
++                                    exact_asset=True,
++                                    draft_preserved=True,
++                                    protections_preserved=True,
++                                    comparison_preserved=True,
++                                    retained_result=True,
++                                    no_extra_posts=True,
++                                    no_solver_on_navigation=True,
++                                    errors=errors,
++                                )
++                            )
++                        finally:
++                            page.close()
++                    self.assertEqual(f.f.editor.state()["revision"], saved["revision"])
++                    self.assertEqual(f.f.editor.state()["rows"], saved["rows"])
++            finally:
++                browser.close()
++        self.save("roundtrip", observations)
++
++    def test_stale_handoff_and_league_switch_do_not_reuse_target_or_work(self):
++        f = MarketNeedFixture(self)
++        observations = []
++        with sync_playwright() as pw:
++            browser = launch_chromium(pw, headless=True)
++            try:
++                page, requests, _, _, errors = f.helper.page(browser, f.f, 390, 844)
++                try:
++                    f.helper.ready(page)
++                    f.helper.choose(page)
++                    before = f.helper.draft(page)
++                    old_scope = page.locator(
++                        'meta[name="dtos-navigation-scope"]'
++                    ).get_attribute("content")
++                    page.goto(
++                        f.helper.origin + "/market?q=2-RB-0", wait_until="networkidle"
++                    )
++                    link = (
++                        page.locator("#market-roster-movement")
++                        .get_by_role("link", name="Explore in Trade For")
++                        .get_attribute("href")
++                    )
++                    f.f.capital.reader.begin_external_refresh()
++                    f.f.capital.reader.fail_external_refresh(
++                        RuntimeError("controlled fixture failure")
++                    )
++                    page.goto(f.helper.origin + link, wait_until="networkidle")
++                    self.assertIn(
++                        "No new target was applied",
++                        page.locator("#market-trade-origin").inner_text(),
++                    )
++                    self.assertEqual(
++                        page.locator("#trade-builder").get_attribute(
++                            "data-preload-asset"
++                        ),
++                        "",
++                    )
++                    self.assertEqual(
++                        f.helper.draft(page)["currentProposal"],
++                        before["currentProposal"],
++                    )
++                    f.f.editor.store.upsert_membership(
++                        "account-a",
++                        {"league_id": "league-2", "season": "2026"},
++                        "account-a",
++                        1,
++                        "Other fixture franchise",
++                        "active",
++                    )
++                    f.f.editor.store.activate("account-a", "league-2")
++                    f.data["league"]["league_id"] = "league-2"
++                    page.goto(f.helper.origin + link, wait_until="networkidle")
++                    self.assertIn(
++                        "No new target was applied",
++                        page.locator("#market-trade-origin").inner_text(),
++                    )
++                    self.assertNotEqual(
++                        page.locator(
++                            'meta[name="dtos-navigation-scope"]'
++                        ).get_attribute("content"),
++                        old_scope,
++                    )
++                    self.assertEqual(
++                        page.locator("#trade-builder").get_attribute(
++                            "data-preload-asset"
++                        ),
++                        "",
++                    )
++                    self.assertEqual(sum(m == "POST" for m, _, _ in requests), 0)
++                    self.assertEqual(errors, [])
++                    observations.append(
++                        dict(
++                            stale_link_withheld=True,
++                            new_target_not_applied=True,
++                            existing_draft_preserved=True,
++                            league_switch_cleared_scope=True,
++                            no_posts=True,
++                            errors=errors,
++                        )
++                    )
++                    self.save("stale-and-league", observations, page)
++                finally:
++                    page.close()
++            finally:
++                browser.close()

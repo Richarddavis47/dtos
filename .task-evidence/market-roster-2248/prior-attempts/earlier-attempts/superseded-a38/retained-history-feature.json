@@ -1,0 +1,186 @@
+{
+  "head": "a38f3e719d84d600fcba153f57863fd0d668a0a3",
+  "tree": "2a38336e6971916886256a16dcda7b1504260532",
+  "working_tree_clean": true,
+  "source_fixture_sha256": "012de53aeefa4cfb4cb7de717910fa829f399b23d6f6ad7962598afe8c76833f",
+  "raw_retained_expectations": {
+    "completed_trades": 2,
+    "firsts_received": 3,
+    "firsts_sent": 1,
+    "receiving_trades": 1,
+    "sending_trades": 1
+  },
+  "cases": [
+    {
+      "case": "retained_day",
+      "summary": {
+        "state": "partial",
+        "completed_trades": 2,
+        "firsts_received": 3,
+        "firsts_sent": 1,
+        "receiving_trades": 1,
+        "sending_trades": 1,
+        "pick_covered_trades": 2,
+        "pick_counts_complete_in_sample": true,
+        "dated_trades": 2,
+        "first_completion_at": "2026-03-01T14:01:05.246000Z",
+        "last_completion_at": "2026-10-11T15:05:21.347000Z",
+        "source_seasons": [
+          2026,
+          2023
+        ],
+        "unattributed_source_trades": 0,
+        "references": [
+          {
+            "url": "/trades/history/1414718106177122304",
+            "transaction_id": "1414718106177122304",
+            "season": 2026,
+            "completion_at": "2026-10-11T15:05:21.347000Z",
+            "firsts_received": [],
+            "firsts_sent": []
+          },
+          {
+            "url": "/trades/history/1333655835015942144",
+            "transaction_id": "1333655835015942144",
+            "season": 2026,
+            "completion_at": "2026-03-01T14:01:05.246000Z",
+            "firsts_received": [
+              "PICK-2027-R1-ORIG7",
+              "PICK-2028-R1-ORIG7",
+              "PICK-2026-R1-ORIG8"
+            ],
+            "firsts_sent": [
+              "PICK-2026-R1-ORIG5"
+            ]
+          }
+        ],
+        "reason": "Only supported retained trades are counted. Missing periods and unconfirmed franchise continuity remain unknown.",
+        "attribution": "Franchise history. These observations do not establish the current manager\u2019s past decisions, present intent or willingness to trade."
+      }
+    },
+    {
+      "case": "multi_team",
+      "summary": {
+        "state": "partial",
+        "completed_trades": 1,
+        "firsts_received": 2,
+        "firsts_sent": 1,
+        "receiving_trades": 1,
+        "sending_trades": 1,
+        "pick_covered_trades": 1,
+        "pick_counts_complete_in_sample": true,
+        "dated_trades": 0,
+        "first_completion_at": null,
+        "last_completion_at": null,
+        "source_seasons": [
+          2026,
+          2024,
+          2023
+        ],
+        "unattributed_source_trades": 0,
+        "references": [
+          {
+            "url": "/trades/history/controlled",
+            "transaction_id": "controlled",
+            "season": 2024,
+            "completion_at": null,
+            "firsts_received": [
+              "PICK-2028-R1-ORIG9",
+              "PICK-2029-R1-ORIG7"
+            ],
+            "firsts_sent": [
+              "PICK-2027-R1-ORIG2"
+            ]
+          }
+        ],
+        "reason": "Only supported retained trades are counted. Missing periods and unconfirmed franchise continuity remain unknown.",
+        "attribution": "Franchise history. These observations do not establish the current manager\u2019s past decisions, present intent or willingness to trade."
+      }
+    },
+    {
+      "case": "partial_pick",
+      "summary": {
+        "state": "partial",
+        "completed_trades": 1,
+        "firsts_received": 1,
+        "firsts_sent": null,
+        "receiving_trades": 1,
+        "sending_trades": null,
+        "pick_covered_trades": 0,
+        "pick_counts_complete_in_sample": false,
+        "dated_trades": 0,
+        "first_completion_at": null,
+        "last_completion_at": null,
+        "source_seasons": [
+          2026,
+          2024,
+          2023
+        ],
+        "unattributed_source_trades": 0,
+        "references": [],
+        "reason": "Only supported retained trades are counted. Missing periods and unconfirmed franchise continuity remain unknown.",
+        "attribution": "Franchise history. These observations do not establish the current manager\u2019s past decisions, present intent or willingness to trade."
+      }
+    },
+    {
+      "case": "supported_zero",
+      "summary": {
+        "state": "partial",
+        "completed_trades": 1,
+        "firsts_received": 0,
+        "firsts_sent": 0,
+        "receiving_trades": 0,
+        "sending_trades": 0,
+        "pick_covered_trades": 1,
+        "pick_counts_complete_in_sample": true,
+        "dated_trades": 0,
+        "first_completion_at": null,
+        "last_completion_at": null,
+        "source_seasons": [
+          2026,
+          2024,
+          2023
+        ],
+        "unattributed_source_trades": 0,
+        "references": [
+          {
+            "url": "/trades/history/controlled",
+            "transaction_id": "controlled",
+            "season": 2024,
+            "completion_at": null,
+            "firsts_received": [],
+            "firsts_sent": []
+          }
+        ],
+        "reason": "Only supported retained trades are counted. Missing periods and unconfirmed franchise continuity remain unknown.",
+        "attribution": "Franchise history. These observations do not establish the current manager\u2019s past decisions, present intent or willingness to trade."
+      }
+    },
+    {
+      "case": "unknown",
+      "summary": {
+        "state": "unknown",
+        "completed_trades": null,
+        "firsts_received": null,
+        "firsts_sent": null,
+        "receiving_trades": null,
+        "sending_trades": null,
+        "pick_covered_trades": null,
+        "pick_counts_complete_in_sample": false,
+        "dated_trades": null,
+        "first_completion_at": null,
+        "last_completion_at": null,
+        "source_seasons": [
+          2026,
+          2023
+        ],
+        "unattributed_source_trades": 0,
+        "references": [],
+        "reason": "Only supported retained trades are counted. Missing periods and unconfirmed franchise continuity remain unknown.",
+        "attribution": "Franchise history. These observations do not establish the current manager\u2019s past decisions, present intent or willingness to trade."
+      }
+    }
+  ],
+  "live_observation": false,
+  "scope": "Actual prepared retained-source replay plus explicitly disposable controls; no production payload or manager-intent claim."
+}

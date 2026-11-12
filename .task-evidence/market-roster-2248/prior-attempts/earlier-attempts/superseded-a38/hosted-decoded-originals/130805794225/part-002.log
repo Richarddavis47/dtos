@@ -1,0 +1,390 @@
+11-11T21:40:25.0958720Z [36;1m  python -m tools.validation.windows_bounded_unittest tests.test_fois_history_execution tests.test_fois_history_qualification tests.test_sleeper_history_publication tests.test_fois_history_read tests.test_fois_delta_integrity tests.test_season_cache_residency tests.test_fois_worker_residency[0m
+2026-11-11T21:40:25.0959825Z [36;1melse[0m
+2026-11-11T21:40:25.0961318Z [36;1m  docker run --rm --memory=2g --memory-swap=2g --cpus=2 --network=none -e PYTHONPATH=/src -e PYTHONDONTWRITEBYTECODE=1 -v "$PWD:/src:ro" -w /tmp dtos-worker-validation python -m unittest tests.test_fois_history_execution tests.test_fois_history_qualification tests.test_sleeper_history_publication tests.test_fois_history_read tests.test_fois_delta_integrity tests.test_season_cache_residency tests.test_fois_worker_residency[0m
+2026-11-11T21:40:25.0963438Z [36;1mfi[0m
+2026-11-11T21:40:25.0977695Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-11-11T21:40:25.0978122Z env:
+2026-11-11T21:40:25.0979064Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-11T21:40:25.0979629Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib/pkgconfig
+2026-11-11T21:40:25.0980134Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-11T21:40:25.0980601Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-11T21:40:25.0981106Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-11T21:40:25.0981585Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib
+2026-11-11T21:40:25.0982031Z ##[endgroup]
+2026-11-11T21:40:25.6424549Z /usr/local/lib/python3.12/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+2026-11-11T21:40:25.6425623Z   from starlette.testclient import TestClient as TestClient  # noqa
+2026-11-11T21:40:26.3283356Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:26.3297220Z INFO:httpx:HTTP Request: GET http://testserver/api/fois/leagues/A/gms/gm/timeline "HTTP/1.1 503 Service Unavailable"
+2026-11-11T21:40:26.3301302Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:26.3382240Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:26.3389974Z INFO:httpx:HTTP Request: GET http://testserver/api/fois/leagues/A/gms/gm/timeline "HTTP/1.1 503 Service Unavailable"
+2026-11-11T21:40:26.3391571Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:26.3398501Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:26.3430269Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:26.4128302Z .INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:26.4174986Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:26.8554831Z INFO:httpx:HTTP Request: GET http://testserver/api/fois/leagues/A/gms/gm/timeline "HTTP/1.1 200 OK"
+2026-11-11T21:40:26.8568036Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:26.8613725Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:26.8636027Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:26.8666168Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:27.3067089Z INFO:httpx:HTTP Request: GET http://testserver/api/fois/leagues/A/gms/gm/timeline "HTTP/1.1 200 OK"
+2026-11-11T21:40:27.3082401Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:27.3129252Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:27.3147751Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:27.3171652Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:27.7553610Z INFO:httpx:HTTP Request: GET http://testserver/api/fois/leagues/B/gms/gm/timeline "HTTP/1.1 404 Not Found"
+2026-11-11T21:40:27.7560741Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:27.7595782Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:27.8122364Z .INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:27.8148910Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:27.8158288Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:27.8182195Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:29.8610325Z .....INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:29.8634073Z INFO:httpx:HTTP Request: GET http://testserver/api/fois/leagues/A/gms/gm/timeline "HTTP/1.1 503 Service Unavailable"
+2026-11-11T21:40:29.8643235Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:29.8693034Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:29.8697468Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:29.8733263Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:29.8748248Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:30.3175683Z INFO:httpx:HTTP Request: GET http://testserver/api/fois/leagues/A/gms/gm/timeline "HTTP/1.1 200 OK"
+2026-11-11T21:40:30.3190053Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:30.3223649Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:30.3901406Z .INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:30.3950338Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:30.8381533Z INFO:httpx:HTTP Request: GET http://testserver/api/fois/leagues/A/gms/gm "HTTP/1.1 200 OK"
+2026-11-11T21:40:30.8396143Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:30.8435628Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:31.3856008Z ..INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:31.3883578Z INFO:httpx:HTTP Request: GET http://testserver/api/fois/leagues/A/gms/gm/timeline "HTTP/1.1 503 Service Unavailable"
+2026-11-11T21:40:31.3888706Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:31.3920081Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:31.3937732Z .INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:31.4533391Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:31.4553990Z INFO:httpx:HTTP Request: GET http://testserver/api/fois/leagues/A/gms/gm/timeline "HTTP/1.1 503 Service Unavailable"
+2026-11-11T21:40:31.4558599Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:31.4589245Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:31.4604427Z .INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:31.6650900Z .INFO:httpx:HTTP Request: GET http://fixture/api/fois/leagues/A/gms/gm/timeline "HTTP/1.1 401 Unauthorized"
+2026-11-11T21:40:31.6796107Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:31.6856874Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:31.6885744Z INFO:asyncio:execute program '/usr/local/bin/python': <_UnixSubprocessTransport pid=109 running stdin=<_UnixWritePipeTransport fd=8 idle bufsize=0>>
+2026-11-11T21:40:32.1377134Z INFO:asyncio:<_UnixWritePipeTransport fd=8 idle bufsize=0> was closed by peer
+2026-11-11T21:40:32.1383330Z INFO:asyncio:<_UnixSubprocessTransport pid=109 running stdin=<_UnixWritePipeTransport closed fd=8 closed>> exited with return code 0
+2026-11-11T21:40:32.1443288Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:32.1445815Z INFO:httpx:HTTP Request: GET http://fixture/api/fois/leagues/A/gms/gm/timeline "HTTP/1.1 200 OK"
+2026-11-11T21:40:32.1471179Z INFO:httpx:HTTP Request: GET http://fixture/api/fois/leagues/A/gms/gm/timeline "HTTP/1.1 403 Forbidden"
+2026-11-11T21:40:32.1490253Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:32.1508248Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:32.1539757Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:32.1557444Z INFO:asyncio:execute program '/usr/local/bin/python': <_UnixSubprocessTransport pid=117 running stdin=<_UnixWritePipeTransport fd=8 idle bufsize=0>>
+2026-11-11T21:40:32.6064533Z INFO:asyncio:<_UnixWritePipeTransport fd=8 idle bufsize=0> was closed by peer
+2026-11-11T21:40:32.6068502Z INFO:asyncio:<_UnixSubprocessTransport pid=117 running stdin=<_UnixWritePipeTransport closed fd=8 closed>> exited with return code 0
+2026-11-11T21:40:32.6121645Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:32.6124155Z INFO:httpx:HTTP Request: GET http://fixture/api/fois/leagues/A/gms/gm "HTTP/1.1 200 OK"
+2026-11-11T21:40:32.6150033Z INFO:httpx:HTTP Request: GET http://fixture/api/fois/leagues/A/gms/gm "HTTP/1.1 403 Forbidden"
+2026-11-11T21:40:32.6170193Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:32.7407950Z .INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:32.7438915Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:32.7465206Z INFO:asyncio:execute program '/usr/local/bin/python': <_UnixSubprocessTransport pid=125 running stdin=<_UnixWritePipeTransport fd=8 idle bufsize=0>>
+2026-11-11T21:40:33.1932501Z INFO:asyncio:<_UnixWritePipeTransport fd=8 idle bufsize=0> was closed by peer
+2026-11-11T21:40:33.1937189Z INFO:asyncio:<_UnixSubprocessTransport pid=125 running stdin=<_UnixWritePipeTransport closed fd=8 closed>> exited with return code 0
+2026-11-11T21:40:33.1993964Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:33.1997864Z INFO:httpx:HTTP Request: GET http://fixture/api/fois/leagues/A/gms/gm/timeline "HTTP/1.1 200 OK"
+2026-11-11T21:40:33.2038487Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:33.2590037Z .INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:33.2621408Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:33.2638550Z INFO:asyncio:execute program '/usr/local/bin/python': <_UnixSubprocessTransport pid=133 running stdin=<_UnixWritePipeTransport fd=8 idle bufsize=0>>
+2026-11-11T21:40:33.7153692Z INFO:asyncio:<_UnixWritePipeTransport fd=8 idle bufsize=0> was closed by peer
+2026-11-11T21:40:33.7157054Z INFO:asyncio:<_UnixSubprocessTransport pid=133 running stdin=<_UnixWritePipeTransport closed fd=8 closed>> exited with return code 0
+2026-11-11T21:40:33.7199512Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:33.7226877Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:33.7248930Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:33.7284795Z INFO:asyncio:execute program '/usr/local/bin/python': <_UnixSubprocessTransport pid=139 running stdin=<_UnixWritePipeTransport fd=9 idle bufsize=0>>
+2026-11-11T21:40:33.7320535Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:34.1728921Z INFO:asyncio:<_UnixWritePipeTransport fd=9 idle bufsize=0> was closed by peer
+2026-11-11T21:40:34.1733659Z INFO:asyncio:<_UnixSubprocessTransport pid=139 running stdin=<_UnixWritePipeTransport closed fd=9 closed>> exited with return code 0
+2026-11-11T21:40:34.1771977Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:34.1775059Z INFO:httpx:HTTP Request: GET http://fixture/api/fois/leagues/A/gms/gm/timeline "HTTP/1.1 200 OK"
+2026-11-11T21:40:34.1822168Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:34.2387114Z .INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:34.2446698Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:34.2453526Z INFO:asyncio:execute program '/usr/local/bin/python': <_UnixSubprocessTransport pid=145 running stdin=<_UnixWritePipeTransport fd=9 idle bufsize=0>>
+2026-11-11T21:40:34.6935109Z INFO:asyncio:<_UnixWritePipeTransport fd=9 idle bufsize=0> was closed by peer
+2026-11-11T21:40:34.6938214Z INFO:asyncio:<_UnixSubprocessTransport pid=145 running stdin=<_UnixWritePipeTransport closed fd=9 closed>> exited with return code 0
+2026-11-11T21:40:34.6985322Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:34.7020864Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:34.7796303Z .INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:34.7861749Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:34.7863988Z INFO:asyncio:execute program '/usr/local/bin/python': <_UnixSubprocessTransport pid=153 running stdin=<_UnixWritePipeTransport fd=9 idle bufsize=0>>
+2026-11-11T21:40:35.2349062Z INFO:asyncio:<_UnixWritePipeTransport fd=9 idle bufsize=0> was closed by peer
+2026-11-11T21:40:35.2352932Z INFO:asyncio:<_UnixSubprocessTransport pid=153 running stdin=<_UnixWritePipeTransport closed fd=9 closed>> exited with return code 0
+2026-11-11T21:40:35.2415823Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:35.2417361Z INFO:httpx:HTTP Request: GET http://fixture/api/fois/leagues/A/gms/gm "HTTP/1.1 200 OK"
+2026-11-11T21:40:35.2458435Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:35.3042503Z .INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:35.3079396Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:35.3104687Z INFO:asyncio:execute program '/usr/local/bin/python': <_UnixSubprocessTransport pid=161 running stdin=<_UnixWritePipeTransport fd=8 idle bufsize=0>>
+2026-11-11T21:40:35.7597105Z INFO:asyncio:<_UnixWritePipeTransport fd=8 idle bufsize=0> was closed by peer
+2026-11-11T21:40:35.7601517Z INFO:asyncio:<_UnixSubprocessTransport pid=161 running stdin=<_UnixWritePipeTransport closed fd=8 closed>> exited with return code 0
+2026-11-11T21:40:35.7641101Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:35.7642632Z INFO:httpx:HTTP Request: GET http://fixture/api/fois/leagues/A/gms/gm/timeline "HTTP/1.1 200 OK"
+2026-11-11T21:40:35.7677365Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:35.7696954Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:35.7740622Z INFO:asyncio:execute program '/usr/local/bin/python': <_UnixSubprocessTransport pid=166 running stdin=<_UnixWritePipeTransport fd=9 idle bufsize=0>>
+2026-11-11T21:40:35.7754830Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:36.2276934Z INFO:asyncio:<_UnixWritePipeTransport fd=9 idle bufsize=0> was closed by peer
+2026-11-11T21:40:36.2280391Z INFO:asyncio:<_UnixSubprocessTransport pid=166 running stdin=<_UnixWritePipeTransport closed fd=9 closed>> exited with return code 0
+2026-11-11T21:40:36.2324966Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:36.2326766Z INFO:httpx:HTTP Request: GET http://fixture/api/fois/leagues/A/gms/gm/timeline "HTTP/1.1 200 OK"
+2026-11-11T21:40:36.2361734Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:36.2385596Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:36.2415540Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:36.2434660Z INFO:asyncio:execute program '/usr/local/bin/python': <_UnixSubprocessTransport pid=171 running stdin=<_UnixWritePipeTransport fd=9 idle bufsize=0>>
+2026-11-11T21:40:36.6893478Z INFO:asyncio:<_UnixWritePipeTransport fd=9 idle bufsize=0> was closed by peer
+2026-11-11T21:40:36.6896315Z INFO:asyncio:<_UnixSubprocessTransport pid=171 running stdin=<_UnixWritePipeTransport closed fd=9 closed>> exited with return code 0
+2026-11-11T21:40:36.6945916Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:36.6959764Z INFO:httpx:HTTP Request: GET http://fixture/api/fois/leagues/A/gms/gm/timeline "HTTP/1.1 200 OK"
+2026-11-11T21:40:36.6981438Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:36.6997610Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:36.7033263Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:36.7036465Z INFO:asyncio:execute program '/usr/local/bin/python': <_UnixSubprocessTransport pid=176 running stdin=<_UnixWritePipeTransport fd=9 idle bufsize=0>>
+2026-11-11T21:40:37.1516945Z INFO:asyncio:<_UnixWritePipeTransport fd=9 idle bufsize=0> was closed by peer
+2026-11-11T21:40:37.1520940Z INFO:asyncio:<_UnixSubprocessTransport pid=176 running stdin=<_UnixWritePipeTransport closed fd=9 closed>> exited with return code 0
+2026-11-11T21:40:37.1561458Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:37.1562676Z INFO:httpx:HTTP Request: GET http://fixture/api/fois/leagues/A/gms/gm/timeline "HTTP/1.1 200 OK"
+2026-11-11T21:40:37.1605471Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:37.2360566Z .INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:37.2414197Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:37.2422613Z INFO:asyncio:execute program '/usr/local/bin/python': <_UnixSubprocessTransport pid=182 running stdin=<_UnixWritePipeTransport fd=9 idle bufsize=0>>
+2026-11-11T21:40:37.2527251Z INFO:asyncio:<_UnixWritePipeTransport fd=9 idle bufsize=0> was closed by peer
+2026-11-11T21:40:37.2528313Z INFO:asyncio:<_UnixSubprocessTransport pid=182 running stdin=<_UnixWritePipeTransport closed fd=9 closed>> exited with return code 0
+2026-11-11T21:40:37.2552619Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:37.2554972Z INFO:httpx:HTTP Request: GET http://fixture/api/fois/leagues/A/gms/gm/timeline "HTTP/1.1 503 Service Unavailable"
+2026-11-11T21:40:37.2583540Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:37.2607346Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:37.2633847Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:37.2640660Z INFO:asyncio:execute program '/usr/local/bin/python': <_UnixSubprocessTransport pid=186 running stdin=<_UnixWritePipeTransport fd=9 idle bufsize=0>>
+2026-11-11T21:40:37.2746147Z INFO:asyncio:<_UnixWritePipeTransport fd=9 idle bufsize=0> was closed by peer
+2026-11-11T21:40:37.2750744Z INFO:asyncio:<_UnixSubprocessTransport pid=186 running stdin=<_UnixWritePipeTransport closed fd=9 closed>> exited with return code 0
+2026-11-11T21:40:37.2781138Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:37.2783205Z INFO:httpx:HTTP Request: GET http://fixture/api/fois/leagues/A/gms/gm/timeline "HTTP/1.1 503 Service Unavailable"
+2026-11-11T21:40:37.2812650Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:37.2835173Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:37.2870957Z INFO:asyncio:execute program '/usr/local/bin/python': <_UnixSubprocessTransport pid=190 running stdin=<_UnixWritePipeTransport fd=9 idle bufsize=0>>
+2026-11-11T21:40:37.2905723Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:37.2977865Z INFO:asyncio:<_UnixWritePipeTransport fd=9 idle bufsize=0> was closed by peer
+2026-11-11T21:40:37.2980169Z INFO:asyncio:<_UnixSubprocessTransport pid=190 running stdin=<_UnixWritePipeTransport closed fd=9 closed>> exited with return code 0
+2026-11-11T21:40:37.3008722Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:37.3010926Z INFO:httpx:HTTP Request: GET http://fixture/api/fois/leagues/A/gms/gm/timeline "HTTP/1.1 503 Service Unavailable"
+2026-11-11T21:40:37.3034068Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:37.3072936Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:37.3094919Z INFO:asyncio:execute program '/usr/local/bin/python': <_UnixSubprocessTransport pid=194 running stdin=<_UnixWritePipeTransport fd=9 idle bufsize=0>>
+2026-11-11T21:40:37.3131155Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:37.7607968Z INFO:asyncio:<_UnixWritePipeTransport fd=9 idle bufsize=0> was closed by peer
+2026-11-11T21:40:37.7611006Z INFO:asyncio:<_UnixSubprocessTransport pid=194 running stdin=<_UnixWritePipeTransport closed fd=9 closed>> exited with return code 0
+2026-11-11T21:40:37.7651451Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:37.7655800Z INFO:httpx:HTTP Request: GET http://fixture/api/fois/leagues/A/gms/gm/timeline "HTTP/1.1 200 OK"
+2026-11-11T21:40:37.7691503Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:37.8444160Z .INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:37.8499118Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:37.8509583Z INFO:asyncio:execute program '/usr/local/bin/python': <_UnixSubprocessTransport pid=200 running stdin=<_UnixWritePipeTransport fd=9 idle bufsize=0>>
+2026-11-11T21:40:38.3006588Z INFO:asyncio:<_UnixWritePipeTransport fd=9 idle bufsize=0> was closed by peer
+2026-11-11T21:40:38.3010041Z INFO:asyncio:<_UnixSubprocessTransport pid=200 running stdin=<_UnixWritePipeTransport closed fd=9 closed>> exited with return code 0
+2026-11-11T21:40:38.3041035Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:38.3043202Z INFO:httpx:HTTP Request: GET http://fixture/api/fois/leagues/A/gms/gm/timeline "HTTP/1.1 503 Service Unavailable"
+2026-11-11T21:40:38.3071453Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:38.3106020Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:38.3139273Z INFO:asyncio:execute program '/usr/local/bin/python': <_UnixSubprocessTransport pid=205 running stdin=<_UnixWritePipeTransport fd=8 idle bufsize=0>>
+2026-11-11T21:40:38.3147850Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:38.7646238Z INFO:asyncio:<_UnixWritePipeTransport fd=8 idle bufsize=0> was closed by peer
+2026-11-11T21:40:38.7650506Z INFO:asyncio:<_UnixSubprocessTransport pid=205 running stdin=<_UnixWritePipeTransport closed fd=8 closed>> exited with return code 0
+2026-11-11T21:40:38.7683011Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:38.7684476Z INFO:httpx:HTTP Request: GET http://fixture/api/fois/leagues/A/gms/gm/timeline "HTTP/1.1 503 Service Unavailable"
+2026-11-11T21:40:38.7713646Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:38.7750896Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:38.7777887Z INFO:asyncio:execute program '/usr/local/bin/python': <_UnixSubprocessTransport pid=210 running stdin=<_UnixWritePipeTransport fd=9 idle bufsize=0>>
+2026-11-11T21:40:38.7813279Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:39.2259463Z INFO:asyncio:<_UnixWritePipeTransport fd=9 idle bufsize=0> was closed by peer
+2026-11-11T21:40:39.2263540Z INFO:asyncio:<_UnixSubprocessTransport pid=210 running stdin=<_UnixWritePipeTransport closed fd=9 closed>> exited with return code 0
+2026-11-11T21:40:39.2293129Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:39.2294865Z INFO:httpx:HTTP Request: GET http://fixture/api/fois/leagues/A/gms/gm/timeline "HTTP/1.1 503 Service Unavailable"
+2026-11-11T21:40:39.2326545Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:39.2983410Z .INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:39.3017392Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:39.3034151Z INFO:asyncio:execute program '/usr/local/bin/python': <_UnixSubprocessTransport pid=216 running stdin=<_UnixWritePipeTransport fd=8 idle bufsize=0>>
+2026-11-11T21:40:39.7583107Z INFO:asyncio:<_UnixWritePipeTransport fd=8 idle bufsize=0> was closed by peer
+2026-11-11T21:40:39.7586681Z INFO:asyncio:<_UnixSubprocessTransport pid=216 running stdin=<_UnixWritePipeTransport closed fd=8 closed>> exited with return code 0
+2026-11-11T21:40:39.7632396Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:39.7635052Z INFO:httpx:HTTP Request: GET http://fixture/api/fois/leagues/A/gms/gm/timeline "HTTP/1.1 200 OK"
+2026-11-11T21:40:39.7676342Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:39.8259540Z .INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:39.8297691Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:39.8318237Z INFO:asyncio:execute program '/usr/local/bin/python': <_UnixSubprocessTransport pid=222 running stdin=<_UnixWritePipeTransport fd=8 idle bufsize=0>>
+2026-11-11T21:40:40.2985403Z INFO:asyncio:<_UnixWritePipeTransport fd=8 idle bufsize=0> was closed by peer
+2026-11-11T21:40:40.2988905Z INFO:asyncio:<_UnixSubprocessTransport pid=222 running stdin=<_UnixWritePipeTransport closed fd=8 closed>> exited with return code 0
+2026-11-11T21:40:40.3028812Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:40.3030020Z INFO:httpx:HTTP Request: GET http://fixture/api/fois/leagues/A/gms/gm/timeline "HTTP/1.1 200 OK"
+2026-11-11T21:40:40.3083693Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:40.3088771Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:40.3122935Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:40.3144681Z INFO:asyncio:execute program '/usr/local/bin/python': <_UnixSubprocessTransport pid=228 running stdin=<_UnixWritePipeTransport fd=9 idle bufsize=0>>
+2026-11-11T21:40:40.7776101Z INFO:asyncio:<_UnixWritePipeTransport fd=9 idle bufsize=0> was closed by peer
+2026-11-11T21:40:40.7779855Z INFO:asyncio:<_UnixSubprocessTransport pid=228 running stdin=<_UnixWritePipeTransport closed fd=9 closed>> exited with return code 0
+2026-11-11T21:40:40.7817879Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:40.7820114Z INFO:httpx:HTTP Request: GET http://fixture/api/fois/leagues/A/gms/gm "HTTP/1.1 200 OK"
+2026-11-11T21:40:40.7873364Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:40.7879414Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:40.7906399Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:40.7948164Z INFO:asyncio:execute program '/usr/local/bin/python': <_UnixSubprocessTransport pid=234 running stdin=<_UnixWritePipeTransport fd=8 idle bufsize=0>>
+2026-11-11T21:40:41.2674502Z INFO:asyncio:<_UnixWritePipeTransport fd=8 idle bufsize=0> was closed by peer
+2026-11-11T21:40:41.2681480Z INFO:asyncio:<_UnixSubprocessTransport pid=234 running stdin=<_UnixWritePipeTransport closed fd=8 closed>> exited with return code 0
+2026-11-11T21:40:41.2720813Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:41.2722918Z INFO:httpx:HTTP Request: GET http://fixture/api/fois/leagues/A/gms/gm/timeline "HTTP/1.1 200 OK"
+2026-11-11T21:40:41.2767905Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:41.2777218Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:41.2828081Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:41.2856775Z INFO:asyncio:execute program '/usr/local/bin/python': <_UnixSubprocessTransport pid=241 running stdin=<_UnixWritePipeTransport fd=9 idle bufsize=0>>
+2026-11-11T21:40:41.7613921Z INFO:asyncio:<_UnixWritePipeTransport fd=9 idle bufsize=0> was closed by peer
+2026-11-11T21:40:41.7618348Z INFO:asyncio:<_UnixSubprocessTransport pid=241 running stdin=<_UnixWritePipeTransport closed fd=9 closed>> exited with return code 0
+2026-11-11T21:40:41.7655649Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:41.7658524Z INFO:httpx:HTTP Request: GET http://fixture/api/fois/leagues/A/gms/gm "HTTP/1.1 200 OK"
+2026-11-11T21:40:41.7709842Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:41.8241190Z .INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:41.8275459Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:41.8293059Z INFO:asyncio:execute program '/usr/local/bin/python': <_UnixSubprocessTransport pid=248 running stdin=<_UnixWritePipeTransport fd=8 idle bufsize=0>>
+2026-11-11T21:40:42.2788680Z INFO:asyncio:<_UnixWritePipeTransport fd=8 idle bufsize=0> was closed by peer
+2026-11-11T21:40:42.2792154Z INFO:asyncio:<_UnixSubprocessTransport pid=248 running stdin=<_UnixWritePipeTransport closed fd=8 closed>> exited with return code 0
+2026-11-11T21:40:42.2843547Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:42.2846301Z INFO:httpx:HTTP Request: GET http://fixture/api/fois/leagues/A/gms/gm/timeline "HTTP/1.1 200 OK"
+2026-11-11T21:40:42.2889085Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:42.2899924Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:42.2941976Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:42.2945902Z INFO:asyncio:execute program '/usr/local/bin/python': <_UnixSubprocessTransport pid=255 running stdin=<_UnixWritePipeTransport fd=9 idle bufsize=0>>
+2026-11-11T21:40:42.7417098Z INFO:asyncio:<_UnixWritePipeTransport fd=9 idle bufsize=0> was closed by peer
+2026-11-11T21:40:42.7420489Z INFO:asyncio:<_UnixSubprocessTransport pid=255 running stdin=<_UnixWritePipeTransport closed fd=9 closed>> exited with return code 0
+2026-11-11T21:40:42.7471940Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:42.7474786Z INFO:httpx:HTTP Request: GET http://fixture/api/fois/leagues/A/gms/gm "HTTP/1.1 200 OK"
+2026-11-11T21:40:42.7517286Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:42.8237230Z .INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:42.8274198Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:42.8295355Z INFO:asyncio:execute program '/usr/local/bin/python': <_UnixSubprocessTransport pid=263 running stdin=<_UnixWritePipeTransport fd=8 idle bufsize=0>>
+2026-11-11T21:40:43.2785276Z INFO:asyncio:<_UnixWritePipeTransport fd=8 idle bufsize=0> was closed by peer
+2026-11-11T21:40:43.2790979Z INFO:asyncio:<_UnixSubprocessTransport pid=263 running stdin=<_UnixWritePipeTransport closed fd=8 closed>> exited with return code 0
+2026-11-11T21:40:43.2857021Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:43.2858046Z INFO:httpx:HTTP Request: GET http://fixture/api/fois/leagues/A/gms/gm/timeline "HTTP/1.1 200 OK"
+2026-11-11T21:40:43.2896836Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:43.3639295Z .INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:43.3671117Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:43.3690673Z INFO:asyncio:execute program '/usr/local/bin/python': <_UnixSubprocessTransport pid=271 running stdin=<_UnixWritePipeTransport fd=8 idle bufsize=0>>
+2026-11-11T21:40:43.8143176Z INFO:asyncio:<_UnixWritePipeTransport fd=8 idle bufsize=0> was closed by peer
+2026-11-11T21:40:43.8146899Z INFO:asyncio:<_UnixSubprocessTransport pid=271 running stdin=<_UnixWritePipeTransport closed fd=8 closed>> exited with return code 0
+2026-11-11T21:40:43.8183655Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:43.8186254Z INFO:httpx:HTTP Request: GET http://fixture/api/fois/leagues/A/gms/gm/timeline "HTTP/1.1 200 OK"
+2026-11-11T21:40:43.8218738Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:43.8237631Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:43.8270125Z INFO:asyncio:execute program '/usr/local/bin/python': <_UnixSubprocessTransport pid=276 running stdin=<_UnixWritePipeTransport fd=9 idle bufsize=0>>
+2026-11-11T21:40:43.8272561Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:44.2757348Z INFO:asyncio:<_UnixWritePipeTransport fd=9 idle bufsize=0> was closed by peer
+2026-11-11T21:40:44.2761849Z INFO:asyncio:<_UnixSubprocessTransport pid=276 running stdin=<_UnixWritePipeTransport closed fd=9 closed>> exited with return code 0
+2026-11-11T21:40:44.2802284Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:44.2804889Z INFO:httpx:HTTP Request: GET http://fixture/api/fois/leagues/A/gms/gm "HTTP/1.1 200 OK"
+2026-11-11T21:40:44.2831665Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:44.2859845Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:44.2894071Z INFO:asyncio:execute program '/usr/local/bin/python': <_UnixSubprocessTransport pid=281 running stdin=<_UnixWritePipeTransport fd=9 idle bufsize=0>>
+2026-11-11T21:40:44.2902858Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:44.7415489Z INFO:asyncio:<_UnixWritePipeTransport fd=9 idle bufsize=0> was closed by peer
+2026-11-11T21:40:44.7418615Z INFO:asyncio:<_UnixSubprocessTransport pid=281 running stdin=<_UnixWritePipeTransport closed fd=9 closed>> exited with return code 0
+2026-11-11T21:40:44.7456442Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:44.7458253Z INFO:httpx:HTTP Request: GET http://fixture/api/fois/leagues/A/gms/gm/timeline "HTTP/1.1 200 OK"
+2026-11-11T21:40:44.7487306Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:44.7525064Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:44.7544926Z INFO:asyncio:execute program '/usr/local/bin/python': <_UnixSubprocessTransport pid=286 running stdin=<_UnixWritePipeTransport fd=9 idle bufsize=0>>
+2026-11-11T21:40:44.7584585Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:45.2017473Z INFO:asyncio:<_UnixWritePipeTransport fd=9 idle bufsize=0> was closed by peer
+2026-11-11T21:40:45.2020659Z INFO:asyncio:<_UnixSubprocessTransport pid=286 running stdin=<_UnixWritePipeTransport closed fd=9 closed>> exited with return code 0
+2026-11-11T21:40:45.2058926Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:45.2064830Z INFO:httpx:HTTP Request: GET http://fixture/api/fois/leagues/A/gms/gm "HTTP/1.1 200 OK"
+2026-11-11T21:40:45.2090880Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:45.2129380Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:45.2149934Z INFO:asyncio:execute program '/usr/local/bin/python': <_UnixSubprocessTransport pid=291 running stdin=<_UnixWritePipeTransport fd=9 idle bufsize=0>>
+2026-11-11T21:40:45.2191598Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:45.6661938Z INFO:asyncio:<_UnixWritePipeTransport fd=9 idle bufsize=0> was closed by peer
+2026-11-11T21:40:45.6666039Z INFO:asyncio:<_UnixSubprocessTransport pid=291 running stdin=<_UnixWritePipeTransport closed fd=9 closed>> exited with return code 0
+2026-11-11T21:40:45.6706362Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:45.6715983Z INFO:httpx:HTTP Request: GET http://fixture/api/fois/leagues/A/gms/gm/timeline "HTTP/1.1 200 OK"
+2026-11-11T21:40:45.6738192Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:45.6766838Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:45.6803160Z INFO:asyncio:execute program '/usr/local/bin/python': <_UnixSubprocessTransport pid=296 running stdin=<_UnixWritePipeTransport fd=9 idle bufsize=0>>
+2026-11-11T21:40:45.6821899Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:46.1311288Z INFO:asyncio:<_UnixWritePipeTransport fd=9 idle bufsize=0> was closed by peer
+2026-11-11T21:40:46.1314402Z INFO:asyncio:<_UnixSubprocessTransport pid=296 running stdin=<_UnixWritePipeTransport closed fd=9 closed>> exited with return code 0
+2026-11-11T21:40:46.1350965Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:46.1353312Z INFO:httpx:HTTP Request: GET http://fixture/api/fois/leagues/A/gms/gm "HTTP/1.1 200 OK"
+2026-11-11T21:40:46.1383459Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:46.1403152Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:46.1430476Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:46.1436130Z INFO:asyncio:execute program '/usr/local/bin/python': <_UnixSubprocessTransport pid=301 running stdin=<_UnixWritePipeTransport fd=9 idle bufsize=0>>
+2026-11-11T21:40:46.5941838Z INFO:asyncio:<_UnixWritePipeTransport fd=9 idle bufsize=0> was closed by peer
+2026-11-11T21:40:46.5945159Z INFO:asyncio:<_UnixSubprocessTransport pid=301 running stdin=<_UnixWritePipeTransport closed fd=9 closed>> exited with return code 0
+2026-11-11T21:40:46.5983541Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:46.5985183Z INFO:httpx:HTTP Request: GET http://fixture/api/fois/leagues/A/gms/gm/timeline "HTTP/1.1 200 OK"
+2026-11-11T21:40:46.6018479Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:46.6044857Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:46.6071403Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:46.6078337Z INFO:asyncio:execute program '/usr/local/bin/python': <_UnixSubprocessTransport pid=306 running stdin=<_UnixWritePipeTransport fd=9 idle bufsize=0>>
+2026-11-11T21:40:47.0629434Z INFO:asyncio:<_UnixWritePipeTransport fd=9 idle bufsize=0> was closed by peer
+2026-11-11T21:40:47.0632836Z INFO:asyncio:<_UnixSubprocessTransport pid=306 running stdin=<_UnixWritePipeTransport closed fd=9 closed>> exited with return code 0
+2026-11-11T21:40:47.0671003Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:47.0672603Z INFO:httpx:HTTP Request: GET http://fixture/api/fois/leagues/A/gms/gm "HTTP/1.1 200 OK"
+2026-11-11T21:40:47.0716503Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:47.1398744Z .INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:47.1433334Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:47.1451060Z INFO:asyncio:execute program '/usr/local/bin/python': <_UnixSubprocessTransport pid=312 running stdin=<_UnixWritePipeTransport fd=8 idle bufsize=0>>
+2026-11-11T21:40:47.1556717Z INFO:asyncio:<_UnixWritePipeTransport fd=8 idle bufsize=0> was closed by peer
+2026-11-11T21:40:47.1559889Z INFO:asyncio:<_UnixSubprocessTransport pid=312 running stdin=<_UnixWritePipeTransport closed fd=8 closed>> exited with return code 5
+2026-11-11T21:40:47.1577188Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:47.1579769Z INFO:httpx:HTTP Request: GET http://fixture/api/fois/leagues/A/gms/gm/timeline "HTTP/1.1 503 Service Unavailable"
+2026-11-11T21:40:47.1615446Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:47.1640145Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:47.1677843Z INFO:asyncio:execute program '/usr/local/bin/python': <_UnixSubprocessTransport pid=315 running stdin=<_UnixWritePipeTransport fd=9 idle bufsize=0>>
+2026-11-11T21:40:47.1698203Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:47.6173800Z INFO:asyncio:<_UnixWritePipeTransport fd=9 idle bufsize=0> was closed by peer
+2026-11-11T21:40:47.6176797Z INFO:asyncio:<_UnixSubprocessTransport pid=315 running stdin=<_UnixWritePipeTransport closed fd=9 closed>> exited with return code 0
+2026-11-11T21:40:47.6200915Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:47.6234208Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:47.6235158Z INFO:httpx:HTTP Request: GET http://fixture/api/fois/leagues/A/gms/gm/timeline "HTTP/1.1 503 Service Unavailable"
+2026-11-11T21:40:47.6242080Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:47.6249849Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:47.6270930Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:47.6276126Z INFO:httpx:HTTP Request: GET http://fixture/api/fois/leagues/B/gms/gm/timeline "HTTP/1.1 503 Service Unavailable"
+2026-11-11T21:40:47.6280864Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:47.6313051Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:47.6326413Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:47.6329265Z INFO:httpx:HTTP Request: GET http://fixture/api/fois/leagues/A/gms/gm/timeline "HTTP/1.1 200 OK"
+2026-11-11T21:40:47.6361120Z INFO:dtos.attribution:diagnostic_boundary
+2026-11-11T21:40:48.1747206Z .{"timestamp":"2026-11-11T21:40:48.173906+00:00","level":"WARNING","logger":"asyncio","message":"Executing <Task pending name='Task-480' coro=<SleeperHistoryPublicationTests.test_actual_transaction_refresh_cannot_mutate_source_during_prefix() running at /src/tests/test_sleeper_history_publication.py:267> wait_for=<Future pending cb=[Task.task_wakeup()] created at /usr/local/lib/python3.12/asyncio/base_events.py:448> cb=[_run_until_complete_cb() at /usr/local/lib/python3.12/asyncio/base_events.py:181] created at /usr/local/lib/python3.12/asyncio/runners.py:100> took 0.497 seconds","request_id":"system"}
+2026-11-11T21:40:48.1888879Z {"timestamp":"2026-11-11T21:40:48.187685+00:00","level":"INFO","logger":"dtos.attribution","message":"diagnostic_boundary","request_id":"activity-1beedd9cbf414b6a96f308a3a15f6f1c","event":"diagnostic_boundary","diagnostic":{"schema":"request-attribution-v1","event_index":1,"event_limit":512,"dropped_so_far":0,"origin_request_id":null,"name":"fois_history_response","span_id":1,"parent_span_id":null,"boundary":"started","timestamp":"2026-11-11T21:40:48.187636+00:00","elapsed_from_trace_ms":0.016,"duration_ms":0.004,"queue_dropped_record_count":0}}
+2026-11-11T21:40:48.1944644Z {"timestamp":"2026-11-11T21:40:48.192565+00:00","level":"INFO","logger":"dtos.attribution","message":"diagnostic_boundary","request_id":"activity-1beedd9cbf414b6a96f308a3a15f6f1c","event":"diagnostic_boundary","diagnostic":{"schema":"request-attribution-v1","event_index":2,"event_limit":512,"dropped_so_far":0,"origin_request_id":null,"name":"memory_sample","boundary":"captured","timestamp":"2026-11-11T21:40:48.192528+00:00","sample_id":1,"span_id":1,"requested_boundaries":[{"name":"fois_history_response","boundary":"started","span_id":1,"request_id":"activity-1beedd9cbf414b6a96f308a3a15f6f1c","requested_at":"2026-11-11T21:40:48.187794+00:00"}],"active_activities":[{"request_id":"activity-1beedd9cbf414b6a96f308a3a15f6f1c","name":"fois_history_response","span_id":1}],"dropped_activity_or_boundary_count":0,"memory":{"rss_bytes":90583040,"vms_bytes":334217216,"system_available_bytes":15630430208,"memory_accounting_scope":"cgroup","cgroup_current_bytes":74592256,"cgroup_limit_bytes":2147483648,"cgroup_inactive_file_bytes":524288,"cgroup_anonymous_bytes":71450624,"cgroup_memory_events":{"low":0,"high":0,"max":0,"oom":0,"oom_kill":0,"oom_group_kill":0,"sock_throttled":0},"anonymous_bytes":71450624,"file_bytes":524288,"kernel_bytes":1966080,"shmem_bytes":0,"cgroup_lifetime_peak_bytes":94126080,"observer_pid":1,"observer_kind":"main_process","active_process_count":1,"zombie_count":0,"process_samples_truncated":false,"process_samples_are_sequential":true,"processes":[{"pid":1,"role":"application","rss_bytes":90583040,"pss_bytes":90574848,"uss_bytes":90574848,"sample_offset_ms":3.081,"sample_duration_ms":1.109}],"capture_duration_ms":4.193,"pss_requested":true,"runtime_residency":{"resident_count":1,"warm_limit":2,"hydrating_count":0,"warm_count":0,"runtime_samples_truncated":false,"runtimes":[{"scope":"c9adb23a3e8be7a1","state":"cold","active_requests":0,"pinned":true,"owns_state":false,"background_tasks":0,"source_generation_count":0,"source_generation_identity":"4f53cda18c2baa0c","market_cache_owned":true,"projection_cache_owned":false}]},"sample_total_duration_ms":4.266},"queue_dropped_record_count":0}}
+2026-11-11T21:40:48.1957002Z {"timestamp":"2026-11-11T21:40:48.194209+00:00","level":"INFO","logger":"asyncio","message":"execute program '/usr/local/bin/python': <_UnixSubprocessTransport pid=326 running stdin=<_UnixWritePipeTransport fd=9 idle bufsize=0>>","request_id":"system"}
+2026-11-11T21:40:48.6433556Z {"timestamp":"2026-11-11T21:40:48.642678+00:00","level":"INFO","logger":"asyncio","message":"<_UnixWritePipeTransport fd=9 idle bufsize=0> was closed by peer","request_id":"system"}
+2026-11-11T21:40:48.6437506Z {"timestamp":"2026-11-11T21:40:48.643396+00:00","level":"INFO","logger":"asyncio","message":"<_UnixSubprocessTransport pid=326 running stdin=<_UnixWritePipeTransport closed fd=9 closed>> exited with return code 0","request_id":"system"}
+2026-11-11T21:40:48.6752102Z {"timestamp":"2026-11-11T21:40:48.674625+00:00","level":"INFO","logger":"dtos.sleeper","message":"Transaction sync complete: 1 transactions","request_id":"system"}
+2026-11-11T21:40:48.6775248Z {"timestamp":"2026-11-11T21:40:48.677078+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://fixture/api/fois/leagues/A/gms/gm/timeline \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-11T21:40:48.6786723Z {"timestamp":"2026-11-11T21:40:48.676782+00:00","level":"INFO","logger":"dtos.attribution","message":"diagnostic_boundary","request_id":"activity-1beedd9cbf414b6a96f308a3a15f6f1c","event":"diagnostic_boundary","diagnostic":{"schema":"request-attribution-v1","event_index":3,"event_limit":512,"dropped_so_far":0,"origin_request_id":null,"name":"fois_history_response","span_id":1,"parent_span_id":null,"boundary":"finished","timestamp":"2026-11-11T21:40:48.676755+00:00","elapsed_from_trace_ms":489.135,"duration_ms":489.124,"status":"complete","calling_thread_cpu_ms":40.968,"queue_dropped_record_count":0}}
+2026-11-11T21:40:48.6836327Z {"timestamp":"2026-11-11T21:40:48.682442+00:00","level":"INFO","logger":"dtos.attribution","message":"diagnostic_boundary","request_id":"activity-2e2923e3175c4f5ca0059480bf99b55c","event":"diagnostic_boundary","diagnostic":{"schema":"request-attribution-v1","event_index":1,"event_limit":512,"dropped_so_far":0,"origin_request_id":null,"name":"fois_history_response","span_id":1,"parent_span_id":null,"boundary":"started","timestamp":"2026-11-11T21:40:48.682409+00:00","elapsed_from_trace_ms":0.014,"duration_ms":0.003,"queue_dropped_record_count":0}}
+2026-11-11T21:40:48.6855114Z {"timestamp":"2026-11-11T21:40:48.684312+00:00","level":"INFO","logger":"dtos.attribution","message":"diagnostic_boundary","request_id":"activity-1beedd9cbf414b6a96f308a3a15f6f1c","event":"diagnostic_boundary","diagnostic":{"schema":"request-attribution-v1","event_index":4,"event_limit":512,"dropped_so_far":0,"origin_request_id":null,"name":"memory_sample","boundary":"captured","timestamp":"2026-11-11T21:40:48.684263+00:00","sample_id":2,"span_id":1,"requested_boundaries":[{"name":"fois_history_response","boundary":"finished","span_id":1,"request_id":"activity-1beedd9cbf414b6a96f308a3a15f6f1c","requested_at":"2026-11-11T21:40:48.676866+00:00"}],"active_activities":[],"dropped_activity_or_boundary_count":0,"memory":{"rss_bytes":91484160,"vms_bytes":434905088,"system_available_bytes":15600111616,"memory_accounting_scope":"cgroup","cgroup_current_bytes":74633216,"cgroup_limit_bytes":2147483648,"cgroup_inactive_file_bytes":524288,"cgroup_anonymous_bytes":71507968,"cgroup_memory_events":{"low":0,"high":0,"max":0,"oom":0,"oom_kill":0,"oom_group_kill":0,"sock_throttled":0},"anonymous_bytes":71507968,"file_bytes":524288,"kernel_bytes":2101248,"shmem_bytes":0,"cgroup_lifetime_peak_bytes":105967616,"observer_pid":1,"observer_kind":"main_process","active_process_count":1,"zombie_count":0,"process_samples_truncated":false,"process_samples_are_sequential":true,"processes":[{"pid":1,"role":"application","rss_bytes":91484160,"pss_bytes":91475968,"uss_bytes":91475968,"sample_offset_ms":4.097,"sample_duration_ms":2.021}],"capture_duration_ms":6.12,"pss_requested":true,"runtime_residency":{"resident_count":1,"warm_limit":2,"hydrating_count":0,"warm_count":0,"runtime_samples_truncated":false,"runtimes":[{"scope":"c9adb23a3e8be7a1","state":"cold","active_requests":0,"pinned":true,"owns_state":false,"background_tasks":0,"source_generation_count":0,"source_generation_identity":"4f53cda18c2baa0c","market_cache_owned":true,"projection_cache_owned":false}]},"sample_total_duration_ms":6.19},"queue_dropped_record_count":0}}
+2026-11-11T21:40:48.6889905Z {"timestamp":"2026-11-11T21:40:48.687415+00:00","level":"INFO","logger":"dtos.attribution","message":"diagnostic_boundary","request_id":"activity-2e2923e3175c4f5ca0059480bf99b55c","event":"diagnostic_boundary","diagnostic":{"schema":"request-attribution-v1","event_index":2,"event_limit":512,"dropped_so_far":0,"origin_request_id":null,"name":"memory_sample","boundary":"captured","timestamp":"2026-11-11T21:40:48.687386+00:00","sample_id":3,"span_id":1,"requested_boundaries":[{"name":"fois_history_response","boundary":"started","span_id":1,"request_id":"activity-2e2923e3175c4f5ca0059480bf99b55c","requested_at":"2026-11-11T21:40:48.682521+00:00"}],"active_activities":[{"request_id":"activity-2e2923e3175c4f5ca0059480bf99b55c","name":"fois_history_response","span_id":1}],"dropped_activity_or_boundary_count":0,"memory":{"rss_bytes":91484160,"vms_bytes":434905088,"system_available_bytes":15600111616,"memory_accounting_scope":"cgroup","cgroup_current_bytes":74616832,"cgroup_limit_bytes":2147483648,"cgroup_inactive_file_bytes":524288,"cgroup_anonymous_bytes":71507968,"cgroup_memory_events":{"low":0,"high":0,"max":0,"oom":0,"oom_kill":0,"oom_group_kill":0,"sock_throttled":0},"anonymous_bytes":71507968,"file_bytes":524288,"kernel_bytes":2101248,"shmem_bytes":0,"cgroup_lifetime_peak_bytes":105967616,"observer_pid":1,"observer_kind":"main_process","active_process_count":1,"zombie_count":0,"process_samples_truncated":false,"process_samples_are_sequential":true,"processes":[{"pid":1,"role":"application","rss_bytes":91488256,"pss_bytes":91475968,"uss_bytes":91475968,"sample_offset_ms":1.338,"sample_duration_ms":1.589}],"capture_duration_ms":2.932,"pss_requested":true,"runtime_residency":{"resident_count":1,"warm_limit":2,"hydrating_count":0,"warm_count":0,"runtime_samples_truncated":false,"runtimes":[{"scope":"c9adb23a3e8be7a1","state":"cold","active_requests":0,"pinned":true,"owns_state":false,"background_tasks":0,"source_generation_count":0,"source_generation_identity":"4f53cda18c2baa0c","market_cache_owned":true,"projection_cache_owned":false}]},"sample_total_duration_ms":2.99},"queue_dropped_record_count":0}}
+2026-11-11T21:40:48.6898141Z {"timestamp":"2026-11-11T21:40:48.688933+00:00","level":"INFO","logger":"asyncio","message":"execute program '/usr/local/bin/python': <_UnixSubprocessTransport pid=332 running stdin=<_UnixWritePipeTransport fd=9 idle bufsize=0>>","request_id":"system"}
+2026-11-11T21:40:49.1463205Z {"timestamp":"2026-11-11T21:40:49.145514+00:00","level":"INFO","logger":"asyncio","message":"<_UnixWritePipeTransport fd=9 idle bufsize=0> was closed by peer","request_id":"system"}
+2026-11-11T21:40:49.1466994Z {"timestamp":"2026-11-11T21:40:49.146196+00:00","level":"INFO","logger":"asyncio","message":"<_UnixSubprocessTransport pid=332 running stdin=<_UnixWritePipeTransport closed fd=9 closed>> exited with return code 0","request_id":"system"}
+2026-11-11T21:40:49.1573679Z {"timestamp":"2026-11-11T21:40:49.156728+00:00","level":"INFO","logger":"dtos.sleeper","message":"Transaction sync complete: 1 transactions","request_id":"system"}
+2026-11-11T21:40:49.1598512Z {"timestamp":"2026-11-11T21:40:49.159341+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://fixture/api/fois/leagues/A/gms/gm \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-11T21:40:49.1605148Z {"timestamp":"2026-11-11T21:40:49.159015+00:00","level":"INFO","logger":"dtos.attribution","message":"diagnostic_boundary","request_id":"activity-2e2923e3175c4f5ca0059480bf99b55c","event":"diagnostic_boundary","diagnostic":{"schema":"request-attribution-v1","event_index":3,"event_limit":512,"dropped_so_far":0,"origin_request_id":null,"name":"fois_history_response","span_id":1,"parent_span_id":null,"boundary":"finished","timestamp":"2026-11-11T21:40:49.158986+00:00","elapsed_from_trace_ms":476.591,"duration_ms":476.58,"status":"complete","calling_thread_cpu_ms":20.942,"queue_dropped_record_count":0}}
+2026-11-11T21:40:49.1653856Z {"timestamp":"2026-11-11T21:40:49.164173+00:00","level":"INFO","logger":"dtos.attribution","message":"diagnostic_boundary","request_id":"activity-2e2923e3175c4f5ca0059480bf99b55c","event":"diagnostic_boundary","diagnostic":{"schema":"request-attribution-v1","event_index":4,"event_limit":512,"dropped_so_far":0,"origin_request_id":null,"name":"memory_sample","boundary":"captured","timestamp":"2026-11-11T21:40:49.164137+00:00","sample_id":4,"span_id":1,"requested_boundaries":[{"name":"fois_history_response","boundary":"finished","span_id":1,"request_id":"activity-2e2923e3175c4f5ca0059480bf99b55c","requested_at":"2026-11-11T21:40:49.159104+00:00"}],"active_activities":[],"dropped_activity_or_boundary_count":0,"memory":{"rss_bytes":91492352,"vms_bytes":434905088,"system_available_bytes":15590850560,"memory_accounting_scope":"cgroup","cgroup_current_bytes":74403840,"cgroup_limit_bytes":2147483648,"cgroup_inactive_file_bytes":524288,"cgroup_anonymous_bytes":71516160,"cgroup_memory_events":{"low":0,"high":0,"max":0,"oom":0,"oom_kill":0,"oom_group_kill":0,"sock_throttled":0},"anonymous_bytes":71516160,"file_bytes":524288,"kernel_bytes":2101248,"shmem_bytes":0,"cgroup_lifetime_peak_bytes":105992192,"observer_pid":1,"observer_kind":"main_process","active_process_count":1,"zombie_count":0,"process_samples_truncated":false,"process_samples_are_sequential":true,"processes":[{"pid":1,"role":"application","rss_bytes":91492352,"pss_bytes":91484160,"uss_bytes":91484160,"sample_offset_ms":2.498,"sample_duration_ms":1.102}],"capture_duration_ms":3.602,"pss_requested":true,"runtime_residency":{"resident_count":1,"warm_limit":2,"hydrating_count":0,"warm_count":0,"runtime_samples_truncated":false,"runtimes":[{"scope":"c9adb23a3e8be7a1","state":"cold","active_requests":0,"pinned":true,"owns_state":false,"background_tasks":0,"source_generation_count":0,"source_generation_identity":"4f53cda18c2baa0c","market_cache_owned":true,"projection_cache_owned":false}]},"sample_total_duration_ms":3.661},"queue_dropped_record_count":0}}
+2026-11-11T21:40:49.2560470Z ..{"timestamp":"2026-11-11T21:40:49.254920+00:00","level":"INFO","logger":"dtos.attribution","message":"diagnostic_boundary","request_id":"activity-eb57ee1641534226995d0a43488a92f6","event":"diagnostic_boundary","diagnostic":{"schema":"request-attribution-v1","event_index":1,"event_limit":512,"dropped_so_far":0,"origin_request_id":null,"name":"runtime_hydration","span_id":1,"parent_span_id":null,"boundary":"started","timestamp":"2026-11-11T21:40:49.254878+00:00","elapsed_from_trace_ms":0.017,"duration_ms":0.005,"queue_dropped_record_count":0}}
+2026-11-11T21:40:49.2583122Z {"timestamp":"2026-11-11T21:40:49.257172+00:00","level":"INFO","logger":"dtos.attribution","message":"diagnostic_boundary","request_id":"activity-eb57ee1641534226995d0a43488a92f6","event":"diagnostic_boundary","diagnostic":{"schema":"request-attribution-v1","event_index":2,"event_limit":512,"dropped_so_far":0,"origin_request_id":null,"name":"runtime_hydration","span_id":1,"parent_span_id":null,"boundary":"finished","timestamp":"2026-11-11T21:40:49.257135+00:00","elapsed_from_trace_ms":2.274,"duration_ms":2.262,"status":"failed","calling_thread_cpu_ms":1.477,"queue_dropped_record_count":0}}
+2026-11-11T21:40:49.2597448Z {"timestamp":"2026-11-11T21:40:49.258385+00:00","level":"INFO","logger":"dtos.attribution","message":"diagnostic_boundary","request_id":"activity-eb57ee1641534226995d0a43488a92f6","event":"diagnostic_boundary","diagnostic":{"schema":"request-attribution-v1","event_index":3,"event_limit":512,"dropped_so_far":0,"origin_request_id":null,"name":"memory_sample","boundary":"captured","timestamp":"2026-11-11T21:40:49.258349+00:00","sample_id":1,"span_id":1,"requested_boundaries":[{"name":"runtime_hydration","boundary":"started","span_id":1,"request_id":"activity-eb57ee1641534226995d0a43488a92f6","requested_at":"2026-11-11T21:40:49.255020+00:00"}],"active_activities":[{"request_id":"activity-eb57ee1641534226995d0a43488a92f6","name":"runtime_hydration","span_id":1}],"dropped_activity_or_boundary_count":0,"memory":{"rss_bytes":91545600,"vms_bytes":418107392,"system_available_bytes":15591092224,"memory_accounting_scope":"cgroup","cgroup_current_bytes":74584064,"cgroup_limit_bytes":2147483648,"cgroup_inactive_file_bytes":532480,"cgroup_anonymous_bytes":71503872,"cgroup_memory_events":{"low":0,"high":0,"max":0,"oom":0,"oom_kill":0,"oom_group_kill":0,"sock_throttled":0},"anonymous_bytes":71503872,"file_bytes":532480,"kernel_bytes":2052096,"shmem_bytes":0,"cgroup_lifetime_peak_bytes":105992192,"observer_pid":1,"observer_kind":"main_process","active_process_count":1,"zombie_count":0,"process_samples_truncated":false,"process_samples_are_sequential":true,"processes":[{"pid":1,"role":"application","rss_bytes":91545600,"pss_bytes":91537408,"uss_bytes":91537408,"sample_offset_ms":1.373,"sample_duration_ms":1.403}],"capture_duration_ms":2.794,"pss_requested":true,"runtime_residency":{"resident_count":1,"warm_limit":2,"hydrating_count":0,"warm_count":0,"runtime_samples_truncated":false,"runtimes":[{"scope":"c9adb23a3e8be7a1","state":"cold","active_requests":0,"pinned":true,"owns_state":false,"background_tasks":0,"source_generation_count":0,"source_generation_identity":"4f53cda18c2baa0c","market_cache_owned":true,"projection_cache_owned":false}]},"sample_total_duration_ms":2.862},"queue_dropped_record_count":0}}
+2026-11-11T21:40:49.2633210Z {"timestamp":"2026-11-11T21:40:49.261754+00:00","level":"INFO","logger":"dtos.attribution","message":"diagnostic_boundary","request_id":"activity-eb57ee1641534226995d0a43488a92f6","event":"diagnostic_boundary","diagnostic":{"schema":"request-attribution-v1","event_index":4,"event_limit":512,"dropped_so_far":0,"origin_request_id":null,"name":"memory_sample","boundary":"captured","timestamp":"2026-11-11T21:40:49.261719+00:00","sample_id":2,"span_id":1,"requested_boundaries":[{"name":"runtime_hydration","boundary":"finished","span_id":1,"request_id":"activity-eb57ee1641534226995d0a43488a92f6","requested_at":"2026-11-11T21:40:49.257268+00:00"}],"active_activities":[],"dropped_activity_or_boundary_count":0,"memory":{"rss_bytes":91545600,"vms_bytes":418107392,"system_available_bytes":15591092224,"memory_accounting_scope":"cgroup","cgroup_current_bytes":74579968,"cgroup_limit_bytes":2147483648,"cgroup_inactive_file_bytes":532480,"cgroup_anonymous_bytes":71503872,"cgroup_memory_events":{"low":0,"high":0,"max":0,"oom":0,"oom_kill":0,"oom_group_kill":0,"sock_throttled":0},"anonymous_bytes":71503872,"file_bytes":532480,"kernel_bytes":2052096,"shmem_bytes":0,"cgroup_lifetime_peak_bytes":105992192,"observer_pid":1,"observer_kind":"main_process","active_process_count":1,"zombie_count":0,"process_samples_truncated":false,"process_samples_are_sequential":true,"processes":[{"pid":1,"role":"application","rss_bytes":91545600,"pss_bytes":91537408,"uss_bytes":91537408,"sample_offset_ms":2.011,"sample_duration_ms":1.182}],"capture_duration_ms":3.194,"pss_requested":true,"runtime_residency":{"resident_count":1,"warm_limit":2,"hydrating_count":0,"warm_count":0,"runtime_samples_truncated":false,"runtimes":[{"scope":"c9adb23a3e8be7a1","state":"cold","active_requests":0,"pinned":true,"owns_state":false,"background_tasks":0,"source_generation_count":0,"source_generation_identity":"4f53cda18c2baa0c","market_cache_owned":true,"projection_cache_owned":false}]},"sample_total_duration_ms":3.242},"queue_dropped_record_count":0}}
+2026-11-11T21:40:49.3148839Z .{"timestamp":"2026-11-11T21:40:49.313827+00:00","level":"INFO","logger":"dtos.attribution","message":"diagnostic_boundary","request_id":"activity-e4ab0933e00743ed86c5896a15048232","event":"diagnostic_boundary","diagnostic":{"schema":"request-attribution-v1","event_index":1,"event_limit":512,"dropped_so_far":0,"origin_request_id":null,"name":"fois_history_response","span_id":1,"parent_span_id":null,"boundary":"started","timestamp":"2026-11-11T21:40:49.313783+00:00","elapsed_from_trace_ms":0.015,"duration_ms":0.005,"queue_dropped_record_count":0}}
+2026-11-11T21:40:49.3231536Z {"timestamp":"2026-11-11T21:40:49.321705+00:00","level":"INFO","logger":"dtos.attribution","message":"diagnostic_boundary","request_id":"activity-e4ab0933e00743ed86c5896a15048232","event":"diagnostic_boundary","diagnostic":{"schema":"request-attribution-v1","event_index":2,"event_limit":512,"dropped_so_far":0,"origin_request_id":null,"name":"memory_sample","boundary":"captured","timestamp":"2026-11-11T21:40:49.321669+00:00","sample_id":1,"span_id":1,"requested_boundaries":[{"name":"fois_history_response","boundary":"started","span_id":1,"request_id":"activity-e4ab0933e00743ed86c5896a15048232","requested_at":"2026-11-11T21:40:49.313943+00:00"}],"active_activities":[{"request_id":"activity-e4ab0933e00743ed86c5896a15048232","name":"fois_history_response","span_id":1}],"dropped_activity_or_boundary_count":0,"memory":{"rss_bytes":91545600,"vms_bytes":418107392,"system_available_bytes":15591124992,"memory_accounting_scope":"cgroup","cgroup_current_bytes":74555392,"cgroup_limit_bytes":2147483648,"cgroup_inactive_file_bytes":532480,"cgroup_anonymous_bytes":71503872,"cgroup_memory_events":{"low":0,"high":0,"max":0,"oom":0,"oom_kill":0,"oom_group_kill":0,"sock_throttled":0},"anonymous_bytes":71503872,"file_bytes":532480,"kernel_bytes":2084864,"shmem_bytes":0,"cgroup_lifetime_peak_bytes":105992192,"observer_pid":1,"observer_kind":"main_process","active_process_count":1,"zombie_count":0,"process_samples_truncated":false,"process_samples_are_sequential":true,"processes":[{"pid":1,"role":"application","rss_bytes":91545600,"pss_bytes":90880000,"uss_bytes":90222592,"sample_offset_ms":4.769,"sample_duration_ms":2.354}],"capture_duration_ms":7.126,"pss_requested":true,"runtime_residency":{"resident_count":1,"warm_limit":2,"hydrating_count":0,"warm_count":0,"runtime_samples_truncated":false,"runtimes":[{"scope":"c9adb23a3e8be7a1","state":"cold","active_requests":0,"pinned":true,"owns_state":false,"background_tasks":0,"source_generation_count":0,"source_generation_identity":"4f

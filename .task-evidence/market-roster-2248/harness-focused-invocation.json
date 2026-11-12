@@ -1,0 +1,32 @@
+{
+  "head": "2543e27562b27e08aa6ce4d20db442dc692bd2de",
+  "tree": "9f0d9a5b8ad3927b7656888dbae18456afeca716",
+  "args": [
+    "docker",
+    "run",
+    "--rm",
+    "--init",
+    "--user",
+    "1000:1000",
+    "--memory=2g",
+    "--memory-swap=2g",
+    "--cpus=2",
+    "--network=none",
+    "-e",
+    "HOME=/tmp",
+    "-e",
+    "PYTHONDONTWRITEBYTECODE=1",
+    "-v",
+    "/workspace/dtos-market-needs-2248:/app:ro",
+    "-w",
+    "/app",
+    "sha256:f70a0c6402700dfb954c99d8163d4164926f74435c34d2e7e462407151663ae6",
+    "python",
+    "-m",
+    "unittest",
+    "-v",
+    "tests.test_canonical_harness_lifecycle"
+  ],
+  "at": "2026-11-12T00:39:14.802601+00:00",
+  "scope": "Actualfourharnesscontrols beforedispatchingnewfullsource"
+}

@@ -1,0 +1,46 @@
+{
+  "at": "2026-11-11T21:48:23.022092+00:00",
+  "reason": "Known focused application boundary failure discovered during full regression; retain incomplete original and correct missing prepared-projection behavior before full rerun.",
+  "source": {
+    "baseline": "55351c8e4062dc7d74ceb7748eab2179d1bfd92a",
+    "candidate": "a38f3e719d84d600fcba153f57863fd0d668a0a3",
+    "tree": "2a38336e6971916886256a16dcda7b1504260532",
+    "branch": "feat/market-roster-2248",
+    "version": "1.22.33",
+    "build": 2248,
+    "recorded_at": "2026-11-11T21:39:15.905809+00:00",
+    "expected_test_count": 4396
+  },
+  "errors": [
+    {
+      "event": "error",
+      "test": "test_account_league_presentation_v1131.MultiAccountMarketTests.test_real_middleware_switching_concurrency_and_colliding_ids",
+      "time": 1794433634.0855258,
+      "pid": 33,
+      "rss": 302804992,
+      "cgroup": 438132736,
+      "error_type": "AttributeError",
+      "error_text": "'types.SimpleNamespace' object has no attribute 'projection'"
+    }
+  ],
+  "container": "748596a79eb524b8b20972f318756016be58c13f380d68f1b778c87ceed1be7c",
+  "state": {
+    "Status": "exited",
+    "Running": false,
+    "Paused": false,
+    "Restarting": false,
+    "OOMKilled": false,
+    "Dead": false,
+    "Pid": 0,
+    "ExitCode": 143,
+    "Error": "",
+    "StartedAt": "2026-11-11T21:43:02.390631328Z",
+    "FinishedAt": "2026-11-11T21:48:23.121733436Z"
+  },
+  "limits": {
+    "Memory": 2147483648,
+    "MemorySwap": 2147483648,
+    "NanoCpus": 2000000000,
+    "NetworkMode": "none"
+  }
+}

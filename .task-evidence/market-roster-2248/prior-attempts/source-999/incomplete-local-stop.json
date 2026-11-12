@@ -1,0 +1,28 @@
+{
+  "observed_at": "2026-11-11T23:59:02.680047+00:00",
+  "candidate": "99947bf0bd762133403cc667d9346837f9274221",
+  "tree": "e1535b101d0780b2277e57642dca0d9147ecf3ff",
+  "events": {
+    "start": 767,
+    "stop": 766,
+    "failure": 1
+  },
+  "failures": [
+    {
+      "event": "failure",
+      "test": "test_canonical_harness_lifecycle.CanonicalHarnessLifecycleTests.test_ci_budget_and_resource_contract_remain_bounded",
+      "time": 1794441379.8441958,
+      "pid": 33,
+      "rss": 338522112,
+      "cgroup": 403177472,
+      "error_type": "AssertionError",
+      "error_text": "'timeout-minutes: 85' not found in 'name: Canonical release recovery\\n\\non:\\n  pull_request:\\n    branches: [main]\\n  workflow_dispatch:\\n  push:\\n    branches: [main]\\n    paths: [\\'.github/workflows/canonical-release-recovery.yml\\']\\n\\npermissions:\\n  contents: read\\n\\nconcurrency:\\n  group: canonical-release-${{ github.event.pull_request.number || github.ref }}\\n  cancel-in-progress: true\\n\\nenv:\\n  NODE_OPTIONS: --max-old-space-size=256\\n\\njobs:\\n  canonical-release:\\n    if: github.event_name != \\'push\\'\\n    runs-on: ubuntu-24.04\\n    # The full 4399-test corpus reached4272 completions without test errors\\n    # before the80-minute runner deadline (run43107670445). Preserve all tests\\n    # and resource limits; allow110minutes plus bounded artifact/cleanup time.\\n    # Earlier full-local4378 controls took106.9minutes on enforced two CPUs.\\n    timeout-minutes: 120\\n    steps:\\n      - uses: actions/checkout@v4\\n        with:\\n          ref: ${{ github.event.pull_request.head.sha || github.sha }}\\n          fetch-depth: 0\\n          persist-credentials: false\\n      - name: Prepare disposable validation harness\\n        run: |\\n          mkdir -p .validation/canonical-build .validation/canonical-release/observer .validation/canonical-fixture\\n          cp requirements.txt requirements-validation.txt .validation/canonical-build/\\n          cat > .validation/canonical-release/runner.py <<\\'PY\\'\\n          \"\"\"Run the unchanged canonical validator in an enforced disposable cgroup.\"\"\"\\n          import hashlib\\n          import json\\n          import os\\n          from pathlib import Path\\n          import shutil\\n          import signal\\n          import subprocess\\n          import sys\\n          import threading\\n          import time\\n\\n          import psutil\\n\\n          ROOT = Path(\"/app\")\\n          OUTPUT = Path(\"/output\")\\n          FIXTURE = Path(\"/fixture\")\\n          OUTPUT.mkdir(exist_ok=True)\\n          FIXTURE.mkdir(exist_ok=True)\\n          os.envir"
+    }
+  ],
+  "status": "INTENTIONALLY_STOPPED_AFTER_CONFIRMED_HARNESS_CONTRACT_FAILURE",
+  "reason": "Harness test retained old85/82/4800 expectations; workflow runner budget had changed but its step budget had not. Corrected together, no application or resource assertion weakening.",
+  "container_exit": 143,
+  "oom": false,
+  "pid_after": 0,
+  "scope": "Partial original logs retained; not a full pass or business cancellation acceptance."
+}
