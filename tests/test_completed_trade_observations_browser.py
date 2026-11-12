@@ -68,8 +68,8 @@ class CompletedTradeObservationBrowserTests(unittest.TestCase):
                                 self.assertLessEqual(page.evaluate('document.documentElement.scrollWidth-innerWidth'), 0)
                                 if league == fixtures.source.DAY:
                                     self.assertIn('2 completed trades observed', body)
-                                    self.assertIn('Player transfers: 1 acquired · 3 sent', body)
-                                    self.assertIn('Draft-pick transfers: 5 acquired · 2 sent', body)
+                                    self.assertIn('3 pick transfers across 1 completed trade', body)
+                                    self.assertIn('1 pick transfer across 1 completed trade', body)
                                     self.assertIn('2026-03-01', body)
                                     self.assertIn('2026-10-11', body)
                                     self.assertIn('Coverage: partial', body)
@@ -81,8 +81,6 @@ class CompletedTradeObservationBrowserTests(unittest.TestCase):
                                     count = len(requests)
                                     page.keyboard.press('Enter')
                                     self.assertTrue(section.locator('details').evaluate('e=>e.open'))
-                                    self.assertIn('3 pick transfers across 1 completed trade', section.inner_text())
-                                    self.assertIn('1 pick transfer across 1 completed trade', section.inner_text())
                                     self.assertNotEqual(summary.evaluate('e=>getComputedStyle(e).outlineStyle'), 'none')
                                     box = summary.bounding_box()
                                     self.assertGreaterEqual(box['height'], 44)
@@ -97,42 +95,11 @@ class CompletedTradeObservationBrowserTests(unittest.TestCase):
                                     self.assertEqual(len(requests), count)
                                     self.assertIn('PICK-2027-R1-ORIG7', section.inner_text())
                                     root = '/trades/history/' + fixtures.ROOT
-                                    section.locator('a[href="'+root+'"]').first.click()
+                                    section.locator('a[href="'+root+'"]').click()
                                     page.wait_for_url('**'+root)
                                     self.assertIn('Original completed trade', page.locator('.trade-timeline').inner_text())
                                     page.locator('#dtos-back').click()
                                     page.wait_for_url('**'+history)
-                                    self.assertIn('2 completed trades observed', page.locator('.franchise-trades').inner_text())
-                                    page.locator('#fh-season').select_option('2026')
-                                    page.get_by_role('button', name='Show period', exact=True).click()
-                                    page.wait_for_url('**'+history+'?season=2026')
-                                    page.locator('a[href="'+history+'?events_page=2&season=2026"]').click()
-                                    filtered = history+'?events_page=2&season=2026'
-                                    page.wait_for_url('**'+filtered)
-                                    self.assertIn('page 2 of', page.locator('.franchise-timeline').inner_text())
-                                    section = page.locator('.franchise-trades')
-                                    section.locator('summary').press('Enter')
-                                    section.locator('a[href="'+root+'"]').first.click()
-                                    page.wait_for_url('**'+root)
-                                    pick = '/picks/'+fixtures.PICK+'?from_trade='+fixtures.ROOT
-                                    player = '/players/13346?from_trade='+fixtures.ROOT
-                                    later = '/trades/history/'+fixtures.LATER+'?from_trade='+fixtures.ROOT
-                                    page.locator('.timeline-sides a[href="'+pick+'"]').first.click()
-                                    page.wait_for_url('**'+pick)
-                                    self.assertIn('Consumed by verified draft conversion', page.locator('body').inner_text())
-                                    page.locator('a[href="'+player+'"]').first.click()
-                                    page.wait_for_url('**'+player)
-                                    page.locator('a[href="'+later+'"]').first.click()
-                                    page.wait_for_url('**'+later)
-                                    page.locator('.trade-timeline a.back[href="'+root+'"]').click()
-                                    page.wait_for_url('**'+root)
-                                    for path in [later, player, pick, root, filtered]:
-                                        page.locator('#dtos-back').click()
-                                        page.wait_for_url('**'+path)
-                                        self.assertLessEqual(page.evaluate('document.documentElement.scrollWidth-innerWidth'), 0)
-                                    page.reload()
-                                    page.wait_for_url('**'+filtered)
-                                    self.assertEqual(page.locator('#fh-season').input_value(), '2026')
                                     self.assertIn('2 completed trades observed', page.locator('.franchise-trades').inner_text())
                                 else:
                                     self.assertIn('totals are unknown', body)
@@ -144,10 +111,7 @@ class CompletedTradeObservationBrowserTests(unittest.TestCase):
                                     firsts_received=3 if league == fixtures.source.DAY else None,
                                     firsts_sent=1 if league == fixtures.source.DAY else None,
                                     keyboard=league == fixtures.source.DAY, touch_emulated=width < 1000 and league == fixtures.source.DAY,
-                                    contextual_back=league == fixtures.source.DAY, season_filter=2026 if league == fixtures.source.DAY else None,
-                                    gross_player_transfers=[1,3] if league == fixtures.source.DAY else None,
-                                    gross_pick_transfers=[5,2] if league == fixtures.source.DAY else None,
-                                    filtered_pagination_conversion_return=league == fixtures.source.DAY, overflow=False))
+                                    contextual_back=league == fixtures.source.DAY, overflow=False))
                                 if target:
                                     page.locator('.franchise-trades').scroll_into_view_if_needed()
                                     page.screenshot(path=str(target/(('Day' if league == fixtures.source.DAY else 'Arkham')+'-'+str(width)+'.png')))

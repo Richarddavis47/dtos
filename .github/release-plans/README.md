@@ -1,0 +1,7 @@
+# Guarded build 2250 publication
+
+This branch contains publisher tooling only relative to production commit 05c717e50b47683963ed40d66946e9f6eea76694. It is never merged or deployed. The application candidate and immutable source tree are separately pinned in 2250.json. The plan is deliberately unfinalized until every mandatory local/hosted gate and original artifact is verified.
+
+Use the existing scoped Actions GITHUB_TOKEN with contents:write, not a Cloud direct-upload credential. On the final frozen controller, dispatch prepare; verify every staged asset and certificate; only then squash-merge the exact application candidate with a head-SHA guard and verify tree equality. Dispatch publish on the same controller and reference that successful preparation run. Publication rejects an unmerged/wrong tree, changed controller, failed/missing gates, mismatched manifests, missing native controls or an existing conflicting tag.
+
+No new credentials, relays, infrastructure or application admission-policy change. The legacy hard-coded publisher is not used. Final evidence includes original source-bound canonical receipts, all fifteen native artifact archives, sixteen new movement controls, gross/net and conversion boundaries, four-viewport season/pagination/return journeys, and separately retained prior attempts. Production customer acceptance is distinct from source replay and disposable fixtures.

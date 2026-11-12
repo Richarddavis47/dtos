@@ -1,0 +1,86 @@
+{
+  "schema": 1,
+  "repository": "Richarddavis47/dtos",
+  "actor": "Richarddavis47",
+  "publisher_ref": "refs/heads/release/2250-actions-publisher",
+  "baseline": "05c717e50b47683963ed40d66946e9f6eea76694",
+  "candidate": "f40bf83c1abcb3b9763182f0a23e16374a12b404",
+  "tree": "21b31e05f255834fd2946f4b4e412cfd17bbb45a",
+  "pr": 339,
+  "source_branch": "feat/franchise-trade-progress-2250",
+  "version": "1.22.35",
+  "build": 2250,
+  "draft_id": null,
+  "prior_immutable_tag": "v1.22.34",
+  "canonical_tests": 4435,
+  "canonical_entries": null,
+  "local_canonical_entries": null,
+  "product_tests": 932,
+  "python_version": "3.14.3",
+  "capital_tests": 14,
+  "market_roster_tests": 21,
+  "recovery_file": ".github/release-plans/2250-recovery.zip",
+  "recovery_sha256": null,
+  "recovery_parts": [],
+  "prior_evidence_file": ".github/release-plans/2250-prior.zip",
+  "prior_evidence_sha256": null,
+  "runs": [
+    {
+      "name": "Canonical release recovery",
+      "path": ".github/workflows/canonical-release-recovery.yml",
+      "jobs": [
+        "canonical-release"
+      ],
+      "id": null
+    },
+    {
+      "name": "Product browser journeys",
+      "path": ".github/workflows/product-browser.yml",
+      "jobs": [
+        "product-browser",
+        "my-team-browser",
+        "beginner-navigation",
+        "public-welcome-browser",
+        "historical-trade-timeline",
+        "projection-display-cross-version",
+        "resident-refresh-memory"
+      ],
+      "id": null
+    },
+    {
+      "name": "Validation tooling",
+      "path": ".github/workflows/validation-tooling.yml",
+      "jobs": [
+        "tooling (ubuntu-24.04)",
+        "tooling (windows-latest)"
+      ],
+      "id": null
+    },
+    {
+      "name": "Linux Asset Market lifecycle",
+      "path": ".github/workflows/linux-market-lifecycle.yml",
+      "jobs": [
+        "cgroup-lifecycle (ordinary)",
+        "cgroup-lifecycle (archive-warmed)",
+        "cgroup-lifecycle (combined-read)"
+      ],
+      "id": null
+    }
+  ],
+  "artifacts": [],
+  "prior_runs": [
+    43149667688,
+    43149667725,
+    43149667697,
+    43149667665,
+    43177742523
+  ],
+  "prior_jobs": [
+    130955607520,
+    130955607615
+  ],
+  "prior_attempts": [],
+  "finalized": false,
+  "roster_source_scope_tests": 20,
+  "franchise_progress_tests": 16
+}

@@ -226,7 +226,7 @@ def create_history_router(
         )
 
     @router.get("/history/team/{franchise_id:path}", response_class=HTMLResponse)
-    async def team_history_page(franchise_id: str, events_page: int = Query(1, ge=1), season: int | None = Query(None, ge=0, le=9999)) -> HTMLResponse:
+    async def team_history_page(franchise_id: str, events_page: int = Query(1, ge=1)) -> HTMLResponse:
         selected = selected_league()
         prefix = str(selected) + ':franchise:'
         if not franchise_id.startswith(prefix) or not franchise_id[len(prefix):].isdigit():
@@ -246,7 +246,7 @@ def create_history_router(
         facts = require_data() if require_data else {'league': {'league_id': selected}}
         model = historical_graph(historical_store, selected, facts)
         roster_id = franchise_id.rsplit(':', 1)[-1]
-        timeline_view = franchise_timeline(model, roster_id, page=events_page, season=season or None)
+        timeline_view = franchise_timeline(model, roster_id, page=events_page)
         if not snapshots["count"] and not identities["count"] and not timeline_view['total'] and not timeline_view['attempts_total']:
             raise HTTPException(404, "No historical franchise observations are available.")
         names = "".join(
