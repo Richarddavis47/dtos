@@ -1,0 +1,99 @@
+and_controls
+    f.helper.back(
+    ~~~~~~~~~~~~~^
+        page, original.removeprefix(f.helper.origin)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/app/tests/test_contextual_back.py", line 280, in back
+    p.wait_for_url("**" + path)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/playwright/sync_api/_generated.py", line 10057, in wait_for_url
+    self._sync(
+    ~~~~~~~~~~^
+        self._impl_obj.wait_for_url(
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+        )
+        ^
+    )
+    ^
+  File "/usr/local/lib/python3.14/site-packages/playwright/_impl/_sync_base.py", line 115, in _sync
+    return task.result()
+           ~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/site-packages/playwright/_impl/_page.py", line 590, in wait_for_url
+    return await self._main_frame.wait_for_url(**locals_to_params(locals()))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/playwright/_impl/_frame.py", line 289, in wait_for_url
+    async with self.expect_navigation(
+               ~~~~~~~~~~~~~~~~~~~~~~^
+        url=url, waitUntil=waitUntil, timeout=timeout
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ):
+    ^
+  File "/usr/local/lib/python3.14/site-packages/playwright/_impl/_event_context_manager.py", line 33, in __aexit__
+    await self._future
+  File "/usr/local/lib/python3.14/site-packages/playwright/_impl/_frame.py", line 265, in continuation
+    event = await waiter.result()
+            ^^^^^^^^^^^^^^^^^^^^^
+playwright._impl._errors.TimeoutError: Timeout 9000ms exceeded.
+=========================== logs ===========================
+waiting for navigation to "**/trades/create" until 'load'
+  navigated to "http://127.0.0.1:45815/"
+  navigated to "http://127.0.0.1:45815/"
+============================================================
+
+======================================================================
+ERROR: test_my_team_market_exact_trade_for_back_preserves_draft_and_controls (tests.test_roster_source_scope_browser.RosterSourceScopeBrowserTests.test_my_team_market_exact_trade_for_back_preserves_draft_and_controls) (superflex=True, width=1280)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_roster_source_scope_browser.py", line 175, in test_my_team_market_exact_trade_for_back_preserves_draft_and_controls
+    f.helper.back(
+    ~~~~~~~~~~~~~^
+        page, original.removeprefix(f.helper.origin)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/app/tests/test_contextual_back.py", line 280, in back
+    p.wait_for_url("**" + path)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/playwright/sync_api/_generated.py", line 10057, in wait_for_url
+    self._sync(
+    ~~~~~~~~~~^
+        self._impl_obj.wait_for_url(
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+        )
+        ^
+    )
+    ^
+  File "/usr/local/lib/python3.14/site-packages/playwright/_impl/_sync_base.py", line 115, in _sync
+    return task.result()
+           ~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/site-packages/playwright/_impl/_page.py", line 590, in wait_for_url
+    return await self._main_frame.wait_for_url(**locals_to_params(locals()))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/playwright/_impl/_frame.py", line 289, in wait_for_url
+    async with self.expect_navigation(
+               ~~~~~~~~~~~~~~~~~~~~~~^
+        url=url, waitUntil=waitUntil, timeout=timeout
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ):
+    ^
+  File "/usr/local/lib/python3.14/site-packages/playwright/_impl/_event_context_manager.py", line 33, in __aexit__
+    await self._future
+  File "/usr/local/lib/python3.14/site-packages/playwright/_impl/_frame.py", line 265, in continuation
+    event = await waiter.result()
+            ^^^^^^^^^^^^^^^^^^^^^
+playwright._impl._errors.TimeoutError: Timeout 9000ms exceeded.
+=========================== logs ===========================
+waiting for navigation to "**/trades/create" until 'load'
+  navigated to "http://127.0.0.1:42393/"
+  navigated to "http://127.0.0.1:42393/"
+============================================================
+
+----------------------------------------------------------------------
+Ran 2 tests in 165.669s
+
+FAILED (errors=8)
+{"commit": "98030d6af189fe7d023bc36251800ab754a24f05", "tree": "9f0d9a5b8ad3927b7656888dbae18456afeca716", "dirty": [" M .github/workflows/canonical-release-recovery.yml", " M .github/workflows/product-browser.yml", " M CHANGELOG.md", " M RELEASE_NOTES.md", " M app_metadata.py", " M src/core/intelligence/roster_diagnostics.py", "?? docs/audits/ROSTER_SOURCE_SCOPE_2249.md", "?? tests/test_roster_source_scope.py", "?? tests/test_roster_source_scope_browser.py"], "observed_at": "2026-11-12T03:36:26.071137+00:00", "tests": 2, "failures": 0, "errors": 8, "skipped": 0, "passed": false, "memory_limit": 2147483648, "peak": 650833920, "events": {"low": "0", "high": "0", "max": "0", "oom": "0", "oom_kill": "0", "oom_group_kill": "0"}}

@@ -1,0 +1,369 @@
+ped_so_far":0,"origin_request_id":null,"name":"memory_sample","boundary":"captured","timestamp":"2026-11-12T03:35:59.061549+00:00","sample_id":2,"span_id":1,"requested_boundaries":[{"name":"lifecycle_phase","boundary":"finished","span_id":1,"request_id":"activity-a41cf858539e45d1b9496ef18d6f6ea6","requested_at":"2026-11-12T03:35:59.024276+00:00"}],"active_activities":[],"dropped_activity_or_boundary_count":0,"memory":{"rss_bytes":176570368,"vms_bytes":1678106624,"system_available_bytes":17195601920,"memory_accounting_scope":"cgroup","cgroup_current_bytes":348352512,"cgroup_limit_bytes":2147483648,"cgroup_inactive_file_bytes":4894720,"cgroup_anonymous_bytes":329555968,"cgroup_memory_events":{"low":0,"high":0,"max":0,"oom":0,"oom_kill":0,"oom_group_kill":0},"anonymous_bytes":329555968,"file_bytes":5730304,"kernel_bytes":12357632,"shmem_bytes":557056,"cgroup_lifetime_peak_bytes":650833920,"observer_pid":7,"observer_kind":"main_process","active_process_count":8,"zombie_count":0,"process_samples_truncated":false,"process_samples_are_sequential":true,"processes":[{"pid":7,"role":"application","rss_bytes":176574464,"pss_bytes":172932096,"uss_bytes":172335104,"sample_offset_ms":2.625,"sample_duration_ms":19.068},{"pid":1427,"role":"child","rss_bytes":134049792,"pss_bytes":130846720,"uss_bytes":130318336,"sample_offset_ms":21.697,"sample_duration_ms":8.26},{"pid":1439,"role":"child","rss_bytes":189878272,"pss_bytes":116687872,"uss_bytes":87523328,"sample_offset_ms":29.961,"sample_duration_ms":1.734},{"pid":1457,"role":"child","rss_bytes":77799424,"pss_bytes":22194176,"uss_bytes":675840,"sample_offset_ms":31.697,"sample_duration_ms":0.884},{"pid":1459,"role":"child","rss_bytes":81846272,"pss_bytes":23331840,"uss_bytes":741376,"sample_offset_ms":32.584,"sample_duration_ms":1.006},{"pid":1486,"role":"child","rss_bytes":114135040,"pss_bytes":45478912,"uss_bytes":20275200,"sample_offset_ms":33.592,"sample_duration_ms":1.429},{"pid":1494,"role":"child","rss_bytes":56254464,"pss_bytes":19524608,"uss_bytes":2592768,"sample_offset_ms":35.024,"sample_duration_ms":0.916},{"pid":1483,"role":"child","rss_bytes":73814016,"pss_bytes":35678208,"uss_bytes":18251776,"sample_offset_ms":35.944,"sample_duration_ms":0.805}],"capture_duration_ms":36.751,"pss_requested":true,"runtime_residency":{"resident_count":1,"warm_limit":2,"hydrating_count":0,"warm_count":0,"runtime_samples_truncated":false,"runtimes":[{"scope":"c9adb23a3e8be7a1","state":"cold","active_requests":0,"pinned":true,"owns_state":false,"background_tasks":0,"source_generation_count":0,"source_generation_identity":"4f53cda18c2baa0c","market_cache_owned":true,"projection_cache_owned":false}]},"sample_total_duration_ms":36.823},"queue_dropped_record_count":0}}
+{"timestamp":"2026-11-12T03:36:00.434652+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/teams/1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T03:36:00.643308+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T03:36:00.650870+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/strategy_session.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T03:36:00.651047+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T03:36:01.702105+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/market?q=2-RB-0 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T03:36:01.778238+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T03:36:01.778848+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T03:36:02.785192+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T03:36:02.798877+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T03:36:02.829004+00:00","level":"WARNING","logger":"dtos.storage","message":"storage_review {'kind': 'projection', 'database_bytes': 241664, 'rows': {'projection_snapshots': 7, 'projection_source_history': 5, 'projection_player_states': 140}, 'free_bytes': 6741725184, 'row_delta': {'projection_snapshots': 2, 'projection_source_history': 1, 'projection_player_states': 92}, 'reasons': ['ROW_GROWTH_ACCELERATION_REVIEW']}","request_id":"system"}
+{"timestamp":"2026-11-12T03:36:03.894322+00:00","level":"INFO","logger":"dtos.attribution","message":"diagnostic_boundary","request_id":"activity-6cb2ac2b4a3c48098afec3e8c5688a50","event":"diagnostic_boundary","diagnostic":{"schema":"request-attribution-v1","event_index":1,"event_limit":512,"dropped_so_far":0,"origin_request_id":null,"name":"lifecycle_phase","span_id":1,"parent_span_id":null,"boundary":"started","timestamp":"2026-11-12T03:36:03.894206+00:00","elapsed_from_trace_ms":0.018,"duration_ms":0.003,"queue_dropped_record_count":0}}
+{"timestamp":"2026-11-12T03:36:03.897278+00:00","level":"INFO","logger":"dtos.attribution","message":"diagnostic_boundary","request_id":"activity-6cb2ac2b4a3c48098afec3e8c5688a50","event":"diagnostic_boundary","diagnostic":{"schema":"request-attribution-v1","event_index":2,"event_limit":512,"dropped_so_far":0,"origin_request_id":null,"name":"lifecycle_phase","span_id":1,"parent_span_id":null,"boundary":"phase_acquired","timestamp":"2026-11-12T03:36:03.897249+00:00","elapsed_from_trace_ms":3.063,"duration_ms":3.048,"phase_name":"asset_market_build","queue_dropped_record_count":0}}
+{"timestamp":"2026-11-12T03:36:03.913302+00:00","level":"INFO","logger":"dtos.attribution","message":"diagnostic_boundary","request_id":"activity-6cb2ac2b4a3c48098afec3e8c5688a50","event":"diagnostic_boundary","diagnostic":{"schema":"request-attribution-v1","event_index":3,"event_limit":512,"dropped_so_far":0,"origin_request_id":null,"name":"memory_sample","boundary":"captured","timestamp":"2026-11-12T03:36:03.913271+00:00","sample_id":1,"span_id":1,"requested_boundaries":[{"name":"lifecycle_phase","boundary":"started","span_id":1,"request_id":"activity-6cb2ac2b4a3c48098afec3e8c5688a50","requested_at":"2026-11-12T03:36:03.894756+00:00"}],"active_activities":[{"request_id":"activity-6cb2ac2b4a3c48098afec3e8c5688a50","name":"lifecycle_phase","span_id":1}],"dropped_activity_or_boundary_count":0,"memory":{"rss_bytes":180305920,"vms_bytes":1690726400,"system_available_bytes":17086091264,"memory_accounting_scope":"cgroup","cgroup_current_bytes":371871744,"cgroup_limit_bytes":2147483648,"cgroup_inactive_file_bytes":5013504,"cgroup_anonymous_bytes":351035392,"cgroup_memory_events":{"low":0,"high":0,"max":0,"oom":0,"oom_kill":0,"oom_group_kill":0},"anonymous_bytes":351035392,"file_bytes":6717440,"kernel_bytes":13045760,"shmem_bytes":557056,"cgroup_lifetime_peak_bytes":650833920,"observer_pid":7,"observer_kind":"main_process","active_process_count":8,"zombie_count":1,"process_samples_truncated":false,"process_samples_are_sequential":true,"processes":[{"pid":7,"role":"application","rss_bytes":180338688,"pss_bytes":176591872,"uss_bytes":175898624,"sample_offset_ms":2.918,"sample_duration_ms":3.043},{"pid":1427,"role":"child","rss_bytes":138412032,"pss_bytes":135206912,"uss_bytes":134680576,"sample_offset_ms":5.965,"sample_duration_ms":2.648},{"pid":1439,"role":"child","rss_bytes":230027264,"pss_bytes":150518784,"uss_bytes":117006336,"sample_offset_ms":8.615,"sample_duration_ms":1.786},{"pid":1457,"role":"child","rss_bytes":77799424,"pss_bytes":22088704,"uss_bytes":610304,"sample_offset_ms":10.404,"sample_duration_ms":1.42},{"pid":1459,"role":"child","rss_bytes":81846272,"pss_bytes":23231488,"uss_bytes":745472,"sample_offset_ms":11.828,"sample_duration_ms":1.042},{"pid":1486,"role":"child","rss_bytes":119730176,"pss_bytes":47243264,"uss_bytes":19759104,"sample_offset_ms":12.873,"sample_duration_ms":1.686},{"pid":1494,"role":"child","rss_bytes":60497920,"pss_bytes":20660224,"uss_bytes":2498560,"sample_offset_ms":14.562,"sample_duration_ms":1.236},{"pid":1483,"role":"child","rss_bytes":82419712,"pss_bytes":39974912,"uss_bytes":19841024,"sample_offset_ms":15.8,"sample_duration_ms":1.578}],"capture_duration_ms":17.382,"pss_requested":true,"runtime_residency":{"resident_count":1,"warm_limit":2,"hydrating_count":0,"warm_count":0,"runtime_samples_truncated":false,"runtimes":[{"scope":"c9adb23a3e8be7a1","state":"cold","active_requests":0,"pinned":true,"owns_state":false,"background_tasks":0,"source_generation_count":0,"source_generation_identity":"4f53cda18c2baa0c","market_cache_owned":true,"projection_cache_owned":false}]},"sample_total_duration_ms":17.441},"queue_dropped_record_count":0}}
+{"timestamp":"2026-11-12T03:36:04.477151+00:00","level":"INFO","logger":"dtos.attribution","message":"diagnostic_boundary","request_id":"activity-6cb2ac2b4a3c48098afec3e8c5688a50","event":"diagnostic_boundary","diagnostic":{"schema":"request-attribution-v1","event_index":4,"event_limit":512,"dropped_so_far":0,"origin_request_id":null,"name":"lifecycle_phase","span_id":1,"parent_span_id":null,"boundary":"finished","timestamp":"2026-11-12T03:36:04.477120+00:00","elapsed_from_trace_ms":582.934,"duration_ms":582.919,"status":"complete","calling_thread_cpu_ms":526.776,"queue_dropped_record_count":0}}
+{"timestamp":"2026-11-12T03:36:04.593679+00:00","level":"INFO","logger":"dtos.attribution","message":"diagnostic_boundary","request_id":"activity-6cb2ac2b4a3c48098afec3e8c5688a50","event":"diagnostic_boundary","diagnostic":{"schema":"request-attribution-v1","event_index":5,"event_limit":512,"dropped_so_far":0,"origin_request_id":null,"name":"memory_sample","boundary":"captured","timestamp":"2026-11-12T03:36:04.593640+00:00","sample_id":2,"span_id":1,"requested_boundaries":[{"name":"lifecycle_phase","boundary":"finished","span_id":1,"request_id":"activity-6cb2ac2b4a3c48098afec3e8c5688a50","requested_at":"2026-11-12T03:36:04.477271+00:00"}],"active_activities":[],"dropped_activity_or_boundary_count":0,"memory":{"rss_bytes":181239808,"vms_bytes":1693188096,"system_available_bytes":17150218240,"memory_accounting_scope":"cgroup","cgroup_current_bytes":372867072,"cgroup_limit_bytes":2147483648,"cgroup_inactive_file_bytes":5500928,"cgroup_anonymous_bytes":351965184,"cgroup_memory_events":{"low":0,"high":0,"max":0,"oom":0,"oom_kill":0,"oom_group_kill":0},"anonymous_bytes":351965184,"file_bytes":7204864,"kernel_bytes":12935168,"shmem_bytes":557056,"cgroup_lifetime_peak_bytes":650833920,"observer_pid":7,"observer_kind":"main_process","active_process_count":8,"zombie_count":1,"process_samples_truncated":false,"process_samples_are_sequential":true,"processes":[{"pid":7,"role":"application","rss_bytes":181239808,"pss_bytes":177492992,"uss_bytes":176799744,"sample_offset_ms":2.396,"sample_duration_ms":3.275},{"pid":1427,"role":"child","rss_bytes":138412032,"pss_bytes":135207936,"uss_bytes":134680576,"sample_offset_ms":5.674,"sample_duration_ms":12.505},{"pid":1439,"role":"child","rss_bytes":230027264,"pss_bytes":150549504,"uss_bytes":117006336,"sample_offset_ms":18.182,"sample_duration_ms":93.059},{"pid":1457,"role":"child","rss_bytes":77799424,"pss_bytes":22090752,"uss_bytes":610304,"sample_offset_ms":111.243,"sample_duration_ms":0.789},{"pid":1459,"role":"child","rss_bytes":81846272,"pss_bytes":23248896,"uss_bytes":745472,"sample_offset_ms":112.034,"sample_duration_ms":0.88},{"pid":1486,"role":"child","rss_bytes":119730176,"pss_bytes":47243264,"uss_bytes":19759104,"sample_offset_ms":112.917,"sample_duration_ms":1.105},{"pid":1494,"role":"child","rss_bytes":60497920,"pss_bytes":20660224,"uss_bytes":2498560,"sample_offset_ms":114.024,"sample_duration_ms":0.74},{"pid":1483,"role":"child","rss_bytes":82419712,"pss_bytes":39974912,"uss_bytes":19841024,"sample_offset_ms":114.767,"sample_duration_ms":1.319}],"capture_duration_ms":116.114,"pss_requested":true,"runtime_residency":{"resident_count":1,"warm_limit":2,"hydrating_count":0,"warm_count":0,"runtime_samples_truncated":false,"runtimes":[{"scope":"c9adb23a3e8be7a1","state":"cold","active_requests":0,"pinned":true,"owns_state":false,"background_tasks":0,"source_generation_count":0,"source_generation_identity":"4f53cda18c2baa0c","market_cache_owned":true,"projection_cache_owned":false}]},"sample_total_duration_ms":116.198},"queue_dropped_record_count":0}}
+{"timestamp":"2026-11-12T03:36:05.753807+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/teams/1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T03:36:05.944725+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T03:36:05.946677+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T03:36:05.954851+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/strategy_session.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T03:36:06.915650+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/market?q=2-RB-0 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T03:36:06.998276+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T03:36:06.999320+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T03:36:08.086769+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T03:36:08.102972+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T03:36:08.147338+00:00","level":"WARNING","logger":"dtos.storage","message":"storage_review {'kind': 'projection', 'database_bytes': 241664, 'rows': {'projection_snapshots': 7, 'projection_source_history': 5, 'projection_player_states': 140}, 'free_bytes': 7296880640, 'row_delta': {'projection_snapshots': 2, 'projection_source_history': 1, 'projection_player_states': 92}, 'reasons': ['ROW_GROWTH_ACCELERATION_REVIEW']}","request_id":"system"}
+{"timestamp":"2026-11-12T03:36:09.445519+00:00","level":"INFO","logger":"dtos.attribution","message":"diagnostic_boundary","request_id":"activity-3d0800144b534c28879243334e3ff580","event":"diagnostic_boundary","diagnostic":{"schema":"request-attribution-v1","event_index":1,"event_limit":512,"dropped_so_far":0,"origin_request_id":null,"name":"lifecycle_phase","span_id":1,"parent_span_id":null,"boundary":"started","timestamp":"2026-11-12T03:36:09.445405+00:00","elapsed_from_trace_ms":0.096,"duration_ms":0.006,"queue_dropped_record_count":0}}
+{"timestamp":"2026-11-12T03:36:09.453203+00:00","level":"INFO","logger":"dtos.attribution","message":"diagnostic_boundary","request_id":"activity-3d0800144b534c28879243334e3ff580","event":"diagnostic_boundary","diagnostic":{"schema":"request-attribution-v1","event_index":2,"event_limit":512,"dropped_so_far":0,"origin_request_id":null,"name":"lifecycle_phase","span_id":1,"parent_span_id":null,"boundary":"phase_acquired","timestamp":"2026-11-12T03:36:09.453172+00:00","elapsed_from_trace_ms":7.875,"duration_ms":7.785,"phase_name":"asset_market_build","queue_dropped_record_count":0}}
+{"timestamp":"2026-11-12T03:36:09.469074+00:00","level":"INFO","logger":"dtos.attribution","message":"diagnostic_boundary","request_id":"activity-3d0800144b534c28879243334e3ff580","event":"diagnostic_boundary","diagnostic":{"schema":"request-attribution-v1","event_index":3,"event_limit":512,"dropped_so_far":0,"origin_request_id":null,"name":"memory_sample","boundary":"captured","timestamp":"2026-11-12T03:36:09.469041+00:00","sample_id":1,"span_id":1,"requested_boundaries":[{"name":"lifecycle_phase","boundary":"started","span_id":1,"request_id":"activity-3d0800144b534c28879243334e3ff580","requested_at":"2026-11-12T03:36:09.446273+00:00"}],"active_activities":[{"request_id":"activity-3d0800144b534c28879243334e3ff580","name":"lifecycle_phase","span_id":1}],"dropped_activity_or_boundary_count":0,"memory":{"rss_bytes":185507840,"vms_bytes":1714184192,"system_available_bytes":17008717824,"memory_accounting_scope":"cgroup","cgroup_current_bytes":382754816,"cgroup_limit_bytes":2147483648,"cgroup_inactive_file_bytes":5668864,"cgroup_anonymous_bytes":360513536,"cgroup_memory_events":{"low":0,"high":0,"max":0,"oom":0,"oom_kill":0,"oom_group_kill":0},"anonymous_bytes":360513536,"file_bytes":8232960,"kernel_bytes":13254656,"shmem_bytes":557056,"cgroup_lifetime_peak_bytes":650833920,"observer_pid":7,"observer_kind":"main_process","active_process_count":8,"zombie_count":1,"process_samples_truncated":false,"process_samples_are_sequential":true,"processes":[{"pid":7,"role":"application","rss_bytes":185540608,"pss_bytes":181761024,"uss_bytes":181067776,"sample_offset_ms":4.759,"sample_duration_ms":3.177},{"pid":1427,"role":"child","rss_bytes":141299712,"pss_bytes":138095616,"uss_bytes":137568256,"sample_offset_ms":7.938,"sample_duration_ms":1.819},{"pid":1439,"role":"child","rss_bytes":231280640,"pss_bytes":151710720,"uss_bytes":118108160,"sample_offset_ms":9.76,"sample_duration_ms":1.92},{"pid":1457,"role":"child","rss_bytes":77799424,"pss_bytes":22090752,"uss_bytes":610304,"sample_offset_ms":11.682,"sample_duration_ms":1.368},{"pid":1459,"role":"child","rss_bytes":81846272,"pss_bytes":23248896,"uss_bytes":745472,"sample_offset_ms":13.053,"sample_duration_ms":1.209},{"pid":1486,"role":"child","rss_bytes":120000512,"pss_bytes":47431680,"uss_bytes":19898368,"sample_offset_ms":14.265,"sample_duration_ms":1.508},{"pid":1494,"role":"child","rss_bytes":60575744,"pss_bytes":20721664,"uss_bytes":2576384,"sample_offset_ms":15.775,"sample_duration_ms":0.749},{"pid":1483,"role":"child","rss_bytes":82489344,"pss_bytes":40016896,"uss_bytes":19890176,"sample_offset_ms":16.526,"sample_duration_ms":1.123}],"capture_duration_ms":17.652,"pss_requested":true,"runtime_residency":{"resident_count":1,"warm_limit":2,"hydrating_count":0,"warm_count":0,"runtime_samples_truncated":false,"runtimes":[{"scope":"c9adb23a3e8be7a1","state":"cold","active_requests":0,"pinned":true,"owns_state":false,"background_tasks":0,"source_generation_count":0,"source_generation_identity":"4f53cda18c2baa0c","market_cache_owned":true,"projection_cache_owned":false}]},"sample_total_duration_ms":17.789},"queue_dropped_record_count":0}}
+{"timestamp":"2026-11-12T03:36:09.991350+00:00","level":"INFO","logger":"dtos.attribution","message":"diagnostic_boundary","request_id":"activity-3d0800144b534c28879243334e3ff580","event":"diagnostic_boundary","diagnostic":{"schema":"request-attribution-v1","event_index":4,"event_limit":512,"dropped_so_far":0,"origin_request_id":null,"name":"lifecycle_phase","span_id":1,"parent_span_id":null,"boundary":"finished","timestamp":"2026-11-12T03:36:09.991316+00:00","elapsed_from_trace_ms":546.021,"duration_ms":545.931,"status":"complete","calling_thread_cpu_ms":485.288,"queue_dropped_record_count":0}}
+{"timestamp":"2026-11-12T03:36:10.045020+00:00","level":"INFO","logger":"dtos.attribution","message":"diagnostic_boundary","request_id":"activity-3d0800144b534c28879243334e3ff580","event":"diagnostic_boundary","diagnostic":{"schema":"request-attribution-v1","event_index":5,"event_limit":512,"dropped_so_far":0,"origin_request_id":null,"name":"memory_sample","boundary":"captured","timestamp":"2026-11-12T03:36:10.044977+00:00","sample_id":2,"span_id":1,"requested_boundaries":[{"name":"lifecycle_phase","boundary":"finished","span_id":1,"request_id":"activity-3d0800144b534c28879243334e3ff580","requested_at":"2026-11-12T03:36:09.991489+00:00"}],"active_activities":[],"dropped_activity_or_boundary_count":0,"memory":{"rss_bytes":186720256,"vms_bytes":1714184192,"system_available_bytes":17309007872,"memory_accounting_scope":"cgroup","cgroup_current_bytes":384532480,"cgroup_limit_bytes":2147483648,"cgroup_inactive_file_bytes":6156288,"cgroup_anonymous_bytes":361725952,"cgroup_memory_events":{"low":0,"high":0,"max":0,"oom":0,"oom_kill":0,"oom_group_kill":0},"anonymous_bytes":361725952,"file_bytes":8724480,"kernel_bytes":13131776,"shmem_bytes":557056,"cgroup_lifetime_peak_bytes":650833920,"observer_pid":7,"observer_kind":"main_process","active_process_count":8,"zombie_count":0,"process_samples_truncated":false,"process_samples_are_sequential":true,"processes":[{"pid":7,"role":"application","rss_bytes":186720256,"pss_bytes":182973440,"uss_bytes":182280192,"sample_offset_ms":3.508,"sample_duration_ms":3.561},{"pid":1427,"role":"child","rss_bytes":141299712,"pss_bytes":138095616,"uss_bytes":137568256,"sample_offset_ms":7.071,"sample_duration_ms":23.022},{"pid":1439,"role":"child","rss_bytes":231280640,"pss_bytes":151710720,"uss_bytes":118108160,"sample_offset_ms":30.096,"sample_duration_ms":16.254},{"pid":1457,"role":"child","rss_bytes":77799424,"pss_bytes":22090752,"uss_bytes":610304,"sample_offset_ms":46.354,"sample_duration_ms":2.892},{"pid":1459,"role":"child","rss_bytes":81846272,"pss_bytes":23248896,"uss_bytes":745472,"sample_offset_ms":49.249,"sample_duration_ms":0.929},{"pid":1486,"role":"child","rss_bytes":120000512,"pss_bytes":47431680,"uss_bytes":19898368,"sample_offset_ms":50.18,"sample_duration_ms":1.185},{"pid":1494,"role":"child","rss_bytes":60575744,"pss_bytes":20721664,"uss_bytes":2576384,"sample_offset_ms":51.367,"sample_duration_ms":0.815},{"pid":1483,"role":"child","rss_bytes":82489344,"pss_bytes":40017920,"uss_bytes":19890176,"sample_offset_ms":52.185,"sample_duration_ms":0.953}],"capture_duration_ms":53.144,"pss_requested":true,"runtime_residency":{"resident_count":1,"warm_limit":2,"hydrating_count":0,"warm_count":0,"runtime_samples_truncated":false,"runtimes":[{"scope":"c9adb23a3e8be7a1","state":"cold","active_requests":0,"pinned":true,"owns_state":false,"background_tasks":0,"source_generation_count":0,"source_generation_identity":"4f53cda18c2baa0c","market_cache_owned":true,"projection_cache_owned":false}]},"sample_total_duration_ms":53.256},"queue_dropped_record_count":0}}
+{"timestamp":"2026-11-12T03:36:11.050043+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/teams/1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T03:36:11.179165+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T03:36:11.239186+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/strategy_session.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T03:36:11.240080+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T03:36:12.148047+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/market?q=2-RB-0 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T03:36:12.196450+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T03:36:12.201270+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T03:36:13.524880+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T03:36:13.544377+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T03:36:13.579475+00:00","level":"WARNING","logger":"dtos.storage","message":"storage_review {'kind': 'projection', 'database_bytes': 241664, 'rows': {'projection_snapshots': 7, 'projection_source_history': 5, 'projection_player_states': 140}, 'free_bytes': 7434670080, 'row_delta': {'projection_snapshots': 2, 'projection_source_history': 1, 'projection_player_states': 92}, 'reasons': ['ROW_GROWTH_ACCELERATION_REVIEW']}","request_id":"system"}
+{"timestamp":"2026-11-12T03:36:14.712858+00:00","level":"INFO","logger":"dtos.attribution","message":"diagnostic_boundary","request_id":"activity-12543bf3c56447748bedf2129167fe83","event":"diagnostic_boundary","diagnostic":{"schema":"request-attribution-v1","event_index":1,"event_limit":512,"dropped_so_far":0,"origin_request_id":null,"name":"lifecycle_phase","span_id":1,"parent_span_id":null,"boundary":"started","timestamp":"2026-11-12T03:36:14.712815+00:00","elapsed_from_trace_ms":0.027,"duration_ms":0.009,"queue_dropped_record_count":0}}
+{"timestamp":"2026-11-12T03:36:14.715172+00:00","level":"INFO","logger":"dtos.attribution","message":"diagnostic_boundary","request_id":"activity-12543bf3c56447748bedf2129167fe83","event":"diagnostic_boundary","diagnostic":{"schema":"request-attribution-v1","event_index":2,"event_limit":512,"dropped_so_far":0,"origin_request_id":null,"name":"lifecycle_phase","span_id":1,"parent_span_id":null,"boundary":"phase_acquired","timestamp":"2026-11-12T03:36:14.715141+00:00","elapsed_from_trace_ms":2.355,"duration_ms":2.337,"phase_name":"asset_market_build","queue_dropped_record_count":0}}
+{"timestamp":"2026-11-12T03:36:14.731433+00:00","level":"INFO","logger":"dtos.attribution","message":"diagnostic_boundary","request_id":"activity-12543bf3c56447748bedf2129167fe83","event":"diagnostic_boundary","diagnostic":{"schema":"request-attribution-v1","event_index":3,"event_limit":512,"dropped_so_far":0,"origin_request_id":null,"name":"memory_sample","boundary":"captured","timestamp":"2026-11-12T03:36:14.731384+00:00","sample_id":1,"span_id":1,"requested_boundaries":[{"name":"lifecycle_phase","boundary":"started","span_id":1,"request_id":"activity-12543bf3c56447748bedf2129167fe83","requested_at":"2026-11-12T03:36:14.713030+00:00"}],"active_activities":[{"request_id":"activity-12543bf3c56447748bedf2129167fe83","name":"lifecycle_phase","span_id":1}],"dropped_activity_or_boundary_count":0,"memory":{"rss_bytes":191897600,"vms_bytes":1726787584,"system_available_bytes":17304694784,"memory_accounting_scope":"cgroup","cgroup_current_bytes":387649536,"cgroup_limit_bytes":2147483648,"cgroup_inactive_file_bytes":6279168,"cgroup_anonymous_bytes":363941888,"cgroup_memory_events":{"low":0,"high":0,"max":0,"oom":0,"oom_kill":0,"oom_group_kill":0},"anonymous_bytes":363941888,"file_bytes":9715712,"kernel_bytes":13312000,"shmem_bytes":557056,"cgroup_lifetime_peak_bytes":650833920,"observer_pid":7,"observer_kind":"main_process","active_process_count":8,"zombie_count":1,"process_samples_truncated":false,"process_samples_are_sequential":true,"processes":[{"pid":7,"role":"application","rss_bytes":191897600,"pss_bytes":188183552,"uss_bytes":187490304,"sample_offset_ms":2.79,"sample_duration_ms":3.969},{"pid":1427,"role":"child","rss_bytes":138342400,"pss_bytes":135133184,"uss_bytes":134610944,"sample_offset_ms":6.762,"sample_duration_ms":2.242},{"pid":1439,"role":"child","rss_bytes":231792640,"pss_bytes":152219648,"uss_bytes":118620160,"sample_offset_ms":9.008,"sample_duration_ms":2.274},{"pid":1457,"role":"child","rss_bytes":77799424,"pss_bytes":22083584,"uss_bytes":610304,"sample_offset_ms":11.284,"sample_duration_ms":1.088},{"pid":1459,"role":"child","rss_bytes":81846272,"pss_bytes":23248896,"uss_bytes":745472,"sample_offset_ms":12.375,"sample_duration_ms":1.457},{"pid":1486,"role":"child","rss_bytes":120000512,"pss_bytes":47431680,"uss_bytes":19898368,"sample_offset_ms":13.836,"sample_duration_ms":1.092},{"pid":1494,"role":"child","rss_bytes":60583936,"pss_bytes":20729856,"uss_bytes":2584576,"sample_offset_ms":14.93,"sample_duration_ms":1.07},{"pid":1483,"role":"child","rss_bytes":81965056,"pss_bytes":39493632,"uss_bytes":19365888,"sample_offset_ms":16.003,"sample_duration_ms":1.282}],"capture_duration_ms":17.288,"pss_requested":true,"runtime_residency":{"resident_count":1,"warm_limit":2,"hydrating_count":0,"warm_count":0,"runtime_samples_truncated":false,"runtimes":[{"scope":"c9adb23a3e8be7a1","state":"cold","active_requests":0,"pinned":true,"owns_state":false,"background_tasks":0,"source_generation_count":0,"source_generation_identity":"4f53cda18c2baa0c","market_cache_owned":true,"projection_cache_owned":false}]},"sample_total_duration_ms":17.529},"queue_dropped_record_count":0}}
+{"timestamp":"2026-11-12T03:36:15.231834+00:00","level":"INFO","logger":"dtos.attribution","message":"diagnostic_boundary","request_id":"activity-12543bf3c56447748bedf2129167fe83","event":"diagnostic_boundary","diagnostic":{"schema":"request-attribution-v1","event_index":4,"event_limit":512,"dropped_so_far":0,"origin_request_id":null,"name":"lifecycle_phase","span_id":1,"parent_span_id":null,"boundary":"finished","timestamp":"2026-11-12T03:36:15.231724+00:00","elapsed_from_trace_ms":518.937,"duration_ms":518.919,"status":"complete","calling_thread_cpu_ms":470.793,"queue_dropped_record_count":0}}
+{"timestamp":"2026-11-12T03:36:15.269089+00:00","level":"INFO","logger":"dtos.attribution","message":"diagnostic_boundary","request_id":"activity-12543bf3c56447748bedf2129167fe83","event":"diagnostic_boundary","diagnostic":{"schema":"request-attribution-v1","event_index":5,"event_limit":512,"dropped_so_far":0,"origin_request_id":null,"name":"memory_sample","boundary":"captured","timestamp":"2026-11-12T03:36:15.269031+00:00","sample_id":2,"span_id":1,"requested_boundaries":[{"name":"lifecycle_phase","boundary":"finished","span_id":1,"request_id":"activity-12543bf3c56447748bedf2129167fe83","requested_at":"2026-11-12T03:36:15.232105+00:00"}],"active_activities":[],"dropped_activity_or_boundary_count":0,"memory":{"rss_bytes":193093632,"vms_bytes":1729982464,"system_available_bytes":17305161728,"memory_accounting_scope":"cgroup","cgroup_current_bytes":389427200,"cgroup_limit_bytes":2147483648,"cgroup_inactive_file_bytes":6766592,"cgroup_anonymous_bytes":365137920,"cgroup_memory_events":{"low":0,"high":0,"max":0,"oom":0,"oom_kill":0,"oom_group_kill":0},"anonymous_bytes":365137920,"file_bytes":10203136,"kernel_bytes":13217792,"shmem_bytes":557056,"cgroup_lifetime_peak_bytes":650833920,"observer_pid":7,"observer_kind":"main_process","active_process_count":8,"zombie_count":1,"process_samples_truncated":false,"process_samples_are_sequential":true,"processes":[{"pid":7,"role":"application","rss_bytes":193093632,"pss_bytes":189346816,"uss_bytes":188653568,"sample_offset_ms":2.704,"sample_duration_ms":2.875},{"pid":1427,"role":"child","rss_bytes":138342400,"pss_bytes":135138304,"uss_bytes":134610944,"sample_offset_ms":5.582,"sample_duration_ms":12.611},{"pid":1439,"role":"child","rss_bytes":231792640,"pss_bytes":152222720,"uss_bytes":118620160,"sample_offset_ms":18.198,"sample_duration_ms":13.194},{"pid":1457,"role":"child","rss_bytes":77799424,"pss_bytes":22090752,"uss_bytes":610304,"sample_offset_ms":31.395,"sample_duration_ms":0.975},{"pid":1459,"role":"child","rss_bytes":81846272,"pss_bytes":23248896,"uss_bytes":745472,"sample_offset_ms":32.374,"sample_duration_ms":0.878},{"pid":1486,"role":"child","rss_bytes":120000512,"pss_bytes":47431680,"uss_bytes":19898368,"sample_offset_ms":33.255,"sample_duration_ms":1.095},{"pid":1494,"role":"child","rss_bytes":60583936,"pss_bytes":20729856,"uss_bytes":2584576,"sample_offset_ms":34.352,"sample_duration_ms":0.883},{"pid":1483,"role":"child","rss_bytes":81965056,"pss_bytes":39493632,"uss_bytes":19365888,"sample_offset_ms":35.237,"sample_duration_ms":1.151}],"capture_duration_ms":36.453,"pss_requested":true,"runtime_residency":{"resident_count":1,"warm_limit":2,"hydrating_count":0,"warm_count":0,"runtime_samples_truncated":false,"runtimes":[{"scope":"c9adb23a3e8be7a1","state":"cold","active_requests":0,"pinned":true,"owns_state":false,"background_tasks":0,"source_generation_count":0,"source_generation_identity":"4f53cda18c2baa0c","market_cache_owned":true,"projection_cache_owned":false}]},"sample_total_duration_ms":36.579},"queue_dropped_record_count":0}}
+{"timestamp":"2026-11-12T03:36:16.407705+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/teams/1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T03:36:16.558740+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T03:36:16.561383+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T03:36:16.562296+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/strategy_session.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T03:36:17.380670+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/market?q=2-RB-0 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T03:36:17.442521+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T03:36:17.445834+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T03:36:18.401852+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T03:36:18.426608+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T03:36:18.463080+00:00","level":"WARNING","logger":"dtos.storage","message":"storage_review {'kind': 'projection', 'database_bytes': 241664, 'rows': {'projection_snapshots': 7, 'projection_source_history': 5, 'projection_player_states': 140}, 'free_bytes': 7433191424, 'row_delta': {'projection_snapshots': 2, 'projection_source_history': 1, 'projection_player_states': 92}, 'reasons': ['ROW_GROWTH_ACCELERATION_REVIEW']}","request_id":"system"}
+{"timestamp":"2026-11-12T03:36:20.729668+00:00","level":"INFO","logger":"dtos.attribution","message":"diagnostic_boundary","request_id":"activity-b3e43b9c37374d7392042f556fd67f66","event":"diagnostic_boundary","diagnostic":{"schema":"request-attribution-v1","event_index":1,"event_limit":512,"dropped_so_far":0,"origin_request_id":null,"name":"lifecycle_phase","span_id":1,"parent_span_id":null,"boundary":"started","timestamp":"2026-11-12T03:36:20.729370+00:00","elapsed_from_trace_ms":0.109,"duration_ms":0.047,"queue_dropped_record_count":0}}
+{"timestamp":"2026-11-12T03:36:20.737188+00:00","level":"INFO","logger":"dtos.attribution","message":"diagnostic_boundary","request_id":"activity-b3e43b9c37374d7392042f556fd67f66","event":"diagnostic_boundary","diagnostic":{"schema":"request-attribution-v1","event_index":2,"event_limit":512,"dropped_so_far":0,"origin_request_id":null,"name":"lifecycle_phase","span_id":1,"parent_span_id":null,"boundary":"phase_acquired","timestamp":"2026-11-12T03:36:20.737140+00:00","elapsed_from_trace_ms":7.915,"duration_ms":7.853,"phase_name":"asset_market_build","queue_dropped_record_count":0}}
+{"timestamp":"2026-11-12T03:36:20.759597+00:00","level":"INFO","logger":"dtos.attribution","message":"diagnostic_boundary","request_id":"activity-b3e43b9c37374d7392042f556fd67f66","event":"diagnostic_boundary","diagnostic":{"schema":"request-attribution-v1","event_index":3,"event_limit":512,"dropped_so_far":0,"origin_request_id":null,"name":"memory_sample","boundary":"captured","timestamp":"2026-11-12T03:36:20.759530+00:00","sample_id":1,"span_id":1,"requested_boundaries":[{"name":"lifecycle_phase","boundary":"started","span_id":1,"request_id":"activity-b3e43b9c37374d7392042f556fd67f66","requested_at":"2026-11-12T03:36:20.731248+00:00"}],"active_activities":[{"request_id":"activity-b3e43b9c37374d7392042f556fd67f66","name":"lifecycle_phase","span_id":1}],"dropped_activity_or_boundary_count":0,"memory":{"rss_bytes":195555328,"vms_bytes":1740488704,"system_available_bytes":17351618560,"memory_accounting_scope":"cgroup","cgroup_current_bytes":394260480,"cgroup_limit_bytes":2147483648,"cgroup_inactive_file_bytes":6950912,"cgroup_anonymous_bytes":368824320,"cgroup_memory_events":{"low":0,"high":0,"max":0,"oom":0,"oom_kill":0,"oom_group_kill":0},"anonymous_bytes":368824320,"file_bytes":11157504,"kernel_bytes":13451264,"shmem_bytes":557056,"cgroup_lifetime_peak_bytes":650833920,"observer_pid":7,"observer_kind":"main_process","active_process_count":8,"zombie_count":0,"process_samples_truncated":false,"process_samples_are_sequential":true,"processes":[{"pid":7,"role":"application","rss_bytes":195588096,"pss_bytes":191808512,"uss_bytes":191115264,"sample_offset_ms":5.566,"sample_duration_ms":5.33},{"pid":1427,"role":"child","rss_bytes":138813440,"pss_bytes":135609344,"uss_bytes":135081984,"sample_offset_ms":10.899,"sample_duration_ms":2.309},{"pid":1439,"role":"child","rss_bytes":231956480,"pss_bytes":152386560,"uss_bytes":118784000,"sample_offset_ms":13.211,"sample_duration_ms":2.145},{"pid":1457,"role":"child","rss_bytes":77799424,"pss_bytes":22088704,"uss_bytes":610304,"sample_offset_ms":15.359,"sample_duration_ms":1.719},{"pid":1459,"role":"child","rss_bytes":81846272,"pss_bytes":23246848,"uss_bytes":745472,"sample_offset_ms":17.083,"sample_duration_ms":1.075},{"pid":1486,"role":"child","rss_bytes":120012800,"pss_bytes":47418368,"uss_bytes":19910656,"sample_offset_ms":18.162,"sample_duration_ms":1.842},{"pid":1494,"role":"child","rss_bytes":60600320,"pss_bytes":20741120,"uss_bytes":2600960,"sample_offset_ms":20.009,"sample_duration_ms":3.751},{"pid":1483,"role":"child","rss_bytes":82526208,"pss_bytes":40049664,"uss_bytes":19927040,"sample_offset_ms":23.762,"sample_duration_ms":1.009}],"capture_duration_ms":24.774,"pss_requested":true,"runtime_residency":{"resident_count":1,"warm_limit":2,"hydrating_count":0,"warm_count":0,"runtime_samples_truncated":false,"runtimes":[{"scope":"c9adb23a3e8be7a1","state":"cold","active_requests":0,"pinned":true,"owns_state":false,"background_tasks":0,"source_generation_count":0,"source_generation_identity":"4f53cda18c2baa0c","market_cache_owned":true,"projection_cache_owned":false}]},"sample_total_duration_ms":25.157},"queue_dropped_record_count":0}}
+{"timestamp":"2026-11-12T03:36:21.356066+00:00","level":"INFO","logger":"dtos.attribution","message":"diagnostic_boundary","request_id":"activity-b3e43b9c37374d7392042f556fd67f66","event":"diagnostic_boundary","diagnostic":{"schema":"request-attribution-v1","event_index":4,"event_limit":512,"dropped_so_far":0,"origin_request_id":null,"name":"lifecycle_phase","span_id":1,"parent_span_id":null,"boundary":"finished","timestamp":"2026-11-12T03:36:21.356035+00:00","elapsed_from_trace_ms":626.814,"duration_ms":626.751,"status":"complete","calling_thread_cpu_ms":568.683,"queue_dropped_record_count":0}}
+{"timestamp":"2026-11-12T03:36:21.425688+00:00","level":"INFO","logger":"dtos.attribution","message":"diagnostic_boundary","request_id":"activity-b3e43b9c37374d7392042f556fd67f66","event":"diagnostic_boundary","diagnostic":{"schema":"request-attribution-v1","event_index":5,"event_limit":512,"dropped_so_far":0,"origin_request_id":null,"name":"memory_sample","boundary":"captured","timestamp":"2026-11-12T03:36:21.425638+00:00","sample_id":2,"span_id":1,"requested_boundaries":[{"name":"lifecycle_phase","boundary":"finished","span_id":1,"request_id":"activity-b3e43b9c37374d7392042f556fd67f66","requested_at":"2026-11-12T03:36:21.356276+00:00"}],"active_activities":[],"dropped_activity_or_boundary_count":0,"memory":{"rss_bytes":195850240,"vms_bytes":1740488704,"system_available_bytes":17351663616,"memory_accounting_scope":"cgroup","cgroup_current_bytes":394719232,"cgroup_limit_bytes":2147483648,"cgroup_inactive_file_bytes":7438336,"cgroup_anonymous_bytes":369119232,"cgroup_memory_events":{"low":0,"high":0,"max":0,"oom":0,"oom_kill":0,"oom_group_kill":0},"anonymous_bytes":369119232,"file_bytes":11649024,"kernel_bytes":13336576,"shmem_bytes":557056,"cgroup_lifetime_peak_bytes":650833920,"observer_pid":7,"observer_kind":"main_process","active_process_count":8,"zombie_count":0,"process_samples_truncated":false,"process_samples_are_sequential":true,"processes":[{"pid":7,"role":"application","rss_bytes":195866624,"pss_bytes":192111616,"uss_bytes":191418368,"sample_offset_ms":5.788,"sample_duration_ms":25.153},{"pid":1427,"role":"child","rss_bytes":138813440,"pss_bytes":135609344,"uss_bytes":135081984,"sample_offset_ms":30.945,"sample_duration_ms":8.683},{"pid":1439,"role":"child","rss_bytes":231956480,"pss_bytes":152386560,"uss_bytes":118784000,"sample_offset_ms":39.631,"sample_duration_ms":4.46},{"pid":1457,"role":"child","rss_bytes":77799424,"pss_bytes":22090752,"uss_bytes":610304,"sample_offset_ms":44.095,"sample_duration_ms":2.752},{"pid":1459,"role":"child","rss_bytes":81846272,"pss_bytes":23248896,"uss_bytes":745472,"sample_offset_ms":46.853,"sample_duration_ms":4.645},{"pid":1486,"role":"child","rss_bytes":120012800,"pss_bytes":47443968,"uss_bytes":19910656,"sample_offset_ms":51.502,"sample_duration_ms":1.716},{"pid":1494,"role":"child","rss_bytes":60600320,"pss_bytes":20746240,"uss_bytes":2600960,"sample_offset_ms":53.22,"sample_duration_ms":2.848},{"pid":1483,"role":"child","rss_bytes":82526208,"pss_bytes":40054784,"uss_bytes":19927040,"sample_offset_ms":56.071,"sample_duration_ms":12.605}],"capture_duration_ms":68.68,"pss_requested":true,"runtime_residency":{"resident_count":1,"warm_limit":2,"hydrating_count":0,"warm_count":0,"runtime_samples_truncated":false,"runtimes":[{"scope":"c9adb23a3e8be7a1","state":"cold","active_requests":0,"pinned":true,"owns_state":false,"background_tasks":0,"source_generation_count":0,"source_generation_identity":"4f53cda18c2baa0c","market_cache_owned":true,"projection_cache_owned":false}]},"sample_total_duration_ms":68.812},"queue_dropped_record_count":0}}
+{"timestamp":"2026-11-12T03:36:22.355218+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/teams/1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T03:36:22.545693+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T03:36:22.554300+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/strategy_session.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T03:36:22.567511+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T03:36:23.492790+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/market?q=2-RB-0 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T03:36:23.544049+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T03:36:23.547039+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+ok
+
+======================================================================
+ERROR: test_my_team_market_exact_trade_for_back_preserves_draft_and_controls (tests.test_roster_source_scope_browser.RosterSourceScopeBrowserTests.test_my_team_market_exact_trade_for_back_preserves_draft_and_controls) (superflex=False, width=320)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_roster_source_scope_browser.py", line 175, in test_my_team_market_exact_trade_for_back_preserves_draft_and_controls
+    f.helper.back(
+    ~~~~~~~~~~~~~^
+        page, original.removeprefix(f.helper.origin)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/app/tests/test_contextual_back.py", line 280, in back
+    p.wait_for_url("**" + path)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/playwright/sync_api/_generated.py", line 10057, in wait_for_url
+    self._sync(
+    ~~~~~~~~~~^
+        self._impl_obj.wait_for_url(
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+        )
+        ^
+    )
+    ^
+  File "/usr/local/lib/python3.14/site-packages/playwright/_impl/_sync_base.py", line 115, in _sync
+    return task.result()
+           ~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/site-packages/playwright/_impl/_page.py", line 590, in wait_for_url
+    return await self._main_frame.wait_for_url(**locals_to_params(locals()))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/playwright/_impl/_frame.py", line 289, in wait_for_url
+    async with self.expect_navigation(
+               ~~~~~~~~~~~~~~~~~~~~~~^
+        url=url, waitUntil=waitUntil, timeout=timeout
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ):
+    ^
+  File "/usr/local/lib/python3.14/site-packages/playwright/_impl/_event_context_manager.py", line 33, in __aexit__
+    await self._future
+  File "/usr/local/lib/python3.14/site-packages/playwright/_impl/_frame.py", line 265, in continuation
+    event = await waiter.result()
+            ^^^^^^^^^^^^^^^^^^^^^
+playwright._impl._errors.TimeoutError: Timeout 9000ms exceeded.
+=========================== logs ===========================
+waiting for navigation to "**/trades/create" until 'load'
+  navigated to "http://127.0.0.1:46301/"
+  navigated to "http://127.0.0.1:46301/"
+============================================================
+
+======================================================================
+ERROR: test_my_team_market_exact_trade_for_back_preserves_draft_and_controls (tests.test_roster_source_scope_browser.RosterSourceScopeBrowserTests.test_my_team_market_exact_trade_for_back_preserves_draft_and_controls) (superflex=False, width=375)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_roster_source_scope_browser.py", line 175, in test_my_team_market_exact_trade_for_back_preserves_draft_and_controls
+    f.helper.back(
+    ~~~~~~~~~~~~~^
+        page, original.removeprefix(f.helper.origin)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/app/tests/test_contextual_back.py", line 280, in back
+    p.wait_for_url("**" + path)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/playwright/sync_api/_generated.py", line 10057, in wait_for_url
+    self._sync(
+    ~~~~~~~~~~^
+        self._impl_obj.wait_for_url(
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+        )
+        ^
+    )
+    ^
+  File "/usr/local/lib/python3.14/site-packages/playwright/_impl/_sync_base.py", line 115, in _sync
+    return task.result()
+           ~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/site-packages/playwright/_impl/_page.py", line 590, in wait_for_url
+    return await self._main_frame.wait_for_url(**locals_to_params(locals()))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/playwright/_impl/_frame.py", line 289, in wait_for_url
+    async with self.expect_navigation(
+               ~~~~~~~~~~~~~~~~~~~~~~^
+        url=url, waitUntil=waitUntil, timeout=timeout
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ):
+    ^
+  File "/usr/local/lib/python3.14/site-packages/playwright/_impl/_event_context_manager.py", line 33, in __aexit__
+    await self._future
+  File "/usr/local/lib/python3.14/site-packages/playwright/_impl/_frame.py", line 265, in continuation
+    event = await waiter.result()
+            ^^^^^^^^^^^^^^^^^^^^^
+playwright._impl._errors.TimeoutError: Timeout 9000ms exceeded.
+=========================== logs ===========================
+waiting for navigation to "**/trades/create" until 'load'
+  navigated to "http://127.0.0.1:32821/"
+  navigated to "http://127.0.0.1:32821/"
+============================================================
+
+======================================================================
+ERROR: test_my_team_market_exact_trade_for_back_preserves_draft_and_controls (tests.test_roster_source_scope_browser.RosterSourceScopeBrowserTests.test_my_team_market_exact_trade_for_back_preserves_draft_and_controls) (superflex=False, width=390)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_roster_source_scope_browser.py", line 175, in test_my_team_market_exact_trade_for_back_preserves_draft_and_controls
+    f.helper.back(
+    ~~~~~~~~~~~~~^
+        page, original.removeprefix(f.helper.origin)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/app/tests/test_contextual_back.py", line 280, in back
+    p.wait_for_url("**" + path)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/playwright/sync_api/_generated.py", line 10057, in wait_for_url
+    self._sync(
+    ~~~~~~~~~~^
+        self._impl_obj.wait_for_url(
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+        )
+        ^
+    )
+    ^
+  File "/usr/local/lib/python3.14/site-packages/playwright/_impl/_sync_base.py", line 115, in _sync
+    return task.result()
+           ~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/site-packages/playwright/_impl/_page.py", line 590, in wait_for_url
+    return await self._main_frame.wait_for_url(**locals_to_params(locals()))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/playwright/_impl/_frame.py", line 289, in wait_for_url
+    async with self.expect_navigation(
+               ~~~~~~~~~~~~~~~~~~~~~~^
+        url=url, waitUntil=waitUntil, timeout=timeout
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ):
+    ^
+  File "/usr/local/lib/python3.14/site-packages/playwright/_impl/_event_context_manager.py", line 33, in __aexit__
+    await self._future
+  File "/usr/local/lib/python3.14/site-packages/playwright/_impl/_frame.py", line 265, in continuation
+    event = await waiter.result()
+            ^^^^^^^^^^^^^^^^^^^^^
+playwright._impl._errors.TimeoutError: Timeout 9000ms exceeded.
+=========================== logs ===========================
+waiting for navigation to "**/trades/create" until 'load'
+  navigated to "http://127.0.0.1:46717/"
+  navigated to "http://127.0.0.1:46717/"
+============================================================
+
+======================================================================
+ERROR: test_my_team_market_exact_trade_for_back_preserves_draft_and_controls (tests.test_roster_source_scope_browser.RosterSourceScopeBrowserTests.test_my_team_market_exact_trade_for_back_preserves_draft_and_controls) (superflex=False, width=1280)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_roster_source_scope_browser.py", line 175, in test_my_team_market_exact_trade_for_back_preserves_draft_and_controls
+    f.helper.back(
+    ~~~~~~~~~~~~~^
+        page, original.removeprefix(f.helper.origin)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/app/tests/test_contextual_back.py", line 280, in back
+    p.wait_for_url("**" + path)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/playwright/sync_api/_generated.py", line 10057, in wait_for_url
+    self._sync(
+    ~~~~~~~~~~^
+        self._impl_obj.wait_for_url(
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+        )
+        ^
+    )
+    ^
+  File "/usr/local/lib/python3.14/site-packages/playwright/_impl/_sync_base.py", line 115, in _sync
+    return task.result()
+           ~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/site-packages/playwright/_impl/_page.py", line 590, in wait_for_url
+    return await self._main_frame.wait_for_url(**locals_to_params(locals()))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/playwright/_impl/_frame.py", line 289, in wait_for_url
+    async with self.expect_navigation(
+               ~~~~~~~~~~~~~~~~~~~~~~^
+        url=url, waitUntil=waitUntil, timeout=timeout
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ):
+    ^
+  File "/usr/local/lib/python3.14/site-packages/playwright/_impl/_event_context_manager.py", line 33, in __aexit__
+    await self._future
+  File "/usr/local/lib/python3.14/site-packages/playwright/_impl/_frame.py", line 265, in continuation
+    event = await waiter.result()
+            ^^^^^^^^^^^^^^^^^^^^^
+playwright._impl._errors.TimeoutError: Timeout 9000ms exceeded.
+=========================== logs ===========================
+waiting for navigation to "**/trades/create" until 'load'
+  navigated to "http://127.0.0.1:33293/"
+  navigated to "http://127.0.0.1:33293/"
+============================================================
+
+======================================================================
+ERROR: test_my_team_market_exact_trade_for_back_preserves_draft_and_controls (tests.test_roster_source_scope_browser.RosterSourceScopeBrowserTests.test_my_team_market_exact_trade_for_back_preserves_draft_and_controls) (superflex=True, width=320)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_roster_source_scope_browser.py", line 175, in test_my_team_market_exact_trade_for_back_preserves_draft_and_controls
+    f.helper.back(
+    ~~~~~~~~~~~~~^
+        page, original.removeprefix(f.helper.origin)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/app/tests/test_contextual_back.py", line 280, in back
+    p.wait_for_url("**" + path)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/playwright/sync_api/_generated.py", line 10057, in wait_for_url
+    self._sync(
+    ~~~~~~~~~~^
+        self._impl_obj.wait_for_url(
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+        )
+        ^
+    )
+    ^
+  File "/usr/local/lib/python3.14/site-packages/playwright/_impl/_sync_base.py", line 115, in _sync
+    return task.result()
+           ~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/site-packages/playwright/_impl/_page.py", line 590, in wait_for_url
+    return await self._main_frame.wait_for_url(**locals_to_params(locals()))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/playwright/_impl/_frame.py", line 289, in wait_for_url
+    async with self.expect_navigation(
+               ~~~~~~~~~~~~~~~~~~~~~~^
+        url=url, waitUntil=waitUntil, timeout=timeout
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ):
+    ^
+  File "/usr/local/lib/python3.14/site-packages/playwright/_impl/_event_context_manager.py", line 33, in __aexit__
+    await self._future
+  File "/usr/local/lib/python3.14/site-packages/playwright/_impl/_frame.py", line 265, in continuation
+    event = await waiter.result()
+            ^^^^^^^^^^^^^^^^^^^^^
+playwright._impl._errors.TimeoutError: Timeout 9000ms exceeded.
+=========================== logs ===========================
+waiting for navigation to "**/trades/create" until 'load'
+  navigated to "http://127.0.0.1:32921/"
+  navigated to "http://127.0.0.1:32921/"
+============================================================
+
+======================================================================
+ERROR: test_my_team_market_exact_trade_for_back_preserves_draft_and_controls (tests.test_roster_source_scope_browser.RosterSourceScopeBrowserTests.test_my_team_market_exact_trade_for_back_preserves_draft_and_controls) (superflex=True, width=375)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_roster_source_scope_browser.py", line 175, in test_my_team_market_exact_trade_for_back_preserves_draft_and_controls
+    f.helper.back(
+    ~~~~~~~~~~~~~^
+        page, original.removeprefix(f.helper.origin)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/app/tests/test_contextual_back.py", line 280, in back
+    p.wait_for_url("**" + path)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/playwright/sync_api/_generated.py", line 10057, in wait_for_url
+    self._sync(
+    ~~~~~~~~~~^
+        self._impl_obj.wait_for_url(
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+        )
+        ^
+    )
+    ^
+  File "/usr/local/lib/python3.14/site-packages/playwright/_impl/_sync_base.py", line 115, in _sync
+    return task.result()
+           ~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/site-packages/playwright/_impl/_page.py", line 590, in wait_for_url
+    return await self._main_frame.wait_for_url(**locals_to_params(locals()))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/playwright/_impl/_frame.py", line 289, in wait_for_url
+    async with self.expect_navigation(
+               ~~~~~~~~~~~~~~~~~~~~~~^
+        url=url, waitUntil=waitUntil, timeout=timeout
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ):
+    ^
+  File "/usr/local/lib/python3.14/site-packages/playwright/_impl/_event_context_manager.py", line 33, in __aexit__
+    await self._future
+  File "/usr/local/lib/python3.14/site-packages/playwright/_impl/_frame.py", line 265, in continuation
+    event = await waiter.result()
+            ^^^^^^^^^^^^^^^^^^^^^
+playwright._impl._errors.TimeoutError: Timeout 9000ms exceeded.
+=========================== logs ===========================
+waiting for navigation to "**/trades/create" until 'load'
+  navigated to "http://127.0.0.1:36137/"
+  navigated to "http://127.0.0.1:36137/"
+============================================================
+
+======================================================================
+ERROR: test_my_team_market_exact_trade_for_back_preserves_draft_and_controls (tests.test_roster_source_scope_browser.RosterSourceScopeBrowserTests.test_my_team_market_exact_trade_for_back_preserves_draft_and_controls) (superflex=True, width=390)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_roster_source_scope_browser.py", line 175, in test_my_team_market_exact_trade_for_back_preserves_draft_

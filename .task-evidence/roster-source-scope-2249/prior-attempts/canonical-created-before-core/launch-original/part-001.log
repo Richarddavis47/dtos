@@ -1,0 +1,11 @@
+Traceback (most recent call last):
+  File "/workspace/2249-sleeper-relevance/start-release-canonical.py", line 11, in <module>
+    assert not (BASE/'fixture').exists();(BASE/'fixture').mkdir();common=git_common_dir(SOURCE_CHECKOUT)
+                                                               ^^^^^^^^^^^^^^
+AssertionError: Actual scratch guard remains; do not start underinsufficientspace
+Traceback (most recent call last):
+  File "/workspace/2249-sleeper-relevance/start-after-resource.py", line 13, in <module>
+    subprocess.run(['python',str(b/'start-release-canonical.py')],check=True)
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/subprocess.py", line 571, in run
+    raise CalledProcessError(retcode, process.args,
+subprocess.CalledProcessError: Command '['python', '/workspace/2249-sleeper-relevance/start-release-canonical.py']' returned non-zero exit status 1.

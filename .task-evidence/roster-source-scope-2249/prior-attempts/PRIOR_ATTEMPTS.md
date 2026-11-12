@@ -1,0 +1,17 @@
+# Earlier attempts — never final passing evidence
+
+The production98030d6 baseline probe intentionally established the defect using disposable compatible Sleeper records: an unused missing projection changed the qualification without changing roster inputs or numerical results. That matched counterexample is not a failed production search or a claim about Granite's particular live inputs.
+
+Development focus1:62 passed; focus2:18 passed. Browser1 ran two methods with eight draft-return assertion failures because the new test used freshURL navigation instead of contextualBack. Browser2 ran two methods with eight Back timeouts because its initial programmatic MyTeam navigation had reset context. No source assertion was weakened: browser3 used normal navigation and Back and both methods passed. These development dirty-source runs are not final exact-source acceptance.
+
+Candidatec821a0b/tree42194c0 passed70focused controls,50broader controls and three localnative2GiB guards. HostedMyTeam255 andWelcome412 groups each failed the unchanged high-cardinality provenance assertion:6clocks instead of238. The freshness fix had also accidentally narrowed the separate original-clock disclosure. The correction restores complete publication provenance and labels the freshness dependency separately. The existing failing test files remain byte-identical to production.
+
+The c821 localfull and hostedcanonical/remainingProduct work were deliberately cancelled as superseded. The localcomplete validator never completed its unitgate or finalthree gates. Original result, trace, console, per-test events, memory measurements, cancellation ownership and entire original manifest were preserved and checksum-verified. No cancellation or deferral counts as successful execution. The hostedProduct run's overall cancelled state does not erase the two completed failed jobs, nine completed successful required jobs or the two cancelled required jobs.
+
+Welcome's nativepreflight step did not run after the earlier test failure. Its absent-artifact upload error is an incomplete downstream step, not an upload-credential defect. The earlier never-started localcanonical container was refused by the unchanged8GiB scratch guard during overlapping test-container creation; no test/gate executed in it.
+
+All three c821 native GitHub archives were downloaded intact and verified against GitHub's API SHA256 and ZIP CRC. The failedWelcome and cancelledCanonical archives are included in prior-package.zip; the cancelledTrade-resource archive is retained separately under prior-originals in the main recovery package to respect the established single-Git-blob size bound. Each archive remains historical, never final-source validation.
+
+The direct gh job-log read hit an artifact-storage redirect boundary. Original decoded job texts were recovered with the existing GitHub connector. Raw redirect stderr contained an expiring signed URL and is excluded from publishable evidence; only the sanitized boundary and raw-private checksum are included. Decoded-text checksums are not claimed to be HTTP wire-byte checksums.
+
+A24-control development run verified the provenance correction. The final36fc767/treec60f914 exact123focused result and subsequent mandatory final-source results are recorded separately. Their final completion must be established from the actual final records, not this prior-attempt narrative. Production owner access and physicalSafari remain unverified.

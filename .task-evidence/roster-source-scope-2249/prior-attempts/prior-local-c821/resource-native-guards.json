@@ -1,0 +1,60 @@
+{
+  "source": {
+    "baseline": "98030d6af189fe7d023bc36251800ab754a24f05",
+    "candidate": "c821a0bcd8349ae774cd8cd1834fb6e37ad4d18e",
+    "tree": "42194c01f5acfc44578df1aad9683fc5aec861ee",
+    "branch": "fix/sleeper-relevance-2249",
+    "version": "1.22.34",
+    "build": 2249,
+    "recorded_at": "2026-11-12T03:39:24.198129+00:00",
+    "expected_test_count": 4419,
+    "pr": 338
+  },
+  "publisher_guard": {
+    "path": "/workspace/dtos-publisher-2246/tools/release/publish.py",
+    "sha256": "91370b6d38c3be5c212e057e5cd8a33b4361b68926bdf9b899bff8a0baba6830"
+  },
+  "all_native_guards_passed": true,
+  "receipts": [
+    {
+      "name": "local-preflight",
+      "guard": "verify_preflight",
+      "passed": true,
+      "archive": "/workspace/2249-sleeper-relevance/local-resource-native-archives/local-preflight.zip",
+      "archive_sha256": "44030ea9418aef4a474a13576fa8b7d1f5cfc6e376aada5d37f94741d25281e1",
+      "archive_bytes": 3712,
+      "members": {
+        "result.json": "bce5bca6c5910ce0607871f17d32a777472863557f0a2e894ee16ef555fb793b",
+        "raw.log": "1b5bc29454e3e1a9172e59b61fa097709d5325769732a376d34d8819636495d8",
+        "SHA256SUMS": "01cd36b5d0d7bf8618e7e62a91d72dd66bacfef70559771ecc7f667e00df7ce5"
+      }
+    },
+    {
+      "name": "local-restoration-unused",
+      "guard": "verify_actuals_restoration",
+      "passed": true,
+      "archive": "/workspace/2249-sleeper-relevance/local-resource-native-archives/local-restoration-unused.zip",
+      "archive_sha256": "c141928eb7f279544e3c0344d2bf1041e94df1c5eacce373c214d779f9daa049",
+      "archive_bytes": 7285265,
+      "members": {
+        "evidence/result.json": "3b51de92a3f4de5602de7a243449235fd3ec515b0634061a8f6c9b7604edfdf8",
+        "raw.log": "014f9f739b778b7666cc6f8f29377316e9d86dd46e0af3c0408f0cb8bd64a5a6",
+        "prior-study.zip": "df5c88eda13a0671104c76a943b05032d7adfa089d11e738785b11e35a932439",
+        "SHA256SUMS": "f3aabe0067bee43a0836d8662b73fc500d2ba57335c9a5f9c45877a69ec0a361"
+      }
+    },
+    {
+      "name": "local-resident-refresh",
+      "guard": "verify_resident_refresh",
+      "passed": true,
+      "archive": "/workspace/2249-sleeper-relevance/local-resource-native-archives/local-resident-refresh.zip",
+      "archive_sha256": "07bb40c814a6c233d4a38dacf8d75ac3b6ca9f6657b8352028b73e05b816818f",
+      "archive_bytes": 5695,
+      "members": {
+        "evidence/result.json": "c280faabf0e08878fbe9cfac7c1638f1e42f1b71cd74e3a0e08b373ecc1b1195",
+        "raw.log": "432dc7725fd11014f68fa113b207702fe90b6212d389b34f89c66404306714da",
+        "SHA256SUMS": "540154a6894255bce261a3c71b83ed009dadc57e87fc328be432b3e0fbe878eb"
+      }
+    }
+  ]
+}

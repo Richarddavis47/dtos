@@ -1,0 +1,66 @@
+{
+  "observed_at": "2026-11-12T07:40:32.732899+00:00",
+  "commands": [
+    {
+      "command": [
+        "python",
+        "-m",
+        "unittest",
+        "-v",
+        "tests.test_release_publisher"
+      ],
+      "exit_code": 0,
+      "original_log": "publisher-final-exact-controls.log",
+      "tests": 138,
+      "reused": true
+    },
+    {
+      "command": [
+        "python",
+        "-m",
+        "ruff",
+        "check",
+        "tools/release",
+        "tests/test_release_publisher.py"
+      ],
+      "exit_code": 1,
+      "original_log": "publisher-first-ruff-unavailable-original.log",
+      "classification": "Selected Python runtime lacks Ruff; no code lint evaluation occurred"
+    },
+    {
+      "command": [
+        "/workspace/dtos/.venv/bin/ruff",
+        "check",
+        "tools/release",
+        "tests/test_release_publisher.py"
+      ],
+      "exit_code": 0,
+      "original_log": "publisher-final-exact-ruff.log"
+    },
+    {
+      "command": [
+        "python",
+        "-m",
+        "compileall",
+        "-q",
+        "tools/release",
+        "tests/test_release_publisher.py"
+      ],
+      "exit_code": 0,
+      "original_log": "publisher-final-exact-compile.log"
+    },
+    {
+      "command": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exit_code": 0,
+      "original_log": "publisher-final-diff-check.log"
+    }
+  ],
+  "module_sha256": "454d29f60204e52e2aa1a8072ecb484f2b30d484249e3b8666db22fd6ee6aeee",
+  "test_source_sha256": "5ba18b9188ff0930a75958174b2578cf6d5e9310ecae541df66a70345dc609bd",
+  "passed": true,
+  "scope": "Final publisher Python code,138tests passed; existing installed Ruff used after missing-module attempt. Actual finalized plan/Actions context verified separately. No application checks repeated."
+}

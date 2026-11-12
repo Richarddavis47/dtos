@@ -1,0 +1,12 @@
+}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-12T03:59:07.353752+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/workspace?front_office=1&mode=calculator \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-12T03:59:07.699683+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_admission","request_id":"system","event":"trade_admission","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":750927872,"limit_bytes":2147483648,"raw_headroom_bytes":1396555776,"clean_inactive_file_bytes":1331200,"conditional_file_credit_bytes":665600,"admission_headroom_bytes":1397221376,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"recovery":null}}
+{"timestamp":"2026-11-12T03:59:07.758701+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_execution_finished","request_id":"system","event":"trade_execution_finished","duration_ms":60.003,"diagnostic":{"schema":"trade-resource-v1","outcome":"complete"}}
+{"timestamp":"2026-11-12T03:59:07.759932+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/trades/evaluate \"HTTP/1.1 200 OK\"","request_id":"system"}
+ok
+
+----------------------------------------------------------------------
+Ran 24 tests in 161.517s
+
+OK
+{"commit": "c821a0bcd8349ae774cd8cd1834fb6e37ad4d18e", "tree": "42194c01f5acfc44578df1aad9683fc5aec861ee", "dirty": [" M docs/audits/ROSTER_SOURCE_SCOPE_2249.md", " M src/core/intelligence/roster_diagnostics.py", " M src/ui/source_provenance.py", " M tests/test_roster_source_scope.py", " M tests/test_roster_source_scope_browser.py"], "observed_at": "2026-11-12T03:59:08.246679+00:00", "tests": 24, "failures": 0, "errors": 0, "skipped": 0, "passed": true, "memory_limit": 2147483648, "peak": 808308736, "events": {"low": "0", "high": "0", "max": "0", "oom": "0", "oom_kill": "0", "oom_group_kill": "0"}}

@@ -1,0 +1,34 @@
+{
+  "candidate": "c821a0bcd8349ae774cd8cd1834fb6e37ad4d18e",
+  "tree": "42194c01f5acfc44578df1aad9683fc5aec861ee",
+  "source_runs": {
+    "canonical": 43149667688,
+    "product": 43149667725,
+    "tooling": 43149667697,
+    "lifecycle": 43149667665
+  },
+  "failed_jobs": [
+    {
+      "job": 130955607520,
+      "name": "my-team-browser",
+      "tests": 255,
+      "failures": 1,
+      "bytes": 1221461,
+      "sha256": "bc84b32cf7b8fd22d3cadc88a1814b16d8855d3a62818a07f8e3b72ffa2874b8",
+      "transport": "Original GitHub connector decoded text; not HTTP wire-byte claim"
+    },
+    {
+      "job": 130955607615,
+      "name": "public-welcome-browser",
+      "tests": 412,
+      "failures": 1,
+      "bytes": 1892711,
+      "sha256": "bcefd55e847fd51a6d921a8f8c96d1d03642df799db03c3b05820302b9e91db0",
+      "transport": "Original GitHub connector decoded text; not HTTP wire-byte claim"
+    }
+  ],
+  "cause": "The scoped freshness change unintentionally scoped complete source_observations metadata as well. Existing disclosure contract correctly required all238originalclocks;only6remained. Assertions are preserved. Correction restores allpublicationclocks independentlyofscopedfreshness.",
+  "preflight": "Not executed after the412testgroup failed. Its missing-artifact upload is a downstream incomplete-scope outcome, not authorization failure.",
+  "cancelled": "Superseded canonical and remaining Productwork cancelled deliberately after confirmedregression. Earlier completedjob outcomes remain unchanged.",
+  "secret_handling": "Raw direct-download redirectstderr stays private; only sanitizedtransportboundary and digest publishable."
+}

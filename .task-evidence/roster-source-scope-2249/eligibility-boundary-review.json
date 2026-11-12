@@ -1,0 +1,30 @@
+{
+  "observed_at": "2026-11-12T07:38:40.226288+00:00",
+  "candidate": "36fc76784d968fcd0917ce91821840649da1a7a4",
+  "tree": "c60f914d2a0b6b34c2d3e87cdce8eae4560d0b49",
+  "review": "No new eligible-dependency exclusion defect established.",
+  "source_sha256": {
+    "src/core/intelligence/roster_diagnostics.py": "eed949de4d46895a1f092034f23584cc5c988924f235e498932e78807248aa61",
+    "src/core/trade_intelligence/lineup.py": "3a73449b4c9c61257eb57e067bd1336c0c0e9532341a2e7ecba8066e809c1adc",
+    "services/sleeper.py": "829d4528b32c07cf0f759eab35d4b57e81d77486ada40b1095e941d3cea646d1",
+    "tests/test_roster_source_scope.py": "a3b27f759c5d03581a73b320daf660cf65ee85dc9581a17b97f92a3eb9c80c08"
+  },
+  "facts": [
+    "Sleeper normalization derives canonical roster_slot from native starters/taxi/reserve membership; starters take precedence, then taxi, then reserve, otherwise Bench. It is not a UI badge inference.",
+    "Supported current legal-lineup contract excludes stored IR/TAXI/RESERVE and explicit lineup_eligible=False. Diagnostic pools and canonical optimizer use the same boundary. No supported current rule permits a stored player to start without activation.",
+    "Freshness excludes those canonical stored/ineligible rows, but retains all other league roster references, including eligible reserves and unknown availability. This is not participation evidence.",
+    "Activation to Bench restores the source dependency. Post-trade resulting rosters receive an independent qualification; a formerly stored incoming stale player cannot inherit the pre-trade exclusion.",
+    "Atomic compatibility still evaluates every projection leaf. Full source clocks remain separate and complete. Aging and failed refresh remain material.",
+    "These conclusions apply to the admitted compatible roster snapshot, not unobserved upstream roster changes. Incompatible or stale snapshots cannot establish fresh current facts."
+  ],
+  "recorded_full_suite_controls": [
+    "test_explicit_reserve_storage_is_not_current_lineup_source_dependency",
+    "test_reactivation_requires_actual_projection_evidence",
+    "test_missing_eligible_reserve_remains_missing_and_withheld",
+    "test_unknown_kicker_or_defense_availability_is_not_inferred_from_projection",
+    "test_incoming_stored_player_rechecks_its_post_trade_source_freshness",
+    "test_unused_foreign_generation_still_invalidates_atomic_publication"
+  ],
+  "application_source_changed": false,
+  "scope": "Source review plus independently reconciled original executed controls. No league eligibility, projection, scoring or admission policy change."
+}
