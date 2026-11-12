@@ -4,7 +4,7 @@ No discovery, pricing, evaluation or acceptance policy lives here. Neutral cost
 is read from the shared evaluator and checked against its admitted asset pool.
 """
 
-from src.core.trade_intelligence.market_balance import market_balance, package_market
+from src.core.intelligence import trade_market_balance as market_balance
 from src.core.intelligence import trade_pick_identity_errors
 from services.trade_search_policy import ELIGIBLE, classify
 
@@ -73,9 +73,9 @@ def cost_evidence(row, assets, target):
         "incoming": calculated["received"]["total"],
         "net_received_minus_sent": calculated["difference"],
         "extra_received_asset_ids": extras,
-        "extra_received_value": package_market(tuple(assets[key] for key in extras))[
-            "total"
-        ],
+        "extra_received_value": market_balance(
+            (), tuple(assets[key] for key in extras)
+        )["received"]["total"],
     }
 
 
