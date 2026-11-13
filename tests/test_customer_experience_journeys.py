@@ -33,7 +33,7 @@ class CustomerExperienceJourneyTests(journeys.ProductBrowserJourneyTests):
     def audit_page(self, page, path, viewport):
         visible = page.locator("body").inner_text()
         for wording in (
-            "Find offers",
+            "Find Bilateral Options",
             "Advanced DTOS analysis",
             "disjoint reserve cover",
             "Canonical Market",
@@ -41,6 +41,8 @@ class CustomerExperienceJourneyTests(journeys.ProductBrowserJourneyTests):
             "MARKET UNAVAILABLE · Unavailable · Unavailable",
         ):
             self.assertNotIn(wording, visible, (path, wording))
+        if path in ("/trades/trade-for", "/trades/shop"):
+            self.assertEqual(page.locator("#trade-find").inner_text(), "Find offers")
         self.assertGreaterEqual(
             page.locator("body").evaluate(
                 "e => parseFloat(getComputedStyle(e).fontSize)"

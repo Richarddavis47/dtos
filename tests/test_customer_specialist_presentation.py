@@ -163,7 +163,9 @@ class CustomerSpecialistPresentationTests(unittest.TestCase):
             missing = client.get('/fois')
         self.assertIn("Choose a league first", missing.text)
         score = fixture._persist_profiles('active-league', 1)[0]
-        retained = replace(score, evidence_revalidated=False)
+        retained = replace(score, evidence_integrity_version=None,
+                           evidence_state="retained_not_revalidated")
+        self.assertFalse(retained.evidence_revalidated)
         fixture.repository.save(retained, 'retained-customer-control')
         before = fixture.repository.league('active-league', score.model_version)
         with patch.object(fixture.service, 'generate', side_effect=AssertionError('no generation')):

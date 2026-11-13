@@ -85,9 +85,21 @@ class CustomerTradePresentationTests(unittest.TestCase):
         result = fixture.evaluate()
         original = deepcopy(result)
         soup = _Document(render_trade_explanation(result, league_id='one-qb')).root
-        summary = _text(_class(_class(soup, 'tw-decision'), 'tw-team-summary', direct=True))
-        self.assertIn('cannot be verified', summary)
-        self.assertNotIn('+0.00 projected points', summary)
+        summary = _class(_class(soup, 'tw-decision'), 'tw-team-summary', direct=True)
+        sides = [child for child in _elements(summary, direct=True) if child['tag'] == 'section']
+        self.assertEqual(len(sides), 2)
+        active, partner = map(_text, sides)
+        self.assertIn('Your team', active)
+        self.assertIn('cannot be verified', active)
+        self.assertNotIn('+0.00 projected points', active)
+        # The unrelated, independently complete opponent comparison retains its
+        # genuine zero rather than becoming unknown because our DEF is missing.
+        self.assertIn('Their team', partner)
+        self.assertIn('+0.00 projected points', partner)
+        comparison = result['decision_context']['partner_lineup_comparisons']['current_week']
+        if isinstance(comparison, str):
+            comparison = json.loads(comparison)
+        self.assertEqual(comparison['delta'], 0)
         self.assertIn('DEF', _text(_class(soup, 'tw-lineup-details')))
         self.assertEqual(result, original)
 
@@ -199,12 +211,35 @@ class CustomerTradeJourneyTests(unittest.TestCase):
             self.assertIn('NOT REVALIDATED', page.locator('.tw-offer-review').inner_text())
             self.assertEqual(harness.proposal(page), original)
             self.assertEqual(len(requests), count)
-            # Old saved states lacking recorded names remain exact IDs, never
-            # enriched with today's roster labels as historical context.
+            # A missing session copy must not discard the valid recorded names
+            # in the same generation's history snapshot.
             page.evaluate("""() => { const key='dtos-trade-workspace:scout-session'; const s=JSON.parse(sessionStorage.getItem(key)); delete s.previewProposal.preview_presentation; sessionStorage.setItem(key,JSON.stringify(s)); }""")
             page.reload()
             page.get_by_role('button', name='Use this offer in my draft', exact=True).wait_for()
             package = page.locator('.tw-offer-review .tw-offer-package').first.inner_text()
-            self.assertIn(pick, package)
+            self.assertIn('Recorded2028 first · Harbor', package)
+            self.assertIn('2028 round 1 · original franchise #3', package)
             self.assertNotIn('TODAY', package)
+            recorded = page.evaluate('JSON.parse(sessionStorage.getItem("dtos-trade-workspace:scout-session"))')
+            self.assertEqual(recorded['previewProposal']['assets_sent'], [pick])
+            self.assertEqual(recorded['previewProposal']['assets_received'], ['player:x'])
+            # The browser history snapshot is another legitimate retained copy.
+            # Remove names from both stores to actually exercise an older state
+            # without presentation metadata, rather than discarding valid names.
+            page.evaluate("""() => {
+              const strip = draft => {if(draft?.previewProposal) delete draft.previewProposal.preview_presentation;};
+              const key='dtos-trade-workspace:scout-session', saved=JSON.parse(sessionStorage.getItem(key));
+              strip(saved);sessionStorage.setItem(key,JSON.stringify(saved));
+              const state=history.state;
+              if(state?.dtosTrade?.draft){strip(state.dtosTrade.draft);history.replaceState(state,'');}
+            }""")
+            page.reload()
+            page.get_by_role('button', name='Use this offer in my draft', exact=True).wait_for()
+            package = page.locator('.tw-offer-review .tw-offer-package').first.inner_text()
+            self.assertNotIn('TODAY', package)
+            self.assertIn('NOT REVALIDATED', page.locator('.tw-offer-review').inner_text())
+            legacy = page.evaluate('JSON.parse(sessionStorage.getItem("dtos-trade-workspace:scout-session"))')
+            self.assertEqual(legacy['previewProposal']['assets_sent'], [pick])
+            self.assertEqual(legacy['previewProposal']['assets_received'], ['player:x'])
+            self.assertEqual(harness.proposal(page), original)
             self.assertEqual(len(requests), count)

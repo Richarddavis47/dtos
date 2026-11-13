@@ -138,7 +138,7 @@ class CustomerMarketPlayerExperienceTests(unittest.TestCase):
         row = dict(player_id='1', canonical_projection=0, sleeper_web_display_projection='0.00',
                    availability='out', nfl_team_state='assigned')
         reader = self.projection(f, row)
-        with patch('routes.market.current_league_context', return_value=SimpleNamespace(projection=reader)):
+        with patch('routes.market.projection_service', reader):
             html = self.page(f, '/market?selected=player%3A1')
         text = default_text(html)
         self.assertIn('0.00', text)
@@ -152,7 +152,7 @@ class CustomerMarketPlayerExperienceTests(unittest.TestCase):
         row = dict(player_id='1', canonical_projection=None,
                    missing_projection_reason='NO_SCORING_STATISTICS')
         reader = self.projection(f, row)
-        with patch('routes.market.current_league_context', return_value=SimpleNamespace(projection=reader)):
+        with patch('routes.market.projection_service', reader):
             html = self.page(f, '/market?selected=player%3A1')
         self.assertIn('a player-week record exists, but contains no usable scoring statistics', default_text(html))
         self.assertNotIn('0.00 projected points', default_text(html))
