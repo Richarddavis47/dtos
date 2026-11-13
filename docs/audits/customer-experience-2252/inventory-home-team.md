@@ -39,3 +39,9 @@ Home's explicit Find Trade Ideas action previously converted the typed `trade_ca
 - Depth keeps primary coverage, known points and qualification outside details; full original interpretation, eligibility and removal calculations remain inside.
 - Detailed league team-history/current-needs context is now optional; completed observed count, coverage qualification and source meaning remain visible.
 - Human timestamps on Home activity and My Team activity use the shared readable-time formatter, preserving raw clocks in existing source records.
+
+## C4 visual follow-up: repeated unknown sentinels (C5 correction)
+
+The retained C4 320px My Team screenshot showed ten repeated `Status unavailable` / `Week 1 · Sleeper Unavailable` rows, four depth cards repeating unavailable point labels, and four picks printing `Projected range: UNKNOWN · LOW`. This was a customer-visible rendering defect: known empty/model sentinel values were truthy and presented as routine measures, rather than missing data recovered from upstream.
+
+The C5 route renderer now summarizes roster projection/status/Market coverage once, with the exact player-specific gaps and original reasons in an optional list. Supported numeric projections remain on each player with their exact supplied display, including zero and negative scores. Unknown participation is stated beside any numeric projection lacking a reported status; known Out/IR/PUP and supplied bye/exclusion notes remain beside affected players. This never infers participation from an Active label or a projection. Depth keeps supported contribution/backup numbers and coverage counts; shared missing totals are named once by affected positions and exact reasons remain in position detail. Pick range UNKNOWN/empty/unavailable sentinels and their orphan confidence labels are omitted; supported ranges, exact pick identities and explicit zero Market values remain unchanged. No source preparation, scoring, admission or core data changes.

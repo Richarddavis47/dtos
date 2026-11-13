@@ -165,25 +165,62 @@ def _team_intelligence(view: dict[str, Any]) -> str:
     )
 
 
+def _present_label(value) -> bool:
+    """Omit only explicit empty/unknown display sentinels, never numeric zero."""
+    return value is not None and str(value).strip().casefold() not in {
+        '', 'unknown', 'unavailable', 'none', 'null', 'n/a', '—', '--', 'not available', 'not_available',
+    }
+
+
 def _roster_rooms(view: dict[str, Any]) -> str:
     labels = {"QB": "Quarterbacks", "RB": "Running Backs", "WR": "Wide Receivers", "TE": "Tight Ends", "Other": "Other Players"}
-    rooms = []
+    rooms, source_rows = [], []
     groups = {**view["roster_groups"], "Other": view["other_players"]}
+    total = projected = reported = priced = 0
+    weeks = set()
     for position, players in groups.items():
         if position == "Other" and not players:
             continue
         rows = []
         for player in players:
+            total += 1
             pid = str(player["id"])
             target = contextual_player_url(pid, from_team=view['team']['roster_id'], week=view['overview']['projection_week'])
             quote_value = player.get('intelligence')
             price = quote_value.market_value if quote_value is not None else None
             projection = view['projection_views'].get(pid)
-            market = f'{price:g}' if price is not None else 'Unavailable'
+            has_projection = projection is not None and number(projection.get('value')) is not None
+            has_status = _present_label(player.get('availability_status'))
+            projected += has_projection
+            reported += has_status
+            priced += price is not None
+            if projection and projection.get('week') is not None:
+                weeks.add(projection['week'])
+            # A numeric observation and its precision remain unchanged. The
+            # repeated long precision explanation belongs in the source list.
+            compact_projection = {**projection, 'display_reason': None} if has_projection else None
+            status = str(player['availability_status']) if has_status else 'Participation unconfirmed' if has_projection else None
             action = ('<a class="thq-action" href="' + escape('/trades/shop?' + urlencode({'front_office': view['team']['roster_id'], 'asset_id': pid, 'owner_roster_id': view['team']['roster_id']})) + '" aria-label="Shop ' + escape(player['name']) + '">Shop</a>') if view['can_shop'] else ''
-            rows.append(f'<article class="thq-player"><div><a href="{escape(target)}">{player_summary(player_id=pid, name=str(player["name"]), position=str(player.get("position") or "Other"), nfl_team=str(player.get("team") or "Unknown"), context=player.get("availability_status") or "Status unavailable", projection=projection)}</a><div class="thq-player-meta">Market value: {market} · {escape(str(player.get("roster_slot") or "Assignment unavailable"))}</div>{action}</div></article>')
+            metadata = ([f'Market value: {price:g}'] if price is not None else []) + ([str(player['roster_slot'])] if _present_label(player.get('roster_slot')) else [])
+            participation = ('<p class="player-participation-note">' + escape(plain_reason(projection['participation_note'])) + '</p>') if projection and projection.get('participation_note') else ''
+            precision = '<small class="player-projection-qualification">Sleeper display precision unverified.</small>' if has_projection and projection.get('display_reason') else ''
+            rows.append(f'<article class="thq-player"><div><a href="{escape(target)}">{player_summary(player_id=pid, name=str(player["name"]), position=str(player.get("position") or "Other"), nfl_team=str(player.get("team") or "Unknown"), context=status, projection=compact_projection)}</a>{participation}{precision}<div class="thq-player-meta">{escape(" · ".join(metadata))}</div>{action}</div></article>')
+            facts = [f'Reported availability: {player["availability_status"]}.' if has_status else 'Availability not reported; participation remains unknown.']
+            if has_projection:
+                facts.append(f'Week {projection["week"]} Sleeper projection: {projection["display"]}.')
+            else:
+                facts.append((projection or {}).get('reason') or 'No supported weekly Sleeper projection is available for this player.')
+            if price is None:
+                facts.append('No supported Market price is available for this player.')
+            facts.extend(projection[key] for key in ('participation_note', 'display_reason') if projection and projection.get(key))
+            source_rows.append('<li data-roster-player-evidence="' + escape(pid, quote=True) + '"><b>' + escape(player['name']) + '</b>: ' + escape(' '.join(facts)) + '</li>')
         rooms.append(f'<section class="thq-room"><div class="thq-room-head"><span>{labels[position]}</span><span>{len(players)} players</span></div>{"".join(rows) or "<p class=muted>No players currently rostered.</p>"}</section>')
-    return "".join(rooms)
+    week = 'Week ' + str(next(iter(weeks))) if len(weeks) == 1 else 'Weekly'
+    summary = (f'<aside id="roster-evidence-summary" role="note"><p>{escape(week)} projections: <b>{projected}/{total}</b> available · '
+               f'Availability: <b>{reported}/{total}</b> reported · Market prices: <b>{priced}/{total}</b> available.</p>'
+               '<p>Unreported availability remains unknown. A projection does not confirm playing time; missing projections or prices are not zero.</p>'
+               '<details><summary>Player-by-player availability and projection coverage</summary><ul>' + ''.join(source_rows) + '</ul></details></aside>')
+    return summary + "".join(rooms)
 
 
 def _key_players(view):
@@ -222,8 +259,8 @@ def _draft_capital(view: dict[str, Any]) -> str:
                     shop = '/trades/shop?' + urlencode({'front_office': owner, 'asset_id': f'{year}-R{pick["round"]}-{original}', 'owner_roster_id': owner})
                     actions += f'<a class="thq-action" href="{escape(shop)}" aria-label="Shop {escape(title)}">Shop pick</a>'
             market = f'Market value: {value}' if price is not None else 'Market price not available'
-            range_note = (' · Projected range: ' + str(identity['projected_range'])) if identity.get('projected_range') else ''
-            if range_note and identity.get('projected_range_confidence'):
+            range_note = (' · Projected range: ' + str(identity['projected_range'])) if _present_label(identity.get('projected_range')) else ''
+            if range_note and _present_label(identity.get('projected_range_confidence')):
                 range_note += ' · ' + str(identity['projected_range_confidence'])
             own = str(original) == str(view['team']['roster_id']) if original is not None else None
             origin_label = 'Your original pick' if own else 'Acquired pick' if own is False else 'Original franchise unresolved'
@@ -246,7 +283,12 @@ def _positional_depth(view):
         f'<p><strong>{escape(" · ".join(positions))}:</strong> {escape(plain_reason(qualification))}</p>'
         for qualification, positions in qualifications.items() if len(positions) > 1
     )
-    shared_html = f'<div id="depth-evidence-notes" role="note">{shared}</div>' if shared else ''
+    missing_points = [position for position, facts in view['overview']['positions'].items() if number(facts.get('starting_points')) is None]
+    missing_backups = [position for position, facts in view['overview']['positions'].items() if number(facts.get('best_reserve_points')) is None]
+    missing = ('<p>Starting-point contributions are not established at ' + escape(', '.join(missing_points)) + '.</p>') if missing_points else ''
+    if missing_backups:
+        missing += '<p>Backup point comparisons are incomplete at ' + escape(', '.join(missing_backups)) + '. Missing evidence does not prove weak backups.</p>'
+    shared_html = f'<div id="depth-evidence-notes" role="note">{shared}{missing}</div>' if shared or missing else ''
     rows = []
     for position, facts in view['overview']['positions'].items():
         points = _points(facts['starting_points'])
@@ -278,7 +320,13 @@ def _positional_depth(view):
             lead = 'Possible movable depth is identified; review the removal cost before trading.'
         else:
             lead = 'Review this position’s starting contribution and backup options.'
-        rows.append(f'<article class="thq-kpi"><h3>{position}</h3><p>{escape(lead)}</p>{qualification_html}<p>{facts["starting_count"]} players in {escape(facts["lineup_basis"])} · {points} Sleeper-projected points</p><p>Backup projections: <b>{facts["reserve_covered"]}/{facts["reserve_expected"]}</b> covered. Best supported backup: {backup} points.</p>{"<p>Review before moving: " + escape(expendable) + "</p>" if expendable else ""}<details><summary>Replacement options and calculations</summary><p>{escape(explanation)}</p><p>{facts["required_slots"]} required slots · {facts["eligible_flex_slots"]} eligible flex slots · {escape(facts["availability"])}</p><p>Current-week evidence; not a sale recommendation or long-term value grade. Scenarios must not be summed.</p>{details}</details></article>')
+        lead_html = '<p>' + escape(lead) + '</p>' if evidence.get('calculation_supported') or len(qualifications[qualification]) == 1 else ''
+        starting = f'{facts["starting_count"]} players in {escape(facts["lineup_basis"])}'
+        if number(facts.get('starting_points')) is not None:
+            starting += f' · {points} Sleeper-projected points'
+        reserve = (f'<p>Backup projections: <b>{facts["reserve_covered"]}/{facts["reserve_expected"]}</b> covered.'
+                   + (f' Best supported backup: {backup} points.' if number(facts.get('best_reserve_points')) is not None else '') + '</p>') if facts['reserve_expected'] else ''
+        rows.append(f'<article class="thq-kpi"><h3>{position}</h3>{lead_html}{qualification_html}<p>{starting}</p>{reserve}{"<p>Review before moving: " + escape(expendable) + "</p>" if expendable else ""}<details><summary>Replacement options and calculations</summary><p>{escape(explanation)}</p><p>{facts["required_slots"]} required slots · {facts["eligible_flex_slots"]} eligible flex slots · {escape(facts["availability"])}</p><p>Current-week evidence; not a sale recommendation or long-term value grade. Scenarios must not be summed.</p>{details}</details></article>')
     return shared_html + '<div class="thq-cards">' + ''.join(rows) + '</div>'
 
 
@@ -476,7 +524,7 @@ def create_teams_router(
 <section class="thq-section" id="full-roster"><details class="thq-strength-detail" id="my-team-roster" open><summary>Full Roster</summary><div class="thq-roster">{_roster_rooms(view)}</div></details><details class="thq-strength-detail" id="my-team-key-players"><summary>Key players by Market value</summary>{_key_players(view)}</details></section>
 <section class="thq-section" id="draft-capital"><div class="thq-section-head"><h2>Draft Capital</h2><span>Your owned future picks</span></div><div class="thq-picks">{_draft_capital(view)}</div><p class="muted">Pick details preserve the original franchise and current owner. A pick’s future draft position is unknown unless a supported range is shown.</p></section>
 
-<section class="thq-section" id="positional-depth"><div class="thq-section-head"><h2>Starter strength and positional depth</h2><span>Week {escape(str(overview['projection_week'] or 'unavailable'))} · Lineup and backup projections from Sleeper</span></div>{_positional_depth(view)}</section>
+<section class="thq-section" id="positional-depth"><div class="thq-section-head"><h2>Starter strength and positional depth</h2><span>{escape('Week ' + str(overview['projection_week']) + ' · ' if overview['projection_week'] is not None else 'Current roster · ')}Lineup and backup projections from Sleeper</span></div>{_positional_depth(view)}</section>
 <section class="thq-section">{team_observations(view.get("league_observations"), roster_id)}</section>
 <section class="thq-section"><details class="thq-strength-detail" id="my-team-advanced"><summary>Calculations and sources</summary><div class="thq-evidence-body"><p>League evidence updated: {escape(view["last_updated"])}. Selected strategy overrides inferred direction and never changes Market prices.</p><p>Comparison ranks include only franchises with complete evidence for that named dimension. Coverage is evidence support, not an outcome probability. Overall dynasty utility and competitive-window aggregates remain unavailable without an approved model.</p><div class="thq-grades">{_team_intelligence(view)}</div>{_decision_horizons(view)}{multi_horizon_html}<h3>Submitted Starting Lineup</h3><p>Sleeper assignments remain separate from the DTOS optimal legal lineup.</p><details class="thq-strength-detail"><summary>View {len(starters)} submitted starters</summary><div class="thq-starters">{starter_cards}</div></details><h3>Roster facts</h3><p>{escape(roster_summary)} · {view['snapshot']['total_picks']} owned picks</p><div class="thq-cards">{_asset_cards(view['snapshot'])}</div><h3>Current Team Performance</h3><div class="thq-performance">{performance_cards}</div><div class="thq-summary">{summary}</div><h3>Activity</h3><div class="thq-timeline">{activity_html}</div><h3>Franchise History</h3><p>{historical_seasons} retained seasons · {historical_transactions} transactions. Historical FOIS grades are RETAINED / NOT REVALIDATED.</p><a class="thq-action" href="{franchise_history_url}">Franchise History</a><a class="thq-action" href="/history">League History</a><a class="thq-action" href="/front-offices?front_office={roster_id}">View franchise analysis</a><details><summary>About future forecasts</summary><div class="thq-future-grid">{future}</div></details></div></details></section>
 </section><script src="/static/js/strategy_session.js" defer></script>

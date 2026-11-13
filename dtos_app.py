@@ -942,7 +942,7 @@ def page(title: str, body: str, commissioner_chrome: bool = False) -> HTMLRespon
             if item.status == "active" and item.roster_id is not None
         )
         franchise = account.membership.franchise_name if account.membership else "Choose a league"
-        account_html = f'<aside aria-label="Account and league context"><details class="account-context"><summary><b>{escape(league_name)}</b><span>{escape(franchise or "Mapped franchise")} · Switch league</span></summary><div class="ds-actions">{switches}<a class="ds-action" href="/account">Account · {escape(account.display_name)}</a></div></details></aside>'
+        account_html = f'<aside aria-label="Account and league context"><details class="account-context"><summary><b>{escape(league_name)}</b><span>{escape(franchise or "Team name not recorded")} · Switch league</span></summary><div class="ds-actions">{switches}<a class="ds-action" href="/account">Account · {escape(account.display_name)}</a></div></details></aside>'
     from services.contextual_navigation import navigation_markup, with_back
     back, navigation_head = navigation_markup()
     team_heading = 'data-my-team-context=' in body

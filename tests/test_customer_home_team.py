@@ -80,6 +80,93 @@ class CustomerTeamPresentationTests(unittest.TestCase):
         self.assertIn('Original franchise unresolved', html)
         self.assertNotIn('asset_id=2029-R1-None', html)
 
+    def test_unknown_pick_range_sentinels_do_not_create_forecast_claims(self):
+        from routes.teams import _draft_capital
+        identity = {'year': 2029, 'round': 1, 'original_roster_id': 1,
+                    'projected_range_confidence': 'LOW'}
+        view = dict(team={'roster_id': 1, 'team_name': 'Your team'}, can_shop=True,
+                    picks_by_year={2029: [dict(round=1, original_roster_id=1,
+                        current_owner_id=1, original_team='Your team')]},
+                    team_intelligence=SimpleNamespace(future_capital_evidence={
+                        'picks': [{'identity': identity, 'market': {'normalized_market_price': 0}}]}))
+        for value in (None, '', 'UNKNOWN', 'unknown', 'Unavailable', '—'):
+            with self.subTest(value=value):
+                identity['projected_range'] = value
+                before = deepcopy(view)
+                html = _draft_capital(view)
+                self.assertNotIn('Projected range:', html)
+                self.assertNotIn('LOW', html)
+                self.assertIn('Market value: 0', html)
+                self.assertIn('asset_id=2029-R1-1', html)
+                self.assertEqual(view, before)
+        identity['projected_range'] = 'EARLY'
+        self.assertIn('Projected range: EARLY · LOW', _draft_capital(view))
+
+    def test_roster_coverage_consolidates_unknowns_but_keeps_known_risks_and_scores(self):
+        from routes.teams import _roster_rooms
+        players = [dict(id=str(i), name=f'Player {i}', position='RB', team='BUF',
+                        roster_slot='Bench', availability_status=status,
+                        intelligence=SimpleNamespace(market_value=0))
+                   for i, status in enumerate((None, None, 'Out', 'IR'))]
+        projections = {str(i): dict(week=9, value=value, display=display,
+                         availability='available' if value is not None else 'unavailable',
+                         reason=None if value is not None else 'No matching player-week record.',
+                         participation_note='NFL bye in Week 9; excluded from this week’s lineup.' if i == 1 else None)
+                       for i, (value, display) in enumerate(((0, '0.00'), (-1.25, '-1.25'), (None, 'Unavailable'), (None, 'Unavailable')))}
+        view = dict(team={'roster_id': 1}, overview={'projection_week': 9},
+                    roster_groups={'RB': players}, other_players=[], projection_views=projections, can_shop=True)
+        before = deepcopy(view)
+        html = _roster_rooms(view)
+        normal = DisclosureText(html).text
+        self.assertIn('Week 9 projections: ', normal)
+        self.assertIn('2/4', normal)
+        self.assertNotIn('Status unavailable', normal)
+        self.assertNotIn('Sleeper Unavailable', normal)
+        self.assertIn('Sleeper 0.00', normal)
+        self.assertIn('Sleeper -1.25', normal)
+        self.assertIn('Participation unconfirmed', normal)
+        self.assertIn('Out', normal)
+        self.assertIn('IR', normal)
+        self.assertIn('NFL bye in Week 9', normal)
+        self.assertIn('Market value: 0', normal)
+        self.assertNotIn('No matching player-week record.', normal)
+        self.assertIn('No matching player-week record.', html)
+        self.assertIn('Availability not reported; participation remains unknown.', html)
+        self.assertEqual(html.count('data-roster-player-evidence='), 4)
+        self.assertEqual(view, before)
+        # A fully missing roster does not print the same placeholders per row.
+        for player in players:
+            player['availability_status'] = None
+        for row in projections.values():
+            row.update(value=None, display='Unavailable', availability='unavailable', participation_note=None)
+        html = _roster_rooms(view)
+        normal = DisclosureText(html).text
+        self.assertEqual(normal.count('0/4'), 2)  # projections and reported availability, never points
+        self.assertNotIn('Unavailable', normal)
+        self.assertNotIn('Participation unconfirmed', normal)
+        self.assertEqual(html.count('No matching player-week record.'), 2)
+        self.assertEqual(html.count('No supported weekly Sleeper projection is available'), 2)
+
+    def test_depth_missing_totals_are_summarized_once_and_zero_and_negative_stay_visible(self):
+        from routes.teams import _positional_depth
+        base = dict(starting_points=None, best_reserve_points=None, starting_count=1,
+                    lineup_basis='submitted starters', required_slots=1, eligible_flex_slots=1,
+                    reserve_covered=0, reserve_expected=2, availability='partial',
+                    diagnostic={'evidence': {'calculation_supported': False,
+                        'conclusion_state': 'unavailable'}, 'interpretation': 'Missing reserve projection record.'})
+        positions = {p: deepcopy(base) for p in ('QB', 'RB')}
+        view = dict(overview={'positions': positions}, team={'players': []}, projection_snapshot={})
+        html = _positional_depth(view)
+        normal = DisclosureText(html).text
+        self.assertNotIn('Unavailable', normal)
+        self.assertEqual(normal.count('Starting-point contributions are not established'), 1)
+        self.assertEqual(normal.count('Missing evidence does not prove weak backups'), 1)
+        self.assertEqual(html.count('Missing reserve projection record.'), 2)
+        positions['RB'].update(starting_points=0, best_reserve_points=-1.25)
+        normal = DisclosureText(_positional_depth(view)).text
+        self.assertIn('0.00 Sleeper-projected points', normal)
+        self.assertIn('Best supported backup: -1.25 points', normal)
+
     def test_depth_claim_and_uncertainty_are_short_with_original_details_retained(self):
         from routes.teams import _positional_depth
         facts = dict(starting_points=12.125, best_reserve_points=None, starting_count=1,

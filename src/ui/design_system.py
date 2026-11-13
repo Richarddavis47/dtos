@@ -25,7 +25,7 @@ class PagePresentation:
 def _presentation(title: str) -> PagePresentation:
     normalized = title.casefold()
     if normalized == "asset market":
-        return PagePresentation("Find players and exact draft picks using neutral Market prices and your league's ownership context.", "Asset Market", "Open Team HQ", "/teams", variant="search")
+        return PagePresentation("Find players and exact draft picks using neutral Market prices and your league's ownership context.", "Asset Market", "View teams", "/teams", variant="search")
     if "executive profile" in normalized:
         return PagePresentation("Review this manager's process, results, confidence, and historical evidence in the active league.", "General Manager profile", "GM Leaderboard", "/fois", "League History", "/history")
     if "front office intelligence system" in normalized:
@@ -42,20 +42,20 @@ def _presentation(title: str) -> PagePresentation:
     if "player intelligence" in normalized or "player dossier" in normalized:
         return PagePresentation("Decide whether to acquire, hold, build around, or move this player.", "Player decision", "Open Trade Center", "/trades", variant="identity")
     if "trade" in normalized:
-        return PagePresentation("Find the best realistic trade to pursue for the active Front Office.", "Trade planning", "Review Teams", "/teams")
+        return PagePresentation("Review trade options, their costs and the evidence for both teams.", "Trade planning", "Review Teams", "/teams")
     if "front office" in normalized:
-        return PagePresentation("Understand how this franchise builds, competes, and negotiates.", "Franchise management", "Open Team HQ", "/teams")
+        return PagePresentation("Understand how this franchise builds, competes, and negotiates.", "Franchise management", "View teams", "/teams")
     if "matchup" in normalized:
         return PagePresentation("Understand the weekly matchup, lineup leverage, and likely pressure points.", "Weekly competition", "Review Teams", "/teams")
     if "history" in normalized or "historical" in normalized or "season archive" in normalized:
-        return PagePresentation("Review recorded trades and roster changes, with their coverage and limits.", "Historical evidence", "Open Team HQ", "/teams")
+        return PagePresentation("Review recorded trades and roster changes, with their coverage and limits.", "Historical evidence", "View teams", "/teams")
     if "draft" in normalized or "pick" in normalized:
         return PagePresentation("Understand the league's draft-capital ownership and strategic flexibility.", "Draft capital", "Open Trade Center", "/trades")
     if "transaction" in normalized:
         return PagePresentation("See what changed across the league and which assets moved.", "League activity", "Review Transactions", "/transactions")
     if "setting" in normalized:
         return PagePresentation("Review league rules, synchronization state, and application information.", "League configuration", "Review Sync Status", "/settings#sync-status")
-    return PagePresentation("Navigate the league and open the Front Office question that matters now.", "League overview", "Open Team HQ", "/teams")
+    return PagePresentation("Choose a league page to review your team and its next move.", "League overview", "View teams", "/teams")
 
 
 def page_header(title: str, *, league_name: str, last_updated: str) -> str:
