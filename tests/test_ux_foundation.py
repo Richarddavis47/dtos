@@ -64,11 +64,13 @@ class UXFoundationTests(unittest.TestCase):
         with patch('routes.home.build_team_directory', return_value={1: {'rank': None}, 2: {'rank': None}}):
             response = self._client().get('/')
         self.assertEqual(response.status_code, 200)
-        self.assertIn('Compatible weekly lineup evidence is not prepared for this league.', response.text)
+        self.assertIn('This week’s lineup comparison is not ready.', response.text)
+        self.assertIn('Current projections and player availability are needed.', response.text)
         self.assertIn('does not yet calculate a validated overall team grade', response.text)
         self.assertNotIn('data-rank="1"', response.text)
         self.assertNotIn('data-rank="2"', response.text)
-        self.assertIn('not standings or FOIS GM rankings', response.text)
+        self.assertIn('<h2>Projected lineup comparison</h2>', response.text)
+        self.assertIn('<summary>League standings</summary>', response.text)
 
     def setUp(self) -> None:
         home_body_render_cache.__init__(
@@ -179,10 +181,12 @@ class UXFoundationTests(unittest.TestCase):
         self.assertIn("North Stars", html)
         self.assertIn('Front Office Brief', html)
         self.assertNotIn('aria-label="Home Attention"', html)
-        self.assertIn('Reading prepared evidence.', html)
+        self.assertIn('Loading your team brief. No search runs automatically on Home.', html)
+        self.assertIn('id="home-opportunity-status" role="status"', html)
         self.assertNotIn('Highest-value next steps', html)
-        self.assertIn("Canonical team assessment", html)
-        self.assertIn("not standings or FOIS GM rankings", html)
+        self.assertIn("Team assessments, separate from official standings", html)
+        self.assertIn('data-rank="1"', html)
+        self.assertIn('data-rank="2"', html)
         self.assertNotIn("system health", html.casefold())
 
     def test_league_hub_keeps_fois_and_current_rankings_distinct(self) -> None:
@@ -193,8 +197,10 @@ class UXFoundationTests(unittest.TestCase):
         self.assertNotIn('aria-label="Rank 1"', html)
         self.assertIn('href="/reports/weekly"', html)
         self.assertIn("Current-season results—not FOIS", html)
-        self.assertIn("General-manager performance and confidence", html)
-        self.assertIn("League Intelligence", html)
+        self.assertIn("Manager grades and specialist tools", html)
+        self.assertIn('href="/fois">Manager grades (FOIS)', html)
+        self.assertIn("FOIS grades remain RETAINED / NOT REVALIDATED", html)
+        self.assertIn("Explore your league", html)
 
     def test_production_rank_is_derived_from_cached_actual_points(self) -> None:
         ranks = _production_ranks(_data())
@@ -223,7 +229,8 @@ class UXFoundationTests(unittest.TestCase):
             html = self._client(data).get("/?front_office=1").text
         self.assertIn("Weekly Report", html)
         self.assertIn("Unavailable", html)
-        self.assertIn("Canonical team assessment", html)
+        self.assertIn("Team assessments, separate from official standings", html)
+        self.assertIn("Preseason · official record not started", html)
         self.assertNotIn("0-0-0", html)
         self.assertNotIn("0.00", html)
         self.assertNotIn("completed-week", html)
@@ -257,7 +264,7 @@ class UXFoundationTests(unittest.TestCase):
         with patch("routes.home.build_team_directory", return_value={1: {"rank": 1}, 2: {"rank": 2}}):
             html = self._client(data).get("/league").text
         self.assertIn("Preseason League Briefing", html)
-        self.assertIn("Preseason Rankings", html)
+        self.assertIn("Preseason team comparisons", html)
         self.assertNotIn("0-0-0", html)
         self.assertNotIn("0.00", html)
 
