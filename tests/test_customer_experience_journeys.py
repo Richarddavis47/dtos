@@ -57,6 +57,23 @@ class CustomerExperienceJourneyTests(journeys.ProductBrowserJourneyTests):
             .all_text_contents(),
             ["Home", "My Team", "Trade", "League", "Market"],
         )
+        if path.startswith('/trades/'):
+            for header in page.locator('.tw-owner-header').all():
+                if not header.is_visible():
+                    continue
+                title, action = header.locator('h3'), header.locator('a')
+                if not action.count():
+                    continue
+                original = title.inner_text()
+                title.evaluate("e => e.textContent = 'A very long franchise name with an equally long owner label'")
+                a, b = title.bounding_box(), action.bounding_box()
+                self.assertIsNotNone(a)
+                self.assertIsNotNone(b)
+                self.assertTrue(a['x'] + a['width'] <= b['x'] or
+                                a['y'] + a['height'] <= b['y'] or
+                                b['y'] + b['height'] <= a['y'])
+                self.assertGreaterEqual(action.bounding_box()['height'], 44)
+                title.evaluate('(e, text) => e.textContent = text', original)
         resources = page.evaluate(
             "performance.getEntriesByType('resource').map(e=>new URL(e.name).pathname)"
         )

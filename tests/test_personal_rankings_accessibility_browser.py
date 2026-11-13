@@ -302,6 +302,16 @@ class RankingsAccessibilityBrowserTests(unittest.TestCase):
                         self.assertEqual(page.get_by_role('heading', level=1, name='My DTOS', exact=True).count(), 1)
                         self.assertTrue(page.get_by_label('Account and league context', exact=True).is_visible())
                         self.assertTrue(page.locator('.manager-nav').is_visible())
+                        action = page.locator('.personal-heading > a')
+                        self.assertEqual(action.inner_text(), 'Account')
+                        self.assertEqual(action.evaluate("e => getComputedStyle(e).whiteSpace"), 'nowrap')
+                        self.assertGreaterEqual(action.bounding_box()['height'], 44)
+                        self.assertTrue(action.evaluate("e => e.scrollWidth <= e.clientWidth"))
+                        if os.getenv('DTOS_RANKINGS_UX_EVIDENCE'):
+                            destination = Path(os.environ['DTOS_RANKINGS_UX_EVIDENCE'])
+                            destination.mkdir(parents=True, exist_ok=True)
+                            page.screenshot(path=str(destination / f'account-action-{width}.png'), full_page=True)
+
                         measurements.append(page.evaluate('''() => {
                             const box=s=>{const r=document.querySelector(s).getBoundingClientRect();return {top:r.top+scrollY,bottom:r.bottom+scrollY,height:r.height}};
                             return {width:innerWidth,height:innerHeight,editor:box('#my-dtos'),

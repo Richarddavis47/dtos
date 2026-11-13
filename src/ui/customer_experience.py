@@ -47,6 +47,7 @@ def plain_reason(value: object) -> str:
         ('Canonical Market', 'Market value'),
         ('canonical Market', 'Market value'),
         ('disjoint reserve cover', 'different eligible backups'),
+        ('legal-replacement production', 'projected points from eligible backups'),
     ):
         text = text.replace(before, after)
     return text

@@ -429,9 +429,11 @@
   function board(which) {
     const container = el('trade-' + which + '-board'), owner = team(which === 'sent' ? active : partner()), f = filters[which];
     container.replaceChildren(); container.setAttribute('aria-hidden', String(matchMedia('(max-width:760px)').matches && side !== which));
-    container.append(node('h3', owner?.team_name || 'Choose a counterparty'));
+    const ownerHeader = node('div', null, 'tw-owner-header');
+    ownerHeader.append(node('h3', owner?.team_name || 'Choose a trade partner'));
+    container.append(ownerHeader);
     if (!owner) return;
-    const teamLink = node('a', 'View team'); teamLink.href = '/teams/' + owner.roster_id; container.append(teamLink);
+    const teamLink = node('a', 'View team'); teamLink.href = '/teams/' + owner.roster_id; ownerHeader.append(teamLink);
     const search = node('input'); search.type = 'search'; search.value = f.q; search.placeholder = 'Search players or picks'; search.setAttribute('aria-label', which === 'sent' ? 'Search my assets' : 'Search their assets');
     const results = node('div', null, 'tw-asset-results'), chips = node('div', null, 'tw-filters');
     const positions = ['ALL', 'QB', 'RB', 'WR', 'TE', ...[...new Set(owner.assets.filter(a => a.kind !== 'pick' && !['QB','RB','WR','TE'].includes(a.position)).map(a => a.position || 'Other positions'))].sort(), 'PICKS'].filter(p => p === 'ALL' || owner.assets.some(a => (a.kind === 'pick' ? 'PICKS' : (a.position || 'Other positions')) === p));
@@ -1346,6 +1348,7 @@
     return String(value || '').replaceAll('compatible prepared publication', 'league data for this week')
       .replaceAll('Canonical Market', 'Market value').replaceAll('canonical Market', 'Market value')
       .replaceAll('disjoint reserve cover', 'different eligible backups')
+      .replaceAll('legal-replacement production', 'projected points from eligible backups')
       .replaceAll('bilateral recommendation', 'recommendation for both teams');
   }
   function recordedPresentation(row) {
