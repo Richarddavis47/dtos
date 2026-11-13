@@ -1,7 +1,7 @@
 """Display-only shared contracts; source data and clocks remain unchanged."""
 import unittest
 from src.ui.customer_experience import plain_reason, readable_time, source_details
-from src.ui.design_system import DESIGN_SYSTEM_CSS, account_page_header, page_header, manager_navigation
+from src.ui.design_system import DESIGN_SYSTEM_CSS, account_page_header, page_header, manager_navigation, recommendation_panel
 
 
 class CustomerPresentationStandardTests(unittest.TestCase):
@@ -40,3 +40,23 @@ class CustomerPresentationStandardTests(unittest.TestCase):
             self.assertIn(label + '</a>', primary)
         self.assertNotIn('/fois', primary)
         self.assertIn('scroll-padding-top:calc(72px + env(safe-area-inset-top))', DESIGN_SYSTEM_CSS)
+
+
+class SharedRecommendationCopyTests(unittest.TestCase):
+    def test_primary_copy_is_plain_with_original_model_record_on_demand(self):
+        recommendation = 'Review the acquisition-price relationship and available evidence; long-term intrinsic improvement is unavailable.'
+        reason = 'Supported dimensions are published separately; no ambiguous overall grade is manufactured.'
+        html = recommendation_panel(title='Review your team', recommendation=recommendation,
+            confidence=0, primary_reason=reason, evidence=('Sleeper: -2.125; Market: 0',),
+            expected_impact='Unknown', action_label='Review trade', action_href='/trades')
+        main, _, details = html.partition('<details>')
+        self.assertIn('Compare the Market cost and available lineup evidence.', main)
+        self.assertIn('an overall grade is not calculated', main)
+        self.assertNotIn('manufactured', main)
+        self.assertNotIn('acquisition-price', main)
+        self.assertIn('Evidence confidence', main)
+        self.assertIn('0%', main)
+        self.assertIn(recommendation, details)
+        self.assertIn(reason, details)
+        self.assertIn('Sleeper: -2.125; Market: 0', details)
+        self.assertNotIn('<details open', html)

@@ -4,7 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from html import escape
 
-from .customer_experience import readable_time
+from .customer_experience import plain_reason, readable_time
 from .badges import position_chip
 from .theme import DESIGN_SYSTEM_CSS as DESIGN_SYSTEM_CSS
 
@@ -142,7 +142,12 @@ def player_summary(*, player_id: str, name: str, position: str | None, nfl_team:
 
 
 def recommendation_panel(*, title: str, recommendation: str, confidence: int, primary_reason: str, evidence: tuple[str, ...], expected_impact: str, action_label: str, action_href: str, limitations: tuple[str, ...] = ()) -> str:
+    originals = (title, recommendation, primary_reason, expected_impact)
+    title, recommendation, primary_reason, expected_impact = (plain_reason(value) for value in originals)
+    original_record = ("<h3>Original assessment record</h3>" + "".join(
+        "<p>" + escape(value) + "</p>" for value in originals
+    )) if originals != (title, recommendation, primary_reason, expected_impact) else ""
     evidence_html = "".join(f"<li>{escape(item)}</li>" for item in evidence) or "<li>No additional supporting evidence crossed the current confidence boundary.</li>"
     limitations_html = "".join(f"<li>{escape(item)}</li>" for item in limitations) or "<li>No material limitation was identified in the current cached evidence.</li>"
     action_html = f'<a class="ds-action primary" href="{escape(action_href)}">{escape(action_label)}</a>' if action_href else ""
-    return f'''<article class="ds-recommendation" data-dtos-component="recommendation"><div><div class="ds-eyebrow">Recommendation</div><h2>{escape(title)}</h2><p>{escape(recommendation)}</p><p><b>Primary reason:</b> {escape(primary_reason)}</p>{action_html}</div><div class="ds-confidence"><b>{confidence}%</b><span>Confidence</span></div><details><summary>Detailed Evidence</summary><h3>Expected impact:</h3><p>{escape(expected_impact)}</p><h3>Supporting Evidence</h3><ul>{evidence_html}</ul><h3>Limitations</h3><ul>{limitations_html}</ul></details></article>'''
+    return f'''<article class="ds-recommendation" data-dtos-component="recommendation"><div><div class="ds-eyebrow">Recommendation</div><h2>{escape(title)}</h2><p>{escape(recommendation)}</p><p><b>Primary reason:</b> {escape(primary_reason)}</p>{action_html}</div><div class="ds-confidence"><b>{confidence}%</b><span>Evidence confidence</span></div><details><summary>Detailed Evidence</summary>{original_record}<h3>Expected impact:</h3><p>{escape(expected_impact)}</p><h3>Supporting Evidence</h3><ul>{evidence_html}</ul><h3>Limitations</h3><ul>{limitations_html}</ul></details></article>'''

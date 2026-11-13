@@ -36,6 +36,10 @@ def plain_reason(value: object) -> str:
     """
     text = str(value or '')
     for before, after in (
+        ('Review the acquisition-price relationship and available evidence; long-term intrinsic improvement is unavailable.',
+         'Compare the Market cost and available lineup evidence. A long-term value forecast is not available.'),
+        ('Supported dimensions are published separately; no ambiguous overall grade is manufactured.',
+         'DTOS shows individual strengths separately; an overall grade is not calculated for this evidence.'),
         ('Compatible league/week/scoring projection publication unavailable.',
          'Projections are not ready for this league, week and scoring.'),
         ('compatible prepared publication', 'league data for this week'),

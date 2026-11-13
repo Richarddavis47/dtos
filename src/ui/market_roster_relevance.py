@@ -28,7 +28,7 @@ def movement_panel(view, market_query):
         )
     if not view["cards"]:
         html.append(
-            "<p>Compatible dated prices are insufficient in this page sample. Movement is unknown, not zero or evidence of no opportunities. Try the existing Market filters or review an asset’s retained observations.</p>"
+            "<p>This page does not have enough comparable dated prices. Movement is unknown, not zero or evidence of no opportunities. Try the existing Market filters or review an asset’s retained observations.</p>"
         )
     for card in view["cards"]:
         trend = card["trend"]

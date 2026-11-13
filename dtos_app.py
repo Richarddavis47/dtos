@@ -924,7 +924,7 @@ def page(title: str, body: str, commissioner_chrome: bool = False) -> HTMLRespon
         message = ('Refresh is waiting for capacity. Existing supported league data remains available. '
                    if waiting else 'Showing saved league data. ')
         error_html += ('<p role="status" class="muted">' + message + 'Last successful sync: '
-                       + escape(str(selected_state.get('last_sync') or 'not recorded'))
+                       + escape(readable_time(selected_state.get('last_sync')))
                        + '. Current projections and Market values retain their own availability checks.</p>')
     league_name = str(((selected_state.get("data") or {}).get("league") or {}).get("name") or "Sleeper League")
     account = current_account()
