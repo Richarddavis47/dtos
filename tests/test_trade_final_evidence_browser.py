@@ -260,7 +260,7 @@ class TradeMarketDisplayBrowserTests(unittest.TestCase):
                 page.set_viewport_size({'width': width, 'height': height})
                 self.f.build(page)
                 page.click("#trade-balance-offer")
-                card = page.locator(".tw-balance-offer").first
+                card = page.locator(".tw-offer").first
                 expected = f"You send {manager_points(price)} / You receive 600. Difference: {manager_points(gap)}"
                 self.assertIn(expected, card.locator(".tw-offer-market").inner_text())
                 page.get_by_role("button", name="Review trade", exact=True).first.click()
@@ -350,7 +350,7 @@ class TradeMarketDisplayBrowserTests(unittest.TestCase):
             page.click('#trade-balance-offer')
             page.get_by_role('button', name='Review trade', exact=True).nth(1).wait_for()
             self.assertIn('Other trade ideas', page.locator('#trade-result').inner_text())
-            cards = page.locator('.tw-balance-offer')
+            cards = page.locator('.tw-offer')
             self.assertIn('You receive: X', cards.nth(0).inner_text())
             self.assertIn('You receive: Y', cards.nth(1).inner_text())
             cards.nth(1).get_by_role('button', name='Review trade', exact=True).click()
