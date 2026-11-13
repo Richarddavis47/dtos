@@ -38,6 +38,8 @@ def plain_reason(value: object) -> str:
     for before, after in (
         ('Review the acquisition-price relationship and available evidence; long-term intrinsic improvement is unavailable.',
          'Compare the Market cost and available lineup evidence. A long-term value forecast is not available.'),
+        ('No measured counterargument crossed the unified evidence boundary.',
+         'The evidence does not establish an additional drawback.'),
         ('Supported dimensions are published separately; no ambiguous overall grade is manufactured.',
          'DTOS shows individual strengths separately; an overall grade is not calculated for this evidence.'),
         ('Compatible league/week/scoring projection publication unavailable.',

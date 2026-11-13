@@ -62,7 +62,7 @@ class CustomerSpecialistPresentationTests(unittest.TestCase):
         html = front_office_center(view)
         visible = VisibleText(html).value
         self.assertIn("Outlook not established", visible)
-        self.assertIn("not enough supported evidence", visible)
+        self.assertIn("Current evidence does not establish a competitive outlook.", visible)
         self.assertNotIn("classified as Unavailable", visible)
         self.assertIn("Alpha is currently classified as Unavailable.", html)
         self.assertIn("Projections are not ready for this league, week and scoring.", html)

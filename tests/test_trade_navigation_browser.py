@@ -13,7 +13,15 @@ from tests import test_trade_scout_state_browser as scout
 def assert_target_action_layout(case, page):
     links = page.locator('#trade-target .tw-target-actions > a')
     case.assertEqual(links.count(), 2)
-    boxes = [link.bounding_box() for link in links.all()]
+    # paint() replaces target links as the bounded entry request settles.
+    # Capture both visible rectangles in one browser task, never two samples
+    # straddling a repaint. Keep the same spacing and44px assertions below.
+    boxes = page.wait_for_function("""() => {
+      const links = [...document.querySelectorAll('#trade-target .tw-target-actions > a')];
+      if (links.length !== 2 || links.some(a => !a.getClientRects().length)) return false;
+      return links.map(a => { const r = a.getBoundingClientRect();
+        return {x:r.x, y:r.y, width:r.width, height:r.height}; });
+    }""").json_value()
     a, b = boxes
     case.assertIsNotNone(a)
     case.assertIsNotNone(b)
