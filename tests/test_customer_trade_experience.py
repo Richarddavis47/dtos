@@ -76,7 +76,7 @@ class CustomerTradeJourneyTests(unittest.TestCase):
         for row in rows:
             row['evaluation']['decision_context'] = {
                 'decisive_reason': 'The supported upgrade has a real cost for both teams.',
-                'main_cost': 'You spend usable depth.',
+                'main_cost': 'You spend usable depth. Useful legal-replacement production falls 2.25 points per supported week; participation remains unknown.',
                 'summary': 'Your supported roster benefit remains conditional.',
                 'partner_summary': partner_case,
                 'decision_conditions': conditions,
@@ -153,6 +153,9 @@ class CustomerTradeJourneyTests(unittest.TestCase):
                                    'Your team after trade · Week 10', 'Provisional assessment'):
                         self.assertIn(phrase, compact_text)
                     self.assertNotIn('Outgoing-only Player', compact_text)
+                    self.assertNotIn('legal-replacement production', compact_text)
+                    self.assertIn('projected points from eligible backups fall 2.25', compact_text)
+                    self.assertIn('participation remains unknown', compact_text)
                     self.assertNotIn('Recorded partner qualification tail', compact_text)
                     self.assertNotIn('Recorded decision conditions tail', compact_text)
                     self.assertLess(len(compact_text.split()), len((partner_case + conditions).split()))
@@ -165,6 +168,7 @@ class CustomerTradeJourneyTests(unittest.TestCase):
                     self.assertTrue(recorded.evaluate('e=>e.open'))
                     self.assertIn(partner_case, recorded.inner_text())
                     self.assertIn(conditions, recorded.inner_text())
+                    self.assertIn(rows[0]['evaluation']['decision_context']['main_cost'], recorded.inner_text())
                     if os.getenv('DTOS_CUSTOMER_TRADE_EVIDENCE'):
                         comparison.screenshot(path=str(Path(os.environ['DTOS_CUSTOMER_TRADE_EVIDENCE']) / f'comparison-open-{width}.png'))
                     self.assertEqual(len(requests), count)

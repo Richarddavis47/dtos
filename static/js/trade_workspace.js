@@ -1353,17 +1353,9 @@
       window.DTOSOfferComparison.capitalView(record, node, comparisonScope(), retained), 'tw-capital-disclosure');
   }
   function customerText(value) {
-    return String(value || '').replaceAll('compatible prepared publication', 'league data for this week')
-      .replaceAll('Canonical Market', 'Market value').replaceAll('canonical Market', 'Market value')
-      .replaceAll('disjoint reserve cover', 'different eligible backups')
-      .replaceAll('No legitimate bilateral construction clears the current constraints.', 'No offers met the requirements for both teams in this search.')
-      .replaceAll('Useful replacement production declines without a material supported starter gain or Market compensation.', 'Projected points from eligible backups fall without a meaningful starting-lineup gain or Market value to offset the loss.')
-      .replaceAll('legal-replacement production falls', 'projected points from eligible backups fall')
-      .replaceAll('legal-replacement production improves', 'projected points from eligible backups improve')
-      .replaceAll('legal-replacement production declines', 'projected points from eligible backups decline')
-      .replaceAll('legal-replacement production', 'projected points from eligible backups')
-      .replaceAll('bilateral recommendation', 'recommendation for both teams');
+    return window.DTOSOfferComparison?.customerText?.(value) ?? String(value || '');
   }
+
   function recordedPresentation(row) {
     const supplied = row.proposal_presentation || row.proposal.preview_presentation;
     if (!supplied) return null;

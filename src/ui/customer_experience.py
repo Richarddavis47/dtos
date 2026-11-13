@@ -53,6 +53,7 @@ def plain_reason(value: object) -> str:
          'No offers met the requirements for both teams in this search.'),
         ('Useful replacement production declines without a material supported starter gain or Market compensation.',
          'Projected points from eligible backups fall without a meaningful starting-lineup gain or Market value to offset the loss.'),
+        ('Useful replacement production changes', 'Projected points from eligible backups change'),
         ('legal-replacement production falls', 'projected points from eligible backups fall'),
         ('legal-replacement production improves', 'projected points from eligible backups improve'),
         ('legal-replacement production declines', 'projected points from eligible backups decline'),
