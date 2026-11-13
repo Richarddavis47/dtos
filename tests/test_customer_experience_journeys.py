@@ -71,6 +71,21 @@ class CustomerExperienceJourneyTests(journeys.ProductBrowserJourneyTests):
                 ),
                 "Ordinary page navigation must not start expensive trade/source work",
             )
+        if path == "/teams/1":
+            identities = page.locator(".thq-player .player-summary").evaluate_all("""rows => rows.map(row => {
+                const portrait = row.querySelector('.player-portrait').getBoundingClientRect();
+                const fallback = row.querySelector('.player-headshot-fallback').getBoundingClientRect();
+                const name = row.querySelector('.player-summary-copy b').getBoundingClientRect();
+                return {portraitWidth: portrait.width, portraitHeight: portrait.height,
+                    fallbackWidth: fallback.width, fallbackHeight: fallback.height,
+                    fallbackRight: fallback.right, nameLeft: name.left};
+            })""")
+            self.assertGreater(len(identities), 0, "Check actual roster identities, not an empty selector")
+            for identity in identities:
+                self.assertLessEqual(identity["fallbackWidth"], identity["portraitWidth"] + 0.5)
+                self.assertLessEqual(identity["fallbackHeight"], identity["portraitHeight"] + 0.5)
+                self.assertLessEqual(identity["fallbackRight"], identity["nameLeft"],
+                    "Fallback portrait must not cover the player's name")
         summaries = page.locator("main details > summary:visible")
         if summaries.count():
             summary = summaries.last

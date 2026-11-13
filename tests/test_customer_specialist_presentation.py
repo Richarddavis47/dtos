@@ -155,8 +155,16 @@ class CustomerSpecialistPresentationTests(unittest.TestCase):
         fixture = fois_controls.FOISPresentationTests()
         fixture.setUp()
         self.addCleanup(fixture.tearDown)
-        with fixture._client() as client:
-            pending = client.get('/fois')
+        status = fixture.service.status()
+        self.assertEqual(status['state'], 'waiting')
+        with patch.object(fixture.service, 'generate', side_effect=AssertionError('no generation')):
+            with fixture._client() as client:
+                waiting = client.get('/fois')
+                with patch.object(fixture.service, 'status', return_value={**status, 'state': 'running'}):
+                    pending = client.get('/fois')
+        self.assertIn("Manager profiles are not prepared yet", waiting.text)
+        self.assertIn("No saved manager profiles are available for this league yet", waiting.text)
+        self.assertNotIn("are being prepared", waiting.text)
         self.assertIn("Manager profiles are being prepared", pending.text)
         self.assertNotIn("Manager grades are not available", pending.text)
         with fixture._client(Mock(return_value={})) as client:

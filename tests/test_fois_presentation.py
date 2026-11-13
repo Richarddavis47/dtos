@@ -164,7 +164,8 @@ class FOISPresentationTests(unittest.TestCase):
         self.assertNotIn("other-private-league", response.text)
 
     def test_pending_generation_is_distinct_from_missing_data(self) -> None:
-        response = self._client().get("/fois")
+        with patch.object(self.service, 'status', return_value={**self.service.status(), 'state': 'running'}):
+            response = self._client().get("/fois")
         self.assertEqual(response.status_code, 200)
         self.assertIn("Manager profiles are being prepared", response.text)
         self.assertNotIn("Manager grades are not available", response.text)

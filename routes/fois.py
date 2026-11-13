@@ -61,7 +61,8 @@ def _availability_notice(service):
         return ''
     status = _generation_status(service)
     message = ('Manager grades are temporarily unavailable.' if status['state'] == 'failed' else
-               'Manager grades are being prepared.' if context.fois_state == 'pending' else
+               'Manager grades are being prepared.' if status['state'] == 'running' else
+               'Manager grades are not prepared yet.' if context.fois_state == 'pending' else
                'Current manager grades are not available.')
     if context.fois_state == 'retained':
         message += ' Previous grades are RETAINED / NOT REVALIDATED.'
@@ -371,9 +372,12 @@ def create_fois_router(
         elif not valid_selection:
             content = ('<section class="empty-state" data-dtos-component="empty-state">'
                        '<h2>League unavailable</h2><p>Manager profiles are not ready for the requested league.</p></section>')
-        elif status.get("state") in {"running", "waiting"} and not scores:
+        elif status.get("state") == "running" and not scores:
             content = ('<section class="empty-state" data-dtos-component="empty-state">'
                        '<h2>Manager profiles are being prepared</h2><p>Profiles will appear when preparation completes. Your team, Market and Trade remain separate.</p></section>')
+        elif status.get("state") == "waiting" and not scores:
+            content = ('<section class="empty-state" data-dtos-component="empty-state">'
+                       '<h2>Manager profiles are not prepared yet</h2><p>No saved manager profiles are available for this league yet. Your roster, Market and Trade remain usable.</p></section>')
         elif not scores:
             content = ('<section class="empty-state" data-dtos-component="empty-state">'
                        '<h2>Manager grades are not available</h2><p>No saved manager profiles are available for this league yet.</p></section>')
