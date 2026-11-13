@@ -132,7 +132,7 @@ class MarketRosterBrowserTests(unittest.TestCase):
                                 summary.focus()
                                 summary.press("Enter")
                                 self.assertTrue(
-                                    panel.locator("details").evaluate("e=>e.open")
+                                    summary.locator("..").evaluate("e=>e.open")
                                 )
                                 self.assertEqual(len(requests), requests_before)
                                 if touch:

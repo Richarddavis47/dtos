@@ -104,7 +104,13 @@ class ManagerActivityBrowserTests(unittest.TestCase):
                     finally:
                         f.doCleanups()
             finally:
-                browser.close()
-        output = os.environ.get('DTOS_MANAGER_EVIDENCE')
-        if output:
-            (Path(output)/'browser-results.json').write_text(json.dumps(evidence,indent=2))
+                try:
+                    browser.close()
+                finally:
+                    # Preserve only actually captured rows, including a partial
+                    # failed attempt. Artifact creation never establishes PASS.
+                    output = os.environ.get('DTOS_MANAGER_EVIDENCE')
+                    if output:
+                        target = Path(output)
+                        target.mkdir(parents=True, exist_ok=True)
+                        (target/'browser-results.json').write_text(json.dumps(evidence,indent=2))

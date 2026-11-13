@@ -18,6 +18,7 @@ from unittest.mock import AsyncMock, patch
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 from fastapi.testclient import TestClient
+from tests.html_document import _Document, _class, _elements, _text
 
 from routes.market import create_market_router
 from src.core.asset_market import (
@@ -1298,20 +1299,38 @@ class AssetMarketTests(unittest.TestCase):
                     'players': {'10213': {'canonical_projection': 27.335,
                                          'sleeper_web_display_projection': '27.33'}}}
         service = SimpleNamespace(snapshot=lambda: snapshot, week_snapshot=lambda *a, **k: snapshot)
+        def assert_selected_projection(html, expected_display):
+            document = _Document(html).root
+            selected = next(element for element in _elements(document)
+                            if element['attrs'].get('id') == 'selected-asset')
+            projection = next(element for element in _elements(selected, direct=True)
+                              if element['tag'] == 'section' and any(
+                                  child['tag'] == 'p' and _text(child) == 'Sleeper Weekly Projection'
+                                  for child in _elements(element, direct=True)))
+            self.assertNotIn('hidden', projection['attrs'])
+            heading = next(child for child in _elements(projection, direct=True)
+                           if child['tag'] == 'h3')
+            self.assertEqual(_text(heading), f"Week {snapshot['week']}")
+            self.assertEqual(' '.join(_text(_class(projection, 'stat')).split()),
+                             expected_display + ' projected points')
         app = FastAPI()
         app.include_router(create_market_router(require_data=lambda: self.data, state=self.state,
             league_id=self.league_id, page=lambda title, body: HTMLResponse(body)))
         with patch('routes.market.historical_store', self.store), patch('routes.market.projection_service', service):
             client = TestClient(app)
+            first_snapshot = copy.deepcopy(snapshot)
             first = self._ready_get(client, '/market?selected=player%3A10213').text
             self.assertIn('Week 2 · Sleeper 27.33', first)
-            self.assertIn('<b>27.33</b><span>Sleeper projection', first)
+            assert_selected_projection(first, snapshot['players']['10213']['sleeper_web_display_projection'])
+            self.assertEqual(snapshot, first_snapshot)
             price = self._ready_get(client, '/api/market/assets/player:10213').json()['asset']['values']['market_value']
             snapshot.update(horizon_generation='projection-two')
             snapshot['players']['10213'].update(canonical_projection=31.014, sleeper_web_display_projection='31.01')
+            second_snapshot = copy.deepcopy(snapshot)
             second = self._ready_get(client, '/market?selected=player%3A10213').text
             self.assertIn('Week 2 · Sleeper 31.01', second)
-            self.assertIn('<b>31.01</b><span>Sleeper projection', second)
+            assert_selected_projection(second, snapshot['players']['10213']['sleeper_web_display_projection'])
+            self.assertEqual(snapshot, second_snapshot)
             self.assertNotIn('Sleeper 27.33', second)
             self.assertEqual(self._ready_get(client, '/api/market/assets/player:10213').json()['asset']['values']['market_value'], price)
             start = perf_counter()

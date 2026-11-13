@@ -146,6 +146,14 @@ class TradePartnerHistoryBrowserTests(TestCase):
         clicked = helper.draft(page)['previewProposal']
         self.assertIsNotNone(clicked)
         expected = {k: clicked[k] for k in ('partner_roster_id','assets_sent','assets_received')}
+        recorded = clicked['preview_presentation']
+        for side, ids in (('send', expected['assets_sent']), ('receive', expected['assets_received'])):
+            self.assertEqual([item['asset_id'] for item in recorded[side]], ids)
+            for item in recorded[side]:
+                self.assertIn(item['kind'], ('player', 'pick'))
+                self.assertTrue(item['label'])
+                if item['kind'] == 'pick':
+                    self.assertEqual(item['asset_id'], f"{item['year']}-R{item['round']}-{item['original_franchise']}")
         self.assertEqual(page.locator('#trade-result .tw-offer-review').first.locator(':scope > p').filter(has_text=re.compile(r'^You (send|receive):')).all_text_contents(), package)
         rows = []
         with patch('services.sleeper.sleeper_get', side_effect=AssertionError('navigation must not acquire a provider')):
@@ -158,13 +166,25 @@ class TradePartnerHistoryBrowserTests(TestCase):
                 self.assertEqual(after['valuationMode'], initial['valuationMode'])
                 self.assertTrue(after['navigationView']['includePicks'])
                 self.assertEqual(after['navigationView']['typeFilter'], 'all')
-                self.assertEqual(page.locator('#trade-result .tw-offer').first.locator(':scope > p').filter(has_text=re.compile(r'^You (send|receive):')).all_text_contents(), package)
                 proposal = after['previewProposal']
                 exact = {k:proposal[k] for k in ('partner_roster_id','assets_sent','assets_received')}
-                expected = expected or exact
                 self.assertEqual(exact, expected)
+                self.assertEqual(proposal['preview_presentation'], recorded)
+                retained_package = page.locator('#trade-result .tw-offer').first.locator(':scope > p').filter(has_text=re.compile(r'^You (send|receive):')).all_text_contents()
+                self.assertEqual(len(retained_package), 2)
+                for index, (side, prefix) in enumerate((('send', 'You send: '), ('receive', 'You receive: '))):
+                    text = retained_package[index]
+                    self.assertTrue(text.startswith(prefix))
+                    # Retained display intentionally uses recorded origin IDs,
+                    # not today's franchise-name lookup. Check every label and
+                    # ordered year/round/original-franchise identity separately.
+                    positions = [text.find(item['label']) for item in recorded[side]]
+                    self.assertTrue(all(position >= 0 for position in positions))
+                    self.assertEqual(positions, sorted(positions))
+                    pick_identities = [tuple(map(int, match)) for match in re.findall(r'(\d{4})\s+round\s+(\d+)\s+·\s+original franchise #(\d+)', text)]
+                    self.assertEqual(pick_identities, [(int(item['year']), int(item['round']), int(item['original_franchise'])) for item in recorded[side] if item['kind'] == 'pick'])
                 self.assertIn('not revalidated', page.locator('#trade-result').inner_text().lower())
-                rows.append({'viewport':[width,height], 'preview':exact, 'draft':after['currentProposal'], 'post_requests':[r for r in requests if r[0]=='POST']})
+                rows.append({'viewport':[width,height], 'preview':exact, 'draft':after['currentProposal'], 'fresh_package':package, 'retained_package':retained_package, 'recorded_presentation':recorded, 'post_requests':[r for r in requests if r[0]=='POST']})
         self.assertFalse(errors, errors)
         self.record('recommendation-round-trip', rows)
 

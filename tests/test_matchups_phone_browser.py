@@ -91,8 +91,16 @@ class MatchupsPhoneBrowserTests(unittest.TestCase):
                         for path in ('/','/league'):
                             page.goto('https://dtos.test'+path)
                             self.no_overflow(page,width)
+                            if path == '/':
+                                standings = page.get_by_text('League standings', exact=True)
+                                self.hit(page, standings)
+                                page.keyboard.press('Tab')
+                                standings.focus()
+                                standings.press('Enter')
+                                self.assertTrue(standings.evaluate('e=>e.parentElement.open'))
                             table=page.locator('.compact-standings')
                             self.assertEqual(table.count(),1)
+                            self.assertTrue(table.is_visible())
                             self.assertIn('123.45',table.inner_text())
                             self.assertIn('110.67',table.inner_text())
                             self.assertEqual(table.locator('.standings-you').count(),1)

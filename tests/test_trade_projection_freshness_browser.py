@@ -102,7 +102,7 @@ class ProjectionFreshnessBrowserTests(unittest.TestCase):
                 page.reload()
                 page.get_by_role('button',name='Use this offer in my draft',exact=True).wait_for()
                 self.assertIn('projection evidence changed',page.locator('#trade-result').inner_text())
-                self.click(page,'#trade-result button:text-is("'+('Use this offer in my draft' if adopt else 'Back to offers')+'")')
+                self.click(page,'#trade-result button:text-is("'+('Use this offer in my draft' if adopt else 'Back to your draft')+'")')
                 self.assertEqual(self.harness.proposal(page),original)
                 self.assertIn('REJECT',page.locator('#trade-result').inner_text())
                 self.assertIn('not revalidated',page.locator('#trade-result').inner_text())

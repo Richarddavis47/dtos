@@ -223,7 +223,7 @@ class CanonicalFOISLeaderboardTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual([row["rank"] for row in ranking["rankings"]], list(range(1, 11)))
         gm_id = ranking["rankings"][0]["gm_id"]
         profile = client.get(f"/fois/gms/{gm_id}?league_id=season-2026")
-        self.assertIn("CURRENT GM PROFILE", profile.text)
+        self.assertIn("MANAGER PROFILE", profile.text)
         self.assertIn("GM History", profile.text)
         self.assertIn('dtos-explanation', profile.text)
         self.assertIn('FOIS evidence explained', profile.text)

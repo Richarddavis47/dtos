@@ -79,8 +79,12 @@ class CurrentSeasonHistoryBrowserTests(unittest.TestCase):
                                 self.assertIn('RETAINED / NOT REVALIDATED',text)
                                 summary=timeline.locator('summary').filter(has_text='Period freshness').first
                                 summary.scroll_into_view_if_needed()
+                                # Coverage was opened with a pointer. Establish real
+                                # keyboard modality before checking its focus ring.
+                                page.keyboard.press('Tab')
                                 summary.focus()
                                 self.assertTrue(summary.evaluate('e=>e===document.activeElement'))
+                                self.assertTrue(summary.evaluate("e=>e.matches(':focus-visible')"))
                                 self.assertNotEqual(summary.evaluate('e=>getComputedStyle(e).outlineStyle'),'none')
                                 count=len(requests)
                                 summary.press('Enter')

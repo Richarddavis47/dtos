@@ -148,7 +148,7 @@ class FinalPlainEnglishBrowserTests(unittest.TestCase):
                     self.assertIn('Choose your goal', row['text'])
                 if row['name'] == 'depth':
                     self.assertEqual(len(row['shared_depth_notes']), 1)
-                    self.assertEqual(row['text'].count('This comparison is provisional:'), 1)
+                    self.assertEqual(row['text'].count('Provisional: check dates and player availability.'), 1)
                     self.assertIn('QB · RB · WR · TE', row['shared_depth_notes'][0])
                 if row['name'] == 'builder':
                     self.assertIn('Harbor Dynasty', row['text'])

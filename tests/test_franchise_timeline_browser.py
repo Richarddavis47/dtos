@@ -23,6 +23,8 @@ class FranchiseTimelineBrowserTests(unittest.TestCase):
         root = os.environ.get('DTOS_FRANCHISE_HISTORY_EVIDENCE')
         if not root and os.environ.get('DTOS_PHASE2_EVIDENCE'):
             root = str(Path(os.environ['DTOS_PHASE2_EVIDENCE']) / 'franchise-history')
+        if root:
+            Path(root).mkdir(parents=True, exist_ok=True)
         records = []
         with patch.object(f.fixture.store, 'season_chain', side_effect=lambda league: {'seasons': [
                 {'season': 2022, 'league_id': '9000000000000002022', 'cache_status': 'unavailable'}]} if league == DAY else {}), sync_playwright() as pw:
@@ -53,7 +55,7 @@ class FranchiseTimelineBrowserTests(unittest.TestCase):
                                     self.assertIn('2022 · Unknown transaction coverage', body)
                                 count = len(requests)
                                 details = timeline.locator('details').first
-                                summary = details.locator('summary')
+                                summary = details.locator(':scope > summary')
                                 summary.scroll_into_view_if_needed()
                                 summary.focus()
                                 self.assertEqual(summary.evaluate('el=>el===document.activeElement'), True)

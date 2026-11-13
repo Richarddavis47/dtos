@@ -73,7 +73,8 @@ class FOISTrustBrowserTests(unittest.TestCase):
                         self.assertLessEqual(card.locator('h3').bounding_box()['y'] + card.locator('h3').bounding_box()['height'],
                             card.locator('.fois-score').bounding_box()['y'] + 1) if width < 600 else None
                     return
-                self.assertIn('Management behavior and evidence', page.inner_text('body'))
+                activity = page.get_by_text('Observed management activity and limits', exact=True)
+                self.assertIn('Observed management activity and limits', page.inner_text('body'))
                 summary = page.get_by_text('Supporting evidence and limitations', exact=True)
                 summary.click()
                 self.assertTrue(summary.evaluate('e=>e.parentElement.open'))
@@ -82,6 +83,10 @@ class FOISTrustBrowserTests(unittest.TestCase):
                 page.keyboard.press('Enter')
                 self.assertTrue(summary.evaluate('e=>e.parentElement.open'))
                 self.assertIn(code, page.inner_text('.dtos-explanation'))
+                self.assertFalse(activity.locator('..').evaluate('e=>e.open'))
+                activity.focus()
+                page.keyboard.press('Enter')
+                self.assertTrue(activity.locator('..').evaluate('e=>e.open'))
                 evidence = page.locator('.fois-behavior').first
                 control = evidence.locator(':scope > summary')
                 control.click()

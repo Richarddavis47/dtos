@@ -58,6 +58,15 @@ class TechnicalDetailsBrowserTests(unittest.TestCase):
         self.assertLessEqual(page.evaluate('document.documentElement.scrollWidth'), width + 1)
         self.assertLessEqual(page.evaluate('document.body.scrollWidth'), width + 1)
 
+    def open_ancestors(self, page, child):
+        # Walk actual closed controls outer-to-inner; never mutate `open` in JS.
+        for ancestor in child.locator('xpath=ancestor::details[not(@open)]').all():
+            summary = ancestor.locator(':scope > summary')
+            page.keyboard.press('Tab')
+            summary.focus()
+            summary.press('Enter')
+            self.assertTrue(ancestor.evaluate('el=>el.open'))
+
     def assert_selectable(self, code):
         expected = code.text_content()
         selected = code.evaluate('''el => {
@@ -111,10 +120,18 @@ class TechnicalDetailsBrowserTests(unittest.TestCase):
                     self.assertEqual(details.evaluate_all('rows=>rows.every(el=>!el.open)'), True)
                     self.assert_bounded(page, width)
                     for disclosure in details.all():
-                        disclosure.locator('summary').first.click()
+                        self.open_ancestors(page, disclosure)
+                        disclosure.locator(':scope > summary').click()
                         self.assertTrue(disclosure.evaluate('el=>el.open'))
                         self.assert_bounded(page, width)
-                    page.locator('.market-fact details').evaluate_all('rows=>rows.forEach(el=>el.open=true)')
+                    for disclosure in page.locator('.market-fact details').all():
+                        self.open_ancestors(page, disclosure)
+                        if not disclosure.evaluate('el=>el.open'):
+                            summary = disclosure.locator(':scope > summary')
+                            page.keyboard.press('Tab')
+                            summary.focus()
+                            summary.press('Enter')
+                        self.assertTrue(disclosure.evaluate('el=>el.open'))
                     self.assert_bounded(page, width)
                     for code in page.locator('.technical-details code, .market-fact code').all():
                         self.assert_selectable(code)

@@ -1,6 +1,7 @@
 """Compact factual franchise chronology over retained source evidence."""
 from html import escape
 from urllib.parse import quote
+from src.ui.customer_experience import readable_time
 
 
 def _movement_details(row):
@@ -133,14 +134,24 @@ def render_franchise_timeline(view):
                 label = '<a href="/picks/' + quote(a['id'], safe='') + '">' + label + '</a>'
             assets.append('<li><b>' + label + '</b><p>' + text(a['from']) + ' → ' + text(a['to']) + '</p>'
                           + ('<small>Exact pick identity: ' + text(a['id']) + '</small>' if a['kind'] in {'pick', 'selection'} and a.get('id') else '') + '</li>')
-        date = r['occurred_at'] or ('Week ' + str(r['week']) + '; exact time unavailable' if r['week'] is not None else 'Exact event time unavailable')
+        raw_time = r['occurred_at']
+        date = readable_time(raw_time) if raw_time else ('Week ' + str(r['week']) + '; exact time unavailable' if r['week'] is not None else 'Exact event time unavailable')
         detail = ('<a href="' + text(r['detail_url']) + '">View completed trade evidence</a>') if r['detail_url'] else ''
-        source_only = 'Source roster observation · ' if r['attribution'] == 'franchise continuity unconfirmed' else ''
+        attribution = r['attribution']
+        source_only = 'Source roster observation · ' if attribution == 'franchise continuity unconfirmed' else ''
+        attribution_note = ''
+        reason = str(r['reason'] or '')
+        if attribution == 'franchise continuity unconfirmed':
+            attribution_note = '<p class="cx-risk">This activity is recorded, but its link to this franchise is unconfirmed.</p>'
+            reason = reason.removeprefix('Completed movement is supported in this source-season roster slot; continuity with the current franchise is unconfirmed.').strip()
+        elif attribution != 'source-linked roster-slot continuity':
+            attribution_note = '<p class="cx-risk">The franchise connected to this activity is not established.</p>'
         events.append('<article class="card fh-event"><h4>' + source_only + str(r['season']) + ' · ' + text(r['kind'].replace('_', ' ').title()) + '</h4>'
             + '<p>' + text(date) + ' · ' + text(r['status']) + '</p><ul>' + ''.join(assets) + '</ul>'
-            + ('<p>' + text(r['reason']) + '</p>' if r['reason'] else '')
-            + '<p>' + text(r['attribution']) + '.</p>' + detail
-            + '<details><summary>Event source</summary><p>Source league ' + text(r['source_league_id']) + ' · record ' + text(r['id']) + '</p></details></article>')
+            + ('<p>' + text(reason) + '</p>' if reason else '')
+            + attribution_note + detail
+            + '<details><summary>Event source</summary><p>Source league ' + text(r['source_league_id']) + ' · record ' + text(r['id']) + '</p>'
+            + '<p>Exact event timestamp: ' + text(raw_time or 'Not recorded') + '</p><p>Recorded franchise attribution: ' + text(attribution or 'Not recorded') + '</p></details></article>')
     if not events:
         events = ['<p class="fh-empty">No supported completed events are displayed. Review season coverage above; unavailable history is not an empty history.</p>']
     attempts = ''.join('<li>' + str(r['season']) + ' · ' + text(r['kind']) + ' · ' + text(r['status']) + ': '

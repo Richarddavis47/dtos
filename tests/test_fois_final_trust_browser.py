@@ -48,6 +48,11 @@ class FinalTrustBrowserTests(unittest.TestCase):
                     self.assertIn('Results findings are supported', text)
                     self.assertIn('overall strongest area', text)
                     self.assertIn('have not been revalidated', page.inner_text('body'))
+                    self.assertIn('RETAINED / NOT REVALIDATED', page.inner_text('body'))
+                    category = page.get_by_text('Category grades and supporting evidence', exact=True)
+                    category.focus()
+                    category.press('Enter')
+                    self.assertTrue(category.evaluate('e=>e.parentElement.open'))
                     self.assertIn(str(score.category_scores[0].normalized_score), page.inner_text('.card-grid'))
                     self.assertIn('3', page.inner_text('.card-grid'))
                 else:

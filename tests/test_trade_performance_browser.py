@@ -14,7 +14,7 @@ class TradePerformanceBrowserTests(unittest.TestCase):
                 fixture.ready(page, '/trades/recommended')
                 page.click('#trade-find')
                 page.wait_for_function('document.querySelector("#trade-builder").getAttribute("aria-busy")==="true"')
-                self.assertIn('Searching supported bilateral options', page.locator('#trade-result').inner_text())
+                self.assertIn('Searching supported trade offers', page.locator('#trade-result').inner_text())
                 self.assertTrue(page.locator('#trade-find').is_disabled())
                 self.assertLessEqual(page.evaluate('document.documentElement.scrollWidth'), width)
                 page.locator('#trade-strategy').select_option('WIN NOW')

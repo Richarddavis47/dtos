@@ -49,8 +49,17 @@ class TradeNavigationBrowserTests(unittest.TestCase):
                     fixture.harness.page(width, workspace=fixture.workspace, api=api) as (page, requests):
                 fixture.start_offer(page)
                 fixture.cheaper(page)
-                card = page.locator('.tw-offer').filter(has_text='763 → 751')
+                pick_label = next(a['label'] for team in fixture.workspace['teams']
+                                  for a in team['assets'] if a['asset_id'] == '2027-R4-1')
+                card = page.locator('.tw-offer').filter(has_text=pick_label).first
                 card.get_by_role('button', name='Review trade', exact=False).click()
+                requests_before = len(requests)
+                comparison = page.get_by_text('Compare with your current draft', exact=True)
+                comparison.focus()
+                comparison.press('Enter')
+                self.assertTrue(comparison.evaluate('e=>e.parentElement.open'))
+                self.assertIn('763 → 751', comparison.locator('..').inner_text())
+                self.assertEqual(len(requests), requests_before)
                 page.get_by_role('button', name='Use this offer in my draft', exact=True).click()
                 adopted = fixture.proposal(page)
                 self.assertEqual(fixture.proposal(page), adopted)
