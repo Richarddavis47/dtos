@@ -58,11 +58,11 @@ class DossierPlainEnglishTests(unittest.TestCase):
     def test_missing_age_differs_from_observed_age_or_injury_concerns(self):
         self.fixture.data['players']['player one'].pop('age')
         missing = self.page()
-        self.assertIn('Age-related assessment is incomplete because age is missing.', missing)
-        self.assertNotIn('age-related warning, not a prediction', missing)
+        self.assertIn('Age is missing; age risk is unknown.', missing)
+        self.assertNotIn('Age warrants caution for this position; it does not predict', missing)
         self.fixture.data['players']['player one'].update(age=36, injury_status='Out')
         negative = self.page()
-        self.assertIn('age-related warning, not a prediction of retirement', negative)
+        self.assertIn('Age warrants caution for this position; it does not predict retirement', negative)
         self.assertIn('A current injury designation increases observable availability risk.', negative)
         self.assertNotIn('No specific weakness is established', negative)
 
@@ -81,8 +81,8 @@ class DossierPlainEnglishTests(unittest.TestCase):
 
     def test_known_bye_and_missing_bye_are_not_interchanged(self):
         unavailable = self.page()
-        self.assertIn('His bye week is not confirmed in this player record.', unavailable)
-        self.assertIn('missing schedule information does not mean he has no bye', unavailable)
+        self.assertIn('His bye week is not confirmed.', unavailable)
+        self.assertIn('Check the schedule before relying', unavailable)
         self.fixture.data['players']['player one']['bye_week'] = 14
         supported = self.page()
         self.assertIn('<b>Bye:</b> 14', supported)

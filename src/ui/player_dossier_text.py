@@ -7,11 +7,11 @@ _NO_WEAKNESS = "No current evidence-backed weakness exceeds the v1 threshold."
 
 def outlook_text(text: str) -> str:
     if text == _LONG_TERM:
-        return ("Multi-season outlook unavailable. Current age, NFL status and weekly projections "
-                "cannot establish future production.")
+        return ("A reliable multi-season outlook is not available. Age, NFL status and a weekly projection "
+                "do not tell us how long this player will keep producing. Compare current production and Market price separately.")
     if text == 'Weekly evidence is disclosed at its actual horizon, not converted into a season-value score.':
-        return ("Use the weekly Sleeper projection for this week only. "
-                "Season-long production and value remain unknown.")
+        return ("A full-season forecast is not available. Use the weekly Sleeper projection for that week's lineup; "
+                "it does not establish season-long production or value.")
     return text
 
 
@@ -42,7 +42,7 @@ def weaknesses_text(report) -> tuple[str, ...]:
         reason = ("Age is missing; age risk is unknown. " if report.profile.age is None else
                   "Age risk is unverified. ")
         return (reason + "Other checks establish no specific weakness; role changes and injury history need review.",)
-    return ("Age and reported status establish no specific weakness. "
+    return ("No specific weakness is established by age or reported status. "
             "Role changes, injury history and availability remain uncertain.",)
 
 
