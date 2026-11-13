@@ -4,6 +4,7 @@ from types import SimpleNamespace
 from components.asset_intelligence import _scoped_rank_summary
 from components.commissioner import front_office_summary
 from src.ui.intelligence_presentation import exact_rank
+from tests.html_document import _Document, _class, _elements, _text
 
 
 class RankPresentationTests(unittest.TestCase):
@@ -27,11 +28,22 @@ class RankPresentationTests(unittest.TestCase):
                 depth=dimension, asset_health=dimension, confidence=0,
                 competitive_window='Unavailable', window_explanation='Insufficient evidence',
                 record='0–0', power_ranking=None)})
-        self.assertEqual(html.count('Not ranked — insufficient evidence'), 3)
+        document = _Document(html).root
+        # Current lineup rank is explicitly withheld. Unknown future and power
+        # ranks do not become numeric tiles or imply last place.
+        office = _class(document, 'cd-office')
+        self.assertIn('Lineup comparison not ready', _text(_class(office, 'cd-office-main')))
+        self.assertIn('League rank is withheld until a supported comparison is ready.', html)
+        metrics = [item for item in _elements(office, direct=True) if 'cd-metric' in item['attrs'].get('class', '').split()]
+        labels = [_text(child) for item in metrics for child in _elements(item, direct=True) if child['tag'] == 'span']
+        self.assertEqual(labels, ['Record'])
+        self.assertNotIn('Future outlook', labels)
+        self.assertNotIn('Projected lineup rank', labels)
+        self.assertIn('Outlook not established', html)
         self.assertNotIn('#None', html)
-        self.assertIn('Scoring league unavailable', html)
-        self.assertIn('Comparison population unavailable', html)
-        self.assertIn('Projection coverage unavailable', html)
+        self.assertNotIn('#10', html)
+        self.assertIn('Selected league · Projection week not established', html)
+        self.assertIn('Roster projection coverage is not established.', html)
         self.assertNotIn('0% confidence', html)
 
     def test_missing_position_and_universe_are_not_numbers(self):

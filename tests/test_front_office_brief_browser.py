@@ -74,12 +74,12 @@ class FrontOfficeBriefBrowserTests(unittest.TestCase):
                         self.assertFalse(more.evaluate('e=>e.open'))
                         link = page.locator('.home-opportunity').get_by_role('link',name='Explore / Edit')
                         link.click()
-                        page.get_by_text('Alternative preview',exact=True).wait_for()
-                        page.get_by_role('button',name='Keep original',exact=True).click()
+                        page.get_by_text('Trade review',exact=True).wait_for()
+                        page.get_by_role('button',name='Back to your draft',exact=True).click()
                         page.goto('https://dtos.test/')
                         page.locator('.home-opportunity').wait_for()
                         page.locator('.home-opportunity').get_by_role('link',name='Explore / Edit').click()
-                        page.get_by_role('button',name='Adopt alternative',exact=True).click()
+                        page.get_by_role('button',name='Use this offer in my draft',exact=True).click()
                         self.assertIn('2028', page.locator('#trade-received-chips').inner_text())
                         self.assertFalse(errors,errors)
                         measurements.append(row)
@@ -105,9 +105,12 @@ class FrontOfficeBriefBrowserTests(unittest.TestCase):
             browser=launch_chromium(pw,headless=True)
             try:
                 page=f.f.browser_page(browser,390,844)
+                generated, errors = [], []
+                page.on('request', lambda r: generated.append(r.url) if '/api/trades/generate' in r.url else None)
+                page.on('pageerror', lambda e: errors.append(str(e)))
                 with patch('services.home_trade_opportunities.source_identity',return_value=None):
                     page.goto('https://dtos.test/')
-                    page.get_by_text('Trade pricing is unavailable or changing.',exact=False).wait_for()
+                    page.get_by_text('Trade prices are unavailable or changing.',exact=False).wait_for()
                     self.assertIn('owned future first-round',page.locator('#home-opportunity-cards').inner_text())
                     self.assertEqual(page.locator('.home-opportunity').count(),0)
                 page.reload()
@@ -136,6 +139,8 @@ class FrontOfficeBriefBrowserTests(unittest.TestCase):
                 page.wait_for_load_state('networkidle')
                 self.assertEqual(page.locator('.home-opportunity').count(),0)
                 self.assertNotIn('CURRENT',page.locator('#home-opportunity-cards').inner_text())
+                self.assertFalse(generated, generated)
+                self.assertFalse(errors, errors)
                 page.close()
             finally:
                 browser.close()
@@ -182,9 +187,9 @@ class FrontOfficeBriefBrowserTests(unittest.TestCase):
                                 page.wait_for_function("document.querySelector('#home-opportunities').dataset.presentation !== 'loading'")
                             text = page.locator('#home-opportunity-status').inner_text()
                             if state == 'loading':
-                                self.assertIn('Reading prepared evidence', text)
+                                self.assertIn('Loading your team brief', text)
                             elif state == 'error':
-                                self.assertIn('unavailable', text)
+                                self.assertIn('could not be loaded', text)
                                 self.assertEqual(page.locator('#home-opportunity-cards article').count(), 0)
                             elif state == 'empty':
                                 self.assertIn('No actionable insight qualifies', text)

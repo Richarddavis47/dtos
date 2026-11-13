@@ -421,7 +421,7 @@ class ContextualBackTests(unittest.TestCase):
                     form.evaluate("f=>f.requestSubmit()")
                     p.wait_for_url("**/market?*q=c*")
                     p.locator(".market-asset").first.click()
-                    p.locator("a").filter(has_text="Open canonical dossier").click()
+                    p.get_by_role("link", name="Open player", exact=True).click()
                     p.wait_for_url("**/players/*")
                     p.locator("#dtos-back").click()
                     p.wait_for_url("**/market?*")
@@ -588,7 +588,7 @@ class ContextualBackTests(unittest.TestCase):
                 original = self.draft(p)["currentProposal"]
                 p.locator("#trade-balance-offer").click()
                 p.get_by_role(
-                    "button", name="Preview adjustment", exact=True
+                    "button", name="Review trade", exact=True
                 ).first.click()
                 before = self.draft(p)
                 self.assertIsNotNone(before["previewProposal"])
@@ -607,16 +607,24 @@ class ContextualBackTests(unittest.TestCase):
                     before["previewProposal"]["assets_sent"],
                 )
                 self.assertTrue(after["previewProposal"]["preview_context"]["restored"])
-                p.get_by_role("button", name="Keep original", exact=True).click()
+                # The retained preview survives navigation; its entire search
+                # result universe is intentionally not persisted. Return to the
+                # actual draft without rerunning the old search or evaluation.
+                before_keep_posts = [r for r in requests if r[0] == "POST"]
+                keep = p.get_by_role("button", name="Back to your draft", exact=True)
+                keep.focus()
+                keep.press("Enter")
                 self.assertEqual(self.draft(p)["currentProposal"], original)
+                self.assertIsNone(self.draft(p)["previewProposal"])
+                self.assertEqual([r for r in requests if r[0] == "POST"], before_keep_posts)
                 # A deliberate new balance request obtains current evidence;
                 # returning never silently reruns or revalidates the old one.
                 p.locator("#trade-balance-offer").click()
                 p.get_by_role(
-                    "button", name="Preview adjustment", exact=True
+                    "button", name="Review trade", exact=True
                 ).first.click()
                 expected = self.draft(p)["previewProposal"]
-                p.get_by_role("button", name="Adopt alternative", exact=True).click()
+                p.get_by_role("button", name="Use this offer in my draft", exact=True).click()
                 adopted = self.draft(p)["currentProposal"]
                 self.assertEqual(adopted["sent"], expected["assets_sent"])
                 self.assertEqual(adopted["received"], expected["assets_received"])

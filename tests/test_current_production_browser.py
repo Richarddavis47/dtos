@@ -44,8 +44,15 @@ class CurrentProductionBrowserTests(unittest.TestCase):
                         page.route('**/*',transport)
                         def inspect(expected):
                             panel=page.locator('.canonical-production')
-                            panel.evaluate("e=>{for(let p=e.parentElement;p;p=p.parentElement)if(p.tagName==='DETAILS')p.open=true}")
+                            self.assertTrue(panel.is_visible())
                             self.assertIn(expected,panel.inner_text())
+                            disclosure=panel.get_by_text('Results, weekly coverage and sources',exact=True)
+                            count=len(requests)
+                            if not disclosure.evaluate('e=>e.parentElement.open'):
+                                disclosure.focus()
+                                disclosure.press('Enter')
+                            self.assertTrue(disclosure.evaluate('e=>e.parentElement.open'))
+                            self.assertEqual(len(requests),count)
                             table=panel.locator('table').first
                             self.assertGreaterEqual(table.evaluate('e=>e.getBoundingClientRect().width'),672)
                             self.assertEqual(table.evaluate('e=>getComputedStyle(e).overflowWrap'),'normal')
@@ -58,6 +65,8 @@ class CurrentProductionBrowserTests(unittest.TestCase):
                             with patch.dict(dtos_app.STATE,{'data':f.f.data}):
                                 response=page.goto('http://fixture/market?selected=player%3A1')
                                 self.assertEqual(response.status,200)
+                                if dest:
+                                    page.screenshot(path=str(dest/f'default-market-{league}-{w}.png'))
                                 inspect('8 of 8 completed-week score observations')
                                 self.assertIn('18.00 fantasy points',page.locator('.canonical-production').inner_text())
                                 canonical=f.api()['windows'][3]
@@ -65,6 +74,8 @@ class CurrentProductionBrowserTests(unittest.TestCase):
                                     page.screenshot(path=str(dest/f'complete-market-{league}-{w}.png'))
                                 response=page.goto('http://fixture/players/1?front_office=4')
                                 self.assertEqual(response.status,200)
+                                if dest:
+                                    page.screenshot(path=str(dest/f'default-dossier-{league}-{w}.png'))
                                 inspect('8 of 8 completed-week score observations')
                                 self.assertNotIn('This player context does not include a season production summary',page.locator('body').inner_text())
                                 if dest:

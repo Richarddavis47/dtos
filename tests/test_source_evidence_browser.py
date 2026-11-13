@@ -48,7 +48,7 @@ class SourceEvidenceBrowserTests(unittest.TestCase):
                                         "#positional-depth article"
                                     ).first
                                     summary = card.get_by_text(
-                                        "Lineup eligibility and surplus", exact=True
+                                        "Replacement options and calculations", exact=True
                                     )
                                     closed = card.bounding_box()["height"]
                                     summary.focus()
@@ -105,7 +105,7 @@ class SourceEvidenceBrowserTests(unittest.TestCase):
                                                 f.data, rid, f.service.snapshot()
                                             )["evidence"]["source_observations"]:
                                                 self.assertIn(
-                                                    stamp, panel.text_content()
+                                                    stamp, panel.inner_text()
                                                 )
                                             self.assertGreater(
                                                 float(
@@ -152,7 +152,7 @@ class SourceEvidenceBrowserTests(unittest.TestCase):
                                     "https://dtos.test/trades/create?front_office=1"
                                 )
                                 page.get_by_label(
-                                    "Counterparty", exact=True
+                                    "Trade partner", exact=True
                                 ).select_option("2")
                                 page.get_by_label(
                                     "Trade strategy", exact=True
@@ -177,8 +177,10 @@ class SourceEvidenceBrowserTests(unittest.TestCase):
                                     .first
                                 )
                                 evidence.wait_for()
-                                evidence.click()
+                                evidence.focus()
+                                evidence.press("Enter")
                                 detail = evidence.locator("..")
+                                self.assertTrue(detail.evaluate("e=>e.open"))
                                 self.assertEqual(
                                     detail.locator(
                                         ".diagnostic-source-summary"
@@ -189,11 +191,13 @@ class SourceEvidenceBrowserTests(unittest.TestCase):
                                 self.assertEqual(panels.count(), 2)
                                 for panel in panels.all():
                                     self.assertIsNone(panel.get_attribute("open"))
-                                    panel.locator(":scope > summary").click()
+                                    panel.locator(":scope > summary").focus()
+                                    panel.locator(":scope > summary").press("Enter")
+                                    self.assertTrue(panel.evaluate("e=>e.open"))
                                     for stamp in diagnostics.team_diagnostics(
                                         f.data, 1, f.service.snapshot()
                                     )["evidence"]["source_observations"]:
-                                        self.assertIn(stamp, panel.text_content())
+                                        self.assertIn(stamp, panel.inner_text())
                                     panel.locator(":scope > summary").click()
                                 self.assertLessEqual(
                                     page.evaluate(

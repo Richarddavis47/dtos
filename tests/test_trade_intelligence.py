@@ -230,9 +230,9 @@ class TradeIntelligenceTests(unittest.TestCase):
         self.assertEqual(page.status_code, 200)
         if expected["canonical_results"]:
             self.assertIn('data-dtos-component="recommendation"', page.text)
-        self.assertIn("Active Front Office", page.text)
+        self.assertIn("Your team", page.text)
         if expected["canonical_results"]:
-            self.assertIn("View trade details", page.text)
+            self.assertIn("Review trade", page.text)
         self.assertNotIn("<details open", page.text)
 
     def test_trade_center_exposes_shared_workflows_and_manual_evaluation(self) -> None:

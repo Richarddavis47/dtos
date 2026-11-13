@@ -27,10 +27,16 @@ class ConditionalSummaryBrowserTests(unittest.TestCase):
                         card = page.locator('.tw-offer').first
                         self.assertGreater(page.locator('.tw-offer').count(), 0)
                         text = card.inner_text()
-                        for phrase in ['Your team:', 'Their team:', 'Market fairness and receiving a pick', 'per week']:
+                        for phrase in ['Your team:', 'Their team:', 'Main cost or risk:', 'provisional']:
                             self.assertIn(phrase, text)
                         self.assertTrue(card.locator('h3').first.is_visible())
-                        disclosure = card.locator('details').first
+                        requests_before = list(records)
+                        draft_expression = "Object.fromEntries(Object.entries(sessionStorage).filter(([k])=>k.startsWith('dtos-trade-workspace:')).map(([k,v])=>[k,JSON.parse(v).currentProposal]))"
+                        draft_before = page.evaluate(draft_expression)
+                        card.get_by_role('button', name='Review trade', exact=True).press('Enter')
+                        review = page.locator('.tw-offer-review')
+                        self.assertIn('Market fairness and receiving a pick', review.inner_text())
+                        disclosure = review.locator('.tw-offer-sources')
                         summary = disclosure.locator('summary').first
                         summary.evaluate('(e)=>e.scrollIntoView({block:"center"})')
                         if width < 500:
@@ -42,12 +48,20 @@ class ConditionalSummaryBrowserTests(unittest.TestCase):
                         else:
                             summary.press('Enter')
                         self.assertTrue(disclosure.evaluate('e=>e.open'))
+                        impact = disclosure.locator('.tw-team-impact-details')
+                        impact.locator(':scope > summary').focus()
+                        impact.locator(':scope > summary').press('Enter')
+                        self.assertTrue(impact.evaluate('e=>e.open'))
+                        for phrase in ['Your team:', 'Their team:', 'Market fairness and receiving a pick', 'per week']:
+                            self.assertIn(phrase, review.inner_text())
+                        self.assertEqual(records, requests_before)
+                        self.assertEqual(page.evaluate(draft_expression), draft_before)
                         self.assertFalse(errors, errors)
                         self.assertLessEqual(page.evaluate('document.documentElement.scrollWidth-innerWidth'),0)
                         root = os.environ.get('DTOS_CONDITIONAL_EVIDENCE')
                         if root:
                             Path(root).mkdir(parents=True,exist_ok=True)
-                            card.scroll_into_view_if_needed()
+                            review.scroll_into_view_if_needed()
                             page.screenshot(path=str(Path(root)/f'conditional-{width}.png'))
                         reports.append(dict(width=width,height=height,no_overflow=True,keyboard=True,post_status=records[-1]['status'],primary_summary=text))
                     finally:

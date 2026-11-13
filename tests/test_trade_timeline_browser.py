@@ -131,7 +131,7 @@ class TradeTimelineBrowserTests(unittest.TestCase):
                         self.assertNotIn(
                             "Not exercised", page.locator("body").inner_text()
                         )
-                        self.assertIn('Consumed by verified draft conversion', page.locator('body').inner_text())
+                        self.assertIn('Pick used in draft', page.locator('body').inner_text())
                     if url.startswith('/history/team/'):
                         self.assertIn('not a roster for every historical week', page.locator('body').inner_text())
                 page.close()

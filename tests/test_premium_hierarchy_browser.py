@@ -246,7 +246,7 @@ class PremiumPreparedBrowserTests(unittest.TestCase):
                     detail = page.locator("#my-team-outlook-evidence")
                     self.assertFalse(detail.evaluate("e=>e.open"))
                     detail.locator("summary").press("Enter")
-                    for label in ("Trade Calculator", "Trade opportunities"):
+                    for label in ("Evaluate a trade", "Recommended Trades"):
                         self.assertTrue(
                             detail.get_by_role(
                                 "link", name=label, exact=True
@@ -318,7 +318,7 @@ class PremiumPreparedBrowserTests(unittest.TestCase):
                     )
                     self.assertEqual(
                         page.locator(".market-mode [aria-current=page]").inner_text(),
-                        "Neutral DTOS",
+                        "Neutral Market",
                     )
                     self.assertIn(
                         "200", page.locator(".market-value").first.inner_text()

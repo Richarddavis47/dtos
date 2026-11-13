@@ -350,7 +350,7 @@ class LeagueDiagnosticHTTPTests(unittest.TestCase):
         with patch.object(roster_diagnostics, '_now', return_value=self.f.observed):
             league = self.client.get('/league')
             self.assertEqual(league.status_code, 200, league.text)
-            self.assertIn('League identity', league.text)
+            self.assertIn('Completed trade activity', league.text)
             self.assertIn('5 completed trades observed', league.text)
             team = self.client.get('/teams/2')
             self.assertEqual(team.status_code, 200, team.text)
@@ -364,7 +364,7 @@ class LeagueDiagnosticHTTPTests(unittest.TestCase):
             self.assertEqual(evaluation['recommendation'], 'WORTH PURSUING')
             from src.ui.home_trade_opportunities import cards
             output = cards([{**result.json(), 'home_offer': 'fixture'}], 1)
-            self.assertIn('Why this partner:', output)
+            self.assertIn('Partner fit (inferred):', output)
             self.assertIn('Cost and uncertainty:', output)
             self.assertIn('Why this partner?', self.client.get('/static/js/trade_workspace.js').text)
 

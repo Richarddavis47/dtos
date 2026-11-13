@@ -285,9 +285,13 @@ class TeamTradeNeedBrowserTests(unittest.TestCase):
         )
         page.goto(helper.origin + "/teams/1", wait_until="networkidle")
         self.assertEqual(page.locator("#my-team-trade-need").count(), 0)
-        page.locator("#my-team-outlook-evidence").evaluate("e=>e.open=true")
+        outlook = page.locator("#my-team-outlook-evidence")
+        self.assertFalse(outlook.evaluate("e=>e.open"))
+        outlook.locator(":scope > summary").focus()
+        page.keyboard.press("Enter")
+        self.assertTrue(outlook.evaluate("e=>e.open"))
         self.assertEqual(
-            page.get_by_role("link", name="Trade opportunities", exact=True).count(), 1
+            outlook.get_by_role("link", name="Recommended Trades", exact=True).count(), 1
         )
         self.assertFalse([r for r in requests if r[0] == "POST"])
         self.assertFalse(errors, errors)

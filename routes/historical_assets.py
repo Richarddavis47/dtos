@@ -20,6 +20,7 @@ from src.ui.intelligence_presentation import event_label, human_status, technica
 from services.asset_intelligence import contextual_player_url, validated_trade_origin
 from services.market_navigation import market_return
 from src.platform.account_context import current_account
+from src.ui.customer_experience import readable_time, source_details
 
 
 RequireData = Callable[[], dict[str, Any]]
@@ -170,22 +171,33 @@ def create_historical_assets_router(
                 franchise_names[roster_id] = name
                 franchise_names[f'{selected_league()}:franchise:{roster_id}'] = name
         raw_owner = str(dossier.get('current_owner') or '')
-        owner_name = ('Consumed by verified draft conversion' if dossier.get('exercised')
+        owner_name = ('Pick used in draft' if dossier.get('exercised')
                       else franchise_names.get(raw_owner, 'Current ownership unavailable'))
         original_identity = str(dossier.get('original_franchise_id') or '')
         original_name = franchise_names.get(original_identity, 'Original franchise name unavailable')
         account = current_account()
         active_id = int(account.membership.roster_id or 0) if account and account.membership else int(front_office or 0)
         original_id = original_identity.removeprefix(f'{selected_league()}:franchise:')
-        current_pick = next(
-            (
-                row for row in facts.get("pick_ledger") or ()
-                if int(row.get("season") or 0) == int(dossier.get("season") or 0)
-                and int(row.get("round") or 0) == int(dossier.get("round") or 0)
-                and str(row.get("original_roster_id") or "") == original_id
-            ),
-            None,
-        )
+        def positive_number(value):
+            raw = str(value or '')
+            return int(raw) if raw.isascii() and raw.isdigit() and int(raw) > 0 else None
+        pick_year = positive_number(dossier.get('season'))
+        active_year = positive_number((facts.get('league') or {}).get('season'))
+        candidates = [row for row in facts.get('pick_ledger') or ()
+            if row.get('league_id') in (None, selected_league())
+            and positive_number(row.get('season')) == pick_year
+            and positive_number(row.get('round')) == positive_number(dossier.get('round'))
+            and str(row.get('original_roster_id') or '') == original_id]
+        current_pick = candidates[0] if len(candidates) == 1 else None
+        if current_pick:
+            owner = positive_number(current_pick.get('current_owner_id'))
+            # The historical dossier alone is not a current tradable right.
+            # Require an exact, future native-ledger right and independently
+            # matching observed owner; current names or converted players do
+            # not establish ownership of that historical pick.
+            if (not pick_year or not active_year or pick_year <= active_year or not owner
+                    or raw_owner not in {str(owner), f'{selected_league()}:franchise:{owner}'}):
+                current_pick = None
         trade_action = ""
         if current_pick and dossier.get('current_owner') and not dossier.get('exercised'):
             owner_id = int(current_pick.get("current_owner_id") or 0)
@@ -207,10 +219,16 @@ def create_historical_assets_router(
         endpoint = dossier.get('selected_player_observation') or {}
         endpoint_note = ('<p>Drafted player current observed owner: ' + escape(endpoint.get('current_observed_owner_name') or 'Unavailable')
                          + ' · as of ' + escape(str(endpoint.get('as_of') or 'date unavailable')) + ' · DTOS Sleeper retrieval/sync observation. This does not establish uninterrupted ownership.</p>') if dossier.get('selected_player_id') else ''
-        body = f'''<section class="pick-dossier"><h2>{escape(pick_title)}</h2>{history_explanation}
-<div class="summary-grid"><article class="metric"><b>{escape(str(dossier.get("season")))}</b><span>Draft Year</span></article><article class="metric"><b>{escape(str(dossier.get("round")))}</b><span>Round</span></article><article class="metric"><b>{escape(owner_name)}</b><span>Current Owner</span></article><article class="metric"><b>{escape(str(dossier["slot_status"]))}</b><span>Slot Status</span></article><article class="metric"><b>{escape(original_name)}</b><span>Original franchise</span></article></div>
-{observation_note}{transition_note}{last_note}<div class="card"><h3>Pick Conversion</h3><p>{selected}</p>{endpoint_note}<p>{trade_action}</p><p class="muted">Future slots remain unknown until determined by verified draft results.</p></div>
-<div class="card"><h3>Ownership Chain</h3><div class="ds-table-wrap" tabindex="0" role="region" aria-label="Pick ownership history"><table class="pick-history-table"><caption>Verified ownership events for this exact pick</caption><thead><tr><th>Season</th><th>Event</th><th>From</th><th>To</th><th>Status</th></tr></thead><tbody>{rows}</tbody></table></div></div>{details}</section>'''
+        status_label = ('Pick used in draft' if dossier.get('exercised') else
+                        'Future draft pick' if current_pick else 'Historical or unconfirmed pick right')
+        owner_label = 'Current owner' if current_pick else 'Latest observed holder'
+        observed = ('<p class="muted">Owner last observed: ' + escape(readable_time(holding.get('as_of'))) + '.</p>') if raw_owner else ''
+        context_details = source_details(history_explanation + observation_note + last_note + endpoint_note + details,
+                                         summary='Ownership dates, exact identity and sources')
+        body = f'''<section class="pick-dossier"><h2>{escape(pick_title)}</h2><p>{status_label}</p>
+<div class="summary-grid"><article class="metric"><b>{escape(owner_name)}</b><span>{owner_label}</span></article><article class="metric"><b>{escape(original_name)}</b><span>Original franchise</span></article></div>
+{observed}{transition_note}<div class="card"><h3>Draft selection</h3><p>{selected}</p><p>{trade_action}</p><p class="muted">Future draft positions stay unknown until confirmed by draft results.</p></div>
+<details class="card"><summary>Recorded ownership movements</summary><div class="ds-table-wrap" tabindex="0" role="region" aria-label="Pick ownership history"><table class="pick-history-table"><caption>Verified ownership events for this exact pick</caption><thead><tr><th>Season</th><th>Event</th><th>From</th><th>To</th><th>Status</th></tr></thead><tbody>{rows}</tbody></table></div></details>{context_details}</section>'''
         trade_return = f'<a class="back" href="/trades/history/{quote(origin["transaction_id"], safe="")}">← Back to original trade timeline</a>' if origin else ''
         market_origin = market_return(from_market, market_league, selected_league())
         market_back = f'<a class="back" href="{escape(market_origin)}">← Back to Market results</a>' if market_origin else ''

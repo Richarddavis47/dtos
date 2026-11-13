@@ -6,6 +6,7 @@ from src.core.sync_status import synchronization_warning
 import asyncio
 from datetime import datetime
 from html import escape
+from src.ui.customer_experience import readable_time
 from pathlib import Path
 from typing import Any, Awaitable, Callable
 from urllib.parse import parse_qsl, quote, urlencode
@@ -149,7 +150,7 @@ def _format_refresh_time(value: Any) -> str:
 
 def _historical_archive_row(row: dict[str, Any]) -> str:
     detail = (
-        f'<a href="{escape(row["trade_dossier_url"])}">Trade Dossier</a>'
+        f'<a href="{escape(row["trade_dossier_url"])}">Review completed trade</a>'
         if row["trade_dossier_url"]
         else '<details><summary>Source event</summary>' + escape(row["sleeper_transaction_id"]) + '</details>'
     )
@@ -158,7 +159,7 @@ def _historical_archive_row(row: dict[str, Any]) -> str:
     faab = f" · {len(row.get('waiver_budget') or [])} FAAB movement(s)" if row.get('waiver_budget') else ''
     return (
         f'<tr><td>{escape(str(row["season"]))} Week {escape(str(row["week"] if row["week"] is not None else "?"))}</td>'
-        f'<td>{escape(str(row["occurred_at"] or "Date unavailable"))}</td>'
+        f'<td>{escape(readable_time(row["occurred_at"]))}</td>'
         f'<td>{escape(row["type"].replace("_", " ").title())}<p>{escape(row.get("franchise_summary") or "Franchise identities unavailable")}</p></td>'
         f'<td>{escape(str(row["status"]))}</td><td>{consideration}{faab}'
         + (' · No completed movement established' if row.get('malformed_consideration') or str(row['status']).casefold() not in {'complete', 'completed'} else '')
@@ -195,7 +196,7 @@ def _transactions_table(view: dict[str, Any], filters: dict[str, Any]) -> str:
     headings = "".join(
         f"<th>{_sort_heading(label, field, filters, sort, direction)}</th>"
         for label, field in (
-            ("Timestamp", "date"),
+            ("Date", "date"),
             ("Type", "type"),
             ("Teams involved", "teams"),
             ("Assets exchanged", "assets"),
@@ -489,13 +490,13 @@ def create_transactions_router(
         ) or "No external provider data was used."
         depth_role = metadata.get("depth_chart_role") if metadata.get("depth_chart_role") is not None else reasons["depth_chart_role"]
         bye_week = metadata.get("bye_week") if metadata.get("bye_week") is not None else reasons["bye_week"]
-        live_panel = f'''<section class="card"><h2>Live Data &amp; Market</h2>
-<div class="grid"><div><div class="muted">{escape(consensus["evidence_state"])} · 0–1000</div><div class="stat">{escape(str(consensus_value))}</div><p>Evidence confidence {consensus["confidence"]}/100 · Agreement {str(consensus["agreement"]) + "/100" if consensus["agreement"] is not None else "Unavailable"}</p>{market_fact_html(live["market_fact"])}<p>FantasyCalc raw-price 30-day change (provider units): {escape(str(trend_label))}</p><p><a href="/market?{escape(urlencode({'selected': 'player:' + player_id}))}">Observed canonical Market history</a> · Dated comparisons; separate from the provider's raw-price change.</p></div>
+        live_panel = f'''<details class="card cx-evidence"><summary>Market and player sources</summary><h2>Live Data &amp; Market</h2>
+<div class="grid"><div><div class="muted">{escape(consensus["evidence_state"])} · 0–1000</div><div class="stat">{escape(str(consensus_value))}</div><p>Evidence confidence {consensus["confidence"]}/100 · Agreement {str(consensus["agreement"]) + "/100" if consensus["agreement"] is not None else "Unavailable"}</p>{market_fact_html(live["market_fact"])}<p>FantasyCalc raw-price 30-day change (provider units): {escape(str(trend_label))}</p><p><a href="/market?{escape(urlencode({'selected': 'player:' + player_id}))}">Observed Market history</a> · Dated comparisons; separate from the provider's raw-price change.</p></div>
 <div><div class="muted">Player Context</div><p><b>{escape(str(normalized["position"]))}</b> · {escape(str(normalized["nfl_team"]))} · {escape(human_status(normalized["status"]))}</p><p>Age: {escape(available(metadata.get("age"), reason="Age is not supplied by the current source."))}</p><p>Depth chart: {escape(str(depth_role))} · Bye: {escape(str(bye_week))}</p></div></div>
 <div class="ds-table-wrap" tabindex="0" role="region" aria-label="Provider value evidence"><table><thead><tr><th>Provider</th><th>Raw provider value / State</th><th>Freshness</th><th>Confidence</th><th>Availability reason</th></tr></thead><tbody>{provider_values}</tbody></table></div>
 <h3>League Context</h3><div class="grid"><div><b>Trending</b><p>{league_context["trending_adds"]} adds · {league_context["trending_drops"]} drops (Sleeper, last cached window)</p></div><div><b>Ownership</b><p class="player-ownership-label">{escape(ownership["label"])}</p></div><div><b>Transactions</b><p>{league_context["transaction_count"]} cached league transactions</p></div></div>
 <h3>Data Availability</h3><ul><li><b>ADP:</b> {escape(str(reasons["adp"]))}</li><li><b>Current projections:</b> {escape(str(projection_availability))}</li><li><b>Production:</b> {escape(str(reasons["production"]))}</li><li><b>Usage:</b> {escape(str(reasons["usage"]))}</li></ul>
-<p class="muted">Sources: {attribution} · Sleeper player, league, transaction, and trending metadata.</p></section>'''
+<p class="muted">Sources: {attribution} · Sleeper player, league, transaction, and trending metadata.</p></details>'''
         cards = "".join(
             '<div class="card">'
             f'<div class="muted">{escape(transaction["timestamp"])}</div>'
@@ -520,9 +521,9 @@ def create_transactions_router(
             + escape(str(current_observation.get('current_observed_owner_name') or 'Unavailable')) + ' · as of '
             + escape(str(current_observation.get('as_of') or 'date unavailable'))
             + ' · DTOS Sleeper retrieval/sync observation, not acquisition or ownership-change time. Missing intervals do not establish uninterrupted ownership.</p>')
-        historical_panel = f'''<section class="card"><h2>{history_league_name} Career History</h2><p><b>League origin:</b> {escape(human_status(origin.get("event_type")))}</p><p><a href="/history/player/{escape(player_id)}{origin_query}">Open observed historical performance</a></p>{historical_details}<p>Unknown lineup roles remain separate from bench. Missing weekly scoring remains unavailable.</p>
+        historical_panel = f'''<details class="card cx-evidence"><summary>{history_league_name} Career History</summary><h2>Recorded seasons and ownership</h2><p><b>League origin:</b> {escape(human_status(origin.get("event_type")))}</p><p><a href="/history/player/{escape(player_id)}{origin_query}">Open observed historical performance</a></p>{historical_details}<p>Unknown lineup roles remain separate from bench. Missing weekly scoring remains unavailable.</p>
 <h3>Annual League History</h3><div class="ds-table-wrap" tabindex="0" role="region" aria-label="Observed season production"><table><thead><tr><th>Season</th><th>Status</th><th>Scored observations</th><th>Known starts</th><th>Explicit bench</th><th>Unknown role</th><th>Observed points</th><th>Sample overall rank</th><th>Sample position rank</th><th>Scored-week coverage</th></tr></thead><tbody>{season_history}</tbody></table></div>
-<h3>Ownership Timeline</h3>{current_observation_html}<ul>{ownership_history}</ul><p class="muted">Failed transactions remain behavioral evidence and never modify ownership. Missing weeks are not converted to zero. Current values are never backdated.</p></section>'''
+<h3>Ownership Timeline</h3>{current_observation_html}<ul>{ownership_history}</ul><p class="muted">Failed transactions remain behavioral evidence and never modify ownership. Missing weeks are not converted to zero. Current values are never backdated.</p></details>'''
         trade_return = f'<a class="back" href="/trades/history/{quote(original["transaction_id"], safe="")}">← Back to original trade timeline</a>' if original else ''
         matchup_return = ''
         section = from_section if from_section in {'full-roster', 'my-team-advanced'} else 'full-roster'
@@ -540,11 +541,11 @@ def create_transactions_router(
 {market_back or team_return or '<a class="back" href="/transactions">← Back to Transactions Center</a>'}
 {player_dossier(report, selected_team, teams, weekly_projection_html=weekly_panel, ownership=ownership)}
 <p class="player-reported-status">Sleeper reported status: {escape(str(player.get("injury_status") or player.get("status") or "Unavailable"))}</p>
-{profile_explanation}
 {canonical_panel}
+<details class="cx-evidence"><summary>Player assessment explanation</summary>{profile_explanation}</details>
 {live_panel}
 {historical_panel}
-<h2>Recent Transactions</h2><div class="grid">{cards}</div>
+<details class="cx-evidence"><summary>Recent Transactions</summary><div class="grid">{cards}</div></details>
 """
         return page(f"{name} — Player Intelligence", body)
 

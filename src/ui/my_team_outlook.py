@@ -14,8 +14,8 @@ def outlook_panel(outlook, *, editable, roster_id):
     if need:
         action += (f'<p>{escape(need["reason"])}</p><a id="my-team-trade-need" class="thq-action" '
                    f'href="{escape(need["href"], quote=True)}">Explore {escape(need["position"])} trades</a>')
-    trade = (f'<a class="thq-action" href="/trades/calculator?front_office={roster_id}">Trade Calculator</a>'
-             f'<a class="thq-action" href="/trades?front_office={roster_id}">Trade opportunities</a>') if editable else ''
+    trade = (f'<a class="thq-action" href="/trades/calculator?front_office={roster_id}">Evaluate a trade</a>'
+             f'<a class="thq-action" href="/trades?front_office={roster_id}">Recommended Trades</a>') if editable else ''
     navigation = ('<div class="thq-outlook-next">' + action + '</div>'
                   '<nav class="thq-actions" aria-label="Roster sections">'
                   '<a class="thq-action" href="#full-roster" aria-label="View full roster">Roster</a>'

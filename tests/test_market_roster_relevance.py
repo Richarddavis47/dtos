@@ -291,7 +291,8 @@ class MarketRosterRelevanceTests(unittest.TestCase):
         f.add_point(1800, incompatible=True)
         html, _ = f.panel()
         self.assertNotIn("Explore in Trade For", html)
-        self.assertIn("Compatible dated prices are insufficient", html)
+        self.assertIn("This page does not have enough comparable dated prices", html)
+        self.assertIn("Movement is unknown, not zero or evidence of no opportunities", html)
 
     def test_changed_availability_keeps_neutral_movement_and_expires_link(self):
         f = MarketNeedFixture(self)

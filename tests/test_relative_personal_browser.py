@@ -102,7 +102,14 @@ class RelativeMethodBrowserTests(unittest.TestCase):
                                     full_page=True,
                                 )
                             button.focus()
-                            page.keyboard.press("Enter")
+                            with page.expect_response(
+                                lambda response: response.url.endswith('/api/my-dtos')
+                                and response.request.method == 'POST'
+                                and response.request.post_data_json.get('command') == 'method_preview'
+                            ) as method_response:
+                                page.keyboard.press("Enter")
+                            self.assertEqual(method_response.value.status, 200)
+                            preview = method_response.value.json()['method_preview']
                             dialog = page.locator("#personal-method-dialog")
                             dialog.wait_for(state="visible")
                             self.assertEqual(
@@ -123,7 +130,19 @@ class RelativeMethodBrowserTests(unittest.TestCase):
                                 "No preferences changed",
                                 page.locator("#personal-status").inner_text(),
                             )
-                            self.assertIn("Market publication", dialog.inner_text())
+                            source_details = dialog.locator('details').filter(
+                                has=page.get_by_text('Market data used', exact=True)
+                            )
+                            self.assertIsNone(source_details.get_attribute('open'))
+                            source_details.locator('summary').focus()
+                            source_details.locator('summary').press('Enter')
+                            self.assertIsNotNone(source_details.get_attribute('open'))
+                            self.assertEqual(
+                                source_details.locator('p').inner_text(),
+                                f"Source {preview['source_generation']} · "
+                                f"{preview.get('generated_at') or 'Publication time not supplied'} · "
+                                f"ranking revision {preview['ranking_revision']}",
+                            )
                             self.assertLessEqual(
                                 dialog.evaluate("e=>e.scrollWidth-e.clientWidth"), 1
                             )

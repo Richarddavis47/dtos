@@ -267,7 +267,7 @@ class DecisionHTTPBrowserTests(unittest.TestCase):
             original = next(iter(self.state(page).values()))["currentProposal"]
             page.click("#trade-balance-offer")
             page.get_by_role(
-                "button", name="Preview adjustment", exact=True
+                "button", name="Review trade", exact=True
             ).first.wait_for()
             balanced = self.responses[-1]
             self.assertTrue(
@@ -278,19 +278,19 @@ class DecisionHTTPBrowserTests(unittest.TestCase):
             )
             self.assertLessEqual(balanced["search_evidence"]["evaluated"], 8)
             page.get_by_role(
-                "button", name="Preview adjustment", exact=True
+                "button", name="Review trade", exact=True
             ).first.click()
             self.assertEqual(
                 next(iter(self.state(page).values()))["currentProposal"], original
             )
-            page.get_by_role("button", name="Keep original", exact=False).click()
+            page.get_by_role("button", name="Back to offers", exact=False).click()
             self.assertEqual(
                 next(iter(self.state(page).values()))["currentProposal"], original
             )
             page.get_by_role(
-                "button", name="Preview adjustment", exact=True
+                "button", name="Review trade", exact=True
             ).first.click()
-            page.get_by_role("button", name="Adopt alternative", exact=True).click()
+            page.get_by_role("button", name="Use this offer in my draft", exact=True).click()
             adopted = next(iter(self.state(page).values()))["currentProposal"]
             self.assertIn("c", adopted["received"])
             page.reload()

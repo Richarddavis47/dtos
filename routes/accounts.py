@@ -19,7 +19,7 @@ from src.platform.runtime_errors import PRIVATE_HEADERS, log_runtime_failure, ru
 from src.ui.design_system import DESIGN_SYSTEM_CSS, account_page_header
 
 
-def _shell(title: str, body: str, *, purpose: str = "Manage secure access to your dynasty front office.", status_code: int = 200) -> HTMLResponse:
+def _shell(title: str, body: str, *, purpose: str = "Manage your account and connected leagues.", status_code: int = 200) -> HTMLResponse:
     css = """body{margin:0;background:var(--background);color:var(--text);font-family:system-ui,sans-serif}.auth{max-width:720px;margin:auto;padding:28px 18px}.auth .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px;margin:14px 0}.auth .grid{display:grid;gap:12px}.auth label{font-weight:650;font-size:14px}.auth input,.auth select{width:100%;min-height:44px;padding:13px;margin-top:6px;border-radius:10px;border:1px solid var(--border);background:var(--background);color:var(--text)}.auth .btn{display:inline-flex;min-height:46px;align-items:center;justify-content:center;border:0;border-radius:10px;padding:10px 16px;background:var(--accent);color:#081307;font-weight:750;cursor:pointer}.auth a{color:var(--accent)}.auth .muted{color:var(--muted)}.auth .error{color:var(--negative)}.auth .good{color:var(--positive)}@media(max-width:600px){.auth{padding:18px 13px}.auth .card{padding:18px}}"""
     from services.contextual_navigation import navigation_markup, with_back
     back, navigation_head = navigation_markup() if not any(word in title.casefold() for word in ("sign in", "create account", "recover", "welcome")) else ("", "")
@@ -61,7 +61,7 @@ def _preparation_waiting() -> HTMLResponse:
 
 
 def _unmatched_franchise() -> HTMLResponse:
-    return _shell("Review team mapping", '<section class="card"><h1>We found the league, but could not confidently match your team.</h1><p>DTOS did not guess or create ownership. Your saved leagues and active league are unchanged.</p><p>Return to your connected leagues, or review the linked Sleeper identity. You can retry the import after the identity or Sleeper league membership is corrected.</p><div class="grid"><a class="btn" href="/account/leagues">Your leagues</a><a class="btn" href="/account/sleeper">Review Sleeper identity</a></div></section>')
+    return _shell("Review your team", '<section class="card"><h1>We found the league, but could not confidently match your team.</h1><p>DTOS did not guess or create ownership. Your saved leagues and active league are unchanged.</p><p>Check your Sleeper username and league membership, then try adding the league again.</p><div class="grid"><a class="btn" href="/account/leagues">Your leagues</a><a class="btn" href="/account/sleeper">Review Sleeper account</a></div></section>')
 
 
 def _rate_limited(request: Request, seconds: int, destination: str) -> Response:
@@ -204,7 +204,7 @@ def create_accounts_router(*, service: AccountService, runtime_manager: Any) -> 
             return RedirectResponse("/account/sleeper", status_code=303)
         if not context.membership:
             return RedirectResponse("/account/leagues", status_code=303)
-        return _shell("Account", f'<section class="card"><h2>{escape(context.display_name)}</h2><p>Linked Sleeper identity: <b>{escape(context.sleeper_username or "Resolved")}</b> <span class="muted">(resolved, ownership not independently verified)</span></p><p>Active league: <b>{escape(context.membership.league_name or context.membership.league_id)}</b><br>Your team: <b>{escape(context.membership.franchise_name or "Mapped franchise")}</b></p><p><a class="btn ds-action primary" data-dtos-action="primary" data-action-id="open-front-office" href="/">Open DTOS</a> &nbsp; <a href="/account/leagues">Your leagues</a> &nbsp; <a href="/account/my-dtos">My DTOS · Custom Rankings</a></p><form method="post" action="/account/logout"><input type="hidden" name="csrf_token" value="{escape(context.csrf_token)}"><button class="btn" type="submit">Log out</button></form></section>', purpose="Review the linked identity and open the active dynasty front office.")
+        return _shell("Account", f'<section class="card"><h2>{escape(context.display_name)}</h2><p>Sleeper account: <b>{escape(context.sleeper_username or "Connected account")}</b> <span class="muted">(account control not independently verified)</span></p><p>Active league: <b>{escape(context.membership.league_name or context.membership.league_id)}</b><br>Your team: <b>{escape(context.membership.franchise_name or "Team found on Sleeper")}</b></p><p><a class="btn ds-action primary" data-dtos-action="primary" data-action-id="open-front-office" href="/">Open DTOS</a> &nbsp; <a href="/account/leagues">Your leagues</a> &nbsp; <a href="/account/my-dtos">My DTOS · Custom Rankings</a></p><form method="post" action="/account/logout"><input type="hidden" name="csrf_token" value="{escape(context.csrf_token)}"><button class="btn" type="submit">Log out</button></form></section>', purpose="Review your Sleeper account and open your active team.")
 
     @router.get("/account/sign-in")
     async def sign_in_page(error: str = "") -> HTMLResponse:
@@ -232,7 +232,7 @@ def create_accounts_router(*, service: AccountService, runtime_manager: Any) -> 
     @router.get("/account/create")
     async def create_page(error: str = "") -> HTMLResponse:
         message = f'<p class="error">{escape(error)}</p>' if error else ""
-        return _shell("Create account", f'<section class="card"><h2>Create your DTOS account</h2>{message}<form class="grid" method="post" action="/account/create"><label>Display name<input name="display_name" autocomplete="name" required></label><label>Username<input name="username" autocomplete="username" required></label><label>Password<input type="password" name="password" autocomplete="new-password" minlength="12" required></label><button class="btn ds-action primary" data-dtos-action="primary" data-action-id="create-account" type="submit">Create account</button></form><p class="muted">Your DTOS account is separate from your Sleeper identity.</p></section>', purpose="Create a secure DTOS identity before linking a public Sleeper account.")
+        return _shell("Create account", f'<section class="card"><h2>Create your DTOS account</h2>{message}<form class="grid" method="post" action="/account/create"><label>Display name<input name="display_name" autocomplete="name" required></label><label>Username<input name="username" autocomplete="username" required></label><label>Password<input type="password" name="password" autocomplete="new-password" minlength="12" required></label><button class="btn ds-action primary" data-dtos-action="primary" data-action-id="create-account" type="submit">Create account</button></form><p class="muted">Your DTOS account is separate from your Sleeper account.</p></section>', purpose="Create your DTOS account, then connect Sleeper.")
 
     @router.post("/account/create")
     async def create_account(request: Request) -> Response:
@@ -299,7 +299,7 @@ def create_accounts_router(*, service: AccountService, runtime_manager: Any) -> 
         if context is None:
             return RedirectResponse("/account/sign-in", status_code=303)
         message = f'<p class="error">{escape(error)}</p>' if error else ""
-        return _shell("Connect Sleeper", f'<section class="card"><h2>Connect your Sleeper account</h2><p>Enter your Sleeper username so DTOS can resolve your public Sleeper identity and find your leagues.</p>{message}<form class="grid" method="post" action="/account/sleeper"><input type="hidden" name="csrf_token" value="{escape(context.csrf_token)}"><label>Sleeper username<input name="sleeper_username" required></label><button class="btn ds-action primary" data-dtos-action="primary" data-action-id="connect-sleeper" type="submit">Find my Sleeper account</button></form><p class="muted">This links a resolved Sleeper identity. Sleeper does not provide DTOS with proof that you control the account.</p></section>', purpose="Resolve a public Sleeper identity and discover its eligible leagues.")
+        return _shell("Connect Sleeper", f'<section class="card"><h2>Connect your Sleeper account</h2><p>Enter your Sleeper username to find your public account and leagues.</p>{message}<form class="grid" method="post" action="/account/sleeper"><input type="hidden" name="csrf_token" value="{escape(context.csrf_token)}"><label>Sleeper username<input name="sleeper_username" required></label><button class="btn ds-action primary" data-dtos-action="primary" data-action-id="connect-sleeper" type="submit">Find my Sleeper account</button></form><p class="muted">Sleeper lets DTOS find public account information. It does not provide proof that you control that account.</p></section>', purpose="Find your Sleeper leagues, then choose your team.")
 
     @router.post("/account/sleeper")
     async def link_sleeper(request: Request) -> Response:
@@ -315,8 +315,8 @@ def create_accounts_router(*, service: AccountService, runtime_manager: Any) -> 
         except httpx.HTTPError:
             return _source_unavailable(identity=True)
         except (ValueError, sqlite3.IntegrityError) as exc:
-            detail = str(exc) if isinstance(exc, ValueError) else "That Sleeper identity is already linked to another DTOS account."
-            return _shell("Connect Sleeper", f'<section class="card"><h1>We could not connect that identity.</h1><p class="error">{escape(detail)}</p><a href="/account/sleeper">Try again</a></section>')
+            detail = str(exc) if isinstance(exc, ValueError) else "That Sleeper account is already linked to another DTOS account."
+            return _shell("Connect Sleeper", f'<section class="card"><h1>We could not connect that Sleeper account.</h1><p class="error">{escape(detail)}</p><a href="/account/sleeper">Try again</a></section>')
         return RedirectResponse("/account/leagues", status_code=303)
 
     @router.get("/account/leagues")
@@ -357,8 +357,8 @@ def create_accounts_router(*, service: AccountService, runtime_manager: Any) -> 
             history = league.get("historical_seasons") or []
             years = ", ".join(str(row.get("season")) for row in history if row.get("season"))
             coverage = "Saved connection · discovery not refreshed" if league.get("saved_connection") else f"Current season: {escape(str(league.get('season') or 'Unknown'))} · {int(league.get('total_rosters') or 0)} teams"
-            cards.append(f'<article class="card"><h2>{escape(str(league.get("name") or "Sleeper league"))}</h2><p>{coverage}</p>{f"<p>History: {escape(years)}</p>" if years else ""}<p>{"Your team: <b>" + escape(membership.franchise_name or "Mapped franchise") + "</b>" if membership else "DTOS will map the franchise associated with your resolved Sleeper identity."}</p><form method="post" action="{escape(action)}"><input type="hidden" name="csrf_token" value="{escape(context.csrf_token)}"><button class="btn" type="submit">{state}</button></form></article>')
-        return _shell("Your leagues", f'{saved_notice}<p class="muted">Current NFL dynasty leagues are shown first.</p>{"".join(cards) or "<section class=\"card\"><h2>No eligible leagues found</h2><p>Check the linked Sleeper username or try again later.</p></section>"}<section class="card"><h2>Add another league</h2><p>Enter a Sleeper league ID. DTOS will add it only if your resolved identity maps to exactly one franchise.</p><form class="grid" method="post" action="/account/leagues/import"><input type="hidden" name="csrf_token" value="{escape(context.csrf_token)}"><label>Sleeper league ID<input name="league_id" inputmode="numeric" required></label><button class="btn ds-action primary" data-dtos-action="primary" data-action-id="import-league" type="submit">Add to DTOS</button></form></section>', purpose="Choose an authorized league series or add another verified membership.")
+            cards.append(f'<article class="card"><h2>{escape(str(league.get("name") or "Sleeper league"))}</h2><p>{coverage}</p>{f"<p>History: {escape(years)}</p>" if years else ""}<p>{"Your team: <b>" + escape(membership.franchise_name or "Team found on Sleeper") + "</b>" if membership else "DTOS will look for the team linked to your Sleeper account."}</p><form method="post" action="{escape(action)}"><input type="hidden" name="csrf_token" value="{escape(context.csrf_token)}"><button class="btn" type="submit">{state}</button></form></article>')
+        return _shell("Your leagues", f'{saved_notice}<p class="muted">Current NFL dynasty leagues are shown first.</p>{"".join(cards) or "<section class=\"card\"><h2>No eligible leagues found</h2><p>Check the linked Sleeper username or try again later.</p></section>"}<section class="card"><h2>Add another league</h2><p>Enter a Sleeper league ID. DTOS can add the league only when your Sleeper account matches exactly one team.</p><form class="grid" method="post" action="/account/leagues/import"><input type="hidden" name="csrf_token" value="{escape(context.csrf_token)}"><label>Sleeper league ID<input name="league_id" inputmode="numeric" required></label><button class="btn ds-action primary" data-dtos-action="primary" data-action-id="import-league" type="submit">Add to DTOS</button></form></section>', purpose="Choose a connected league or add another league you belong to.")
 
     @router.post("/account/leagues/import")
     async def import_league(request: Request) -> Response:
@@ -403,7 +403,7 @@ def create_accounts_router(*, service: AccountService, runtime_manager: Any) -> 
             return _source_unavailable()
         series = discovered.get(league_id)
         if series is None:
-            return _shell("League unavailable", '<section class="card"><h1>That league is not available to this Sleeper identity.</h1></section>')
+            return _shell("League unavailable", '<section class="card"><h1>That league is not available to this Sleeper account.</h1></section>')
         league = series.current_league
         try:
             series = await service.complete_series(league)

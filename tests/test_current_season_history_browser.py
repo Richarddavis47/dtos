@@ -67,6 +67,11 @@ class CurrentSeasonHistoryBrowserTests(unittest.TestCase):
                                 page.wait_for_load_state('networkidle')
                                 timeline=page.locator('.franchise-timeline')
                                 text=timeline.inner_text()
+                                self.assertNotIn('Retrieved weeks:', text)
+                                coverage=timeline.locator('.fh-season .cx-evidence').first
+                                coverage.locator('summary').first.click()
+                                self.assertTrue(coverage.evaluate('e=>e.open'))
+                                text=timeline.inner_text()
                                 self.assertIn('Retrieved weeks: 1, 2, 3, 5, 6, 7, 8',text)
                                 self.assertIn('Refresh failed: weeks 4',text)
                                 self.assertIn('Observed-empty retrieved weeks: 1, 3, 5, 6, 7, 8',text)
@@ -74,8 +79,12 @@ class CurrentSeasonHistoryBrowserTests(unittest.TestCase):
                                 self.assertIn('RETAINED / NOT REVALIDATED',text)
                                 summary=timeline.locator('summary').filter(has_text='Period freshness').first
                                 summary.scroll_into_view_if_needed()
+                                # Coverage was opened with a pointer. Establish real
+                                # keyboard modality before checking its focus ring.
+                                page.keyboard.press('Tab')
                                 summary.focus()
                                 self.assertTrue(summary.evaluate('e=>e===document.activeElement'))
+                                self.assertTrue(summary.evaluate("e=>e.matches(':focus-visible')"))
                                 self.assertNotEqual(summary.evaluate('e=>getComputedStyle(e).outlineStyle'),'none')
                                 count=len(requests)
                                 summary.press('Enter')

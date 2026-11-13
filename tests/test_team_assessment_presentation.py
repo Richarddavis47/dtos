@@ -114,9 +114,14 @@ class AssessmentCoverageTests(unittest.TestCase):
         self.assertIn('validated overall team grade', MODEL_NOTE)
         # A prepared-cache miss never runs an optimizer to render the page.
         with patch.object(diagnostic_store, 'get', return_value=None):
-            for text in pages():
-                lead = text.split('</summary>', 1)[0] if 'my-team-outlook' in text else text
-                self.assertTrue('matching prepared comparison' in lead or 'evidence is not prepared' in lead or 'Comparison pending' in lead)
+            for index, text in enumerate(pages()):
+                lead = text.split('</summary>', 1)[0] if index == 0 else text
+                if index == 0:
+                    self.assertIn('Comparison pending:', lead)
+                    self.assertIn('current availability and source evidence need matching preparation', lead)
+                else:
+                    self.assertIn('This week’s lineup comparison is not ready.', lead)
+                    self.assertIn('Current projections and player availability are needed.', lead)
                 self.assertNotIn('#', lead)
 
     def test_rendered_incomplete_lineup_retains_known_coverage_on_both_surfaces(self):

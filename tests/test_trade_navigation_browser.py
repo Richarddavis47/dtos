@@ -49,10 +49,29 @@ class TradeNavigationBrowserTests(unittest.TestCase):
                     fixture.harness.page(width, workspace=fixture.workspace, api=api) as (page, requests):
                 fixture.start_offer(page)
                 fixture.cheaper(page)
-                card = page.locator('.tw-offer').filter(has_text='763 → 751')
-                card.get_by_role('button', name='Open editable offer:', exact=False).click()
-                page.get_by_role('button', name='Adopt alternative', exact=True).click()
+                pick = next(a for team in fixture.workspace['teams']
+                            for a in team['assets'] if a['asset_id'] == '2027-R4-1')
+                # The compact package uses the source name, not the picker's
+                # enriched label with availability, confidence and price text.
+                pick_label = pick.get('raw_label') or pick['label']
+                origin = next(team['team_name'] for team in fixture.workspace['teams']
+                              if team['roster_id'] == pick['original_roster_id'])
+                card = page.locator('.tw-offer').filter(has_text=pick_label).filter(
+                    has_text=f'originally {origin} (#{pick["original_roster_id"]})').first
+                card.get_by_role('button', name='Review trade', exact=False).click()
+                requests_before = len(requests)
+                comparison = page.get_by_text('Compare with your current draft', exact=True)
+                comparison.focus()
+                comparison.press('Enter')
+                self.assertTrue(comparison.evaluate('e=>e.parentElement.open'))
+                self.assertIn('763 → 751', comparison.locator('..').inner_text())
+                self.assertEqual(len(requests), requests_before)
+                page.get_by_role('button', name='Use this offer in my draft', exact=True).click()
                 adopted = fixture.proposal(page)
+                recorded = next(row['proposal'] for row in fixture.responses[-1]['results']
+                                if set(row['proposal']['assets_sent']) == {'daniels', '2027-R4-1'})
+                self.assertEqual(adopted['sent'], recorded['assets_sent'])
+                self.assertEqual(adopted['received'], recorded['assets_received'])
                 self.assertEqual(fixture.proposal(page), adopted)
                 page.click('#trade-build-own')
                 page.wait_for_url('**/trades/create?*')
@@ -71,7 +90,7 @@ class TradeNavigationBrowserTests(unittest.TestCase):
                 page.locator('a[href*="/trades/trade-for?"]').first.click()
                 page.locator('#trade-target:not([hidden])').wait_for()
                 self.assertIn('Trey McBride', page.locator('#trade-target').inner_text())
-                self.assertEqual(page.get_by_label('Counterparty', exact=True).input_value(), '2')
+                self.assertEqual(page.get_by_label('Trade partner', exact=True).input_value(), '2')
                 page.locator('.tw-offer').first.wait_for()
                 self.assertEqual([status for status, _ in responses], [422, 200])
                 self.assertEqual(responses[0][1]['detail']['code'], 'canonical_evidence_changed')
@@ -88,7 +107,7 @@ class TradeNavigationBrowserTests(unittest.TestCase):
                 page.locator('a[href*="/trades/trade-for?"]').first.wait_for()
                 page.go_forward()
                 page.locator('#trade-target:not([hidden])').wait_for()
-                self.assertEqual(page.get_by_label('Counterparty', exact=True).input_value(), '2')
+                self.assertEqual(page.get_by_label('Trade partner', exact=True).input_value(), '2')
                 page.reload()
                 page.locator('#trade-target:not([hidden])').wait_for()
                 self.assertEqual(fixture.proposal(page)['received'], ['mcbride'])

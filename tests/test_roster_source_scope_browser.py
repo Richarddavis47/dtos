@@ -116,7 +116,7 @@ class RosterSourceScopeBrowserTests(unittest.TestCase):
                                     disclosure.focus()
                                     disclosure.press("Enter")
                                     self.assertTrue(
-                                        panel.locator("details").evaluate("e=>e.open")
+                                        disclosure.locator("..").evaluate("e=>e.open")
                                     )
                                     self.assertLessEqual(
                                         page.evaluate(

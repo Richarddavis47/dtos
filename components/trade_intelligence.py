@@ -112,7 +112,7 @@ def manager_context_selection(teams: list[dict], *, workflow: str | None = None)
         f'<option value="{int(team.get("roster_id") or 0)}">{escape(str(team.get("team_name") or team.get("owner") or "Unassigned Franchise"))}</option>'
         for team in teams
     )
-    return f'''{TRADE_CSS}<section class="card ti-hero"><div><div class="identity-kicker">Trade Center · Manager Context</div><h2>Choose your franchise</h2><p>DTOS needs an explicit league-scoped manager before it can use ownership, roster fit, or bilateral trade intelligence.</p></div></section><section class="card"><form method="get" action="{destination}"><label for="front_office">Controlled franchise</label><select id="front_office" name="front_office" required><option value="" selected disabled>Choose a franchise</option>{options}</select><div class="ti-actions"><button class="ti-action" type="submit">Continue to Trade Center</button></div></form><p class="muted">No commissioner, first-roster, or named-manager fallback is applied.</p></section>'''
+    return f'''{TRADE_CSS}<section class="card ti-hero"><div><div class="identity-kicker">Trade Center</div><h2>Choose your franchise</h2><p>Choose the franchise you want to review in this league.</p></div></section><section class="card"><form method="get" action="{destination}"><label for="front_office">Your franchise</label><select id="front_office" name="front_office" required><option value="" selected disabled>Choose a franchise</option>{options}</select><div class="ti-actions"><button class="ti-action" type="submit">Continue to Trade Center</button></div></form><p class="muted">DTOS uses only the franchise you select.</p></section>'''
 
 
 def _evidence(dossier: TradeDossier) -> str:
@@ -201,14 +201,14 @@ def _canonical_card(row: dict) -> str:
     ) + '</div>'
     edit_action = '<button type="button" class="ti-action" data-trade-proposal="' + escape(json.dumps(proposal), quote=True) + '">Edit Trade</button>'
     edit_action += '<button type="button" class="ti-action" data-trade-destination="calculator" data-trade-proposal="' + escape(json.dumps(proposal), quote=True) + '">Open in Calculator</button>'
-    return f'''<article class="ti-card"><div class="ti-head"><div class="ti-opportunity-label"><div class="ti-priority">{escape(str(evaluation["recommendation"]))} · {escape(str(best_for))}</div><div class="ti-confidence">{escape(str(confidence))} confidence</div></div><h3>Trade with {escape(partner)}</h3></div><div class="ti-franchises"><div class="ti-franchise"><b>{escape(active)}</b><span>Your franchise</span></div><div class="ti-arrow">⇄</div><div class="ti-franchise"><b>{escape(partner)}</b><span>Trade partner</span></div></div><div class="ti-assets"><div class="ti-package"><span>You send</span>{sent}</div><div class="ti-arrow">→</div><div class="ti-package"><span>You receive</span>{received}</div></div><div class="ti-values"><span>Neutral market: <b>{values["sent"]}</b> sent / <b>{values["received"]}</b> received</span><span>{escape(str(evaluation["perspectives"]["bilateral_reality"]))}</span></div>{impact_strip}<div class="ti-bilateral"><div class="ti-reason"><span>Why you should consider this</span>{escape(str(evaluation["why_you_would_do_it"]))}</div><div class="ti-reason"><span>Why they should consider this</span>{escape(str(evaluation["why_they_would_do_it"]))}</div></div><details class="ti-details"><summary class="ti-card-action">View trade details</summary><h4>Evidence and constraints</h4><p><b>Assessment:</b> {escape(str(evaluation["dominant_reason"]))}</p><p><b>Why now:</b> {escape(str(evaluation.get("why_now") or "No supported timing signal."))}</p><p><b>Historical counterparty evidence:</b> {escape(str(historical.get("assessment") or "INSUFFICIENT EVIDENCE"))} · {escape(str(historical.get("confidence") or "LOW"))} confidence</p><ul>{history_reasons}</ul><p>Package quality, optimal legal lineup effects, counterparty plausibility, and evidence confidence are included in the canonical evaluation. Historical evidence is context, not a promise of acceptance.</p></details>{edit_action}</article>'''
+    return f'''<article class="ti-card"><div class="ti-head"><div class="ti-opportunity-label"><div class="ti-priority">{escape(str(evaluation["recommendation"]))} · {escape(str(best_for))}</div><div class="ti-confidence">{escape(str(confidence))} confidence</div></div><h3>Trade with {escape(partner)}</h3></div><div class="ti-franchises"><div class="ti-franchise"><b>{escape(active)}</b><span>Your franchise</span></div><div class="ti-arrow">⇄</div><div class="ti-franchise"><b>{escape(partner)}</b><span>Trade partner</span></div></div><div class="ti-assets"><div class="ti-package"><span>You send</span>{sent}</div><div class="ti-arrow">→</div><div class="ti-package"><span>You receive</span>{received}</div></div><div class="ti-values"><span>Neutral market: <b>{values["sent"]}</b> sent / <b>{values["received"]}</b> received</span><span>{escape(str(evaluation["perspectives"]["bilateral_reality"]))}</span></div>{impact_strip}<div class="ti-bilateral"><div class="ti-reason"><span>Why you should consider this</span>{escape(str(evaluation["why_you_would_do_it"]))}</div><div class="ti-reason"><span>Why they should consider this</span>{escape(str(evaluation["why_they_would_do_it"]))}</div></div><details class="ti-details"><summary class="ti-card-action">Review trade</summary><h4>Evidence and constraints</h4><p><b>Assessment:</b> {escape(str(evaluation["dominant_reason"]))}</p><p><b>Why now:</b> {escape(str(evaluation.get("why_now") or "No supported timing signal."))}</p><p><b>Historical counterparty evidence:</b> {escape(str(historical.get("assessment") or "INSUFFICIENT EVIDENCE"))} · {escape(str(historical.get("confidence") or "LOW"))} confidence</p><ul>{history_reasons}</ul><p>Package quality, optimal legal lineup effects, counterparty plausibility, and evidence confidence are included in the canonical evaluation. Historical evidence is context, not a promise of acceptance.</p></details>{edit_action}</article>'''
 
 
 def trade_center(view: dict) -> str:
     active = view["active_team"]
     unified = view.get("unified_recommendation")
     active_id = int(active.get("roster_id") or 0)
-    entry_actions = f'''<link rel="stylesheet" href="/static/css/trade_workspace.css"><nav class="tw-entry-actions" aria-label="Primary Trade purpose"><a href="/trades/recommended?front_office={active_id}"><b>Generate Trades</b><span>DTOS discovers possible offers. Choose your goal and optional search constraints.</span></a><a href="/trades/calculator?front_office={active_id}"><b>Evaluate Trade</b><span>You supply the offer. Compare values, then request the bilateral analysis.</span></a></nav>'''
+    entry_actions = f'''<link rel="stylesheet" href="/static/css/trade_workspace.css"><nav class="tw-entry-actions" aria-label="Primary Trade purpose"><a href="/trades/recommended?front_office={active_id}"><b>Generate Trades</b><span>DTOS discovers possible offers. Choose your goal and optional search constraints.</span></a><a href="/trades/calculator?front_office={active_id}"><b>Evaluate Trade</b><span>You supply the offer. Compare values, then evaluate both teams.</span></a></nav>'''
     options = "".join(
         f'<option value="{int(team.get("roster_id") or 0)}" {"selected" if int(team.get("roster_id") or 0) == active_id else ""}>{escape(str(team.get("owner") or team.get("team_name")))}</option>'
         for team in view["teams"]
@@ -219,18 +219,18 @@ def trade_center(view: dict) -> str:
             ("create", "Build a Trade", "See live Market totals, evaluate, and preview balancing options."),
             ("trade-for", "Trade For", "Pursue an asset another franchise owns."),
             ("shop", "Shop / Trade Away", "Search the league for legitimate markets."),
-            ("recommended", "Recommended Trades", "Only worthwhile bilateral opportunities."),
+            ("recommended", "Recommended Trades", "Offers that meet both teams’ requirements."),
         )
     )
     if view.get('search_state') == 'not_started' and not view.get('canonical_results'):
-        return f'''{TRADE_CSS}<section class="card ti-hero"><div><div class="identity-kicker">Trade Center</div><h2>{escape(str(active.get("team_name") or active.get("owner") or "Unassigned Franchise"))}</h2><p>Discover an offer or analyze one you already have.</p></div><form class="ti-selector" method="get"><label>Active Front Office<select name="front_office" onchange="this.form.submit()">{options}</select></label></form></section>{entry_actions}<nav class="ti-workflows" aria-label="Other Trade workflows">{workflows}</nav><p class="muted">No recommendation search has run. Searches are explicit, and every offer remains hypothetical.</p>'''
+        return f'''{TRADE_CSS}<section class="card ti-hero"><div><div class="identity-kicker">Trade Center</div><h2>{escape(str(active.get("team_name") or active.get("owner") or "Unassigned Franchise"))}</h2><p>Discover an offer or analyze one you already have.</p></div><form class="ti-selector" method="get"><label>Your team<select name="front_office" onchange="this.form.submit()">{options}</select></label></form></section>{entry_actions}<nav class="ti-workflows" aria-label="Other Trade workflows">{workflows}</nav><p class="muted">No recommendation search has run. Searches are explicit, and every offer remains hypothetical.</p>'''
     cards = "".join(_canonical_card({**row, "active_team_name": active.get("team_name") or row.get("active_team_name") or "Your franchise"}) for row in view.get("canonical_results", ()))
     if not cards:
-        cards = '<div class="card ti-empty"><div><div class="ds-eyebrow">No clean trade right now</div><h3>No realistic bilateral opportunity clears every gate.</h3><p>DTOS checked neutral market value, roster effects, package quality, counterparty fit, and evidence confidence. Try building a proposal or targeting a specific asset.</p><div class="ti-actions"><a class="ti-action" href="/trades/create">Build a Trade</a><a class="ti-action" href="/trades/trade-for">Trade For a Player</a></div></div></div>'
+        cards = '<div class="card ti-empty"><div><div class="ds-eyebrow">No clean trade right now</div><h3>No offer meets both teams’ requirements.</h3><p>DTOS checked neutral market value, roster effects, package quality, counterparty fit, and evidence confidence. Try building a proposal or targeting a specific asset.</p><div class="ti-actions"><a class="ti-action" href="/trades/create">Build a Trade</a><a class="ti-action" href="/trades/trade-for">Trade For a Player</a></div></div></div>'
     first = (view.get("canonical_results") or [None])[0]
     if first:
         evaluation = first["evaluation"]
-        primary_title = "A bilateral trade is worth reviewing"
+        primary_title = "An offer is worth reviewing"
         primary_recommendation = str(evaluation["recommendation"])
         primary_reason = str(evaluation["dominant_reason"])
         primary_evidence = (
@@ -239,9 +239,9 @@ def trade_center(view: dict) -> str:
         )
         expected_impact = str(evaluation["perspectives"]["bilateral_reality"])
     else:
-        primary_title = "No trade needs your attention right now"
+        primary_title = "No offer qualified in this search"
         primary_recommendation = "KEEP SEARCHING"
-        primary_reason = "No current package clears neutral-market, roster-fit, package-quality, and counterparty gates."
+        primary_reason = "No current package clears the Market, roster and partner requirements."
         primary_evidence = ("DTOS completed the current bilateral search without filling a recommendation quota.",)
         expected_impact = "Your roster remains unchanged."
     primary = recommendation_panel(
@@ -253,4 +253,4 @@ def trade_center(view: dict) -> str:
         action_label="Review Recommended Offers", action_href="#recommended-offers",
         limitations=unified.why_not if unified else (),
     )
-    return f'''{TRADE_CSS}<section class="card ti-hero"><div><div class="identity-kicker">Trade Center</div><h2>{escape(str(active.get("team_name") or active.get("owner") or "Unassigned Franchise"))}</h2><p>Neutral market value and team-specific fit are evaluated separately.</p></div><form class="ti-selector" method="get"><label>Active Front Office<select name="front_office" onchange="this.form.submit()">{options}</select></label></form></section>{entry_actions}<nav class="ti-workflows">{workflows}</nav>{primary}<div class="ti-list" id="recommended-offers">{cards}</div><script src="/static/js/trade_workspace.js" defer></script>'''
+    return f'''{TRADE_CSS}<section class="card ti-hero"><div><div class="identity-kicker">Trade Center</div><h2>{escape(str(active.get("team_name") or active.get("owner") or "Unassigned Franchise"))}</h2><p>Neutral market value and team-specific fit are evaluated separately.</p></div><form class="ti-selector" method="get"><label>Your team<select name="front_office" onchange="this.form.submit()">{options}</select></label></form></section>{entry_actions}<nav class="ti-workflows">{workflows}</nav>{primary}<div class="ti-list" id="recommended-offers">{cards}</div><script src="/static/js/trade_workspace.js" defer></script>'''

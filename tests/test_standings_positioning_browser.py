@@ -119,7 +119,15 @@ class StandingsPositioningBrowserTests(unittest.TestCase):
                             page = bc.new_page()
                             for path in ("/", "/league"):
                                 page.goto("https://dtos.test" + path)
+                                if path == "/":
+                                    summary = page.get_by_text("League standings", exact=True)
+                                    detail = summary.locator("..")
+                                    self.assertFalse(detail.evaluate("e=>e.open"))
+                                    summary.focus()
+                                    summary.press("Enter")
+                                    self.assertTrue(detail.evaluate("e=>e.open"))
                                 table = page.locator(".compact-standings")
+                                self.assertTrue(table.is_visible())
                                 ids = table.locator("tr[data-roster-id]").evaluate_all(
                                     "(rows)=>rows.map(e=>Number(e.dataset.rosterId))"
                                 )

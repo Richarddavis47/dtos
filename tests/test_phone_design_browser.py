@@ -42,11 +42,11 @@ class SharedPhoneDesignBrowserTests(journey.ProductBrowserJourneyTests):
         if path == "/":
             self.assertIn("Official record:", page.locator(".ux-feature").inner_text())
             context = page.locator(".home-secondary-controls details").filter(
-                has=page.locator("summary", has_text="Assessment context and roster shortcuts")
+                has=page.locator("summary", has_text="Team overview and shortcuts")
             )
             self.assertFalse(context.evaluate("e=>e.open"))
             context.locator("summary").click()
-            self.assertIn("DTOS strength assessment:", context.inner_text())
+            self.assertIn("Team comparison:", context.inner_text())
             self.assertIn("separate from official standings", context.inner_text())
             context.locator("summary").click()
             self.assertEqual(page.locator(".ux-feature .ds-you").count(), 1)
@@ -121,7 +121,7 @@ class FocusedPhoneInteractionTests(unittest.TestCase):
                 self.subTest(width=width),
                 fixture.fixture.page(
                     width, workspace=fixture.data, api=fixture.balancing
-                ) as (page, _),
+                ) as (page, requests),
             ):
                 fixture.build(page)
                 self.theme(page)
@@ -135,7 +135,7 @@ class FocusedPhoneInteractionTests(unittest.TestCase):
                 page.click("#calculator-lock")
                 page.click("#trade-balance-offer")
                 preview = page.get_by_role(
-                    "button", name="Preview adjustment", exact=True
+                    "button", name="Review trade", exact=True
                 )
                 preview.wait_for()
                 preview.scroll_into_view_if_needed()
@@ -144,12 +144,6 @@ class FocusedPhoneInteractionTests(unittest.TestCase):
                     page.locator(".manager-nav").bounding_box()["y"],
                 )
                 self.capture(page, width, "balancing-options")
-                self.assertIn(
-                    "Add 2028 Round 1", page.locator(".tw-adjustment").inner_text()
-                )
-                self.assertIn(
-                    "your outgoing package", page.locator(".tw-adjustment").inner_text()
-                )
                 self.assertIn("You send:", page.locator(".tw-offer").inner_text())
                 self.assertIn("You receive:", page.locator(".tw-offer").inner_text())
                 self.assertIn("Current Market: You send", page.locator(".tw-offer").inner_text())
@@ -161,11 +155,20 @@ class FocusedPhoneInteractionTests(unittest.TestCase):
                 )
                 self.assertEqual(page.locator("#trade-result").evaluate("e=>e.previousElementSibling.id"), "calculator-balance-status")
                 self.assertEqual(fixture.state(page)["currentProposal"], original)
+                requests_before = len(requests)
                 preview.click()
-                page.get_by_role("button", name="Keep original", exact=True).click()
+                self.assertIn(
+                    "Add 2028 Round 1", page.locator(".tw-adjustment").inner_text()
+                )
+                self.assertIn(
+                    "your outgoing package", page.locator(".tw-adjustment").inner_text()
+                )
+                self.assertEqual(len(requests), requests_before)
+                self.assertEqual(fixture.state(page)["currentProposal"], original)
+                page.get_by_role("button", name="Back to offers", exact=True).click()
                 self.assertEqual(fixture.state(page)["currentProposal"], original)
                 preview.click()
-                page.get_by_role("button", name="Adopt alternative", exact=True).click()
+                page.get_by_role("button", name="Use this offer in my draft", exact=True).click()
                 self.assertIn(
                     "pick:2028:1:3", fixture.state(page)["currentProposal"]["sent"]
                 )

@@ -1,6 +1,7 @@
 """Compact factual franchise chronology over retained source evidence."""
 from html import escape
 from urllib.parse import quote
+from src.ui.customer_experience import readable_time
 
 
 def _movement_details(row):
@@ -116,12 +117,14 @@ def render_franchise_timeline(view):
         empty = ', '.join(map(str,s.get('observed_empty') or [])) or 'none established'
         timing = ('<details><summary>Period freshness</summary><ul>' + ''.join('<li>' + text(r) + '</li>' for r in freshness) + '</ul><p>Retrieval times are DTOS source observations, not transaction occurrence times. Missing periods do not imply no activity.</p></details>') if freshness else ''
         cards.append(f'''<article class="card fh-season"><h4>{s['season']} · {text(s['state'].title())} transaction coverage</h4>
-<p>{text(s['reason'])}</p><p>{text(activity)}</p><p>{len(s['acquired'])} of 19 supported source weeks retrieved (0 is the offseason bucket; 1–18 are weekly buckets).</p>
+<p>{text(activity)}</p><p>{len(s['acquired'])} source periods retrieved.</p>
+{('<p class="cx-risk">Showing retained history after an incomplete refresh.</p>') if any(row.get('retained_last_valid') for row in observations.values()) else ''}
+<details class="cx-evidence"><summary>Coverage and source details</summary><p>{text(s['reason'])}</p><p>{len(s['acquired'])} of 19 supported source weeks retrieved (0 is the offseason bucket; 1–18 are weekly buckets).</p>
 <p>Retrieved weeks: {text(retrieved)}. Observed-empty retrieved weeks: {text(empty)}.</p>
 {('<p>Selected source week: ' + text(s['source_week']) + '. Unretrieved periods remain unknown.</p>') if s.get('source_week') is not None else ''}{timing}
 {('<p>' + text(gaps) + '.</p>') if gaps else ''}<p>{s['draft_selections']} draft selections retained. {text(s['draft_note'])}</p>
 <p>{text(s['continuity'])}. {'Season-observed franchise identity available.' if s['identity_observed'] else 'Franchise identity for this season is not established.'}</p>
-<details><summary>Source context</summary><p>Source league: {text(s['source_league_id'] or 'not recorded')} · retained source generation: {text(s['source_generation'] or 'not recorded')} · prepared-current fingerprint: {text(s['prepared_current_fingerprint'] or 'not used')}.</p></details></article>''')
+<details><summary>Source context</summary><p>Source league: {text(s['source_league_id'] or 'not recorded')} · retained source generation: {text(s['source_generation'] or 'not recorded')} · prepared-current fingerprint: {text(s['prepared_current_fingerprint'] or 'not used')}.</p></details></details></article>''')
     events = []
     for r in view['events']:
         assets = []
@@ -131,14 +134,24 @@ def render_franchise_timeline(view):
                 label = '<a href="/picks/' + quote(a['id'], safe='') + '">' + label + '</a>'
             assets.append('<li><b>' + label + '</b><p>' + text(a['from']) + ' → ' + text(a['to']) + '</p>'
                           + ('<small>Exact pick identity: ' + text(a['id']) + '</small>' if a['kind'] in {'pick', 'selection'} and a.get('id') else '') + '</li>')
-        date = r['occurred_at'] or ('Week ' + str(r['week']) + '; exact time unavailable' if r['week'] is not None else 'Exact event time unavailable')
+        raw_time = r['occurred_at']
+        date = readable_time(raw_time) if raw_time else ('Week ' + str(r['week']) + '; exact time unavailable' if r['week'] is not None else 'Exact event time unavailable')
         detail = ('<a href="' + text(r['detail_url']) + '">View completed trade evidence</a>') if r['detail_url'] else ''
-        source_only = 'Source roster observation · ' if r['attribution'] == 'franchise continuity unconfirmed' else ''
+        attribution = r['attribution']
+        source_only = 'Source roster observation · ' if attribution == 'franchise continuity unconfirmed' else ''
+        attribution_note = ''
+        reason = str(r['reason'] or '')
+        if attribution == 'franchise continuity unconfirmed':
+            attribution_note = '<p class="cx-risk">This activity is recorded, but its link to this franchise is unconfirmed.</p>'
+            reason = reason.removeprefix('Completed movement is supported in this source-season roster slot; continuity with the current franchise is unconfirmed.').strip()
+        elif attribution != 'source-linked roster-slot continuity':
+            attribution_note = '<p class="cx-risk">The franchise connected to this activity is not established.</p>'
         events.append('<article class="card fh-event"><h4>' + source_only + str(r['season']) + ' · ' + text(r['kind'].replace('_', ' ').title()) + '</h4>'
             + '<p>' + text(date) + ' · ' + text(r['status']) + '</p><ul>' + ''.join(assets) + '</ul>'
-            + ('<p>' + text(r['reason']) + '</p>' if r['reason'] else '')
-            + '<p>' + text(r['attribution']) + '.</p>' + detail
-            + '<details><summary>Event source</summary><p>Source league ' + text(r['source_league_id']) + ' · record ' + text(r['id']) + '</p></details></article>')
+            + ('<p>' + text(reason) + '</p>' if reason else '')
+            + attribution_note + detail
+            + '<details><summary>Event source</summary><p>Source league ' + text(r['source_league_id']) + ' · record ' + text(r['id']) + '</p>'
+            + '<p>Exact event timestamp: ' + text(raw_time or 'Not recorded') + '</p><p>Recorded franchise attribution: ' + text(attribution or 'Not recorded') + '</p></details></article>')
     if not events:
         events = ['<p class="fh-empty">No supported completed events are displayed. Review season coverage above; unavailable history is not an empty history.</p>']
     attempts = ''.join('<li>' + str(r['season']) + ' · ' + text(r['kind']) + ' · ' + text(r['status']) + ': '
@@ -151,4 +164,4 @@ def render_franchise_timeline(view):
     for n, label in ((view['page'] - 1, 'Previous events'), (view['page'] + 1, 'Next events')):
         if 1 <= n <= view['pages']:
             links.append('<a class="ds-action" href="/history/team/' + quote(view['franchise_id'], safe=':') + '?events_page=' + str(n) + ('&amp;season=' + str(view['selected_season']) if view.get('selected_season') else '') + '">' + label + '</a>')
-    return '''<style>.franchise-timeline{min-width:0;overflow-wrap:anywhere}.franchise-timeline .grid{grid-template-columns:repeat(auto-fit,minmax(min(260px,100%),1fr))}.franchise-timeline article{min-width:0}.franchise-timeline summary,.franchise-timeline a{min-height:44px;padding:10px 0;display:block}.franchise-timeline summary{cursor:pointer}.franchise-timeline :focus-visible{outline:2px solid #86efac;outline-offset:3px}.franchise-timeline ul{padding-left:20px}.franchise-trades{min-width:0;overflow-wrap:anywhere}.franchise-trades summary,.franchise-trades a{min-height:44px;padding:10px 0;display:block}.franchise-trades summary{cursor:pointer}.franchise-trades :focus-visible{outline:2px solid #86efac;outline-offset:3px}.franchise-trades ul{padding-left:20px}.franchise-trades form{display:flex;flex-wrap:wrap;gap:8px;align-items:center}.franchise-trades select,.franchise-trades button{min-height:44px;max-width:100%;font:inherit}.franchise-trades select{min-width:0}</style>''' + _completed_trade_observations(view) + '<section class="franchise-timeline"><h3>Franchise transaction timeline</h3><p>' + text(view['qualification']) + '</p>' + changes + ('<p>Earlier linked source-season metadata is unavailable; earlier history remains unknown.</p>' if view['earlier_link_gap'] else '') + '<p>Historical FOIS grades remain RETAINED / NOT REVALIDATED. This factual timeline does not calculate retrospective grades or historical Market values.</p><div class="grid fh-coverage">' + ''.join(cards) + '</div><h3>Completed movements and observed draft selections</h3><p>' + str(view['total']) + ' supported events · page ' + str(view['page']) + ' of ' + str(view['pages']) + '. Undated events are grouped by source identity, not a proven chronological sequence.</p><div class="fh-events">' + ''.join(events) + '</div>' + ''.join(links) + attempts + '</section>'
+    return '''<style>.franchise-timeline{min-width:0;overflow-wrap:anywhere}.franchise-timeline .grid{grid-template-columns:repeat(auto-fit,minmax(min(260px,100%),1fr))}.franchise-timeline article{min-width:0}.franchise-timeline summary,.franchise-timeline a{min-height:44px;padding:10px 0;display:block}.franchise-timeline summary{cursor:pointer}.franchise-timeline :focus-visible{outline:2px solid #86efac;outline-offset:3px}.franchise-timeline ul{padding-left:20px}.franchise-trades{min-width:0;overflow-wrap:anywhere}.franchise-trades summary,.franchise-trades a{min-height:44px;padding:10px 0;display:block}.franchise-trades summary{cursor:pointer}.franchise-trades :focus-visible{outline:2px solid #86efac;outline-offset:3px}.franchise-trades ul{padding-left:20px}.franchise-trades form{display:flex;flex-wrap:wrap;gap:8px;align-items:center}.franchise-trades select,.franchise-trades button{min-height:44px;max-width:100%;font:inherit}.franchise-trades select{min-width:0}</style>''' + _completed_trade_observations(view) + '<section class="franchise-timeline"><h3>Franchise transaction timeline</h3><p>' + text(view['qualification']) + '</p>' + changes + ('<p>Earlier linked source-season metadata is unavailable; earlier history remains unknown.</p>' if view['earlier_link_gap'] else '') + '<p>Historical grades: RETAINED / NOT REVALIDATED.</p><p>Coverage varies by season; missing periods remain unknown.</p><div class="grid fh-coverage">' + ''.join(cards) + '</div><h3>Completed movements and observed draft selections</h3><p>' + str(view['total']) + ' supported events · page ' + str(view['page']) + ' of ' + str(view['pages']) + '. Undated events are grouped by source identity, not a proven chronological sequence.</p><div class="fh-events">' + ''.join(events) + '</div>' + ''.join(links) + attempts + '</section>'

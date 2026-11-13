@@ -21,12 +21,12 @@ def render_report(report, league_name, season, week):
 @media(min-width:900px){.weekly-report .report-around{display:grid;grid-template-columns:1fr 1fr;gap:1rem}}
 </style>'''
     if not report or state == 'unavailable':
-        return style + header + '<p>Prepared evidence for this league and week is unavailable. No result has been inferred.</p></section>'
+        return style + header + '<p>No report is ready for this league and week. Choose a week with recorded results; missing results are not treated as zero.</p></section>'
     body = ''
     if report['stories']:
         body += '<section aria-labelledby="report-leads"><h3 id="report-leads">Top stories</h3>'
         for story in report['stories']:
-            body += f'<article><p>{escape(story["text"])}</p><a href="{escape(story["destination"], quote=True)}">Explore source matchup or season</a></article>'
+            body += f'<article><p>{escape(story["text"])}</p><a href="{escape(story["destination"], quote=True)}">View matchup or season</a></article>'
         body += '</section>'
     if report['around_the_league']:
         body += '<section aria-labelledby="report-around"><h3 id="report-around">Around the league</h3><div class="report-around">'
@@ -37,6 +37,6 @@ def render_report(report, league_name, season, week):
         counts = {kind: sum(row['type'] == kind for row in moves['facts']) for kind in ('trade', 'waiver', 'free_agent')}
         body += '<section aria-labelledby="report-moves"><h3 id="report-moves">Completed moves</h3>'
         body += '<p>' + ' · '.join(f'{n} {name}' for key, name in (('trade', 'trades'), ('waiver', 'waiver actions'), ('free_agent', 'free-agent actions')) if (n := counts[key])) + '</p>'
-        body += '<p>Recorded in this source week’s transaction bucket. These counts describe activity, not decision quality.</p></section>'
+        body += '<p>Recorded moves for this week. Counts describe activity, not decision quality.</p></section>'
     body += '<details><summary>Report evidence and limitations</summary><p>Results use recorded scores and submitted lineups. No current projections or later player outcomes are used to judge historical decisions. Historical franchise labels do not attribute decisions to today’s manager. Missing historical comparisons do not imply no change.</p></details>'
     return style + header + body + '</section>'

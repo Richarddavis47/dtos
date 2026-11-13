@@ -1,6 +1,7 @@
 """One indexed Market query contract through the released HTTP routes."""
 import unittest
 import copy
+from datetime import datetime, timezone
 from types import SimpleNamespace
 from unittest.mock import patch
 from urllib.parse import urlencode
@@ -12,6 +13,7 @@ from fastapi.testclient import TestClient
 from routes.market import create_market_router
 from services.market_navigation import market_return
 from tests import test_asset_market as market_fixture
+from tests.html_document import _Document, _elements, _text
 
 
 class BeginnerMarketTests(unittest.TestCase):
@@ -62,7 +64,17 @@ class BeginnerMarketTests(unittest.TestCase):
         self.fixture.state['last_error'] = 'SYNTHETIC_PRIVATE /private/market credential=fake'
         html = self.get('/market?q=Denzel%20Boston').text
         self.assertIn('Last successful Market available.', html)
-        self.assertIn('Market prepared:', html)
+        document = _Document(html).root
+        clock = datetime.fromisoformat(self.fixture.cache.current().generated_at.replace('Z', '+00:00')).astimezone(timezone.utc)
+        notice = next(item for item in _elements(document) if item['attrs'].get('role') == 'status')
+        self.assertIn(f'Updated {clock:%b} {clock.day}, {clock.year} · {clock:%H:%M} UTC.', _text(notice))
+        exact = next((item for item in _elements(document) if item['tag'] == 'details'
+                      and any(child['tag'] == 'summary' and _text(child) == 'Exact update time'
+                              for child in _elements(item, direct=True))), None)
+        self.assertIsNotNone(exact)
+        self.assertNotIn('open', exact['attrs'])
+        stamp = next(child for child in _elements(exact, direct=True) if child['tag'] == 'p')
+        self.assertEqual(_text(stamp), clock.isoformat().replace('+00:00', 'Z'))
         self.assertNotIn('SYNTHETIC_PRIVATE', html)
         self.assertNotIn('/private/market', html)
         self.assertEqual(self.get('/api/market/search?q=Denzel%20Boston').json()['results'], before)

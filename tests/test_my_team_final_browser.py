@@ -54,7 +54,10 @@ class MyTeamFinalBrowserTests(journeys.ProductBrowserJourneyTests):
                     self.assertIn(status, card.inner_text())
                     self.assertNotIn('Status unavailable', card.inner_text())
                 else:
-                    self.assertIn('Status unavailable', card.inner_text())
+                    source = page.locator('[data-roster-player-evidence="' + identity + '"]')
+                    self.assertIn('Availability not reported; participation remains unknown.', source.text_content())
+                    self.assertIn('Participation unconfirmed', card.inner_text())
+                    self.assertNotIn('Status unavailable', card.inner_text())
             page.locator('#my-team-advanced').evaluate('e=>e.open=true')
             page.locator('.thq-starters').locator('xpath=..').evaluate('e=>e.open=true')
             starter = page.locator('.thq-starters a[href^="/players/"]').first
@@ -143,7 +146,7 @@ class RetainedStrategyBrowserTests(unittest.TestCase):
                 self.assertEqual(page.evaluate('document.cookie'), shared)
                 page.locator('.tw-offer button.tw-next-action').first.click()
                 self.assertEqual(page.evaluate('document.cookie'), shared)
-                page.get_by_role('button', name='Adopt alternative', exact=True).click()
+                page.get_by_role('button', name='Use this offer in my draft', exact=True).click()
                 self.assertEqual(page.evaluate('document.cookie'), shared)
                 self.assertEqual(page.input_value('#trade-strategy'), 'REBUILD')
                 self.assertEqual(requests[-1][1]['strategy'], 'REBUILD')

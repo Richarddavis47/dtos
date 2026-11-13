@@ -91,7 +91,7 @@ def select_insights(facts, attention, offers):
             points = manager_points(min(v for v in d['observed_replacement_points'] if _number(v)))
             candidates.append(_item(issue, 'depth', qualifier + f'Keep {pos} replacement production in view',
                 f'If a {pos} starter is unavailable, the supported backups offer at least {points} projected replacement points under {facts["league_name"]} scoring in week {facts["week"]}.',
-                'Useful cover is not automatically surplus. Separate removal scenarios cannot cover simultaneous absences.',
+                'Having useful backups does not mean they are safe to trade. These scenarios do not cover simultaneous absences.',
                 'Review removal costs', team_url + '#positional-depth', issues=[issue],
                 details=own.get('limitations', [])))
     assessment = facts.get('assessment')
@@ -159,8 +159,8 @@ def select_insights(facts, attention, offers):
             'Market prices and projected starting-lineup points remain unchanged when you choose a goal.',
             'Choose your goal', team_url + '#my-team-strategy'))
     if assessment is None and not diagnostics and not profile:
-        candidates.append(_item('preparation', 'preparation', 'Prepare your current roster assessment',
-            'A compatible roster assessment has not been prepared for this league, week and goal. Open My Team to prepare the evidence.',
+        candidates.append(_item('preparation', 'preparation', 'Your roster analysis is not ready',
+            'This week’s lineup and depth analysis is not ready for your league and selected goal. Open My Team to review what is available.',
             'Missing preparation is not evidence of roster weakness or a lack of opportunities. Opening My Team does not start a trade search or change your goal.',
             'Open My Team', team_url))
     precedence = {'WIN NOW': ['need', 'offer', 'attention', 'depth', 'capital', 'preparation'],

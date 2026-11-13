@@ -4,6 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from html import escape
 
+from .customer_experience import plain_reason, readable_time
 from .badges import position_chip
 from .theme import DESIGN_SYSTEM_CSS as DESIGN_SYSTEM_CSS
 
@@ -24,7 +25,7 @@ class PagePresentation:
 def _presentation(title: str) -> PagePresentation:
     normalized = title.casefold()
     if normalized == "asset market":
-        return PagePresentation("Find players and exact draft picks using neutral Market prices and your league's ownership context.", "Asset Market", "Open Team HQ", "/teams", variant="search")
+        return PagePresentation("Find players and exact draft picks using neutral Market prices and your league's ownership context.", "Asset Market", "View teams", "/teams", variant="search")
     if "executive profile" in normalized:
         return PagePresentation("Review this manager's process, results, confidence, and historical evidence in the active league.", "General Manager profile", "GM Leaderboard", "/fois", "League History", "/history")
     if "front office intelligence system" in normalized:
@@ -41,20 +42,20 @@ def _presentation(title: str) -> PagePresentation:
     if "player intelligence" in normalized or "player dossier" in normalized:
         return PagePresentation("Decide whether to acquire, hold, build around, or move this player.", "Player decision", "Open Trade Center", "/trades", variant="identity")
     if "trade" in normalized:
-        return PagePresentation("Find the best realistic trade to pursue for the active Front Office.", "Trade planning", "Review Teams", "/teams")
+        return PagePresentation("Review trade options, their costs and the evidence for both teams.", "Trade planning", "Review Teams", "/teams")
     if "front office" in normalized:
-        return PagePresentation("Understand how this franchise builds, competes, and negotiates.", "Franchise management", "Open Team HQ", "/teams")
+        return PagePresentation("Understand how this franchise builds, competes, and negotiates.", "Franchise management", "View teams", "/teams")
     if "matchup" in normalized:
         return PagePresentation("Understand the weekly matchup, lineup leverage, and likely pressure points.", "Weekly competition", "Review Teams", "/teams")
     if "history" in normalized or "historical" in normalized or "season archive" in normalized:
-        return PagePresentation("Understand how league and franchise decisions produced today's position.", "Historical evidence", "Open Team HQ", "/teams")
+        return PagePresentation("Review recorded trades and roster changes, with their coverage and limits.", "Historical evidence", "View teams", "/teams")
     if "draft" in normalized or "pick" in normalized:
         return PagePresentation("Understand the league's draft-capital ownership and strategic flexibility.", "Draft capital", "Open Trade Center", "/trades")
     if "transaction" in normalized:
-        return PagePresentation("See what changed across the league and which assets moved.", "League activity", "Refresh Transactions", "/transactions?refresh=1")
+        return PagePresentation("See what changed across the league and which assets moved.", "League activity", "Review Transactions", "/transactions")
     if "setting" in normalized:
         return PagePresentation("Review league rules, synchronization state, and application information.", "League configuration", "Review Sync Status", "/settings#sync-status")
-    return PagePresentation("Navigate the league and open the Front Office question that matters now.", "League overview", "Open Team HQ", "/teams")
+    return PagePresentation("Choose a league page to review your team and its next move.", "League overview", "View teams", "/teams")
 
 
 def page_header(title: str, *, league_name: str, last_updated: str) -> str:
@@ -63,7 +64,7 @@ def page_header(title: str, *, league_name: str, last_updated: str) -> str:
     presentation = _presentation(title)
     actions = f'<div class="ds-header-side"><div class="ds-actions"><a class="ds-action primary" href="{escape(presentation.primary_href)}">{escape(presentation.primary_label)}</a><a class="ds-action" href="{escape(presentation.secondary_href)}">{escape(presentation.secondary_label)}</a></div></div>'
     task_first = presentation.variant in {"search", "identity"}
-    return f'''<header class="ds-page-header ds-page-header--{presentation.variant}" data-dtos-component="page-header" data-design-system="{DESIGN_SYSTEM_VERSION}"><div><h1>{escape(title)}</h1><details class="ds-page-guide"><summary>How it works</summary><p class="ds-purpose">{escape(presentation.purpose)}</p><div class="ds-context">{escape(league_name)} · {escape(presentation.context)}</div><div class="ds-freshness">League Sync: <b>{escape(last_updated or "Not synchronized yet")}</b></div>{actions if task_first else ""}</details></div>{"" if task_first else actions}</header>'''
+    return f'''<header class="ds-page-header ds-page-header--{presentation.variant}" data-dtos-component="page-header" data-design-system="{DESIGN_SYSTEM_VERSION}"><div><h1>{escape(title)}</h1><details class="ds-page-guide"><summary>How it works</summary><p class="ds-purpose">{escape(presentation.purpose)}</p><div class="ds-context">{escape(league_name)} · {escape(presentation.context)}</div><div class="ds-freshness">League data updated: <b>{escape(readable_time(last_updated))}</b><details class="cx-evidence"><summary>Exact sync time</summary><p>League Sync: <code>{escape(last_updated or "Not recorded")}</code></p></details></div>{actions if task_first else ""}</details></div>{"" if task_first else actions}</header>'''
 
 
 def account_page_header(title: str, *, purpose: str) -> str:
@@ -71,7 +72,7 @@ def account_page_header(title: str, *, purpose: str) -> str:
     return (
         f'<header class="ds-page-header" data-dtos-component="page-header" '
         f'data-dtos-shell="account-onboarding" data-design-system="{DESIGN_SYSTEM_VERSION}">'
-        '<div><div class="ds-eyebrow">DTOS — Account &amp; identity</div>'
+        '<div><div class="ds-eyebrow">DTOS — Your account</div>'
         f'<h1>{escape(title)}</h1><p class="ds-purpose">{escape(purpose)}</p>'
         '<div class="ds-context">Secure Sleeper-backed front office access</div></div>'
         '</header>'
@@ -112,10 +113,10 @@ def manager_navigation(title: str, *, roster_id: int | None = None, include_tool
 def secondary_navigation() -> str:
     """The existing tool destinations, usable beside the shared account shell."""
     secondary = (
-        ("FOIS", "/fois"), ("Commissioner", "/commissioner"),
+        ("Manager grades · FOIS", "/fois"), ("Commissioner", "/commissioner"),
         ("History", "/history"), ("Transactions", "/transactions"),
         ("Weekly Report", "/reports/weekly"),
-        ("Draft Capital", "/picks"), ("Advanced", "/brain"),
+        ("Draft Capital", "/picks"), ("Analysis tools", "/brain"),
         ("Calibration", "/valuation/calibration"), ("Settings", "/settings"),
         ("My DTOS", "/account/my-dtos"),
     )
@@ -141,7 +142,12 @@ def player_summary(*, player_id: str, name: str, position: str | None, nfl_team:
 
 
 def recommendation_panel(*, title: str, recommendation: str, confidence: int, primary_reason: str, evidence: tuple[str, ...], expected_impact: str, action_label: str, action_href: str, limitations: tuple[str, ...] = ()) -> str:
+    originals = (title, recommendation, primary_reason, expected_impact)
+    title, recommendation, primary_reason, expected_impact = (plain_reason(value) for value in originals)
+    original_record = ("<h3>Original assessment record</h3>" + "".join(
+        "<p>" + escape(value) + "</p>" for value in originals
+    )) if originals != (title, recommendation, primary_reason, expected_impact) else ""
     evidence_html = "".join(f"<li>{escape(item)}</li>" for item in evidence) or "<li>No additional supporting evidence crossed the current confidence boundary.</li>"
     limitations_html = "".join(f"<li>{escape(item)}</li>" for item in limitations) or "<li>No material limitation was identified in the current cached evidence.</li>"
     action_html = f'<a class="ds-action primary" href="{escape(action_href)}">{escape(action_label)}</a>' if action_href else ""
-    return f'''<article class="ds-recommendation" data-dtos-component="recommendation"><div><div class="ds-eyebrow">Recommendation</div><h2>{escape(title)}</h2><p>{escape(recommendation)}</p><p><b>Primary reason:</b> {escape(primary_reason)}</p>{action_html}</div><div class="ds-confidence"><b>{confidence}%</b><span>Confidence</span></div><details><summary>Detailed Evidence</summary><h3>Expected impact:</h3><p>{escape(expected_impact)}</p><h3>Supporting Evidence</h3><ul>{evidence_html}</ul><h3>Limitations</h3><ul>{limitations_html}</ul></details></article>'''
+    return f'''<article class="ds-recommendation" data-dtos-component="recommendation"><div><div class="ds-eyebrow">Recommendation</div><h2>{escape(title)}</h2><p>{escape(recommendation)}</p><p><b>Primary reason:</b> {escape(primary_reason)}</p>{action_html}</div><div class="ds-confidence"><b>{confidence}%</b><span>Evidence confidence</span></div><details><summary>Detailed Evidence</summary>{original_record}<h3>Expected impact:</h3><p>{escape(expected_impact)}</p><h3>Supporting Evidence</h3><ul>{evidence_html}</ul><h3>Limitations</h3><ul>{limitations_html}</ul></details></article>'''

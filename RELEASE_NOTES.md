@@ -1,3 +1,9 @@
+# v1.22.37 / build 2252 — Clearer decisions and useful evidence
+
+DTOS keeps supported answers and actions first, with explanations and material uncertainty beside them and detailed calculations/sources on demand. Trade offers are compact and open their existing prepared review without another evaluation; exact packages, both teams’ effects, acquisition cost/fit roles, comparison and explicit repair remain intact.
+
+Home, My Team, Market/player views, league/history/draft/weekly pages, account/Custom settings and specialist tools use clearer wording and fewer repeated unavailable-model placeholders. Market now preserves the existing player-specific projection limitation; Home preserves typed search deferral and earlier results. Retained draft/postseason evidence has readable customer views, and historical picks do not imply current tradability. Unknown evidence remains unknown. No valuation, scoring, source-authority, qualification, saved-preference or resource-policy change. See docs/CUSTOMER_PRESENTATION_STANDARD.md and docs/audits/customer-experience-2252.
+
 # v1.22.36 / build 2251 — Trade For cost and fit
 
 Trade For preserves the best-supported fit and the lowest gross outgoing Neutral Market cost among eligible offers already assessed within the existing bounded search, before equivalent-pick and shape presentation pruning. One card carries both roles when they coincide. Missing/incompatible costs cannot win; ties preserve existing fit order. FAIR / OPTIONAL remains optional and all original bilateral judgments remain intact.

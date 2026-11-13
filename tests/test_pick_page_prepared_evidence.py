@@ -24,7 +24,7 @@ class PickPagePreparedEvidenceTests(unittest.TestCase):
                          normalized_value=414, version=NORMALIZATION_VERSION,
                          generation='prepared-1', method='provider_range_linear'))
         pick = dict(season='2027', round=1, roster_id=1, owner_id=2)
-        return dict(league={'league_id': 'A'}, teams=[
+        return dict(league={'league_id': 'A', 'season': '2026'}, teams=[
             {'roster_id': 1, 'team_name': 'Original'}, {'roster_id': 2, 'team_name': 'Owner'}],
             traded_picks=[pick], pick_ledger=[{**pick, 'year': 2027, 'league_id': 'A',
                 'original_roster_id': 1, 'current_owner_id': 2}],
@@ -66,7 +66,7 @@ class PickPagePreparedEvidenceTests(unittest.TestCase):
         data = self.data()
         data['pick_ledger'][0].update(league_id='B', current_owner_id=1)
         html = self.render(data)
-        self.assertIn('Current owner</span><a href="/teams/2">Owner', html)
+        self.assertIn('Owner in recorded transfer</span><a href="/teams/2">Owner', html)
 
     def test_source_supported_zero_price_stays_zero(self):
         data = self.data()

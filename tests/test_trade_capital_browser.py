@@ -9,6 +9,18 @@ from tests import test_offer_comparison_browser as comparison_fixture
 
 
 class CapitalBrowserTests(unittest.TestCase):
+    def open_comparison_capital(self, page, requests):
+        before = list(requests)
+        inventories = page.locator('#trade-comparison details:has(> .tw-draft-capital)')
+        self.assertEqual(inventories.count(), 3)
+        for inventory in inventories.all():
+            self.assertIsNone(inventory.get_attribute('open'))
+            summary = inventory.locator(':scope > summary')
+            summary.focus()
+            summary.press('Enter')
+            self.assertTrue(inventory.evaluate('e=>e.open'))
+        self.assertEqual(requests, before)
+
     def test_actual_offers_two_alternatives_reload_and_scope_at_four_sizes(self):
         for superflex in (False, True):
             with self.subTest(superflex=superflex):
@@ -75,6 +87,7 @@ class CapitalBrowserTests(unittest.TestCase):
                         page, requests, _, _, errors = helper.page(browser, f)
                         helper.ready(page)
                         control.evaluate(page, helper, "d", with_pick=True)
+                        page.locator("#trade-result .tw-capital-disclosure > summary").first.click()
                         box = page.locator("#trade-result .tw-draft-capital").first
                         self.assertIn(
                             "Your draft capital after this trade", box.inner_text()
@@ -87,6 +100,7 @@ class CapitalBrowserTests(unittest.TestCase):
                         control.evaluate(page, helper, "c")
                         page.locator("#trade-result > .tw-compare-add").click()
                         control.open_readonly(page, requests)
+                        self.open_comparison_capital(page, requests)
                         self.assertEqual(
                             page.locator("#trade-comparison .tw-draft-capital").count(),
                             3,
@@ -131,6 +145,7 @@ class CapitalBrowserTests(unittest.TestCase):
                         page.reload()
                         helper.ready(page)
                         control.open_readonly(page, requests)
+                        self.open_comparison_capital(page, requests)
                         self.assertIn(
                             "NOT REVALIDATED",
                             page.locator("#trade-comparison").inner_text(),
@@ -167,6 +182,7 @@ class CapitalBrowserTests(unittest.TestCase):
                         page.reload()
                         helper.ready(page)
                         control.open_readonly(page, requests)
+                        self.open_comparison_capital(page, requests)
                         self.assertEqual(
                             [
                                 x["context"]["draft_capital_record"]

@@ -138,7 +138,7 @@ def render_season_week(view: dict, *, matchup_id: str | None = None) -> str:
         return body + '<section class="card"><h3>Playoff opponents not established</h3><p>Projected seeding is not a locked matchup. Playoff-window strength remains opponent-independent.</p><a href="/teams">View team strength</a></section>'
     byes = ''.join(f'<section class="card"><h3><a href="/teams/{side["roster_id"]}">{escape(side["team"])}</a></h3><p>First-round bye · qualified for the playoffs. No opponent or game score is assigned.</p></section>' for side in view.get('byes') or [])
     if view['availability'] != 'available':
-        return body + byes + '<section class="card"><h3>Week evidence unavailable</h3><p>This week has not been prepared successfully. Return to a supported week or use the normal league sync.</p></section>'
+        return body + byes + '<section class="card"><h3>This week is not ready</h3><p>Choose a week with available results, or retry the normal league refresh when it is available.</p></section>'
     cards = []
     ordered = sorted(view['groups'].items(), key=lambda item: (not any(s.get('is_viewer') for s in item[1]), item[0]))
     for identity, sides in ordered:
@@ -201,7 +201,7 @@ def render_season_week(view: dict, *, matchup_id: str | None = None) -> str:
         technical += '<p>No supported win probability or remaining-game estimate is available. Projected points are not odds.</p></details>'
         cards.append('<article class="card season-matchup">' + content + technical + '</article>')
     if not cards and not byes:
-        cards.append('<section class="card"><h3>No source matchups published for this week</h3><p>Matchup not published in this week. Choose a supported week; no opponents or results are inferred.</p></section>')
+        cards.append('<section class="card"><h3>No matchups are available for this week</h3><p>Choose another available week. No opponents or results are assumed.</p></section>')
     if view.get('viewer_roster_id') and not any(s.get('is_viewer') for sides in view['groups'].values() for s in sides) and not any(s['roster_id'] == view['viewer_roster_id'] for s in view.get('byes') or []):
         body += '<p class="matchup-warning">Your franchise has no published matchup in this week.</p>'
     return body + byes + ''.join(cards) + f'<details class="matchup-evidence"><summary>Source and coverage</summary><p>Sleeper · observed {escape(str(view["observed_at"] or "Unavailable"))}. Observation is retrieval time, not a provider update timestamp.</p><p>Projection generation: {escape(str(view["projection_generation"] or "Unavailable"))}</p></details>'

@@ -7,6 +7,7 @@ from tempfile import TemporaryDirectory
 from types import SimpleNamespace
 import unittest
 from unittest.mock import AsyncMock, patch
+from urllib.parse import parse_qs, urlsplit
 
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
@@ -20,6 +21,7 @@ from src.core.intelligence_memory.pipeline import CheckpointPipeline
 from src.core.intelligence_memory.store import IntelligenceCheckpointStore
 from src.ui.render_cache import GenerationRenderCache
 from tests.test_market_observation_producer_identity import prepared, checkpoint
+from tests.html_document import _Document, _elements, _text
 
 
 class MarketHistoryFixture:
@@ -212,9 +214,22 @@ class MarketHistoryCoverageTests(unittest.TestCase):
             page=lambda title,body:HTMLResponse(body)))
         response = f.client.get('/players/1?front_office=4')
         self.assertEqual(response.status_code,200)
-        self.assertIn('FantasyCalc raw-price 30-day change (provider units): -999',response.text)
-        self.assertIn('href="/market?selected=player%3A1">Observed canonical Market history',response.text)
-        destination = f.client.get('/market?selected=player%3A1')
+        document = _Document(response.text).root
+        sources = next(element for element in _elements(document)
+                       if element['tag'] == 'details' and any(
+                           child['tag'] == 'summary' and _text(child) == 'Market and player sources'
+                           for child in _elements(element, direct=True)))
+        # Raw provider movement remains available in the real optional source
+        # disclosure; this HTTP control does not claim default visibility.
+        self.assertNotIn('open', sources['attrs'])
+        self.assertIn('FantasyCalc raw-price 30-day change (provider units): -999', _text(sources))
+        links = [element for element in _elements(sources)
+                 if element['tag'] == 'a' and _text(element) == 'Observed Market history']
+        self.assertEqual(len(links), 1)
+        target = urlsplit(links[0]['attrs']['href'])
+        self.assertEqual(target.path, '/market')
+        self.assertEqual(parse_qs(target.query), {'selected': ['player:1']})
+        destination = f.client.get(links[0]['attrs']['href'])
         self.assertEqual(destination.status_code,200)
         self.assertIn('+100.00 Market points',destination.text)
         self.assertNotIn('-999',destination.text)
@@ -305,7 +320,18 @@ class MarketHistoryCoverageTests(unittest.TestCase):
         self.assertIn('INCOMPATIBLE_OBSERVATION_BOUNDARY', trend['comparison_reasons'])
         html = f.html()
         self.assertNotIn('+100.00 Market points', html)
-        self.assertIn('This is not player movement', html)
+        self.assertNotIn('+0.00 Market points', html)
+        document = _Document(html).root
+        details = next(element for element in _elements(document)
+                       if element['tag'] == 'details' and any(
+                           child['tag'] == 'summary' and _text(child) == 'Observed trends and comparison details'
+                           for child in _elements(element, direct=True)))
+        self.assertNotIn('open', details['attrs'])
+        # The detailed source boundary is on demand, not silently interpreted
+        # as player movement or a supported zero in the canonical comparison.
+        self.assertIn('Comparable Market history unavailable.', _text(details))
+        self.assertIn('cannot be compared safely.', _text(details))
+        self.assertIn('This does not show a change in the player’s value.', _text(details))
 
     def test_settled_reads_preserve_every_record_and_do_not_prepare_again(self):
         f = MarketHistoryFixture(self)

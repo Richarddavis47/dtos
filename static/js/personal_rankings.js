@@ -28,8 +28,8 @@
       const box = el('personal-method-comparison'); box.replaceChildren();
       box.append(node('p', `Current: ${preview.current.label} · ${preview.current.personal_value_count} personal values · ${preview.current.owned_value_count} for your saved assets.`),
         node('p', `Proposed: ${preview.proposed.label} · ${preview.proposed.personal_value_count} personal values · ${preview.proposed.owned_value_count} for your saved assets.`),
-        node('p', `${preview.proposed.unpriced_count} saved ${preview.proposed.unpriced_count === 1 ? 'asset remains' : 'assets remain'} unpriced. Ranking revision ${preview.ranking_revision}.`));
-      const source = node('details'); source.append(node('summary', 'Market publication used'), node('p', `Source ${preview.source_generation} · ${preview.generated_at || 'Publication time not supplied'}`)); box.append(source);
+        node('p', `${preview.proposed.unpriced_count} saved ${preview.proposed.unpriced_count === 1 ? 'asset remains' : 'assets remain'} without a personal value.`));
+      const source = node('details'); source.append(node('summary', 'Market data used'), node('p', `Source ${preview.source_generation} · ${preview.generated_at || 'Publication time not supplied'} · ranking revision ${preview.ranking_revision}`)); box.append(source);
       if (preview.eligibility_change_count) {
         box.append(node('h3', 'Quote changes since your last review'));
         for (const change of preview.eligibility_changes) box.append(node('p', `${change.label}: ${change.change}.`));
@@ -244,7 +244,7 @@
         : 'Saved protection is inactive because this exact asset is not currently owned by your franchise.', 'personal-qualification'));
       list.append(item);
     }
-    if (!rows.length) list.append(node('li', state.rows?.length ? 'No assets match these filters. Clear the search or position filter.' : 'Prepared compatible Market rankings are unavailable. Neutral browsing remains available; reload after Market is ready.', 'personal-empty'));
+    if (!rows.length) list.append(node('li', state.rows?.length ? 'No assets match these filters. Clear the search or position filter.' : 'Market rankings are not ready. You can still browse Market; retry rankings after its data is ready.', 'personal-empty'));
     el('personal-results-count').textContent = `${rows.length} matches / ${state.rows?.length || 0} assets · Ranks are overall`;
     for (const suffix of ['', '-bottom']) {
       el('personal-page' + suffix).textContent = `Page ${page + 1} of ${pages}`;

@@ -67,6 +67,11 @@ class LeagueGMIntegrityBrowserTests(unittest.TestCase):
                                         self.assertNotIn('acquiring 0 supported exact picks', section.inner_text())
                                         if path == '/league':
                                             self.assertIn(f'{expected} completed trades observed', section.inner_text())
+                                            context = section.locator('#league-trade-context')
+                                            self.assertFalse(context.evaluate('e=>e.open'))
+                                            context.locator(':scope > summary').focus()
+                                            page.keyboard.press('Enter')
+                                            self.assertTrue(context.evaluate('e=>e.open'))
                                             row = section.locator('.gm-row').first
                                             self.assertIsNone(row.get_attribute('open'))
                                             control = row.locator('summary').first

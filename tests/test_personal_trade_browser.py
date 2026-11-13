@@ -249,7 +249,7 @@ class PersonalTradeBrowserTests(unittest.TestCase):
                             self.assertIn('Side B · You receive: 250', market.inner_text())
                             original = self.draft(page)['currentProposal']
                             page.locator('#trade-balance-offer').click()
-                            page.get_by_role('button', name='Preview adjustment', exact=True).first.wait_for()
+                            page.get_by_role('button', name='Review trade', exact=True).first.wait_for()
                             balance = next(record['response'] for record in records if record['endpoint'].endswith('/balance'))
                             self.assertGreater(balance['count'], 0)
                             self.assertEqual(balance['original_market']['sent']['total'], 500)
@@ -260,11 +260,11 @@ class PersonalTradeBrowserTests(unittest.TestCase):
                                     self.assertEqual(row['balance_adjustment'][side]['unit'], 'personal_rank_slot_value')
                                     self.assertEqual(row['balance_adjustment'][side]['valuation_basis'], 'personal_rank_slot_value')
                             expected = balance['results'][0]['proposal']
-                            page.get_by_role('button', name='Preview adjustment', exact=True).first.click()
-                            page.get_by_role('button', name='Keep original', exact=True).click()
+                            page.get_by_role('button', name='Review trade', exact=True).first.click()
+                            page.get_by_role('button', name='Back to offers', exact=True).click()
                             self.assertEqual(self.draft(page)['currentProposal'], original)
-                            page.get_by_role('button', name='Preview adjustment', exact=True).first.click()
-                            page.get_by_role('button', name='Adopt alternative', exact=True).click()
+                            page.get_by_role('button', name='Review trade', exact=True).first.click()
+                            page.get_by_role('button', name='Use this offer in my draft', exact=True).click()
                             adopted = self.draft(page)['currentProposal']
                             self.assertEqual(adopted['sent'], expected['assets_sent'])
                             self.assertEqual(adopted['received'], expected['assets_received'])

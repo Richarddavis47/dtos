@@ -45,14 +45,16 @@ class DiagnosticBrowserTests(unittest.TestCase):
                                 page.goto(f"https://dtos.test/teams/{rid}").status, 200
                             )
                             room = page.locator("#positional-depth")
-                            disclosure = room.get_by_text(
-                                "Lineup eligibility and surplus", exact=True
-                            ).first
+                            card = room.locator("article").first
+                            detail = card.locator("details").first
+                            disclosure = detail.locator(":scope > summary")
+                            self.assertFalse(detail.evaluate("e=>e.open"))
                             disclosure.focus()
                             page.keyboard.press("Enter")
+                            self.assertTrue(detail.evaluate("e=>e.open"))
                             body = room.inner_text()
                             self.assertIn(
-                                "Stale"
+                                "at least six hours old"
                                 if state == "stale"
                                 else "insufficient supported scoring evidence",
                                 body,
@@ -66,7 +68,6 @@ class DiagnosticBrowserTests(unittest.TestCase):
                                 page.evaluate("document.documentElement.scrollWidth"),
                                 width,
                             )
-                            card = room.locator("article").first
                             box = card.bounding_box()
                             if width <= 390:
                                 self.assertGreater(box["width"], width * 0.65)

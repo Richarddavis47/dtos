@@ -33,14 +33,17 @@ class MyTeamEvidenceTests(TestCase):
                     'picks_by_year': {'2027': [pick]},
                     'team_intelligence': SimpleNamespace(future_capital_evidence={'picks': [prepared]})}
             rendered = _draft_capital(view)
-            self.assertIn('Market: 0', rendered)
+            self.assertIn('Market value: 0', rendered)
             self.assertIn('asset_id=2027-R4-2', rendered)
-            self.assertIn('Original franchise: Original team', rendered)
-            self.assertIn('Current owner: My franchise', rendered)
+            self.assertIn('2027 Round 4 · Original team', rendered)
+            self.assertIn('Acquired pick', rendered)
+            self.assertIn('Owned by: My franchise', rendered)
             view['picks_by_year']['2027'][0] = {**pick, 'original_roster_id': None}
             view['team_intelligence'].future_capital_evidence = {'picks': [{'identity': {'year': '2027', 'round': 4}, 'market': {}}]}
             unknown = _draft_capital(view)
-            self.assertIn('Market: Unavailable', unknown)
+            self.assertIn('Market price not available', unknown)
+            self.assertIn('Original franchise unresolved', unknown)
+            self.assertNotIn('Acquired pick', unknown)
             self.assertNotIn('/trades/shop', unknown)
 
     def test_actual_publisher_rollover_and_material_generation(self):

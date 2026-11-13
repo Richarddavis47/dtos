@@ -54,15 +54,16 @@ class DynamicNeedsBrowserTests(TestCase):
                             f.source.reader.snapshot(),
                             strategy="REBUILD" if rid == 1 else "WIN NOW",
                         )["positions"]["QB"]
+                        detail = room.locator('article').first.locator('details').first
+                        summary = detail.locator(':scope > summary')
+                        self.assertFalse(detail.evaluate('e=>e.open'))
+                        summary.focus()
+                        page.keyboard.press("Enter")
+                        self.assertTrue(detail.evaluate('e=>e.open'))
                         self.assertIn(
                             expected["classification"].lower(),
                             room.inner_text().lower(),
                         )
-                        summary = room.get_by_text(
-                            "Lineup eligibility and surplus", exact=True
-                        ).first
-                        summary.focus()
-                        page.keyboard.press("Enter")
                         self.assertIn("removing this player", room.inner_text())
                         self.assertNotIn("remove_one", room.inner_text())
                         self.assertLessEqual(
@@ -76,15 +77,25 @@ class DynamicNeedsBrowserTests(TestCase):
                     )
                     page.get_by_role("link", name="Explore / Edit").first.click()
                     page.get_by_role(
-                        "button", name="Adopt alternative", exact=True
+                        "button", name="Use this offer in my draft", exact=True
                     ).click()
                     page.get_by_role("button", name="Reevaluate Trade").click()
                     page.wait_for_function(
                         "document.querySelector('#trade-result').dataset.assessmentFreshness==='current'"
                     )
+                    full = page.locator('#trade-result > .dtos-explanation > .tw-evaluation-detail')
+                    self.assertFalse(full.evaluate('e=>e.open'))
+                    full.locator(':scope > summary').focus()
+                    page.keyboard.press('Enter')
+                    self.assertTrue(full.evaluate('e=>e.open'))
+                    supporting = full.locator('details').filter(
+                        has=page.locator('summary', has_text='Supporting evidence and limitations')).first
+                    supporting.locator(':scope > summary').focus()
+                    page.keyboard.press('Enter')
+                    self.assertTrue(supporting.evaluate('e=>e.open'))
                     self.assertIn(
                         "replacement",
-                        page.locator("#trade-result").text_content().lower(),
+                        supporting.inner_text().lower(),
                     )
                     self.assertLessEqual(
                         page.evaluate("document.documentElement.scrollWidth"), width

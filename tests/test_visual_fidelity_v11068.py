@@ -87,7 +87,7 @@ class VisualFidelityTests(unittest.TestCase):
         for marker in (
             "ti-franchises", "You send", "You receive",
             "Why you should consider this", "Why they should consider this",
-            "View trade details",
+            "Review trade",
             "Market fairness", "Roster fit", "Counterparty", "Evidence",
             "FAIR", "CLEAR", "PLAUSIBLE",
         ):

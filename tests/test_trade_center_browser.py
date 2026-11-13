@@ -63,7 +63,7 @@ class TradeCenterBrowserTests(unittest.TestCase):
                         wait_until="domcontentloaded",
                         timeout=10_000,
                     )
-                    page.get_by_label("Counterparty", exact=True).select_option("2")
+                    page.get_by_label("Trade partner", exact=True).select_option("2")
 
                     def assert_filter(side: str, position: str) -> None:
                         if width < 760:
@@ -176,7 +176,7 @@ class TradeCenterBrowserTests(unittest.TestCase):
 
             page.route("**/*", route)
             page.goto("https://dtos.test/trades/create")
-            page.get_by_label("Counterparty", exact=True).select_option("2")
+            page.get_by_label("Trade partner", exact=True).select_option("2")
             self.assertEqual(page.get_by_role("button", name="My assets", exact=True).count(), 1)
             self.assertEqual(page.get_by_role("button", name="Their assets", exact=True).count(), 1)
             self.assertEqual(page.locator('#trade-sent-board').get_by_role("button", name="PICKS", exact=True).count(), 1)
@@ -214,12 +214,12 @@ class TradeCenterBrowserTests(unittest.TestCase):
             page.locator('#trade-constraint-asset').select_option('a')
             page.fill("#trade-instruction", "Don't trade Alpha. Use picks instead.")
             page.click("#trade-apply-adjust")
-            page.get_by_role('button', name='Open editable offer:', exact=False).click()
+            page.get_by_role('button', name='Review trade', exact=False).click()
             self.assertEqual(page.locator('#trade-sent-chips .tw-asset').count(), 3)
-            page.get_by_role('button', name='Keep original', exact=True).click()
+            page.get_by_role('button', name='Back to offers', exact=True).click()
             self.assertEqual(page.locator('#trade-sent-chips .tw-asset').count(), 3)
-            page.get_by_role('button', name='Open editable offer:', exact=False).click()
-            page.get_by_role('button', name='Adopt alternative', exact=True).click()
+            page.get_by_role('button', name='Review trade', exact=False).click()
+            page.get_by_role('button', name='Use this offer in my draft', exact=True).click()
             self.assertEqual(page.locator('#trade-sent-chips .tw-asset').count(), 1)
             self.assertIn("2027 Round 1", page.locator("#trade-sent-chips .tw-asset").inner_text())
             self.assertIn("Don't trade Alpha", requests[-1]["instruction"])

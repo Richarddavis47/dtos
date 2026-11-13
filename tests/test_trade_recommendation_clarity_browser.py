@@ -77,7 +77,7 @@ class RecommendationClarityBrowserTests(unittest.TestCase):
                     self.assertIn("COUNTERPARTY LIMITED", primary.inner_text())
                     self.assertNotIn("WORTH PURSUING", primary.inner_text())
                     self.assertIn(
-                        "not the bilateral verdict",
+                        "Both teams have not passed the trade checks",
                         page.locator("#trade-result").inner_text(),
                     )
                     details = page.locator(".tw-evaluation-detail > summary")
@@ -217,14 +217,10 @@ class RecommendationClarityBrowserTests(unittest.TestCase):
             card = page.locator(".tw-offer").first
             card.wait_for()
             self.assertNotIn("WORTH PURSUING", card.locator("h3").first.inner_text())
-            card.get_by_text("Why this offer · evidence and risks", exact=True).click()
-            self.assertIn(
-                "COUNTERPARTY LIMITED",
-                card.locator(".dtos-explanation > p").first.inner_text(),
-            )
-            card.get_by_role(
-                "button", name="Open editable offer: preview", exact=True
-            ).click()
+            card.get_by_role("button", name="Review trade", exact=True).click()
+            card = page.locator(".tw-offer-review")
+            card.locator(".tw-offer-sources > summary").click()
+            self.assertIn("COUNTERPARTY LIMITED", card.locator(".dtos-explanation > p").first.inner_text())
             page.locator("#trade-result .tw-offer").wait_for()
             self.assertNotIn(
                 "WORTH PURSUING",

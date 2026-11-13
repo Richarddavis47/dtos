@@ -220,7 +220,7 @@ class SeasonMatchupTests(unittest.TestCase):
         view.update(availability='unavailable', byes=[{'roster_id': 1, 'team': 'Qualified'}])
         rendered = render_season_week(view)
         self.assertIn('First-round bye · qualified for the playoffs', rendered)
-        self.assertIn('Week evidence unavailable', rendered)
+        self.assertIn('This week is not ready', rendered)
 
     def test_multiweek_final_preserves_components_until_complete(self):
         from src.core.intelligence.season_calendar import season_calendar
@@ -300,7 +300,7 @@ class SeasonMatchupTests(unittest.TestCase):
                 patch('services.matchup_intelligence.matchup_projection', side_effect=AssertionError('legacy fallback')):
             response = TestClient(app).get('/matchups')
         self.assertEqual(response.status_code, 200)
-        self.assertIn('Week evidence unavailable', response.text)
+        self.assertIn('This week is not ready', response.text)
 
 
 if __name__ == "__main__":

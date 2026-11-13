@@ -145,16 +145,15 @@ class PhoneVisualCorrectionTests(unittest.TestCase):
                 self.assertEqual(fixture.state(page), before)
                 page.click("#trade-find")
                 card = page.locator(".tw-offer").first
-                lock = card.locator('[data-badge=protection][data-asset-id="player:x"]')
-                lock.locator("summary").click()
-                self.assertIn("incoming Trade For target", lock.inner_text())
+                self.assertEqual(card.locator('[data-badge=protection]').count(), 0)
                 original = fixture.state(page)["currentProposal"]
-                card.get_by_role("button", name="Open editable offer: preview").click()
-                preview = page.locator("#trade-result .tw-offer [data-badge=protection]")
-                preview.locator("summary").click()
+                card.get_by_role("button", name="Review trade").click()
+                preview = page.locator('#trade-result .tw-offer [data-badge=protection][data-asset-id="player:x"]')
+                preview.locator("summary").press('Enter')
+                self.assertIn("incoming Trade For target", preview.inner_text())
                 self.assertIn("player:x", preview.inner_text())
                 self.assertEqual(fixture.state(page)["currentProposal"], original)
-                page.get_by_role("button", name="Keep original", exact=True).click()
+                page.get_by_role("button", name="Back to offers", exact=True).click()
                 self.assertEqual(fixture.state(page)["currentProposal"], original)
                 technical.TechnicalDetailsBrowserTests().assert_bounded(page, width)
 

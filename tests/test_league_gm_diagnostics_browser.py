@@ -46,6 +46,9 @@ class LeagueGMDiagnosticBrowserTests(unittest.TestCase):
                                             self.assertIn(f'{trade_count} completed trades observed', section.inner_text())
                                             self.assertIn('History is partial', section.inner_text())
                                             self.assertNotIn('Aggressive', section.inner_text())
+                                            context = section.locator('#league-trade-context')
+                                            self.assertIsNone(context.get_attribute('open'))
+                                            context.locator('summary').first.click()
                                             row = section.locator('.gm-row').first
                                             control = row.locator('summary').first
                                             self.assertIsNone(row.get_attribute('open'))

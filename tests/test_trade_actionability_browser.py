@@ -42,24 +42,32 @@ class TradeActionabilityBrowserTests(unittest.TestCase):
                         card = page.locator('.tw-offer').first
                         d = e['decision_context']
                         self.assertIn(d['decisive_reason'], card.inner_text())
-                        self.assertIn(d['decision_next_step'], card.inner_text())
-                        for key in ('your_side_summary', 'their_side_summary', 'decision_conditions'):
-                            for line in d[key].splitlines():
-                                self.assertIn(line, card.inner_text())
-                        geometry = card.evaluate('e=>({action:e.querySelector(".tw-next-action").getBoundingClientRect().top-e.getBoundingClientRect().top,lead:e.querySelector(".tw-decision-lead").getBoundingClientRect().top-e.getBoundingClientRect().top})')
+                        lead = card.locator(':scope > .tw-decision-lead')
+                        for selector in ('.tw-offer-reason', '.tw-drawback', '.tw-offer-effects', '.tw-offer-market'):
+                            self.assertEqual(lead.locator(':scope > ' + selector).count(), 1)
+                        geometry = card.evaluate('e=>{const c=e.getBoundingClientRect(),l=e.querySelector(".tw-decision-lead").getBoundingClientRect();return {action:e.querySelector(".tw-next-action").getBoundingClientRect().top-c.top,lead:l.top-c.top,lead_bottom:l.bottom-c.top,lead_height:l.height};}')
                         self.assertLess(geometry['action'], 850)
                         self.assertLess(geometry['lead'], geometry['action'])
-                        self.assertTrue(card.locator(':scope > .tw-next-action').evaluate('e=>Boolean(e.compareDocumentPosition(Array.from(e.parentNode.children).find(x=>x.textContent.startsWith("Your team:"))) & Node.DOCUMENT_POSITION_FOLLOWING)'))
+                        self.assertLessEqual(geometry['lead_bottom'], geometry['action'])
+                        self.assertEqual(card.locator('.tw-depth-details,.tw-lineup-details,.tw-draft-capital').count(), 0)
                         self.assertLessEqual(page.evaluate('document.documentElement.scrollWidth'), width)
                         card.locator(':scope > .tw-next-action').click()
                         preview = page.locator('#trade-result')
                         self.assertIn(d['decisive_reason'], preview.inner_text())
                         self.assertIn(d['verdict'], preview.inner_text())
-                        page.get_by_role('button', name='Keep original', exact=True).click()
+                        review = preview.locator('.tw-offer-review')
+                        review.locator('.tw-offer-sources > summary').press('Enter')
+                        review.locator('.tw-team-impact-details > summary').press('Enter')
+                        self.assertIn(d['decision_next_step'], review.inner_text())
+                        for key in ('your_side_summary', 'their_side_summary', 'decision_conditions'):
+                            for line in d[key].splitlines():
+                                self.assertIn(line, review.inner_text())
+                        self.assertEqual(len(records), 1)
+                        page.get_by_role('button', name='Back to offers', exact=True).click()
                         self.assertEqual(page.locator('#trade-strategy').input_value(), 'REBUILD')
                         self.assertEqual(len(records), 1)
                         page.locator('.tw-offer').first.locator(':scope > .tw-next-action').click()
-                        page.get_by_role('button', name='Adopt alternative', exact=True).click()
+                        page.get_by_role('button', name='Use this offer in my draft', exact=True).click()
                         self.assertIn(d['decisive_reason'], page.locator('#trade-result').inner_text())
                         page.get_by_role('button', name='Reevaluate Trade', exact=True).click()
                         page.wait_for_function("['fresh_complete','fresh_incomplete'].includes(document.querySelector('#trade-result').dataset.assessmentState)")
@@ -137,7 +145,7 @@ class TradeActionabilityBrowserTests(unittest.TestCase):
                     page.locator('#trade-find').click()
                     h.complete(page)
                     page.locator('.tw-offer').first.locator(':scope > .tw-next-action').click()
-                    page.get_by_role('button', name='Adopt alternative', exact=True).click()
+                    page.get_by_role('button', name='Use this offer in my draft', exact=True).click()
                     # Adopted evidence is deliberately retained, never current.
                     text = page.locator('#trade-result').inner_text()
                     self.assertEqual('Timing context at assessment · not revalidated' in text, expected)

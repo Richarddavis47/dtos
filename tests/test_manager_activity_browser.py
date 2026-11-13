@@ -45,6 +45,11 @@ class ManagerActivityBrowserTests(unittest.TestCase):
                                         response = page.goto('https://dtos.test/league')
                                         self.assertEqual(response.status, 200)
                                         section = page.locator('#league-observations')
+                                        context = section.locator('#league-trade-context')
+                                        self.assertFalse(context.evaluate('e=>e.open'))
+                                        context.locator(':scope > summary').focus()
+                                        page.keyboard.press('Enter')
+                                        self.assertTrue(context.evaluate('e=>e.open'))
                                         self.assertIn('1 completed waiver claims', section.inner_text())
                                         self.assertIn('2 failed', section.inner_text())
                                         self.assertIn('unknown-status waiver attempts', section.inner_text())
@@ -62,7 +67,7 @@ class ManagerActivityBrowserTests(unittest.TestCase):
                                         page.goto('https://dtos.test/trades/create?front_office=1')
                                         page.locator('#trade-partner option[value="2"]').wait_for(state='attached')
                                         page.select_option('#trade-partner', '2')
-                                        page.locator('#trade-strategy').locator('xpath=ancestor::details').evaluate_all('rows=>rows.forEach(e=>e.open=true)')
+                                        self.assertTrue(page.locator('#trade-strategy').is_visible())
                                         page.select_option('#trade-strategy', 'REBUILD')
                                         for which, identity in (('sent', 'a'), ('received', '2028-R1-4')):
                                             control = page.locator(f'[data-side={which}]')
@@ -99,7 +104,13 @@ class ManagerActivityBrowserTests(unittest.TestCase):
                     finally:
                         f.doCleanups()
             finally:
-                browser.close()
-        output = os.environ.get('DTOS_MANAGER_EVIDENCE')
-        if output:
-            (Path(output)/'browser-results.json').write_text(json.dumps(evidence,indent=2))
+                try:
+                    browser.close()
+                finally:
+                    # Preserve only actually captured rows, including a partial
+                    # failed attempt. Artifact creation never establishes PASS.
+                    output = os.environ.get('DTOS_MANAGER_EVIDENCE')
+                    if output:
+                        target = Path(output)
+                        target.mkdir(parents=True, exist_ok=True)
+                        (target/'browser-results.json').write_text(json.dumps(evidence,indent=2))

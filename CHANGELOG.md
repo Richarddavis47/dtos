@@ -1,5 +1,12 @@
 # v1.22.36 / build 2251 — Trade For cost and fit
 
+## v1.22.37 / build 2252
+
+- Customer-first wording and three-layer presentation across the existing page families.
+- Compact Trade cards and prepared offer review preserve all decisions, exact assets, cost/fit roles and state.
+- Recover specific Market projection restrictions and truthful Home capacity/failure states; readable retained draft/postseason views and safe historical-pick actions.
+- Preserve all fantasy, valuation, account and memory contracts.
+
 Trade For preserves the best-supported fit and the lowest gross outgoing Neutral Market cost among eligible offers already assessed within the existing bounded search, before equivalent-pick and shape presentation pruning. One card carries both roles when they coincide. Missing/incompatible costs cannot win; ties preserve existing fit order. FAIR / OPTIONAL remains optional and all original bilateral judgments remain intact.
 
 Prepared offer cards, editable previews and the existing comparison distinguish outgoing cost, additional assets received and net Market exchange. Retained roles describe their original search, never new acceptance or an asking price. Custom valuations stay separately labeled. No new discovery, automatic repair, provider work, prices, lineup calculations, qualification thresholds or resource policy. See docs/audits/TRADE_FOR_ACQUISITION_2251.md.
