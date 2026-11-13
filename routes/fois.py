@@ -377,7 +377,7 @@ def create_fois_router(
                        '<h2>Manager profiles are being prepared</h2><p>Profiles will appear when preparation completes. Your team, Market and Trade remain separate.</p></section>')
         elif status.get("state") == "waiting" and not scores:
             content = ('<section class="empty-state" data-dtos-component="empty-state">'
-                       '<h2>Manager profiles are not prepared yet</h2><p>No saved manager profiles are available for this league yet. Your roster, Market and Trade remain usable.</p></section>')
+                       '<h2>Manager profiles are not prepared yet</h2><p>No saved manager profiles are available for this league yet. Review your roster, Market and Trade separately.</p></section>')
         elif not scores:
             content = ('<section class="empty-state" data-dtos-component="empty-state">'
                        '<h2>Manager grades are not available</h2><p>No saved manager profiles are available for this league yet.</p></section>')
