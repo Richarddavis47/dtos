@@ -1,0 +1,26 @@
+{
+  "observed_at": "2026-11-13T00:23:41.860963+00:00",
+  "scope": "Unsupported host precommit topology, not mandatory canonical validation; original four-control log retained",
+  "tests": 4,
+  "failures": 1,
+  "budget_assertion_passed": true,
+  "timeout_exercised": true,
+  "timeout_cleanup_failed": true,
+  "processes": [
+    {
+      "pid": 1,
+      "ppid": 0,
+      "name": "tail",
+      "status": "sleeping"
+    },
+    {
+      "pid": 2705939,
+      "ppid": 1,
+      "name": "python",
+      "status": "zombie"
+    }
+  ],
+  "reason": "Detached descendant is a zombie under host PID1; host has no Docker --init reaper. Official existing validation uses --init; no application/fixture assertion changed to hide this outcome.",
+  "ruff_host_outcome": "Python host has no installed ruff; not a lint pass. Use existing pinned canonical image.",
+  "tested_file_sha256": "c735e0ed5cd38cc7b479e39176b52b8d13a5d91ad5f77443a270d8efd88d8c5a"
+}

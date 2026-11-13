@@ -1,0 +1,60 @@
+{
+  "source": {
+    "baseline": "b8c3e6162630fea96fecee56c7a45ac0d5890971",
+    "candidate": "9943a3c220f0064c281bc9d53803afbf1ab03f49",
+    "tree": "1502404775deac8eb657d62b855bbac62aed374c",
+    "branch": "feat/trade-for-cost-2251",
+    "version": "1.22.36",
+    "build": 2251,
+    "recorded_at": "2026-11-13T00:24:15.840527+00:00",
+    "expected_test_count": 4455,
+    "pr": 340
+  },
+  "publisher_guard": {
+    "path": "/workspace/dtos-publisher-2246/tools/release/publish.py",
+    "sha256": "91370b6d38c3be5c212e057e5cd8a33b4361b68926bdf9b899bff8a0baba6830"
+  },
+  "all_native_guards_passed": true,
+  "receipts": [
+    {
+      "name": "local-preflight",
+      "guard": "verify_preflight",
+      "passed": true,
+      "archive": "/workspace/2251-trade-for-cost/local-resource-native-archives/local-preflight.zip",
+      "archive_sha256": "fcb8ca2e52ff740e20f9b51d1822b171a34ea7aef6ebc690592fe9c3be30e9eb",
+      "archive_bytes": 3695,
+      "members": {
+        "result.json": "7e61388fdd092f806ab2def9964e85042611a967c48d18f5f2caedc5090353e4",
+        "raw.log": "d8bcf50ca7a6b4b85b9c1a745d23aab742c552fda0113f4ff76465c349fe14a8",
+        "SHA256SUMS": "5756e3f5d04f6ba4d55c87e35d92ba77ef18e5dc4b427ca6746adfd6c9196104"
+      }
+    },
+    {
+      "name": "local-restoration-unused",
+      "guard": "verify_actuals_restoration",
+      "passed": true,
+      "archive": "/workspace/2251-trade-for-cost/local-resource-native-archives/local-restoration-unused.zip",
+      "archive_sha256": "3df70f037d48ef1b440971a3932ecaf2b4973bbb5d78321f38cf2fd40bd6525c",
+      "archive_bytes": 7285351,
+      "members": {
+        "evidence/result.json": "938a4d859c5d0b6794bae26affa7e90b0ea3821a7ea4a58097fda07b144230ec",
+        "raw.log": "403dab5892379cb0dfe51fadae7192fe1322a29ecf36ae9dbf85bed6b8873a07",
+        "prior-study.zip": "df5c88eda13a0671104c76a943b05032d7adfa089d11e738785b11e35a932439",
+        "SHA256SUMS": "8cdf64d7f9676c4c950a174f1d0ad3481b21c1c37a8e58e8502d80e56db48b62"
+      }
+    },
+    {
+      "name": "local-resident-refresh",
+      "guard": "verify_resident_refresh",
+      "passed": true,
+      "archive": "/workspace/2251-trade-for-cost/local-resource-native-archives/local-resident-refresh.zip",
+      "archive_sha256": "e548442305dfb6573a5af562e9cd44f131bdf8ffe05b6e024e33117d3820d7b8",
+      "archive_bytes": 5727,
+      "members": {
+        "evidence/result.json": "6807e8aef7bc0cbdca769673aefcd7c61f385aeeeff3dd2a48ed82ffd4f3276b",
+        "raw.log": "022f2095ad6cdbdc696f246df70018ab49999340ac04658169d9e77650698824",
+        "SHA256SUMS": "e9dadd63615996735cbbbf1a767cee78e1dc89bd35ce000df4972f2f21367c1b"
+      }
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+test_ci_budget_and_resource_contract_remain_bounded (tests.test_canonical_harness_lifecycle.CanonicalHarnessLifecycleTests.test_ci_budget_and_resource_contract_remain_bounded) ... ok
+test_nonzero_result_is_not_converted_to_success (tests.test_canonical_harness_lifecycle.CanonicalHarnessLifecycleTests.test_nonzero_result_is_not_converted_to_success) ... ok
+test_real_normal_execution_completes (tests.test_canonical_harness_lifecycle.CanonicalHarnessLifecycleTests.test_real_normal_execution_completes) ... ok
+test_timeout_stops_detached_writer_before_manifest_sealing (tests.test_canonical_harness_lifecycle.CanonicalHarnessLifecycleTests.test_timeout_stops_detached_writer_before_manifest_sealing) ... FAIL
+
+======================================================================
+FAIL: test_timeout_stops_detached_writer_before_manifest_sealing (tests.test_canonical_harness_lifecycle.CanonicalHarnessLifecycleTests.test_timeout_stops_detached_writer_before_manifest_sealing)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/dtos-trade-for-cost-2251/tests/test_canonical_harness_lifecycle.py", line 75, in test_timeout_stops_detached_writer_before_manifest_sealing
+    self.assertTrue(cleanup['timeout_cleanup_complete'], cleanup)
+AssertionError: False is not true : {'timeout_triggered': True, 'validator_pid': 2705938, 'descendant_count': 1, 'active_after_count': 1, 'active_after': [2705939], 'discovery_complete': True, 'timeout_cleanup_complete': False}
+
+----------------------------------------------------------------------
+Ran 4 tests in 8.163s
+
+FAILED (failures=1)

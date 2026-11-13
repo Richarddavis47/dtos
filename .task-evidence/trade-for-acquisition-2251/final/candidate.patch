@@ -1,0 +1,1182 @@
+diff --git a/.github/workflows/product-browser.yml b/.github/workflows/product-browser.yml
+index 604b712c..e3431af5 100644
+--- a/.github/workflows/product-browser.yml
++++ b/.github/workflows/product-browser.yml
+@@ -32,11 +32,13 @@ jobs:
+       - name: Build bounded browser validation dependencies
+         run: docker build -f tools/validation/containers/browser.Dockerfile -t dtos-browser-validation .
+       - name: Authenticated product, interaction and accessibility contracts
+-        # The existing 636 tests exceeded 20 minutes with every assertion passing.
+-        # This bounded CI allowance does not change any application timeout.
+-        timeout-minutes: 25
++        # Run43327175874 hit25minutes after735of762start markers, without a
++        # completed test summary. Preserve the whole corpus and every assertion.
++        # This bounded batch allowance changes no application/worker timeout,
++        # search budget, performance threshold,2GiB limit or two-CPU enforcement.
++        timeout-minutes: 35
+         run: |
+-          docker run --rm --memory=2g --memory-swap=2g --cpus=2 --network=none -e NODE_OPTIONS -e DTOS_TRADE_RESOURCE_BROWSER_EVIDENCE=.validation/trade-resource/evidence/browser -e DTOS_LINEUP_DETAIL_EVIDENCE=.validation/trade-resource/evidence/browser/lineups -e DTOS_TEAM_NEED_EVIDENCE=.validation/trade-resource/evidence/browser/team-need -e DTOS_ACTIVATION_EVIDENCE=.validation/trade-resource/evidence/browser/activation -e DTOS_FRONT_OFFICE_WORKFLOW_EVIDENCE=.validation/trade-resource/evidence/browser/front-office-workflow -e DTOS_PROTECTIONS_EVIDENCE=.validation/trade-resource/evidence/browser/protections -e DTOS_COMPARE_EVIDENCE=.validation/trade-resource/evidence/browser/offer-comparison -e DTOS_MARKET_NEED_EVIDENCE=.validation/trade-resource/evidence/browser/market-needs -e DTOS_ROSTER_SOURCE_SCOPE_EVIDENCE=.validation/trade-resource/evidence/browser/roster-source-scope -v "$PWD:$PWD" -w "$PWD" -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0="$PWD" dtos-browser-validation python -m unittest -v tests.test_roster_source_scope tests.test_roster_source_scope_browser tests.test_market_roster_relevance tests.test_market_roster_relevance_browser tests.test_trade_capital_inventory tests.test_trade_capital_browser tests.test_account_activation_deferral tests.test_front_office_workflow_browser tests.test_recommended_protections_browser tests.test_offer_comparison tests.test_offer_comparison_browser tests.test_team_trade_need tests.test_team_trade_need_browser tests.test_00_trade_simple_browser tests.test_trade_actionability tests.test_trade_actionability_browser tests.test_trade_conditional_summary tests.test_trade_recommendation_clarity tests.test_batch5_recommended_browser tests.test_franchise_timeline_coverage tests.test_franchise_timeline_browser tests.test_trade_reserve_evidence tests.test_trade_lineup_detail tests.test_trade_lineup_detail_browser tests.test_trade_resource_admission tests.test_trade_resource_browser tests.test_multileague_projection_browser tests.test_relative_personal_values tests.test_relative_personal_browser tests.test_decision_history_continuity_browser tests.test_personal_rankings_compatibility tests.test_personal_rankings_recovery_storage tests.test_personal_rankings_recovery_trade tests.test_personal_rankings_recovery_browser tests.test_personal_rankings_recovery_trade_browser tests.test_personal_rankings_partial_browser tests.test_dossier_plain_english tests.test_plain_english_home_depth tests.test_builder_plain_english tests.test_plain_english_preservation_final tests.test_plain_english_final_browser tests.test_plain_english_decisions tests.test_plain_english_browser tests.test_personal_rankings_availability tests.test_personal_rankings_availability_browser tests.test_personal_rankings tests.test_personal_rankings_store tests.test_personal_rankings_integration tests.test_personal_trade_workflows tests.test_personal_rankings_browser tests.test_personal_rankings_accessibility_browser tests.test_personal_trade_browser tests.test_market_trend_current_browser tests.test_standings_positioning tests.test_standings_positioning_browser tests.test_matchup_portraits_browser tests.test_matchups_phone tests.test_matchups_phone_browser tests.test_trade_projection_freshness tests.test_trade_projection_freshness_browser tests.test_trade_preview_scope_browser tests.test_trade_simple_discovery tests.test_fois_final_trust_browser tests.test_fois_evidence_integrity tests.test_fois_trust_browser tests.test_proposal_tray_browser tests.test_journey_evidence tests.test_journey_corrections_browser tests.test_dossier_status_browser tests.test_phone_visual_corrections_browser tests.test_phone_design_semantics tests.test_phone_design_browser tests.test_trade_calculator tests.test_trade_calculator_browser tests.test_calculator_balance_feedback_browser tests.test_calculator_stale_feedback_browser tests.test_trade_explicit_navigation_browser tests.test_trade_navigation_identity tests.test_trade_navigation_browser tests.test_player_actions tests.test_player_actions_browser tests.test_trade_performance tests.test_trade_construction_performance tests.test_trade_performance_browser tests.test_technical_details_browser tests.test_canonical_asset_facts tests.test_canonical_asset_facts_browser tests.test_product_browser_journey tests.test_matchup_browser_contract tests.test_trade_center_browser tests.test_trade_scout_state_browser tests.test_make_it_cheaper_browser tests.test_trade_center_accessibility tests.test_trade_workspace_browser tests.test_trade_workspace_batch1 tests.test_live_inspection tests.test_browser_fixture_images tests.test_visual_retirement tests.test_trade_decision_experience tests.test_trade_decision_browser tests.test_trade_decision_http_browser tests.test_trade_decision_standings_browser tests.test_batch6_trade_ux tests.test_trade_p2_browser tests.test_trade_final_evidence_browser tests.test_trade_endorsement_integrity tests.test_trade_missing_market_presentation tests.test_batch6_trade_explanation tests.test_league_entry_coordination
++          docker run --rm --memory=2g --memory-swap=2g --cpus=2 --network=none -e NODE_OPTIONS -e DTOS_TRADE_RESOURCE_BROWSER_EVIDENCE=.validation/trade-resource/evidence/browser -e DTOS_LINEUP_DETAIL_EVIDENCE=.validation/trade-resource/evidence/browser/lineups -e DTOS_TEAM_NEED_EVIDENCE=.validation/trade-resource/evidence/browser/team-need -e DTOS_ACTIVATION_EVIDENCE=.validation/trade-resource/evidence/browser/activation -e DTOS_FRONT_OFFICE_WORKFLOW_EVIDENCE=.validation/trade-resource/evidence/browser/front-office-workflow -e DTOS_PROTECTIONS_EVIDENCE=.validation/trade-resource/evidence/browser/protections -e DTOS_COMPARE_EVIDENCE=.validation/trade-resource/evidence/browser/offer-comparison -e DTOS_MARKET_NEED_EVIDENCE=.validation/trade-resource/evidence/browser/market-needs -e DTOS_ROSTER_SOURCE_SCOPE_EVIDENCE=.validation/trade-resource/evidence/browser/roster-source-scope -v "$PWD:$PWD" -w "$PWD" -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0="$PWD" dtos-browser-validation python -m unittest -v tests.test_trade_for_acquisition tests.test_trade_for_acquisition_integration tests.test_trade_for_acquisition_browser tests.test_roster_source_scope tests.test_roster_source_scope_browser tests.test_market_roster_relevance tests.test_market_roster_relevance_browser tests.test_trade_capital_inventory tests.test_trade_capital_browser tests.test_account_activation_deferral tests.test_front_office_workflow_browser tests.test_recommended_protections_browser tests.test_offer_comparison tests.test_offer_comparison_browser tests.test_team_trade_need tests.test_team_trade_need_browser tests.test_00_trade_simple_browser tests.test_trade_actionability tests.test_trade_actionability_browser tests.test_trade_conditional_summary tests.test_trade_recommendation_clarity tests.test_batch5_recommended_browser tests.test_franchise_timeline_coverage tests.test_franchise_timeline_browser tests.test_trade_reserve_evidence tests.test_trade_lineup_detail tests.test_trade_lineup_detail_browser tests.test_trade_resource_admission tests.test_trade_resource_browser tests.test_multileague_projection_browser tests.test_relative_personal_values tests.test_relative_personal_browser tests.test_decision_history_continuity_browser tests.test_personal_rankings_compatibility tests.test_personal_rankings_recovery_storage tests.test_personal_rankings_recovery_trade tests.test_personal_rankings_recovery_browser tests.test_personal_rankings_recovery_trade_browser tests.test_personal_rankings_partial_browser tests.test_dossier_plain_english tests.test_plain_english_home_depth tests.test_builder_plain_english tests.test_plain_english_preservation_final tests.test_plain_english_final_browser tests.test_plain_english_decisions tests.test_plain_english_browser tests.test_personal_rankings_availability tests.test_personal_rankings_availability_browser tests.test_personal_rankings tests.test_personal_rankings_store tests.test_personal_rankings_integration tests.test_personal_trade_workflows tests.test_personal_rankings_browser tests.test_personal_rankings_accessibility_browser tests.test_personal_trade_browser tests.test_market_trend_current_browser tests.test_standings_positioning tests.test_standings_positioning_browser tests.test_matchup_portraits_browser tests.test_matchups_phone tests.test_matchups_phone_browser tests.test_trade_projection_freshness tests.test_trade_projection_freshness_browser tests.test_trade_preview_scope_browser tests.test_trade_simple_discovery tests.test_fois_final_trust_browser tests.test_fois_evidence_integrity tests.test_fois_trust_browser tests.test_proposal_tray_browser tests.test_journey_evidence tests.test_journey_corrections_browser tests.test_dossier_status_browser tests.test_phone_visual_corrections_browser tests.test_phone_design_semantics tests.test_phone_design_browser tests.test_trade_calculator tests.test_trade_calculator_browser tests.test_calculator_balance_feedback_browser tests.test_calculator_stale_feedback_browser tests.test_trade_explicit_navigation_browser tests.test_trade_navigation_identity tests.test_trade_navigation_browser tests.test_player_actions tests.test_player_actions_browser tests.test_trade_performance tests.test_trade_construction_performance tests.test_trade_performance_browser tests.test_technical_details_browser tests.test_canonical_asset_facts tests.test_canonical_asset_facts_browser tests.test_product_browser_journey tests.test_matchup_browser_contract tests.test_trade_center_browser tests.test_trade_scout_state_browser tests.test_make_it_cheaper_browser tests.test_trade_center_accessibility tests.test_trade_workspace_browser tests.test_trade_workspace_batch1 tests.test_live_inspection tests.test_browser_fixture_images tests.test_visual_retirement tests.test_trade_decision_experience tests.test_trade_decision_browser tests.test_trade_decision_http_browser tests.test_trade_decision_standings_browser tests.test_batch6_trade_ux tests.test_trade_p2_browser tests.test_trade_final_evidence_browser tests.test_trade_endorsement_integrity tests.test_trade_missing_market_presentation tests.test_batch6_trade_explanation tests.test_league_entry_coordination
+           docker run --rm --memory=2g --memory-swap=2g --cpus=2 --network=none -e NODE_OPTIONS -v "$PWD:$PWD" -w "$PWD" -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0="$PWD" dtos-browser-validation python -m unittest -v tests.test_historical_evidence_weeks tests.test_fois_final_trust tests.test_trade_time_market_evidence tests.test_trade_time_market_evidence_browser
+ 
+ 
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index c2ab78c8..f1aa8d1e 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -1,3 +1,9 @@
++# v1.22.36 / build 2251 — Trade For cost and fit
++
++Trade For preserves the best-supported fit and the lowest gross outgoing Neutral Market cost among eligible offers already assessed within the existing bounded search, before equivalent-pick and shape presentation pruning. One card carries both roles when they coincide. Missing/incompatible costs cannot win; ties preserve existing fit order. FAIR / OPTIONAL remains optional and all original bilateral judgments remain intact.
++
++Prepared offer cards, editable previews and the existing comparison distinguish outgoing cost, additional assets received and net Market exchange. Retained roles describe their original search, never new acceptance or an asking price. Custom valuations stay separately labeled. No new discovery, automatic repair, provider work, prices, lineup calculations, qualification thresholds or resource policy. See docs/audits/TRADE_FOR_ACQUISITION_2251.md.
++
+ # v1.22.35 / build 2250 — Franchise changes from completed trades
+ 
+ Franchise History extends its existing completed-trade observations with source-season selection, gross player and exact-pick acquisitions/disposals, and net transfers within the observed trade sample. Expandable identities group picks by draft year and round, distinguish original own picks, and link existing supporting deals, subsequent movements and pick conversions. Acquired-and-later-sent assets remain visible in both events.
+diff --git a/RELEASE_NOTES.md b/RELEASE_NOTES.md
+index 4dfd8de1..1bf32cb8 100644
+--- a/RELEASE_NOTES.md
++++ b/RELEASE_NOTES.md
+@@ -1,3 +1,9 @@
++# v1.22.36 / build 2251 — Trade For cost and fit
++
++Trade For preserves the best-supported fit and the lowest gross outgoing Neutral Market cost among eligible offers already assessed within the existing bounded search, before equivalent-pick and shape presentation pruning. One card carries both roles when they coincide. Missing/incompatible costs cannot win; ties preserve existing fit order. FAIR / OPTIONAL remains optional and all original bilateral judgments remain intact.
++
++Prepared offer cards, editable previews and the existing comparison distinguish outgoing cost, additional assets received and net Market exchange. Retained roles describe their original search, never new acceptance or an asking price. Custom valuations stay separately labeled. No new discovery, automatic repair, provider work, prices, lineup calculations, qualification thresholds or resource policy. See docs/audits/TRADE_FOR_ACQUISITION_2251.md.
++
+ # v1.22.35 / build 2250 — Franchise changes from completed trades
+ 
+ Franchise History extends its existing completed-trade observations with source-season selection, gross player and exact-pick acquisitions/disposals, and net transfers within the observed trade sample. Expandable identities group picks by draft year and round, distinguish original own picks, and link existing supporting deals, subsequent movements and pick conversions. Acquired-and-later-sent assets remain visible in both events.
+diff --git a/app_metadata.py b/app_metadata.py
+index 2233dd35..e48747cb 100644
+--- a/app_metadata.py
++++ b/app_metadata.py
+@@ -7,10 +7,10 @@ from datetime import datetime, timezone
+ from pathlib import Path
+ 
+ APPLICATION_NAME = "DTOS"
+-VERSION = "1.22.35"
+-PRODUCT_VERSION = "1.22.35"
+-BUILD_NUMBER = 2250
+-RELEASE_CODENAME = "Franchise Changes From Completed Trades"
++VERSION = "1.22.36"
++PRODUCT_VERSION = "1.22.36"
++BUILD_NUMBER = 2251
++RELEASE_CODENAME = "Trade For Cost and Fit"
+ APPLICATION_STARTED_AT = datetime.now(timezone.utc).isoformat()
+ 
+ _REPOSITORY_ROOT = Path(__file__).resolve().parent
+diff --git a/docs/audits/TRADE_FOR_ACQUISITION_2251.md b/docs/audits/TRADE_FOR_ACQUISITION_2251.md
+new file mode 100644
+index 00000000..b01e8303
+--- /dev/null
++++ b/docs/audits/TRADE_FOR_ACQUISITION_2251.md
+@@ -0,0 +1,68 @@
++# Trade For acquisition costs — build 2251
++
++## Confirmed gap and narrow correction
++
++The bounded search already constrains the exact target and sends each candidate
++through the shared bilateral evaluator. Its result display previously sorted by
++existing strategy, collapsed equivalent pick constructions, preferred package
++shapes, then truncated to three. Both steps could remove the least expensive
++eligible assessed offer. The prior `offer_level` label was not rendered by the
++shared offer card.
++
++The existing strategy and saved soft-preference order now establishes the fit
++leader before presentation pruning. A request-local presentation selector also
++retains the minimum fully evidenced **gross outgoing Neutral Market** package
++among the eligible assessments from that same search. Both anchors survive the
++existing shape/equivalent-pick diversity selection. A shared anchor appears once.
++Existing relative order resolves exact cost ties without display rounding. At
++most three cards remain; no discovery, evaluation or repair budget is enlarged.
++
++## Evidence contract
++
++Prices must match the shared canonical Market balance admitted in each completed
++evaluation and its current request's neutral asset pool. Full compatible prices
++on both sides, valid exact identities and canonical ownership are required for
++cost selection. Missing, partial, nonfinite, negative, incompatible-unit,
++changed-price or ambiguous pick evidence cannot win cost selection. Zero remains
++zero. A missing cost never removes a separately eligible assessed offer; its cost
++is unknown. Incoming extras and net received-minus-sent are separate, using the
++same canonical package arithmetic. Different extras are not equivalent purchases.
++
++Custom construction and evaluation preserve their existing saved method,
++revision, scope and prices. Cost selection uses the preserved neutral pools and
++neutral evaluator evidence, never personal slot values. Same-search source
++boundary and ownership rechecks remain in place. No retained offer is reranked
++against a later inventory or quote. Existing stale/retained and comparison
++admission checks govern read-only previews and reload/Back.
++
++Cost roles are descriptions within a limited search, not global optima, manager
++asking prices, acceptance promises, new recommendation tiers or valuations.
++FAIR / OPTIONAL remains optional, and cheaper rejected/evidence-limited offers
++remain outside eligible results. Exact target, original-franchise picks,
++protections and exclusions remain enforced by the existing search and evaluator.
++
++## Scope and verification
++
++`services/trade_for_acquisition.py` selects from existing evaluated results;
++`services/trade_intelligence.py` invokes it at the presentation boundary. The
++released workspace/comparison JavaScript renders and retains the compact record
++inside existing bounded, account/league/franchise-scoped state. Existing decision,
++production, reserve, roster-space and future-capital disclosures are reused.
++Opening/expanding/previewing/comparing results never starts Make It Cheaper.
++
++Matched prepared-offer controls explicitly distinguish selection behavior from
++real evaluator acceptance. Canonical source/evaluator controls use existing
++1-QB/K/DEF and Superflex disposable publications. Phone/browser controls exercise
++explicit Generate, two offers, preview/adoption, comparison, keyboard, touch
++emulation and reload. Existing cross-generation, protection, Custom-method,
++ownership and league-switch controls remain mandatory. Public evidence contains
++no owner data. Browser emulation does not establish physical iPhone/Safari or
++live owner acceptance. Exact final validation and deployment receipts are
++published separately; this document does not assert an unfinished gate passed.
++
++No source provider, store, runtime owner, optimizer, Trade/FOIS policy, scoring,
++submitted lineup, preference, 2 GiB cap, 16x restoration allowance or FOIS/Trade
++reservation changes.
++
++
++Validation recovery: the first exact-source full local run encountered two existing Rebuild browser timeouts after real capacity deferral. One admission had 394,358,784 usable bytes against 402,653,184 required. Six earlier gates passed; the already-failed remainder was deliberately interrupted, so regression and the three later gates were not complete. No OOM occurred. A planned two-method matched fresh-container control completed with and without explicit collection; it recovered unreachable retired-fixture objects at setup boundaries, but did not demonstrate a lower overall peak or prove the original objects responsible. The shared browser fixture now collects only unreachable prior-fixture cycles before constructing its normal fixture/viewport and reports process/container measurements. GC stays enabled; every real search, exclusion, viewport, timeout and assertion remains. Admission, reserves and application cleanup are unchanged. Final-source full local and hosted validation remain mandatory.
+diff --git a/services/trade_for_acquisition.py b/services/trade_for_acquisition.py
+new file mode 100644
+index 00000000..1c792620
+--- /dev/null
++++ b/services/trade_for_acquisition.py
+@@ -0,0 +1,140 @@
++"""Bounded presentation selection from already evaluated exact-target offers.
++
++No discovery, pricing, evaluation or acceptance policy lives here. Neutral cost
++is read from the shared evaluator and checked against its admitted asset pool.
++"""
++
++from src.core.intelligence import trade_market_balance as market_balance
++from src.core.intelligence import trade_pick_identity_errors
++from services.trade_search_policy import ELIGIBLE, classify
++
++
++def cost_evidence(row, assets, target):
++    proposal = row["proposal"]
++    sent, received = proposal["assets_sent"], proposal["assets_received"]
++    unknown = {
++        "availability": "unknown",
++        "reason": "Complete compatible Neutral Market cost is unavailable for this assessment.",
++    }
++    if (
++        target not in received
++        or not sent
++        or not received
++        or len(set(sent + received)) != len(sent + received)
++        or any(key not in assets for key in sent + received)
++    ):
++        return unknown
++    for ids, owner in (
++        (sent, proposal["active_roster_id"]),
++        (received, proposal["partner_roster_id"]),
++    ):
++        if any(
++            assets[key].source_roster_id != owner
++            or (
++                assets[key].kind == "pick"
++                and (
++                    any(
++                        value is None
++                        for value in (
++                            assets[key].season,
++                            assets[key].round,
++                            assets[key].original_roster_id,
++                        )
++                    )
++                    or trade_pick_identity_errors(assets[key])
++                )
++            )
++            for key in ids
++        ):
++            return unknown
++    evidence = (row.get("evaluation") or {}).get("market_evidence") or {}
++    try:
++        calculated = market_balance(
++            tuple(assets[key] for key in sent), tuple(assets[key] for key in received)
++        )
++    except (ValueError, TypeError):
++        return unknown
++    if (
++        calculated["availability"] != "full"
++        or evidence.get("availability") != "full"
++        or evidence.get("unit") != calculated["unit"]
++        or any(
++            (evidence.get(side) or {}).get("availability") != "full"
++            or (evidence.get(side) or {}).get("total") != calculated[side]["total"]
++            for side in ("sent", "received")
++        )
++    ):
++        return unknown
++    extras = [key for key in received if key != target]
++    return {
++        "availability": "full",
++        "unit": calculated["unit"],
++        "outgoing": calculated["sent"]["total"],
++        "incoming": calculated["received"]["total"],
++        "net_received_minus_sent": calculated["difference"],
++        "extra_received_asset_ids": extras,
++        "extra_received_value": market_balance(
++            (), tuple(assets[key] for key in extras)
++        )["received"]["total"],
++    }
++
++
++def select_offers(ranked, assets, target, distinct, *, limit=3):
++    """Keep strategic leader and cheapest fully priced eligible construction.
++
++    Input order is the existing strategy/preference order. Ties keep that order.
++    Diversity can fill spare places, but cannot remove either leader. No row is
++    duplicated, even when both roles belong to the same exact package.
++    """
++    rows = [
++        row
++        for row in ranked
++        if classify(row["evaluation"]) in ELIGIBLE
++        and target in row["proposal"]["assets_received"]
++    ]
++    if not rows:
++        return []
++    costs = [cost_evidence(row, assets, target) for row in rows]
++    priced = [i for i, cost in enumerate(costs) if cost["availability"] == "full"]
++    cheapest = min(priced, key=lambda i: costs[i]["outgoing"]) if priced else None
++    chosen = [0] + ([cheapest] if cheapest not in (None, 0) else [])
++    diversified = distinct(rows, assets)
++    shapes, rest = {}, []
++    for row in diversified:
++        p = row["proposal"]
++        shape = tuple(
++            tuple(sorted(assets[key].kind for key in p[side]))
++            for side in ("assets_sent", "assets_received")
++        )
++        if shape in shapes:
++            rest.append(row)
++        else:
++            shapes[shape] = row
++    index_by_object = {id(row): i for i, row in enumerate(rows)}
++    for row in [*shapes.values(), *rest]:
++        index = index_by_object[id(row)]
++        if index not in chosen and len(chosen) < limit:
++            chosen.append(index)
++    result = []
++    for i in chosen[:limit]:
++        roles = (["best_fit"] if i == 0 else []) + (
++            ["lowest_cost"] if i == cheapest else []
++        )
++        result.append(
++            {
++                **rows[i],
++                "acquisition_comparison": {
++                    "roles": roles,
++                    "cost": costs[i],
++                    "eligible_assessed": len(rows),
++                    "cost_comparable_assessed": len(priced),
++                    "lowest_cost_ties": sum(
++                        costs[j]["outgoing"] == costs[i]["outgoing"] for j in priced
++                    )
++                    if i == cheapest
++                    else 0,
++                    "basis": "gross outgoing Neutral Market cost; bounded eligible assessed offers only",
++                },
++            }
++        )
++    return result
+diff --git a/services/trade_intelligence.py b/services/trade_intelligence.py
+index 9e837f73..2df72940 100644
+--- a/services/trade_intelligence.py
++++ b/services/trade_intelligence.py
+@@ -1504,19 +1504,12 @@ def generate_trade_workflow(data: dict[str, Any], payload: dict[str, Any]) -> di
+             break
+     if workflow == 'trade_for':
+         from services.trade_search_policy import rank_key
++        from services.trade_for_acquisition import select_offers
+         generated.sort(key=rank_key)
+-        by_id = {a.asset_id: a for pool in workspace['pools'].values() for a in pool}
+-        generated = _distinct_trade_for_offers(generated, by_id)
+-        # Prefer different constructions before tiny variants with the same shape.
+-        shapes, rest = {}, []
+-        for row in generated:
+-            shape = (tuple(sorted(by_id[i].kind for i in row['proposal']['assets_sent'])),
+-                     tuple(sorted(by_id[i].kind for i in row['proposal']['assets_received'])))
+-            if shape not in shapes:
+-                shapes[shape] = row
+-            else:
+-                rest.append(row)
+-        generated = list(shapes.values()) + rest
++        generated = personal_order(generated, personal_context(payload))
++        neutral = workspace.get('neutral_pools') or workspace['pools']
++        neutral_assets = {a.asset_id: a for pool in neutral.values() for a in pool}
++        generated = select_offers(generated, neutral_assets, target, _distinct_trade_for_offers)
+     elif workflow == 'shop':
+         from services.shop_asset_search import rank_returns
+         assets = {a.asset_id: a for pool in workspace['pools'].values() for a in pool}
+@@ -1539,14 +1532,11 @@ def generate_trade_workflow(data: dict[str, Any], payload: dict[str, Any]) -> di
+             -int(row['evaluation']['dimensions'].get('league_partner_context', {}).get('soft_tie_break') or 0),
+             row["evaluation"]["provenance"]["evaluation_id"],
+         ))
+-    generated = personal_order(generated, personal_context(payload))
++    if workflow != 'trade_for':
++        generated = personal_order(generated, personal_context(payload))
+     for market in shop_markets:
+         market['returns'] = personal_order(market['returns'], personal_context(payload))
+     limit = 5 if workflow in {"shop", "recommended"} else 3
+-    offer_labels = ("BEST SUPPORTED FIT FOUND", "ALTERNATIVE CONSTRUCTION", "ALTERNATIVE CONSTRUCTION") if workflow == "trade_for" else ()
+-    for index, result in enumerate(generated[:limit]):
+-        if index < len(offer_labels):
+-            result["offer_level"] = offer_labels[index]
+     next_paths = []
+     closest_path = None
+     if not generated and workflow == "trade_for" and target:
+diff --git a/static/js/trade_comparison.js b/static/js/trade_comparison.js
+index cbed2f8f..857e1658 100644
+--- a/static/js/trade_comparison.js
++++ b/static/js/trade_comparison.js
+@@ -116,6 +116,28 @@
+     box.append(moves); return box;
+   }
+ 
++  function acquisitionView(out, record, node, market, retained = false) {
++    if (!record) return;
++    const roles = record.roles || [], cost = record.cost || {};
++    const labels = [];
++    if (roles.includes('best_fit')) labels.push('Best-supported fit found');
++    if (roles.includes('lowest_cost')) labels.push('Lowest-cost supported offer found');
++    out.append(node('p', labels.join(' · ') || 'Different supported construction', 'tw-acquisition-role'));
++    const detail = node('details'); detail.append(node('summary', 'Acquisition cost evidence · Neutral Market'));
++    if (retained) out.append(node('small', 'Roles and costs belong to the recorded search, not a new assessment.'));
++    if (cost.availability === 'full' && [cost.outgoing, cost.incoming, cost.net_received_minus_sent, cost.extra_received_value].every(number)) {
++      out.append(node('p', 'Gross outgoing Neutral Market cost: ' + market(cost.outgoing)));
++      detail.append(node('p', 'All assets received: ' + market(cost.incoming) + ' · Net Market received minus sent: ' + market(cost.net_received_minus_sent) + '.'));
++      out.append(node('p', cost.extra_received_asset_ids?.length
++        ? 'Includes additional incoming assets worth ' + market(cost.extra_received_value) + ' beyond the exact target. Packages with different extras are not equivalent purchases.'
++        : 'No additional incoming assets beyond the exact target.'));
++    } else out.append(node('p', cost.reason || 'Complete compatible Neutral Market cost is unknown; this offer cannot be selected as lowest-cost.', 'tw-drawback'));
++    detail.append(node('small', 'Among ' + record.eligible_assessed + ' eligible assessed offers; ' + record.cost_comparable_assessed + ' have complete comparable Neutral Market costs. ' +
++      (record.lowest_cost_ties > 1 ? 'Lowest cost tied; existing fit ordering breaks the tie. ' : '') +
++      'Costs do not determine the original verdict.'));
++    out.append(node('small', 'Bounded search, not a global minimum, asking price or guarantee of acceptance. Lower cost does not establish a better trade.'));
++    out.append(detail);
++  }
+   function create(options) {
+     const {node, points, market, panel, tray, getEntries, setEntries, environment, details} = options;
+     let returnFocus = null, returnScroll = 0;
+@@ -131,6 +153,7 @@
+     function offer(entry, index, comparison) {
+       const out = node('article', null, 'tw-comparison-offer'); out.dataset.comparisonSlot = String(index + 1);
+       out.append(capitalView(entry.context?.draft_capital_record, node, environment().scope, true));
++      acquisitionView(out, entry.summary.acquisition, node, market, entry.retained || entry.context?.restored);
+       const s = entry.summary, depth = s.depth || {}, capacity = s.capacity || {};
+       out.append(node('h4', 'Offer ' + (index + 1) + ' · ' + s.verdict),
+         node('p', 'Counterparty: ' + s.partner), node('p', 'Assessment strategy: ' + (s.strategy || 'No selected goal')));
+@@ -223,7 +246,7 @@
+     refresh();
+     return {add, refresh};
+   }
+-  const api = {compatibility, sameScope, wellFormed, create, readCapital, capitalView};
++  const api = {acquisitionView, compatibility, sameScope, wellFormed, create, readCapital, capitalView};
+   if (typeof module !== 'undefined' && module.exports) module.exports = api;
+   else globalThis.DTOSOfferComparison = api;
+ })();
+diff --git a/static/js/trade_workspace.js b/static/js/trade_workspace.js
+index e2a77742..d2dd8d0f 100644
+--- a/static/js/trade_workspace.js
++++ b/static/js/trade_workspace.js
+@@ -696,7 +696,7 @@
+     } catch (_) { return null; }
+   }
+   function restoreContext(value, includePrevious = true) {
+-    return {schema: 1, draft_capital_record: boundedEvidence(value.draft_capital_record), identity: boundedEvidence(value.identity || {}), exploration: value.exploration === true,
++    return {schema: 1, acquisition_comparison: boundedEvidence(value.acquisition_comparison), draft_capital_record: boundedEvidence(value.draft_capital_record), identity: boundedEvidence(value.identity || {}), exploration: value.exploration === true,
+       search_result_type: boundedEvidence(value.search_result_type), stale_reason: boundedEvidence(value.stale_reason), restored: true,
+       attempt_state: value.attempt_state || value.evaluation?.assessment_state?.state || 'fresh_incomplete',
+       previous_assessment: includePrevious && value.previous_assessment ? restoreContext(value.previous_assessment, false) : null,
+@@ -760,6 +760,7 @@
+             baseline: e.personalization?.baseline_generation, method: e.personalization?.method},
+           methodLabel: String(e.personalization?.method || '').includes('relative') ? 'Relative priced order' :
+             String(e.personalization?.method || '').includes('absolute') ? 'Absolute slot' : 'Custom method not retained',
++          acquisition: boundedEvidence(context?.acquisition_comparison),
+           neutral: {availability: evidence.availability, sent: evidence.sent?.total, received: evidence.received?.total},
+           personal: {availability: personal.availability, sent: personal.sent?.total, received: personal.received?.total},
+           lineup: d.lineup_comparisons.current_week || {}, depth, capacity,
+@@ -782,7 +783,7 @@
+     // Independently bounded ownership evidence must survive even when the
+     // existing 512-node analytical disclosure is full. The 64k context and
+     // 100k offer limits remain unchanged; truncation never implies zero.
+-    const context = {schema: 1, draft_capital_record: boundedEvidence(e.draft_capital_record), evaluation: boundedEvidence(compactRetainedEvaluation(Object.fromEntries(keys.filter(key => key in e).map(key => [key, e[key]])))),
++    const context = {schema: 1, acquisition_comparison: boundedEvidence(row.acquisition_comparison), draft_capital_record: boundedEvidence(e.draft_capital_record), evaluation: boundedEvidence(compactRetainedEvaluation(Object.fromEntries(keys.filter(key => key in e).map(key => [key, e[key]])))),
+       exploration: row.exploration === true, search_result_type: row.search_result_type || null,
+       opportunity: boundedEvidence(row.opportunity || null),
+       identity: {personalization: JSON.stringify(personalPayload()), package: packageIdentity(row.proposal || selected), strategy: row.home_assessment_strategy ?? el('trade-strategy').value,
+@@ -1348,6 +1349,7 @@
+     const decision = decisionPresentation(e);
+     if (decision.qualification) card.append(node('p', decision.qualification, 'tw-verdict-qualification'));
+     appendDecisionLead(card, decision);
++    window.DTOSOfferComparison.acquisitionView(card, context?.acquisition_comparison, node, displayMarket, retained);
+     if (row.repair_type) card.append(node('p', row.repair_type));
+     if (row.adjustment_evidence?.concept === 'strictly_lower_canonical_outgoing_market_cost') {
+       const cost = row.adjustment_evidence;
+diff --git a/tests/test_canonical_harness_lifecycle.py b/tests/test_canonical_harness_lifecycle.py
+index c2df332e..6120dc40 100644
+--- a/tests/test_canonical_harness_lifecycle.py
++++ b/tests/test_canonical_harness_lifecycle.py
+@@ -4,6 +4,7 @@ from hashlib import sha256
+ import json
+ import os
+ from pathlib import Path
++import re
+ import signal
+ import subprocess
+ import sys
+@@ -89,9 +90,22 @@ class CanonicalHarnessLifecycleTests(unittest.TestCase):
+         self.assertIn('[sys.executable, "-m", "tools.validation.validate_release"]', source)
+         self.assertIn('--memory 2g --memory-swap 2g --cpus 2 --network none', source)
+         product = WORKFLOW.with_name('product-browser.yml').read_text()
+-        self.assertIn('    timeout-minutes: 45\n', product)
+-        self.assertIn('        timeout-minutes: 25\n', product)
+-        self.assertIn('--memory=2g --memory-swap=2g --cpus=2 --network=none', product)
++        # This is the complete-corpus orchestration allowance, not an
++        # application/search timeout or a responsiveness performance threshold.
++        # Run43327175874 exhausted the old25-minute batch before completion.
++        # Check the actual owning blocks; a matching comment/other job cannot
++        # satisfy the contract. Preserve10minutes for other steps/cleanup.
++        job = re.search(r'(?ms)^  product-browser:\n(.*?)(?=^  [\w-]+:\n|\Z)', product)
++        self.assertIsNotNone(job)
++        job_minutes = int(re.search(r'(?m)^    timeout-minutes: (\d+)$', job[1])[1])
++        batch = job[1].split('      - name: Authenticated product, interaction and accessibility contracts\n', 1)[1].split('\n      - ', 1)[0]
++        batch_minutes = int(re.search(r'(?m)^        timeout-minutes: (\d+)$', batch)[1])
++        self.assertEqual(job_minutes, 45)
++        self.assertEqual(batch_minutes, 35)
++        self.assertLess(batch_minutes, job_minutes)
++        self.assertEqual(job_minutes - batch_minutes, 10)
++        self.assertIn('python -m unittest', batch)
++        self.assertIn('--memory=2g --memory-swap=2g --cpus=2 --network=none', batch)
+ 
+ 
+ if __name__ == '__main__':
+diff --git a/tests/test_trade_for_acquisition.py b/tests/test_trade_for_acquisition.py
+new file mode 100644
+index 00000000..280600fe
+--- /dev/null
++++ b/tests/test_trade_for_acquisition.py
+@@ -0,0 +1,276 @@
++"""Exact prepared-offer selection, not a second evaluator or price engine."""
++
++from copy import deepcopy
++from dataclasses import replace
++import unittest
++from unittest.mock import patch
++
++from services.trade_for_acquisition import cost_evidence, select_offers
++from services.trade_intelligence import _distinct_trade_for_offers
++from src.core.trade_intelligence.market_balance import market_balance
++from tests.test_batch5_trade_strategy import asset
++
++
++def panel():
++    assets = {
++        key: asset(key, price, owner)
++        for key, price, owner in (
++            ("a", 400, 1),
++            ("b", 250, 1),
++            ("d", 100, 1),
++            ("target", 600, 2),
++            ("extra", 100, 2),
++        )
++    }
++    for key, origin, price in [("2029-R1-1", 1, 200), ("2029-R1-3", 3, 150)]:
++        assets[key] = replace(
++            asset(key, price, 1),
++            kind="pick",
++            position=None,
++            season=2029,
++            round=1,
++            original_roster_id=origin,
++            current_owner_id=1,
++        )
++    return assets
++
++
++def row(assets, sent, received=None, verdict="WORTH PURSUING"):
++    received = received or ["target"]
++    return {
++        "proposal": {
++            "active_roster_id": 1,
++            "partner_roster_id": 2,
++            "assets_sent": sent,
++            "assets_received": received,
++        },
++        "evaluation": {
++            "legal": True,
++            "recommendation": verdict,
++            "generated_trade_eligible": verdict == "WORTH PURSUING",
++            "legality": {
++                "execution_status": "NO IDENTIFIED OWNERSHIP OR CAPACITY BLOCKER"
++            },
++            "dimensions": {
++                "counterparty_plausibility": {"assessment": "PLAUSIBLE"},
++                "confidence": {"assessment": "HIGH"},
++            },
++            "market_evidence": market_balance(
++                tuple(assets[k] for k in sent), tuple(assets[k] for k in received)
++            ),
++        },
++    }
++
++
++def select(rows, assets):
++    return select_offers(rows, assets, "target", _distinct_trade_for_offers)
++
++
++class AcquisitionSelectionTests(unittest.TestCase):
++    def setUp(self):
++        self.assets = panel()
++
++    def test_distinct_cost_and_fit_retained_without_rewriting_evaluation(self):
++        rows = [
++            row(self.assets, ["a"]),
++            row(self.assets, ["b"]),
++            row(self.assets, ["d"]),
++        ]
++        before = deepcopy(rows)
++        chosen = select(rows, self.assets)
++        self.assertEqual(chosen[0]["acquisition_comparison"]["roles"], ["best_fit"])
++        self.assertEqual(chosen[1]["proposal"]["assets_sent"], ["d"])
++        self.assertEqual(chosen[1]["acquisition_comparison"]["roles"], ["lowest_cost"])
++        self.assertEqual(chosen[1]["acquisition_comparison"]["cost"]["outgoing"], 100)
++        self.assertEqual(chosen[0]["acquisition_comparison"]["cost"]["outgoing"], 400)
++        self.assertEqual(rows, before)
++        self.assertTrue(
++            all(
++                r["evaluation"]
++                is rows[[x["proposal"] for x in rows].index(r["proposal"])][
++                    "evaluation"
++                ]
++                for r in chosen
++            )
++        )
++
++    def test_shape_pruning_cannot_hide_cheaper_same_shape(self):
++        rows = [
++            row(self.assets, ["a"]),
++            row(self.assets, ["a", "b"]),
++            row(self.assets, ["a", "b", "d"]),
++            row(self.assets, ["d"]),
++        ]
++        self.assertIn(
++            ["d"], [r["proposal"]["assets_sent"] for r in select(rows, self.assets)]
++        )
++        self.assertEqual(len(select(rows, self.assets)), 3)
++
++    def test_equivalent_pick_dedup_cannot_hide_lower_exact_pick_cost(self):
++        rows = [
++            row(self.assets, ["a", "2029-R1-1"]),
++            row(self.assets, ["a", "2029-R1-3"]),
++        ]
++        self.assertEqual(len(_distinct_trade_for_offers(rows, self.assets)), 1)
++        chosen = select(rows, self.assets)
++        self.assertEqual(len(chosen), 2)
++        self.assertEqual(chosen[1]["proposal"]["assets_sent"], ["a", "2029-R1-3"])
++        self.assertEqual(chosen[1]["acquisition_comparison"]["cost"]["outgoing"], 550)
++
++    def test_same_offer_gets_both_roles_once(self):
++        chosen = select([row(self.assets, ["d"])], self.assets)
++        self.assertEqual(len(chosen), 1)
++        self.assertEqual(
++            chosen[0]["acquisition_comparison"]["roles"], ["best_fit", "lowest_cost"]
++        )
++
++    def test_cheaper_rejection_or_low_bilateral_support_cannot_win(self):
++        for kind in ("rejected", "counterparty", "confidence", "capacity"):
++            cheap = row(self.assets, ["d"], verdict="FAIR / OPTIONAL")
++            if kind == "rejected":
++                cheap["evaluation"]["recommendation"] = "REJECT"
++            elif kind == "capacity":
++                cheap["evaluation"]["legality"]["execution_status"] = (
++                    "REQUIRES ROSTER RESOLUTION"
++                )
++            else:
++                key = (
++                    "counterparty_plausibility"
++                    if kind == "counterparty"
++                    else "confidence"
++                )
++                cheap["evaluation"]["dimensions"][key]["assessment"] = "LOW"
++            with self.subTest(kind=kind):
++                chosen = select([row(self.assets, ["a"]), cheap], self.assets)
++                self.assertEqual(len(chosen), 1)
++                self.assertEqual(
++                    chosen[0]["acquisition_comparison"]["roles"],
++                    ["best_fit", "lowest_cost"],
++                )
++
++    def test_fair_remains_optional_not_promoted(self):
++        rows = [
++            row(self.assets, ["a"]),
++            row(self.assets, ["d"], verdict="FAIR / OPTIONAL"),
++        ]
++        self.assertEqual(
++            select(rows, self.assets)[1]["evaluation"]["recommendation"],
++            "FAIR / OPTIONAL",
++        )
++        self.assertFalse(
++            select(rows, self.assets)[1]["evaluation"]["generated_trade_eligible"]
++        )
++
++    def test_extra_incoming_assets_separated_from_gross_and_net(self):
++        chosen = select(
++            [row(self.assets, ["a"], ["target", "extra"]), row(self.assets, ["d"])],
++            self.assets,
++        )
++        cost = chosen[0]["acquisition_comparison"]["cost"]
++        self.assertEqual(
++            (cost["outgoing"], cost["incoming"], cost["net_received_minus_sent"]),
++            (400, 700, 300),
++        )
++        self.assertEqual(cost["extra_received_asset_ids"], ["extra"])
++        self.assertEqual(cost["extra_received_value"], 100)
++        self.assertEqual(
++            chosen[1]["acquisition_comparison"]["cost"]["extra_received_value"], 0
++        )
++
++    def test_missing_price_does_not_win_or_become_zero(self):
++        rows = [row(self.assets, ["a"]), row(self.assets, ["d"])]
++        assets = {**self.assets, "d": replace(self.assets["d"], trade_value=None)}
++        chosen = select(rows, assets)
++        self.assertEqual(
++            chosen[0]["acquisition_comparison"]["roles"], ["best_fit", "lowest_cost"]
++        )
++        self.assertEqual(
++            chosen[1]["acquisition_comparison"]["cost"]["availability"], "unknown"
++        )
++
++    def test_incompatible_units_or_partial_evidence_cannot_win(self):
++        for change in (
++            {"unit": "personal_rank_slot_value"},
++            {"availability": "partial"},
++        ):
++            rows = [row(self.assets, ["a"]), row(self.assets, ["d"])]
++            rows[1]["evaluation"]["market_evidence"].update(change)
++            with self.subTest(change=change):
++                self.assertEqual(
++                    select(rows, self.assets)[1]["acquisition_comparison"]["roles"], []
++                )
++
++    def test_ties_use_existing_fit_order_without_rounding(self):
++        assets = {**self.assets, "b": replace(self.assets["b"], trade_value=400)}
++        rows = [row(assets, ["a"]), row(assets, ["b"])]
++        chosen = select(rows, assets)
++        self.assertEqual(chosen[0]["acquisition_comparison"]["lowest_cost_ties"], 2)
++        self.assertEqual(chosen[1]["acquisition_comparison"]["roles"], [])
++        assets["b"] = replace(assets["b"], trade_value=399.999999)
++        self.assertEqual(
++            select([row(assets, ["a"]), row(assets, ["b"])], assets)[1][
++                "acquisition_comparison"
++            ]["roles"],
++            ["lowest_cost"],
++        )
++
++    def test_explicit_zero_supported(self):
++        assets = {**self.assets, "d": replace(self.assets["d"], trade_value=0)}
++        chosen = select([row(assets, ["a"]), row(assets, ["d"])], assets)
++        self.assertEqual(chosen[1]["acquisition_comparison"]["cost"]["outgoing"], 0)
++        self.assertEqual(chosen[1]["acquisition_comparison"]["roles"], ["lowest_cost"])
++
++    def test_duplicate_wrong_owner_and_invalid_pick_stay_unknown(self):
++        for sent in (["a", "a"], ["target"], ["2029-R1-3"]):
++            assets = dict(self.assets)
++            if sent == ["2029-R1-3"]:
++                assets[sent[0]] = replace(assets[sent[0]], original_roster_id=None)
++            r = row(assets, sent)
++            self.assertEqual(
++                cost_evidence(r, assets, "target")["availability"], "unknown"
++            )
++
++    def test_stale_pool_prices_do_not_reprice_retained_evaluation(self):
++        r = row(self.assets, ["a"])
++        assets = {**self.assets, "a": replace(self.assets["a"], trade_value=10)}
++        self.assertEqual(cost_evidence(r, assets, "target")["availability"], "unknown")
++        self.assertEqual(r["evaluation"]["market_evidence"]["sent"]["total"], 400)
++
++    def test_custom_values_never_supply_neutral_cost(self):
++        for method in ("absolute_slot_v1", "relative_priced_order_v1"):
++            r = row(self.assets, ["a"])
++            r["evaluation"].update(
++                personalization={"mode": "custom", "method": method, "revision": 4},
++                values={"sent": 10},
++                personal_value_evidence={"sent": {"total": 10}},
++            )
++            self.assertEqual(
++                select([r], self.assets)[0]["acquisition_comparison"]["cost"][
++                    "outgoing"
++                ],
++                400,
++            )
++
++    def test_no_eligible_offers_is_empty_not_a_fabricated_tier(self):
++        self.assertEqual(select([], self.assets), [])
++        self.assertEqual(
++            select([row(self.assets, ["d"], verdict="REJECT")], self.assets), []
++        )
++
++    def test_selection_is_pure_no_search_or_repair(self):
++        r = row(self.assets, ["a"])
++        with (
++            patch(
++                "services.trade_intelligence.generate_proposals",
++                side_effect=AssertionError("search"),
++            ),
++            patch(
++                "services.trade_intelligence.evaluate_trade_request",
++                side_effect=AssertionError("evaluation"),
++            ),
++            patch(
++                "services.trade_cheaper_repair.cheaper_phase",
++                side_effect=AssertionError("repair"),
++            ),
++        ):
++            self.assertEqual(len(select([r], self.assets)), 1)
+diff --git a/tests/test_trade_for_acquisition_browser.py b/tests/test_trade_for_acquisition_browser.py
+new file mode 100644
+index 00000000..25ef591c
+--- /dev/null
++++ b/tests/test_trade_for_acquisition_browser.py
+@@ -0,0 +1,265 @@
++"""Prepared-offer presentation, phone state and zero incidental HTTP work.
++
++Selection/evaluator integration has separate source-backed controls. These
++browser responses are explicitly disposable prepared-assessment fixtures.
++"""
++
++from contextlib import contextmanager
++from unittest.mock import patch
++from components.trade_workspace import trade_workspace
++from copy import deepcopy
++import json
++import os
++from pathlib import Path
++import unittest
++from tests import test_trade_scout_state_browser as scout
++from tests.test_trade_for_acquisition import panel, row, select
++
++
++class AcquisitionBrowserTests(unittest.TestCase):
++    @contextmanager
++    def page(self, width, **kwargs):
++        # Reuse the real, explicit-Generate Market handoff presentation contract.
++        def render(view, *args):
++            return trade_workspace(
++                {
++                    **view,
++                    "market_need": {
++                        "name": "X",
++                        "reason": "Supported fixture position relevance.",
++                    },
++                },
++                *args,
++            )
++
++        with (
++            patch(
++                "tests.test_trade_scout_state_browser.trade_workspace",
++                side_effect=render,
++            ),
++            scout.ScoutWorkspaceStateBrowserTests().page(width, **kwargs) as result,
++        ):
++            yield result
++
++    def offer_panel(self):
++        assets = panel()
++        rows = select(
++            [
++                row(assets, ["a"], ["target", "extra"]),
++                row(assets, ["b"]),
++                row(assets, ["d"], verdict="FAIR / OPTIONAL"),
++            ],
++            assets,
++        )
++        mapping = {
++            "a": "player:a",
++            "b": "player:b",
++            "d": "player:d",
++            "target": "player:x",
++            "extra": "player:y",
++        }
++        # Preserve canonical assessment values; map only fixture identity spelling
++        # into the existing browser harness's exact player namespace.
++        for r in rows:
++            r["evaluation"]["provenance"] = {
++                "evaluation_id": "fixture-" + "-".join(r["proposal"]["assets_sent"])
++            }
++            for field in ("assets_sent", "assets_received"):
++                r["proposal"][field] = [mapping.get(k, k) for k in r["proposal"][field]]
++            r["acquisition_comparison"]["cost"]["extra_received_asset_ids"] = [
++                mapping.get(k, k)
++                for k in r["acquisition_comparison"]["cost"]["extra_received_asset_ids"]
++            ]
++        return rows
++
++    def record(self, page, width, rows, requests):
++        folder = os.environ.get("DTOS_ACQUISITION_EVIDENCE")
++        if folder:
++            root = Path(folder)
++            root.mkdir(parents=True, exist_ok=True)
++            (root / f"phone-{width}.json").write_text(
++                json.dumps(
++                    dict(
++                        width=width,
++                        physical_safari=False,
++                        source="Disposable prepared-offer browser fixture",
++                        rows=rows,
++                        operations=[{"path": p, "payload": v} for p, v in requests],
++                        no_overflow=page.evaluate(
++                            "document.documentElement.scrollWidth"
++                        )
++                        <= width + 1,
++                    ),
++                    indent=2,
++                )
++                + "\n"
++            )
++            page.screenshot(path=str(root / f"phone-{width}.png"), full_page=True)
++
++    def test_cost_fit_preview_comparison_back_reload_are_readonly(self):
++        harness = scout.ScoutWorkspaceStateBrowserTests()
++        rows = self.offer_panel()
++        for width, height in ((320, 432), (375, 667), (390, 844), (1280, 900)):
++            with self.subTest(width=width):
++
++                def api(route, payload):
++                    self.assertTrue(
++                        route.request.url.endswith("/generate"),
++                        "Opening results must not evaluate or repair",
++                    )
++                    route.fulfill(
++                        json={
++                            "workflow": "trade_for",
++                            "results": deepcopy(rows),
++                            "count": len(rows),
++                        }
++                    )
++
++                with self.page(width, api=api) as (page, requests):
++                    page.set_viewport_size({"width": width, "height": height})
++                    # Existing Market entry contract requires explicit Generate.
++                    harness.ready(page, "/trades/trade-for?asset_id=player:x")
++                    self.assertEqual(requests, [])
++                    page.locator("#trade-find").focus()
++                    page.locator("#trade-find").press("Enter")
++                    page.locator(".tw-acquisition-role").first.wait_for()
++                    self.assertIn(
++                        "Best-supported fit found",
++                        page.locator(".tw-offer").first.inner_text(),
++                    )
++                    cheap = (
++                        page.locator(".tw-offer")
++                        .filter(has_text="Lowest-cost supported offer found")
++                        .first
++                    )
++                    self.assertIn(
++                        "Gross outgoing Neutral Market cost: 100", cheap.inner_text()
++                    )
++                    self.assertIn("FAIR / OPTIONAL", cheap.inner_text())
++                    best = page.locator(".tw-offer").first
++                    self.assertIn(
++                        "additional incoming assets worth 100", best.inner_text()
++                    )
++                    self.assertIn("not equivalent purchases", best.inner_text())
++                    self.assertIn("not a global minimum", best.inner_text())
++                    count = len(requests)
++                    best.get_by_role(
++                        "button", name="Add to comparison", exact=False
++                    ).click()
++                    cheap.get_by_role(
++                        "button", name="Add to comparison", exact=False
++                    ).click()
++                    page.get_by_role(
++                        "button", name="Compare selected offers", exact=True
++                    ).click()
++                    panel = page.locator("#trade-comparison")
++                    panel.get_by_text("Best-supported fit found", exact=True).wait_for()
++                    self.assertIn(
++                        "Lowest-cost supported offer found", panel.inner_text()
++                    )
++                    self.assertIn("400", panel.inner_text())
++                    self.assertIn("100", panel.inner_text())
++                    self.assertEqual(len(requests), count)
++                    page.get_by_role(
++                        "button", name="Return to my offer or draft", exact=True
++                    ).click()
++                    cheap = (
++                        page.locator(".tw-offer")
++                        .filter(has_text="Lowest-cost supported offer found")
++                        .first
++                    )
++                    if width == 390:
++                        touch = page.context.new_cdp_session(page)
++                        touch.send(
++                            "Emulation.setTouchEmulationEnabled", {"enabled": True}
++                        )
++                        control = cheap.get_by_role(
++                            "button", name="Open editable offer:", exact=False
++                        )
++                        control.scroll_into_view_if_needed()
++                        box = control.bounding_box()
++                        touch.send(
++                            "Input.dispatchTouchEvent",
++                            {
++                                "type": "touchStart",
++                                "touchPoints": [
++                                    {
++                                        "x": box["x"] + box["width"] / 2,
++                                        "y": box["y"] + box["height"] / 2,
++                                    }
++                                ],
++                            },
++                        )
++                        touch.send(
++                            "Input.dispatchTouchEvent",
++                            {"type": "touchEnd", "touchPoints": []},
++                        )
++                        touch.send(
++                            "Emulation.setTouchEmulationEnabled", {"enabled": False}
++                        )
++                        touch.detach()
++                    else:
++                        cheap.get_by_role(
++                            "button", name="Open editable offer:", exact=False
++                        ).click()
++                    self.assertIn(
++                        "Lowest-cost supported offer found",
++                        page.locator("#trade-result").inner_text(),
++                    )
++                    page.get_by_role(
++                        "button", name="Adopt alternative", exact=True
++                    ).click()
++                    self.assertEqual(harness.proposal(page)["sent"], ["player:d"])
++                    self.assertEqual(harness.proposal(page)["received"], ["player:x"])
++                    page.reload()
++                    page.locator("#trade-target:not([hidden])").wait_for()
++                    self.assertEqual(harness.proposal(page)["sent"], ["player:d"])
++                    self.assertEqual(len(requests), count)
++                    self.assertLessEqual(
++                        page.evaluate("document.documentElement.scrollWidth"), width + 1
++                    )
++                    self.record(page, width, rows, requests)
++
++    def test_same_offer_roles_not_duplicate_and_unknown_cost_is_explicit(self):
++        harness = scout.ScoutWorkspaceStateBrowserTests()
++        assets = panel()
++        only = select([row(assets, ["d"])], assets)[0]
++        only["proposal"]["assets_sent"] = ["player:d"]
++        only["proposal"]["assets_received"] = ["player:x"]
++        with self.page(
++            320,
++            api=lambda route, payload: route.fulfill(
++                json={"results": [only], "count": 1}
++            ),
++        ) as (page, requests):
++            harness.ready(page, "/trades/trade-for?asset_id=player:x")
++            page.click("#trade-find")
++            page.locator(".tw-acquisition-role").wait_for()
++            self.assertEqual(page.locator(".tw-offer").count(), 1)
++            self.assertIn(
++                "Best-supported fit found · Lowest-cost supported offer found",
++                page.locator(".tw-acquisition-role").inner_text(),
++            )
++        unknown = deepcopy(only)
++        unknown["acquisition_comparison"]["roles"] = ["best_fit"]
++        unknown["acquisition_comparison"]["cost"] = {
++            "availability": "unknown",
++            "reason": "Complete compatible Neutral Market cost is unavailable for this assessment.",
++        }
++        with self.page(
++            320,
++            api=lambda route, payload: route.fulfill(
++                json={"results": [unknown], "count": 1}
++            ),
++        ) as (page, requests):
++            harness.ready(page, "/trades/trade-for?asset_id=player:x")
++            page.click("#trade-find")
++            page.locator(".tw-acquisition-role").wait_for()
++            self.assertIn(
++                "Complete compatible Neutral Market cost is unavailable",
++                page.locator(".tw-offer").inner_text(),
++            )
++            self.assertNotIn(
++                "Lowest-cost supported offer found",
++                page.locator(".tw-offer").inner_text(),
++            )
+diff --git a/tests/test_trade_for_acquisition_integration.py b/tests/test_trade_for_acquisition_integration.py
+new file mode 100644
+index 00000000..59c88b96
+--- /dev/null
++++ b/tests/test_trade_for_acquisition_integration.py
+@@ -0,0 +1,108 @@
++"""Existing canonical sources/search/evaluator; cost roles never alter verdicts."""
++
++from copy import deepcopy
++import unittest
++from unittest.mock import patch
++from services import trade_intelligence as trade
++from services.trade_for_acquisition import select_offers
++from tests import test_trade_discovery_repair as discovery
++from tests import test_offer_comparison_browser as comparison
++
++
++class AcquisitionIntegrationTests(unittest.TestCase):
++    def test_actual_bounded_search_keeps_cost_minimum_from_all_eligible_assessments(
++        self,
++    ):
++        fixture = discovery.DiscoveryRepairTests()
++        fixture.setUp()
++        self.addCleanup(fixture.doCleanups)
++        captured = []
++
++        def select(rows, *args, **kwargs):
++            captured.extend(deepcopy(rows))
++            return select_offers(rows, *args, **kwargs)
++
++        with patch("services.trade_for_acquisition.select_offers", side_effect=select):
++            result = fixture.search(
++                "trade_for", asset_id="2w", protected_assets=["1qb"]
++            )
++        self.assertTrue(result["results"])
++        self.assertTrue(captured)
++        priced = [
++            r
++            for r in captured
++            if r["evaluation"]["market_evidence"]["availability"] == "full"
++        ]
++        winner = next(
++            r
++            for r in result["results"]
++            if "lowest_cost" in r["acquisition_comparison"]["roles"]
++        )
++        self.assertEqual(
++            winner["acquisition_comparison"]["cost"]["outgoing"],
++            min(r["evaluation"]["market_evidence"]["sent"]["total"] for r in priced),
++        )
++        best = next(
++            r
++            for r in result["results"]
++            if "best_fit" in r["acquisition_comparison"]["roles"]
++        )
++        self.assertEqual(best["proposal"], captured[0]["proposal"])
++        for row in result["results"]:
++            self.assertNotIn("1qb", row["proposal"]["assets_sent"])
++            self.assertIn("2w", row["proposal"]["assets_received"])
++            manual = trade.evaluate_trade_request(
++                fixture.data,
++                {**row["proposal"], "workflow": "create"},
++                projection_reader=fixture.fixture.reader,
++            )
++            self.assertEqual(
++                row["evaluation"]["recommendation"],
++                manual["evaluation"]["recommendation"],
++            )
++            self.assertEqual(
++                row["evaluation"]["market_evidence"],
++                manual["evaluation"]["market_evidence"],
++            )
++        self.assertLessEqual(result["search_evidence"]["full_evaluations"], 240)
++
++    def test_granite_shaped_and_superflex_lineups_keep_shared_evaluator_values(self):
++        for sf in (False, True):
++            with self.subTest(superflex=sf):
++                f = comparison.OfferComparisonBrowserTests()
++                source, _, fixture = f.fixture(superflex=sf)
++                try:
++                    data = fixture.editor.data
++                    with patch(
++                        "services.trade_intelligence._trade_projection_service",
++                        return_value=fixture.capital.reader,
++                    ):
++                        payload = {
++                            "active_roster_id": 1,
++                            "partner_roster_id": 2,
++                            "assets_sent": ["a"],
++                            "assets_received": ["c"],
++                            "strategy": "WIN NOW",
++                        }
++                        manual = trade.evaluate_trade_request(
++                            data, {**payload, "workflow": "create"}
++                        )
++                        targeted = trade.evaluate_trade_request(
++                            data, {**payload, "workflow": "trade_for"}
++                        )
++                    self.assertEqual(
++                        manual["evaluation"]["market_evidence"],
++                        targeted["evaluation"]["market_evidence"],
++                    )
++                    self.assertEqual(
++                        manual["evaluation"]["recommendation"],
++                        targeted["evaluation"]["recommendation"],
++                    )
++                    self.assertEqual(
++                        manual["evaluation"]["decision_context"]["lineup_comparisons"],
++                        targeted["evaluation"]["decision_context"][
++                            "lineup_comparisons"
++                        ],
++                    )
++                finally:
++                    f.doCleanups()
+diff --git a/tests/test_trade_workflow_experience.py b/tests/test_trade_workflow_experience.py
+index e784d3e3..ad3b5c05 100644
+--- a/tests/test_trade_workflow_experience.py
++++ b/tests/test_trade_workflow_experience.py
+@@ -3,6 +3,7 @@
+ No production account writes. Held responses simulate transfer delays, not
+ fabricated recommendation results. Chromium/CDP is not physical Safari.
+ """
++import gc
+ import json
+ import os
+ from pathlib import Path
+@@ -15,14 +16,41 @@ from tests import test_home_opportunity_integrity as fixtures
+ from tools.validation.browser_runtime import launch_chromium
+ 
+ 
++def _collect_retired_fixture_objects(phase):
++    """Isolate normal browser scenarios from unreachable earlier fixture cycles.
++
++    Live publications, active requests and current fixtures keep their strong
++    references. Do not trim allocators, clear caches or change admission. The
++    whole test still includes collection and the real workload with GC enabled.
++    """
++    from src.platform.lifecycle import memory_snapshot
++
++    if not gc.isenabled():
++        raise AssertionError("Normal-execution browser controls require enabled GC")
++    before = memory_snapshot()
++    collected = gc.collect()
++    after = memory_snapshot()
++    print(json.dumps(dict(
++        event='retired_fixture_cleanup', phase=phase, collected=collected,
++        gc_enabled=gc.isenabled(), process_rss_before=before['rss_bytes'],
++        process_rss_after=after['rss_bytes'],
++        container_before=before.get('cgroup_current_bytes'),
++        container_after=after.get('cgroup_current_bytes'),
++        limit=after.get('cgroup_limit_bytes'),
++        scope='Unreachable test objects only; container delta may include asynchronous browser exit.'
++    )), flush=True)
++
++
+ class TradeWorkflowExperienceTests(unittest.TestCase):
+     def fixture(self):
++        _collect_retired_fixture_objects('before_fixture')
+         f = fixtures.OpportunityIntegrityTests()
+         f.setUp()
+         self.addCleanup(f.doCleanups)
+         return f
+ 
+     def page(self, browser, f, width=375, height=667):
++        _collect_retired_fixture_objects('before_viewport')
+         page = browser.new_page(viewport=dict(width=width, height=height))
+         page.set_default_timeout(10000)
+         records, held, errors = [], [], []

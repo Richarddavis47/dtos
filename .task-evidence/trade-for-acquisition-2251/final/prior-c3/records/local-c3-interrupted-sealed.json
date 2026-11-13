@@ -1,0 +1,81 @@
+{
+  "source": {
+    "baseline": "b8c3e6162630fea96fecee56c7a45ac0d5890971",
+    "candidate": "9d403f364698a68d4bddf984b85e635175330242",
+    "tree": "324163c1c97d72095b3cd271710243871a0fab15",
+    "branch": "feat/trade-for-cost-2251",
+    "version": "1.22.36",
+    "build": 2251,
+    "recorded_at": "2026-11-12T23:07:28.861517+00:00",
+    "expected_test_count": 4455,
+    "pr": 340
+  },
+  "archive_bytes": 24266950,
+  "archive_sha256": "3522b78ef7649ac54836f31c9bbefb31d6bd4f7092d7e23964f97a4f1d3ea3ff",
+  "manifest_entries": 188,
+  "original_members_verified": true,
+  "test_events": {
+    "start": 1748,
+    "stop": 1748
+  },
+  "outcome": "INCOMPLETE_INTERRUPTED_FOR_CI_ONLY_FINAL_SOURCE_CORRECTION",
+  "complete_local_regression_pass": false,
+  "result": {
+    "head": "9d403f364698a68d4bddf984b85e635175330242",
+    "tree": "324163c1c97d72095b3cd271710243871a0fab15",
+    "python": "3.14.3 (main, Apr  7 2026, 02:23:36) [GCC 12.2.0]",
+    "started_at": 1794525695.3200915,
+    "finished_at": 1794527265.780111,
+    "elapsed_seconds": 1570.4600203037262,
+    "exit_code": -2,
+    "passed": false,
+    "error": null,
+    "process_cleanup": {
+      "timeout_triggered": false,
+      "validator_pid": 16,
+      "validator_reaped": true
+    },
+    "cgroup_limit": 2147483648,
+    "cpus": 2,
+    "network": "none",
+    "final_memory": {
+      "rss_bytes": 47972352,
+      "vms_bytes": 128749568,
+      "system_available_bytes": 17019289600,
+      "memory_accounting_scope": "cgroup",
+      "cgroup_current_bytes": 820420608,
+      "cgroup_limit_bytes": 2147483648,
+      "cgroup_inactive_file_bytes": 39198720,
+      "cgroup_anonymous_bytes": 749928448,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0
+      }
+    },
+    "kernel_peak": 1357844480,
+    "fixture": "250 asset prepared sanitized foundation; disposable authenticated test transports"
+  },
+  "container": {
+    "Id": "ba8b601c8ff78a2cae03c24862602db63ee3c87ad95ec6e4398eb82b423a3c13",
+    "Image": "sha256:f70a0c6402700dfb954c99d8163d4164926f74435c34d2e7e462407151663ae6",
+    "State": {
+      "Status": "exited",
+      "Running": false,
+      "Paused": false,
+      "Restarting": false,
+      "OOMKilled": false,
+      "Dead": false,
+      "Pid": 0,
+      "ExitCode": 254,
+      "Error": "",
+      "StartedAt": "2026-11-12T23:21:34.385006136Z",
+      "FinishedAt": "2026-11-12T23:47:46.378645549Z"
+    }
+  },
+  "at": "2026-11-12T23:48:18.956480+00:00",
+  "scope": "No local test errors observed before interruption. Six preliminary gates passed; unit gate and subsequentthree did not finish. Original interrupted records never count as a completed pass."
+}

@@ -1,0 +1,26 @@
+{"timestamp":"2026-11-12T21:45:48.163030+00:00","event":"validator_start","pid":15,"parent_pid":6,"process_group":15}
+{"timestamp":"2026-11-12T21:45:48.163403+00:00","event":"validation_run_id_created","pid":15,"parent_pid":6,"run_id":"4fc006b269c74eb9b7f39a0dc4b1353a"}
+{"timestamp":"2026-11-12T21:45:48.163457+00:00","event":"release_validation_start","pid":15,"parent_pid":6,"root":"/app","run_id":"4fc006b269c74eb9b7f39a0dc4b1353a"}
+{"timestamp":"2026-11-12T21:45:48.177387+00:00","event":"documentation_validation_complete","pid":15,"parent_pid":6}
+{"timestamp":"2026-11-12T21:45:48.199231+00:00","event":"validation_step_launch","pid":15,"parent_pid":6,"step":"Committed whitespace","command":["git","show","--check","--oneline","HEAD"],"run_id":"4fc006b269c74eb9b7f39a0dc4b1353a"}
+{"timestamp":"2026-11-12T21:45:48.200866+00:00","event":"validation_child_started","pid":15,"parent_pid":6,"step":"Committed whitespace","child_pid":16}
+{"timestamp":"2026-11-12T21:45:48.207600+00:00","event":"validation_child_completed","pid":15,"parent_pid":6,"step":"Committed whitespace","child_pid":16,"return_code":0}
+{"timestamp":"2026-11-12T21:45:48.207753+00:00","event":"validation_step_launch","pid":15,"parent_pid":6,"step":"Working-tree whitespace","command":["git","diff","--check"],"run_id":"4fc006b269c74eb9b7f39a0dc4b1353a"}
+{"timestamp":"2026-11-12T21:45:48.208480+00:00","event":"validation_child_started","pid":15,"parent_pid":6,"step":"Working-tree whitespace","child_pid":17}
+{"timestamp":"2026-11-12T21:45:48.217295+00:00","event":"validation_child_completed","pid":15,"parent_pid":6,"step":"Working-tree whitespace","child_pid":17,"return_code":0}
+{"timestamp":"2026-11-12T21:45:48.217404+00:00","event":"validation_step_launch","pid":15,"parent_pid":6,"step":"Staged whitespace","command":["git","diff","--cached","--check"],"run_id":"4fc006b269c74eb9b7f39a0dc4b1353a"}
+{"timestamp":"2026-11-12T21:45:48.218177+00:00","event":"validation_child_started","pid":15,"parent_pid":6,"step":"Staged whitespace","child_pid":23}
+{"timestamp":"2026-11-12T21:45:48.221174+00:00","event":"validation_child_completed","pid":15,"parent_pid":6,"step":"Staged whitespace","child_pid":23,"return_code":0}
+{"timestamp":"2026-11-12T21:45:48.221358+00:00","event":"validation_step_launch","pid":15,"parent_pid":6,"step":"Python compilation","command":["/usr/local/bin/python","-m","compileall","-q","."],"run_id":"4fc006b269c74eb9b7f39a0dc4b1353a"}
+{"timestamp":"2026-11-12T21:45:48.221987+00:00","event":"validation_child_started","pid":15,"parent_pid":6,"step":"Python compilation","child_pid":24}
+{"timestamp":"2026-11-12T21:45:51.991083+00:00","event":"validation_child_completed","pid":15,"parent_pid":6,"step":"Python compilation","child_pid":24,"return_code":0}
+{"timestamp":"2026-11-12T21:45:51.991931+00:00","event":"validation_step_launch","pid":15,"parent_pid":6,"step":"Ruff","command":["/usr/local/bin/python","-m","ruff","check","."],"run_id":"4fc006b269c74eb9b7f39a0dc4b1353a"}
+{"timestamp":"2026-11-12T21:45:51.993229+00:00","event":"validation_child_started","pid":15,"parent_pid":6,"step":"Ruff","child_pid":25}
+{"timestamp":"2026-11-12T21:45:52.552066+00:00","event":"validation_child_completed","pid":15,"parent_pid":6,"step":"Ruff","child_pid":25,"return_code":0}
+{"timestamp":"2026-11-12T21:45:52.552228+00:00","event":"validation_step_launch","pid":15,"parent_pid":6,"step":"Dependency integrity","command":["/usr/local/bin/python","-m","pip","check"],"run_id":"4fc006b269c74eb9b7f39a0dc4b1353a"}
+{"timestamp":"2026-11-12T21:45:52.552853+00:00","event":"validation_child_started","pid":15,"parent_pid":6,"step":"Dependency integrity","child_pid":30}
+{"timestamp":"2026-11-12T21:45:54.034908+00:00","event":"validation_child_completed","pid":15,"parent_pid":6,"step":"Dependency integrity","child_pid":30,"return_code":0}
+{"timestamp":"2026-11-12T21:45:54.035064+00:00","event":"validation_step_launch","pid":15,"parent_pid":6,"step":"Unit and regression tests","command":["/usr/local/bin/python","-m","unittest","discover","-s","tests"],"run_id":"4fc006b269c74eb9b7f39a0dc4b1353a"}
+{"timestamp":"2026-11-12T21:45:54.036232+00:00","event":"validation_child_started","pid":15,"parent_pid":6,"step":"Unit and regression tests","child_pid":31}
+{"timestamp":"2026-11-12T22:59:07.666127+00:00","event":"validator_uncaught_exception","pid":15,"parent_pid":6,"exception_type":"KeyboardInterrupt","message":"","traceback":"Traceback (most recent call last):\n  File \"/app/tools/validation/validate_release.py\", line 30, in main\n    results = run_release_validation(ROOT, run_id)\n  File \"/app/src/platform/validation/release.py\", line 130, in run_release_validation\n    stdout, stderr = child.communicate()\n                     ~~~~~~~~~~~~~~~~~^^\n  File \"/usr/local/lib/python3.14/subprocess.py\", line 1220, in communicate\n    stdout, stderr = self._communicate(input, endtime, timeout)\n                     ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.14/subprocess.py\", line 2152, in _communicate\n    ready = selector.select(timeout)\n  File \"/usr/local/lib/python3.14/selectors.py\", line 398, in select\n    fd_event_list = self._selector.poll(timeout)\nKeyboardInterrupt\n"}
+{"timestamp":"2026-11-12T22:59:07.667160+00:00","event":"validator_exit","pid":15,"parent_pid":6,"exit_code":1}

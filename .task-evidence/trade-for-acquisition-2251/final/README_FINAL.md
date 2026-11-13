@@ -1,0 +1,29 @@
+# Trade For cost and fit — final handoff
+
+Released v1.22.36 / build 2251. Production readiness and seven bounded public smoke checks passed on commit `e7ecd1b72944e36481668554d05dc4e321e7b3de`, exact validated tree `1502404775deac8eb657d62b855bbac62aed374c`. PR https://github.com/Richarddavis47/dtos/pull/340 . Immutable release: https://github.com/Richarddavis47/dtos/releases/tag/v1.22.36 .
+
+## Customer outcome
+Trade For now retains the lowest fully supported gross outgoing Neutral Market cost among its existing eligible assessed offers alongside the existing strategic fit leader. Previously equivalent-pick/shape diversity could hide the cheaper eligible construction. Both roles on one offer produce one card. Other alternatives still fill the existing three-card limit. No additional discovery/evaluation is performed. Unsupported costs cannot win; ties follow existing fit order.
+
+Cards, editable previews and existing two-offer comparison distinguish outgoing cost, extra incoming assets and net exchange. Lower cost alone is not better, different extras are not equivalent purchases, and FAIR / OPTIONAL is not promoted. Original production/depth/roster-space/capital consequences and uncertainty remain attached. This is a bounded search result, not a global minimum, asking price or guaranteed acceptance.
+
+In the real canonical-evaluator disposable HTTP fixture,18 eligible assessments had complete costs. The fit leader sent645 and received650 including250 in additional incoming picks; the lowest-cost construction sent290 and received only the400 target; another shape cost390. These are exact fixture Market units, not current owner prices or live offers. A separate matched selection replay demonstrated old pruning hiding the100-cost construction behind a500-cost fit leader, without changing any assessment.
+
+## Exact identities
+Baseline `b8c3e6162630fea96fecee56c7a45ac0d5890971` (v1.22.35/build2250). Candidate `9943a3c220f0064c281bc9d53803afbf1ab03f49`. Validated tree `1502404775deac8eb657d62b855bbac62aed374c`. Squash merge/deployed commit `e7ecd1b72944e36481668554d05dc4e321e7b3de` has that identical tree and baseline as parent. The frozen tools-only Actions publisher `829a83da7ff358257f79c01d4ed30eccbe227050` on `release/2251-actions-publisher` was never merged/deployed; its scoped GITHUB_TOKEN prepared/read-back all attachments before source merge, then published the merged exact tree and verified immutable publication.
+
+## Independently checkable validation
+Local Python3.14.3 canonical:4,455 tests, all ten gates, exit0;746 manifest entries. Hosted canonical:4,455 tests, all ten gates;750 entries. All13 required hosted jobs passed against the exact source/tree; Product952 tests (762+35+155). Focused123, normal execution10, publisher151, harness/lifecycle4 and three native resource protocols passed. Supplemental capital2/history1/styled1 captures are separate from the unchanged full canonical manifest.
+
+Local full run enforced2GiB/no-extra-swap/2CPU/networknone, kernel peak2,078,744,576bytes and noOOM. Hosted kernel peak reached2GiB during intentional pressure fixtures; noOOM. Styled real-evaluator fixture peak1,068,314,624bytes, noOOM. Actual init-container cleanup verified. Finite samples do not establish continuous coverage or long-term leak freedom.
+
+All23 release attachments were manifest/size/SHA256 checked and independently read back by Actions. `evidence-manifest.json` and `SHA256SUMS` are release attachments. `Trade-For-Cost-Fit.zip` preserves full original final local evidence, controls, receipts and source patch. `Prior-attempts.zip` separately preserves failed/interrupted evidence, with exact original hosted canceled/partial ZIPs linked at commit b6098133c7fd4f4f994c77e7e60819d4ad0ab19b. Original consoles, test events, canonical traces and decoded hosted logs are directly readable here; oversized originals are split into ordered UTF8-safe parts without changing bytes. See manifest.json for whole and part checksums. Reassemble parts before parsing. The complete archives retain remaining telemetry and images.
+
+Earlier architecture failure, genuine local capacity deferrals, interrupted/canceled suites, Product orchestration timeout, outdated CI contract assertion, unsupported host cleanup failure and supplemental harness failures remain failed/incomplete as originally recorded. Full final checks were not inferred from those attempts. Fixture GC isolation did not prove the original exact cause or lower overall peak. CI batch allowance35minutes within unchanged45minute job changed only orchestration; application/worker/performance thresholds and resource policies were preserved.
+
+## Acceptance scope and remaining limitations
+No owner authenticated live search was performed: existing browser connector reports disconnected, and no Render Shell is exposed. Public production identity/smokes are live observations, not authenticated Trade acceptance. Four-size phone/desktop Chromium keyboard/touch emulation is fixture evidence, not physical iPhone/Safari. No production settings, lineups, rankings, goals, sources or actual trades were changed. No forced sync, FOIS rebuild, cold-entry bypass or infrastructure change.
+
+The existing legacy exact-target action can initiate one bounded search on entry. Fixture records distinguish that existing action from a subsequent explicit Generate, while editing controls and inspecting/comparing/returning add no HTTP work. The existing contextual Market handoff requires explicit Generate. Neither existing contract was changed by this release. No automatic Make It Cheaper was added.
+
+All core/platform, Sleeper authority, scoring, valuation, optimizer/evaluator, bilateral thresholds, exact identity/ownership and memory admission policies remain unchanged. Actual future offers may be absent, optional or evidence-limited; this feature does not manufacture recommendations.
