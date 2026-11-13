@@ -90,6 +90,8 @@ class ReserveQualityBrowserTests(unittest.TestCase):
                     primary_text = primary.inner_text()
                     self.assertNotIn('No material downside identified', primary_text)
                     self.assertIn('projected points from eligible backups fall', primary_text.casefold())
+                    self.assertNotIn('legal-replacement production', primary_text)
+                    self.assertIn('legal-replacement production', e['decision_context']['main_cost'])
                     self.assertIn(f'{39 * scoring:.2f}', primary_text)
                     self.assertIn('+0.00 projected points', primary_text)
                     self.assertEqual(e['decision_context']['lineup_comparisons']['current_week']['delta'], 0)
