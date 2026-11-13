@@ -364,7 +364,7 @@ class LeagueDiagnosticHTTPTests(unittest.TestCase):
             self.assertEqual(evaluation['recommendation'], 'WORTH PURSUING')
             from src.ui.home_trade_opportunities import cards
             output = cards([{**result.json(), 'home_offer': 'fixture'}], 1)
-            self.assertIn('Why this partner:', output)
+            self.assertIn('Partner fit (inferred):', output)
             self.assertIn('Cost and uncertainty:', output)
             self.assertIn('Why this partner?', self.client.get('/static/js/trade_workspace.js').text)
 

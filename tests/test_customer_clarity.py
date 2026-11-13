@@ -8,6 +8,7 @@ import os
 from pathlib import Path
 import unittest
 from unittest.mock import patch
+from urllib.parse import urlsplit
 
 from playwright.sync_api import sync_playwright
 from tests import test_contextual_back as navigation
@@ -185,10 +186,13 @@ class CustomerClarityTests(unittest.TestCase):
                         form.evaluate("f=>f.requestSubmit()")
                         page.wait_for_url("**/market?*q=c*")
                         page.locator(".market-asset").first.click()
-                        page.locator("a").filter(
-                            has_text="Open canonical dossier"
-                        ).click()
+                        dossier = page.get_by_role("link", name="Open player", exact=True)
+                        dossier_path = urlsplit(dossier.get_attribute("href")).path
+                        self.assertTrue(dossier_path.startswith("/players/"))
+                        self.assertTrue(dossier_path.removeprefix("/players/"))
+                        dossier.click()
                         page.wait_for_url("**/players/*")
+                        self.assertEqual(urlsplit(page.url).path, dossier_path)
                         page.evaluate("scrollTo(0,1000)")
                         page.wait_for_function(
                             'document.documentElement.classList.contains("dtos-back-docked")'

@@ -129,11 +129,25 @@ class TradePartnerHistoryBrowserTests(TestCase):
         original = initial['currentProposal']
         page.select_option('#trade-strategy', 'REBUILD')
         page.locator('#trade-find').click()
-        page.locator('#trade-result .tw-partner-history').first.wait_for(timeout=30000)
-        package = page.locator('#trade-result .tw-offer').first.locator(':scope > p').filter(has_text=re.compile(r'^You (send|receive):')).all_text_contents()
+        offer = page.locator('#trade-result .tw-offer').first
+        review = offer.get_by_role('button', name='Review trade', exact=True)
+        review.wait_for(timeout=30000)
+        package = offer.locator(':scope > p').filter(has_text=re.compile(r'^You (send|receive):')).all_text_contents()
         self.assertTrue(package)
+        # Partner history belongs to the organized review, not every compact
+        # offer card. Opening that prepared review does not adopt or evaluate.
+        self.assertEqual(offer.locator('.tw-partner-history').count(), 0)
+        before_review_posts = [r for r in requests if r[0] == 'POST']
+        review.focus()
+        page.keyboard.press('Enter')
+        page.locator('#trade-result .tw-offer-review .tw-partner-history').first.wait_for()
+        self.assertEqual([r for r in requests if r[0] == 'POST'], before_review_posts)
+        self.assertEqual(helper.draft(page)['currentProposal'], original)
+        clicked = helper.draft(page)['previewProposal']
+        self.assertIsNotNone(clicked)
+        expected = {k: clicked[k] for k in ('partner_roster_id','assets_sent','assets_received')}
+        self.assertEqual(page.locator('#trade-result .tw-offer-review').first.locator(':scope > p').filter(has_text=re.compile(r'^You (send|receive):')).all_text_contents(), package)
         rows = []
-        expected = None
         with patch('services.sleeper.sleeper_get', side_effect=AssertionError('navigation must not acquire a provider')):
             for width, height in [(320,432), (375,667), (390,844), (1280,900)]:
                 page.set_viewport_size({'width': width, 'height': height})

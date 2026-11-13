@@ -5,53 +5,11 @@ import os
 from pathlib import Path
 import unittest
 
-from html.parser import HTMLParser
+from tests.html_document import _Document, _class, _elements, _text
 from services.trade_explanation import render_trade_explanation
 from tests import test_trade_lineup_detail as native
 from tests import test_trade_for_acquisition_browser as prepared
 from tests import test_trade_scout_state_browser as scout
-
-
-class _Document(HTMLParser):
-    """Small structural reader for trusted rendered HTML, with no dependency."""
-    def __init__(self, html):
-        super().__init__(convert_charrefs=True)
-        self.root = dict(tag='root', attrs={}, children=[])
-        self.stack = [self.root]
-        self.feed(html)
-
-    def handle_starttag(self, tag, attrs):
-        element = dict(tag=tag, attrs=dict(attrs), children=[])
-        self.stack[-1]['children'].append(element)
-        if tag not in {'br', 'img', 'input', 'link', 'meta', 'hr', 'source', 'wbr'}:
-            self.stack.append(element)
-
-    def handle_endtag(self, tag):
-        for index in range(len(self.stack) - 1, 0, -1):
-            if self.stack[index]['tag'] == tag:
-                self.stack = self.stack[:index]
-                return
-
-    def handle_data(self, value):
-        self.stack[-1]['children'].append(value)
-
-
-def _elements(element, *, direct=False):
-    for child in element['children']:
-        if isinstance(child, dict):
-            yield child
-            if not direct:
-                yield from _elements(child)
-
-
-def _class(element, name, *, direct=False):
-    return next((child for child in _elements(element, direct=direct)
-                 if name in (child['attrs'].get('class') or '').split()), None)
-
-
-def _text(element):
-    return ''.join(_text(child) if isinstance(child, dict) else child
-                   for child in element['children'])
 
 
 class CustomerTradePresentationTests(unittest.TestCase):
@@ -198,6 +156,8 @@ class CustomerTradeJourneyTests(unittest.TestCase):
                     self.assertNotIn('Recorded partner qualification tail', compact_text)
                     self.assertNotIn('Recorded decision conditions tail', compact_text)
                     self.assertLess(len(compact_text.split()), len((partner_case + conditions).split()))
+                    if os.getenv('DTOS_CUSTOMER_TRADE_EVIDENCE'):
+                        comparison.screenshot(path=str(Path(os.environ['DTOS_CUSTOMER_TRADE_EVIDENCE']) / f'comparison-closed-{width}.png'))
                     recorded = compared.locator(':scope > details').filter(
                         has=page.get_by_text('Original assessment · both teams and evidence limits', exact=True))
                     recorded.locator(':scope > summary').focus()
@@ -205,6 +165,8 @@ class CustomerTradeJourneyTests(unittest.TestCase):
                     self.assertTrue(recorded.evaluate('e=>e.open'))
                     self.assertIn(partner_case, recorded.inner_text())
                     self.assertIn(conditions, recorded.inner_text())
+                    if os.getenv('DTOS_CUSTOMER_TRADE_EVIDENCE'):
+                        comparison.screenshot(path=str(Path(os.environ['DTOS_CUSTOMER_TRADE_EVIDENCE']) / f'comparison-open-{width}.png'))
                     self.assertEqual(len(requests), count)
                     self.assertEqual(harness.proposal(page), before)
                     page.get_by_role('button', name='Return to my offer or draft', exact=True).click()

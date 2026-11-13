@@ -4,7 +4,6 @@ import unittest
 from html import unescape
 from urllib.parse import urlencode
 from unittest.mock import AsyncMock, patch
-from bs4 import BeautifulSoup
 
 from components.commissioner import league_intelligence
 from routes.home import create_home_router
@@ -13,6 +12,7 @@ from tests import test_beginner_market as market_base
 from tests import test_trade_workspace_batch1 as trade_base
 from tests import test_historical_tracker_phase2 as history_base
 from tests.test_historical_tracker_phase2 import PICK, ROOT, DAY
+from tests.html_document import _Document, _class, _elements, _text
 
 
 class FinalMarketTests(unittest.TestCase):
@@ -225,11 +225,15 @@ class FinalCommissionerTests(unittest.TestCase):
             html = league_intelligence({"league_intelligence": data})
             for raw in (">None<", ">null<", ">nan<", ">inf<", ">-inf<", "Noneth", "None contender", "nan contender", "inf contender"):
                 self.assertNotIn(raw, html)
-            soup = BeautifulSoup(html, 'html.parser')
-            self.assertEqual(soup.select('.cd-intelligence > article'), [])
-            limits = soup.find('summary', string='League assessment limits')
+            document = _Document(html).root
+            grid = _class(document, 'cd-intelligence')
+            self.assertIsNotNone(grid)
+            self.assertEqual([item for item in _elements(grid, direct=True) if item['tag'] == 'article'], [])
+            limits = next((item for item in _elements(document) if item['tag'] == 'details'
+                           and any(child['tag'] == 'summary' and _text(child) == 'League assessment limits'
+                                   for child in _elements(item, direct=True))), None)
             self.assertIsNotNone(limits)
-            self.assertFalse(limits.parent.has_attr('open'))
+            self.assertNotIn('open', limits['attrs'])
             self.assertIn("No supported result is available for:", html)
             self.assertIn("Recorded classification counts are not established.", html)
         supported = dict.fromkeys(keys, None)

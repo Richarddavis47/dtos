@@ -54,14 +54,25 @@ class DiagnosticAgingBrowserTests(unittest.TestCase):
                                     200,
                                 )
                                 room = page.locator("#positional-depth")
-                                summary = room.get_by_text(
-                                    "Lineup eligibility and surplus", exact=True
-                                ).first
+                                detail = room.locator("article").first.locator("details").first
+                                summary = detail.locator(":scope > summary")
+                                self.assertFalse(detail.evaluate("e=>e.open"))
                                 summary.focus()
                                 page.keyboard.press("Enter")
+                                self.assertTrue(detail.evaluate("e=>e.open"))
                                 self.assertIn({"Fresh": "observations are recent", "Aging": "at least an hour old",
                                                "Stale": "at least six hours old"}[label], room.inner_text())
-                                original = json.loads(room.locator('.diagnostic-source-provenance pre').first.text_content())
+                                source = detail.locator('.diagnostic-source-provenance').first
+                                source.locator(':scope > summary').focus()
+                                page.keyboard.press('Enter')
+                                self.assertTrue(source.evaluate('e=>e.open'))
+                                technical = source.locator('details').first
+                                technical.locator(':scope > summary').focus()
+                                page.keyboard.press('Enter')
+                                self.assertTrue(technical.evaluate('e=>e.open'))
+                                original_json = technical.locator('pre')
+                                self.assertTrue(original_json.is_visible())
+                                original = json.loads(original_json.inner_text())
                                 self.assertEqual(original['projection_freshness'], [label])
                                 self.assertIn(
                                     "Projection updates:", room.inner_text()
@@ -88,7 +99,7 @@ class DiagnosticAgingBrowserTests(unittest.TestCase):
                                 summary.click()
                     with patch.object(diagnostics, "_now", return_value=f.observed):
                         page.goto("https://dtos.test/trades/create?front_office=1")
-                        page.get_by_label("Counterparty", exact=True).select_option("2")
+                        page.get_by_label("Trade partner", exact=True).select_option("2")
                         page.get_by_label("Trade strategy", exact=True).select_option(
                             "WIN NOW"
                         )
