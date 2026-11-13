@@ -61,7 +61,9 @@ class TradeActionabilityBrowserTests(unittest.TestCase):
                         self.assertIn(d['decision_next_step'], review.inner_text())
                         for key in ('your_side_summary', 'their_side_summary', 'decision_conditions'):
                             for line in d[key].splitlines():
-                                self.assertIn(line, review.inner_text())
+                                # Presentation translates prose; exact amounts and qualifications stay intact.
+                                expected = line.replace('Useful replacement production changes', 'Projected points from eligible backups change')
+                                self.assertIn(expected, review.inner_text())
                         self.assertEqual(len(records), 1)
                         page.get_by_role('button', name='Back to offers', exact=True).click()
                         self.assertEqual(page.locator('#trade-strategy').input_value(), 'REBUILD')
@@ -109,7 +111,9 @@ class TradeActionabilityBrowserTests(unittest.TestCase):
                 body = records[-1]['body']
                 self.assertFalse(any(r['evaluation']['generated_trade_eligible'] for r in body['results']))
                 self.assertIn('No qualified recommendations', page.locator('#trade-result').inner_text())
-                self.assertIn(body['zero_result_guidance']['message'], page.locator('#trade-result').inner_text())
+                self.assertIn('No bilateral recommendation', body['zero_result_guidance']['message'])
+                expected = body['zero_result_guidance']['message'].replace('No bilateral recommendation', 'No recommendation for both teams')
+                self.assertIn(expected, page.locator('#trade-result').inner_text())
                 self.assertIn('Main limit:', body['quiet_state'])
                 self.assertTrue(page.get_by_role('region', name='Other evaluated offers · not qualified').count())
                 self.assertNotIn('Why now', page.locator('#trade-result').inner_text())
