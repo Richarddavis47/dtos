@@ -4,6 +4,7 @@ from hashlib import sha256
 import json
 import os
 from pathlib import Path
+import re
 import signal
 import subprocess
 import sys
@@ -89,9 +90,22 @@ class CanonicalHarnessLifecycleTests(unittest.TestCase):
         self.assertIn('[sys.executable, "-m", "tools.validation.validate_release"]', source)
         self.assertIn('--memory 2g --memory-swap 2g --cpus 2 --network none', source)
         product = WORKFLOW.with_name('product-browser.yml').read_text()
-        self.assertIn('    timeout-minutes: 45\n', product)
-        self.assertIn('        timeout-minutes: 25\n', product)
-        self.assertIn('--memory=2g --memory-swap=2g --cpus=2 --network=none', product)
+        # This is the complete-corpus orchestration allowance, not an
+        # application/search timeout or a responsiveness performance threshold.
+        # Run43327175874 exhausted the old25-minute batch before completion.
+        # Check the actual owning blocks; a matching comment/other job cannot
+        # satisfy the contract. Preserve10minutes for other steps/cleanup.
+        job = re.search(r'(?ms)^  product-browser:\n(.*?)(?=^  [\w-]+:\n|\Z)', product)
+        self.assertIsNotNone(job)
+        job_minutes = int(re.search(r'(?m)^    timeout-minutes: (\d+)$', job[1])[1])
+        batch = job[1].split('      - name: Authenticated product, interaction and accessibility contracts\n', 1)[1].split('\n      - ', 1)[0]
+        batch_minutes = int(re.search(r'(?m)^        timeout-minutes: (\d+)$', batch)[1])
+        self.assertEqual(job_minutes, 45)
+        self.assertEqual(batch_minutes, 35)
+        self.assertLess(batch_minutes, job_minutes)
+        self.assertEqual(job_minutes - batch_minutes, 10)
+        self.assertIn('python -m unittest', batch)
+        self.assertIn('--memory=2g --memory-swap=2g --cpus=2 --network=none', batch)
 
 
 if __name__ == '__main__':

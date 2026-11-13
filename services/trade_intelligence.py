@@ -1504,19 +1504,12 @@ def generate_trade_workflow(data: dict[str, Any], payload: dict[str, Any]) -> di
             break
     if workflow == 'trade_for':
         from services.trade_search_policy import rank_key
+        from services.trade_for_acquisition import select_offers
         generated.sort(key=rank_key)
-        by_id = {a.asset_id: a for pool in workspace['pools'].values() for a in pool}
-        generated = _distinct_trade_for_offers(generated, by_id)
-        # Prefer different constructions before tiny variants with the same shape.
-        shapes, rest = {}, []
-        for row in generated:
-            shape = (tuple(sorted(by_id[i].kind for i in row['proposal']['assets_sent'])),
-                     tuple(sorted(by_id[i].kind for i in row['proposal']['assets_received'])))
-            if shape not in shapes:
-                shapes[shape] = row
-            else:
-                rest.append(row)
-        generated = list(shapes.values()) + rest
+        generated = personal_order(generated, personal_context(payload))
+        neutral = workspace.get('neutral_pools') or workspace['pools']
+        neutral_assets = {a.asset_id: a for pool in neutral.values() for a in pool}
+        generated = select_offers(generated, neutral_assets, target, _distinct_trade_for_offers)
     elif workflow == 'shop':
         from services.shop_asset_search import rank_returns
         assets = {a.asset_id: a for pool in workspace['pools'].values() for a in pool}
@@ -1539,14 +1532,11 @@ def generate_trade_workflow(data: dict[str, Any], payload: dict[str, Any]) -> di
             -int(row['evaluation']['dimensions'].get('league_partner_context', {}).get('soft_tie_break') or 0),
             row["evaluation"]["provenance"]["evaluation_id"],
         ))
-    generated = personal_order(generated, personal_context(payload))
+    if workflow != 'trade_for':
+        generated = personal_order(generated, personal_context(payload))
     for market in shop_markets:
         market['returns'] = personal_order(market['returns'], personal_context(payload))
     limit = 5 if workflow in {"shop", "recommended"} else 3
-    offer_labels = ("BEST SUPPORTED FIT FOUND", "ALTERNATIVE CONSTRUCTION", "ALTERNATIVE CONSTRUCTION") if workflow == "trade_for" else ()
-    for index, result in enumerate(generated[:limit]):
-        if index < len(offer_labels):
-            result["offer_level"] = offer_labels[index]
     next_paths = []
     closest_path = None
     if not generated and workflow == "trade_for" and target:

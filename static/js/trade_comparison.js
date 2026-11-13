@@ -116,6 +116,28 @@
     box.append(moves); return box;
   }
 
+  function acquisitionView(out, record, node, market, retained = false) {
+    if (!record) return;
+    const roles = record.roles || [], cost = record.cost || {};
+    const labels = [];
+    if (roles.includes('best_fit')) labels.push('Best-supported fit found');
+    if (roles.includes('lowest_cost')) labels.push('Lowest-cost supported offer found');
+    out.append(node('p', labels.join(' · ') || 'Different supported construction', 'tw-acquisition-role'));
+    const detail = node('details'); detail.append(node('summary', 'Acquisition cost evidence · Neutral Market'));
+    if (retained) out.append(node('small', 'Roles and costs belong to the recorded search, not a new assessment.'));
+    if (cost.availability === 'full' && [cost.outgoing, cost.incoming, cost.net_received_minus_sent, cost.extra_received_value].every(number)) {
+      out.append(node('p', 'Gross outgoing Neutral Market cost: ' + market(cost.outgoing)));
+      detail.append(node('p', 'All assets received: ' + market(cost.incoming) + ' · Net Market received minus sent: ' + market(cost.net_received_minus_sent) + '.'));
+      out.append(node('p', cost.extra_received_asset_ids?.length
+        ? 'Includes additional incoming assets worth ' + market(cost.extra_received_value) + ' beyond the exact target. Packages with different extras are not equivalent purchases.'
+        : 'No additional incoming assets beyond the exact target.'));
+    } else out.append(node('p', cost.reason || 'Complete compatible Neutral Market cost is unknown; this offer cannot be selected as lowest-cost.', 'tw-drawback'));
+    detail.append(node('small', 'Among ' + record.eligible_assessed + ' eligible assessed offers; ' + record.cost_comparable_assessed + ' have complete comparable Neutral Market costs. ' +
+      (record.lowest_cost_ties > 1 ? 'Lowest cost tied; existing fit ordering breaks the tie. ' : '') +
+      'Costs do not determine the original verdict.'));
+    out.append(node('small', 'Bounded search, not a global minimum, asking price or guarantee of acceptance. Lower cost does not establish a better trade.'));
+    out.append(detail);
+  }
   function create(options) {
     const {node, points, market, panel, tray, getEntries, setEntries, environment, details} = options;
     let returnFocus = null, returnScroll = 0;
@@ -131,6 +153,7 @@
     function offer(entry, index, comparison) {
       const out = node('article', null, 'tw-comparison-offer'); out.dataset.comparisonSlot = String(index + 1);
       out.append(capitalView(entry.context?.draft_capital_record, node, environment().scope, true));
+      acquisitionView(out, entry.summary.acquisition, node, market, entry.retained || entry.context?.restored);
       const s = entry.summary, depth = s.depth || {}, capacity = s.capacity || {};
       out.append(node('h4', 'Offer ' + (index + 1) + ' · ' + s.verdict),
         node('p', 'Counterparty: ' + s.partner), node('p', 'Assessment strategy: ' + (s.strategy || 'No selected goal')));
@@ -223,7 +246,7 @@
     refresh();
     return {add, refresh};
   }
-  const api = {compatibility, sameScope, wellFormed, create, readCapital, capitalView};
+  const api = {acquisitionView, compatibility, sameScope, wellFormed, create, readCapital, capitalView};
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else globalThis.DTOSOfferComparison = api;
 })();

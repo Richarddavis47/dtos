@@ -1,3 +1,9 @@
+# v1.22.36 / build 2251 — Trade For cost and fit
+
+Trade For preserves the best-supported fit and the lowest gross outgoing Neutral Market cost among eligible offers already assessed within the existing bounded search, before equivalent-pick and shape presentation pruning. One card carries both roles when they coincide. Missing/incompatible costs cannot win; ties preserve existing fit order. FAIR / OPTIONAL remains optional and all original bilateral judgments remain intact.
+
+Prepared offer cards, editable previews and the existing comparison distinguish outgoing cost, additional assets received and net Market exchange. Retained roles describe their original search, never new acceptance or an asking price. Custom valuations stay separately labeled. No new discovery, automatic repair, provider work, prices, lineup calculations, qualification thresholds or resource policy. See docs/audits/TRADE_FOR_ACQUISITION_2251.md.
+
 # v1.22.35 / build 2250 — Franchise changes from completed trades
 
 Franchise History extends its existing completed-trade observations with source-season selection, gross player and exact-pick acquisitions/disposals, and net transfers within the observed trade sample. Expandable identities group picks by draft year and round, distinguish original own picks, and link existing supporting deals, subsequent movements and pick conversions. Acquired-and-later-sent assets remain visible in both events.
