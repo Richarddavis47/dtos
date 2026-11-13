@@ -67,6 +67,11 @@ class CurrentSeasonHistoryBrowserTests(unittest.TestCase):
                                 page.wait_for_load_state('networkidle')
                                 timeline=page.locator('.franchise-timeline')
                                 text=timeline.inner_text()
+                                self.assertNotIn('Retrieved weeks:', text)
+                                coverage=timeline.locator('.fh-season .cx-evidence').first
+                                coverage.locator('summary').first.click()
+                                self.assertTrue(coverage.evaluate('e=>e.open'))
+                                text=timeline.inner_text()
                                 self.assertIn('Retrieved weeks: 1, 2, 3, 5, 6, 7, 8',text)
                                 self.assertIn('Refresh failed: weeks 4',text)
                                 self.assertIn('Observed-empty retrieved weeks: 1, 3, 5, 6, 7, 8',text)

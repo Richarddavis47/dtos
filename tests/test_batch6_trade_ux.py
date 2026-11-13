@@ -94,9 +94,9 @@ class TradeUXTests(unittest.TestCase):
                             compact_slots = card.locator(':scope > .tw-lineup-details').text_content()
                             compact_risks = card.locator(':scope > .tw-lineup-warning').all_text_contents()
                             original_count = page.locator('#trade-sent-chips .tw-asset').count()
-                            card.get_by_role('button', name='Open editable offer:', exact=False).click()
+                            card.get_by_role('button', name='Review trade', exact=False).click()
                             self.assertEqual(page.locator('#trade-sent-chips .tw-asset').count(), original_count)
-                            page.get_by_role('button', name='Adopt alternative', exact=True).click()
+                            page.get_by_role('button', name='Use this offer in my draft', exact=True).click()
                             # All evaluator evidence remains identical. The card
                             # deliberately promotes slot details/current risks out
                             # of its nested explanation; compare those separately.

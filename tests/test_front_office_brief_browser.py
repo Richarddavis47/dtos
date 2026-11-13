@@ -74,12 +74,12 @@ class FrontOfficeBriefBrowserTests(unittest.TestCase):
                         self.assertFalse(more.evaluate('e=>e.open'))
                         link = page.locator('.home-opportunity').get_by_role('link',name='Explore / Edit')
                         link.click()
-                        page.get_by_text('Alternative preview',exact=True).wait_for()
-                        page.get_by_role('button',name='Keep original',exact=True).click()
+                        page.get_by_text('Trade review',exact=True).wait_for()
+                        page.get_by_role('button',name='Back to your draft',exact=True).click()
                         page.goto('https://dtos.test/')
                         page.locator('.home-opportunity').wait_for()
                         page.locator('.home-opportunity').get_by_role('link',name='Explore / Edit').click()
-                        page.get_by_role('button',name='Adopt alternative',exact=True).click()
+                        page.get_by_role('button',name='Use this offer in my draft',exact=True).click()
                         self.assertIn('2028', page.locator('#trade-received-chips').inner_text())
                         self.assertFalse(errors,errors)
                         measurements.append(row)
@@ -182,9 +182,9 @@ class FrontOfficeBriefBrowserTests(unittest.TestCase):
                                 page.wait_for_function("document.querySelector('#home-opportunities').dataset.presentation !== 'loading'")
                             text = page.locator('#home-opportunity-status').inner_text()
                             if state == 'loading':
-                                self.assertIn('Reading prepared evidence', text)
+                                self.assertIn('Loading your team brief', text)
                             elif state == 'error':
-                                self.assertIn('unavailable', text)
+                                self.assertIn('could not be loaded', text)
                                 self.assertEqual(page.locator('#home-opportunity-cards article').count(), 0)
                             elif state == 'empty':
                                 self.assertIn('No actionable insight qualifies', text)

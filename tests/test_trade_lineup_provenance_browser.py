@@ -141,29 +141,23 @@ class LineupProvenanceBrowserTests(unittest.TestCase):
                         self.assertNotIn(
                             "WORTH PURSUING", card.locator("h3").first.inner_text()
                         )
-                        card.get_by_text(
-                            "Why this offer · evidence and risks", exact=True
-                        ).click()
-                        self.assertNotIn(
-                            "WORTH PURSUING",
-                            card.locator(".tw-final-verdict").inner_text(),
-                        )
-                        card.get_by_role(
-                            "button", name="Open editable offer: preview", exact=True
-                        ).click()
+                        card.get_by_role("button", name="Review trade", exact=True).click()
+                        review = page.locator(".tw-offer-review")
+                        review.locator(".tw-offer-sources > summary").click()
+                        self.assertNotIn("WORTH PURSUING", review.locator(".tw-final-verdict").inner_text())
                         page.get_by_role(
-                            "button", name="Keep original", exact=True
+                            "button", name="Back to offers", exact=True
                         ).click()
                         self.assertEqual(
                             next(iter(f.f.state(page).values()))["currentProposal"],
                             original_draft,
                         )
                         page.get_by_role(
-                            "button", name="Open editable offer: preview", exact=True
+                            "button", name="Review trade", exact=True
                         ).click()
                         page.reload()
                         page.get_by_role(
-                            "button", name="Adopt alternative", exact=True
+                            "button", name="Use this offer in my draft", exact=True
                         ).wait_for()
                         page.locator("#trade-result details").evaluate_all(
                             "rows=>rows.forEach(e=>e.open=true)"
@@ -187,7 +181,7 @@ class LineupProvenanceBrowserTests(unittest.TestCase):
                             )
                             self.assertIn("Their team · Next-N: -18.93", restored_text)
                         page.get_by_role(
-                            "button", name="Adopt alternative", exact=True
+                            "button", name="Use this offer in my draft", exact=True
                         ).click()
                         page.reload()
                         page.locator("#trade-context").wait_for()

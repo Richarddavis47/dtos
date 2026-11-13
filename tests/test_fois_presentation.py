@@ -139,7 +139,7 @@ class FOISPresentationTests(unittest.TestCase):
     def test_no_loaded_league_has_honest_empty_state(self) -> None:
         response = self._client(Mock(return_value={})).get("/fois")
         self.assertEqual(response.status_code, 200)
-        self.assertIn("No valid league is loaded", response.text)
+        self.assertIn("Choose a league first", response.text)
         self.assertNotIn("FOIS is ready", response.text)
 
     def test_single_persisted_league_is_safe_fallback(self) -> None:
@@ -166,8 +166,8 @@ class FOISPresentationTests(unittest.TestCase):
     def test_pending_generation_is_distinct_from_missing_data(self) -> None:
         response = self._client().get("/fois")
         self.assertEqual(response.status_code, 200)
-        self.assertIn("FOIS generation pending", response.text)
-        self.assertNotIn("FOIS data unavailable", response.text)
+        self.assertIn("Manager profiles are being prepared", response.text)
+        self.assertNotIn("Manager grades are not available", response.text)
 
     def test_rendering_does_not_change_score_output(self) -> None:
         before = self._persist_profiles("active-league", 1)[0]

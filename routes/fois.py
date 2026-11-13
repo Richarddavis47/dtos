@@ -18,6 +18,7 @@ from src.core.fois.render_cache import FOISRenderCache
 from src.core.fois.service import FOISService, fois_enabled
 from src.core.fois.state_delta import InvalidDeltaError
 from src.ui.intelligence_presentation import exact_rank, human_status, technical_details
+from src.ui.customer_experience import source_details
 from src.platform.account_context import current_account
 from src.platform.league_context import current_league_context
 from src.core.fois.process_execution import FOISExecutionBusy
@@ -52,16 +53,16 @@ def _evidence_state(score):
 def _availability_notice(service):
     context = current_league_context()
     if context is not None and context.runtime.lifecycle.get('fois_generation') == 'deferred':
-        return ('<p role="status">FOIS preparation is deferred to protect league availability. '
+        return ('<p role="status">Manager-grade preparation is waiting to keep your league available. '
                 'Wait for other preparation to finish, then retry. '
                 'Previous grades remain RETAINED / NOT REVALIDATED. '
                 'Your league, roster, Market and Trade remain usable.</p>')
     if context is None or context.fois_state == 'ready':
         return ''
     status = _generation_status(service)
-    message = ('FOIS is temporarily unavailable.' if status['state'] == 'failed' else
-               'FOIS preparation is pending.' if context.fois_state == 'pending' else
-               'Current FOIS is unavailable.')
+    message = ('Manager grades are temporarily unavailable.' if status['state'] == 'failed' else
+               'Manager grades are being prepared.' if context.fois_state == 'pending' else
+               'Current manager grades are not available.')
     if context.fois_state == 'retained':
         message += ' Previous grades are RETAINED / NOT REVALIDATED.'
     return '<p role="status" class="muted" data-fois-availability="' + context.fois_state + '">' + message + ' Your league, roster, Market and Trade remain usable.</p>'
@@ -174,7 +175,7 @@ def create_fois_router(
             scores = None
         except FOISMemoryDeferred:
             return JSONResponse({'league_id': league_id, 'generation_status': 'deferred',
-                'detail': 'FOIS preparation is deferred to protect league availability. Retry after other preparation finishes and memory is available. Previous grades remain RETAINED / NOT REVALIDATED.'},
+                'detail': 'Manager-grade preparation is waiting to keep your league available. Retry after other preparation finishes and memory is available. Previous grades remain RETAINED / NOT REVALIDATED.'},
                 status_code=503, headers={'Retry-After': '60'})
         except Exception:
             return JSONResponse({'league_id': league_id, 'generation_status': 'failed',
@@ -353,11 +354,11 @@ def create_fois_router(
         ))
         cards = "".join(
             f'<article class="card fois-leader" data-fois-current="true" data-fois-rank="{rank if score.overall_score is not None else "unavailable"}" data-fois-gm="{escape(score.gm_id or "")}">'
-            f'<div class="fois-rank"><span>League overall FOIS rank</span><b>{exact_rank(rank if score.overall_score is not None else None)}</b></div>'
-            f'<div><p class="eyebrow">{"RETAINED · NOT REVALIDATED" if not score.evidence_revalidated or _evidence_state(score) == "retained_not_revalidated" else "CURRENT"} · {exact_rank(rank if score.overall_score is not None else None, sum(row.overall_score is not None for row in ranked_scores))}</p><h3><a href="/fois/gms/{escape(score.gm_id or "")}?league_id={escape(score.league_id)}">{escape(score.gm_name or "GM")}</a></h3>'
+            f'<div class="fois-rank"><span>Manager grade rank</span><b>{exact_rank(rank if score.overall_score is not None else None)}</b></div>'
+            f'<div><p class="eyebrow">{"RETAINED / NOT REVALIDATED" if not score.evidence_revalidated or _evidence_state(score) == "retained_not_revalidated" else "CURRENT"} · {exact_rank(rank if score.overall_score is not None else None, sum(row.overall_score is not None for row in ranked_scores))}</p><h3><a href="/fois/gms/{escape(score.gm_id or "")}?league_id={escape(score.league_id)}">{escape(score.gm_name or "GM")}</a></h3>'
             f'<p class="muted">{escape(score.franchise_name or "Current franchise")}</p></div>'
             f'<div class="fois-score"><b>{score.overall_score if score.overall_score is not None else "—"}</b><span>{escape(score.overall_letter_grade or "Insufficient evidence")}</span></div>'
-            f'<div class="fois-evidence"><b>{score.confidence:.0f}% confidence</b><span>{score.completeness:.0f}% evidence coverage · {score.supported_weight:.0f}% supported weight</span></div>'
+            f'<div class="fois-evidence"><b>{score.confidence:.0f}% confidence</b><span>{score.completeness:.0f}% evidence coverage</span></div>'
             f'<div><b>Strength:</b> {escape(score.strengths[0] if score.strengths else "Not yet supported")}'
             f'<br><b>Improve:</b> {escape(score.weaknesses[0] if score.weaknesses else "Not yet supported")}</div>'
             f'<a class="ds-action" href="/fois/gms/{escape(score.gm_id or "")}?league_id={escape(score.league_id)}" data-api-profile="/api/fois/leagues/{escape(score.league_id)}/gms/{escape(score.gm_id or "")}">Open Executive Profile</a></article>'
@@ -366,16 +367,16 @@ def create_fois_router(
         status = _generation_status(service)
         if not selected_league_id:
             content = ('<section class="empty-state" data-dtos-component="empty-state">'
-                       '<h2>No valid league is loaded</h2><p>Synchronize a league before opening Front Office Intelligence.</p></section>')
+                       '<h2>Choose a league first</h2><p>Connect or select a league to see its manager grades.</p><a href="/account/leagues">Your leagues</a></section>')
         elif not valid_selection:
             content = ('<section class="empty-state" data-dtos-component="empty-state">'
-                       '<h2>League unavailable</h2><p>The requested league is not loaded and has no persisted FOIS profiles.</p></section>')
+                       '<h2>League unavailable</h2><p>Manager profiles are not ready for the requested league.</p></section>')
         elif status.get("state") in {"running", "waiting"} and not scores:
             content = ('<section class="empty-state" data-dtos-component="empty-state">'
-                       '<h2>FOIS generation pending</h2><p>Executive profiles will appear after cached FOIS generation completes.</p></section>')
+                       '<h2>Manager profiles are being prepared</h2><p>Profiles will appear when preparation completes. Your team, Market and Trade remain separate.</p></section>')
         elif not scores:
             content = ('<section class="empty-state" data-dtos-component="empty-state">'
-                       '<h2>FOIS data unavailable</h2><p>No persisted executive profiles exist for this league.</p></section>')
+                       '<h2>Manager grades are not available</h2><p>No saved manager profiles are available for this league yet.</p></section>')
         else:
             health = service.repository.canonical_health(selected_league_id, FOIS_MODEL_VERSION)
             content = (
@@ -391,7 +392,7 @@ def create_fois_router(
             '<a href="#gm-rankings">GM Rankings</a><a href="#executive-profiles">Executive Profiles</a>'
             '<a href="/history">Franchise and GM History</a></nav>'
             '<section id="gm-rankings"><p class="eyebrow">CURRENT LEAGUE INTELLIGENCE</p><h2>GM Leaderboard</h2>'
-            '<p class="muted">One current intelligence profile per GM, ranked by canonical FOIS score. Historical evaluations live inside each GM profile.</p>'
+            '<p class="muted">Compare manager grades based on supported league records. These are separate from team strength and official standings. Earlier assessments are available inside each profile.</p>'
             f'{content}</section>'
         )
         return HTMLResponse(body)
@@ -461,7 +462,7 @@ def create_fois_router(
             strengths = "".join(f"<li>{escape(item)}</li>" for item in score.strengths)
             strengths_summary = escape(strengths_context(score))
             weaknesses = "".join(f"<li>{escape(item)}</li>" for item in score.weaknesses) or "<li>No evidence-supported weakness is established yet.</li>"
-            details = technical_details((("GM identity", score.gm_id), ("FOIS model", score.model_version), ("Brain snapshot", score.brain_snapshot_id), ("Generated", score.generated_at)))
+            details = technical_details((("GM identity", score.gm_id), ("FOIS model", score.model_version), ("Brain snapshot", score.brain_snapshot_id), ("Generated", score.generated_at), ("League overall FOIS rank", exact_rank(rank, sum(row.overall_score is not None for row in rankings))), ("Evidence coverage", f"{score.completeness:.0f}%"), ("Supported weight", f"{score.supported_weight:.0f}%")), summary="Grade calculations and sources")
             activity_html = '<p>Event-level activity unavailable from this retained profile. <a href="/history">Review league history</a>.</p>'
             with span('fois_profile_activity'):
                 if str((data.get('league') or {}).get('league_id')) == selected_league:
@@ -482,7 +483,7 @@ def create_fois_router(
                         activity_html = '<p>Supported completed trades from up to 25 retained profile references. Historical actors follow season observations; exact takeover timing is not inferred. Activity links do not revalidate grades; retained historical assessments remain NOT REVALIDATED.</p><ul>' + ''.join(activity) + '</ul>'
             historical_rows = "".join(
                 f'<li data-fois-history="true"><b>HISTORICAL SNAPSHOT</b> · {escape(row.generated_at[:10])} · '
-                f'{row.overall_score if row.overall_score is not None else "Unavailable"} {escape(row.overall_letter_grade or "")}</li>'
+                f'{row.overall_score if row.overall_score is not None else "Not assessed"} {escape(row.overall_letter_grade or "")}</li>'
                 for row in reversed(history)
             ) or "<li>No earlier meaningful FOIS snapshot is available in retained history.</li>"
             from src.core.gm_behavioral_intelligence.models import GM_BEHAVIOR_METHOD_VERSION
@@ -520,13 +521,13 @@ def create_fois_router(
                 preservation = ('<p class="notice" role="status">Retained historical assessment: these grades predate the evidence-integrity correction. They remain unchanged and have not been revalidated. Regeneration requires separate authorization.</p>'
                                 if not score.evidence_revalidated else '')
             body = f'''<a class="back" href="/fois?league_id={escape(selected_league)}">← GM Leaderboard</a><p class="eyebrow">CURRENT GM PROFILE</p><h2>{escape(score.gm_name or "General Manager")}</h2><p>{escape(score.franchise_name or "Current franchise")}</p>
-    <div class="summary-grid"><article class="metric"><b>{exact_rank(rank, sum(row.overall_score is not None for row in rankings))}</b><span>League overall FOIS rank</span></article><article class="metric"><b>{score.overall_score if score.overall_score is not None else "Not ranked"} {escape(score.overall_letter_grade or "")}</b><span>FOIS Score</span></article><article class="metric"><b>{score.confidence:.0f}%</b><span>Confidence</span></article><article class="metric"><b>{score.completeness:.0f}%</b><span>Evidence Coverage</span></article><article class="metric"><b>{score.supported_weight:.0f}%</b><span>Supported Weight</span></article></div>
+    <div class="summary-grid"><article class="metric"><b>{exact_rank(rank, sum(row.overall_score is not None for row in rankings))}</b><span>Manager grade rank</span></article><article class="metric"><b>{score.overall_score if score.overall_score is not None else "Not assessed"} {escape(score.overall_letter_grade or "")}</b><span>Manager grade · FOIS</span></article><article class="metric"><b>{score.confidence:.0f}%</b><span>Evidence confidence</span></article></div>
     <section class="card"><h3>Executive Summary</h3><p>{escape(score.executive_summary)}</p><p><b>Management momentum:</b> {escape(human_status(score.management_momentum))}</p><p class="muted">Completed seasons alone do not establish movement. A comparable historical momentum assessment is required.</p></section>{explanation_html}
-    <div class="card-grid">{categories}</div><div class="grid"><section class="card" data-fois-strengths><h3>Top strengths</h3><p>{strengths_summary}</p>{'<ul>' + strengths + '</ul>' if strengths else ''}</section><section class="card"><h3>Improvement areas</h3><ul>{weaknesses}</ul></section></div><details class="card" data-fois-history-count="{len(history)}"><summary>GM History · {len(history)} earlier snapshot(s)</summary><ul>{historical_rows}</ul></details>{details}'''
+    {source_details('<div class="card-grid">' + categories + '</div>', summary="Category grades and supporting evidence")}<div class="grid"><section class="card" data-fois-strengths><h3>Top strengths</h3><p>{strengths_summary}</p>{'<ul>' + strengths + '</ul>' if strengths else ''}</section><section class="card"><h3>Improvement areas</h3><ul>{weaknesses}</ul></section></div><details class="card" data-fois-history-count="{len(history)}"><summary>GM History · {len(history)} earlier snapshot(s)</summary><ul>{historical_rows}</ul></details>{details}'''
             body = (availability_html + '<style>.fois-profile{min-width:0}.fois-profile .dtos-explanation li,.fois-profile .fois-behavior p,.fois-profile .fois-behavior code{overflow-wrap:anywhere;word-break:normal}.fois-behavior summary{min-height:44px;cursor:pointer}.fois-behavior summary:focus-visible{outline:2px solid var(--accent);outline-offset:3px}</style>'
                     + '<div class="fois-profile">' + preservation + body
                     + '<section class="card"><h3>Activity · completed trade evidence</h3>' + activity_html + '</section>'
-                    + '<section class="card"><h3>Management behavior and evidence</h3>' + behavioral_html + '</section></div>')
+                    + source_details(behavioral_html, summary="Observed management activity and limits") + '</div>')
         with span('fois_profile_render'):
             return page(f"{score.gm_name or 'GM'} — Executive Profile", body) if page else HTMLResponse(body)
 

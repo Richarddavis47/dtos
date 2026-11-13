@@ -257,10 +257,10 @@ class OpportunityIntegrityTests(unittest.TestCase):
                         page.locator(".home-opportunity").inner_text(),
                     )
                     page.get_by_role("link", name="Explore / Edit").click()
-                    page.get_by_text("Alternative preview", exact=True).wait_for()
+                    page.get_by_text("Trade review", exact=True).wait_for()
                     moved = self.move()
                     page.get_by_role(
-                        "button", name="Adopt alternative", exact=True
+                        "button", name="Use this offer in my draft", exact=True
                     ).click()
                     result = page.locator("#trade-result")
                     self.assertIn("NOT REVALIDATED", result.inner_text())
@@ -383,7 +383,7 @@ class OpportunityIntegrityTests(unittest.TestCase):
                     page.goto("https://dtos.test/")
                     page.locator(".home-opportunity").wait_for()
                     page.get_by_role("link", name="Explore / Edit").click()
-                    page.get_by_text("Alternative preview", exact=True).wait_for()
+                    page.get_by_text("Trade review", exact=True).wait_for()
                     if change == "market":
                         self.source.prices(a=300)
                         self.f.data["market_data"] = self.source.data["market_data"]
@@ -397,7 +397,7 @@ class OpportunityIntegrityTests(unittest.TestCase):
                         # no old response may turn the prior strategy current.
                         self.assertFalse(
                             page.get_by_role(
-                                "button", name="Adopt alternative", exact=True
+                                "button", name="Use this offer in my draft", exact=True
                             ).is_visible()
                         )
                         page.close()
@@ -405,7 +405,7 @@ class OpportunityIntegrityTests(unittest.TestCase):
                         self.seed()
                         continue
                     page.get_by_role(
-                        "button", name="Adopt alternative", exact=True
+                        "button", name="Use this offer in my draft", exact=True
                     ).click()
                     self.assertEqual(
                         page.locator("#trade-result").get_attribute(
@@ -491,7 +491,7 @@ class OpportunityIntegrityTests(unittest.TestCase):
                 page.goto("https://dtos.test/")
                 page.locator(".home-opportunity").wait_for()
                 page.get_by_role("link", name="Explore / Edit").click()
-                page.get_by_role("button", name="Adopt alternative", exact=True).click()
+                page.get_by_role("button", name="Use this offer in my draft", exact=True).click()
                 pending = []
                 page.route(
                     "**/api/trades/evaluate", lambda route: pending.append(route)

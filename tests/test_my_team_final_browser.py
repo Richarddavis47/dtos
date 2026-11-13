@@ -143,7 +143,7 @@ class RetainedStrategyBrowserTests(unittest.TestCase):
                 self.assertEqual(page.evaluate('document.cookie'), shared)
                 page.locator('.tw-offer button.tw-next-action').first.click()
                 self.assertEqual(page.evaluate('document.cookie'), shared)
-                page.get_by_role('button', name='Adopt alternative', exact=True).click()
+                page.get_by_role('button', name='Use this offer in my draft', exact=True).click()
                 self.assertEqual(page.evaluate('document.cookie'), shared)
                 self.assertEqual(page.input_value('#trade-strategy'), 'REBUILD')
                 self.assertEqual(requests[-1][1]['strategy'], 'REBUILD')

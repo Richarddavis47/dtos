@@ -76,7 +76,7 @@ class DynamicNeedsBrowserTests(TestCase):
                     )
                     page.get_by_role("link", name="Explore / Edit").first.click()
                     page.get_by_role(
-                        "button", name="Adopt alternative", exact=True
+                        "button", name="Use this offer in my draft", exact=True
                     ).click()
                     page.get_by_role("button", name="Reevaluate Trade").click()
                     page.wait_for_function(

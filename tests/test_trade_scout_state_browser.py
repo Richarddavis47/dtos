@@ -89,8 +89,8 @@ class ScoutWorkspaceStateBrowserTests(unittest.TestCase):
 
     @staticmethod
     def adopt(page):
-        page.get_by_role('button', name='Open editable offer:', exact=False).first.click()
-        page.get_by_role('button', name='Adopt alternative', exact=True).click()
+        page.get_by_role('button', name='Review trade', exact=False).first.click()
+        page.get_by_role('button', name='Use this offer in my draft', exact=True).click()
 
     @staticmethod
     def proposal(page):
@@ -114,15 +114,15 @@ class ScoutWorkspaceStateBrowserTests(unittest.TestCase):
                 page.click('#trade-adjust')
                 page.fill('#trade-instruction', 'make it cheaper')
                 page.click('#trade-apply-adjust')
-                page.get_by_role('button', name='Open editable offer:', exact=False).click()
+                page.get_by_role('button', name='Review trade', exact=False).click()
                 self.assertEqual(self.proposal(page), original)
                 self.assertIn('Original: A + D', page.locator('#trade-result').inner_text())
-                page.get_by_role('button', name='Keep original', exact=True).click()
+                page.get_by_role('button', name='Back to offers', exact=True).click()
                 self.assertEqual(self.proposal(page), original)
                 self.adopt(page)
                 self.assertEqual(self.proposal(page)['sent'], ['player:a'])
                 page.click('#trade-alternatives')
-                page.get_by_role('button', name='Open editable offer:', exact=False).wait_for()
+                page.get_by_role('button', name='Review trade', exact=False).wait_for()
                 self.assertEqual(requests[0][1]['protected_assets'], [])  # Automatic initial search precedes refinement.
                 for _, request in requests[1:]:
                     self.assertEqual(request['protected_assets'], ['player:b'])
@@ -147,7 +147,7 @@ class ScoutWorkspaceStateBrowserTests(unittest.TestCase):
             page.click('#trade-adjust')
             page.fill('#trade-instruction', 'make it cheaper')
             page.click('#trade-apply-adjust')
-            page.get_by_role('button', name='Open editable offer:', exact=False).wait_for()
+            page.get_by_role('button', name='Review trade', exact=False).wait_for()
             self.assertEqual(requests[-1][1]['origin_workflow'], 'trade_for')
             self.assertIn('player:x', requests[-1][1]['assets_received'])
             page.click('#trade-edit')
@@ -194,9 +194,9 @@ class ScoutWorkspaceStateBrowserTests(unittest.TestCase):
             original = self.proposal(page)
             self.ready(page, '/trades/recommended')
             page.click('#trade-find')
-            page.get_by_role('button', name='Open editable offer:', exact=False).click()
+            page.get_by_role('button', name='Review trade', exact=False).click()
             self.assertEqual(self.proposal(page), original)
-            page.get_by_role('button', name='Keep original', exact=True).click()
+            page.get_by_role('button', name='Back to offers', exact=True).click()
             self.assertEqual(self.proposal(page), original)
             self.adopt(page)
             self.assertEqual(self.proposal(page)['sent'], ['player:d'])
@@ -213,18 +213,18 @@ class ScoutWorkspaceStateBrowserTests(unittest.TestCase):
             page.click('#trade-adjust')
             page.fill('#trade-instruction', 'make it cheaper')
             page.click('#trade-apply-adjust')
-            page.get_by_role('button', name='Open editable offer:', exact=False).click()
+            page.get_by_role('button', name='Review trade', exact=False).click()
             page.reload()
-            page.get_by_role('button', name='Keep original', exact=True).wait_for()
+            page.get_by_role('button', name='Back to offers', exact=True).wait_for()
             self.assertEqual(self.proposal(page), original)
             self.assertIn('Original: A + D', page.locator('#trade-result').inner_text())
-            page.get_by_role('button', name='Keep original', exact=True).click()
+            page.get_by_role('button', name='Back to offers', exact=True).click()
             self.assertEqual(self.proposal(page), original)
             page.click('#trade-adjust')
             page.fill('#trade-instruction', 'make it cheaper')
             page.click('#trade-apply-adjust')
-            page.get_by_role('button', name='Open editable offer:', exact=False).click()
-            page.get_by_role('button', name='Adopt alternative', exact=True).click()
+            page.get_by_role('button', name='Review trade', exact=False).click()
+            page.get_by_role('button', name='Use this offer in my draft', exact=True).click()
             self.assertEqual(self.proposal(page)['sent'], ['player:a'])
 
     def test_explicit_shop_replaces_manual_package_and_preserves_locks(self):
@@ -239,7 +239,7 @@ class ScoutWorkspaceStateBrowserTests(unittest.TestCase):
             page.locator('#trade-constraint-asset').select_option('player:b')
             page.fill('#trade-instruction', 'keep this player')
             page.click('#trade-apply-adjust')
-            page.get_by_role('button', name='Open editable offer:', exact=False).wait_for()
+            page.get_by_role('button', name='Review trade', exact=False).wait_for()
             self.ready(page, '/trades/shop?asset_id=player:a')
             self.assertEqual(self.proposal(page), {'sent': ['player:a'], 'received': [], 'partner': 0})
             self.assertEqual(page.locator('#shop-protected').evaluate('n => [...n.selectedOptions].map(o => o.value)'), ['player:b'])
@@ -248,7 +248,7 @@ class ScoutWorkspaceStateBrowserTests(unittest.TestCase):
             self.ready(page, '/trades/create')
             page.click('#trade-adjust')
             page.click('#trade-alternatives')
-            page.get_by_role('button', name='Open editable offer:', exact=False).wait_for()
+            page.get_by_role('button', name='Review trade', exact=False).wait_for()
             self.assertEqual(requests[-1][1]['protected_assets'], ['player:b'])
             self.assertEqual(requests[-1][1]['origin_asset_id'], 'player:a')
 
@@ -269,7 +269,7 @@ class ScoutWorkspaceStateBrowserTests(unittest.TestCase):
             page.locator('#trade-target:not([hidden])').wait_for()
             page.click('#trade-adjust')
             page.click('#trade-alternatives')
-            page.get_by_role('button', name='Open editable offer:', exact=False).wait_for()
+            page.get_by_role('button', name='Review trade', exact=False).wait_for()
             self.assertEqual(requests[-1][1]['protected_assets'], ['pick:2028:1:3'])
             self.assertNotIn('pick:2028:1:3', self.proposal(page)['sent'])
 
@@ -297,7 +297,7 @@ class ScoutWorkspaceStateBrowserTests(unittest.TestCase):
             page.click('#trade-apply-adjust')
             self.adopt(page)
             page.click('#trade-alternatives')
-            page.get_by_role('button', name='Open editable offer:', exact=False).wait_for()
+            page.get_by_role('button', name='Review trade', exact=False).wait_for()
             self.assertEqual(requests[0][1]['protected_assets'], [])
             for path, request in requests[1:]:
                 self.assertEqual(request['protected_assets'], ['player:b'])
@@ -367,13 +367,13 @@ class ScoutWorkspaceStateBrowserTests(unittest.TestCase):
                     page.locator('#shop-refinements > summary').click()
                 page.locator('#shop-protected').select_option(pick['asset_id'])
                 page.click('#trade-find')
-                page.get_by_role('button', name='Open editable offer:', exact=False).click()
-                for name in ('Keep original', 'Adopt alternative'):
+                page.get_by_role('button', name='Review trade', exact=False).click()
+                for name in ('Back to offers', 'Use this offer in my draft'):
                     button = page.get_by_role('button', name=name, exact=True)
                     button.scroll_into_view_if_needed()
                     self.assertTrue(button.is_visible())
                     self.assertTrue(button.evaluate('n => {const r=n.getBoundingClientRect(); return document.elementFromPoint(r.x+r.width/2,r.y+r.height/2)===n;}'))
-                page.get_by_role('button', name='Adopt alternative', exact=True).click()
+                page.get_by_role('button', name='Use this offer in my draft', exact=True).click()
                 page.click('#trade-adjust')
                 page.fill('#trade-instruction', 'make it cheaper')
                 page.click('#trade-apply-adjust')

@@ -26,5 +26,5 @@ class TradePerformanceBrowserTests(unittest.TestCase):
                 page.wait_for_function('document.querySelector("#trade-builder").getAttribute("aria-busy")==="true"')
                 self.assertEqual(pending[1][1]['strategy'], 'WIN NOW')
                 pending[1][0].fulfill(json={'results': [old_offer], 'count': 1})
-                page.get_by_role('button', name='Open editable offer:', exact=False).wait_for()
+                page.get_by_role('button', name='Review trade', exact=False).wait_for()
                 self.assertLessEqual(page.evaluate('document.documentElement.scrollWidth'), width)

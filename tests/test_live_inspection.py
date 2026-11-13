@@ -118,7 +118,7 @@ class LiveInspectionTests(unittest.TestCase):
         self.assertNotIn("DTOS Projection", html)
         missing = _starter_projection_html({})
         self.assertIn("Projection unavailable", missing)
-        self.assertIn("Technical Details", missing)
+        self.assertIn("Projection sources", missing)
 
     def test_synthetic_future_public_route_registers_automatically(self):
         app = FastAPI()

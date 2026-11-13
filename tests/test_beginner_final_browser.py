@@ -244,14 +244,14 @@ class FinalResetBrowserTests(unittest.TestCase):
                     )
                     page.locator("#trade-balance-offer").click()
                     page.get_by_role(
-                        "button", name="Preview adjustment", exact=True
+                        "button", name="Review trade", exact=True
                     ).first.click()
                     previewed = page.evaluate(
                         "key=>JSON.parse(sessionStorage.getItem(key))", binding
                     )
                     self.assertIsNotNone(previewed["previewProposal"])
                     self.assertIsNotNone(previewed["originalProposal"])
-                    page.get_by_role("button", name="Keep original", exact=True).click()
+                    page.get_by_role("button", name="Back to offers", exact=True).click()
                     hold[0] = True
                     page.locator("#trade-run").click()
                     page.wait_for_function(
@@ -589,7 +589,7 @@ class FinalNavigationBrowserTests(unittest.TestCase):
                     self.assertEqual(page.locator(".market-asset").count(), 3)
                     page.locator(".market-asset").first.click()
                     selected = page.url.split("#")[0]
-                    page.get_by_role("link", name="Open canonical dossier").click()
+                    page.get_by_role("link", name="Open player").click()
                     self.assertIn("/picks/", page.url)
                     page.reload()
                     back = page.get_by_role("link", name="← Back to Market results")
@@ -608,7 +608,7 @@ class FinalNavigationBrowserTests(unittest.TestCase):
                     self.assertGreater(page.locator(".market-asset").count(), 0)
                     page.locator(".market-asset").first.click()
                     offset_selected = page.url.split("#")[0]
-                    page.get_by_role("link", name="Open canonical dossier").click()
+                    page.get_by_role("link", name="Open player").click()
                     # A newer explicit Market origin wins over stale team context.
                     page.goto(page.url + "&from_team=1")
                     page.get_by_role("link", name="← Back to Market results").click()

@@ -4,6 +4,7 @@ from __future__ import annotations
 from html import escape
 
 from src.ui import recommendation_panel
+from src.ui.customer_experience import plain_reason, source_details
 
 
 CSS = """<style>
@@ -15,14 +16,48 @@ def _evidence(items) -> str:
     return "".join(f"<li><b>{escape(item.factor)}:</b> {escape(item.observed_value)} — {escape(item.explanation)} <small>Source: {escape(item.source)}</small></li>" for item in items)
 
 
+def _profile_summary(active) -> str:
+    """Describe admitted facts without turning an unknown outlook into a label."""
+    if active.competitive_window.classification.value != "Unavailable":
+        return plain_reason(active.executive_summary)
+    return (f"{active.team_name}: roster and completed-trade observations are shown separately. "
+            "There is not enough supported evidence to establish a competitive outlook.")
+
+
 def front_office_center(view: dict) -> str:
     active = view["active"]
     unified = view["unified_recommendation"]
     preferences = "".join(f"<li>{escape(item.label)} <span class=\"pill\">{escape(item.strength)}</span></li>" for item in active.asset_preferences)
     from src.core.gm_behavioral_intelligence.activity import activity_text
     activity = activity_text(active.activity.observed_activity)
-    compatibility = "".join(f'<article class="foi-card"><span class="identity-kicker">{escape(item.difficulty)}</span><h3>{escape(next(report.team_name for report in view["reports"] if report.roster_id in {item.first_roster_id, item.second_roster_id} and report.roster_id != active.roster_id))}</h3><div class="foi-score">{item.score}/100</div><p class="muted">Themes: {escape(", ".join(item.best_trade_themes))}</p><p>Uncalibrated roster-context compatibility; this is not an acceptance probability.</p><details class="foi-evidence"><summary>Show Evidence & Forecast</summary><p>{escape(item.forecast.opening_recommendation)}</p><p>{escape(item.forecast.expected_counter)}</p><ul>{_evidence(item.evidence)}</ul></details></article>' for item in view["compatibilities"])
-    primary = recommendation_panel(title=unified.title, recommendation=unified.recommendation, confidence=unified.confidence.score, primary_reason=unified.why[0] if unified.why else active.executive_summary, evidence=unified.why, expected_impact=f"Current: {unified.current_outlook} Future: {unified.future_outlook}", action_label="Open Team Headquarters", action_href=f"/teams/{active.roster_id}", limitations=unified.why_not)
-    return f'''{CSS}<section class="card foi-hero"><div><div class="identity-kicker">Franchise Management Profile</div><h2><a href="/teams/{active.roster_id}">{escape(active.team_name)}</a></h2><p>{escape(active.executive_summary)}</p></div><div><p>Your controlled franchise · {escape(active.team_name)}</p><a class="secondary" href="/fois">View league Executive Profiles</a></div></section>{primary}
-<section class="foi-grid"><article class="foi-card"><span class="identity-kicker">Competitive Window</span><h3>{escape(active.competitive_window.classification.value)}</h3><p>{escape(" · ".join(active.philosophies))}</p></article><article class="foi-card"><span class="identity-kicker">Negotiation Style</span><h3>{escape(active.negotiation_style)}</h3><p>{active.activity.trades} observed completed trades. {escape(activity)}</p></article><article class="foi-card"><span class="identity-kicker">Profile evidence confidence</span><div class="foi-score">{active.confidence}%</div><p>This heuristic describes support from cached roster, pick and activity context. Trading tendencies require their own history sample; this is not an acceptance probability.</p></article><article class="foi-card"><h3>Current roster composition</h3><ul>{preferences}</ul></article><article class="foi-card"><h3>Strategic Strengths</h3><p>{escape(", ".join(active.strengths))}</p></article><article class="foi-card"><h3>Observable Constraints</h3><p>{escape(", ".join(active.constraints))}</p></article></section>
-<details class="card foi-evidence"><summary>Show Full Dossier Evidence</summary><ul>{_evidence(active.evidence)}</ul><p class="muted">DTOS models fantasy-football actions only. It does not infer personality, character, or private intent.</p></details><h2>Trade Compatibility</h2><section class="foi-grid">{compatibility}</section>'''
+    summary = _profile_summary(active)
+    window = active.competitive_window
+    window_label = window.classification.value if window.classification.value != "Unavailable" else "Outlook not established"
+    reasons = "".join(f"<li>{escape(plain_reason(item))}</li>" for item in window.reasons)
+    strengths = ", ".join(escape(plain_reason(item)) for item in active.strengths)
+    constraints = ", ".join(escape(plain_reason(item)) for item in active.constraints)
+    compatibility = []
+    for item in view["compatibilities"]:
+        partner = next(report for report in view["reports"] if report.roster_id in {item.first_roster_id, item.second_roster_id} and report.roster_id != active.roster_id)
+        detail = (f'<p>Possible approach (inference): {escape(item.forecast.opening_recommendation)}</p>'
+                  f'<p>{escape(item.forecast.expected_counter)}</p><ul>{_evidence(item.evidence)}</ul>')
+        compatibility.append(f'<article class="foi-card"><h3>{escape(partner.team_name)}</h3>'
+                             f'<p>Roster-context fit: {item.score}/100 · {escape(item.difficulty)}</p>'
+                             f'<p>{escape(", ".join(item.best_trade_themes))}</p>'
+                             + source_details(detail, summary="Why this partner may fit") + '</article>')
+    primary = recommendation_panel(title=unified.title, recommendation=unified.recommendation, confidence=unified.confidence.score, primary_reason=plain_reason(unified.why[0]) if unified.why else summary, evidence=unified.why, expected_impact=f"Current: {unified.current_outlook} Future: {unified.future_outlook}", action_label="Open My Team", action_href=f"/teams/{active.roster_id}", limitations=unified.why_not)
+    profile_details = (f'<p>Original assessment: {escape(active.executive_summary)}</p>'
+                       f'<p>Profile evidence confidence: {active.confidence}%.</p>'
+                       '<p>This describes support from roster, pick and activity records. It is not an acceptance probability.</p>'
+                       f'<h3>Current roster composition</h3><ul>{preferences}</ul><ul>{_evidence(active.evidence)}</ul>'
+                       '<p>DTOS describes observed fantasy-football activity, not personality or private intent.</p>')
+    return (CSS + f'<section class="card foi-hero"><div><div class="identity-kicker">Franchise Management Profile</div>'
+            f'<h2><a href="/teams/{active.roster_id}">{escape(active.team_name)}</a></h2><p>{escape(summary)}</p></div>'
+            '<a class="secondary" href="/fois">Manager grades</a></section>' + primary
+            + f'<section class="foi-grid"><article class="foi-card"><h3>{escape(window_label)}</h3>'
+            + source_details(f'<ul>{reasons}</ul>', summary="Outlook evidence") + '</article>'
+            + f'<article class="foi-card"><h3>Observed franchise activity</h3><p>{escape(activity)}</p></article>'
+            + f'<article class="foi-card"><h3>Roster strengths and needs</h3><p><b>Strengths:</b> {strengths}</p><p><b>Needs:</b> {constraints}</p></article></section>'
+            + source_details(profile_details, summary="Profile calculations and sources")
+            + '<h2>Potential trade partners</h2><p>Fit is an inference from roster context, not a qualified offer or a prediction of acceptance.</p>'
+            + '<section class="foi-grid">' + ''.join(compatibility) + '</section>')

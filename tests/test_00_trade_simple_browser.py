@@ -235,7 +235,7 @@ class SimpleTradeJourneyBrowserTests(unittest.TestCase):
             start = perf_counter()
             click("#trade-balance-offer")
             page.get_by_role(
-                "button", name="Preview adjustment", exact=True
+                "button", name="Review trade", exact=True
             ).first.wait_for()
             done()
             balance = perf_counter() - start
@@ -244,7 +244,7 @@ class SimpleTradeJourneyBrowserTests(unittest.TestCase):
             )
             start = perf_counter()
             page.get_by_role(
-                "button", name="Preview adjustment", exact=True
+                "button", name="Review trade", exact=True
             ).first.click()
             preview_time = perf_counter() - start
             self.assertEqual(
@@ -253,12 +253,12 @@ class SimpleTradeJourneyBrowserTests(unittest.TestCase):
                 ),
                 original,
             )
-            click('#trade-result button:text-is("Keep original")')
+            click('#trade-result button:text-is("Back to offers")')
             page.get_by_role(
-                "button", name="Preview adjustment", exact=True
+                "button", name="Review trade", exact=True
             ).first.click()
             start = perf_counter()
-            click('#trade-result button:text-is("Adopt alternative")')
+            click('#trade-result button:text-is("Use this offer in my draft")')
             adoption_time = perf_counter() - start
             adopted = page.evaluate(
                 'async () => JSON.parse(sessionStorage.getItem((await fetch("/api/trades/workspace").then(r=>r.json()).then(w=>"dtos-trade-workspace:" + w.workspace_context.binding)))).currentProposal'
@@ -320,14 +320,14 @@ class SimpleTradeJourneyBrowserTests(unittest.TestCase):
                 # preserve structured evidence across the process's
                 # real authenticated route transport and reload.
                 costly = page.locator('.tw-offer').filter(has_text='Exploratory only').first
-                costly.get_by_role('button', name='Open editable offer:', exact=False).click()
+                costly.get_by_role('button', name='Review trade', exact=False).click()
                 context_before = page.evaluate('async () => JSON.parse(sessionStorage.getItem((await fetch("/api/trades/workspace").then(r=>r.json()).then(w=>"dtos-trade-workspace:" + w.workspace_context.binding)))).previewProposal.preview_context')
                 self.assertEqual(context_before['evaluation']['recommendation'], 'NOT WORTH IT')
                 page.reload()
-                page.get_by_role('button', name='Adopt alternative', exact=True).wait_for()
+                page.get_by_role('button', name='Use this offer in my draft', exact=True).wait_for()
                 self.assertIn('Exploratory only', page.locator('#trade-result').inner_text())
                 self.assertIn(context_before['evaluation']['major_drawback'], page.locator('#trade-result').inner_text())
-                click('#trade-result button:text-is("Adopt alternative")')
+                click('#trade-result button:text-is("Use this offer in my draft")')
                 self.assertIn('NOT WORTH IT', page.locator('#trade-result').inner_text())
                 self.assertIn(context_before['evaluation']['major_drawback'], page.locator('#trade-result').inner_text())
                 self.assertIn('not revalidated', page.locator('#trade-result').inner_text().lower())

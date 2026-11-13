@@ -305,4 +305,18 @@ input:disabled,select:disabled{color:var(--text-muted);background:var(--surface-
  .market-mode{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.market-mode .ds-action{padding:8px;font-size:13px;text-align:center}
 }
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+
+/* Customer presentation: answer, explanation, optional evidence. */
+.cx-lead{font-size:16px;line-height:1.55;max-width:65ch;margin:8px 0 16px}
+.cx-evidence{margin:12px 0;min-width:0;overflow-wrap:anywhere}
+.cx-evidence>summary{font-size:14px;font-weight:650;min-height:44px;cursor:pointer;color:var(--text-secondary)}
+.cx-evidence[open]>summary{color:var(--text-primary);margin-bottom:8px}
+.cx-evidence-body{padding:12px;border:1px solid var(--border);border-radius:var(--radius-sm);min-width:0}
+.cx-evidence-body p{line-height:1.55}.cx-evidence-body pre{max-height:320px;overflow:auto}
+.cx-section{margin:20px 0;min-width:0}.cx-section>h2{margin-bottom:12px}
+.cx-facts{display:flex;flex-wrap:wrap;gap:8px 20px;align-items:baseline}
+.cx-facts>div{min-width:0;max-width:100%;overflow-wrap:anywhere}
+.cx-status{padding:12px;border-left:3px solid var(--warning);background:var(--surface);line-height:1.55}
+:where(button,input,select,textarea,summary,a[id]){scroll-margin-bottom:100px;scroll-margin-top:12px}
+@media(max-width:760px){.cx-lead{font-size:16px}.cx-section{margin:16px 0}.cx-evidence-body{padding:10px}.top{flex-wrap:wrap}}
 """

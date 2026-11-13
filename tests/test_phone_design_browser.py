@@ -135,7 +135,7 @@ class FocusedPhoneInteractionTests(unittest.TestCase):
                 page.click("#calculator-lock")
                 page.click("#trade-balance-offer")
                 preview = page.get_by_role(
-                    "button", name="Preview adjustment", exact=True
+                    "button", name="Review trade", exact=True
                 )
                 preview.wait_for()
                 preview.scroll_into_view_if_needed()
@@ -162,10 +162,10 @@ class FocusedPhoneInteractionTests(unittest.TestCase):
                 self.assertEqual(page.locator("#trade-result").evaluate("e=>e.previousElementSibling.id"), "calculator-balance-status")
                 self.assertEqual(fixture.state(page)["currentProposal"], original)
                 preview.click()
-                page.get_by_role("button", name="Keep original", exact=True).click()
+                page.get_by_role("button", name="Back to offers", exact=True).click()
                 self.assertEqual(fixture.state(page)["currentProposal"], original)
                 preview.click()
-                page.get_by_role("button", name="Adopt alternative", exact=True).click()
+                page.get_by_role("button", name="Use this offer in my draft", exact=True).click()
                 self.assertIn(
                     "pick:2028:1:3", fixture.state(page)["currentProposal"]["sent"]
                 )

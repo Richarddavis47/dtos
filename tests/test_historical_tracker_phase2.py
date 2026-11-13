@@ -294,7 +294,7 @@ class TrackerPhase2Tests(unittest.TestCase):
     def test_consumed_love_and_boston_keep_conversion_and_no_active_pick_action(self):
         for pick, name in [('PICK-2026-R1-ORIG4', 'Jeremiyah Love'), (PICK, 'Denzel Boston')]:
             r = self.client.get('/picks/' + pick + '?front_office=4&from_trade=' + ROOT)
-            self.assertIn('Consumed by verified draft conversion', r.text)
+            self.assertIn('Pick used in draft', r.text)
             self.assertIn(name, r.text)
             self.assertNotIn('Shop Asset', r.text)
             self.assertNotIn('Trade For', r.text)

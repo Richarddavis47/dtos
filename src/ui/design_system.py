@@ -4,6 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from html import escape
 
+from .customer_experience import readable_time
 from .badges import position_chip
 from .theme import DESIGN_SYSTEM_CSS as DESIGN_SYSTEM_CSS
 
@@ -47,11 +48,11 @@ def _presentation(title: str) -> PagePresentation:
     if "matchup" in normalized:
         return PagePresentation("Understand the weekly matchup, lineup leverage, and likely pressure points.", "Weekly competition", "Review Teams", "/teams")
     if "history" in normalized or "historical" in normalized or "season archive" in normalized:
-        return PagePresentation("Understand how league and franchise decisions produced today's position.", "Historical evidence", "Open Team HQ", "/teams")
+        return PagePresentation("Review recorded trades and roster changes, with their coverage and limits.", "Historical evidence", "Open Team HQ", "/teams")
     if "draft" in normalized or "pick" in normalized:
         return PagePresentation("Understand the league's draft-capital ownership and strategic flexibility.", "Draft capital", "Open Trade Center", "/trades")
     if "transaction" in normalized:
-        return PagePresentation("See what changed across the league and which assets moved.", "League activity", "Refresh Transactions", "/transactions?refresh=1")
+        return PagePresentation("See what changed across the league and which assets moved.", "League activity", "Review Transactions", "/transactions")
     if "setting" in normalized:
         return PagePresentation("Review league rules, synchronization state, and application information.", "League configuration", "Review Sync Status", "/settings#sync-status")
     return PagePresentation("Navigate the league and open the Front Office question that matters now.", "League overview", "Open Team HQ", "/teams")
@@ -63,7 +64,7 @@ def page_header(title: str, *, league_name: str, last_updated: str) -> str:
     presentation = _presentation(title)
     actions = f'<div class="ds-header-side"><div class="ds-actions"><a class="ds-action primary" href="{escape(presentation.primary_href)}">{escape(presentation.primary_label)}</a><a class="ds-action" href="{escape(presentation.secondary_href)}">{escape(presentation.secondary_label)}</a></div></div>'
     task_first = presentation.variant in {"search", "identity"}
-    return f'''<header class="ds-page-header ds-page-header--{presentation.variant}" data-dtos-component="page-header" data-design-system="{DESIGN_SYSTEM_VERSION}"><div><h1>{escape(title)}</h1><details class="ds-page-guide"><summary>How it works</summary><p class="ds-purpose">{escape(presentation.purpose)}</p><div class="ds-context">{escape(league_name)} · {escape(presentation.context)}</div><div class="ds-freshness">League Sync: <b>{escape(last_updated or "Not synchronized yet")}</b></div>{actions if task_first else ""}</details></div>{"" if task_first else actions}</header>'''
+    return f'''<header class="ds-page-header ds-page-header--{presentation.variant}" data-dtos-component="page-header" data-design-system="{DESIGN_SYSTEM_VERSION}"><div><h1>{escape(title)}</h1><details class="ds-page-guide"><summary>How it works</summary><p class="ds-purpose">{escape(presentation.purpose)}</p><div class="ds-context">{escape(league_name)} · {escape(presentation.context)}</div><div class="ds-freshness">League data updated: <b>{escape(readable_time(last_updated))}</b><details class="cx-evidence"><summary>Exact sync time</summary><p>League Sync: <code>{escape(last_updated or "Not recorded")}</code></p></details></div>{actions if task_first else ""}</details></div>{"" if task_first else actions}</header>'''
 
 
 def account_page_header(title: str, *, purpose: str) -> str:
@@ -71,7 +72,7 @@ def account_page_header(title: str, *, purpose: str) -> str:
     return (
         f'<header class="ds-page-header" data-dtos-component="page-header" '
         f'data-dtos-shell="account-onboarding" data-design-system="{DESIGN_SYSTEM_VERSION}">'
-        '<div><div class="ds-eyebrow">DTOS — Account &amp; identity</div>'
+        '<div><div class="ds-eyebrow">DTOS — Your account</div>'
         f'<h1>{escape(title)}</h1><p class="ds-purpose">{escape(purpose)}</p>'
         '<div class="ds-context">Secure Sleeper-backed front office access</div></div>'
         '</header>'
@@ -112,10 +113,10 @@ def manager_navigation(title: str, *, roster_id: int | None = None, include_tool
 def secondary_navigation() -> str:
     """The existing tool destinations, usable beside the shared account shell."""
     secondary = (
-        ("FOIS", "/fois"), ("Commissioner", "/commissioner"),
+        ("Manager grades · FOIS", "/fois"), ("Commissioner", "/commissioner"),
         ("History", "/history"), ("Transactions", "/transactions"),
         ("Weekly Report", "/reports/weekly"),
-        ("Draft Capital", "/picks"), ("Advanced", "/brain"),
+        ("Draft Capital", "/picks"), ("Analysis tools", "/brain"),
         ("Calibration", "/valuation/calibration"), ("Settings", "/settings"),
         ("My DTOS", "/account/my-dtos"),
     )

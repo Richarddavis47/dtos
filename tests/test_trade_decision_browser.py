@@ -169,7 +169,7 @@ class TradeDecisionBrowserTests(unittest.TestCase):
             ).wait_for()
             self.assertEqual(len(calls), 1)
             self.assertTrue(page.locator("#trade-find").is_enabled())
-            self.assertIn("Find Shop returns", page.locator("#trade-find").inner_text())
+            self.assertIn("Find offers", page.locator("#trade-find").inner_text())
             page.click("#trade-find")
             page.locator("#recommendation-status[data-search-state=error]").wait_for()
             self.assertTrue(page.locator("#trade-find").is_enabled())

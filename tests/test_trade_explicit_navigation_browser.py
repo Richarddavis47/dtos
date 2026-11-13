@@ -97,7 +97,7 @@ class ExplicitNavigationBrowserTests(unittest.TestCase):
             page.click('#trade-adjust')
             page.fill('#trade-instruction', 'make it cheaper')
             page.click('#trade-apply-adjust')
-            page.get_by_role('button', name='Open editable offer:', exact=False).click()
+            page.get_by_role('button', name='Review trade', exact=False).click()
             self.assertIsNotNone(self.state(page)['previewProposal'])
             self.select(page, 'trade-for', 'player:y')
             self.assert_target(page, 'trade-for', 'player:y')

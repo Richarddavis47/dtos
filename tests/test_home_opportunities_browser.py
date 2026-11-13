@@ -172,8 +172,8 @@ class HomeOpportunityBrowserTests(unittest.TestCase):
                     page.locator(".home-opportunity").first.get_by_role(
                         "link", name="Explore / Edit"
                     ).click()
-                    page.get_by_text("Alternative preview", exact=True).wait_for()
-                    page.get_by_role("button", name="Keep original", exact=True).click()
+                    page.get_by_text("Trade review", exact=True).wait_for()
+                    page.get_by_role("button", name="Back to your draft", exact=True).click()
                     self.assertIn(
                         "1-RB-2", page.locator("#trade-sent-chips").inner_text()
                     )
@@ -182,7 +182,7 @@ class HomeOpportunityBrowserTests(unittest.TestCase):
                         "#trade-sent-board button[data-asset-id]"
                     ).first.wait_for(state="attached")
                     self.assertEqual(
-                        page.get_by_text("Alternative preview", exact=True).count(), 0
+                        page.get_by_text("Trade review", exact=True).count(), 0
                     )
                     self.assertIn(
                         "1-RB-2", page.locator("#trade-sent-chips").inner_text()
@@ -193,7 +193,7 @@ class HomeOpportunityBrowserTests(unittest.TestCase):
                         "link", name="Explore / Edit"
                     ).click()
                     page.get_by_role(
-                        "button", name="Adopt alternative", exact=True
+                        "button", name="Use this offer in my draft", exact=True
                     ).click()
                     page.locator(
                         '#trade-sent-board button[data-asset-id="1-QB-0"]'

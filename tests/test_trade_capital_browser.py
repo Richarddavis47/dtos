@@ -75,6 +75,7 @@ class CapitalBrowserTests(unittest.TestCase):
                         page, requests, _, _, errors = helper.page(browser, f)
                         helper.ready(page)
                         control.evaluate(page, helper, "d", with_pick=True)
+                        page.locator("#trade-result .tw-capital-disclosure > summary").first.click()
                         box = page.locator("#trade-result .tw-draft-capital").first
                         self.assertIn(
                             "Your draft capital after this trade", box.inner_text()
@@ -87,6 +88,7 @@ class CapitalBrowserTests(unittest.TestCase):
                         control.evaluate(page, helper, "c")
                         page.locator("#trade-result > .tw-compare-add").click()
                         control.open_readonly(page, requests)
+                        page.locator("#trade-comparison details").evaluate_all("rows=>rows.forEach(e=>e.open=true)")
                         self.assertEqual(
                             page.locator("#trade-comparison .tw-draft-capital").count(),
                             3,
@@ -131,6 +133,7 @@ class CapitalBrowserTests(unittest.TestCase):
                         page.reload()
                         helper.ready(page)
                         control.open_readonly(page, requests)
+                        page.locator("#trade-comparison details").evaluate_all("rows=>rows.forEach(e=>e.open=true)")
                         self.assertIn(
                             "NOT REVALIDATED",
                             page.locator("#trade-comparison").inner_text(),
@@ -167,6 +170,7 @@ class CapitalBrowserTests(unittest.TestCase):
                         page.reload()
                         helper.ready(page)
                         control.open_readonly(page, requests)
+                        page.locator("#trade-comparison details").evaluate_all("rows=>rows.forEach(e=>e.open=true)")
                         self.assertEqual(
                             [
                                 x["context"]["draft_capital_record"]

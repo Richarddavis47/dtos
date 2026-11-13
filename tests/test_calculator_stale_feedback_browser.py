@@ -29,12 +29,12 @@ class CalculatorStaleFeedbackBrowserTests(unittest.TestCase):
 
     def success(self, page):
         page.click('#trade-balance-offer')
-        page.get_by_role('button', name='Preview adjustment', exact=True).wait_for()
+        page.get_by_role('button', name='Review trade', exact=True).wait_for()
         self.assertIn('Balancing options ready', page.locator('#calculator-balance-status').inner_text())
 
     def no_old_feedback(self, page):
         self.assertEqual(page.locator('#calculator-balance-status').inner_text(), '')
-        self.assertFalse(page.get_by_role('button', name='Preview adjustment', exact=True).is_visible())
+        self.assertFalse(page.get_by_role('button', name='Review trade', exact=True).is_visible())
         self.assertIsNone(self.fixture.state(page)['previewProposal'])
 
     def add(self, page, which, asset_id):
@@ -76,20 +76,20 @@ class CalculatorStaleFeedbackBrowserTests(unittest.TestCase):
                 page.click('#calculator-lock')
             original = self.fixture.state(page)['currentProposal']
             self.success(page)
-            page.get_by_role('button', name='Preview adjustment', exact=True).click()
+            page.get_by_role('button', name='Review trade', exact=True).click()
             self.assertEqual(self.fixture.state(page)['currentProposal'], original)
-            page.get_by_role('button', name='Keep original', exact=True).click()
+            page.get_by_role('button', name='Back to offers', exact=True).click()
             self.assertIn('Balancing options ready', page.locator('#calculator-balance-status').inner_text())
-            page.get_by_role('button', name='Preview adjustment', exact=True).click()
+            page.get_by_role('button', name='Review trade', exact=True).click()
             page.get_by_role('button', name='Remove A from calculator', exact=True).click()
             self.no_old_feedback(page)
             self.add(page, 'sent', 'player:b')
             edited = self.fixture.state(page)['currentProposal']
             self.success(page)
             self.assertEqual(requests[-1][1]['assets_sent'], ['player:b'])
-            page.get_by_role('button', name='Preview adjustment', exact=True).click()
+            page.get_by_role('button', name='Review trade', exact=True).click()
             self.assertEqual(self.fixture.state(page)['currentProposal'], edited)
-            page.get_by_role('button', name='Adopt alternative', exact=True).click()
+            page.get_by_role('button', name='Use this offer in my draft', exact=True).click()
             state = self.fixture.state(page)
             self.assertEqual(state['currentProposal']['sent'], ['player:b', 'pick:2028:1:3'])
             self.assertEqual(state['protectedAssets'], ['player:d', 'pick:2028:2:3'])
@@ -109,7 +109,7 @@ class CalculatorStaleFeedbackBrowserTests(unittest.TestCase):
                     page.select_option('#trade-constraint-asset', 'player:d')
                     page.click('#calculator-lock')
                 self.success(page)
-                page.get_by_role('button', name='Preview adjustment', exact=True).click()
+                page.get_by_role('button', name='Review trade', exact=True).click()
                 if change in ('protect', 'release'):
                     page.click('#calculator-protect')
                     page.select_option('#trade-constraint-asset', 'player:d')
@@ -163,7 +163,7 @@ class CalculatorStaleFeedbackBrowserTests(unittest.TestCase):
         with self.fixture.fixture.page(workspace=self.data, api=self.respond) as (page, _):
             self.fixture.build(page)
             self.success(page)
-            page.get_by_role('button', name='Preview adjustment', exact=True).click()
+            page.get_by_role('button', name='Review trade', exact=True).click()
             page.get_by_role('button', name='Remove A from calculator', exact=True).click()
             edited = self.fixture.state(page)['currentProposal']
             page.reload()

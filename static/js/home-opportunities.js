@@ -23,7 +23,7 @@
     const before = context && identity();
     try {
       const response = await fetch('/api/trades/home-opportunities?' + query(), {credentials:'same-origin', signal:request.signal});
-      if (!response.ok) throw new Error('Prepared opportunities are unavailable. Explore Trades or try again.');
+      if (!response.ok) throw new Error('Your team brief could not be loaded. Open Trade or try again.');
       const body = await response.json();
       if (run !== revision || departed || (before && before !== identity())) return;
       if (body.workspace_context.roster_id !== rid || (context && body.workspace_context.binding !== context.binding)) {
@@ -38,9 +38,9 @@
       const html = body.brief_html ?? body.html;
       if (cards.innerHTML !== html) cards.innerHTML = html;
       displayedIdentity = identity(); // Escaped same-origin canonical presentation, no scoring here.
-      status.textContent = body.count ? 'Recently completed search · current matching evidence. Hypothetical offers, not submitted trades.' : body.retained ? (body.reason || 'No supported opportunities in this bounded search.') : 'No current matching search is prepared. Find Trade Ideas when ready.';
-      if (!body.source_identity) status.textContent = 'Trade pricing is unavailable or changing. Prepared roster facts remain separate. Review My Team or try again shortly.';
-      else if (!body.brief_count && 'brief_count' in body) status.textContent = 'No actionable insight qualifies in the prepared evidence. Review My Team or explicitly Find Trade Ideas; this is not proof that no opportunities exist.';
+      status.textContent = body.count ? 'Recently completed search · matches the current team and data. These offers have not been submitted.' : body.retained ? (body.reason || 'No supported opportunities in this bounded search.') : 'No current matching search has been completed. Find Trade Ideas when ready.';
+      if (!body.source_identity) status.textContent = 'Trade prices are unavailable or changing. Your roster facts are still shown separately. Review My Team or try again shortly.';
+      else if (!body.brief_count && 'brief_count' in body) status.textContent = 'No actionable insight qualifies from the available team data. Review My Team or choose Find Trade Ideas; this does not mean no useful trades exist.';
       root.dataset.state = body.state;
       root.dataset.presentation = body.brief_count ? 'prepared' : 'empty';
     } catch (error) { if (run === revision && !departed && error.name !== 'AbortError') {
@@ -53,7 +53,7 @@
     if (!context || !metadata?.source_identity) return load();
     const run = ++revision, before = identity(), frozen = {...locks()};
     request?.abort(); request = new AbortController(); find.disabled = true;
-    status.textContent = 'Searching supported opportunities… Home and your draft stay available.'; root.dataset.state = 'loading'; root.dataset.presentation = 'loading';
+    status.textContent = 'Searching trade ideas… Home and your draft stay available.'; root.dataset.state = 'loading'; root.dataset.presentation = 'loading';
     const controller = request;
     const timeout = setTimeout(() => controller.abort(), 120000);
     try {
@@ -61,10 +61,24 @@
         headers:{'Content-Type':'application/json','X-CSRF-Token':metadata.csrf_token},
         body:JSON.stringify({workflow:'recommended', active_roster_id:rid, partner_roster_id:0, strategy:window.dtosStrategy.get(context) || null,
           workspace_context:context, home_source_identity:metadata.source_identity, ...frozen})});
-      if (!response.ok) throw new Error('Search unavailable or evidence changed. Your draft is intact. Try again or Explore more trades.');
+      if (!response.ok) {
+        const failure = await response.json().catch(() => ({}));
+        const detail = failure.detail || failure;
+        const deferred = detail.code === 'trade_capacity_deferred';
+        const error = new Error(deferred
+          ? 'Trade search is waiting for capacity. Your draft is intact. Try Find Trade Ideas later.'
+          : 'Trade search did not finish. Your draft is intact. Try again or open Recommended Trades.');
+        error.presentation = deferred ? 'capacity_deferred' : 'failed';
+        throw error;
+      }
       if (run !== revision || departed || before !== identity()) return;
       await load();
-    } catch (error) { if (run === revision && !departed) status.textContent = error.name === 'AbortError' ? 'Search interrupted or timed out. Try again; your draft is intact.' : error.message; }
+    } catch (error) { if (run === revision && !departed) {
+      root.dataset.state = error.name === 'AbortError' ? 'interrupted' : (error.presentation || 'failed');
+      root.dataset.presentation = error.presentation === 'capacity_deferred' ? 'deferred' : 'error';
+      status.textContent = (error.name === 'AbortError' ? 'Search interrupted or timed out. Your draft is intact; retry explicitly when ready.' : error.message)
+        + (cards.children.length ? ' Earlier results remain below; this search did not update them.' : ' No new search result is available.');
+    } }
     finally { clearTimeout(timeout); if (run === revision && !invalidated) find.disabled = false; }
   };
   reload.onclick = () => location.reload();

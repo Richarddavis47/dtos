@@ -22,6 +22,7 @@ from src.ui.badges import champion_badge, defending_champion, standing_badge, yo
 from src.platform.account_context import current_account
 from src.ui.render_cache import GenerationRenderCache
 from src.ui.front_office_brief import CSS as BRIEF_CSS
+from src.ui.customer_experience import readable_time
 from src.ui.standings import render_standings
 from src.platform.league_context import current_league_context
 from src.core.request_execution import run_manager_read
@@ -57,9 +58,9 @@ def _team_selector(data: dict[str, Any], selected: dict[str, Any] | None) -> str
         for team in data.get("teams") or []
     )
     if not options:
-        return '<p class="muted">Franchise evaluation is unavailable until league rosters are supported.</p>'
+        return '<p class="muted">Your teams will appear when Sleeper roster data is ready.</p>'
     initial = int((selected or (data.get("teams") or [{}])[0]).get("roster_id") or 0)
-    return f'''<details class="ds-home-detail"><summary>View another franchise</summary><form method="get" action="/teams/{initial}" class="card" onsubmit="this.action='/teams/'+this.elements.roster_id.value"><label for="front-office">Selected franchise</label><select id="front-office" name="roster_id">{options}</select><button class="btn" type="submit">View franchise</button></form><p class="muted">Opens a read-only team evaluation. Your Home and trade workspace stay with your controlled franchise.</p><noscript><a href="/league">Open League to choose a franchise</a></noscript></details>'''
+    return f'''<details class="ds-home-detail"><summary>View another franchise</summary><form method="get" action="/teams/{initial}" class="card" onsubmit="this.action='/teams/'+this.elements.roster_id.value"><label for="front-office">Team to view</label><select id="front-office" name="roster_id">{options}</select><button class="btn" type="submit">View franchise</button></form><p class="muted">View another team without changing your Home or Trade workspace.</p><noscript><a href="/league">Open League to choose a franchise</a></noscript></details>'''
 
 
 def create_home_router(
@@ -114,13 +115,13 @@ def create_home_router(
         # changing roster/Market facts. No generation is triggered by this read.
         if active is not None and active.fois_state in {'pending', 'unavailable', 'retained'}:
             state = active.runtime.lifecycle.get('fois_generation')
-            wording = ('FOIS is temporarily unavailable.' if state == 'failed' else
-                       'FOIS is being prepared.' if active.fois_state == 'pending' else
-                       'Current FOIS is unavailable.')
-            retained = ' Previous grades are retained, not revalidated.' if active.fois_state == 'retained' else ''
-            body += ('<p class="muted" role="status" data-fois-availability="' + active.fois_state + '">'
+            wording = ('Manager grades are temporarily unavailable.' if state == 'failed' else
+                       'Manager grades are being prepared.' if active.fois_state == 'pending' else
+                       'Current manager grades are unavailable.')
+            retained = ' Previous grades are RETAINED / NOT REVALIDATED.' if active.fois_state == 'retained' else ''
+            body += ('<details class="cx-evidence" data-fois-availability="' + active.fois_state + '"><summary>Manager-grade status</summary><p role="status">'
                      + wording + retained + ' Your roster, Market and Trade remain usable. '
-                     '<a href="/fois">Review FOIS status</a></p>')
+                     '<a href="/fois">Review manager grades</a></p></details>')
         if rid:
             from services.trade_workspace_context import workspace_context
             context = escape(json.dumps(workspace_context(data, int(rid))), quote=True)
@@ -132,7 +133,7 @@ def create_home_router(
         team = _selected_team(data, front_office)
         selector = _team_selector(data, team)
         if team is None:
-            return selector + '<div class="ds-empty"><b>No franchise is available.</b>The current Sleeper context has no team roster to brief.</div>'
+            return selector + '<div class="ds-empty"><b>No franchise is available.</b>Sleeper roster data is not ready for this league.</div>'
 
         roster_id = int(team.get("roster_id") or 0)
         outlook = directory.get(roster_id, {})
@@ -140,14 +141,14 @@ def create_home_router(
         record = record_evidence(team.get("wins"), team.get("losses"), team.get("ties"), season_started=not preseason)
         ranking_label = "preseason outlook" if preseason else "current league outlook"
         competitive = f'#{outlook.get("rank", "—")} in the {ranking_label}' if outlook.get("rank") else MODEL_NOTE
-        header = f'''<article class="ux-feature home-command"><p class="identity-kicker">Your front office · {escape(str(team.get("owner") or "Unassigned"))}</p><h2>{escape(str(team.get("team_name") or "Franchise"))}{you_badge(data, roster_id)}</h2><div class="home-record">{standing_badge(standings_order(data)["ranks"].get(roster_id), derived=True)}{champion_badge(champion, roster_id)}<b>{escape("Preseason · official record not started" if preseason else "Official record: " + record)}</b></div><div class="ux-feature-actions"><a class="ux-primary-action" href="/teams/{roster_id}">Open My Team</a><a class="ux-secondary-action" href="/trades?front_office={roster_id}">Build a trade</a></div></article>'''
-        secondary = f'''<div class="home-secondary-controls">{selector}<details class="ds-home-detail"><summary>Assessment context and roster shortcuts</summary><p>DTOS strength assessment: {escape(competitive)}. Strength assessments remain separate from official standings.</p><a class="ds-action" href="/teams/{roster_id}#full-roster">Roster · {len(team.get("players") or [])} players</a> <a class="ds-action" href="/teams/{roster_id}#draft-capital">Capital · {len(team.get("picks_owned") or [])} future picks</a><a class="ds-action" href="/league">League overview</a></details></div>'''
+        header = f'''<article class="ux-feature home-command"><p class="identity-kicker">Your team · {escape(str(team.get("owner") or "Unassigned"))}</p><h2>{escape(str(team.get("team_name") or "Franchise"))}{you_badge(data, roster_id)}</h2><div class="home-record">{standing_badge(standings_order(data)["ranks"].get(roster_id), derived=True)}{champion_badge(champion, roster_id)}<b>{escape("Preseason · official record not started" if preseason else "Official record: " + record)}</b></div><div class="ux-feature-actions"><a class="ux-primary-action" href="/teams/{roster_id}">Open My Team</a><a class="ux-secondary-action" href="/trades?front_office={roster_id}">Build a trade</a></div></article>'''
+        secondary = f'''<div class="home-secondary-controls">{selector}<details class="ds-home-detail"><summary>Team overview and shortcuts</summary><p>Team comparison: {escape(competitive)}. This is separate from official standings.</p><a class="ds-action" href="/teams/{roster_id}#full-roster">Roster · {len(team.get("players") or [])} players</a> <a class="ds-action" href="/teams/{roster_id}#draft-capital">Capital · {len(team.get("picks_owned") or [])} future picks</a><a class="ds-action" href="/league">League overview</a></details></div>'''
 
 
         actions = [
             ("Review my assets", "See your current players, lineup and exact owned picks.", f"/teams/{roster_id}#full-roster"),
-            ("Check this week's matchup", "Compare actual scoring and available projections without invented odds.", "/matchups"),
-            ("Explore a trade", "Use the existing Trade Intelligence workflow for this front office.", f"/trades?front_office={roster_id}"),
+            ("Check this week's matchup", "See actual scores and this week’s projections.", "/matchups"),
+            ("Explore a trade", "Review possible trades for your team.", f"/trades?front_office={roster_id}"),
         ]
         action_html = '<div class="card ux-action-list">' + "".join(
             f'<a class="ux-action" href="{href}"><span><b>{escape(title)}</b><p>{escape(reason)}</p></span><span aria-hidden="true">→</span></a>'
@@ -160,9 +161,9 @@ def create_home_router(
             key=lambda row: (int(row[2].get("rank") or 999), str(row[1].get("team_name") or "")),
         )[:5]
         rank_html = '<div class="podium-grid">' + "".join(
-            f'<a class="podium-card" data-rank="{int(view["rank"])}" href="/teams/{rid}"><span class="podium-rank">#{escape(str(view["rank"]))}</span><h3>{escape(str(row.get("team_name") or "Team"))}</h3><p>{escape("Canonical team assessment" if preseason else record_evidence(row.get("wins"), row.get("losses"), row.get("ties"), season_started=True))}</p></a>'
+            f'<a class="podium-card" data-rank="{int(view["rank"])}" href="/teams/{rid}"><span class="podium-rank">#{escape(str(view["rank"]))}</span><h3>{escape(str(row.get("team_name") or "Team"))}</h3><p>{escape("Team assessment" if preseason else record_evidence(row.get("wins"), row.get("losses"), row.get("ties"), season_started=True))}</p></a>'
             for index, (rid, row, view) in enumerate(rankings[:3], start=1)
-        ) + '</div>' + ('<div class="card">' + ''.join(f'<p><a href="/teams/{int(row.get("roster_id") or 0)}">{escape(str(row.get("team_name") or "Team"))}</a>: {escape(directory.get(int(row.get("roster_id") or 0), {}).get("weekly_comparison") or "Compatible weekly lineup evidence is not prepared for this league.")}</p>' for row in teams) + '<p>Individual strengths are shown separately; DTOS does not yet calculate a validated overall team grade.</p></div>' if not rankings else '') + '<p><a href="/teams">Open team assessments →</a></p>'
+        ) + '</div>' + ('<div class="card">' + ''.join(f'<p><a href="/teams/{int(row.get("roster_id") or 0)}">{escape(str(row.get("team_name") or "Team"))}</a>: {escape(directory.get(int(row.get("roster_id") or 0), {}).get("weekly_comparison") or "This week’s lineup comparison is not ready. Current projections and player availability are needed.")}</p>' for row in teams) + '<p>Individual strengths are shown separately; DTOS does not yet calculate a validated overall team grade.</p></div>' if not rankings else '') + '<p><a href="/teams">Open team assessments →</a></p>'
 
         matchups = []
         for matchup_id, sides in sorted(current_matchup_groups(data).items())[:5]:
@@ -172,9 +173,9 @@ def create_home_router(
 
         recent = normalize_transactions(data)[:5]
         activity_html = '<div class="card">' + ("".join(
-            f'<p><b>{escape(str(item.get("type_label") or "League activity"))}</b><br><span class="muted">{escape(str(item.get("timestamp") or "Time unavailable"))}</span></p>'
+            f'<p><b>{escape(str(item.get("type_label") or "League activity"))}</b><br><span class="muted">{escape(readable_time(item.get("timestamp")))}</span></p>'
             for item in recent
-        ) or '<p class="muted">No cached league activity is available.</p>') + '<a href="/transactions">View league activity →</a></div>'
+        ) or '<p class="muted">No recent league activity has been recorded here.</p>') + '<a href="/transactions">View league activity →</a></div>'
 
         assets = team.get("players") or []
         assets_html = f'<div class="card"><p><b>{len(assets)}</b> rostered players · <b>{len(team.get("picks_owned") or [])}</b> future picks</p><a href="/teams/{roster_id}#full-roster">Review my assets →</a></div>'
@@ -183,13 +184,13 @@ def create_home_router(
         facts = weekly_facts(data, report_week)
         report_state = {"completed": "Final", "in_progress": "In progress", "preview": "Preview"}.get(facts["state"], "Unavailable")
         body = (
-            header + '<!--home-opportunities-->' + secondary + '<!--home-trade-news-->' + _section('Standings', 'Official records and scoring · not DTOS power rankings', render_standings(data, champion=champion))
+            header + '<!--home-opportunities-->' + secondary + '<!--home-trade-news-->' + '<details class="ds-home-detail"><summary>League standings</summary>' + _section('Standings', 'Records and scoring from Sleeper', render_standings(data, champion=champion)) + '</details>'
             + _section("Weekly Report", report_state + " · current week evidence", f'<div class="card ux-recap"><a href="/reports/weekly?week={report_week}">Open Week {report_week} report · {report_state} →</a></div>')
-            + _section("Explore", "Useful destinations—not personalized Attention recommendations", action_html)
-            + '<details class="ds-home-detail"><summary>DTOS team assessment · not official standings</summary>' + _section("Team Assessment Rankings" if rankings else "Projected lineup comparison", "Canonical team assessment · not standings or FOIS GM rankings" if rankings else "Projected lineups · not standings or FOIS GM rankings or an overall grade", rank_html) + '</details>'
-            + _section("Matchups this week", "Current Sleeper matchup evidence", matchup_html)
-            + '<details class="ds-home-detail"><summary>Market and league activity</summary>' + _section("Market Movers", "Meaningful movement only", '<div class="card"><p class="muted">Market movement is shown only when timestamped comparable observations cross the established threshold.</p><a href="/market#market-movers">Review market evidence →</a></div>')
-            + _section("League Activity", "Recent cached transactions", activity_html)
+            + _section("Explore", "Your team, matchup and trade workspace", action_html)
+            + '<details class="ds-home-detail"><summary>Team comparisons</summary>' + _section("Team Assessment Rankings" if rankings else "Projected lineup comparison", "Team assessments, separate from official standings" if rankings else "This week’s best projected legal lineups, with coverage shown for each team", rank_html) + '</details>'
+            + '<details class="ds-home-detail"><summary>All matchups this week</summary>' + _section("Matchups this week", "Scores and projections from Sleeper", matchup_html) + '</details>'
+            + '<details class="ds-home-detail"><summary>Market and league activity</summary>' + _section("Market Movers", "Observed Market changes", '<div class="card"><p class="muted">See value changes supported by recorded Market observations.</p><a href="/market#market-movers">View Market movement →</a></div>')
+            + _section("League Activity", "Recent recorded transactions", activity_html)
             + _section("My Assets", "Roster and draft capital", assets_html) + '</details>'
         )
         return body
@@ -208,8 +209,8 @@ def create_home_router(
         if preseason:
             directory = build_team_directory(data, prepared_only=True) if teams else {}
             ordered = sorted(teams, key=lambda t: directory.get(int(t['roster_id']), {}).get('rank') or 999)
-            rows = ''.join(f'<li><a href="/teams/{int(t["roster_id"])}">{escape(str(t.get("team_name") or "Franchise"))}</a> · DTOS assessment rank {escape(str(directory.get(int(t["roster_id"]), {}).get("rank") or "Unavailable"))}</li>' for t in ordered)
-            preseason_analysis = '<details><summary>Preseason Rankings · DTOS assessment, not official standings</summary><ul>' + rows + '</ul></details>'
+            rows = ''.join(f'<li><a href="/teams/{int(t["roster_id"])}">{escape(str(t.get("team_name") or "Franchise"))}</a> · {escape("Team assessment #" + str(directory[int(t["roster_id"])]["rank"]) if directory.get(int(t["roster_id"]), {}).get("rank") is not None else directory.get(int(t["roster_id"]), {}).get("weekly_comparison") or "Weekly lineup comparison is not ready.")}</li>' for t in ordered)
+            preseason_analysis = '<details><summary>Preseason team comparisons</summary><ul>' + rows + '</ul></details>'
         from src.core.intelligence.orchestrator import intelligence_orchestrator
         from src.ui.league_gm_diagnostics import league_observations
         account = current_account()
@@ -222,18 +223,18 @@ def create_home_router(
                 user_preferences={'strategy': strategy}, include_trade_opportunities=False)
             observations_html = league_observations(intelligence, data, active_id)
         destinations = (
-            ("Weekly Report", "Prepared league recap and supported changes", "/reports/weekly"),
+            ("Weekly Report", "This week’s scores and changes", "/reports/weekly"),
             ("Matchups", "Weekly competition and starter evidence", "/matchups"),
-            ("FOIS", "General-manager performance and confidence", "/fois"),
+
             ("Transactions", "Trades, waivers, adds, and drops", "/transactions"),
             ("Draft Capital", "League pick ownership", "/picks"),
-            ("History", "Verified seasons, standings, and evidence", "/history"),
+            ("History", "Past seasons, completed trades and draft results", "/history"),
         )
         links = '<div class="grid">' + "".join(f'<a class="card" href="{href}"><h3>{title}</h3><p class="muted">{description}</p></a>' for title, description, href in destinations) + "</div>"
         body = (
-            _section("Preseason League Briefing" if preseason else "League Recap", "A league-wide view, separate from your personal front office", f'<div class="card ux-recap"><p>{escape("Regular-season games have not started. Review roster direction, recent activity, market movement, and Week 1 preparation." if preseason else f"{len(teams)} franchises · Week {data.get('week') or '—'} · Season {(data.get('league') or {}).get('season') or '—'}")}</p></div>')
+            _section("Preseason League Briefing" if preseason else "League Recap", "Your league’s teams, results and recent activity", f'<div class="card ux-recap"><p>{escape("Regular-season games have not started. Review roster direction, recent activity, market movement, and Week 1 preparation." if preseason else f"{len(teams)} franchises · Week {data.get('week') or '—'} · Season {(data.get('league') or {}).get('season') or '—'}")}</p></div>')
             + observations_html + _section("Standings", "League-specific Sleeper records and scoring", visual_standings) + preseason_analysis
-            + _section("League Intelligence", "Competition, management, activity, and history", links)
+            + _section("Explore your league", "Matchups, picks and completed activity", links) + '<details class="cx-evidence"><summary>Manager grades and specialist tools</summary><a class="ds-action" href="/fois">Manager grades (FOIS)</a></details>'
         )
         return page("League", body)
 

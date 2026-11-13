@@ -588,7 +588,7 @@ class ContextualBackTests(unittest.TestCase):
                 original = self.draft(p)["currentProposal"]
                 p.locator("#trade-balance-offer").click()
                 p.get_by_role(
-                    "button", name="Preview adjustment", exact=True
+                    "button", name="Review trade", exact=True
                 ).first.click()
                 before = self.draft(p)
                 self.assertIsNotNone(before["previewProposal"])
@@ -607,16 +607,16 @@ class ContextualBackTests(unittest.TestCase):
                     before["previewProposal"]["assets_sent"],
                 )
                 self.assertTrue(after["previewProposal"]["preview_context"]["restored"])
-                p.get_by_role("button", name="Keep original", exact=True).click()
+                p.get_by_role("button", name="Back to offers", exact=True).click()
                 self.assertEqual(self.draft(p)["currentProposal"], original)
                 # A deliberate new balance request obtains current evidence;
                 # returning never silently reruns or revalidates the old one.
                 p.locator("#trade-balance-offer").click()
                 p.get_by_role(
-                    "button", name="Preview adjustment", exact=True
+                    "button", name="Review trade", exact=True
                 ).first.click()
                 expected = self.draft(p)["previewProposal"]
-                p.get_by_role("button", name="Adopt alternative", exact=True).click()
+                p.get_by_role("button", name="Use this offer in my draft", exact=True).click()
                 adopted = self.draft(p)["currentProposal"]
                 self.assertEqual(adopted["sent"], expected["assets_sent"])
                 self.assertEqual(adopted["received"], expected["assets_received"])

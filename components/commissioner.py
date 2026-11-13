@@ -8,6 +8,7 @@ from urllib.parse import quote
 from models.commissioner import RecommendationPriority
 from src.ui import recommendation_panel as shared_recommendation_panel
 from src.ui.intelligence_presentation import exact_rank, available, percentile_label, manager_points
+from src.ui.customer_experience import plain_reason, readable_time, source_details
 
 COMMISSIONER_DESK_CSS = """
 <style>
@@ -72,42 +73,66 @@ def since_last_visit(view: dict[str, Any]) -> str:
     labels = ("Trade", "Waiver Claim", "Add", "Drop", "Draft Pick Movement", "League Event")
     counts = "".join(f'<div class="cd-count"><b>{briefing.counts.get(label, 0)}</b><span>{escape(label)}s</span></div>' for label in labels)
     events = "".join(
-        f'<article class="cd-event"><time>{escape(event.occurred_at)}</time><b>{escape(event.event_type.value)}</b><p><strong>{escape(event.title)}</strong> · {escape(event.detail)}</p>{f"<a href=\"/transactions?q={quote(event.source_id)}\">Open</a>" if event.source_id else ""}</article>'
+        f'<article class="cd-event"><time>{escape(readable_time(event.occurred_at))}</time><b>{escape(event.event_type.value)}</b><p><strong>{escape(event.title)}</strong> · {escape(event.detail)}</p>{f"<a href=\"/transactions?q={quote(event.source_id)}\">Open</a>" if event.source_id else ""}</article>'
         for event in briefing.events[:12]
-    ) or '<div class="cd-empty"><b>No verified changes in this briefing window.</b><br>DTOS will surface new cached league activity here after the next visit or synchronization.</div>'
+    ) or '<div class="cd-empty"><b>No changes observed in the available activity.</b><br>Unretrieved periods remain unknown. New activity appears after the league data updates.</div>'
     unavailable = "".join(f"<li>{escape(item)}</li>" for item in briefing.unavailable)
-    return f'<section class="cd-section"><div class="cd-section-head"><div><h2>What changed?</h2><p>Since your last Commissioner Desk visit · {escape(briefing.since_label)}</p></div><span class="cd-chip">Objective cached events</span></div><div class="cd-counts">{counts}</div><div class="cd-events">{events}</div><details class="cd-card"><summary>Data not yet available</summary><ul class="cd-unavailable">{unavailable}</ul></details></section>'
+    return f'<section class="cd-section"><div class="cd-section-head"><div><h2>What changed?</h2><p>Since your last Commissioner Desk visit · {escape(briefing.since_label)}</p></div><span class="cd-chip">Observed league activity</span></div><div class="cd-counts">{counts}</div><div class="cd-events">{events}</div><details class="cd-card"><summary>Data not yet available</summary><ul class="cd-unavailable">{unavailable}</ul></details></section>'
 
 
 def league_headlines(view: dict[str, Any]) -> str:
-    cards = "".join(f'<article class="cd-card cd-headline"><span class="cd-kicker">{escape(item.category)}</span><h3>{escape(item.title)}</h3><p>{escape(item.detail)}</p><p class="cd-evidence">Evidence: {escape(item.evidence)}</p></article>' for item in view["headlines"])
-    return f'<section class="cd-section"><div class="cd-section-head"><div><h2>What matters?</h2><p>Around the League · deterministic headlines only</p></div><span class="cd-chip">No speculation</span></div><div class="cd-headlines">{cards or "<div class=\"cd-empty\">No verified league headlines are available.</div>"}</div></section>'
+    cards = []
+    for item in view["headlines"]:
+        title, detail, limitation = item.title, item.detail, ""
+        if item.category == "Draft Capital":
+            title = title.replace(" is tied for the largest future-pick inventory", " has one of the largest recorded pick lists").replace(" holds the largest future-pick inventory", " has the largest recorded pick list")
+            detail = detail.replace("The franchise owns ", "The available records list ")
+            limitation = '<p class="cd-evidence">This compares recorded holdings; the headline alone does not establish a complete pick inventory.</p>'
+        evidence = source_details(f'<p>{escape(item.evidence)}</p>' + ('<p>No inventory-completeness receipt is attached to this headline.</p>' if limitation else ''), summary="Headline sources")
+        cards.append(f'<article class="cd-card cd-headline"><span class="cd-kicker">{escape(item.category)}</span><h3>{escape(title)}</h3><p>{escape(detail)}</p>{limitation}{evidence}</article>')
+    return f'<section class="cd-section"><div class="cd-section-head"><div><h2>What matters?</h2><p>Observed activity around the league</p></div><span class="cd-chip">No speculation</span></div><div class="cd-headlines">{"".join(cards) or "<div class=\"cd-empty\">No supported league headlines are available.</div>"}</div></section>'
 
 
 def front_office_summary(view: dict[str, Any]) -> str:
     office = view["active_front_office"]
     summary = view["front_office_summary"]
     current = summary["current_outlook"]
-    future = summary["future_outlook"]
-    depth = summary["depth"]
-    assets = summary["asset_health"]
-    evidence = summary.get('lineup_evidence')
-    points = getattr(evidence, 'optimal_lineup_projection', None)
-    week = getattr(evidence, 'projection_week', None)
-    league_name = getattr(view.get('active_league'), 'name', None) or 'Scoring league unavailable'
-    context = f"{league_name} · Week {week}" if week is not None else f"{league_name} · Projection week unavailable"
-    reasons = ''.join(f'<li>{escape(reason)}</li>' for reason in (getattr(current, 'reasons', ()) or ('Additional lineup evidence unavailable.',)))
-    limitations = ''.join(f'<li>{escape(reason)}</li>' for reason in getattr(evidence, 'limitations', ()))
-    coverage = f"Roster projection coverage {evidence.projection_covered}/{evidence.roster_count}." if evidence is not None else 'Projection coverage unavailable.'
-    lineup_grade = f'{escape(current.grade)} · lineup-relative grade' if current.percentile is not None else 'Lineup-relative grade unavailable'
-    offices = view.get('front_offices')
-    comparison = (f'{current.league_size} of {len(offices)} franchises with supported comparable lineup evidence'
-                  if offices and current.percentile is not None else 'Comparison population unavailable; insufficient comparable evidence')
-    return f"""
-<section class="cd-section"><div class="cd-section-head"><div><h2>Selected Franchise</h2><p>{escape(office.owner_name)} · {escape(office.team_name)}</p></div><a class="cd-chip" href="/teams/{office.roster_id}">Open Team Headquarters</a></div>
-<div class="cd-office"><article class="cd-card cd-office-main"><span class="cd-kicker">Optimal Projected Lineup</span><div class="cd-grade">{manager_points(points)} projected points</div><p>{escape(context)}</p><p>{exact_rank(current.rank, current.league_size)} · {percentile_label(current.percentile)}</p><p>{lineup_grade}</p><p>{comparison}. {coverage}</p><p class="ds-grade-context">Optimal legal-lineup projection compared within this scoring league; not a championship or competitive-window grade.</p><details><summary>Show Lineup Evidence</summary><ul>{reasons}{limitations}</ul></details><p><b>Competitive Window</b></p><span class="cd-status">{escape(summary['competitive_window'])}</span><details><summary>Show Window Reasoning</summary><p>{escape(summary['window_explanation'])}</p></details></article>
-<article class="cd-card cd-metric"><span>Future Outlook</span><b>{escape(future.grade)} · {future.score if future.score is not None else "Score unavailable"}</b><p>{exact_rank(future.rank)} · {percentile_label(future.percentile)}</p><p class="ds-grade-context">Meaning: sustainable value beyond the current season.</p></article><article class="cd-card cd-metric"><span>Record</span><b>{escape(summary['record'])}</b><p>Current Sleeper record</p></article><article class="cd-card cd-metric"><span>Power Ranking</span><b>{exact_rank(summary['power_ranking'])}</b><p>League-relative projected order</p></article><article class="cd-card cd-metric"><span>Depth Analysis</span><b>{escape(depth.grade)} · {depth.score if depth.score is not None else "Score unavailable"}</b><p>Core position coverage; confidence unavailable for this dimension</p></article><article class="cd-card cd-metric"><span>Asset Health</span><b>{escape(assets.grade)} · {assets.score if assets.score is not None else "Score unavailable"}</b><p>Draft capital, flexibility, and balance; confidence unavailable for this dimension</p></article></div></section>
-"""
+    evidence = summary.get("lineup_evidence")
+    points = getattr(evidence, "optimal_lineup_projection", None)
+    week = getattr(evidence, "projection_week", None)
+    league_name = getattr(view.get("active_league"), "name", None) or "Selected league"
+    context = f"{league_name} · Week {week}" if week is not None else f"{league_name} · Projection week not established"
+    reasons = tuple(getattr(current, "reasons", ()) or ())
+    limitations = tuple(getattr(evidence, "limitations", ()) or ())
+    limitation = plain_reason((limitations or reasons or ("The available projections do not support this comparison.",))[0])
+    coverage = f"Roster projections: {evidence.projection_covered}/{evidence.roster_count}." if evidence is not None else "Roster projection coverage is not established."
+    comparison = (f"{current.league_size} of {len(view['front_offices'])} franchises comparable."
+                  if view.get("front_offices") and current.percentile is not None else "League rank is withheld until a supported comparison is ready.")
+    lineup = f"{manager_points(points)} projected points" if points is not None else "Lineup comparison not ready"
+    rank = f"{exact_rank(current.rank, current.league_size)} · {percentile_label(current.percentile)}" if current.percentile is not None else ""
+    calculation = ('<p>Independently optimized legal lineup; separate from your submitted Sleeper starters.</p><ul>'
+                   + ''.join(f'<li>{escape(item)}</li>' for item in (*reasons, *limitations)) + '</ul>')
+    cards = [f'<article class="cd-card cd-metric"><span>Record</span><b>{escape(summary["record"])}</b><p>Current Sleeper record</p></article>']
+    if summary["power_ranking"] is not None:
+        cards.append(f'<article class="cd-card cd-metric"><span>Projected lineup rank</span><b>{exact_rank(summary["power_ranking"])}</b><p>Within this league, separate from official standings</p></article>')
+    unsupported = []
+    for key, label in (("future_outlook", "Future outlook"), ("depth", "Depth score"), ("asset_health", "Asset score")):
+        result = summary[key]
+        if result.score is None:
+            unsupported.append(label)
+        else:
+            cards.append(f'<article class="cd-card cd-metric"><span>{escape(label)}</span><b>{escape(result.grade)} · {result.score}</b></article>')
+    additional = source_details('<p>No result is established for: ' + escape(', '.join(unsupported)) + '.</p><p>A missing assessment does not establish a roster weakness.</p>', summary="Other assessment limits") if unsupported else ""
+    window = str(summary["competitive_window"])
+    window_label = "Outlook not established" if window == "Unavailable" else window
+    return (f'<section class="cd-section"><div class="cd-section-head"><div><h2>Selected Franchise</h2><p>{escape(office.owner_name)} · {escape(office.team_name)}</p></div><a class="cd-chip" href="/teams/{office.roster_id}">Open My Team</a></div>'
+            f'<div class="cd-office"><article class="cd-card cd-office-main"><span class="cd-kicker">Optimal Projected Lineup</span><div class="cd-grade">{lineup}</div><p>{escape(context)}</p>'
+            + (f'<p>{rank}</p>' if rank else '') + f'<p>{escape(comparison)} {escape(coverage)}</p>'
+            + (f'<p class="muted">{escape(limitation)}</p>' if limitations or points is None else '')
+            + source_details(calculation, summary="Lineup calculations and sources")
+            + f'<p><b>{escape(window_label)}</b></p>'
+            + source_details(f'<p>Competitive Window: {escape(summary["window_explanation"])}</p>', summary="Outlook evidence")
+            + '</article>' + ''.join(cards) + '</div>' + additional + '</section>')
 
 
 def recommendation_panel(view: dict[str, Any]) -> str:
@@ -116,7 +141,7 @@ def recommendation_panel(view: dict[str, Any]) -> str:
     for recommendation in view["recommendations"]:
         metrics = "".join(f"<li>{escape(metric)}</li>" for metric in recommendation.supporting_metrics)
         cards.append(
-            f'<article class="cd-card cd-rec"><div class="cd-priority {recommendation.priority.value.lower()}">{icons[recommendation.priority]} {escape(recommendation.priority.value)} Priority<br><span>{escape(recommendation.category.value)}</span></div><div><h3>{escape(recommendation.title)}</h3><p>{escape(recommendation.summary)}</p></div><div class="cd-confidence"><b>{recommendation.confidence.value}%</b><span class="muted">Confidence</span></div><details><summary>Show Reasoning</summary><div class="cd-reason"><p>{escape(recommendation.reasoning)}</p><b>Supporting data</b><ul>{metrics}</ul><p>Future explanation hook: {escape(str(recommendation.future_explanation_hook.get("engine") or "unassigned"))}</p></div></details></article>'
+            f'<article class="cd-card cd-rec"><div class="cd-priority {recommendation.priority.value.lower()}">{icons[recommendation.priority]} {escape(recommendation.priority.value)} Priority<br><span>{escape(recommendation.category.value)}</span></div><div><h3>{escape(recommendation.title)}</h3><p>{escape(recommendation.summary)}</p></div><div class="cd-confidence"><b>{recommendation.confidence.value}%</b><span class="muted">Confidence</span></div><details><summary>Show Reasoning</summary><div class="cd-reason"><p>{escape(recommendation.reasoning)}</p><b>Supporting data</b><ul>{metrics}</ul></div></details></article>'
         )
     return f'<section class="cd-section"><div class="cd-section-head"><div><h2>What should I do?</h2><p>Prioritized Front Office recommendations for {escape(view["active_front_office"].owner_name)}</p></div><span class="cd-chip">Confidence + evidence</span></div><div class="cd-recommendations">{"".join(cards)}</div></section>'
 
@@ -124,7 +149,7 @@ def recommendation_panel(view: dict[str, Any]) -> str:
 def unified_recommendation_panel(view: dict[str, Any]) -> str:
     recommendation = view["unified_recommendation"]
     card = shared_recommendation_panel(title=recommendation.title, recommendation=recommendation.recommendation, confidence=recommendation.confidence.score, primary_reason=recommendation.why[0] if recommendation.why else recommendation.current_outlook, evidence=recommendation.why, expected_impact=f"Current: {recommendation.current_outlook} Future: {recommendation.future_outlook}", action_label="Open Trade Center", action_href=f'/trades?front_office={view["active_front_office"].roster_id}', limitations=recommendation.why_not)
-    return f'<section class="cd-section"><div class="cd-section-head"><div><h2>What should I do?</h2><p>One unified recommendation for {escape(view["active_front_office"].owner_name)}</p></div><span class="cd-chip">Four engines / one answer</span></div><div class="cd-recommendations">{card}</div></section>'
+    return f'<section class="cd-section"><div class="cd-section-head"><div><h2>What should I do?</h2><p>Next action for {escape(view["active_front_office"].owner_name)}</p></div><span class="cd-chip">Team evidence</span></div><div class="cd-recommendations">{card}</div></section>'
 
 
 def league_intelligence(view: dict[str, Any]) -> str:
@@ -134,16 +159,21 @@ def league_intelligence(view: dict[str, Any]) -> str:
         ("Average Roster Age", intelligence["average_roster_age"]),
         ("Draft Capital Concentration", concentration + '%' if concentration else None),
         ("Average Team Grade", intelligence["average_team_grade"]), ("League Strength", intelligence["league_strength"]),
-        ("League Parity", intelligence["league_parity"]), ("Contenders", intelligence["contenders"]),
-        ("Rebuilders", intelligence["rebuilders"]), ("Strongest Position Group", intelligence["strongest_position"]),
+        ("League Parity", intelligence["league_parity"]),
+        ("Strongest Position Group", intelligence["strongest_position"]),
         ("Weakest Position Group", intelligence["weakest_position"]), ("Championship Favorite", intelligence["championship_favorite"]),
-        ("Most Draft Capital", intelligence["most_draft_capital"]), ("Least Draft Capital", intelligence["least_draft_capital"]),
+        ("Most recorded draft picks", intelligence["most_draft_capital"]), ("Fewest recorded draft picks", intelligence["least_draft_capital"]),
         ("Most Flexible Roster", intelligence["most_flexible_roster"]),
         ("Oldest Team", intelligence["oldest_team"]), ("Youngest Team", intelligence["youngest_team"]),
         ("Trending Up", intelligence["trending_up"]), ("Trending Down", intelligence["trending_down"]),
     )
-    cards = "".join(f'<article class="cd-card cd-intel"><span>{escape(label)}</span><b>{escape(available(value, reason="Unavailable — insufficient supported evidence."))}</b></article>' for label, value in values)
-    return f'<section class="cd-section"><div class="cd-section-head"><div><h2>League Intelligence</h2><p>Current structure and activity, with historical limits disclosed</p></div></div><div class="cd-intelligence">{cards}</div></section>'
+    def supported(value):
+        return (value is not None and str(value).strip() not in {"", "Unknown", "Not established"}
+                and not str(value).strip().startswith("Unavailable"))
+    cards = "".join(f'<article class="cd-card cd-intel"><span>{escape(label)}</span><b>{escape(str(value))}</b></article>' for label, value in values if supported(value))
+    missing = [label for label, value in values if not supported(value)]
+    details = source_details(('<p>No supported result is available for: ' + escape(', '.join(missing)) + '.</p>' if missing else '') + '<p>These missing assessments do not establish a team weakness or a championship forecast.</p>' + f'<p>Recorded classification counters: {intelligence["contenders"]} contender and {intelligence["rebuilders"]} rebuild classifications. These are not complete league counts when team classifications are missing.</p>', summary="League assessment limits")
+    return f'<section class="cd-section"><div class="cd-section-head"><div><h2>League Intelligence</h2><p>Supported league facts</p></div></div><div class="cd-intelligence">{cards}</div>{details}</section>'
 
 
 def league_opportunity_dashboard(view: dict[str, Any]) -> str:
@@ -154,19 +184,19 @@ def league_opportunity_dashboard(view: dict[str, Any]) -> str:
     partner_rows = "".join(
         f'<div class="cd-mini-row"><b>{escape(team_names.get(item.second_roster_id if item.first_roster_id == report.active_roster_id else item.first_roster_id, "Unassigned Franchise"))} · {item.score}/100</b><span>{escape(", ".join(item.complementary_needs) or item.timeline_fit)}</span></div>'
         for item in partners
-    ) or '<p class="muted">No compatible partner crossed the current evidence boundary.</p>'
+    ) or '<p class="muted">No supported partner fit is established from the available team evidence.</p>'
     opportunities = "".join(
         f'<div class="cd-mini-row"><b>{escape(item.player_name)} · {item.score}/100</b><span>{escape(team_names.get(item.owner_roster_id, "Unassigned Franchise"))} · {escape(item.availability)}</span></div>'
         for item in report.opportunities[:7]
     ) or '<p class="muted">No evidence-supported player opportunity is available.</p>'
     economy = "".join(f'<div class="cd-mini-row"><b>{escape(position)} · {escape(item.state)}</b><span>{item.demand} supported need contexts / {item.supply} conditional depth suppliers · no price premium inferred</span></div>' for position, item in report.economy.items())
-    return f'<section class="cd-section"><div class="cd-section-head"><div><h2>League Opportunity Dashboard</h2><p>League-aware needs, availability, compatibility, and market inefficiencies</p></div><span class="cd-chip">Explainable synthesis</span></div><div class="cd-intelligence">{cards}</div><div class="cd-snapshots"><details class="cd-snapshot" open><summary>Best Trade Partners</summary><div class="cd-snapshot-body">{partner_rows}</div></details><details class="cd-snapshot"><summary>Top Player Opportunities</summary><div class="cd-snapshot-body">{opportunities}</div></details><details class="cd-snapshot"><summary>League Economy</summary><div class="cd-snapshot-body">{economy}</div></details></div></section>'
+    return f'<section class="cd-section"><div class="cd-section-head"><div><h2>League Opportunity Dashboard</h2><p>Roster needs and possible partners to investigate</p></div><span class="cd-chip">Roster context</span></div><div class="cd-intelligence">{cards}</div><div class="cd-snapshots"><details class="cd-snapshot" open><summary>Best Trade Partners</summary><div class="cd-snapshot-body">{partner_rows}</div></details><details class="cd-snapshot"><summary>Top Player Opportunities</summary><div class="cd-snapshot-body">{opportunities}</div></details><details class="cd-snapshot"><summary>League Economy</summary><div class="cd-snapshot-body">{economy}</div></details></div></section>'
 
 
 def league_snapshot(view: dict[str, Any]) -> str:
     snapshot = view["snapshot"]
     standings = "".join(f'<div class="cd-mini-row"><b>#{rank} {escape(team["team_name"])}</b><span>{escape(snapshot["season_label"])} · {team["wins"]}-{team["losses"]}-{team["ties"]}</span></div>' for rank, team in enumerate(snapshot["standings"], 1))
-    transactions = "".join(f'<div class="cd-mini-row"><b>{escape(item["type_label"])}</b><span>{escape(item["timestamp"])}</span></div>' for item in snapshot["transactions"]) or '<p class="muted">No cached transactions.</p>'
+    transactions = "".join(f'<div class="cd-mini-row"><b>{escape(item["type_label"])}</b><span>{escape(readable_time(item["timestamp"]))}</span></div>' for item in snapshot["transactions"]) or '<p class="muted">No cached transactions.</p>'
     matchups = []
     for matchup_id, sides in sorted(snapshot["matchups"].items(), key=lambda item: str(item[0])):
         names = " vs ".join(escape(str(side.get("team") or "TBD")) for side in sides)
@@ -174,7 +204,7 @@ def league_snapshot(view: dict[str, Any]) -> str:
     leader = snapshot["leader"]
     leaders = (f'<div class="cd-mini-row"><b>Projected Power Leader</b><span>{escape(str(leader.get("team_name"))) if leader else "No projected leader is available yet."}</span></div>' if snapshot["preseason"] else f'<div class="cd-mini-row"><b>{escape(snapshot["season_label"])} Leader</b><span>{escape(str(leader.get("team_name"))) if leader else "No current-season leader is available."}</span></div>')
     health = snapshot["health"]
-    health_html = f'<div class="cd-mini-row"><b>{escape(health["status"])}</b><span>Last sync {escape(health["last_sync"])}</span></div>' + (f'<p class="warn">{escape(health["error"])}</p>' if health["error"] else "")
+    health_html = f'<div class="cd-mini-row"><b>{escape(health["status"])}</b><span>Last sync {escape(readable_time(health["last_sync"]))}</span></div>' + (f'<p class="warn">{escape(health["error"])}</p>' if health["error"] else "")
     sections = ((snapshot["season_label"], standings), ("Recent Transactions", transactions), ("Upcoming Matchups", "".join(matchups) or '<p class="muted">No matchup assignments.</p>'), ("League Leaders", leaders), ("League Health", health_html))
     cards = "".join(f'<details class="cd-snapshot"{" open" if index == 0 else ""}><summary>{escape(title)}</summary><div class="cd-snapshot-body">{body}</div></details>' for index, (title, body) in enumerate(sections))
     return f'<section class="cd-section"><div class="cd-section-head"><div><h2>League Snapshot</h2><p>Compact reference cards · expand only what you need</p></div></div><div class="cd-snapshots">{cards}</div></section>'
@@ -195,9 +225,8 @@ def commissioner_desk(view: dict[str, Any]) -> str:
         + since_last_visit(view)
         + unified_recommendation_panel(view)
         + front_office_summary(view)
-        + league_opportunity_dashboard(view)
         + league_headlines(view)
-        + league_intelligence(view)
+        + source_details(league_opportunity_dashboard(view) + league_intelligence(view), summary="Detailed Evidence · league assessments")
         + league_snapshot(view)
         + '<p class="cd-footer-note">Facts before interpretation · Explainable recommendations · Uncertainty disclosed</p></div>'
         + PERSISTENCE_SCRIPT

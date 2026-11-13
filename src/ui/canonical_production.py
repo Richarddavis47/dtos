@@ -1,5 +1,6 @@
 """Render admitted Sleeper observations; no acquisition or scoring work."""
 from html import escape
+from src.ui.customer_experience import readable_time
 from src.core.player_value_projection.sleeper_actuals import actual_display
 
 _REASONS = {
@@ -10,7 +11,7 @@ _REASONS = {
     'score_not_observed': 'No individual Sleeper score was supplied',
     'SOURCE_WEEK_UNAVAILABLE': 'The weekly source request failed',
     'INVALID_SOURCE_WEEK': 'The weekly source response could not be admitted',
-    'compatible_sleeper_matchup_publication_unavailable': 'A compatible Sleeper league-season matchup publication is not prepared',
+    'compatible_sleeper_matchup_publication_unavailable': 'Sleeper results are not ready for this league and season',
     'sleeper_scoring_provenance_unverified': 'The retained matchup publication does not verify the selected scoring context',
 }
 
@@ -75,6 +76,8 @@ def production_panel(production: dict | None, *, refresh_failed: bool = False) -
     notes = ''.join('<li>' + escape(str(note)) + '</li>' for note in production.get('limitations') or ())
     return ('<section class="card canonical-production" style="min-width:0;overflow-wrap:anywhere">'
             '<h3>Sleeper actual fantasy results · selected league</h3><p>' + escape(summary) + '</p>' + retained
+            + '<details class="cx-evidence"><summary>Results, weekly coverage and sources</summary>'
+            + '<p>Updated: ' + escape(readable_time(production.get('updated_at'))) + '</p>'
             + '<p>Source: ' + escape(str(production.get('source') or 'Sleeper league matchup results'))
             + ' · League: ' + escape(str(production.get('league_id') or 'Unknown'))
             + ' · Preparation observed: ' + escape(str(production.get('updated_at') or 'Unknown')) + '</p>'
@@ -91,4 +94,4 @@ def production_panel(production: dict | None, *, refresh_failed: bool = False) -
             '<thead><tr><th>Week</th><th>Points</th><th>Result / period</th><th>Observation / receipt / freshness</th><th>Qualification</th></tr></thead><tbody>'
             + ''.join(observations) + '</tbody></table></div></details>' + usage + '<ul>' + notes + '</ul>'
             '<p>Non-Sleeper usage, fixed-reference valuation analysis, historical roster observations and forward Sleeper '
-            'projections remain separate. No absent score, bye or DNP is reconstructed. Retained historical grades are not revalidated here.</p></section>')
+            'projections remain separate. No absent score, bye or DNP is reconstructed. Retained historical grades are not revalidated here.</p></details></section>')

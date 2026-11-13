@@ -29,6 +29,11 @@ class TradeLineupDetailBrowserTests(unittest.TestCase):
                     page.locator('#trade-find').press('Enter')
                     helper.complete(page)
                     card = page.locator('.tw-offer').first
+                    self.assertEqual(card.locator(':scope > .tw-lineup-details').count(), 0)
+                    before_review = len(records)
+                    card.get_by_role('button', name='Review trade', exact=True).click()
+                    self.assertEqual(len(records), before_review)
+                    card = page.locator('.tw-offer-review').first
                     detail = card.locator(':scope > .tw-lineup-details')
                     self.assertEqual(detail.count(), 1)
                     count = len(records)
@@ -78,6 +83,7 @@ class TradeLineupDetailBrowserTests(unittest.TestCase):
                 summary = disclosure.locator('summary').first
                 summary.wait_for()
                 card = page.locator('#trade-result')
+                card.locator('.tw-team-impact-details > summary').click()
                 self.assertIn('10.00 points (known subtotal only', card.inner_text())
                 self.assertIn('Uncovered bench receiver: no numerical projection', card.inner_text())
                 self.assertIn('week 8 reserve-production change: +10.00', card.inner_text())

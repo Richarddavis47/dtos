@@ -80,10 +80,10 @@ def _starter_projection_html(row: dict[str, Any] | None) -> str:
         return (
             '<div class="starter-projections unavailable" data-dtos-semantic-field="pregame_projection" '
             'data-dtos-availability="unavailable"><span>Projection unavailable</span>'
-            '<details><summary>Technical Details</summary><small>No canonical Sleeper projection exists for this starter. DTOS does not fabricate a fallback.</small></details></div>'
+            '<details><summary>Projection sources</summary><small>Sleeper has no supported projection for this starter in the selected league and week.</small></details></div>'
         )
     technical = (
-        f'<details><summary>Technical Details</summary><small>Provider: Sleeper. '
+        f'<details><summary>Projection sources</summary><small>Provider: Sleeper. '
         f'Availability: {escape(str(projection.get("projection_availability") or "projected"))}. '
         f'Confidence: {escape(str(projection.get("projection_confidence") if projection.get("projection_confidence") is not None else "Unavailable"))}%. '
         f'DTOS uses the unrounded league-scored total for intelligence; the displayed '

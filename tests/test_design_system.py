@@ -54,7 +54,7 @@ class DesignSystemTests(unittest.TestCase):
         html = account_page_header("Sign in", purpose="Return to your leagues.")
         self.assertIn('data-dtos-component="page-header"', html)
         self.assertIn('data-dtos-shell="account-onboarding"', html)
-        self.assertIn("Account &amp; identity", html)
+        self.assertIn("DTOS — Your account", html)
         self.assertIn("Return to your leagues.", html)
         self.assertNotIn("manager-nav", html)
 

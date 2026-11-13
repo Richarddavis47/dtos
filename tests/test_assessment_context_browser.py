@@ -82,7 +82,7 @@ class AssessmentContextBrowserTests(unittest.TestCase):
                         page.select_option("#shop-protected", "player:b")
                         page.click("#trade-find")
                         button = page.get_by_role(
-                            "button", name="Open editable offer: preview", exact=True
+                            "button", name="Review trade", exact=True
                         )
                         button.wait_for()
                         if preview_first:
@@ -98,7 +98,7 @@ class AssessmentContextBrowserTests(unittest.TestCase):
                         if not preview_first:
                             button.click()
                         page.get_by_role(
-                            "button", name="Adopt alternative", exact=True
+                            "button", name="Use this offer in my draft", exact=True
                         ).click()
                         state = page.evaluate(
                             "JSON.parse(sessionStorage.getItem('dtos-trade-workspace:scout-session'))"

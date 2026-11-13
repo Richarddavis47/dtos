@@ -43,12 +43,12 @@ class CalculatorBalanceFeedbackBrowserTests(unittest.TestCase):
                 self.assertLess(status.bounding_box()['y'] + box['height'], 844)
                 self.assertLessEqual(page.evaluate('document.documentElement.scrollWidth'), width + 1)
                 self.fixture.balancing(*pending[0])
-                page.get_by_role('button', name='Preview adjustment', exact=True).wait_for()
+                page.get_by_role('button', name='Review trade', exact=True).wait_for()
                 self.assertTrue(remove.is_enabled())
                 self.assertTrue(page.locator('#calculator-lock').is_enabled())
                 self.assertEqual(self.fixture.state(page)['currentProposal'], original)
-                page.get_by_role('button', name='Preview adjustment', exact=True).click()
-                page.get_by_role('button', name='Keep original', exact=True).click()
+                page.get_by_role('button', name='Review trade', exact=True).click()
+                page.get_by_role('button', name='Back to offers', exact=True).click()
                 self.assertEqual(self.fixture.state(page)['currentProposal'], original)
 
     def test_empty_error_network_failure_and_timeout_restore_controls_and_original(self):
@@ -108,7 +108,7 @@ class CalculatorBalanceFeedbackBrowserTests(unittest.TestCase):
                 pending[0].fulfill(json={'results': [self.fixture.fixture.offer(['player:a'], ['player:x'])], 'count': 1})
                 page.wait_for_timeout(50)
                 self.assertEqual(self.fixture.state(page)['currentProposal'], state)
-                self.assertNotIn('Alternative preview', page.locator('#trade-result').inner_text())
+                self.assertNotIn('Trade review', page.locator('#trade-result').inner_text())
                 if intent not in ('navigate', 'build_own'):
                     self.assertFalse(page.locator('#trade-balance-offer').get_attribute('aria-busy') == 'true')
                     self.assertTrue(page.get_by_role('button', name='Remove A from calculator', exact=True).is_enabled())

@@ -116,7 +116,7 @@
     box.append(moves); return box;
   }
 
-  function acquisitionView(out, record, node, market, retained = false) {
+  function acquisitionView(out, record, node, market, retained = false, compact = false) {
     if (!record) return;
     const roles = record.roles || [], cost = record.cost || {};
     const labels = [];
@@ -136,7 +136,7 @@
       (record.lowest_cost_ties > 1 ? 'Lowest cost tied; existing fit ordering breaks the tie. ' : '') +
       'Costs do not determine the original verdict.'));
     out.append(node('small', 'Bounded search, not a global minimum, asking price or guarantee of acceptance. Lower cost does not establish a better trade.'));
-    out.append(detail);
+    if (!compact) out.append(detail);
   }
   function create(options) {
     const {node, points, market, panel, tray, getEntries, setEntries, environment, details} = options;
@@ -152,7 +152,7 @@
     }
     function offer(entry, index, comparison) {
       const out = node('article', null, 'tw-comparison-offer'); out.dataset.comparisonSlot = String(index + 1);
-      out.append(capitalView(entry.context?.draft_capital_record, node, environment().scope, true));
+      const capital = node('details'); capital.append(node('summary', 'Draft capital · picks before and after'), capitalView(entry.context?.draft_capital_record, node, environment().scope, true));
       acquisitionView(out, entry.summary.acquisition, node, market, entry.retained || entry.context?.restored);
       const s = entry.summary, depth = s.depth || {}, capacity = s.capacity || {};
       out.append(node('h4', 'Offer ' + (index + 1) + ' · ' + s.verdict),
@@ -187,6 +187,7 @@
       const disclosure = node('details'); disclosure.append(node('summary', 'Original assessment · both teams and evidence limits'));
       disclosure.append(node('small', 'Captured ' + (entry.context?.identity?.captured_at || 'time unavailable') + '. Values and conclusions belong to this offer’s original assessment.'));
       details(entry, disclosure); out.append(disclosure);
+      out.append(capital);
       out.append(button('Remove offer ' + (index + 1), () => save(entries().filter((_, i) => i !== index))));
       return out;
     }
@@ -210,7 +211,7 @@
       keep.append(node('p', result.supported ? 'Season ' + result.season + ' · week ' + result.week + ': ' + points(result.baseline) + ' recorded optimal-lineup points; 0.00 trade-related change.' : 'A shared supported lineup total is unavailable. No zero projection is inferred.'));
       const capitals = rows.map(row => readCapital(row.context?.draft_capital_record, environment().scope));
       if (capitals.length && capitals.every(c => c?.complete && c.generation === capitals[0].generation))
-        keep.append(capitalView(rows[0].context.draft_capital_record, node, environment().scope, true, true));
+        { const capital = node('details'); capital.append(node('summary', 'Draft capital · keep the roster'), capitalView(rows[0].context.draft_capital_record, node, environment().scope, true, true)); keep.append(capital); }
       else keep.append(node('p', 'A shared recorded draft-capital baseline is unavailable; each offer’s supported inventory stays separate.'));
       grid.append(keep); rows.forEach((row, i) => grid.append(offer(row, i, result))); panel.append(grid);
       if (!rows.length) panel.append(node('p', 'Add a completed assessment from this Trade workspace. Your draft has not changed.'));

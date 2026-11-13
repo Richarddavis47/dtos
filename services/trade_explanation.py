@@ -384,24 +384,31 @@ def _decision_primary(result, decision, admissions=None):
     brief = '<section class="tw-decision" aria-label="Trade decision summary">' + lead + market_html
     final = final_decision(result, _admissions=admissions)
     if not final['qualified'] and final['side_assessment'] in ('SMASH ACCEPT', 'WORTH PURSUING'):
-        brief += paragraph('Your-side assessment only: ' + final['side_assessment'] + '. This is not the bilateral verdict.', 'tw-side-assessment')
-    brief += paragraph(decision.get('blocker'), 'tw-drawback')
-    brief += paragraph(decision['lineup']['explanation']) + paragraph(decision.get('summary'))
-    brief += paragraph(decision.get('coverage_explanation'), 'tw-drawback')
-    brief += paragraph('Cost and uncertainty: ' + decision['main_cost'], 'tw-drawback')
-    for key in ('your_side_summary', 'their_side_summary', 'decision_conditions', 'evidence_next_action'):
-        for line in (decision.get(key) or '').splitlines():
+        brief += paragraph('Your-side assessment only: ' + final['side_assessment'] + '. Both teams have not passed the trade checks.', 'tw-side-assessment')
+    # One principal cost and the admitted current-week effect lead. Longer
+    # periods, reserve qualifications and manager-fit conditions remain below.
+    for value in dict.fromkeys(filter(None, (decision.get('blocker'), decision.get('main_cost'), decision.get('limitation')))):
+        brief += paragraph(value, 'tw-drawback')
+    brief += '<section class="tw-team-summary" aria-label="Current projected lineup effects">'
+    for key, title in [('your_side_summary', 'Your team'), ('their_side_summary', 'Their team')]:
+        lines = (decision.get(key) or '').splitlines()
+        brief += '<section><h4>' + title + '</h4>' + paragraph(lines[0] if lines else 'The projected lineup effect is not established.') + '</section>'
+    brief += '</section>' + paragraph(decision.get('next_action'))
+    brief += '<details class="tw-team-impact-details"><summary>Both teams · depth, costs and conditions</summary>'
+    for key, title in [('your_side_summary', 'Your team'), ('their_side_summary', 'Their team')]:
+        brief += '<h4>' + title + '</h4>'
+        for line in dict.fromkeys((decision.get(key) or '').splitlines()[1:]):
+            brief += paragraph(line)
+    for key in ('decision_conditions', 'evidence_next_action'):
+        for line in dict.fromkeys((decision.get(key) or '').splitlines()):
             brief += paragraph(line, 'tw-drawback' if key == 'decision_conditions' else '')
+    partner = (result.get('dimensions') or {}).get('league_partner_context') or {}
     partner_admission = admissions['partner']
     partner_supported = partner_admission['identity_state'] == 'compatible' and not partner_admission['invalid_comparison']
-    brief += paragraph('Other team: ' + result['why_they_would_do_it'] if result.get('why_they_would_do_it') and partner_supported else 'Other team: a complete roster-production benefit cannot be verified.' if not partner_supported else None)
-    partner = (result.get('dimensions') or {}).get('league_partner_context') or {}
-    brief += paragraph('Their cost and uncertainty: ' + partner['current_cost'] if partner.get('current_cost') and partner_supported else 'Their roster-production cost cannot be verified in this source context.' if not partner_supported else None)
-    if decision.get('limitation'):
-        brief += paragraph('Evidence limit: ' + decision['limitation'], 'tw-drawback')
+    brief += paragraph('Their principal cost: ' + partner['current_cost'] if partner.get('current_cost') and partner_supported else None)
     if decision.get('conditional'):
-        brief += '<details><summary>Contender versus rebuild considerations · conditional</summary>' + ''.join(paragraph(t) for t in decision['conditional']) + '</details>'
-    brief += paragraph(decision['next_action'])
+        brief += '<h4>Other supported considerations</h4>' + ''.join(paragraph(t) for t in decision['conditional'])
+    brief += '</details>'
     facts = result.get('player_facts') or {}
     if facts:
         brief += '<details class="tw-player-facts"><summary>Player production, projections and rank definitions</summary>'

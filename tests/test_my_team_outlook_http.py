@@ -46,7 +46,11 @@ class MyTeamOutlookHTTPTests(unittest.TestCase):
         response = self.directory()
         self.assertEqual(response.status_code, 200)
         self.assertNotIn('None%', response.text)
-        self.assertIn('Forecast unavailable', response.text)
+        self.assertNotIn('Forecast unavailable', response.text)
+        self.assertNotIn('Projected finish: Unavailable', response.text)
+        self.assertNotIn('Playoff Odds', response.text)
+        self.assertNotIn('Championship Odds', response.text)
+        self.assertIn('Preseason · official record not started', response.text)
 
     def test_supported_numeric_zero_probability_remains_zero(self):
         directory = {t['roster_id']: dict(preseason=True, rank=None, projected_wins=None,

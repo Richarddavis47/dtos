@@ -123,7 +123,7 @@ class TradeWorkspaceBrowserTests(unittest.TestCase):
                                 if workflow == "trade-for":
                                     self.assertEqual(page.get_by_label("Counterparty", exact=True).input_value(), "2")
                                 self.assertTrue(page.get_by_role('region', name='Selected trade target').is_visible())
-                                search = page.get_by_role("button", name="Find Shop returns" if workflow == "shop" else "Find Bilateral Options", exact=True)
+                                search = page.get_by_role("button", name="Find offers" if workflow == "shop" else "Find offers", exact=True)
                                 search.wait_for()
                                 self.assertTrue(search.is_visible())
                             page.goto("https://dtos.test/trades/recommended")

@@ -184,7 +184,7 @@ class BeginnerBrowserTests(unittest.TestCase):
                 self.assertIn('Result #1', page.locator('.market-asset').inner_text())
                 self.assertEqual(page.get_by_role('link', name='Next page →').count(), 0)
                 page.locator('.market-asset').click()
-                page.get_by_role('link', name='Open canonical dossier').click()
+                page.get_by_role('link', name='Open player').click()
                 back = page.get_by_role('link', name='← Back to Market results')
                 self.assertIn('q=Denzel', back.get_attribute('href'))
                 self.assertIn('position=WR', back.get_attribute('href'))

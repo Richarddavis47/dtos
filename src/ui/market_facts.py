@@ -1,6 +1,7 @@
 """Shared readable Market provenance; raw generation IDs stay in disclosure."""
 from dataclasses import asdict, is_dataclass
 from html import escape
+from src.ui.customer_experience import readable_time
 
 
 def market_fact_html(fact) -> str:
@@ -11,9 +12,9 @@ def market_fact_html(fact) -> str:
     fallback = ' · Last valid provider evidence (refresh unavailable)' if row.get('fallback') else ''
     source = row.get('source_updated_at')
     retrieved = row.get('retrieved_at')
-    time_label = f'Source as of {source}' if source else 'Source timestamp unavailable'
+    time_label = f'Source as of {readable_time(source)}' if source else 'Source date not recorded'
     if retrieved:
-        time_label += f' · Retrieved {retrieved}'
+        time_label += f' · Retrieved {readable_time(retrieved)}'
     reason = row.get('unavailability_reason')
     support = ', '.join(row.get('evidence_coverage') or ()) or 'No supported source'
     return (
@@ -27,6 +28,7 @@ def market_fact_html(fact) -> str:
         f'<p>{escape(support)} · Evidence confidence {row.get("confidence", 0)}/100. '
         'Evidence support and freshness; not recommendation or acceptance confidence.</p>'
         f'<p>{escape(str(row.get("warning") or ""))}</p>'
+        f'<p>Source timestamp: {escape(str(source or "Not recorded"))} · Retrieval timestamp: {escape(str(retrieved or "Not recorded"))}</p>'
         f'<p>Source generation: <code>{escape(str(row.get("generation") or "Unavailable"))}</code></p>'
         '</details></div>'
     )

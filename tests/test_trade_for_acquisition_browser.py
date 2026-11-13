@@ -174,7 +174,7 @@ class AcquisitionBrowserTests(unittest.TestCase):
                             "Emulation.setTouchEmulationEnabled", {"enabled": True}
                         )
                         control = cheap.get_by_role(
-                            "button", name="Open editable offer:", exact=False
+                            "button", name="Review trade", exact=False
                         )
                         control.scroll_into_view_if_needed()
                         box = control.bounding_box()
@@ -200,14 +200,14 @@ class AcquisitionBrowserTests(unittest.TestCase):
                         touch.detach()
                     else:
                         cheap.get_by_role(
-                            "button", name="Open editable offer:", exact=False
+                            "button", name="Review trade", exact=False
                         ).click()
                     self.assertIn(
                         "Lowest-cost supported offer found",
                         page.locator("#trade-result").inner_text(),
                     )
                     page.get_by_role(
-                        "button", name="Adopt alternative", exact=True
+                        "button", name="Use this offer in my draft", exact=True
                     ).click()
                     self.assertEqual(harness.proposal(page)["sent"], ["player:d"])
                     self.assertEqual(harness.proposal(page)["received"], ["player:x"])

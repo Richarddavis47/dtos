@@ -120,7 +120,7 @@ class TradeRepairContractTests(unittest.TestCase):
         script = (Path(__file__).parents[1] / "static/js/trade_workspace.js").read_text(encoding="utf-8")
         self.assertIn('row.proposal_presentation?.send', script)
         self.assertIn('row.proposal_presentation?.receive', script)
-        self.assertIn('Open editable offer:', script)
+        self.assertIn('Review trade', script)
 
     def test_rendered_workflow_fails_closed_on_mismatched_repair_mode(self) -> None:
         html = trade_workflow({

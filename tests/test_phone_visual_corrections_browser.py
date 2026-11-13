@@ -149,12 +149,12 @@ class PhoneVisualCorrectionTests(unittest.TestCase):
                 lock.locator("summary").click()
                 self.assertIn("incoming Trade For target", lock.inner_text())
                 original = fixture.state(page)["currentProposal"]
-                card.get_by_role("button", name="Open editable offer: preview").click()
+                card.get_by_role("button", name="Review trade").click()
                 preview = page.locator("#trade-result .tw-offer [data-badge=protection]")
                 preview.locator("summary").click()
                 self.assertIn("player:x", preview.inner_text())
                 self.assertEqual(fixture.state(page)["currentProposal"], original)
-                page.get_by_role("button", name="Keep original", exact=True).click()
+                page.get_by_role("button", name="Back to offers", exact=True).click()
                 self.assertEqual(fixture.state(page)["currentProposal"], original)
                 technical.TechnicalDetailsBrowserTests().assert_bounded(page, width)
 
