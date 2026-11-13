@@ -340,9 +340,13 @@ def main():
             # This is one bounded pre-work calibration, not an operation retry.
             target = required + 32 * execution.MIB
             deficit = max(0, target - initial["capacity"]["admission_headroom_bytes"])
-            chunks = (deficit + 8 * execution.MIB - 1) // (8 * execution.MIB)
+            # Use full buffers first; the last allocated buffer may be short.
+            # One extra quantum covers the measured charge/uncharge overhead.
+            chunks = ((deficit + 8 * execution.MIB - 1) // (8 * execution.MIB)
+                      + bool(deficit))
             assert chunks <= 8 and chunks <= len(ballast), initial["capacity"]
-            released = sum(len(ballast.pop()) for _ in range(chunks))
+            released = sum(len(ballast.pop(0)) for _ in range(chunks))
+            assert deficit <= released <= 64 * execution.MIB
             # Returning Python objects alone may leave their pages in libc.
             # Reuse the existing cleanup boundary and then measure actual
             # container capacity; never credit the requested release itself.
@@ -354,6 +358,7 @@ def main():
                 "fixture_margin_bytes": 32 * execution.MIB,
                 "released_harness_bytes": released,
                 "maximum_release_bytes": 64 * execution.MIB,
+                "buffer_quantum_bytes": 8 * execution.MIB,
                 "unused_pages_released": unused_pages_released,
                 "admitted_capacity": before["capacity"],
                 "operation_retries": 0,
