@@ -1,0 +1,23 @@
+# Trade presentation inventory — baseline build2251
+
+Source e7ecd1b72944e36481668554d05dc4e321e7b3de/tree1502404775deac8eb657d62b855bbac62aed374c. Source audit before implementation, not live owner inspection.
+
+| Route/state | Concrete existing before example | Confirmed issue | Reuse/correction boundary |
+|---|---|---|---|
+| /trades, fresh not-started | "Only worthwhile bilateral opportunities", "Active Front Office" | Internal bilateral/identity vocabulary on normal entry | components/trade_intelligence.py labels only; preserve all entry URLs and source logic |
+| /trades/trade-for and /trades/shop, ready | "Find Bilateral Options" | Primary action requires internal terminology | components/trade_workspace.py: "Find offers"; same button ID/action |
+| /trades/calculator, selected package | "Advanced DTOS analysis" | Main action hides ordinary purpose | Existing #trade-run becomes "Evaluate trade"; same execution |
+| Recommended/Trade For/Shop completed current offer | offerCard adds final verdict, decisive reason/next step, acquisition roles/cost, partner/history link, send/receive, drawback, full four-line decision summary, all capital seasons/rounds, comparison button, each exact protection, every future-capital consequence and supporting paragraphs. It additionally lifts .tw-lineup-warning and .tw-lineup-details out of the main explanation into every card. | Confirmed very long default cards and duplicate risk/availability/depth text. | Reuse previewOffer(row) and preserved assessmentContext; collapsed card only decision/partner/exact package/reason/main risk/qualified active+partner current-week impact/active valuation/cost-role labels and one Review trade action. Existing details available in review without HTTP. |
+| Offer review/current | previewOffer creates "Alternative preview", repeats Original/Alternative package paragraphs, renders offerCard(row,true), then Adopt alternative/Keep original | The review uses existing persisted originalProposal/previewProposal and context; useful but wrongly framed for ordinary reviewing | Keep state/ownership/revalidation machinery; title Trade review, clarify edit/adopt versus return; group existing evidence into summary/team effects/lineups/depth/capital/sources |
+| Evaluate/current result | showEvaluation capital inventory appears before assessment and source explanation, then repeated decision/main-cost, dimensions, depth/source and rationale sections | Answer displaced by inventory and repeated warnings | Keep canonical explanation nodes, re-layer client DOM into primary summary and existing optional calculation/source groups |
+| two-offer comparison | Each alternative starts with entire capital inventory before offer heading; own/partner risk and conditions repeat; original complete assessment follows | Comparison lead obscured | Move capital into disclosure below decision/package/effects; preserve recorded baseline and compatibility checks exactly |
+| incomplete/current, retained, stale, source-changed | existing contextNotice, finalVerdict, decisionPresentation, incomplete recommendation suppression, NOT REVALIDATED semantics | Correct qualifications must remain near affected claim | No new inference/source substitution. Keep qualifications, condense duplicate presentation only. |
+| capacity-deferred/timeout/cancel/error | readiness/status feedback and late-result suppression already present | Needs plain descriptions, no false zero-offer result | Preserve typed HTTP statuses, safeguards and actual recovery behavior |
+
+## Data-path findings
+
+No confirmed lost projection/result/Market/ownership facts in this initial Trade audit. Current duplication is rendering: the same admitted decision, reserve and capital facts are appended in multiple blocks. Unsupported models/unknowns remain qualified. Any new evidence-path defect will be separately reported and matched-tested before correction; evaluator, scoring, qualification and admission remain unchanged.
+
+## Validation plan
+
+Use existing native evaluator/HTTP browser harness and prepared-offer controls. Capture exact same result payloads before/after at320×432,375×667,390×844,desktop, including long exact picks. Measure visible first-card height/text with screenshots and verify Review opens already evaluated evidence, two-sided lineups/depth/capital, comparison/return state, and zero extra API calls. Cover zero-offer/incomplete/retained/deferred/error and acquisition cost-vs-fit roles. Adapt existing tests that directly clicked details in collapsed cards to first open Review; preserve their original evidence/math assertions, focus/touch and no-new-work checks.

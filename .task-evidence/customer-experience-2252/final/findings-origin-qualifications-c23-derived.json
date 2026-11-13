@@ -1,0 +1,141 @@
+{
+  "schema": 1,
+  "source": {
+    "baseline": "e7ecd1b72944e36481668554d05dc4e321e7b3de",
+    "baseline_tree": "1502404775deac8eb657d62b855bbac62aed374c",
+    "candidate": "85984a5661e6f506bab11b91555695c83a2d1bb4",
+    "tree": "551ad8508f11d4b1b2870838aa804390840a6f62",
+    "branch": "feat/customer-experience-2252",
+    "version": "1.22.37",
+    "build": 2252,
+    "recorded_at": "2026-11-13T10:12:15.630087+00:00",
+    "expected_test_count": 4501,
+    "pr": 341
+  },
+  "observed_at": "2026-11-13T10:15:41.243575+00:00",
+  "scope": "Derived C23 qualification; original findings table and all app objects unchanged, only tests migrated. Earlier fixture failures remain separately qualified.",
+  "table": {
+    "path": "docs/audits/customer-experience-2252/SOURCE_TO_SCREEN_FINDINGS.md",
+    "bytes": 7226,
+    "sha256": "f9798c7d91592a99819e3a6523314c7080bfa058bbe73bdafd8b8670faed0f32",
+    "rows": 18,
+    "original_bytes_preserved": true
+  },
+  "findings": [
+    {
+      "case": "Invalid Commissioner scalars",
+      "finding_id": "invalid-commissioner-scalars",
+      "origin": "introduced_intermediate_candidate_regression",
+      "production_baseline_defect_established": false,
+      "observed_candidate": "214daee495710bc80cc584fd75256a3b0e63ee3e",
+      "baseline_path": "components/commissioner.py",
+      "baseline_fact": "M0 league_intelligence rendered each scalar through the existing available() formatter; the intermediate compact-card support gate instead accepted nonfinite/null-like strings and emitted raw counters.",
+      "final_fact": "Current display admission reuses the existing formatter and qualifies missing counters. Zero and negative supported values remain visible.",
+      "allowed_claim": "An intermediate presentation regression was caught and corrected before deployment.",
+      "disallowed_claim": "A newly discovered production grading, ingestion or upstream-data defect was repaired."
+    },
+    {
+      "case": "Manager-profile waiting state",
+      "finding_id": "manager-waiting-not-progress",
+      "origin": "introduced_intermediate_candidate_regression",
+      "production_baseline_defect_established": false,
+      "observed_candidate": "0ccb9c1480517c358a7fce735d8ae01c5885c229",
+      "baseline_path": "routes/fois.py",
+      "baseline_fact": "M0 used FOIS generation pending / preparation pending for waiting; the first overhaul wording said profiles are being prepared for both waiting and running.",
+      "final_fact": "Only observed running state claims preparation in progress. Waiting/no saved profile says not prepared yet; no generation is started.",
+      "allowed_claim": "Candidate wording was refined to distinguish waiting from observed active work.",
+      "disallowed_claim": "Production FOIS workers or admission were defective, or missing profiles were recovered."
+    },
+    {
+      "case": "Roster portrait/name overlap",
+      "finding_id": "roster-portrait-name-overlap",
+      "origin": "introduced_intermediate_candidate_regression",
+      "production_baseline_defect_established": false,
+      "baseline_fact": "The compact candidate used a 40px wrapper with an inherited 52px fallback.",
+      "final_fact": "The fallback follows the actual wrapper dimensions, and rendered geometry checks keep it outside player names.",
+      "allowed_claim": "Visual review caught and corrected an introduced overlap.",
+      "disallowed_claim": "This repaired a production source-identity or roster-data defect."
+    },
+    {
+      "case": "Owner-observation clock meaning",
+      "finding_id": "owner-observation-clock-meaning",
+      "origin": "introduced_intermediate_candidate_regression",
+      "production_baseline_defect_established": false,
+      "baseline_fact": "M0 explained that current-owner as-of times are retrieval/sync observations, not acquisition times. An intermediate simplification removed that interpretation.",
+      "final_fact": "The exact distinction is restored once in optional provenance while the concise visible ownership-gap warning remains.",
+      "allowed_claim": "Source-clock interpretation was preserved during the presentation migration.",
+      "disallowed_claim": "Historical ownership time was reconstructed or a new observation clock was obtained."
+    },
+    {
+      "case": "Roster entry placement",
+      "finding_id": "roster-entry-placement",
+      "origin": "candidate_layout_regression_against_existing_geometry_contract",
+      "production_baseline_defect_established": false,
+      "baseline_fact": "The existing phone acceptance threshold was 600px for the first roster action; candidate aggregate explanation exceeded it.",
+      "final_fact": "The complete coverage explanation follows the roster rows, while compact counts and material named risks remain adjacent.",
+      "allowed_claim": "The layout was corrected against the unchanged acceptance threshold.",
+      "disallowed_claim": "The threshold was relaxed or a source-preparation/memory defect was repaired."
+    }
+  ],
+  "global_limits": [
+    "No newly fixed ingestion/scoring/restoration/provider-acquisition defect is established by this overhaul.",
+    "Existing genuine missing/incompatible or not-yet-prepared publications remain qualified.",
+    "Unset overall grades and multi-year forecasts are unimplemented models; presentation does not make them available.",
+    "Final C14 full local/canonical/hosted acceptance remains pending unless separately reconciled with original receipts."
+  ],
+  "original_qualifier_source": {
+    "baseline": "e7ecd1b72944e36481668554d05dc4e321e7b3de",
+    "baseline_tree": "1502404775deac8eb657d62b855bbac62aed374c",
+    "candidate": "3d3ae2239a08a33189eb90d4e777a1d545d2437e",
+    "tree": "4e9b5f719359c5e86cddb337abed5adf607b1809",
+    "branch": "feat/customer-experience-2252",
+    "version": "1.22.37",
+    "build": 2252,
+    "recorded_at": "2026-11-13T05:46:07.337153+00:00",
+    "expected_test_count": 4501,
+    "pr": 341
+  },
+  "derivation": {
+    "prior": "findings-origin-qualifications-c22-derived.json",
+    "sha256": "532a45b59a3cbd2ef63ff9c8eb30804e860e2e8e02645596028b7ba7e17a5c94",
+    "application_equivalence": "source-preservation-c23-derived.json"
+  },
+  "normalization_inputs": [
+    {
+      "path": "findings-origin-qualifications-c14.json",
+      "bytes": 5408,
+      "sha256": "ab37138f245590dcaeeedf466c567d20437d8e8ea71eb64026c7e1465cdbf7da"
+    },
+    {
+      "path": "findings-origin-qualifications-c14.md",
+      "bytes": 2535,
+      "sha256": "5176668bfdbb0d6ddf77466206f161e54eb5efadeaf69cd53d7fe5756f2d4fab"
+    },
+    {
+      "path": "source-c15-test-only-reconciliation.json",
+      "bytes": 1258,
+      "sha256": "faa7b0c0114bbc17614eb5485eb692c3cbf44d6afc9ab7a9858109a7f80678bb"
+    },
+    {
+      "path": "source-preservation-c15.json",
+      "bytes": 3615,
+      "sha256": "30a7196d682606054982e1957a1ea145da1b924fcb588887bc76d209e641ce09"
+    }
+  ],
+  "derived_from": {
+    "path": "findings-origin-qualifications-c15-derived.json",
+    "sha256": "fee880c28b75f3cb8c41ef24c3cbcce0bfd8ae2f6dbeee97b53aff189f680296",
+    "source": {
+      "baseline": "e7ecd1b72944e36481668554d05dc4e321e7b3de",
+      "baseline_tree": "1502404775deac8eb657d62b855bbac62aed374c",
+      "candidate": "ac4d58a6cf1b60f801174dfd0376af7e4dcad966",
+      "tree": "b47b511559ef1844ba28f0cca7bf94a901beac4b",
+      "branch": "feat/customer-experience-2252",
+      "version": "1.22.37",
+      "build": 2252,
+      "recorded_at": "2026-11-13T06:15:17.072026+00:00",
+      "expected_test_count": 4501,
+      "pr": 341
+    }
+  }
+}
