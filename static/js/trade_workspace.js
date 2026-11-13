@@ -891,6 +891,12 @@
   function parsedExplanation(e) {
     const parsed = new DOMParser().parseFromString(e.explanation_html, 'text/html');
     const primary = parsed.querySelector('.dtos-explanation > p');
+    // Translate only the displayed decision copy, including retained HTML.
+    // The recorded evaluation, source payload and qualifications stay untouched.
+    for (const section of parsed.querySelectorAll('.tw-decision')) {
+      const text = parsed.createTreeWalker(section, NodeFilter.SHOW_TEXT);
+      while (text.nextNode()) text.currentNode.textContent = customerText(text.currentNode.textContent);
+    }
     // Older cached HTML must follow the same recorded bilateral admission in
     // expanded cards and previews as in the main result. No re-evaluation.
     if (primary && primary.firstChild?.textContent.trim() === e.recommendation && finalVerdict(e) !== e.recommendation) {
@@ -901,15 +907,15 @@
   function appendDecisionSummary(target, decision) {
     for (const key of ['your_side_summary', 'their_side_summary', 'decision_conditions', 'evidence_next_action']) {
       for (const line of (decision[key] || '').split('\n').filter(Boolean))
-        target.append(node('p', line, key === 'decision_conditions' ? 'tw-drawback' : ''));
+        target.append(node('p', customerText(line), key === 'decision_conditions' ? 'tw-drawback' : ''));
     }
   }
   function appendDecisionLead(target, decision) {
     if (!decision.decisive_reason && !decision.decision_next_step) return;
     const lead = node('section', null, 'tw-decision-lead');
     lead.setAttribute('aria-label', 'Decision and next step');
-    if (decision.decisive_reason) lead.append(node('p', 'Why this decision: ' + decision.decisive_reason));
-    if (decision.decision_next_step) lead.append(node('p', 'Next step: ' + decision.decision_next_step));
+    if (decision.decisive_reason) lead.append(node('p', 'Why this decision: ' + customerText(decision.decisive_reason)));
+    if (decision.decision_next_step) lead.append(node('p', 'Next step: ' + customerText(decision.decision_next_step)));
     target.append(lead);
   }
   function decisionPresentation(e) {
@@ -1059,7 +1065,7 @@
       out.append(brief);
       if (!previousContainer && e.decision_context.strategy?.selection_required) strategyAction(out);
     }
-    if (decision.main_cost || e.major_drawback || e.major_risks?.length) out.append(node('p', 'Cost and uncertainty: ' + (decision.main_cost || e.major_drawback || e.major_risks.join('; ').replaceAll('_', ' ')), 'tw-drawback'));
+    if (decision.main_cost || e.major_drawback || e.major_risks?.length) out.append(node('p', 'Cost and uncertainty: ' + customerText(decision.main_cost || e.major_drawback || e.major_risks.join('; ').replaceAll('_', ' ')), 'tw-drawback'));
     else if (context?.restored) out.append(node('p', 'Major drawback unavailable in retained context. Reevaluate for supported costs.', 'tw-drawback'));
     if (previousContainer) for (const risk of e.major_risks || []) if (risk !== e.major_drawback) out.append(node('p', 'Previous risk: ' + risk.replaceAll('_', ' '), 'tw-drawback'));
     if (e.legality?.execution_status && !retained && (!incomplete || e.legal === false || e.legality.execution_status === 'REQUIRES ROSTER RESOLUTION')) out.append(node('p', e.legality.execution_status));
@@ -1316,7 +1322,7 @@
     const unfavorable = ['REJECT', 'NOT WORTH IT'].includes(e.recommendation);
     const reason = unfavorable ? 'Closer current Market terms do not make this a recommended trade.' : decision.lineup?.explanation || e.why_you_would_do_it || 'Market balance is separate from strategic fit; no supported positive roster case is established.';
     card.append(node('p', 'Why consider: ' + reason),
-      node('p', 'Major drawback: ' + (decision.main_cost || e.major_drawback || 'A supported main cost is unavailable; reevaluate before deciding.'), 'tw-drawback'));
+      node('p', 'Major drawback: ' + customerText(decision.main_cost || e.major_drawback || 'A supported main cost is unavailable; reevaluate before deciding.'), 'tw-drawback'));
     if (decision.limitation) card.append(node('p', 'Evidence limit: ' + decision.limitation, 'tw-drawback'));
     if (retained) card.append(node('p', 'Prior benefits and drawbacks are not current conclusions. Reevaluate after adoption.', 'tw-drawback'));
     for (const id of [...row.proposal.assets_sent, ...row.proposal.assets_received]) { const protection = lockDetail(id); if (protection) card.append(protection); }
@@ -1351,6 +1357,7 @@
       .replaceAll('Canonical Market', 'Market value').replaceAll('canonical Market', 'Market value')
       .replaceAll('disjoint reserve cover', 'different eligible backups')
       .replaceAll('No legitimate bilateral construction clears the current constraints.', 'No offers met the requirements for both teams in this search.')
+      .replaceAll('Useful replacement production declines without a material supported starter gain or Market compensation.', 'Projected points from eligible backups fall without a meaningful starting-lineup gain or Market value to offset the loss.')
       .replaceAll('legal-replacement production falls', 'projected points from eligible backups fall')
       .replaceAll('legal-replacement production improves', 'projected points from eligible backups improve')
       .replaceAll('legal-replacement production declines', 'projected points from eligible backups decline')

@@ -4,6 +4,7 @@ from src.core.explanations import (
     Explanation, Statement,
 )
 from src.ui.intelligence_presentation import manager_points
+from src.ui.customer_experience import plain_reason
 from src.core.player_value_projection.sleeper_actuals import actual_display
 from html import escape
 from services.trade_decision import final_decision, lineup_comparisons
@@ -346,7 +347,7 @@ def render_trade_explanation(result: dict, *, league_id: str, _slot_details=True
 def _decision_primary(result, decision, admissions=None):
     admissions = admissions or completed_lineup_admissions(result)
     def paragraph(text, css=''):
-        return '<p' + (f' class="{css}"' if css else '') + '>' + escape(str(text)) + '</p>' if text else ''
+        return '<p' + (f' class="{css}"' if css else '') + '>' + escape(plain_reason(text)) + '</p>' if text else ''
     market = result.get('market_evidence') or {}
     sent, received = (market.get('sent') or {}).get('total'), (market.get('received') or {}).get('total')
     full = market.get('availability') == 'full' and sent is not None and received is not None

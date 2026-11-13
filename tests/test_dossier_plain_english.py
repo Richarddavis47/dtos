@@ -123,7 +123,7 @@ class DossierPlainEnglishTests(unittest.TestCase):
         report = replace(report, risk=replace(report.risk, evidence=evidence))
         self.assertIsNotNone(report.profile.age)
         text = ' '.join(weaknesses_text(report))
-        self.assertIn('could not be verified', text)
+        self.assertIn('Age risk is unverified.', text)
         self.assertNotIn('age is missing', text)
 
     def test_supported_buy_and_hold_keep_actions_and_report_unchanged(self):
@@ -143,7 +143,7 @@ class DossierPlainEnglishTests(unittest.TestCase):
                 self.assertIn('Compare this player', html)
                 self.assertNotIn('contextual v1 posture', html)
                 self.assertNotIn('position-specific v1 risk threshold', html)
-                self.assertIn('below the model&#x27;s positional caution range', html)
+                self.assertIn('Below this position&#x27;s age caution range', html)
                 self.assertEqual(supported.recommendation.action, action)
                 self.assertEqual(asdict(supported), before)
 

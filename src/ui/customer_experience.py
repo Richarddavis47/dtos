@@ -51,6 +51,8 @@ def plain_reason(value: object) -> str:
         ('disjoint reserve cover', 'different eligible backups'),
         ('No legitimate bilateral construction clears the current constraints.',
          'No offers met the requirements for both teams in this search.'),
+        ('Useful replacement production declines without a material supported starter gain or Market compensation.',
+         'Projected points from eligible backups fall without a meaningful starting-lineup gain or Market value to offset the loss.'),
         ('legal-replacement production falls', 'projected points from eligible backups fall'),
         ('legal-replacement production improves', 'projected points from eligible backups improve'),
         ('legal-replacement production declines', 'projected points from eligible backups decline'),
