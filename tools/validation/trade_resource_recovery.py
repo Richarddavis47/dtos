@@ -202,9 +202,15 @@ def main():
     def allocate_to_raw_headroom(mib):
         current = execution.observe_memory()["cgroup_current_bytes"]
         count = max(0, 2147483648 - current - mib * execution.MIB)
-        padding = bytearray(count)
-        for offset in range(0, len(padding), 4096):
-            padding[offset] = 1
+        # Separate harness-owned mappings can be released without copying a
+        # large bytearray while the container is already under pressure.
+        padding = []
+        while count:
+            chunk = bytearray(min(count, 8 * execution.MIB))
+            for offset in range(0, len(chunk), 4096):
+                chunk[offset] = 1
+            padding.append(chunk)
+            count -= len(chunk)
         return padding
 
     async def health(label):
@@ -326,9 +332,30 @@ def main():
             del chunk
             await asyncio.sleep(0.25)
             ballast = allocate_to_raw_headroom(64)
+            initial = observe("clean_file_cache_fixture_initial")
+            required = execution.WORKING_BYTES + execution.SAFETY_BYTES
+            # Kernel reclamation and prior real operations change the amount
+            # of file credit. Establish this normal-execution fixture from
+            # measured admission, rather than assuming 768MiB stays resident.
+            # This is one bounded pre-work calibration, not an operation retry.
+            target = required + 32 * execution.MIB
+            deficit = max(0, target - initial["capacity"]["admission_headroom_bytes"])
+            chunks = (deficit + 8 * execution.MIB - 1) // (8 * execution.MIB)
+            assert chunks <= 8 and chunks <= len(ballast), initial["capacity"]
+            released = sum(len(ballast.pop()) for _ in range(chunks))
             before = observe("clean_file_cache_pressure")
             assert before["capacity"]["admitted"], before["capacity"]
             assert before["capacity"]["conditional_file_credit_bytes"] > 0
+            assert before["capacity"]["raw_headroom_bytes"] < required
+            report["file_cache_fixture_calibration"] = {
+                "initial_capacity": initial["capacity"],
+                "required_bytes": required,
+                "fixture_margin_bytes": 32 * execution.MIB,
+                "released_harness_bytes": released,
+                "maximum_release_bytes": 64 * execution.MIB,
+                "admitted_capacity": before["capacity"],
+                "operation_retries": 0,
+            }
             index = len(samples)
 
             def work():
@@ -349,7 +376,7 @@ def main():
             assert before["file_accounting"]["file"] > min_file
             report["file_cache_recovery"] = {
                 "model_harness_ballast_bytes": 140 * execution.MIB,
-                "other_harness_ballast_bytes": len(ballast),
+                "other_harness_ballast_bytes": sum(map(len, ballast)),
                 "file_before": before["file_accounting"]["file"],
                 "minimum_file_during": min_file,
                 "raw_peak": max(x["current"] for x in during),
