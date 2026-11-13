@@ -1,0 +1,255 @@
+{
+  "schema": 1,
+  "repository": "Richarddavis47/dtos",
+  "actor": "Richarddavis47",
+  "publisher_ref": "refs/heads/release/2251-actions-publisher",
+  "baseline": "b8c3e6162630fea96fecee56c7a45ac0d5890971",
+  "candidate": "9943a3c220f0064c281bc9d53803afbf1ab03f49",
+  "tree": "1502404775deac8eb657d62b855bbac62aed374c",
+  "pr": 340,
+  "source_branch": "feat/trade-for-cost-2251",
+  "version": "1.22.36",
+  "build": 2251,
+  "draft_id": 443748442,
+  "prior_immutable_tag": "v1.22.35",
+  "canonical_tests": 4455,
+  "canonical_entries": 750,
+  "local_canonical_entries": 746,
+  "product_tests": 952,
+  "python_version": "3.14.3",
+  "capital_tests": 14,
+  "market_roster_tests": 21,
+  "recovery_file": ".github/release-plans/2251-recovery.zip",
+  "recovery_sha256": "47d516b9f5eac0ca6f021fe18fc4d885a7bd55ed27715699539f4bbcbb913476",
+  "recovery_parts": [
+    {
+      "path": ".github/release-plans/2251-recovery-001.part",
+      "bytes": 67108864,
+      "sha256": "b39e508c75d38650282b8ae4ba0b378ba064ec532825e39fe0c167caec55d9b4"
+    },
+    {
+      "path": ".github/release-plans/2251-recovery-002.part",
+      "bytes": 67108864,
+      "sha256": "2ef53ff494a7fd9502ec75423848aa2615ac0fd72016b0675fc8fd6c500abada"
+    },
+    {
+      "path": ".github/release-plans/2251-recovery-003.part",
+      "bytes": 35163332,
+      "sha256": "69b05def142bdefab32e0e09a0f775531ed75ed47ec88e192e87832a18ce9828"
+    }
+  ],
+  "prior_evidence_file": ".github/release-plans/2251-prior.zip",
+  "prior_evidence_sha256": "19999a8c51f8a136eb6bdf315804f7130f290629f261ac3117a8ffc1c20afe22",
+  "runs": [
+    {
+      "name": "Canonical release recovery",
+      "path": ".github/workflows/canonical-release-recovery.yml",
+      "jobs": [
+        "canonical-release"
+      ],
+      "id": 43337012923
+    },
+    {
+      "name": "Product browser journeys",
+      "path": ".github/workflows/product-browser.yml",
+      "jobs": [
+        "product-browser",
+        "my-team-browser",
+        "beginner-navigation",
+        "public-welcome-browser",
+        "historical-trade-timeline",
+        "projection-display-cross-version",
+        "resident-refresh-memory"
+      ],
+      "id": 43337012450
+    },
+    {
+      "name": "Validation tooling",
+      "path": ".github/workflows/validation-tooling.yml",
+      "jobs": [
+        "tooling (ubuntu-24.04)",
+        "tooling (windows-latest)"
+      ],
+      "id": 43337012484
+    },
+    {
+      "name": "Linux Asset Market lifecycle",
+      "path": ".github/workflows/linux-market-lifecycle.yml",
+      "jobs": [
+        "cgroup-lifecycle (ordinary)",
+        "cgroup-lifecycle (archive-warmed)",
+        "cgroup-lifecycle (combined-read)"
+      ],
+      "id": 43337012249
+    }
+  ],
+  "artifacts": [
+    {
+      "id": 14002071791,
+      "name": "canonical-release-2g-python314",
+      "run": 43337012923,
+      "file": "canonical-original.zip",
+      "bytes": 103257156,
+      "sha256": "d09c48db2b93d6bf7d9e2a3c781fd072acbfdf3de2d52fcdaa0060706af6f2b9"
+    },
+    {
+      "id": 13999496779,
+      "name": "current-season-history-browser",
+      "run": 43337012450,
+      "file": "current-history-original.zip",
+      "bytes": 895271,
+      "sha256": "ca34dc58698e002d881d954f18200f2ce3bc474b0d5701e6e74e15ee06a995ed"
+    },
+    {
+      "id": 13999311452,
+      "name": "history-followthrough-browser",
+      "run": 43337012450,
+      "file": "history-followthrough-original.zip",
+      "bytes": 1015676,
+      "sha256": "8b7d6a98d3aa7beab39e5c963257f72f630db35fdee0571dd2091abc4e951f25"
+    },
+    {
+      "id": 13999187018,
+      "name": "market-history-coverage-browser",
+      "run": 43337012450,
+      "file": "market-history-coverage-original.zip",
+      "bytes": 1430929,
+      "sha256": "7d7be14e0046619a13a5047590daf0a9edfd0bc59b96b2dcbb026836b00d1276"
+    },
+    {
+      "id": 13999761231,
+      "name": "current-production-coverage-browser",
+      "run": 43337012450,
+      "file": "current-production-coverage-original.zip",
+      "bytes": 2095044,
+      "sha256": "1206683f1b8f8a69fc11350df35deed0cfc6764082fee679784ca22c9593f629"
+    },
+    {
+      "id": 14000490230,
+      "name": "trade-resource-2g",
+      "run": 43337012450,
+      "file": "trade-resource-original.zip",
+      "bytes": 42245936,
+      "sha256": "7f9af73ce2c0e3a3fba6d942d496f19610851451b35d855647acea756650b650"
+    },
+    {
+      "id": 14000570116,
+      "name": "league-entry-2g",
+      "run": 43337012450,
+      "file": "league-entry-original.zip",
+      "bytes": 12400,
+      "sha256": "5839da51088497be3ed0f74e9975d9c230e79ad7146c59b395decd7000e9c04f"
+    },
+    {
+      "id": 13998894706,
+      "name": "restoration-unused-2g",
+      "run": 43337012450,
+      "file": "restoration-unused-original.zip",
+      "bytes": 7341096,
+      "sha256": "d96b119adfaf5b1bd3059f3348e923719199ab4df6ffaeb894501fb986ea4c67"
+    },
+    {
+      "id": 13999167542,
+      "name": "actuals-restoration-2g",
+      "run": 43337012450,
+      "file": "actuals-restoration-original.zip",
+      "bytes": 7341443,
+      "sha256": "94ddee856f81629ca35f074e7a1080b156b059ee149eabac2e0ccc3d03d285e1"
+    },
+    {
+      "id": 13998940141,
+      "name": "restoration-preflight-2g",
+      "run": 43337012450,
+      "file": "preflight-original.zip",
+      "bytes": 3714,
+      "sha256": "c23ae8175612d384b187acc9ec27e8600cec47d36291652a2b0707b75a6ee3d8"
+    },
+    {
+      "id": 13998400990,
+      "name": "resident-refresh-ownership-2g",
+      "run": 43337012450,
+      "file": "resident-refresh-original.zip",
+      "bytes": 5619,
+      "sha256": "b421c746f627776c80a485abf45b6766bfd6af3f34d82e1aac195d45d2614338"
+    },
+    {
+      "id": 13998256109,
+      "name": "linux-market-lifecycle-ordinary-summary",
+      "run": 43337012249,
+      "file": "lifecycle-ordinary.zip",
+      "bytes": 13737,
+      "sha256": "264e30ea39587cfdc2d5e00559381ebe9b44d12b326c3d824ef687303e9d4286"
+    },
+    {
+      "id": 13997891886,
+      "name": "linux-market-lifecycle-archive-warmed-summary",
+      "run": 43337012249,
+      "file": "lifecycle-archive-warmed.zip",
+      "bytes": 12871,
+      "sha256": "54ad0d9ac5ce0f3751fce0e376477d79a0f17fef990a01a92d52c9aaae2316a6"
+    },
+    {
+      "id": 13998161342,
+      "name": "linux-market-lifecycle-combined-read-summary",
+      "run": 43337012249,
+      "file": "lifecycle-combined-read.zip",
+      "bytes": 14958,
+      "sha256": "1797fad94ea4c321f8eef4560c65ea113c403251d6e742ac412284b7d3d49350"
+    },
+    {
+      "id": 13998616855,
+      "name": "public-welcome-security-browser",
+      "run": 43337012450,
+      "file": "public-welcome-security.zip",
+      "bytes": 75725413,
+      "sha256": "748a910e76108e47d0917b67eb75586e0cb11fcd5a253b0a9b5c84120e409a2b"
+    }
+  ],
+  "prior_runs": [
+    43311323362,
+    43311323421,
+    43311323775,
+    43311323132,
+    43312528768,
+    43312528818,
+    43312528823,
+    43312529205,
+    43327175989,
+    43327175874,
+    43327175806,
+    43327175831,
+    43332230448,
+    43332230371,
+    43332230422,
+    43332230313
+  ],
+  "prior_jobs": [
+    131507851862,
+    131512019752,
+    131562469193,
+    131562468776,
+    131579651301,
+    131579489694
+  ],
+  "prior_attempts": [],
+  "finalized": true,
+  "roster_source_scope_tests": 20,
+  "franchise_progress_tests": 16,
+  "branch": "feat/trade-for-cost-2251",
+  "recorded_at": "2026-11-12T23:50:07.096814+00:00",
+  "expected_test_count": 4455,
+  "acquisition_tests": 20,
+  "fixture_isolation_tests": 10,
+  "prior_evidence_parts": [
+    {
+      "path": ".github/release-plans/2251-prior-001.part",
+      "bytes": 67108864,
+      "sha256": "c4fa437b3360e171307dd7e1fd9fbd9ce683c3e209fbd555a407833262743a35"
+    },
+    {
+      "path": ".github/release-plans/2251-prior-002.part",
+      "bytes": 47607545,
+      "sha256": "881f3ef994bcb1246669053afbc5c2e4be0b5b66140b74e49c9b3b9d18c2d299"
+    }
+  ]
+}
