@@ -115,7 +115,7 @@ class CustomerTradeJourneyTests(unittest.TestCase):
                 'main_cost': 'You spend usable depth.',
                 'summary': 'Your supported roster benefit remains conditional.',
                 'partner_summary': 'Their assets provide a supported return; willingness is unconfirmed.',
-                'qualification': 'Provisional: recorded participation needs review.',
+                'qualification': 'Provisional: recorded participation needs review. Not a qualified bilateral recommendation.',
                 'lineup_comparisons': {'current_week': {'state': 'provisional', 'weeks': [10], 'delta': 2.25}},
                 'partner_lineup_comparisons': {'current_week': {'state': 'supported', 'weeks': [10], 'delta': -1.5}},
                 'your_side_summary': 'Your team: Week10 change +2.25.\nUsable replacement-depth coverage is incomplete.',
@@ -146,6 +146,8 @@ class CustomerTradeJourneyTests(unittest.TestCase):
                     for phrase in ('WORTH PURSUING', 'You send:', 'You receive:', 'usable depth', 'Incoming Player', 'IR', 'provisional', 'Your team:', 'Their team:', '+2.25', '-1.50', 'Neutral Market', 'Best-supported fit found'):
                         self.assertIn(phrase, text)
                     self.assertNotIn('Exact technical source context', text)
+                    self.assertIn('Not a qualified recommendation for both teams.', text)
+                    self.assertNotIn('bilateral', text.lower())
                     self.assertEqual(first.locator('.tw-draft-capital, .tw-lineup-details').count(), 0)
                     self.assertEqual(first.locator('button.primary').count(), 1)
                     self.assertLess(len(text), 2000)
@@ -187,9 +189,13 @@ class CustomerTradeJourneyTests(unittest.TestCase):
         helper = prepared.AcquisitionBrowserTests()
         harness = scout.ScoutWorkspaceStateBrowserTests()
         workspace = harness.workspace()
+        workspace['workspace_context'].update(league_id='fixture', roster_id=1)
+        workspace['manager_context']['roster_id'] = 1
+        workspace['active_front_office'] = 1
         workspace['teams'].append({'roster_id': 3, 'team_name': 'Harbor at assessment', 'assets': []})
         pick = 'pick:2028:1:3'
         row = harness.offer([pick], ['player:x'])
+        row['evaluation']['provenance'] = {'evaluation_id': 'retained-label-fixture', 'inputs': {'league_id': 'fixture', 'active_roster_id': 1}}
         row['proposal_presentation'] = {'send': [dict(asset_id=pick, label='Recorded2028 first · Harbor', kind='pick', year=2028, round=1, original_franchise=3)], 'receive': [dict(asset_id='player:x', label='Recorded target X', kind='player')]}
         def api(route, payload):
             self.assertTrue(route.request.url.endswith('/generate'))
@@ -201,6 +207,7 @@ class CustomerTradeJourneyTests(unittest.TestCase):
             original = harness.proposal(page)
             count = len(requests)
             workspace['teams'][2]['team_name'] = 'TODAY renamed franchise'
+            workspace['teams'][1]['team_name'] = 'TODAY renamed partner'
             next(a for a in workspace['teams'][0]['assets'] if a['asset_id'] == pick)['label'] = 'TODAY renamed pick'
             page.reload()
             page.get_by_role('button', name='Use this offer in my draft', exact=True).wait_for()
@@ -211,6 +218,24 @@ class CustomerTradeJourneyTests(unittest.TestCase):
             self.assertIn('NOT REVALIDATED', page.locator('.tw-offer-review').inner_text())
             self.assertEqual(harness.proposal(page), original)
             self.assertEqual(len(requests), count)
+            page.locator('.tw-offer-review').get_by_role('button', name='Add to comparison', exact=True).click()
+            selected = page.evaluate('JSON.parse(sessionStorage.getItem("dtos-trade-workspace:scout-session")).comparisonOffers')
+            self.assertEqual(len(selected), 1)
+            self.assertEqual(selected[0]['summary']['partner'], 'Partner')
+            self.assertEqual([a['id'] for a in selected[0]['assets']['sent']], [pick])
+            self.assertEqual([a['id'] for a in selected[0]['assets']['received']], ['player:x'])
+            self.assertIn('Recorded2028 first · Harbor', selected[0]['assets']['sent'][0]['label'])
+            self.assertIn('original franchise #3', selected[0]['assets']['sent'][0]['label'])
+            self.assertNotIn('TODAY', selected[0]['assets']['sent'][0]['label'])
+            page.get_by_role('button', name='Compare selected offers', exact=True).click()
+            comparison = page.locator('#trade-comparison')
+            self.assertIn('Recorded2028 first · Harbor', comparison.inner_text())
+            self.assertIn('NOT REVALIDATED', comparison.inner_text())
+            self.assertNotIn('TODAY', comparison.locator('ol').first.inner_text())
+            self.assertEqual(len(requests), count)
+            page.get_by_role('button', name='Remove offer 1', exact=True).click()
+            page.get_by_role('button', name='Return to my offer or draft', exact=True).click()
+            self.assertEqual(harness.proposal(page), original)
             # A missing session copy must not discard the valid recorded names
             # in the same generation's history snapshot.
             page.evaluate("""() => { const key='dtos-trade-workspace:scout-session'; const s=JSON.parse(sessionStorage.getItem(key)); delete s.previewProposal.preview_presentation; sessionStorage.setItem(key,JSON.stringify(s)); }""")
@@ -227,7 +252,7 @@ class CustomerTradeJourneyTests(unittest.TestCase):
             # Remove names from both stores to actually exercise an older state
             # without presentation metadata, rather than discarding valid names.
             page.evaluate("""() => {
-              const strip = draft => {if(draft?.previewProposal) delete draft.previewProposal.preview_presentation;};
+              const strip = draft => {if(draft?.previewProposal){delete draft.previewProposal.preview_presentation;delete draft.previewProposal.preview_context.identity.counterparty;}};
               const key='dtos-trade-workspace:scout-session', saved=JSON.parse(sessionStorage.getItem(key));
               strip(saved);sessionStorage.setItem(key,JSON.stringify(saved));
               const state=history.state;
@@ -241,6 +266,15 @@ class CustomerTradeJourneyTests(unittest.TestCase):
             legacy = page.evaluate('JSON.parse(sessionStorage.getItem("dtos-trade-workspace:scout-session"))')
             self.assertEqual(legacy['previewProposal']['assets_sent'], [pick])
             self.assertEqual(legacy['previewProposal']['assets_received'], ['player:x'])
+            self.assertNotIn('TODAY', page.locator('.tw-offer-review').inner_text())
+            page.locator('.tw-offer-review').get_by_role('button', name='Add to comparison', exact=True).click()
+            legacy_comparison = page.evaluate('JSON.parse(sessionStorage.getItem("dtos-trade-workspace:scout-session")).comparisonOffers')
+            self.assertEqual([a['id'] for a in legacy_comparison[0]['assets']['sent']], [pick])
+            self.assertEqual([a['id'] for a in legacy_comparison[0]['assets']['received']], ['player:x'])
+            self.assertNotIn('TODAY', legacy_comparison[0]['assets']['sent'][0]['label'])
+            self.assertIn('Franchise #2', legacy_comparison[0]['summary']['partner'])
+            self.assertIn('recorded name unavailable', legacy_comparison[0]['summary']['partner'])
+            self.assertNotIn('TODAY', legacy_comparison[0]['summary']['partner'])
             self.assertEqual(harness.proposal(page), original)
             self.assertEqual(len(requests), count)
 

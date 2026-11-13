@@ -725,12 +725,19 @@
       const d = decisionPresentation(e), inputs = e.provenance?.inputs || {}, projection = inputs.projection_evidence || {};
       // Keep exact source order and names; no current quote is substituted for
       // the neutral/personal values admitted in this completed assessment.
-      const assets = {};
+      const assets = {}, retained = Boolean(contextQualification(context, p));
+      const recorded = row.proposal_presentation || p.preview_presentation;
       for (const [side, ids] of [['sent', p.assets_sent], ['received', p.assets_received]]) {
         if (ids.length > 32 || ids.some(id => typeof id !== 'string' || id.length > 256)) {
           button.after(node('p', 'This package exceeds the bounded comparison size. Its original offer remains available.')); return;
         }
         assets[side] = ids.map(id => {
+          if (retained) {
+            // Recorded comparisons cannot borrow today's player/franchise names.
+            // Legacy records keep exact IDs when no original labels survived.
+            const presented = recorded?.[side === 'sent' ? 'send' : 'receive'];
+            return {id, label: packageText([id], presented, true).slice(0,512)};
+          }
           const a = asset(id), pick = a?.kind === 'pick' ? ` · ${a.season} round ${a.round} · Original franchise: ${team(a.original_roster_id)?.team_name || a.original_roster_id || 'unavailable'}` : '';
           return {id, label: String((a ? label(a) : id) + pick).slice(0,512)};
         });
@@ -755,7 +762,7 @@
         assets, context, proposal: {active_roster_id: active, partner_roster_id: p.partner_roster_id,
           assets_sent: [...p.assets_sent], assets_received: [...p.assets_received]},
         summary: {verdict: finalVerdict(e), strategy: context?.identity?.strategy,
-          partner: context?.identity?.counterparty || team(p.partner_roster_id)?.team_name || 'Franchise identity unavailable',
+          partner: context?.identity?.counterparty || (retained ? 'Franchise #' + p.partner_roster_id + ' · recorded name unavailable' : team(p.partner_roster_id)?.team_name || 'Franchise identity unavailable'),
           mode: e.personalization?.mode || 'neutral', method: e.personalization?.method || null,
           personalContext: {revision: e.personalization?.revision, market: e.personalization?.market_generation,
             baseline: e.personalization?.baseline_generation, method: e.personalization?.method},
@@ -1040,7 +1047,7 @@
         node('p', `You send ${side('sent')} / You receive ${side('received')}. Difference: ${m.availability === 'full' && m.difference != null ? displayMarket(Math.abs(m.difference)) : 'Unavailable · incomplete comparison'}.`),
         node('small', 'Retained displayed values, not new quotes or trade-date grades.'));
     }
-    if (decision.qualification) out.append(node('p', decision.qualification, 'tw-verdict-qualification'));
+    if (decision.qualification) out.append(node('p', customerText(decision.qualification), 'tw-verdict-qualification'));
     if (e.decision_context) {
       const brief = node('section', null, 'tw-decision');
       if (retained) brief.append(node('p', 'Previous decision context · NOT REVALIDATED. Numbers and conclusions below describe the original assessment.'));
@@ -1299,7 +1306,7 @@
 
     if (context.exploration) card.append(node('p', 'Exploratory only · not a recommendation', 'tw-drawback'));
     card.append(node('p', (retained ? 'Retained assessment · NOT REVALIDATED: ' : e.personalization?.mode === 'custom' ? 'Separate Custom DTOS personal assessment: ' : 'Separate DTOS assessment: ') + finalVerdict(e)));
-    if (decision.qualification) card.append(node('p', decision.qualification, 'tw-verdict-qualification'));
+    if (decision.qualification) card.append(node('p', customerText(decision.qualification), 'tw-verdict-qualification'));
     appendDecisionSummary(card, decision);
     card.append(capitalDisclosure(context?.draft_capital_record || e.draft_capital_record, retained));
     const unfavorable = ['REJECT', 'NOT WORTH IT'].includes(e.recommendation);
@@ -1338,7 +1345,8 @@
   function customerText(value) {
     return String(value || '').replaceAll('compatible prepared publication', 'league data for this week')
       .replaceAll('Canonical Market', 'Market value').replaceAll('canonical Market', 'Market value')
-      .replaceAll('disjoint reserve cover', 'different eligible backups');
+      .replaceAll('disjoint reserve cover', 'different eligible backups')
+      .replaceAll('bilateral recommendation', 'recommendation for both teams');
   }
   function recordedPresentation(row) {
     const supplied = row.proposal_presentation || row.proposal.preview_presentation;
@@ -1397,10 +1405,10 @@
     const card = node('article', null, preview ? 'tw-offer tw-offer-review' : 'tw-offer tw-offer-summary');
     if (row.exploration) card.append(node('p', 'Exploratory only · not a recommendation', 'tw-drawback'));
     if (retained) card.append(node('p', 'Retained assessment · NOT REVALIDATED', 'tw-drawback'));
-    card.append(node('h3', finalVerdict(e)), node('p', 'Trade with ' + (context.identity?.counterparty || team(row.proposal.partner_roster_id)?.team_name || 'the selected partner'), 'tw-offer-partner'));
+    card.append(node('h3', finalVerdict(e)), node('p', 'Trade with ' + (context.identity?.counterparty || (retained ? 'Franchise #' + row.proposal.partner_roster_id + ' · recorded name unavailable' : team(row.proposal.partner_roster_id)?.team_name || 'the selected partner')), 'tw-offer-partner'));
     card.append(node('p', 'You send: ' + packageText(row.proposal.assets_sent, (row.proposal_presentation || row.proposal.preview_presentation)?.send, retained), 'tw-offer-package'),
       node('p', 'You receive: ' + packageText(row.proposal.assets_received, (row.proposal_presentation || row.proposal.preview_presentation)?.receive, retained), 'tw-offer-package'));
-    if (decision.qualification) card.append(node('p', decision.qualification, 'tw-verdict-qualification'));
+    if (decision.qualification) card.append(node('p', customerText(decision.qualification), 'tw-verdict-qualification'));
     const lead = node('section', null, 'tw-decision-lead');
     const reason = decision.decisive_reason || decision.summary || e.why_you_would_do_it || e.dominant_reason;
     if (reason) lead.append(node('p', 'Why: ' + customerText(reason), 'tw-offer-reason'));
@@ -1656,7 +1664,7 @@
     if (path === 'generate') searchStatus('Searching supported trades… Your offer stays intact.', 'loading', started, startedRun);
     else operationStatus(path === 'balance' ? 'Finding balancing options… Your offer stays intact.' : path === 'evaluate' ? 'Evaluating your exact offer…' : 'Checking revised offers… Your original stays intact.', 'loading');
     paint();
-    message(path === 'balance' ? 'Checking owned, lock-respecting Market adjustments… Your original stays intact.' : path === 'generate' ? 'Searching supported bilateral options… Your proposal stays intact.' : path === 'assist' ? 'Checking revised offers… Your original proposal stays intact.' : 'Evaluating your proposal…');
+    message(path === 'balance' ? 'Checking owned, lock-respecting Market adjustments… Your original stays intact.' : path === 'generate' ? 'Searching supported trade offers… Your proposal stays intact.' : path === 'assist' ? 'Checking revised offers… Your original proposal stays intact.' : 'Evaluating your proposal…');
     if (path === 'evaluate') el('trade-result').dataset.assessmentState = 'evaluating';
     try {
       let body;
@@ -1689,7 +1697,7 @@
         el('trade-search-readiness').dataset.state = 'ready';
       }
       if (path === 'generate') searchStatus(completedOffers.some(qualifiedOffer) ? 'Trade options ready. Search complete; review the qualified offers before adopting.' : 'Search complete. No qualified recommendations; any alternatives keep their own limitations.', 'complete', started, startedRun);
-      else operationStatus(path === 'evaluate' ? 'Evaluation complete. Review the final bilateral verdict.' : 'Options ready. Preview before adopting; your original stays intact.', 'complete');
+      else operationStatus(path === 'evaluate' ? 'Evaluation complete. Review the decision for both teams.' : 'Options ready. Preview before adopting; your original stays intact.', 'complete');
       if (path === 'evaluate') {
         const context = assessmentContext({...body, evaluation: body.evaluation});
         context.attempt_state = body.assessment_source_identity ? body.evaluation?.assessment_state?.state || 'fresh_incomplete' : 'fresh_incomplete';

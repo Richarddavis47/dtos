@@ -26,13 +26,15 @@ class TradeUXTests(unittest.TestCase):
                         with self.subTest(width=width, workflow=flow):
                             page = browser.new_page(viewport={'width': width, 'height': 900})
                             page.set_default_timeout(8000)
-                            pending, errors = [], []
+                            pending, errors, operations = [], [], []
                             page.on('pageerror', lambda error: errors.append(str(error)))
 
                             def route(request):
                                 parsed = urlsplit(request.request.url)
                                 if parsed.netloc != 'dtos.test':
                                     return request.abort()
+                                if request.request.method == 'POST' and parsed.path.startswith('/api/trades/'):
+                                    operations.append(parsed.path)
                                 if parsed.path in ('/api/trades/generate', '/api/trades/assist'):
                                     pending.append(request)
                                     return None
@@ -49,7 +51,7 @@ class TradeUXTests(unittest.TestCase):
                                 page.locator('#trade-asset-options > summary').click()
                             page.locator('#trade-sent-board button[data-asset-id="1-QB-0"]').wait_for()
                             if flow == 'create':
-                                page.get_by_label('Counterparty', exact=True).select_option('2')
+                                page.get_by_label('Trade partner', exact=True).select_option('2')
                                 page.locator('#trade-sent-board button[data-asset-id="1-QB-0"]').click()
                                 if width < 760:
                                     page.get_by_role('button', name='Their assets', exact=True).click()
@@ -85,29 +87,48 @@ class TradeUXTests(unittest.TestCase):
                                 self.assertEqual(page.evaluate('document.activeElement.id'), 'trade-result')
                             card = page.locator('.tw-offer')
                             self.assertEqual(card.locator('h3').first.inner_text(), offer['evaluation']['recommendation'] or 'Recommendation unavailable')
-                            summary = card.locator('summary').filter(has_text='Why this offer · evidence and risks')
-                            self.assertGreaterEqual(summary.bounding_box()['height'], 44)
-                            summary.focus()
-                            page.keyboard.press('Enter')
-                            self.assertTrue(summary.evaluate('(e) => e.parentElement.open'))
-                            compact_text = card.locator('.dtos-explanation').text_content()
-                            compact_slots = card.locator(':scope > .tw-lineup-details').text_content()
-                            compact_risks = card.locator(':scope > .tw-lineup-warning').all_text_contents()
+                            self.assertEqual(card.locator(':scope > .tw-lineup-details').count(), 0)
+                            self.assertEqual(card.locator('.tw-draft-capital').count(), 0)
                             original_count = page.locator('#trade-sent-chips .tw-asset').count()
-                            card.get_by_role('button', name='Review trade', exact=False).click()
+                            before_review_operations = list(operations)
+                            review_action = card.get_by_role('button', name='Review trade', exact=True)
+                            self.assertGreaterEqual(review_action.bounding_box()['height'], 44)
+                            review_action.focus()
+                            page.keyboard.press('Enter')
+                            review = page.locator('#trade-result .tw-offer-review')
                             self.assertEqual(page.locator('#trade-sent-chips .tw-asset').count(), original_count)
+                            self.assertEqual(operations, before_review_operations)
+                            # The compact card deliberately omits deep evidence.
+                            # Read the same already-prepared explanation through
+                            # the real organized review before checking parity.
+                            for selector in ('.tw-depth-details', '.tw-lineup-details', '.tw-offer-sources'):
+                                details = review.locator(':scope > ' + selector)
+                                summary = details.locator(':scope > summary')
+                                self.assertGreaterEqual(summary.bounding_box()['height'], 44)
+                                summary.focus()
+                                page.keyboard.press('Enter')
+                                self.assertTrue(details.evaluate('e=>e.open'))
+                            prepared_text = review.locator('.tw-offer-sources .dtos-explanation').text_content()
+                            prepared_slots = review.locator(':scope > .tw-lineup-details').text_content()
+                            prepared_risks = review.locator(':scope > .tw-depth-details .tw-lineup-warning').all_text_contents()
+                            self.assertEqual(operations, before_review_operations)
                             page.get_by_role('button', name='Use this offer in my draft', exact=True).click()
-                            # All evaluator evidence remains identical. The card
-                            # deliberately promotes slot details/current risks out
-                            # of its nested explanation; compare those separately.
+                            self.assertEqual(operations, before_review_operations)
+                            adopted = page.evaluate('history.state.dtosTrade.draft.currentProposal')
+                            self.assertEqual(adopted['sent'], list(offer['proposal']['assets_sent']))
+                            self.assertEqual(adopted['received'], list(offer['proposal']['assets_received']))
+                            self.assertEqual(adopted['partner'], offer['proposal']['partner_roster_id'])
+                            # All evaluator evidence remains identical. Review
+                            # groups slots and risks separately from calculations;
+                            # compare each exact family with adopted Evaluate.
                             assessment = page.locator('#trade-result .dtos-explanation')
                             balance = assessment.locator(':scope > a[href="#trade-balancing"]')
                             self.assertEqual(balance.count(), 1)
                             self.assertTrue(balance.is_visible())
-                            self.assertEqual(assessment.locator(':scope > .tw-lineup-details').text_content(), compact_slots)
-                            self.assertEqual(assessment.locator(':scope > .tw-lineup-warning').all_text_contents(), compact_risks)
+                            self.assertEqual(assessment.locator(':scope > .tw-lineup-details').text_content(), prepared_slots)
+                            self.assertEqual(assessment.locator(':scope > .tw-lineup-warning').all_text_contents(), prepared_risks)
                             complete_text = assessment.evaluate("e=>{const copy=e.cloneNode(true);copy.querySelectorAll(':scope > a[href=\"#trade-balancing\"], :scope > .tw-lineup-details, :scope > .tw-lineup-warning').forEach(n=>n.remove());return copy.textContent;}")
-                            self.assertEqual(complete_text, compact_text)
+                            self.assertEqual(complete_text, prepared_text)
                             self.assertEqual(page.locator('#trade-review button[data-asset-id="1-QB-0"]').count(), 1)
                             self.assertEqual(page.locator('#trade-review button[data-asset-id="2-QB-0"]').count(), 1)
                             self.assertEqual(page.evaluate('document.activeElement.id'), 'trade-result')
