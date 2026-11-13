@@ -59,7 +59,7 @@ class CustomerExperienceJourneyTests(journeys.ProductBrowserJourneyTests):
         )
         if path == '/teams/1':
             label = page.locator('#my-team-goal-form label')
-            self.assertEqual(label.inner_text(), 'Team goal')
+            self.assertEqual(label.inner_text(), 'Goal')
             self.assertEqual(label.evaluate('e => {const r=document.createRange();r.selectNodeContents(e);return r.getClientRects().length;}'), 1)
         if path.startswith('/trades/'):
             for header in page.locator('.tw-owner-header').all():
