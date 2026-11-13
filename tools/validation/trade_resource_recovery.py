@@ -202,7 +202,7 @@ def main():
     def allocate_to_raw_headroom(mib):
         current = execution.observe_memory()["cgroup_current_bytes"]
         count = max(0, 2147483648 - current - mib * execution.MIB)
-        # Separate harness-owned mappings can be released without copying a
+        # Separate harness-owned buffers can be dropped without copying a
         # large bytearray while the container is already under pressure.
         padding = []
         while count:
@@ -343,19 +343,25 @@ def main():
             chunks = (deficit + 8 * execution.MIB - 1) // (8 * execution.MIB)
             assert chunks <= 8 and chunks <= len(ballast), initial["capacity"]
             released = sum(len(ballast.pop()) for _ in range(chunks))
+            # Returning Python objects alone may leave their pages in libc.
+            # Reuse the existing cleanup boundary and then measure actual
+            # container capacity; never credit the requested release itself.
+            unused_pages_released = release_unused_allocator_pages()
             before = observe("clean_file_cache_pressure")
-            assert before["capacity"]["admitted"], before["capacity"]
-            assert before["capacity"]["conditional_file_credit_bytes"] > 0
-            assert before["capacity"]["raw_headroom_bytes"] < required
             report["file_cache_fixture_calibration"] = {
                 "initial_capacity": initial["capacity"],
                 "required_bytes": required,
                 "fixture_margin_bytes": 32 * execution.MIB,
                 "released_harness_bytes": released,
                 "maximum_release_bytes": 64 * execution.MIB,
+                "unused_pages_released": unused_pages_released,
                 "admitted_capacity": before["capacity"],
                 "operation_retries": 0,
             }
+            assert before["capacity"]["admitted"], before["capacity"]
+            assert before["capacity"]["admission_headroom_bytes"] >= target
+            assert before["capacity"]["conditional_file_credit_bytes"] > 0
+            assert before["capacity"]["raw_headroom_bytes"] < required
             index = len(samples)
 
             def work():
