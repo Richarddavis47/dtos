@@ -317,6 +317,7 @@ input:disabled,select:disabled{color:var(--text-muted);background:var(--surface-
 .cx-facts{display:flex;flex-wrap:wrap;gap:8px 20px;align-items:baseline}
 .cx-facts>div{min-width:0;max-width:100%;overflow-wrap:anywhere}
 .cx-status{padding:12px;border-left:3px solid var(--warning);background:var(--surface);line-height:1.55}
+html{scroll-padding-top:calc(72px + env(safe-area-inset-top))}
 :where(button,input,select,textarea,summary,a[id]){scroll-margin-bottom:100px;scroll-margin-top:12px}
 @media(max-width:760px){.cx-lead{font-size:16px}.cx-section{margin:16px 0}.cx-evidence-body{padding:10px}.top{flex-wrap:wrap}}
 """

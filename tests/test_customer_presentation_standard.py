@@ -1,7 +1,7 @@
 """Display-only shared contracts; source data and clocks remain unchanged."""
 import unittest
 from src.ui.customer_experience import plain_reason, readable_time, source_details
-from src.ui.design_system import account_page_header, page_header, manager_navigation
+from src.ui.design_system import DESIGN_SYSTEM_CSS, account_page_header, page_header, manager_navigation
 
 
 class CustomerPresentationStandardTests(unittest.TestCase):
@@ -39,3 +39,4 @@ class CustomerPresentationStandardTests(unittest.TestCase):
         for label in ('Home', 'My Team', 'Trade', 'League', 'Market'):
             self.assertIn(label + '</a>', primary)
         self.assertNotIn('/fois', primary)
+        self.assertIn('scroll-padding-top:calc(72px + env(safe-area-inset-top))', DESIGN_SYSTEM_CSS)

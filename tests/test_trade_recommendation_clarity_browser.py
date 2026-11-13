@@ -77,7 +77,7 @@ class RecommendationClarityBrowserTests(unittest.TestCase):
                     self.assertIn("COUNTERPARTY LIMITED", primary.inner_text())
                     self.assertNotIn("WORTH PURSUING", primary.inner_text())
                     self.assertIn(
-                        "not the bilateral verdict",
+                        "Both teams have not passed the trade checks",
                         page.locator("#trade-result").inner_text(),
                     )
                     details = page.locator(".tw-evaluation-detail > summary")

@@ -91,7 +91,8 @@ class ReserveQualityBrowserTests(unittest.TestCase):
                     self.assertNotIn('No material downside identified', primary_text)
                     self.assertIn('legal-replacement production falls', primary_text)
                     self.assertIn(f'{39 * scoring:.2f}', primary_text)
-                    self.assertIn('starters are unchanged', primary_text)
+                    self.assertIn('+0.00 projected points', primary_text)
+                    self.assertEqual(e['decision_context']['lineup_comparisons']['current_week']['delta'], 0)
                     sent = page.locator('#trade-sent-chips button[data-asset-id="b"]')
                     received = page.locator('#trade-received-chips button[data-asset-id="d"]')
                     self.assertIn('Supported Reserve Quarterback', sent.inner_text())
@@ -202,7 +203,7 @@ class ReserveQualityBrowserTests(unittest.TestCase):
                 for limitation in old['major_limitations']:
                     self.assertIn(limitation.replace('_', ' '), text)
                 for side, title in (('active', 'Your team'), ('partner', 'Their team')):
-                    detail = prior.get_by_text(title + ' strategic evidence', exact=True).locator('..')
+                    detail = prior.get_by_text(title + ' depth and roster space', exact=True).locator('..')
                     detail.locator(':scope > summary').click()
                     reserve_text = detail.inner_text()
                     self.assertIn('Previous useful replacement production · NOT REVALIDATED', reserve_text)

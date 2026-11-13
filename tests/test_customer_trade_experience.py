@@ -243,3 +243,56 @@ class CustomerTradeJourneyTests(unittest.TestCase):
             self.assertEqual(legacy['previewProposal']['assets_received'], ['player:x'])
             self.assertEqual(harness.proposal(page), original)
             self.assertEqual(len(requests), count)
+
+    def test_optional_custom_pricing_stays_collapsed_until_selected_or_opened(self):
+        helper = prepared.AcquisitionBrowserTests()
+        harness = scout.ScoutWorkspaceStateBrowserTests()
+        for active_custom in (False, True):
+            with self.subTest(active_custom=active_custom):
+                workspace = harness.workspace()
+                workspace['personalization'] = dict(mode='custom' if active_custom else 'neutral', revision=2,
+                    available=active_custom, method='relative_priced_order_v1', method_label='Relative Priced-Order',
+                    personal_partial_available=active_custom, personal_value_count=3,
+                    readiness_code='ready' if active_custom else 'market_unavailable',
+                    market_generation='fixture-market', baseline_generation='fixture-baseline',
+                    limitations=['Custom prices have not been prepared for these assets.'], values={})
+                with helper.page(375, workspace=workspace) as (page, requests):
+                    personal_reads = []
+                    def personal(route):
+                        personal_reads.append(route.request.url)
+                        route.fulfill(status=503, json={'detail': 'Controlled optional Custom evidence unavailable'})
+                    page.route('**/api/my-dtos', personal)
+                    harness.ready(page, '/trades/create?front_office=1')
+                    select = page.locator('#trade-valuation-mode')
+                    pricing = page.locator('.tw-custom-pricing')
+                    notice = page.locator('.tw-active-valuation-notice')
+                    self.assertEqual(pricing.get_attribute('open'), None)
+                    self.assertEqual(select.input_value(), 'custom' if active_custom else 'neutral')
+                    self.assertEqual(select.locator('option[value=neutral]').inner_text(), 'Neutral Market')
+                    if not active_custom:
+                        self.assertTrue(notice.is_hidden())
+                        self.assertTrue(page.locator('#trade-personal-retry').is_hidden())
+                        self.assertNotIn('Custom prices have not been prepared', page.locator('.tw-valuation-mode').inner_text())
+                        summary = pricing.locator(':scope > summary')
+                        summary.focus()
+                        summary.press('Enter')
+                        self.assertTrue(pricing.evaluate('e=>e.open'))
+                        self.assertIn('Custom prices have not been prepared', pricing.inner_text())
+                        self.assertTrue(page.locator('#trade-personal-retry').is_visible())
+                        summary.press('Enter')
+                        self.assertTrue(page.locator('#trade-personal-retry').is_hidden())
+                        self.assertEqual(select.input_value(), 'neutral')
+                    else:
+                        self.assertTrue(notice.is_visible())
+                        self.assertIn('Relative Priced-Order', notice.inner_text())
+                        self.assertIn('Some assets have unverified personal values', notice.inner_text())
+                        original = harness.proposal(page)
+                        before = len(personal_reads)
+                        page.evaluate('window.dispatchEvent(new Event("focus"))')
+                        page.wait_for_function("document.querySelector('.tw-active-valuation-notice').textContent.includes('need review')")
+                        self.assertEqual(len(personal_reads), before + 1)
+                        self.assertEqual(select.input_value(), 'custom')
+                        self.assertEqual(harness.proposal(page), original)
+                        self.assertTrue(notice.is_visible())
+                    self.assertEqual(requests, [])
+                    self.assertLessEqual(page.evaluate('document.documentElement.scrollWidth-innerWidth'), 0)

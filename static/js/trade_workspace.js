@@ -135,6 +135,7 @@
   let comparison = null;
   const excludedFamilies = new Set(); let displayedFamilies = []; let lastOffers = null; let lastOffersIsBalance = false; let searchExhausted = false; let hasDiscovered = false;
   let valuationMode = 'neutral', personalRevisionStale = false, checkingPersonal = false;
+  let paintValuationHelp = () => {};
   let interruptedNavigation = false;
   const latestEvidence = {};
   const sourceKeys = ['market_generation', 'projection_generation', 'historical_generation'];
@@ -197,7 +198,7 @@
         personalRevisionStale = true; activeRequest?.abort(); activeRequest = null; balanceRequest = null; revision++; runSequence++; busy = false;
         session.previewProposal = null; lastOffers = null; p.values = {};
         if (session.currentAssessment) staleAssessment('Personal ranking revision or source changed');
-        persist(); paint(); personalChangedNotice();
+        paintValuationHelp(); persist(); paint(); personalChangedNotice();
       }
     } catch (_) { /* A later explicit request still performs server-side admission and final revision checks. */ }
     finally { checkingPersonal = false; }
@@ -817,7 +818,7 @@
     return context.restored || reasons.length ? 'Retained assessment context · not revalidated. ' + (reasons.length ? reasons.join('; ') + '. ' : '') + 'Reevaluate to establish a current assessment; prior benefits and drawbacks are retained.' : '';
   }
   function contextNotice(out, context, proposal) {
-    if (context?.exploration) out.append(node('p', 'Exploratory only · ' + (context.search_result_type || 'supported alternative') + ' · not a qualified bilateral recommendation', 'tw-drawback'));
+    if (context?.exploration) out.append(node('p', 'Exploratory only · ' + (context.search_result_type || 'supported alternative') + ' · not a recommendation', 'tw-drawback'));
     if (context?.identity?.ownership && context.identity.ownership !== workspace.workspace_context.ownership_generation) out.append(node('p', 'Ownership has changed. Your proposal is retained for review; evaluation will identify any assets that moved.', 'tw-drawback'));
     if (context?.identity) { const summary = node('p', 'Assessment strategy: ' + (context.identity.strategy || 'Use supported competitive window') + ' · Current selected strategy: ' + (el('trade-strategy').value || 'Use supported competitive window')); summary.dataset.assessmentStrategy = context.identity.strategy || ''; out.append(summary); }
     const qualification = contextQualification(context, proposal);
@@ -882,7 +883,7 @@
     // Older cached HTML must follow the same recorded bilateral admission in
     // expanded cards and previews as in the main result. No re-evaluation.
     if (primary && primary.firstChild?.textContent.trim() === e.recommendation && finalVerdict(e) !== e.recommendation) {
-      primary.replaceChildren(node('span', finalVerdict(e)), node('span', 'Not a qualified bilateral recommendation; your-side assessment is separate.', 'tw-verdict-qualification'));
+      primary.replaceChildren(node('span', finalVerdict(e)), node('span', 'Both teams have not passed the trade checks; your-side assessment is separate.', 'tw-verdict-qualification'));
     }
     return parsed;
   }
@@ -1296,7 +1297,7 @@
     };
     card.append(node('p', [changes(original.sent, row.proposal.assets_sent, 'your outgoing package'), changes(original.received, row.proposal.assets_received, 'the assets you receive')].filter(Boolean).join('; '), 'tw-adjustment'));
 
-    if (context.exploration) card.append(node('p', 'Exploratory only · not a qualified bilateral recommendation', 'tw-drawback'));
+    if (context.exploration) card.append(node('p', 'Exploratory only · not a recommendation', 'tw-drawback'));
     card.append(node('p', (retained ? 'Retained assessment · NOT REVALIDATED: ' : e.personalization?.mode === 'custom' ? 'Separate Custom DTOS personal assessment: ' : 'Separate DTOS assessment: ') + finalVerdict(e)));
     if (decision.qualification) card.append(node('p', decision.qualification, 'tw-verdict-qualification'));
     appendDecisionSummary(card, decision);
@@ -1400,22 +1401,24 @@
     card.append(node('p', 'You send: ' + packageText(row.proposal.assets_sent, (row.proposal_presentation || row.proposal.preview_presentation)?.send, retained), 'tw-offer-package'),
       node('p', 'You receive: ' + packageText(row.proposal.assets_received, (row.proposal_presentation || row.proposal.preview_presentation)?.receive, retained), 'tw-offer-package'));
     if (decision.qualification) card.append(node('p', decision.qualification, 'tw-verdict-qualification'));
+    const lead = node('section', null, 'tw-decision-lead');
     const reason = decision.decisive_reason || decision.summary || e.why_you_would_do_it || e.dominant_reason;
-    if (reason) card.append(node('p', 'Why: ' + customerText(reason), 'tw-offer-reason'));
+    if (reason) lead.append(node('p', 'Why: ' + customerText(reason), 'tw-offer-reason'));
     const mainCost = decision.main_cost || e.major_drawback || e.major_risks?.join('; ').replaceAll('_', ' ')
       || e.major_limitations?.join('; ').replaceAll('_', ' ') || 'The principal cost is not established in this assessment.';
-    card.append(node('p', 'Main cost or risk: ' + customerText(mainCost), 'tw-drawback'));
+    lead.append(node('p', 'Main cost or risk: ' + customerText(mainCost), 'tw-drawback'));
     const cautions = availabilityCautions(e);
     if (cautions.length) {
       const material = cautions.filter(line => /\b(?:OUT|IR|PUP|SUSPENDED|INACTIVE|RETIRED)\b|Bye \/ no scheduled game/.test(line)).filter(line => {
         const name = line.match(/: (.*?) — /)?.[1], state = line.match(/\b(?:OUT|IR|PUP|SUSPENDED|INACTIVE|RETIRED)\b/)?.[0];
         return !(name && state && mainCost.includes(name) && mainCost.includes(state));
       }).map(line => line.replace(/ · Season (\d+) · Week (\d+): /, ' · week $2: '));
-      card.append(node('p', 'Availability and depth: ' + cautions.length + ' player-specific caution' + (cautions.length === 1 ? '' : 's') + '. ' + material.join(' ') + ' Full player details in Review trade.', 'tw-risk-summary'));
+      lead.append(node('p', 'Availability and depth: ' + cautions.length + ' player-specific caution' + (cautions.length === 1 ? '' : 's') + '. ' + material.join(' ') + ' Full player details in Review trade.', 'tw-risk-summary'));
     }
-    appendCurrentLineupSummary(card, decision);
+    appendCurrentLineupSummary(lead, decision);
     const balanceShown = balance ? balanceMarketDisplay(balance, 'suggested') : null;
-    card.append(node('p', balanceShown ? (balance.valuation_context?.startsWith('Custom') ? 'Your personal valuation' : 'Current Market') + ': You send ' + balanceShown.sent + ' / You receive ' + balanceShown.received + '. Difference: ' + balanceShown.gap + '.' : valuationSummary(e), 'tw-offer-market'));
+    lead.append(node('p', balanceShown ? (balance.valuation_context?.startsWith('Custom') ? 'Your personal valuation' : 'Current Market') + ': You send ' + balanceShown.sent + ' / You receive ' + balanceShown.received + '. Difference: ' + balanceShown.gap + '.' : valuationSummary(e), 'tw-offer-market'));
+    card.append(lead);
     window.DTOSOfferComparison.acquisitionView(card, context?.acquisition_comparison, node, displayMarket, retained, !preview);
     const matches = row.personal_preference_matches;
     if (matches?.avoid_received?.length) card.append(node('p', 'Includes an asset you prefer to avoid.', 'tw-drawback'));
@@ -1878,33 +1881,43 @@
       const label = node('label', 'Valuation mode'); label.htmlFor = 'trade-valuation-mode';
       const select = node('select'); select.id = 'trade-valuation-mode';
       const preparing = ['market_unavailable', 'market_source_changed', 'market_incomplete'].includes(p.readiness_code);
-      for (const [value, text] of [['neutral', 'Neutral DTOS'], ['custom', p.available === true ? 'Custom DTOS' : p.revision > 0 ? preparing ? 'Custom · prepare Market' : 'Custom · review prices' : 'Custom · create rankings']]) { const option = node('option', text); option.value = value; option.disabled = value === 'custom' && (!(p.revision > 0) || p.available !== true); select.append(option); }
+      for (const [value, text] of [['neutral', 'Neutral Market'], ['custom', p.available === true ? 'Custom DTOS' : p.revision > 0 ? preparing ? 'Custom · prepare Market' : 'Custom · review prices' : 'Custom · create rankings']]) { const option = node('option', text); option.value = value; option.disabled = value === 'custom' && (!(p.revision > 0) || p.available !== true); select.append(option); }
       select.value = valuationMode;
       const needsReview = p.revision > 0 && p.compatibility_issues?.length;
       const edit = node('a', needsReview ? 'Review affected Custom Rankings assets' : 'Edit My DTOS rankings');
       edit.href = needsReview ? '/account/my-dtos#personal-compatibility' : '/account/my-dtos';
-      const help = node('details'); help.append(node('summary', 'About valuations'), node('p', 'Neutral Market and Sleeper lineup facts stay unchanged. Custom DTOS uses your saved ranking values for your decision.'));
-      panel.append(label, select);
-      if (p.method_label) panel.append(node('p', `Custom pricing: ${p.method_label}. Neutral Market is separate.`, 'muted'));
+      const customPricing = node('details', null, 'tw-custom-pricing');
+      customPricing.append(node('summary', 'Custom pricing'), node('p', 'Neutral Market and Sleeper lineup facts stay unchanged. Custom uses your saved ranking values for your decision.'));
+      const notice = node('section', null, 'tw-active-valuation-notice'); notice.setAttribute('aria-live', 'polite');
+      panel.append(label, select, notice);
+      if (p.method_label) customPricing.append(node('p', `Custom pricing: ${p.method_label}. Neutral Market is separate.`, 'muted'));
       if (p.method_review?.publication_changed) {
         const review = node('a', 'Review Custom pricing after the Market update'); review.href = '/account/my-dtos';
-        panel.append(node('p', p.method_review.message, 'muted'), review);
+        customPricing.append(node('p', p.method_review.message, 'muted'), review);
       }
-      if (needsReview || p.available !== true) panel.append(edit); else help.append(edit);
-      if (p.personal_partial_available) panel.append(node('p', `${p.personal_value_count} saved assets have verified Custom values. Only supported packages can be assessed.`, 'muted'));
-      if (p.available !== true) panel.append(node('p', !(p.revision > 0)
-        ? 'Create Custom Rankings in My DTOS to use Custom Trade. Neutral DTOS is available now.'
+      customPricing.append(edit);
+      if (p.personal_partial_available) customPricing.append(node('p', `${p.personal_value_count} saved assets have verified Custom values. Only supported packages can be assessed.`, 'muted'));
+      if (p.available !== true) customPricing.append(node('p', !(p.revision > 0)
+        ? 'Create Custom Rankings in My DTOS to use Custom Trade. Neutral Market is available now.'
         : (p.limitations || []).join(' ') || 'Saved Custom Rankings need compatible Market prices. Open My DTOS to retry; Neutral Trade remains available.', 'muted'));
       if (p.available !== true && p.revision > 0) {
         const retry = node('button', 'Reload Custom evidence', 'btn'); retry.type = 'button'; retry.id = 'trade-personal-retry';
         retry.title = 'Reload prepared evidence while keeping this offer. Saved rankings are unchanged.';
-        retry.onclick = () => location.reload(); panel.append(retry);
+        retry.onclick = () => location.reload(); customPricing.append(retry);
       }
-      panel.append(help);
+      paintValuationHelp = () => {
+        notice.replaceChildren(); notice.hidden = valuationMode !== 'custom';
+        if (notice.hidden) return;
+        notice.append(node('b', 'Custom · ' + (p.method_label || 'saved ranking values')));
+        if (personalRevisionStale || p.available !== true) notice.append(node('p', 'Custom values need review before another search or evaluation. Your draft is unchanged.', 'tw-drawback'));
+        else if (p.personal_partial_available || needsReview) notice.append(node('p', 'Some assets have unverified personal values. Only supported packages can be evaluated.', 'tw-drawback'));
+        if (p.method_review?.publication_changed) notice.append(node('p', 'Market prices changed; this can change your Custom values.', 'tw-drawback'));
+      };
+      panel.append(customPricing); paintValuationHelp();
       el('trade-intent-controls').append(panel);
       select.onchange = () => {
         activeRequest?.abort(); activeRequest = null; balanceRequest = null; revision++; runSequence++; busy = false;
-        valuationMode = select.value; clearBalancePreview(); lastOffers = null; excludedFamilies.clear(); searchExhausted = false; hasDiscovered = false; displayedFamilies = [];
+        valuationMode = select.value; paintValuationHelp(); clearBalancePreview(); lastOffers = null; excludedFamilies.clear(); searchExhausted = false; hasDiscovered = false; displayedFamilies = [];
         if (session.currentAssessment) staleAssessment('Valuation mode changed. Reevaluate this exact proposal.');
         el('trade-result').hidden = true;
         persist(); paint(); message('Valuation mode changed. Your exact offer is unchanged; reevaluate or run an explicit search.');
