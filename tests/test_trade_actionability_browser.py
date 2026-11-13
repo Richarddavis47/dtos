@@ -7,7 +7,7 @@ from unittest.mock import patch
 
 from playwright.sync_api import sync_playwright
 from services.trade_intelligence import evaluate_trade_request
-from tests import test_trade_workflow_experience as workflows
+from tests import test_00_trade_workflow_experience as workflows
 from tools.validation.browser_runtime import launch_chromium
 
 

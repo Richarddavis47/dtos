@@ -6,7 +6,7 @@ from pathlib import Path
 import unittest
 
 from playwright.sync_api import sync_playwright
-from tests import test_trade_workflow_experience as workflow
+from tests import test_00_trade_workflow_experience as workflow
 from tools.validation.browser_runtime import launch_chromium
 
 
