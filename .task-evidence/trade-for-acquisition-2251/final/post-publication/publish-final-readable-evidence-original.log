@@ -1,0 +1,94 @@
+{"phase": "readable-batch-stored", "files": 57, "payload_bytes": 2744446}
+{"phase": "readable-batch-stored", "files": 7, "payload_bytes": 3111588}
+{"phase": "readable-batch-stored", "files": 7, "payload_bytes": 3115609}
+{"phase": "readable-batch-stored", "files": 7, "payload_bytes": 3121568}
+{"phase": "readable-batch-stored", "files": 7, "payload_bytes": 3113950}
+{"phase": "readable-batch-stored", "files": 11, "payload_bytes": 3085949}
+{"phase": "readable-batch-stored", "files": 8, "payload_bytes": 2889952}
+{"phase": "readable-batch-stored", "files": 7, "payload_bytes": 3109983}
+{"phase": "readable-batch-stored", "files": 7, "payload_bytes": 3119903}
+{"phase": "readable-batch-stored", "files": 7, "payload_bytes": 3122541}
+{"phase": "readable-batch-stored", "files": 7, "payload_bytes": 3113597}
+{"phase": "readable-batch-stored", "files": 14, "payload_bytes": 2764991}
+{"phase": "readable-batch-stored", "files": 9, "payload_bytes": 2815944}
+{"phase": "readable-batch-stored", "files": 7, "payload_bytes": 3105882}
+{"phase": "readable-batch-stored", "files": 7, "payload_bytes": 2804998}
+{"phase": "readable-batch-stored", "files": 7, "payload_bytes": 3080258}
+{"phase": "readable-batch-stored", "files": 8, "payload_bytes": 2930209}
+{"phase": "readable-batch-stored", "files": 33, "payload_bytes": 2774175}
+{"phase": "readable-batch-stored", "files": 6, "payload_bytes": 2710810}
+{"phase": "readable-batch-stored", "files": 6, "payload_bytes": 2710359}
+{"phase": "readable-batch-stored", "files": 6, "payload_bytes": 2717513}
+{"phase": "readable-batch-stored", "files": 6, "payload_bytes": 2718442}
+{"phase": "readable-batch-stored", "files": 9, "payload_bytes": 3112253}
+{"phase": "readable-batch-stored", "files": 7, "payload_bytes": 2925230}
+{"phase": "readable-batch-stored", "files": 7, "payload_bytes": 3119812}
+{"phase": "readable-batch-stored", "files": 7, "payload_bytes": 3105676}
+{"phase": "readable-batch-stored", "files": 7, "payload_bytes": 3121471}
+{"phase": "readable-batch-stored", "files": 8, "payload_bytes": 2791536}
+{"phase": "readable-batch-stored", "files": 7, "payload_bytes": 3105201}
+{"phase": "readable-batch-stored", "files": 17, "payload_bytes": 2900640}
+{"phase": "readable-batch-stored", "files": 7, "payload_bytes": 3087592}
+{"phase": "readable-batch-stored", "files": 7, "payload_bytes": 3078074}
+{"phase": "readable-batch-stored", "files": 14, "payload_bytes": 2761939}
+{"phase": "readable-batch-stored", "files": 17, "payload_bytes": 2759966}
+{"phase": "readable-batch-stored", "files": 8, "payload_bytes": 2957055}
+{"phase": "readable-batch-stored", "files": 7, "payload_bytes": 3063007}
+{"phase": "readable-batch-stored", "files": 7, "payload_bytes": 3109462}
+{"phase": "readable-batch-stored", "files": 9, "payload_bytes": 2856762}
+{"phase": "readable-batch-stored", "files": 6, "payload_bytes": 2710470}
+{"phase": "readable-batch-stored", "files": 7, "payload_bytes": 2721476}
+{"phase": "readable-batch-stored", "files": 7, "payload_bytes": 2988265}
+{"phase": "readable-batch-stored", "files": 7, "payload_bytes": 3111815}
+{"phase": "readable-batch-stored", "files": 7, "payload_bytes": 3116999}
+{"phase": "readable-batch-stored", "files": 12, "payload_bytes": 2924585}
+{"phase": "readable-batch-stored", "files": 7, "payload_bytes": 3087392}
+{"phase": "readable-batch-stored", "files": 12, "payload_bytes": 2968212}
+{"phase": "readable-batch-stored", "files": 8, "payload_bytes": 3014204}
+{"phase": "readable-batch-stored", "files": 15, "payload_bytes": 2710576}
+{"phase": "readable-batch-stored", "files": 14, "payload_bytes": 2745692}
+{"phase": "readable-batch-stored", "files": 8, "payload_bytes": 2994985}
+{"phase": "readable-batch-stored", "files": 9, "payload_bytes": 3096271}
+{"phase": "readable-batch-stored", "files": 6, "payload_bytes": 2713501}
+{"phase": "readable-batch-stored", "files": 7, "payload_bytes": 2937051}
+{"phase": "readable-batch-stored", "files": 7, "payload_bytes": 3118661}
+{"phase": "readable-batch-stored", "files": 7, "payload_bytes": 3107560}
+{"phase": "readable-batch-stored", "files": 7, "payload_bytes": 3120282}
+{"phase": "readable-batch-stored", "files": 20, "payload_bytes": 2836673}
+{"phase": "readable-batch-stored", "files": 7, "payload_bytes": 3079241}
+{"phase": "readable-batch-stored", "files": 7, "payload_bytes": 3078512}
+{"phase": "readable-batch-stored", "files": 9, "payload_bytes": 2766561}
+{"phase": "readable-batch-stored", "files": 8, "payload_bytes": 2711011}
+{"phase": "readable-batch-stored", "files": 55, "payload_bytes": 2991756}
+{"phase": "readable-batch-stored", "files": 7, "payload_bytes": 2947611}
+{"phase": "readable-batch-stored", "files": 7, "payload_bytes": 2949618}
+{"phase": "readable-batch-stored", "files": 7, "payload_bytes": 2948077}
+{"phase": "readable-batch-stored", "files": 7, "payload_bytes": 2948004}
+gh: We couldn't respond to your request in time. Sorry about that. Please try resubmitting your request and contact us if the problem persists. (HTTP 504)
+Traceback (most recent call last):
+  File "/workspace/2251-trade-for-cost/publish-final-readable-evidence.py", line 50, in <module>
+    with ThreadPoolExecutor(max_workers=4) as pool:assert all(pool.map(verify,meta['files']))
+                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/concurrent/futures/_base.py", line 619, in result_iterator
+    yield _result_or_cancel(fs.pop())
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/concurrent/futures/_base.py", line 317, in _result_or_cancel
+    return fut.result(timeout)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/concurrent/futures/_base.py", line 456, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/concurrent/futures/thread.py", line 59, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/2251-trade-for-cost/publish-final-readable-evidence.py", line 49, in verify
+    raw=subprocess.check_output(['gh','api',repo+'/git/blobs/'+row['git_blob_sha1'],'--header','Accept: application/vnd.github.raw+json']);assert len(raw)==row['bytes'] and hashlib.sha256(raw).hexdigest()==row['sha256'];return True
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/subprocess.py", line 466, in check_output
+    return run(*popenargs, stdout=PIPE, timeout=timeout, check=True,
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/subprocess.py", line 571, in run
+    raise CalledProcessError(retcode, process.args,
+subprocess.CalledProcessError: Command '['gh', 'api', 'repos/Richarddavis47/dtos/git/blobs/f59b0e3ebc06ac94a91fe3cadcf94d5db3d79f7d', '--header', 'Accept: application/vnd.github.raw+json']' returned non-zero exit status 1.

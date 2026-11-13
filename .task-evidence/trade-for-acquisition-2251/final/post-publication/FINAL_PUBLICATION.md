@@ -1,0 +1,11 @@
+# Final publication and independent deployment corroboration
+
+DTOS v1.22.36 / build2251 is published and immutable: https://github.com/Richarddavis47/dtos/releases/tag/v1.22.36 . PR340 merged. Deployed commit `e7ecd1b72944e36481668554d05dc4e321e7b3de`, validated tree `1502404775deac8eb657d62b855bbac62aed374c`, candidate `9943a3c220f0064c281bc9d53803afbf1ab03f49`.
+
+The existing authorized Render API independently reports deploy `dep-dbr7hqm8bjmc73bfgs4g` LIVE on that commit. Public application readiness, static-byte equality and bounded smoke checks passed. One earlier readiness request returned HTTP502 during the deployment interval; its receipt records only what was observed and does not prove a cause. No owner authenticated Trade acceptance or physical iPhone/Safari claim. The owner requested no further Opera use; no further Opera connection attempt was made or is required.
+
+All690 original readable files at immutable commit `dabe916169e86ee4a935234c18f94bc1934e0535` were read back and matched byte/SHA256 and committed-path Git identity. The initial verification encountered one GitHub HTTP504; the original failed verification log is preserved here. Recovery performed only readback of already published files, not another upload, application change, or test run. Its per-file original JSONL receipts are included. The earlier immutable release attachments and original source logs are unchanged.
+
+The local main worktree is clean at the approved merged tree. Only the exact fully merged feature branch was removed; the original candidate worktree remains detached and its evidence preserved. The frozen publisher branch remains for audit and was never merged/deployed. No production data, settings, credentials, source publications, caches, infrastructure or real trades were mutated.
+
+Read ../README_FINAL.md and ../SCOUT_DEPLOYED_HANDOFF.md for the full result and conditional independent owner acceptance. Root manifest.json/SHA256SUMS cover the original690 readable files; this directory's separate manifest/SHA256SUMS cover the appended receipts without rewriting that historical manifest. All23 immutable release attachments retain their release evidence-manifest.json/SHA256SUMS.
