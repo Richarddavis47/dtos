@@ -120,7 +120,7 @@ class FOISTrustBrowserTests(unittest.TestCase):
             self.assertEqual(page.locator('.foi-hero h2').inner_text(), data['teams'][0]['team_name'])
             self.assertNotIn('Values youth', page.inner_text('body'))
             self.assertNotIn('Acceptance: ', page.inner_text('body'))
-            self.assertIn('not a prediction of acceptance', page.inner_text('body'))
+            self.assertIn('Fit is an inference from roster context, not a qualified offer or a prediction of acceptance.', page.inner_text('body'))
             summary = page.get_by_text('Profile calculations and sources', exact=True)
             summary.focus()
             page.keyboard.press('Enter')

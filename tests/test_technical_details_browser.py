@@ -60,7 +60,10 @@ class TechnicalDetailsBrowserTests(unittest.TestCase):
 
     def open_ancestors(self, page, child):
         # Walk actual closed controls outer-to-inner; never mutate `open` in JS.
-        for ancestor in child.locator('xpath=ancestor::details[not(@open)]').all():
+        # Keep locator membership stable as Enter changes the open attribute.
+        for ancestor in child.locator('xpath=ancestor::details').all():
+            if ancestor.evaluate('el=>el.open'):
+                continue
             summary = ancestor.locator(':scope > summary')
             page.keyboard.press('Tab')
             summary.focus()
