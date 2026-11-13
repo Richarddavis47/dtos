@@ -1,0 +1,267 @@
+diff --git a/services/trade_explanation.py b/services/trade_explanation.py
+index 58f1e55d..2b266b51 100644
+--- a/services/trade_explanation.py
++++ b/services/trade_explanation.py
+@@ -46,8 +46,8 @@ REASONS = {
+     'ROS_DOWNGRADE': 'The supported rest-of-regular-season optimal lineups lose projected points.',
+     'PLAYOFF_WINDOW_DOWNGRADE': 'The supported playoff-window optimal lineups lose projected points; this is not a qualification forecast.',
+     'DEPTH_LOSS': 'Supported reserve coverage declines.',
+-    'RESERVE_PRODUCTION_LOSS': 'Useful legal-replacement production falls, even if reserve-slot counts stay the same.',
+-    'RESERVE_PRODUCTION_GAIN': 'Useful legal-replacement production improves; this is depth, not a starter upgrade.',
++    'RESERVE_PRODUCTION_LOSS': 'Useful projected points from eligible backups falls, even if reserve-slot counts stay the same.',
++    'RESERVE_PRODUCTION_GAIN': 'Useful projected points from eligible backups improves; this is depth, not a starter upgrade.',
+     'MIXED_WEEKLY_RESERVE_PRODUCTION': 'Replacement production improves in some supported weeks and declines in others; the changes do not establish a uniform gain.',
+     'RESERVE_PRODUCTION_COST_WITHOUT_SUPPORTED_COMPENSATION': 'Useful replacement production declines without a material supported starter gain or Market compensation.',
+     'RESERVE_QUALITY_UNAVAILABLE': 'Complete reserve-production evidence is unavailable; missing projections are not zero.',
+diff --git a/src/ui/customer_experience.py b/src/ui/customer_experience.py
+index 26eb5fe8..24c9f0a5 100644
+--- a/src/ui/customer_experience.py
++++ b/src/ui/customer_experience.py
+@@ -47,6 +47,7 @@ def plain_reason(value: object) -> str:
+         ('Canonical Market', 'Market value'),
+         ('canonical Market', 'Market value'),
+         ('disjoint reserve cover', 'different eligible backups'),
++        ('legal-replacement production', 'projected points from eligible backups'),
+     ):
+         text = text.replace(before, after)
+     return text
+diff --git a/src/ui/design_system.py b/src/ui/design_system.py
+index 84c38c6c..6f6b64e9 100644
+--- a/src/ui/design_system.py
++++ b/src/ui/design_system.py
+@@ -147,7 +147,11 @@ def recommendation_panel(*, title: str, recommendation: str, confidence: int, pr
+     original_record = ("<h3>Original assessment record</h3>" + "".join(
+         "<p>" + escape(value) + "</p>" for value in originals
+     )) if originals != (title, recommendation, primary_reason, expected_impact) else ""
+-    evidence_html = "".join(f"<li>{escape(item)}</li>" for item in evidence) or "<li>No additional supporting evidence crossed the current confidence boundary.</li>"
+-    limitations_html = "".join(f"<li>{escape(item)}</li>" for item in limitations) or "<li>No material limitation was identified in the current cached evidence.</li>"
++    evidence_html = "".join(f"<li>{escape(item)}</li>" for item in dict.fromkeys(evidence)) or "<li>No additional supporting evidence crossed the current confidence boundary.</li>"
++    limitations_html = "".join(f"<li>{escape(item)}</li>" for item in dict.fromkeys(limitations)) or "<li>No material limitation was identified in the current cached evidence.</li>"
+     action_html = f'<a class="ds-action primary" href="{escape(action_href)}">{escape(action_label)}</a>' if action_href else ""
+-    return f'''<article class="ds-recommendation" data-dtos-component="recommendation"><div><div class="ds-eyebrow">Recommendation</div><h2>{escape(title)}</h2><p>{escape(recommendation)}</p><p><b>Primary reason:</b> {escape(primary_reason)}</p>{action_html}</div><div class="ds-confidence"><b>{confidence}%</b><span>Evidence confidence</span></div><details><summary>Detailed Evidence</summary>{original_record}<h3>Expected impact:</h3><p>{escape(expected_impact)}</p><h3>Supporting Evidence</h3><ul>{evidence_html}</ul><h3>Limitations</h3><ul>{limitations_html}</ul></details></article>'''
++    reason_html = (f'<p><b>Primary reason:</b> {escape(primary_reason)}</p>'
++                   if primary_reason not in {title, recommendation} else '')
++    risk_html = (f'<p class="ds-main-limitation"><b>Keep in mind:</b> {escape(plain_reason(limitations[0]))}</p>'
++                 if limitations and plain_reason(limitations[0]) not in {title, recommendation, primary_reason} else '')
++    return f'''<article class="ds-recommendation" data-dtos-component="recommendation"><div><div class="ds-eyebrow">Recommendation</div><h2>{escape(title)}</h2><p>{escape(recommendation)}</p>{reason_html}{risk_html}{action_html}</div><div class="ds-confidence"><b>{confidence}%</b><span>Evidence confidence</span></div><details><summary>Detailed Evidence</summary>{original_record}<h3>Expected impact:</h3><p>{escape(expected_impact)}</p><h3>Supporting Evidence</h3><ul>{evidence_html}</ul><h3>Limitations</h3><ul>{limitations_html}</ul></details></article>'''
+diff --git a/src/ui/front_office_brief.py b/src/ui/front_office_brief.py
+index cd376ea3..0a850ef3 100644
+--- a/src/ui/front_office_brief.py
++++ b/src/ui/front_office_brief.py
+@@ -15,7 +15,10 @@ def cards(items):
+                                  'major_drawback': item['drawback']}
+             output.append(offer_cards([row], item['roster_id']))
+             continue
+-        details = ''.join('<p>' + escape(str(line)) + '</p>' for line in item['details'] if line)
++        visible_reasons = {plain_reason(item['reason']), plain_reason(item['drawback'])}
++        details = ''.join('<p>' + escape(plain_reason(line)) + '</p>'
++                          for line in dict.fromkeys(item['details'])
++                          if line and plain_reason(line) not in visible_reasons)
+         label = ('Evidence limit' if item['family'] == 'attention' else
+                  'Cost and uncertainty' if item['family'] in {'need', 'depth', 'capital'} else 'Keep in mind')
+         output.append(f'''<article class="home-brief-insight" data-brief-family="{escape(item['family'])}">{"<p class=identity-kicker>Next action</p>" if not output else ""}<h3>{escape(item['title'])}</h3><p><b>Why:</b> {escape(plain_reason(item['reason']))}</p><p><b>{label}:</b> {escape(item['drawback'])}</p><a class="ds-action" href="{escape(item['href'], quote=True)}">{escape(item['action'])} →</a>''' +
+diff --git a/src/ui/player_dossier_text.py b/src/ui/player_dossier_text.py
+index ab8e3394..8ea7934e 100644
+--- a/src/ui/player_dossier_text.py
++++ b/src/ui/player_dossier_text.py
+@@ -29,8 +29,8 @@ def strengths_text(report) -> tuple[str, ...]:
+     rows = tuple(item for item in report.strengths if item != _NO_STRENGTH)
+     if rows:
+         return rows
+-    return ("This dossier has not established a clear player advantage from supported production or role evidence. "
+-            "That is an evidence limit, not a negative grade. Review his weekly projection and Market price separately.",)
++    return ("No clear player strength is established. "
++            "This is not a negative grade; review his weekly projection and Market price separately.",)
+ 
+ 
+ def weaknesses_text(report) -> tuple[str, ...]:
+@@ -58,9 +58,9 @@ def evidence_text(text: str) -> str:
+ def availability_text(field: str, text: str | None) -> str | None:
+     """Translate legacy presentation hints without changing or supplementing facts."""
+     if field == 'bye_week' and text and text.startswith('Consult canonical_evidence.schedule'):
+-        return ("His bye week is not confirmed in this player record. Check the NFL schedule before relying "
+-                "on him to cover another player's bye; missing schedule information does not mean he has no bye.")
++        return ("His bye week is not confirmed. Check the schedule before relying "
++                "on him for bye cover.")
+     if field == 'production' and text and text.startswith('Consult canonical_evidence for season-scoped production'):
+-        return ("This player context does not include a season production summary. Review the scored observations "
++        return ("No season result summary is prepared here. Review the scored observations "
+                 "in Career History below; missing production is not zero points.")
+     return text
+diff --git a/src/ui/public_welcome.py b/src/ui/public_welcome.py
+index 55bb3afa..268ef7b9 100644
+--- a/src/ui/public_welcome.py
++++ b/src/ui/public_welcome.py
+@@ -153,7 +153,7 @@ def render_welcome(data: Mapping[str, Any] | None = None) -> str:
+     population = team.get("comparison_population")
+     qualified_rank = (isinstance(rank, int) and not isinstance(rank, bool) and isinstance(population, int)
+                       and not isinstance(population, bool) and 0 < rank <= population)
+-    rank_context = (f'Week {_text(data["week"])}: projected lineup #{rank} among {population} supported fictional franchises. This is not official standing.'
++    rank_context = (f'Week {_text(data["week"])}: projected lineup #{rank} among {population} fictional teams with comparable lineups. This compares projections, not league standings.'
+                     if qualified_rank else 'A comparative lineup rank is unavailable for this example.')
+     market_totals = (f'<div class="pw-metrics"><div><b class="pw-number">{_number(trade.get("market_sent"))}</b>'
+                      '<span class="pw-metric-label">You send · neutral Market units</span></div>'
+@@ -185,8 +185,8 @@ def render_welcome(data: Mapping[str, Any] | None = None) -> str:
+ <nav class="pw-demo-nav" aria-label="Explore the demonstrations"><a href="#demo-team">Team</a><a href="#demo-trade">Trade</a><a href="#demo-values">Your values</a></nav>
+ <details class="pw-demo" id="demo-team" open><summary><h2><span class="pw-index">01</span>Understand Your Team</h2></summary>
+ {demo_note}<article class="pw-conclusion"><p class="pw-team-name">{_text(team["name"])} · {_text(league["name"])}</p>
+-<h3>{_text(team["strength"])}</h3><div class="pw-metrics"><div><b class="pw-number">{_number(team.get("lineup_points"))}</b><span class="pw-metric-label">Strongest legal lineup · projected points</span></div><div><b>{_text(team["strategy"])}</b><span class="pw-metric-label">Selected goal in this example</span></div></div>
+-<p>{rank_context}</p><p><b>Replacement evidence:</b> {reserve_text or "No supported replacement observations in this example."}</p><p class="pw-cost"><b>Keep in mind:</b> {_text(team["limitation"])}</p><p><b>Consider next:</b> {_text(team["next_step"])}</p></article>
++<h3>{_text(team["strength"])}</h3><div class="pw-metrics"><div><b class="pw-number">{_number(team.get("lineup_points"))}</b><span class="pw-metric-label">Highest projected starting lineup</span></div><div><b>{_text(team["strategy"])}</b><span class="pw-metric-label">Selected goal in this example</span></div></div>
++<p>{rank_context}</p><p><b>Eligible backups:</b> {reserve_text or "No supported replacement observations in this example."}</p><p class="pw-cost"><b>Keep in mind:</b> {_text(team["limitation"])}</p><p><b>Consider next:</b> {_text(team["next_step"])}</p></article>
+ <details class="pw-detail" id="demo-roster"><summary>Starting lineup and useful replacements</summary><p>Fictional week {_text(data["week"])} projections under this example's rules. Bench players are not counted in the starting total.</p><h3>Starting lineup</h3>{_roster(team["lineup"], starters=True)}<h3>Available replacements</h3>{_roster(team["reserve"])}</details>
+ <details class="pw-detail" id="demo-capital"><summary>Exact draft capital</summary>{_capital(team.get("capital"))}<p>Original franchise and current ownership remain separate. A pick is not guaranteed to be early or to produce a particular player.</p></details>
+ </details>
+diff --git a/static/css/personal_rankings.css b/static/css/personal_rankings.css
+index 9aeb385b..9d2f6ac6 100644
+--- a/static/css/personal_rankings.css
++++ b/static/css/personal_rankings.css
+@@ -85,3 +85,6 @@ body:has(#my-dtos) .ds-page-header{display:none}
+ #personal-method-dialog p{font-size:.875rem;line-height:1.5}
+ #personal-method-dialog .personal-actions{position:sticky;bottom:-1rem;background:#242a27;padding:.75rem 0;margin-bottom:-.25rem;border-top:1px solid #658272}
+ @media(min-width:481px){.personal-method-choice label{min-width:12rem}}
++
++/* Keep the account action intact; the heading may wrap independently. */
++.personal-heading{flex-wrap:wrap}.personal-heading h1{min-width:0;flex:1 1 8rem}.personal-heading>.btn{flex:0 0 auto;white-space:nowrap;overflow-wrap:normal}
+diff --git a/static/css/trade_workspace.css b/static/css/trade_workspace.css
+index 8fcced03..a5c6b7eb 100644
+--- a/static/css/trade_workspace.css
++++ b/static/css/trade_workspace.css
+@@ -127,3 +127,5 @@ body:has(#trade-builder) .ds-page-header>div:first-child{display:flex;flex-wrap:
+ /* Scan offers first; the prepared review contains deeper evidence. */
+ .tw-offer-summary{padding:16px}.tw-offer-summary>p{margin:8px 0;line-height:1.45}.tw-offer-summary .tw-offer-partner{font-weight:650}.tw-offer-summary .tw-offer-effects{padding:8px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border)}.tw-offer-effects p{margin:6px 0;line-height:1.45}.tw-offer-summary .tw-risk-summary{color:var(--warning);font-weight:600}.tw-offer-summary .tw-offer-market{font-weight:650}.tw-offer-review>details{margin:10px 0}.tw-review-actions{display:flex;flex-wrap:wrap;gap:8px}.tw-offer-summary .tw-acquisition-role{font-weight:700}.tw-offer-summary>small{display:block;line-height:1.45}.tw-depth-details section{margin:12px 0}.tw-capital-disclosure>.tw-draft-capital{padding:8px 0}.tw-offer-sources pre{white-space:pre-wrap;overflow-wrap:anywhere}
+ .tw-active-valuation-notice{margin:6px 0;line-height:1.45}.tw-active-valuation-notice p{margin:6px 0}.tw-valuation-mode>.tw-custom-pricing{margin:0}.tw-custom-pricing>summary{min-height:44px;cursor:pointer}.tw-custom-pricing p{line-height:1.45}.tw-offer-summary>.tw-decision-lead{padding:0;border:0;background:transparent}.tw-offer-summary>.tw-decision-lead>p{margin:8px 0;line-height:1.45}
++
++.tw-owner-header{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin-bottom:12px}.tw-owner-header>h3{flex:1 1 12rem;min-width:0;margin:0;overflow-wrap:anywhere}.tw-owner-header>a{flex:0 0 auto;min-height:44px;display:flex;align-items:center}
+diff --git a/static/js/trade_workspace.js b/static/js/trade_workspace.js
+index 57ab93fa..b8d0c3db 100644
+--- a/static/js/trade_workspace.js
++++ b/static/js/trade_workspace.js
+@@ -429,9 +429,11 @@
+   function board(which) {
+     const container = el('trade-' + which + '-board'), owner = team(which === 'sent' ? active : partner()), f = filters[which];
+     container.replaceChildren(); container.setAttribute('aria-hidden', String(matchMedia('(max-width:760px)').matches && side !== which));
+-    container.append(node('h3', owner?.team_name || 'Choose a counterparty'));
++    const ownerHeader = node('div', null, 'tw-owner-header');
++    ownerHeader.append(node('h3', owner?.team_name || 'Choose a trade partner'));
++    container.append(ownerHeader);
+     if (!owner) return;
+-    const teamLink = node('a', 'View team'); teamLink.href = '/teams/' + owner.roster_id; container.append(teamLink);
++    const teamLink = node('a', 'View team'); teamLink.href = '/teams/' + owner.roster_id; ownerHeader.append(teamLink);
+     const search = node('input'); search.type = 'search'; search.value = f.q; search.placeholder = 'Search players or picks'; search.setAttribute('aria-label', which === 'sent' ? 'Search my assets' : 'Search their assets');
+     const results = node('div', null, 'tw-asset-results'), chips = node('div', null, 'tw-filters');
+     const positions = ['ALL', 'QB', 'RB', 'WR', 'TE', ...[...new Set(owner.assets.filter(a => a.kind !== 'pick' && !['QB','RB','WR','TE'].includes(a.position)).map(a => a.position || 'Other positions'))].sort(), 'PICKS'].filter(p => p === 'ALL' || owner.assets.some(a => (a.kind === 'pick' ? 'PICKS' : (a.position || 'Other positions')) === p));
+@@ -1346,6 +1348,7 @@
+     return String(value || '').replaceAll('compatible prepared publication', 'league data for this week')
+       .replaceAll('Canonical Market', 'Market value').replaceAll('canonical Market', 'Market value')
+       .replaceAll('disjoint reserve cover', 'different eligible backups')
++      .replaceAll('legal-replacement production', 'projected points from eligible backups')
+       .replaceAll('bilateral recommendation', 'recommendation for both teams');
+   }
+   function recordedPresentation(row) {
+diff --git a/tests/test_customer_acceptance_followup.py b/tests/test_customer_acceptance_followup.py
+new file mode 100644
+index 00000000..44f1b1e2
+--- /dev/null
++++ b/tests/test_customer_acceptance_followup.py
+@@ -0,0 +1,29 @@
++"""Presentation-only acceptance: material facts remain visible and inspectable."""
++import unittest
++from src.ui import recommendation_panel
++from src.ui.customer_experience import plain_reason
++from src.ui.front_office_brief import cards
++
++class CustomerAcceptanceFollowupTests(unittest.TestCase):
++    def test_backup_points_translation_preserves_qualification(self):
++        raw = 'Useful legal-replacement production falls 2.25 points per supported week; participation is unknown.'
++        shown = plain_reason(raw)
++        self.assertIn('projected points from eligible backups', shown)
++        self.assertIn('2.25 points per supported week; participation is unknown.', shown)
++        html = recommendation_panel(title='Review', recommendation=raw, confidence=55,
++            primary_reason=raw, evidence=(raw,), expected_impact='Unknown',
++            action_label='Review trade', action_href='/trades', limitations=('Incoming Player is on IR.',))
++        self.assertIn(raw, html)
++        self.assertLess(html.index('Incoming Player is on IR.'), html.index('<details>'))
++        self.assertIn('Original assessment record', html)
++
++    def test_repeated_brief_explanation_does_not_erase_a_distinct_risk(self):
++        item = dict(family='need', title='Receiver cover', reason='WR cover is limited.',
++                    drawback='Player A is out.', details=['WR cover is limited.', 'Player A is out.',
++                    'Player B has no projection.', 'Player B has no projection.'],
++                    href='/trades', action='Explore WR trades')
++        html = cards([item])
++        self.assertEqual(html.count('WR cover is limited.'), 1)
++        self.assertEqual(html.count('Player A is out.'), 1)
++        self.assertEqual(html.count('Player B has no projection.'), 1)
++        self.assertIn('<details>', html)
+diff --git a/tests/test_customer_experience_journeys.py b/tests/test_customer_experience_journeys.py
+index ca2460d1..2b7252d7 100644
+--- a/tests/test_customer_experience_journeys.py
++++ b/tests/test_customer_experience_journeys.py
+@@ -57,6 +57,23 @@ class CustomerExperienceJourneyTests(journeys.ProductBrowserJourneyTests):
+             .all_text_contents(),
+             ["Home", "My Team", "Trade", "League", "Market"],
+         )
++        if path.startswith('/trades/'):
++            for header in page.locator('.tw-owner-header').all():
++                if not header.is_visible():
++                    continue
++                title, action = header.locator('h3'), header.locator('a')
++                if not action.count():
++                    continue
++                original = title.inner_text()
++                title.evaluate("e => e.textContent = 'A very long franchise name with an equally long owner label'")
++                a, b = title.bounding_box(), action.bounding_box()
++                self.assertIsNotNone(a)
++                self.assertIsNotNone(b)
++                self.assertTrue(a['x'] + a['width'] <= b['x'] or
++                                a['y'] + a['height'] <= b['y'] or
++                                b['y'] + b['height'] <= a['y'])
++                self.assertGreaterEqual(action.bounding_box()['height'], 44)
++                title.evaluate('(e, text) => e.textContent = text', original)
+         resources = page.evaluate(
+             "performance.getEntriesByType('resource').map(e=>new URL(e.name).pathname)"
+         )
+diff --git a/tests/test_personal_rankings_accessibility_browser.py b/tests/test_personal_rankings_accessibility_browser.py
+index 40f72425..de16f353 100644
+--- a/tests/test_personal_rankings_accessibility_browser.py
++++ b/tests/test_personal_rankings_accessibility_browser.py
+@@ -302,6 +302,16 @@ class RankingsAccessibilityBrowserTests(unittest.TestCase):
+                         self.assertEqual(page.get_by_role('heading', level=1, name='My DTOS', exact=True).count(), 1)
+                         self.assertTrue(page.get_by_label('Account and league context', exact=True).is_visible())
+                         self.assertTrue(page.locator('.manager-nav').is_visible())
++                        action = page.locator('.personal-heading > a')
++                        self.assertEqual(action.inner_text(), 'Account')
++                        self.assertEqual(action.evaluate("e => getComputedStyle(e).whiteSpace"), 'nowrap')
++                        self.assertGreaterEqual(action.bounding_box()['height'], 44)
++                        self.assertTrue(action.evaluate("e => e.scrollWidth <= e.clientWidth"))
++                        if os.getenv('DTOS_RANKINGS_UX_EVIDENCE'):
++                            destination = Path(os.environ['DTOS_RANKINGS_UX_EVIDENCE'])
++                            destination.mkdir(parents=True, exist_ok=True)
++                            page.screenshot(path=str(destination / f'account-action-{width}.png'), full_page=True)
++
+                         measurements.append(page.evaluate('''() => {
+                             const box=s=>{const r=document.querySelector(s).getBoundingClientRect();return {top:r.top+scrollY,bottom:r.bottom+scrollY,height:r.height}};
+                             return {width:innerWidth,height:innerHeight,editor:box('#my-dtos'),
+diff --git a/tests/test_public_welcome_presentation.py b/tests/test_public_welcome_presentation.py
+index a442598a..90c1b974 100644
+--- a/tests/test_public_welcome_presentation.py
++++ b/tests/test_public_welcome_presentation.py
+@@ -70,7 +70,7 @@ class PublicWelcomePresentationTests(unittest.TestCase):
+         self.assertIn(self.fixture['personal']['cohort_label'], text)
+         self.assertIn('Unpriced future picks remain capital facts', text)
+         self.assertIn(f"Week {self.fixture['week']}: projected lineup #{self.fixture['team']['comparison_rank']}", text)
+-        self.assertIn('This is not official standing.', text)
++        self.assertIn('This compares projections, not league standings.', text)
+         for pick in self.fixture['team']['capital']:
+             self.assertIn(pick['label'], text)
+             self.assertIn(pick['original_franchise'], text)
+@@ -100,7 +100,7 @@ class PublicWelcomePresentationTests(unittest.TestCase):
+         data['team']['lineup_points'] = 0
+         data['team']['comparison_rank'] = None
+         source = render_welcome(data)
+-        self.assertIn('<b class="pw-number">0</b><span class="pw-metric-label">Strongest legal lineup', source)
++        self.assertIn('<b class="pw-number">0</b><span class="pw-metric-label">Highest projected starting lineup', source)
+         self.assertIn('<b class="pw-number">0</b><span class="pw-metric-label">You send', source)
+         self.assertIn('<b class="pw-number">Unavailable</b><span class="pw-metric-label">You receive', source)
+         self.assertIn('<dt>You Send</dt><dd>0</dd>', source)
