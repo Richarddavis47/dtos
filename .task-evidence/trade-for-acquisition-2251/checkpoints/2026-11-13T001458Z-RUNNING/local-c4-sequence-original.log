@@ -1,0 +1,12 @@
+{"phase": "focused123", "running": true, "observed_at": "2026-11-13T00:00:51.978786+00:00"}
+{"phase": "focused123", "running": true, "observed_at": "2026-11-13T00:01:22.001511+00:00"}
+{"phase": "focused123", "running": false, "observed_at": "2026-11-13T00:01:52.025754+00:00"}
+{"candidate": "04dd3e50c7105f571edda16b05738dceeddf3473", "tree": "e084fdf2257690d10a4ecdf428c12d428acac4a8", "passed": true, "tests": 123, "peak": 858353664, "memory_limit": 2147483648, "original": "focused-exact/original-console.log", "console_sha256": "96f318aec4323d5401eadb532dc90ef9aefc3ab9f9ef2a7a8a794213bb2cee05", "actual_exit_verified": true, "owned_stopped_container_removed": true}
+Traceback (most recent call last):
+  File "/workspace/2251-trade-for-cost/continue-final-local-c4.py", line 14, in <module>
+    step=next(x['run'] for x in yaml.safe_load(raw)['jobs']['canonical-release']['steps'] if x['name']=='Prepare disposable validation harness')
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/2251-trade-for-cost/continue-final-local-c4.py", line 14, in <genexpr>
+    step=next(x['run'] for x in yaml.safe_load(raw)['jobs']['canonical-release']['steps'] if x['name']=='Prepare disposable validation harness')
+                                                                                             ~^^^^^^^^
+KeyError: 'name'

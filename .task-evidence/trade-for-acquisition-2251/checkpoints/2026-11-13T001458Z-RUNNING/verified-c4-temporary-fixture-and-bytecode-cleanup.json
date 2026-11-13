@@ -1,0 +1,4643 @@
+{
+  "source": {
+    "baseline": "b8c3e6162630fea96fecee56c7a45ac0d5890971",
+    "candidate": "04dd3e50c7105f571edda16b05738dceeddf3473",
+    "tree": "e084fdf2257690d10a4ecdf428c12d428acac4a8",
+    "branch": "feat/trade-for-cost-2251",
+    "version": "1.22.36",
+    "build": 2251,
+    "recorded_at": "2026-11-12T23:50:07.096814+00:00",
+    "expected_test_count": 4455,
+    "pr": 340
+  },
+  "native3_complete_before_cleanup": true,
+  "original_frozen_inputs_preserved": true,
+  "removed_duplicate_inputs": [
+    {
+      "path": "/workspace/2251-trade-for-cost/local-resource-inputs/oneqb.json",
+      "original": "/workspace/2246-granite-activation/local-resident-refresh-candidate588/inputs/oneqb.json",
+      "bytes": 45671736,
+      "sha256": "98d76b8452431ff3e6f961b6bddd9a654f7b6d23129d96cce60e52cbf79cb11b"
+    },
+    {
+      "path": "/workspace/2251-trade-for-cost/local-resource-inputs/projections.sqlite3",
+      "original": "/workspace/2246-granite-activation/local-resident-refresh-candidate588/inputs/projections.sqlite3",
+      "bytes": 7155712,
+      "sha256": "43541f6a3c738d0ebeac0794cdfd7c009bd27f450816919315b824b512a7b708"
+    },
+    {
+      "path": "/workspace/2251-trade-for-cost/local-resource-inputs/superflex.json",
+      "original": "/workspace/2246-granite-activation/local-resident-refresh-candidate588/inputs/superflex.json",
+      "bytes": 45679653,
+      "sha256": "49915270f727cd3eb6a3a792b8531a487d7da96a06c031ee0e5a176887f69c81"
+    }
+  ],
+  "removed_ignored_regenerable_bytecode": [
+    {
+      "path": "__pycache__/app.cpython-314.pyc",
+      "bytes": 215
+    },
+    {
+      "path": "__pycache__/dtos_app.cpython-314.pyc",
+      "bytes": 89700
+    },
+    {
+      "path": "__pycache__/app_metadata.cpython-314.pyc",
+      "bytes": 6104
+    },
+    {
+      "path": "__pycache__/main.cpython-314.pyc",
+      "bytes": 215
+    },
+    {
+      "path": "__pycache__/config.cpython-314.pyc",
+      "bytes": 11313
+    },
+    {
+      "path": "src/__pycache__/__init__.cpython-314.pyc",
+      "bytes": 159
+    },
+    {
+      "path": "src/__pycache__/global_evidence_worker.cpython-314.pyc",
+      "bytes": 7488
+    },
+    {
+      "path": "src/__pycache__/fois_compute_worker.cpython-314.pyc",
+      "bytes": 4447
+    },
+    {
+      "path": "src/core/__pycache__/__init__.cpython-314.pyc",
+      "bytes": 161
+    },
+    {
+      "path": "src/core/__pycache__/sync_status.cpython-314.pyc",
+      "bytes": 1970
+    },
+    {
+      "path": "src/core/__pycache__/player_ownership.cpython-314.pyc",
+      "bytes": 7485
+    },
+    {
+      "path": "src/core/__pycache__/explanations.cpython-314.pyc",
+      "bytes": 8932
+    },
+    {
+      "path": "src/core/__pycache__/operational_history.cpython-314.pyc",
+      "bytes": 3249
+    },
+    {
+      "path": "src/core/__pycache__/team_identity.cpython-314.pyc",
+      "bytes": 2363
+    },
+    {
+      "path": "src/core/__pycache__/request_execution.cpython-314.pyc",
+      "bytes": 922
+    },
+    {
+      "path": "src/core/__pycache__/freshness.cpython-314.pyc",
+      "bytes": 5183
+    },
+    {
+      "path": "src/core/projection_intelligence/__pycache__/quarantine.cpython-314.pyc",
+      "bytes": 10633
+    },
+    {
+      "path": "src/core/projection_intelligence/__pycache__/retention.cpython-314.pyc",
+      "bytes": 17471
+    },
+    {
+      "path": "src/core/projection_intelligence/__pycache__/__init__.cpython-314.pyc",
+      "bytes": 588
+    },
+    {
+      "path": "src/core/projection_intelligence/__pycache__/sleeper_provider.cpython-314.pyc",
+      "bytes": 12509
+    },
+    {
+      "path": "src/core/projection_intelligence/__pycache__/root_transition.cpython-314.pyc",
+      "bytes": 16467
+    },
+    {
+      "path": "src/core/projection_intelligence/__pycache__/scoring.cpython-314.pyc",
+      "bytes": 7339
+    },
+    {
+      "path": "src/core/projection_intelligence/__pycache__/calibration.cpython-314.pyc",
+      "bytes": 15506
+    },
+    {
+      "path": "src/core/projection_intelligence/__pycache__/state_storage.cpython-314.pyc",
+      "bytes": 6008
+    },
+    {
+      "path": "src/core/projection_intelligence/__pycache__/provenance_retention.cpython-314.pyc",
+      "bytes": 11061
+    },
+    {
+      "path": "src/core/projection_intelligence/__pycache__/consumer_registry.cpython-314.pyc",
+      "bytes": 1060
+    },
+    {
+      "path": "src/core/projection_intelligence/__pycache__/service.cpython-314.pyc",
+      "bytes": 95090
+    },
+    {
+      "path": "src/core/team_intelligence/__pycache__/__init__.cpython-314.pyc",
+      "bytes": 582
+    },
+    {
+      "path": "src/core/team_intelligence/__pycache__/engine.cpython-314.pyc",
+      "bytes": 12583
+    },
+    {
+      "path": "src/core/team_intelligence/__pycache__/models.cpython-314.pyc",
+      "bytes": 3443
+    },
+    {
+      "path": "src/core/historical_franchise_state/__pycache__/__init__.cpython-314.pyc",
+      "bytes": 638
+    },
+    {
+      "path": "src/core/historical_franchise_state/__pycache__/models.cpython-314.pyc",
+      "bytes": 8426
+    },
+    {
+      "path": "src/core/historical_franchise_state/__pycache__/service.cpython-314.pyc",
+      "bytes": 78327
+    },
+    {
+      "path": "src/core/competitive_window/__pycache__/__init__.cpython-314.pyc",
+      "bytes": 532
+    },
+    {
+      "path": "src/core/competitive_window/__pycache__/engine.cpython-314.pyc",
+      "bytes": 5461
+    },
+    {
+      "path": "src/core/competitive_window/__pycache__/models.cpython-314.pyc",
+      "bytes": 2584
+    },
+    {
+      "path": "src/core/historical_memory/__pycache__/storage.cpython-314.pyc",
+      "bytes": 4742
+    },
+    {
+      "path": "src/core/historical_memory/__pycache__/read_model.cpython-314.pyc",
+      "bytes": 14046
+    },
+    {
+      "path": "src/core/historical_memory/__pycache__/__init__.cpython-314.pyc",
+      "bytes": 1550
+    },
+    {
+      "path": "src/core/historical_memory/__pycache__/graph.cpython-314.pyc",
+      "bytes": 127520
+    },
+    {
+      "path": "src/core/historical_memory/__pycache__/scoring.cpython-314.pyc",
+      "bytes": 2547
+    },
+    {
+      "path": "src/core/historical_memory/__pycache__/jobs.cpython-314.pyc",
+      "bytes": 14172
+    },
+    {
+      "path": "src/core/historical_memory/__pycache__/store.cpython-314.pyc",
+      "bytes": 124985
+    },
+    {
+      "path": "src/core/historical_memory/__pycache__/season_state.cpython-314.pyc",
+      "bytes": 3117
+    },
+    {
+      "path": "src/core/historical_memory/__pycache__/enrichment.cpython-314.pyc",
+      "bytes": 5807
+    },
+    {
+      "path": "src/core/historical_memory/__pycache__/signals.cpython-314.pyc",
+      "bytes": 1894
+    },
+    {
+      "path": "src/core/historical_memory/__pycache__/timeline.cpython-314.pyc",
+      "bytes": 18905
+    },
+    {
+      "path": "src/core/historical_memory/__pycache__/valuation.cpython-314.pyc",
+      "bytes": 2877
+    },
+    {
+      "path": "src/core/historical_memory/__pycache__/models.cpython-314.pyc",
+      "bytes": 5148
+    },
+    {
+      "path": "src/core/historical_memory/__pycache__/providers.cpython-314.pyc",
+      "bytes": 12842
+    },
+    {
+      "path": "src/core/historical_memory/__pycache__/importer.cpython-314.pyc",
+      "bytes": 36356
+    },
+    {
+      "path": "src/core/historical_memory/__pycache__/aggregation.cpython-314.pyc",
+      "bytes": 3810
+    },
+    {
+      "path": "src/core/decision_engine/__pycache__/__init__.cpython-314.pyc",
+      "bytes": 834
+    },
+    {
+      "path": "src/core/decision_engine/__pycache__/engine.cpython-314.pyc",
+      "bytes": 1258
+    },
+    {
+      "path": "src/core/decision_engine/league/__pycache__/__init__.cpython-314.pyc",
+      "bytes": 193
+    },
+    {
+      "path": "src/core/decision_engine/league/__pycache__/league_analyzer.cpython-314.pyc",
+      "bytes": 1109
+    },
+    {
+      "path": "src/core/decision_engine/league/__pycache__/trend_detector.cpython-314.pyc",
+      "bytes": 753
+    },
+    {
+      "path": "src/core/decision_engine/league/__pycache__/positional_scarcity.cpython-314.pyc",
+      "bytes": 1474
+    },
+    {
+      "path": "src/core/decision_engine/assets/__pycache__/__init__.cpython-314.pyc",
+      "bytes": 187
+    },
+    {
+      "path": "src/core/decision_engine/assets/__pycache__/market_context.cpython-314.pyc",
+      "bytes": 1434
+    },
+    {
+      "path": "src/core/decision_engine/assets/__pycache__/player_evaluator.cpython-314.pyc",
+      "bytes": 2334
+    },
+    {
+      "path": "src/core/decision_engine/assets/__pycache__/pick_evaluator.cpython-314.pyc",
+      "bytes": 2329
+    },
+    {
+      "path": "src/core/decision_engine/team/__pycache__/__init__.cpython-314.pyc",
+      "bytes": 181
+    },
+    {
+      "path": "src/core/decision_engine/team/__pycache__/scoring.cpython-314.pyc",
+      "bytes": 2149
+    },
+    {
+      "path": "src/core/decision_engine/team/__pycache__/future_score.cpython-314.pyc",
+      "bytes": 3268
+    },
+    {
+      "path": "src/core/decision_engine/team/__pycache__/contender_score.cpython-314.pyc",
+      "bytes": 3228
+    },
+    {
+      "path": "src/core/decision_engine/team/__pycache__/team_evaluator.cpython-314.pyc",
+      "bytes": 13385
+    },
+    {
+      "path": "src/core/decision_engine/team/__pycache__/depth_analyzer.cpython-314.pyc",
+      "bytes": 3337
+    },
+    {
+      "path": "src/core/decision_engine/recommendations/__pycache__/confidence_calculator.cpython-314.pyc",
+      "bytes": 1623
+    },
+    {
+      "path": "src/core/decision_engine/recommendations/__pycache__/__init__.cpython-314.pyc",
+      "bytes": 198
+    },
+    {
+      "path": "src/core/decision_engine/recommendations/__pycache__/reasoning_builder.cpython-314.pyc",
+      "bytes": 2740
+    },
+    {
+      "path": "src/core/decision_engine/recommendations/__pycache__/recommendation_engine.cpython-314.pyc",
+      "bytes": 5974
+    },
+    {
+      "path": "src/core/decision_engine/models/__pycache__/__init__.cpython-314.pyc",
+      "bytes": 802
+    },
+    {
+      "path": "src/core/decision_engine/models/__pycache__/recommendation.cpython-314.pyc",
+      "bytes": 2897
+    },
+    {
+      "path": "src/core/decision_engine/models/__pycache__/team_profile.cpython-314.pyc",
+      "bytes": 1861
+    },
+    {
+      "path": "src/core/decision_engine/models/__pycache__/decision.cpython-314.pyc",
+      "bytes": 1835
+    },
+    {
+      "path": "src/core/decision_engine/models/__pycache__/evaluation.cpython-314.pyc",
+      "bytes": 2344
+    },
+    {
+      "path": "src/core/brain/__pycache__/__init__.cpython-314.pyc",
+      "bytes": 470
+    },
+    {
+      "path": "src/core/brain/__pycache__/service.cpython-314.pyc",
+      "bytes": 14680
+    },
+    {
+      "path": "src/core/brain/__pycache__/contracts.cpython-314.pyc",
+      "bytes": 1831
+    },
+    {
+      "path": "src/core/inspection/__pycache__/__init__.cpython-314.pyc",
+      "bytes": 1476
+    },
+    {
+      "path": "src/core/inspection/__pycache__/projection_contract.cpython-314.pyc",
+      "bytes": 9117
+    },
+    {
+      "path": "src/core/inspection/__pycache__/engine.cpython-314.pyc",
+      "bytes": 29045
+    },
+    {
+      "path": "src/core/inspection/__pycache__/discovery.cpython-314.pyc",
+      "bytes": 19819
+    },
+    {
+      "path": "src/core/inspection/__pycache__/models.cpython-314.pyc",
+      "bytes": 3814
+    },
+    {
+      "path": "src/core/inspection/__pycache__/live.cpython-314.pyc",
+      "bytes": 22608
+    },
+    {
+      "path": "src/core/league_runtime/__pycache__/__init__.cpython-314.pyc",
+      "bytes": 657
+    },
+    {
+      "path": "src/core/league_runtime/__pycache__/identity.cpython-314.pyc",
+      "bytes": 5048
+    },
+    {
+      "path": "src/core/league_runtime/__pycache__/context.cpython-314.pyc",
+      "bytes": 9904
+    },
+    {
+      "path": "src/core/league_runtime/__pycache__/manager.cpython-314.pyc",
+      "bytes": 37046
+    },
+    {
+      "path": "src/core/valuation/__pycache__/__init__.cpython-314.pyc",
+      "bytes": 1657
+    },
+    {
+      "path": "src/core/valuation/__pycache__/ranking.cpython-314.pyc",
+      "bytes": 9041
+    },
+    {
+      "path": "src/core/valuation/__pycache__/intrinsic_profile.cpython-314.pyc",
+      "bytes": 3328
+    },
+    {
+      "path": "src/core/valuation/__pycache__/intrinsic_tiers.cpython-314.pyc",
+      "bytes": 2639
+    },
+    {
+      "path": "src/core/valuation/__pycache__/player_methodology.cpython-314.pyc",
+      "bytes": 15924
+    },
+    {
+      "path": "src/core/valuation/__pycache__/universe.cpython-314.pyc",
+      "bytes": 42814
+    },
+    {
+      "path": "src/core/valuation/__pycache__/calibration.cpython-314.pyc",
+      "bytes": 15850
+    },
+    {
+      "path": "src/core/valuation/__pycache__/packages.cpython-314.pyc",
+      "bytes": 7664
+    },
+    {
+      "path": "src/core/valuation/__pycache__/normalization.cpython-314.pyc",
+      "bytes": 19230
+    },
+    {
+      "path": "src/core/valuation/__pycache__/automation.cpython-314.pyc",
+      "bytes": 21669
+    },
+    {
+      "path": "src/core/valuation/__pycache__/models.cpython-314.pyc",
+      "bytes": 5737
+    },
+    {
+      "path": "src/core/valuation/__pycache__/observation_identity.cpython-314.pyc",
+      "bytes": 4354
+    },
+    {
+      "path": "src/core/valuation/__pycache__/source_time.cpython-314.pyc",
+      "bytes": 1192
+    },
+    {
+      "path": "src/core/valuation/__pycache__/forward_evidence.cpython-314.pyc",
+      "bytes": 7072
+    },
+    {
+      "path": "src/core/valuation/__pycache__/config.cpython-314.pyc",
+      "bytes": 2344
+    },
+    {
+      "path": "src/core/valuation/__pycache__/quote_eligibility.cpython-314.pyc",
+      "bytes": 2411
+    },
+    {
+      "path": "src/core/valuation/__pycache__/consensus.cpython-314.pyc",
+      "bytes": 8480
+    },
+    {
+      "path": "src/core/player_value_projection/__pycache__/__init__.cpython-314.pyc",
+      "bytes": 700
+    },
+    {
+      "path": "src/core/player_value_projection/__pycache__/canonical_production.cpython-314.pyc",
+      "bytes": 20066
+    },
+    {
+      "path": "src/core/player_value_projection/__pycache__/sleeper_actuals.cpython-314.pyc",
+      "bytes": 22441
+    },
+    {
+      "path": "src/core/player_value_projection/__pycache__/engine.cpython-314.pyc",
+      "bytes": 11845
+    },
+    {
+      "path": "src/core/player_value_projection/__pycache__/models.cpython-314.pyc",
+      "bytes": 6138
+    },
+    {
+      "path": "src/core/player_value_projection/__pycache__/providers.cpython-314.pyc",
+      "bytes": 10453
+    },
+    {
+      "path": "src/core/intelligence_memory/__pycache__/__init__.cpython-314.pyc",
+      "bytes": 3421
+    },
+    {
+      "path": "src/core/intelligence_memory/__pycache__/triggers.cpython-314.pyc",
+      "bytes": 4973
+    },
+    {
+      "path": "src/core/intelligence_memory/__pycache__/chain.cpython-314.pyc",
+      "bytes": 5773
+    },
+    {
+      "path": "src/core/intelligence_memory/__pycache__/fois.cpython-314.pyc",
+      "bytes": 2295
+    },
+    {
+      "path": "src/core/intelligence_memory/__pycache__/confidence.cpython-314.pyc",
+      "bytes": 1724
+    },
+    {
+      "path": "src/core/intelligence_memory/__pycache__/season_cache.cpython-314.pyc",
+      "bytes": 374
+    },
+    {
+      "path": "src/core/intelligence_memory/__pycache__/relevance.cpython-314.pyc",
+      "bytes": 7207
+    },
+    {
+      "path": "src/core/intelligence_memory/__pycache__/store.cpython-314.pyc",
+      "bytes": 92141
+    },
+    {
+      "path": "src/core/intelligence_memory/__pycache__/equivalence.cpython-314.pyc",
+      "bytes": 2458
+    },
+    {
+      "path": "src/core/intelligence_memory/__pycache__/timestamps.cpython-314.pyc",
+      "bytes": 1696
+    },
+    {
+      "path": "src/core/intelligence_memory/__pycache__/historical_providers.cpython-314.pyc",
+      "bytes": 13292
+    },
+    {
+      "path": "src/core/intelligence_memory/__pycache__/trade_resolution.cpython-314.pyc",
+      "bytes": 16103
+    },
+    {
+      "path": "src/core/intelligence_memory/__pycache__/ownership.cpython-314.pyc",
+      "bytes": 1358
+    },
+    {
+      "path": "src/core/intelligence_memory/__pycache__/models.cpython-314.pyc",
+      "bytes": 10322
+    },
+    {
+      "path": "src/core/intelligence_memory/__pycache__/market.cpython-314.pyc",
+      "bytes": 5307
+    },
+    {
+      "path": "src/core/intelligence_memory/__pycache__/pipeline.cpython-314.pyc",
+      "bytes": 41183
+    },
+    {
+      "path": "src/core/intelligence_memory/__pycache__/sleeper_source.cpython-314.pyc",
+      "bytes": 8765
+    },
+    {
+      "path": "src/core/intelligence_memory/__pycache__/historical_resolver.cpython-314.pyc",
+      "bytes": 21372
+    },
+    {
+      "path": "src/core/intelligence_memory/__pycache__/checkpoint_flight.cpython-314.pyc",
+      "bytes": 7809
+    },
+    {
+      "path": "src/core/intelligence_memory/__pycache__/market_memory.cpython-314.pyc",
+      "bytes": 9576
+    },
+    {
+      "path": "src/core/intelligence_memory/__pycache__/service.cpython-314.pyc",
+      "bytes": 11927
+    },
+    {
+      "path": "src/core/roster_intelligence/__pycache__/__init__.cpython-314.pyc",
+      "bytes": 456
+    },
+    {
+      "path": "src/core/roster_intelligence/__pycache__/engine.cpython-314.pyc",
+      "bytes": 10649
+    },
+    {
+      "path": "src/core/roster_intelligence/__pycache__/models.cpython-314.pyc",
+      "bytes": 2886
+    },
+    {
+      "path": "src/core/historical_intelligence/__pycache__/__init__.cpython-314.pyc",
+      "bytes": 721
+    },
+    {
+      "path": "src/core/historical_intelligence/__pycache__/price_admission.cpython-314.pyc",
+      "bytes": 8636
+    },
+    {
+      "path": "src/core/historical_intelligence/__pycache__/market_comparison.cpython-314.pyc",
+      "bytes": 13393
+    },
+    {
+      "path": "src/core/historical_intelligence/__pycache__/models.cpython-314.pyc",
+      "bytes": 10968
+    },
+    {
+      "path": "src/core/historical_intelligence/__pycache__/service.cpython-314.pyc",
+      "bytes": 32914
+    },
+    {
+      "path": "src/core/front_office_intelligence/__pycache__/__init__.cpython-314.pyc",
+      "bytes": 705
+    },
+    {
+      "path": "src/core/front_office_intelligence/__pycache__/engine.cpython-314.pyc",
+      "bytes": 27903
+    },
+    {
+      "path": "src/core/front_office_intelligence/__pycache__/models.cpython-314.pyc",
+      "bytes": 4748
+    },
+    {
+      "path": "src/core/intelligence/__pycache__/__init__.cpython-314.pyc",
+      "bytes": 3583
+    },
+    {
+      "path": "src/core/intelligence/__pycache__/serialization.cpython-314.pyc",
+      "bytes": 1562
+    },
+    {
+      "path": "src/core/intelligence/__pycache__/confidence.cpython-314.pyc",
+      "bytes": 2771
+    },
+    {
+      "path": "src/core/intelligence/__pycache__/roster_grading.cpython-314.pyc",
+      "bytes": 11224
+    },
+    {
+      "path": "src/core/intelligence/__pycache__/league_scope.cpython-314.pyc",
+      "bytes": 4647
+    },
+    {
+      "path": "src/core/intelligence/__pycache__/team_assessment.cpython-314.pyc",
+      "bytes": 8508
+    },
+    {
+      "path": "src/core/intelligence/__pycache__/cache.cpython-314.pyc",
+      "bytes": 9457
+    },
+    {
+      "path": "src/core/intelligence/__pycache__/recommendations.cpython-314.pyc",
+      "bytes": 4756
+    },
+    {
+      "path": "src/core/intelligence/__pycache__/models.cpython-314.pyc",
+      "bytes": 1417
+    },
+    {
+      "path": "src/core/intelligence/__pycache__/strength_history.cpython-314.pyc",
+      "bytes": 4150
+    },
+    {
+      "path": "src/core/intelligence/__pycache__/context.cpython-314.pyc",
+      "bytes": 8818
+    },
+    {
+      "path": "src/core/intelligence/__pycache__/pipeline.cpython-314.pyc",
+      "bytes": 1547
+    },
+    {
+      "path": "src/core/intelligence/__pycache__/registry.cpython-314.pyc",
+      "bytes": 2396
+    },
+    {
+      "path": "src/core/intelligence/__pycache__/season_calendar.cpython-314.pyc",
+      "bytes": 7081
+    },
+    {
+      "path": "src/core/intelligence/__pycache__/roster_evidence.cpython-314.pyc",
+      "bytes": 15912
+    },
+    {
+      "path": "src/core/intelligence/__pycache__/orchestrator.cpython-314.pyc",
+      "bytes": 29776
+    },
+    {
+      "path": "src/core/intelligence/__pycache__/manager_evidence.cpython-314.pyc",
+      "bytes": 13262
+    },
+    {
+      "path": "src/core/intelligence/__pycache__/team_strength.cpython-314.pyc",
+      "bytes": 41040
+    },
+    {
+      "path": "src/core/intelligence/__pycache__/pick_context.cpython-314.pyc",
+      "bytes": 13358
+    },
+    {
+      "path": "src/core/intelligence/__pycache__/lineup_review.cpython-314.pyc",
+      "bytes": 21983
+    },
+    {
+      "path": "src/core/intelligence/__pycache__/evidence.cpython-314.pyc",
+      "bytes": 2760
+    },
+    {
+      "path": "src/core/intelligence/__pycache__/roster_diagnostics.cpython-314.pyc",
+      "bytes": 61360
+    },
+    {
+      "path": "src/core/valuation_intelligence/__pycache__/__init__.cpython-314.pyc",
+      "bytes": 496
+    },
+    {
+      "path": "src/core/valuation_intelligence/__pycache__/changes.cpython-314.pyc",
+      "bytes": 9578
+    },
+    {
+      "path": "src/core/valuation_intelligence/__pycache__/engine.cpython-314.pyc",
+      "bytes": 35256
+    },
+    {
+      "path": "src/core/asset_market/__pycache__/semantic_contract.cpython-314.pyc",
+      "bytes": 9332
+    },
+    {
+      "path": "src/core/asset_market/__pycache__/read_model.cpython-314.pyc",
+      "bytes": 37421
+    },
+    {
+      "path": "src/core/asset_market/__pycache__/__init__.cpython-314.pyc",
+      "bytes": 462
+    },
+    {
+      "path": "src/core/asset_market/__pycache__/semantic_worker.cpython-314.pyc",
+      "bytes": 4766
+    },
+    {
+      "path": "src/core/asset_market/__pycache__/engine.cpython-314.pyc",
+      "bytes": 132489
+    },
+    {
+      "path": "src/core/asset_market/__pycache__/resource_diagnostics.cpython-314.pyc",
+      "bytes": 25067
+    },
+    {
+      "path": "src/core/fois/__pycache__/retention.cpython-314.pyc",
+      "bytes": 13043
+    },
+    {
+      "path": "src/core/fois/__pycache__/decision_evaluators.cpython-314.pyc",
+      "bytes": 10019
+    },
+    {
+      "path": "src/core/fois/__pycache__/__init__.cpython-314.pyc",
+      "bytes": 1670
+    },
+    {
+      "path": "src/core/fois/__pycache__/history_execution.cpython-314.pyc",
+      "bytes": 26042
+    },
+    {
+      "path": "src/core/fois/__pycache__/configuration.cpython-314.pyc",
+      "bytes": 3731
+    },
+    {
+      "path": "src/core/fois/__pycache__/state_delta.cpython-314.pyc",
+      "bytes": 4647
+    },
+    {
+      "path": "src/core/fois/__pycache__/render_cache.cpython-314.pyc",
+      "bytes": 6456
+    },
+    {
+      "path": "src/core/fois/__pycache__/working_storage.cpython-314.pyc",
+      "bytes": 8269
+    },
+    {
+      "path": "src/core/fois/__pycache__/identity.cpython-314.pyc",
+      "bytes": 3506
+    },
+    {
+      "path": "src/core/fois/__pycache__/scoring.cpython-314.pyc",
+      "bytes": 7136
+    },
+    {
+      "path": "src/core/fois/__pycache__/results.cpython-314.pyc",
+      "bytes": 22531
+    },
+    {
+      "path": "src/core/fois/__pycache__/facts.cpython-314.pyc",
+      "bytes": 7539
+    },
+    {
+      "path": "src/core/fois/__pycache__/process_execution.cpython-314.pyc",
+      "bytes": 30944
+    },
+    {
+      "path": "src/core/fois/__pycache__/decision_context.cpython-314.pyc",
+      "bytes": 5108
+    },
+    {
+      "path": "src/core/fois/__pycache__/engine.cpython-314.pyc",
+      "bytes": 33993
+    },
+    {
+      "path": "src/core/fois/__pycache__/assessment_export.cpython-314.pyc",
+      "bytes": 7667
+    },
+    {
+      "path": "src/core/fois/__pycache__/repository.cpython-314.pyc",
+      "bytes": 37268
+    },
+    {
+      "path": "src/core/fois/__pycache__/history.cpython-314.pyc",
+      "bytes": 35583
+    },
+    {
+      "path": "src/core/fois/__pycache__/state_storage.cpython-314.pyc",
+      "bytes": 13865
+    },
+    {
+      "path": "src/core/fois/__pycache__/cycles.cpython-314.pyc",
+      "bytes": 16913
+    },
+    {
+      "path": "src/core/fois/__pycache__/attribution.cpython-314.pyc",
+      "bytes": 1327
+    },
+    {
+      "path": "src/core/fois/__pycache__/models.cpython-314.pyc",
+      "bytes": 13163
+    },
+    {
+      "path": "src/core/fois/__pycache__/registry.cpython-314.pyc",
+      "bytes": 6230
+    },
+    {
+      "path": "src/core/fois/__pycache__/history_request_worker.cpython-314.pyc",
+      "bytes": 4473
+    },
+    {
+      "path": "src/core/fois/__pycache__/service.cpython-314.pyc",
+      "bytes": 25190
+    },
+    {
+      "path": "src/core/fois/__pycache__/coverage.cpython-314.pyc",
+      "bytes": 12218
+    },
+    {
+      "path": "src/core/relevant_players/__pycache__/__init__.cpython-314.pyc",
+      "bytes": 415
+    },
+    {
+      "path": "src/core/relevant_players/__pycache__/service.cpython-314.pyc",
+      "bytes": 11493
+    },
+    {
+      "path": "src/core/market_trends/__pycache__/__init__.cpython-314.pyc",
+      "bytes": 433
+    },
+    {
+      "path": "src/core/market_trends/__pycache__/compatibility.cpython-314.pyc",
+      "bytes": 4794
+    },
+    {
+      "path": "src/core/market_trends/__pycache__/models.cpython-314.pyc",
+      "bytes": 4323
+    },
+    {
+      "path": "src/core/market_trends/__pycache__/current.cpython-314.pyc",
+      "bytes": 9517
+    },
+    {
+      "path": "src/core/market_trends/__pycache__/service.cpython-314.pyc",
+      "bytes": 25529
+    },
+    {
+      "path": "src/core/provider_network/__pycache__/__init__.cpython-314.pyc",
+      "bytes": 518
+    },
+    {
+      "path": "src/core/provider_network/__pycache__/trades.cpython-314.pyc",
+      "bytes": 4977
+    },
+    {
+      "path": "src/core/provider_network/__pycache__/engine.cpython-314.pyc",
+      "bytes": 28684
+    },
+    {
+      "path": "src/core/provider_network/__pycache__/registry.cpython-314.pyc",
+      "bytes": 13258
+    },
+    {
+      "path": "src/core/provider_network/__pycache__/contracts.cpython-314.pyc",
+      "bytes": 2765
+    },
+    {
+      "path": "src/core/gm_behavioral_intelligence/__pycache__/__init__.cpython-314.pyc",
+      "bytes": 581
+    },
+    {
+      "path": "src/core/gm_behavioral_intelligence/__pycache__/diagnostics.cpython-314.pyc",
+      "bytes": 42956
+    },
+    {
+      "path": "src/core/gm_behavioral_intelligence/__pycache__/models.cpython-314.pyc",
+      "bytes": 2702
+    },
+    {
+      "path": "src/core/gm_behavioral_intelligence/__pycache__/activity.cpython-314.pyc",
+      "bytes": 12338
+    },
+    {
+      "path": "src/core/gm_behavioral_intelligence/__pycache__/service.cpython-314.pyc",
+      "bytes": 20810
+    },
+    {
+      "path": "src/core/asset_intelligence/__pycache__/__init__.cpython-314.pyc",
+      "bytes": 834
+    },
+    {
+      "path": "src/core/asset_intelligence/__pycache__/engine.cpython-314.pyc",
+      "bytes": 1659
+    },
+    {
+      "path": "src/core/asset_intelligence/__pycache__/portfolio.cpython-314.pyc",
+      "bytes": 5768
+    },
+    {
+      "path": "src/core/asset_intelligence/players/__pycache__/risk_analysis.cpython-314.pyc",
+      "bytes": 3023
+    },
+    {
+      "path": "src/core/asset_intelligence/players/__pycache__/__init__.cpython-314.pyc",
+      "bytes": 312
+    },
+    {
+      "path": "src/core/asset_intelligence/players/__pycache__/player_archetype.cpython-314.pyc",
+      "bytes": 2356
+    },
+    {
+      "path": "src/core/asset_intelligence/players/__pycache__/league_context.cpython-314.pyc",
+      "bytes": 2112
+    },
+    {
+      "path": "src/core/asset_intelligence/players/__pycache__/value_models.cpython-314.pyc",
+      "bytes": 7228
+    },
+    {
+      "path": "src/core/asset_intelligence/players/__pycache__/player_profile.cpython-314.pyc",
+      "bytes": 3266
+    },
+    {
+      "path": "src/core/asset_intelligence/players/__pycache__/player_evaluator.cpython-314.pyc",
+      "bytes": 5474
+    },
+    {
+      "path": "src/core/asset_intelligence/evidence/__pycache__/__init__.cpython-314.pyc",
+      "bytes": 350
+    },
+    {
+      "path": "src/core/asset_intelligence/evidence/__pycache__/evidence_engine.cpython-314.pyc",
+      "bytes": 2633
+    },
+    {
+      "path": "src/core/asset_intelligence/models/__pycache__/pick_report.cpython-314.pyc",
+      "bytes": 1169
+    },
+    {
+      "path": "src/core/asset_intelligence/models/__pycache__/__init__.cpython-314.pyc",
+      "bytes": 733
+    },
+    {
+      "path": "src/core/asset_intelligence/models/__pycache__/asset_evaluation.cpython-314.pyc",
+      "bytes": 3058
+    },
+    {
+      "path": "src/core/asset_intelligence/models/__pycache__/player_report.cpython-314.pyc",
+      "bytes": 2534
+    },
+    {
+      "path": "src/core/asset_intelligence/models/__pycache__/evidence.cpython-314.pyc",
+      "bytes": 773
+    },
+    {
+      "path": "src/core/asset_intelligence/picks/__pycache__/__init__.cpython-314.pyc",
+      "bytes": 308
+    },
+    {
+      "path": "src/core/asset_intelligence/picks/__pycache__/pick_risk.cpython-314.pyc",
+      "bytes": 2258
+    },
+    {
+      "path": "src/core/asset_intelligence/picks/__pycache__/pick_value.cpython-314.pyc",
+      "bytes": 1967
+    },
+    {
+      "path": "src/core/asset_intelligence/picks/__pycache__/pick_evaluator.cpython-314.pyc",
+      "bytes": 3807
+    },
+    {
+      "path": "src/core/trade_intelligence/__pycache__/__init__.cpython-314.pyc",
+      "bytes": 660
+    },
+    {
+      "path": "src/core/trade_intelligence/__pycache__/package_quality.cpython-314.pyc",
+      "bytes": 14766
+    },
+    {
+      "path": "src/core/trade_intelligence/__pycache__/confidence.cpython-314.pyc",
+      "bytes": 4892
+    },
+    {
+      "path": "src/core/trade_intelligence/__pycache__/strategy_dimensions.cpython-314.pyc",
+      "bytes": 32655
+    },
+    {
+      "path": "src/core/trade_intelligence/__pycache__/market_balance.cpython-314.pyc",
+      "bytes": 2559
+    },
+    {
+      "path": "src/core/trade_intelligence/__pycache__/horizon_impact.cpython-314.pyc",
+      "bytes": 10374
+    },
+    {
+      "path": "src/core/trade_intelligence/__pycache__/evidence_context.cpython-314.pyc",
+      "bytes": 23056
+    },
+    {
+      "path": "src/core/trade_intelligence/__pycache__/bilateral.cpython-314.pyc",
+      "bytes": 31046
+    },
+    {
+      "path": "src/core/trade_intelligence/__pycache__/capital_assessment.cpython-314.pyc",
+      "bytes": 14300
+    },
+    {
+      "path": "src/core/trade_intelligence/__pycache__/package_shape.cpython-314.pyc",
+      "bytes": 3207
+    },
+    {
+      "path": "src/core/trade_intelligence/__pycache__/roster_space.cpython-314.pyc",
+      "bytes": 1636
+    },
+    {
+      "path": "src/core/trade_intelligence/__pycache__/lineup_memo.cpython-314.pyc",
+      "bytes": 9650
+    },
+    {
+      "path": "src/core/trade_intelligence/__pycache__/lineup.cpython-314.pyc",
+      "bytes": 12718
+    },
+    {
+      "path": "src/core/trade_intelligence/analysis/__pycache__/__init__.cpython-314.pyc",
+      "bytes": 309
+    },
+    {
+      "path": "src/core/trade_intelligence/analysis/__pycache__/trade_impact.cpython-314.pyc",
+      "bytes": 8095
+    },
+    {
+      "path": "src/core/trade_intelligence/gm/__pycache__/__init__.cpython-314.pyc",
+      "bytes": 312
+    },
+    {
+      "path": "src/core/trade_intelligence/gm/__pycache__/partner_selection.cpython-314.pyc",
+      "bytes": 2854
+    },
+    {
+      "path": "src/core/trade_intelligence/market/__pycache__/__init__.cpython-314.pyc",
+      "bytes": 300
+    },
+    {
+      "path": "src/core/trade_intelligence/market/__pycache__/positional_rank.cpython-314.pyc",
+      "bytes": 2612
+    },
+    {
+      "path": "src/core/trade_intelligence/market/__pycache__/trade_market.cpython-314.pyc",
+      "bytes": 10271
+    },
+    {
+      "path": "src/core/trade_intelligence/evidence/__pycache__/__init__.cpython-314.pyc",
+      "bytes": 306
+    },
+    {
+      "path": "src/core/trade_intelligence/evidence/__pycache__/trade_evidence.cpython-314.pyc",
+      "bytes": 799
+    },
+    {
+      "path": "src/core/trade_intelligence/engine/__pycache__/__init__.cpython-314.pyc",
+      "bytes": 340
+    },
+    {
+      "path": "src/core/trade_intelligence/engine/__pycache__/trade_engine.cpython-314.pyc",
+      "bytes": 8098
+    },
+    {
+      "path": "src/core/trade_intelligence/engine/__pycache__/recommendation_engine.cpython-314.pyc",
+      "bytes": 3013
+    },
+    {
+      "path": "src/core/trade_intelligence/engine/__pycache__/trade_evaluator.cpython-314.pyc",
+      "bytes": 12998
+    },
+    {
+      "path": "src/core/trade_intelligence/engine/__pycache__/negotiation_engine.cpython-314.pyc",
+      "bytes": 2398
+    },
+    {
+      "path": "src/core/trade_intelligence/engine/__pycache__/trade_generator.cpython-314.pyc",
+      "bytes": 22644
+    },
+    {
+      "path": "src/core/trade_intelligence/models/__pycache__/__init__.cpython-314.pyc",
+      "bytes": 503
+    },
+    {
+      "path": "src/core/trade_intelligence/models/__pycache__/trade_report.cpython-314.pyc",
+      "bytes": 6459
+    },
+    {
+      "path": "src/core/history_context/__pycache__/__init__.cpython-314.pyc",
+      "bytes": 564
+    },
+    {
+      "path": "src/core/history_context/__pycache__/season_cache.cpython-314.pyc",
+      "bytes": 36275
+    },
+    {
+      "path": "src/core/history_context/__pycache__/results.cpython-314.pyc",
+      "bytes": 3780
+    },
+    {
+      "path": "src/core/history_context/__pycache__/store.cpython-314.pyc",
+      "bytes": 125273
+    },
+    {
+      "path": "src/core/history_context/__pycache__/playoffs.cpython-314.pyc",
+      "bytes": 18023
+    },
+    {
+      "path": "src/core/history_context/__pycache__/timestamps.cpython-314.pyc",
+      "bytes": 4552
+    },
+    {
+      "path": "src/core/history_context/__pycache__/guard.cpython-314.pyc",
+      "bytes": 9224
+    },
+    {
+      "path": "src/core/history_context/__pycache__/metadata.cpython-314.pyc",
+      "bytes": 10729
+    },
+    {
+      "path": "src/core/history_context/__pycache__/assets.cpython-314.pyc",
+      "bytes": 10171
+    },
+    {
+      "path": "src/core/history_context/__pycache__/ownership.cpython-314.pyc",
+      "bytes": 5163
+    },
+    {
+      "path": "src/core/history_context/__pycache__/reconciliation.cpython-314.pyc",
+      "bytes": 6849
+    },
+    {
+      "path": "src/core/history_context/__pycache__/transaction_periods.cpython-314.pyc",
+      "bytes": 9562
+    },
+    {
+      "path": "src/core/history_context/__pycache__/coverage.cpython-314.pyc",
+      "bytes": 15029
+    },
+    {
+      "path": "src/core/history_context/__pycache__/recovery.cpython-314.pyc",
+      "bytes": 11270
+    },
+    {
+      "path": "src/core/data_platform/__pycache__/storage.cpython-314.pyc",
+      "bytes": 6173
+    },
+    {
+      "path": "src/core/data_platform/__pycache__/__init__.cpython-314.pyc",
+      "bytes": 1794
+    },
+    {
+      "path": "src/core/data_platform/__pycache__/provider_activation.cpython-314.pyc",
+      "bytes": 22462
+    },
+    {
+      "path": "src/core/data_platform/__pycache__/scheduler.cpython-314.pyc",
+      "bytes": 2528
+    },
+    {
+      "path": "src/core/data_platform/__pycache__/defaults.cpython-314.pyc",
+      "bytes": 3880
+    },
+    {
+      "path": "src/core/data_platform/__pycache__/provider.cpython-314.pyc",
+      "bytes": 2203
+    },
+    {
+      "path": "src/core/data_platform/__pycache__/global_schedule.cpython-314.pyc",
+      "bytes": 4389
+    },
+    {
+      "path": "src/core/data_platform/__pycache__/source_snapshot.cpython-314.pyc",
+      "bytes": 4008
+    },
+    {
+      "path": "src/core/data_platform/__pycache__/news.cpython-314.pyc",
+      "bytes": 3115
+    },
+    {
+      "path": "src/core/data_platform/__pycache__/global_usage.cpython-314.pyc",
+      "bytes": 3123
+    },
+    {
+      "path": "src/core/data_platform/__pycache__/ingestion_lock.cpython-314.pyc",
+      "bytes": 2598
+    },
+    {
+      "path": "src/core/data_platform/__pycache__/adapters.cpython-314.pyc",
+      "bytes": 5842
+    },
+    {
+      "path": "src/core/data_platform/__pycache__/evidence_availability.cpython-314.pyc",
+      "bytes": 3728
+    },
+    {
+      "path": "src/core/data_platform/__pycache__/quality.cpython-314.pyc",
+      "bytes": 3307
+    },
+    {
+      "path": "src/core/data_platform/__pycache__/reliability.cpython-314.pyc",
+      "bytes": 4791
+    },
+    {
+      "path": "src/core/data_platform/__pycache__/platform.cpython-314.pyc",
+      "bytes": 30977
+    },
+    {
+      "path": "src/core/data_platform/__pycache__/ingestion.cpython-314.pyc",
+      "bytes": 3276
+    },
+    {
+      "path": "src/core/data_platform/__pycache__/models.cpython-314.pyc",
+      "bytes": 4813
+    },
+    {
+      "path": "src/core/data_platform/__pycache__/registry.cpython-314.pyc",
+      "bytes": 4537
+    },
+    {
+      "path": "src/core/data_platform/__pycache__/identity_crosswalk.cpython-314.pyc",
+      "bytes": 5723
+    },
+    {
+      "path": "src/core/data_platform/__pycache__/pick_quotes.cpython-314.pyc",
+      "bytes": 9608
+    },
+    {
+      "path": "src/core/data_platform/__pycache__/schedule_ingestion.cpython-314.pyc",
+      "bytes": 5667
+    },
+    {
+      "path": "src/core/data_platform/__pycache__/global_evidence.cpython-314.pyc",
+      "bytes": 32777
+    },
+    {
+      "path": "src/core/data_platform/__pycache__/aggregation.cpython-314.pyc",
+      "bytes": 9964
+    },
+    {
+      "path": "src/core/data_platform/__pycache__/production_ingestion.cpython-314.pyc",
+      "bytes": 5069
+    },
+    {
+      "path": "src/core/data_platform/__pycache__/global_production.cpython-314.pyc",
+      "bytes": 11330
+    },
+    {
+      "path": "src/core/data_platform/normalization/__pycache__/__init__.cpython-314.pyc",
+      "bytes": 670
+    },
+    {
+      "path": "src/core/data_platform/normalization/__pycache__/birth_dates.cpython-314.pyc",
+      "bytes": 4223
+    },
+    {
+      "path": "src/core/data_platform/normalization/__pycache__/identity.cpython-314.pyc",
+      "bytes": 10213
+    },
+    {
+      "path": "src/core/data_platform/normalization/__pycache__/models.cpython-314.pyc",
+      "bytes": 1452
+    },
+    {
+      "path": "src/core/data_platform/normalization/__pycache__/normalizer.cpython-314.pyc",
+      "bytes": 5996
+    },
+    {
+      "path": "src/core/historical_transaction_intelligence/__pycache__/__init__.cpython-314.pyc",
+      "bytes": 878
+    },
+    {
+      "path": "src/core/historical_transaction_intelligence/__pycache__/models.cpython-314.pyc",
+      "bytes": 5928
+    },
+    {
+      "path": "src/core/historical_transaction_intelligence/__pycache__/service.cpython-314.pyc",
+      "bytes": 39433
+    },
+    {
+      "path": "src/core/front_office_evidence/__pycache__/__init__.cpython-314.pyc",
+      "bytes": 518
+    },
+    {
+      "path": "src/core/front_office_evidence/__pycache__/models.cpython-314.pyc",
+      "bytes": 2243
+    },
+    {
+      "path": "src/core/front_office_evidence/__pycache__/service.cpython-314.pyc",
+      "bytes": 9611
+    },
+    {
+      "path": "src/core/league_intelligence/__pycache__/__init__.cpython-314.pyc",
+      "bytes": 402
+    },
+    {
+      "path": "src/core/league_intelligence/__pycache__/engine.cpython-314.pyc",
+      "bytes": 32774
+    },
+    {
+      "path": "src/core/league_intelligence/__pycache__/models.cpython-314.pyc",
+      "bytes": 5604
+    },
+    {
+      "path": "src/core/market_intelligence/__pycache__/__init__.cpython-314.pyc",
+      "bytes": 956
+    },
+    {
+      "path": "src/core/market_intelligence/__pycache__/engine.cpython-314.pyc",
+      "bytes": 23375
+    },
+    {
+      "path": "src/core/market_intelligence/__pycache__/cache.cpython-314.pyc",
+      "bytes": 6535
+    },
+    {
+      "path": "src/core/market_intelligence/__pycache__/models.cpython-314.pyc",
+      "bytes": 5938
+    },
+    {
+      "path": "src/core/market_intelligence/providers/__pycache__/keeptradecut.cpython-314.pyc",
+      "bytes": 583
+    },
+    {
+      "path": "src/core/market_intelligence/providers/__pycache__/__init__.cpython-314.pyc",
+      "bytes": 404
+    },
+    {
+      "path": "src/core/market_intelligence/providers/__pycache__/sleeper.cpython-314.pyc",
+      "bytes": 574
+    },
+    {
+      "path": "src/core/market_intelligence/providers/__pycache__/base.cpython-314.pyc",
+      "bytes": 5995
+    },
+    {
+      "path": "src/core/market_intelligence/providers/__pycache__/fantasycalc.cpython-314.pyc",
+      "bytes": 548
+    },
+    {
+      "path": "src/core/market_intelligence/providers/__pycache__/dynastyprocess.cpython-314.pyc",
+      "bytes": 560
+    },
+    {
+      "path": "src/core/market_intelligence/providers/__pycache__/registry.cpython-314.pyc",
+      "bytes": 3155
+    },
+    {
+      "path": "src/core/market_intelligence/history/__pycache__/__init__.cpython-314.pyc",
+      "bytes": 300
+    },
+    {
+      "path": "src/core/market_intelligence/history/__pycache__/store.cpython-314.pyc",
+      "bytes": 5872
+    },
+    {
+      "path": "src/core/market_intelligence/trends/__pycache__/__init__.cpython-314.pyc",
+      "bytes": 261
+    },
+    {
+      "path": "src/core/market_intelligence/trends/__pycache__/engine.cpython-314.pyc",
+      "bytes": 7968
+    },
+    {
+      "path": "src/core/market_intelligence/aggregation/__pycache__/__init__.cpython-314.pyc",
+      "bytes": 274
+    },
+    {
+      "path": "src/core/market_intelligence/aggregation/__pycache__/consensus.cpython-314.pyc",
+      "bytes": 5523
+    },
+    {
+      "path": "src/core/market_intelligence/evidence/__pycache__/__init__.cpython-314.pyc",
+      "bytes": 272
+    },
+    {
+      "path": "src/core/market_intelligence/evidence/__pycache__/builder.cpython-314.pyc",
+      "bytes": 3691
+    },
+    {
+      "path": "src/core/accounts/__pycache__/__init__.cpython-314.pyc",
+      "bytes": 505
+    },
+    {
+      "path": "src/core/accounts/__pycache__/goal_store.cpython-314.pyc",
+      "bytes": 4130
+    },
+    {
+      "path": "src/core/accounts/__pycache__/personal_store.cpython-314.pyc",
+      "bytes": 16765
+    },
+    {
+      "path": "src/core/accounts/__pycache__/league_series.cpython-314.pyc",
+      "bytes": 5785
+    },
+    {
+      "path": "src/core/accounts/__pycache__/store.cpython-314.pyc",
+      "bytes": 36907
+    },
+    {
+      "path": "src/core/accounts/__pycache__/models.cpython-314.pyc",
+      "bytes": 2063
+    },
+    {
+      "path": "src/core/accounts/__pycache__/service.cpython-314.pyc",
+      "bytes": 17381
+    },
+    {
+      "path": "src/ui/__pycache__/source_provenance.cpython-314.pyc",
+      "bytes": 7040
+    },
+    {
+      "path": "src/ui/__pycache__/home_attention.cpython-314.pyc",
+      "bytes": 4507
+    },
+    {
+      "path": "src/ui/__pycache__/__init__.cpython-314.pyc",
+      "bytes": 393
+    },
+    {
+      "path": "src/ui/__pycache__/event_presentation.cpython-314.pyc",
+      "bytes": 3827
+    },
+    {
+      "path": "src/ui/__pycache__/matchup_season.cpython-314.pyc",
+      "bytes": 31390
+    },
+    {
+      "path": "src/ui/__pycache__/render_cache.cpython-314.pyc",
+      "bytes": 6634
+    },
+    {
+      "path": "src/ui/__pycache__/player_dossier_text.cpython-314.pyc",
+      "bytes": 7107
+    },
+    {
+      "path": "src/ui/__pycache__/front_office_brief.cpython-314.pyc",
+      "bytes": 3744
+    },
+    {
+      "path": "src/ui/__pycache__/player_actions.cpython-314.pyc",
+      "bytes": 2465
+    },
+    {
+      "path": "src/ui/__pycache__/canonical_production.cpython-314.pyc",
+      "bytes": 13943
+    },
+    {
+      "path": "src/ui/__pycache__/market_roster_relevance.cpython-314.pyc",
+      "bytes": 5629
+    },
+    {
+      "path": "src/ui/__pycache__/home_trade_opportunities.cpython-314.pyc",
+      "bytes": 8014
+    },
+    {
+      "path": "src/ui/__pycache__/trade_timeline.cpython-314.pyc",
+      "bytes": 40200
+    },
+    {
+      "path": "src/ui/__pycache__/intelligence_presentation.cpython-314.pyc",
+      "bytes": 18274
+    },
+    {
+      "path": "src/ui/__pycache__/roster_diagnostic_evidence.cpython-314.pyc",
+      "bytes": 5301
+    },
+    {
+      "path": "src/ui/__pycache__/public_welcome.cpython-314.pyc",
+      "bytes": 31118
+    },
+    {
+      "path": "src/ui/__pycache__/home_trade_news.cpython-314.pyc",
+      "bytes": 25603
+    },
+    {
+      "path": "src/ui/__pycache__/badges.cpython-314.pyc",
+      "bytes": 11061
+    },
+    {
+      "path": "src/ui/__pycache__/explanations.cpython-314.pyc",
+      "bytes": 5791
+    },
+    {
+      "path": "src/ui/__pycache__/market_facts.cpython-314.pyc",
+      "bytes": 3187
+    },
+    {
+      "path": "src/ui/__pycache__/player_projections.cpython-314.pyc",
+      "bytes": 4945
+    },
+    {
+      "path": "src/ui/__pycache__/my_team_outlook.cpython-314.pyc",
+      "bytes": 4080
+    },
+    {
+      "path": "src/ui/__pycache__/league_gm_diagnostics.cpython-314.pyc",
+      "bytes": 16632
+    },
+    {
+      "path": "src/ui/__pycache__/franchise_timeline.cpython-314.pyc",
+      "bytes": 31567
+    },
+    {
+      "path": "src/ui/__pycache__/team_strength.cpython-314.pyc",
+      "bytes": 13301
+    },
+    {
+      "path": "src/ui/__pycache__/season_history.cpython-314.pyc",
+      "bytes": 5683
+    },
+    {
+      "path": "src/ui/__pycache__/weekly_report.cpython-314.pyc",
+      "bytes": 5166
+    },
+    {
+      "path": "src/ui/__pycache__/standings.cpython-314.pyc",
+      "bytes": 12413
+    },
+    {
+      "path": "src/ui/__pycache__/theme.cpython-314.pyc",
+      "bytes": 31899
+    },
+    {
+      "path": "src/ui/__pycache__/lineup_review.cpython-314.pyc",
+      "bytes": 4191
+    },
+    {
+      "path": "src/ui/__pycache__/design_system.cpython-314.pyc",
+      "bytes": 16944
+    },
+    {
+      "path": "src/platform/__pycache__/observability.cpython-314.pyc",
+      "bytes": 21087
+    },
+    {
+      "path": "src/platform/__pycache__/operational_inspection.cpython-314.pyc",
+      "bytes": 25300
+    },
+    {
+      "path": "src/platform/__pycache__/__init__.cpython-314.pyc",
+      "bytes": 171
+    },
+    {
+      "path": "src/platform/__pycache__/memory_reclamation.cpython-314.pyc",
+      "bytes": 4992
+    },
+    {
+      "path": "src/platform/__pycache__/inspection_security.cpython-314.pyc",
+      "bytes": 5634
+    },
+    {
+      "path": "src/platform/__pycache__/cache_restoration_admission.cpython-314.pyc",
+      "bytes": 3578
+    },
+    {
+      "path": "src/platform/__pycache__/storage_accounting.cpython-314.pyc",
+      "bytes": 8963
+    },
+    {
+      "path": "src/platform/__pycache__/league_context.cpython-314.pyc",
+      "bytes": 15474
+    },
+    {
+      "path": "src/platform/__pycache__/storage_review.cpython-314.pyc",
+      "bytes": 3640
+    },
+    {
+      "path": "src/platform/__pycache__/trade_execution.cpython-314.pyc",
+      "bytes": 15305
+    },
+    {
+      "path": "src/platform/__pycache__/request_capacity.cpython-314.pyc",
+      "bytes": 2950
+    },
+    {
+      "path": "src/platform/__pycache__/storage_gate.cpython-314.pyc",
+      "bytes": 5105
+    },
+    {
+      "path": "src/platform/__pycache__/account_context.cpython-314.pyc",
+      "bytes": 18237
+    },
+    {
+      "path": "src/platform/__pycache__/sync_diagnostics.cpython-314.pyc",
+      "bytes": 6512
+    },
+    {
+      "path": "src/platform/__pycache__/restoration_preflight.cpython-314.pyc",
+      "bytes": 22790
+    },
+    {
+      "path": "src/platform/__pycache__/fois_admission.cpython-314.pyc",
+      "bytes": 1559
+    },
+    {
+      "path": "src/platform/__pycache__/runtime_errors.cpython-314.pyc",
+      "bytes": 8963
+    },
+    {
+      "path": "src/platform/__pycache__/lifecycle.cpython-314.pyc",
+      "bytes": 27165
+    },
+    {
+      "path": "src/platform/__pycache__/cache_json.cpython-314.pyc",
+      "bytes": 4124
+    },
+    {
+      "path": "src/platform/__pycache__/windows_job_memory.cpython-314.pyc",
+      "bytes": 6113
+    },
+    {
+      "path": "src/platform/__pycache__/storage_monitor.cpython-314.pyc",
+      "bytes": 4608
+    },
+    {
+      "path": "src/platform/__pycache__/memory_attribution.cpython-314.pyc",
+      "bytes": 14549
+    },
+    {
+      "path": "src/platform/__pycache__/durable_storage_monitor.cpython-314.pyc",
+      "bytes": 11317
+    },
+    {
+      "path": "src/platform/__pycache__/cache_budget.cpython-314.pyc",
+      "bytes": 10688
+    },
+    {
+      "path": "src/platform/__pycache__/request_diagnostics.cpython-314.pyc",
+      "bytes": 22400
+    },
+    {
+      "path": "src/platform/__pycache__/market_warming.cpython-314.pyc",
+      "bytes": 9220
+    },
+    {
+      "path": "src/platform/validation/__pycache__/process_detection.cpython-314.pyc",
+      "bytes": 12030
+    },
+    {
+      "path": "src/platform/validation/__pycache__/__init__.cpython-314.pyc",
+      "bytes": 1048
+    },
+    {
+      "path": "src/platform/validation/__pycache__/progress.cpython-314.pyc",
+      "bytes": 10885
+    },
+    {
+      "path": "src/platform/validation/__pycache__/release.cpython-314.pyc",
+      "bytes": 11589
+    },
+    {
+      "path": "src/platform/validation/__pycache__/routes.cpython-314.pyc",
+      "bytes": 379
+    },
+    {
+      "path": "src/platform/validation/__pycache__/browser_memory.cpython-314.pyc",
+      "bytes": 1087
+    },
+    {
+      "path": "src/platform/validation/__pycache__/worker.cpython-314.pyc",
+      "bytes": 5153
+    },
+    {
+      "path": "src/platform/validation/__pycache__/lifecycle.cpython-314.pyc",
+      "bytes": 13958
+    },
+    {
+      "path": "tools/__pycache__/__init__.cpython-314.pyc",
+      "bytes": 168
+    },
+    {
+      "path": "tools/__pycache__/retire_historical_store.cpython-314.pyc",
+      "bytes": 12480
+    },
+    {
+      "path": "tools/__pycache__/recovery_guard.cpython-314.pyc",
+      "bytes": 7456
+    },
+    {
+      "path": "tools/__pycache__/recovery_command.cpython-314.pyc",
+      "bytes": 7129
+    },
+    {
+      "path": "tools/__pycache__/recovery_stream.cpython-314.pyc",
+      "bytes": 8715
+    },
+    {
+      "path": "tools/__pycache__/recovery_backup.cpython-314.pyc",
+      "bytes": 14829
+    },
+    {
+      "path": "tools/__pycache__/history_report.cpython-314.pyc",
+      "bytes": 891
+    },
+    {
+      "path": "tools/__pycache__/recovery_reads.cpython-314.pyc",
+      "bytes": 4941
+    },
+    {
+      "path": "tools/__pycache__/history_enrich.cpython-314.pyc",
+      "bytes": 1940
+    },
+    {
+      "path": "tools/__pycache__/global_evidence_backfill.cpython-314.pyc",
+      "bytes": 4928
+    },
+    {
+      "path": "tools/__pycache__/storage_migration.cpython-314.pyc",
+      "bytes": 15954
+    },
+    {
+      "path": "tools/__pycache__/history_backfill.cpython-314.pyc",
+      "bytes": 2327
+    },
+    {
+      "path": "tools/__pycache__/storage_maintenance.cpython-314.pyc",
+      "bytes": 2347
+    },
+    {
+      "path": "tools/__pycache__/recovery_build.cpython-314.pyc",
+      "bytes": 9118
+    },
+    {
+      "path": "tools/__pycache__/projection_reachability.cpython-314.pyc",
+      "bytes": 25951
+    },
+    {
+      "path": "tools/__pycache__/market_checkpoint_backfill.cpython-314.pyc",
+      "bytes": 2185
+    },
+    {
+      "path": "tools/__pycache__/retained_storage_recovery.cpython-314.pyc",
+      "bytes": 16534
+    },
+    {
+      "path": "tools/__pycache__/staged_fois_cutover.cpython-314.pyc",
+      "bytes": 11594
+    },
+    {
+      "path": "tools/__pycache__/projection_retention_migration.cpython-314.pyc",
+      "bytes": 14926
+    },
+    {
+      "path": "tools/__pycache__/staged_projection_cutover.cpython-314.pyc",
+      "bytes": 10134
+    },
+    {
+      "path": "tools/validation/__pycache__/server_host.cpython-314.pyc",
+      "bytes": 2281
+    },
+    {
+      "path": "tools/validation/__pycache__/setup_cloud.cpython-314.pyc",
+      "bytes": 3063
+    },
+    {
+      "path": "tools/validation/__pycache__/smoke_http.cpython-314.pyc",
+      "bytes": 40620
+    },
+    {
+      "path": "tools/validation/__pycache__/audit_pick_source_panel.cpython-314.pyc",
+      "bytes": 10161
+    },
+    {
+      "path": "tools/validation/__pycache__/browser_runtime.cpython-314.pyc",
+      "bytes": 3845
+    },
+    {
+      "path": "tools/validation/__pycache__/batch7_transition_storage.cpython-314.pyc",
+      "bytes": 7276
+    },
+    {
+      "path": "tools/validation/__pycache__/__init__.cpython-314.pyc",
+      "bytes": 179
+    },
+    {
+      "path": "tools/validation/__pycache__/retention_long_run.cpython-314.pyc",
+      "bytes": 8932
+    },
+    {
+      "path": "tools/validation/__pycache__/capture_restart_evidence.cpython-314.pyc",
+      "bytes": 19862
+    },
+    {
+      "path": "tools/validation/__pycache__/audit_draft_time_boundary.cpython-314.pyc",
+      "bytes": 2719
+    },
+    {
+      "path": "tools/validation/__pycache__/restoration_unused_memory.cpython-314.pyc",
+      "bytes": 30033
+    },
+    {
+      "path": "tools/validation/__pycache__/http_worker.cpython-314.pyc",
+      "bytes": 15598
+    },
+    {
+      "path": "tools/validation/__pycache__/batch5_missing_price_identity.cpython-314.pyc",
+      "bytes": 5481
+    },
+    {
+      "path": "tools/validation/__pycache__/process_check.cpython-314.pyc",
+      "bytes": 2283
+    },
+    {
+      "path": "tools/validation/__pycache__/storage_integrated_replay.cpython-314.pyc",
+      "bytes": 13822
+    },
+    {
+      "path": "tools/validation/__pycache__/verify_fois_historical.cpython-314.pyc",
+      "bytes": 37183
+    },
+    {
+      "path": "tools/validation/__pycache__/generate_sanitized_market_fixture.cpython-314.pyc",
+      "bytes": 40719
+    },
+    {
+      "path": "tools/validation/__pycache__/verify_historical_weeks.cpython-314.pyc",
+      "bytes": 18996
+    },
+    {
+      "path": "tools/validation/__pycache__/resident_refresh_ownership.cpython-314.pyc",
+      "bytes": 33438
+    },
+    {
+      "path": "tools/validation/__pycache__/batch5_shop_timing.cpython-314.pyc",
+      "bytes": 6887
+    },
+    {
+      "path": "tools/validation/__pycache__/browser_fixture_images.cpython-314.pyc",
+      "bytes": 9971
+    },
+    {
+      "path": "tools/validation/__pycache__/public_demo_fixture.cpython-314.pyc",
+      "bytes": 26594
+    },
+    {
+      "path": "tools/validation/__pycache__/dins_sustained_memory_app.cpython-314.pyc",
+      "bytes": 3408
+    },
+    {
+      "path": "tools/validation/__pycache__/build_final_player_panel.cpython-314.pyc",
+      "bytes": 13309
+    },
+    {
+      "path": "tools/validation/__pycache__/linux_identity_cgroup_gate.cpython-314.pyc",
+      "bytes": 14089
+    },
+    {
+      "path": "tools/validation/__pycache__/batch5_recommended_samples.cpython-314.pyc",
+      "bytes": 5357
+    },
+    {
+      "path": "tools/validation/__pycache__/market_semantic_contract.cpython-314.pyc",
+      "bytes": 2123
+    },
+    {
+      "path": "tools/validation/__pycache__/projection_display_cross_version.cpython-314.pyc",
+      "bytes": 17875
+    },
+    {
+      "path": "tools/validation/__pycache__/fois_navigation_memory_probe.cpython-314.pyc",
+      "bytes": 15552
+    },
+    {
+      "path": "tools/validation/__pycache__/audit_intrinsic_cohort.cpython-314.pyc",
+      "bytes": 10613
+    },
+    {
+      "path": "tools/validation/__pycache__/batch5_team_strength_panel.cpython-314.pyc",
+      "bytes": 16999
+    },
+    {
+      "path": "tools/validation/__pycache__/recovery_quiescence_linux.cpython-314.pyc",
+      "bytes": 3933
+    },
+    {
+      "path": "tools/validation/__pycache__/batch5_trade_samples.cpython-314.pyc",
+      "bytes": 21052
+    },
+    {
+      "path": "tools/validation/__pycache__/benchmark_historical_read_model.cpython-314.pyc",
+      "bytes": 7084
+    },
+    {
+      "path": "tools/validation/__pycache__/market_profile_app.cpython-314.pyc",
+      "bytes": 68034
+    },
+    {
+      "path": "tools/validation/__pycache__/market_replacement_window.cpython-314.pyc",
+      "bytes": 5830
+    },
+    {
+      "path": "tools/validation/__pycache__/audit_forward_player_context.cpython-314.pyc",
+      "bytes": 6393
+    },
+    {
+      "path": "tools/validation/__pycache__/batch5_projection_source_panel.cpython-314.pyc",
+      "bytes": 10173
+    },
+    {
+      "path": "tools/validation/__pycache__/retention_event_run.cpython-314.pyc",
+      "bytes": 4502
+    },
+    {
+      "path": "tools/validation/__pycache__/server_lifecycle.cpython-314.pyc",
+      "bytes": 389
+    },
+    {
+      "path": "tools/validation/__pycache__/generate_sanitized_identity_fixture.cpython-314.pyc",
+      "bytes": 5164
+    },
+    {
+      "path": "tools/validation/__pycache__/restart_evidence.cpython-314.pyc",
+      "bytes": 15440
+    },
+    {
+      "path": "tools/validation/__pycache__/benchmark_enrichment_batches.cpython-314.pyc",
+      "bytes": 5552
+    },
+    {
+      "path": "tools/validation/__pycache__/audit_player_methodology.cpython-314.pyc",
+      "bytes": 13123
+    },
+    {
+      "path": "tools/validation/__pycache__/benchmark_historical_memory_stability.cpython-314.pyc",
+      "bytes": 15032
+    },
+    {
+      "path": "tools/validation/__pycache__/benchmark_asset_market.cpython-314.pyc",
+      "bytes": 6457
+    },
+    {
+      "path": "tools/validation/__pycache__/windows_bounded_unittest.cpython-314.pyc",
+      "bytes": 1014
+    },
+    {
+      "path": "tools/validation/__pycache__/browser_contract.cpython-314.pyc",
+      "bytes": 2531
+    },
+    {
+      "path": "tools/validation/__pycache__/league_entry_recovery.cpython-314.pyc",
+      "bytes": 18104
+    },
+    {
+      "path": "tools/validation/__pycache__/run_http_validation.cpython-314.pyc",
+      "bytes": 12994
+    },
+    {
+      "path": "tools/validation/__pycache__/trade_resource_recovery.cpython-314.pyc",
+      "bytes": 25959
+    },
+    {
+      "path": "tools/validation/__pycache__/audit_fois_decision_coverage.cpython-314.pyc",
+      "bytes": 6635
+    },
+    {
+      "path": "tools/validation/__pycache__/trade_quote_cross_version.cpython-314.pyc",
+      "bytes": 9288
+    },
+    {
+      "path": "tools/validation/__pycache__/build_intrinsic_player_panel.cpython-314.pyc",
+      "bytes": 16973
+    },
+    {
+      "path": "tools/validation/__pycache__/restoration_preflight_gate.cpython-314.pyc",
+      "bytes": 13769
+    },
+    {
+      "path": "tools/validation/__pycache__/batch5_shop_samples.cpython-314.pyc",
+      "bytes": 7784
+    },
+    {
+      "path": "tools/validation/__pycache__/benchmark_production_memory_lifecycle.cpython-314.pyc",
+      "bytes": 13163
+    },
+    {
+      "path": "tools/validation/__pycache__/batch5_adjust_samples.cpython-314.pyc",
+      "bytes": 5028
+    },
+    {
+      "path": "tools/validation/__pycache__/audit_market_coverage.cpython-314.pyc",
+      "bytes": 6579
+    },
+    {
+      "path": "tools/validation/__pycache__/season_turnover_dependency.cpython-314.pyc",
+      "bytes": 11674
+    },
+    {
+      "path": "tools/validation/__pycache__/linux_market_cgroup_gate.cpython-314.pyc",
+      "bytes": 150234
+    },
+    {
+      "path": "tools/validation/__pycache__/navigation_residency_probe.cpython-314.pyc",
+      "bytes": 14767
+    },
+    {
+      "path": "tools/validation/__pycache__/audit_batch4_assessment_quality.cpython-314.pyc",
+      "bytes": 9583
+    },
+    {
+      "path": "tools/validation/__pycache__/replay_batch4_assessments.cpython-314.pyc",
+      "bytes": 7811
+    },
+    {
+      "path": "tools/validation/__pycache__/validate_routes.cpython-314.pyc",
+      "bytes": 3355
+    },
+    {
+      "path": "tools/validation/__pycache__/trade_discovery_performance.cpython-314.pyc",
+      "bytes": 10658
+    },
+    {
+      "path": "tools/validation/__pycache__/audit_batch4_second_league.cpython-314.pyc",
+      "bytes": 12700
+    },
+    {
+      "path": "tools/validation/__pycache__/pick_prepared_read_proof.cpython-314.pyc",
+      "bytes": 8757
+    },
+    {
+      "path": "tools/validation/__pycache__/validate_release.cpython-314.pyc",
+      "bytes": 3008
+    },
+    {
+      "path": "tools/validation/__pycache__/audit_fois_retained_quality.cpython-314.pyc",
+      "bytes": 3180
+    },
+    {
+      "path": "tools/validation/__pycache__/replay_batch5_trade_calibration.cpython-314.pyc",
+      "bytes": 5803
+    },
+    {
+      "path": "tools/validation/__pycache__/batch5_final_parity.cpython-314.pyc",
+      "bytes": 6413
+    },
+    {
+      "path": "tools/accounts/__pycache__/__init__.cpython-314.pyc",
+      "bytes": 195
+    },
+    {
+      "path": "tools/accounts/__pycache__/bootstrap.cpython-314.pyc",
+      "bytes": 5998
+    },
+    {
+      "path": "services/__pycache__/trade_search_policy.cpython-314.pyc",
+      "bytes": 24354
+    },
+    {
+      "path": "services/__pycache__/trade_candidate_admission.cpython-314.pyc",
+      "bytes": 8607
+    },
+    {
+      "path": "services/__pycache__/weekly_report_transactions.cpython-314.pyc",
+      "bytes": 4266
+    },
+    {
+      "path": "services/__pycache__/draft_capital.cpython-314.pyc",
+      "bytes": 175
+    },
+    {
+      "path": "services/__pycache__/home_attention.cpython-314.pyc",
+      "bytes": 6769
+    },
+    {
+      "path": "services/__pycache__/player_projection_view.cpython-314.pyc",
+      "bytes": 10388
+    },
+    {
+      "path": "services/__pycache__/__init__.cpython-314.pyc",
+      "bytes": 255
+    },
+    {
+      "path": "services/__pycache__/trade_reserve_evidence.cpython-314.pyc",
+      "bytes": 7965
+    },
+    {
+      "path": "services/__pycache__/trade_for_acquisition.cpython-314.pyc",
+      "bytes": 9500
+    },
+    {
+      "path": "services/__pycache__/personal_rankings.cpython-314.pyc",
+      "bytes": 65183
+    },
+    {
+      "path": "services/__pycache__/matchup_season.cpython-314.pyc",
+      "bytes": 39607
+    },
+    {
+      "path": "services/__pycache__/team_fois_explanations.cpython-314.pyc",
+      "bytes": 11653
+    },
+    {
+      "path": "services/__pycache__/league_maintenance.cpython-314.pyc",
+      "bytes": 10300
+    },
+    {
+      "path": "services/__pycache__/matchup_desk.cpython-314.pyc",
+      "bytes": 16575
+    },
+    {
+      "path": "services/__pycache__/power_rankings.cpython-314.pyc",
+      "bytes": 177
+    },
+    {
+      "path": "services/__pycache__/front_office_brief.cpython-314.pyc",
+      "bytes": 19702
+    },
+    {
+      "path": "services/__pycache__/transactions.cpython-314.pyc",
+      "bytes": 22913
+    },
+    {
+      "path": "services/__pycache__/trade_workspace_context.cpython-314.pyc",
+      "bytes": 6021
+    },
+    {
+      "path": "services/__pycache__/my_team_overview.cpython-314.pyc",
+      "bytes": 8530
+    },
+    {
+      "path": "services/__pycache__/fois.cpython-314.pyc",
+      "bytes": 3251
+    },
+    {
+      "path": "services/__pycache__/matchup_intelligence.cpython-314.pyc",
+      "bytes": 13830
+    },
+    {
+      "path": "services/__pycache__/sleeper.cpython-314.pyc",
+      "bytes": 55039
+    },
+    {
+      "path": "services/__pycache__/team_assessment_presentation.cpython-314.pyc",
+      "bytes": 6367
+    },
+    {
+      "path": "services/__pycache__/market_roster_relevance.cpython-314.pyc",
+      "bytes": 12455
+    },
+    {
+      "path": "services/__pycache__/home_trade_opportunities.cpython-314.pyc",
+      "bytes": 13803
+    },
+    {
+      "path": "services/__pycache__/trade_lineup_evidence.cpython-314.pyc",
+      "bytes": 19226
+    },
+    {
+      "path": "services/__pycache__/commissioner.cpython-314.pyc",
+      "bytes": 27101
+    },
+    {
+      "path": "services/__pycache__/trade_explanation.cpython-314.pyc",
+      "bytes": 50016
+    },
+    {
+      "path": "services/__pycache__/trade_cheaper_repair.cpython-314.pyc",
+      "bytes": 16740
+    },
+    {
+      "path": "services/__pycache__/team_headquarters.cpython-314.pyc",
+      "bytes": 25375
+    },
+    {
+      "path": "services/__pycache__/trade_decision.cpython-314.pyc",
+      "bytes": 27282
+    },
+    {
+      "path": "services/__pycache__/crawl.cpython-314.pyc",
+      "bytes": 28054
+    },
+    {
+      "path": "services/__pycache__/player_evidence.cpython-314.pyc",
+      "bytes": 18143
+    },
+    {
+      "path": "services/__pycache__/trade_decision_summary.cpython-314.pyc",
+      "bytes": 11782
+    },
+    {
+      "path": "services/__pycache__/weekly_report_stories.cpython-314.pyc",
+      "bytes": 6570
+    },
+    {
+      "path": "services/__pycache__/projection_audit.cpython-314.pyc",
+      "bytes": 37754
+    },
+    {
+      "path": "services/__pycache__/shop_asset_search.cpython-314.pyc",
+      "bytes": 14115
+    },
+    {
+      "path": "services/__pycache__/home_trade_news.cpython-314.pyc",
+      "bytes": 30695
+    },
+    {
+      "path": "services/__pycache__/asset_intelligence.cpython-314.pyc",
+      "bytes": 10760
+    },
+    {
+      "path": "services/__pycache__/strategy_session.cpython-314.pyc",
+      "bytes": 2839
+    },
+    {
+      "path": "services/__pycache__/asset_explanations.cpython-314.pyc",
+      "bytes": 17883
+    },
+    {
+      "path": "services/__pycache__/attention_changes.cpython-314.pyc",
+      "bytes": 8194
+    },
+    {
+      "path": "services/__pycache__/history.cpython-314.pyc",
+      "bytes": 67933
+    },
+    {
+      "path": "services/__pycache__/roster_strength.cpython-314.pyc",
+      "bytes": 179
+    },
+    {
+      "path": "services/__pycache__/team_trade_need.cpython-314.pyc",
+      "bytes": 6273
+    },
+    {
+      "path": "services/__pycache__/market_preparation.cpython-314.pyc",
+      "bytes": 5278
+    },
+    {
+      "path": "services/__pycache__/trade_calculator.cpython-314.pyc",
+      "bytes": 31067
+    },
+    {
+      "path": "services/__pycache__/trade_lineup_detail.cpython-314.pyc",
+      "bytes": 35527
+    },
+    {
+      "path": "services/__pycache__/historical_archive.cpython-314.pyc",
+      "bytes": 6377
+    },
+    {
+      "path": "services/__pycache__/global_evidence_ingestion.cpython-314.pyc",
+      "bytes": 9668
+    },
+    {
+      "path": "services/__pycache__/league_preparation.cpython-314.pyc",
+      "bytes": 8859
+    },
+    {
+      "path": "services/__pycache__/my_team_outlook.cpython-314.pyc",
+      "bytes": 23306
+    },
+    {
+      "path": "services/__pycache__/recommended_trade_search.cpython-314.pyc",
+      "bytes": 40202
+    },
+    {
+      "path": "services/__pycache__/franchise_timeline.cpython-314.pyc",
+      "bytes": 32846
+    },
+    {
+      "path": "services/__pycache__/market_navigation.cpython-314.pyc",
+      "bytes": 3383
+    },
+    {
+      "path": "services/__pycache__/weekly_report.cpython-314.pyc",
+      "bytes": 8630
+    },
+    {
+      "path": "services/__pycache__/standings.cpython-314.pyc",
+      "bytes": 20164
+    },
+    {
+      "path": "services/__pycache__/contextual_navigation.cpython-314.pyc",
+      "bytes": 2357
+    },
+    {
+      "path": "services/__pycache__/analytics.cpython-314.pyc",
+      "bytes": 167
+    },
+    {
+      "path": "services/__pycache__/trade_evidence_limits.cpython-314.pyc",
+      "bytes": 7315
+    },
+    {
+      "path": "services/__pycache__/trade_intelligence.cpython-314.pyc",
+      "bytes": 176947
+    },
+    {
+      "path": "services/__pycache__/front_office_intelligence.cpython-314.pyc",
+      "bytes": 5236
+    },
+    {
+      "path": "services/__pycache__/global_evidence.cpython-314.pyc",
+      "bytes": 10499
+    },
+    {
+      "path": "services/__pycache__/trade_capital_inventory.cpython-314.pyc",
+      "bytes": 12805
+    },
+    {
+      "path": "tests/__pycache__/test_trade_partner_history_browser.cpython-314.pyc",
+      "bytes": 17880
+    },
+    {
+      "path": "tests/__pycache__/test_projection_root_transition.cpython-314.pyc",
+      "bytes": 34314
+    },
+    {
+      "path": "tests/__pycache__/test_batch6_explanations.cpython-314.pyc",
+      "bytes": 12486
+    },
+    {
+      "path": "tests/__pycache__/test_roster_diagnostic_admission.cpython-314.pyc",
+      "bytes": 16617
+    },
+    {
+      "path": "tests/__pycache__/test_reserve_quality_browser.cpython-314.pyc",
+      "bytes": 22540
+    },
+    {
+      "path": "tests/__pycache__/test_batch6_weekly_report.cpython-314.pyc",
+      "bytes": 14604
+    },
+    {
+      "path": "tests/__pycache__/test_provider_normalization_freshness_v1133.cpython-314.pyc",
+      "bytes": 6501
+    },
+    {
+      "path": "tests/__pycache__/test_phone_design_semantics.cpython-314.pyc",
+      "bytes": 10959
+    },
+    {
+      "path": "tests/__pycache__/test_retained_projection_recovery.cpython-314.pyc",
+      "bytes": 9194
+    },
+    {
+      "path": "tests/__pycache__/test_checkpoint_flight.cpython-314.pyc",
+      "bytes": 18131
+    },
+    {
+      "path": "tests/__pycache__/test_league_entry_coordination.cpython-314.pyc",
+      "bytes": 35467
+    },
+    {
+      "path": "tests/__pycache__/test_batch2_history_reconciliation.cpython-314.pyc",
+      "bytes": 8849
+    },
+    {
+      "path": "tests/__pycache__/test_team_assessment_presentation.cpython-314.pyc",
+      "bytes": 15862
+    },
+    {
+      "path": "tests/__pycache__/test_authenticated_smoke_v11065.cpython-314.pyc",
+      "bytes": 11848
+    },
+    {
+      "path": "tests/__pycache__/test_visual_retirement.cpython-314.pyc",
+      "bytes": 4261
+    },
+    {
+      "path": "tests/__pycache__/test_visual_inspection.cpython-314.pyc",
+      "bytes": 9790
+    },
+    {
+      "path": "tests/__pycache__/test_personal_rankings_accessibility_browser.cpython-314.pyc",
+      "bytes": 44472
+    },
+    {
+      "path": "tests/__pycache__/test_bounded_identity_context.cpython-314.pyc",
+      "bytes": 16975
+    },
+    {
+      "path": "tests/__pycache__/test_player_api.cpython-314.pyc",
+      "bytes": 15859
+    },
+    {
+      "path": "tests/__pycache__/test_personal_rankings_availability_browser.cpython-314.pyc",
+      "bytes": 14553
+    },
+    {
+      "path": "tests/__pycache__/test_public_welcome_browser.cpython-314.pyc",
+      "bytes": 30524
+    },
+    {
+      "path": "tests/__pycache__/test_canonical_production_normalization.cpython-314.pyc",
+      "bytes": 4447
+    },
+    {
+      "path": "tests/__pycache__/test_trade_endorsement_integrity.cpython-314.pyc",
+      "bytes": 24770
+    },
+    {
+      "path": "tests/__pycache__/test_trade_center_correction.cpython-314.pyc",
+      "bytes": 27981
+    },
+    {
+      "path": "tests/__pycache__/lineup_review_fixture.cpython-314.pyc",
+      "bytes": 9689
+    },
+    {
+      "path": "tests/__pycache__/test_personal_rankings.cpython-314.pyc",
+      "bytes": 51090
+    },
+    {
+      "path": "tests/__pycache__/test_plain_english_final_browser.cpython-314.pyc",
+      "bytes": 13731
+    },
+    {
+      "path": "tests/__pycache__/test_valuation_calibration.cpython-314.pyc",
+      "bytes": 23970
+    },
+    {
+      "path": "tests/__pycache__/test_pick_range_history.cpython-314.pyc",
+      "bytes": 7844
+    },
+    {
+      "path": "tests/__pycache__/test_fois_trade_missing_evidence.cpython-314.pyc",
+      "bytes": 4889
+    },
+    {
+      "path": "tests/__pycache__/test_batch6_asset_explanation_browser.cpython-314.pyc",
+      "bytes": 3757
+    },
+    {
+      "path": "tests/__pycache__/test_player_actions.cpython-314.pyc",
+      "bytes": 24160
+    },
+    {
+      "path": "tests/__pycache__/test_asset_intelligence.cpython-314.pyc",
+      "bytes": 10600
+    },
+    {
+      "path": "tests/__pycache__/test_projection_event_retention.cpython-314.pyc",
+      "bytes": 9768
+    },
+    {
+      "path": "tests/__pycache__/test_historicalstore_retirement.cpython-314.pyc",
+      "bytes": 14124
+    },
+    {
+      "path": "tests/__pycache__/test_manager_activity_integrity.cpython-314.pyc",
+      "bytes": 37063
+    },
+    {
+      "path": "tests/__pycache__/test_history_progress_presentation.cpython-314.pyc",
+      "bytes": 21800
+    },
+    {
+      "path": "tests/__pycache__/test_custom_market_readiness.cpython-314.pyc",
+      "bytes": 27482
+    },
+    {
+      "path": "tests/__pycache__/__init__.cpython-314.pyc",
+      "bytes": 151
+    },
+    {
+      "path": "tests/__pycache__/test_batch4_storage_replay.cpython-314.pyc",
+      "bytes": 4086
+    },
+    {
+      "path": "tests/__pycache__/test_fois_assessment_export.cpython-314.pyc",
+      "bytes": 2437
+    },
+    {
+      "path": "tests/__pycache__/test_prepared_player_ranks.cpython-314.pyc",
+      "bytes": 10102
+    },
+    {
+      "path": "tests/__pycache__/test_trade_decision_experience.cpython-314.pyc",
+      "bytes": 29615
+    },
+    {
+      "path": "tests/__pycache__/test_trade_calculator.cpython-314.pyc",
+      "bytes": 30072
+    },
+    {
+      "path": "tests/__pycache__/test_capital_strategy_reconciliation.cpython-314.pyc",
+      "bytes": 38976
+    },
+    {
+      "path": "tests/__pycache__/test_player_production_stream.cpython-314.pyc",
+      "bytes": 6326
+    },
+    {
+      "path": "tests/__pycache__/test_reserved_league_routes.cpython-314.pyc",
+      "bytes": 12820
+    },
+    {
+      "path": "tests/__pycache__/test_matchup_evidence_contract.cpython-314.pyc",
+      "bytes": 12994
+    },
+    {
+      "path": "tests/__pycache__/test_deployment_readiness.cpython-314.pyc",
+      "bytes": 37993
+    },
+    {
+      "path": "tests/__pycache__/test_market_trends_step7.cpython-314.pyc",
+      "bytes": 18498
+    },
+    {
+      "path": "tests/__pycache__/test_canonical_player_evidence.cpython-314.pyc",
+      "bytes": 5651
+    },
+    {
+      "path": "tests/__pycache__/test_trade_partner_history.cpython-314.pyc",
+      "bytes": 7969
+    },
+    {
+      "path": "tests/__pycache__/test_global_ingestion.cpython-314.pyc",
+      "bytes": 12125
+    },
+    {
+      "path": "tests/__pycache__/test_trade_projection_freshness_browser.cpython-314.pyc",
+      "bytes": 13641
+    },
+    {
+      "path": "tests/__pycache__/test_market_coverage.cpython-314.pyc",
+      "bytes": 8030
+    },
+    {
+      "path": "tests/__pycache__/test_event_relevant_global_market_memory.cpython-314.pyc",
+      "bytes": 15190
+    },
+    {
+      "path": "tests/__pycache__/test_projection_reachability.cpython-314.pyc",
+      "bytes": 7875
+    },
+    {
+      "path": "tests/__pycache__/test_projection_provenance_retention.cpython-314.pyc",
+      "bytes": 28084
+    },
+    {
+      "path": "tests/__pycache__/test_data_completeness.cpython-314.pyc",
+      "bytes": 4085
+    },
+    {
+      "path": "tests/__pycache__/test_route_validation.cpython-314.pyc",
+      "bytes": 10256
+    },
+    {
+      "path": "tests/__pycache__/test_batch6_season_history.cpython-314.pyc",
+      "bytes": 3303
+    },
+    {
+      "path": "tests/__pycache__/test_history_reliability.cpython-314.pyc",
+      "bytes": 65899
+    },
+    {
+      "path": "tests/__pycache__/test_plain_english_preservation_final.cpython-314.pyc",
+      "bytes": 8271
+    },
+    {
+      "path": "tests/__pycache__/test_roster_diagnostic_aging_browser.cpython-314.pyc",
+      "bytes": 8193
+    },
+    {
+      "path": "tests/__pycache__/test_fois_canonical_leaderboard.cpython-314.pyc",
+      "bytes": 32750
+    },
+    {
+      "path": "tests/__pycache__/test_trade_response_integrity.cpython-314.pyc",
+      "bytes": 17137
+    },
+    {
+      "path": "tests/__pycache__/test_history_final_source.cpython-314.pyc",
+      "bytes": 26974
+    },
+    {
+      "path": "tests/__pycache__/test_canonical_asset_facts.cpython-314.pyc",
+      "bytes": 29079
+    },
+    {
+      "path": "tests/__pycache__/test_account_activation_deferral.cpython-314.pyc",
+      "bytes": 30312
+    },
+    {
+      "path": "tests/__pycache__/test_cold_league_recovery.cpython-314.pyc",
+      "bytes": 37939
+    },
+    {
+      "path": "tests/__pycache__/test_global_usage.cpython-314.pyc",
+      "bytes": 2480
+    },
+    {
+      "path": "tests/__pycache__/test_journey_evidence.cpython-314.pyc",
+      "bytes": 10101
+    },
+    {
+      "path": "tests/__pycache__/test_historical_observation_ordering.cpython-314.pyc",
+      "bytes": 12556
+    },
+    {
+      "path": "tests/__pycache__/test_projection_value_missingness.cpython-314.pyc",
+      "bytes": 3536
+    },
+    {
+      "path": "tests/__pycache__/test_storage_review.cpython-314.pyc",
+      "bytes": 2773
+    },
+    {
+      "path": "tests/__pycache__/test_market_trend_current_browser.cpython-314.pyc",
+      "bytes": 6959
+    },
+    {
+      "path": "tests/__pycache__/test_memory_reclamation.cpython-314.pyc",
+      "bytes": 10746
+    },
+    {
+      "path": "tests/__pycache__/test_batch6_matchup_season.cpython-314.pyc",
+      "bytes": 30789
+    },
+    {
+      "path": "tests/__pycache__/test_season_cache_residency.cpython-314.pyc",
+      "bytes": 23420
+    },
+    {
+      "path": "tests/__pycache__/test_plain_english_decisions.cpython-314.pyc",
+      "bytes": 10080
+    },
+    {
+      "path": "tests/__pycache__/test_batch5_adjust_constraints.cpython-314.pyc",
+      "bytes": 24277
+    },
+    {
+      "path": "tests/__pycache__/test_personal_rankings_availability.cpython-314.pyc",
+      "bytes": 27187
+    },
+    {
+      "path": "tests/__pycache__/test_batch6_market_state_presentation.cpython-314.pyc",
+      "bytes": 2347
+    },
+    {
+      "path": "tests/__pycache__/test_trade_timeline_browser.cpython-314.pyc",
+      "bytes": 10152
+    },
+    {
+      "path": "tests/__pycache__/test_roster_source_scope_browser.cpython-314.pyc",
+      "bytes": 16326
+    },
+    {
+      "path": "tests/__pycache__/test_reserve_quality_admission.cpython-314.pyc",
+      "bytes": 8266
+    },
+    {
+      "path": "tests/__pycache__/test_personal_rankings_integration.cpython-314.pyc",
+      "bytes": 10772
+    },
+    {
+      "path": "tests/__pycache__/test_trade_lineup_provenance.cpython-314.pyc",
+      "bytes": 19401
+    },
+    {
+      "path": "tests/__pycache__/test_dossier_plain_english.cpython-314.pyc",
+      "bytes": 14425
+    },
+    {
+      "path": "tests/__pycache__/test_fois_decision_coverage.cpython-314.pyc",
+      "bytes": 6226
+    },
+    {
+      "path": "tests/__pycache__/test_fois_render_cache.cpython-314.pyc",
+      "bytes": 8913
+    },
+    {
+      "path": "tests/__pycache__/test_team_headquarters.cpython-314.pyc",
+      "bytes": 19474
+    },
+    {
+      "path": "tests/__pycache__/test_global_source_snapshot.cpython-314.pyc",
+      "bytes": 4682
+    },
+    {
+      "path": "tests/__pycache__/test_dossier_status_browser.cpython-314.pyc",
+      "bytes": 9089
+    },
+    {
+      "path": "tests/__pycache__/test_identity_crosswalk.cpython-314.pyc",
+      "bytes": 2864
+    },
+    {
+      "path": "tests/__pycache__/test_fois_tenure_continuity.cpython-314.pyc",
+      "bytes": 10301
+    },
+    {
+      "path": "tests/__pycache__/test_offer_comparison.cpython-314.pyc",
+      "bytes": 10869
+    },
+    {
+      "path": "tests/__pycache__/test_fois_coverage_panel.cpython-314.pyc",
+      "bytes": 1746
+    },
+    {
+      "path": "tests/__pycache__/test_trade_performance_browser.cpython-314.pyc",
+      "bytes": 3768
+    },
+    {
+      "path": "tests/__pycache__/test_offer_comparison_browser.cpython-314.pyc",
+      "bytes": 41242
+    },
+    {
+      "path": "tests/__pycache__/test_beginner_final_browser.cpython-314.pyc",
+      "bytes": 40793
+    },
+    {
+      "path": "tests/__pycache__/test_history_season_archive.cpython-314.pyc",
+      "bytes": 18480
+    },
+    {
+      "path": "tests/__pycache__/test_trade_time_market_evidence.cpython-314.pyc",
+      "bytes": 21287
+    },
+    {
+      "path": "tests/__pycache__/test_standings_positioning_browser.cpython-314.pyc",
+      "bytes": 14333
+    },
+    {
+      "path": "tests/__pycache__/test_valuation_intelligence.cpython-314.pyc",
+      "bytes": 30048
+    },
+    {
+      "path": "tests/__pycache__/test_trade_workflow_experience.cpython-314.pyc",
+      "bytes": 34768
+    },
+    {
+      "path": "tests/__pycache__/test_plain_english_browser.cpython-314.pyc",
+      "bytes": 10778
+    },
+    {
+      "path": "tests/__pycache__/test_batch7_season_operations.cpython-314.pyc",
+      "bytes": 17881
+    },
+    {
+      "path": "tests/__pycache__/test_beginner_market.cpython-314.pyc",
+      "bytes": 18281
+    },
+    {
+      "path": "tests/__pycache__/test_team_identity.cpython-314.pyc",
+      "bytes": 5073
+    },
+    {
+      "path": "tests/__pycache__/test_staged_fois_cutover.cpython-314.pyc",
+      "bytes": 19075
+    },
+    {
+      "path": "tests/__pycache__/test_trade_decision_browser.cpython-314.pyc",
+      "bytes": 19471
+    },
+    {
+      "path": "tests/__pycache__/test_http_fois_storage.cpython-314.pyc",
+      "bytes": 14294
+    },
+    {
+      "path": "tests/__pycache__/test_builder_plain_english.cpython-314.pyc",
+      "bytes": 11463
+    },
+    {
+      "path": "tests/__pycache__/trade_performance_fixture.cpython-314.pyc",
+      "bytes": 5832
+    },
+    {
+      "path": "tests/__pycache__/test_trade_smoke_contract_v11063.cpython-314.pyc",
+      "bytes": 4546
+    },
+    {
+      "path": "tests/__pycache__/test_personal_rankings_compatibility.cpython-314.pyc",
+      "bytes": 41263
+    },
+    {
+      "path": "tests/__pycache__/test_player_semantic_changes.cpython-314.pyc",
+      "bytes": 6245
+    },
+    {
+      "path": "tests/__pycache__/test_trade_capital_browser.cpython-314.pyc",
+      "bytes": 13686
+    },
+    {
+      "path": "tests/__pycache__/test_canonical_playoff_facts.cpython-314.pyc",
+      "bytes": 5334
+    },
+    {
+      "path": "tests/__pycache__/test_market_trend_current_integration.cpython-314.pyc",
+      "bytes": 38373
+    },
+    {
+      "path": "tests/__pycache__/test_navigation_residency.cpython-314.pyc",
+      "bytes": 19585
+    },
+    {
+      "path": "tests/__pycache__/test_batch6_event_presentation.cpython-314.pyc",
+      "bytes": 2409
+    },
+    {
+      "path": "tests/__pycache__/test_fois_delta_integrity.cpython-314.pyc",
+      "bytes": 23199
+    },
+    {
+      "path": "tests/__pycache__/test_batch6_player_read_contract.cpython-314.pyc",
+      "bytes": 7053
+    },
+    {
+      "path": "tests/__pycache__/test_projection_audit.cpython-314.pyc",
+      "bytes": 29757
+    },
+    {
+      "path": "tests/__pycache__/test_source_evidence_presentation.cpython-314.pyc",
+      "bytes": 9029
+    },
+    {
+      "path": "tests/__pycache__/test_batch6_player_active_pages.cpython-314.pyc",
+      "bytes": 8113
+    },
+    {
+      "path": "tests/__pycache__/test_make_it_cheaper_completeness.cpython-314.pyc",
+      "bytes": 41783
+    },
+    {
+      "path": "tests/__pycache__/test_premium_navigation_contract.cpython-314.pyc",
+      "bytes": 4498
+    },
+    {
+      "path": "tests/__pycache__/test_batch5_projection_precision_refresh.cpython-314.pyc",
+      "bytes": 7944
+    },
+    {
+      "path": "tests/__pycache__/test_plain_english_home_depth.cpython-314.pyc",
+      "bytes": 6614
+    },
+    {
+      "path": "tests/__pycache__/test_calculator_stale_feedback_browser.cpython-314.pyc",
+      "bytes": 21690
+    },
+    {
+      "path": "tests/__pycache__/test_pick_portfolio_context.cpython-314.pyc",
+      "bytes": 5768
+    },
+    {
+      "path": "tests/__pycache__/test_fois_state_storage.cpython-314.pyc",
+      "bytes": 6842
+    },
+    {
+      "path": "tests/__pycache__/test_final_player_panel.cpython-314.pyc",
+      "bytes": 4107
+    },
+    {
+      "path": "tests/__pycache__/test_batch5_lineup_state_equivalence.cpython-314.pyc",
+      "bytes": 7848
+    },
+    {
+      "path": "tests/__pycache__/test_team_trade_need_browser.cpython-314.pyc",
+      "bytes": 24342
+    },
+    {
+      "path": "tests/__pycache__/test_accounts_v11060.cpython-314.pyc",
+      "bytes": 27954
+    },
+    {
+      "path": "tests/__pycache__/test_batch5_recommended_browser.cpython-314.pyc",
+      "bytes": 7570
+    },
+    {
+      "path": "tests/__pycache__/test_trade_performance.cpython-314.pyc",
+      "bytes": 16545
+    },
+    {
+      "path": "tests/__pycache__/test_batch5_team_strength.cpython-314.pyc",
+      "bytes": 12086
+    },
+    {
+      "path": "tests/__pycache__/test_storage_monitor.cpython-314.pyc",
+      "bytes": 3342
+    },
+    {
+      "path": "tests/__pycache__/test_personal_rankings_recovery_trade.cpython-314.pyc",
+      "bytes": 23274
+    },
+    {
+      "path": "tests/__pycache__/test_fois_tradefact_timestamp.cpython-314.pyc",
+      "bytes": 7816
+    },
+    {
+      "path": "tests/__pycache__/test_roster_intelligence.cpython-314.pyc",
+      "bytes": 5807
+    },
+    {
+      "path": "tests/__pycache__/test_checkpoint_compatibility.cpython-314.pyc",
+      "bytes": 15292
+    },
+    {
+      "path": "tests/__pycache__/test_multileague_projection_browser.cpython-314.pyc",
+      "bytes": 7034
+    },
+    {
+      "path": "tests/__pycache__/test_fois_decision_context.cpython-314.pyc",
+      "bytes": 3713
+    },
+    {
+      "path": "tests/__pycache__/test_batch5_team_strength_active.cpython-314.pyc",
+      "bytes": 9270
+    },
+    {
+      "path": "tests/__pycache__/test_ux_foundation.cpython-314.pyc",
+      "bytes": 30622
+    },
+    {
+      "path": "tests/__pycache__/test_market_preparation.cpython-314.pyc",
+      "bytes": 55115
+    },
+    {
+      "path": "tests/__pycache__/test_projection_coverage_integrity.cpython-314.pyc",
+      "bytes": 26370
+    },
+    {
+      "path": "tests/__pycache__/test_intelligence_presentation.cpython-314.pyc",
+      "bytes": 3400
+    },
+    {
+      "path": "tests/__pycache__/test_player_methodology.cpython-314.pyc",
+      "bytes": 14558
+    },
+    {
+      "path": "tests/__pycache__/test_capture_restart_evidence_v1133.cpython-314.pyc",
+      "bytes": 17255
+    },
+    {
+      "path": "tests/__pycache__/test_validation_progress.cpython-314.pyc",
+      "bytes": 29944
+    },
+    {
+      "path": "tests/__pycache__/test_browser_fixture_images.cpython-314.pyc",
+      "bytes": 14955
+    },
+    {
+      "path": "tests/__pycache__/test_market_source_boundaries.cpython-314.pyc",
+      "bytes": 10156
+    },
+    {
+      "path": "tests/__pycache__/test_trade_workspace_batch1.cpython-314.pyc",
+      "bytes": 21742
+    },
+    {
+      "path": "tests/__pycache__/test_intrinsic_profile.cpython-314.pyc",
+      "bytes": 4184
+    },
+    {
+      "path": "tests/__pycache__/test_resident_league_maintenance_v1131.cpython-314.pyc",
+      "bytes": 18042
+    },
+    {
+      "path": "tests/__pycache__/test_beginner_browser.cpython-314.pyc",
+      "bytes": 24200
+    },
+    {
+      "path": "tests/__pycache__/test_pick_range_adapter.cpython-314.pyc",
+      "bytes": 3205
+    },
+    {
+      "path": "tests/__pycache__/test_personal_rankings_partial_browser.cpython-314.pyc",
+      "bytes": 11024
+    },
+    {
+      "path": "tests/__pycache__/test_batch6_weekly_report_route.cpython-314.pyc",
+      "bytes": 7400
+    },
+    {
+      "path": "tests/__pycache__/test_trade_lineup_detail_browser.cpython-314.pyc",
+      "bytes": 12952
+    },
+    {
+      "path": "tests/__pycache__/test_current_season_franchise_history.cpython-314.pyc",
+      "bytes": 44839
+    },
+    {
+      "path": "tests/__pycache__/test_historical_evidence_weeks.cpython-314.pyc",
+      "bytes": 18042
+    },
+    {
+      "path": "tests/__pycache__/test_current_production_browser.cpython-314.pyc",
+      "bytes": 11600
+    },
+    {
+      "path": "tests/__pycache__/test_source_continuity_browser.cpython-314.pyc",
+      "bytes": 10165
+    },
+    {
+      "path": "tests/__pycache__/test_market_intelligence.cpython-314.pyc",
+      "bytes": 34633
+    },
+    {
+      "path": "tests/__pycache__/test_historicalstore_migration.cpython-314.pyc",
+      "bytes": 72665
+    },
+    {
+      "path": "tests/__pycache__/test_00_trade_simple_browser.cpython-314.pyc",
+      "bytes": 23722
+    },
+    {
+      "path": "tests/__pycache__/test_fois_evidence_integrity.cpython-314.pyc",
+      "bytes": 52518
+    },
+    {
+      "path": "tests/__pycache__/test_intelligence_memory.cpython-314.pyc",
+      "bytes": 40417
+    },
+    {
+      "path": "tests/__pycache__/test_dynamic_needs_browser.cpython-314.pyc",
+      "bytes": 6240
+    },
+    {
+      "path": "tests/__pycache__/test_process_check.cpython-314.pyc",
+      "bytes": 16013
+    },
+    {
+      "path": "tests/__pycache__/test_historical_player_evidence_browser.cpython-314.pyc",
+      "bytes": 7291
+    },
+    {
+      "path": "tests/__pycache__/test_personal_rankings_partial.cpython-314.pyc",
+      "bytes": 35380
+    },
+    {
+      "path": "tests/__pycache__/test_design_system.cpython-314.pyc",
+      "bytes": 13890
+    },
+    {
+      "path": "tests/__pycache__/test_trade_center_browser.cpython-314.pyc",
+      "bytes": 21279
+    },
+    {
+      "path": "tests/__pycache__/test_matchups_phone.cpython-314.pyc",
+      "bytes": 27627
+    },
+    {
+      "path": "tests/__pycache__/test_fois_navigation_reliability.cpython-314.pyc",
+      "bytes": 52526
+    },
+    {
+      "path": "tests/__pycache__/test_market_replacement_window.cpython-314.pyc",
+      "bytes": 13376
+    },
+    {
+      "path": "tests/__pycache__/test_championship_evidence_browser.cpython-314.pyc",
+      "bytes": 12357
+    },
+    {
+      "path": "tests/__pycache__/test_front_office_evidence_v1125.cpython-314.pyc",
+      "bytes": 15919
+    },
+    {
+      "path": "tests/__pycache__/test_manager_activity_browser.cpython-314.pyc",
+      "bytes": 10423
+    },
+    {
+      "path": "tests/__pycache__/test_canonical_team_assessment.cpython-314.pyc",
+      "bytes": 14679
+    },
+    {
+      "path": "tests/__pycache__/test_current_season_history_browser.cpython-314.pyc",
+      "bytes": 11244
+    },
+    {
+      "path": "tests/__pycache__/test_trade_for_acquisition.cpython-314.pyc",
+      "bytes": 18678
+    },
+    {
+      "path": "tests/__pycache__/test_trade_scout_state_browser.cpython-314.pyc",
+      "bytes": 39616
+    },
+    {
+      "path": "tests/__pycache__/test_my_team_intelligence_browser.cpython-314.pyc",
+      "bytes": 12663
+    },
+    {
+      "path": "tests/__pycache__/test_trade_center_accessibility.cpython-314.pyc",
+      "bytes": 4793
+    },
+    {
+      "path": "tests/__pycache__/test_history_ownership.cpython-314.pyc",
+      "bytes": 3946
+    },
+    {
+      "path": "tests/__pycache__/test_lineup_review.cpython-314.pyc",
+      "bytes": 26816
+    },
+    {
+      "path": "tests/__pycache__/test_trade_timeline.cpython-314.pyc",
+      "bytes": 44941
+    },
+    {
+      "path": "tests/__pycache__/test_premium_hierarchy_browser.cpython-314.pyc",
+      "bytes": 26878
+    },
+    {
+      "path": "tests/__pycache__/test_trade_point_display.cpython-314.pyc",
+      "bytes": 3398
+    },
+    {
+      "path": "tests/__pycache__/test_roster_diagnostic_browser.cpython-314.pyc",
+      "bytes": 5601
+    },
+    {
+      "path": "tests/__pycache__/test_sleeper_history_source_boundary.cpython-314.pyc",
+      "bytes": 5152
+    },
+    {
+      "path": "tests/__pycache__/test_pick_quote_identity.cpython-314.pyc",
+      "bytes": 2943
+    },
+    {
+      "path": "tests/__pycache__/test_crawl_api.cpython-314.pyc",
+      "bytes": 19502
+    },
+    {
+      "path": "tests/__pycache__/test_historical_intelligence_contract.cpython-314.pyc",
+      "bytes": 20496
+    },
+    {
+      "path": "tests/__pycache__/test_server_lifecycle.cpython-314.pyc",
+      "bytes": 21915
+    },
+    {
+      "path": "tests/__pycache__/test_fois_active_quality.cpython-314.pyc",
+      "bytes": 8563
+    },
+    {
+      "path": "tests/__pycache__/test_personal_rankings_recovery_browser.cpython-314.pyc",
+      "bytes": 37022
+    },
+    {
+      "path": "tests/__pycache__/test_beginner_final.cpython-314.pyc",
+      "bytes": 14961
+    },
+    {
+      "path": "tests/__pycache__/test_league_gm_integrity_browser.cpython-314.pyc",
+      "bytes": 11320
+    },
+    {
+      "path": "tests/__pycache__/test_history_final_source_browser.cpython-314.pyc",
+      "bytes": 18480
+    },
+    {
+      "path": "tests/__pycache__/test_home_opportunities_browser.cpython-314.pyc",
+      "bytes": 17295
+    },
+    {
+      "path": "tests/__pycache__/test_completed_trade_observations.cpython-314.pyc",
+      "bytes": 21952
+    },
+    {
+      "path": "tests/__pycache__/test_forward_evidence.cpython-314.pyc",
+      "bytes": 6695
+    },
+    {
+      "path": "tests/__pycache__/test_account_league_presentation_v1131.cpython-314.pyc",
+      "bytes": 12005
+    },
+    {
+      "path": "tests/__pycache__/test_pick_quote_selection.cpython-314.pyc",
+      "bytes": 4574
+    },
+    {
+      "path": "tests/__pycache__/test_public_demo_fixture.cpython-314.pyc",
+      "bytes": 18345
+    },
+    {
+      "path": "tests/__pycache__/test_trade_center_bilateral.cpython-314.pyc",
+      "bytes": 12049
+    },
+    {
+      "path": "tests/__pycache__/test_rebuild_discovery_browser.cpython-314.pyc",
+      "bytes": 10113
+    },
+    {
+      "path": "tests/__pycache__/test_contextual_back.cpython-314.pyc",
+      "bytes": 66626
+    },
+    {
+      "path": "tests/__pycache__/test_resident_refresh_retention.cpython-314.pyc",
+      "bytes": 17625
+    },
+    {
+      "path": "tests/__pycache__/test_cache_restoration_admission.cpython-314.pyc",
+      "bytes": 17759
+    },
+    {
+      "path": "tests/__pycache__/test_schedule_ingestion.cpython-314.pyc",
+      "bytes": 4367
+    },
+    {
+      "path": "tests/__pycache__/test_historical_state_integrity.cpython-314.pyc",
+      "bytes": 19539
+    },
+    {
+      "path": "tests/__pycache__/test_make_it_cheaper_browser.cpython-314.pyc",
+      "bytes": 12014
+    },
+    {
+      "path": "tests/__pycache__/test_player_history_batch.cpython-314.pyc",
+      "bytes": 7704
+    },
+    {
+      "path": "tests/__pycache__/test_relative_personal_values.cpython-314.pyc",
+      "bytes": 32682
+    },
+    {
+      "path": "tests/__pycache__/test_history_followthrough.cpython-314.pyc",
+      "bytes": 26667
+    },
+    {
+      "path": "tests/__pycache__/test_trade_navigation_smoke.cpython-314.pyc",
+      "bytes": 3588
+    },
+    {
+      "path": "tests/__pycache__/test_trade_price_contract.cpython-314.pyc",
+      "bytes": 11420
+    },
+    {
+      "path": "tests/__pycache__/test_projection_intelligence.cpython-314.pyc",
+      "bytes": 61538
+    },
+    {
+      "path": "tests/__pycache__/historical_market_fixture.cpython-314.pyc",
+      "bytes": 1673
+    },
+    {
+      "path": "tests/__pycache__/test_trade_explicit_navigation_browser.cpython-314.pyc",
+      "bytes": 30875
+    },
+    {
+      "path": "tests/__pycache__/test_intelligence_memory_runtime.cpython-314.pyc",
+      "bytes": 21646
+    },
+    {
+      "path": "tests/__pycache__/test_cached_sync_security_browser.cpython-314.pyc",
+      "bytes": 7932
+    },
+    {
+      "path": "tests/__pycache__/test_relevant_player_universe.cpython-314.pyc",
+      "bytes": 9149
+    },
+    {
+      "path": "tests/__pycache__/test_trade_construction_performance.cpython-314.pyc",
+      "bytes": 5366
+    },
+    {
+      "path": "tests/__pycache__/test_prepared_player_evidence.cpython-314.pyc",
+      "bytes": 11728
+    },
+    {
+      "path": "tests/__pycache__/test_gm_behavioral_intelligence_v1126.cpython-314.pyc",
+      "bytes": 23664
+    },
+    {
+      "path": "tests/__pycache__/test_operator_context_integrity.cpython-314.pyc",
+      "bytes": 15893
+    },
+    {
+      "path": "tests/__pycache__/test_decision_history_continuity_browser.cpython-314.pyc",
+      "bytes": 16086
+    },
+    {
+      "path": "tests/__pycache__/test_decision_history_continuity.cpython-314.pyc",
+      "bytes": 47538
+    },
+    {
+      "path": "tests/__pycache__/test_calibration_memory.cpython-314.pyc",
+      "bytes": 6081
+    },
+    {
+      "path": "tests/__pycache__/test_historical_trade_time.cpython-314.pyc",
+      "bytes": 13800
+    },
+    {
+      "path": "tests/__pycache__/test_league_intelligence.cpython-314.pyc",
+      "bytes": 15135
+    },
+    {
+      "path": "tests/__pycache__/test_market_history_coverage_browser.cpython-314.pyc",
+      "bytes": 13319
+    },
+    {
+      "path": "tests/__pycache__/test_fois_decision_evaluators.cpython-314.pyc",
+      "bytes": 4284
+    },
+    {
+      "path": "tests/__pycache__/test_fois_memory_admission.cpython-314.pyc",
+      "bytes": 7074
+    },
+    {
+      "path": "tests/__pycache__/test_fois_history_execution.cpython-314.pyc",
+      "bytes": 33362
+    },
+    {
+      "path": "tests/__pycache__/test_storage_maintenance.cpython-314.pyc",
+      "bytes": 8716
+    },
+    {
+      "path": "tests/__pycache__/test_sleeper_actual_results.cpython-314.pyc",
+      "bytes": 51605
+    },
+    {
+      "path": "tests/__pycache__/test_projection_empty_stat_semantics.cpython-314.pyc",
+      "bytes": 2493
+    },
+    {
+      "path": "tests/__pycache__/test_batch6_attention_changes.cpython-314.pyc",
+      "bytes": 8549
+    },
+    {
+      "path": "tests/__pycache__/test_storage_migration.cpython-314.pyc",
+      "bytes": 9584
+    },
+    {
+      "path": "tests/__pycache__/test_trade_missing_market_presentation.cpython-314.pyc",
+      "bytes": 22287
+    },
+    {
+      "path": "tests/__pycache__/test_restoration_preflight_application.cpython-314.pyc",
+      "bytes": 4535
+    },
+    {
+      "path": "tests/__pycache__/test_global_evidence_storage.cpython-314.pyc",
+      "bytes": 12017
+    },
+    {
+      "path": "tests/__pycache__/test_calculator_balance_feedback_browser.cpython-314.pyc",
+      "bytes": 15919
+    },
+    {
+      "path": "tests/__pycache__/test_fois_state_delta.cpython-314.pyc",
+      "bytes": 16828
+    },
+    {
+      "path": "tests/__pycache__/test_canonical_asset_facts_browser.cpython-314.pyc",
+      "bytes": 7544
+    },
+    {
+      "path": "tests/__pycache__/test_trade_for_acquisition_integration.cpython-314.pyc",
+      "bytes": 6995
+    },
+    {
+      "path": "tests/__pycache__/test_trade_recommendation_clarity.cpython-314.pyc",
+      "bytes": 21732
+    },
+    {
+      "path": "tests/__pycache__/test_valuation_golden_set.cpython-314.pyc",
+      "bytes": 10482
+    },
+    {
+      "path": "tests/__pycache__/test_trade_response_browser.cpython-314.pyc",
+      "bytes": 9321
+    },
+    {
+      "path": "tests/__pycache__/test_season_reconciliation.cpython-314.pyc",
+      "bytes": 3156
+    },
+    {
+      "path": "tests/__pycache__/test_historical_lifecycle_stability.cpython-314.pyc",
+      "bytes": 13143
+    },
+    {
+      "path": "tests/__pycache__/test_restart_evidence_dedup_v1134.cpython-314.pyc",
+      "bytes": 6231
+    },
+    {
+      "path": "tests/__pycache__/test_accounts_v11061.cpython-314.pyc",
+      "bytes": 10936
+    },
+    {
+      "path": "tests/__pycache__/test_preparation_diagnostics.cpython-314.pyc",
+      "bytes": 31926
+    },
+    {
+      "path": "tests/__pycache__/test_batch7_projection_rollover.cpython-314.pyc",
+      "bytes": 9583
+    },
+    {
+      "path": "tests/__pycache__/test_normalization_inputs_route_v1133.cpython-314.pyc",
+      "bytes": 5081
+    },
+    {
+      "path": "tests/__pycache__/test_my_team_outlook.cpython-314.pyc",
+      "bytes": 20399
+    },
+    {
+      "path": "tests/__pycache__/test_transactions.cpython-314.pyc",
+      "bytes": 11111
+    },
+    {
+      "path": "tests/__pycache__/test_global_market_memory.cpython-314.pyc",
+      "bytes": 29221
+    },
+    {
+      "path": "tests/__pycache__/test_evidence_availability.cpython-314.pyc",
+      "bytes": 3397
+    },
+    {
+      "path": "tests/__pycache__/test_historical_retained_admission_browser.cpython-314.pyc",
+      "bytes": 8931
+    },
+    {
+      "path": "tests/__pycache__/test_projection_retention.cpython-314.pyc",
+      "bytes": 18536
+    },
+    {
+      "path": "tests/__pycache__/test_phone_design_browser.cpython-314.pyc",
+      "bytes": 20088
+    },
+    {
+      "path": "tests/__pycache__/test_fois_preparation_cleanup.cpython-314.pyc",
+      "bytes": 22284
+    },
+    {
+      "path": "tests/__pycache__/test_batch6_player_projection_view.cpython-314.pyc",
+      "bytes": 9386
+    },
+    {
+      "path": "tests/__pycache__/test_fois_final_trust_browser.cpython-314.pyc",
+      "bytes": 12185
+    },
+    {
+      "path": "tests/__pycache__/test_production_ingestion.cpython-314.pyc",
+      "bytes": 3641
+    },
+    {
+      "path": "tests/__pycache__/test_global_production.cpython-314.pyc",
+      "bytes": 6475
+    },
+    {
+      "path": "tests/__pycache__/test_batch5_shop_timing.cpython-314.pyc",
+      "bytes": 1939
+    },
+    {
+      "path": "tests/__pycache__/test_my_team_intelligence.cpython-314.pyc",
+      "bytes": 21605
+    },
+    {
+      "path": "tests/__pycache__/test_provider_activation.cpython-314.pyc",
+      "bytes": 21739
+    },
+    {
+      "path": "tests/__pycache__/test_my_team_final_browser.cpython-314.pyc",
+      "bytes": 14893
+    },
+    {
+      "path": "tests/__pycache__/test_data_platform.cpython-314.pyc",
+      "bytes": 24972
+    },
+    {
+      "path": "tests/__pycache__/test_historical_tracker_phase2_browser.cpython-314.pyc",
+      "bytes": 18283
+    },
+    {
+      "path": "tests/__pycache__/test_provider_network.cpython-314.pyc",
+      "bytes": 23628
+    },
+    {
+      "path": "tests/__pycache__/test_trade_navigation_identity.cpython-314.pyc",
+      "bytes": 16230
+    },
+    {
+      "path": "tests/__pycache__/test_proposal_tray_browser.cpython-314.pyc",
+      "bytes": 23798
+    },
+    {
+      "path": "tests/__pycache__/test_batch5_season_calendar.cpython-314.pyc",
+      "bytes": 3114
+    },
+    {
+      "path": "tests/__pycache__/test_sleeper_actual_restoration.cpython-314.pyc",
+      "bytes": 29851
+    },
+    {
+      "path": "tests/__pycache__/test_unmatched_import_recovery.cpython-314.pyc",
+      "bytes": 14644
+    },
+    {
+      "path": "tests/__pycache__/test_fois_gm_intelligence.cpython-314.pyc",
+      "bytes": 18516
+    },
+    {
+      "path": "tests/__pycache__/test_cache_json.cpython-314.pyc",
+      "bytes": 13246
+    },
+    {
+      "path": "tests/__pycache__/test_retained_storage_recovery.cpython-314.pyc",
+      "bytes": 35016
+    },
+    {
+      "path": "tests/__pycache__/test_fois_presentation.cpython-314.pyc",
+      "bytes": 18410
+    },
+    {
+      "path": "tests/__pycache__/test_commissioner.cpython-314.pyc",
+      "bytes": 17556
+    },
+    {
+      "path": "tests/__pycache__/test_batch5_recommended.cpython-314.pyc",
+      "bytes": 20866
+    },
+    {
+      "path": "tests/__pycache__/test_intrinsic_player_panel.cpython-314.pyc",
+      "bytes": 3526
+    },
+    {
+      "path": "tests/__pycache__/test_sleeper_history_publication.cpython-314.pyc",
+      "bytes": 33928
+    },
+    {
+      "path": "tests/__pycache__/test_trade_final_evidence_browser.cpython-314.pyc",
+      "bytes": 37309
+    },
+    {
+      "path": "tests/__pycache__/test_fois_history_read.cpython-314.pyc",
+      "bytes": 19479
+    },
+    {
+      "path": "tests/__pycache__/test_global_evidence_backfill.cpython-314.pyc",
+      "bytes": 3930
+    },
+    {
+      "path": "tests/__pycache__/test_trade_strategy_state_browser.cpython-314.pyc",
+      "bytes": 25375
+    },
+    {
+      "path": "tests/__pycache__/test_batch5_strength_history.cpython-314.pyc",
+      "bytes": 5175
+    },
+    {
+      "path": "tests/__pycache__/test_batch5_sleeper_display_semantics.cpython-314.pyc",
+      "bytes": 6929
+    },
+    {
+      "path": "tests/__pycache__/test_restoration_unused_memory.cpython-314.pyc",
+      "bytes": 25631
+    },
+    {
+      "path": "tests/__pycache__/test_front_office_brief.cpython-314.pyc",
+      "bytes": 26527
+    },
+    {
+      "path": "tests/__pycache__/test_historical_snapshot_integrity.cpython-314.pyc",
+      "bytes": 15777
+    },
+    {
+      "path": "tests/__pycache__/test_batch6_weekly_report_transactions.cpython-314.pyc",
+      "bytes": 4971
+    },
+    {
+      "path": "tests/__pycache__/test_memory_lifecycle.cpython-314.pyc",
+      "bytes": 19758
+    },
+    {
+      "path": "tests/__pycache__/test_live_inspection.cpython-314.pyc",
+      "bytes": 31094
+    },
+    {
+      "path": "tests/__pycache__/test_customer_clarity.cpython-314.pyc",
+      "bytes": 25607
+    },
+    {
+      "path": "tests/__pycache__/test_batch6_team_strength_ux.cpython-314.pyc",
+      "bytes": 9574
+    },
+    {
+      "path": "tests/__pycache__/test_cached_sync_security.cpython-314.pyc",
+      "bytes": 22793
+    },
+    {
+      "path": "tests/__pycache__/test_projection_audit_rank_semantics.cpython-314.pyc",
+      "bytes": 4866
+    },
+    {
+      "path": "tests/__pycache__/test_market_warming_validation.cpython-314.pyc",
+      "bytes": 19238
+    },
+    {
+      "path": "tests/__pycache__/test_player_actions_browser.cpython-314.pyc",
+      "bytes": 9753
+    },
+    {
+      "path": "tests/__pycache__/test_player_value_projection.cpython-314.pyc",
+      "bytes": 33815
+    },
+    {
+      "path": "tests/__pycache__/test_matchup_browser_contract.cpython-314.pyc",
+      "bytes": 6082
+    },
+    {
+      "path": "tests/__pycache__/test_market_normalization_reference.cpython-314.pyc",
+      "bytes": 14636
+    },
+    {
+      "path": "tests/__pycache__/test_historical_tracker_phase2.cpython-314.pyc",
+      "bytes": 47076
+    },
+    {
+      "path": "tests/__pycache__/test_projection_startup_scope_v1132.cpython-314.pyc",
+      "bytes": 7412
+    },
+    {
+      "path": "tests/__pycache__/test_home_opportunity_integrity.cpython-314.pyc",
+      "bytes": 35019
+    },
+    {
+      "path": "tests/__pycache__/test_reserve_quality_consumers.cpython-314.pyc",
+      "bytes": 13373
+    },
+    {
+      "path": "tests/__pycache__/test_fois_process_execution.cpython-314.pyc",
+      "bytes": 42854
+    },
+    {
+      "path": "tests/__pycache__/test_assessment_context_browser.cpython-314.pyc",
+      "bytes": 7691
+    },
+    {
+      "path": "tests/__pycache__/test_canonical_production_context.cpython-314.pyc",
+      "bytes": 7870
+    },
+    {
+      "path": "tests/__pycache__/test_fois_final_trust.cpython-314.pyc",
+      "bytes": 15256
+    },
+    {
+      "path": "tests/__pycache__/test_league_gm_diagnostics_browser.cpython-314.pyc",
+      "bytes": 11044
+    },
+    {
+      "path": "tests/__pycache__/test_trade_decision_standings_browser.cpython-314.pyc",
+      "bytes": 6332
+    },
+    {
+      "path": "tests/__pycache__/test_current_production_coverage.cpython-314.pyc",
+      "bytes": 53383
+    },
+    {
+      "path": "tests/__pycache__/test_trade_workspace_browser.cpython-314.pyc",
+      "bytes": 14489
+    },
+    {
+      "path": "tests/__pycache__/test_personal_trade_browser.cpython-314.pyc",
+      "bytes": 28660
+    },
+    {
+      "path": "tests/__pycache__/manager_evidence_fixtures.cpython-314.pyc",
+      "bytes": 770
+    },
+    {
+      "path": "tests/__pycache__/test_trade_history_discovery.cpython-314.pyc",
+      "bytes": 15201
+    },
+    {
+      "path": "tests/__pycache__/test_personal_trade_workflows.cpython-314.pyc",
+      "bytes": 23515
+    },
+    {
+      "path": "tests/__pycache__/test_batch5_trade_for_browser.cpython-314.pyc",
+      "bytes": 7189
+    },
+    {
+      "path": "tests/__pycache__/test_batch5_trade_strategy.cpython-314.pyc",
+      "bytes": 18846
+    },
+    {
+      "path": "tests/__pycache__/test_my_team_outlook_http.cpython-314.pyc",
+      "bytes": 10422
+    },
+    {
+      "path": "tests/__pycache__/test_global_ingestion_execution.cpython-314.pyc",
+      "bytes": 8050
+    },
+    {
+      "path": "tests/__pycache__/test_sleeper_projection_transport.cpython-314.pyc",
+      "bytes": 12704
+    },
+    {
+      "path": "tests/__pycache__/test_rebuild_discovery_integrity.cpython-314.pyc",
+      "bytes": 29767
+    },
+    {
+      "path": "tests/__pycache__/test_trade_reserve_evidence.cpython-314.pyc",
+      "bytes": 24767
+    },
+    {
+      "path": "tests/__pycache__/test_request_attribution.cpython-314.pyc",
+      "bytes": 39313
+    },
+    {
+      "path": "tests/__pycache__/test_durable_storage_monitor.cpython-314.pyc",
+      "bytes": 9304
+    },
+    {
+      "path": "tests/__pycache__/test_market_roster_relevance_browser.cpython-314.pyc",
+      "bytes": 17561
+    },
+    {
+      "path": "tests/__pycache__/test_rebuild_roster_space_browser.cpython-314.pyc",
+      "bytes": 9663
+    },
+    {
+      "path": "tests/__pycache__/test_scoped_player_ranks.cpython-314.pyc",
+      "bytes": 4786
+    },
+    {
+      "path": "tests/__pycache__/test_phone_visual_corrections_browser.cpython-314.pyc",
+      "bytes": 18661
+    },
+    {
+      "path": "tests/__pycache__/test_sparse_historical_market.cpython-314.pyc",
+      "bytes": 43808
+    },
+    {
+      "path": "tests/__pycache__/test_historical_transaction_intelligence.cpython-314.pyc",
+      "bytes": 25463
+    },
+    {
+      "path": "tests/__pycache__/test_batch6_trade_explanation.cpython-314.pyc",
+      "bytes": 14247
+    },
+    {
+      "path": "tests/__pycache__/test_trade_conditional_summary_browser.cpython-314.pyc",
+      "bytes": 5587
+    },
+    {
+      "path": "tests/__pycache__/test_batch5_shop_asset.cpython-314.pyc",
+      "bytes": 20593
+    },
+    {
+      "path": "tests/__pycache__/test_market_warming_middleware.cpython-314.pyc",
+      "bytes": 18435
+    },
+    {
+      "path": "tests/__pycache__/test_fois_trust_browser.cpython-314.pyc",
+      "bytes": 13019
+    },
+    {
+      "path": "tests/__pycache__/test_competitive_window_contract.cpython-314.pyc",
+      "bytes": 10981
+    },
+    {
+      "path": "tests/__pycache__/test_playoff_participant_browser.cpython-314.pyc",
+      "bytes": 6936
+    },
+    {
+      "path": "tests/__pycache__/test_market_consensus_independence.cpython-314.pyc",
+      "bytes": 10671
+    },
+    {
+      "path": "tests/__pycache__/test_historical_memory.cpython-314.pyc",
+      "bytes": 24196
+    },
+    {
+      "path": "tests/__pycache__/test_fois_history_qualification.cpython-314.pyc",
+      "bytes": 47813
+    },
+    {
+      "path": "tests/__pycache__/test_batch5_atomic_projection_horizon.cpython-314.pyc",
+      "bytes": 11875
+    },
+    {
+      "path": "tests/__pycache__/test_front_office_intelligence.cpython-314.pyc",
+      "bytes": 16629
+    },
+    {
+      "path": "tests/__pycache__/test_cloud_tooling.cpython-314.pyc",
+      "bytes": 22257
+    },
+    {
+      "path": "tests/__pycache__/test_home_news_corrections.cpython-314.pyc",
+      "bytes": 24162
+    },
+    {
+      "path": "tests/__pycache__/test_fois_worker_residency.cpython-314.pyc",
+      "bytes": 9881
+    },
+    {
+      "path": "tests/__pycache__/test_historical_storage.cpython-314.pyc",
+      "bytes": 9324
+    },
+    {
+      "path": "tests/__pycache__/test_batch6_asset_explanations.cpython-314.pyc",
+      "bytes": 5912
+    },
+    {
+      "path": "tests/__pycache__/trade_construction_reference.cpython-314.pyc",
+      "bytes": 8691
+    },
+    {
+      "path": "tests/__pycache__/test_sync_diagnostics.cpython-314.pyc",
+      "bytes": 6684
+    },
+    {
+      "path": "tests/__pycache__/test_public_readiness.cpython-314.pyc",
+      "bytes": 38969
+    },
+    {
+      "path": "tests/__pycache__/test_source_evidence_browser.cpython-314.pyc",
+      "bytes": 11265
+    },
+    {
+      "path": "tests/__pycache__/test_market_history_coverage.cpython-314.pyc",
+      "bytes": 33103
+    },
+    {
+      "path": "tests/__pycache__/test_storage_accounting.cpython-314.pyc",
+      "bytes": 7959
+    },
+    {
+      "path": "tests/__pycache__/test_cache_budget.cpython-314.pyc",
+      "bytes": 15606
+    },
+    {
+      "path": "tests/__pycache__/test_league_gm_diagnostics.cpython-314.pyc",
+      "bytes": 51917
+    },
+    {
+      "path": "tests/__pycache__/test_global_schedule.cpython-314.pyc",
+      "bytes": 4454
+    },
+    {
+      "path": "tests/__pycache__/test_franchise_trade_progress.cpython-314.pyc",
+      "bytes": 23097
+    },
+    {
+      "path": "tests/__pycache__/test_batch4_assessment_quality_panel.cpython-314.pyc",
+      "bytes": 5495
+    },
+    {
+      "path": "tests/__pycache__/test_trade_calculator_browser.cpython-314.pyc",
+      "bytes": 25855
+    },
+    {
+      "path": "tests/__pycache__/test_trade_decision_http_browser.cpython-314.pyc",
+      "bytes": 28536
+    },
+    {
+      "path": "tests/__pycache__/test_operational_inspection.cpython-314.pyc",
+      "bytes": 40188
+    },
+    {
+      "path": "tests/__pycache__/test_recommended_protections_browser.cpython-314.pyc",
+      "bytes": 24111
+    },
+    {
+      "path": "tests/__pycache__/test_projection_coverage_browser.cpython-314.pyc",
+      "bytes": 8891
+    },
+    {
+      "path": "tests/__pycache__/projection_coverage_fixture.cpython-314.pyc",
+      "bytes": 6778
+    },
+    {
+      "path": "tests/__pycache__/test_trade_conditional_summary.cpython-314.pyc",
+      "bytes": 9298
+    },
+    {
+      "path": "tests/__pycache__/test_relative_personal_browser.cpython-314.pyc",
+      "bytes": 12447
+    },
+    {
+      "path": "tests/__pycache__/test_market_calibration_dashboard.cpython-314.pyc",
+      "bytes": 17067
+    },
+    {
+      "path": "tests/__pycache__/test_trade_builder_repair.cpython-314.pyc",
+      "bytes": 18963
+    },
+    {
+      "path": "tests/__pycache__/test_trade_resource_admission.cpython-314.pyc",
+      "bytes": 26899
+    },
+    {
+      "path": "tests/__pycache__/test_batch5_trade_market_balance.cpython-314.pyc",
+      "bytes": 5149
+    },
+    {
+      "path": "tests/__pycache__/test_home_trade_news_browser.cpython-314.pyc",
+      "bytes": 38954
+    },
+    {
+      "path": "tests/__pycache__/test_batch5_trade_for.cpython-314.pyc",
+      "bytes": 25552
+    },
+    {
+      "path": "tests/__pycache__/test_completed_trade_observations_browser.cpython-314.pyc",
+      "bytes": 17832
+    },
+    {
+      "path": "tests/__pycache__/test_active_roster_grading.cpython-314.pyc",
+      "bytes": 27283
+    },
+    {
+      "path": "tests/__pycache__/test_trade_actionability_browser.cpython-314.pyc",
+      "bytes": 16210
+    },
+    {
+      "path": "tests/__pycache__/test_multi_league_intelligence_isolation_v1130.cpython-314.pyc",
+      "bytes": 9672
+    },
+    {
+      "path": "tests/__pycache__/test_global_evidence_background.cpython-314.pyc",
+      "bytes": 3107
+    },
+    {
+      "path": "tests/__pycache__/test_fois_retention.cpython-314.pyc",
+      "bytes": 12357
+    },
+    {
+      "path": "tests/__pycache__/test_pick_page_prepared_evidence.cpython-314.pyc",
+      "bytes": 11318
+    },
+    {
+      "path": "tests/__pycache__/test_fois.cpython-314.pyc",
+      "bytes": 19786
+    },
+    {
+      "path": "tests/__pycache__/test_trade_lineup_detail.cpython-314.pyc",
+      "bytes": 35346
+    },
+    {
+      "path": "tests/__pycache__/test_matchup_portraits_browser.cpython-314.pyc",
+      "bytes": 14340
+    },
+    {
+      "path": "tests/__pycache__/test_personal_rankings_browser.cpython-314.pyc",
+      "bytes": 41851
+    },
+    {
+      "path": "tests/__pycache__/test_trade_historical_upgrade_v1129.cpython-314.pyc",
+      "bytes": 10749
+    },
+    {
+      "path": "tests/__pycache__/test_trade_discovery_repair.cpython-314.pyc",
+      "bytes": 32516
+    },
+    {
+      "path": "tests/__pycache__/test_linux_market_cgroup_gate.cpython-314.pyc",
+      "bytes": 103408
+    },
+    {
+      "path": "tests/__pycache__/test_import_commissioner_integrity.cpython-314.pyc",
+      "bytes": 36106
+    },
+    {
+      "path": "tests/__pycache__/test_historical_retained_admission.cpython-314.pyc",
+      "bytes": 38746
+    },
+    {
+      "path": "tests/__pycache__/test_accounts_v11059.cpython-314.pyc",
+      "bytes": 31262
+    },
+    {
+      "path": "tests/__pycache__/test_pick_ownership_chain.cpython-314.pyc",
+      "bytes": 4458
+    },
+    {
+      "path": "tests/__pycache__/test_intelligence_import_order.cpython-314.pyc",
+      "bytes": 1654
+    },
+    {
+      "path": "tests/__pycache__/test_global_evidence_worker.cpython-314.pyc",
+      "bytes": 8080
+    },
+    {
+      "path": "tests/__pycache__/test_trade_projection_freshness.cpython-314.pyc",
+      "bytes": 13621
+    },
+    {
+      "path": "tests/__pycache__/test_multileague_projection_compatibility.cpython-314.pyc",
+      "bytes": 22012
+    },
+    {
+      "path": "tests/__pycache__/test_restoration_preflight.cpython-314.pyc",
+      "bytes": 31006
+    },
+    {
+      "path": "tests/__pycache__/test_market_change_reasons.cpython-314.pyc",
+      "bytes": 2439
+    },
+    {
+      "path": "tests/__pycache__/test_trade_picker_order.cpython-314.pyc",
+      "bytes": 12550
+    },
+    {
+      "path": "tests/__pycache__/matchup_prepared_fixture.cpython-314.pyc",
+      "bytes": 5466
+    },
+    {
+      "path": "tests/__pycache__/test_batch6_home_attention.cpython-314.pyc",
+      "bytes": 10346
+    },
+    {
+      "path": "tests/__pycache__/test_rebuild_roster_space.cpython-314.pyc",
+      "bytes": 28251
+    },
+    {
+      "path": "tests/__pycache__/test_staged_projection_cutover.cpython-314.pyc",
+      "bytes": 19363
+    },
+    {
+      "path": "tests/__pycache__/test_batch5_final_parity.cpython-314.pyc",
+      "bytes": 3852
+    },
+    {
+      "path": "tests/__pycache__/test_fois_results.cpython-314.pyc",
+      "bytes": 33528
+    },
+    {
+      "path": "tests/__pycache__/test_canonical_harness_lifecycle.cpython-314.pyc",
+      "bytes": 8739
+    },
+    {
+      "path": "tests/__pycache__/test_trade_strategy_state.cpython-314.pyc",
+      "bytes": 20828
+    },
+    {
+      "path": "tests/__pycache__/test_batch5_trade_horizons.cpython-314.pyc",
+      "bytes": 21035
+    },
+    {
+      "path": "tests/__pycache__/test_historical_read_model.cpython-314.pyc",
+      "bytes": 16146
+    },
+    {
+      "path": "tests/__pycache__/test_roster_diagnostic_http.cpython-314.pyc",
+      "bytes": 9221
+    },
+    {
+      "path": "tests/__pycache__/test_historical_faab_conflicts.cpython-314.pyc",
+      "bytes": 21073
+    },
+    {
+      "path": "tests/__pycache__/test_fois_quality_boundary.cpython-314.pyc",
+      "bytes": 2866
+    },
+    {
+      "path": "tests/__pycache__/inspection_auth_fixture.cpython-314.pyc",
+      "bytes": 1082
+    },
+    {
+      "path": "tests/__pycache__/test_valuation_universe.cpython-314.pyc",
+      "bytes": 17041
+    },
+    {
+      "path": "tests/__pycache__/test_trade_for_acquisition_browser.cpython-314.pyc",
+      "bytes": 14243
+    },
+    {
+      "path": "tests/__pycache__/test_standings_positioning.cpython-314.pyc",
+      "bytes": 35478
+    },
+    {
+      "path": "tests/__pycache__/test_trade_recommendation_clarity_browser.cpython-314.pyc",
+      "bytes": 15672
+    },
+    {
+      "path": "tests/__pycache__/test_operational_history.cpython-314.pyc",
+      "bytes": 3682
+    },
+    {
+      "path": "tests/__pycache__/test_reference_production_methodology.cpython-314.pyc",
+      "bytes": 8825
+    },
+    {
+      "path": "tests/__pycache__/test_batch6_matchup_browser.cpython-314.pyc",
+      "bytes": 8308
+    },
+    {
+      "path": "tests/__pycache__/test_team_intelligence.cpython-314.pyc",
+      "bytes": 12727
+    },
+    {
+      "path": "tests/__pycache__/test_production_readiness.cpython-314.pyc",
+      "bytes": 16421
+    },
+    {
+      "path": "tests/__pycache__/test_fois_attribution.cpython-314.pyc",
+      "bytes": 4226
+    },
+    {
+      "path": "tests/__pycache__/test_market_trend_compatibility.cpython-314.pyc",
+      "bytes": 12745
+    },
+    {
+      "path": "tests/__pycache__/test_historical_reader_recovery.cpython-314.pyc",
+      "bytes": 38793
+    },
+    {
+      "path": "tests/__pycache__/test_lineup_review_browser.cpython-314.pyc",
+      "bytes": 15444
+    },
+    {
+      "path": "tests/__pycache__/test_history_followthrough_browser.cpython-314.pyc",
+      "bytes": 17716
+    },
+    {
+      "path": "tests/__pycache__/test_legacy_display_integrity.cpython-314.pyc",
+      "bytes": 5168
+    },
+    {
+      "path": "tests/__pycache__/test_trade_actionability.cpython-314.pyc",
+      "bytes": 10977
+    },
+    {
+      "path": "tests/__pycache__/test_front_office_brief_browser.cpython-314.pyc",
+      "bytes": 26312
+    },
+    {
+      "path": "tests/__pycache__/test_intelligence_platform.cpython-314.pyc",
+      "bytes": 16883
+    },
+    {
+      "path": "tests/__pycache__/test_global_ingestion_lock.cpython-314.pyc",
+      "bytes": 2739
+    },
+    {
+      "path": "tests/__pycache__/test_reserve_quality.cpython-314.pyc",
+      "bytes": 40592
+    },
+    {
+      "path": "tests/__pycache__/test_personal_rankings_recovery_trade_browser.cpython-314.pyc",
+      "bytes": 11136
+    },
+    {
+      "path": "tests/__pycache__/test_home_opportunities.cpython-314.pyc",
+      "bytes": 28687
+    },
+    {
+      "path": "tests/__pycache__/test_market_observation_producer_identity.cpython-314.pyc",
+      "bytes": 26466
+    },
+    {
+      "path": "tests/__pycache__/test_historical_state_sources.cpython-314.pyc",
+      "bytes": 11838
+    },
+    {
+      "path": "tests/__pycache__/test_canonical_fixture_inventory.cpython-314.pyc",
+      "bytes": 5659
+    },
+    {
+      "path": "tests/__pycache__/test_inspection.cpython-314.pyc",
+      "bytes": 15094
+    },
+    {
+      "path": "tests/__pycache__/test_data_normalization.cpython-314.pyc",
+      "bytes": 18748
+    },
+    {
+      "path": "tests/__pycache__/test_historical_franchise_state.cpython-314.pyc",
+      "bytes": 31950
+    },
+    {
+      "path": "tests/__pycache__/test_resource_observability.cpython-314.pyc",
+      "bytes": 14578
+    },
+    {
+      "path": "tests/__pycache__/test_fois_decision_time_boundary.cpython-314.pyc",
+      "bytes": 4151
+    },
+    {
+      "path": "tests/__pycache__/test_batch6_rank_presentation.cpython-314.pyc",
+      "bytes": 4770
+    },
+    {
+      "path": "tests/__pycache__/test_my_team_final.cpython-314.pyc",
+      "bytes": 17387
+    },
+    {
+      "path": "tests/__pycache__/test_championship_evidence_consistency.cpython-314.pyc",
+      "bytes": 15712
+    },
+    {
+      "path": "tests/__pycache__/test_home_read_responsiveness.cpython-314.pyc",
+      "bytes": 6977
+    },
+    {
+      "path": "tests/__pycache__/test_consumer_scalar_boundaries.cpython-314.pyc",
+      "bytes": 6680
+    },
+    {
+      "path": "tests/__pycache__/test_batch5_legal_lineup.cpython-314.pyc",
+      "bytes": 6300
+    },
+    {
+      "path": "tests/__pycache__/test_market_render_cache.cpython-314.pyc",
+      "bytes": 22057
+    },
+    {
+      "path": "tests/__pycache__/test_freshness_policy.cpython-314.pyc",
+      "bytes": 5030
+    },
+    {
+      "path": "tests/__pycache__/test_trade_simple_discovery.cpython-314.pyc",
+      "bytes": 12790
+    },
+    {
+      "path": "tests/__pycache__/test_restoration_preflight_http.cpython-314.pyc",
+      "bytes": 22974
+    },
+    {
+      "path": "tests/__pycache__/test_roster_source_scope.cpython-314.pyc",
+      "bytes": 33319
+    },
+    {
+      "path": "tests/__pycache__/test_fois_working_storage.cpython-314.pyc",
+      "bytes": 5404
+    },
+    {
+      "path": "tests/__pycache__/test_dynamic_needs.cpython-314.pyc",
+      "bytes": 40631
+    },
+    {
+      "path": "tests/__pycache__/test_trade_p2_browser.cpython-314.pyc",
+      "bytes": 32567
+    },
+    {
+      "path": "tests/__pycache__/test_fois_decision_adapter.cpython-314.pyc",
+      "bytes": 7124
+    },
+    {
+      "path": "tests/__pycache__/test_playoff_participant_integrity.cpython-314.pyc",
+      "bytes": 21591
+    },
+    {
+      "path": "tests/__pycache__/test_batch6_player_projection_browser.cpython-314.pyc",
+      "bytes": 6965
+    },
+    {
+      "path": "tests/__pycache__/test_team_trade_need.cpython-314.pyc",
+      "bytes": 16531
+    },
+    {
+      "path": "tests/__pycache__/test_historical_asset_graph.cpython-314.pyc",
+      "bytes": 17809
+    },
+    {
+      "path": "tests/__pycache__/test_trade_time_market_evidence_browser.cpython-314.pyc",
+      "bytes": 8906
+    },
+    {
+      "path": "tests/__pycache__/test_storage_command_imports.cpython-314.pyc",
+      "bytes": 3649
+    },
+    {
+      "path": "tests/__pycache__/test_batch5_adjust_boundary.cpython-314.pyc",
+      "bytes": 10976
+    },
+    {
+      "path": "tests/__pycache__/test_trade_capital_inventory.cpython-314.pyc",
+      "bytes": 14478
+    },
+    {
+      "path": "tests/__pycache__/test_trade_navigation_browser.cpython-314.pyc",
+      "bytes": 19054
+    },
+    {
+      "path": "tests/__pycache__/test_technical_details_browser.cpython-314.pyc",
+      "bytes": 21811
+    },
+    {
+      "path": "tests/__pycache__/test_global_evidence_retention.cpython-314.pyc",
+      "bytes": 8121
+    },
+    {
+      "path": "tests/__pycache__/test_front_office_context_v11064.cpython-314.pyc",
+      "bytes": 11988
+    },
+    {
+      "path": "tests/__pycache__/test_public_welcome_security.cpython-314.pyc",
+      "bytes": 16833
+    },
+    {
+      "path": "tests/__pycache__/test_brain_integration.cpython-314.pyc",
+      "bytes": 11733
+    },
+    {
+      "path": "tests/__pycache__/test_roster_grading_dimensions.cpython-314.pyc",
+      "bytes": 6128
+    },
+    {
+      "path": "tests/__pycache__/test_trade_intelligence.cpython-314.pyc",
+      "bytes": 29363
+    },
+    {
+      "path": "tests/__pycache__/test_asset_market.cpython-314.pyc",
+      "bytes": 150041
+    },
+    {
+      "path": "tests/__pycache__/test_journey_corrections_browser.cpython-314.pyc",
+      "bytes": 23867
+    },
+    {
+      "path": "tests/__pycache__/test_runtime_error_security.cpython-314.pyc",
+      "bytes": 18859
+    },
+    {
+      "path": "tests/__pycache__/test_personal_rankings_recovery_storage.cpython-314.pyc",
+      "bytes": 27132
+    },
+    {
+      "path": "tests/__pycache__/test_market_roster_relevance.cpython-314.pyc",
+      "bytes": 31645
+    },
+    {
+      "path": "tests/__pycache__/test_personal_rankings_store.cpython-314.pyc",
+      "bytes": 25947
+    },
+    {
+      "path": "tests/__pycache__/test_public_entry.cpython-314.pyc",
+      "bytes": 18346
+    },
+    {
+      "path": "tests/__pycache__/test_my_team_outlook_browser.cpython-314.pyc",
+      "bytes": 10140
+    },
+    {
+      "path": "tests/__pycache__/test_trade_controlled_manager_v11055.cpython-314.pyc",
+      "bytes": 12876
+    },
+    {
+      "path": "tests/__pycache__/test_home_trade_news.cpython-314.pyc",
+      "bytes": 35166
+    },
+    {
+      "path": "tests/__pycache__/test_pick_normalization.cpython-314.pyc",
+      "bytes": 2815
+    },
+    {
+      "path": "tests/__pycache__/test_league_gm_integrity.cpython-314.pyc",
+      "bytes": 37842
+    },
+    {
+      "path": "tests/__pycache__/test_intelligence_cache_expiry.cpython-314.pyc",
+      "bytes": 5787
+    },
+    {
+      "path": "tests/__pycache__/test_franchise_timeline_coverage.cpython-314.pyc",
+      "bytes": 43993
+    },
+    {
+      "path": "tests/__pycache__/test_visual_fidelity_v11068.cpython-314.pyc",
+      "bytes": 13619
+    },
+    {
+      "path": "tests/__pycache__/test_trade_resource_browser.cpython-314.pyc",
+      "bytes": 14692
+    },
+    {
+      "path": "tests/__pycache__/test_historical_player_evidence.cpython-314.pyc",
+      "bytes": 42084
+    },
+    {
+      "path": "tests/__pycache__/test_roster_diagnostic_aging.cpython-314.pyc",
+      "bytes": 34541
+    },
+    {
+      "path": "tests/__pycache__/test_projection_state_storage.cpython-314.pyc",
+      "bytes": 4315
+    },
+    {
+      "path": "tests/__pycache__/test_global_source_checks.cpython-314.pyc",
+      "bytes": 2911
+    },
+    {
+      "path": "tests/__pycache__/test_request_capacity.cpython-314.pyc",
+      "bytes": 1401
+    },
+    {
+      "path": "tests/__pycache__/test_product_browser_journey.cpython-314.pyc",
+      "bytes": 21208
+    },
+    {
+      "path": "tests/__pycache__/test_front_office_workflow_browser.cpython-314.pyc",
+      "bytes": 40538
+    },
+    {
+      "path": "tests/__pycache__/test_roster_evidence_boundary.cpython-314.pyc",
+      "bytes": 8042
+    },
+    {
+      "path": "tests/__pycache__/test_front_office_brief_http.cpython-314.pyc",
+      "bytes": 14882
+    },
+    {
+      "path": "tests/__pycache__/test_intrinsic_tiers.cpython-314.pyc",
+      "bytes": 4019
+    },
+    {
+      "path": "tests/__pycache__/test_league_runtime.cpython-314.pyc",
+      "bytes": 38454
+    },
+    {
+      "path": "tests/__pycache__/test_trade_preview_scope_browser.cpython-314.pyc",
+      "bytes": 27954
+    },
+    {
+      "path": "tests/__pycache__/test_batch5_projection_source_time.cpython-314.pyc",
+      "bytes": 3785
+    },
+    {
+      "path": "tests/__pycache__/test_async_market_generation.cpython-314.pyc",
+      "bytes": 29136
+    },
+    {
+      "path": "tests/__pycache__/test_batch5_shop_browser.cpython-314.pyc",
+      "bytes": 8252
+    },
+    {
+      "path": "tests/__pycache__/test_restart_evidence_v1133.cpython-314.pyc",
+      "bytes": 11474
+    },
+    {
+      "path": "tests/__pycache__/test_decision_engine.cpython-314.pyc",
+      "bytes": 6018
+    },
+    {
+      "path": "tests/__pycache__/test_projection_quarantine.cpython-314.pyc",
+      "bytes": 16968
+    },
+    {
+      "path": "tests/__pycache__/test_public_welcome_presentation.cpython-314.pyc",
+      "bytes": 14007
+    },
+    {
+      "path": "tests/__pycache__/test_batch5_pick_year_identity.cpython-314.pyc",
+      "bytes": 3660
+    },
+    {
+      "path": "tests/__pycache__/test_trade_lineup_provenance_browser.cpython-314.pyc",
+      "bytes": 13427
+    },
+    {
+      "path": "tests/__pycache__/test_franchise_timeline_browser.cpython-314.pyc",
+      "bytes": 9144
+    },
+    {
+      "path": "tests/__pycache__/test_batch6_matchup_desk.cpython-314.pyc",
+      "bytes": 13848
+    },
+    {
+      "path": "tests/__pycache__/test_diagnostic_security.cpython-314.pyc",
+      "bytes": 36387
+    },
+    {
+      "path": "tests/__pycache__/test_batch6_trade_ux.cpython-314.pyc",
+      "bytes": 18364
+    },
+    {
+      "path": "tests/__pycache__/test_batch5_final_trade_integration.cpython-314.pyc",
+      "bytes": 5751
+    },
+    {
+      "path": "tests/__pycache__/test_matchups_phone_browser.cpython-314.pyc",
+      "bytes": 13049
+    },
+    {
+      "path": "components/__pycache__/__init__.cpython-314.pyc",
+      "bytes": 192
+    },
+    {
+      "path": "components/__pycache__/commissioner.cpython-314.pyc",
+      "bytes": 41022
+    },
+    {
+      "path": "components/__pycache__/asset_intelligence.cpython-314.pyc",
+      "bytes": 27818
+    },
+    {
+      "path": "components/__pycache__/trade_workspace.cpython-314.pyc",
+      "bytes": 19120
+    },
+    {
+      "path": "components/__pycache__/trade_intelligence.cpython-314.pyc",
+      "bytes": 38103
+    },
+    {
+      "path": "components/__pycache__/front_office_intelligence.cpython-314.pyc",
+      "bytes": 9775
+    },
+    {
+      "path": "validation/__pycache__/__init__.cpython-314.pyc",
+      "bytes": 162
+    },
+    {
+      "path": "validation/__pycache__/routes.cpython-314.pyc",
+      "bytes": 8036
+    },
+    {
+      "path": "routes/__pycache__/accounts.cpython-314.pyc",
+      "bytes": 57650
+    },
+    {
+      "path": "routes/__pycache__/home.cpython-314.pyc",
+      "bytes": 32789
+    },
+    {
+      "path": "routes/__pycache__/teams.cpython-314.pyc",
+      "bytes": 68192
+    },
+    {
+      "path": "routes/__pycache__/matchups.cpython-314.pyc",
+      "bytes": 19957
+    },
+    {
+      "path": "routes/__pycache__/__init__.cpython-314.pyc",
+      "bytes": 205
+    },
+    {
+      "path": "routes/__pycache__/personal_rankings.cpython-314.pyc",
+      "bytes": 20878
+    },
+    {
+      "path": "routes/__pycache__/api.cpython-314.pyc",
+      "bytes": 22750
+    },
+    {
+      "path": "routes/__pycache__/audit.cpython-314.pyc",
+      "bytes": 5868
+    },
+    {
+      "path": "routes/__pycache__/transactions.cpython-314.pyc",
+      "bytes": 61403
+    },
+    {
+      "path": "routes/__pycache__/fois.cpython-314.pyc",
+      "bytes": 57799
+    },
+    {
+      "path": "routes/__pycache__/projections.cpython-314.pyc",
+      "bytes": 6296
+    },
+    {
+      "path": "routes/__pycache__/settings.cpython-314.pyc",
+      "bytes": 7448
+    },
+    {
+      "path": "routes/__pycache__/navigation.cpython-314.pyc",
+      "bytes": 2332
+    },
+    {
+      "path": "routes/__pycache__/public_entry.cpython-314.pyc",
+      "bytes": 2245
+    },
+    {
+      "path": "routes/__pycache__/intelligence_memory.cpython-314.pyc",
+      "bytes": 7888
+    },
+    {
+      "path": "routes/__pycache__/crawl.cpython-314.pyc",
+      "bytes": 35630
+    },
+    {
+      "path": "routes/__pycache__/league_runtime.cpython-314.pyc",
+      "bytes": 7474
+    },
+    {
+      "path": "routes/__pycache__/trades.cpython-314.pyc",
+      "bytes": 52754
+    },
+    {
+      "path": "routes/__pycache__/valuation.cpython-314.pyc",
+      "bytes": 46978
+    },
+    {
+      "path": "routes/__pycache__/draft.cpython-314.pyc",
+      "bytes": 10349
+    },
+    {
+      "path": "routes/__pycache__/history.cpython-314.pyc",
+      "bytes": 36116
+    },
+    {
+      "path": "routes/__pycache__/market_preparation.cpython-314.pyc",
+      "bytes": 2067
+    },
+    {
+      "path": "routes/__pycache__/market.cpython-314.pyc",
+      "bytes": 67424
+    },
+    {
+      "path": "routes/__pycache__/historical_assets.cpython-314.pyc",
+      "bytes": 40502
+    },
+    {
+      "path": "routes/__pycache__/operations_inspect.cpython-314.pyc",
+      "bytes": 10714
+    },
+    {
+      "path": "routes/__pycache__/inspect.cpython-314.pyc",
+      "bytes": 41496
+    },
+    {
+      "path": "routes/__pycache__/hq.cpython-314.pyc",
+      "bytes": 2733
+    },
+    {
+      "path": "routes/__pycache__/weekly_report.cpython-314.pyc",
+      "bytes": 5079
+    },
+    {
+      "path": "routes/__pycache__/front_offices.cpython-314.pyc",
+      "bytes": 5442
+    },
+    {
+      "path": "models/__pycache__/__init__.cpython-314.pyc",
+      "bytes": 159
+    },
+    {
+      "path": "models/__pycache__/commissioner.cpython-314.pyc",
+      "bytes": 2955
+    }
+  ],
+  "free_after": 11004837888,
+  "observed_at": "2026-11-13T00:05:21.647008+00:00"
+}

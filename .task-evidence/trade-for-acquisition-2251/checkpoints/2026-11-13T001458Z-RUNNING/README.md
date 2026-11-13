@@ -1,0 +1,11 @@
+# Trade For acquisition costs — current C4 running checkpoint
+
+PR #340 remains draft and unmerged. Production remains v1.22.35/build2250. Candidate 04dd3e50c7105f571edda16b05738dceeddf3473 / tree e084fdf2257690d10a4ecdf428c12d428acac4a8. Proposed v1.22.36/build2251 is not released.
+
+Exact-source focused123, normal-execution10 and three native resource protocols passed under enforced2GiB, with original results and actual process cleanup. Full local canonical is running in its original daemon-owned container, not passed. Six preliminary gates passed; all4455 tests and later gates remain mandatory. Eleven of13 required hosted jobs completed successfully with source/checkout trees reconciled; Product and canonical remain in progress. Publisher151 controls passed with an unfinalized plan; it has not been dispatched, merged, tagged or published.
+
+Prior C2 local failed2 real capacity-deferral browser cases, then failed remainder was deliberately interrupted. C3 Product hit its25-minute orchestration timeout. C3 canonical was canceled on final-source push; original artifact has2537starts/2536stops and no final result, manifest or trace. C3 local was deliberately interrupted with1748stop records and no observed error. These are incomplete attempts, not passes. Exact original archives/logs remain in the workspace for final separate publication.
+
+C4 changes only the Product batch deadline25to35minutes within the unchanged45-minute job cap relative toC3. Application/test methods and assertions, canonical harness, all individual deadlines and resource policies remain identical. A wrapper YAML extraction KeyError occurred after successful native controls but before full launch; its original log is retained. Only extraction was corrected, without rerunning passed scopes. Full launch passed the unchanged8GiB scratch guard after verified disposable fixture-copy and ignored bytecode cleanup; original frozen fixtures remain untouched.
+
+No owner authenticated search or physical iPhone/Safari testing is claimed. Fixtures and public identity reads are separate. No user settings, production data or infrastructure changed. Never start a duplicate full run; use canonical-invocation.json and actual Docker state. All mandatory gates and guarded Actions publication remain required.
