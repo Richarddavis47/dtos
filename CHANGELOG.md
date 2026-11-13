@@ -1,5 +1,9 @@
 # v1.22.36 / build 2251 — Trade For cost and fit
 
+## v1.22.38 / build 2253 — Customer Experience Acceptance
+
+Correct phone Account wrapping and Trade owner/action spacing. Use plain backup-point and zero-offer explanations; consolidate player and Front Office warnings; simplify the read-only Team demonstration. Preserve analytical, account and resource contracts.
+
 ## v1.22.37 / build 2252
 
 - Customer-first wording and three-layer presentation across the existing page families.

@@ -47,6 +47,11 @@ def plain_reason(value: object) -> str:
         ('Canonical Market', 'Market value'),
         ('canonical Market', 'Market value'),
         ('disjoint reserve cover', 'different eligible backups'),
+        ('No legitimate bilateral construction clears the current constraints.',
+         'No offers met the requirements for both teams in this search.'),
+        ('legal-replacement production falls', 'projected points from eligible backups fall'),
+        ('legal-replacement production improves', 'projected points from eligible backups improve'),
+        ('legal-replacement production declines', 'projected points from eligible backups decline'),
         ('legal-replacement production', 'projected points from eligible backups'),
     ):
         text = text.replace(before, after)

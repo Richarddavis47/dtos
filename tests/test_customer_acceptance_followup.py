@@ -27,3 +27,17 @@ class CustomerAcceptanceFollowupTests(unittest.TestCase):
         self.assertEqual(html.count('Player A is out.'), 1)
         self.assertEqual(html.count('Player B has no projection.'), 1)
         self.assertIn('<details>', html)
+
+    def test_duplicate_player_notes_keep_zero_and_distinct_risks(self):
+        from src.ui.player_projections import player_projection_panel
+        view = dict(player_id='fixture', week=8, weeks=[8], season=2026,
+                    league_id='fixture', generation='fixture-generation', value=0,
+                    display='0', availability='available', confidence=100,
+                    reason='Player A is out.', participation_note='Player A is out.',
+                    eligibility_note='Player B has no projection.')
+        html = player_projection_panel(view)
+        default = html.split('<details', 1)[0]
+        self.assertEqual(default.count('Player A is out.'), 1)
+        self.assertIn('Player B has no projection.', default)
+        self.assertIn('>0</strong>', default)
+        self.assertEqual(view['value'], 0)

@@ -351,7 +351,7 @@ class ScoutWorkspaceStateBrowserTests(unittest.TestCase):
                 self.assertIn('conflicts with the required trade objective', text)
                 self.assertIn('Optional change: Remove the conflicting exact lock on', text)
                 self.assertIn('No package was evaluated', text)
-                self.assertEqual(page.get_by_text('Evaluated near misses', exact=True).count(), 0)
+                self.assertEqual(page.get_by_text('Other evaluated offers · not recommended', exact=True).count(), 0)
                 self.assertEqual(page.locator('#shop-protected').evaluate('n => [...n.selectedOptions].map(o => o.value)'), [pick['asset_id']])
                 self.assertEqual(requests[-1][1]['protected_assets'], [pick['asset_id']])
                 self.assertTrue(conflict.is_visible())

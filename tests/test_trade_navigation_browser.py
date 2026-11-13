@@ -10,6 +10,19 @@ from tests import test_make_it_cheaper_browser as cheaper
 from tests import test_trade_scout_state_browser as scout
 
 
+def assert_target_action_layout(case, page):
+    links = page.locator('#trade-target .tw-target-actions > a')
+    case.assertEqual(links.count(), 2)
+    boxes = [link.bounding_box() for link in links.all()]
+    a, b = boxes
+    case.assertIsNotNone(a)
+    case.assertIsNotNone(b)
+    case.assertGreaterEqual(a['height'], 44)
+    case.assertGreaterEqual(b['height'], 44)
+    case.assertTrue(b['x'] >= a['x'] + a['width'] + 10 or
+                    b['y'] >= a['y'] + a['height'] + 10)
+
+
 class TradeNavigationBrowserTests(unittest.TestCase):
     def test_cheaper_build_own_dossier_trade_for_recovers_without_reload(self):
         fixture = cheaper.CheaperRepairBrowserTests()
@@ -89,6 +102,7 @@ class TradeNavigationBrowserTests(unittest.TestCase):
                 page.goto('https://dtos.test/players/mcbride')
                 page.locator('a[href*="/trades/trade-for?"]').first.click()
                 page.locator('#trade-target:not([hidden])').wait_for()
+                assert_target_action_layout(self, page)
                 self.assertIn('Trey McBride', page.locator('#trade-target').inner_text())
                 self.assertEqual(page.get_by_label('Trade partner', exact=True).input_value(), '2')
                 page.locator('.tw-offer').first.wait_for()
@@ -107,9 +121,11 @@ class TradeNavigationBrowserTests(unittest.TestCase):
                 page.locator('a[href*="/trades/trade-for?"]').first.wait_for()
                 page.go_forward()
                 page.locator('#trade-target:not([hidden])').wait_for()
+                assert_target_action_layout(self, page)
                 self.assertEqual(page.get_by_label('Trade partner', exact=True).input_value(), '2')
                 page.reload()
                 page.locator('#trade-target:not([hidden])').wait_for()
+                assert_target_action_layout(self, page)
                 self.assertEqual(fixture.proposal(page)['received'], ['mcbride'])
 
     def test_refresh_retry_bounded_and_real_identity_rejection_never_retried(self):

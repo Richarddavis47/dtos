@@ -466,8 +466,10 @@
     if (target && !entryBlocked) {
       targetBox.append(node('h3', session.requiredOutgoingAsset ? 'Asset you are shopping' : 'Player or pick you want'), identity(target));
       const owner = workspace.teams.find(t => t.assets.some(a => a.asset_id === targetId));
-      const ownerLink = node('a', 'Current owner: ' + owner.team_name); ownerLink.href = '/teams/' + owner.roster_id; targetBox.append(ownerLink);
-      if (target.kind === 'player') { const dossier = node('a', 'Open player dossier'); dossier.href = '/players/' + encodeURIComponent(target.asset_id.replace(/^player:/, '')); targetBox.append(dossier); }
+      const targetActions = node('div', null, 'tw-target-actions');
+      const ownerLink = node('a', 'Current owner: ' + owner.team_name); ownerLink.href = '/teams/' + owner.roster_id; targetActions.append(ownerLink);
+      if (target.kind === 'player') { const dossier = node('a', 'Open player dossier'); dossier.href = '/players/' + encodeURIComponent(target.asset_id.replace(/^player:/, '')); targetActions.append(dossier); }
+      targetBox.append(targetActions);
     }
     for (const which of ['sent', 'received']) { const box = el('trade-' + which + '-chips'); box.replaceChildren(); for (const id of selected[which]) { const a = asset(id); if (a) box.append(assetRow(a, which, true)); else box.append(node('p', 'An asset is no longer available. Refresh this workspace.')); } }
     const count = selected.sent.length + selected.received.length;
@@ -1348,6 +1350,10 @@
     return String(value || '').replaceAll('compatible prepared publication', 'league data for this week')
       .replaceAll('Canonical Market', 'Market value').replaceAll('canonical Market', 'Market value')
       .replaceAll('disjoint reserve cover', 'different eligible backups')
+      .replaceAll('No legitimate bilateral construction clears the current constraints.', 'No offers met the requirements for both teams in this search.')
+      .replaceAll('legal-replacement production falls', 'projected points from eligible backups fall')
+      .replaceAll('legal-replacement production improves', 'projected points from eligible backups improve')
+      .replaceAll('legal-replacement production declines', 'projected points from eligible backups decline')
       .replaceAll('legal-replacement production', 'projected points from eligible backups')
       .replaceAll('bilateral recommendation', 'recommendation for both teams');
   }
@@ -1515,7 +1521,7 @@
       out.append(conflict);
     }
     if (body.near_misses?.length) {
-      const detail = node('details', null, 'tw-near-misses'); detail.append(node('summary', 'Evaluated near misses'));
+      const detail = node('details', null, 'tw-near-misses'); detail.append(node('summary', 'Other evaluated offers · not recommended'));
       for (const row of body.near_misses) {
         const p = row.proposal;
         if (!p || !row.evaluation) continue; // A near miss must be an assessed package.
@@ -1568,7 +1574,7 @@
       const qualified = (body.results || []).filter(qualifiedOffer);
       const other = (body.results || []).filter(row => !qualifiedOffer(row));
       out.append(node('h3', qualified.length ? `Qualified recommendations · ${qualified.length}` : 'No qualified recommendations'));
-      if (!qualified.length) out.append(node('p', body.quiet_state || 'No offer is endorsed as Worth Pursuing in this search. Optional or limited offers are shown separately.'));
+      if (!qualified.length) out.append(node('p', customerText(body.quiet_state) || 'No offer is endorsed as Worth Pursuing in this search. Optional or limited offers are shown separately.'));
       for (const row of qualified) {
         out.append(offerCard(row));
       }
@@ -1590,7 +1596,7 @@
     if (flow === 'shop' && body.markets) {
       const out = el('trade-result'); out.hidden = false; out.replaceChildren();
       const refineLink = node('a', 'Refine returns · optional', 'ds-action'); refineLink.href = '#shop-refinements'; out.append(refineLink);
-      if (!body.markets.length) out.append(node('p', body.quiet_state || 'No credible market in this bounded search.'));
+      if (!body.markets.length) out.append(node('p', customerText(body.quiet_state) || 'No credible market in this bounded search.'));
       for (const limitation of body.shop_preference?.limitations || []) out.append(node('p', limitation));
       for (const market of body.markets) {
         out.append(node('h3', team(market.counterparty_roster_id)?.team_name || 'Counterparty'),

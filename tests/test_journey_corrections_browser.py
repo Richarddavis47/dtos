@@ -128,7 +128,7 @@ class EvaluateLandingBrowserTests(unittest.TestCase):
                                     page.goto('https://dtos.test/trades/recommended')
                                     page.locator('#trade-find').click()
                                     page.wait_for_function('!document.querySelector("#trade-find").disabled')
-                                near = page.get_by_text('Evaluated near misses', exact=True)
+                                near = page.get_by_text('Other evaluated offers · not recommended', exact=True)
                                 near.click()
                                 self.assertIn('cannot supply or upload', page.locator('#trade-result').inner_text())
                                 self.assertEqual(page.get_by_role('link', name='Review current Market evidence').first.get_attribute('href'), '/market')

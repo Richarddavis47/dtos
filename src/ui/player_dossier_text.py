@@ -7,11 +7,11 @@ _NO_WEAKNESS = "No current evidence-backed weakness exceeds the v1 threshold."
 
 def outlook_text(text: str) -> str:
     if text == _LONG_TERM:
-        return ("A reliable multi-season outlook is not available. Age, NFL status and a weekly projection "
-                "do not tell us how long this player will keep producing. Compare current production and Market price separately.")
+        return ("Multi-season outlook unavailable. Current age, NFL status and weekly projections "
+                "cannot establish future production.")
     if text == 'Weekly evidence is disclosed at its actual horizon, not converted into a season-value score.':
-        return ("A full-season forecast is not available. Use the weekly Sleeper projection for that week's lineup; "
-                "it does not establish season-long production or value.")
+        return ("Use the weekly Sleeper projection for this week only. "
+                "Season-long production and value remain unknown.")
     return text
 
 
@@ -34,24 +34,24 @@ def strengths_text(report) -> tuple[str, ...]:
 
 
 def weaknesses_text(report) -> tuple[str, ...]:
-    rows = tuple(evidence_text(item) for item in report.weaknesses if item != _NO_WEAKNESS)
+    rows = tuple(dict.fromkeys(evidence_text(item) for item in report.weaknesses if item != _NO_WEAKNESS))
     if rows:
         return rows
     unverified_age = any(item.factor == 'Age-decline risk' and not item.available for item in report.risk.evidence)
     if unverified_age:
-        reason = ("Age-related assessment is incomplete because age is missing. " if report.profile.age is None else
-                  "Age-related assessment could not be verified from the available evidence. ")
-        return (reason + "No specific weakness is established by the remaining checks; role changes and injury history still need review.",)
-    return ("No specific weakness is established by the available age and reported-status checks. "
-            "Role changes and injury history are not fully assessed; this is not a guarantee of availability.",)
+        reason = ("Age is missing; age risk is unknown. " if report.profile.age is None else
+                  "Age risk is unverified. ")
+        return (reason + "Other checks establish no specific weakness; role changes and injury history need review.",)
+    return ("Age and reported status establish no specific weakness. "
+            "Role changes, injury history and availability remain uncertain.",)
 
 
 def evidence_text(text: str) -> str:
     return {
         "Age is at or above the position-specific v1 risk threshold.":
-            "His age reaches the model's positional caution range. This is an age-related warning, not a prediction of retirement or future production.",
+            "Age warrants caution for this position; it does not predict retirement or future points.",
         "Age is below the position-specific v1 risk threshold.":
-            "His age is below the model's positional caution range. That does not establish future seasons of production.",
+            "Below this position's age caution range; future production remains unknown.",
     }.get(text, outlook_text(text))
 
 
