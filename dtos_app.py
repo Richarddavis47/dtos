@@ -15,6 +15,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 
 from src.core.sync_status import synchronization_warning
+from src.ui.customer_experience import readable_time
 
 from app_metadata import APPLICATION_NAME, VERSION
 from config import (
@@ -953,7 +954,7 @@ def page(title: str, body: str, commissioner_chrome: bool = False) -> HTMLRespon
     header = with_back(page_header(title, league_name=league_name, last_updated=str(sync)), '' if own_heading else back)
     standard_chrome = f"""<div class="ds-shell"><header class="top"><div class="brand"><a class="brand-mark" href="/" aria-label="DTOS Home">{APPLICATION_NAME}</a><p>{escape(league_name)} Front Office</p></div><form method="post" action="/sync">{csrf_html}<button class="btn" type="submit">Sync League</button></form>{secondary_navigation()}</header>{account_html}
 {manager_navigation(title, roster_id=navigation_roster_id, include_tools=False)}</div>{header}"""
-    footer = f'<footer class="footer"><b>League Sync:</b> {escape(str(sync))} · Intelligence is generated from the latest cached league state. Automatic refresh every {SYNC_MINUTES} minutes while service is active.</footer>'
+    footer = f'<footer class="footer"><details class="cx-evidence"><summary>League data · {escape(readable_time(sync))}</summary><p>Last recorded league sync: <code>{escape(str(sync))}</code>. Automatic refresh is scheduled every {SYNC_MINUTES} minutes while the service is active. Projections, results and Market prices keep their own source dates and qualifications.</p></details></footer>'
     html = f"""<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{escape(title)} · {APPLICATION_NAME}</title><style>{CSS}</style>{navigation_head}</head>
 <body><main class="wrap">{"" if commissioner_chrome else standard_chrome}{error_html}{body}{"" if commissioner_chrome else footer}</main></body></html>"""
     return HTMLResponse(html)
