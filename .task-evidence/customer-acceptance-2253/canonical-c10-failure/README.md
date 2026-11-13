@@ -1,0 +1,5 @@
+# Original failed C10 canonical evidence
+
+Exact source3c7868670db59712ad560736a9dfd25b348646c6, treecc811e8d6f2c0709cb0574d34c79625bd85a7688. Hosted run43513320388 completed4504 tests with1 failure and1 error. Six gates passed, one failed, three did not run. This is not release approval. Full original console and event log are split into exact ordered readable parts. Manifest checksums verify concatenation and published bytes. Archive14082054078 SHA256f69537f4cd782211343ba8067a63c593ec3bbbb56e8e07b3b80dd14ae1bd8844 was independently checked against all910 sealed members. Original transport ZIP remains preserved privately on the existing executor; these are its unchanged named text members.
+
+The dossier failure expects obsolete display wording. The browser error followed real capacity deferral:380516352 usable bytes versus402653184 required. A passing retry alone does not explain it. Fixture retained-response accounting is under investigation; no admission guard change is authorized or implemented. Existing local validation is allowed to finish separately.
