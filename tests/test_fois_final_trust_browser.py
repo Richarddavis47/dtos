@@ -88,13 +88,16 @@ class FinalTrustBrowserTests(unittest.TestCase):
         def check(page, path, width):
             disclosures = page.locator('details')
             for item in disclosures.all():
-                item.evaluate('e=>e.open=true')
+                summary = item.locator(':scope > summary')
+                summary.focus()
+                summary.press('Enter')
+                self.assertTrue(item.evaluate('e=>e.open'))
             text = page.inner_text('body')
             self.assertIn('No specific need-based negotiation angle', text)
             self.assertNotIn('addressing an observed roster need', text)
             self.assertIn('Complementary position needs', text)
             self.assertNotIn('Acceptance: ', text)
-            control = page.get_by_text('Show Full Dossier Evidence', exact=True)
+            control = page.get_by_text('Profile calculations and sources', exact=True)
             control.focus()
             page.keyboard.press('Enter')
             self.assertFalse(control.evaluate('e=>e.parentElement.open'))

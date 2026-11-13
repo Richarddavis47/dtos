@@ -63,7 +63,7 @@ class TradeCenterBrowserTests(unittest.TestCase):
                         wait_until="domcontentloaded",
                         timeout=10_000,
                     )
-                    page.get_by_label("Counterparty", exact=True).select_option("2")
+                    page.get_by_label("Trade partner", exact=True).select_option("2")
 
                     def assert_filter(side: str, position: str) -> None:
                         if width < 760:
@@ -176,7 +176,7 @@ class TradeCenterBrowserTests(unittest.TestCase):
 
             page.route("**/*", route)
             page.goto("https://dtos.test/trades/create")
-            page.get_by_label("Counterparty", exact=True).select_option("2")
+            page.get_by_label("Trade partner", exact=True).select_option("2")
             self.assertEqual(page.get_by_role("button", name="My assets", exact=True).count(), 1)
             self.assertEqual(page.get_by_role("button", name="Their assets", exact=True).count(), 1)
             self.assertEqual(page.locator('#trade-sent-board').get_by_role("button", name="PICKS", exact=True).count(), 1)

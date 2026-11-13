@@ -230,7 +230,7 @@ class ScoutWorkspaceStateBrowserTests(unittest.TestCase):
     def test_explicit_shop_replaces_manual_package_and_preserves_locks(self):
         with self.page() as (page, requests):
             self.ready(page, '/trades/create')
-            page.get_by_label('Counterparty', exact=True).select_option('2')
+            page.get_by_label('Trade partner', exact=True).select_option('2')
             for value in ('player:a', 'player:d'):
                 page.locator(f'#trade-sent-board button[data-asset-id="{value}"]').click()
             page.get_by_role('button', name='Their assets', exact=True).click()
@@ -326,7 +326,7 @@ class ScoutWorkspaceStateBrowserTests(unittest.TestCase):
                 page.click('#trade-find')
                 page.locator('.tw-conflict').wait_for()
                 self.assertIn('required outgoing Shop asset', page.locator('.tw-conflict').inner_text())
-                page.get_by_label('Counterparty', exact=True).select_option('2')
+                page.get_by_label('Trade partner', exact=True).select_option('2')
                 page.get_by_role('button', name='Their assets', exact=True).click()
                 page.locator('#trade-received-board button[data-asset-id="2-QB-0"]').click()
                 if not page.locator('#shop-refinements').evaluate('n => n.open'):

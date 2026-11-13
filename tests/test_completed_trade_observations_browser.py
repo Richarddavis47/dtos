@@ -119,7 +119,7 @@ class CompletedTradeObservationBrowserTests(unittest.TestCase):
                                     later = '/trades/history/'+fixtures.LATER+'?from_trade='+fixtures.ROOT
                                     page.locator('.timeline-sides a[href="'+pick+'"]').first.click()
                                     page.wait_for_url('**'+pick)
-                                    self.assertIn('Consumed by verified draft conversion', page.locator('body').inner_text())
+                                    self.assertIn('Pick used in draft', page.locator('body').inner_text())
                                     page.locator('a[href="'+player+'"]').first.click()
                                     page.wait_for_url('**'+player)
                                     page.locator('a[href="'+later+'"]').first.click()

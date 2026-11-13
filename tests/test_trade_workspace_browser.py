@@ -39,7 +39,7 @@ class TradeWorkspaceBrowserTests(unittest.TestCase):
 
                         page.route("**/*", route)
                         page.goto("https://dtos.test/trades/create", wait_until="domcontentloaded")
-                        page.get_by_label("Counterparty", exact=True).select_option("2")
+                        page.get_by_label("Trade partner", exact=True).select_option("2")
                         own = page.locator("#trade-sent-board")
                         own.get_by_role("button", name="Add Player 1-QB-0 — you send", exact=True).click()
                         own.get_by_role("button", name="PICKS", exact=True).click()
@@ -121,14 +121,14 @@ class TradeWorkspaceBrowserTests(unittest.TestCase):
                                 page.goto(f"https://dtos.test/trades/{workflow}?asset_id={target}&owner_roster_id=1")
                                 page.locator(f'#trade-{expected_side}-chips button[data-asset-id="{target}"]').wait_for(state="attached")
                                 if workflow == "trade-for":
-                                    self.assertEqual(page.get_by_label("Counterparty", exact=True).input_value(), "2")
+                                    self.assertEqual(page.get_by_label("Trade partner", exact=True).input_value(), "2")
                                 self.assertTrue(page.get_by_role('region', name='Selected trade target').is_visible())
                                 search = page.get_by_role("button", name="Find offers" if workflow == "shop" else "Find offers", exact=True)
                                 search.wait_for()
                                 self.assertTrue(search.is_visible())
                             page.goto("https://dtos.test/trades/recommended")
                             page.locator('#trade-asset-options > summary').click()
-                            page.get_by_label("Counterparty", exact=True).select_option("2")
+                            page.get_by_label("Trade partner", exact=True).select_option("2")
                             self.assertEqual(page.locator('#trade-builder').get_attribute('data-trade-workflow'), 'recommended')
                         page.close()
             finally:

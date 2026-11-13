@@ -351,7 +351,7 @@ class CapitalStrategyTests(unittest.TestCase):
                                 content_type=response.headers.get('content-type'), body=response.content)
                         page.route('**/*', route)
                         page.goto('https://dtos.test/trades/create?front_office=2')
-                        page.get_by_label('Counterparty', exact=True).select_option('1')
+                        page.get_by_label('Trade partner', exact=True).select_option('1')
                         page.get_by_label('Trade strategy', exact=True).select_option('WIN NOW')
                         page.locator('#trade-sent-board button[data-asset-id="2028-R1-4"]').click()
                         if width < 760:

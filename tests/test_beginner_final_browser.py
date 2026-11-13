@@ -207,7 +207,7 @@ class FinalResetBrowserTests(unittest.TestCase):
                     self.assertLess(picker_y, 900, (width, picker_y))
                     self.assertNotIn("Market evidence", own.inner_text())
                     page.locator("#trade-strategy").select_option("REBUILD")
-                    page.get_by_label("Counterparty", exact=True).select_option("2")
+                    page.get_by_label("Trade partner", exact=True).select_option("2")
                     own.get_by_role(
                         "button", name="Add Player 1-QB-0 — you send", exact=True
                     ).click()
@@ -322,7 +322,7 @@ class FinalResetBrowserTests(unittest.TestCase):
                     own.get_by_role("searchbox").wait_for()
                     self.assertEqual(page.locator("#trade-partner").input_value(), "")
                     page.goto("https://dtos.test/trades/trade-for")
-                    page.get_by_label("Counterparty", exact=True).select_option("2")
+                    page.get_by_label("Trade partner", exact=True).select_option("2")
                     if width < 760:
                         self.assertTrue(
                             page.locator("#trade-received-board").is_visible()
@@ -403,7 +403,7 @@ class FinalResetBrowserTests(unittest.TestCase):
                     page.goto("https://dtos.test/trades/create?front_office=2")
                     page.locator("#trade-sent-board input[type=search]").wait_for()
                     page.locator("#trade-strategy").select_option("WIN NOW")
-                    page.get_by_label("Counterparty", exact=True).select_option("1")
+                    page.get_by_label("Trade partner", exact=True).select_option("1")
                     page.locator("#trade-sent-board").get_by_role(
                         "button", name="Add Player 2-QB-0 — you send", exact=True
                     ).click()
