@@ -5,7 +5,7 @@ from types import SimpleNamespace
 import unittest
 from unittest.mock import Mock, patch
 
-from components.commissioner import commissioner_desk, front_office_summary
+from components.commissioner import commissioner_desk, front_office_summary, league_intelligence
 from components.front_office_intelligence import front_office_center
 from services.front_office_intelligence import build_front_office_center
 from src.core.competitive_window.models import CompetitiveWindowClassification
@@ -102,6 +102,20 @@ class CustomerSpecialistPresentationTests(unittest.TestCase):
         self.assertNotIn("Future explanation hook", full)
         self.assertIn("Detailed Evidence", full)
         self.assertNotIn("Four engines / one answer", full)
+        for missing in (None, float('nan'), float('inf'), -float('inf'), 'null', 'None'):
+            stats = dict(view['league_intelligence'], average_team_grade=missing,
+                         contenders=missing, rebuilders=missing)
+            rendered = league_intelligence({'league_intelligence': stats})
+            self.assertNotIn('Average Team Grade', VisibleText(rendered).value)
+            self.assertIn('Recorded classification counts are not established.', rendered)
+            for token in ('>None<', '>null<', '>nan<', '>inf<', '>-inf<', 'None contender', 'nan contender'):
+                self.assertNotIn(token, rendered)
+        for value in (0, -2.125):
+            stats = dict(view['league_intelligence'], league_strength=value,
+                         contenders=0, rebuilders=0)
+            rendered = league_intelligence({'league_intelligence': stats})
+            self.assertIn(f'<b>{value}</b>', rendered)
+            self.assertIn('Recorded classifications: 0 contender; 0 rebuild.', rendered)
 
     def test_recorded_pick_headline_does_not_claim_inventory_completeness(self):
         fixture = commissioner_controls.CommissionerDeskTests()

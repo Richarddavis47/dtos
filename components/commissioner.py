@@ -168,11 +168,14 @@ def league_intelligence(view: dict[str, Any]) -> str:
         ("Trending Up", intelligence["trending_up"]), ("Trending Down", intelligence["trending_down"]),
     )
     def supported(value):
-        return (value is not None and str(value).strip() not in {"", "Unknown", "Not established"}
-                and not str(value).strip().startswith("Unavailable"))
+        display = available(value, reason="").strip()
+        return bool(display) and display not in {"Unknown", "Not established"} and not display.startswith("Unavailable")
     cards = "".join(f'<article class="cd-card cd-intel"><span>{escape(label)}</span><b>{escape(str(value))}</b></article>' for label, value in values if supported(value))
     missing = [label for label, value in values if not supported(value)]
-    details = source_details(('<p>No supported result is available for: ' + escape(', '.join(missing)) + '.</p>' if missing else '') + '<p>These missing assessments do not establish a team weakness or a championship forecast.</p>' + f'<p>Recorded classification counters: {intelligence["contenders"]} contender and {intelligence["rebuilders"]} rebuild classifications. These are not complete league counts when team classifications are missing.</p>', summary="League assessment limits")
+    counts = [(available(intelligence[key], reason=""), label) for key, label in (("contenders", "contender"), ("rebuilders", "rebuild"))]
+    count_text = ("Recorded classifications: " + "; ".join(f"{value} {label}" if value else f"{label} count not established" for value, label in counts) + "."
+                  if any(value for value, _ in counts) else "Recorded classification counts are not established.")
+    details = source_details(('<p>No supported result is available for: ' + escape(', '.join(missing)) + '.</p>' if missing else '') + '<p>These missing assessments do not establish a team weakness or a championship forecast.</p>' + f'<p>{escape(count_text)} These are not complete league counts when team classifications are missing.</p>', summary="League assessment limits")
     return f'<section class="cd-section"><div class="cd-section-head"><div><h2>League Intelligence</h2><p>Supported league facts</p></div></div><div class="cd-intelligence">{cards}</div>{details}</section>'
 
 

@@ -54,9 +54,15 @@ class MarketTrendCurrentBrowserTests(unittest.TestCase):
                         trend = page.locator('section.card').filter(has=page.locator('p.eyebrow', has_text='Observed Market Trend'))
                         text = trend.inner_text()
                         self.assertIn('+100.00 Market points', text)
-                        self.assertIn('Historical to current publication', text)
-                        self.assertIn('2026-07-01', text)
-                        self.assertIn('2026-08-31', text)
+                        self.assertIn('Saved price to latest update', text)
+                        self.assertIn('Jul 1, 2026', text)
+                        self.assertIn('Aug 31, 2026', text)
+                        # The real disclosure preserves exact source clocks and
+                        # scope alongside the concise human-readable comparison.
+                        source_text = summary.locator('..').inner_text()
+                        self.assertIn('Historical to current publication', source_text)
+                        self.assertIn('2026-07-01', source_text)
+                        self.assertIn('2026-08-31', source_text)
                         self.assertIn('freshness is not established', text)
                         self.assertLessEqual(page.evaluate('document.documentElement.scrollWidth'), width)
                         box = trend.bounding_box()

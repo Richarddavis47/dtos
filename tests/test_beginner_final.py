@@ -4,6 +4,7 @@ import unittest
 from html import unescape
 from urllib.parse import urlencode
 from unittest.mock import AsyncMock, patch
+from bs4 import BeautifulSoup
 
 from components.commissioner import league_intelligence
 from routes.home import create_home_router
@@ -123,7 +124,8 @@ class FinalPickOriginTests(unittest.TestCase):
         self.assertEqual(r.status_code, 200, r.text)
         self.assertIn("Back to Market", r.text)
         self.assertNotIn("Back to My Team draft capital", r.text)
-        self.assertIn("Consumed by verified draft conversion", r.text)
+        self.assertIn("Pick used in draft", r.text)
+        self.assertIn("Draft selection", r.text)
         self.assertNotIn(">Shop Asset<", r.text)
         for params, label in [
             ({"from_team": 1}, "Back to My Team draft capital"),
@@ -218,14 +220,28 @@ class FinalCommissionerTests(unittest.TestCase):
             "trending_up",
             "trending_down",
         )
-        for missing in (None, float("nan"), "null", "None"):
+        for missing in (None, float("nan"), float("inf"), -float("inf"), "null", "None"):
             data = dict.fromkeys(keys, missing)
             html = league_intelligence({"league_intelligence": data})
-            for raw in (">None<", ">null<", ">nan<", "Noneth"):
+            for raw in (">None<", ">null<", ">nan<", ">inf<", ">-inf<", "Noneth", "None contender", "nan contender", "inf contender"):
                 self.assertNotIn(raw, html)
-            self.assertIn("Unavailable", html)
+            soup = BeautifulSoup(html, 'html.parser')
+            self.assertEqual(soup.select('.cd-intelligence > article'), [])
+            limits = soup.find('summary', string='League assessment limits')
+            self.assertIsNotNone(limits)
+            self.assertFalse(limits.parent.has_attr('open'))
+            self.assertIn("No supported result is available for:", html)
+            self.assertIn("Recorded classification counts are not established.", html)
         supported = dict.fromkeys(keys, None)
         supported.update(average_team_grade=0, contenders=3)
         html = league_intelligence({"league_intelligence": supported})
         self.assertIn("<b>0</b>", html)
-        self.assertIn("<b>3</b>", html)
+        self.assertIn("Recorded classifications: 3 contender; rebuild count not established.", html)
+        self.assertIn("These are not complete league counts", html)
+        # Finite signed observations are preserved by the presentation gate;
+        # this does not validate an analytical model or invent missing counts.
+        supported.update(league_strength=-2.125, contenders=0, rebuilders=0)
+        html = league_intelligence({"league_intelligence": supported})
+        self.assertIn("<b>-2.125</b>", html)
+        self.assertIn("<b>0</b>", html)
+        self.assertIn("Recorded classifications: 0 contender; 0 rebuild.", html)

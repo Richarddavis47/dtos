@@ -150,6 +150,37 @@
         ? market(side.sent) + ' sent / ' + market(side.received) + ' received'
         : 'Incomplete or unavailable; no complete package value inferred.');
     }
+    function recordedPeriod(recorded) {
+      let row = recorded;
+      if (typeof row === 'string') { try { row = JSON.parse(row); } catch (_) { row = null; } }
+      return row && typeof row === 'object' ? row : null;
+    }
+    function partnerCase(entry) {
+      const row = recordedPeriod(entry.context?.evaluation?.decision_context?.partner_lineup_comparisons?.current_week);
+      const supported = row && ['supported', 'provisional'].includes(row.state) && number(row.delta) && Array.isArray(row.weeks) && row.weeks.length;
+      return 'Their case: Fit is an inference, not confirmed willingness. ' + (supported
+        ? 'Recorded week ' + row.weeks.join(', ') + ' lineup change: ' + signed(row.delta) + ' projected points' + (row.state === 'provisional' ? ' · provisional' : '') + '.'
+        : 'Their projected lineup change is unverified; no production benefit is assumed.');
+    }
+    function participationCautions(entry) {
+      const e = entry.context?.evaluation || {}, cautions = new Set();
+      const material = /\b(?:OUT|IR|PUP|SUSPENDED|INACTIVE|RETIRED)\b|Bye \/ no scheduled game/i;
+      const diagnostics = e.dimensions?.roster_diagnostics || {};
+      const period = known(diagnostics.week) ? 'Week ' + diagnostics.week : 'week not recorded';
+      for (const [side, title] of [['active', 'Your team'], ['partner', 'Their team']]) {
+        const rows = diagnostics.sides?.[side]?.post_eligibility;
+        for (const row of (Array.isArray(rows) ? rows : []).slice(0, 64)) {
+          if (row.name && material.test(String(row.status || '') + ' ' + String(row.reason || '')))
+            cautions.add(title + ' after trade · ' + period + ': ' + row.name + ' · ' + (row.reason || String(row.status).toUpperCase()));
+        }
+      }
+      // Older records may retain a named warning only in the original prose.
+      // Keep that warning visible; never infer a player's participation state.
+      const source = [entry.summary.limitation, entry.summary.conditions, ...(e.major_risks || [])];
+      for (const text of source) for (const sentence of String(text || '').split(/\n|(?<=[.!?])\s+/))
+        if (material.test(sentence) && !entry.summary.cost?.includes(sentence)) cautions.add('Recorded warning: ' + sentence);
+      return [...cautions];
+    }
     function offer(entry, index, comparison) {
       const out = node('article', null, 'tw-comparison-offer'); out.dataset.comparisonSlot = String(index + 1);
       const capital = node('details'); capital.append(node('summary', 'Draft capital · picks before and after'), capitalView(entry.context?.draft_capital_record, node, environment().scope, true));
@@ -181,11 +212,18 @@
         out.append(node('p', (side === 'active' ? 'Your' : 'Their') + ' additional configured roster spots to resolve: ' +
           (number(spots) ? spots + '. No cut is assumed.' : 'Unknown; roster feasibility is not inferred.')));
       }
-      out.append(node('p', 'Main cost or risk: ' + s.cost, 'tw-drawback'),
-        node('p', 'Their case: ' + s.partnerReason), node('p', 'Conditions: ' + s.conditions, 'tw-drawback'));
-      if (s.limitation) out.append(node('p', 'Evidence limit: ' + s.limitation, 'tw-drawback'));
+      out.append(node('p', 'Main cost or risk: ' + s.cost, 'tw-drawback'), node('p', partnerCase(entry), 'tw-comparison-partner'));
+      const cautions = participationCautions(entry);
+      if (cautions.length) out.append(node('p', 'Availability to review: ' + cautions.join(' '), 'tw-comparison-risk-summary tw-drawback'));
+      const decision = entry.context?.evaluation?.decision_context || {};
+      const provisional = s.lineup?.state === 'provisional' || recordedPeriod(decision.lineup_comparisons?.current_week)?.state === 'provisional' || /\bprovisional\b/i.test(String(decision.qualification || ''));
+      if (s.limitation || provisional) out.append(node('p', (provisional ? 'Provisional assessment. ' : '') + 'Some availability or coverage remains unverified. Review the original assessment for the affected evidence.', 'tw-comparison-qualification tw-drawback'));
       const disclosure = node('details'); disclosure.append(node('summary', 'Original assessment · both teams and evidence limits'));
       disclosure.append(node('small', 'Captured ' + (entry.context?.identity?.captured_at || 'time unavailable') + '. Values and conclusions belong to this offer’s original assessment.'));
+      disclosure.append(node('p', 'Their original case: ' + s.partnerReason));
+      if (s.conditions !== entry.context?.evaluation?.decision_context?.decision_conditions)
+        disclosure.append(node('p', 'Conditions: ' + s.conditions, 'tw-drawback'));
+      if (s.limitation) disclosure.append(node('p', 'Evidence limit: ' + s.limitation, 'tw-drawback'));
       details(entry, disclosure); out.append(disclosure);
       out.append(capital);
       out.append(button('Remove offer ' + (index + 1), () => save(entries().filter((_, i) => i !== index))));

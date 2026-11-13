@@ -103,7 +103,7 @@ class CustomerTeamPresentationTests(unittest.TestCase):
         self.assertIn('Projected range: EARLY · LOW', _draft_capital(view))
 
     def test_roster_coverage_consolidates_unknowns_but_keeps_known_risks_and_scores(self):
-        from routes.teams import _roster_rooms
+        from routes.teams import _roster_projection_coverage, _roster_rooms
         players = [dict(id=str(i), name=f'Player {i}', position='RB', team='BUF',
                         roster_slot='Bench', availability_status=status,
                         intelligence=SimpleNamespace(market_value=0))
@@ -118,6 +118,8 @@ class CustomerTeamPresentationTests(unittest.TestCase):
         before = deepcopy(view)
         html = _roster_rooms(view)
         normal = DisclosureText(html).text
+        self.assertEqual(_roster_projection_coverage(view), '2/4 projections')
+        self.assertLess(html.index('class="thq-room"'), html.index('id="roster-evidence-summary"'))
         self.assertIn('Week 9 projections: ', normal)
         self.assertIn('2/4', normal)
         self.assertNotIn('Status unavailable', normal)
@@ -141,6 +143,7 @@ class CustomerTeamPresentationTests(unittest.TestCase):
             row.update(value=None, display='Unavailable', availability='unavailable', participation_note=None)
         html = _roster_rooms(view)
         normal = DisclosureText(html).text
+        self.assertEqual(_roster_projection_coverage(view), '0/4 projections')
         self.assertEqual(normal.count('0/4'), 2)  # projections and reported availability, never points
         self.assertNotIn('Unavailable', normal)
         self.assertNotIn('Participation unconfirmed', normal)
@@ -216,6 +219,7 @@ class CustomerHomeTeamHTTPTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         normal = DisclosureText(response.text).text
         self.assertIn('Your roster at a glance', normal)
+        self.assertIn('Full Roster · ', normal)
         self.assertIn('slots', normal)
         self.assertIn('Market value:', normal)
         self.assertNotIn('Canonical Market', normal)

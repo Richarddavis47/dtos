@@ -466,6 +466,7 @@ class FinalResetBrowserTests(unittest.TestCase):
 class FinalNavigationBrowserTests(unittest.TestCase):
     def test_pick_market_origin_and_read_only_franchise_routes(self):
         import dtos_app
+        from urllib.parse import parse_qs
         from routes.historical_assets import create_historical_assets_router
         from routes.hq import create_hq_router
         from tests import test_beginner_market as market_base
@@ -589,8 +590,20 @@ class FinalNavigationBrowserTests(unittest.TestCase):
                     self.assertEqual(page.locator(".market-asset").count(), 3)
                     page.locator(".market-asset").first.click()
                     selected = page.url.split("#")[0]
-                    page.get_by_role("link", name="Open player").click()
-                    self.assertIn("/picks/", page.url)
+                    exact_pick = parse_qs(urlsplit(selected).query)["selected"][0]
+                    kind, season, round_number, original = exact_pick.split(":")
+                    self.assertEqual(kind, "pick")
+                    self.assertEqual((season, round_number), ("2029", "2"))
+                    destination = f"/picks/PICK-{season}-R{round_number}-ORIG{original}"
+                    open_pick = page.get_by_role("link", name="Open pick", exact=True)
+                    self.assertEqual(urlsplit(open_pick.get_attribute("href")).path, destination)
+                    open_pick.click()
+                    self.assertEqual(urlsplit(page.url).path, destination)
+                    self.assertIn("Future draft pick", page.locator("main").inner_text())
+                    shop = page.get_by_role("link", name="Shop Asset", exact=True)
+                    shop_query = parse_qs(urlsplit(shop.get_attribute("href")).query)
+                    self.assertEqual(shop_query["asset_id"], [f"{season}-R{round_number}-{original}"])
+                    self.assertEqual(shop_query["owner_roster_id"], ["1"])
                     page.reload()
                     back = page.get_by_role("link", name="← Back to Market results")
                     back.click()
@@ -608,12 +621,17 @@ class FinalNavigationBrowserTests(unittest.TestCase):
                     self.assertGreater(page.locator(".market-asset").count(), 0)
                     page.locator(".market-asset").first.click()
                     offset_selected = page.url.split("#")[0]
-                    page.get_by_role("link", name="Open player").click()
+                    page.get_by_role("link", name="Open pick", exact=True).click()
                     # A newer explicit Market origin wins over stale team context.
                     page.goto(page.url + "&from_team=1")
                     page.get_by_role("link", name="← Back to Market results").click()
                     self.assertEqual(page.url, offset_selected)
                     self.assertIn("offset=10", page.url)
+                    # A syntactically valid old pick without a current native
+                    # right is historical/unknown, never an acquisition target.
+                    page.goto("https://dtos.test/picks/PICK-2024-R2-ORIG1?front_office=1")
+                    self.assertIn("Historical or unconfirmed pick right", page.locator("main").inner_text())
+                    self.assertEqual(page.locator('a[href^="/trades/shop"],a[href^="/trades/trade-for"]').count(), 0)
                     page.goto(
                         "https://dtos.test/market?q=free+agents+Boston&availability=taxi"
                     )
@@ -666,15 +684,31 @@ class FinalNavigationBrowserTests(unittest.TestCase):
                     owner.store.activate(owner.account_id, "league-1")
                     owner.data["league"]["league_id"] = "league-1"
                     page.goto("https://dtos.test/commissioner")
-                    self.assertEqual(
-                        page.locator(".cd-intelligence").last.locator("b").count(), 17
-                    )
-                    for text in (
-                        page.locator(".cd-intelligence")
-                        .last.locator("b")
-                        .all_text_contents()
-                    ):
+                    evidence = page.get_by_text("Detailed Evidence · league assessments", exact=True)
+                    self.assertFalse(evidence.locator("..").evaluate("e=>e.open"))
+                    evidence.focus()
+                    self.assertNotEqual(evidence.evaluate("e=>getComputedStyle(e).outlineStyle"), "none")
+                    evidence.press("Enter")
+                    self.assertTrue(evidence.locator("..").evaluate("e=>e.open"))
+                    facts = page.locator(".cd-intelligence").last
+                    # These facts come directly from this fixture's recorded
+                    # player ages and twelve owned picks, not a composite grade.
+                    for label, expected in (("Average Roster Age", "24.9"), ("Draft Capital Concentration", "33%")):
+                        card = facts.locator(".cd-intel").filter(has=page.get_by_text(label, exact=True))
+                        self.assertEqual(card.locator("b").inner_text(), expected)
+                    missing_models = ("Average Team Grade", "League Strength", "League Parity", "Trending Up", "Trending Down")
+                    for label in missing_models:
+                        self.assertEqual(facts.locator(".cd-intel").filter(has=page.get_by_text(label, exact=True)).count(), 0)
+                    for text in facts.locator("b").all_text_contents():
                         self.assertNotIn(text, ("None", "null", "NaN", "nan"))
+                    limits = page.get_by_text("League assessment limits", exact=True)
+                    self.assertFalse(limits.locator("..").evaluate("e=>e.open"))
+                    limits.focus()
+                    limits.press("Enter")
+                    self.assertTrue(limits.locator("..").evaluate("e=>e.open"))
+                    for label in missing_models:
+                        self.assertIn(label, limits.locator("..").inner_text())
+                    self.assertIn("These are not complete league counts", limits.locator("..").inner_text())
                     self.assertLessEqual(
                         page.evaluate("document.documentElement.scrollWidth"), width
                     )

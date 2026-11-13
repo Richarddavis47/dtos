@@ -197,7 +197,8 @@ class TeamHeadquartersRequestSchedulingTests(unittest.IsolatedAsyncioTestCase):
         self.assertIn("<h1>Team 1</h1>", team_response.text)
         self.assertIn('data-dtos-component="recommendation"', team_response.text)
         self.assertIn('submitted starters</summary>', team_response.text)
-        self.assertIn('Full Roster</summary>', team_response.text)
+        self.assertIn('Full Roster · ', team_response.text)
+        self.assertIn('projections</summary>', team_response.text)
 
     async def test_team_hq_worker_failure_propagates(self) -> None:
         app = await self._application(fixture_data())

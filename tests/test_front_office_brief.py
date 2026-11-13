@@ -182,7 +182,8 @@ class FrontOfficeBriefTests(unittest.TestCase):
         items = select_insights(facts,[],[])
         qb = next(i for i in items if 'position:QB' in i['issues'])
         self.assertIn('28', qb['reason'])
-        self.assertIn('not automatically surplus', qb['drawback'])
+        self.assertIn('Having useful backups does not mean they are safe to trade.', qb['drawback'])
+        self.assertIn('do not cover simultaneous absences', qb['drawback'])
         self.assertEqual(facts['assessment'].roster_evidence.optimal_lineup_projection,59)
         self.assertNotIn('/trades/shop', qb['href'])
 

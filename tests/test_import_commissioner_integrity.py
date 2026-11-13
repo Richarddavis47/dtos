@@ -181,9 +181,9 @@ class CommissionerLineupTests(unittest.TestCase):
 
     def test_missing_scoring_withholds_lineup_not_a_zero(self):
         html = front_office_summary(self.view(no_scoring=True))
-        self.assertIn('Unavailable projected points', html)
-        self.assertIn('Percentile unavailable', html)
-        self.assertIn('Lineup-relative grade unavailable', html)
+        self.assertIn('Lineup comparison not ready', html)
+        self.assertIn('League rank is withheld until a supported comparison is ready.', html)
+        self.assertIn('missing scoring is not zero', html)
         self.assertNotIn('0 projected points', html)
 
     def test_rendered_phone_disclosure_and_no_overflow(self):

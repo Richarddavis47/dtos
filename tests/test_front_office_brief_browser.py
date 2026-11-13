@@ -105,9 +105,12 @@ class FrontOfficeBriefBrowserTests(unittest.TestCase):
             browser=launch_chromium(pw,headless=True)
             try:
                 page=f.f.browser_page(browser,390,844)
+                generated, errors = [], []
+                page.on('request', lambda r: generated.append(r.url) if '/api/trades/generate' in r.url else None)
+                page.on('pageerror', lambda e: errors.append(str(e)))
                 with patch('services.home_trade_opportunities.source_identity',return_value=None):
                     page.goto('https://dtos.test/')
-                    page.get_by_text('Trade pricing is unavailable or changing.',exact=False).wait_for()
+                    page.get_by_text('Trade prices are unavailable or changing.',exact=False).wait_for()
                     self.assertIn('owned future first-round',page.locator('#home-opportunity-cards').inner_text())
                     self.assertEqual(page.locator('.home-opportunity').count(),0)
                 page.reload()
@@ -136,6 +139,8 @@ class FrontOfficeBriefBrowserTests(unittest.TestCase):
                 page.wait_for_load_state('networkidle')
                 self.assertEqual(page.locator('.home-opportunity').count(),0)
                 self.assertNotIn('CURRENT',page.locator('#home-opportunity-cards').inner_text())
+                self.assertFalse(generated, generated)
+                self.assertFalse(errors, errors)
                 page.close()
             finally:
                 browser.close()

@@ -88,7 +88,7 @@ class TrackerPhase2BrowserTests(unittest.TestCase):
                 self.assertEqual(len(production_requests), 1)
                 self.bounded(page, width, 'original and loaded partial production')
                 page.locator(f'a[href="/picks/{fixtures.PICK}?from_trade={fixtures.ROOT}"]').first.click()
-                self.assertIn('Consumed by verified draft conversion', page.locator('main').inner_text())
+                self.assertIn('Pick used in draft', page.locator('main').inner_text())
                 player = page.get_by_role('link', name='Denzel Boston', exact=True)
                 self.assertIn('from_trade=' + fixtures.ROOT, player.get_attribute('href'))
                 player.click()

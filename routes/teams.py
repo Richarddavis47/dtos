@@ -172,6 +172,15 @@ def _present_label(value) -> bool:
     }
 
 
+def _roster_projection_coverage(view: dict[str, Any]) -> str:
+    """Compact evidence count for the roster's existing disclosure heading."""
+    players = [player for group in view['roster_groups'].values() for player in group]
+    players.extend(view['other_players'])
+    supported = sum(number((view['projection_views'].get(str(player['id'])) or {}).get('value')) is not None
+                    for player in players)
+    return f'{supported}/{len(players)} projections'
+
+
 def _roster_rooms(view: dict[str, Any]) -> str:
     labels = {"QB": "Quarterbacks", "RB": "Running Backs", "WR": "Wide Receivers", "TE": "Tight Ends", "Other": "Other Players"}
     rooms, source_rows = [], []
@@ -220,7 +229,10 @@ def _roster_rooms(view: dict[str, Any]) -> str:
                f'Availability: <b>{reported}/{total}</b> reported · Market prices: <b>{priced}/{total}</b> available.</p>'
                '<p>Unreported availability remains unknown. A projection does not confirm playing time; missing projections or prices are not zero.</p>'
                '<details><summary>Player-by-player availability and projection coverage</summary><ul>' + ''.join(source_rows) + '</ul></details></aside>')
-    return summary + "".join(rooms)
+    # Keep the roster itself close to its heading on a phone. The heading has
+    # the compact projection count; the one full coverage explanation follows
+    # the players, while player-specific playing-time risks remain beside them.
+    return "".join(rooms) + summary
 
 
 def _key_players(view):
@@ -521,7 +533,7 @@ def create_teams_router(
 <header class="thq-header"><div class="thq-identity">{avatar}<div class="thq-title"><div class="identity-kicker">Manager: {escape(team['owner'])}</div><div class="thq-name-row"><h1>{escape(team['team_name'])}{you_badge(data, roster_id)}</h1>{champion_badge(defending_champion(data), roster_id)}</div><p>{escape(performance["record"])} · {escape(performance["standing"])}</p></div></div><div class="thq-strategy">{strategy_control}<small>League evidence updated: {escape(view['last_updated'])}</small></div></header>
 {outlook_panel(assessment_outlook, editable=editable, roster_id=roster_id)}
 {lineup_alert}
-<section class="thq-section" id="full-roster"><details class="thq-strength-detail" id="my-team-roster" open><summary>Full Roster</summary><div class="thq-roster">{_roster_rooms(view)}</div></details><details class="thq-strength-detail" id="my-team-key-players"><summary>Key players by Market value</summary>{_key_players(view)}</details></section>
+<section class="thq-section" id="full-roster"><details class="thq-strength-detail" id="my-team-roster" open><summary>Full Roster · {escape(_roster_projection_coverage(view))}</summary><div class="thq-roster">{_roster_rooms(view)}</div></details><details class="thq-strength-detail" id="my-team-key-players"><summary>Key players by Market value</summary>{_key_players(view)}</details></section>
 <section class="thq-section" id="draft-capital"><div class="thq-section-head"><h2>Draft Capital</h2><span>Your owned future picks</span></div><div class="thq-picks">{_draft_capital(view)}</div><p class="muted">Pick details preserve the original franchise and current owner. A pick’s future draft position is unknown unless a supported range is shown.</p></section>
 
 <section class="thq-section" id="positional-depth"><div class="thq-section-head"><h2>Starter strength and positional depth</h2><span>{escape('Week ' + str(overview['projection_week']) + ' · ' if overview['projection_week'] is not None else 'Current roster · ')}Lineup and backup projections from Sleeper</span></div>{_positional_depth(view)}</section>

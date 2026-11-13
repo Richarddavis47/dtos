@@ -35,7 +35,7 @@ class UnmatchedImportRecoveryTests(unittest.TestCase):
                 self.assertEqual(response.status_code, 200)
                 self.assertIn('could not confidently match your team', response.text)
                 self.assertIn('href="/account/leagues">Your leagues</a>', response.text)
-                self.assertIn('href="/account/sleeper">Review Sleeper identity</a>', response.text)
+                self.assertIn('href="/account/sleeper">Review Sleeper account</a>', response.text)
                 self.assertEqual(response.headers['cache-control'], 'no-store, private')
                 leagues = self.client.get('/account/leagues')
                 self.assertEqual(leagues.status_code, 200)
@@ -111,7 +111,7 @@ class UnmatchedImportRecoveryTests(unittest.TestCase):
             for discovered in (False, True):
                 with self.subTest(width=width, discovered=discovered), self.browser(width, height) as page:
                     for destination, label in (('/account/leagues', 'Your leagues'),
-                                               ('/account/sleeper', 'Review Sleeper identity')):
+                                               ('/account/sleeper', 'Review Sleeper account')):
                         page.goto(self.origin + '/account/leagues', wait_until='networkidle')
                         if discovered:
                             page.get_by_role('heading', name='Second league', exact=True).locator('..').get_by_role('button', name='Add to DTOS', exact=True).click()

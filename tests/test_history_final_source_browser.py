@@ -77,6 +77,8 @@ class HistoryFinalSourceBrowserTests(unittest.TestCase):
         data = self.fixture.data
         with patch.object(data_platform, 'warehouse', SnapshotWarehouse()), patch.dict(self.application.STATE, {'data': data, 'last_sync': '2026-10-13T02:00:00Z'}), sync_playwright() as pw:
             browser, page = self.browser(pw)
+            requests = []
+            page.on('request', lambda request: requests.append(request.url))
             for width, height in [(320, 568), (375, 667), (390, 844), (390, 432), (1165, 800)]:
                 page.set_viewport_size({'width': width, 'height': height})
                 for trade in (fixtures.ROOT, fixtures.FAAB, '1414718106177122304'):
@@ -87,14 +89,28 @@ class HistoryFinalSourceBrowserTests(unittest.TestCase):
                     self.assertIn(200, response)
                     self.assertEqual(disclosure.get_attribute('data-loaded'), 'true')
                     self.assertNotIn('Open to retrieve', disclosure.inner_text())
-                    self.assertIn('DTOS Sleeper retrieval/sync observations', page.locator('main').inner_text())
+                    self.assertIn('Recorded movements and the latest observed owner are shown separately. Gaps do not establish continuous ownership.', page.locator('main').inner_text())
+                    # Exact retrieval clocks remain available on demand, not as
+                    # repeated lead copy. Exercise the real disclosure without
+                    # introducing a source fetch or another production request.
+                    sources = page.get_by_text('Source provenance and branch limitations', exact=True)
+                    self.assertFalse(sources.locator('..').evaluate('(e)=>e.open'))
+                    sources.focus()
+                    self.assertNotEqual(sources.evaluate('(e)=>getComputedStyle(e).outlineStyle'), 'none')
+                    before_sources = len(requests)
+                    sources.press('Enter')
+                    self.assertTrue(sources.locator('..').evaluate('(e)=>e.open'))
+                    self.assertIn('DTOS Sleeper retrieval/sync observations', sources.locator('..').inner_text())
                     self.assertIn('2026-10-13T02:00:00Z', page.locator('main').inner_text())
+                    self.assertEqual(len(requests), before_sources)
                     self.assertLessEqual(page.evaluate('document.documentElement.scrollWidth'), width)
                     self.measurements.append({'trade': trade, 'width': width, 'height': height,
                                               'documentWidth': page.evaluate('document.documentElement.scrollWidth')})
+                    before_cached_toggle = len(requests)
                     disclosure.locator(':scope > summary').click()
                     disclosure.locator(':scope > summary').click()
                     self.assertEqual(disclosure.get_attribute('data-loaded'), 'true')
+                    self.assertEqual(len(requests), before_cached_toggle)
                     if trade == fixtures.FAAB:
                         self.assertEqual(page.locator('.timeline-faab').count(), 1)
                         self.assertIn('100 FAAB', page.locator('.timeline-faab').inner_text())

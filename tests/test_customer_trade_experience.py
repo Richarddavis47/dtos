@@ -109,18 +109,30 @@ class CustomerTradeJourneyTests(unittest.TestCase):
         helper = prepared.AcquisitionBrowserTests()
         harness = scout.ScoutWorkspaceStateBrowserTests()
         rows = helper.offer_panel()
+        partner_case = ('Their assets provide a supported return; willingness is unconfirmed. '
+                        + 'The remaining projection horizons and manager preferences are not established. ' * 18
+                        + 'Recorded partner qualification tail.')
+        conditions = ('Their manager direction is unconfirmed. '
+                      + 'Discuss the production sacrificed and exact compensation before pursuing this offer. ' * 8
+                      + 'Recorded decision conditions tail.')
         for row in rows:
             row['evaluation']['decision_context'] = {
                 'decisive_reason': 'The supported upgrade has a real cost for both teams.',
                 'main_cost': 'You spend usable depth.',
                 'summary': 'Your supported roster benefit remains conditional.',
-                'partner_summary': 'Their assets provide a supported return; willingness is unconfirmed.',
+                'partner_summary': partner_case,
+                'decision_conditions': conditions,
                 'qualification': 'Provisional: recorded participation needs review. Not a qualified bilateral recommendation.',
                 'lineup_comparisons': {'current_week': {'state': 'provisional', 'weeks': [10], 'delta': 2.25}},
                 'partner_lineup_comparisons': {'current_week': {'state': 'supported', 'weeks': [10], 'delta': -1.5}},
                 'your_side_summary': 'Your team: Week10 change +2.25.\nUsable replacement-depth coverage is incomplete.',
                 'their_side_summary': 'Their team: Week10 change -1.50.\nSupported replacement depth declines.',
             }
+            row['evaluation'].setdefault('dimensions', {})['roster_diagnostics'] = {'week': 10, 'sides': {
+                'active': {'pre_eligibility': [{'name': 'Outgoing-only Player', 'status': 'ir',
+                                             'excluded': True, 'reason': 'Excluded from usable cover · IR'}],
+                           'post_eligibility': [{'name': 'Incoming Player', 'status': 'ir',
+                                              'excluded': True, 'reason': 'Excluded from usable cover · IR'}]}}}
             row['evaluation']['explanation_html'] = ('<section class="dtos-explanation"><p>Recorded fixture decision.</p>'
                 '<p class="tw-lineup-warning">Your team · Season 2026 · Week 10: Incoming Player — Excluded from usable cover · IR.</p>'
                 '<details class="tw-lineup-details"><summary>Before and after · both optimal lineups</summary>'
@@ -174,7 +186,27 @@ class CustomerTradeJourneyTests(unittest.TestCase):
                     self.assertIn('FAIR / OPTIONAL', cheap.inner_text())
                     cheap.get_by_role('button', name='Add to comparison', exact=True).click()
                     page.get_by_role('button', name='Compare selected offers', exact=True).click()
-                    self.assertIn('FAIR / OPTIONAL', page.locator('#trade-comparison').inner_text())
+                    comparison = page.locator('#trade-comparison')
+                    self.assertIn('FAIR / OPTIONAL', comparison.inner_text())
+                    compared = comparison.locator('.tw-comparison-offer').first
+                    compact_text = compared.inner_text()
+                    for phrase in ('usable depth', 'Incoming Player', 'IR', 'inference',
+                                   '-1.50 projected points', 'unverified', 'Their team:',
+                                   'Your team after trade · Week 10', 'Provisional assessment'):
+                        self.assertIn(phrase, compact_text)
+                    self.assertNotIn('Outgoing-only Player', compact_text)
+                    self.assertNotIn('Recorded partner qualification tail', compact_text)
+                    self.assertNotIn('Recorded decision conditions tail', compact_text)
+                    self.assertLess(len(compact_text.split()), len((partner_case + conditions).split()))
+                    recorded = compared.locator(':scope > details').filter(
+                        has=page.get_by_text('Original assessment · both teams and evidence limits', exact=True))
+                    recorded.locator(':scope > summary').focus()
+                    recorded.locator(':scope > summary').press('Enter')
+                    self.assertTrue(recorded.evaluate('e=>e.open'))
+                    self.assertIn(partner_case, recorded.inner_text())
+                    self.assertIn(conditions, recorded.inner_text())
+                    self.assertEqual(len(requests), count)
+                    self.assertEqual(harness.proposal(page), before)
                     page.get_by_role('button', name='Return to my offer or draft', exact=True).click()
                     self.assertEqual(harness.proposal(page), before)
                     self.assertEqual(len(requests), count)
