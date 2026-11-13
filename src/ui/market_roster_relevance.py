@@ -56,7 +56,7 @@ def movement_panel(view, market_query):
                 f'<article class="market-roster-card" data-market-asset="{text(card["asset_id"])}">',
                 "<h3>" + text(card["name"]) + "</h3>",
                 f"<p><b>Observed change: {trend['magnitude']:+,.2f} Market points</b><br>{text(readable_time(trend['comparison_start_at']))} → {text(readable_time(trend['comparison_end_at']))}</p>",
-                "<p>" + text(card["source"]) + " · " + text(card["age"]) + ".</p>",
+                "<p>" + text(plain_reason(card["source"])) + " · " + text(card["age"]) + ".</p>",
                 "<p>"
                 + (
                     f"Position matches your supported {text(view['need']['position'])} {text(view['need']['kind'])} need. This match does not establish this player’s legal-lineup improvement."
@@ -66,6 +66,7 @@ def movement_panel(view, market_query):
                 + "</p>",
                 f"<p>Current neutral Market: {text(price)}.</p>",
                 "<details><summary>Comparison coverage and limits</summary>",
+                "<p>Original price source label: " + text(card["source"]) + "</p>",
                 f"<p>Exact comparison dates: {text(trend['comparison_start_at'])} → {text(trend['comparison_end_at'])}.</p><p>{text(trend.get('checkpoint_count', 'Unknown'))} retained checkpoints · {text(trend.get('comparison_scope', 'Unknown'))}. Sparse observations are not continuous daily history. {text(trend.get('current_qualification') or 'Current endpoint qualification unavailable.')}</p></details>",
                 f'<div class="ds-actions"><a class="ds-action" href="{text(detail)}">Review asset evidence</a>',
             ]
