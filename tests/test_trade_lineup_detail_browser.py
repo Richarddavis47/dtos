@@ -137,6 +137,11 @@ class TradeLineupDetailBrowserTests(unittest.TestCase):
                 page.locator('#trade-context').get_by_text('Active league', exact=False).wait_for()
                 self.assertGreater(page.locator('#trade-sent-chips [data-asset-id="1-10"]').count(), 0)
                 self.assertGreater(page.locator('#trade-received-chips [data-asset-id="2-0"]').count(), 0)
+                saved_detail = page.get_by_text('Recorded before-and-after lineups · NOT REVALIDATED', exact=True)
+                saved_detail.wait_for()
+                saved_detail.press('Enter')
+                self.assertIn('Before trade', saved_detail.locator('..').inner_text())
+                self.assertIn('After trade', saved_detail.locator('..').inner_text())
         self.assertEqual(helper.data, original)
         if os.environ.get('DTOS_LINEUP_DETAIL_EVIDENCE'):
             (Path(os.environ['DTOS_LINEUP_DETAIL_EVIDENCE']) / 'browser.json').write_text(json.dumps(records, indent=2))

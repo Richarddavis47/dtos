@@ -216,7 +216,7 @@
         out.append(list);
       }
       out.append(node('p', price(s.neutral, 'Neutral Market at evaluation')));
-      if (s.mode === 'custom') out.append(node('p', price(s.personal, 'Your Custom values · ' + (s.methodLabel || 'method not retained'))),
+      if (s.mode === 'custom') out.append(node('p', price(s.personal, 'Your Custom values · ' + (s.method === 'personal-current-market-slot-curve-v1' ? 'Absolute slot' : s.method === 'personal-relative-priced-order-v1' ? 'Relative priced order' : 'method not retained'))),
         node('small', 'Personal value does not establish the counterparty’s willingness or change Neutral Market.'));
       out.append(node('h5', 'Depth and roster consequences'));
       for (const side of ['active', 'partner']) {

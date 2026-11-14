@@ -1,3 +1,7 @@
+## v1.22.40 / build 2255 — Recorded Trade Assessment Context
+
+Display the recorded Custom valuation method using its exact supported identifier. Preserve bounded recorded current-week analytical lineup disclosures and readable comparison evidence across review and return navigation, explicitly NOT REVALIDATED. No valuation, qualification, source or admission-policy changes.
+
 ## v1.22.39 / build 2254 — Clear Trade Review and Team Demo
 
 Keep detailed team-fit methodology optional in Trade Review while preserving primary decisions, costs and material risks. Describe the public Team example as backup quarterback depth, with a brief Superflex explanation. Calculations and resource policies unchanged.
