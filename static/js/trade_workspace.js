@@ -1451,8 +1451,9 @@
       if (side === 'partner') section.append(node('small', 'Their fit is an evidence-based inference, not a statement of the manager’s intent.'));
       teams.append(section);
     }
-    card.append(teams);
-    if (decision.decision_conditions) card.append(node('p', decision.decision_conditions, 'tw-decision-conditions'));
+    if (decision.decision_conditions) teams.append(node('p', decision.decision_conditions, 'tw-decision-conditions'));
+    card.append(node('p', 'Partner fit is an inference, not evidence that the manager will accept.', 'tw-fit-qualification'));
+    card.append(disclosure('Why this may fit each team', teams, 'tw-team-fit-details'));
     const depth = node('div');
     for (const line of cautions) depth.append(node('p', line, 'tw-lineup-warning'));
     for (const [side, title] of [['active', 'Your team'], ['partner', 'Their team']]) {
