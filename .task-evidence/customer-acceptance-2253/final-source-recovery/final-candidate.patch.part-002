@@ -1,0 +1,741 @@
+of value === 'string' && value.length > 0) || number(value);
+   const sameScope = (entry, scope) => entry?.schema === 1 && scope?.binding &&
+@@ -207,12 +220,12 @@
+         node('small', 'Personal value does not establish the counterparty’s willingness or change Neutral Market.'));
+       out.append(node('h5', 'Depth and roster consequences'));
+       for (const side of ['active', 'partner']) {
+-        out.append(node('p', (side === 'active' ? 'Your team: ' : 'Their team: ') + (depth[side] || 'Reserve-depth evidence unavailable.')));
++        out.append(node('p', (side === 'active' ? 'Your team: ' : 'Their team: ') + customerText(depth[side] || 'Reserve-depth evidence unavailable.')));
+         const spots = capacity[side];
+         out.append(node('p', (side === 'active' ? 'Your' : 'Their') + ' additional configured roster spots to resolve: ' +
+           (number(spots) ? spots + '. No cut is assumed.' : 'Unknown; roster feasibility is not inferred.')));
+       }
+-      out.append(node('p', 'Main cost or risk: ' + s.cost, 'tw-drawback'), node('p', partnerCase(entry), 'tw-comparison-partner'));
++      out.append(node('p', 'Main cost or risk: ' + customerText(s.cost), 'tw-drawback'), node('p', partnerCase(entry), 'tw-comparison-partner'));
+       const cautions = participationCautions(entry);
+       if (cautions.length) out.append(node('p', 'Availability to review: ' + cautions.join(' '), 'tw-comparison-risk-summary tw-drawback'));
+       const decision = entry.context?.evaluation?.decision_context || {};
+@@ -220,7 +233,7 @@
+       if (s.limitation || provisional) out.append(node('p', (provisional ? 'Provisional assessment. ' : '') + 'Some availability or coverage remains unverified. Review the original assessment for the affected evidence.', 'tw-comparison-qualification tw-drawback'));
+       const disclosure = node('details'); disclosure.append(node('summary', 'Original assessment · both teams and evidence limits'));
+       disclosure.append(node('small', 'Captured ' + (entry.context?.identity?.captured_at || 'time unavailable') + '. Values and conclusions belong to this offer’s original assessment.'));
+-      disclosure.append(node('p', 'Their original case: ' + s.partnerReason));
++      disclosure.append(node('p', 'Recorded cost: ' + s.cost), node('p', 'Their original case: ' + s.partnerReason));
+       if (s.conditions !== entry.context?.evaluation?.decision_context?.decision_conditions)
+         disclosure.append(node('p', 'Conditions: ' + s.conditions, 'tw-drawback'));
+       if (s.limitation) disclosure.append(node('p', 'Evidence limit: ' + s.limitation, 'tw-drawback'));
+@@ -285,7 +298,7 @@
+     refresh();
+     return {add, refresh};
+   }
+-  const api = {acquisitionView, compatibility, sameScope, wellFormed, create, readCapital, capitalView};
++  const api = {customerText, acquisitionView, compatibility, sameScope, wellFormed, create, readCapital, capitalView};
+   if (typeof module !== 'undefined' && module.exports) module.exports = api;
+   else globalThis.DTOSOfferComparison = api;
+ })();
+diff --git a/static/js/trade_workspace.js b/static/js/trade_workspace.js
+index 57ab93fa..3e7a7cf7 100644
+--- a/static/js/trade_workspace.js
++++ b/static/js/trade_workspace.js
+@@ -429,9 +429,11 @@
+   function board(which) {
+     const container = el('trade-' + which + '-board'), owner = team(which === 'sent' ? active : partner()), f = filters[which];
+     container.replaceChildren(); container.setAttribute('aria-hidden', String(matchMedia('(max-width:760px)').matches && side !== which));
+-    container.append(node('h3', owner?.team_name || 'Choose a counterparty'));
++    const ownerHeader = node('div', null, 'tw-owner-header');
++    ownerHeader.append(node('h3', owner?.team_name || 'Choose a trade partner'));
++    container.append(ownerHeader);
+     if (!owner) return;
+-    const teamLink = node('a', 'View team'); teamLink.href = '/teams/' + owner.roster_id; container.append(teamLink);
++    const teamLink = node('a', 'View team'); teamLink.href = '/teams/' + owner.roster_id; ownerHeader.append(teamLink);
+     const search = node('input'); search.type = 'search'; search.value = f.q; search.placeholder = 'Search players or picks'; search.setAttribute('aria-label', which === 'sent' ? 'Search my assets' : 'Search their assets');
+     const results = node('div', null, 'tw-asset-results'), chips = node('div', null, 'tw-filters');
+     const positions = ['ALL', 'QB', 'RB', 'WR', 'TE', ...[...new Set(owner.assets.filter(a => a.kind !== 'pick' && !['QB','RB','WR','TE'].includes(a.position)).map(a => a.position || 'Other positions'))].sort(), 'PICKS'].filter(p => p === 'ALL' || owner.assets.some(a => (a.kind === 'pick' ? 'PICKS' : (a.position || 'Other positions')) === p));
+@@ -464,8 +466,10 @@
+     if (target && !entryBlocked) {
+       targetBox.append(node('h3', session.requiredOutgoingAsset ? 'Asset you are shopping' : 'Player or pick you want'), identity(target));
+       const owner = workspace.teams.find(t => t.assets.some(a => a.asset_id === targetId));
+-      const ownerLink = node('a', 'Current owner: ' + owner.team_name); ownerLink.href = '/teams/' + owner.roster_id; targetBox.append(ownerLink);
+-      if (target.kind === 'player') { const dossier = node('a', 'Open player dossier'); dossier.href = '/players/' + encodeURIComponent(target.asset_id.replace(/^player:/, '')); targetBox.append(dossier); }
++      const targetActions = node('div', null, 'tw-target-actions');
++      const ownerLink = node('a', 'Current owner: ' + owner.team_name); ownerLink.href = '/teams/' + owner.roster_id; targetActions.append(ownerLink);
++      if (target.kind === 'player') { const dossier = node('a', 'Open player dossier'); dossier.href = '/players/' + encodeURIComponent(target.asset_id.replace(/^player:/, '')); targetActions.append(dossier); }
++      targetBox.append(targetActions);
+     }
+     for (const which of ['sent', 'received']) { const box = el('trade-' + which + '-chips'); box.replaceChildren(); for (const id of selected[which]) { const a = asset(id); if (a) box.append(assetRow(a, which, true)); else box.append(node('p', 'An asset is no longer available. Refresh this workspace.')); } }
+     const count = selected.sent.length + selected.received.length;
+@@ -887,6 +891,12 @@
+   function parsedExplanation(e) {
+     const parsed = new DOMParser().parseFromString(e.explanation_html, 'text/html');
+     const primary = parsed.querySelector('.dtos-explanation > p');
++    // Translate only the displayed decision copy, including retained HTML.
++    // The recorded evaluation, source payload and qualifications stay untouched.
++    for (const section of parsed.querySelectorAll('.tw-decision')) {
++      const text = parsed.createTreeWalker(section, NodeFilter.SHOW_TEXT);
++      while (text.nextNode()) text.currentNode.textContent = customerText(text.currentNode.textContent);
++    }
+     // Older cached HTML must follow the same recorded bilateral admission in
+     // expanded cards and previews as in the main result. No re-evaluation.
+     if (primary && primary.firstChild?.textContent.trim() === e.recommendation && finalVerdict(e) !== e.recommendation) {
+@@ -897,15 +907,15 @@
+   function appendDecisionSummary(target, decision) {
+     for (const key of ['your_side_summary', 'their_side_summary', 'decision_conditions', 'evidence_next_action']) {
+       for (const line of (decision[key] || '').split('\n').filter(Boolean))
+-        target.append(node('p', line, key === 'decision_conditions' ? 'tw-drawback' : ''));
++        target.append(node('p', customerText(line), key === 'decision_conditions' ? 'tw-drawback' : ''));
+     }
+   }
+   function appendDecisionLead(target, decision) {
+     if (!decision.decisive_reason && !decision.decision_next_step) return;
+     const lead = node('section', null, 'tw-decision-lead');
+     lead.setAttribute('aria-label', 'Decision and next step');
+-    if (decision.decisive_reason) lead.append(node('p', 'Why this decision: ' + decision.decisive_reason));
+-    if (decision.decision_next_step) lead.append(node('p', 'Next step: ' + decision.decision_next_step));
++    if (decision.decisive_reason) lead.append(node('p', 'Why this decision: ' + customerText(decision.decisive_reason)));
++    if (decision.decision_next_step) lead.append(node('p', 'Next step: ' + customerText(decision.decision_next_step)));
+     target.append(lead);
+   }
+   function decisionPresentation(e) {
+@@ -1055,7 +1065,7 @@
+       out.append(brief);
+       if (!previousContainer && e.decision_context.strategy?.selection_required) strategyAction(out);
+     }
+-    if (decision.main_cost || e.major_drawback || e.major_risks?.length) out.append(node('p', 'Cost and uncertainty: ' + (decision.main_cost || e.major_drawback || e.major_risks.join('; ').replaceAll('_', ' ')), 'tw-drawback'));
++    if (decision.main_cost || e.major_drawback || e.major_risks?.length) out.append(node('p', 'Cost and uncertainty: ' + customerText(decision.main_cost || e.major_drawback || e.major_risks.join('; ').replaceAll('_', ' ')), 'tw-drawback'));
+     else if (context?.restored) out.append(node('p', 'Major drawback unavailable in retained context. Reevaluate for supported costs.', 'tw-drawback'));
+     if (previousContainer) for (const risk of e.major_risks || []) if (risk !== e.major_drawback) out.append(node('p', 'Previous risk: ' + risk.replaceAll('_', ' '), 'tw-drawback'));
+     if (e.legality?.execution_status && !retained && (!incomplete || e.legal === false || e.legality.execution_status === 'REQUIRES ROSTER RESOLUTION')) out.append(node('p', e.legality.execution_status));
+@@ -1312,7 +1322,7 @@
+     const unfavorable = ['REJECT', 'NOT WORTH IT'].includes(e.recommendation);
+     const reason = unfavorable ? 'Closer current Market terms do not make this a recommended trade.' : decision.lineup?.explanation || e.why_you_would_do_it || 'Market balance is separate from strategic fit; no supported positive roster case is established.';
+     card.append(node('p', 'Why consider: ' + reason),
+-      node('p', 'Major drawback: ' + (decision.main_cost || e.major_drawback || 'A supported main cost is unavailable; reevaluate before deciding.'), 'tw-drawback'));
++      node('p', 'Major drawback: ' + customerText(decision.main_cost || e.major_drawback || 'A supported main cost is unavailable; reevaluate before deciding.'), 'tw-drawback'));
+     if (decision.limitation) card.append(node('p', 'Evidence limit: ' + decision.limitation, 'tw-drawback'));
+     if (retained) card.append(node('p', 'Prior benefits and drawbacks are not current conclusions. Reevaluate after adoption.', 'tw-drawback'));
+     for (const id of [...row.proposal.assets_sent, ...row.proposal.assets_received]) { const protection = lockDetail(id); if (protection) card.append(protection); }
+@@ -1343,11 +1353,9 @@
+       window.DTOSOfferComparison.capitalView(record, node, comparisonScope(), retained), 'tw-capital-disclosure');
+   }
+   function customerText(value) {
+-    return String(value || '').replaceAll('compatible prepared publication', 'league data for this week')
+-      .replaceAll('Canonical Market', 'Market value').replaceAll('canonical Market', 'Market value')
+-      .replaceAll('disjoint reserve cover', 'different eligible backups')
+-      .replaceAll('bilateral recommendation', 'recommendation for both teams');
++    return window.DTOSOfferComparison?.customerText?.(value) ?? String(value || '');
+   }
++
+   function recordedPresentation(row) {
+     const supplied = row.proposal_presentation || row.proposal.preview_presentation;
+     if (!supplied) return null;
+@@ -1439,7 +1447,7 @@
+     for (const [side, title] of [['active', 'Your team'], ['partner', 'Their team']]) {
+       const section = node('section'); section.append(node('h4', title));
+       const explanation = side === 'active' ? decision.summary || e.why_you_would_do_it : decision.partner_summary || e.counterparty_summary || e.why_they_would_do_it;
+-      section.append(node('p', explanation || 'A supported team-specific explanation is not available.'));
++      section.append(node('p', customerText(explanation || 'A supported team-specific explanation is not available.')));
+       if (side === 'partner') section.append(node('small', 'Their fit is an evidence-based inference, not a statement of the manager’s intent.'));
+       teams.append(section);
+     }
+@@ -1512,7 +1520,7 @@
+       out.append(conflict);
+     }
+     if (body.near_misses?.length) {
+-      const detail = node('details', null, 'tw-near-misses'); detail.append(node('summary', 'Evaluated near misses'));
++      const detail = node('details', null, 'tw-near-misses'); detail.append(node('summary', 'Other evaluated offers · not recommended'));
+       for (const row of body.near_misses) {
+         const p = row.proposal;
+         if (!p || !row.evaluation) continue; // A near miss must be an assessed package.
+@@ -1565,7 +1573,7 @@
+       const qualified = (body.results || []).filter(qualifiedOffer);
+       const other = (body.results || []).filter(row => !qualifiedOffer(row));
+       out.append(node('h3', qualified.length ? `Qualified recommendations · ${qualified.length}` : 'No qualified recommendations'));
+-      if (!qualified.length) out.append(node('p', body.quiet_state || 'No offer is endorsed as Worth Pursuing in this search. Optional or limited offers are shown separately.'));
++      if (!qualified.length) out.append(node('p', customerText(body.quiet_state) || 'No offer is endorsed as Worth Pursuing in this search. Optional or limited offers are shown separately.'));
+       for (const row of qualified) {
+         out.append(offerCard(row));
+       }
+@@ -1587,7 +1595,7 @@
+     if (flow === 'shop' && body.markets) {
+       const out = el('trade-result'); out.hidden = false; out.replaceChildren();
+       const refineLink = node('a', 'Refine returns · optional', 'ds-action'); refineLink.href = '#shop-refinements'; out.append(refineLink);
+-      if (!body.markets.length) out.append(node('p', body.quiet_state || 'No credible market in this bounded search.'));
++      if (!body.markets.length) out.append(node('p', customerText(body.quiet_state) || 'No credible market in this bounded search.'));
+       for (const limitation of body.shop_preference?.limitations || []) out.append(node('p', limitation));
+       for (const market of body.markets) {
+         out.append(node('h3', team(market.counterparty_roster_id)?.team_name || 'Counterparty'),
+diff --git a/tests/test_00_trade_simple_browser.py b/tests/test_00_trade_simple_browser.py
+index 803da250..441e4a16 100644
+--- a/tests/test_00_trade_simple_browser.py
++++ b/tests/test_00_trade_simple_browser.py
+@@ -326,10 +326,10 @@ class SimpleTradeJourneyBrowserTests(unittest.TestCase):
+                 page.reload()
+                 page.get_by_role('button', name='Use this offer in my draft', exact=True).wait_for()
+                 self.assertIn('Exploratory only', page.locator('#trade-result').inner_text())
+-                self.assertIn(context_before['evaluation']['major_drawback'], page.locator('#trade-result').inner_text())
++                self.assertIn(context_before['evaluation']['major_drawback'].replace('Useful legal-replacement production falls', 'Useful projected points from eligible backups fall'), page.locator('#trade-result').inner_text())
+                 click('#trade-result button:text-is("Use this offer in my draft")')
+                 self.assertIn('NOT WORTH IT', page.locator('#trade-result').inner_text())
+-                self.assertIn(context_before['evaluation']['major_drawback'], page.locator('#trade-result').inner_text())
++                self.assertIn(context_before['evaluation']['major_drawback'].replace('Useful legal-replacement production falls', 'Useful projected points from eligible backups fall'), page.locator('#trade-result').inner_text())
+                 self.assertIn('not revalidated', page.locator('#trade-result').inner_text().lower())
+             page.goto("https://dtos.test/trades/recommended")
+             start = perf_counter()
+diff --git a/tests/test_trade_workflow_experience.py b/tests/test_00_trade_workflow_experience.py
+similarity index 100%
+rename from tests/test_trade_workflow_experience.py
+rename to tests/test_00_trade_workflow_experience.py
+diff --git a/tests/test_customer_acceptance_followup.py b/tests/test_customer_acceptance_followup.py
+new file mode 100644
+index 00000000..71f022f7
+--- /dev/null
++++ b/tests/test_customer_acceptance_followup.py
+@@ -0,0 +1,53 @@
++"""Presentation-only acceptance: material facts remain visible and inspectable."""
++import unittest
++from src.ui import recommendation_panel
++from src.ui.customer_experience import plain_reason
++from src.ui.front_office_brief import cards
++
++class CustomerAcceptanceFollowupTests(unittest.TestCase):
++    def test_backup_points_translation_preserves_qualification(self):
++        raw = 'Useful legal-replacement production falls 2.25 points per supported week; participation is unknown.'
++        shown = plain_reason(raw)
++        self.assertIn('projected points from eligible backups', shown)
++        self.assertIn('2.25 points per supported week; participation is unknown.', shown)
++        html = recommendation_panel(title='Review', recommendation=raw, confidence=55,
++            primary_reason=raw, evidence=(raw,), expected_impact='Unknown',
++            action_label='Review trade', action_href='/trades', limitations=('Incoming Player is on IR.',))
++        self.assertIn(raw, html)
++        self.assertLess(html.index('Incoming Player is on IR.'), html.index('<details>'))
++        self.assertIn('Original assessment record', html)
++
++        from src.ui.home_trade_opportunities import cards as home_cards
++        home = home_cards([dict(home_offer='fixture-only', evaluation=dict(
++            recommendation='REJECT', major_drawback=raw,
++            why_you_would_do_it='No supported gain.', dominant_reason=raw))], 1)
++        primary, details = home.split('<details>', 1)
++        self.assertNotIn('legal-replacement', primary)
++        self.assertIn('projected points from eligible backups', primary)
++        self.assertIn('2.25 points per supported week; participation is unknown.', primary)
++        self.assertIn(raw, details)
++
++    def test_repeated_brief_explanation_does_not_erase_a_distinct_risk(self):
++        item = dict(family='need', title='Receiver cover', reason='WR cover is limited.',
++                    drawback='Player A is out.', details=['WR cover is limited.', 'Player A is out.',
++                    'Player B has no projection.', 'Player B has no projection.'],
++                    href='/trades', action='Explore WR trades')
++        html = cards([item])
++        self.assertEqual(html.count('WR cover is limited.'), 1)
++        self.assertEqual(html.count('Player A is out.'), 1)
++        self.assertEqual(html.count('Player B has no projection.'), 1)
++        self.assertIn('<details>', html)
++
++    def test_duplicate_player_notes_keep_zero_and_distinct_risks(self):
++        from src.ui.player_projections import player_projection_panel
++        view = dict(player_id='fixture', week=8, weeks=[8], season=2026,
++                    league_id='fixture', generation='fixture-generation', value=0,
++                    display='0', availability='available', confidence=100,
++                    reason='Player A is out.', participation_note='Player A is out.',
++                    eligibility_note='Player B has no projection.')
++        html = player_projection_panel(view)
++        default = html.split('<details', 1)[0]
++        self.assertEqual(default.count('Player A is out.'), 1)
++        self.assertIn('Player B has no projection.', default)
++        self.assertIn('>0</strong>', default)
++        self.assertEqual(view['value'], 0)
+diff --git a/tests/test_customer_experience_journeys.py b/tests/test_customer_experience_journeys.py
+index ca2460d1..ee36b23d 100644
+--- a/tests/test_customer_experience_journeys.py
++++ b/tests/test_customer_experience_journeys.py
+@@ -57,6 +57,27 @@ class CustomerExperienceJourneyTests(journeys.ProductBrowserJourneyTests):
+             .all_text_contents(),
+             ["Home", "My Team", "Trade", "League", "Market"],
+         )
++        if path == '/teams/1':
++            label = page.locator('#my-team-goal-form label')
++            self.assertEqual(label.inner_text(), 'Goal')
++            self.assertEqual(label.evaluate('e => {const r=document.createRange();r.selectNodeContents(e);return r.getClientRects().length;}'), 1)
++        if path.startswith('/trades/'):
++            for header in page.locator('.tw-owner-header').all():
++                if not header.is_visible():
++                    continue
++                title, action = header.locator('h3'), header.locator('a')
++                if not action.count():
++                    continue
++                original = title.inner_text()
++                title.evaluate("e => e.textContent = 'A very long franchise name with an equally long owner label'")
++                a, b = title.bounding_box(), action.bounding_box()
++                self.assertIsNotNone(a)
++                self.assertIsNotNone(b)
++                self.assertTrue(a['x'] + a['width'] <= b['x'] or
++                                a['y'] + a['height'] <= b['y'] or
++                                b['y'] + b['height'] <= a['y'])
++                self.assertGreaterEqual(action.bounding_box()['height'], 44)
++                title.evaluate('(e, text) => e.textContent = text', original)
+         resources = page.evaluate(
+             "performance.getEntriesByType('resource').map(e=>new URL(e.name).pathname)"
+         )
+diff --git a/tests/test_customer_specialist_presentation.py b/tests/test_customer_specialist_presentation.py
+index 0641f7ce..3727301c 100644
+--- a/tests/test_customer_specialist_presentation.py
++++ b/tests/test_customer_specialist_presentation.py
+@@ -62,7 +62,7 @@ class CustomerSpecialistPresentationTests(unittest.TestCase):
+         html = front_office_center(view)
+         visible = VisibleText(html).value
+         self.assertIn("Outlook not established", visible)
+-        self.assertIn("not enough supported evidence", visible)
++        self.assertIn("Current evidence does not establish a competitive outlook.", visible)
+         self.assertNotIn("classified as Unavailable", visible)
+         self.assertIn("Alpha is currently classified as Unavailable.", html)
+         self.assertIn("Projections are not ready for this league, week and scoring.", html)
+diff --git a/tests/test_customer_trade_experience.py b/tests/test_customer_trade_experience.py
+index afb7cef6..8d4cdd30 100644
+--- a/tests/test_customer_trade_experience.py
++++ b/tests/test_customer_trade_experience.py
+@@ -68,6 +68,7 @@ class CustomerTradeJourneyTests(unittest.TestCase):
+         harness = scout.ScoutWorkspaceStateBrowserTests()
+         rows = helper.offer_panel()
+         partner_case = ('Their assets provide a supported return; willingness is unconfirmed. '
++                        + 'Useful legal-replacement production falls 4.00 points per supported week; participation remains unknown. '
+                         + 'The remaining projection horizons and manager preferences are not established. ' * 18
+                         + 'Recorded partner qualification tail.')
+         conditions = ('Their manager direction is unconfirmed. '
+@@ -76,7 +77,7 @@ class CustomerTradeJourneyTests(unittest.TestCase):
+         for row in rows:
+             row['evaluation']['decision_context'] = {
+                 'decisive_reason': 'The supported upgrade has a real cost for both teams.',
+-                'main_cost': 'You spend usable depth.',
++                'main_cost': 'You spend usable depth. Useful legal-replacement production falls 2.25 points per supported week; participation remains unknown.',
+                 'summary': 'Your supported roster benefit remains conditional.',
+                 'partner_summary': partner_case,
+                 'decision_conditions': conditions,
+@@ -130,6 +131,10 @@ class CustomerTradeJourneyTests(unittest.TestCase):
+                     review = page.locator('#trade-result > article.tw-offer-review')
+                     self.assertIn('Incoming Player', review.inner_text())
+                     self.assertIn('inference', review.inner_text())
++                    team_text = review.locator(':scope > .tw-team-summary').inner_text()
++                    self.assertNotIn('legal-replacement production', team_text)
++                    self.assertIn('projected points from eligible backups fall 4.00 points per supported week', team_text)
++                    self.assertIn('participation remains unknown', team_text)
+                     detail = review.locator(':scope > .tw-lineup-details')
+                     detail.locator('summary').press('Enter')
+                     self.assertIn('FLEX, K, DEF', detail.inner_text())
+@@ -153,6 +158,9 @@ class CustomerTradeJourneyTests(unittest.TestCase):
+                                    'Your team after trade · Week 10', 'Provisional assessment'):
+                         self.assertIn(phrase, compact_text)
+                     self.assertNotIn('Outgoing-only Player', compact_text)
++                    self.assertNotIn('legal-replacement production', compact_text)
++                    self.assertIn('projected points from eligible backups fall 2.25', compact_text)
++                    self.assertIn('participation remains unknown', compact_text)
+                     self.assertNotIn('Recorded partner qualification tail', compact_text)
+                     self.assertNotIn('Recorded decision conditions tail', compact_text)
+                     self.assertLess(len(compact_text.split()), len((partner_case + conditions).split()))
+@@ -165,6 +173,7 @@ class CustomerTradeJourneyTests(unittest.TestCase):
+                     self.assertTrue(recorded.evaluate('e=>e.open'))
+                     self.assertIn(partner_case, recorded.inner_text())
+                     self.assertIn(conditions, recorded.inner_text())
++                    self.assertIn(rows[0]['evaluation']['decision_context']['main_cost'], recorded.inner_text())
+                     if os.getenv('DTOS_CUSTOMER_TRADE_EVIDENCE'):
+                         comparison.screenshot(path=str(Path(os.environ['DTOS_CUSTOMER_TRADE_EVIDENCE']) / f'comparison-open-{width}.png'))
+                     self.assertEqual(len(requests), count)
+diff --git a/tests/test_dossier_plain_english.py b/tests/test_dossier_plain_english.py
+index 231c8651..7f8f1dcc 100644
+--- a/tests/test_dossier_plain_english.py
++++ b/tests/test_dossier_plain_english.py
+@@ -58,11 +58,11 @@ class DossierPlainEnglishTests(unittest.TestCase):
+     def test_missing_age_differs_from_observed_age_or_injury_concerns(self):
+         self.fixture.data['players']['player one'].pop('age')
+         missing = self.page()
+-        self.assertIn('Age-related assessment is incomplete because age is missing.', missing)
+-        self.assertNotIn('age-related warning, not a prediction', missing)
++        self.assertIn('Age is missing; age risk is unknown.', missing)
++        self.assertNotIn('Age warrants caution for this position; it does not predict', missing)
+         self.fixture.data['players']['player one'].update(age=36, injury_status='Out')
+         negative = self.page()
+-        self.assertIn('age-related warning, not a prediction of retirement', negative)
++        self.assertIn('Age warrants caution for this position; it does not predict retirement', negative)
+         self.assertIn('A current injury designation increases observable availability risk.', negative)
+         self.assertNotIn('No specific weakness is established', negative)
+ 
+@@ -81,8 +81,8 @@ class DossierPlainEnglishTests(unittest.TestCase):
+ 
+     def test_known_bye_and_missing_bye_are_not_interchanged(self):
+         unavailable = self.page()
+-        self.assertIn('His bye week is not confirmed in this player record.', unavailable)
+-        self.assertIn('missing schedule information does not mean he has no bye', unavailable)
++        self.assertIn('His bye week is not confirmed.', unavailable)
++        self.assertIn('Check the schedule before relying', unavailable)
+         self.fixture.data['players']['player one']['bye_week'] = 14
+         supported = self.page()
+         self.assertIn('<b>Bye:</b> 14', supported)
+@@ -123,7 +123,7 @@ class DossierPlainEnglishTests(unittest.TestCase):
+         report = replace(report, risk=replace(report.risk, evidence=evidence))
+         self.assertIsNotNone(report.profile.age)
+         text = ' '.join(weaknesses_text(report))
+-        self.assertIn('could not be verified', text)
++        self.assertIn('Age risk is unverified.', text)
+         self.assertNotIn('age is missing', text)
+ 
+     def test_supported_buy_and_hold_keep_actions_and_report_unchanged(self):
+@@ -143,7 +143,7 @@ class DossierPlainEnglishTests(unittest.TestCase):
+                 self.assertIn('Compare this player', html)
+                 self.assertNotIn('contextual v1 posture', html)
+                 self.assertNotIn('position-specific v1 risk threshold', html)
+-                self.assertIn('below the model&#x27;s positional caution range', html)
++                self.assertIn('Below this position&#x27;s age caution range', html)
+                 self.assertEqual(supported.recommendation.action, action)
+                 self.assertEqual(asdict(supported), before)
+ 
+diff --git a/tests/test_journey_corrections_browser.py b/tests/test_journey_corrections_browser.py
+index 864c9f45..901b03e1 100644
+--- a/tests/test_journey_corrections_browser.py
++++ b/tests/test_journey_corrections_browser.py
+@@ -128,7 +128,7 @@ class EvaluateLandingBrowserTests(unittest.TestCase):
+                                     page.goto('https://dtos.test/trades/recommended')
+                                     page.locator('#trade-find').click()
+                                     page.wait_for_function('!document.querySelector("#trade-find").disabled')
+-                                near = page.get_by_text('Evaluated near misses', exact=True)
++                                near = page.get_by_text('Other evaluated offers · not recommended', exact=True)
+                                 near.click()
+                                 self.assertIn('cannot supply or upload', page.locator('#trade-result').inner_text())
+                                 self.assertEqual(page.get_by_role('link', name='Review current Market evidence').first.get_attribute('href'), '/market')
+diff --git a/tests/test_personal_rankings_accessibility_browser.py b/tests/test_personal_rankings_accessibility_browser.py
+index 40f72425..de16f353 100644
+--- a/tests/test_personal_rankings_accessibility_browser.py
++++ b/tests/test_personal_rankings_accessibility_browser.py
+@@ -302,6 +302,16 @@ class RankingsAccessibilityBrowserTests(unittest.TestCase):
+                         self.assertEqual(page.get_by_role('heading', level=1, name='My DTOS', exact=True).count(), 1)
+                         self.assertTrue(page.get_by_label('Account and league context', exact=True).is_visible())
+                         self.assertTrue(page.locator('.manager-nav').is_visible())
++                        action = page.locator('.personal-heading > a')
++                        self.assertEqual(action.inner_text(), 'Account')
++                        self.assertEqual(action.evaluate("e => getComputedStyle(e).whiteSpace"), 'nowrap')
++                        self.assertGreaterEqual(action.bounding_box()['height'], 44)
++                        self.assertTrue(action.evaluate("e => e.scrollWidth <= e.clientWidth"))
++                        if os.getenv('DTOS_RANKINGS_UX_EVIDENCE'):
++                            destination = Path(os.environ['DTOS_RANKINGS_UX_EVIDENCE'])
++                            destination.mkdir(parents=True, exist_ok=True)
++                            page.screenshot(path=str(destination / f'account-action-{width}.png'), full_page=True)
++
+                         measurements.append(page.evaluate('''() => {
+                             const box=s=>{const r=document.querySelector(s).getBoundingClientRect();return {top:r.top+scrollY,bottom:r.bottom+scrollY,height:r.height}};
+                             return {width:innerWidth,height:innerHeight,editor:box('#my-dtos'),
+diff --git a/tests/test_player_api.py b/tests/test_player_api.py
+index 839c514b..56a99ed9 100644
+--- a/tests/test_player_api.py
++++ b/tests/test_player_api.py
+@@ -136,7 +136,8 @@ class PlayerApiContractTests(unittest.TestCase):
+         self.assertIn("Availability reason", valid.text)
+         self.assertIn("9100", valid.text)
+         self.assertIn("FantasyCalc", valid.text)
+-        self.assertIn("This player context does not include a season production summary", valid.text)
++        self.assertIn("No season result summary is prepared here.", valid.text)
++        self.assertIn("Career History below; missing production is not zero points.", valid.text)
+         self.assertNotIn("No supported production-stat provider is configured", valid.text)
+         self.assertNotIn("Market Consensus</div><div class=\"stat\">Unavailable", valid.text)
+         self.assertEqual(self.client.get("/players/").status_code, 404)
+diff --git a/tests/test_public_welcome_presentation.py b/tests/test_public_welcome_presentation.py
+index a442598a..90c1b974 100644
+--- a/tests/test_public_welcome_presentation.py
++++ b/tests/test_public_welcome_presentation.py
+@@ -70,7 +70,7 @@ class PublicWelcomePresentationTests(unittest.TestCase):
+         self.assertIn(self.fixture['personal']['cohort_label'], text)
+         self.assertIn('Unpriced future picks remain capital facts', text)
+         self.assertIn(f"Week {self.fixture['week']}: projected lineup #{self.fixture['team']['comparison_rank']}", text)
+-        self.assertIn('This is not official standing.', text)
++        self.assertIn('This compares projections, not league standings.', text)
+         for pick in self.fixture['team']['capital']:
+             self.assertIn(pick['label'], text)
+             self.assertIn(pick['original_franchise'], text)
+@@ -100,7 +100,7 @@ class PublicWelcomePresentationTests(unittest.TestCase):
+         data['team']['lineup_points'] = 0
+         data['team']['comparison_rank'] = None
+         source = render_welcome(data)
+-        self.assertIn('<b class="pw-number">0</b><span class="pw-metric-label">Strongest legal lineup', source)
++        self.assertIn('<b class="pw-number">0</b><span class="pw-metric-label">Highest projected starting lineup', source)
+         self.assertIn('<b class="pw-number">0</b><span class="pw-metric-label">You send', source)
+         self.assertIn('<b class="pw-number">Unavailable</b><span class="pw-metric-label">You receive', source)
+         self.assertIn('<dt>You Send</dt><dd>0</dd>', source)
+diff --git a/tests/test_rebuild_discovery_browser.py b/tests/test_rebuild_discovery_browser.py
+index c28909d9..7edabcff 100644
+--- a/tests/test_rebuild_discovery_browser.py
++++ b/tests/test_rebuild_discovery_browser.py
+@@ -11,7 +11,7 @@ from unittest.mock import patch
+ 
+ from playwright.sync_api import sync_playwright
+ from tests import test_rebuild_discovery_integrity as controls
+-from tests import test_trade_workflow_experience as workflow
++from tests import test_00_trade_workflow_experience as workflow
+ from tools.validation.browser_runtime import launch_chromium
+ 
+ 
+@@ -96,7 +96,8 @@ class RebuildDiscoveryBrowserTests(unittest.TestCase):
+                     self.assertFalse(zero['zero_result_guidance']['recommendation'])
+                     text = page.locator('#trade-result').inner_text()
+                     self.assertIn('No qualified recommendations', text)
+-                    self.assertIn('No bilateral recommendation', text)
++                    self.assertIn('No recommendation for both teams', text)
++                    self.assertIn('No bilateral recommendation', zero['quiet_state'])
+                     self.assertIn('not qualified offers', text)
+                     self.assertLessEqual(page.evaluate('document.documentElement.scrollWidth'), width)
+                     bad = page.locator('main *').evaluate_all('es=>es.filter(e=>e.getBoundingClientRect().width>innerWidth+1).map(e=>e.tagName+"."+e.className)')
+diff --git a/tests/test_rebuild_roster_space_browser.py b/tests/test_rebuild_roster_space_browser.py
+index bff479a3..967fa277 100644
+--- a/tests/test_rebuild_roster_space_browser.py
++++ b/tests/test_rebuild_roster_space_browser.py
+@@ -6,7 +6,7 @@ from pathlib import Path
+ import unittest
+ 
+ from playwright.sync_api import sync_playwright
+-from tests import test_trade_workflow_experience as workflow
++from tests import test_00_trade_workflow_experience as workflow
+ from tools.validation.browser_runtime import launch_chromium
+ 
+ 
+diff --git a/tests/test_reserve_quality_browser.py b/tests/test_reserve_quality_browser.py
+index 58486739..62e74082 100644
+--- a/tests/test_reserve_quality_browser.py
++++ b/tests/test_reserve_quality_browser.py
+@@ -89,7 +89,9 @@ class ReserveQualityBrowserTests(unittest.TestCase):
+                     primary = page.locator('#trade-result .tw-decision')
+                     primary_text = primary.inner_text()
+                     self.assertNotIn('No material downside identified', primary_text)
+-                    self.assertIn('legal-replacement production falls', primary_text)
++                    self.assertIn('projected points from eligible backups fall', primary_text.casefold())
++                    self.assertNotIn('legal-replacement production', primary_text)
++                    self.assertIn('legal-replacement production', e['decision_context']['main_cost'])
+                     self.assertIn(f'{39 * scoring:.2f}', primary_text)
+                     self.assertIn('+0.00 projected points', primary_text)
+                     self.assertEqual(e['decision_context']['lineup_comparisons']['current_week']['delta'], 0)
+@@ -151,7 +153,7 @@ class ReserveQualityBrowserTests(unittest.TestCase):
+             self.assertEqual(e['dimensions']['package_quality']['active']['reserve_quality']['mean_weekly_delta'], -1)
+             text = page.locator('#trade-result .tw-decision').inner_text()
+             self.assertIn('1.00', text)
+-            self.assertIn('legal-replacement production falls', text)
++            self.assertIn('projected points from eligible backups fall', text.casefold())
+             self.assertFalse(e['generated_trade_eligible'])
+             self.assertEqual(e['dimensions']['counterparty_plausibility']['assessment'], 'LOW')
+             self.assertIn('COUNTERPARTY LIMITED', page.locator('#trade-result .dtos-explanation > p').first.inner_text())
+diff --git a/tests/test_roster_source_scope_browser.py b/tests/test_roster_source_scope_browser.py
+index 65f7adf9..daad4b23 100644
+--- a/tests/test_roster_source_scope_browser.py
++++ b/tests/test_roster_source_scope_browser.py
+@@ -1,5 +1,6 @@
+ """Source-scoped findings through real authenticated phone routes, never owner live."""
+ 
++from contextlib import contextmanager
+ from datetime import datetime, timedelta, timezone
+ from types import SimpleNamespace
+ import json
+@@ -24,6 +25,20 @@ class RosterSourceScopeBrowserTests(unittest.TestCase):
+         helper.publish(f)
+         return helper, f
+ 
++    @contextmanager
++    def prepared_browser(self, pw, **options):
++        # Prepare the real Market before starting an independent browser process.
++        # Each league's fixture and browser close before the next league is built.
++        helper, fixture = self.fixture(**options)
++        browser = None
++        try:
++            browser = launch_chromium(pw, headless=True)
++            yield helper, fixture, browser
++        finally:
++            if browser is not None:
++                browser.close()
++            helper.doCleanups()
++
+     def save(self, name, record, page):
+         folder = os.environ.get("DTOS_ROSTER_SOURCE_SCOPE_EVIDENCE")
+         if not folder:
+@@ -47,10 +62,10 @@ class RosterSourceScopeBrowserTests(unittest.TestCase):
+ 
+     def test_my_team_market_exact_trade_for_back_preserves_draft_and_controls(self):
+         with sync_playwright() as pw:
+-            browser = launch_chromium(pw, headless=True)
+-            try:
+-                for sf in (False, True):
+-                    helper, f = self.fixture(superflex=sf, depth=sf)
++            for sf in (False, True):
++                with self.prepared_browser(
++                    pw, superflex=sf, depth=sf
++                ) as (helper, f, browser):
+                     saved = f.f.editor.state()
+                     for width, height in (
+                         (320, 432),
+@@ -197,21 +212,17 @@ class RosterSourceScopeBrowserTests(unittest.TestCase):
+                                 page.close()
+                     self.assertEqual(f.f.editor.state()["revision"], saved["revision"])
+                     self.assertEqual(f.f.editor.state()["rows"], saved["rows"])
+-            finally:
+-                browser.close()
+ 
+     def test_relevant_unknown_aging_and_failed_refresh_still_withhold_actions(self):
+         with sync_playwright() as pw:
+-            browser = launch_chromium(pw, headless=True)
+-            try:
+-                for reason in (
+-                    "unknown-k",
+-                    "unknown-def",
+-                    "eligible-missing",
+-                    "aging",
+-                    "failed-refresh",
+-                ):
+-                    helper, f = self.fixture()
++            for reason in (
++                "unknown-k",
++                "unknown-def",
++                "eligible-missing",
++                "aging",
++                "failed-refresh",
++            ):
++                with self.prepared_browser(pw) as (helper, f, browser):
+                     if reason.startswith("unknown-"):
+                         position = "K" if reason == "unknown-k" else "DEF"
+                         pid = "1-" + position + "-0"
+@@ -280,5 +291,3 @@ class RosterSourceScopeBrowserTests(unittest.TestCase):
+                             )
+                     finally:
+                         page.close()
+-            finally:
+-                browser.close()
+diff --git a/tests/test_trade_actionability_browser.py b/tests/test_trade_actionability_browser.py
+index 658fdedf..844c4eec 100644
+--- a/tests/test_trade_actionability_browser.py
++++ b/tests/test_trade_actionability_browser.py
+@@ -7,7 +7,7 @@ from unittest.mock import patch
+ 
+ from playwright.sync_api import sync_playwright
+ from services.trade_intelligence import evaluate_trade_request
+-from tests import test_trade_workflow_experience as workflows
++from tests import test_00_trade_workflow_experience as workflows
+ from tools.validation.browser_runtime import launch_chromium
+ 
+ 
+@@ -61,7 +61,9 @@ class TradeActionabilityBrowserTests(unittest.TestCase):
+                         self.assertIn(d['decision_next_step'], review.inner_text())
+                         for key in ('your_side_summary', 'their_side_summary', 'decision_conditions'):
+                             for line in d[key].splitlines():
+-                                self.assertIn(line, review.inner_text())
++                                # Presentation translates prose; exact amounts and qualifications stay intact.
++                                expected = line.replace('Useful replacement production changes', 'Projected points from eligible backups change')
++                                self.assertIn(expected, review.inner_text())
+                         self.assertEqual(len(records), 1)
+                         page.get_by_role('button', name='Back to offers', exact=True).click()
+                         self.assertEqual(page.locator('#trade-strategy').input_value(), 'REBUILD')
+@@ -109,7 +111,9 @@ class TradeActionabilityBrowserTests(unittest.TestCase):
+                 body = records[-1]['body']
+                 self.assertFalse(any(r['evaluation']['generated_trade_eligible'] for r in body['results']))
+                 self.assertIn('No qualified recommendations', page.locator('#trade-result').inner_text())
+-                self.assertIn(body['zero_result_guidance']['message'], page.locator('#trade-result').inner_text())
++                self.assertIn('No bilateral recommendation', body['zero_result_guidance']['message'])
++                expected = body['zero_result_guidance']['message'].replace('No bilateral recommendation', 'No recommendation for both teams')
++                self.assertIn(expected, page.locator('#trade-result').inner_text())
+                 self.assertIn('Main limit:', body['quiet_state'])
+                 self.assertTrue(page.get_by_role('region', name='Other evaluated offers · not qualified').count())
+                 self.assertNotIn('Why now', page.locator('#trade-result').inner_text())
+diff --git a/tests/test_trade_conditional_summary_browser.py b/tests/test_trade_conditional_summary_browser.py
+index 105fb3e3..657b4eeb 100644
+--- a/tests/test_trade_conditional_summary_browser.py
++++ b/tests/test_trade_conditional_summary_browser.py
+@@ -4,7 +4,7 @@ import os
+ from pathlib import Path
+ import unittest
+ from playwright.sync_api import sync_playwright
+-from tests import test_trade_workflow_experience as workflow
++from tests import test_00_trade_workflow_experience as workflow
+ from tools.validation.browser_runtime import launch_chromium
+ 
+ 
+diff --git a/tests/test_trade_lineup_detail_browser.py b/tests/test_trade_lineup_detail_browser.py
+index 9e641db9..192a5a84 100644
+--- a/tests/test_trade_lineup_detail_browser.py
++++ b/tests/test_trade_lineup_detail_browser.py
+@@ -13,7 +13,7 @@ from src.core.intelligence.team_strength import prepare_for_data
+ 
+ class TradeLineupDetailBrowserTests(unittest.TestCase):
+     def test_generated_card_lineups_are_one_disclosure_from_the_primary_card(self):
+-        from tests import test_trade_workflow_experience as workflow
++        from tests import test_00_trade_workflow_experience as workflow
+         from playwright.sync_api import sync_playwright
+         from tools.validation.browser_runtime import launch_chromium
+         helper = workflow.TradeWorkflowExperienceTests()
+diff --git a/tests/test_trade_navigation_browser.py b/tests/test_trade_navigation_browser.py
+index 95956230..967abde9 100644
+--- a/tests/test_trade_navigation_browser.py
++++ b/tests/test_trade_navigation_browser.py
+@@ -10,6 +10,27 @@ from tests import test_make_it_cheaper_browser as cheaper
+ from tests import test_trade_scout_state_browser as scout
+ 
+ 
++def assert_target_action_layout(case, page):
++    links = page.locator('#trade-target .tw-target-actions > a')
++    case.assertEqual(links.count(), 2)
++    # paint() replaces target links as the bounded entry request settles.
++    # Capture both visible rectangles in one browser task, never two samples
++    # straddling a repaint. Keep the same spacing and44px assertions below.
++    boxes = page.wait_for_function("""() => {
++      const links = [...document.querySelectorAll('#trade-target .tw-target-actions > a')];
++      if (links.length !== 2 || links.some(a => !a.getClientRects().length)) return false;
++      return links.map(a => { const r = a.getBoundingClientRect();
++        return {x:r.x, y:r.y, width:r.width, height:r.height}; });
++    }""").json_value()
++    a, b = boxes
++    case.assertIsNotNone(a)
++    case.assertIsNotNone(b)
++    case.assertGreaterEqual(a['height'], 44)
++    case.assertGreaterEqual(b['height'], 44)
++    case.assertTrue(b['x'] >= a['x'] + a['width'] + 10 or
++                    b['y'] >= a['y'] + a['height'] + 10)
++
++
+ class TradeNavigationBrowserTests(unittest.TestCase):
+     def test_cheaper_build_own_dossier_trade_for_recovers_without_reload(self):
+         fixture = cheaper.CheaperRepairBrowserTests()
+@@ -89,6 +110,7 @@ class TradeNavigationBrowserTests(unittest.TestCase):
+                 page.goto('https://dtos.test/players/mcbride')
+                 page.locator('a[href*="/trades/trade-for?"]').first.click()
+                 page.locator('#trade-target:not([hidden])').wait_for()
++                assert_target_action_layout(self, page)
+                 self.assertIn('Trey McBride', page.locator('#trade-target').inner_text())
+                 self.assertEqual(page.get_by_label('Trade partner', exact=True).input_value(), '2')
+                 page.locator('.tw-offer').first.wait_for()
+@@ -107,9 +129,11 @@ class TradeNavigationBrowserTests(unittest.TestCase):
+                 page.locator('a[href*="/trades/trade-for?"]').first.wait_for()
+                 page.go_forward()
+                 page.locator('#trade-target:not([hidden])').wait_for()
++                assert_target_action_layout(self, page)
+                 self.assertEqual(page.get_by_label('Trade partner', exact=True).input_value(), '2')
+                 page.reload()
+                 page.locator('#trade-target:not([hidden])').wait_for()
++                assert_target_action_layout(self, page)
+                 self.assertEqual(fixture.proposal(page)['received'], ['mcbride'])
+ 
+     def test_refresh_retry_bounded_and_real_identity_rejection_never_retried(self):
+diff --git a/tests/test_trade_response_browser.py b/tests/test_trade_response_browser.py
+index 8440dafa..c706b3aa 100644
+--- a/tests/test_trade_response_browser.py
++++ b/tests/test_trade_response_browser.py
+@@ -5,7 +5,7 @@ from pathlib import Path
+ import unittest
+ 
+ from playwright.sync_api import sync_playwright
+-from tests import test_trade_workflow_experience as workflow
++from tests import test_00_trade_workflow_experience as workflow
+ from tools.validation.browser_runtime import launch_chromium
+ 
+ 
+diff --git a/tests/test_trade_scout_state_browser.py b/tests/test_trade_scout_state_browser.py
+index 475c308d..2ecc8554 100644
+--- a/tests/test_trade_scout_state_browser.py
++++ b/tests/test_trade_scout_state_browser.py
+@@ -351,7 +351,7 @@ class ScoutWorkspaceStateBrowserTests(unittest.TestCase):
+                 self.assertIn('conflicts with the required trade objective', text)
+                 self.assertIn('Optional change: Remove the conflicting exact lock on', text)
+                 self.assertIn('No package was evaluated', text)
+-                self.assertEqual(page.get_by_text('Evaluated near misses', exact=True).count(), 0)
++                self.assertEqual(page.get_by_text('Other evaluated offers · not recommended', exact=True).count(), 0)
+                 self.assertEqual(page.locator('#shop-protected').evaluate('n => [...n.selectedOptions].map(o => o.value)'), [pick['asset_id']])
+                 self.assertEqual(requests[-1][1]['protected_assets'], [pick['asset_id']])
+                 self.assertTrue(conflict.is_visible())

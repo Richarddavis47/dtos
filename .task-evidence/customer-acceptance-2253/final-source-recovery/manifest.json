@@ -1,0 +1,251 @@
+{
+  "source": {
+    "baseline": "6bac32ce348cf6c5961c6c69f7659d217a76cee6",
+    "baseline_tree": "551ad8508f11d4b1b2870838aa804390840a6f62",
+    "candidate": "e85425fe60811dac15216dc2329478f5f58e325b",
+    "tree": "17893ff96552627e6c26c36adcdefede0f4e3bf4",
+    "branch": "fix/customer-acceptance-2253",
+    "version": "1.22.38",
+    "build": 2253,
+    "expected_test_count": 4504,
+    "scope": "Final implementation candidate; discovery, exact-source focused/full validation and visual review still required.",
+    "pr": 342
+  },
+  "scope": "Exact completed focused/preservation originals plus truthful running-state recovery, not mandatory full completion",
+  "originals": [
+    {
+      "name": "source.json",
+      "bytes": 494,
+      "sha256": "97fca46d794936ab28eb70827b4995aedb7913c2e0e83b42cc1a97e466b45344",
+      "parts": [
+        {
+          "name": "source.json",
+          "bytes": 494,
+          "sha256": "97fca46d794936ab28eb70827b4995aedb7913c2e0e83b42cc1a97e466b45344"
+        }
+      ]
+    },
+    {
+      "name": "final-candidate.patch",
+      "bytes": 400753,
+      "sha256": "781ba305b46fbb9b7bbb39c2d8a7599ff640fd77cac21d1305aa6f629181a30c",
+      "parts": [
+        {
+          "name": "final-candidate.patch.part-001",
+          "bytes": 350000,
+          "sha256": "8ed7dc54776efe4995e25bfeb968e0adeba7ad63ad8c6b6245ba5ffb5ab6470f"
+        },
+        {
+          "name": "final-candidate.patch.part-002",
+          "bytes": 50753,
+          "sha256": "ae6575ebcbec764dd45344a68a26ab714285d7b56c6b594d5c7c8a6682742edb"
+        }
+      ]
+    },
+    {
+      "name": "final-candidate-patch.sha256",
+      "bytes": 88,
+      "sha256": "bf48c1370f50fac7803aa15085afa92b1dbb1c463a45b453ee4d3fdfbae2e37b",
+      "parts": [
+        {
+          "name": "final-candidate-patch.sha256",
+          "bytes": 88,
+          "sha256": "bf48c1370f50fac7803aa15085afa92b1dbb1c463a45b453ee4d3fdfbae2e37b"
+        }
+      ]
+    },
+    {
+      "name": "triage-c13-home-verified.json",
+      "bytes": 567,
+      "sha256": "b150157ca9cdfde252ad630c1430ec06c656e0ce9f1804c536ebc7b0f7679075",
+      "parts": [
+        {
+          "name": "triage-c13-home-verified.json",
+          "bytes": 567,
+          "sha256": "b150157ca9cdfde252ad630c1430ec06c656e0ce9f1804c536ebc7b0f7679075"
+        }
+      ]
+    },
+    {
+      "name": "triage-c13-home__result.json",
+      "bytes": 480,
+      "sha256": "ae4b7bb2d2caca0f6155f007f6494d9ed80add47eacfe26930d7889deb579fb8",
+      "parts": [
+        {
+          "name": "triage-c13-home__result.json",
+          "bytes": 480,
+          "sha256": "ae4b7bb2d2caca0f6155f007f6494d9ed80add47eacfe26930d7889deb579fb8"
+        }
+      ]
+    },
+    {
+      "name": "triage-c13-home__original-console.log",
+      "bytes": 124632,
+      "sha256": "75713e73035f7cf1927eee537d52b7f660f6754fbc6f7f020112ba32a4068954",
+      "parts": [
+        {
+          "name": "triage-c13-home__original-console.log",
+          "bytes": 124632,
+          "sha256": "75713e73035f7cf1927eee537d52b7f660f6754fbc6f7f020112ba32a4068954"
+        }
+      ]
+    },
+    {
+      "name": "fixture-isolation-ready.json",
+      "bytes": 425,
+      "sha256": "328da19d492d2af891ee2ce72cb52206fef4f9dcb6ce7534980c49fd274ecbc0",
+      "parts": [
+        {
+          "name": "fixture-isolation-ready.json",
+          "bytes": 425,
+          "sha256": "328da19d492d2af891ee2ce72cb52206fef4f9dcb6ce7534980c49fd274ecbc0"
+        }
+      ]
+    },
+    {
+      "name": "focused-ready.json",
+      "bytes": 416,
+      "sha256": "79facafb39a9193dc0a612a21a908cafed80012b5f67e81d6c063adc0edeca4a",
+      "parts": [
+        {
+          "name": "focused-ready.json",
+          "bytes": 416,
+          "sha256": "79facafb39a9193dc0a612a21a908cafed80012b5f67e81d6c063adc0edeca4a"
+        }
+      ]
+    },
+    {
+      "name": "harness-contract-ready.json",
+      "bytes": 1068,
+      "sha256": "881058117d2abf079b68c480fb392bec4237f42741cc23dc5f0cc1bf7befef0a",
+      "parts": [
+        {
+          "name": "harness-contract-ready.json",
+          "bytes": 1068,
+          "sha256": "881058117d2abf079b68c480fb392bec4237f42741cc23dc5f0cc1bf7befef0a"
+        }
+      ]
+    },
+    {
+      "name": "resource-preservation-verified.json",
+      "bytes": 53116,
+      "sha256": "5bc072a4f8bfb78725fa9b5037438485fa42214c61ad44a2b567dd2e0153c3c9",
+      "parts": [
+        {
+          "name": "resource-preservation-verified.json",
+          "bytes": 53116,
+          "sha256": "5bc072a4f8bfb78725fa9b5037438485fa42214c61ad44a2b567dd2e0153c3c9"
+        }
+      ]
+    },
+    {
+      "name": "canonical-invocation.json",
+      "bytes": 2575,
+      "sha256": "43cd20ff5a94d2d90e305773ebfefa2e853bb72ee607f7fc73a39eda79e8878b",
+      "parts": [
+        {
+          "name": "canonical-invocation.json",
+          "bytes": 2575,
+          "sha256": "43cd20ff5a94d2d90e305773ebfefa2e853bb72ee607f7fc73a39eda79e8878b"
+        }
+      ]
+    },
+    {
+      "name": "canonical-harness-extraction.json",
+      "bytes": 2799,
+      "sha256": "ff3e81b69e564b13ded042ce1e2032e4846b5f3aa27851dad1afdd22eeda9663",
+      "parts": [
+        {
+          "name": "canonical-harness-extraction.json",
+          "bytes": 2799,
+          "sha256": "ff3e81b69e564b13ded042ce1e2032e4846b5f3aa27851dad1afdd22eeda9663"
+        }
+      ]
+    },
+    {
+      "name": "customer-test-population-final.json",
+      "bytes": 7778,
+      "sha256": "f09dc4d9310ce2fd97eb407ffe200c234d67517d5c72c897d6d5c5232653430f",
+      "parts": [
+        {
+          "name": "customer-test-population-final.json",
+          "bytes": 7778,
+          "sha256": "f09dc4d9310ce2fd97eb407ffe200c234d67517d5c72c897d6d5c5232653430f"
+        }
+      ]
+    },
+    {
+      "name": "owner-access-boundary.json",
+      "bytes": 439,
+      "sha256": "9ee23a29c61cbb59c33f92f53a3b578a8840a5cfcc36f0bd9bf6973380c47f7e",
+      "parts": [
+        {
+          "name": "owner-access-boundary.json",
+          "bytes": 439,
+          "sha256": "9ee23a29c61cbb59c33f92f53a3b578a8840a5cfcc36f0bd9bf6973380c47f7e"
+        }
+      ]
+    },
+    {
+      "name": "pending-home-card-language.patch",
+      "bytes": 1492,
+      "sha256": "720b28eaba4d53cfd6ccb9cafbe0bcecc712f7c7e577a45b6b6b802e5586a6c2",
+      "parts": [
+        {
+          "name": "pending-home-card-language.patch",
+          "bytes": 1492,
+          "sha256": "720b28eaba4d53cfd6ccb9cafbe0bcecc712f7c7e577a45b6b6b802e5586a6c2"
+        }
+      ]
+    },
+    {
+      "name": "finish-home-language-final-source.py",
+      "bytes": 6907,
+      "sha256": "24d89491be1b12526a54e67cd87ab77c9d2f04023e9a4eb7cebea3a1da96143c",
+      "parts": [
+        {
+          "name": "finish-home-language-final-source.py",
+          "bytes": 6907,
+          "sha256": "24d89491be1b12526a54e67cd87ab77c9d2f04023e9a4eb7cebea3a1da96143c"
+        }
+      ]
+    },
+    {
+      "name": "finish-final-source-local.py",
+      "bytes": 2033,
+      "sha256": "f4c11c3a07535e1756a7f6cfe5a89461b5a2aafd5b7c4df65999c62b38a06970",
+      "parts": [
+        {
+          "name": "finish-final-source-local.py",
+          "bytes": 2033,
+          "sha256": "f4c11c3a07535e1756a7f6cfe5a89461b5a2aafd5b7c4df65999c62b38a06970"
+        }
+      ]
+    },
+    {
+      "name": "preserve-final-source-scratch.py",
+      "bytes": 3432,
+      "sha256": "329d67aad9b878bb5ce3922b79ed23179286ebd9fe8b6d4b8888d10c943e19d6",
+      "parts": [
+        {
+          "name": "preserve-final-source-scratch.py",
+          "bytes": 3432,
+          "sha256": "329d67aad9b878bb5ce3922b79ed23179286ebd9fe8b6d4b8888d10c943e19d6"
+        }
+      ]
+    },
+    {
+      "name": "materialize-final-main-visual.py",
+      "bytes": 1590,
+      "sha256": "cbdfe798d8d6fdc67569554819023e3cb35b3681929561045929c3c75a10aadb",
+      "parts": [
+        {
+          "name": "materialize-final-main-visual.py",
+          "bytes": 1590,
+          "sha256": "cbdfe798d8d6fdc67569554819023e3cb35b3681929561045929c3c75a10aadb"
+        }
+      ]
+    }
+  ],
+  "observed_at": "2026-11-14T05:35:48.849430+00:00"
+}
