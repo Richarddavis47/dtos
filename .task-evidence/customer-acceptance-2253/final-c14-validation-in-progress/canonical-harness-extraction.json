@@ -1,0 +1,57 @@
+{
+  "source": {
+    "baseline": "6bac32ce348cf6c5961c6c69f7659d217a76cee6",
+    "baseline_tree": "551ad8508f11d4b1b2870838aa804390840a6f62",
+    "candidate": "d812de9125fcd0971c4b521186369cdc2c72f012",
+    "tree": "256e7e7c1046f9d82f1928141c84662ee7928bd5",
+    "branch": "fix/customer-acceptance-2253",
+    "version": "1.22.38",
+    "build": 2253,
+    "expected_test_count": 4504,
+    "scope": "Final implementation candidate; discovery, exact-source focused/full validation and visual review still required.",
+    "pr": 342
+  },
+  "passed": true,
+  "scope": "Pure committed-source comparison and harness extraction only; no tests executed",
+  "observed_at": "2026-11-14T06:17:31.596430+00:00",
+  "workflow": ".github/workflows/canonical-release-recovery.yml",
+  "candidate_workflow_sha256": "c824664de0eeeb0d6d1162c1e9c8fa54a0b69971545d6ede69b963287bda0492",
+  "baseline_workflow_sha256": "c824664de0eeeb0d6d1162c1e9c8fa54a0b69971545d6ede69b963287bda0492",
+  "canonical_delta": "None: exact verified2252 workflow/runner/observer bytes",
+  "product_delta": "Three acceptance controls added; identical8 normal cases scheduled early via module rename. Other setup, assertions and budgets unchanged",
+  "all_other_setup_and_validation_files_unchanged": [
+    ".github/workflows/linux-market-lifecycle.yml",
+    ".github/workflows/validation-tooling.yml",
+    "tools/validation/validate_release.py",
+    "src/platform/validation/release.py",
+    "requirements.txt",
+    "requirements-validation.txt",
+    "tests/test_canonical_harness_lifecycle.py"
+  ],
+  "actual_harness_test_ids": [
+    "tests.test_canonical_harness_lifecycle.CanonicalHarnessLifecycleTests.test_ci_budget_and_resource_contract_remain_bounded",
+    "tests.test_canonical_harness_lifecycle.CanonicalHarnessLifecycleTests.test_nonzero_result_is_not_converted_to_success",
+    "tests.test_canonical_harness_lifecycle.CanonicalHarnessLifecycleTests.test_real_normal_execution_completes",
+    "tests.test_canonical_harness_lifecycle.CanonicalHarnessLifecycleTests.test_timeout_stops_detached_writer_before_manifest_sealing"
+  ],
+  "tests_executed": 0,
+  "files": [
+    {
+      "path": "runner.py",
+      "bytes": 10167,
+      "sha256": "574308d9f64252575970aa19ce113f603ccb9927f2c6a523e8c228869fd37cac",
+      "baseline_bytes": 10167,
+      "baseline_sha256": "574308d9f64252575970aa19ce113f603ccb9927f2c6a523e8c228869fd37cac",
+      "official_candidate_bytes": true
+    },
+    {
+      "path": "observer/sitecustomize.py",
+      "bytes": 2029,
+      "sha256": "3f43288a099e49a3ed2dea36f977b596707589eaefd2656b40a3b9c6533be2d4",
+      "baseline_bytes": 2029,
+      "baseline_sha256": "3f43288a099e49a3ed2dea36f977b596707589eaefd2656b40a3b9c6533be2d4",
+      "official_candidate_bytes": true
+    }
+  ],
+  "unchanged_official_bytes": true
+}

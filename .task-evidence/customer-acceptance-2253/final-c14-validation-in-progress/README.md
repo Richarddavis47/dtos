@@ -1,0 +1,15 @@
+# Final corrected source — mandatory validation running
+
+PR342 remains draft/unmerged; production isv1.22.37/build2252/M06bac32ce348cf6c5961c6c69f7659d217a76cee6. Current candidate is recorded exactly in source.json and the patch; targetv1.22.38/build2253, draft445036079 remains unpublished.
+
+27 focused controls include the entire unchanged Home integrity module.123 preservation,10 actual normal-execution,4 harness and3 constrained native controls passed. Counts overlap full suites. Discovery4504executions/4445unique and49release-specific IDs are unchanged. Full local and hosted canonical are running, not approved. See NEXT_ACTIONS.md, WORK_STATUS.json and original invocation for exact controllers/container/runtime/source.
+
+The rendered C12 Home review found an unadapted primary cost phrase, despite C12 whole-source passes. C13 translated it but omitted the original cost in optional Home details when methodology was generic. Hosted beginner162scope failed1assertion; the unchanged original test reproduced1failure under2GiB. Known-failing C13 local/hosted canonical runs were deliberately stopped and preserved as canceled/incomplete, never passes. C14 retains original cost inside the existing optional disclosure, preserving primary plain wording, amount and uncertainty. Existing raw-cost assertion was not relaxed. Complete decoded hosted original and exact chunk checksum records are directly readable below; source clocks remain the original workflow timestamps. Canceled full artifact is separately retained with its actual no-result/no-manifest qualification.
+
+Do not cancel/duplicate healthy current validation. Existing controller collects actual full exit/all10/manifest, removes only verified stopped container, restores all closed original bytes/modes/times, then captures current-source supplementary/extra/native views. Current closed originals are safely inventoried under/tmp/dtos-2253-final-release-closed-evidence; no production data or active runtime was moved. The exact recovery procedure and remaining manual-review/publisher steps are in NEXT_ACTIONS.md. No code changes beyond a newly confirmed correctness defect are planned.
+
+Final current-source visuals, all mandatory passing local/hosted gates, source/evidence manifests and guarded publisher prepare/readback are required before sourceCASmerge. Merged tree must match validated tree; publish via frozen Actions credential, never directCloud upload/2191 publisher. No token export, infrastructure changes, owner setting mutations or production searches.
+
+Source-bound screenshots are Chromium fixtures, not authenticated owner production, physical Safari or a real user study. Long-owner zero-gap was reproduced; separate historical board-heading collision was not. Memory replay rejected semantic_preparation versus originalcanonical_asset_iteration, so exact historical memory cause remains unproven. Current managed capabilities expose no owner browser/RenderShell; MainChat Renderlocal200 remains supplied evidence. No Opera was used.
+
+This is accessible recovery evidence while the authorized task continues, not a release or a final success claim.

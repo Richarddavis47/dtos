@@ -1,0 +1,39 @@
+--- a/src/ui/home_trade_opportunities.py
++++ b/src/ui/home_trade_opportunities.py
+@@ -2,6 +2,8 @@
+ 
+ from html import escape
+ from urllib.parse import urlencode
++
++from src.ui.customer_experience import plain_reason
+ 
+ 
+ def section(roster_id):
+@@ -9,7 +11,7 @@
+ 
+ 
+ def _brief(text):
+-    text = str(text)
++    text = plain_reason(text)
+     return text if len(text) <= 240 else text[:237].rstrip() + "…"
+ 
+ 
+--- a/tests/test_customer_acceptance_followup.py
++++ b/tests/test_customer_acceptance_followup.py
+@@ -16,6 +16,16 @@
+         self.assertIn(raw, html)
+         self.assertLess(html.index('Incoming Player is on IR.'), html.index('<details>'))
+         self.assertIn('Original assessment record', html)
++
++        from src.ui.home_trade_opportunities import cards as home_cards
++        home = home_cards([dict(home_offer='fixture-only', evaluation=dict(
++            recommendation='REJECT', major_drawback=raw,
++            why_you_would_do_it='No supported gain.', dominant_reason=raw))], 1)
++        primary, details = home.split('<details>', 1)
++        self.assertNotIn('legal-replacement', primary)
++        self.assertIn('projected points from eligible backups', primary)
++        self.assertIn('2.25 points per supported week; participation is unknown.', primary)
++        self.assertIn(raw, details)
+ 
+     def test_repeated_brief_explanation_does_not_erase_a_distinct_risk(self):
+         item = dict(family='need', title='Receiver cover', reason='WR cover is limited.',

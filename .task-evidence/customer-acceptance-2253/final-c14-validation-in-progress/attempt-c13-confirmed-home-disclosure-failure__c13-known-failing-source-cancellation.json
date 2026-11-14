@@ -1,0 +1,27 @@
+{
+  "source": {
+    "baseline": "6bac32ce348cf6c5961c6c69f7659d217a76cee6",
+    "baseline_tree": "551ad8508f11d4b1b2870838aa804390840a6f62",
+    "candidate": "e85425fe60811dac15216dc2329478f5f58e325b",
+    "tree": "17893ff96552627e6c26c36adcdefede0f4e3bf4",
+    "branch": "fix/customer-acceptance-2253",
+    "version": "1.22.38",
+    "build": 2253,
+    "expected_test_count": 4504,
+    "scope": "Final implementation candidate; discovery, exact-source focused/full validation and visual review still required.",
+    "pr": 342
+  },
+  "at": "2026-11-14T06:03:47.145908+00:00",
+  "action": "Stop only disposable full validation on a proven failing source, preserve as canceled/incomplete; no healthy-source retries or production operation",
+  "reason": "Hosted beginner162 scope failed unchanged Home raw-cost preservation assertion; matched existing single test reproduced1failure under2GiB. Existing local/hosted canonical contain that same required test; continuing cannot establish all-pass.",
+  "hosted_failed_run": 43561451532,
+  "hosted_failed_job": 132345826977,
+  "matched_original": "triage-c13-home-integrity/result.json",
+  "local_container": "14d3bc22c6df31ed4258ae8b47952e031a36f28f2974c24fec79b3d2607c2171",
+  "recorded_starts": 1815,
+  "recorded_stops": 1814,
+  "recorded_test_failures": 0,
+  "full_local_pass": false,
+  "full_hosted_pass": false,
+  "production_changed": false
+}
