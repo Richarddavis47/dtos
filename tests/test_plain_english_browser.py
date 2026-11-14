@@ -111,7 +111,15 @@ class PlainEnglishBrowserTests(unittest.TestCase):
                 self.assertIn('Your team', primary.inner_text())
                 self.assertIn('Their team', primary.inner_text())
                 self.assertIn('7.70 projected points', primary.inner_text())
-                self.assertIn('Recommendation unavailable', page.locator('#trade-result .tw-final-verdict').inner_text())
+                # This fixture has full prices and lineup coverage; its missing
+                # input is the analysis goal, with freshness still qualified.
+                self.assertEqual(result['market_evidence']['availability'], 'full')
+                self.assertTrue(all(result['dimensions']['strategic_fit'][side]['projection_coverage_complete']
+                                    for side in ('active', 'partner')))
+                self.assertEqual(result['decision_context']['verdict'], 'Choose an analysis goal')
+                self.assertIn('Choose an analysis goal', page.locator('#trade-result .tw-final-verdict').inner_text())
+                self.assertIn('no recommendation is established', page.locator('#trade-result .tw-final-verdict').inner_text())
+                self.assertIn('provisional', primary.inner_text().lower())
                 primary.locator('.tw-team-impact-details > summary').press('Enter')
                 self.assertIn('Their principal cost:', primary.inner_text())
                 self.assertEqual(page.locator('.tw-evaluation-detail').get_attribute('open'), None)
