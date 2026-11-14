@@ -108,6 +108,7 @@ class TradePartnerHistoryBrowserTests(TestCase):
             for width, height in [(320,432), (375,667), (390,844), (1280,900)]:
                 page.set_viewport_size({'width': width, 'height': height})
                 self.round_trip(helper, page, requests, '/trades/create', touch=width==390)
+                self.assertIn('Your Custom values · Absolute slot', page.locator('#trade-result').inner_text())
                 after = helper.draft(page)
                 for key in ('currentProposal', 'valuationMode', 'strategy'):
                     self.assertEqual(after[key], before[key])
