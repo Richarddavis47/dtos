@@ -1043,7 +1043,10 @@
     if (e.personalization?.mode === 'custom') {
       out.append(node('h3', 'Custom DTOS · your personal assessment'), node('p', 'Neutral DTOS: ' + (e.neutral_assessment?.recommendation || 'Unavailable') + '. Market prices and your counterparty’s supported evidence remain neutral.', 'tw-verdict-qualification'));
       const value = e.personal_value_evidence;
-      if (value) out.append(node('p', valuationSummary(e)));
+      if (value) {
+        if (retained) out.append(node('small', valuationSummary(e).split(':', 1)[0]));
+        out.append(node('p', 'Your personal values from Custom Rankings · You send ' + (value.sent?.total == null ? 'Unavailable' : displayMarket(value.sent.total)) + ' / You receive ' + (value.received?.total == null ? 'Unavailable' : displayMarket(value.received.total))));
+      }
     }
     for (const warning of e.personal_preference_warnings || []) out.append(node('p', warning + '. Your manually entered offer was not altered.', 'tw-drawback'));
     if (!retained) for (const conflict of e.personal_preference_conflicts || []) {
