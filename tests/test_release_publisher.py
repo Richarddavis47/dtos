@@ -4609,6 +4609,17 @@ class CustomerBaselineAliasTests(unittest.TestCase):
             "head": {"sha": "e" * 40, "repo": {"full_name": "fixture/repository"}},
         }
 
+    def test_final_release_plan_aliases_match_its_actual_baseline(self):
+        plan_path = Path(__file__).parents[1] / ".github/release-plans/2253.json"
+        plan = json.loads(plan_path.read_text())
+        aliases = plan["baseline_snapshot_aliases"]
+        self.assertTrue(aliases)
+        for alias in aliases:
+            self.assertEqual(set(alias), {"commit", "tree", "pr"})
+            self.assertEqual(alias["tree"], plan["baseline_tree"])
+            self.assertRegex(alias["commit"], "^[0-9a-f]{40}$")
+            self.assertGreater(alias["pr"], 0)
+
     def test_reviewed_premerge_alias_requires_actual_merged_pr_and_exact_tree(self):
         with (
             patch.object(p, "api", return_value=self.pr) as api,
