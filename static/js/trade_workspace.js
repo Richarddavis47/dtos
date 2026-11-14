@@ -695,6 +695,15 @@
         strategic_fit: strategies ? {...strategies, active: withoutReserveCopies(strategies.active), partner: withoutReserveCopies(strategies.partner)} : strategies,
         package_quality: packages ? Object.fromEntries(Object.entries(packages).map(([key, row]) => [key, withoutReserveCopies(row)])) : packages}};
   }
+  function recordedEvaluation(value) {
+    if (!value || typeof value !== 'object' || Array.isArray(value)) return {};
+    const compact = compactRetainedEvaluation(value);
+    const saved = boundedEvidence(compact);
+    // Independently bounded evidence families must not evict one another.
+    // Keep tuple/dictionary reserve disclosures, never raw provider catalogs.
+    saved.reserve_evidence = boundedEvidence(compact.reserve_evidence);
+    return saved;
+  }
   function retainedReserveRow(row, quality) {
     if (typeof row !== 'string' || quality?.reserve_quality_encoding !== 'tuple-v1') return row;
     try {
@@ -738,7 +747,7 @@
       search_result_type: boundedEvidence(value.search_result_type), stale_reason: boundedEvidence(value.stale_reason), restored: true,
       attempt_state: value.attempt_state || value.evaluation?.assessment_state?.state || 'fresh_incomplete',
       previous_assessment: includePrevious && value.previous_assessment ? restoreContext(value.previous_assessment, false) : null,
-      evaluation: boundedEvidence(compactRetainedEvaluation(value.evaluation || {})), opportunity: boundedEvidence(value.opportunity)};
+      evaluation: recordedEvaluation(value.evaluation || {}), opportunity: boundedEvidence(value.opportunity)};
   }
   const assessedOfferContexts = new WeakMap();
   const comparisonScope = () => ({binding: workspace.workspace_context.binding,
@@ -828,7 +837,7 @@
     // Independently bounded ownership evidence must survive even when the
     // existing 512-node analytical disclosure is full. The 64k context and
     // 100k offer limits remain unchanged; truncation never implies zero.
-    const context = {schema: 1, recorded_lineup_text: boundedEvidence(recordedLineupText(e)), acquisition_comparison: boundedEvidence(row.acquisition_comparison), draft_capital_record: boundedEvidence(e.draft_capital_record), evaluation: boundedEvidence(compactRetainedEvaluation(Object.fromEntries(keys.filter(key => key in e).map(key => [key, e[key]])))),
+    const context = {schema: 1, recorded_lineup_text: boundedEvidence(recordedLineupText(e)), acquisition_comparison: boundedEvidence(row.acquisition_comparison), draft_capital_record: boundedEvidence(e.draft_capital_record), evaluation: recordedEvaluation(Object.fromEntries(keys.filter(key => key in e).map(key => [key, e[key]]))),
       exploration: row.exploration === true, search_result_type: row.search_result_type || null,
       opportunity: boundedEvidence(row.opportunity || null),
       identity: {personalization: JSON.stringify(personalPayload()), package: packageIdentity(row.proposal || selected), strategy: row.home_assessment_strategy ?? el('trade-strategy').value,
@@ -844,6 +853,7 @@
       context.identity.package = context.identity.package.slice(0, 16000);
       context.evaluation.major_limitations = [...(context.evaluation.major_limitations || []), 'Additional evidence omitted from temporary preview; reevaluate for full details.'].slice(-32);
     }
+    if (JSON.stringify(context).length > 64000) context.recorded_lineup_text = {omitted: 'Detailed lineups were too large to save with this offer. Recorded comparisons remain qualified, not revalidated.'};
     return context;
   }
   function contextQualification(context, proposal = selected) {
