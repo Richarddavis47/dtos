@@ -15,7 +15,10 @@ def cards(items):
                                  'major_drawback': item['drawback']}
             output.append(offer_cards([row], item['roster_id']))
             continue
-        details = ''.join('<p>' + escape(str(line)) + '</p>' for line in item['details'] if line)
+        visible_reasons = {plain_reason(item['reason']), plain_reason(item['drawback'])}
+        details = ''.join('<p>' + escape(plain_reason(line)) + '</p>'
+                          for line in dict.fromkeys(item['details'])
+                          if line and plain_reason(line) not in visible_reasons)
         label = ('Evidence limit' if item['family'] == 'attention' else
                  'Cost and uncertainty' if item['family'] in {'need', 'depth', 'capital'} else 'Keep in mind')
         output.append(f'''<article class="home-brief-insight" data-brief-family="{escape(item['family'])}">{"<p class=identity-kicker>Next action</p>" if not output else ""}<h3>{escape(item['title'])}</h3><p><b>Why:</b> {escape(plain_reason(item['reason']))}</p><p><b>{label}:</b> {escape(item['drawback'])}</p><a class="ds-action" href="{escape(item['href'], quote=True)}">{escape(item['action'])} →</a>''' +

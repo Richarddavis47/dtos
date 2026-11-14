@@ -147,7 +147,11 @@ def recommendation_panel(*, title: str, recommendation: str, confidence: int, pr
     original_record = ("<h3>Original assessment record</h3>" + "".join(
         "<p>" + escape(value) + "</p>" for value in originals
     )) if originals != (title, recommendation, primary_reason, expected_impact) else ""
-    evidence_html = "".join(f"<li>{escape(item)}</li>" for item in evidence) or "<li>No additional supporting evidence crossed the current confidence boundary.</li>"
-    limitations_html = "".join(f"<li>{escape(item)}</li>" for item in limitations) or "<li>No material limitation was identified in the current cached evidence.</li>"
+    evidence_html = "".join(f"<li>{escape(item)}</li>" for item in dict.fromkeys(evidence)) or "<li>No additional supporting evidence crossed the current confidence boundary.</li>"
+    limitations_html = "".join(f"<li>{escape(item)}</li>" for item in dict.fromkeys(limitations)) or "<li>No material limitation was identified in the current cached evidence.</li>"
     action_html = f'<a class="ds-action primary" href="{escape(action_href)}">{escape(action_label)}</a>' if action_href else ""
-    return f'''<article class="ds-recommendation" data-dtos-component="recommendation"><div><div class="ds-eyebrow">Recommendation</div><h2>{escape(title)}</h2><p>{escape(recommendation)}</p><p><b>Primary reason:</b> {escape(primary_reason)}</p>{action_html}</div><div class="ds-confidence"><b>{confidence}%</b><span>Evidence confidence</span></div><details><summary>Detailed Evidence</summary>{original_record}<h3>Expected impact:</h3><p>{escape(expected_impact)}</p><h3>Supporting Evidence</h3><ul>{evidence_html}</ul><h3>Limitations</h3><ul>{limitations_html}</ul></details></article>'''
+    reason_html = (f'<p><b>Primary reason:</b> {escape(primary_reason)}</p>'
+                   if primary_reason not in {title, recommendation} else '')
+    risk_html = (f'<p class="ds-main-limitation"><b>Keep in mind:</b> {escape(plain_reason(limitations[0]))}</p>'
+                 if limitations and plain_reason(limitations[0]) not in {title, recommendation, primary_reason} else '')
+    return f'''<article class="ds-recommendation" data-dtos-component="recommendation"><div><div class="ds-eyebrow">Recommendation</div><h2>{escape(title)}</h2><p>{escape(recommendation)}</p>{reason_html}{risk_html}{action_html}</div><div class="ds-confidence"><b>{confidence}%</b><span>Evidence confidence</span></div><details><summary>Detailed Evidence</summary>{original_record}<h3>Expected impact:</h3><p>{escape(expected_impact)}</p><h3>Supporting Evidence</h3><ul>{evidence_html}</ul><h3>Limitations</h3><ul>{limitations_html}</ul></details></article>'''

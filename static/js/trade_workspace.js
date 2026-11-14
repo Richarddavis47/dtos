@@ -429,9 +429,11 @@
   function board(which) {
     const container = el('trade-' + which + '-board'), owner = team(which === 'sent' ? active : partner()), f = filters[which];
     container.replaceChildren(); container.setAttribute('aria-hidden', String(matchMedia('(max-width:760px)').matches && side !== which));
-    container.append(node('h3', owner?.team_name || 'Choose a counterparty'));
+    const ownerHeader = node('div', null, 'tw-owner-header');
+    ownerHeader.append(node('h3', owner?.team_name || 'Choose a trade partner'));
+    container.append(ownerHeader);
     if (!owner) return;
-    const teamLink = node('a', 'View team'); teamLink.href = '/teams/' + owner.roster_id; container.append(teamLink);
+    const teamLink = node('a', 'View team'); teamLink.href = '/teams/' + owner.roster_id; ownerHeader.append(teamLink);
     const search = node('input'); search.type = 'search'; search.value = f.q; search.placeholder = 'Search players or picks'; search.setAttribute('aria-label', which === 'sent' ? 'Search my assets' : 'Search their assets');
     const results = node('div', null, 'tw-asset-results'), chips = node('div', null, 'tw-filters');
     const positions = ['ALL', 'QB', 'RB', 'WR', 'TE', ...[...new Set(owner.assets.filter(a => a.kind !== 'pick' && !['QB','RB','WR','TE'].includes(a.position)).map(a => a.position || 'Other positions'))].sort(), 'PICKS'].filter(p => p === 'ALL' || owner.assets.some(a => (a.kind === 'pick' ? 'PICKS' : (a.position || 'Other positions')) === p));
@@ -464,8 +466,10 @@
     if (target && !entryBlocked) {
       targetBox.append(node('h3', session.requiredOutgoingAsset ? 'Asset you are shopping' : 'Player or pick you want'), identity(target));
       const owner = workspace.teams.find(t => t.assets.some(a => a.asset_id === targetId));
-      const ownerLink = node('a', 'Current owner: ' + owner.team_name); ownerLink.href = '/teams/' + owner.roster_id; targetBox.append(ownerLink);
-      if (target.kind === 'player') { const dossier = node('a', 'Open player dossier'); dossier.href = '/players/' + encodeURIComponent(target.asset_id.replace(/^player:/, '')); targetBox.append(dossier); }
+      const targetActions = node('div', null, 'tw-target-actions');
+      const ownerLink = node('a', 'Current owner: ' + owner.team_name); ownerLink.href = '/teams/' + owner.roster_id; targetActions.append(ownerLink);
+      if (target.kind === 'player') { const dossier = node('a', 'Open player dossier'); dossier.href = '/players/' + encodeURIComponent(target.asset_id.replace(/^player:/, '')); targetActions.append(dossier); }
+      targetBox.append(targetActions);
     }
     for (const which of ['sent', 'received']) { const box = el('trade-' + which + '-chips'); box.replaceChildren(); for (const id of selected[which]) { const a = asset(id); if (a) box.append(assetRow(a, which, true)); else box.append(node('p', 'An asset is no longer available. Refresh this workspace.')); } }
     const count = selected.sent.length + selected.received.length;
@@ -887,6 +891,12 @@
   function parsedExplanation(e) {
     const parsed = new DOMParser().parseFromString(e.explanation_html, 'text/html');
     const primary = parsed.querySelector('.dtos-explanation > p');
+    // Translate only the displayed decision copy, including retained HTML.
+    // The recorded evaluation, source payload and qualifications stay untouched.
+    for (const section of parsed.querySelectorAll('.tw-decision')) {
+      const text = parsed.createTreeWalker(section, NodeFilter.SHOW_TEXT);
+      while (text.nextNode()) text.currentNode.textContent = customerText(text.currentNode.textContent);
+    }
     // Older cached HTML must follow the same recorded bilateral admission in
     // expanded cards and previews as in the main result. No re-evaluation.
     if (primary && primary.firstChild?.textContent.trim() === e.recommendation && finalVerdict(e) !== e.recommendation) {
@@ -897,15 +907,15 @@
   function appendDecisionSummary(target, decision) {
     for (const key of ['your_side_summary', 'their_side_summary', 'decision_conditions', 'evidence_next_action']) {
       for (const line of (decision[key] || '').split('\n').filter(Boolean))
-        target.append(node('p', line, key === 'decision_conditions' ? 'tw-drawback' : ''));
+        target.append(node('p', customerText(line), key === 'decision_conditions' ? 'tw-drawback' : ''));
     }
   }
   function appendDecisionLead(target, decision) {
     if (!decision.decisive_reason && !decision.decision_next_step) return;
     const lead = node('section', null, 'tw-decision-lead');
     lead.setAttribute('aria-label', 'Decision and next step');
-    if (decision.decisive_reason) lead.append(node('p', 'Why this decision: ' + decision.decisive_reason));
-    if (decision.decision_next_step) lead.append(node('p', 'Next step: ' + decision.decision_next_step));
+    if (decision.decisive_reason) lead.append(node('p', 'Why this decision: ' + customerText(decision.decisive_reason)));
+    if (decision.decision_next_step) lead.append(node('p', 'Next step: ' + customerText(decision.decision_next_step)));
     target.append(lead);
   }
   function decisionPresentation(e) {
@@ -1055,7 +1065,7 @@
       out.append(brief);
       if (!previousContainer && e.decision_context.strategy?.selection_required) strategyAction(out);
     }
-    if (decision.main_cost || e.major_drawback || e.major_risks?.length) out.append(node('p', 'Cost and uncertainty: ' + (decision.main_cost || e.major_drawback || e.major_risks.join('; ').replaceAll('_', ' ')), 'tw-drawback'));
+    if (decision.main_cost || e.major_drawback || e.major_risks?.length) out.append(node('p', 'Cost and uncertainty: ' + customerText(decision.main_cost || e.major_drawback || e.major_risks.join('; ').replaceAll('_', ' ')), 'tw-drawback'));
     else if (context?.restored) out.append(node('p', 'Major drawback unavailable in retained context. Reevaluate for supported costs.', 'tw-drawback'));
     if (previousContainer) for (const risk of e.major_risks || []) if (risk !== e.major_drawback) out.append(node('p', 'Previous risk: ' + risk.replaceAll('_', ' '), 'tw-drawback'));
     if (e.legality?.execution_status && !retained && (!incomplete || e.legal === false || e.legality.execution_status === 'REQUIRES ROSTER RESOLUTION')) out.append(node('p', e.legality.execution_status));
@@ -1312,7 +1322,7 @@
     const unfavorable = ['REJECT', 'NOT WORTH IT'].includes(e.recommendation);
     const reason = unfavorable ? 'Closer current Market terms do not make this a recommended trade.' : decision.lineup?.explanation || e.why_you_would_do_it || 'Market balance is separate from strategic fit; no supported positive roster case is established.';
     card.append(node('p', 'Why consider: ' + reason),
-      node('p', 'Major drawback: ' + (decision.main_cost || e.major_drawback || 'A supported main cost is unavailable; reevaluate before deciding.'), 'tw-drawback'));
+      node('p', 'Major drawback: ' + customerText(decision.main_cost || e.major_drawback || 'A supported main cost is unavailable; reevaluate before deciding.'), 'tw-drawback'));
     if (decision.limitation) card.append(node('p', 'Evidence limit: ' + decision.limitation, 'tw-drawback'));
     if (retained) card.append(node('p', 'Prior benefits and drawbacks are not current conclusions. Reevaluate after adoption.', 'tw-drawback'));
     for (const id of [...row.proposal.assets_sent, ...row.proposal.assets_received]) { const protection = lockDetail(id); if (protection) card.append(protection); }
@@ -1343,11 +1353,9 @@
       window.DTOSOfferComparison.capitalView(record, node, comparisonScope(), retained), 'tw-capital-disclosure');
   }
   function customerText(value) {
-    return String(value || '').replaceAll('compatible prepared publication', 'league data for this week')
-      .replaceAll('Canonical Market', 'Market value').replaceAll('canonical Market', 'Market value')
-      .replaceAll('disjoint reserve cover', 'different eligible backups')
-      .replaceAll('bilateral recommendation', 'recommendation for both teams');
+    return window.DTOSOfferComparison?.customerText?.(value) ?? String(value || '');
   }
+
   function recordedPresentation(row) {
     const supplied = row.proposal_presentation || row.proposal.preview_presentation;
     if (!supplied) return null;
@@ -1439,7 +1447,7 @@
     for (const [side, title] of [['active', 'Your team'], ['partner', 'Their team']]) {
       const section = node('section'); section.append(node('h4', title));
       const explanation = side === 'active' ? decision.summary || e.why_you_would_do_it : decision.partner_summary || e.counterparty_summary || e.why_they_would_do_it;
-      section.append(node('p', explanation || 'A supported team-specific explanation is not available.'));
+      section.append(node('p', customerText(explanation || 'A supported team-specific explanation is not available.')));
       if (side === 'partner') section.append(node('small', 'Their fit is an evidence-based inference, not a statement of the manager’s intent.'));
       teams.append(section);
     }
@@ -1512,7 +1520,7 @@
       out.append(conflict);
     }
     if (body.near_misses?.length) {
-      const detail = node('details', null, 'tw-near-misses'); detail.append(node('summary', 'Evaluated near misses'));
+      const detail = node('details', null, 'tw-near-misses'); detail.append(node('summary', 'Other evaluated offers · not recommended'));
       for (const row of body.near_misses) {
         const p = row.proposal;
         if (!p || !row.evaluation) continue; // A near miss must be an assessed package.
@@ -1565,7 +1573,7 @@
       const qualified = (body.results || []).filter(qualifiedOffer);
       const other = (body.results || []).filter(row => !qualifiedOffer(row));
       out.append(node('h3', qualified.length ? `Qualified recommendations · ${qualified.length}` : 'No qualified recommendations'));
-      if (!qualified.length) out.append(node('p', body.quiet_state || 'No offer is endorsed as Worth Pursuing in this search. Optional or limited offers are shown separately.'));
+      if (!qualified.length) out.append(node('p', customerText(body.quiet_state) || 'No offer is endorsed as Worth Pursuing in this search. Optional or limited offers are shown separately.'));
       for (const row of qualified) {
         out.append(offerCard(row));
       }
@@ -1587,7 +1595,7 @@
     if (flow === 'shop' && body.markets) {
       const out = el('trade-result'); out.hidden = false; out.replaceChildren();
       const refineLink = node('a', 'Refine returns · optional', 'ds-action'); refineLink.href = '#shop-refinements'; out.append(refineLink);
-      if (!body.markets.length) out.append(node('p', body.quiet_state || 'No credible market in this bounded search.'));
+      if (!body.markets.length) out.append(node('p', customerText(body.quiet_state) || 'No credible market in this bounded search.'));
       for (const limitation of body.shop_preference?.limitations || []) out.append(node('p', limitation));
       for (const market of body.markets) {
         out.append(node('h3', team(market.counterparty_roster_id)?.team_name || 'Counterparty'),

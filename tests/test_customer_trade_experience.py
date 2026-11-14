@@ -68,6 +68,7 @@ class CustomerTradeJourneyTests(unittest.TestCase):
         harness = scout.ScoutWorkspaceStateBrowserTests()
         rows = helper.offer_panel()
         partner_case = ('Their assets provide a supported return; willingness is unconfirmed. '
+                        + 'Useful legal-replacement production falls 4.00 points per supported week; participation remains unknown. '
                         + 'The remaining projection horizons and manager preferences are not established. ' * 18
                         + 'Recorded partner qualification tail.')
         conditions = ('Their manager direction is unconfirmed. '
@@ -76,7 +77,7 @@ class CustomerTradeJourneyTests(unittest.TestCase):
         for row in rows:
             row['evaluation']['decision_context'] = {
                 'decisive_reason': 'The supported upgrade has a real cost for both teams.',
-                'main_cost': 'You spend usable depth.',
+                'main_cost': 'You spend usable depth. Useful legal-replacement production falls 2.25 points per supported week; participation remains unknown.',
                 'summary': 'Your supported roster benefit remains conditional.',
                 'partner_summary': partner_case,
                 'decision_conditions': conditions,
@@ -130,6 +131,10 @@ class CustomerTradeJourneyTests(unittest.TestCase):
                     review = page.locator('#trade-result > article.tw-offer-review')
                     self.assertIn('Incoming Player', review.inner_text())
                     self.assertIn('inference', review.inner_text())
+                    team_text = review.locator(':scope > .tw-team-summary').inner_text()
+                    self.assertNotIn('legal-replacement production', team_text)
+                    self.assertIn('projected points from eligible backups fall 4.00 points per supported week', team_text)
+                    self.assertIn('participation remains unknown', team_text)
                     detail = review.locator(':scope > .tw-lineup-details')
                     detail.locator('summary').press('Enter')
                     self.assertIn('FLEX, K, DEF', detail.inner_text())
@@ -153,6 +158,9 @@ class CustomerTradeJourneyTests(unittest.TestCase):
                                    'Your team after trade · Week 10', 'Provisional assessment'):
                         self.assertIn(phrase, compact_text)
                     self.assertNotIn('Outgoing-only Player', compact_text)
+                    self.assertNotIn('legal-replacement production', compact_text)
+                    self.assertIn('projected points from eligible backups fall 2.25', compact_text)
+                    self.assertIn('participation remains unknown', compact_text)
                     self.assertNotIn('Recorded partner qualification tail', compact_text)
                     self.assertNotIn('Recorded decision conditions tail', compact_text)
                     self.assertLess(len(compact_text.split()), len((partner_case + conditions).split()))
@@ -165,6 +173,7 @@ class CustomerTradeJourneyTests(unittest.TestCase):
                     self.assertTrue(recorded.evaluate('e=>e.open'))
                     self.assertIn(partner_case, recorded.inner_text())
                     self.assertIn(conditions, recorded.inner_text())
+                    self.assertIn(rows[0]['evaluation']['decision_context']['main_cost'], recorded.inner_text())
                     if os.getenv('DTOS_CUSTOMER_TRADE_EVIDENCE'):
                         comparison.screenshot(path=str(Path(os.environ['DTOS_CUSTOMER_TRADE_EVIDENCE']) / f'comparison-open-{width}.png'))
                     self.assertEqual(len(requests), count)

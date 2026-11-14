@@ -26,7 +26,10 @@ def player_projection_panel(view: dict, front_office: int | None = None) -> str:
             if front_office is not None:
                 query['front_office'] = front_office
             links.append(f'<a class="button" href="{path}?{escape(urlencode(query))}">{label}</a>')
-    reason = ''.join(f'<p>{escape(plain_reason(view[key]).replace("current league snapshot", "current league data").replace("scoring publication", "league scoring"))}</p>' for key in ('reason', 'participation_note', 'eligibility_note') if view.get(key))
+    notes = dict.fromkeys(plain_reason(view[key]).replace("current league snapshot", "current league data")
+                          .replace("scoring publication", "league scoring")
+                          for key in ('reason', 'participation_note', 'eligibility_note') if view.get(key))
+    reason = ''.join(f'<p>{escape(note)}</p>' for note in notes)
     if view.get('display_reason'):
         reason += '<p>Exact Sleeper display precision has not been verified.</p>'
     return ('<link rel="stylesheet" href="/static/css/matchups.css">'

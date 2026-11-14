@@ -1,6 +1,19 @@
 /* Bounded presentation of two completed assessments. No HTTP or evaluation. */
 (() => {
   'use strict';
+  function customerText(value) {
+    return String(value || '').replaceAll('compatible prepared publication', 'league data for this week')
+      .replaceAll('Canonical Market', 'Market value').replaceAll('canonical Market', 'Market value')
+      .replaceAll('disjoint reserve cover', 'different eligible backups')
+      .replaceAll('No legitimate bilateral construction clears the current constraints.', 'No offers met the requirements for both teams in this search.')
+      .replaceAll('Useful replacement production declines without a material supported starter gain or Market compensation.', 'Projected points from eligible backups fall without a meaningful starting-lineup gain or Market value to offset the loss.')
+      .replaceAll('Useful replacement production changes', 'Projected points from eligible backups change')
+      .replaceAll('legal-replacement production falls', 'projected points from eligible backups fall')
+      .replaceAll('legal-replacement production improves', 'projected points from eligible backups improve')
+      .replaceAll('legal-replacement production declines', 'projected points from eligible backups decline')
+      .replaceAll('legal-replacement production', 'projected points from eligible backups')
+      .replaceAll('bilateral recommendation', 'recommendation for both teams');
+  }
   const number = value => typeof value === 'number' && Number.isFinite(value);
   const known = value => (typeof value === 'string' && value.length > 0) || number(value);
   const sameScope = (entry, scope) => entry?.schema === 1 && scope?.binding &&
@@ -207,12 +220,12 @@
         node('small', 'Personal value does not establish the counterparty’s willingness or change Neutral Market.'));
       out.append(node('h5', 'Depth and roster consequences'));
       for (const side of ['active', 'partner']) {
-        out.append(node('p', (side === 'active' ? 'Your team: ' : 'Their team: ') + (depth[side] || 'Reserve-depth evidence unavailable.')));
+        out.append(node('p', (side === 'active' ? 'Your team: ' : 'Their team: ') + customerText(depth[side] || 'Reserve-depth evidence unavailable.')));
         const spots = capacity[side];
         out.append(node('p', (side === 'active' ? 'Your' : 'Their') + ' additional configured roster spots to resolve: ' +
           (number(spots) ? spots + '. No cut is assumed.' : 'Unknown; roster feasibility is not inferred.')));
       }
-      out.append(node('p', 'Main cost or risk: ' + s.cost, 'tw-drawback'), node('p', partnerCase(entry), 'tw-comparison-partner'));
+      out.append(node('p', 'Main cost or risk: ' + customerText(s.cost), 'tw-drawback'), node('p', partnerCase(entry), 'tw-comparison-partner'));
       const cautions = participationCautions(entry);
       if (cautions.length) out.append(node('p', 'Availability to review: ' + cautions.join(' '), 'tw-comparison-risk-summary tw-drawback'));
       const decision = entry.context?.evaluation?.decision_context || {};
@@ -220,7 +233,7 @@
       if (s.limitation || provisional) out.append(node('p', (provisional ? 'Provisional assessment. ' : '') + 'Some availability or coverage remains unverified. Review the original assessment for the affected evidence.', 'tw-comparison-qualification tw-drawback'));
       const disclosure = node('details'); disclosure.append(node('summary', 'Original assessment · both teams and evidence limits'));
       disclosure.append(node('small', 'Captured ' + (entry.context?.identity?.captured_at || 'time unavailable') + '. Values and conclusions belong to this offer’s original assessment.'));
-      disclosure.append(node('p', 'Their original case: ' + s.partnerReason));
+      disclosure.append(node('p', 'Recorded cost: ' + s.cost), node('p', 'Their original case: ' + s.partnerReason));
       if (s.conditions !== entry.context?.evaluation?.decision_context?.decision_conditions)
         disclosure.append(node('p', 'Conditions: ' + s.conditions, 'tw-drawback'));
       if (s.limitation) disclosure.append(node('p', 'Evidence limit: ' + s.limitation, 'tw-drawback'));
@@ -285,7 +298,7 @@
     refresh();
     return {add, refresh};
   }
-  const api = {acquisitionView, compatibility, sameScope, wellFormed, create, readCapital, capitalView};
+  const api = {customerText, acquisitionView, compatibility, sameScope, wellFormed, create, readCapital, capitalView};
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else globalThis.DTOSOfferComparison = api;
 })();

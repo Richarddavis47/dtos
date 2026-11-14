@@ -4,6 +4,7 @@ from src.core.explanations import (
     Explanation, Statement,
 )
 from src.ui.intelligence_presentation import manager_points
+from src.ui.customer_experience import plain_reason
 from src.core.player_value_projection.sleeper_actuals import actual_display
 from html import escape
 from services.trade_decision import final_decision, lineup_comparisons
@@ -46,8 +47,8 @@ REASONS = {
     'ROS_DOWNGRADE': 'The supported rest-of-regular-season optimal lineups lose projected points.',
     'PLAYOFF_WINDOW_DOWNGRADE': 'The supported playoff-window optimal lineups lose projected points; this is not a qualification forecast.',
     'DEPTH_LOSS': 'Supported reserve coverage declines.',
-    'RESERVE_PRODUCTION_LOSS': 'Useful legal-replacement production falls, even if reserve-slot counts stay the same.',
-    'RESERVE_PRODUCTION_GAIN': 'Useful legal-replacement production improves; this is depth, not a starter upgrade.',
+    'RESERVE_PRODUCTION_LOSS': 'Projected points from eligible backups fall, even if the same number of backup slots is covered.',
+    'RESERVE_PRODUCTION_GAIN': 'Projected points from eligible backups improve; this helps depth, not the starting lineup.',
     'MIXED_WEEKLY_RESERVE_PRODUCTION': 'Replacement production improves in some supported weeks and declines in others; the changes do not establish a uniform gain.',
     'RESERVE_PRODUCTION_COST_WITHOUT_SUPPORTED_COMPENSATION': 'Useful replacement production declines without a material supported starter gain or Market compensation.',
     'RESERVE_QUALITY_UNAVAILABLE': 'Complete reserve-production evidence is unavailable; missing projections are not zero.',
@@ -346,7 +347,7 @@ def render_trade_explanation(result: dict, *, league_id: str, _slot_details=True
 def _decision_primary(result, decision, admissions=None):
     admissions = admissions or completed_lineup_admissions(result)
     def paragraph(text, css=''):
-        return '<p' + (f' class="{css}"' if css else '') + '>' + escape(str(text)) + '</p>' if text else ''
+        return '<p' + (f' class="{css}"' if css else '') + '>' + escape(plain_reason(text)) + '</p>' if text else ''
     market = result.get('market_evidence') or {}
     sent, received = (market.get('sent') or {}).get('total'), (market.get('received') or {}).get('total')
     full = market.get('availability') == 'full' and sent is not None and received is not None

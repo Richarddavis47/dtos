@@ -491,7 +491,7 @@ def create_teams_router(
             hint = ('Your saved franchise goal. Trade choices stay separate.' if revision else
                     'Save explicitly for your account. Trade choices stay separate.')
             strategy_control = (f'<form method="post" action="/account/franchise-goal" id="my-team-goal-form">'
-                f'<label for="my-team-strategy">Franchise goal</label><select id="my-team-strategy" name="strategy" aria-describedby="my-team-goal-help">{options}</select>'
+                f'<label for="my-team-strategy">Goal</label><select id="my-team-strategy" name="strategy" aria-describedby="my-team-goal-help">{options}</select>'
                 f'<input type="hidden" name="csrf_token" value="{escape(account.csrf_token if account else "")}">'
                 f'<input type="hidden" name="expected_revision" value="{revision}">'
                 f'<input type="hidden" name="league_id" value="{escape(league_id)}">'

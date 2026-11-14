@@ -153,7 +153,7 @@ def render_welcome(data: Mapping[str, Any] | None = None) -> str:
     population = team.get("comparison_population")
     qualified_rank = (isinstance(rank, int) and not isinstance(rank, bool) and isinstance(population, int)
                       and not isinstance(population, bool) and 0 < rank <= population)
-    rank_context = (f'Week {_text(data["week"])}: projected lineup #{rank} among {population} supported fictional franchises. This is not official standing.'
+    rank_context = (f'Week {_text(data["week"])}: projected lineup #{rank} among {population} fictional teams with comparable lineups. This compares projections, not league standings.'
                     if qualified_rank else 'A comparative lineup rank is unavailable for this example.')
     market_totals = (f'<div class="pw-metrics"><div><b class="pw-number">{_number(trade.get("market_sent"))}</b>'
                      '<span class="pw-metric-label">You send · neutral Market units</span></div>'
@@ -185,8 +185,8 @@ def render_welcome(data: Mapping[str, Any] | None = None) -> str:
 <nav class="pw-demo-nav" aria-label="Explore the demonstrations"><a href="#demo-team">Team</a><a href="#demo-trade">Trade</a><a href="#demo-values">Your values</a></nav>
 <details class="pw-demo" id="demo-team" open><summary><h2><span class="pw-index">01</span>Understand Your Team</h2></summary>
 {demo_note}<article class="pw-conclusion"><p class="pw-team-name">{_text(team["name"])} · {_text(league["name"])}</p>
-<h3>{_text(team["strength"])}</h3><div class="pw-metrics"><div><b class="pw-number">{_number(team.get("lineup_points"))}</b><span class="pw-metric-label">Strongest legal lineup · projected points</span></div><div><b>{_text(team["strategy"])}</b><span class="pw-metric-label">Selected goal in this example</span></div></div>
-<p>{rank_context}</p><p><b>Replacement evidence:</b> {reserve_text or "No supported replacement observations in this example."}</p><p class="pw-cost"><b>Keep in mind:</b> {_text(team["limitation"])}</p><p><b>Consider next:</b> {_text(team["next_step"])}</p></article>
+<h3>{_text(team["strength"])}</h3><div class="pw-metrics"><div><b class="pw-number">{_number(team.get("lineup_points"))}</b><span class="pw-metric-label">Highest projected starting lineup</span></div><div><b>{_text(team["strategy"])}</b><span class="pw-metric-label">Selected goal in this example</span></div></div>
+<p>{rank_context}</p><p><b>Eligible backups:</b> {reserve_text or "No supported replacement observations in this example."}</p><p class="pw-cost"><b>Keep in mind:</b> {_text(team["limitation"])}</p><p><b>Consider next:</b> {_text(team["next_step"])}</p></article>
 <details class="pw-detail" id="demo-roster"><summary>Starting lineup and useful replacements</summary><p>Fictional week {_text(data["week"])} projections under this example's rules. Bench players are not counted in the starting total.</p><h3>Starting lineup</h3>{_roster(team["lineup"], starters=True)}<h3>Available replacements</h3>{_roster(team["reserve"])}</details>
 <details class="pw-detail" id="demo-capital"><summary>Exact draft capital</summary>{_capital(team.get("capital"))}<p>Original franchise and current ownership remain separate. A pick is not guaranteed to be early or to produce a particular player.</p></details>
 </details>

@@ -70,7 +70,7 @@ class PublicWelcomePresentationTests(unittest.TestCase):
         self.assertIn(self.fixture['personal']['cohort_label'], text)
         self.assertIn('Unpriced future picks remain capital facts', text)
         self.assertIn(f"Week {self.fixture['week']}: projected lineup #{self.fixture['team']['comparison_rank']}", text)
-        self.assertIn('This is not official standing.', text)
+        self.assertIn('This compares projections, not league standings.', text)
         for pick in self.fixture['team']['capital']:
             self.assertIn(pick['label'], text)
             self.assertIn(pick['original_franchise'], text)
@@ -100,7 +100,7 @@ class PublicWelcomePresentationTests(unittest.TestCase):
         data['team']['lineup_points'] = 0
         data['team']['comparison_rank'] = None
         source = render_welcome(data)
-        self.assertIn('<b class="pw-number">0</b><span class="pw-metric-label">Strongest legal lineup', source)
+        self.assertIn('<b class="pw-number">0</b><span class="pw-metric-label">Highest projected starting lineup', source)
         self.assertIn('<b class="pw-number">0</b><span class="pw-metric-label">You send', source)
         self.assertIn('<b class="pw-number">Unavailable</b><span class="pw-metric-label">You receive', source)
         self.assertIn('<dt>You Send</dt><dd>0</dd>', source)

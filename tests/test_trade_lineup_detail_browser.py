@@ -13,7 +13,7 @@ from src.core.intelligence.team_strength import prepare_for_data
 
 class TradeLineupDetailBrowserTests(unittest.TestCase):
     def test_generated_card_lineups_are_one_disclosure_from_the_primary_card(self):
-        from tests import test_trade_workflow_experience as workflow
+        from tests import test_00_trade_workflow_experience as workflow
         from playwright.sync_api import sync_playwright
         from tools.validation.browser_runtime import launch_chromium
         helper = workflow.TradeWorkflowExperienceTests()

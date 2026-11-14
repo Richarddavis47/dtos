@@ -38,6 +38,8 @@ def plain_reason(value: object) -> str:
     for before, after in (
         ('Review the acquisition-price relationship and available evidence; long-term intrinsic improvement is unavailable.',
          'Compare the Market cost and available lineup evidence. A long-term value forecast is not available.'),
+        ('No measured counterargument crossed the unified evidence boundary.',
+         'The evidence does not establish an additional drawback.'),
         ('Supported dimensions are published separately; no ambiguous overall grade is manufactured.',
          'DTOS shows individual strengths separately; an overall grade is not calculated for this evidence.'),
         ('Compatible league/week/scoring projection publication unavailable.',
@@ -47,6 +49,15 @@ def plain_reason(value: object) -> str:
         ('Canonical Market', 'Market value'),
         ('canonical Market', 'Market value'),
         ('disjoint reserve cover', 'different eligible backups'),
+        ('No legitimate bilateral construction clears the current constraints.',
+         'No offers met the requirements for both teams in this search.'),
+        ('Useful replacement production declines without a material supported starter gain or Market compensation.',
+         'Projected points from eligible backups fall without a meaningful starting-lineup gain or Market value to offset the loss.'),
+        ('Useful replacement production changes', 'Projected points from eligible backups change'),
+        ('legal-replacement production falls', 'projected points from eligible backups fall'),
+        ('legal-replacement production improves', 'projected points from eligible backups improve'),
+        ('legal-replacement production declines', 'projected points from eligible backups decline'),
+        ('legal-replacement production', 'projected points from eligible backups'),
     ):
         text = text.replace(before, after)
     return text

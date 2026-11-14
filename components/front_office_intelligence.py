@@ -20,8 +20,7 @@ def _profile_summary(active) -> str:
     """Describe admitted facts without turning an unknown outlook into a label."""
     if active.competitive_window.classification.value != "Unavailable":
         return plain_reason(active.executive_summary)
-    return (f"{active.team_name}: roster and completed-trade observations are shown separately. "
-            "There is not enough supported evidence to establish a competitive outlook.")
+    return f"{active.team_name}: roster and completed-trade observations are shown separately."
 
 
 def front_office_center(view: dict) -> str:
@@ -33,7 +32,9 @@ def front_office_center(view: dict) -> str:
     summary = _profile_summary(active)
     window = active.competitive_window
     window_label = window.classification.value if window.classification.value != "Unavailable" else "Outlook not established"
-    reasons = "".join(f"<li>{escape(plain_reason(item))}</li>" for item in window.reasons)
+    reasons = "".join(f"<li>{escape(plain_reason(item))}</li>" for item in dict.fromkeys(window.reasons))
+    outlook_limit = ('<p>Current evidence does not establish a competitive outlook.</p>'
+                     if window.classification.value == "Unavailable" else '')
     strengths = ", ".join(escape(plain_reason(item)) for item in active.strengths)
     constraints = ", ".join(escape(plain_reason(item)) for item in active.constraints)
     compatibility = []
@@ -55,7 +56,7 @@ def front_office_center(view: dict) -> str:
             f'<h2><a href="/teams/{active.roster_id}">{escape(active.team_name)}</a></h2><p>{escape(summary)}</p></div>'
             '<a class="secondary" href="/fois">Manager grades</a></section>' + primary
             + f'<section class="foi-grid"><article class="foi-card"><h3>{escape(window_label)}</h3>'
-            + source_details(f'<ul>{reasons}</ul>', summary="Outlook evidence") + '</article>'
+            + outlook_limit + source_details(f'<ul>{reasons}</ul>', summary="Outlook evidence") + '</article>'
             + f'<article class="foi-card"><h3>Observed franchise activity</h3><p>{escape(activity)}</p></article>'
             + f'<article class="foi-card"><h3>Roster strengths and needs</h3><p><b>Strengths:</b> {strengths}</p><p><b>Needs:</b> {constraints}</p></article></section>'
             + source_details(profile_details, summary="Profile calculations and sources")

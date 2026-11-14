@@ -11,7 +11,7 @@ from unittest.mock import patch
 
 from playwright.sync_api import sync_playwright
 from tests import test_rebuild_discovery_integrity as controls
-from tests import test_trade_workflow_experience as workflow
+from tests import test_00_trade_workflow_experience as workflow
 from tools.validation.browser_runtime import launch_chromium
 
 
@@ -96,7 +96,8 @@ class RebuildDiscoveryBrowserTests(unittest.TestCase):
                     self.assertFalse(zero['zero_result_guidance']['recommendation'])
                     text = page.locator('#trade-result').inner_text()
                     self.assertIn('No qualified recommendations', text)
-                    self.assertIn('No bilateral recommendation', text)
+                    self.assertIn('No recommendation for both teams', text)
+                    self.assertIn('No bilateral recommendation', zero['quiet_state'])
                     self.assertIn('not qualified offers', text)
                     self.assertLessEqual(page.evaluate('document.documentElement.scrollWidth'), width)
                     bad = page.locator('main *').evaluate_all('es=>es.filter(e=>e.getBoundingClientRect().width>innerWidth+1).map(e=>e.tagName+"."+e.className)')
