@@ -1,0 +1,267 @@
+/usr/local/lib/python3.14/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+  from starlette.testclient import TestClient as TestClient  # noqa
+E{"event": "retired_fixture_cleanup", "phase": "before_fixture", "collected": 138, "gc_enabled": true, "process_rss_before": 79142912, "process_rss_after": 79142912, "container_before": 61517824, "container_after": 61517824, "limit": 2147483648, "scope": "Unreachable test objects only; container delta may include asynchronous browser exit."}
+EEEEEEEEE
+======================================================================
+ERROR: test_large_comparison_survives_original_limits (tests.test_trade_recorded_context.RecordedContextTests.test_large_comparison_survives_original_limits)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_trade_recorded_context.py", line 30, in test_large_comparison_survives_original_limits
+    subprocess.run(['node', '-e', script], check=True, capture_output=True, text=True)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/subprocess.py", line 554, in run
+    with Popen(*popenargs, **kwargs) as process:
+         ~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/subprocess.py", line 1038, in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                        pass_fds, cwd, env,
+                        ^^^^^^^^^^^^^^^^^^^
+    ...<5 lines>...
+                        gid, gids, uid, umask,
+                        ^^^^^^^^^^^^^^^^^^^^^^
+                        start_new_session, process_group)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/subprocess.py", line 1989, in _execute_child
+    raise child_exception_type(errno_num, err_msg, err_filename)
+FileNotFoundError: [Errno 2] No such file or directory: 'node'
+
+======================================================================
+ERROR: test_generated_card_lineups_are_one_disclosure_from_the_primary_card (tests.test_trade_lineup_detail_browser.TradeLineupDetailBrowserTests.test_generated_card_lineups_are_one_disclosure_from_the_primary_card)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_trade_lineup_detail_browser.py", line 21, in test_generated_card_lineups_are_one_disclosure_from_the_primary_card
+    f = helper.fixture()
+  File "/app/tests/test_00_trade_workflow_experience.py", line 48, in fixture
+    f.setUp()
+    ~~~~~~~^^
+  File "/app/tests/test_home_opportunity_integrity.py", line 27, in setUp
+    self.f.setUp()
+    ~~~~~~~~~~~~^^
+  File "/app/tests/test_trade_workspace_batch1.py", line 20, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpu19s63t4'
+
+======================================================================
+ERROR: test_one_qb_slot_audit_at_four_sizes_without_extra_requests (tests.test_trade_lineup_detail_browser.TradeLineupDetailBrowserTests.test_one_qb_slot_audit_at_four_sizes_without_extra_requests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_trade_lineup_detail_browser.py", line 52, in test_one_qb_slot_audit_at_four_sizes_without_extra_requests
+    helper.setUp()
+    ~~~~~~~~~~~~^^
+  File "/app/tests/test_trade_decision_http_browser.py", line 29, in setUp
+    self.f.setUp()
+    ~~~~~~~~~~~~^^
+  File "/app/tests/test_capital_strategy_reconciliation.py", line 29, in setUp
+    self.tmp = tempfile.TemporaryDirectory()
+               ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpyyad1cml'
+
+======================================================================
+ERROR: test_aged_publication_reload_withholds_shared_numbers_and_keeps_original_offers (tests.test_offer_comparison_browser.OfferComparisonBrowserTests.test_aged_publication_reload_withholds_shared_numbers_and_keeps_original_offers)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_offer_comparison_browser.py", line 220, in test_aged_publication_reload_withholds_shared_numbers_and_keeps_original_offers
+    source, helper, f = self.fixture()
+                        ~~~~~~~~~~~~^^
+  File "/app/tests/test_offer_comparison_browser.py", line 20, in fixture
+    helper, f = source.fixture(superflex=superflex)
+                ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/app/tests/test_team_trade_need_browser.py", line 22, in fixture
+    f = helper.fixture()
+  File "/app/tests/test_contextual_back.py", line 45, in fixture
+    f.setUp()
+    ~~~~~~~^^
+  File "/app/tests/test_personal_rankings.py", line 321, in setUp
+    self.capital.setUp()
+    ~~~~~~~~~~~~~~~~~~^^
+  File "/app/tests/test_capital_strategy_reconciliation.py", line 29, in setUp
+    self.tmp = tempfile.TemporaryDirectory()
+               ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpj65dn6ma'
+
+======================================================================
+ERROR: test_custom_and_neutral_values_remain_attached_to_their_actual_evaluations (tests.test_offer_comparison_browser.OfferComparisonBrowserTests.test_custom_and_neutral_values_remain_attached_to_their_actual_evaluations)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_offer_comparison_browser.py", line 342, in test_custom_and_neutral_values_remain_attached_to_their_actual_evaluations
+    f = helper.fixture()
+  File "/app/tests/test_contextual_back.py", line 45, in fixture
+    f.setUp()
+    ~~~~~~~^^
+  File "/app/tests/test_personal_rankings.py", line 321, in setUp
+    self.capital.setUp()
+    ~~~~~~~~~~~~~~~~~~^^
+  File "/app/tests/test_capital_strategy_reconciliation.py", line 29, in setUp
+    self.tmp = tempfile.TemporaryDirectory()
+               ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmp0fbdgbva'
+
+======================================================================
+ERROR: test_phone_two_real_evaluations_keep_packages_costs_and_exact_draft (tests.test_offer_comparison_browser.OfferComparisonBrowserTests.test_phone_two_real_evaluations_keep_packages_costs_and_exact_draft)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_offer_comparison_browser.py", line 83, in test_phone_two_real_evaluations_keep_packages_costs_and_exact_draft
+    source, helper, f = self.fixture()
+                        ~~~~~~~~~~~~^^
+  File "/app/tests/test_offer_comparison_browser.py", line 20, in fixture
+    helper, f = source.fixture(superflex=superflex)
+                ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/app/tests/test_team_trade_need_browser.py", line 22, in fixture
+    f = helper.fixture()
+  File "/app/tests/test_contextual_back.py", line 45, in fixture
+    f.setUp()
+    ~~~~~~~^^
+  File "/app/tests/test_personal_rankings.py", line 321, in setUp
+    self.capital.setUp()
+    ~~~~~~~~~~~~~~~~~~^^
+  File "/app/tests/test_capital_strategy_reconciliation.py", line 29, in setUp
+    self.tmp = tempfile.TemporaryDirectory()
+               ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpdvnseppb'
+
+======================================================================
+ERROR: test_recommendations_compare_without_adoption_and_league_switch_discards_scope (tests.test_offer_comparison_browser.OfferComparisonBrowserTests.test_recommendations_compare_without_adoption_and_league_switch_discards_scope)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_offer_comparison_browser.py", line 246, in test_recommendations_compare_without_adoption_and_league_switch_discards_scope
+    f = helper.fixture()
+  File "/app/tests/test_contextual_back.py", line 45, in fixture
+    f.setUp()
+    ~~~~~~~^^
+  File "/app/tests/test_personal_rankings.py", line 321, in setUp
+    self.capital.setUp()
+    ~~~~~~~~~~~~~~~~~~^^
+  File "/app/tests/test_capital_strategy_reconciliation.py", line 29, in setUp
+    self.tmp = tempfile.TemporaryDirectory()
+               ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmp5oyl_len'
+
+======================================================================
+ERROR: test_superflex_replacement_removal_and_missing_depth_stay_independent (tests.test_offer_comparison_browser.OfferComparisonBrowserTests.test_superflex_replacement_removal_and_missing_depth_stay_independent)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_offer_comparison_browser.py", line 185, in test_superflex_replacement_removal_and_missing_depth_stay_independent
+    source, helper, f = self.fixture(superflex=True)
+                        ~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "/app/tests/test_offer_comparison_browser.py", line 20, in fixture
+    helper, f = source.fixture(superflex=superflex)
+                ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/app/tests/test_team_trade_need_browser.py", line 22, in fixture
+    f = helper.fixture()
+  File "/app/tests/test_contextual_back.py", line 45, in fixture
+    f.setUp()
+    ~~~~~~~^^
+  File "/app/tests/test_personal_rankings.py", line 321, in setUp
+    self.capital.setUp()
+    ~~~~~~~~~~~~~~~~~~^^
+  File "/app/tests/test_capital_strategy_reconciliation.py", line 29, in setUp
+    self.tmp = tempfile.TemporaryDirectory()
+               ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpigzzjvlq'
+
+======================================================================
+ERROR: test_supported_offer_effect_survives_an_incomplete_other_lineup (tests.test_offer_comparison_browser.OfferComparisonBrowserTests.test_supported_offer_effect_survives_an_incomplete_other_lineup)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_offer_comparison_browser.py", line 308, in test_supported_offer_effect_survives_an_incomplete_other_lineup
+    source, helper, f = self.fixture()
+                        ~~~~~~~~~~~~^^
+  File "/app/tests/test_offer_comparison_browser.py", line 20, in fixture
+    helper, f = source.fixture(superflex=superflex)
+                ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/app/tests/test_team_trade_need_browser.py", line 22, in fixture
+    f = helper.fixture()
+  File "/app/tests/test_contextual_back.py", line 45, in fixture
+    f.setUp()
+    ~~~~~~~^^
+  File "/app/tests/test_personal_rankings.py", line 321, in setUp
+    self.capital.setUp()
+    ~~~~~~~~~~~~~~~~~~^^
+  File "/app/tests/test_capital_strategy_reconciliation.py", line 29, in setUp
+    self.tmp = tempfile.TemporaryDirectory()
+               ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpjvp16ntr'
+
+======================================================================
+ERROR: test_two_actual_source_generations_cannot_share_a_lineup_comparison (tests.test_offer_comparison_browser.OfferComparisonBrowserTests.test_two_actual_source_generations_cannot_share_a_lineup_comparison)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_offer_comparison_browser.py", line 279, in test_two_actual_source_generations_cannot_share_a_lineup_comparison
+    source, helper, f = self.fixture()
+                        ~~~~~~~~~~~~^^
+  File "/app/tests/test_offer_comparison_browser.py", line 20, in fixture
+    helper, f = source.fixture(superflex=superflex)
+                ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/app/tests/test_team_trade_need_browser.py", line 22, in fixture
+    f = helper.fixture()
+  File "/app/tests/test_contextual_back.py", line 45, in fixture
+    f.setUp()
+    ~~~~~~~^^
+  File "/app/tests/test_personal_rankings.py", line 321, in setUp
+    self.capital.setUp()
+    ~~~~~~~~~~~~~~~~~~^^
+  File "/app/tests/test_capital_strategy_reconciliation.py", line 29, in setUp
+    self.tmp = tempfile.TemporaryDirectory()
+               ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpi9uxp5ja'
+
+----------------------------------------------------------------------
+Ran 10 tests in 0.531s
+
+FAILED (errors=10)

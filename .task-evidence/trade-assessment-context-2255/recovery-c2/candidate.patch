@@ -1,0 +1,277 @@
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index ccc98dca..d38676b1 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -1,3 +1,7 @@
++## v1.22.40 / build 2255 — Recorded Trade Assessment Context
++
++Display the recorded Custom valuation method using its exact supported identifier. Preserve bounded recorded current-week analytical lineup disclosures and readable comparison evidence across review and return navigation, explicitly NOT REVALIDATED. No valuation, qualification, source or admission-policy changes.
++
+ ## v1.22.39 / build 2254 — Clear Trade Review and Team Demo
+ 
+ Keep detailed team-fit methodology optional in Trade Review while preserving primary decisions, costs and material risks. Describe the public Team example as backup quarterback depth, with a brief Superflex explanation. Calculations and resource policies unchanged.
+diff --git a/RELEASE_NOTES.md b/RELEASE_NOTES.md
+index 045afb10..8bb7edc5 100644
+--- a/RELEASE_NOTES.md
++++ b/RELEASE_NOTES.md
+@@ -1,3 +1,7 @@
++# DTOS v1.22.40 / build 2255
++
++Display the recorded Custom valuation method using its exact supported identifier. Preserve bounded recorded current-week analytical lineup disclosures and readable comparison evidence across review and return navigation, explicitly NOT REVALIDATED. No valuation, qualification, source or admission-policy changes.
++
+ # DTOS v1.22.39 / build 2254
+ 
+ Trade Review keeps its decision, practical cost, both teams’ projected effects and important risks visible; detailed fit rationale is available in an accessible disclosure. The public Team example describes backup quarterbacks without implying a starting-lineup gain.
+diff --git a/app_metadata.py b/app_metadata.py
+index eccf8b86..e55b497b 100644
+--- a/app_metadata.py
++++ b/app_metadata.py
+@@ -7,10 +7,10 @@ from datetime import datetime, timezone
+ from pathlib import Path
+ 
+ APPLICATION_NAME = "DTOS"
+-VERSION = "1.22.39"
+-PRODUCT_VERSION = "1.22.39"
+-BUILD_NUMBER = 2254
+-RELEASE_CODENAME = "Clear Trade Review and Team Demo"
++VERSION = "1.22.40"
++PRODUCT_VERSION = "1.22.40"
++BUILD_NUMBER = 2255
++RELEASE_CODENAME = "Recorded Trade Assessment Context"
+ APPLICATION_STARTED_AT = datetime.now(timezone.utc).isoformat()
+ 
+ _REPOSITORY_ROOT = Path(__file__).resolve().parent
+diff --git a/static/js/trade_comparison.js b/static/js/trade_comparison.js
+index 77a1d0e8..189dece4 100644
+--- a/static/js/trade_comparison.js
++++ b/static/js/trade_comparison.js
+@@ -216,7 +216,7 @@
+         out.append(list);
+       }
+       out.append(node('p', price(s.neutral, 'Neutral Market at evaluation')));
+-      if (s.mode === 'custom') out.append(node('p', price(s.personal, 'Your Custom values · ' + (s.methodLabel || 'method not retained'))),
++      if (s.mode === 'custom') out.append(node('p', price(s.personal, 'Your Custom values · ' + (s.method === 'personal-current-market-slot-curve-v1' ? 'Absolute slot' : s.method === 'personal-relative-priced-order-v1' ? 'Relative priced order' : 'method not retained'))),
+         node('small', 'Personal value does not establish the counterparty’s willingness or change Neutral Market.'));
+       out.append(node('h5', 'Depth and roster consequences'));
+       for (const side of ['active', 'partner']) {
+diff --git a/static/js/trade_workspace.js b/static/js/trade_workspace.js
+index acfc95ff..f687553c 100644
+--- a/static/js/trade_workspace.js
++++ b/static/js/trade_workspace.js
+@@ -677,18 +677,33 @@
+         .map(entry => JSON.stringify(entry))};
+     // Intern each admitted comparison once within the unchanged 12k/512-node
+     // context bound. Never revive raw strategy numbers after HTML is discarded.
+-    const rows = value => value ? Object.fromEntries(Object.entries(value).map(([key,row]) =>
+-      [key, typeof row === 'string' ? row : JSON.stringify(row)])) : value;
++    const rows = value => value ? Object.fromEntries(Object.entries(value).map(([key,row]) => {
++      if (typeof row === 'string' || row?.encoding === 'json-chunks-v1') return [key, row];
++      const text = JSON.stringify(row);
++      return [key, {encoding: 'json-chunks-v1', chunks: text.match(/[\s\S]{1,1200}/g) || []}];
++    })) : value;
+     const d = value.decision_context;
+-    const compactDecision = d ? {...d, lineup_comparisons: rows(d.lineup_comparisons),
++    const {lineup_comparisons, partner_lineup_comparisons, lineup_phase_admission, ...decisionRest} = d || {};
++    const compactDecision = d ? {lineup_comparisons: rows(lineup_comparisons),
+       partner_lineup_comparisons: rows(d.partner_lineup_comparisons),
+       lineup_phase_admission: d.lineup_phase_admission ? Object.fromEntries(Object.entries(d.lineup_phase_admission)
+         .map(([side,weeks]) => [side,rows(weeks)])) : d.lineup_phase_admission} : d;
+-    return {reserve_evidence: reserveEvidence, ...value, decision_context: compactDecision, recommendation_trace: compactTrace,
++    if (compactDecision) Object.assign(compactDecision, decisionRest);
++    const {decision_context, personalization, ...restValue} = value;
++    return {personalization, recommendation: value.recommendation, dominant_reason: value.dominant_reason, major_drawback: value.major_drawback, assessment_state: value.assessment_state, provenance: value.provenance, decision_context: compactDecision, ...restValue, reserve_evidence: reserveEvidence, recommendation_trace: compactTrace,
+       dimensions: {...dims,
+         strategic_fit: strategies ? {...strategies, active: withoutReserveCopies(strategies.active), partner: withoutReserveCopies(strategies.partner)} : strategies,
+         package_quality: packages ? Object.fromEntries(Object.entries(packages).map(([key, row]) => [key, withoutReserveCopies(row)])) : packages}};
+   }
++  function recordedEvaluation(value) {
++    if (!value || typeof value !== 'object' || Array.isArray(value)) return {};
++    const compact = compactRetainedEvaluation(value);
++    const saved = boundedEvidence(compact);
++    // Independently bounded evidence families must not evict one another.
++    // Keep tuple/dictionary reserve disclosures, never raw provider catalogs.
++    saved.reserve_evidence = boundedEvidence(compact.reserve_evidence);
++    return saved;
++  }
+   function retainedReserveRow(row, quality) {
+     if (typeof row !== 'string' || quality?.reserve_quality_encoding !== 'tuple-v1') return row;
+     try {
+@@ -700,12 +715,39 @@
+         limitations: (values[11] || []).map(index => quality.reserve_qualifications?.[index]).filter(text => typeof text === 'string')};
+     } catch (_) { return null; }
+   }
++  function recordedLineupText(e) {
++    if (e.recorded_lineup_text) return e.recorded_lineup_text;
++    if (!e.explanation_html) return null;
++    const parsed = parsedExplanation(e);
++    const weeks = decisionPresentation(e).lineup_comparisons?.current_week?.weeks;
++    if (!Array.isArray(weeks) || weeks.length !== 1 || !Number.isInteger(weeks[0])) return {omitted: 'The recorded current week is unknown; no lineup is inferred.'};
++    const text = [...parsed.querySelectorAll('.dtos-explanation > .tw-lineup-details .tw-lineup-week')]
++      .filter(detail => detail.querySelector('h4')?.textContent.endsWith(' · Week ' + weeks[0]))
++      .map(detail => {
++        const copy = detail.cloneNode(true);
++        for (const cell of copy.querySelectorAll('th,td')) cell.append(' \t ');
++        for (const row of copy.querySelectorAll('tr,p,h4,h5,summary,caption')) row.append('\n');
++        return copy.textContent;
++      }).join('\n');
++    // Separate bounded presentation evidence, never provider rows or executable HTML.
++    if (!text) return null;
++    if (text.length > 12000) return {omitted: 'Recorded lineup details exceed the bounded saved-view limit. No current lineup is inferred.'};
++    return {chunks: text.match(/[\s\S]{1,1200}/g) || []};
++  }
++  function appendRecordedLineups(out, context) {
++    const record = context?.recorded_lineup_text;
++    if (!record) return;
++    if (record.omitted) { out.append(node('p', record.omitted)); return; }
++    if (!Array.isArray(record.chunks) || record.chunks.length > 10 || record.chunks.some(v => typeof v !== 'string' || v.length > 1200)) return;
++    const body = node('p', 'Recorded current-week analytical lineups, not submitted Sleeper starters. Other periods’ individual slots are not retained in this bounded view.\n' + record.chunks.join('')); body.style.whiteSpace = 'pre-wrap';
++    out.append(disclosure('Recorded before-and-after lineups · NOT REVALIDATED', body, 'tw-lineup-details'));
++  }
+   function restoreContext(value, includePrevious = true) {
+-    return {schema: 1, acquisition_comparison: boundedEvidence(value.acquisition_comparison), draft_capital_record: boundedEvidence(value.draft_capital_record), identity: boundedEvidence(value.identity || {}), exploration: value.exploration === true,
++    return {schema: 1, recorded_lineup_text: boundedEvidence(value.recorded_lineup_text), acquisition_comparison: boundedEvidence(value.acquisition_comparison), draft_capital_record: boundedEvidence(value.draft_capital_record), identity: boundedEvidence(value.identity || {}), exploration: value.exploration === true,
+       search_result_type: boundedEvidence(value.search_result_type), stale_reason: boundedEvidence(value.stale_reason), restored: true,
+       attempt_state: value.attempt_state || value.evaluation?.assessment_state?.state || 'fresh_incomplete',
+       previous_assessment: includePrevious && value.previous_assessment ? restoreContext(value.previous_assessment, false) : null,
+-      evaluation: boundedEvidence(compactRetainedEvaluation(value.evaluation || {})), opportunity: boundedEvidence(value.opportunity)};
++      evaluation: recordedEvaluation(value.evaluation || {}), opportunity: boundedEvidence(value.opportunity)};
+   }
+   const assessedOfferContexts = new WeakMap();
+   const comparisonScope = () => ({binding: workspace.workspace_context.binding,
+@@ -770,8 +812,8 @@
+           mode: e.personalization?.mode || 'neutral', method: e.personalization?.method || null,
+           personalContext: {revision: e.personalization?.revision, market: e.personalization?.market_generation,
+             baseline: e.personalization?.baseline_generation, method: e.personalization?.method},
+-          methodLabel: String(e.personalization?.method || '').includes('relative') ? 'Relative priced order' :
+-            String(e.personalization?.method || '').includes('absolute') ? 'Absolute slot' : 'Custom method not retained',
++          methodLabel: e.personalization?.method === 'personal-relative-priced-order-v1' ? 'Relative priced order' :
++            e.personalization?.method === 'personal-current-market-slot-curve-v1' ? 'Absolute slot' : 'Custom method not retained',
+           acquisition: boundedEvidence(context?.acquisition_comparison),
+           neutral: {availability: evidence.availability, sent: evidence.sent?.total, received: evidence.received?.total},
+           personal: {availability: personal.availability, sent: personal.sent?.total, received: personal.received?.total},
+@@ -795,7 +837,7 @@
+     // Independently bounded ownership evidence must survive even when the
+     // existing 512-node analytical disclosure is full. The 64k context and
+     // 100k offer limits remain unchanged; truncation never implies zero.
+-    const context = {schema: 1, acquisition_comparison: boundedEvidence(row.acquisition_comparison), draft_capital_record: boundedEvidence(e.draft_capital_record), evaluation: boundedEvidence(compactRetainedEvaluation(Object.fromEntries(keys.filter(key => key in e).map(key => [key, e[key]])))),
++    const context = {schema: 1, recorded_lineup_text: boundedEvidence(recordedLineupText(e)), acquisition_comparison: boundedEvidence(row.acquisition_comparison), draft_capital_record: boundedEvidence(e.draft_capital_record), evaluation: recordedEvaluation(Object.fromEntries(keys.filter(key => key in e).map(key => [key, e[key]]))),
+       exploration: row.exploration === true, search_result_type: row.search_result_type || null,
+       opportunity: boundedEvidence(row.opportunity || null),
+       identity: {personalization: JSON.stringify(personalPayload()), package: packageIdentity(row.proposal || selected), strategy: row.home_assessment_strategy ?? el('trade-strategy').value,
+@@ -811,6 +853,7 @@
+       context.identity.package = context.identity.package.slice(0, 16000);
+       context.evaluation.major_limitations = [...(context.evaluation.major_limitations || []), 'Additional evidence omitted from temporary preview; reevaluate for full details.'].slice(-32);
+     }
++    if (JSON.stringify(context).length > 64000) context.recorded_lineup_text = {omitted: 'Detailed lineups were too large to save with this offer. Recorded comparisons remain qualified, not revalidated.'};
+     return context;
+   }
+   function contextQualification(context, proposal = selected) {
+@@ -921,6 +964,10 @@
+   function decisionPresentation(e) {
+     const decision = {...(e.decision_context || {})};
+     const row = value => {
++      if (value?.encoding === 'json-chunks-v1') {
++        if (!Array.isArray(value.chunks) || value.chunks.some(chunk => typeof chunk !== 'string')) return null;
++        value = value.chunks.join('');
++      }
+       if (typeof value !== 'string') return value;
+       try { const parsed = JSON.parse(value); return parsed && typeof parsed === 'object' ? parsed : null; }
+       catch (_) { return null; }
+@@ -989,6 +1036,7 @@
+     out.dataset.assessment = 'true';
+     const retained = Boolean(previousContainer || contextQualification(context));
+     out.dataset.assessmentFreshness = retained ? 'retained' : 'current';
++    if (retained) appendRecordedLineups(out, context);
+     out.append(capitalDisclosure(context?.draft_capital_record || e.draft_capital_record, retained));
+     const attemptState = context?.attempt_state || e.assessment_state?.state || 'fresh_incomplete';
+     out.dataset.assessmentState = retained ? 'retained' : attemptState;
+@@ -1381,8 +1429,8 @@
+     const personal = e.personalization?.mode === 'custom', value = personal ? e.personal_value_evidence : e.market_evidence;
+     const side = key => value?.[key]?.total != null ? displayMarket(value[key].total)
+       : value?.[key]?.known_subtotal != null ? displayMarket(value[key].known_subtotal) + ' known subtotal' : 'Unknown';
+-    const method = String(e.personalization?.method || '').includes('relative') ? 'Relative priced order'
+-      : String(e.personalization?.method || '').includes('absolute') ? 'Absolute slot' : 'method not recorded';
++    const method = e.personalization?.method === 'personal-relative-priced-order-v1' ? 'Relative priced order'
++      : e.personalization?.method === 'personal-current-market-slot-curve-v1' ? 'Absolute slot' : 'method not recorded';
+     return (personal ? 'Your Custom values · ' + method : 'Neutral Market') + ': ' + side('sent') + ' sent / ' + side('received') + ' received';
+   }
+   function appendCurrentLineupSummary(card, decision) {
+@@ -1469,6 +1517,7 @@
+     card.append(capitalDisclosure(context?.draft_capital_record || e.draft_capital_record, retained));
+     appendPartnerHistory(card, context);
+     const sources = node('div');
++    if (retained && !e.explanation_html) appendRecordedLineups(card, context);
+     if (e.explanation_html) {
+       const parsed = parsedExplanation(e), explanation = parsed.querySelector('.dtos-explanation');
+       // Move the already-admitted slot view once; no new optimization or request.
+diff --git a/tests/test_trade_lineup_detail_browser.py b/tests/test_trade_lineup_detail_browser.py
+index 192a5a84..1cccc5c6 100644
+--- a/tests/test_trade_lineup_detail_browser.py
++++ b/tests/test_trade_lineup_detail_browser.py
+@@ -137,6 +137,13 @@ class TradeLineupDetailBrowserTests(unittest.TestCase):
+                 page.locator('#trade-context').get_by_text('Active league', exact=False).wait_for()
+                 self.assertGreater(page.locator('#trade-sent-chips [data-asset-id="1-10"]').count(), 0)
+                 self.assertGreater(page.locator('#trade-received-chips [data-asset-id="2-0"]').count(), 0)
++                saved_detail = page.get_by_text('Recorded before-and-after lineups · NOT REVALIDATED', exact=True)
++                saved_detail.wait_for()
++                saved_detail.press('Enter')
++                self.assertIn('Before trade', saved_detail.locator('..').inner_text())
++                self.assertIn('After trade', saved_detail.locator('..').inner_text())
++                if root:
++                    page.screenshot(path=str(directory / f'lineup-retained-{width}.png'), full_page=True)
+         self.assertEqual(helper.data, original)
+         if os.environ.get('DTOS_LINEUP_DETAIL_EVIDENCE'):
+             (Path(os.environ['DTOS_LINEUP_DETAIL_EVIDENCE']) / 'browser.json').write_text(json.dumps(records, indent=2))
+diff --git a/tests/test_trade_recorded_context.py b/tests/test_trade_recorded_context.py
+new file mode 100644
+index 00000000..502ba9cb
+--- /dev/null
++++ b/tests/test_trade_recorded_context.py
+@@ -0,0 +1,47 @@
++"""Exercise actual client serializer/decoder without copying its implementation."""
++from pathlib import Path
++import unittest
++
++
++class RecordedContextTests(unittest.TestCase):
++    def test_large_comparison_survives_original_limits(self):
++        source = Path('static/js/trade_workspace.js').read_text()
++        def function(name, following):
++            return source[source.index('  function ' + name):source.index(following, source.index('  function ' + name))]
++        script = '\n'.join([
++            function('boundedEvidence', '  const packageIdentity'),
++            function('compactRetainedEvaluation', '  function retainedReserveRow'),
++            function('decisionPresentation', '  function catalystDelta'),
++            function('valuationSummary', '  function appendCurrentLineupSummary'),
++            r"""
++const assert = {equal(a,b){if(a !== b) throw Error('Values differ');}, deepEqual(a,b){if(JSON.stringify(a)!==JSON.stringify(b)) throw Error('Recorded comparison differs');}};
++const displayMarket = String;
++for (const value of [null,42,'invalid',[]]) assert.deepEqual(recordedEvaluation(value),{});
++for (const [method, label] of [['personal-current-market-slot-curve-v1','Absolute slot'],['personal-relative-priced-order-v1','Relative priced order'],[undefined,'method not recorded'],['foreign-relative-method','method not recorded']]) {
++ const e={personalization:{mode:'custom',method},personal_value_evidence:{sent:{total:10},received:{total:20}}};
++ assert.equal(valuationSummary(e),'Your Custom values · '+label+': 10 sent / 20 received');
++}
++const period = {delta:-2.68, weeks:[10], pre_total:120, post_total:117.32, qualification:'provisional', notes:'availability uncertain '.repeat(80)};
++const original = {personalization:{mode:'custom',method:'personal-current-market-slot-curve-v1'},decision_context:{summary:'retained '.repeat(200),lineup_comparisons:{current_week:{delta:0.17,weeks:[10]}},partner_lineup_comparisons:{current_week:period}}};
++original.reserve_evidence = {active:{limitations:'reserve evidence '.repeat(1400)}};
++const saved = recordedEvaluation(original);
++const restored = recordedEvaluation(JSON.parse(JSON.stringify(saved)));
++assert.deepEqual(decisionPresentation(restored).partner_lineup_comparisons.current_week, period);
++assert.equal(restored.personalization.method, original.personalization.method);
++assert.equal(typeof restored.reserve_evidence.active.limitations, 'string');
++assert.equal(restored.reserve_evidence.active.limitations.length,1600);
++assert.equal(decisionPresentation(restored).lineup_comparisons.current_week.delta,0.17);
++assert.equal(original.decision_context.partner_lineup_comparisons.current_week,period);
++const broken = structuredClone(restored); broken.decision_context.partner_lineup_comparisons.current_week.chunks.pop();
++assert.equal(decisionPresentation(broken).partner_lineup_comparisons.current_week,null);
++""",
++        ])
++        from playwright.sync_api import sync_playwright
++        from tools.validation.browser_runtime import launch_chromium
++        with sync_playwright() as pw:
++            browser = launch_chromium(pw, headless=True)
++            try:
++                page = browser.new_page()
++                page.evaluate('() => {' + script + '}')
++            finally:
++                browser.close()
