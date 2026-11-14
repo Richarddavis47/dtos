@@ -4609,6 +4609,16 @@ class CustomerBaselineAliasTests(unittest.TestCase):
             "head": {"sha": "e" * 40, "repo": {"full_name": "fixture/repository"}},
         }
 
+    def test_finalized_plan_transport_leaves_room_under_unchanged_aggregate_cap(self):
+        plan = json.loads(
+            (Path(__file__).parents[1] / ".github/release-plans/2253.json").read_text()
+        )
+        originals = sum(row["bytes"] for row in plan["artifacts"])
+        recovery = sum(row["bytes"] for row in plan["recovery_parts"])
+        prior = sum(row["bytes"] for row in plan["prior_evidence_parts"])
+        # Leave4MiB for bounded metadata and compressed original Product log.
+        self.assertLess(originals + recovery + prior, 508 * 1024**2)
+
     def test_final_release_plan_aliases_match_its_actual_baseline(self):
         plan_path = Path(__file__).parents[1] / ".github/release-plans/2253.json"
         plan = json.loads(plan_path.read_text())
