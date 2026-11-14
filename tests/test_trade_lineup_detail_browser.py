@@ -142,6 +142,8 @@ class TradeLineupDetailBrowserTests(unittest.TestCase):
                 saved_detail.press('Enter')
                 self.assertIn('Before trade', saved_detail.locator('..').inner_text())
                 self.assertIn('After trade', saved_detail.locator('..').inner_text())
+                if root:
+                    page.screenshot(path=str(directory / f'lineup-retained-{width}.png'), full_page=True)
         self.assertEqual(helper.data, original)
         if os.environ.get('DTOS_LINEUP_DETAIL_EVIDENCE'):
             (Path(os.environ['DTOS_LINEUP_DETAIL_EVIDENCE']) / 'browser.json').write_text(json.dumps(records, indent=2))
