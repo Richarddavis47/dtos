@@ -1,0 +1,26 @@
+{
+  "source": {
+    "baseline": "6bac32ce348cf6c5961c6c69f7659d217a76cee6",
+    "baseline_tree": "551ad8508f11d4b1b2870838aa804390840a6f62",
+    "candidate": "d812de9125fcd0971c4b521186369cdc2c72f012",
+    "tree": "256e7e7c1046f9d82f1928141c84662ee7928bd5",
+    "branch": "fix/customer-acceptance-2253",
+    "version": "1.22.38",
+    "build": 2253,
+    "expected_test_count": 4504,
+    "scope": "Final implementation candidate; discovery, exact-source focused/full validation and visual review still required.",
+    "pr": 342
+  },
+  "original_expanded_bytes": 627718059,
+  "unchanged_archive_cap_bytes": 536870912,
+  "observed_guard_error": "RuntimeError: Oversized archive",
+  "original_packaging": "evidence-packaging-expanded-limit-original/prior-package-final.zip",
+  "original_sha256": "1d7176b9f9445f8389bf1503b2df97df909e162c6d5e9381f6368fe962db32ca",
+  "correction": "Original text records in one recursively checked prior-records.zip; original failed/canceled transports remain alongside. Both levels keep512MiB cap and maximum child depth1.",
+  "all_original_records_preserved": 3517,
+  "application_source_changed": false,
+  "scope": "Packaging-only observed guard refusal and verified correction, not an application test failure or weakened limit",
+  "nested_control_first_attempt": "publisher-nested-focused-original.log",
+  "nested_control_fixture_correction": "Use raw ZIP constructor only in the unsafe-child test fixture; validating make_zip had correctly rejected it before the tested assertion.",
+  "nested_controls_final": "publisher-nested-focused-reconciled-original.log"
+}

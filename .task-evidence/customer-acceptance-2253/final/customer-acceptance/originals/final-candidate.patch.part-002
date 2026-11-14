@@ -1,0 +1,47 @@
+eaper.CheaperRepairBrowserTests()
+@@ -89,6 +110,7 @@ class TradeNavigationBrowserTests(unittest.TestCase):
+                 page.goto('https://dtos.test/players/mcbride')
+                 page.locator('a[href*="/trades/trade-for?"]').first.click()
+                 page.locator('#trade-target:not([hidden])').wait_for()
++                assert_target_action_layout(self, page)
+                 self.assertIn('Trey McBride', page.locator('#trade-target').inner_text())
+                 self.assertEqual(page.get_by_label('Trade partner', exact=True).input_value(), '2')
+                 page.locator('.tw-offer').first.wait_for()
+@@ -107,9 +129,11 @@ class TradeNavigationBrowserTests(unittest.TestCase):
+                 page.locator('a[href*="/trades/trade-for?"]').first.wait_for()
+                 page.go_forward()
+                 page.locator('#trade-target:not([hidden])').wait_for()
++                assert_target_action_layout(self, page)
+                 self.assertEqual(page.get_by_label('Trade partner', exact=True).input_value(), '2')
+                 page.reload()
+                 page.locator('#trade-target:not([hidden])').wait_for()
++                assert_target_action_layout(self, page)
+                 self.assertEqual(fixture.proposal(page)['received'], ['mcbride'])
+ 
+     def test_refresh_retry_bounded_and_real_identity_rejection_never_retried(self):
+diff --git a/tests/test_trade_response_browser.py b/tests/test_trade_response_browser.py
+index 8440dafa..c706b3aa 100644
+--- a/tests/test_trade_response_browser.py
++++ b/tests/test_trade_response_browser.py
+@@ -5,7 +5,7 @@ from pathlib import Path
+ import unittest
+ 
+ from playwright.sync_api import sync_playwright
+-from tests import test_trade_workflow_experience as workflow
++from tests import test_00_trade_workflow_experience as workflow
+ from tools.validation.browser_runtime import launch_chromium
+ 
+ 
+diff --git a/tests/test_trade_scout_state_browser.py b/tests/test_trade_scout_state_browser.py
+index 475c308d..2ecc8554 100644
+--- a/tests/test_trade_scout_state_browser.py
++++ b/tests/test_trade_scout_state_browser.py
+@@ -351,7 +351,7 @@ class ScoutWorkspaceStateBrowserTests(unittest.TestCase):
+                 self.assertIn('conflicts with the required trade objective', text)
+                 self.assertIn('Optional change: Remove the conflicting exact lock on', text)
+                 self.assertIn('No package was evaluated', text)
+-                self.assertEqual(page.get_by_text('Evaluated near misses', exact=True).count(), 0)
++                self.assertEqual(page.get_by_text('Other evaluated offers · not recommended', exact=True).count(), 0)
+                 self.assertEqual(page.locator('#shop-protected').evaluate('n => [...n.selectedOptions].map(o => o.value)'), [pick['asset_id']])
+                 self.assertEqual(requests[-1][1]['protected_assets'], [pick['asset_id']])
+                 self.assertTrue(conflict.is_visible())

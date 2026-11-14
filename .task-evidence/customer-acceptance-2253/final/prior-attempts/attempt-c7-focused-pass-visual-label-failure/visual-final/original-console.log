@@ -1,0 +1,491 @@
+/usr/local/lib/python3.14/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+  from starlette.testclient import TestClient as TestClient  # noqa
+test_authenticated_product_navigation_and_league_switching (tests.test_customer_experience_journeys.CustomerExperienceJourneyTests.test_authenticated_product_navigation_and_league_switching) ... Validation Chromium: /usr/bin/chromium
+Validation Chromium version: 156.0.8078.79
+
+  test_authenticated_product_navigation_and_league_switching (tests.test_customer_experience_journeys.CustomerExperienceJourneyTests.test_authenticated_product_navigation_and_league_switching) (viewport={'width': 320, 'height': 432}, account='alpha', league='100', route='/teams/1') ... FAIL
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.14/unittest/case.py", line 58, in testPartExecutor
+    yield
+  File "/usr/local/lib/python3.14/unittest/case.py", line 565, in subTest
+    yield
+  File "/app/tests/test_product_browser_journey.py", line 212, in test_authenticated_product_navigation_and_league_switching
+    self.audit_page(page, path, viewport)
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/tests/test_customer_experience_journeys.py", line 63, in audit_page
+    self.assertEqual(label.evaluate('e => {const r=document.createRange();r.selectNodeContents(e);return r.getClientRects().length;}'), 1)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 2 != 1
+
+{"timestamp":"2026-11-13T20:54:43.335984+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":449990656,"limit_bytes":2147483648,"raw_headroom_bytes":1697492992,"clean_inactive_file_bytes":1519616,"conditional_file_credit_bytes":759808,"admission_headroom_bytes":1698252800,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-13T20:54:44.472853+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":469712896,"limit_bytes":2147483648,"raw_headroom_bytes":1677770752,"clean_inactive_file_bytes":1519616,"conditional_file_credit_bytes":759808,"admission_headroom_bytes":1678530560,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-13T20:54:45.306737+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":487395328,"limit_bytes":2147483648,"raw_headroom_bytes":1660088320,"clean_inactive_file_bytes":1519616,"conditional_file_credit_bytes":759808,"admission_headroom_bytes":1660848128,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-13T20:54:46.237885+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":505200640,"limit_bytes":2147483648,"raw_headroom_bytes":1642283008,"clean_inactive_file_bytes":1519616,"conditional_file_credit_bytes":759808,"admission_headroom_bytes":1643042816,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+  test_authenticated_product_navigation_and_league_switching (tests.test_customer_experience_journeys.CustomerExperienceJourneyTests.test_authenticated_product_navigation_and_league_switching) (viewport={'width': 320, 'height': 432}, account='alpha', league='200', route='/teams/1') ... FAIL
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.14/unittest/case.py", line 58, in testPartExecutor
+    yield
+  File "/usr/local/lib/python3.14/unittest/case.py", line 565, in subTest
+    yield
+  File "/app/tests/test_product_browser_journey.py", line 212, in test_authenticated_product_navigation_and_league_switching
+    self.audit_page(page, path, viewport)
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/tests/test_customer_experience_journeys.py", line 63, in audit_page
+    self.assertEqual(label.evaluate('e => {const r=document.createRange();r.selectNodeContents(e);return r.getClientRects().length;}'), 1)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 2 != 1
+
+{"timestamp":"2026-11-13T20:54:54.403580+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":567013376,"limit_bytes":2147483648,"raw_headroom_bytes":1580470272,"clean_inactive_file_bytes":1568768,"conditional_file_credit_bytes":784384,"admission_headroom_bytes":1581254656,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-13T20:54:54.947850+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":570359808,"limit_bytes":2147483648,"raw_headroom_bytes":1577123840,"clean_inactive_file_bytes":1568768,"conditional_file_credit_bytes":784384,"admission_headroom_bytes":1577908224,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-13T20:54:55.390513+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":576839680,"limit_bytes":2147483648,"raw_headroom_bytes":1570643968,"clean_inactive_file_bytes":1568768,"conditional_file_credit_bytes":784384,"admission_headroom_bytes":1571428352,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-13T20:54:55.965407+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":588578816,"limit_bytes":2147483648,"raw_headroom_bytes":1558904832,"clean_inactive_file_bytes":1568768,"conditional_file_credit_bytes":784384,"admission_headroom_bytes":1559689216,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+  test_authenticated_product_navigation_and_league_switching (tests.test_customer_experience_journeys.CustomerExperienceJourneyTests.test_authenticated_product_navigation_and_league_switching) (viewport={'width': 320, 'height': 432}, account='alpha', league='100', route='/teams/1') ... FAIL
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.14/unittest/case.py", line 58, in testPartExecutor
+    yield
+  File "/usr/local/lib/python3.14/unittest/case.py", line 565, in subTest
+    yield
+  File "/app/tests/test_product_browser_journey.py", line 212, in test_authenticated_product_navigation_and_league_switching
+    self.audit_page(page, path, viewport)
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/tests/test_customer_experience_journeys.py", line 63, in audit_page
+    self.assertEqual(label.evaluate('e => {const r=document.createRange();r.selectNodeContents(e);return r.getClientRects().length;}'), 1)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 2 != 1
+
+{"timestamp":"2026-11-13T20:55:01.521180+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":657133568,"limit_bytes":2147483648,"raw_headroom_bytes":1490350080,"clean_inactive_file_bytes":1568768,"conditional_file_credit_bytes":784384,"admission_headroom_bytes":1491134464,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-13T20:55:02.288700+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":660029440,"limit_bytes":2147483648,"raw_headroom_bytes":1487454208,"clean_inactive_file_bytes":1568768,"conditional_file_credit_bytes":784384,"admission_headroom_bytes":1488238592,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-13T20:55:02.794614+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":665808896,"limit_bytes":2147483648,"raw_headroom_bytes":1481674752,"clean_inactive_file_bytes":1568768,"conditional_file_credit_bytes":784384,"admission_headroom_bytes":1482459136,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-13T20:55:03.307576+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":669028352,"limit_bytes":2147483648,"raw_headroom_bytes":1478455296,"clean_inactive_file_bytes":1568768,"conditional_file_credit_bytes":784384,"admission_headroom_bytes":1479239680,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+  test_authenticated_product_navigation_and_league_switching (tests.test_customer_experience_journeys.CustomerExperienceJourneyTests.test_authenticated_product_navigation_and_league_switching) (viewport={'width': 320, 'height': 432}, account='beta', league='300', route='/teams/1') ... FAIL
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.14/unittest/case.py", line 58, in testPartExecutor
+    yield
+  File "/usr/local/lib/python3.14/unittest/case.py", line 565, in subTest
+    yield
+  File "/app/tests/test_product_browser_journey.py", line 212, in test_authenticated_product_navigation_and_league_switching
+    self.audit_page(page, path, viewport)
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/tests/test_customer_experience_journeys.py", line 63, in audit_page
+    self.assertEqual(label.evaluate('e => {const r=document.createRange();r.selectNodeContents(e);return r.getClientRects().length;}'), 1)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 2 != 1
+
+{"timestamp":"2026-11-13T20:55:09.588285+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":530165760,"limit_bytes":2147483648,"raw_headroom_bytes":1617317888,"clean_inactive_file_bytes":1638400,"conditional_file_credit_bytes":819200,"admission_headroom_bytes":1618137088,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-13T20:55:10.096398+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":540413952,"limit_bytes":2147483648,"raw_headroom_bytes":1607069696,"clean_inactive_file_bytes":1638400,"conditional_file_credit_bytes":819200,"admission_headroom_bytes":1607888896,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-13T20:55:10.466583+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":549855232,"limit_bytes":2147483648,"raw_headroom_bytes":1597628416,"clean_inactive_file_bytes":1638400,"conditional_file_credit_bytes":819200,"admission_headroom_bytes":1598447616,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-13T20:55:10.984184+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":557944832,"limit_bytes":2147483648,"raw_headroom_bytes":1589538816,"clean_inactive_file_bytes":1638400,"conditional_file_credit_bytes":819200,"admission_headroom_bytes":1590358016,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+  test_authenticated_product_navigation_and_league_switching (tests.test_customer_experience_journeys.CustomerExperienceJourneyTests.test_authenticated_product_navigation_and_league_switching) (viewport={'width': 375, 'height': 667}, account='alpha', league='100', route='/teams/1') ... FAIL
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.14/unittest/case.py", line 58, in testPartExecutor
+    yield
+  File "/usr/local/lib/python3.14/unittest/case.py", line 565, in subTest
+    yield
+  File "/app/tests/test_product_browser_journey.py", line 212, in test_authenticated_product_navigation_and_league_switching
+    self.audit_page(page, path, viewport)
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/tests/test_customer_experience_journeys.py", line 63, in audit_page
+    self.assertEqual(label.evaluate('e => {const r=document.createRange();r.selectNodeContents(e);return r.getClientRects().length;}'), 1)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 2 != 1
+
+{"timestamp":"2026-11-13T20:55:17.917704+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":543817728,"limit_bytes":2147483648,"raw_headroom_bytes":1603665920,"clean_inactive_file_bytes":1638400,"conditional_file_credit_bytes":819200,"admission_headroom_bytes":1604485120,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-13T20:55:18.697699+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":561811456,"limit_bytes":2147483648,"raw_headroom_bytes":1585672192,"clean_inactive_file_bytes":1638400,"conditional_file_credit_bytes":819200,"admission_headroom_bytes":1586491392,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-13T20:55:19.229928+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":563990528,"limit_bytes":2147483648,"raw_headroom_bytes":1583493120,"clean_inactive_file_bytes":1638400,"conditional_file_credit_bytes":819200,"admission_headroom_bytes":1584312320,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-13T20:55:19.935410+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":579559424,"limit_bytes":2147483648,"raw_headroom_bytes":1567924224,"clean_inactive_file_bytes":1638400,"conditional_file_credit_bytes":819200,"admission_headroom_bytes":1568743424,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+  test_authenticated_product_navigation_and_league_switching (tests.test_customer_experience_journeys.CustomerExperienceJourneyTests.test_authenticated_product_navigation_and_league_switching) (viewport={'width': 375, 'height': 667}, account='alpha', league='200', route='/teams/1') ... FAIL
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.14/unittest/case.py", line 58, in testPartExecutor
+    yield
+  File "/usr/local/lib/python3.14/unittest/case.py", line 565, in subTest
+    yield
+  File "/app/tests/test_product_browser_journey.py", line 212, in test_authenticated_product_navigation_and_league_switching
+    self.audit_page(page, path, viewport)
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/tests/test_customer_experience_journeys.py", line 63, in audit_page
+    self.assertEqual(label.evaluate('e => {const r=document.createRange();r.selectNodeContents(e);return r.getClientRects().length;}'), 1)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 2 != 1
+
+{"timestamp":"2026-11-13T20:55:26.118777+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":631087104,"limit_bytes":2147483648,"raw_headroom_bytes":1516396544,"clean_inactive_file_bytes":1638400,"conditional_file_credit_bytes":819200,"admission_headroom_bytes":1517215744,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-13T20:55:26.779354+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":641667072,"limit_bytes":2147483648,"raw_headroom_bytes":1505816576,"clean_inactive_file_bytes":1638400,"conditional_file_credit_bytes":819200,"admission_headroom_bytes":1506635776,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-13T20:55:27.237649+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":650674176,"limit_bytes":2147483648,"raw_headroom_bytes":1496809472,"clean_inactive_file_bytes":1638400,"conditional_file_credit_bytes":819200,"admission_headroom_bytes":1497628672,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-13T20:55:27.765529+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":659005440,"limit_bytes":2147483648,"raw_headroom_bytes":1488478208,"clean_inactive_file_bytes":1638400,"conditional_file_credit_bytes":819200,"admission_headroom_bytes":1489297408,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+  test_authenticated_product_navigation_and_league_switching (tests.test_customer_experience_journeys.CustomerExperienceJourneyTests.test_authenticated_product_navigation_and_league_switching) (viewport={'width': 375, 'height': 667}, account='alpha', league='100', route='/teams/1') ... FAIL
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.14/unittest/case.py", line 58, in testPartExecutor
+    yield
+  File "/usr/local/lib/python3.14/unittest/case.py", line 565, in subTest
+    yield
+  File "/app/tests/test_product_browser_journey.py", line 212, in test_authenticated_product_navigation_and_league_switching
+    self.audit_page(page, path, viewport)
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/tests/test_customer_experience_journeys.py", line 63, in audit_page
+    self.assertEqual(label.evaluate('e => {const r=document.createRange();r.selectNodeContents(e);return r.getClientRects().length;}'), 1)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 2 != 1
+
+{"timestamp":"2026-11-13T20:55:33.383683+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":728580096,"limit_bytes":2147483648,"raw_headroom_bytes":1418903552,"clean_inactive_file_bytes":1638400,"conditional_file_credit_bytes":819200,"admission_headroom_bytes":1419722752,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-13T20:55:33.904471+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":733753344,"limit_bytes":2147483648,"raw_headroom_bytes":1413730304,"clean_inactive_file_bytes":1638400,"conditional_file_credit_bytes":819200,"admission_headroom_bytes":1414549504,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-13T20:55:34.305234+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":735354880,"limit_bytes":2147483648,"raw_headroom_bytes":1412128768,"clean_inactive_file_bytes":1638400,"conditional_file_credit_bytes":819200,"admission_headroom_bytes":1412947968,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-13T20:55:34.821995+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":742813696,"limit_bytes":2147483648,"raw_headroom_bytes":1404669952,"clean_inactive_file_bytes":1638400,"conditional_file_credit_bytes":819200,"admission_headroom_bytes":1405489152,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+  test_authenticated_product_navigation_and_league_switching (tests.test_customer_experience_journeys.CustomerExperienceJourneyTests.test_authenticated_product_navigation_and_league_switching) (viewport={'width': 375, 'height': 667}, account='beta', league='300', route='/teams/1') ... FAIL
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.14/unittest/case.py", line 58, in testPartExecutor
+    yield
+  File "/usr/local/lib/python3.14/unittest/case.py", line 565, in subTest
+    yield
+  File "/app/tests/test_product_browser_journey.py", line 212, in test_authenticated_product_navigation_and_league_switching
+    self.audit_page(page, path, viewport)
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/tests/test_customer_experience_journeys.py", line 63, in audit_page
+    self.assertEqual(label.evaluate('e => {const r=document.createRange();r.selectNodeContents(e);return r.getClientRects().length;}'), 1)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 2 != 1
+
+{"timestamp":"2026-11-13T20:55:41.179022+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":566833152,"limit_bytes":2147483648,"raw_headroom_bytes":1580650496,"clean_inactive_file_bytes":1638400,"conditional_file_credit_bytes":819200,"admission_headroom_bytes":1581469696,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-13T20:55:41.752690+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":583446528,"limit_bytes":2147483648,"raw_headroom_bytes":1564037120,"clean_inactive_file_bytes":1638400,"conditional_file_credit_bytes":819200,"admission_headroom_bytes":1564856320,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-13T20:55:42.197757+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":584855552,"limit_bytes":2147483648,"raw_headroom_bytes":1562628096,"clean_inactive_file_bytes":1638400,"conditional_file_credit_bytes":819200,"admission_headroom_bytes":1563447296,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-13T20:55:42.715347+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":598499328,"limit_bytes":2147483648,"raw_headroom_bytes":1548984320,"clean_inactive_file_bytes":1638400,"conditional_file_credit_bytes":819200,"admission_headroom_bytes":1549803520,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+  test_authenticated_product_navigation_and_league_switching (tests.test_customer_experience_journeys.CustomerExperienceJourneyTests.test_authenticated_product_navigation_and_league_switching) (viewport={'width': 390, 'height': 844}, account='alpha', league='100', route='/teams/1') ... FAIL
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.14/unittest/case.py", line 58, in testPartExecutor
+    yield
+  File "/usr/local/lib/python3.14/unittest/case.py", line 565, in subTest
+    yield
+  File "/app/tests/test_product_browser_journey.py", line 212, in test_authenticated_product_navigation_and_league_switching
+    self.audit_page(page, path, viewport)
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/tests/test_customer_experience_journeys.py", line 63, in audit_page
+    self.assertEqual(label.evaluate('e => {const r=document.createRange();r.selectNodeContents(e);return r.getClientRects().length;}'), 1)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 2 != 1
+
+{"timestamp":"2026-11-13T20:55:49.778609+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":588513280,"limit_bytes":2147483648,"raw_headroom_bytes":1558970368,"clean_inactive_file_bytes":1638400,"conditional_file_credit_bytes":819200,"admission_headroom_bytes":1559789568,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-13T20:55:50.575246+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":602013696,"limit_bytes":2147483648,"raw_headroom_bytes":1545469952,"clean_inactive_file_bytes":1638400,"conditional_file_credit_bytes":819200,"admission_headroom_bytes":1546289152,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-13T20:55:51.114099+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":613601280,"limit_bytes":2147483648,"raw_headroom_bytes":1533882368,"clean_inactive_file_bytes":1638400,"conditional_file_credit_bytes":819200,"admission_headroom_bytes":1534701568,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-13T20:55:51.797028+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":612593664,"limit_bytes":2147483648,"raw_headroom_bytes":1534889984,"clean_inactive_file_bytes":1638400,"conditional_file_credit_bytes":819200,"admission_headroom_bytes":1535709184,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+  test_authenticated_product_navigation_and_league_switching (tests.test_customer_experience_journeys.CustomerExperienceJourneyTests.test_authenticated_product_navigation_and_league_switching) (viewport={'width': 390, 'height': 844}, account='alpha', league='200', route='/teams/1') ... FAIL
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.14/unittest/case.py", line 58, in testPartExecutor
+    yield
+  File "/usr/local/lib/python3.14/unittest/case.py", line 565, in subTest
+    yield
+  File "/app/tests/test_product_browser_journey.py", line 212, in test_authenticated_product_navigation_and_league_switching
+    self.audit_page(page, path, viewport)
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/tests/test_customer_experience_journeys.py", line 63, in audit_page
+    self.assertEqual(label.evaluate('e => {const r=document.createRange();r.selectNodeContents(e);return r.getClientRects().length;}'), 1)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 2 != 1
+
+{"timestamp":"2026-11-13T20:55:58.783406+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":659222528,"limit_bytes":2147483648,"raw_headroom_bytes":1488261120,"clean_inactive_file_bytes":1638400,"conditional_file_credit_bytes":819200,"admission_headroom_bytes":1489080320,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-13T20:55:59.364803+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":666701824,"limit_bytes":2147483648,"raw_headroom_bytes":1480781824,"clean_inactive_file_bytes":1638400,"conditional_file_credit_bytes":819200,"admission_headroom_bytes":1481601024,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-13T20:55:59.841768+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":666320896,"limit_bytes":2147483648,"raw_headroom_bytes":1481162752,"clean_inactive_file_bytes":1638400,"conditional_file_credit_bytes":819200,"admission_headroom_bytes":1481981952,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-13T20:56:00.471450+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":672374784,"limit_bytes":2147483648,"raw_headroom_bytes":1475108864,"clean_inactive_file_bytes":1638400,"conditional_file_credit_bytes":819200,"admission_headroom_bytes":1475928064,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+  test_authenticated_product_navigation_and_league_switching (tests.test_customer_experience_journeys.CustomerExperienceJourneyTests.test_authenticated_product_navigation_and_league_switching) (viewport={'width': 390, 'height': 844}, account='alpha', league='100', route='/teams/1') ... FAIL
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.14/unittest/case.py", line 58, in testPartExecutor
+    yield
+  File "/usr/local/lib/python3.14/unittest/case.py", line 565, in subTest
+    yield
+  File "/app/tests/test_product_browser_journey.py", line 212, in test_authenticated_product_navigation_and_league_switching
+    self.audit_page(page, path, viewport)
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/tests/test_customer_experience_journeys.py", line 63, in audit_page
+    self.assertEqual(label.evaluate('e => {const r=document.createRange();r.selectNodeContents(e);return r.getClientRects().length;}'), 1)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 2 != 1
+
+{"timestamp":"2026-11-13T20:56:06.881981+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":722800640,"limit_bytes":2147483648,"raw_headroom_bytes":1424683008,"clean_inactive_file_bytes":1638400,"conditional_file_credit_bytes":819200,"admission_headroom_bytes":1425502208,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-13T20:56:07.501790+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":724504576,"limit_bytes":2147483648,"raw_headroom_bytes":1422979072,"clean_inactive_file_bytes":1638400,"conditional_file_credit_bytes":819200,"admission_headroom_bytes":1423798272,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-13T20:56:07.943243+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":728694784,"limit_bytes":2147483648,"raw_headroom_bytes":1418788864,"clean_inactive_file_bytes":1638400,"conditional_file_credit_bytes":819200,"admission_headroom_bytes":1419608064,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-13T20:56:08.610467+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":731795456,"limit_bytes":2147483648,"raw_headroom_bytes":1415688192,"clean_inactive_file_bytes":1638400,"conditional_file_credit_bytes":819200,"admission_headroom_bytes":1416507392,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+  test_authenticated_product_navigation_and_league_switching (tests.test_customer_experience_journeys.CustomerExperienceJourneyTests.test_authenticated_product_navigation_and_league_switching) (viewport={'width': 390, 'height': 844}, account='beta', league='300', route='/teams/1') ... FAIL
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.14/unittest/case.py", line 58, in testPartExecutor
+    yield
+  File "/usr/local/lib/python3.14/unittest/case.py", line 565, in subTest
+    yield
+  File "/app/tests/test_product_browser_journey.py", line 212, in test_authenticated_product_navigation_and_league_switching
+    self.audit_page(page, path, viewport)
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/tests/test_customer_experience_journeys.py", line 63, in audit_page
+    self.assertEqual(label.evaluate('e => {const r=document.createRange();r.selectNodeContents(e);return r.getClientRects().length;}'), 1)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 2 != 1
+
+{"timestamp":"2026-11-13T20:56:15.771762+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":619216896,"limit_bytes":2147483648,"raw_headroom_bytes":1528266752,"clean_inactive_file_bytes":1638400,"conditional_file_credit_bytes":819200,"admission_headroom_bytes":1529085952,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-13T20:56:16.343961+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":621568000,"limit_bytes":2147483648,"raw_headroom_bytes":1525915648,"clean_inactive_file_bytes":1638400,"conditional_file_credit_bytes":819200,"admission_headroom_bytes":1526734848,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-13T20:56:16.838847+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":632737792,"limit_bytes":2147483648,"raw_headroom_bytes":1514745856,"clean_inactive_file_bytes":1638400,"conditional_file_credit_bytes":819200,"admission_headroom_bytes":1515565056,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-13T20:56:17.405024+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":646365184,"limit_bytes":2147483648,"raw_headroom_bytes":1501118464,"clean_inactive_file_bytes":1638400,"conditional_file_credit_bytes":819200,"admission_headroom_bytes":1501937664,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+  test_authenticated_product_navigation_and_league_switching (tests.test_customer_experience_journeys.CustomerExperienceJourneyTests.test_authenticated_product_navigation_and_league_switching) (viewport={'width': 1280, 'height': 900}, account='alpha', league='100', route='/teams/1') ... FAIL
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.14/unittest/case.py", line 58, in testPartExecutor
+    yield
+  File "/usr/local/lib/python3.14/unittest/case.py", line 565, in subTest
+    yield
+  File "/app/tests/test_product_browser_journey.py", line 212, in test_authenticated_product_navigation_and_league_switching
+    self.audit_page(page, path, viewport)
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/tests/test_customer_experience_journeys.py", line 63, in audit_page
+    self.assertEqual(label.evaluate('e => {const r=document.createRange();r.selectNodeContents(e);return r.getClientRects().length;}'), 1)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 2 != 1
+
+{"timestamp":"2026-11-13T20:56:24.493205+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":656998400,"limit_bytes":2147483648,"raw_headroom_bytes":1490485248,"clean_inactive_file_bytes":1638400,"conditional_file_credit_bytes":819200,"admission_headroom_bytes":1491304448,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-13T20:56:25.217443+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":664408064,"limit_bytes":2147483648,"raw_headroom_bytes":1483075584,"clean_inactive_file_bytes":1638400,"conditional_file_credit_bytes":819200,"admission_headroom_bytes":1483894784,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-13T20:56:25.941341+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":677912576,"limit_bytes":2147483648,"raw_headroom_bytes":1469571072,"clean_inactive_file_bytes":1638400,"conditional_file_credit_bytes":819200,"admission_headroom_bytes":1470390272,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-13T20:56:26.764249+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":693731328,"limit_bytes":2147483648,"raw_headroom_bytes":1453752320,"clean_inactive_file_bytes":1638400,"conditional_file_credit_bytes":819200,"admission_headroom_bytes":1454571520,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+  test_authenticated_product_navigation_and_league_switching (tests.test_customer_experience_journeys.CustomerExperienceJourneyTests.test_authenticated_product_navigation_and_league_switching) (viewport={'width': 1280, 'height': 900}, account='alpha', league='200', route='/teams/1') ... FAIL
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.14/unittest/case.py", line 58, in testPartExecutor
+    yield
+  File "/usr/local/lib/python3.14/unittest/case.py", line 565, in subTest
+    yield
+  File "/app/tests/test_product_browser_journey.py", line 212, in test_authenticated_product_navigation_and_league_switching
+    self.audit_page(page, path, viewport)
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/tests/test_customer_experience_journeys.py", line 63, in audit_page
+    self.assertEqual(label.evaluate('e => {const r=document.createRange();r.selectNodeContents(e);return r.getClientRects().length;}'), 1)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 2 != 1
+
+{"timestamp":"2026-11-13T20:56:32.586106+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":734769152,"limit_bytes":2147483648,"raw_headroom_bytes":1412714496,"clean_inactive_file_bytes":1638400,"conditional_file_credit_bytes":819200,"admission_headroom_bytes":1413533696,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-13T20:56:33.130389+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":732213248,"limit_bytes":2147483648,"raw_headroom_bytes":1415270400,"clean_inactive_file_bytes":1638400,"conditional_file_credit_bytes":819200,"admission_headroom_bytes":1416089600,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-13T20:56:33.682434+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":724787200,"limit_bytes":2147483648,"raw_headroom_bytes":1422696448,"clean_inactive_file_bytes":1638400,"conditional_file_credit_bytes":819200,"admission_headroom_bytes":1423515648,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-13T20:56:34.198442+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":731623424,"limit_bytes":2147483648,"raw_headroom_bytes":1415860224,"clean_inactive_file_bytes":1638400,"conditional_file_credit_bytes":819200,"admission_headroom_bytes":1416679424,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+  test_authenticated_product_navigation_and_league_switching (tests.test_customer_experience_journeys.CustomerExperienceJourneyTests.test_authenticated_product_navigation_and_league_switching) (viewport={'width': 1280, 'height': 900}, account='alpha', league='100', route='/teams/1') ... FAIL
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.14/unittest/case.py", line 58, in testPartExecutor
+    yield
+  File "/usr/local/lib/python3.14/unittest/case.py", line 565, in subTest
+    yield
+  File "/app/tests/test_product_browser_journey.py", line 212, in test_authenticated_product_navigation_and_league_switching
+    self.audit_page(page, path, viewport)
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/tests/test_customer_experience_journeys.py", line 63, in audit_page
+    self.assertEqual(label.evaluate('e => {const r=document.createRange();r.selectNodeContents(e);return r.getClientRects().length;}'), 1)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 2 != 1
+
+{"timestamp":"2026-11-13T20:56:39.603106+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":795439104,"limit_bytes":2147483648,"raw_headroom_bytes":1352044544,"clean_inactive_file_bytes":1720320,"conditional_file_credit_bytes":860160,"admission_headroom_bytes":1352904704,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-13T20:56:40.200855+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":795287552,"limit_bytes":2147483648,"raw_headroom_bytes":1352196096,"clean_inactive_file_bytes":1720320,"conditional_file_credit_bytes":860160,"admission_headroom_bytes":1353056256,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-13T20:56:40.713460+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":792891392,"limit_bytes":2147483648,"raw_headroom_bytes":1354592256,"clean_inactive_file_bytes":1720320,"conditional_file_credit_bytes":860160,"admission_headroom_bytes":1355452416,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-13T20:56:41.289791+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":801972224,"limit_bytes":2147483648,"raw_headroom_bytes":1345511424,"clean_inactive_file_bytes":1720320,"conditional_file_credit_bytes":860160,"admission_headroom_bytes":1346371584,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+  test_authenticated_product_navigation_and_league_switching (tests.test_customer_experience_journeys.CustomerExperienceJourneyTests.test_authenticated_product_navigation_and_league_switching) (viewport={'width': 1280, 'height': 900}, account='beta', league='300', route='/teams/1') ... FAIL
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.14/unittest/case.py", line 58, in testPartExecutor
+    yield
+  File "/usr/local/lib/python3.14/unittest/case.py", line 565, in subTest
+    yield
+  File "/app/tests/test_product_browser_journey.py", line 212, in test_authenticated_product_navigation_and_league_switching
+    self.audit_page(page, path, viewport)
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/tests/test_customer_experience_journeys.py", line 63, in audit_page
+    self.assertEqual(label.evaluate('e => {const r=document.createRange();r.selectNodeContents(e);return r.getClientRects().length;}'), 1)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 2 != 1
+
+{"timestamp":"2026-11-13T20:56:47.776083+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":684150784,"limit_bytes":2147483648,"raw_headroom_bytes":1463332864,"clean_inactive_file_bytes":1720320,"conditional_file_credit_bytes":860160,"admission_headroom_bytes":1464193024,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-13T20:56:48.316625+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":694202368,"limit_bytes":2147483648,"raw_headroom_bytes":1453281280,"clean_inactive_file_bytes":1720320,"conditional_file_credit_bytes":860160,"admission_headroom_bytes":1454141440,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-13T20:56:49.023555+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":703873024,"limit_bytes":2147483648,"raw_headroom_bytes":1443610624,"clean_inactive_file_bytes":1720320,"conditional_file_credit_bytes":860160,"admission_headroom_bytes":1444470784,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-13T20:56:49.515830+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":712916992,"limit_bytes":2147483648,"raw_headroom_bytes":1434566656,"clean_inactive_file_bytes":1720320,"conditional_file_credit_bytes":860160,"admission_headroom_bytes":1435426816,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+
+======================================================================
+FAIL: test_authenticated_product_navigation_and_league_switching (tests.test_customer_experience_journeys.CustomerExperienceJourneyTests.test_authenticated_product_navigation_and_league_switching) (viewport={'width': 320, 'height': 432}, account='alpha', league='100', route='/teams/1')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_product_browser_journey.py", line 212, in test_authenticated_product_navigation_and_league_switching
+    self.audit_page(page, path, viewport)
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/tests/test_customer_experience_journeys.py", line 63, in audit_page
+    self.assertEqual(label.evaluate('e => {const r=document.createRange();r.selectNodeContents(e);return r.getClientRects().length;}'), 1)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 2 != 1
+
+======================================================================
+FAIL: test_authenticated_product_navigation_and_league_switching (tests.test_customer_experience_journeys.CustomerExperienceJourneyTests.test_authenticated_product_navigation_and_league_switching) (viewport={'width': 320, 'height': 432}, account='alpha', league='200', route='/teams/1')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_product_browser_journey.py", line 212, in test_authenticated_product_navigation_and_league_switching
+    self.audit_page(page, path, viewport)
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/tests/test_customer_experience_journeys.py", line 63, in audit_page
+    self.assertEqual(label.evaluate('e => {const r=document.createRange();r.selectNodeContents(e);return r.getClientRects().length;}'), 1)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 2 != 1
+
+======================================================================
+FAIL: test_authenticated_product_navigation_and_league_switching (tests.test_customer_experience_journeys.CustomerExperienceJourneyTests.test_authenticated_product_navigation_and_league_switching) (viewport={'width': 320, 'height': 432}, account='alpha', league='100', route='/teams/1')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_product_browser_journey.py", line 212, in test_authenticated_product_navigation_and_league_switching
+    self.audit_page(page, path, viewport)
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/tests/test_customer_experience_journeys.py", line 63, in audit_page
+    self.assertEqual(label.evaluate('e => {const r=document.createRange();r.selectNodeContents(e);return r.getClientRects().length;}'), 1)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 2 != 1
+
+======================================================================
+FAIL: test_authenticated_product_navigation_and_league_switching (tests.test_customer_experience_journeys.CustomerExperienceJourneyTests.test_authenticated_product_navigation_and_league_switching) (viewport={'width': 320, 'height': 432}, account='beta', league='300', route='/teams/1')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_product_browser_journey.py", line 212, in test_authenticated_product_navigation_and_league_switching
+    self.audit_page(page, path, viewport)
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/tests/test_customer_experience_journeys.py", line 63, in audit_page
+    self.assertEqual(label.evaluate('e => {const r=document.createRange();r.selectNodeContents(e);return r.getClientRects().length;}'), 1)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 2 != 1
+
+======================================================================
+FAIL: test_authenticated_product_navigation_and_league_switching (tests.test_customer_experience_journeys.CustomerExperienceJourneyTests.test_authenticated_product_navigation_and_league_switching) (viewport={'width': 375, 'height': 667}, account='alpha', league='100', route='/teams/1')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_product_browser_journey.py", line 212, in test_authenticated_product_navigation_and_league_switching
+    self.audit_page(page, path, viewport)
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/tests/test_customer_experience_journeys.py", line 63, in audit_page
+    self.assertEqual(label.evaluate('e => {const r=document.createRange();r.selectNodeContents(e);return r.getClientRects().length;}'), 1)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 2 != 1
+
+======================================================================
+FAIL: test_authenticated_product_navigation_and_league_switching (tests.test_customer_experience_journeys.CustomerExperienceJourneyTests.test_authenticated_product_navigation_and_league_switching) (viewport={'width': 375, 'height': 667}, account='alpha', league='200', route='/teams/1')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_product_browser_journey.py", line 212, in test_authenticated_product_navigation_and_league_switching
+    self.audit_page(page, path, viewport)
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/tests/test_customer_experience_journeys.py", line 63, in audit_page
+    self.assertEqual(label.evaluate('e => {const r=document.createRange();r.selectNodeContents(e);return r.getClientRects().length;}'), 1)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 2 != 1
+
+======================================================================
+FAIL: test_authenticated_product_navigation_and_league_switching (tests.test_customer_experience_journeys.CustomerExperienceJourneyTests.test_authenticated_product_navigation_and_league_switching) (viewport={'width': 375, 'height': 667}, account='alpha', league='100', route='/teams/1')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_product_browser_journey.py", line 212, in test_authenticated_product_navigation_and_league_switching
+    self.audit_page(page, path, viewport)
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/tests/test_customer_experience_journeys.py", line 63, in audit_page
+    self.assertEqual(label.evaluate('e => {const r=document.createRange();r.selectNodeContents(e);return r.getClientRects().length;}'), 1)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 2 != 1
+
+======================================================================
+FAIL: test_authenticated_product_navigation_and_league_switching (tests.test_customer_experience_journeys.CustomerExperienceJourneyTests.test_authenticated_product_navigation_and_league_switching) (viewport={'width': 375, 'height': 667}, account='beta', league='300', route='/teams/1')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_product_browser_journey.py", line 212, in test_authenticated_product_navigation_and_league_switching
+    self.audit_page(page, path, viewport)
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/tests/test_customer_experience_journeys.py", line 63, in audit_page
+    self.assertEqual(label.evaluate('e => {const r=document.createRange();r.selectNodeContents(e);return r.getClientRects().length;}'), 1)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 2 != 1
+
+======================================================================
+FAIL: test_authenticated_product_navigation_and_league_switching (tests.test_customer_experience_journeys.CustomerExperienceJourneyTests.test_authenticated_product_navigation_and_league_switching) (viewport={'width': 390, 'height': 844}, account='alpha', league='100', route='/teams/1')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_product_browser_journey.py", line 212, in test_authenticated_product_navigation_and_league_switching
+    self.audit_page(page, path, viewport)
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/tests/test_customer_experience_journeys.py", line 63, in audit_page
+    self.assertEqual(label.evaluate('e => {const r=document.createRange();r.selectNodeContents(e);return r.getClientRects().length;}'), 1)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 2 != 1
+
+======================================================================
+FAIL: test_authenticated_product_navigation_and_league_switching (tests.test_customer_experience_journeys.CustomerExperienceJourneyTests.test_authenticated_product_navigation_and_league_switching) (viewport={'width': 390, 'height': 844}, account='alpha', league='200', route='/teams/1')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_product_browser_journey.py", line 212, in test_authenticated_product_navigation_and_league_switching
+    self.audit_page(page, path, viewport)
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/tests/test_customer_experience_journeys.py", line 63, in audit_page
+    self.assertEqual(label.evaluate('e => {const r=document.createRange();r.selectNodeContents(e);return r.getClientRects().length;}'), 1)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 2 != 1
+
+======================================================================
+FAIL: test_authenticated_product_navigation_and_league_switching (tests.test_customer_experience_journeys.CustomerExperienceJourneyTests.test_authenticated_product_navigation_and_league_switching) (viewport={'width': 390, 'height': 844}, account='alpha', league='100', route='/teams/1')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_product_browser_journey.py", line 212, in test_authenticated_product_navigation_and_league_switching
+    self.audit_page(page, path, viewport)
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/tests/test_customer_experience_journeys.py", line 63, in audit_page
+    self.assertEqual(label.evaluate('e => {const r=document.createRange();r.selectNodeContents(e);return r.getClientRects().length;}'), 1)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 2 != 1
+
+======================================================================
+FAIL: test_authenticated_product_navigation_and_league_switching (tests.test_customer_experience_journeys.CustomerExperienceJourneyTests.test_authenticated_product_navigation_and_league_switching) (viewport={'width': 390, 'height': 844}, account='beta', league='300', route='/teams/1')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_product_browser_journey.py", line 212, in test_authenticated_product_navigation_and_league_switching
+    self.audit_page(page, path, viewport)
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/tests/test_customer_experience_journeys.py", line 63, in audit_page
+    self.assertEqual(label.evaluate('e => {const r=document.createRange();r.selectNodeContents(e);return r.getClientRects().length;}'), 1)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 2 != 1
+
+======================================================================
+FAIL: test_authenticated_product_navigation_and_league_switching (tests.test_customer_experience_journeys.CustomerExperienceJourneyTests.test_authenticated_product_navigation_and_league_switching) (viewport={'width': 1280, 'height': 900}, account='alpha', league='100', route='/teams/1')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_product_browser_journey.py", line 212, in test_authenticated_product_navigation_and_league_switching
+    self.audit_page(page, path, viewport)
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/tests/test_customer_experience_journeys.py", line 63, in audit_page
+    self.assertEqual(label.evaluate('e => {const r=document.createRange();r.selectNodeContents(e);return r.getClientRects().length;}'), 1)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 2 != 1
+
+======================================================================
+FAIL: test_authenticated_product_navigation_and_league_switching (tests.test_customer_experience_journeys.CustomerExperienceJourneyTests.test_authenticated_product_navigation_and_league_switching) (viewport={'width': 1280, 'height': 900}, account='alpha', league='200', route='/teams/1')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_product_browser_journey.py", line 212, in test_authenticated_product_navigation_and_league_switching
+    self.audit_page(page, path, viewport)
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/tests/test_customer_experience_journeys.py", line 63, in audit_page
+    self.assertEqual(label.evaluate('e => {const r=document.createRange();r.selectNodeContents(e);return r.getClientRects().length;}'), 1)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 2 != 1
+
+======================================================================
+FAIL: test_authenticated_product_navigation_and_league_switching (tests.test_customer_experience_journeys.CustomerExperienceJourneyTests.test_authenticated_product_navigation_and_league_switching) (viewport={'width': 1280, 'height': 900}, account='alpha', league='100', route='/teams/1')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_product_browser_journey.py", line 212, in test_authenticated_product_navigation_and_league_switching
+    self.audit_page(page, path, viewport)
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/tests/test_customer_experience_journeys.py", line 63, in audit_page
+    self.assertEqual(label.evaluate('e => {const r=document.createRange();r.selectNodeContents(e);return r.getClientRects().length;}'), 1)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 2 != 1
+
+======================================================================
+FAIL: test_authenticated_product_navigation_and_league_switching (tests.test_customer_experience_journeys.CustomerExperienceJourneyTests.test_authenticated_product_navigation_and_league_switching) (viewport={'width': 1280, 'height': 900}, account='beta', league='300', route='/teams/1')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_product_browser_journey.py", line 212, in test_authenticated_product_navigation_and_league_switching
+    self.audit_page(page, path, viewport)
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/tests/test_customer_experience_journeys.py", line 63, in audit_page
+    self.assertEqual(label.evaluate('e => {const r=document.createRange();r.selectNodeContents(e);return r.getClientRects().length;}'), 1)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 2 != 1
+
+----------------------------------------------------------------------
+Ran 1 test in 136.433s
+
+FAILED (failures=16)
+{"source": {"candidate": "a092a8e3e5882f55366a774a08b622dd25ff40af", "tree": "946879861ababa41501b4ccb253a9e0777530c9e", "dirty": ""}, "tests": 1, "expected": 1, "failures": 16, "errors": 0, "skips": 0, "passed": false, "limit": 2147483648, "peak": 865570816, "events": {"low": "0", "high": "0", "max": "0", "oom": "0", "oom_kill": "0", "oom_group_kill": "0"}, "observed_at": "2026-11-13T20:56:53.074865+00:00"}

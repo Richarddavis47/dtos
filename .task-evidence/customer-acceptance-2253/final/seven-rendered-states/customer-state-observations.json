@@ -1,0 +1,129 @@
+{
+  "schema": 1,
+  "source": {
+    "baseline": "6bac32ce348cf6c5961c6c69f7659d217a76cee6",
+    "baseline_tree": "551ad8508f11d4b1b2870838aa804390840a6f62",
+    "candidate": "d812de9125fcd0971c4b521186369cdc2c72f012",
+    "tree": "256e7e7c1046f9d82f1928141c84662ee7928bd5",
+    "branch": "fix/customer-acceptance-2253",
+    "version": "1.22.38",
+    "build": 2253,
+    "expected_test_count": 4504,
+    "scope": "Final implementation candidate; discovery, exact-source focused/full validation and visual review still required.",
+    "pr": 342
+  },
+  "producer_sha256": "02643993d4694b669cfd25eb1c0f93e8c3f310b70b1337eb9a11088d7668ce44",
+  "scope": "Source-bound rendered fixtures plus explicitly controlled Home transport states; no live owner or actual resource-admission claim.",
+  "physical_safari": false,
+  "records": [
+    {
+      "family": "player",
+      "state": "complete",
+      "source_generation": "a9b7ba99c0bbeaefed3df32a6c08ed21954d6d95bb94f2e358644c7eb5c97362",
+      "source_generation_status": "known",
+      "assessment_supported": true,
+      "qualification_preserved": true,
+      "no_new_heavy_work": true,
+      "proof_kind": "source_bound_rendered_state",
+      "record": {
+        "path": "customer-states/player-complete-original.json",
+        "bytes": 27764,
+        "sha256": "f4b91b978c093c5ec8afa0423c620a5a1e2a6164496e6aa2f8be871ab81f46a5"
+      }
+    },
+    {
+      "family": "player",
+      "state": "partial",
+      "source_generation": "1a9896b194e58a076d170c17f619b113d7174b53175378de80c1b72b1b0918a6",
+      "source_generation_status": "known",
+      "assessment_supported": false,
+      "qualification_preserved": true,
+      "no_new_heavy_work": true,
+      "proof_kind": "source_bound_rendered_state",
+      "record": {
+        "path": "customer-states/player-partial-original.json",
+        "bytes": 27947,
+        "sha256": "e54f8af3b8120084368d4c6877c28653087a18c1a654427e506a279af03f2aaf"
+      }
+    },
+    {
+      "family": "player",
+      "state": "missing",
+      "source_generation": "26b55b710b4ded7bacf5ea76b9ae4a785bc05f25381213efdf9b58b4f59681e0",
+      "source_generation_status": "known",
+      "assessment_supported": false,
+      "qualification_preserved": true,
+      "no_new_heavy_work": true,
+      "proof_kind": "source_bound_rendered_state",
+      "record": {
+        "path": "customer-states/player-missing-original.json",
+        "bytes": 27879,
+        "sha256": "58cd5106b63897703c89076b65a3c021226d9a63739d6b17edf16bdbe127345e"
+      }
+    },
+    {
+      "family": "player",
+      "state": "retained",
+      "source_generation": "a9b7ba99c0bbeaefed3df32a6c08ed21954d6d95bb94f2e358644c7eb5c97362",
+      "source_generation_status": "known",
+      "assessment_supported": true,
+      "qualification_preserved": true,
+      "no_new_heavy_work": true,
+      "proof_kind": "source_bound_rendered_state",
+      "record": {
+        "path": "customer-states/player-retained-original.json",
+        "bytes": 27971,
+        "sha256": "3ab40de0f2fa3e3ac1802a34c81e6dbf3129ddc0ea9ee85244472a9644ec0d42"
+      }
+    },
+    {
+      "family": "home",
+      "state": "loading",
+      "source_generation": null,
+      "source_generation_status": "unknown",
+      "assessment_supported": false,
+      "qualification_preserved": true,
+      "no_new_heavy_work": true,
+      "proof_kind": "controlled_transport_ui_state",
+      "actual_memory_admission_measured": false,
+      "record": {
+        "path": "customer-states/home-loading-original.json",
+        "bytes": 3723,
+        "sha256": "ac6a0af3db471fb84578d7bc6d2d5e667c9ee57a90cd39aaf05d0dffa1adc4ee"
+      }
+    },
+    {
+      "family": "home",
+      "state": "capacity_deferred",
+      "source_generation": null,
+      "source_generation_status": "unknown",
+      "assessment_supported": false,
+      "qualification_preserved": true,
+      "no_new_heavy_work": true,
+      "proof_kind": "controlled_transport_ui_state",
+      "actual_memory_admission_measured": false,
+      "record": {
+        "path": "customer-states/home-capacity_deferred-original.json",
+        "bytes": 5360,
+        "sha256": "8404327671ccb4f1ed6ba9bd46aae0e6dda453057d99d6a66dffd03f3c620cf4"
+      }
+    },
+    {
+      "family": "home",
+      "state": "error",
+      "source_generation": null,
+      "source_generation_status": "unknown",
+      "assessment_supported": false,
+      "qualification_preserved": true,
+      "no_new_heavy_work": true,
+      "proof_kind": "controlled_transport_ui_state",
+      "actual_memory_admission_measured": false,
+      "record": {
+        "path": "customer-states/home-error-original.json",
+        "bytes": 5326,
+        "sha256": "1d78c93c706d641e133c4e9eac00a467a0d9172d0a11bf82bf3b0571191414c3"
+      }
+    }
+  ],
+  "observed_at": "2026-11-14T07:59:52.492986+00:00"
+}

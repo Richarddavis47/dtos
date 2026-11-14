@@ -1,0 +1,38 @@
+/usr/local/lib/python3.14/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+  from starlette.testclient import TestClient as TestClient  # noqa
+test_home_package_reason_drawback_and_unfavorable_honesty (tests.test_home_opportunity_integrity.OpportunityIntegrityTests.test_home_package_reason_drawback_and_unfavorable_honesty) ... {"timestamp":"2026-11-14T06:03:24.513522+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":95215616,"limit_bytes":2147483648,"raw_headroom_bytes":2052268032,"clean_inactive_file_bytes":655360,"conditional_file_credit_bytes":327680,"admission_headroom_bytes":2052595712,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-14T06:03:24.515663+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/workspace?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-14T06:03:24.523708+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_admission","request_id":"system","event":"trade_admission","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":95002624,"limit_bytes":2147483648,"raw_headroom_bytes":2052481024,"clean_inactive_file_bytes":655360,"conditional_file_credit_bytes":327680,"admission_headroom_bytes":2052808704,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"recovery":null}}
+{"timestamp":"2026-11-14T06:03:24.577648+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_execution_finished","request_id":"system","event":"trade_execution_finished","duration_ms":54.6,"diagnostic":{"schema":"trade-resource-v1","outcome":"complete"}}
+{"timestamp":"2026-11-14T06:03:24.580348+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/trades/evaluate \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-14T06:03:24.593199+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-14T06:03:24.608840+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+FAIL
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.14/unittest/case.py", line 58, in testPartExecutor
+    yield
+  File "/usr/local/lib/python3.14/unittest/case.py", line 669, in run
+    self._callTestMethod(testMethod)
+    ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/unittest/case.py", line 615, in _callTestMethod
+    result = method()
+  File "/app/tests/test_home_opportunity_integrity.py", line 182, in test_home_package_reason_drawback_and_unfavorable_honesty
+    self.assertIn(row["evaluation"]["major_drawback"], html)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'Optimal legal-lineup production falls 4.00 points per supported week; Useful legal-replacement production falls 1.00 points per supported week' not found in '<article class="home-opportunity"><p class="identity-kicker">RECOMMENDED TRADE</p><h3>Team 2</h3><p><b>You send:</b> a</p><p><b>You receive:</b> 2028 Round 1 (Unknown)</p><p>Current Market: send 250.0 / receive 250.0</p><p><b>WORTH PURSUING</b></p><p><b>Why consider:</b> Rebuild fit: you give up current production while gaining meaningful priced future capital. Reserve coverage and pick-range uncertainty remain explicit. Provisional: check dates and player availability.</p><p><b>Cost and uncertainty:</b> Optimal legal-lineup production falls 4.00 points per supported week; Useful projected points from eligible backups fall 1.00 points per supported week</p><p><b>Partner fit (inferred):</b> Win-now fit: this costs future flexibility, and materially improves the optimal legal lineup. Any reserve loss remains a disclosed cost. Main cost: Spends 250 Market units of future capital.</p><details><summary>Assessment evidence</summary><p>Generic methodology</p></details><a class="ds-action" href="/trades/create?front_office=1&amp;home_offer=opaque">Explore / Edit · preview →</a></article>'
+
+
+======================================================================
+FAIL: test_home_package_reason_drawback_and_unfavorable_honesty (tests.test_home_opportunity_integrity.OpportunityIntegrityTests.test_home_package_reason_drawback_and_unfavorable_honesty)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_home_opportunity_integrity.py", line 182, in test_home_package_reason_drawback_and_unfavorable_honesty
+    self.assertIn(row["evaluation"]["major_drawback"], html)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'Optimal legal-lineup production falls 4.00 points per supported week; Useful legal-replacement production falls 1.00 points per supported week' not found in '<article class="home-opportunity"><p class="identity-kicker">RECOMMENDED TRADE</p><h3>Team 2</h3><p><b>You send:</b> a</p><p><b>You receive:</b> 2028 Round 1 (Unknown)</p><p>Current Market: send 250.0 / receive 250.0</p><p><b>WORTH PURSUING</b></p><p><b>Why consider:</b> Rebuild fit: you give up current production while gaining meaningful priced future capital. Reserve coverage and pick-range uncertainty remain explicit. Provisional: check dates and player availability.</p><p><b>Cost and uncertainty:</b> Optimal legal-lineup production falls 4.00 points per supported week; Useful projected points from eligible backups fall 1.00 points per supported week</p><p><b>Partner fit (inferred):</b> Win-now fit: this costs future flexibility, and materially improves the optimal legal lineup. Any reserve loss remains a disclosed cost. Main cost: Spends 250 Market units of future capital.</p><details><summary>Assessment evidence</summary><p>Generic methodology</p></details><a class="ds-action" href="/trades/create?front_office=1&amp;home_offer=opaque">Explore / Edit · preview →</a></article>'
+
+----------------------------------------------------------------------
+Ran 1 test in 1.153s
+
+FAILED (failures=1)
+{"source": {"candidate": "e85425fe60811dac15216dc2329478f5f58e325b", "tree": "17893ff96552627e6c26c36adcdefede0f4e3bf4", "dirty": ""}, "tests": 1, "expected": 1, "failures": 1, "errors": 0, "skips": 0, "passed": false, "limit": 2147483648, "peak": 146546688, "events": {"low": "0", "high": "0", "max": "0", "oom": "0", "oom_kill": "0", "oom_group_kill": "0"}, "observed_at": "2026-11-14T06:03:24.615303+00:00"}

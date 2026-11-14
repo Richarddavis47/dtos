@@ -1,0 +1,73 @@
+{
+  "source": {
+    "baseline": "6bac32ce348cf6c5961c6c69f7659d217a76cee6",
+    "baseline_tree": "551ad8508f11d4b1b2870838aa804390840a6f62",
+    "candidate": "e85425fe60811dac15216dc2329478f5f58e325b",
+    "tree": "17893ff96552627e6c26c36adcdefede0f4e3bf4",
+    "branch": "fix/customer-acceptance-2253",
+    "version": "1.22.38",
+    "build": 2253,
+    "expected_test_count": 4504,
+    "scope": "Final implementation candidate; discovery, exact-source focused/full validation and visual review still required.",
+    "pr": 342
+  },
+  "sha256": "9a0219b4f85ae47076cc2b4a938df3577ba35599790347eb34db9b1208e5d7b5",
+  "scope": "Original interrupted validator trace copied before official next-run reset. Partial only; no all-ten-gate claim.",
+  "events": 24,
+  "completed_gates": [
+    {
+      "timestamp": "2026-11-14T05:34:22.614099+00:00",
+      "event": "validation_child_completed",
+      "pid": 17,
+      "parent_pid": 8,
+      "step": "Committed whitespace",
+      "child_pid": 18,
+      "return_code": 0
+    },
+    {
+      "timestamp": "2026-11-14T05:34:22.623392+00:00",
+      "event": "validation_child_completed",
+      "pid": 17,
+      "parent_pid": 8,
+      "step": "Working-tree whitespace",
+      "child_pid": 19,
+      "return_code": 0
+    },
+    {
+      "timestamp": "2026-11-14T05:34:22.631194+00:00",
+      "event": "validation_child_completed",
+      "pid": 17,
+      "parent_pid": 8,
+      "step": "Staged whitespace",
+      "child_pid": 25,
+      "return_code": 0
+    },
+    {
+      "timestamp": "2026-11-14T05:34:23.299793+00:00",
+      "event": "validation_child_completed",
+      "pid": 17,
+      "parent_pid": 8,
+      "step": "Python compilation",
+      "child_pid": 26,
+      "return_code": 0
+    },
+    {
+      "timestamp": "2026-11-14T05:34:23.795630+00:00",
+      "event": "validation_child_completed",
+      "pid": 17,
+      "parent_pid": 8,
+      "step": "Ruff",
+      "child_pid": 27,
+      "return_code": 0
+    },
+    {
+      "timestamp": "2026-11-14T05:34:25.178920+00:00",
+      "event": "validation_child_completed",
+      "pid": 17,
+      "parent_pid": 8,
+      "step": "Dependency integrity",
+      "child_pid": 32,
+      "return_code": 0
+    }
+  ]
+}

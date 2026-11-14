@@ -1,0 +1,22 @@
+....E
+======================================================================
+ERROR: test_unsafe_child_path_is_rejected (tests.test_release_publisher.NestedPriorEvidenceTests.test_unsafe_child_path_is_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/dtos-publisher-2253/tests/test_release_publisher.py", line 4828, in test_unsafe_child_path_is_rejected
+    child = self.prior("records.zip", {"../escape.log": b"bad"})
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/dtos-publisher-2253/tests/test_release_publisher.py", line 4794, in prior
+    p.make_zip(path, payload)
+  File "/workspace/dtos-publisher-2253/tools/release/publish.py", line 2803, in make_zip
+    verify_zip(path)
+  File "/workspace/dtos-publisher-2253/tools/release/publish.py", line 103, in verify_zip
+    require(
+  File "/workspace/dtos-publisher-2253/tools/release/publish.py", line 47, in require
+    raise RuntimeError(message)
+RuntimeError: Unsafe archive member
+
+----------------------------------------------------------------------
+Ran 5 tests in 0.009s
+
+FAILED (errors=1)

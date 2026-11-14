@@ -1,0 +1,13 @@
+F
+======================================================================
+FAIL: test_finalized_plan_transport_leaves_room_under_unchanged_aggregate_cap (tests.test_release_publisher.CustomerBaselineAliasTests.test_finalized_plan_transport_leaves_room_under_unchanged_aggregate_cap)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/dtos-publisher-2253/tests/test_release_publisher.py", line 4620, in test_finalized_plan_transport_leaves_room_under_unchanged_aggregate_cap
+    self.assertLess(originals + recovery + prior, 508 * 1024**2)
+AssertionError: 628113640 not less than 532676608
+
+----------------------------------------------------------------------
+Ran 1 test in 0.002s
+
+FAILED (failures=1)
