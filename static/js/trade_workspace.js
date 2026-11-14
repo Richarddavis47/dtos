@@ -1447,7 +1447,7 @@
     for (const [side, title] of [['active', 'Your team'], ['partner', 'Their team']]) {
       const section = node('section'); section.append(node('h4', title));
       const explanation = side === 'active' ? decision.summary || e.why_you_would_do_it : decision.partner_summary || e.counterparty_summary || e.why_they_would_do_it;
-      section.append(node('p', explanation || 'A supported team-specific explanation is not available.'));
+      section.append(node('p', customerText(explanation || 'A supported team-specific explanation is not available.')));
       if (side === 'partner') section.append(node('small', 'Their fit is an evidence-based inference, not a statement of the manager’s intent.'));
       teams.append(section);
     }
