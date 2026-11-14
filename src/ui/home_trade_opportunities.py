@@ -3,13 +3,15 @@
 from html import escape
 from urllib.parse import urlencode
 
+from src.ui.customer_experience import plain_reason
+
 
 def section(roster_id):
     return f'''<section class="ux-section" id="home-opportunities" data-front-office="{roster_id}" data-presentation="loading" aria-labelledby="home-brief-title"><div class="ux-section-head"><h2 id="home-brief-title">Front Office Brief</h2></div><div id="home-opportunity-cards"></div><p class="home-brief-status" id="home-opportunity-status" role="status">Loading your team brief. No search runs automatically on Home.</p><div class="ux-feature-actions home-brief-actions"><button type="button" class="ds-action" id="home-find-ideas">Find Trade Ideas</button><button type="button" class="btn" id="home-reload-opportunities" hidden>Reload Home</button><a class="ds-action" href="/trades/recommended?front_office={roster_id}">Explore more trades →</a></div></section><script src="/static/js/strategy_session.js"></script><script src="/static/js/home-opportunities.js"></script>'''
 
 
 def _brief(text):
-    text = str(text)
+    text = plain_reason(text)
     return text if len(text) <= 240 else text[:237].rstrip() + "…"
 
 

@@ -17,6 +17,16 @@ class CustomerAcceptanceFollowupTests(unittest.TestCase):
         self.assertLess(html.index('Incoming Player is on IR.'), html.index('<details>'))
         self.assertIn('Original assessment record', html)
 
+        from src.ui.home_trade_opportunities import cards as home_cards
+        home = home_cards([dict(home_offer='fixture-only', evaluation=dict(
+            recommendation='REJECT', major_drawback=raw,
+            why_you_would_do_it='No supported gain.', dominant_reason=raw))], 1)
+        primary, details = home.split('<details>', 1)
+        self.assertNotIn('legal-replacement', primary)
+        self.assertIn('projected points from eligible backups', primary)
+        self.assertIn('2.25 points per supported week; participation is unknown.', primary)
+        self.assertIn(raw, details)
+
     def test_repeated_brief_explanation_does_not_erase_a_distinct_risk(self):
         item = dict(family='need', title='Receiver cover', reason='WR cover is limited.',
                     drawback='Player A is out.', details=['WR cover is limited.', 'Player A is out.',
