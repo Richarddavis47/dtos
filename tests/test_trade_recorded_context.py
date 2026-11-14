@@ -8,7 +8,9 @@ class RecordedContextTests(unittest.TestCase):
         source = Path('static/js/trade_workspace.js').read_text()
         def function(name, following):
             return source[source.index('  function ' + name):source.index(following, source.index('  function ' + name))]
-        script = '\n'.join([
+        comparison = Path('static/js/trade_comparison.js').read_text()
+        decoder = comparison[comparison.index('  function recordedPeriod'):comparison.index('  function create', comparison.index('  function recordedPeriod'))]
+        script = '\n'.join([decoder, 'window.DTOSOfferComparison = {recordedPeriod};',
             function('boundedEvidence', '  const packageIdentity'),
             function('compactRetainedEvaluation', '  function retainedReserveRow'),
             function('decisionPresentation', '  function catalystDelta'),

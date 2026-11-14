@@ -963,15 +963,7 @@
   }
   function decisionPresentation(e) {
     const decision = {...(e.decision_context || {})};
-    const row = value => {
-      if (value?.encoding === 'json-chunks-v1') {
-        if (!Array.isArray(value.chunks) || value.chunks.some(chunk => typeof chunk !== 'string')) return null;
-        value = value.chunks.join('');
-      }
-      if (typeof value !== 'string') return value;
-      try { const parsed = JSON.parse(value); return parsed && typeof parsed === 'object' ? parsed : null; }
-      catch (_) { return null; }
-    };
+    const row = value => window.DTOSOfferComparison.recordedPeriod(value);
     const rows = value => Object.fromEntries(Object.entries(value || {}).map(([key,value]) => [key,row(value)]));
     decision.lineup_comparisons = rows(decision.lineup_comparisons);
     decision.partner_lineup_comparisons = rows(decision.partner_lineup_comparisons);
@@ -1036,7 +1028,7 @@
     out.dataset.assessment = 'true';
     const retained = Boolean(previousContainer || contextQualification(context));
     out.dataset.assessmentFreshness = retained ? 'retained' : 'current';
-    if (retained) appendRecordedLineups(out, context);
+    if (retained && !e.explanation_html) appendRecordedLineups(out, context);
     out.append(capitalDisclosure(context?.draft_capital_record || e.draft_capital_record, retained));
     const attemptState = context?.attempt_state || e.assessment_state?.state || 'fresh_incomplete';
     out.dataset.assessmentState = retained ? 'retained' : attemptState;
