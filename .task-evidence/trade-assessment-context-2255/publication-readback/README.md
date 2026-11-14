@@ -1,0 +1,1 @@
+All 703 existing final evidence files remain unchanged. This supplement preserves the original raw-PNG CLI readback error, successful standard GitHub JSON/base64 byte reconciliation and final safe cleanup receipt. No tests, source edits, duplicated release or authentication changes were needed.

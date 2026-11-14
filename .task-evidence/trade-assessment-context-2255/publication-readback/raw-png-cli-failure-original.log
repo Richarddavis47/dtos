@@ -1,0 +1,15 @@
+From https://github.com/Richarddavis47/dtos
+ * branch              evidence/cache-string-sharing-2237 -> FETCH_HEAD
+To https://github.com/Richarddavis47/dtos.git
+   90abd52e..3ae0d762  3ae0d7629ec676771a021bfeb7d3977c12f8d82c -> evidence/cache-string-sharing-2237
+transform: short source buffer
+Traceback (most recent call last):
+  File "/workspace/2255-trade-context-final/publish-final-readable-evidence.py", line 26, in <module>
+    raw=subprocess.check_output(['gh','api',repo+'/contents/'+prefix+'/'+name+'?ref='+commit,'--header','Accept: application/vnd.github.raw+json']);r=next(x for x in meta['files'] if x['name']==name);assert len(raw)==r['bytes'] and hashlib.sha256(raw).hexdigest()==r['sha256']
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/subprocess.py", line 466, in check_output
+    return run(*popenargs, stdout=PIPE, timeout=timeout, check=True,
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/subprocess.py", line 571, in run
+    raise CalledProcessError(retcode, process.args,
+subprocess.CalledProcessError: Command '['gh', 'api', 'repos/Richarddavis47/dtos/contents/.task-evidence/trade-assessment-context-2255/final/connected-journey/oneqb-recorded-slots-320.png?ref=3ae0d7629ec676771a021bfeb7d3977c12f8d82c', '--header', 'Accept: application/vnd.github.raw+json']' returned non-zero exit status 1.
