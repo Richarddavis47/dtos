@@ -1,0 +1,81 @@
+--- a/tests/test_roster_source_scope_browser.py
++++ b/tests/test_roster_source_scope_browser.py
+@@ -1,5 +1,6 @@
+ """Source-scoped findings through real authenticated phone routes, never owner live."""
+ 
++from contextlib import contextmanager
+ from datetime import datetime, timedelta, timezone
+ from types import SimpleNamespace
+ import json
+@@ -23,6 +24,20 @@
+         helper.add_unused(f)
+         helper.publish(f)
+         return helper, f
++
++    @contextmanager
++    def prepared_browser(self, pw, **options):
++        # Prepare the real Market before starting an independent browser process.
++        # Each league's fixture and browser close before the next league is built.
++        helper, fixture = self.fixture(**options)
++        browser = None
++        try:
++            browser = launch_chromium(pw, headless=True)
++            yield helper, fixture, browser
++        finally:
++            if browser is not None:
++                browser.close()
++            helper.doCleanups()
+ 
+     def save(self, name, record, page):
+         folder = os.environ.get("DTOS_ROSTER_SOURCE_SCOPE_EVIDENCE")
+@@ -47,10 +62,10 @@
+ 
+     def test_my_team_market_exact_trade_for_back_preserves_draft_and_controls(self):
+         with sync_playwright() as pw:
+-            browser = launch_chromium(pw, headless=True)
+-            try:
+-                for sf in (False, True):
+-                    helper, f = self.fixture(superflex=sf, depth=sf)
++            for sf in (False, True):
++                with self.prepared_browser(
++                    pw, superflex=sf, depth=sf
++                ) as (helper, f, browser):
+                     saved = f.f.editor.state()
+                     for width, height in (
+                         (320, 432),
+@@ -197,21 +212,17 @@
+                                 page.close()
+                     self.assertEqual(f.f.editor.state()["revision"], saved["revision"])
+                     self.assertEqual(f.f.editor.state()["rows"], saved["rows"])
+-            finally:
+-                browser.close()
+ 
+     def test_relevant_unknown_aging_and_failed_refresh_still_withhold_actions(self):
+         with sync_playwright() as pw:
+-            browser = launch_chromium(pw, headless=True)
+-            try:
+-                for reason in (
+-                    "unknown-k",
+-                    "unknown-def",
+-                    "eligible-missing",
+-                    "aging",
+-                    "failed-refresh",
+-                ):
+-                    helper, f = self.fixture()
++            for reason in (
++                "unknown-k",
++                "unknown-def",
++                "eligible-missing",
++                "aging",
++                "failed-refresh",
++            ):
++                with self.prepared_browser(pw) as (helper, f, browser):
+                     if reason.startswith("unknown-"):
+                         position = "K" if reason == "unknown-k" else "DEF"
+                         pid = "1-" + position + "-0"
+@@ -280,5 +291,3 @@
+                             )
+                     finally:
+                         page.close()
+-            finally:
+-                browser.close()

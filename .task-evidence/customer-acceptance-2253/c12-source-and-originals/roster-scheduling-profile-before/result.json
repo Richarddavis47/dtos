@@ -1,0 +1,877 @@
+{
+  "mode": "before",
+  "head": "069fa46c92a53d175a6b00366aeb21fee8d94613",
+  "tree": "326c285351fc8197522ee90609431d4ecb73f845",
+  "fixture_program": "/app/tests/test_roster_source_scope_browser.py",
+  "fixture_program_sha256": "329b88c32c5d510cc37cb7a9bc74b4a39de0a673faf4109623e6e1e5db6d1dee",
+  "memory_limit": 2147483648,
+  "tests": 1,
+  "failures": 0,
+  "errors": 1,
+  "skipped": 0,
+  "completed_normally": false,
+  "elapsed_seconds": 21.804184565960895,
+  "remaining_new_child_pids": [],
+  "metrics": [
+    {
+      "phase": "before_bounded_parent_pressure",
+      "time": 1794621270.2786257,
+      "memory": {
+        "rss_bytes": 89874432,
+        "vms_bytes": 173572096,
+        "system_available_bytes": 17638502400,
+        "memory_accounting_scope": "cgroup",
+        "cgroup_current_bytes": 71819264,
+        "cgroup_limit_bytes": 2147483648,
+        "cgroup_inactive_file_bytes": 339968,
+        "cgroup_anonymous_bytes": 70131712,
+        "cgroup_memory_events": {
+          "low": 0,
+          "high": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_kill": 0,
+          "oom_group_kill": 0
+        }
+      },
+      "children": []
+    },
+    {
+      "phase": "measured_parent_pressure",
+      "time": 1794621273.9623177,
+      "memory": {
+        "rss_bytes": 1227665408,
+        "vms_bytes": 1311338496,
+        "system_available_bytes": 16491036672,
+        "memory_accounting_scope": "cgroup",
+        "cgroup_current_bytes": 1211867136,
+        "cgroup_limit_bytes": 2147483648,
+        "cgroup_inactive_file_bytes": 339968,
+        "cgroup_anonymous_bytes": 1207922688,
+        "cgroup_memory_events": {
+          "low": 0,
+          "high": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_kill": 0,
+          "oom_group_kill": 0
+        }
+      },
+      "children": [],
+      "target_rss_floor": 1163919360,
+      "target_container_anonymous": 1203974144,
+      "source_sample_time": 1794617072.5935252,
+      "allocation_cap": 1153433600,
+      "allocated": 1136656384,
+      "target_is_fixture_not_claim_of_process_or_object_equivalence": true
+    },
+    {
+      "phase": "fixture_before",
+      "time": 1794621274.9683876,
+      "memory": {
+        "rss_bytes": 1230663680,
+        "vms_bytes": 1314979840,
+        "system_available_bytes": 16323928064,
+        "memory_accounting_scope": "cgroup",
+        "cgroup_current_bytes": 1390407680,
+        "cgroup_limit_bytes": 2147483648,
+        "cgroup_inactive_file_bytes": 1171456,
+        "cgroup_anonymous_bytes": 1374695424,
+        "cgroup_memory_events": {
+          "low": 0,
+          "high": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_kill": 0,
+          "oom_group_kill": 0
+        }
+      },
+      "children": [
+        {
+          "pid": 9,
+          "ppid": 7,
+          "name": "MainThread",
+          "rss": 133152768
+        },
+        {
+          "pid": 21,
+          "ppid": 9,
+          "name": "chromium",
+          "rss": 189394944
+        },
+        {
+          "pid": 41,
+          "ppid": 21,
+          "name": "chromium",
+          "rss": 81854464
+        },
+        {
+          "pid": 42,
+          "ppid": 21,
+          "name": "chromium",
+          "rss": 82612224
+        },
+        {
+          "pid": 76,
+          "ppid": 21,
+          "name": "exe",
+          "rss": 27406336
+        },
+        {
+          "pid": 84,
+          "ppid": 42,
+          "name": "chromium",
+          "rss": 56123392
+        },
+        {
+          "pid": 72,
+          "ppid": 41,
+          "name": "chromium",
+          "rss": 83734528
+        }
+      ],
+      "options": {
+        "superflex": false,
+        "depth": false
+      }
+    },
+    {
+      "phase": "guard_before",
+      "time": 1794621276.2493174,
+      "memory": {
+        "rss_bytes": 1237909504,
+        "vms_bytes": 1547583488,
+        "system_available_bytes": 16297115648,
+        "memory_accounting_scope": "cgroup",
+        "cgroup_current_bytes": 1408479232,
+        "cgroup_limit_bytes": 2147483648,
+        "cgroup_inactive_file_bytes": 1826816,
+        "cgroup_anonymous_bytes": 1390604288,
+        "cgroup_memory_events": {
+          "low": 0,
+          "high": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_kill": 0,
+          "oom_group_kill": 0
+        }
+      },
+      "children": [
+        {
+          "pid": 9,
+          "ppid": 7,
+          "name": "MainThread",
+          "rss": 133152768
+        },
+        {
+          "pid": 21,
+          "ppid": 9,
+          "name": "chromium",
+          "rss": 190488576
+        },
+        {
+          "pid": 41,
+          "ppid": 21,
+          "name": "chromium",
+          "rss": 81854464
+        },
+        {
+          "pid": 42,
+          "ppid": 21,
+          "name": "chromium",
+          "rss": 82612224
+        },
+        {
+          "pid": 76,
+          "ppid": 21,
+          "name": "chromium",
+          "rss": 113905664
+        },
+        {
+          "pid": 84,
+          "ppid": 42,
+          "name": "chromium",
+          "rss": 56385536
+        },
+        {
+          "pid": 72,
+          "ppid": 41,
+          "name": "chromium",
+          "rss": 83734528
+        }
+      ],
+      "stage": "artifact_initialization"
+    },
+    {
+      "phase": "guard_admitted",
+      "time": 1794621276.2526898,
+      "memory": {
+        "rss_bytes": 1237909504,
+        "vms_bytes": 1547583488,
+        "system_available_bytes": 16297115648,
+        "memory_accounting_scope": "cgroup",
+        "cgroup_current_bytes": 1408475136,
+        "cgroup_limit_bytes": 2147483648,
+        "cgroup_inactive_file_bytes": 1830912,
+        "cgroup_anonymous_bytes": 1390604288,
+        "cgroup_memory_events": {
+          "low": 0,
+          "high": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_kill": 0,
+          "oom_group_kill": 0
+        }
+      },
+      "children": [
+        {
+          "pid": 9,
+          "ppid": 7,
+          "name": "MainThread",
+          "rss": 133152768
+        },
+        {
+          "pid": 21,
+          "ppid": 9,
+          "name": "chromium",
+          "rss": 190488576
+        },
+        {
+          "pid": 41,
+          "ppid": 21,
+          "name": "chromium",
+          "rss": 81854464
+        },
+        {
+          "pid": 42,
+          "ppid": 21,
+          "name": "chromium",
+          "rss": 82612224
+        },
+        {
+          "pid": 76,
+          "ppid": 21,
+          "name": "chromium",
+          "rss": 113905664
+        },
+        {
+          "pid": 84,
+          "ppid": 42,
+          "name": "chromium",
+          "rss": 56385536
+        },
+        {
+          "pid": 72,
+          "ppid": 41,
+          "name": "chromium",
+          "rss": 83734528
+        }
+      ],
+      "stage": "artifact_initialization",
+      "actual_admission": {
+        "raw_cgroup_bytes": 1408479232,
+        "inactive_file_bytes": 1826816,
+        "effective_working_set_bytes": 1406652416,
+        "stage_estimate_bytes": 33554432,
+        "predicted_effective_bytes": 1440206848,
+        "reclaimable_allowance_bytes": 1370112,
+        "hard_pressure_margin_bytes": 268435456,
+        "hard_pressure_ceiling_bytes": 1879048192,
+        "predicted_hard_pressure_bytes": 1440663552,
+        "target_ceiling_bytes": 1610612736,
+        "raw_headroom_bytes": 739004416,
+        "effective_headroom_bytes": 203960320,
+        "accounting_mode": "cgroup_working_set",
+        "memory_event_deltas": {},
+        "admitted": true,
+        "reason": "admitted"
+      }
+    },
+    {
+      "phase": "guard_before",
+      "time": 1794621276.3416662,
+      "memory": {
+        "rss_bytes": 1238798336,
+        "vms_bytes": 1548251136,
+        "system_available_bytes": 16293130240,
+        "memory_accounting_scope": "cgroup",
+        "cgroup_current_bytes": 1409343488,
+        "cgroup_limit_bytes": 2147483648,
+        "cgroup_inactive_file_bytes": 1888256,
+        "cgroup_anonymous_bytes": 1391497216,
+        "cgroup_memory_events": {
+          "low": 0,
+          "high": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_kill": 0,
+          "oom_group_kill": 0
+        }
+      },
+      "children": [
+        {
+          "pid": 9,
+          "ppid": 7,
+          "name": "MainThread",
+          "rss": 133152768
+        },
+        {
+          "pid": 21,
+          "ppid": 9,
+          "name": "chromium",
+          "rss": 190488576
+        },
+        {
+          "pid": 41,
+          "ppid": 21,
+          "name": "chromium",
+          "rss": 81854464
+        },
+        {
+          "pid": 42,
+          "ppid": 21,
+          "name": "chromium",
+          "rss": 82612224
+        },
+        {
+          "pid": 76,
+          "ppid": 21,
+          "name": "chromium",
+          "rss": 113909760
+        },
+        {
+          "pid": 84,
+          "ppid": 42,
+          "name": "chromium",
+          "rss": 56385536
+        },
+        {
+          "pid": 72,
+          "ppid": 41,
+          "name": "chromium",
+          "rss": 83734528
+        }
+      ],
+      "stage": "canonical_asset_iteration"
+    },
+    {
+      "phase": "guard_admitted",
+      "time": 1794621276.3452768,
+      "memory": {
+        "rss_bytes": 1238798336,
+        "vms_bytes": 1548251136,
+        "system_available_bytes": 16293130240,
+        "memory_accounting_scope": "cgroup",
+        "cgroup_current_bytes": 1409306624,
+        "cgroup_limit_bytes": 2147483648,
+        "cgroup_inactive_file_bytes": 1892352,
+        "cgroup_anonymous_bytes": 1391497216,
+        "cgroup_memory_events": {
+          "low": 0,
+          "high": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_kill": 0,
+          "oom_group_kill": 0
+        }
+      },
+      "children": [
+        {
+          "pid": 9,
+          "ppid": 7,
+          "name": "MainThread",
+          "rss": 133152768
+        },
+        {
+          "pid": 21,
+          "ppid": 9,
+          "name": "chromium",
+          "rss": 190488576
+        },
+        {
+          "pid": 41,
+          "ppid": 21,
+          "name": "chromium",
+          "rss": 81854464
+        },
+        {
+          "pid": 42,
+          "ppid": 21,
+          "name": "chromium",
+          "rss": 82612224
+        },
+        {
+          "pid": 76,
+          "ppid": 21,
+          "name": "chromium",
+          "rss": 113909760
+        },
+        {
+          "pid": 84,
+          "ppid": 42,
+          "name": "chromium",
+          "rss": 56385536
+        },
+        {
+          "pid": 72,
+          "ppid": 41,
+          "name": "chromium",
+          "rss": 83734528
+        }
+      ],
+      "stage": "canonical_asset_iteration",
+      "actual_admission": {
+        "raw_cgroup_bytes": 1409343488,
+        "inactive_file_bytes": 1888256,
+        "effective_working_set_bytes": 1407455232,
+        "stage_estimate_bytes": 134217728,
+        "predicted_effective_bytes": 1541672960,
+        "reclaimable_allowance_bytes": 1416192,
+        "hard_pressure_margin_bytes": 268435456,
+        "hard_pressure_ceiling_bytes": 1879048192,
+        "predicted_hard_pressure_bytes": 1542145024,
+        "target_ceiling_bytes": 1610612736,
+        "raw_headroom_bytes": 738140160,
+        "effective_headroom_bytes": 203157504,
+        "accounting_mode": "cgroup_working_set",
+        "memory_event_deltas": {
+          "oom": 0,
+          "oom_kill": 0,
+          "oom_group_kill": 0
+        },
+        "admitted": true,
+        "reason": "admitted"
+      }
+    },
+    {
+      "phase": "guard_before",
+      "time": 1794621276.4168656,
+      "memory": {
+        "rss_bytes": 1239207936,
+        "vms_bytes": 1549242368,
+        "system_available_bytes": 16293138432,
+        "memory_accounting_scope": "cgroup",
+        "cgroup_current_bytes": 1409830912,
+        "cgroup_limit_bytes": 2147483648,
+        "cgroup_inactive_file_bytes": 1945600,
+        "cgroup_anonymous_bytes": 1391906816,
+        "cgroup_memory_events": {
+          "low": 0,
+          "high": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_kill": 0,
+          "oom_group_kill": 0
+        }
+      },
+      "children": [
+        {
+          "pid": 9,
+          "ppid": 7,
+          "name": "MainThread",
+          "rss": 133152768
+        },
+        {
+          "pid": 21,
+          "ppid": 9,
+          "name": "chromium",
+          "rss": 190488576
+        },
+        {
+          "pid": 41,
+          "ppid": 21,
+          "name": "chromium",
+          "rss": 81854464
+        },
+        {
+          "pid": 42,
+          "ppid": 21,
+          "name": "chromium",
+          "rss": 82612224
+        },
+        {
+          "pid": 76,
+          "ppid": 21,
+          "name": "chromium",
+          "rss": 113909760
+        },
+        {
+          "pid": 84,
+          "ppid": 42,
+          "name": "chromium",
+          "rss": 56385536
+        },
+        {
+          "pid": 72,
+          "ppid": 41,
+          "name": "chromium",
+          "rss": 83734528
+        }
+      ],
+      "stage": "model_publication"
+    },
+    {
+      "phase": "guard_admitted",
+      "time": 1794621276.4207466,
+      "memory": {
+        "rss_bytes": 1239207936,
+        "vms_bytes": 1549242368,
+        "system_available_bytes": 16293138432,
+        "memory_accounting_scope": "cgroup",
+        "cgroup_current_bytes": 1409822720,
+        "cgroup_limit_bytes": 2147483648,
+        "cgroup_inactive_file_bytes": 1945600,
+        "cgroup_anonymous_bytes": 1391906816,
+        "cgroup_memory_events": {
+          "low": 0,
+          "high": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_kill": 0,
+          "oom_group_kill": 0
+        }
+      },
+      "children": [
+        {
+          "pid": 9,
+          "ppid": 7,
+          "name": "MainThread",
+          "rss": 133152768
+        },
+        {
+          "pid": 21,
+          "ppid": 9,
+          "name": "chromium",
+          "rss": 190488576
+        },
+        {
+          "pid": 41,
+          "ppid": 21,
+          "name": "chromium",
+          "rss": 81854464
+        },
+        {
+          "pid": 42,
+          "ppid": 21,
+          "name": "chromium",
+          "rss": 82612224
+        },
+        {
+          "pid": 76,
+          "ppid": 21,
+          "name": "chromium",
+          "rss": 113909760
+        },
+        {
+          "pid": 84,
+          "ppid": 42,
+          "name": "chromium",
+          "rss": 56385536
+        },
+        {
+          "pid": 72,
+          "ppid": 41,
+          "name": "chromium",
+          "rss": 83734528
+        }
+      ],
+      "stage": "model_publication",
+      "actual_admission": {
+        "raw_cgroup_bytes": 1409830912,
+        "inactive_file_bytes": 1945600,
+        "effective_working_set_bytes": 1407885312,
+        "stage_estimate_bytes": 16777216,
+        "predicted_effective_bytes": 1424662528,
+        "reclaimable_allowance_bytes": 1459200,
+        "hard_pressure_margin_bytes": 268435456,
+        "hard_pressure_ceiling_bytes": 1879048192,
+        "predicted_hard_pressure_bytes": 1425148928,
+        "target_ceiling_bytes": 1610612736,
+        "raw_headroom_bytes": 737652736,
+        "effective_headroom_bytes": 202727424,
+        "accounting_mode": "cgroup_working_set",
+        "memory_event_deltas": {
+          "oom": 0,
+          "oom_kill": 0,
+          "oom_group_kill": 0
+        },
+        "admitted": true,
+        "reason": "admitted"
+      }
+    },
+    {
+      "phase": "fixture_prepared",
+      "time": 1794621276.717305,
+      "memory": {
+        "rss_bytes": 1239269376,
+        "vms_bytes": 1549225984,
+        "system_available_bytes": 16287178752,
+        "memory_accounting_scope": "cgroup",
+        "cgroup_current_bytes": 1410179072,
+        "cgroup_limit_bytes": 2147483648,
+        "cgroup_inactive_file_bytes": 1880064,
+        "cgroup_anonymous_bytes": 1391968256,
+        "cgroup_memory_events": {
+          "low": 0,
+          "high": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_kill": 0,
+          "oom_group_kill": 0
+        }
+      },
+      "children": [
+        {
+          "pid": 9,
+          "ppid": 7,
+          "name": "MainThread",
+          "rss": 133152768
+        },
+        {
+          "pid": 21,
+          "ppid": 9,
+          "name": "chromium",
+          "rss": 190488576
+        },
+        {
+          "pid": 41,
+          "ppid": 21,
+          "name": "chromium",
+          "rss": 81854464
+        },
+        {
+          "pid": 42,
+          "ppid": 21,
+          "name": "chromium",
+          "rss": 82612224
+        },
+        {
+          "pid": 76,
+          "ppid": 21,
+          "name": "chromium",
+          "rss": 113909760
+        },
+        {
+          "pid": 84,
+          "ppid": 42,
+          "name": "chromium",
+          "rss": 56385536
+        },
+        {
+          "pid": 72,
+          "ppid": 41,
+          "name": "chromium",
+          "rss": 83734528
+        }
+      ],
+      "options": {
+        "superflex": false,
+        "depth": false
+      }
+    },
+    {
+      "phase": "fixture_before",
+      "time": 1794621293.8483934,
+      "memory": {
+        "rss_bytes": 1280540672,
+        "vms_bytes": 2490933248,
+        "system_available_bytes": 16020520960,
+        "memory_accounting_scope": "cgroup",
+        "cgroup_current_bytes": 1538519040,
+        "cgroup_limit_bytes": 2147483648,
+        "cgroup_inactive_file_bytes": 1867776,
+        "cgroup_anonymous_bytes": 1509666816,
+        "cgroup_memory_events": {
+          "low": 0,
+          "high": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_kill": 0,
+          "oom_group_kill": 0
+        }
+      },
+      "children": [
+        {
+          "pid": 9,
+          "ppid": 7,
+          "name": "MainThread",
+          "rss": 190185472
+        },
+        {
+          "pid": 21,
+          "ppid": 9,
+          "name": "chromium",
+          "rss": 238280704
+        },
+        {
+          "pid": 41,
+          "ppid": 21,
+          "name": "chromium",
+          "rss": 81854464
+        },
+        {
+          "pid": 42,
+          "ppid": 21,
+          "name": "chromium",
+          "rss": 82612224
+        },
+        {
+          "pid": 76,
+          "ppid": 21,
+          "name": "chromium",
+          "rss": 121028608
+        },
+        {
+          "pid": 84,
+          "ppid": 42,
+          "name": "chromium",
+          "rss": 61026304
+        },
+        {
+          "pid": 588,
+          "ppid": 42,
+          "name": "chromium",
+          "rss": 0
+        },
+        {
+          "pid": 599,
+          "ppid": 42,
+          "name": "chromium",
+          "rss": 0
+        },
+        {
+          "pid": 72,
+          "ppid": 41,
+          "name": "chromium",
+          "rss": 105619456
+        }
+      ],
+      "options": {
+        "superflex": true,
+        "depth": true
+      }
+    },
+    {
+      "phase": "fixture_failed",
+      "time": 1794621294.2322874,
+      "memory": {
+        "rss_bytes": 1280548864,
+        "vms_bytes": 2490933248,
+        "system_available_bytes": 16031838208,
+        "memory_accounting_scope": "cgroup",
+        "cgroup_current_bytes": 1530597376,
+        "cgroup_limit_bytes": 2147483648,
+        "cgroup_inactive_file_bytes": 2314240,
+        "cgroup_anonymous_bytes": 1503956992,
+        "cgroup_memory_events": {
+          "low": 0,
+          "high": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_kill": 0,
+          "oom_group_kill": 0
+        }
+      },
+      "children": [
+        {
+          "pid": 9,
+          "ppid": 7,
+          "name": "MainThread",
+          "rss": 190185472
+        },
+        {
+          "pid": 21,
+          "ppid": 9,
+          "name": "chromium",
+          "rss": 237174784
+        },
+        {
+          "pid": 41,
+          "ppid": 21,
+          "name": "chromium",
+          "rss": 81854464
+        },
+        {
+          "pid": 42,
+          "ppid": 21,
+          "name": "chromium",
+          "rss": 82612224
+        },
+        {
+          "pid": 76,
+          "ppid": 21,
+          "name": "chromium",
+          "rss": 121028608
+        },
+        {
+          "pid": 84,
+          "ppid": 42,
+          "name": "chromium",
+          "rss": 61026304
+        },
+        {
+          "pid": 588,
+          "ppid": 42,
+          "name": "chromium",
+          "rss": 0
+        },
+        {
+          "pid": 72,
+          "ppid": 41,
+          "name": "chromium",
+          "rss": 98242560
+        }
+      ],
+      "error_type": "MarketMemoryBudgetError"
+    },
+    {
+      "phase": "after_real_test_and_cleanup",
+      "time": 1794621295.7676132,
+      "memory": {
+        "rss_bytes": 1280446464,
+        "vms_bytes": 2457280512,
+        "system_available_bytes": 16334503936,
+        "memory_accounting_scope": "cgroup",
+        "cgroup_current_bytes": 1265152000,
+        "cgroup_limit_bytes": 2147483648,
+        "cgroup_inactive_file_bytes": 352256,
+        "cgroup_anonymous_bytes": 1260466176,
+        "cgroup_memory_events": {
+          "low": 0,
+          "high": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_kill": 0,
+          "oom_group_kill": 0
+        }
+      },
+      "children": []
+    },
+    {
+      "phase": "after_bounded_pressure_released",
+      "time": 1794621295.972704,
+      "memory": {
+        "rss_bytes": 142680064,
+        "vms_bytes": 1319514112,
+        "system_available_bytes": 17467506688,
+        "memory_accounting_scope": "cgroup",
+        "cgroup_current_bytes": 124989440,
+        "cgroup_limit_bytes": 2147483648,
+        "cgroup_inactive_file_bytes": 352256,
+        "cgroup_anonymous_bytes": 122699776,
+        "cgroup_memory_events": {
+          "low": 0,
+          "high": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_kill": 0,
+          "oom_group_kill": 0
+        }
+      },
+      "children": []
+    }
+  ],
+  "kernel_peak": 1729449984,
+  "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0\n",
+  "scope": "Single matched scheduling experiment with real canonical Market guard, real prepared fixture, complete original eight-width/league journey and unchanged assertions. Parent RSS pressure approximates the original hosted sample, not object-graph or production equivalence. External variant is explicitly not a committed source pass. No application threshold, values, timeout, GC policy or request assertion changed."
+}

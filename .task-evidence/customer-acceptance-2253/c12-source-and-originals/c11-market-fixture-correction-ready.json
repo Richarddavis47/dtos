@@ -1,0 +1,45 @@
+{
+  "source": {
+    "baseline": "6bac32ce348cf6c5961c6c69f7659d217a76cee6",
+    "baseline_tree": "551ad8508f11d4b1b2870838aa804390840a6f62",
+    "candidate": "069fa46c92a53d175a6b00366aeb21fee8d94613",
+    "tree": "326c285351fc8197522ee90609431d4ecb73f845",
+    "branch": "fix/customer-acceptance-2253",
+    "version": "1.22.38",
+    "build": 2253,
+    "expected_test_count": 4504,
+    "scope": "Final implementation candidate; discovery, exact-source focused/full validation and visual review still required.",
+    "pr": 342
+  },
+  "matched_before_deferral_after_completion": true,
+  "all_assertions_preserved": true,
+  "real_guard_unchanged": true,
+  "pressure_target_parent_rss_floor": 1163919360,
+  "pressure_target_container_anon": 1203974144,
+  "scope": "One matched workload/pressure replay with unchanged real guard. Different rejected stage from original hosted failure: replay semantic_preparation; hosted canonical_asset_iteration. Supports fixture scheduling/isolation correction, not exact historical admission reconstruction or production defect.",
+  "replay_reason_code": "unknown: semantic admission bypassed the recorder hook; original actual exception and stage are retained",
+  "recorder_correction": "Original collector incorrectly assumed every admission passes through enforce_memory_budget. Reconcile real semantic-stage exception from original console/fixture-error record; no test rerun or altered outcome.",
+  "patch_sha256": "6f6568197c7238e38d6bc809be9fb08e3fdb2650296b6f8d109bda05f327aafb",
+  "rows": [
+    {
+      "mode": "before",
+      "completed_normally": false,
+      "tests": 1,
+      "failures": 0,
+      "errors": 1,
+      "peak": 1729449984,
+      "original_console_sha256": "728de376e88a1eb64b9fb8b8bb6b98a21b4a40d39e653647d2225eb2d307b301",
+      "result_sha256": "99f428dc5c8cdd54186ba98561ffcc17d00628eacec206ac967f39a3aec21b3c"
+    },
+    {
+      "mode": "after",
+      "completed_normally": true,
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "peak": 1765351424,
+      "original_console_sha256": "9c296c278debb36707869182aae9b57fd417f029bdb74ff29a2e4fcaeca293c1",
+      "result_sha256": "5b36a4bbcb0c2c1efbb361e8b6b23eff732f63546cebc720aa531bfa26e73564"
+    }
+  ]
+}

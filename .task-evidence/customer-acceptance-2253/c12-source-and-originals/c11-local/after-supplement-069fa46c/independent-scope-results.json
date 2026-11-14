@@ -1,0 +1,158 @@
+{
+  "source": {
+    "baseline": "6bac32ce348cf6c5961c6c69f7659d217a76cee6",
+    "baseline_tree": "551ad8508f11d4b1b2870838aa804390840a6f62",
+    "candidate": "069fa46c92a53d175a6b00366aeb21fee8d94613",
+    "tree": "326c285351fc8197522ee90609431d4ecb73f845",
+    "branch": "fix/customer-acceptance-2253",
+    "version": "1.22.38",
+    "build": 2253,
+    "expected_test_count": 4504,
+    "scope": "Final implementation candidate; discovery, exact-source focused/full validation and visual review still required.",
+    "pr": 342
+  },
+  "records": [
+    {
+      "scope": "source_consumer_before",
+      "source": {
+        "baseline": "6bac32ce348cf6c5961c6c69f7659d217a76cee6",
+        "baseline_tree": "551ad8508f11d4b1b2870838aa804390840a6f62",
+        "candidate": "069fa46c92a53d175a6b00366aeb21fee8d94613",
+        "tree": "326c285351fc8197522ee90609431d4ecb73f845",
+        "branch": "fix/customer-acceptance-2253",
+        "version": "1.22.38",
+        "build": 2253,
+        "expected_test_count": 4504,
+        "scope": "Final implementation candidate; discovery, exact-source focused/full validation and visual review still required.",
+        "pr": 342
+      },
+      "command": [
+        "/usr/local/bin/python",
+        "/evidence/probe-source-consumer-parity.py",
+        "before"
+      ],
+      "program_sha256": "1ff0fdbc4374fdd2466cba49aa711256c4a326cb36d5a4f47538eb42343114d8",
+      "started_at": "2026-11-14T01:51:11.487599+00:00",
+      "before_memory": {
+        "memory.current": 14061568,
+        "memory.peak": 14061568,
+        "memory.max": 2147483648
+      },
+      "exit_code": 0,
+      "finished_at": "2026-11-14T01:51:28.410775+00:00",
+      "after_memory": {
+        "memory.current": 13717504,
+        "memory.peak": 107208704,
+        "memory.max": 2147483648
+      },
+      "log_sha256": "ba4a5b6f4db9f5cca749fc9229e18ec2187ec46cb32d0f0e8175a1499ec8f0d1"
+    },
+    {
+      "scope": "source_consumer",
+      "source": {
+        "baseline": "6bac32ce348cf6c5961c6c69f7659d217a76cee6",
+        "baseline_tree": "551ad8508f11d4b1b2870838aa804390840a6f62",
+        "candidate": "069fa46c92a53d175a6b00366aeb21fee8d94613",
+        "tree": "326c285351fc8197522ee90609431d4ecb73f845",
+        "branch": "fix/customer-acceptance-2253",
+        "version": "1.22.38",
+        "build": 2253,
+        "expected_test_count": 4504,
+        "scope": "Final implementation candidate; discovery, exact-source focused/full validation and visual review still required.",
+        "pr": 342
+      },
+      "command": [
+        "/usr/local/bin/python",
+        "/evidence/probe-source-consumer-parity.py",
+        "after"
+      ],
+      "program_sha256": "1ff0fdbc4374fdd2466cba49aa711256c4a326cb36d5a4f47538eb42343114d8",
+      "started_at": "2026-11-14T01:51:28.412264+00:00",
+      "before_memory": {
+        "memory.current": 13717504,
+        "memory.peak": 107208704,
+        "memory.max": 2147483648
+      },
+      "exit_code": 0,
+      "finished_at": "2026-11-14T01:51:38.551332+00:00",
+      "after_memory": {
+        "memory.current": 14802944,
+        "memory.peak": 107208704,
+        "memory.max": 2147483648
+      },
+      "log_sha256": "bc3ac7fc08ecb38c8a2e537828965478c66e701c29373e26eb3fbef326241835"
+    },
+    {
+      "scope": "computed_styles",
+      "source": {
+        "baseline": "6bac32ce348cf6c5961c6c69f7659d217a76cee6",
+        "baseline_tree": "551ad8508f11d4b1b2870838aa804390840a6f62",
+        "candidate": "069fa46c92a53d175a6b00366aeb21fee8d94613",
+        "tree": "326c285351fc8197522ee90609431d4ecb73f845",
+        "branch": "fix/customer-acceptance-2253",
+        "version": "1.22.38",
+        "build": 2253,
+        "expected_test_count": 4504,
+        "scope": "Final implementation candidate; discovery, exact-source focused/full validation and visual review still required.",
+        "pr": 342
+      },
+      "command": [
+        "/usr/local/bin/python",
+        "/evidence/measure-computed-styles.py",
+        "after"
+      ],
+      "program_sha256": "e90b2f5274162cf651ebeedb9fd7f9b0f6254044501bf5de3cf38867bbe170d9",
+      "started_at": "2026-11-14T01:51:38.552300+00:00",
+      "before_memory": {
+        "memory.current": 14798848,
+        "memory.peak": 107208704,
+        "memory.max": 2147483648
+      },
+      "exit_code": 1,
+      "finished_at": "2026-11-14T01:51:40.125889+00:00",
+      "after_memory": {
+        "memory.current": 15028224,
+        "memory.peak": 107208704,
+        "memory.max": 2147483648
+      },
+      "log_sha256": "5d06b90414cf0dedab7cfdf9dc5fc1a259499e6bd3e0539de6cec4a691908f84"
+    },
+    {
+      "scope": "customer_states",
+      "source": {
+        "baseline": "6bac32ce348cf6c5961c6c69f7659d217a76cee6",
+        "baseline_tree": "551ad8508f11d4b1b2870838aa804390840a6f62",
+        "candidate": "069fa46c92a53d175a6b00366aeb21fee8d94613",
+        "tree": "326c285351fc8197522ee90609431d4ecb73f845",
+        "branch": "fix/customer-acceptance-2253",
+        "version": "1.22.38",
+        "build": 2253,
+        "expected_test_count": 4504,
+        "scope": "Final implementation candidate; discovery, exact-source focused/full validation and visual review still required.",
+        "pr": 342
+      },
+      "command": [
+        "/usr/local/bin/python",
+        "/evidence/capture-customer-states.py"
+      ],
+      "program_sha256": "4b344bedc813c896c6726076351ac4909eee841f6c1b9a9025348399de5208b9",
+      "started_at": "2026-11-14T01:51:40.126919+00:00",
+      "before_memory": {
+        "memory.current": 15024128,
+        "memory.peak": 107208704,
+        "memory.max": 2147483648
+      },
+      "exit_code": 0,
+      "finished_at": "2026-11-14T01:52:00.517204+00:00",
+      "after_memory": {
+        "memory.current": 17485824,
+        "memory.peak": 433602560,
+        "memory.max": 2147483648
+      },
+      "log_sha256": "9ce277e06139b2050659f55aaa5e04a3ee12de337cf2cad446c722830d076c16"
+    }
+  ],
+  "all_completed": true,
+  "all_passed": false,
+  "scope": "Separate original outcomes; one recorder error does not suppress or repeat other scopes."
+}

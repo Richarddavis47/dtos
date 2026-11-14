@@ -1,0 +1,32 @@
+--- a/static/js/trade_workspace.js
++++ b/static/js/trade_workspace.js
+@@ -1447,7 +1447,7 @@
+     for (const [side, title] of [['active', 'Your team'], ['partner', 'Their team']]) {
+       const section = node('section'); section.append(node('h4', title));
+       const explanation = side === 'active' ? decision.summary || e.why_you_would_do_it : decision.partner_summary || e.counterparty_summary || e.why_they_would_do_it;
+-      section.append(node('p', explanation || 'A supported team-specific explanation is not available.'));
++      section.append(node('p', customerText(explanation || 'A supported team-specific explanation is not available.')));
+       if (side === 'partner') section.append(node('small', 'Their fit is an evidence-based inference, not a statement of the manager’s intent.'));
+       teams.append(section);
+     }
+--- a/tests/test_customer_trade_experience.py
++++ b/tests/test_customer_trade_experience.py
+@@ -68,6 +68,7 @@
+         harness = scout.ScoutWorkspaceStateBrowserTests()
+         rows = helper.offer_panel()
+         partner_case = ('Their assets provide a supported return; willingness is unconfirmed. '
++                        + 'Useful legal-replacement production falls 4.00 points per supported week; participation remains unknown. '
+                         + 'The remaining projection horizons and manager preferences are not established. ' * 18
+                         + 'Recorded partner qualification tail.')
+         conditions = ('Their manager direction is unconfirmed. '
+@@ -130,6 +131,10 @@
+                     review = page.locator('#trade-result > article.tw-offer-review')
+                     self.assertIn('Incoming Player', review.inner_text())
+                     self.assertIn('inference', review.inner_text())
++                    team_text = review.locator(':scope > .tw-team-summary').inner_text()
++                    self.assertNotIn('legal-replacement production', team_text)
++                    self.assertIn('projected points from eligible backups fall 4.00 points per supported week', team_text)
++                    self.assertIn('participation remains unknown', team_text)
+                     detail = review.locator(':scope > .tw-lineup-details')
+                     detail.locator('summary').press('Enter')
+                     self.assertIn('FLEX, K, DEF', detail.inner_text())
