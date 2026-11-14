@@ -5,6 +5,21 @@ These policies never price assets, change a recommendation or infer acceptance.
 from collections import Counter
 
 
+def analysis_goal_required(evaluation):
+    """Read the evaluator's recorded input requirement; never infer a goal."""
+    fit = (((evaluation.get('dimensions') or {}).get('strategic_fit') or {}).get('active') or {}).get('capital_strategy_fit') or {}
+    return (evaluation.get('recommendation') is None
+            and fit.get('reason_code') == 'FUTURE_CAPITAL_TRADEOFF_UNRESOLVED'
+            and 'analysis_strategy' in (fit.get('unresolved_inputs') or []))
+
+
+def analysis_goal_guidance():
+    return ('Choose a temporary analysis goal — Win Now, Retool or Rebuild — to assess the draft-capital trade-off, '
+            'then explicitly run Generate or Evaluate again. This does not change your saved goal or describe '
+            'the other manager’s intentions. Syncing or waiting for Sleeper cannot choose this goal. '
+            'The choice does not supply missing prices or projections, or guarantee a qualified trade.')
+
+
 def classify(evaluation):
     dimensions = evaluation.get('dimensions') or {}
     legality = evaluation.get('legality') or {}
@@ -19,8 +34,10 @@ def classify(evaluation):
         strategies = (dimensions.get('strategic_fit') or {})
         missing |= any(s.get('projection_coverage_complete') is False or s.get('production_evidence', {}).get('mean_weekly_delta') is None
                        for s in strategies.values() if isinstance(s, dict))
-        missing |= 'FUTURE_CAPITAL_TRADEOFF_UNRESOLVED' in (evaluation.get('recommendation_trace') or {}).get('rule_reasons', [])
-        return 'MISSING REQUIRED EVIDENCE' if missing else 'STRATEGICALLY POOR'
+        goal = analysis_goal_required(evaluation)
+        missing |= not goal and 'FUTURE_CAPITAL_TRADEOFF_UNRESOLVED' in (evaluation.get('recommendation_trace') or {}).get('rule_reasons', [])
+        return ('MISSING REQUIRED EVIDENCE' if missing else
+                'ANALYSIS GOAL REQUIRED' if goal else 'STRATEGICALLY POOR')
     if label in ('REJECT', 'NOT WORTH IT'):
         return 'STRATEGICALLY POOR'
     counterparty = (dimensions.get('counterparty_plausibility') or {}).get('assessment')
@@ -75,15 +92,18 @@ def missing_evidence_guidance(evaluation):
         for row in strategies.values() if isinstance(row, dict)
     ):
         missing.append('canonical projection coverage and optimal legal-lineup impact')
-    if 'FUTURE_CAPITAL_TRADEOFF_UNRESOLVED' in reasons:
+    goal = analysis_goal_required(evaluation)
+    if 'FUTURE_CAPITAL_TRADEOFF_UNRESOLVED' in reasons and not goal:
         missing.append('supported future-capital trade-off evidence')
+    if goal and not missing:
+        return analysis_goal_guidance()
     if not missing:
         missing.append('sufficient support for the named assessment limitations')
-    return ('Missing: ' + '; '.join(missing) + '. These are system/source evidence limits. '
+    return ('Missing: ' + '; '.join(missing) + '. These are recorded evidence limits. '
             'This screen cannot supply or upload that evidence. Review the Market or assessment '
             'evidence, or try again after source data updates. You can edit assets, strategy and '
             'exact protections, but those edits do not supply missing source evidence. '
-            'No recommendation is established.')
+            'No recommendation is established.' + (' ' + analysis_goal_guidance() if goal else ''))
 
 
 class SearchFunnel:
@@ -100,6 +120,8 @@ class SearchFunnel:
         self.evidence_causes = Counter()
         self.evidence_qualifications = Counter()
         self.unresolved_evidence_causes = 0
+        self.analysis_goal_assessments = 0
+        self.analysis_goal_with_evidence_gaps = 0
 
     def construction(self, partner, proposals, diagnostics=None):
         self.teams.add(partner)
@@ -113,12 +135,16 @@ class SearchFunnel:
         row['search_result_type'] = state
         self.counts['evaluated'] += 1
         field = {'HARD INVALID': 'hard_invalid', 'MISSING REQUIRED EVIDENCE': 'missing_evidence',
+                 'ANALYSIS GOAL REQUIRED': 'analysis_goal_required',
                  'COUNTERPARTY LIMITED': 'counterparty_limited',
                  'STRATEGICALLY POOR': 'strategically_rejected'}.get(state, 'eligible')
         if filtered and state in ELIGIBLE:
             field = 'filtered'
         self.counts[field] += 1
         e = row['evaluation']
+        if analysis_goal_required(e):
+            self.analysis_goal_assessments += 1
+            self.analysis_goal_with_evidence_gaps += state == 'MISSING REQUIRED EVIDENCE'
         if state == 'MISSING REQUIRED EVIDENCE':
             from services.trade_evidence_limits import evidence_limitations
             limits = e.get('evidence_limitations') or evidence_limitations(e)
@@ -144,7 +170,7 @@ class SearchFunnel:
                 'proposal': row['proposal'], 'proposal_presentation': row.get('proposal_presentation'),
                 'evaluation': e, 'blockers': reasons, 'eligible': False,
                 'smallest_optional_relaxation': (
-                    missing_evidence_guidance(e) if state == 'MISSING REQUIRED EVIDENCE'
+                    missing_evidence_guidance(e) if state in ('MISSING REQUIRED EVIDENCE', 'ANALYSIS GOAL REQUIRED')
                     else 'Resolve the identified ownership or roster constraint before reconsidering.' if state == 'HARD INVALID'
                     else 'Change the package to address the other roster’s stated cost.' if state == 'COUNTERPARTY LIMITED'
                     else 'Relax the named adjustment requirement only if you choose to; this package failed that requirement.' if state == 'FILTERED'
@@ -153,12 +179,15 @@ class SearchFunnel:
 
     def result(self, displayed):
         fields = ('constructions_generated', 'constructions_pruned', 'evaluated', 'hard_invalid',
-                  'missing_evidence', 'counterparty_limited', 'strategically_rejected', 'filtered', 'eligible')
+                  'missing_evidence', 'analysis_goal_required', 'counterparty_limited', 'strategically_rejected', 'filtered', 'eligible')
         return {**{k: self.counts[k] for k in fields}, 'eligible_partners': len(self.partners),
                 'teams_searched': len(self.teams), 'asset_pool_sizes': self.pools,
                 'ranked': self.counts['eligible'], 'displayed': displayed,
                 'evaluation_budget': self.budget, 'budget_reached': self.counts['evaluated'] >= self.budget,
                 'rejection_reason_counts': dict(self.reasons), 'bounded': True,
+                'analysis_requirements': {'analysis_goal': self.analysis_goal_assessments,
+                    'also_missing_evidence': self.analysis_goal_with_evidence_gaps,
+                    'meaning': 'Recorded active-franchise analysis input, not missing source data or counterparty intent. Counts may overlap real evidence gaps.'},
                 'evidence_limitations': {'assessments': self.counts['missing_evidence'],
                     'blocking_requirement_counts': dict(self.evidence_causes),
                     'contextual_qualification_counts': dict(self.evidence_qualifications),
@@ -172,7 +201,7 @@ class SearchFunnel:
     def near(self):
         # Prefer a supported strategic near miss over absent evidence or invalidity.
         order = {'FILTERED': 0, 'COUNTERPARTY LIMITED': 0, 'STRATEGICALLY POOR': 1,
-                 'MISSING REQUIRED EVIDENCE': 2, 'HARD INVALID': 3}
+                 'MISSING REQUIRED EVIDENCE': 2, 'ANALYSIS GOAL REQUIRED': 2, 'HARD INVALID': 3}
         return sorted(self.near_misses, key=lambda r: (order[r['blocker_type']],
             abs(1 - ((r['evaluation'].get('values') or {}).get('ratio', 1) or 1)),
             str(r['proposal'])))[:3]
@@ -184,6 +213,8 @@ def result_state(funnel, results):
                                               for r in results) else 'OPTIONAL / LOWER-RANKED TRADE'
     if funnel.counts['evaluated'] and funnel.counts['missing_evidence'] == funnel.counts['evaluated']:
         return 'MISSING REQUIRED EVIDENCE'
+    if funnel.counts['evaluated'] and funnel.counts['analysis_goal_required'] == funnel.counts['evaluated']:
+        return 'ANALYSIS GOAL REQUIRED'
     return 'NO CREDIBLE RESULT WITHIN SEARCH BUDGET'
 
 

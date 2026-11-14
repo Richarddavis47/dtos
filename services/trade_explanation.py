@@ -98,6 +98,8 @@ def decision_lead(result, final, admissions):
         action = 'Resolve the recorded ownership or roster-space blocker before pursuing this package.'
     elif state == 'COUNTERPARTY LIMITED':
         action = 'Review their sacrifice and compensation; confirm their direction before pursuing this offer.'
+    elif state == 'ANALYSIS GOAL REQUIRED':
+        action = 'Choose a temporary analysis goal, then explicitly Generate or Evaluate again. Your saved goal stays unchanged; no qualified trade is promised.'
     elif state == 'MISSING REQUIRED EVIDENCE':
         action = 'Review the named evidence gaps below. Changing a pick cannot supply missing projections.'
     elif result.get('recommendation') in ('REJECT', 'NOT WORTH IT'):

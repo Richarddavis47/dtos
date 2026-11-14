@@ -347,12 +347,13 @@ def rank(rows):
 def zero_result_guidance(funnel, discoveries, workspace, *, projection_available, optional_count=0):
     """Summarize assessed limits and prepared search leads; never an offer."""
     counts = {key: funnel.counts[key] for key in (
-        'hard_invalid', 'missing_evidence', 'counterparty_limited', 'strategically_rejected', 'filtered')}
+        'hard_invalid', 'missing_evidence', 'analysis_goal_required', 'counterparty_limited', 'strategically_rejected', 'filtered')}
     counts['optional'] = optional_count
     text = 'No bilateral recommendation to show under this search’s strategy and filters.'
     descriptions = {
         'hard_invalid': 'unresolved roster-space or ownership requirements',
         'missing_evidence': 'incomplete evidence required for a full assessment',
+        'analysis_goal_required': 'a temporary analysis goal is needed for the draft-capital trade-off',
         'counterparty_limited': 'benefit to the other team was not established',
         'strategically_rejected': 'production, capital or Market cost was not justified',
         'filtered': 'offers excluded by filters or previously viewed families',
@@ -368,6 +369,12 @@ def zero_result_guidance(funnel, discoveries, workspace, *, projection_available
         text += ' Compatible projection evidence is not ready. Check source preparation before trying again.'
     else:
         text += ' No priced, permitted construction reached evaluation. Review Market evidence and optional filters; protections are unchanged.'
+    goal_count = funnel.analysis_goal_assessments
+    if goal_count:
+        text += (f' Choose a temporary analysis goal — Win Now, Retool or Rebuild — for {goal_count} assessed packages '
+                 'involving draft capital, then explicitly Generate again. Your saved goal stays unchanged. '
+                 'Syncing or waiting for Sleeper cannot choose this goal; it does not fill real evidence gaps '
+                 'or guarantee a qualified offer.')
     admission = workspace.get('candidate_admission')
     construction = admission.summary() if admission else {}
     if construction.get('roster_capacity_rejected_checks'):
@@ -393,4 +400,7 @@ def zero_result_guidance(funnel, discoveries, workspace, *, projection_available
     if leads:
         text += ' Consider reviewing ' + ', '.join(row['label'] for row in leads) + ' in Shop Asset. These are search leads, not qualified offers.'
     return {'message': text, 'assessed_limit_counts': counts, 'construction_admission': construction, 'shop_review_leads': leads,
+            'analysis_goal': {'selection_required': bool(goal_count), 'assessments': goal_count,
+                'also_missing_evidence': funnel.analysis_goal_with_evidence_gaps,
+                'temporary_only': True, 'choices': ['WIN NOW', 'RETOOL', 'REBUILD']},
             'recommendation': False, 'acceptance_probability': None}
