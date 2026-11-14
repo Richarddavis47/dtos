@@ -62,6 +62,9 @@ class PublicWelcomePresentationTests(unittest.TestCase):
         self.assertEqual(source.count('Illustrative values and hypothetical rosters. Not live player valuations or actual trades.'), 3)
         self.assertIn('same hypothetical offer', text)
         self.assertIn(self.fixture['team']['name'], text)
+        self.assertIn('Backup quarterbacks for the flexible starting spot.', text)
+        self.assertIn('In Superflex, the flexible starting spot can use a quarterback', text)
+        self.assertNotIn('Superflex replacement cover', text)
         for side in ('active', 'partner'):
             self.assertIn(self.fixture['trade'][side]['name'], text)
             self.assertIn(self.fixture['trade'][side]['benefit'], text)

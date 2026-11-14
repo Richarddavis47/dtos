@@ -1,3 +1,7 @@
+## v1.22.39 / build 2254 — Clear Trade Review and Team Demo
+
+Keep detailed team-fit methodology optional in Trade Review while preserving primary decisions, costs and material risks. Describe the public Team example as backup quarterback depth, with a brief Superflex explanation. Calculations and resource policies unchanged.
+
 # v1.22.36 / build 2251 — Trade For cost and fit
 
 ## v1.22.38 / build 2253 — Customer Experience Acceptance
