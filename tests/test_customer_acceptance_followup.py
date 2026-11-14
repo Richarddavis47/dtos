@@ -20,12 +20,14 @@ class CustomerAcceptanceFollowupTests(unittest.TestCase):
         from src.ui.home_trade_opportunities import cards as home_cards
         home = home_cards([dict(home_offer='fixture-only', evaluation=dict(
             recommendation='REJECT', major_drawback=raw,
-            why_you_would_do_it='No supported gain.', dominant_reason=raw))], 1)
+            why_you_would_do_it='No supported gain.', dominant_reason='Generic methodology'))], 1)
         primary, details = home.split('<details>', 1)
         self.assertNotIn('legal-replacement', primary)
         self.assertIn('projected points from eligible backups', primary)
         self.assertIn('2.25 points per supported week; participation is unknown.', primary)
         self.assertIn(raw, details)
+        self.assertIn('Original cost explanation:', details)
+        self.assertIn('Generic methodology', details)
 
     def test_repeated_brief_explanation_does_not_erase_a_distinct_risk(self):
         item = dict(family='need', title='Receiver cover', reason='WR cover is limited.',
