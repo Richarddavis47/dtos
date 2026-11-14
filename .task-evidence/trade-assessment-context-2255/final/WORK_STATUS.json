@@ -1,0 +1,161 @@
+{
+  "status": "RELEASED_AND_DEPLOYED_OWNER_LIVE_UNVERIFIED",
+  "source": {
+    "baseline": "c6f985eba8adccffb7869a77884590f222feb795",
+    "baseline_tree": "6825aa61ffb501822a02e25e8840ee04b353bb75",
+    "candidate": "9c71de66eab3ff4ef1285393aed97a7972ccbb77",
+    "tree": "b9c099c84cfe5590ef1dc10af28f9755dbb01ee9",
+    "branch": "fix/trade-assessment-context-2255",
+    "version": "1.22.40",
+    "build": 2255,
+    "expected_test_count": 4505,
+    "pr": 344
+  },
+  "local": "b52c23667422f4373a91031c87123617b4f4625e049c6b78d26aa256cc9cb4ba",
+  "runs": [
+    {
+      "name": "Canonical release recovery",
+      "path": ".github/workflows/canonical-release-recovery.yml",
+      "jobs": [
+        "canonical-release"
+      ],
+      "id": 43634198731
+    },
+    {
+      "name": "Product browser journeys",
+      "path": ".github/workflows/product-browser.yml",
+      "jobs": [
+        "product-browser",
+        "my-team-browser",
+        "beginner-navigation",
+        "public-welcome-browser",
+        "historical-trade-timeline",
+        "projection-display-cross-version",
+        "resident-refresh-memory"
+      ],
+      "id": 43634198718
+    },
+    {
+      "name": "Validation tooling",
+      "path": ".github/workflows/validation-tooling.yml",
+      "jobs": [
+        "tooling (ubuntu-24.04)",
+        "tooling (windows-latest)"
+      ],
+      "id": 43634198787
+    },
+    {
+      "name": "Linux Asset Market lifecycle",
+      "path": ".github/workflows/linux-market-lifecycle.yml",
+      "jobs": [
+        "cgroup-lifecycle (ordinary)",
+        "cgroup-lifecycle (archive-warmed)",
+        "cgroup-lifecycle (combined-read)"
+      ],
+      "id": 43634198713
+    }
+  ],
+  "focused": "focused-c5-original.log",
+  "previous_sources": "C3 complete original gates and actual connected acceptance retained separately; C4 copy replacement violated unchanged PersonalTradeBrowser contract. C5 preserves that paragraph and adds only the retained method label.",
+  "production": {
+    "passed": true,
+    "version": "1.22.40",
+    "build": 2255,
+    "commit": "7dafa5cc44197752ced5469c84e66fe3dd80da06",
+    "tree": "b9c099c84cfe5590ef1dc10af28f9755dbb01ee9",
+    "ready": true,
+    "static_files_equal_validated_source": true,
+    "ordinary_public_smoke_passed": true,
+    "authenticated_owner_acceptance": false,
+    "authenticated_limitation": "Supported owner-browser control and Render Shell session not exposed; no unchanged external inspection401 retry.",
+    "scope": "Public HTTP and independently verified Git tree; fixtures/live owner evidence remain distinct.",
+    "observed_at": "2026-11-14T22:14:18.381767+00:00"
+  },
+  "draft": {
+    "id": 445526685,
+    "tag_name": "v1.22.40",
+    "target_commitish": "9c71de66eab3ff4ef1285393aed97a7972ccbb77",
+    "name": "DTOS v1.22.40 / build 2255",
+    "draft": true,
+    "prerelease": false,
+    "immutable": false,
+    "html_url": "https://github.com/Richarddavis47/dtos/releases/tag/untagged-c5c05d95d90dabf22bd4",
+    "created_at": "2026-11-14T19:10:06Z"
+  },
+  "updated_at": "2026-11-14T22:05:13.875628+00:00",
+  "hosted": {
+    "canonical": 43634198731,
+    "tests": 4505,
+    "gates": 10,
+    "required_jobs_passed": 13,
+    "native_original_archives": 15,
+    "original_digests_and_native_guards_verified": true,
+    "canonical_sha256": "69efb89afe601ccbfc0c9d6f6568c4fc295eb39ac9622317069422ba96534680"
+  },
+  "reconnection": "Original host collector defunct; resumed waiting for unchanged running container. controller-reconnection.json, actual resumed logs kept separately. No test restarted.",
+  "local_verified": {
+    "candidate": "9c71de66eab3ff4ef1285393aed97a7972ccbb77",
+    "tree": "b9c099c84cfe5590ef1dc10af28f9755dbb01ee9",
+    "tests": 4505,
+    "all_local_gates_passed": true,
+    "local_manifest_entries": 906,
+    "console_sha256": "cd1c610a2e5be4f037242795cab184be60cc17056dabfaa6c80230b1cffe6fe3",
+    "kernel_peak": 1835450368,
+    "elapsed_seconds": 6745.180896282196,
+    "cgroup_limit": 2147483648
+  },
+  "focused_final": 27,
+  "connected_fixture": {
+    "passed": true,
+    "league_configurations": [
+      "1QB/K/DEF",
+      "Superflex"
+    ],
+    "widths": [
+      320,
+      375,
+      390,
+      1280
+    ],
+    "observations": 8,
+    "owner_live": false
+  },
+  "visual": {
+    "current_context_images": 24,
+    "pixel_identical_preservation": 73,
+    "inspected_clock_only_differences": 3,
+    "physical_safari": false
+  },
+  "packaging_attempts": "attempt-evidence-assembly preserves two refused builds; no application or test change",
+  "merge": {
+    "merged": true,
+    "pr": 344,
+    "candidate": "9c71de66eab3ff4ef1285393aed97a7972ccbb77",
+    "merge_commit": "7dafa5cc44197752ced5469c84e66fe3dd80da06",
+    "tree": "b9c099c84cfe5590ef1dc10af28f9755dbb01ee9",
+    "validated_tree": "b9c099c84cfe5590ef1dc10af28f9755dbb01ee9",
+    "baseline": "c6f985eba8adccffb7869a77884590f222feb795",
+    "exact_tree_unchanged": true,
+    "preparation_run": 43646459179,
+    "observed_at": "2026-11-14T22:12:11.939653+00:00"
+  },
+  "immutable_release": {
+    "passed": true,
+    "version": "1.22.40",
+    "build": 2255,
+    "release_id": 445526685,
+    "release_url": "https://github.com/Richarddavis47/dtos/releases/tag/v1.22.40",
+    "immutable": true,
+    "draft": false,
+    "tag": "v1.22.40",
+    "tag_object_sha": "ad656fc78f02c07030fa8ff854172ba2ae5af7b5",
+    "tag_objects": [
+      "ad656fc78f02c07030fa8ff854172ba2ae5af7b5"
+    ],
+    "commit": "7dafa5cc44197752ced5469c84e66fe3dd80da06",
+    "tree": "b9c099c84cfe5590ef1dc10af28f9755dbb01ee9",
+    "attachments": 23,
+    "observed_at": "2026-11-14T22:15:56.451530+00:00",
+    "scope": "Independent actual GitHub release, annotatedtag peel and commit tree verification; asset bytes/digests separately verified in original Actions certificate"
+  }
+}

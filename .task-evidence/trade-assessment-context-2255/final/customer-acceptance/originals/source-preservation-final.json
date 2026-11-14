@@ -1,0 +1,93 @@
+{
+  "source": {
+    "candidate": "9c71de66eab3ff4ef1285393aed97a7972ccbb77",
+    "tree": "b9c099c84cfe5590ef1dc10af28f9755dbb01ee9",
+    "baseline": "c6f985eba8adccffb7869a77884590f222feb795",
+    "baseline_tree": "6825aa61ffb501822a02e25e8840ee04b353bb75"
+  },
+  "changed_files": [
+    "CHANGELOG.md",
+    "RELEASE_NOTES.md",
+    "app_metadata.py",
+    "static/js/trade_comparison.js",
+    "static/js/trade_workspace.js",
+    "tests/test_trade_lineup_detail_browser.py",
+    "tests/test_trade_partner_history_browser.py",
+    "tests/test_trade_recorded_context.py"
+  ],
+  "critical_unchanged": [
+    {
+      "path": "services/league_preparation.py",
+      "bytes": 8808,
+      "sha256": "e4b97ff3cc50b852a096e4fe4fb8d41df241481aa48211bbe73354171914bc98",
+      "identical_to_baseline": true
+    },
+    {
+      "path": "services/player_evidence.py",
+      "bytes": 13238,
+      "sha256": "cb923f637c145dd6cd8a94330527aa11a681bd7615943e1f569af874278cd1ea",
+      "identical_to_baseline": true
+    },
+    {
+      "path": "services/sleeper.py",
+      "bytes": 42212,
+      "sha256": "829d4528b32c07cf0f759eab35d4b57e81d77486ada40b1095e941d3cea646d1",
+      "identical_to_baseline": true
+    },
+    {
+      "path": "services/trade_decision.py",
+      "bytes": 20338,
+      "sha256": "3d9dc1045be5735ba7ef2f554b7013bd05f82ab027f537a3a7efd960bf373802",
+      "identical_to_baseline": true
+    },
+    {
+      "path": "services/trade_search_policy.py",
+      "bytes": 15388,
+      "sha256": "715f39249739b568efc30453bbb3bb86037eaa0239efc3982a7183795d54ee83",
+      "identical_to_baseline": true
+    },
+    {
+      "path": "src/core/asset_market/engine.py",
+      "bytes": 100009,
+      "sha256": "d548c91d45969fc44a58991190915c16f2c6fc248247cc10189bb532674a3098",
+      "identical_to_baseline": true
+    },
+    {
+      "path": "src/core/asset_market/read_model.py",
+      "bytes": 23384,
+      "sha256": "e9dd34ccc221f8cbc5fbb4f8341ebf7d40d09ed5b159844bf4d72aea7eca1550",
+      "identical_to_baseline": true
+    },
+    {
+      "path": "src/core/team_intelligence/engine.py",
+      "bytes": 7592,
+      "sha256": "0240a880a91ef108cf5c33c9d49f6b55c89502cfca2f3a4d3adb3a8d522b2b04",
+      "identical_to_baseline": true
+    },
+    {
+      "path": "src/platform/lifecycle.py",
+      "bytes": 16508,
+      "sha256": "0f0802d3cc802a91432bee0af2753d26c21ec655414cab230398720c1a1dcd36",
+      "identical_to_baseline": true
+    },
+    {
+      "path": "src/ui/trade_timeline.py",
+      "bytes": 21764,
+      "sha256": "a0c4e3e3949d4d220c188f4f3de8dd0393fef7208dac356082ec34bebd943d8b",
+      "identical_to_baseline": true
+    },
+    {
+      "path": "routes/history.py",
+      "bytes": 20755,
+      "sha256": "233e39cd77816a1bf533e27ee6b440bf15a90c13f5c81aaa4bc1e8c6ccc3d0ee",
+      "identical_to_baseline": true
+    },
+    {
+      "path": "static/css/trade_workspace.css",
+      "bytes": 22792,
+      "sha256": "06f8bf79df0fbc22cbf6dd4bde32756c4d623df312705eac1be766855ac353fa",
+      "identical_to_baseline": true
+    }
+  ],
+  "scope": "Only client evidence serialization/read/display, regression coverage and release metadata. Backend valuation, qualification, source, scoring, account and admission implementations unchanged."
+}

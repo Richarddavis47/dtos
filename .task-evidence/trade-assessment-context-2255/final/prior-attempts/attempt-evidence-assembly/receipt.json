@@ -1,0 +1,21 @@
+{
+  "source": {
+    "baseline": "c6f985eba8adccffb7869a77884590f222feb795",
+    "baseline_tree": "6825aa61ffb501822a02e25e8840ee04b353bb75",
+    "candidate": "9c71de66eab3ff4ef1285393aed97a7972ccbb77",
+    "tree": "b9c099c84cfe5590ef1dc10af28f9755dbb01ee9",
+    "branch": "fix/trade-assessment-context-2255",
+    "version": "1.22.40",
+    "build": 2255,
+    "expected_test_count": 4505,
+    "pr": 344
+  },
+  "scope": "Failed packaging attempts only, not application or validation failures. First index comparison included extra review-note keys. A dependent build was mistakenly started before successful assembly and native guard correctly refused the missing customer-acceptance/evidence.json. Second builder refused to overwrite that archive. Both original consoles and failed archive preserved. All contained unique validation files remain byte-identical in the final source originals; screenshots and tests were not rerun.",
+  "failed_archive": {
+    "file": "/workspace/2255-trade-context-final/attempt-evidence-assembly/recovery-package.zip",
+    "bytes": 152965127,
+    "sha256": "ff92e0b76a4be148b8cbff80fb70dfff075dc1f4cd00ffd6d33c6439da45a42c"
+  },
+  "published_scope": "Readable original error consoles and this precise receipt; duplicate failed ZIP retained locally, no claim it passed or was immutable release evidence.",
+  "at": "2026-11-14T22:05:04.183159+00:00"
+}

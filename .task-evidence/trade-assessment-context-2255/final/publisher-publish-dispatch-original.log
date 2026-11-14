@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "/workspace/2255-trade-context-final/dispatch-guarded-publisher.py", line 11, in <module>
+    assert len(matches)==1;v=matches[0];safe={k:v[k]for k in ['id','html_url','head_sha','head_branch','status','conclusion','created_at']};(B/('publisher-'+phase+'-started.json')).write_text(json.dumps(safe,indent=2)+'\n');print(json.dumps(safe))
+           ^^^^^^^^^^^^^^^
+AssertionError

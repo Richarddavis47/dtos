@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "/workspace/2255-trade-context-final/build-release-evidence.py", line 63, in <module>
+    rows=[dict(name=n,bytes=p.stat().st_size,sha256=digest(p)) for n,p in sorted(files.items())];meta=(json.dumps(dict(candidate=S['candidate'],tree=S['tree'],scope='Exact-source original pre-publication evidence plus explicitly identified derived indexes; not owner live or physicalSafari.',files=rows),indent=2)+'\n').encode();out=B/'recovery-package.zip';assert not out.exists()
+                                                                                                                                                                                                                                                                                                                                                                             ^^^^^^^^^^^^^^^^
+AssertionError

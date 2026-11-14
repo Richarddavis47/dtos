@@ -1,0 +1,16 @@
+Traceback (most recent call last):
+  File "/workspace/2255-trade-context-final/build-release-evidence.py", line 72, in <module>
+    if prefix is None:fn(out,plan)
+                      ^^^^^^^^^^^^
+  File "/workspace/dtos-publisher-2255/tools/release/publish.py", line 4565, in verify_customer_acceptance
+    data = json.loads(archive.read("customer-acceptance/evidence.json"))
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/zipfile/__init__.py", line 1585, in read
+    with self.open(name, "r", pwd) as fp:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/zipfile/__init__.py", line 1622, in open
+    zinfo = self.getinfo(name)
+            ^^^^^^^^^^^^^^^^^^
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/zipfile/__init__.py", line 1550, in getinfo
+    raise KeyError(
+KeyError: "There is no item named 'customer-acceptance/evidence.json' in the archive"
