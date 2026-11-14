@@ -1,0 +1,124 @@
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index b3f088cf..ccc98dca 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -1,3 +1,7 @@
++## v1.22.39 / build 2254 — Clear Trade Review and Team Demo
++
++Keep detailed team-fit methodology optional in Trade Review while preserving primary decisions, costs and material risks. Describe the public Team example as backup quarterback depth, with a brief Superflex explanation. Calculations and resource policies unchanged.
++
+ # v1.22.36 / build 2251 — Trade For cost and fit
+ 
+ ## v1.22.38 / build 2253 — Customer Experience Acceptance
+diff --git a/RELEASE_NOTES.md b/RELEASE_NOTES.md
+index fc4e860a..045afb10 100644
+--- a/RELEASE_NOTES.md
++++ b/RELEASE_NOTES.md
+@@ -1,3 +1,9 @@
++# DTOS v1.22.39 / build 2254
++
++Trade Review keeps its decision, practical cost, both teams’ projected effects and important risks visible; detailed fit rationale is available in an accessible disclosure. The public Team example describes backup quarterbacks without implying a starting-lineup gain.
++
++No evaluator, valuation, league, account, source or admission-policy changes.
++
+ # DTOS v1.22.38 / build 2253
+ 
+ Complete the customer-experience acceptance corrections across existing pages.
+diff --git a/app_metadata.py b/app_metadata.py
+index f773dece..eccf8b86 100644
+--- a/app_metadata.py
++++ b/app_metadata.py
+@@ -7,10 +7,10 @@ from datetime import datetime, timezone
+ from pathlib import Path
+ 
+ APPLICATION_NAME = "DTOS"
+-VERSION = "1.22.38"
+-PRODUCT_VERSION = "1.22.38"
+-BUILD_NUMBER = 2253
+-RELEASE_CODENAME = "Customer Experience Acceptance"
++VERSION = "1.22.39"
++PRODUCT_VERSION = "1.22.39"
++BUILD_NUMBER = 2254
++RELEASE_CODENAME = "Clear Trade Review and Team Demo"
+ APPLICATION_STARTED_AT = datetime.now(timezone.utc).isoformat()
+ 
+ _REPOSITORY_ROOT = Path(__file__).resolve().parent
+diff --git a/src/ui/public_demo_data.json b/src/ui/public_demo_data.json
+index 7b59e334..01950ada 100644
+--- a/src/ui/public_demo_data.json
++++ b/src/ui/public_demo_data.json
+@@ -110,8 +110,8 @@
+         "points": 4.0
+       }
+     ],
+-    "strength": "Three projected quarterbacks provide meaningful Superflex replacement cover.",
+-    "limitation": "Using a reserve quarterback to improve receivers can remove that quarterback cover. Current points do not establish future availability.",
++    "strength": "Backup quarterbacks for the flexible starting spot.",
++    "limitation": "In Superflex, the flexible starting spot can use a quarterback, running back, receiver or tight end. Trading a backup quarterback can leave less cover. These projections do not confirm future availability.",
+     "next_step": "Compare a receiver upgrade with its quarterback-depth cost before pursuing it.",
+     "capital": [
+       {
+diff --git a/static/js/trade_workspace.js b/static/js/trade_workspace.js
+index 3e7a7cf7..acfc95ff 100644
+--- a/static/js/trade_workspace.js
++++ b/static/js/trade_workspace.js
+@@ -1451,8 +1451,9 @@
+       if (side === 'partner') section.append(node('small', 'Their fit is an evidence-based inference, not a statement of the manager’s intent.'));
+       teams.append(section);
+     }
+-    card.append(teams);
+     if (decision.decision_conditions) card.append(node('p', decision.decision_conditions, 'tw-decision-conditions'));
++    card.append(node('p', 'Partner fit is an inference, not evidence that the manager will accept.', 'tw-fit-qualification'));
++    card.append(disclosure('Why this may fit each team', teams, 'tw-team-fit-details'));
+     const depth = node('div');
+     for (const line of cautions) depth.append(node('p', line, 'tw-lineup-warning'));
+     for (const [side, title] of [['active', 'Your team'], ['partner', 'Their team']]) {
+diff --git a/tests/test_customer_trade_experience.py b/tests/test_customer_trade_experience.py
+index 8d4cdd30..c232a11a 100644
+--- a/tests/test_customer_trade_experience.py
++++ b/tests/test_customer_trade_experience.py
+@@ -131,7 +131,14 @@ class CustomerTradeJourneyTests(unittest.TestCase):
+                     review = page.locator('#trade-result > article.tw-offer-review')
+                     self.assertIn('Incoming Player', review.inner_text())
+                     self.assertIn('inference', review.inner_text())
+-                    team_text = review.locator(':scope > .tw-team-summary').inner_text()
++                    fit = review.locator(':scope > .tw-team-fit-details')
++                    self.assertFalse(fit.evaluate('(el) => el.open'))
++                    self.assertFalse(fit.locator('.tw-team-summary').is_visible())
++                    self.assertIn('IR', review.inner_text())
++                    self.assertIn('provisional', review.inner_text())
++                    self.assertIn('Incoming Player', review.inner_text())
++                    fit.locator('summary').press('Enter')
++                    team_text = fit.locator('.tw-team-summary').inner_text()
+                     self.assertNotIn('legal-replacement production', team_text)
+                     self.assertIn('projected points from eligible backups fall 4.00 points per supported week', team_text)
+                     self.assertIn('participation remains unknown', team_text)
+diff --git a/tests/test_public_welcome_presentation.py b/tests/test_public_welcome_presentation.py
+index 90c1b974..eace5b97 100644
+--- a/tests/test_public_welcome_presentation.py
++++ b/tests/test_public_welcome_presentation.py
+@@ -62,6 +62,9 @@ class PublicWelcomePresentationTests(unittest.TestCase):
+         self.assertEqual(source.count('Illustrative values and hypothetical rosters. Not live player valuations or actual trades.'), 3)
+         self.assertIn('same hypothetical offer', text)
+         self.assertIn(self.fixture['team']['name'], text)
++        self.assertIn('Backup quarterbacks for the flexible starting spot.', text)
++        self.assertIn('In Superflex, the flexible starting spot can use a quarterback', text)
++        self.assertNotIn('Superflex replacement cover', text)
+         for side in ('active', 'partner'):
+             self.assertIn(self.fixture['trade'][side]['name'], text)
+             self.assertIn(self.fixture['trade'][side]['benefit'], text)
+diff --git a/tools/validation/public_demo_fixture.py b/tools/validation/public_demo_fixture.py
+index 063f8946..47e36662 100644
+--- a/tools/validation/public_demo_fixture.py
++++ b/tools/validation/public_demo_fixture.py
+@@ -587,8 +587,8 @@ def generate():
+                     for e in before[0].entries
+                 ],
+                 "reserve": reserves,
+-                "strength": "Three projected quarterbacks provide meaningful Superflex replacement cover.",
+-                "limitation": "Using a reserve quarterback to improve receivers can remove that quarterback cover. Current points do not establish future availability.",
++                "strength": "Backup quarterbacks for the flexible starting spot.",
++                "limitation": "In Superflex, the flexible starting spot can use a quarterback, running back, receiver or tight end. Trading a backup quarterback can leave less cover. These projections do not confirm future availability.",
+                 "next_step": "Compare a receiver upgrade with its quarterback-depth cost before pursuing it.",
+                 "capital": [
+                     {

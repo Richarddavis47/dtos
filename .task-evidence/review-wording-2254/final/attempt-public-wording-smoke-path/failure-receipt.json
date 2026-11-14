@@ -1,0 +1,26 @@
+{
+  "scope": "Structured preservation of retrieved terminal execution62231; not a recreated original console.",
+  "source": {
+    "baseline": "c7806fc076c23f02411daf012cf6e4d53b908d05",
+    "baseline_tree": "256e7e7c1046f9d82f1928141c84662ee7928bd5",
+    "candidate": "17c714db3de9c8dad5d03d9fd57ae4aeab833851",
+    "tree": "6825aa61ffb501822a02e25e8840ee04b353bb75",
+    "branch": "fix/review-wording-2254",
+    "version": "1.22.39",
+    "build": 2254,
+    "pr": 343,
+    "expected_test_count": 4504
+  },
+  "production": "v1.22.39/build2254",
+  "preceding_checks_passed": [
+    "Seven public smokes",
+    "Exact TradeJS parity",
+    "New Teamheadline present",
+    "Oldheadline absent",
+    "Superflex definition",
+    "Three demodetails"
+  ],
+  "failure": "AssertionError: /account/register not in public page hrefs",
+  "diagnosis": "Smoke recorder assumed wrong registration URL. Existing unchanged repository test and route use /account/create. Application is unchanged.",
+  "corrected_scope": "Only this bounded publicWelcomeGET and recorder metadata."
+}

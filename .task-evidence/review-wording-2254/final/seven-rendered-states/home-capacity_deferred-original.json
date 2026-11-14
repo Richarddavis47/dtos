@@ -1,0 +1,88 @@
+{
+  "source": {
+    "baseline": "c7806fc076c23f02411daf012cf6e4d53b908d05",
+    "baseline_tree": "256e7e7c1046f9d82f1928141c84662ee7928bd5",
+    "candidate": "17c714db3de9c8dad5d03d9fd57ae4aeab833851",
+    "tree": "6825aa61ffb501822a02e25e8840ee04b353bb75",
+    "branch": "fix/review-wording-2254",
+    "version": "1.22.39",
+    "build": 2254,
+    "pr": 343,
+    "expected_test_count": 4504
+  },
+  "family": "home",
+  "state": "capacity_deferred",
+  "proof_kind": "controlled_transport_ui_state",
+  "source_generation": null,
+  "source_generation_status": "unknown",
+  "assessment_supported": false,
+  "actual_memory_admission_measured": false,
+  "attempted_search_completed": false,
+  "prior_offer_count": 1,
+  "retained_prior_generation": "0ba77f5b860a021e7705d573d0e26caacf3abc049823f5c9db9b17c9387f6844",
+  "control": "Intercept exactly one explicit Generate HTTP response; do not execute engine/admission",
+  "rendered_status": "Trade search is waiting for capacity. Your draft is intact. Try Find Trade Ideas later. Earlier results remain below; this search did not update them.",
+  "requests": [
+    {
+      "method": "GET",
+      "path": "/"
+    },
+    {
+      "method": "GET",
+      "path": "/static/css/contextual_navigation.css"
+    },
+    {
+      "method": "GET",
+      "path": "/static/js/contextual_navigation.js"
+    },
+    {
+      "method": "GET",
+      "path": "/static/js/strategy_session.js"
+    },
+    {
+      "method": "GET",
+      "path": "/static/js/home-opportunities.js"
+    },
+    {
+      "method": "GET",
+      "path": "/static/css/matchups.css"
+    },
+    {
+      "method": "GET",
+      "path": "/static/js/trade_workspace.js"
+    },
+    {
+      "method": "GET",
+      "path": "/api/trades/home-opportunities"
+    },
+    {
+      "method": "POST",
+      "path": "/api/trades/generate"
+    }
+  ],
+  "explicit_generate_http_requests": 1,
+  "actual_heavy_calls": {
+    "services.sleeper.sleeper_get": 0,
+    "services.sleeper.sync_sleeper": 0,
+    "routes.trades.generate_trade_workflow": 0,
+    "src.core.fois.service.FOISService._generate_sync": 0
+  },
+  "page_errors": [],
+  "observed_at": "2026-11-14T10:53:23.361063+00:00",
+  "dom": {
+    "path": "customer-states/home-capacity_deferred-dom.html",
+    "bytes": 73421,
+    "sha256": "de27761673f9ceadb6fd1e303068d8903f814a056f3e1a12df320328067a1e03"
+  },
+  "image": {
+    "path": "customer-states/home-capacity_deferred.png",
+    "bytes": 199475,
+    "sha256": "2e53cdb8bd80d0eac70e8f1962033d63ed48be4fbe278e94d5f1c60cbb07c9bc"
+  },
+  "original_dom_sha256_before_redaction": "a072e9013a3bf11560ff614cbe7b809fd244d39e51aac124ae1c09cd383c49da",
+  "dom_scope": "Original captured browser DOM with disposable credential/offer nonce values redacted in evidence copy only",
+  "body_text": "DTOS\nSync League\nMore tools\nFixture\nTeam 1 \u00b7 Switch league\nHome\nMy Team\nTrade\nLeague\nMarket\nHome\nFixture\n\nYOUR TEAM \u00b7 OWNER 1\n\nTeam 1You\n\ud83e\udd47 #1\nOfficial record: 6-4-0\nOpen My Team\nBuild a trade\nFront Office Brief\n\nNEXT ACTION\n\n1 owned future first-round pick\n\nWhy: 2028 first \u00b7 original team name unavailable (see exact identity below) \u00b7 owned by your team\n\nCost and uncertainty: Prepared assessment pricing covers 3/3 owned picks. Unknown ranges are not guaranteed early picks; capital does not establish future success.\n\nReview exact draft capital \u2192\nSupporting evidence\n\nRECOMMENDED TRADE\n\nTeam 2\n\nYou send: a\n\nYou receive: 2028 Round 1 (Unknown)\n\nCurrent Market: send 250.0 / receive 250.0\n\nWORTH PURSUING\n\nWhy consider: Rebuild fit: you give up current production while gaining meaningful priced future capital. Reserve coverage and pick-range uncertainty remain explicit. Provisional: check dates and player availability.\n\nCost and uncertainty: Optimal legal-lineup production falls 4.00 points per supported week; Useful projected points from eligible backups fall 1.00 points per supported week\n\nPartner fit (inferred): Win-now fit: this costs future flexibility, and materially improves the optimal legal lineup. Any reserve loss remains a disclosed cost. Main cost: Spends 250 Market units of future capital.\n\nAssessment evidence\nExplore / Edit \u00b7 preview \u2192\nMore ideas for your team\n\nTrade search is waiting for capacity. Your draft is intact. Try Find Trade Ideas later. Earlier results remain below; this search did not update them.\n\nFind Trade Ideas\nExplore more trades \u2192\nView another franchise\nTeam overview and shortcuts\nLEAGUE TRADE NEWS\n\nLast 7 days \u00b7 Biggest deals first\n\nNo completed league trades in the past seven days with supported completion-time evidence.\n\nFeed coverage and ordering\nLeague standings\nWeekly Report\n\nUnavailable \u00b7 current week evidence\n\nOpen Week 2 report \u00b7 Unavailable \u2192\nExplore\n\nYour team, matchup and trade workspace\n\nReview my assets\n\nSee your current players, lineup and exact owned picks.\n\n\u2192\nCheck this week's matchup\n\nSee actual scores and this week\u2019s projections.\n\n\u2192\nTeam comparisons\nAll matchups this week\nMarket and league activity\nLeague data \u00b7 Time not recorded",
+  "width": 390,
+  "height": 844,
+  "no_horizontal_overflow": true
+}

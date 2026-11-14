@@ -1,0 +1,128 @@
+{
+  "schema": 1,
+  "source": {
+    "baseline": "c7806fc076c23f02411daf012cf6e4d53b908d05",
+    "baseline_tree": "256e7e7c1046f9d82f1928141c84662ee7928bd5",
+    "candidate": "17c714db3de9c8dad5d03d9fd57ae4aeab833851",
+    "tree": "6825aa61ffb501822a02e25e8840ee04b353bb75",
+    "branch": "fix/review-wording-2254",
+    "version": "1.22.39",
+    "build": 2254,
+    "pr": 343,
+    "expected_test_count": 4504
+  },
+  "producer_sha256": "02643993d4694b669cfd25eb1c0f93e8c3f310b70b1337eb9a11088d7668ce44",
+  "scope": "Source-bound rendered fixtures plus explicitly controlled Home transport states; no live owner or actual resource-admission claim.",
+  "physical_safari": false,
+  "records": [
+    {
+      "family": "player",
+      "state": "complete",
+      "source_generation": "a9b7ba99c0bbeaefed3df32a6c08ed21954d6d95bb94f2e358644c7eb5c97362",
+      "source_generation_status": "known",
+      "assessment_supported": true,
+      "qualification_preserved": true,
+      "no_new_heavy_work": true,
+      "proof_kind": "source_bound_rendered_state",
+      "record": {
+        "path": "customer-states/player-complete-original.json",
+        "bytes": 27629,
+        "sha256": "eb8f0d714712b31a6e0cf43842839ebc0394e6569461854f0d28cff0b64d0a8f"
+      }
+    },
+    {
+      "family": "player",
+      "state": "partial",
+      "source_generation": "1a9896b194e58a076d170c17f619b113d7174b53175378de80c1b72b1b0918a6",
+      "source_generation_status": "known",
+      "assessment_supported": false,
+      "qualification_preserved": true,
+      "no_new_heavy_work": true,
+      "proof_kind": "source_bound_rendered_state",
+      "record": {
+        "path": "customer-states/player-partial-original.json",
+        "bytes": 27812,
+        "sha256": "416fbb0727f9d9eb8486312a849712a9baf46bbdf38f5f5e2f3a83ce4388d37a"
+      }
+    },
+    {
+      "family": "player",
+      "state": "missing",
+      "source_generation": "26b55b710b4ded7bacf5ea76b9ae4a785bc05f25381213efdf9b58b4f59681e0",
+      "source_generation_status": "known",
+      "assessment_supported": false,
+      "qualification_preserved": true,
+      "no_new_heavy_work": true,
+      "proof_kind": "source_bound_rendered_state",
+      "record": {
+        "path": "customer-states/player-missing-original.json",
+        "bytes": 27744,
+        "sha256": "b64da789e47ee5df8a683a25fcdb7ab2900df5bf4c62e48efd794d6636505bc2"
+      }
+    },
+    {
+      "family": "player",
+      "state": "retained",
+      "source_generation": "a9b7ba99c0bbeaefed3df32a6c08ed21954d6d95bb94f2e358644c7eb5c97362",
+      "source_generation_status": "known",
+      "assessment_supported": true,
+      "qualification_preserved": true,
+      "no_new_heavy_work": true,
+      "proof_kind": "source_bound_rendered_state",
+      "record": {
+        "path": "customer-states/player-retained-original.json",
+        "bytes": 27836,
+        "sha256": "fb01fb4b76c28a96b673ee2fcaaebfd033e8948ff2d11c6c4deb4d9692e2c90b"
+      }
+    },
+    {
+      "family": "home",
+      "state": "loading",
+      "source_generation": null,
+      "source_generation_status": "unknown",
+      "assessment_supported": false,
+      "qualification_preserved": true,
+      "no_new_heavy_work": true,
+      "proof_kind": "controlled_transport_ui_state",
+      "actual_memory_admission_measured": false,
+      "record": {
+        "path": "customer-states/home-loading-original.json",
+        "bytes": 3588,
+        "sha256": "c08f73ac95a0214c9a3dc741da25e81225a43f443c36a8a3d70a46bd33a01313"
+      }
+    },
+    {
+      "family": "home",
+      "state": "capacity_deferred",
+      "source_generation": null,
+      "source_generation_status": "unknown",
+      "assessment_supported": false,
+      "qualification_preserved": true,
+      "no_new_heavy_work": true,
+      "proof_kind": "controlled_transport_ui_state",
+      "actual_memory_admission_measured": false,
+      "record": {
+        "path": "customer-states/home-capacity_deferred-original.json",
+        "bytes": 5225,
+        "sha256": "6d434f9ca3daadca605ad44945f3f2a1149cf72da8ea8e42c556ee606f3984c9"
+      }
+    },
+    {
+      "family": "home",
+      "state": "error",
+      "source_generation": null,
+      "source_generation_status": "unknown",
+      "assessment_supported": false,
+      "qualification_preserved": true,
+      "no_new_heavy_work": true,
+      "proof_kind": "controlled_transport_ui_state",
+      "actual_memory_admission_measured": false,
+      "record": {
+        "path": "customer-states/home-error-original.json",
+        "bytes": 5191,
+        "sha256": "9320427e7fe980dce2f043715f0a7461a1c9091c2c93edceea5063220b4737c0"
+      }
+    }
+  ],
+  "observed_at": "2026-11-14T10:53:24.508076+00:00"
+}

@@ -1,0 +1,43 @@
+{
+  "source": {
+    "baseline": "c7806fc076c23f02411daf012cf6e4d53b908d05",
+    "baseline_tree": "256e7e7c1046f9d82f1928141c84662ee7928bd5",
+    "candidate": "17c714db3de9c8dad5d03d9fd57ae4aeab833851",
+    "tree": "6825aa61ffb501822a02e25e8840ee04b353bb75",
+    "branch": "fix/review-wording-2254",
+    "version": "1.22.39",
+    "build": 2254,
+    "pr": 343,
+    "expected_test_count": 4504
+  },
+  "scope": "Two original acceptance findings only",
+  "findings": [
+    {
+      "id": "trade_review_technical_paragraph",
+      "status": "fixed",
+      "before": "Full team strategy, opportunity cost and replacement methodology always expanded in normal Trade Review.",
+      "after": "Decision, principal cost/risk, both team effects and acceptance caution remain primary; complete team rationale is under Why this may fit each team.",
+      "evidence": "after-native-17c714db/native-review-default-{width}.png and native-review-fit-expanded-{width}.png",
+      "qualification": "Uses retained evaluator text unchanged inside details. Material decision conditions remain outside."
+    },
+    {
+      "id": "team_demo_superflex_cover_headline",
+      "status": "fixed",
+      "before": "Superflex replacement cover",
+      "after": "Backup quarterbacks for the flexible starting spot.",
+      "explanation": "Superflex permits QB/RB/WR/TE; trading a backup quarterback can leave less cover. Projections do not confirm future availability.",
+      "evidence": "after-extra-17c714db/welcome-team-expanded-{width}.png",
+      "qualification": "Backup-depth measure; fictional108starting-lineup points unchanged, not a new improvement claim."
+    }
+  ],
+  "widths": [
+    320,
+    375,
+    390,
+    1280
+  ],
+  "fixture_only": true,
+  "physical_safari": false,
+  "live_owner": false,
+  "unchanged_surfaces": "89fresh images pixel-identical to reviewed2253originals;3Commissioner time-digit regions inspected; changedTrade/Team inspected. No new18familyaudit."
+}

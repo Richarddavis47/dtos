@@ -1,0 +1,69 @@
+..........................................................................................................................E....................................EEEE.F................
+======================================================================
+ERROR: test_placeholder_or_incomplete_evidence_cannot_publish (tests.test_release_publisher.PlanFinalizationTests.test_placeholder_or_incomplete_evidence_cannot_publish)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/dtos-publisher-2254/tests/test_release_publisher.py", line 1347, in test_placeholder_or_incomplete_evidence_cannot_publish
+    p.verify_plan(ready)
+  File "/workspace/dtos-publisher-2254/tools/release/publish.py", line 4545, in verify_plan
+    require(
+  File "/workspace/dtos-publisher-2254/tools/release/publish.py", line 47, in require
+    raise RuntimeError(message)
+RuntimeError: Required thirteen-job population missing
+
+======================================================================
+ERROR: test_exact_thirteen_jobs_are_required (tests.test_release_publisher.RunAdmissionTests.test_exact_thirteen_jobs_are_required)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/dtos-publisher-2254/tests/test_release_publisher.py", line 486, in test_exact_thirteen_jobs_are_required
+    records, product = p.verify_runs(self.plan)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/dtos-publisher-2254/tools/release/publish.py", line 2793, in verify_runs
+    require(len(records) == 13 and product_job, "Required gate population mismatch")
+  File "/workspace/dtos-publisher-2254/tools/release/publish.py", line 47, in require
+    raise RuntimeError(message)
+RuntimeError: Required gate population mismatch
+
+======================================================================
+ERROR: test_later_failed_missing_and_wrong_source_checks_reject (tests.test_release_publisher.RunAdmissionTests.test_later_failed_missing_and_wrong_source_checks_reject) (change='failed')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/dtos-publisher-2254/tests/test_release_publisher.py", line 495, in test_later_failed_missing_and_wrong_source_checks_reject
+    self.checks[0]["conclusion"] = "failure"
+    ~~~~~~~~~~~^^^
+IndexError: list index out of range
+
+======================================================================
+ERROR: test_later_failed_missing_and_wrong_source_checks_reject (tests.test_release_publisher.RunAdmissionTests.test_later_failed_missing_and_wrong_source_checks_reject) (change='missing')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/dtos-publisher-2254/tests/test_release_publisher.py", line 497, in test_later_failed_missing_and_wrong_source_checks_reject
+    self.checks.pop()
+IndexError: pop from empty list
+
+======================================================================
+ERROR: test_later_failed_missing_and_wrong_source_checks_reject (tests.test_release_publisher.RunAdmissionTests.test_later_failed_missing_and_wrong_source_checks_reject) (change='source')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/dtos-publisher-2254/tests/test_release_publisher.py", line 499, in test_later_failed_missing_and_wrong_source_checks_reject
+    self.checks[0]["head_sha"] = "wrong"
+    ~~~~~~~~~~~^^^
+IndexError: list index out of range
+
+======================================================================
+FAIL: test_successful_run_from_another_commit_is_rejected (tests.test_release_publisher.RunAdmissionTests.test_successful_run_from_another_commit_is_rejected)
+----------------------------------------------------------------------
+RuntimeError: Required gate population mismatch
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/workspace/dtos-publisher-2254/tests/test_release_publisher.py", line 511, in test_successful_run_from_another_commit_is_rejected
+    self.assertRaisesRegex(RuntimeError, "run source mismatch"),
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: "run source mismatch" does not match "Required gate population mismatch"
+
+----------------------------------------------------------------------
+Ran 179 tests in 2.829s
+
+FAILED (failures=1, errors=5)
