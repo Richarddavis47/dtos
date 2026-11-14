@@ -1,0 +1,80 @@
+{
+  "status": "C3_FOCUSED23_PASSED_HOSTED12_JOBS_PASSED_FULL_CANONICAL_RUNNING",
+  "source": {
+    "baseline": "c6f985eba8adccffb7869a77884590f222feb795",
+    "baseline_tree": "6825aa61ffb501822a02e25e8840ee04b353bb75",
+    "candidate": "c70c9d5b703f45e61c150902bf528d37a28a5fd7",
+    "tree": "1f1921ec66925889f25e7ef3a7103cbe525aa45a",
+    "branch": "fix/trade-assessment-context-2255",
+    "version": "1.22.40",
+    "build": 2255,
+    "expected_test_count": 4505,
+    "pr": 344
+  },
+  "local_container": "c2c982af281434c80f7b13125af216c4cf35f8dfc76f169b1b44553fbdb9290f",
+  "hosted_runs": [
+    {
+      "name": "Canonical release recovery",
+      "path": ".github/workflows/canonical-release-recovery.yml",
+      "jobs": [
+        "canonical-release"
+      ],
+      "id": 43620779139
+    },
+    {
+      "name": "Product browser journeys",
+      "path": ".github/workflows/product-browser.yml",
+      "jobs": [
+        "product-browser",
+        "my-team-browser",
+        "beginner-navigation",
+        "public-welcome-browser",
+        "historical-trade-timeline",
+        "projection-display-cross-version",
+        "resident-refresh-memory"
+      ],
+      "id": 43620779045
+    },
+    {
+      "name": "Validation tooling",
+      "path": ".github/workflows/validation-tooling.yml",
+      "jobs": [
+        "tooling (ubuntu-24.04)",
+        "tooling (windows-latest)"
+      ],
+      "id": 43620779134
+    },
+    {
+      "name": "Linux Asset Market lifecycle",
+      "path": ".github/workflows/linux-market-lifecycle.yml",
+      "jobs": [
+        "cgroup-lifecycle (ordinary)",
+        "cgroup-lifecycle (archive-warmed)",
+        "cgroup-lifecycle (combined-read)"
+      ],
+      "id": 43620779107
+    }
+  ],
+  "focused": "23 focused controls passed on final implementation working tree before commit; full exact committed source validation is running. No assertion/threshold changed.",
+  "failed_prior": "C1D889 MyTeam255/1failure reserve budget starvation; C2 5a731127 Product811/4viewport subtestfailures comparison decoder lacked newencoding. Complete original logs and canceled partial localruns archived separately; downstream unexecuted tests are not passing.",
+  "production": "unchanged v1.22.39/build2254",
+  "remaining": [
+    "Complete local4505/all10",
+    "Complete hosted13jobs",
+    "Inspect exact-source fresh/retained disclosure and complete roundtrip screenshots",
+    "Current original artifacts/checksums/publisher controls",
+    "GuardedActions release",
+    "Production identity/smokes",
+    "Accessible Scout handoff"
+  ],
+  "closed_originals_temporary": true,
+  "restoration_manifests": [
+    "closed-originals-preserved.json",
+    "extra-archives-preserved.json",
+    "closed-readable-stage-preserved.json"
+  ],
+  "updated_at": "2026-11-14T18:10:22.516739+00:00",
+  "product_original": "product-decoded-original.log",
+  "product_tests": 1001,
+  "product_sha256": "a1286d7dd0801a5b1613c0bd96eee1fc26d87a8c60a518098f05c895e8afe650"
+}
