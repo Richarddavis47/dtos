@@ -151,6 +151,15 @@
     out.append(node('small', 'Bounded search, not a global minimum, asking price or guarantee of acceptance. Lower cost does not establish a better trade.'));
     if (!compact) out.append(detail);
   }
+  // One reader for fresh objects, legacy JSON strings and bounded saved chunks.
+  function recordedPeriod(value) {
+    if (value?.encoding === 'json-chunks-v1') {
+      if (!Array.isArray(value.chunks) || value.chunks.length > 32 || value.chunks.some(chunk => typeof chunk !== 'string' || chunk.length > 1600)) return null;
+      value = value.chunks.join('');
+    }
+    if (typeof value === 'string') { try { value = JSON.parse(value); } catch (_) { return null; } }
+    return value && typeof value === 'object' ? value : null;
+  }
   function create(options) {
     const {node, points, market, panel, tray, getEntries, setEntries, environment, details} = options;
     let returnFocus = null, returnScroll = 0;
@@ -162,11 +171,6 @@
       return label + ': ' + (side?.availability === 'full' && number(side.sent) && number(side.received)
         ? market(side.sent) + ' sent / ' + market(side.received) + ' received'
         : 'Incomplete or unavailable; no complete package value inferred.');
-    }
-    function recordedPeriod(recorded) {
-      let row = recorded;
-      if (typeof row === 'string') { try { row = JSON.parse(row); } catch (_) { row = null; } }
-      return row && typeof row === 'object' ? row : null;
     }
     function partnerCase(entry) {
       const row = recordedPeriod(entry.context?.evaluation?.decision_context?.partner_lineup_comparisons?.current_week);
@@ -216,7 +220,7 @@
         out.append(list);
       }
       out.append(node('p', price(s.neutral, 'Neutral Market at evaluation')));
-      if (s.mode === 'custom') out.append(node('p', price(s.personal, 'Your Custom values · ' + (s.methodLabel || 'method not retained'))),
+      if (s.mode === 'custom') out.append(node('p', price(s.personal, 'Your Custom values · ' + (s.method === 'personal-current-market-slot-curve-v1' ? 'Absolute slot' : s.method === 'personal-relative-priced-order-v1' ? 'Relative priced order' : 'method not retained'))),
         node('small', 'Personal value does not establish the counterparty’s willingness or change Neutral Market.'));
       out.append(node('h5', 'Depth and roster consequences'));
       for (const side of ['active', 'partner']) {
@@ -298,7 +302,7 @@
     refresh();
     return {add, refresh};
   }
-  const api = {customerText, acquisitionView, compatibility, sameScope, wellFormed, create, readCapital, capitalView};
+  const api = {recordedPeriod, customerText, acquisitionView, compatibility, sameScope, wellFormed, create, readCapital, capitalView};
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else globalThis.DTOSOfferComparison = api;
 })();

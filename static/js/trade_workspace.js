@@ -677,17 +677,32 @@
         .map(entry => JSON.stringify(entry))};
     // Intern each admitted comparison once within the unchanged 12k/512-node
     // context bound. Never revive raw strategy numbers after HTML is discarded.
-    const rows = value => value ? Object.fromEntries(Object.entries(value).map(([key,row]) =>
-      [key, typeof row === 'string' ? row : JSON.stringify(row)])) : value;
+    const rows = value => value ? Object.fromEntries(Object.entries(value).map(([key,row]) => {
+      if (typeof row === 'string' || row?.encoding === 'json-chunks-v1') return [key, row];
+      const text = JSON.stringify(row);
+      return [key, {encoding: 'json-chunks-v1', chunks: text.match(/[\s\S]{1,1200}/g) || []}];
+    })) : value;
     const d = value.decision_context;
-    const compactDecision = d ? {...d, lineup_comparisons: rows(d.lineup_comparisons),
+    const {lineup_comparisons, partner_lineup_comparisons, lineup_phase_admission, ...decisionRest} = d || {};
+    const compactDecision = d ? {lineup_comparisons: rows(lineup_comparisons),
       partner_lineup_comparisons: rows(d.partner_lineup_comparisons),
       lineup_phase_admission: d.lineup_phase_admission ? Object.fromEntries(Object.entries(d.lineup_phase_admission)
         .map(([side,weeks]) => [side,rows(weeks)])) : d.lineup_phase_admission} : d;
-    return {reserve_evidence: reserveEvidence, ...value, decision_context: compactDecision, recommendation_trace: compactTrace,
+    if (compactDecision) Object.assign(compactDecision, decisionRest);
+    const {decision_context, personalization, ...restValue} = value;
+    return {personalization, recommendation: value.recommendation, dominant_reason: value.dominant_reason, major_drawback: value.major_drawback, assessment_state: value.assessment_state, provenance: value.provenance, decision_context: compactDecision, ...restValue, reserve_evidence: reserveEvidence, recommendation_trace: compactTrace,
       dimensions: {...dims,
         strategic_fit: strategies ? {...strategies, active: withoutReserveCopies(strategies.active), partner: withoutReserveCopies(strategies.partner)} : strategies,
         package_quality: packages ? Object.fromEntries(Object.entries(packages).map(([key, row]) => [key, withoutReserveCopies(row)])) : packages}};
+  }
+  function recordedEvaluation(value) {
+    if (!value || typeof value !== 'object' || Array.isArray(value)) return {};
+    const compact = compactRetainedEvaluation(value);
+    const saved = boundedEvidence(compact);
+    // Independently bounded evidence families must not evict one another.
+    // Keep tuple/dictionary reserve disclosures, never raw provider catalogs.
+    saved.reserve_evidence = boundedEvidence(compact.reserve_evidence);
+    return saved;
   }
   function retainedReserveRow(row, quality) {
     if (typeof row !== 'string' || quality?.reserve_quality_encoding !== 'tuple-v1') return row;
@@ -700,12 +715,39 @@
         limitations: (values[11] || []).map(index => quality.reserve_qualifications?.[index]).filter(text => typeof text === 'string')};
     } catch (_) { return null; }
   }
+  function recordedLineupText(e) {
+    if (e.recorded_lineup_text) return e.recorded_lineup_text;
+    if (!e.explanation_html) return null;
+    const parsed = parsedExplanation(e);
+    const weeks = decisionPresentation(e).lineup_comparisons?.current_week?.weeks;
+    if (!Array.isArray(weeks) || weeks.length !== 1 || !Number.isInteger(weeks[0])) return {omitted: 'The recorded current week is unknown; no lineup is inferred.'};
+    const text = [...parsed.querySelectorAll('.dtos-explanation > .tw-lineup-details .tw-lineup-week')]
+      .filter(detail => detail.querySelector('h4')?.textContent.endsWith(' · Week ' + weeks[0]))
+      .map(detail => {
+        const copy = detail.cloneNode(true);
+        for (const cell of copy.querySelectorAll('th,td')) cell.append(' \t ');
+        for (const row of copy.querySelectorAll('tr,p,h4,h5,summary,caption')) row.append('\n');
+        return copy.textContent;
+      }).join('\n');
+    // Separate bounded presentation evidence, never provider rows or executable HTML.
+    if (!text) return null;
+    if (text.length > 12000) return {omitted: 'Recorded lineup details exceed the bounded saved-view limit. No current lineup is inferred.'};
+    return {chunks: text.match(/[\s\S]{1,1200}/g) || []};
+  }
+  function appendRecordedLineups(out, context) {
+    const record = context?.recorded_lineup_text;
+    if (!record) return;
+    if (record.omitted) { out.append(node('p', record.omitted)); return; }
+    if (!Array.isArray(record.chunks) || record.chunks.length > 10 || record.chunks.some(v => typeof v !== 'string' || v.length > 1200)) return;
+    const body = node('p', 'Recorded current-week analytical lineups, not submitted Sleeper starters. Other periods’ individual slots are not retained in this bounded view.\n' + record.chunks.join('')); body.style.whiteSpace = 'pre-wrap';
+    out.append(disclosure('Recorded before-and-after lineups · NOT REVALIDATED', body, 'tw-lineup-details'));
+  }
   function restoreContext(value, includePrevious = true) {
-    return {schema: 1, acquisition_comparison: boundedEvidence(value.acquisition_comparison), draft_capital_record: boundedEvidence(value.draft_capital_record), identity: boundedEvidence(value.identity || {}), exploration: value.exploration === true,
+    return {schema: 1, recorded_lineup_text: boundedEvidence(value.recorded_lineup_text), acquisition_comparison: boundedEvidence(value.acquisition_comparison), draft_capital_record: boundedEvidence(value.draft_capital_record), identity: boundedEvidence(value.identity || {}), exploration: value.exploration === true,
       search_result_type: boundedEvidence(value.search_result_type), stale_reason: boundedEvidence(value.stale_reason), restored: true,
       attempt_state: value.attempt_state || value.evaluation?.assessment_state?.state || 'fresh_incomplete',
       previous_assessment: includePrevious && value.previous_assessment ? restoreContext(value.previous_assessment, false) : null,
-      evaluation: boundedEvidence(compactRetainedEvaluation(value.evaluation || {})), opportunity: boundedEvidence(value.opportunity)};
+      evaluation: recordedEvaluation(value.evaluation || {}), opportunity: boundedEvidence(value.opportunity)};
   }
   const assessedOfferContexts = new WeakMap();
   const comparisonScope = () => ({binding: workspace.workspace_context.binding,
@@ -770,8 +812,8 @@
           mode: e.personalization?.mode || 'neutral', method: e.personalization?.method || null,
           personalContext: {revision: e.personalization?.revision, market: e.personalization?.market_generation,
             baseline: e.personalization?.baseline_generation, method: e.personalization?.method},
-          methodLabel: String(e.personalization?.method || '').includes('relative') ? 'Relative priced order' :
-            String(e.personalization?.method || '').includes('absolute') ? 'Absolute slot' : 'Custom method not retained',
+          methodLabel: e.personalization?.method === 'personal-relative-priced-order-v1' ? 'Relative priced order' :
+            e.personalization?.method === 'personal-current-market-slot-curve-v1' ? 'Absolute slot' : 'Custom method not retained',
           acquisition: boundedEvidence(context?.acquisition_comparison),
           neutral: {availability: evidence.availability, sent: evidence.sent?.total, received: evidence.received?.total},
           personal: {availability: personal.availability, sent: personal.sent?.total, received: personal.received?.total},
@@ -795,7 +837,7 @@
     // Independently bounded ownership evidence must survive even when the
     // existing 512-node analytical disclosure is full. The 64k context and
     // 100k offer limits remain unchanged; truncation never implies zero.
-    const context = {schema: 1, acquisition_comparison: boundedEvidence(row.acquisition_comparison), draft_capital_record: boundedEvidence(e.draft_capital_record), evaluation: boundedEvidence(compactRetainedEvaluation(Object.fromEntries(keys.filter(key => key in e).map(key => [key, e[key]])))),
+    const context = {schema: 1, recorded_lineup_text: boundedEvidence(recordedLineupText(e)), acquisition_comparison: boundedEvidence(row.acquisition_comparison), draft_capital_record: boundedEvidence(e.draft_capital_record), evaluation: recordedEvaluation(Object.fromEntries(keys.filter(key => key in e).map(key => [key, e[key]]))),
       exploration: row.exploration === true, search_result_type: row.search_result_type || null,
       opportunity: boundedEvidence(row.opportunity || null),
       identity: {personalization: JSON.stringify(personalPayload()), package: packageIdentity(row.proposal || selected), strategy: row.home_assessment_strategy ?? el('trade-strategy').value,
@@ -811,6 +853,7 @@
       context.identity.package = context.identity.package.slice(0, 16000);
       context.evaluation.major_limitations = [...(context.evaluation.major_limitations || []), 'Additional evidence omitted from temporary preview; reevaluate for full details.'].slice(-32);
     }
+    if (JSON.stringify(context).length > 64000) context.recorded_lineup_text = {omitted: 'Detailed lineups were too large to save with this offer. Recorded comparisons remain qualified, not revalidated.'};
     return context;
   }
   function contextQualification(context, proposal = selected) {
@@ -920,11 +963,7 @@
   }
   function decisionPresentation(e) {
     const decision = {...(e.decision_context || {})};
-    const row = value => {
-      if (typeof value !== 'string') return value;
-      try { const parsed = JSON.parse(value); return parsed && typeof parsed === 'object' ? parsed : null; }
-      catch (_) { return null; }
-    };
+    const row = value => window.DTOSOfferComparison.recordedPeriod(value);
     const rows = value => Object.fromEntries(Object.entries(value || {}).map(([key,value]) => [key,row(value)]));
     decision.lineup_comparisons = rows(decision.lineup_comparisons);
     decision.partner_lineup_comparisons = rows(decision.partner_lineup_comparisons);
@@ -989,6 +1028,7 @@
     out.dataset.assessment = 'true';
     const retained = Boolean(previousContainer || contextQualification(context));
     out.dataset.assessmentFreshness = retained ? 'retained' : 'current';
+    if (retained && !e.explanation_html) appendRecordedLineups(out, context);
     out.append(capitalDisclosure(context?.draft_capital_record || e.draft_capital_record, retained));
     const attemptState = context?.attempt_state || e.assessment_state?.state || 'fresh_incomplete';
     out.dataset.assessmentState = retained ? 'retained' : attemptState;
@@ -1003,7 +1043,10 @@
     if (e.personalization?.mode === 'custom') {
       out.append(node('h3', 'Custom DTOS · your personal assessment'), node('p', 'Neutral DTOS: ' + (e.neutral_assessment?.recommendation || 'Unavailable') + '. Market prices and your counterparty’s supported evidence remain neutral.', 'tw-verdict-qualification'));
       const value = e.personal_value_evidence;
-      if (value) out.append(node('p', 'Your personal values from Custom Rankings · You send ' + (value.sent?.total == null ? 'Unavailable' : displayMarket(value.sent.total)) + ' / You receive ' + (value.received?.total == null ? 'Unavailable' : displayMarket(value.received.total))));
+      if (value) {
+        if (retained) out.append(node('small', valuationSummary(e).split(':', 1)[0]));
+        out.append(node('p', 'Your personal values from Custom Rankings · You send ' + (value.sent?.total == null ? 'Unavailable' : displayMarket(value.sent.total)) + ' / You receive ' + (value.received?.total == null ? 'Unavailable' : displayMarket(value.received.total))));
+      }
     }
     for (const warning of e.personal_preference_warnings || []) out.append(node('p', warning + '. Your manually entered offer was not altered.', 'tw-drawback'));
     if (!retained) for (const conflict of e.personal_preference_conflicts || []) {
@@ -1381,8 +1424,8 @@
     const personal = e.personalization?.mode === 'custom', value = personal ? e.personal_value_evidence : e.market_evidence;
     const side = key => value?.[key]?.total != null ? displayMarket(value[key].total)
       : value?.[key]?.known_subtotal != null ? displayMarket(value[key].known_subtotal) + ' known subtotal' : 'Unknown';
-    const method = String(e.personalization?.method || '').includes('relative') ? 'Relative priced order'
-      : String(e.personalization?.method || '').includes('absolute') ? 'Absolute slot' : 'method not recorded';
+    const method = e.personalization?.method === 'personal-relative-priced-order-v1' ? 'Relative priced order'
+      : e.personalization?.method === 'personal-current-market-slot-curve-v1' ? 'Absolute slot' : 'method not recorded';
     return (personal ? 'Your Custom values · ' + method : 'Neutral Market') + ': ' + side('sent') + ' sent / ' + side('received') + ' received';
   }
   function appendCurrentLineupSummary(card, decision) {
@@ -1469,6 +1512,7 @@
     card.append(capitalDisclosure(context?.draft_capital_record || e.draft_capital_record, retained));
     appendPartnerHistory(card, context);
     const sources = node('div');
+    if (retained && !e.explanation_html) appendRecordedLineups(card, context);
     if (e.explanation_html) {
       const parsed = parsedExplanation(e), explanation = parsed.querySelector('.dtos-explanation');
       // Move the already-admitted slot view once; no new optimization or request.

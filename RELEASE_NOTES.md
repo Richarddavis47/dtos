@@ -1,3 +1,7 @@
+# DTOS v1.22.40 / build 2255
+
+Display the recorded Custom valuation method using its exact supported identifier. Preserve bounded recorded current-week analytical lineup disclosures and readable comparison evidence across review and return navigation, explicitly NOT REVALIDATED. No valuation, qualification, source or admission-policy changes.
+
 # DTOS v1.22.39 / build 2254
 
 Trade Review keeps its decision, practical cost, both teams’ projected effects and important risks visible; detailed fit rationale is available in an accessible disclosure. The public Team example describes backup quarterbacks without implying a starting-lineup gain.
