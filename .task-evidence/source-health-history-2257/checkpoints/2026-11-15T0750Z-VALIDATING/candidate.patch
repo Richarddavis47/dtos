@@ -1,0 +1,984 @@
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index 521238d5..80d42311 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -1,5 +1,10 @@
+ ## v1.22.41 / build 2256 — Trade Analysis Goal Clarity
+ 
++## v1.22.42 / build 2257
++
++- Report selected-player Sleeper projections/results and separate auxiliary usage from actual retained evidence, including unknown clocks and failed refreshes. Configuration is not complete source coverage.
++- Recover only missing historical transaction buckets during existing cache preparation, retaining source facts on failure and recording successful empty observations without inventing legacy retrieval times. Page reads remain provider-free.
++
+ Separate a recorded unresolved analysis-goal choice from missing source evidence in Trade diagnostics and guidance. Preserve overlapping lineup gaps and rejected verdicts; offer the existing temporary goal control without changing saved goals or starting work automatically. Valuation, scoring, qualification and resource policies unchanged.
+ 
+ ## v1.22.40 / build 2255 — Recorded Trade Assessment Context
+diff --git a/RELEASE_NOTES.md b/RELEASE_NOTES.md
+index 65a80285..91e5bdb6 100644
+--- a/RELEASE_NOTES.md
++++ b/RELEASE_NOTES.md
+@@ -1,3 +1,9 @@
++# v1.22.42 / build 2257
++
++Source reporting now distinguishes configured access from the selected player’s prepared evidence, freshness and failed refreshes. Available Sleeper scores and projections are no longer described as disabled; auxiliary football statistics remain separate from fantasy results.
++
++Existing admitted historical preparation can acquire missing transaction periods, including Week 0, without replacing already observed records or fetching a whole retained season. A successful empty response establishes an observed-empty period; failure or an unqueried period does not. Rendering does not fetch sources. Legacy observation times remain unknown, and retained historical grades are not revalidated.
++
+ # DTOS v1.22.41 / build 2256
+ 
+ Trade searches distinguish a needed temporary analysis goal from missing prices or lineup evidence. Choose Win Now, Retool or Rebuild explicitly when the recorded draft-capital assessment requires it; syncing cannot supply this choice. Real coverage gaps remain visible and a selected goal does not promise a qualified trade. Saved preferences, valuation and recommendation standards, and memory safeguards are unchanged.
+diff --git a/app_metadata.py b/app_metadata.py
+index 10e925c9..579d37ad 100644
+--- a/app_metadata.py
++++ b/app_metadata.py
+@@ -7,10 +7,10 @@ from datetime import datetime, timezone
+ from pathlib import Path
+ 
+ APPLICATION_NAME = "DTOS"
+-VERSION = "1.22.41"
+-PRODUCT_VERSION = "1.22.41"
+-BUILD_NUMBER = 2256
+-RELEASE_CODENAME = "Trade Analysis Goal Clarity"
++VERSION = "1.22.42"
++PRODUCT_VERSION = "1.22.42"
++BUILD_NUMBER = 2257
++RELEASE_CODENAME = "Scoped Source Health and Historical Recovery"
+ APPLICATION_STARTED_AT = datetime.now(timezone.utc).isoformat()
+ 
+ _REPOSITORY_ROOT = Path(__file__).resolve().parent
+diff --git a/docs/PLAYER_DATA_PROVIDERS.md b/docs/PLAYER_DATA_PROVIDERS.md
+index e48deb95..d714c2dd 100644
+--- a/docs/PLAYER_DATA_PROVIDERS.md
++++ b/docs/PLAYER_DATA_PROVIDERS.md
+@@ -1,8 +1,12 @@
+ # Historical Player Data Providers
+ 
+-## nflverse
++## Sleeper fantasy-point authority
+ 
+-DTOS selects nflverse player summary statistics as the v1.5.1 enrichment source.
++Sleeper is the exclusive source of fantasy projections and actual fantasy scores. Retained matchup scores and league-scoped projection publications are admitted independently of auxiliary box-score coverage. Explicit zero, negative, missing and conflicting results remain distinct.
++
++## nflverse — separate auxiliary football analysis
++
++DTOS retains nflverse player summary statistics as auxiliary analysis, not a fantasy-point projection or actual-results authority.
+ 
+ Weekly release files are seasonally available. DTOS treats a missing completed
+ historical season as a provider gap, while an unpublished current preseason or
+diff --git a/docs/PROVIDER_ACTIVATION.md b/docs/PROVIDER_ACTIVATION.md
+index 42c4d141..8a58a00f 100644
+--- a/docs/PROVIDER_ACTIVATION.md
++++ b/docs/PROVIDER_ACTIVATION.md
+@@ -24,3 +24,15 @@ Configure enablement with `DTOS_PROVIDER_<NORMALIZED_NAME>`. Enabling a provider
+ 4. Add deterministic live, cached, historical, unavailable, schema-change, and rate-limit tests.
+ 5. Document attribution and refresh limits.
+ 6. Verify no provider-specific object reaches an intelligence engine.
++
++## Source coverage inventory — build 2257
++
++| Evidence | Existing connected path | Coverage and limits |
++|---|---|---|
++| Fantasy projections | Sleeper weekly projection publication, league scoring and exact player/week identity | Numeric zero and negatives are supported. ADP-only rows without scoring statistics are unavailable, not zero. Selected-player evidence does not establish complete catalog coverage. |
++| Fantasy results | Retained Sleeper league matchup player/starter scores | Compatible completed observations, live/unconfirmed observations, conflicts and missing coverage remain distinct. No NFLverse scoring fallback. |
++| Auxiliary football analysis | Retained nflverse box-score facts | Targets/carries/receptions where supported, separately qualified by source check and observation boundary. Does not supply authoritative fantasy scores. Snaps, routes and future models remain unsupported. |
++| Neutral Market | Existing compatible FantasyCalc and DynastyProcess adapters | Provider/format/method compatibility and source clocks still apply. No personal Custom values substituted. Unsupported/licensed feeds are not activated. |
++| Franchise history | Sleeper season chain and retained weekly transaction buckets | Existing admitted preparation recovers only gaps, at most19periods and4concurrent requests per season. A failed period waits at least5minutes before another preparation attempt. Existing observed buckets are not refreshed by this recovery. No page-render acquisition or automatic retry loop. |
++
++Player source health is a read-only scoped disclosure; evaluator/Trade eligibility does not consume its labels. It separates configured capability, prepared observation count, original observation/source clocks, freshness and failure. Unknown clocks remain unknown. A complete-season cache’s structural validity is not proof of complete transaction acquisition. A verified source league/season is required before gap recovery; aliases and incompatible archives do not authorize a fetch. Atomic writes retain other source families, transaction identities and historical grade provenance.
+diff --git a/routes/api.py b/routes/api.py
+index 4cbd4ab0..39139369 100644
+--- a/routes/api.py
++++ b/routes/api.py
+@@ -201,7 +201,11 @@ def create_api_router(
+         if str((data.get("league") or {}).get("league_id") or "") != str(selected_league()):
+             return JSONResponse({"detail": "Selected league context is not ready"}, status_code=503)
+         try:
+-            report = data_platform.player_report(player_id, data)
++            from src.platform.league_context import current_league_context
++            from src.core.projection_intelligence import projection_service
++            active = current_league_context()
++            report = data_platform.player_report(player_id, data,
++                projection_service=active.projection if active else projection_service)
+         except KeyError:
+             return JSONResponse({"detail": "Player not found"}, status_code=404)
+         from src.core.player_ownership import PlayerOwnershipIndex
+diff --git a/routes/intelligence_memory.py b/routes/intelligence_memory.py
+index 47d11126..ea6805e8 100644
+--- a/routes/intelligence_memory.py
++++ b/routes/intelligence_memory.py
+@@ -102,6 +102,7 @@ def create_intelligence_memory_router(
+             return JSONResponse({"status": "feature_gated"}, status_code=403)
+         result = await sleeper_season_cache.get_or_rebuild(
+             str(league_id), int(season), source.completed_season_facts,
++            recover_transactions=getattr(source, 'recover_transaction_periods', None),
+         )
+         return JSONResponse({
+             "status": result.status, "season": result.season,
+diff --git a/routes/transactions.py b/routes/transactions.py
+index be43a9e4..04c9c2fb 100644
+--- a/routes/transactions.py
++++ b/routes/transactions.py
+@@ -448,7 +448,8 @@ def create_transactions_router(
+         name = player.get("full_name") or " ".join(
+             value for value in (player.get("first_name"), player.get("last_name")) if value
+         ) or player_id
+-        live = data_platform.player_report(player_id, data, market_fact=report.market_fact)
++        live = data_platform.player_report(player_id, data, market_fact=report.market_fact,
++            projection_service=active.projection if active else projection_service)
+         # Reuse the same selected-week/scoring/generation as the numeric panel.
+         projection_availability = (
+             f"Available · Sleeper week {projection_view['week']} · {projection_view['display']} points"
+diff --git a/services/history.py b/services/history.py
+index 85d5e39f..e1b2595b 100644
+--- a/services/history.py
++++ b/services/history.py
+@@ -543,6 +543,7 @@ def start_background_backfill(fetch: Any, *, league_id: str | None = None) -> as
+                         season = await sleeper_season_cache.get_or_rebuild(
+                             reference.league_id, reference.season,
+                             source.completed_season_facts,
++                            recover_transactions=getattr(source, 'recover_transaction_periods', None),
+                         )
+                         if not season.facts:
+                             raise RuntimeError("provider_season_unavailable")
+diff --git a/src/core/data_platform/evidence_health.py b/src/core/data_platform/evidence_health.py
+new file mode 100644
+index 00000000..e2cbe24c
+--- /dev/null
++++ b/src/core/data_platform/evidence_health.py
+@@ -0,0 +1,106 @@
++"""Bounded, read-only source disclosures for one admitted player context.
++
++Capability is not acquired coverage. No catalog scan, provider IO, preparation,
++cache mutation or intelligence decision belongs in this reporting adapter.
++"""
++from __future__ import annotations
++
++from src.core.player_value_projection.sleeper_actuals import score_number, scoring_identity
++from src.core.projection_intelligence.service import projection_row_compatible
++from src.core.projection_intelligence.sleeper_provider import freshness_state
++
++
++def projection_evidence(player_id, data):
++    league = data.get('league') or {}
++    snapshot = data.get('projection_intelligence') or {}
++    row = (snapshot.get('players') or {}).get(str(player_id)) or {}
++    scoring = data.get('scoring_settings') or league.get('scoring_settings') or {}
++    compatible = bool(league.get('league_id') and scoring
++        and str(snapshot.get('league_id')) == str(league['league_id'])
++        and str(snapshot.get('season')) == str(league.get('season'))
++        and snapshot.get('week') == data.get('week')
++        and snapshot.get('scoring_settings') == scoring
++        and snapshot.get('projection_snapshot_id')
++        and row.get('provider') == 'Sleeper'
++        and projection_row_compatible(snapshot, str(player_id), row))
++    value = score_number(row.get('canonical_projection')) if compatible else None
++    mirror = row.get('weekly_projected_points')
++    if compatible and mirror is not None and score_number(mirror) != value:
++        value = None
++    return dict(value=value, source='Sleeper', availability='cached' if value is not None else 'unavailable',
++        league_id=str(league.get('league_id') or ''), season=snapshot.get('season') if compatible else None,
++        week=snapshot.get('week') if compatible else None,
++        snapshot_id=snapshot.get('projection_snapshot_id') if compatible else None,
++        source_updated_at=row.get('source_timestamp') if compatible else None,
++        prepared_at=snapshot.get('generated_at') if compatible else None,
++        freshness=freshness_state(row.get('source_timestamp')) if compatible else 'Unavailable',
++        reason=None if value is not None else row.get('availability_reason')
++            or row.get('missing_projection_reason') if compatible else 'Compatible player-week projection not prepared.')
++
++
++def player_source_health(player_id, data, configured, *, projection_service=None):
++    """Report this player's retained sample, never an entire source's completeness."""
++    from .provider_activation import provider_catalog
++    from src.core.player_value_projection.canonical_production import prepared_production_context
++
++    health = provider_catalog(configured)
++    league = data.get('league') or {}
++    lid = str(league.get('league_id') or '')
++    scope = dict(league_id=lid, player_id=str(player_id), season=league.get('season'),
++                 coverage='Selected player only; not complete league or season coverage.')
++    projection = projection_evidence(player_id, data)
++    refresh = {}
++    snapshot = data.get('projection_intelligence') or {}
++    if projection['snapshot_id'] and projection_service is not None:
++        refresh = projection_service.refresh_evidence(snapshot)
++
++    def disclosure(name, *, source, state, reason, count=0, stamp=None,
++                   generation=None, freshness='unknown', failure=None, **extra):
++        health[name] = dict(enabled=True, configured_capability=source, status=state,
++            refresh_result='retained_after_failure' if failure else 'prepared_evidence' if count else 'not_prepared',
++            last_refresh=None, next_refresh=None, records_retrieved=None,
++            prepared_observations=count, observation_boundary=stamp,
++            generation=generation, freshness=freshness, refresh_failure=failure or None,
++            scope=scope, reason=reason, **extra)
++
++    available = projection['value'] is not None
++    disclosure('Projections', source='Sleeper', state='available' if available else 'unavailable',
++        reason=('Sleeper projection available for this player and week.' if available else
++                'No compatible scoring projection for this player and week; missing is not zero.'),
++        count=int(available), stamp=projection['prepared_at'], generation=projection['snapshot_id'],
++        freshness=projection['freshness'], failure=refresh,
++        week=projection['week'], source_updated_at=projection['source_updated_at'])
++
++    production = data.get('canonical_player_production') or {}
++    compatible = bool(lid and str(production.get('league_id')) == lid
++        and str(production.get('season')) == str(league.get('season'))
++        and production.get('scoring_fingerprint') == scoring_identity(
++            data.get('scoring_settings') or league.get('scoring_settings') or {}))
++    context = prepared_production_context(production, league_id=lid, player_id=str(player_id), data=data) if compatible else None
++    rows = context.observations if context else ()
++    completed = [row for row in rows if row.get('state') == 'completed']
++    known = sum(score_number(row.get('points')) is not None for row in completed)
++    disclosure('Production', source='Sleeper league matchup results',
++        state='partial' if known and known < len(completed) else 'available' if known else 'unavailable',
++        reason=('Retained completed-week Sleeper scores are available; coverage is an observed sample.' if known else
++                'No compatible completed-week Sleeper score is prepared for this player.'),
++        count=known, stamp=context.updated_at if context else None,
++        generation=context.source_generation if context else None,
++        freshness='retained' if rows else 'unknown',
++        completed_observations=len(completed), live_or_unconfirmed_observations=len(rows)-len(completed))
++
++    analysis = ((production.get('players') or {}).get(str(player_id)) or {}).get('non_sleeper_analysis') or {} if compatible else {}
++    windows = analysis.get('windows') or ()
++    supported = [w for w in windows if w.get('observation_count', 0)
++                 and any(score_number(w.get(k)) is not None for k in ('targets', 'carries', 'receptions'))]
++    checks = production.get('source_checks') or {} if compatible else {}
++    check = checks.get(str(league.get('season'))) or {}
++    disclosure('Usage', source='Auxiliary football statistics; not fantasy results',
++        state='available' if supported else 'unavailable',
++        reason=('Retained targets, carries or receptions are available. Snap and route detail is not connected.' if supported else
++                'No compatible targets, carries or receptions are prepared. Snap and route detail is not connected.'),
++        count=max((w.get('observation_count', 0) for w in supported), default=0),
++        stamp=analysis.get('updated_at'), generation=production.get('reference_generation') if compatible else None,
++        freshness='retained' if supported else 'unknown',
++        failure={'status':check['status'], 'checked_at':check.get('checked_at')} if check.get('status') not in {None, 'complete'} else None)
++    return health
+diff --git a/src/core/data_platform/platform.py b/src/core/data_platform/platform.py
+index 59a5348d..5e47df19 100644
+--- a/src/core/data_platform/platform.py
++++ b/src/core/data_platform/platform.py
+@@ -104,7 +104,7 @@ class DataPlatform:
+     def trend(self, key: str, category: str | None = None):
+         return trend(key, self.warehouse.history(key, category))
+ 
+-    def player_report(self, player_id: str, data: dict[str, Any], *, market_fact=None) -> dict[str, Any]:
++    def player_report(self, player_id: str, data: dict[str, Any], *, market_fact=None, projection_service=None) -> dict[str, Any]:
+         players = data.get("players") or {}
+         resolver = PlayerIdentityResolver(players)
+         player = resolver.resolve(player_id)
+@@ -146,7 +146,13 @@ class DataPlatform:
+             provider.metadata.name: ((market_data.get("providers") or {}).get(provider.metadata.name) or {}).get(player_id)
+             for provider in providers
+         }
+-        return {"normalized_player": asdict(player), "provider_values": tuple(asdict(row) for row in values), "provider_details": details, "consensus": canonical, "market_fact": fact.to_dict(), "market_trend": asdict(self.trend(player_id, "market")), "provider_availability": availability, "provider_health": market_data.get("provider_status") or {}, "attribution": market_data.get("attribution") or {}, "player_context": player_context(player_id, data), "normalization": {"identity": "canonical DTOS player", "contract": "NormalizedPlayer + DataEnvelope", "provider_ids": player.provider_ids}, "unavailable_reasons": tuple(sorted({row.limitations[0] for row in values if row.value is None and row.limitations}))}
++        from .evidence_health import player_source_health
++        health = player_source_health(player_id, data, market_data.get("provider_status") or {},
++                                      projection_service=projection_service)
++        player_details = player_context(player_id, data)
++        for family in ('Production', 'Usage'):
++            player_details['availability'][family.lower()] = health[family]['reason']
++        return {"normalized_player": asdict(player), "provider_values": tuple(asdict(row) for row in values), "provider_details": details, "consensus": canonical, "market_fact": fact.to_dict(), "market_trend": asdict(self.trend(player_id, "market")), "provider_availability": availability, "provider_health": health, "attribution": market_data.get("attribution") or {}, "player_context": player_details, "normalization": {"identity": "canonical DTOS player", "contract": "NormalizedPlayer + DataEnvelope", "provider_ids": player.provider_ids}, "unavailable_reasons": tuple(sorted({row.limitations[0] for row in values if row.value is None and row.limitations}))}
+ 
+     def refresh(self, category: str, context: dict[str, Any], keys: tuple[str, ...], *, provider_name: str | None = None) -> tuple[RefreshResult, ...]:
+         providers = (self.registry.provider(provider_name),) if provider_name else self.registry.providers(category)
+diff --git a/src/core/data_platform/provider_activation.py b/src/core/data_platform/provider_activation.py
+index ded9d53a..cfe4c7bd 100644
+--- a/src/core/data_platform/provider_activation.py
++++ b/src/core/data_platform/provider_activation.py
+@@ -50,6 +50,12 @@ def _status(
+     }
+ 
+ 
++def _evidence_capability(source):
++    return {"enabled": True, "configured_capability": source, "status": "unknown",
++            "last_refresh": None, "next_refresh": None, "records_retrieved": None,
++            "refresh_result": "not_observed", "reason": "Coverage requires the selected league, player and period; configuration alone does not establish it."}
++
++
+ def provider_catalog(existing: dict[str, Any] | None = None) -> dict[str, dict[str, Any]]:
+     """Return complete provider state, including sources DTOS cannot activate."""
+     catalog = dict(existing or {})
+@@ -63,9 +69,9 @@ def provider_catalog(existing: dict[str, Any] | None = None) -> dict[str, dict[s
+             "Sleeper ADP": _status(enabled=False, state="unsupported", result="Disabled", reason="Sleeper's supported public API does not expose an ADP endpoint."),
+             "Underdog ADP": _status(enabled=False, state="unsupported", result="Disabled", reason="No approved public Underdog ADP API is available to this deployment."),
+             "KeepTradeCut": _status(enabled=False, state="unsupported", result="Disabled", reason="No approved public API or licensed integration is configured."),
+-            "Projections": _status(enabled=False, state="unsupported", result="Disabled", reason="No live projection provider has been configured."),
+-            "Production": _status(enabled=True, state="waiting", result="Canonical global background ingestion", reason="Availability depends on the requested source season and retained canonical evidence."),
+-            "Usage": _status(enabled=True, state="waiting", result="Derived targets/carries from canonical production", reason="Snap-share and route detail are not connected."),
++            "Projections": _evidence_capability("Sleeper league-scoped projections"),
++            "Production": _evidence_capability("Sleeper league matchup results"),
++            "Usage": _evidence_capability("Auxiliary targets/carries/receptions; snaps and routes are not connected"),
+         }
+     )
+     return catalog
+@@ -232,10 +238,9 @@ def player_context(player_id: str, data: dict[str, Any]) -> dict[str, Any]:
+     owners = [team for team in data.get("teams") or [] if any(str(row.get("id")) == player_id for row in team.get("players") or [])]
+     transactions = [row for row in data.get("transactions") or [] if player_id in {str(key) for key in (row.get("adds") or {})} or player_id in {str(key) for key in (row.get("drops") or {})}]
+     role = player.get("depth_chart_position") or player.get("depth_chart_order")
+-    snapshot = data.get("projection_intelligence") or {}
+-    league_id = str((data.get("league") or {}).get("league_id") or "")
+-    projection = ((snapshot.get("players") or {}).get(player_id) or {}) if league_id and str(snapshot.get("league_id") or "") == league_id else {}
+-    projected = projection.get("weekly_projected_points")
++    from .evidence_health import projection_evidence
++    evidence = projection_evidence(player_id, data)
++    projected = evidence['value']
+     return {
+         "metadata": {
+             "team": player.get("team"),
+@@ -247,19 +252,11 @@ def player_context(player_id: str, data: dict[str, Any]) -> dict[str, Any]:
+             "depth_chart_order": player.get("depth_chart_order"),
+         },
+         "league": {"trending_adds": adds, "trending_drops": drops, "owned_by": owners[0].get("team_name") if owners else None, "transaction_count": len(transactions), "source": "Sleeper"},
+-        "projection_evidence": {
+-            "value": projected, "source": "Sleeper",
+-            "availability": "cached" if projected is not None else "unavailable",
+-            "league_id": league_id,
+-            "snapshot_id": snapshot.get("projection_snapshot_id") if projection else None,
+-            "season": snapshot.get("season") if projection else None,
+-            "week": snapshot.get("week") if projection else None,
+-            "freshness": projection.get("source_freshness") if projection else None,
+-        },
++        "projection_evidence": evidence,
+         "availability": {
+             "adp": "Sleeper and Underdog do not expose an approved public ADP feed to this deployment.",
+             "production": "Consult canonical_evidence for season-scoped production; this legacy context does not attach a production window.",
+-            "projection": f"Available · Sleeper week {snapshot.get('week')} · {projected} points" if projected is not None else "Canonical Sleeper projection evidence is unavailable for this player in the active league snapshot; missing evidence is not zero.",
++            "projection": f"Available · Sleeper week {evidence.get('week')} · {projected} points" if projected is not None else "Canonical Sleeper projection evidence is unavailable for this player in the active league snapshot; missing evidence is not zero.",
+             "usage": "No supported snap-share or route-usage provider is configured.",
+             "depth_chart_role": None if role is not None else "Sleeper player metadata does not currently provide a depth-chart role for this player.",
+             "bye_week": None if player.get("bye_week") is not None else "Consult canonical_evidence.schedule for source-backed schedule/bye evidence; Sleeper metadata alone does not supply this field.",
+diff --git a/src/core/history_context/season_cache.py b/src/core/history_context/season_cache.py
+index 6e079d07..d983211f 100644
+--- a/src/core/history_context/season_cache.py
++++ b/src/core/history_context/season_cache.py
+@@ -29,8 +29,12 @@ class SeasonSourceUnavailable(ValueError):
+     """Retained evidence could not be decoded; the source is not an empty season."""
+ 
+ 
++class SeasonPublicationChanged(ValueError):
++    """An admitted recovery may not replace a different source publication."""
++
++
+ class SleeperSeasonCache:
+-    # Two idle runtime contexts x six retained seasons x three compact sections.
++    # Bounded compact sections, including optional acquisition metadata.
+     # The separate 8 MiB object budget matches the existing historical memo's
+     # small-footprint allowance; this is not a larger decoded-history cache.
+     MAX_SECTIONS = 36
+@@ -106,7 +110,7 @@ class SleeperSeasonCache:
+                     'maximum_resident_bytes': self.MAX_RESIDENT_BYTES,
+                     'maximum_checksums': self.MAX_CHECKSUMS}
+ 
+-    def _remember(self, path, identity, archive, epoch, names=('league', 'rosters', 'transactions'), *, checksum=False):
++    def _remember(self, path, identity, archive, epoch, names=('league', 'rosters', 'transactions', 'transaction_acquisition'), *, checksum=False):
+         # Size traversal is outside the short publication/metadata lock.
+         rows = [(name, archive.facts.get(name)) for name in names]
+         rows = [(name, value, self._object_bytes(value) + self._object_bytes((path, name, identity)))
+@@ -164,6 +168,13 @@ class SleeperSeasonCache:
+             "draft_picks", "traded_picks", "winners_bracket", "losers_bracket",
+         )
+         normalized = {key: facts.get(key) for key in supported if key in facts}
++        # Optional acquisition clocks are not a required source family. Legacy
++        # readable buckets retain unknown retrieval times rather than file ages.
++        if 'transaction_acquisition' in facts:
++            from .transaction_periods import admitted_metadata
++            league = facts.get('league') or {}
++            normalized['transaction_acquisition'] = admitted_metadata(
++                facts, league.get('league_id'), league.get('season'))
+         completeness = {
+             key: "available" if facts.get(key) is not None else "unavailable"
+             for key in supported
+@@ -207,7 +218,8 @@ class SleeperSeasonCache:
+         with self._checksum_lock:
+             self._invalidate(path)
+ 
+-    def write(self, season: CachedSeason, *, verified_evictions: dict[int, str] | None = None) -> Path:
++    def write(self, season: CachedSeason, *, verified_evictions: dict[int, str] | None = None,
++              expected_identity: tuple | None = None) -> Path:
+         path = self.path(season.league_id, season.season)
+         path.parent.mkdir(parents=True, exist_ok=True)
+         payload = json.dumps({
+@@ -223,6 +235,13 @@ class SleeperSeasonCache:
+             epoch = self._epoch
+         try:
+             with database_gate(self.root / '.season-cache-quota', exclusive=True):
++                if expected_identity is not None:
++                    try:
++                        unchanged = self._identity(path) == expected_identity
++                    except FileNotFoundError:
++                        unchanged = False
++                    if not unchanged:
++                        raise SeasonPublicationChanged('Season publication changed during gap recovery.')
+                 evictions = verified_evictions or {}
+                 for year, checksum in evictions.items():
+                     old = self.read(season.league_id, year)
+@@ -373,9 +392,25 @@ class SleeperSeasonCache:
+     async def get_or_rebuild(
+         self, league_id: str, season: int,
+         fetch_facts: Callable[[str, int], Awaitable[dict[str, Any] | None]],
++        *, recover_transactions=None,
+     ) -> CachedSeason:
++        identity = None
++        if recover_transactions is not None:
++            try:
++                identity = self._identity(self.path(league_id, season))
++            except FileNotFoundError:
++                pass
+         cached = self.read(league_id, season)
+         if cached is not None:
++            if recover_transactions is not None:
++                # Seal the same file that was checksum-verified by read().
++                try:
++                    stable = identity is not None and self._identity(self.path(league_id, season)) == identity
++                except FileNotFoundError:
++                    stable = False
++                if not stable:
++                    return self._latest_season(cached)
++                return await self._recover_transactions(cached, recover_transactions, identity)
+             return cached
+         facts = await fetch_facts(str(league_id), int(season))
+         rebuilt = self.normalize(league_id, season, facts or {})
+@@ -383,6 +418,76 @@ class SleeperSeasonCache:
+             self.write(rebuilt)
+         return rebuilt
+ 
++    def _latest_season(self, cached):
++        latest = self.read(cached.league_id, cached.season)
++        if latest is None:
++            raise SeasonPublicationChanged('Season publication removed during gap recovery.')
++        return latest
++
++    async def _recover_transactions(self, cached, recover, identity):
++        """Fill only unobserved transaction periods during existing preparation.
++
++        Read paths do not invoke this. Complete buckets are never refetched;
++        failed attempts retain source facts and are bounded by a5minute cooldown.
++        """
++        from datetime import datetime, timezone
++        from .coverage import periods
++        from .transaction_periods import SCHEMA, admitted_metadata, record_period
++        from .timestamps import canonical_utc_timestamp
++        league = cached.facts.get('league') or {}
++        if (str(league.get('league_id')) != cached.league_id
++                or str(league.get('season')) != str(cached.season)):
++            return cached  # An alias or unverifiable legacy source is not authority to fetch.
++        coverage = periods(cached.facts, 'transactions')
++        meta = admitted_metadata(cached.facts, cached.league_id, cached.season)
++        now = datetime.now(timezone.utc)
++        missing = []
++        for week in sorted(set(coverage['unacquired'] + coverage['unavailable'] + coverage['malformed'])):
++            attempt = (meta.get('periods', {}).get(str(week)) or {}).get('last_attempt_at')
++            stamp = canonical_utc_timestamp(attempt) if attempt else None
++            if stamp and (now-datetime.fromisoformat(stamp.replace('Z', '+00:00'))).total_seconds() < 300:
++                continue
++            missing.append(week)
++        if not missing:
++            return cached
++        try:
++            buckets, acquired = await recover(cached.league_id, cached.season, tuple(missing))
++        except Exception:
++            buckets, acquired = {}, {}
++        # A concurrent writer's newer publication wins; never overwrite it with
++        # a response prepared against this older archive.
++        try:
++            unchanged = self._identity(self.path(cached.league_id, cached.season)) == identity
++        except FileNotFoundError:
++            unchanged = False
++        if not unchanged:
++            return self._latest_season(cached)
++        old = cached.facts.get('transactions')
++        merged = dict(old) if isinstance(old, dict) else {}
++        meta = {**meta, 'schema': SCHEMA, 'league_id': cached.league_id, 'season': str(cached.season)}
++        valid_meta = admitted_metadata({'transaction_acquisition': acquired}, cached.league_id, cached.season)
++        for week in missing:
++            key = str(week)
++            record = (valid_meta.get('periods') or {}).get(key) or {}
++            rows = buckets.get(key) if isinstance(buckets, dict) else None
++            observed = record.get('state') in {'observed', 'observed_empty'} and isinstance(rows, list) and all(isinstance(r, dict) for r in rows)
++            stamp = record.get('last_attempt_at') or now.isoformat()
++            if observed and not record.get('retrieved_at'):
++                observed = False  # Never invent a successful retrieval clock.
++            if observed:
++                merged[key] = rows
++            meta = record_period(meta, week, rows if observed else None, observed_at=stamp,
++                                 state=None if observed else record.get('state') if record.get('state') in {'failed','unavailable','malformed'} else 'failed')
++        recovered = self.normalize(cached.league_id, cached.season,
++                                   {**cached.facts, 'transactions': merged, 'transaction_acquisition': meta})
++        try:
++            # Recheck under the existing cross-process atomic write/quota gate.
++            # No second full decode on the ordinary unchanged-file path.
++            self.write(recovered, expected_identity=identity)
++        except SeasonPublicationChanged:
++            return self._latest_season(cached)
++        return recovered
++
+     def storage_estimate(self, league_id: str, season_count: int) -> dict[str, int]:
+         """Estimate a complete root namespace from existing compact archives."""
+         files = [
+diff --git a/src/core/history_context/store.py b/src/core/history_context/store.py
+index 321f8b57..d11fba68 100644
+--- a/src/core/history_context/store.py
++++ b/src/core/history_context/store.py
+@@ -282,7 +282,7 @@ class CanonicalHistoryStore:
+             years.add(int(current_year))
+         rows = []
+         for year in sorted(years, reverse=True):
+-            facts = sleeper_season_cache.sections(league_id, year, ('league', 'transactions'))
++            facts = sleeper_season_cache.sections(league_id, year, ('league', 'transactions', 'transaction_acquisition'))
+             league = facts.get('league') or {}
+             # A current activity list is not proof that weekly buckets were acquired.
+             if not league and str(current_year) == str(year):
+@@ -318,7 +318,7 @@ class CanonicalHistoryStore:
+                 for bucket in (facts.get('transactions') or {}).values() if isinstance(bucket, list)
+                 for row in bucket if isinstance(row, dict) and str(row.get('status') or '').casefold() not in known_statuses} if isinstance(facts.get('transactions'), dict) else set()
+             from .transaction_periods import admitted_metadata
+-            acquisition = admitted_metadata(current, league_id, year) if used_current else {}
++            acquisition = admitted_metadata(current, league_id, year) if used_current else admitted_metadata(facts, league.get('league_id'), year)
+             source_week = current.get('week') if str(current_year) == str(year) else None
+             if type(source_week) is int and 0 <= source_week <= 18:
+                 # The selected league/source week is already season-qualified
+diff --git a/src/core/intelligence_memory/sleeper_source.py b/src/core/intelligence_memory/sleeper_source.py
+index 5bb27bc4..a2c6009a 100644
+--- a/src/core/intelligence_memory/sleeper_source.py
++++ b/src/core/intelligence_memory/sleeper_source.py
+@@ -2,6 +2,7 @@
+ from __future__ import annotations
+ 
+ import asyncio
++from datetime import datetime, timezone
+ from typing import Any
+ 
+ import httpx
+@@ -33,6 +34,39 @@ class SleeperHistoricalSource:
+                 league_id, lambda item: self._get(client, f"/league/{item}"),
+             )
+ 
++    async def _transaction_periods(self, client, league_id, season, periods):
++        from src.core.history_context.transaction_periods import SCHEMA, record_period
++        periods = tuple(periods)
++        if len(periods) > 19 or len(set(periods)) != len(periods) or any(
++                type(w) is not int or not 0 <= w <= 18 for w in periods):
++            raise ValueError('Unsupported transaction recovery periods')
++        gate = asyncio.Semaphore(4)
++
++        async def get(week):
++            async with gate:
++                try:
++                    rows = await self._get(client, f'/league/{league_id}/transactions/{week}')
++                    state = None if isinstance(rows, list) and all(isinstance(r, dict) for r in rows) else 'unavailable' if rows is None else 'malformed'
++                except Exception:
++                    rows, state = None, 'failed'
++                return week, rows, state, datetime.now(timezone.utc).isoformat()
++
++        metadata = dict(schema=SCHEMA, league_id=str(league_id), season=str(season), periods={})
++        buckets = {}
++        for week, rows, state, stamp in await asyncio.gather(*(get(w) for w in periods)):
++            buckets[str(week)] = rows if state is None else None
++            metadata = record_period(metadata, week, rows, observed_at=stamp, state=state)
++        return buckets, metadata
++
++    async def recover_transaction_periods(self, league_id, season, periods):
++        """Only requested gaps from an already verified source league/season.
++
++        Called by admitted cache preparation, never a renderer. Four requests
++        at once, at most19periods, no whole-season refetch or automatic loop.
++        """
++        async with httpx.AsyncClient(timeout=self.timeout, headers=request_headers()) as client:
++            return await self._transaction_periods(client, league_id, season, periods)
++
+     async def completed_season_facts(
+         self, league_id: str, season: int,
+     ) -> dict[str, Any] | None:
+@@ -59,10 +93,8 @@ class SleeperHistoricalSource:
+                 self._get(client, f"/league/{league_id}/matchups/{week}")
+                 for week in weeks
+             ))
+-            transaction_rows = await asyncio.gather(*(
+-                self._get(client, f"/league/{league_id}/transactions/{week}")
+-                for week in transaction_weeks
+-            ))
++            transaction_rows, acquisition = await self._transaction_periods(
++                client, league_id, season, transaction_weeks)
+             draft_rows = []
+             for index, draft in enumerate(drafts or ()):
+                 detail = await self._get(client, f"/draft/{draft.get('draft_id')}") if draft.get("draft_id") else None
+@@ -82,7 +114,7 @@ class SleeperHistoricalSource:
+         return {
+             "league": league, "users": users, "rosters": rosters,
+             "matchups": {str(index): rows for index, rows in enumerate(matchup_rows, 1)},
+-            "transactions": {str(index): rows for index, rows in zip(transaction_weeks, transaction_rows)},
++            "transactions": transaction_rows, "transaction_acquisition": acquisition,
+             "drafts": drafts, "draft_picks": draft_rows,
+             "traded_picks": traded_picks, "winners_bracket": brackets[0],
+             "losers_bracket": brackets[1], "season": int(season),
+diff --git a/tests/test_history_period_recovery.py b/tests/test_history_period_recovery.py
+new file mode 100644
+index 00000000..a3e27610
+--- /dev/null
++++ b/tests/test_history_period_recovery.py
+@@ -0,0 +1,157 @@
++"""Recover only source-supported gaps during preparation, never on page reads."""
++from copy import deepcopy
++from pathlib import Path
++import tempfile
++import unittest
++from unittest.mock import AsyncMock, patch
++
++import httpx
++from src.core.history_context.season_cache import SleeperSeasonCache
++from src.core.history_context.coverage import periods
++from src.core.intelligence_memory.sleeper_source import SleeperHistoricalSource
++
++
++def facts(lid='A', season=2025):
++    return dict(league={'league_id':lid, 'season':str(season), 'status':'complete'},
++        users=[], rosters=[], matchups={}, drafts=[], draft_picks=[], traded_picks=[],
++        winners_bracket=[], losers_bracket=[], transactions={str(w):[] for w in range(1,19)})
++
++
++class HistoryPeriodRecoveryTests(unittest.IsolatedAsyncioTestCase):
++    def setUp(self):
++        self.directory = self.enterContext(tempfile.TemporaryDirectory())
++        self.cache = SleeperSeasonCache(Path(self.directory))
++        self.original = facts()
++        self.original['transactions']['2'] = [{'transaction_id':'retained', 'type':'trade', 'status':'complete'}]
++        self.cache.write(self.cache.normalize('A',2025,self.original))
++        self.full = AsyncMock(side_effect=AssertionError('No whole-season fetch for a retained cache'))
++
++    async def recover(self, response, *, cache=None, lid='A', season=2025):
++        calls = []
++        def handler(request):
++            calls.append(request.url.path)
++            return response(request) if callable(response) else httpx.Response(response[0], json=response[1])
++        client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
++        source = SleeperHistoricalSource(base_url='https://fixture.invalid')
++        with patch('src.core.intelligence_memory.sleeper_source.httpx.AsyncClient',return_value=client):
++            result = await (cache or self.cache).get_or_rebuild(lid,season,self.full,
++                recover_transactions=source.recover_transaction_periods)
++        return result,calls
++
++    async def test_legacy_missing_week_zero_recovers_only_zero_and_preserves_unknown_old_clocks(self):
++        result,calls = await self.recover((200,[]))
++        self.assertEqual(calls,['/league/A/transactions/0'])
++        self.assertEqual(result.facts['transactions']['0'],[])
++        self.assertEqual(result.facts['transactions']['2'],self.original['transactions']['2'])
++        metadata = result.facts['transaction_acquisition']['periods']
++        self.assertEqual(metadata['0']['state'],'observed_empty')
++        self.assertIsNotNone(metadata['0']['retrieved_at'])
++        self.assertNotIn('1',metadata)
++        self.assertTrue(periods(result.facts,'transactions')['complete_acquisition'])
++        again,calls = await self.recover((500,None))
++        self.assertFalse(calls)
++        self.assertEqual(again.checksum,result.checksum)
++        self.full.assert_not_awaited()
++
++    async def test_failed_unavailable_and_malformed_are_not_empty_or_data_loss_and_cool_down(self):
++        for response, expected in (((500,{}),'failed'),((404,None),'unavailable'),((200,{}),'malformed')):
++            self.cache.write(self.cache.normalize('A',2025,self.original))
++            result,calls = await self.recover(response)
++            self.assertEqual(len(calls),1)
++            self.assertEqual(result.facts['transactions'],self.original['transactions'])
++            row = result.facts['transaction_acquisition']['periods']['0']
++            self.assertEqual(row['state'],expected)
++            self.assertIsNone(row['retrieved_at'])
++            self.assertFalse(periods(result.facts,'transactions')['complete_acquisition'])
++            _,calls = await self.recover((200,[]))
++            self.assertEqual(calls,[])
++
++    async def test_only_missing_buckets_are_requested_and_valid_zero_empty_is_not_missing(self):
++        original=deepcopy(self.original)
++        original['transactions'].update({'0':[], '3':None, '7':'bad'})
++        del original['transactions']['8']
++        self.cache.write(self.cache.normalize('A',2025,original))
++        result,calls=await self.recover((200,[]))
++        self.assertEqual(set(calls),{f'/league/A/transactions/{w}' for w in (3,7,8)})
++        self.assertEqual(result.facts['transactions']['2'],original['transactions']['2'])
++        self.assertTrue(periods(result.facts,'transactions')['complete_acquisition'])
++
++    async def test_foreign_source_identity_is_never_authority_to_recover(self):
++        original=deepcopy(self.original)
++        original['league']['league_id']='B'
++        self.cache.write(self.cache.normalize('A',2025,original))
++        result,calls=await self.recover((200,[]))
++        self.assertEqual(calls,[])
++        self.assertNotIn('0',result.facts['transactions'])
++
++    async def test_source_bounds_and_refresh_failure_preserve_original_archive(self):
++        source=SleeperHistoricalSource()
++        for periods_to_get in ((-1,), (19,), (True,), (0,0), tuple(range(20))):
++            with self.assertRaises(ValueError):
++                await source._transaction_periods(None,'A',2025,periods_to_get)
++        before=self.cache.read('A',2025)
++        failing=AsyncMock(side_effect=RuntimeError('fixture transport failed'))
++        result=await self.cache.get_or_rebuild('A',2025,self.full,recover_transactions=failing)
++        self.assertEqual(result.facts['transactions'],before.facts['transactions'])
++        self.assertIsNone(result.facts['transaction_acquisition']['periods']['0']['retrieved_at'])
++
++    async def test_concurrent_new_publication_wins_over_old_recovery(self):
++        newer=deepcopy(self.original)
++        newer['transactions']['0']=[{'transaction_id':'concurrent'}]
++        async def recover(*args):
++            self.cache.write(self.cache.normalize('A',2025,newer))
++            return {},{}
++        result=await self.cache.get_or_rebuild('A',2025,self.full,recover_transactions=recover)
++        self.assertEqual(result.facts['transactions']['0'],newer['transactions']['0'])
++        # The writer can also arrive after the optimistic read/check, directly
++        # before commit. Only a compare-and-publish inside the write gate wins.
++        self.cache.write(self.cache.normalize('A',2025,self.original))
++        from src.core.history_context.transaction_periods import SCHEMA, record_period
++        from datetime import datetime, timezone
++        async def observed(*args):
++            meta=record_period({'schema':SCHEMA,'league_id':'A','season':'2025','periods':{}},0,[],
++                               observed_at=datetime.now(timezone.utc).isoformat())
++            return {'0':[]},meta
++        writer=self.cache.write
++        def late_writer(candidate,**kwargs):
++            writer(self.cache.normalize('A',2025,newer))
++            return writer(candidate,**kwargs)
++        with patch.object(self.cache,'write',side_effect=late_writer):
++            result=await self.cache.get_or_rebuild('A',2025,self.full,recover_transactions=observed)
++        self.assertEqual(result.facts['transactions']['0'],newer['transactions']['0'])
++        self.assertEqual(self.cache.read('A',2025).checksum,result.checksum)
++
++    async def test_ordinary_cache_reads_and_warm_metadata_do_not_call_source_or_decode_again(self):
++        result,_=await self.recover((200,[]))
++        self.cache.clear_resident()
++        fields=('league','transactions','transaction_acquisition')
++        first=self.cache.sections('A',2025,fields)
++        with patch.object(self.cache,'read',side_effect=AssertionError('No repeat decode on warm read')):
++            second=self.cache.sections('A',2025,fields)
++        self.assertEqual(second,first)
++        self.assertEqual(second['transaction_acquisition'],result.facts['transaction_acquisition'])
++        self.full.assert_not_awaited()
++
++    async def test_rendered_history_updates_coverage_and_keeps_supporting_events(self):
++        from tests import test_current_season_franchise_history as fixtures
++        # Reuse the fixture on this running async test case so its patches and
++        # async cleanups are owned by the real runner, not an unrun nested case.
++        fixtures.CurrentSeasonRuntimeHistoryTests.setUp(self)
++        await fixtures.CurrentSeasonRuntimeHistoryTests.restore(self)
++        f=self
++        lid=f.runtime.league_id
++        year=int(f.data['league']['season'])-1
++        original=facts(lid,year)
++        f.cache.write(f.cache.normalize(lid,year,original))
++        path=f'/history/team/{lid}:franchise:1?season={year}'
++        before=f.client.get(path)
++        self.assertEqual(before.status_code,200)
++        self.assertIn('18 of 19 supported source weeks retrieved',before.text)
++        self.assertIn('Not retrieved: weeks 0',before.text)
++        _,calls=await self.recover((200,[]),cache=f.cache,lid=lid,season=year)
++        self.assertEqual(calls,[f'/league/{lid}/transactions/0'])
++        after=f.client.get(path)
++        self.assertEqual(after.status_code,200)
++        self.assertIn('19 of 19 supported source weeks retrieved',after.text)
++        self.assertNotIn('Not retrieved: weeks 0',after.text)
++        f.sync.assert_not_called()
+diff --git a/tests/test_player_api.py b/tests/test_player_api.py
+index 56a99ed9..36001617 100644
+--- a/tests/test_player_api.py
++++ b/tests/test_player_api.py
+@@ -136,8 +136,14 @@ class PlayerApiContractTests(unittest.TestCase):
+         self.assertIn("Availability reason", valid.text)
+         self.assertIn("9100", valid.text)
+         self.assertIn("FantasyCalc", valid.text)
+-        self.assertIn("No season result summary is prepared here.", valid.text)
+-        self.assertIn("Career History below; missing production is not zero points.", valid.text)
++        self.assertIn("No compatible completed-week Sleeper score is prepared for this player.", valid.text)
++        self.assertIn("Open observed historical performance", valid.text)
++        intelligence = self.client.get("/api/players/player%20one/intelligence").json()
++        production = intelligence["provider_health"]["Production"]
++        self.assertEqual(production["status"], "unavailable")
++        self.assertEqual(production["scope"]["league_id"], "league-1")
++        self.assertEqual(production["prepared_observations"], 0)
++        self.assertIsNone(intelligence["player_context"]["projection_evidence"]["value"])
+         self.assertNotIn("No supported production-stat provider is configured", valid.text)
+         self.assertNotIn("Market Consensus</div><div class=\"stat\">Unavailable", valid.text)
+         self.assertEqual(self.client.get("/players/").status_code, 404)
+diff --git a/tests/test_provider_activation.py b/tests/test_provider_activation.py
+index 4a99a2a2..fd4ff468 100644
+--- a/tests/test_provider_activation.py
++++ b/tests/test_provider_activation.py
+@@ -126,7 +126,7 @@ class ProviderActivationTests(unittest.IsolatedAsyncioTestCase):
+ 
+     def test_unsupported_providers_have_specific_reasons(self) -> None:
+         catalog = provider_catalog()
+-        for name in ("Sleeper ADP", "Underdog ADP", "KeepTradeCut", "Projections"):
++        for name in ("Sleeper ADP", "Underdog ADP", "KeepTradeCut"):
+             self.assertFalse(catalog[name]["enabled"])
+             self.assertTrue(catalog[name]["reason"])
+ 
+@@ -139,10 +139,10 @@ class ProviderActivationTests(unittest.IsolatedAsyncioTestCase):
+         self.assertIn("canonical_evidence", context["availability"]["production"])
+ 
+     def test_projection_availability_uses_only_active_league_canonical_snapshot(self) -> None:
+-        data = {"players": self.players, "league": {"league_id": "A"},
+-                "projection_intelligence": {"league_id": "A", "season": 2026,
++        data = {"players": self.players, "league": {"league_id": "A", "season": "2026"}, "week": 1, "scoring_settings": {"rec": 1},
++                "projection_intelligence": {"league_id": "A", "season": 2026, "scoring_settings": {"rec": 1},
+                     "week": 1, "projection_snapshot_id": "generation-a",
+-                    "players": {"9509": {"weekly_projected_points": 0.0,
++                    "players": {"9509": {"provider": "Sleeper", "canonical_projection": 0.0, "weekly_projected_points": 0.0,
+                                           "source_freshness": "fresh"}}}}
+         context = player_context("9509", data)
+         self.assertEqual(context["availability"]["projection"], "Available · Sleeper week 1 · 0.0 points")
+diff --git a/tests/test_scoped_source_health.py b/tests/test_scoped_source_health.py
+new file mode 100644
+index 00000000..3fbdb534
+--- /dev/null
++++ b/tests/test_scoped_source_health.py
+@@ -0,0 +1,155 @@
++"""Source disclosures are scoped observations, never new calculation inputs."""
++from copy import deepcopy
++from datetime import datetime, timedelta, timezone
++import unittest
++from unittest.mock import Mock, patch, AsyncMock
++
++from fastapi import FastAPI
++from fastapi.testclient import TestClient
++from src.core.data_platform.defaults import build_data_platform
++from src.core.data_platform.provider_activation import provider_catalog
++from tests import test_sleeper_actual_results as native
++
++
++class ScopedSourceHealthTests(unittest.TestCase):
++    def setUp(self):
++        self.data = native.actual_data()
++        self.data['players']['4984'] = {'full_name': 'Fixture Quarterback', 'position': 'QB', 'team': 'BUF'}
++        native.publish(self.data)
++        self.data['market_data'] = {'provider_status': provider_catalog()}
++        stamp = datetime.now(timezone.utc).isoformat()
++        self.data['projection_intelligence'] = {
++            'league_id': 'A', 'season': 2026, 'week': 9, 'projection_snapshot_id': 'leaf-a',
++            'scoring_settings': self.data['scoring_settings'], 'generated_at': stamp,
++            'players': {'4984': {'provider': 'Sleeper', 'canonical_projection': 20.424,
++                'weekly_projected_points': 20.424, 'source_timestamp': stamp}}}
++        self.platform = build_data_platform()
++
++    def report(self, **kwargs):
++        return self.platform.player_report('4984', self.data, **kwargs)
++
++    def test_prepared_projection_and_actuals_do_not_claim_disabled_or_waiting(self):
++        before = deepcopy(self.data)
++        report = self.report()
++        health = report['provider_health']
++        self.assertEqual(report['player_context']['projection_evidence']['value'], 20.424)
++        self.assertEqual(health['Projections']['status'], 'available')
++        self.assertEqual(health['Projections']['prepared_observations'], 1)
++        self.assertEqual(health['Projections']['scope']['player_id'], '4984')
++        self.assertIsNone(health['Projections']['records_retrieved'])
++        self.assertEqual(health['Production']['prepared_observations'], 8)
++        self.assertEqual(health['Production']['status'], 'available')
++        self.assertIn('observed sample', health['Production']['reason'])
++        self.assertEqual(self.data, before)
++
++    def test_capability_without_context_has_unknown_coverage_and_no_invented_clock(self):
++        for name in ('Projections', 'Production', 'Usage'):
++            row = provider_catalog()[name]
++            self.assertTrue(row['enabled'])
++            self.assertEqual(row['status'], 'unknown')
++            self.assertIsNone(row['last_refresh'])
++            self.assertIsNone(row['records_retrieved'])
++
++    def test_one_supported_player_never_marks_another_player_or_catalog_complete(self):
++        self.data['players']['other'] = {'full_name':'Other Fixture', 'position':'RB'}
++        report = self.platform.player_report('other', self.data)
++        for family in ('Projections','Production','Usage'):
++            self.assertEqual(report['provider_health'][family]['status'],'unavailable')
++            self.assertEqual(report['provider_health'][family]['prepared_observations'],0)
++            self.assertEqual(report['provider_health'][family]['scope']['player_id'],'other')
++        self.assertEqual(self.report()['provider_health']['Projections']['status'],'available')
++
++    def test_default_and_connected_restore_report_same_native_result_coverage(self):
++        from tests import test_sleeper_actual_restoration as fixtures
++        f = fixtures.ActualRestorationTests()
++        self.addCleanup(f.doCleanups)
++        _, data = f.fixture()
++        reports = []
++        for default in (True,False):
++            restored = f.restore(deepcopy(data),default=default)
++            report = self.platform.player_report('1',restored)
++            health = report['provider_health']['Production']
++            self.assertEqual(health['status'],'available')
++            self.assertEqual(health['prepared_observations'],8)
++            reports.append(health)
++        self.assertEqual(reports[0],reports[1])
++
++    def test_zero_negative_missing_and_placeholder_only_projection_remain_distinct(self):
++        row = self.data['projection_intelligence']['players']['4984']
++        for value in (0, -2.125, None):
++            row.update(canonical_projection=value, weekly_projected_points=value)
++            report = self.report()
++            self.assertEqual(report['player_context']['projection_evidence']['value'], value)
++            self.assertEqual(report['provider_health']['Projections']['status'], 'unavailable' if value is None else 'available')
++        row.update(projected_stats={'adp_dynasty': 8}, missing_projection_reason='NO_SCORING_STATISTICS')
++        self.assertIsNone(self.report()['player_context']['projection_evidence']['value'])
++        row.update(canonical_projection=0, weekly_projected_points=1)
++        self.assertEqual(self.report()['provider_health']['Projections']['status'], 'unavailable')
++
++    def test_aging_and_failed_refresh_preserve_value_and_original_clocks(self):
++        row = self.data['projection_intelligence']['players']['4984']
++        row['source_timestamp'] = (datetime.now(timezone.utc)-timedelta(days=2)).isoformat()
++        service = Mock()
++        service.refresh_evidence.return_value = {'retained_publication': True, 'failed_at': '2026-11-15T00:00:00Z'}
++        report = self.report(projection_service=service)
++        self.assertEqual(report['provider_health']['Projections']['freshness'], 'Stale')
++        self.assertTrue(report['provider_health']['Projections']['refresh_failure']['retained_publication'])
++        self.assertEqual(report['player_context']['projection_evidence']['value'], 20.424)
++        self.assertEqual(report['provider_health']['Projections']['source_updated_at'], row['source_timestamp'])
++
++    def test_foreign_league_season_scoring_and_generation_are_not_admitted(self):
++        original = deepcopy(self.data)
++        for field, value in (('league_id', 'B'), ('season', 2025), ('week', 10),
++                             ('scoring_settings', {'rec': 99}), ('projection_snapshot_id', None)):
++            self.data = deepcopy(original)
++            self.data['projection_intelligence'][field] = value
++            report = self.report()
++            self.assertIsNone(report['player_context']['projection_evidence']['value'])
++            self.assertEqual(report['provider_health']['Projections']['status'], 'unavailable')
++        self.data = deepcopy(original)
++        self.data['canonical_player_production']['league_id'] = 'B'
++        self.assertEqual(self.report()['provider_health']['Production']['status'], 'unavailable')
++
++    def test_partial_native_scores_and_auxiliary_usage_remain_independent(self):
++        self.data = native.actual_data(scores=(0, -2.125, None))
++        self.data['players']['4984'] = {'full_name': 'Fixture Quarterback', 'position': 'QB'}
++        production = native.publish(self.data)
++        production['players']['4984'] = {'non_sleeper_analysis': {
++            'updated_at': native.STAMP, 'windows': [{'label': 'Season Average',
++            'observation_count': 3, 'targets': 0, 'carries': 2, 'fantasy_points': None}]}}
++        production['source_checks'] = {'2026': {'status': 'failed', 'checked_at': native.STAMP}}
++        health = self.report()['provider_health']
++        self.assertEqual(health['Production']['status'], 'partial')
++        self.assertEqual(health['Production']['prepared_observations'], 2)
++        self.assertEqual(health['Usage']['status'], 'available')
++        self.assertEqual(health['Usage']['refresh_failure']['status'], 'failed')
++        self.assertIn('not fantasy results', health['Usage']['configured_capability'])
++        self.assertEqual(health['Usage']['observation_boundary'], native.STAMP)
++
++    def test_rendered_api_uses_same_scoped_health_without_refresh_or_mutation(self):
++        from routes.api import create_api_router
++        app = FastAPI()
++        ensure, sync = AsyncMock(), AsyncMock(side_effect=AssertionError('No sync on read'))
++        app.include_router(create_api_router(ensure_fresh=ensure, require_data=lambda:self.data,
++            sync_sleeper=sync, state={'data':self.data}, league_id='A'))
++        before = deepcopy(self.data)
++        with patch('routes.api.data_platform', self.platform), patch('services.global_evidence.canonical_player_evidence', return_value={}):
++            with TestClient(app) as client:
++                payload = client.get('/api/players/4984/intelligence').json()
++                self.assertEqual(payload['player_context']['projection_evidence']['value'], 20.424)
++                self.assertEqual(payload['provider_health']['Projections']['status'], 'available')
++                self.assertEqual(payload['provider_health']['Production']['prepared_observations'], 8)
++                self.data['league']['league_id'] = 'B'
++                self.assertEqual(client.get('/api/players/4984/intelligence').status_code, 503)
++        sync.assert_not_called()
++        self.data['league']['league_id'] = 'A'
++        self.assertEqual(self.data, before)
++
++    def test_rendered_dossier_preserves_supported_actual_results(self):
++        from tests import test_current_production_coverage as fixtures
++        f = fixtures.ProductionViewFixture(self)
++        response = f.f.client.get('/players/1?front_office=4')
++        self.assertEqual(response.status_code, 200)
++        self.assertNotIn('this legacy context does not attach a production window', response.text)
++        self.assertIn('18.00 fantasy points per score observation', response.text)
++        self.assertIn('8 of 8 completed-week score observations', response.text)
