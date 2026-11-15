@@ -1,0 +1,133 @@
+[
+  {
+    "observed_at": "2026-11-15T19:20:49.541382+00:00",
+    "command": [
+      "gh",
+      "api",
+      "repos/nflverse/nflverse-data/contents/LICENSE.md"
+    ],
+    "exit_code": 0,
+    "stderr": "",
+    "stdout_file": "sources/nflverse-data-license.txt"
+  },
+  {
+    "observed_at": "2026-11-15T19:20:50.001487+00:00",
+    "command": [
+      "gh",
+      "api",
+      "repos/nflverse/nflreadr/contents/README.md"
+    ],
+    "exit_code": 0,
+    "stderr": "",
+    "stdout_file": "sources/nflreadr-readme.txt"
+  },
+  {
+    "observed_at": "2026-11-15T19:20:50.473053+00:00",
+    "command": [
+      "gh",
+      "api",
+      "repos/nflverse/nflreadpy/contents/README.md"
+    ],
+    "exit_code": 0,
+    "stderr": "",
+    "stdout_file": "sources/nflreadpy-readme.txt"
+  },
+  {
+    "observed_at": "2026-11-15T19:20:51.088093+00:00",
+    "command": [
+      "gh",
+      "api",
+      "repos/nflverse/nflverse-data/releases/tags/snap_counts"
+    ],
+    "exit_code": 0,
+    "stderr": "",
+    "stdout_file": "sources/snap-release.txt"
+  },
+  {
+    "observed_at": "2026-11-15T19:20:51.638319+00:00",
+    "command": [
+      "gh",
+      "api",
+      "repos/nflverse/nflverse-data/issues/106"
+    ],
+    "exit_code": 0,
+    "stderr": "",
+    "stdout_file": "sources/licensing-issue-106.txt"
+  },
+  {
+    "observed_at": "2026-11-15T19:20:52.187410+00:00",
+    "command": [
+      "gh",
+      "api",
+      "repos/nflverse/nflverse-data/issues/106/comments"
+    ],
+    "exit_code": 0,
+    "stderr": "",
+    "stdout_file": "sources/licensing-issue-106-comments.txt"
+  },
+  {
+    "observed_at": "2026-11-15T19:20:52.525337+00:00",
+    "command": [
+      "gh",
+      "api",
+      "repos/Richarddavis47/dtos/commits/main"
+    ],
+    "exit_code": 0,
+    "stderr": "",
+    "stdout_file": "sources/production-main.txt"
+  },
+  {
+    "observed_at": "2026-11-15T19:20:53.056306+00:00",
+    "command": [
+      "gh",
+      "api",
+      "repos/Richarddavis47/dtos/git/ref/tags/v1.22.43"
+    ],
+    "exit_code": 1,
+    "stderr": "gh: Not Found (HTTP 404)\n",
+    "stdout_file": "sources/next-tag-check.txt"
+  },
+  {
+    "observed_at": "2026-11-15T19:20:53.393527+00:00",
+    "command": [
+      "git",
+      "log",
+      "-1",
+      "--format=%H %T"
+    ],
+    "exit_code": 0,
+    "stderr": "",
+    "stdout_file": "sources/source-identity.txt"
+  },
+  {
+    "observed_at": "2026-11-15T19:20:53.398609+00:00",
+    "command": [
+      "sed",
+      "-n",
+      "520,551p",
+      "dtos_app.py"
+    ],
+    "exit_code": 0,
+    "stderr": "",
+    "stdout_file": "sources/existing-scheduler.txt"
+  },
+  {
+    "observed_at": "2026-11-15T19:20:53.402334+00:00",
+    "command": [
+      "sed",
+      "-n",
+      "111,123p",
+      "docs/BATCH2_CANONICAL_DATA_FOUNDATION.md"
+    ],
+    "exit_code": 0,
+    "stderr": "",
+    "stdout_file": "sources/prior-source-review.txt"
+  },
+  {
+    "observed_at": "2026-11-15T19:20:53.404406+00:00",
+    "method": "GET",
+    "url": "https://dtos.onrender.com/health/ready",
+    "status": 200,
+    "output_file": "sources/production-readiness.json"
+  }
+]
