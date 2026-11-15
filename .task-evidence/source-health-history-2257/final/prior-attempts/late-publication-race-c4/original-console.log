@@ -1,0 +1,29 @@
+test_newer_observed_transaction_must_not_be_overwritten (__main__.LatePublicationRace.test_newer_observed_transaction_must_not_be_overwritten) ... {"returned_period_2": [], "stored_period_2": [], "scope": "Controlled second writer after recovery freshness read, before atomic replacement. No production involvement."}
+FAIL
+
+======================================================================
+FAIL: test_newer_observed_transaction_must_not_be_overwritten (__main__.LatePublicationRace.test_newer_observed_transaction_must_not_be_overwritten)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.14/asyncio/runners.py", line 127, in run
+    return self._loop.run_until_complete(task)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "/usr/local/lib/python3.14/asyncio/base_events.py", line 719, in run_until_complete
+    return future.result()
+           ~~~~~~~~~~~~~^^
+  File "/evidence/reproduce-late-publication-race.py", line 18, in test_newer_observed_transaction_must_not_be_overwritten
+    self.assertEqual(result.facts['transactions']['2'],newer['transactions']['2'])
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Lists differ: [] != [{'transaction_id': 'newer-observation', 'type': 'trade', 'status': 'complete'}]
+
+Second list contains 1 additional elements.
+First extra element 0:
+{'transaction_id': 'newer-observation', 'type': 'trade', 'status': 'complete'}
+
+- []
++ [{'status': 'complete', 'transaction_id': 'newer-observation', 'type': 'trade'}]
+
+----------------------------------------------------------------------
+Ran 1 test in 0.017s
+
+FAILED (failures=1)

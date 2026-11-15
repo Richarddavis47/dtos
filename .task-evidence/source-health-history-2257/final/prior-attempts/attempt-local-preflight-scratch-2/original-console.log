@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "/workspace/2257-source-health/start-official-local.py", line 10, in <module>
+    free=shutil.disk_usage(B).free;assert free>8*1024**3+2400000000,('Insufficient actual scratch; no weakening',free)
+                                          ^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ('Insufficient actual scratch; no weakening', 10827993088)

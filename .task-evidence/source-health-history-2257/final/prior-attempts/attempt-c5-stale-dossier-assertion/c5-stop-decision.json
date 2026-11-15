@@ -1,0 +1,21 @@
+{
+  "source": {
+    "baseline": "7d61325f86dc11cb4cbd597204f275fa1a77e6dc",
+    "baseline_tree": "bb1cc8346184de92e9be29a49824f3da3cde9894",
+    "candidate": "7f2304ea64c1315dbd91c2ec31ef01b9f392ef59",
+    "tree": "f03eabe78894d881b61efe9339fbd7da35e5f447",
+    "branch": "fix/source-health-history-2257",
+    "version": "1.22.42",
+    "build": 2257,
+    "expected_test_count": 4531,
+    "pr": 346
+  },
+  "decision_at": "2026-11-15T07:40:15.073342+00:00",
+  "reason": "Final hosted original4531tests has one reproduced obsolete dossier-wording assertion. Required candidate known failed; stop its now redundant incomplete local run before test-only correction, preserve originals, then validate final exact source. No healthy final-source pass discarded.",
+  "hosted_run": 43686173952,
+  "artifact": 14151614880,
+  "artifact_sha256": "f10a3d44052a84ab1a9f5951e29fad9c00d69fccf2fc8b18fdc27aadce871e5a",
+  "matched_reproduction": "c5-dossier-before/result.json",
+  "tests_will_not_be_waived": true,
+  "application_changes_needed": false
+}

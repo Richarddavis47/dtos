@@ -1,0 +1,34 @@
+{
+  "source": {
+    "baseline": "7d61325f86dc11cb4cbd597204f275fa1a77e6dc",
+    "baseline_tree": "bb1cc8346184de92e9be29a49824f3da3cde9894",
+    "candidate": "7f2304ea64c1315dbd91c2ec31ef01b9f392ef59",
+    "tree": "f03eabe78894d881b61efe9339fbd7da35e5f447",
+    "branch": "fix/source-health-history-2257",
+    "version": "1.22.42",
+    "build": 2257,
+    "expected_test_count": 4531,
+    "pr": 346
+  },
+  "test_ids": [
+    "test_history_period_recovery.HistoryPeriodRecoveryTests.test_concurrent_new_publication_wins_over_old_recovery",
+    "test_history_period_recovery.HistoryPeriodRecoveryTests.test_failed_unavailable_and_malformed_are_not_empty_or_data_loss_and_cool_down",
+    "test_history_period_recovery.HistoryPeriodRecoveryTests.test_foreign_source_identity_is_never_authority_to_recover",
+    "test_history_period_recovery.HistoryPeriodRecoveryTests.test_legacy_missing_week_zero_recovers_only_zero_and_preserves_unknown_old_clocks",
+    "test_history_period_recovery.HistoryPeriodRecoveryTests.test_only_missing_buckets_are_requested_and_valid_zero_empty_is_not_missing",
+    "test_history_period_recovery.HistoryPeriodRecoveryTests.test_ordinary_cache_reads_and_warm_metadata_do_not_call_source_or_decode_again",
+    "test_history_period_recovery.HistoryPeriodRecoveryTests.test_rendered_history_updates_coverage_and_keeps_supporting_events",
+    "test_history_period_recovery.HistoryPeriodRecoveryTests.test_source_bounds_and_refresh_failure_preserve_original_archive",
+    "test_scoped_source_health.ScopedSourceHealthTests.test_aging_and_failed_refresh_preserve_value_and_original_clocks",
+    "test_scoped_source_health.ScopedSourceHealthTests.test_capability_without_context_has_unknown_coverage_and_no_invented_clock",
+    "test_scoped_source_health.ScopedSourceHealthTests.test_default_and_connected_restore_report_same_native_result_coverage",
+    "test_scoped_source_health.ScopedSourceHealthTests.test_foreign_league_season_scoring_and_generation_are_not_admitted",
+    "test_scoped_source_health.ScopedSourceHealthTests.test_one_supported_player_never_marks_another_player_or_catalog_complete",
+    "test_scoped_source_health.ScopedSourceHealthTests.test_partial_native_scores_and_auxiliary_usage_remain_independent",
+    "test_scoped_source_health.ScopedSourceHealthTests.test_prepared_projection_and_actuals_do_not_claim_disabled_or_waiting",
+    "test_scoped_source_health.ScopedSourceHealthTests.test_rendered_api_uses_same_scoped_health_without_refresh_or_mutation",
+    "test_scoped_source_health.ScopedSourceHealthTests.test_rendered_dossier_preserves_supported_actual_results",
+    "test_scoped_source_health.ScopedSourceHealthTests.test_zero_negative_missing_and_placeholder_only_projection_remain_distinct"
+  ],
+  "scope": "Source AST inventory only, not a test pass. Actual final-source canonical/local start/stop evidence required."
+}

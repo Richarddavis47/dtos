@@ -1,0 +1,17 @@
+{
+  "source": {
+    "baseline": "7d61325f86dc11cb4cbd597204f275fa1a77e6dc",
+    "baseline_tree": "bb1cc8346184de92e9be29a49824f3da3cde9894",
+    "candidate": "ac83027bff540d495eecad11594a2fd269c9bada",
+    "tree": "73699b9bc64eb97c374d21b24d7acc14192a2760",
+    "branch": "fix/source-health-history-2257",
+    "version": "1.22.42",
+    "build": 2257,
+    "expected_test_count": 4531,
+    "pr": 346
+  },
+  "at": "2026-11-15T06:30:52.520349+00:00",
+  "reason": "Deterministic candidate-only late-writer control lost a newer observed transaction; source is not releasable. Stop its incomplete full local to avoid continuing obsolete-source validation.",
+  "proof": "late-publication-race-c4/result.json",
+  "previous_partial_gates": "First six gates passed; regression still incomplete, no remaining-gate pass claimed."
+}

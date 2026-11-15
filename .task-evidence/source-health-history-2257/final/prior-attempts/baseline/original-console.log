@@ -1,0 +1,37 @@
+test_retained_missing_zero_is_not_recovered (__main__.BaselineContradictions.test_retained_missing_zero_is_not_recovered) ... {"control": "legacy", "observed": ["1", "10", "11", "12", "13", "14", "15", "16", "17", "18", "2", "3", "4", "5", "6", "7", "8", "9"], "source_calls": 0}
+Executing <Task finished name='Task-2' coro=<BaselineContradictions.test_retained_missing_zero_is_not_recovered() done, defined at /evidence/reproduce-baseline.py:12> exception=AssertionError("'0' not found in {'1': [], '10': [], '11': [], '12': [], '13': [], '14': [], '15': [], '16': [], '17': [], '18': [], '2': [], '3': [], '4': [], '5': [], '6': [], '7': [], '8': [], '9': []}") created at /usr/local/lib/python3.14/asyncio/runners.py:109> took 0.113 seconds
+FAIL
+test_supported_projection_health (__main__.BaselineContradictions.test_supported_projection_health) ... {"control": "projection", "value": 20.424, "health": "unsupported"}
+FAIL
+
+======================================================================
+FAIL: test_retained_missing_zero_is_not_recovered (__main__.BaselineContradictions.test_retained_missing_zero_is_not_recovered)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.14/asyncio/runners.py", line 127, in run
+    return self._loop.run_until_complete(task)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "/usr/local/lib/python3.14/asyncio/base_events.py", line 719, in run_until_complete
+    return future.result()
+           ~~~~~~~~~~~~~^^
+  File "/evidence/reproduce-baseline.py", line 17, in test_retained_missing_zero_is_not_recovered
+    result=await cache.get_or_rebuild('A',2025,fetch);print(json.dumps({'control':'legacy','observed':list(result.facts['transactions']),'source_calls':len(calls)}),flush=True);self.assertIn('0',result.facts['transactions'])
+                                                                                                                                                                                 ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: '0' not found in {'1': [], '10': [], '11': [], '12': [], '13': [], '14': [], '15': [], '16': [], '17': [], '18': [], '2': [], '3': [], '4': [], '5': [], '6': [], '7': [], '8': [], '9': []}
+
+======================================================================
+FAIL: test_supported_projection_health (__main__.BaselineContradictions.test_supported_projection_health)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/evidence/reproduce-baseline.py", line 11, in test_supported_projection_health
+    report=build_data_platform().player_report('1',data);value=report['player_context']['projection_evidence']['value'];state=report['provider_health']['Projections']['status'];print(json.dumps({'control':'projection','value':value,'health':state}),flush=True);self.assertEqual(value,20.424);self.assertEqual(state,'available')
+                                                                                                                                                                                                                                                                                                    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+AssertionError: 'unsupported' != 'available'
+- unsupported
++ available
+
+
+----------------------------------------------------------------------
+Ran 2 tests in 0.414s
+
+FAILED (failures=2)

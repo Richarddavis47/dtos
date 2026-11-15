@@ -1,0 +1,44 @@
+{
+  "passed": true,
+  "source": {
+    "baseline": "7d61325f86dc11cb4cbd597204f275fa1a77e6dc",
+    "baseline_tree": "bb1cc8346184de92e9be29a49824f3da3cde9894",
+    "candidate": "aeb7f614826106c0b61b1540ae3234309739fea8",
+    "tree": "129b9423d529d3a5fea70603474f22088a662389",
+    "branch": "fix/source-health-history-2257",
+    "version": "1.22.42",
+    "build": 2257,
+    "expected_test_count": 4531,
+    "pr": 346
+  },
+  "controller": {
+    "commit": "e90088ef2ee4e817a893ae4b7308ae791f93a216",
+    "tree": "a283d3c1573b225a96b2c4e3b3c7879999b7c89b",
+    "branch": "release/2257-actions-publisher",
+    "ref": "refs/heads/release/2257-actions-publisher",
+    "source": {
+      "baseline": "7d61325f86dc11cb4cbd597204f275fa1a77e6dc",
+      "baseline_tree": "bb1cc8346184de92e9be29a49824f3da3cde9894",
+      "candidate": "aeb7f614826106c0b61b1540ae3234309739fea8",
+      "tree": "129b9423d529d3a5fea70603474f22088a662389",
+      "branch": "fix/source-health-history-2257",
+      "version": "1.22.42",
+      "build": 2257,
+      "expected_test_count": 4531,
+      "pr": 346
+    },
+    "tooling_only": true,
+    "not_merged_into_main": true
+  },
+  "sha256": {
+    "tools/release/publish.py": "d15808271ceb80873f535cbd2b07db171e87e3281b4dbb3ff7d7bba1eed0c7f0",
+    "tests/test_release_publisher.py": "ef42b7df95184338ca70ca2a2afbe116c5cbe7bae0b7c7c8415d781f8bf21878",
+    ".github/workflows/canonical-release-recovery.yml": "8bdd6539bae3268707394b23959c839568a52fef5eb504e7092fd86257bc8591",
+    ".github/release-plans/2257.json": "f9ff19237c7920b3005c3904634d298baa2e1f8b0bf5c4a742813387445ae70b"
+  },
+  "tests": 181,
+  "lint": true,
+  "compile": true,
+  "diff_check": true,
+  "scope": "Finalized real plan; existing publisher contract controls, lint, compilation and clean source checked without bypass"
+}

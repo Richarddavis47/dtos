@@ -1,0 +1,498 @@
+{
+  "source": {
+    "baseline": "7d61325f86dc11cb4cbd597204f275fa1a77e6dc",
+    "baseline_tree": "bb1cc8346184de92e9be29a49824f3da3cde9894",
+    "candidate": "aeb7f614826106c0b61b1540ae3234309739fea8",
+    "tree": "129b9423d529d3a5fea70603474f22088a662389",
+    "branch": "fix/source-health-history-2257",
+    "version": "1.22.42",
+    "build": 2257,
+    "expected_test_count": 4531,
+    "pr": 346
+  },
+  "scope": "Additional enforced2GiB disposable fixture API and native-adapter demonstration. Not production, owner-live, a source replay, or an additional unique regression test count.",
+  "source_health": [
+    {
+      "case": "prepared_projection_and_native_actuals",
+      "status": 200,
+      "projection": {
+        "value": 20.424,
+        "source": "Sleeper",
+        "availability": "cached",
+        "league_id": "A",
+        "season": 2026,
+        "week": 9,
+        "snapshot_id": "leaf-a",
+        "source_updated_at": "2026-11-15T09:53:24.082639+00:00",
+        "prepared_at": "2026-11-15T09:53:24.082639+00:00",
+        "freshness": "Fresh",
+        "reason": null
+      },
+      "health": {
+        "Projections": {
+          "enabled": true,
+          "configured_capability": "Sleeper",
+          "status": "available",
+          "refresh_result": "prepared_evidence",
+          "last_refresh": null,
+          "next_refresh": null,
+          "records_retrieved": null,
+          "prepared_observations": 1,
+          "observation_boundary": "2026-11-15T09:53:24.082639+00:00",
+          "generation": "leaf-a",
+          "freshness": "Fresh",
+          "refresh_failure": null,
+          "scope": {
+            "league_id": "A",
+            "player_id": "4984",
+            "season": "2026",
+            "coverage": "Selected player only; not complete league or season coverage."
+          },
+          "reason": "Sleeper projection available for this player and week.",
+          "week": 9,
+          "source_updated_at": "2026-11-15T09:53:24.082639+00:00"
+        },
+        "Production": {
+          "enabled": true,
+          "configured_capability": "Sleeper league matchup results",
+          "status": "available",
+          "refresh_result": "prepared_evidence",
+          "last_refresh": null,
+          "next_refresh": null,
+          "records_retrieved": null,
+          "prepared_observations": 8,
+          "observation_boundary": "2026-11-01T00:00:00Z",
+          "generation": "b97c841603acc6ae8971cc67765ca1dbed7e47ef93ae2cccbdb9737dee4f72a9",
+          "freshness": "retained",
+          "refresh_failure": null,
+          "scope": {
+            "league_id": "A",
+            "player_id": "4984",
+            "season": "2026",
+            "coverage": "Selected player only; not complete league or season coverage."
+          },
+          "reason": "Retained completed-week Sleeper scores are available; coverage is an observed sample.",
+          "completed_observations": 8,
+          "live_or_unconfirmed_observations": 0
+        },
+        "Usage": {
+          "enabled": true,
+          "configured_capability": "Auxiliary football statistics; not fantasy results",
+          "status": "unavailable",
+          "refresh_result": "not_prepared",
+          "last_refresh": null,
+          "next_refresh": null,
+          "records_retrieved": null,
+          "prepared_observations": 0,
+          "observation_boundary": null,
+          "generation": "unchanged-analysis",
+          "freshness": "unknown",
+          "refresh_failure": null,
+          "scope": {
+            "league_id": "A",
+            "player_id": "4984",
+            "season": "2026",
+            "coverage": "Selected player only; not complete league or season coverage."
+          },
+          "reason": "No compatible targets, carries or receptions are prepared. Snap and route detail is not connected."
+        }
+      }
+    },
+    {
+      "case": "explicit_zero",
+      "status": 200,
+      "projection": {
+        "value": 0.0,
+        "source": "Sleeper",
+        "availability": "cached",
+        "league_id": "A",
+        "season": 2026,
+        "week": 9,
+        "snapshot_id": "leaf-a",
+        "source_updated_at": "2026-11-15T09:53:24.082639+00:00",
+        "prepared_at": "2026-11-15T09:53:24.082639+00:00",
+        "freshness": "Fresh",
+        "reason": null
+      },
+      "health": {
+        "Projections": {
+          "enabled": true,
+          "configured_capability": "Sleeper",
+          "status": "available",
+          "refresh_result": "prepared_evidence",
+          "last_refresh": null,
+          "next_refresh": null,
+          "records_retrieved": null,
+          "prepared_observations": 1,
+          "observation_boundary": "2026-11-15T09:53:24.082639+00:00",
+          "generation": "leaf-a",
+          "freshness": "Fresh",
+          "refresh_failure": null,
+          "scope": {
+            "league_id": "A",
+            "player_id": "4984",
+            "season": "2026",
+            "coverage": "Selected player only; not complete league or season coverage."
+          },
+          "reason": "Sleeper projection available for this player and week.",
+          "week": 9,
+          "source_updated_at": "2026-11-15T09:53:24.082639+00:00"
+        },
+        "Production": {
+          "enabled": true,
+          "configured_capability": "Sleeper league matchup results",
+          "status": "available",
+          "refresh_result": "prepared_evidence",
+          "last_refresh": null,
+          "next_refresh": null,
+          "records_retrieved": null,
+          "prepared_observations": 8,
+          "observation_boundary": "2026-11-01T00:00:00Z",
+          "generation": "b97c841603acc6ae8971cc67765ca1dbed7e47ef93ae2cccbdb9737dee4f72a9",
+          "freshness": "retained",
+          "refresh_failure": null,
+          "scope": {
+            "league_id": "A",
+            "player_id": "4984",
+            "season": "2026",
+            "coverage": "Selected player only; not complete league or season coverage."
+          },
+          "reason": "Retained completed-week Sleeper scores are available; coverage is an observed sample.",
+          "completed_observations": 8,
+          "live_or_unconfirmed_observations": 0
+        },
+        "Usage": {
+          "enabled": true,
+          "configured_capability": "Auxiliary football statistics; not fantasy results",
+          "status": "unavailable",
+          "refresh_result": "not_prepared",
+          "last_refresh": null,
+          "next_refresh": null,
+          "records_retrieved": null,
+          "prepared_observations": 0,
+          "observation_boundary": null,
+          "generation": "unchanged-analysis",
+          "freshness": "unknown",
+          "refresh_failure": null,
+          "scope": {
+            "league_id": "A",
+            "player_id": "4984",
+            "season": "2026",
+            "coverage": "Selected player only; not complete league or season coverage."
+          },
+          "reason": "No compatible targets, carries or receptions are prepared. Snap and route detail is not connected."
+        }
+      }
+    },
+    {
+      "case": "negative",
+      "status": 200,
+      "projection": {
+        "value": -2.125,
+        "source": "Sleeper",
+        "availability": "cached",
+        "league_id": "A",
+        "season": 2026,
+        "week": 9,
+        "snapshot_id": "leaf-a",
+        "source_updated_at": "2026-11-15T09:53:24.082639+00:00",
+        "prepared_at": "2026-11-15T09:53:24.082639+00:00",
+        "freshness": "Fresh",
+        "reason": null
+      },
+      "health": {
+        "Projections": {
+          "enabled": true,
+          "configured_capability": "Sleeper",
+          "status": "available",
+          "refresh_result": "prepared_evidence",
+          "last_refresh": null,
+          "next_refresh": null,
+          "records_retrieved": null,
+          "prepared_observations": 1,
+          "observation_boundary": "2026-11-15T09:53:24.082639+00:00",
+          "generation": "leaf-a",
+          "freshness": "Fresh",
+          "refresh_failure": null,
+          "scope": {
+            "league_id": "A",
+            "player_id": "4984",
+            "season": "2026",
+            "coverage": "Selected player only; not complete league or season coverage."
+          },
+          "reason": "Sleeper projection available for this player and week.",
+          "week": 9,
+          "source_updated_at": "2026-11-15T09:53:24.082639+00:00"
+        },
+        "Production": {
+          "enabled": true,
+          "configured_capability": "Sleeper league matchup results",
+          "status": "available",
+          "refresh_result": "prepared_evidence",
+          "last_refresh": null,
+          "next_refresh": null,
+          "records_retrieved": null,
+          "prepared_observations": 8,
+          "observation_boundary": "2026-11-01T00:00:00Z",
+          "generation": "b97c841603acc6ae8971cc67765ca1dbed7e47ef93ae2cccbdb9737dee4f72a9",
+          "freshness": "retained",
+          "refresh_failure": null,
+          "scope": {
+            "league_id": "A",
+            "player_id": "4984",
+            "season": "2026",
+            "coverage": "Selected player only; not complete league or season coverage."
+          },
+          "reason": "Retained completed-week Sleeper scores are available; coverage is an observed sample.",
+          "completed_observations": 8,
+          "live_or_unconfirmed_observations": 0
+        },
+        "Usage": {
+          "enabled": true,
+          "configured_capability": "Auxiliary football statistics; not fantasy results",
+          "status": "unavailable",
+          "refresh_result": "not_prepared",
+          "last_refresh": null,
+          "next_refresh": null,
+          "records_retrieved": null,
+          "prepared_observations": 0,
+          "observation_boundary": null,
+          "generation": "unchanged-analysis",
+          "freshness": "unknown",
+          "refresh_failure": null,
+          "scope": {
+            "league_id": "A",
+            "player_id": "4984",
+            "season": "2026",
+            "coverage": "Selected player only; not complete league or season coverage."
+          },
+          "reason": "No compatible targets, carries or receptions are prepared. Snap and route detail is not connected."
+        }
+      }
+    },
+    {
+      "case": "missing_scoring_projection",
+      "status": 200,
+      "projection": {
+        "value": null,
+        "source": "Sleeper",
+        "availability": "unavailable",
+        "league_id": "A",
+        "season": 2026,
+        "week": 9,
+        "snapshot_id": "leaf-a",
+        "source_updated_at": "2026-11-15T09:53:24.082639+00:00",
+        "prepared_at": "2026-11-15T09:53:24.082639+00:00",
+        "freshness": "Fresh",
+        "reason": null
+      },
+      "health": {
+        "Projections": {
+          "enabled": true,
+          "configured_capability": "Sleeper",
+          "status": "unavailable",
+          "refresh_result": "not_prepared",
+          "last_refresh": null,
+          "next_refresh": null,
+          "records_retrieved": null,
+          "prepared_observations": 0,
+          "observation_boundary": "2026-11-15T09:53:24.082639+00:00",
+          "generation": "leaf-a",
+          "freshness": "Fresh",
+          "refresh_failure": null,
+          "scope": {
+            "league_id": "A",
+            "player_id": "4984",
+            "season": "2026",
+            "coverage": "Selected player only; not complete league or season coverage."
+          },
+          "reason": "No compatible scoring projection for this player and week; missing is not zero.",
+          "week": 9,
+          "source_updated_at": "2026-11-15T09:53:24.082639+00:00"
+        },
+        "Production": {
+          "enabled": true,
+          "configured_capability": "Sleeper league matchup results",
+          "status": "available",
+          "refresh_result": "prepared_evidence",
+          "last_refresh": null,
+          "next_refresh": null,
+          "records_retrieved": null,
+          "prepared_observations": 8,
+          "observation_boundary": "2026-11-01T00:00:00Z",
+          "generation": "b97c841603acc6ae8971cc67765ca1dbed7e47ef93ae2cccbdb9737dee4f72a9",
+          "freshness": "retained",
+          "refresh_failure": null,
+          "scope": {
+            "league_id": "A",
+            "player_id": "4984",
+            "season": "2026",
+            "coverage": "Selected player only; not complete league or season coverage."
+          },
+          "reason": "Retained completed-week Sleeper scores are available; coverage is an observed sample.",
+          "completed_observations": 8,
+          "live_or_unconfirmed_observations": 0
+        },
+        "Usage": {
+          "enabled": true,
+          "configured_capability": "Auxiliary football statistics; not fantasy results",
+          "status": "unavailable",
+          "refresh_result": "not_prepared",
+          "last_refresh": null,
+          "next_refresh": null,
+          "records_retrieved": null,
+          "prepared_observations": 0,
+          "observation_boundary": null,
+          "generation": "unchanged-analysis",
+          "freshness": "unknown",
+          "refresh_failure": null,
+          "scope": {
+            "league_id": "A",
+            "player_id": "4984",
+            "season": "2026",
+            "coverage": "Selected player only; not complete league or season coverage."
+          },
+          "reason": "No compatible targets, carries or receptions are prepared. Snap and route detail is not connected."
+        }
+      }
+    }
+  ],
+  "historical": {
+    "before": {
+      "family": "transactions",
+      "observed": [
+        2
+      ],
+      "observed_empty": [
+        1,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18
+      ],
+      "unavailable": [],
+      "unacquired": [
+        0
+      ],
+      "malformed": [],
+      "acquired": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18
+      ],
+      "complete_acquisition": false,
+      "scope": "Supported Sleeper transaction buckets 0\u201318"
+    },
+    "after": {
+      "family": "transactions",
+      "observed": [
+        2
+      ],
+      "observed_empty": [
+        0,
+        1,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18
+      ],
+      "unavailable": [],
+      "unacquired": [],
+      "malformed": [],
+      "acquired": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18
+      ],
+      "complete_acquisition": true,
+      "scope": "Supported Sleeper transaction buckets 0\u201318"
+    },
+    "actual_fixture_requests": [
+      "/league/fixture-history/transactions/0"
+    ],
+    "acquisition": {
+      "schema": "sleeper-transaction-periods-v1",
+      "league_id": "fixture-history",
+      "season": "2025",
+      "through_week": null,
+      "periods": {
+        "0": {
+          "state": "observed_empty",
+          "retrieved_at": "2026-11-15T09:53:24.176703Z",
+          "last_attempt_at": "2026-11-15T09:53:24.176703Z",
+          "retained_last_valid": false
+        }
+      }
+    },
+    "existing_records_unchanged": true,
+    "whole_season_fetches": 0,
+    "legacy_periods_1_to_18_retrieval_times": "unknown; not invented",
+    "scope": "Fixture acquisition coverage only, not full historical evidence or grade revalidation."
+  },
+  "memory_limit": 2147483648,
+  "peak": 58028032,
+  "memory_events": {
+    "low": "0",
+    "high": "0",
+    "max": "0",
+    "oom": "0",
+    "oom_kill": "0",
+    "oom_group_kill": "0"
+  },
+  "no_sync_or_search": true
+}

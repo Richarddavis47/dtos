@@ -1,0 +1,8 @@
+{"phase": "full-collect", "exit": 1, "at": "2026-11-15T07:40:19.814082+00:00"}
+Traceback (most recent call last):
+  File "/workspace/2257-source-health/finish-current-local.py", line 13, in <module>
+    run('full-collect',['python','collect-local-completion.py'])
+  File "/workspace/2257-source-health/finish-current-local.py", line 12, in run
+    print(json.dumps(dict(phase=label,exit=r.returncode,at=datetime.datetime.now(datetime.timezone.utc).isoformat())),flush=True);assert r.returncode==0,label
+                                                                                                                                         ^^^^^^^^^^^^^^^
+AssertionError: full-collect
