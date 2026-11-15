@@ -282,7 +282,7 @@ class CanonicalHistoryStore:
             years.add(int(current_year))
         rows = []
         for year in sorted(years, reverse=True):
-            facts = sleeper_season_cache.sections(league_id, year, ('league', 'transactions'))
+            facts = sleeper_season_cache.sections(league_id, year, ('league', 'transactions', 'transaction_acquisition'))
             league = facts.get('league') or {}
             # A current activity list is not proof that weekly buckets were acquired.
             if not league and str(current_year) == str(year):
@@ -318,7 +318,7 @@ class CanonicalHistoryStore:
                 for bucket in (facts.get('transactions') or {}).values() if isinstance(bucket, list)
                 for row in bucket if isinstance(row, dict) and str(row.get('status') or '').casefold() not in known_statuses} if isinstance(facts.get('transactions'), dict) else set()
             from .transaction_periods import admitted_metadata
-            acquisition = admitted_metadata(current, league_id, year) if used_current else {}
+            acquisition = admitted_metadata(current, league_id, year) if used_current else admitted_metadata(facts, league.get('league_id'), year)
             source_week = current.get('week') if str(current_year) == str(year) else None
             if type(source_week) is int and 0 <= source_week <= 18:
                 # The selected league/source week is already season-qualified

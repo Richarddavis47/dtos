@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from datetime import datetime, timezone
 from typing import Any
 
 import httpx
@@ -33,6 +34,39 @@ class SleeperHistoricalSource:
                 league_id, lambda item: self._get(client, f"/league/{item}"),
             )
 
+    async def _transaction_periods(self, client, league_id, season, periods):
+        from src.core.history_context.transaction_periods import SCHEMA, record_period
+        periods = tuple(periods)
+        if len(periods) > 19 or len(set(periods)) != len(periods) or any(
+                type(w) is not int or not 0 <= w <= 18 for w in periods):
+            raise ValueError('Unsupported transaction recovery periods')
+        gate = asyncio.Semaphore(4)
+
+        async def get(week):
+            async with gate:
+                try:
+                    rows = await self._get(client, f'/league/{league_id}/transactions/{week}')
+                    state = None if isinstance(rows, list) and all(isinstance(r, dict) for r in rows) else 'unavailable' if rows is None else 'malformed'
+                except Exception:
+                    rows, state = None, 'failed'
+                return week, rows, state, datetime.now(timezone.utc).isoformat()
+
+        metadata = dict(schema=SCHEMA, league_id=str(league_id), season=str(season), periods={})
+        buckets = {}
+        for week, rows, state, stamp in await asyncio.gather(*(get(w) for w in periods)):
+            buckets[str(week)] = rows if state is None else None
+            metadata = record_period(metadata, week, rows, observed_at=stamp, state=state)
+        return buckets, metadata
+
+    async def recover_transaction_periods(self, league_id, season, periods):
+        """Only requested gaps from an already verified source league/season.
+
+        Called by admitted cache preparation, never a renderer. Four requests
+        at once, at most19periods, no whole-season refetch or automatic loop.
+        """
+        async with httpx.AsyncClient(timeout=self.timeout, headers=request_headers()) as client:
+            return await self._transaction_periods(client, league_id, season, periods)
+
     async def completed_season_facts(
         self, league_id: str, season: int,
     ) -> dict[str, Any] | None:
@@ -59,10 +93,8 @@ class SleeperHistoricalSource:
                 self._get(client, f"/league/{league_id}/matchups/{week}")
                 for week in weeks
             ))
-            transaction_rows = await asyncio.gather(*(
-                self._get(client, f"/league/{league_id}/transactions/{week}")
-                for week in transaction_weeks
-            ))
+            transaction_rows, acquisition = await self._transaction_periods(
+                client, league_id, season, transaction_weeks)
             draft_rows = []
             for index, draft in enumerate(drafts or ()):
                 detail = await self._get(client, f"/draft/{draft.get('draft_id')}") if draft.get("draft_id") else None
@@ -82,7 +114,7 @@ class SleeperHistoricalSource:
         return {
             "league": league, "users": users, "rosters": rosters,
             "matchups": {str(index): rows for index, rows in enumerate(matchup_rows, 1)},
-            "transactions": {str(index): rows for index, rows in zip(transaction_weeks, transaction_rows)},
+            "transactions": transaction_rows, "transaction_acquisition": acquisition,
             "drafts": drafts, "draft_picks": draft_rows,
             "traded_picks": traded_picks, "winners_bracket": brackets[0],
             "losers_bracket": brackets[1], "season": int(season),
