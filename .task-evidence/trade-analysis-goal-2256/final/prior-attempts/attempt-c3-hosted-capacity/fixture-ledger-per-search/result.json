@@ -1,0 +1,579 @@
+{
+  "candidate": "065667bf125a32ac3a496b0a32136d5312e32150",
+  "tree": "a83e9f503fb910313fc45163413316b3cf973ea5",
+  "original_method_sha256": "660bef373d8d6b562968cefe1114da0ae065c2d0a5d1115c64ec633c7d850fab",
+  "instrumented_method_sha256": "e92d4edf3f1496f47831230da762f1a958939a322e873a5626c78f16dd9f62db",
+  "variation": "Only release each obsolete harness response after its existing assertions; retain exact count scalar for the final unchanged positivity assertion; no admission, payload, timeout or workload changes.",
+  "passed": true,
+  "tests": 1,
+  "errors": 0,
+  "failures": 0,
+  "memory_limit": 2147483648,
+  "kernel_peak": 852926464,
+  "records": [
+    {
+      "width": 320,
+      "strategy": "WIN NOW",
+      "retired_request_statuses": [
+        [
+          "/api/trades/generate",
+          200
+        ]
+      ],
+      "before": {
+        "rss_bytes": 144506880,
+        "vms_bytes": 437465088,
+        "system_available_bytes": 7745855488,
+        "memory_accounting_scope": "cgroup",
+        "cgroup_current_bytes": 492978176,
+        "cgroup_limit_bytes": 2147483648,
+        "cgroup_inactive_file_bytes": 1593344,
+        "cgroup_anonymous_bytes": 462446592,
+        "cgroup_memory_events": {
+          "low": 0,
+          "high": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_kill": 0,
+          "oom_group_kill": 0
+        }
+      },
+      "after": {
+        "rss_bytes": 140746752,
+        "vms_bytes": 433688576,
+        "system_available_bytes": 7745986560,
+        "memory_accounting_scope": "cgroup",
+        "cgroup_current_bytes": 490352640,
+        "cgroup_limit_bytes": 2147483648,
+        "cgroup_inactive_file_bytes": 1593344,
+        "cgroup_anonymous_bytes": 459079680,
+        "cgroup_memory_events": {
+          "low": 0,
+          "high": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_kill": 0,
+          "oom_group_kill": 0
+        }
+      },
+      "active_fixture_preserved": true
+    },
+    {
+      "width": 320,
+      "strategy": "RETOOL",
+      "retired_request_statuses": [
+        [
+          "/api/trades/generate",
+          200
+        ]
+      ],
+      "before": {
+        "rss_bytes": 158724096,
+        "vms_bytes": 440786944,
+        "system_available_bytes": 7679971328,
+        "memory_accounting_scope": "cgroup",
+        "cgroup_current_bytes": 552460288,
+        "cgroup_limit_bytes": 2147483648,
+        "cgroup_inactive_file_bytes": 1593344,
+        "cgroup_anonymous_bytes": 520400896,
+        "cgroup_memory_events": {
+          "low": 0,
+          "high": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_kill": 0,
+          "oom_group_kill": 0
+        }
+      },
+      "after": {
+        "rss_bytes": 155996160,
+        "vms_bytes": 438059008,
+        "system_available_bytes": 7679975424,
+        "memory_accounting_scope": "cgroup",
+        "cgroup_current_bytes": 549974016,
+        "cgroup_limit_bytes": 2147483648,
+        "cgroup_inactive_file_bytes": 1593344,
+        "cgroup_anonymous_bytes": 517996544,
+        "cgroup_memory_events": {
+          "low": 0,
+          "high": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_kill": 0,
+          "oom_group_kill": 0
+        }
+      },
+      "active_fixture_preserved": true
+    },
+    {
+      "width": 320,
+      "strategy": "REBUILD",
+      "retired_request_statuses": [
+        [
+          "/api/trades/generate",
+          200
+        ]
+      ],
+      "before": {
+        "rss_bytes": 182837248,
+        "vms_bytes": 453349376,
+        "system_available_bytes": 7454072832,
+        "memory_accounting_scope": "cgroup",
+        "cgroup_current_bytes": 733626368,
+        "cgroup_limit_bytes": 2147483648,
+        "cgroup_inactive_file_bytes": 1593344,
+        "cgroup_anonymous_bytes": 704770048,
+        "cgroup_memory_events": {
+          "low": 0,
+          "high": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_kill": 0,
+          "oom_group_kill": 0
+        }
+      },
+      "after": {
+        "rss_bytes": 175165440,
+        "vms_bytes": 445636608,
+        "system_available_bytes": 7454072832,
+        "memory_accounting_scope": "cgroup",
+        "cgroup_current_bytes": 701362176,
+        "cgroup_limit_bytes": 2147483648,
+        "cgroup_inactive_file_bytes": 1593344,
+        "cgroup_anonymous_bytes": 672567296,
+        "cgroup_memory_events": {
+          "low": 0,
+          "high": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_kill": 0,
+          "oom_group_kill": 0
+        }
+      },
+      "active_fixture_preserved": true
+    },
+    {
+      "width": 375,
+      "strategy": "WIN NOW",
+      "retired_request_statuses": [
+        [
+          "/api/trades/generate",
+          200
+        ]
+      ],
+      "before": {
+        "rss_bytes": 180486144,
+        "vms_bytes": 526000128,
+        "system_available_bytes": 7486849024,
+        "memory_accounting_scope": "cgroup",
+        "cgroup_current_bytes": 603258880,
+        "cgroup_limit_bytes": 2147483648,
+        "cgroup_inactive_file_bytes": 1679360,
+        "cgroup_anonymous_bytes": 573681664,
+        "cgroup_memory_events": {
+          "low": 0,
+          "high": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_kill": 0,
+          "oom_group_kill": 0
+        }
+      },
+      "after": {
+        "rss_bytes": 180486144,
+        "vms_bytes": 526000128,
+        "system_available_bytes": 7486275584,
+        "memory_accounting_scope": "cgroup",
+        "cgroup_current_bytes": 604020736,
+        "cgroup_limit_bytes": 2147483648,
+        "cgroup_inactive_file_bytes": 1679360,
+        "cgroup_anonymous_bytes": 574136320,
+        "cgroup_memory_events": {
+          "low": 0,
+          "high": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_kill": 0,
+          "oom_group_kill": 0
+        }
+      },
+      "active_fixture_preserved": true
+    },
+    {
+      "width": 375,
+      "strategy": "RETOOL",
+      "retired_request_statuses": [
+        [
+          "/api/trades/generate",
+          200
+        ]
+      ],
+      "before": {
+        "rss_bytes": 204701696,
+        "vms_bytes": 529592320,
+        "system_available_bytes": 7467196416,
+        "memory_accounting_scope": "cgroup",
+        "cgroup_current_bytes": 700723200,
+        "cgroup_limit_bytes": 2147483648,
+        "cgroup_inactive_file_bytes": 1683456,
+        "cgroup_anonymous_bytes": 670277632,
+        "cgroup_memory_events": {
+          "low": 0,
+          "high": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_kill": 0,
+          "oom_group_kill": 0
+        }
+      },
+      "after": {
+        "rss_bytes": 204701696,
+        "vms_bytes": 529592320,
+        "system_available_bytes": 7467196416,
+        "memory_accounting_scope": "cgroup",
+        "cgroup_current_bytes": 700837888,
+        "cgroup_limit_bytes": 2147483648,
+        "cgroup_inactive_file_bytes": 1683456,
+        "cgroup_anonymous_bytes": 670519296,
+        "cgroup_memory_events": {
+          "low": 0,
+          "high": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_kill": 0,
+          "oom_group_kill": 0
+        }
+      },
+      "active_fixture_preserved": true
+    },
+    {
+      "width": 375,
+      "strategy": "REBUILD",
+      "retired_request_statuses": [
+        [
+          "/api/trades/generate",
+          200
+        ]
+      ],
+      "before": {
+        "rss_bytes": 200458240,
+        "vms_bytes": 522145792,
+        "system_available_bytes": 7385427968,
+        "memory_accounting_scope": "cgroup",
+        "cgroup_current_bytes": 672362496,
+        "cgroup_limit_bytes": 2147483648,
+        "cgroup_inactive_file_bytes": 1683456,
+        "cgroup_anonymous_bytes": 642895872,
+        "cgroup_memory_events": {
+          "low": 0,
+          "high": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_kill": 0,
+          "oom_group_kill": 0
+        }
+      },
+      "after": {
+        "rss_bytes": 192778240,
+        "vms_bytes": 514433024,
+        "system_available_bytes": 7389241344,
+        "memory_accounting_scope": "cgroup",
+        "cgroup_current_bytes": 664637440,
+        "cgroup_limit_bytes": 2147483648,
+        "cgroup_inactive_file_bytes": 1683456,
+        "cgroup_anonymous_bytes": 635297792,
+        "cgroup_memory_events": {
+          "low": 0,
+          "high": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_kill": 0,
+          "oom_group_kill": 0
+        }
+      },
+      "active_fixture_preserved": true
+    },
+    {
+      "width": 390,
+      "strategy": "WIN NOW",
+      "retired_request_statuses": [
+        [
+          "/api/trades/generate",
+          200
+        ]
+      ],
+      "before": {
+        "rss_bytes": 209043456,
+        "vms_bytes": 528662528,
+        "system_available_bytes": 7558533120,
+        "memory_accounting_scope": "cgroup",
+        "cgroup_current_bytes": 642260992,
+        "cgroup_limit_bytes": 2147483648,
+        "cgroup_inactive_file_bytes": 1798144,
+        "cgroup_anonymous_bytes": 613580800,
+        "cgroup_memory_events": {
+          "low": 0,
+          "high": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_kill": 0,
+          "oom_group_kill": 0
+        }
+      },
+      "after": {
+        "rss_bytes": 209043456,
+        "vms_bytes": 528662528,
+        "system_available_bytes": 7560441856,
+        "memory_accounting_scope": "cgroup",
+        "cgroup_current_bytes": 644550656,
+        "cgroup_limit_bytes": 2147483648,
+        "cgroup_inactive_file_bytes": 1798144,
+        "cgroup_anonymous_bytes": 614072320,
+        "cgroup_memory_events": {
+          "low": 0,
+          "high": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_kill": 0,
+          "oom_group_kill": 0
+        }
+      },
+      "active_fixture_preserved": true
+    },
+    {
+      "width": 390,
+      "strategy": "RETOOL",
+      "retired_request_statuses": [
+        [
+          "/api/trades/generate",
+          200
+        ]
+      ],
+      "before": {
+        "rss_bytes": 212668416,
+        "vms_bytes": 532287488,
+        "system_available_bytes": 7557910528,
+        "memory_accounting_scope": "cgroup",
+        "cgroup_current_bytes": 703860736,
+        "cgroup_limit_bytes": 2147483648,
+        "cgroup_inactive_file_bytes": 1798144,
+        "cgroup_anonymous_bytes": 672141312,
+        "cgroup_memory_events": {
+          "low": 0,
+          "high": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_kill": 0,
+          "oom_group_kill": 0
+        }
+      },
+      "after": {
+        "rss_bytes": 212668416,
+        "vms_bytes": 532287488,
+        "system_available_bytes": 7557910528,
+        "memory_accounting_scope": "cgroup",
+        "cgroup_current_bytes": 704229376,
+        "cgroup_limit_bytes": 2147483648,
+        "cgroup_inactive_file_bytes": 1798144,
+        "cgroup_anonymous_bytes": 672387072,
+        "cgroup_memory_events": {
+          "low": 0,
+          "high": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_kill": 0,
+          "oom_group_kill": 0
+        }
+      },
+      "active_fixture_preserved": true
+    },
+    {
+      "width": 390,
+      "strategy": "REBUILD",
+      "retired_request_statuses": [
+        [
+          "/api/trades/generate",
+          200
+        ]
+      ],
+      "before": {
+        "rss_bytes": 214437888,
+        "vms_bytes": 524505088,
+        "system_available_bytes": 7608541184,
+        "memory_accounting_scope": "cgroup",
+        "cgroup_current_bytes": 677449728,
+        "cgroup_limit_bytes": 2147483648,
+        "cgroup_inactive_file_bytes": 1798144,
+        "cgroup_anonymous_bytes": 646770688,
+        "cgroup_memory_events": {
+          "low": 0,
+          "high": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_kill": 0,
+          "oom_group_kill": 0
+        }
+      },
+      "after": {
+        "rss_bytes": 207773696,
+        "vms_bytes": 517840896,
+        "system_available_bytes": 7608377344,
+        "memory_accounting_scope": "cgroup",
+        "cgroup_current_bytes": 644509696,
+        "cgroup_limit_bytes": 2147483648,
+        "cgroup_inactive_file_bytes": 1798144,
+        "cgroup_anonymous_bytes": 613699584,
+        "cgroup_memory_events": {
+          "low": 0,
+          "high": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_kill": 0,
+          "oom_group_kill": 0
+        }
+      },
+      "active_fixture_preserved": true
+    },
+    {
+      "width": 1280,
+      "strategy": "WIN NOW",
+      "retired_request_statuses": [
+        [
+          "/api/trades/generate",
+          200
+        ]
+      ],
+      "before": {
+        "rss_bytes": 225824768,
+        "vms_bytes": 535736320,
+        "system_available_bytes": 7624347648,
+        "memory_accounting_scope": "cgroup",
+        "cgroup_current_bytes": 610914304,
+        "cgroup_limit_bytes": 2147483648,
+        "cgroup_inactive_file_bytes": 1945600,
+        "cgroup_anonymous_bytes": 570822656,
+        "cgroup_memory_events": {
+          "low": 0,
+          "high": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_kill": 0,
+          "oom_group_kill": 0
+        }
+      },
+      "after": {
+        "rss_bytes": 225824768,
+        "vms_bytes": 535736320,
+        "system_available_bytes": 7623327744,
+        "memory_accounting_scope": "cgroup",
+        "cgroup_current_bytes": 616443904,
+        "cgroup_limit_bytes": 2147483648,
+        "cgroup_inactive_file_bytes": 1945600,
+        "cgroup_anonymous_bytes": 571441152,
+        "cgroup_memory_events": {
+          "low": 0,
+          "high": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_kill": 0,
+          "oom_group_kill": 0
+        }
+      },
+      "active_fixture_preserved": true
+    },
+    {
+      "width": 1280,
+      "strategy": "RETOOL",
+      "retired_request_statuses": [
+        [
+          "/api/trades/generate",
+          200
+        ]
+      ],
+      "before": {
+        "rss_bytes": 225824768,
+        "vms_bytes": 535736320,
+        "system_available_bytes": 7567360000,
+        "memory_accounting_scope": "cgroup",
+        "cgroup_current_bytes": 701255680,
+        "cgroup_limit_bytes": 2147483648,
+        "cgroup_inactive_file_bytes": 1945600,
+        "cgroup_anonymous_bytes": 652800000,
+        "cgroup_memory_events": {
+          "low": 0,
+          "high": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_kill": 0,
+          "oom_group_kill": 0
+        }
+      },
+      "after": {
+        "rss_bytes": 225824768,
+        "vms_bytes": 535736320,
+        "system_available_bytes": 7567360000,
+        "memory_accounting_scope": "cgroup",
+        "cgroup_current_bytes": 700489728,
+        "cgroup_limit_bytes": 2147483648,
+        "cgroup_inactive_file_bytes": 1945600,
+        "cgroup_anonymous_bytes": 651997184,
+        "cgroup_memory_events": {
+          "low": 0,
+          "high": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_kill": 0,
+          "oom_group_kill": 0
+        }
+      },
+      "active_fixture_preserved": true
+    },
+    {
+      "width": 1280,
+      "strategy": "REBUILD",
+      "retired_request_statuses": [
+        [
+          "/api/trades/generate",
+          200
+        ]
+      ],
+      "before": {
+        "rss_bytes": 217010176,
+        "vms_bytes": 525877248,
+        "system_available_bytes": 7415537664,
+        "memory_accounting_scope": "cgroup",
+        "cgroup_current_bytes": 775323648,
+        "cgroup_limit_bytes": 2147483648,
+        "cgroup_inactive_file_bytes": 1921024,
+        "cgroup_anonymous_bytes": 728489984,
+        "cgroup_memory_events": {
+          "low": 0,
+          "high": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_kill": 0,
+          "oom_group_kill": 0
+        }
+      },
+      "after": {
+        "rss_bytes": 210345984,
+        "vms_bytes": 519213056,
+        "system_available_bytes": 7439900672,
+        "memory_accounting_scope": "cgroup",
+        "cgroup_current_bytes": 742510592,
+        "cgroup_limit_bytes": 2147483648,
+        "cgroup_inactive_file_bytes": 1921024,
+        "cgroup_anonymous_bytes": 695848960,
+        "cgroup_memory_events": {
+          "low": 0,
+          "high": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_kill": 0,
+          "oom_group_kill": 0
+        }
+      },
+      "active_fixture_preserved": true
+    }
+  ]
+}

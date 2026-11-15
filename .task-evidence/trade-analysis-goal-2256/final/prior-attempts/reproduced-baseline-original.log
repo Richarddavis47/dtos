@@ -1,0 +1,74 @@
+/usr/local/lib/python3.14/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+  from starlette.testclient import TestClient as TestClient  # noqa
+test_all_six_legal_package_shapes_qualify (tests.test_capital_strategy_reconciliation.CapitalStrategyTests.test_all_six_legal_package_shapes_qualify) ... ok
+test_bad_return_and_tiny_positive_signal_do_not_rescue_counterparty (tests.test_capital_strategy_reconciliation.CapitalStrategyTests.test_bad_return_and_tiny_positive_signal_do_not_rescue_counterparty) ... ok
+test_browser_strategy_controls_real_capital_evaluation (tests.test_capital_strategy_reconciliation.CapitalStrategyTests.test_browser_strategy_controls_real_capital_evaluation) ... Validation Chromium: /usr/bin/chromium
+Validation Chromium version: 156.0.8078.79
+INFO:httpx:HTTP Request: GET http://testserver/trades/create?front_office=2 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/static/css/trade_workspace.css? "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/static/js/strategy_session.js? "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/static/js/trade_comparison.js? "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/static/js/trade_workspace.js? "HTTP/1.1 200 OK"
+INFO:dtos.trade_resources:trade_readiness
+INFO:httpx:HTTP Request: GET http://testserver/api/trades/workspace?front_office=2&mode=calculator "HTTP/1.1 200 OK"
+INFO:dtos.trade_resources:trade_admission
+INFO:dtos.trade_resources:trade_execution_finished
+INFO:httpx:HTTP Request: POST http://testserver/api/trades/evaluate? "HTTP/1.1 200 OK"
+INFO:dtos.trade_resources:trade_admission
+INFO:dtos.trade_resources:trade_execution_finished
+INFO:httpx:HTTP Request: POST http://testserver/api/trades/evaluate? "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/trades/create?front_office=2 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/static/css/trade_workspace.css? "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/static/js/strategy_session.js? "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/static/js/trade_comparison.js? "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/static/js/trade_workspace.js? "HTTP/1.1 200 OK"
+INFO:dtos.trade_resources:trade_readiness
+INFO:httpx:HTTP Request: GET http://testserver/api/trades/workspace?front_office=2&mode=calculator "HTTP/1.1 200 OK"
+INFO:dtos.trade_resources:trade_admission
+INFO:dtos.trade_resources:trade_execution_finished
+INFO:httpx:HTTP Request: POST http://testserver/api/trades/evaluate? "HTTP/1.1 200 OK"
+INFO:dtos.trade_resources:trade_admission
+INFO:dtos.trade_resources:trade_execution_finished
+INFO:httpx:HTTP Request: POST http://testserver/api/trades/evaluate? "HTTP/1.1 200 OK"
+ok
+test_capacity_and_duplicate_assets_block_execution_not_strategy (tests.test_capital_strategy_reconciliation.CapitalStrategyTests.test_capacity_and_duplicate_assets_block_execution_not_strategy) ... ok
+test_exact_acquired_pick_identity_and_unknown_range_preserved (tests.test_capital_strategy_reconciliation.CapitalStrategyTests.test_exact_acquired_pick_identity_and_unknown_range_preserved) ... ok
+test_generated_shop_trade_for_recommended_and_adjustment_use_real_evaluator (tests.test_capital_strategy_reconciliation.CapitalStrategyTests.test_generated_shop_trade_for_recommended_and_adjustment_use_real_evaluator) ... ok
+test_market_premium_requires_material_production (tests.test_capital_strategy_reconciliation.CapitalStrategyTests.test_market_premium_requires_material_production) ... ok
+test_missing_price_identity_projection_or_strategy_remains_unresolved (tests.test_capital_strategy_reconciliation.CapitalStrategyTests.test_missing_price_identity_projection_or_strategy_remains_unresolved) ... ok
+test_rebuild_discloses_mixed_production_instead_of_claiming_preservation (tests.test_capital_strategy_reconciliation.CapitalStrategyTests.test_rebuild_discloses_mixed_production_instead_of_claiming_preservation) ... ok
+test_retool_balanced_mixed_exchange (tests.test_capital_strategy_reconciliation.CapitalStrategyTests.test_retool_balanced_mixed_exchange) ... ok
+test_route_api_strategy_and_capital_contract (tests.test_capital_strategy_reconciliation.CapitalStrategyTests.test_route_api_strategy_and_capital_contract) ... INFO:dtos.trade_resources:trade_admission
+INFO:dtos.trade_resources:trade_execution_finished
+INFO:httpx:HTTP Request: POST http://testserver/api/trades/evaluate "HTTP/1.1 200 OK"
+INFO:dtos.trade_resources:trade_admission
+INFO:dtos.trade_resources:trade_execution_finished
+INFO:httpx:HTTP Request: POST http://testserver/api/trades/generate "HTTP/1.1 200 OK"
+INFO:dtos.trade_resources:trade_admission
+INFO:dtos.trade_resources:trade_execution_finished
+INFO:httpx:HTTP Request: POST http://testserver/api/trades/evaluate "HTTP/1.1 422 Unprocessable Entity"
+ok
+test_smash_and_fair_labels_are_available_with_capital (tests.test_capital_strategy_reconciliation.CapitalStrategyTests.test_smash_and_fair_labels_are_available_with_capital) ... ok
+test_strategy_changes_fit_never_market_or_lineups (tests.test_capital_strategy_reconciliation.CapitalStrategyTests.test_strategy_changes_fit_never_market_or_lineups) ... ok
+test_unique_weeks_not_overlapping_horizon_sum (tests.test_capital_strategy_reconciliation.CapitalStrategyTests.test_unique_weeks_not_overlapping_horizon_sum) ... ok
+test_unknown_playoff_calendar_is_missing_evidence_not_an_evaluator_exception (tests.test_capital_strategy_reconciliation.CapitalStrategyTests.test_unknown_playoff_calendar_is_missing_evidence_not_an_evaluator_exception) ... ok
+test_window_defaults_must_match_generation_and_explicit_intent_wins (tests.test_capital_strategy_reconciliation.CapitalStrategyTests.test_window_defaults_must_match_generation_and_explicit_intent_wins) ... ok
+test_complete_source_unselected_goal_is_not_a_source_gap (__main__.MatchedReproduction.test_complete_source_unselected_goal_is_not_a_source_gap) ... {"scope": "Disposable real prepared Sleeper projection/evaluator fixture, not live Day Traders or matched live searches", "proposal": {"active_roster_id": 1, "partner_roster_id": 2, "assets_sent": ["a"], "assets_received": ["2028-R1-4"]}, "unresolved_inputs": ["analysis_strategy"], "classification": "MISSING REQUIRED EVIDENCE", "explicit_classification": "CREDIBLE RECOMMENDATION", "original_recommendations": [null, "WORTH PURSUING"], "same_market_and_lineups": true, "funnel": {"constructions_generated": 0, "constructions_pruned": 0, "evaluated": 1, "hard_invalid": 0, "missing_evidence": 1, "counterparty_limited": 0, "strategically_rejected": 0, "filtered": 0, "eligible": 0, "eligible_partners": 0, "teams_searched": 0, "asset_pool_sizes": {}, "ranked": 0, "displayed": 0, "evaluation_budget": 180, "budget_reached": false, "rejection_reason_counts": {"FUTURE_CAPITAL_TRADEOFF_UNRESOLVED": 1}, "bounded": true, "evidence_limitations": {"assessments": 1, "blocking_requirement_counts": {"future_capital_tradeoff": 1}, "contextual_qualification_counts": {"availability_or_freshness": 1, "manager_direction": 1, "manager_history": 1}, "unknown_cause_count": 0, "meaning": "Counts per evidence-limited assessment; categories overlap. Contextual qualifications are not necessarily admission blockers; upstream absence is not inferred."}}, "guidance": {"message": "No bilateral recommendation to show under this search\u2019s strategy and filters. Main limit: incomplete evidence required for a full assessment (1 assessed packages). Review the source gaps in the assessed alternatives.", "assessed_limit_counts": {"hard_invalid": 0, "missing_evidence": 1, "counterparty_limited": 0, "strategically_rejected": 0, "filtered": 0, "optional": 0}, "construction_admission": {}, "shop_review_leads": [], "recommendation": false, "acceptance_probability": null}, "limit": 2147483648}
+FAIL
+
+======================================================================
+FAIL: test_complete_source_unselected_goal_is_not_a_source_gap (__main__.MatchedReproduction.test_complete_source_unselected_goal_is_not_a_source_gap)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/evidence/reproduce.py", line 27, in test_complete_source_unselected_goal_is_not_a_source_gap
+    self.assertEqual(classify(before),'ANALYSIS GOAL REQUIRED')
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'MISSING REQUIRED EVIDENCE' != 'ANALYSIS GOAL REQUIRED'
+- MISSING REQUIRED EVIDENCE
++ ANALYSIS GOAL REQUIRED
+
+
+----------------------------------------------------------------------
+Ran 17 tests in 14.296s
+
+FAILED (failures=1)

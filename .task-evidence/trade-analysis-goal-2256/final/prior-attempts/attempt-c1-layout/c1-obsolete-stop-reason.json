@@ -1,0 +1,27 @@
+{
+  "source": {
+    "baseline": "7dafa5cc44197752ced5469c84e66fe3dd80da06",
+    "baseline_tree": "b9c099c84cfe5590ef1dc10af28f9755dbb01ee9",
+    "candidate": "9fb28baeeb51f4f6192989b404e67246cd1c313f",
+    "tree": "66899f0208da372267730cf1782e25d1e11ad0ec",
+    "branch": "fix/trade-analysis-goal-2256",
+    "version": "1.22.41",
+    "build": 2256,
+    "expected_test_count": 4513,
+    "pr": 345
+  },
+  "reason": "Confirmed new help text moves320px asset picker938.296875px beyond unchanged900px requirement. Candidate must change; stopping known-failed obsolete local source, not retrying for a pass. No production action.",
+  "original_failure_events": [
+    {
+      "event": "failure",
+      "test": "test_beginner_final_browser.FinalResetBrowserTests.test_visible_roster_picker_full_reset_and_two_league_intent",
+      "time": 1794699101.5662766,
+      "pid": 32,
+      "rss": 415195136,
+      "cgroup": 459304960,
+      "error_type": "AssertionError",
+      "error_text": "938.296875 not less than 900 : (320, 938.296875)"
+    }
+  ],
+  "observed_before_stop": "2026-11-14T23:37:29.239005+00:00"
+}

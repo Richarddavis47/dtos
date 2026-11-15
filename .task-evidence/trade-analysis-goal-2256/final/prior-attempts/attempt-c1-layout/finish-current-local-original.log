@@ -1,0 +1,14 @@
+Error: No such object: 5c4b36b378821b5b104243f08376bcc14073f2a1e8984239461e7ca9f98f0855
+Traceback (most recent call last):
+  File "/workspace/2256-analysis-goal/finish-current-local.py", line 6, in <module>
+    d=json.loads(command('docker','inspect',i['container']))[0]
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/2256-analysis-goal/common.py", line 15, in command
+    return subprocess.check_output(args, cwd=cwd, text=True).strip()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/subprocess.py", line 466, in check_output
+    return run(*popenargs, stdout=PIPE, timeout=timeout, check=True,
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/subprocess.py", line 571, in run
+    raise CalledProcessError(retcode, process.args,
+subprocess.CalledProcessError: Command '('docker', 'inspect', '5c4b36b378821b5b104243f08376bcc14073f2a1e8984239461e7ca9f98f0855')' returned non-zero exit status 1.

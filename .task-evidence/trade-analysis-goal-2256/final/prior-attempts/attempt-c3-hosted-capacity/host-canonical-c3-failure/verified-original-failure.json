@@ -1,0 +1,40 @@
+{
+  "source": {
+    "baseline": "7dafa5cc44197752ced5469c84e66fe3dd80da06",
+    "baseline_tree": "b9c099c84cfe5590ef1dc10af28f9755dbb01ee9",
+    "candidate": "065667bf125a32ac3a496b0a32136d5312e32150",
+    "tree": "a83e9f503fb910313fc45163413316b3cf973ea5",
+    "branch": "fix/trade-analysis-goal-2256",
+    "version": "1.22.41",
+    "build": 2256,
+    "expected_test_count": 4513,
+    "pr": 345
+  },
+  "archive_bytes": 90813974,
+  "archive_sha256": "c57b930d58b0ae2910c8eecdea116f8bdf625de1396592203cf5901681d4c4ad",
+  "all_original_manifest_entries_verified": 902,
+  "tests": 4513,
+  "failures": 0,
+  "errors": 1,
+  "test_summary": "Original full regression failed; remaining canonical gates not claimed passed.",
+  "limit": 2147483648,
+  "kernel_peak": 2033016832,
+  "zero_oom_events": true,
+  "process_cleanup": {
+    "timeout_triggered": false,
+    "validator_pid": 16,
+    "validator_reaped": true
+  },
+  "exact_admission": {
+    "current_bytes": 1827295232,
+    "admission_headroom_bytes": 393566208,
+    "required_bytes": 402653184,
+    "shortfall_bytes": 9086976,
+    "recovery": {
+      "expired_entries": 0,
+      "idle_worker_retired": false,
+      "allocator_trimmed": true
+    }
+  },
+  "explanation": "Fourth request genuinely deferred before work; browser helper incorrectly expected normal completion under this CI residency. Unnecessary fixture response copies are being measured; no claim they account for the entire historical shortfall. No test or guard weakened."
+}

@@ -1,0 +1,550 @@
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index d38676b1..521238d5 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -1,3 +1,7 @@
++## v1.22.41 / build 2256 — Trade Analysis Goal Clarity
++
++Separate a recorded unresolved analysis-goal choice from missing source evidence in Trade diagnostics and guidance. Preserve overlapping lineup gaps and rejected verdicts; offer the existing temporary goal control without changing saved goals or starting work automatically. Valuation, scoring, qualification and resource policies unchanged.
++
+ ## v1.22.40 / build 2255 — Recorded Trade Assessment Context
+ 
+ Display the recorded Custom valuation method using its exact supported identifier. Preserve bounded recorded current-week analytical lineup disclosures and readable comparison evidence across review and return navigation, explicitly NOT REVALIDATED. No valuation, qualification, source or admission-policy changes.
+diff --git a/RELEASE_NOTES.md b/RELEASE_NOTES.md
+index 8bb7edc5..65a80285 100644
+--- a/RELEASE_NOTES.md
++++ b/RELEASE_NOTES.md
+@@ -1,3 +1,7 @@
++# DTOS v1.22.41 / build 2256
++
++Trade searches distinguish a needed temporary analysis goal from missing prices or lineup evidence. Choose Win Now, Retool or Rebuild explicitly when the recorded draft-capital assessment requires it; syncing cannot supply this choice. Real coverage gaps remain visible and a selected goal does not promise a qualified trade. Saved preferences, valuation and recommendation standards, and memory safeguards are unchanged.
++
+ # DTOS v1.22.40 / build 2255
+ 
+ Display the recorded Custom valuation method using its exact supported identifier. Preserve bounded recorded current-week analytical lineup disclosures and readable comparison evidence across review and return navigation, explicitly NOT REVALIDATED. No valuation, qualification, source or admission-policy changes.
+diff --git a/app_metadata.py b/app_metadata.py
+index e55b497b..10e925c9 100644
+--- a/app_metadata.py
++++ b/app_metadata.py
+@@ -7,10 +7,10 @@ from datetime import datetime, timezone
+ from pathlib import Path
+ 
+ APPLICATION_NAME = "DTOS"
+-VERSION = "1.22.40"
+-PRODUCT_VERSION = "1.22.40"
+-BUILD_NUMBER = 2255
+-RELEASE_CODENAME = "Recorded Trade Assessment Context"
++VERSION = "1.22.41"
++PRODUCT_VERSION = "1.22.41"
++BUILD_NUMBER = 2256
++RELEASE_CODENAME = "Trade Analysis Goal Clarity"
+ APPLICATION_STARTED_AT = datetime.now(timezone.utc).isoformat()
+ 
+ _REPOSITORY_ROOT = Path(__file__).resolve().parent
+diff --git a/components/trade_workspace.py b/components/trade_workspace.py
+index 43470845..ce384608 100644
+--- a/components/trade_workspace.py
++++ b/components/trade_workspace.py
+@@ -55,7 +55,7 @@ def trade_workspace(view: dict, workflow: str, asset_id=None, owner_roster_id=No
+     heading = f'<div class="tw-heading"><h2>{escape(title)}</h2></div>'
+     discovery = ('<button id="trade-find" class="tw-primary-action" type="button" disabled>Generate Trades</button>' if workflow == 'recommended' else '<button id="trade-find" class="tw-primary-action" type="button" disabled>Find offers</button>' if workflow in ('shop', 'trade-for') else '')
+     partner_controls = f'<div class="tw-partner-controls"><label for="trade-partner">Trade partner</label><select id="trade-partner"><option value="">{partner_placeholder}</option></select>{partner_help}</div>'
+-    strategy_controls = f'{strategy_open}<label class="tw-control-label" for="trade-strategy">Trade strategy <small class="tw-intent-help" id="trade-strategy-help">Not your saved goal</small></label><select id="trade-strategy" aria-label="Trade strategy" aria-describedby="trade-strategy-help" disabled><option value="">No goal</option><option value="WIN NOW">Win Now</option><option value="RETOOL">Retool</option><option value="REBUILD">Rebuild</option></select>{strategy_close}'
++    strategy_controls = f'{strategy_open}<label class="tw-control-label" for="trade-strategy">Trade strategy <small class="tw-intent-help" id="trade-strategy-help">Not your saved goal. Some draft-pick trade-offs need a goal; supported player-only offers may not.</small></label><select id="trade-strategy" aria-label="Trade strategy" aria-describedby="trade-strategy-help" disabled><option value="">No goal</option><option value="WIN NOW">Win Now</option><option value="RETOOL">Retool</option><option value="REBUILD">Rebuild</option></select>{strategy_close}'
+     is_discovery = workflow in ('recommended', 'shop', 'trade-for')
+     pick_options = '<label class="tw-check"><input id="trade-include-picks" type="checkbox" checked disabled>Include draft picks in this search</label><p class="muted">Turning picks off excludes exact current picks from generated packages only. It does not change your entered offer or saved preferences.</p>'
+     optional_search = (shop_controls.replace('</details>', pick_options + '</details>') if workflow == 'shop' else f'<details id="trade-search-options"><summary>Search options · optional</summary>{recommended_controls}{pick_options}</details>') if is_discovery else ''
+diff --git a/services/recommended_trade_search.py b/services/recommended_trade_search.py
+index 4a6e7736..e0a04b30 100644
+--- a/services/recommended_trade_search.py
++++ b/services/recommended_trade_search.py
+@@ -347,12 +347,13 @@ def rank(rows):
+ def zero_result_guidance(funnel, discoveries, workspace, *, projection_available, optional_count=0):
+     """Summarize assessed limits and prepared search leads; never an offer."""
+     counts = {key: funnel.counts[key] for key in (
+-        'hard_invalid', 'missing_evidence', 'counterparty_limited', 'strategically_rejected', 'filtered')}
++        'hard_invalid', 'missing_evidence', 'analysis_goal_required', 'counterparty_limited', 'strategically_rejected', 'filtered')}
+     counts['optional'] = optional_count
+     text = 'No bilateral recommendation to show under this search’s strategy and filters.'
+     descriptions = {
+         'hard_invalid': 'unresolved roster-space or ownership requirements',
+         'missing_evidence': 'incomplete evidence required for a full assessment',
++        'analysis_goal_required': 'a temporary analysis goal is needed for the draft-capital trade-off',
+         'counterparty_limited': 'benefit to the other team was not established',
+         'strategically_rejected': 'production, capital or Market cost was not justified',
+         'filtered': 'offers excluded by filters or previously viewed families',
+@@ -368,6 +369,12 @@ def zero_result_guidance(funnel, discoveries, workspace, *, projection_available
+         text += ' Compatible projection evidence is not ready. Check source preparation before trying again.'
+     else:
+         text += ' No priced, permitted construction reached evaluation. Review Market evidence and optional filters; protections are unchanged.'
++    goal_count = funnel.analysis_goal_assessments
++    if goal_count:
++        text += (f' Choose a temporary analysis goal — Win Now, Retool or Rebuild — for {goal_count} assessed packages '
++                 'involving draft capital, then explicitly Generate again. Your saved goal stays unchanged. '
++                 'Syncing or waiting for Sleeper cannot choose this goal; it does not fill real evidence gaps '
++                 'or guarantee a qualified offer.')
+     admission = workspace.get('candidate_admission')
+     construction = admission.summary() if admission else {}
+     if construction.get('roster_capacity_rejected_checks'):
+@@ -393,4 +400,7 @@ def zero_result_guidance(funnel, discoveries, workspace, *, projection_available
+     if leads:
+         text += ' Consider reviewing ' + ', '.join(row['label'] for row in leads) + ' in Shop Asset. These are search leads, not qualified offers.'
+     return {'message': text, 'assessed_limit_counts': counts, 'construction_admission': construction, 'shop_review_leads': leads,
++            'analysis_goal': {'selection_required': bool(goal_count), 'assessments': goal_count,
++                'also_missing_evidence': funnel.analysis_goal_with_evidence_gaps,
++                'temporary_only': True, 'choices': ['WIN NOW', 'RETOOL', 'REBUILD']},
+             'recommendation': False, 'acceptance_probability': None}
+diff --git a/services/trade_decision.py b/services/trade_decision.py
+index 50b22a23..1283cced 100644
+--- a/services/trade_decision.py
++++ b/services/trade_decision.py
+@@ -34,8 +34,9 @@ def final_decision(result, *, _admissions=None):
+     state = classify(result)
+     label = result.get("recommendation")
+     qualified = result.get("generated_trade_eligible") is True
+-    headline = label or "Recommendation unavailable"
+-    qualification = None
++    headline = label or ("Choose an analysis goal" if state == 'ANALYSIS GOAL REQUIRED' else "Recommendation unavailable")
++    qualification = ("A temporary analysis choice is needed for this draft-capital trade-off; no recommendation is established."
++                     if state == 'ANALYSIS GOAL REQUIRED' else None)
+     if not qualified and label in ("SMASH ACCEPT", "WORTH PURSUING"):
+         headline = {
+             "COUNTERPARTY LIMITED": "COUNTERPARTY LIMITED",
+diff --git a/services/trade_decision_summary.py b/services/trade_decision_summary.py
+index c0b19f1d..bc4850b5 100644
+--- a/services/trade_decision_summary.py
++++ b/services/trade_decision_summary.py
+@@ -89,5 +89,8 @@ def decision_summary(result, admissions, *, lineup_view=None):
+     personal = result.get('personal_value_evidence')
+     if personal and personal.get('availability') != 'full':
+         next_action = 'Personal Custom rank-slot evidence is incomplete for this package. Review affected assets in My DTOS or use the independent Neutral mode; no ranking reset is required.\n' + next_action
++    from services.trade_search_policy import analysis_goal_required, analysis_goal_guidance
++    if analysis_goal_required(result):
++        next_action = analysis_goal_guidance() + ('\n' + next_action if missing else '')
+     return {'your_side_summary': summaries['active'], 'their_side_summary': summaries['partner'],
+             'decision_conditions': condition, 'evidence_next_action': next_action}
+diff --git a/services/trade_evidence_limits.py b/services/trade_evidence_limits.py
+index 07bdbd56..83b87680 100644
+--- a/services/trade_evidence_limits.py
++++ b/services/trade_evidence_limits.py
+@@ -59,7 +59,9 @@ def evidence_limitations(result, *, admissions=None):
+             qualifications.append({'cause': 'manager_direction', 'side': side,
+                 'message': 'Manager direction is unconfirmed; this alone does not invalidate compatible production evidence.'})
+     reasons = (result.get('recommendation_trace') or {}).get('rule_reasons') or []
+-    if 'FUTURE_CAPITAL_TRADEOFF_UNRESOLVED' in reasons:
++    from services.trade_search_policy import analysis_goal_required
++    goal = analysis_goal_required(result)
++    if 'FUTURE_CAPITAL_TRADEOFF_UNRESOLVED' in reasons and not goal:
+         blocking.append({'cause': 'future_capital_tradeoff',
+             'message': 'The recorded future-capital strategy trade-off remains unresolved; this is not proof of a missing source price.'})
+     history = dimensions.get('historical_counterparty_evidence') or {}
+@@ -67,4 +69,6 @@ def evidence_limitations(result, *, admissions=None):
+         qualifications.append({'cause': 'manager_history',
+             'message': 'Historical manager evidence is limited; it is context, not a promise of acceptance.'})
+     return {'blocking_requirements': blocking, 'contextual_qualifications': qualifications,
++            'analysis_requirements': [{'input': 'analysis_strategy', 'side': 'active',
++                'message': 'Choose a temporary analysis goal for the draft-capital trade-off; source updates cannot supply that choice.'}] if goal else [],
+             'meaning': 'Recorded assessment limitations; categories may overlap. A missing downstream value does not establish upstream absence.'}
+diff --git a/services/trade_explanation.py b/services/trade_explanation.py
+index 1f3167c3..742b5509 100644
+--- a/services/trade_explanation.py
++++ b/services/trade_explanation.py
+@@ -98,6 +98,8 @@ def decision_lead(result, final, admissions):
+         action = 'Resolve the recorded ownership or roster-space blocker before pursuing this package.'
+     elif state == 'COUNTERPARTY LIMITED':
+         action = 'Review their sacrifice and compensation; confirm their direction before pursuing this offer.'
++    elif state == 'ANALYSIS GOAL REQUIRED':
++        action = 'Choose a temporary analysis goal, then explicitly Generate or Evaluate again. Your saved goal stays unchanged; no qualified trade is promised.'
+     elif state == 'MISSING REQUIRED EVIDENCE':
+         action = 'Review the named evidence gaps below. Changing a pick cannot supply missing projections.'
+     elif result.get('recommendation') in ('REJECT', 'NOT WORTH IT'):
+diff --git a/services/trade_search_policy.py b/services/trade_search_policy.py
+index dd758f70..0c9f1154 100644
+--- a/services/trade_search_policy.py
++++ b/services/trade_search_policy.py
+@@ -5,6 +5,21 @@ These policies never price assets, change a recommendation or infer acceptance.
+ from collections import Counter
+ 
+ 
++def analysis_goal_required(evaluation):
++    """Read the evaluator's recorded input requirement; never infer a goal."""
++    fit = (((evaluation.get('dimensions') or {}).get('strategic_fit') or {}).get('active') or {}).get('capital_strategy_fit') or {}
++    return (evaluation.get('recommendation') is None
++            and fit.get('reason_code') == 'FUTURE_CAPITAL_TRADEOFF_UNRESOLVED'
++            and 'analysis_strategy' in (fit.get('unresolved_inputs') or []))
++
++
++def analysis_goal_guidance():
++    return ('Choose a temporary analysis goal — Win Now, Retool or Rebuild — to assess the draft-capital trade-off, '
++            'then explicitly run Generate or Evaluate again. This does not change your saved goal or describe '
++            'the other manager’s intentions. Syncing or waiting for Sleeper cannot choose this goal. '
++            'The choice does not supply missing prices or projections, or guarantee a qualified trade.')
++
++
+ def classify(evaluation):
+     dimensions = evaluation.get('dimensions') or {}
+     legality = evaluation.get('legality') or {}
+@@ -19,8 +34,10 @@ def classify(evaluation):
+         strategies = (dimensions.get('strategic_fit') or {})
+         missing |= any(s.get('projection_coverage_complete') is False or s.get('production_evidence', {}).get('mean_weekly_delta') is None
+                        for s in strategies.values() if isinstance(s, dict))
+-        missing |= 'FUTURE_CAPITAL_TRADEOFF_UNRESOLVED' in (evaluation.get('recommendation_trace') or {}).get('rule_reasons', [])
+-        return 'MISSING REQUIRED EVIDENCE' if missing else 'STRATEGICALLY POOR'
++        goal = analysis_goal_required(evaluation)
++        missing |= not goal and 'FUTURE_CAPITAL_TRADEOFF_UNRESOLVED' in (evaluation.get('recommendation_trace') or {}).get('rule_reasons', [])
++        return ('MISSING REQUIRED EVIDENCE' if missing else
++                'ANALYSIS GOAL REQUIRED' if goal else 'STRATEGICALLY POOR')
+     if label in ('REJECT', 'NOT WORTH IT'):
+         return 'STRATEGICALLY POOR'
+     counterparty = (dimensions.get('counterparty_plausibility') or {}).get('assessment')
+@@ -75,15 +92,18 @@ def missing_evidence_guidance(evaluation):
+         for row in strategies.values() if isinstance(row, dict)
+     ):
+         missing.append('canonical projection coverage and optimal legal-lineup impact')
+-    if 'FUTURE_CAPITAL_TRADEOFF_UNRESOLVED' in reasons:
++    goal = analysis_goal_required(evaluation)
++    if 'FUTURE_CAPITAL_TRADEOFF_UNRESOLVED' in reasons and not goal:
+         missing.append('supported future-capital trade-off evidence')
++    if goal and not missing:
++        return analysis_goal_guidance()
+     if not missing:
+         missing.append('sufficient support for the named assessment limitations')
+-    return ('Missing: ' + '; '.join(missing) + '. These are system/source evidence limits. '
++    return ('Missing: ' + '; '.join(missing) + '. These are recorded evidence limits. '
+             'This screen cannot supply or upload that evidence. Review the Market or assessment '
+             'evidence, or try again after source data updates. You can edit assets, strategy and '
+             'exact protections, but those edits do not supply missing source evidence. '
+-            'No recommendation is established.')
++            'No recommendation is established.' + (' ' + analysis_goal_guidance() if goal else ''))
+ 
+ 
+ class SearchFunnel:
+@@ -100,6 +120,8 @@ class SearchFunnel:
+         self.evidence_causes = Counter()
+         self.evidence_qualifications = Counter()
+         self.unresolved_evidence_causes = 0
++        self.analysis_goal_assessments = 0
++        self.analysis_goal_with_evidence_gaps = 0
+ 
+     def construction(self, partner, proposals, diagnostics=None):
+         self.teams.add(partner)
+@@ -113,12 +135,16 @@ class SearchFunnel:
+         row['search_result_type'] = state
+         self.counts['evaluated'] += 1
+         field = {'HARD INVALID': 'hard_invalid', 'MISSING REQUIRED EVIDENCE': 'missing_evidence',
++                 'ANALYSIS GOAL REQUIRED': 'analysis_goal_required',
+                  'COUNTERPARTY LIMITED': 'counterparty_limited',
+                  'STRATEGICALLY POOR': 'strategically_rejected'}.get(state, 'eligible')
+         if filtered and state in ELIGIBLE:
+             field = 'filtered'
+         self.counts[field] += 1
+         e = row['evaluation']
++        if analysis_goal_required(e):
++            self.analysis_goal_assessments += 1
++            self.analysis_goal_with_evidence_gaps += state == 'MISSING REQUIRED EVIDENCE'
+         if state == 'MISSING REQUIRED EVIDENCE':
+             from services.trade_evidence_limits import evidence_limitations
+             limits = e.get('evidence_limitations') or evidence_limitations(e)
+@@ -144,7 +170,7 @@ class SearchFunnel:
+                 'proposal': row['proposal'], 'proposal_presentation': row.get('proposal_presentation'),
+                 'evaluation': e, 'blockers': reasons, 'eligible': False,
+                 'smallest_optional_relaxation': (
+-                    missing_evidence_guidance(e) if state == 'MISSING REQUIRED EVIDENCE'
++                    missing_evidence_guidance(e) if state in ('MISSING REQUIRED EVIDENCE', 'ANALYSIS GOAL REQUIRED')
+                     else 'Resolve the identified ownership or roster constraint before reconsidering.' if state == 'HARD INVALID'
+                     else 'Change the package to address the other roster’s stated cost.' if state == 'COUNTERPARTY LIMITED'
+                     else 'Relax the named adjustment requirement only if you choose to; this package failed that requirement.' if state == 'FILTERED'
+@@ -153,12 +179,15 @@ class SearchFunnel:
+ 
+     def result(self, displayed):
+         fields = ('constructions_generated', 'constructions_pruned', 'evaluated', 'hard_invalid',
+-                  'missing_evidence', 'counterparty_limited', 'strategically_rejected', 'filtered', 'eligible')
++                  'missing_evidence', 'analysis_goal_required', 'counterparty_limited', 'strategically_rejected', 'filtered', 'eligible')
+         return {**{k: self.counts[k] for k in fields}, 'eligible_partners': len(self.partners),
+                 'teams_searched': len(self.teams), 'asset_pool_sizes': self.pools,
+                 'ranked': self.counts['eligible'], 'displayed': displayed,
+                 'evaluation_budget': self.budget, 'budget_reached': self.counts['evaluated'] >= self.budget,
+                 'rejection_reason_counts': dict(self.reasons), 'bounded': True,
++                'analysis_requirements': {'analysis_goal': self.analysis_goal_assessments,
++                    'also_missing_evidence': self.analysis_goal_with_evidence_gaps,
++                    'meaning': 'Recorded active-franchise analysis input, not missing source data or counterparty intent. Counts may overlap real evidence gaps.'},
+                 'evidence_limitations': {'assessments': self.counts['missing_evidence'],
+                     'blocking_requirement_counts': dict(self.evidence_causes),
+                     'contextual_qualification_counts': dict(self.evidence_qualifications),
+@@ -172,7 +201,7 @@ class SearchFunnel:
+     def near(self):
+         # Prefer a supported strategic near miss over absent evidence or invalidity.
+         order = {'FILTERED': 0, 'COUNTERPARTY LIMITED': 0, 'STRATEGICALLY POOR': 1,
+-                 'MISSING REQUIRED EVIDENCE': 2, 'HARD INVALID': 3}
++                 'MISSING REQUIRED EVIDENCE': 2, 'ANALYSIS GOAL REQUIRED': 2, 'HARD INVALID': 3}
+         return sorted(self.near_misses, key=lambda r: (order[r['blocker_type']],
+             abs(1 - ((r['evaluation'].get('values') or {}).get('ratio', 1) or 1)),
+             str(r['proposal'])))[:3]
+@@ -184,6 +213,8 @@ def result_state(funnel, results):
+                                               for r in results) else 'OPTIONAL / LOWER-RANKED TRADE'
+     if funnel.counts['evaluated'] and funnel.counts['missing_evidence'] == funnel.counts['evaluated']:
+         return 'MISSING REQUIRED EVIDENCE'
++    if funnel.counts['evaluated'] and funnel.counts['analysis_goal_required'] == funnel.counts['evaluated']:
++        return 'ANALYSIS GOAL REQUIRED'
+     return 'NO CREDIBLE RESULT WITHIN SEARCH BUDGET'
+ 
+ 
+diff --git a/static/js/trade_workspace.js b/static/js/trade_workspace.js
+index 823bb7f2..d9d04826 100644
+--- a/static/js/trade_workspace.js
++++ b/static/js/trade_workspace.js
+@@ -1228,8 +1228,8 @@
+       out.append(detail);
+     }
+   }
+-  function strategyAction(out) {
+-    const button = node('button', 'Choose analysis strategy'); button.type = 'button'; button.dataset.selectStrategy = 'true';
++  function strategyAction(out, label = 'Choose analysis strategy') {
++    const button = node('button', label); button.type = 'button'; button.dataset.selectStrategy = 'true';
+     button.onclick = () => { const detail = root.querySelector('.tw-strategy-detail'); if (detail?.tagName === 'DETAILS') detail.open = true; el('trade-strategy').focus(); };
+     out.append(button);
+   }
+@@ -1539,6 +1539,7 @@
+     return card;
+   }
+   function searchDetails(body, out) {
++    if (body.zero_result_guidance?.analysis_goal?.selection_required) strategyAction(out, 'Choose temporary analysis goal');
+     if (body.other_trade_ideas?.length) {
+       const section = node('section'); section.setAttribute('aria-label', 'Other trade ideas');
+       section.append(node('h3', 'Other trade ideas'), node('p', 'These change your requested incoming target. Your original trade stays intact unless you explicitly preview and adopt one.'));
+@@ -1573,7 +1574,7 @@
+         detail.append(node('p', names(row.proposal_presentation?.send, p.assets_sent) + ' → ' + names(row.proposal_presentation?.receive, p.assets_received)),
+           node('p', row.conflict_explanation || row.blocker_type + ': ' + (row.blockers || []).join(', ').replaceAll('_', ' ')));
+         for (const id of row.blocking_asset_ids || []) detail.append(node('p', 'Blocking asset: ' + label(asset(id) || {label: id}) + ' · ' + id));
+-        if (row.smallest_optional_relaxation) detail.append(node('p', (row.blocker_type === 'MISSING REQUIRED EVIDENCE' ? 'Evidence limit: ' : 'Optional change: ') + row.smallest_optional_relaxation));
++        if (row.smallest_optional_relaxation) detail.append(node('p', (row.blocker_type === 'MISSING REQUIRED EVIDENCE' ? 'Evidence limit: ' : row.blocker_type === 'ANALYSIS GOAL REQUIRED' ? 'Analysis choice: ' : 'Optional change: ') + row.smallest_optional_relaxation));
+         detail.append(node('p', 'Other franchise: ' + (team(p.partner_roster_id)?.team_name || 'selected counterparty')));
+         const diagnosed = decisionPresentation(row.evaluation);
+         for (const key of ['their_side_summary', 'decision_conditions', 'evidence_next_action']) if (diagnosed[key]) detail.append(node('p', diagnosed[key]));
+diff --git a/tests/test_trade_analysis_goal.py b/tests/test_trade_analysis_goal.py
+new file mode 100644
+index 00000000..c998f306
+--- /dev/null
++++ b/tests/test_trade_analysis_goal.py
+@@ -0,0 +1,142 @@
++"""Matched real prepared packages: analysis choices are not provider gaps."""
++from copy import deepcopy
++import unittest
++from unittest.mock import patch
++
++from tests import test_capital_strategy_reconciliation as fixtures
++from services.trade_intelligence import evaluate_trade_request
++from services.trade_search_policy import (
++    analysis_goal_required, classify, SearchFunnel, result_state,
++    missing_evidence_guidance,
++)
++from services.recommended_trade_search import zero_result_guidance
++from src.core.intelligence.team_strength import prepare_for_data
++
++
++class TradeAnalysisGoalTests(unittest.TestCase):
++    def setUp(self):
++        self.f = fixtures.CapitalStrategyTests()
++        self.f.setUp()
++        self.addCleanup(self.f.doCleanups)
++        self.f.data['teams'][0].pop('strategy')
++        self.payload = dict(active_roster_id=1, partner_roster_id=2,
++                            assets_sent=['a'], assets_received=['2028-R1-4'])
++
++    def evaluate(self, **updates):
++        return evaluate_trade_request(self.f.data, {**self.payload, **updates},
++                                      projection_reader=self.f.reader)['evaluation']
++
++    def gap(self, side):
++        rows = deepcopy(self.f.payloads)
++        ids = {'a', 'b', 'e'} if side == 'active' else {'c', 'd', 'f'}
++        rows[3] = [r for r in rows[3] if r['player_id'] not in ids]
++        self.f.reader.publish_horizon(rows, data=self.f.data, league_id='league-1',
++                                     season=2026, current_week=2)
++        with patch('services.global_evidence.retained_global_evidence', return_value=None):
++            prepare_for_data(self.f.reader, self.f.data)
++
++    def funnel(self, evaluation):
++        funnel = SearchFunnel(180)
++        self.assertFalse(funnel.assessed({'evaluation': evaluation, 'proposal': self.payload}))
++        return funnel
++
++    def test_complete_matched_goal_choice_changes_no_market_or_lineup_facts(self):
++        original = deepcopy(self.f.data)
++        no_goal = self.evaluate()
++        self.assertEqual(classify(no_goal), 'ANALYSIS GOAL REQUIRED')
++        self.assertIsNone(no_goal['recommendation'])
++        self.assertFalse(no_goal['generated_trade_eligible'])
++        self.assertEqual(no_goal['decision_context']['verdict'], 'Choose an analysis goal')
++        self.assertTrue(no_goal['decision_context']['strategy']['selection_required'])
++        self.assertNotIn('future_capital_tradeoff', {r['cause'] for r in no_goal['evidence_limitations']['blocking_requirements']})
++        self.assertEqual(no_goal['evidence_limitations']['analysis_requirements'][0]['input'], 'analysis_strategy')
++        for goal in ('REBUILD', 'WIN NOW', 'RETOOL'):
++            with self.subTest(goal=goal):
++                explicit = self.evaluate(strategy=goal)
++                self.assertFalse(analysis_goal_required(explicit))
++                self.assertEqual(explicit['market_evidence'], no_goal['market_evidence'])
++                self.assertEqual(explicit['multi_horizon_impact'], no_goal['multi_horizon_impact'])
++                self.assertEqual(explicit['dimensions']['strategic_fit']['active']['manager_strategy']['strategy'], goal)
++        self.assertEqual(self.evaluate(strategy='REBUILD')['recommendation'], 'WORTH PURSUING')
++        self.assertEqual(self.evaluate(strategy='WIN NOW')['recommendation'], 'NOT WORTH IT')
++        self.assertEqual(self.f.data, original)
++
++    def test_goal_only_funnel_and_guidance_do_not_request_source_recovery(self):
++        e = self.evaluate()
++        f = self.funnel(e)
++        counts = f.result(0)
++        self.assertEqual(counts['analysis_goal_required'], 1)
++        self.assertEqual(counts['missing_evidence'], 0)
++        self.assertEqual(counts['analysis_requirements']['analysis_goal'], 1)
++        self.assertEqual(result_state(f, []), 'ANALYSIS GOAL REQUIRED')
++        guidance = zero_result_guidance(f, [], {'pools': {}}, projection_available=True)
++        self.assertTrue(guidance['analysis_goal']['temporary_only'])
++        self.assertEqual(guidance['analysis_goal']['choices'], ['WIN NOW', 'RETOOL', 'REBUILD'])
++        for text in (guidance['message'], missing_evidence_guidance(e)):
++            self.assertIn('temporary analysis goal', text)
++            self.assertNotIn('Review the source gaps', text)
++            self.assertNotIn('try again after source data updates', text)
++            self.assertIn('cannot choose this goal', text)
++        self.assertFalse(guidance['recommendation'])
++
++    def test_real_active_source_gap_does_not_invent_a_strategy_requirement(self):
++        self.gap('active')
++        e = self.evaluate()
++        self.assertEqual(classify(e), 'MISSING REQUIRED EVIDENCE')
++        self.assertFalse(analysis_goal_required(e))
++        self.assertIn('future_week_lineup', {r['cause'] for r in e['evidence_limitations']['blocking_requirements']})
++        g = zero_result_guidance(self.funnel(e), [], {'pools': {}}, projection_available=True)
++        self.assertFalse(g['analysis_goal']['selection_required'])
++        self.assertIn('Review the source gaps', g['message'])
++
++    def test_mixed_partner_gap_retains_both_independent_causes(self):
++        self.gap('partner')
++        e = self.evaluate()
++        self.assertTrue(analysis_goal_required(e))
++        self.assertEqual(classify(e), 'MISSING REQUIRED EVIDENCE')
++        self.assertTrue(any(r['cause'] == 'future_week_lineup' and r.get('side') == 'partner'
++                            for r in e['evidence_limitations']['blocking_requirements']))
++        self.assertTrue(e['evidence_limitations']['analysis_requirements'])
++        f = self.funnel(e)
++        self.assertEqual(f.result(0)['analysis_requirements'], {
++            'analysis_goal': 1, 'also_missing_evidence': 1,
++            'meaning': 'Recorded active-franchise analysis input, not missing source data or counterparty intent. Counts may overlap real evidence gaps.'})
++        g = zero_result_guidance(f, [], {'pools': {}}, projection_available=True)
++        self.assertIn('Review the source gaps', g['message'])
++        self.assertTrue(g['analysis_goal']['selection_required'])
++        explicit = self.evaluate(strategy='REBUILD')
++        self.assertFalse(analysis_goal_required(explicit))
++        self.assertEqual(explicit['multi_horizon_impact'], e['multi_horizon_impact'])
++        self.assertTrue(any(r['cause'] == 'future_week_lineup' for r in explicit['evidence_limitations']['blocking_requirements']))
++
++    def test_supported_player_only_rejection_needs_no_goal(self):
++        e = self.evaluate(assets_received=['c'])
++        self.assertFalse(analysis_goal_required(e))
++        self.assertIn(e['recommendation'], ('REJECT', 'NOT WORTH IT'))
++        self.assertEqual(classify(e), 'STRATEGICALLY POOR')
++        self.assertFalse(e['decision_context']['strategy']['selection_required'])
++
++    def test_legacy_ambiguous_capital_reason_stays_unknown(self):
++        e = self.evaluate()
++        del e['dimensions']['strategic_fit']['active']['capital_strategy_fit']['unresolved_inputs']
++        self.assertFalse(analysis_goal_required(e))
++        self.assertEqual(classify(e), 'MISSING REQUIRED EVIDENCE')
++        self.assertNotIn('temporary analysis goal', missing_evidence_guidance(e))
++
++    def test_primary_counts_and_overlaps_do_not_promote_rejected_packages(self):
++        complete = self.evaluate()
++        rejected = self.evaluate(strategy='WIN NOW')
++        self.gap('partner')
++        mixed = self.evaluate()
++        f = SearchFunnel(180)
++        for e in (complete, rejected, mixed):
++            self.assertFalse(f.assessed({'evaluation': e, 'proposal': self.payload}))
++        r = f.result(0)
++        self.assertEqual((r['evaluated'], r['analysis_goal_required'], r['missing_evidence'], r['strategically_rejected'], r['eligible']), (3, 1, 1, 1, 0))
++        self.assertEqual(r['analysis_requirements']['analysis_goal'], 2)
++        self.assertEqual(r['analysis_requirements']['also_missing_evidence'], 1)
++        self.assertIn('future_week_lineup', r['evidence_limitations']['blocking_requirement_counts'])
++        self.assertEqual(len(f.explorations), 1)
++        self.assertIs(f.explorations[0]['evaluation'], rejected)
++        self.assertFalse(f.explorations[0]['evaluation']['generated_trade_eligible'])
++        self.assertEqual(f.explorations[0]['evaluation']['recommendation'], 'NOT WORTH IT')
+diff --git a/tests/test_trade_analysis_goal_browser.py b/tests/test_trade_analysis_goal_browser.py
+new file mode 100644
+index 00000000..8a35dd41
+--- /dev/null
++++ b/tests/test_trade_analysis_goal_browser.py
+@@ -0,0 +1,73 @@
++"""Actual guarded search → temporary goal choice; no saved-goal write."""
++import json
++import os
++from pathlib import Path
++import unittest
++
++from playwright.sync_api import sync_playwright
++from tests import test_00_trade_workflow_experience as workflow
++from tools.validation.browser_runtime import launch_chromium
++
++
++class TradeAnalysisGoalBrowserTests(unittest.TestCase):
++    def test_completed_no_goal_search_offers_explicit_temporary_choice(self):
++        h = workflow.TradeWorkflowExperienceTests()
++        f = h.fixture()
++        self.addCleanup(h.doCleanups)
++        f.f.data['teams'][0].pop('strategy', None)
++        f.f.client.cookies.delete('dtos_strategy')
++        observations = []
++        with sync_playwright() as pw:
++            browser = launch_chromium(pw, headless=True)
++            try:
++                for width, height in [(320, 432), (375, 667), (390, 844), (1280, 900)]:
++                    with self.subTest(width=width):
++                        page, records, _, errors, _ = h.page(browser, f, width, height)
++                        try:
++                            h.ready(page)
++                            page.select_option('#trade-strategy', '')
++                            self.assertEqual(records, [])
++                            page.locator('#trade-find').click()
++                            h.complete(page)
++                            body = records[-1]['body']
++                            self.assertEqual(records[-1]['status'], 200)
++                            self.assertFalse(any(r['evaluation']['generated_trade_eligible'] for r in body['results']))
++                            goal = body['zero_result_guidance']['analysis_goal']
++                            self.assertGreater(goal['assessments'], 0)
++                            self.assertTrue(goal['temporary_only'])
++                            result = page.locator('#trade-result')
++                            self.assertIn('No qualified recommendations', result.inner_text())
++                            self.assertIn('temporary analysis goal', result.inner_text())
++                            self.assertIn('cannot choose this goal', result.inner_text())
++                            choice = page.get_by_role('button', name='Choose temporary analysis goal', exact=True)
++                            before = len(records)
++                            choice.press('Enter')
++                            self.assertTrue(page.locator('#trade-strategy').evaluate('e=>e===document.activeElement'))
++                            self.assertEqual(page.locator('#trade-strategy').input_value(), '')
++                            self.assertEqual(len(records), before)
++                            self.assertLessEqual(page.evaluate('document.documentElement.scrollWidth'), width)
++                            target = os.environ.get('DTOS_TRADE_GOAL_EVIDENCE')
++                            if target:
++                                directory = Path(target)
++                                directory.mkdir(parents=True, exist_ok=True)
++                                page.screenshot(path=str(directory / f'goal-choice-{width}.png'), full_page=True)
++                            page.select_option('#trade-strategy', 'REBUILD')
++                            self.assertEqual(len(records), before)
++                            self.assertNotIn('strategy', f.f.data['teams'][0])
++                            self.assertIsNone(f.f.client.cookies.get('dtos_strategy'))
++                            page.locator('#trade-find').click()
++                            h.complete(page)
++                            self.assertEqual(records[-1]['payload']['strategy'], 'REBUILD')
++                            self.assertEqual(len([r for r in records if r['path'] == '/api/trades/generate']), 2)
++                            self.assertFalse(records[-1]['body']['zero_result_guidance'] and records[-1]['body']['zero_result_guidance']['analysis_goal']['selection_required'])
++                            self.assertFalse(errors, errors)
++                            observations.append(dict(width=width, completed_no_goal=True,
++                                strategy_assessments=goal['assessments'], real_gap_overlap=goal['also_missing_evidence'],
++                                no_automatic_search=True, explicit_goal='REBUILD', saved_goal_unchanged=True,
++                                no_qualification_inferred=True, browser='Chromium emulation'))
++                        finally:
++                            page.close()
++            finally:
++                browser.close()
++        if os.environ.get('DTOS_TRADE_GOAL_EVIDENCE'):
++            Path(os.environ['DTOS_TRADE_GOAL_EVIDENCE'], 'observations.json').write_text(json.dumps(observations, indent=2) + '\n')

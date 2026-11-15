@@ -1,0 +1,59 @@
+{
+  "source": {
+    "baseline": "7dafa5cc44197752ced5469c84e66fe3dd80da06",
+    "baseline_tree": "b9c099c84cfe5590ef1dc10af28f9755dbb01ee9",
+    "candidate": "b207fd46c14deac0315191a0efc39420cbbb279d",
+    "tree": "bb1cc8346184de92e9be29a49824f3da3cde9894",
+    "branch": "fix/trade-analysis-goal-2256",
+    "version": "1.22.41",
+    "build": 2256,
+    "expected_test_count": 4513,
+    "pr": 345
+  },
+  "accepted_prior_source": {
+    "baseline": "7dafa5cc44197752ced5469c84e66fe3dd80da06",
+    "baseline_tree": "b9c099c84cfe5590ef1dc10af28f9755dbb01ee9",
+    "candidate": "065667bf125a32ac3a496b0a32136d5312e32150",
+    "tree": "a83e9f503fb910313fc45163413316b3cf973ea5",
+    "branch": "fix/trade-analysis-goal-2256",
+    "version": "1.22.41",
+    "build": 2256,
+    "expected_test_count": 4513,
+    "pr": 345
+  },
+  "only_source_diff": [
+    "tests/test_rebuild_roster_space_browser.py"
+  ],
+  "application_bytes_identical": true,
+  "images": [
+    {
+      "width": 320,
+      "prior_sha256": "222d3d23813a1fdc4f2ee427d327ce3a0011c90d11867ef5ae69c56d26a1be70",
+      "current_sha256": "222d3d23813a1fdc4f2ee427d327ce3a0011c90d11867ef5ae69c56d26a1be70",
+      "same_bytes": true,
+      "review": "Exact inspected accepted pixels reused"
+    },
+    {
+      "width": 375,
+      "prior_sha256": "72cc11a45a59a9daa36d38360727a116da062d8805fbe829efddafe220c60e9c",
+      "current_sha256": "28f3b5b6a3c60aebd316c109b58bba3032d9182e4e578e380f59d3f90bec0b8c",
+      "same_bytes": false,
+      "review": "Current rendered screenshot directly inspected"
+    },
+    {
+      "width": 390,
+      "prior_sha256": "bde95fcb554644d0b86dca27c86bec09e6eb3c62ea46a6649fc03f5d6ea6de06",
+      "current_sha256": "bde95fcb554644d0b86dca27c86bec09e6eb3c62ea46a6649fc03f5d6ea6de06",
+      "same_bytes": true,
+      "review": "Exact inspected accepted pixels reused"
+    },
+    {
+      "width": 1280,
+      "prior_sha256": "fc45fa8113b8b5c6545b95a9a2e76f134b825aaf8971f949a67c8f8e74d9ef9b",
+      "current_sha256": "fc45fa8113b8b5c6545b95a9a2e76f134b825aaf8971f949a67c8f8e74d9ef9b",
+      "same_bytes": true,
+      "review": "Exact inspected accepted pixels reused"
+    }
+  ],
+  "scope": "Three current images match actually inspected prior pixels exactly. Current375 screenshot directly inspected; no ownerlive or physical Safari claim."
+}

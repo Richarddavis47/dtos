@@ -1,0 +1,756 @@
+{
+  "source": {
+    "baseline": "7dafa5cc44197752ced5469c84e66fe3dd80da06",
+    "baseline_tree": "b9c099c84cfe5590ef1dc10af28f9755dbb01ee9",
+    "candidate": "065667bf125a32ac3a496b0a32136d5312e32150",
+    "tree": "a83e9f503fb910313fc45163413316b3cf973ea5",
+    "branch": "fix/trade-analysis-goal-2256",
+    "version": "1.22.41",
+    "build": 2256,
+    "expected_test_count": 4513,
+    "pr": 345
+  },
+  "scope": "Exact retained observer rows around hosted fourth admission; process RSS/PSS are sampled and not interchangeable with shared container usage. No separate coordinator created.",
+  "samples": [
+    {
+      "time": 1794703226.329593,
+      "monotonic": 2955.93492725,
+      "memory": {
+        "rss_bytes": 47386624,
+        "vms_bytes": 137617408,
+        "system_available_bytes": 13919211520,
+        "memory_accounting_scope": "cgroup",
+        "cgroup_current_bytes": 1838968832,
+        "cgroup_limit_bytes": 2147483648,
+        "cgroup_inactive_file_bytes": 154681344,
+        "cgroup_anonymous_bytes": 1637335040,
+        "cgroup_memory_events": {
+          "low": 0,
+          "high": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_kill": 0,
+          "oom_group_kill": 0,
+          "sock_throttled": 0
+        }
+      },
+      "processes": [
+        {
+          "pid": 7,
+          "ppid": 1,
+          "name": "python",
+          "rss": 47386624,
+          "pss": 38445056,
+          "uss": 34119680
+        },
+        {
+          "pid": 16,
+          "ppid": 7,
+          "name": "python",
+          "rss": 37363712,
+          "pss": 31385600,
+          "uss": 29827072
+        },
+        {
+          "pid": 32,
+          "ppid": 16,
+          "name": "python",
+          "rss": 1065267200,
+          "pss": 1055114240,
+          "uss": 1050423296
+        },
+        {
+          "pid": 44341,
+          "ppid": 32,
+          "name": "python",
+          "rss": 20340736,
+          "pss": 15010816,
+          "uss": 13713408
+        },
+        {
+          "pid": 117630,
+          "ppid": 32,
+          "name": "MainThread",
+          "rss": 379387904,
+          "pss": 375520256,
+          "uss": 375144448
+        },
+        {
+          "pid": 117642,
+          "ppid": 117630,
+          "name": "chromium",
+          "rss": 231964672,
+          "pss": 131143680,
+          "uss": 97566720
+        },
+        {
+          "pid": 117663,
+          "ppid": 117642,
+          "name": "chromium",
+          "rss": 86175744,
+          "pss": 22435840,
+          "uss": 958464
+        },
+        {
+          "pid": 117664,
+          "ppid": 117642,
+          "name": "chromium",
+          "rss": 85704704,
+          "pss": 17381376,
+          "uss": 593920
+        },
+        {
+          "pid": 117686,
+          "ppid": 117642,
+          "name": "chromium",
+          "rss": 112992256,
+          "pss": 39324672,
+          "uss": 19615744
+        },
+        {
+          "pid": 117700,
+          "ppid": 117664,
+          "name": "chromium",
+          "rss": 52682752,
+          "pss": 10362880,
+          "uss": 1921024
+        },
+        {
+          "pid": 117733,
+          "ppid": 117664,
+          "name": "chromium",
+          "rss": 179200000,
+          "pss": 80045056,
+          "uss": 42504192
+        },
+        {
+          "pid": 117744,
+          "ppid": 117664,
+          "name": "chromium",
+          "rss": 88809472,
+          "pss": 22404096,
+          "uss": 6201344
+        },
+        {
+          "pid": 117746,
+          "ppid": 117664,
+          "name": "chromium",
+          "rss": 236163072,
+          "pss": 133157888,
+          "uss": 90320896
+        },
+        {
+          "pid": 117683,
+          "ppid": 117663,
+          "name": "chromium",
+          "rss": 91570176,
+          "pss": 40511488,
+          "uss": 20484096
+        }
+      ],
+      "fixture_free_bytes": 84008771584,
+      "anon": 1637335040,
+      "file": 167165952,
+      "shmem": 12480512,
+      "inactive_file": 154681344,
+      "active_file": 4096,
+      "kernel": 33767424,
+      "kernel_peak": 2017079296,
+      "process_samples_truncated": false,
+      "zombies": 0,
+      "sampling_window_ms": 90.18839500004106
+    },
+    {
+      "time": 1794703226.92003,
+      "monotonic": 2956.525364921,
+      "memory": {
+        "rss_bytes": 47386624,
+        "vms_bytes": 137617408,
+        "system_available_bytes": 13744967680,
+        "memory_accounting_scope": "cgroup",
+        "cgroup_current_bytes": 1932828672,
+        "cgroup_limit_bytes": 2147483648,
+        "cgroup_inactive_file_bytes": 154718208,
+        "cgroup_anonymous_bytes": 1733697536,
+        "cgroup_memory_events": {
+          "low": 0,
+          "high": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_kill": 0,
+          "oom_group_kill": 0,
+          "sock_throttled": 0
+        }
+      },
+      "processes": [
+        {
+          "pid": 7,
+          "ppid": 1,
+          "name": "python",
+          "rss": 47386624,
+          "pss": 38431744,
+          "uss": 34119680
+        },
+        {
+          "pid": 16,
+          "ppid": 7,
+          "name": "python",
+          "rss": 37367808,
+          "pss": 31363072,
+          "uss": 29802496
+        },
+        {
+          "pid": 32,
+          "ppid": 16,
+          "name": "python",
+          "rss": 1065312256,
+          "pss": 1055140864,
+          "uss": 1050464256
+        },
+        {
+          "pid": 44341,
+          "ppid": 32,
+          "name": "python",
+          "rss": 20340736,
+          "pss": 15010816,
+          "uss": 13713408
+        },
+        {
+          "pid": 117630,
+          "ppid": 32,
+          "name": "MainThread",
+          "rss": 409354240,
+          "pss": 406187008,
+          "uss": 405811200
+        },
+        {
+          "pid": 117642,
+          "ppid": 117630,
+          "name": "chromium",
+          "rss": 247742464,
+          "pss": 145718272,
+          "uss": 112054272
+        },
+        {
+          "pid": 117663,
+          "ppid": 117642,
+          "name": "chromium",
+          "rss": 86175744,
+          "pss": 22431744,
+          "uss": 954368
+        },
+        {
+          "pid": 117664,
+          "ppid": 117642,
+          "name": "chromium",
+          "rss": 85704704,
+          "pss": 17379328,
+          "uss": 593920
+        },
+        {
+          "pid": 117686,
+          "ppid": 117642,
+          "name": "chromium",
+          "rss": 113090560,
+          "pss": 39365632,
+          "uss": 19648512
+        },
+        {
+          "pid": 117700,
+          "ppid": 117664,
+          "name": "chromium",
+          "rss": 53960704,
+          "pss": 11064320,
+          "uss": 2433024
+        },
+        {
+          "pid": 117733,
+          "ppid": 117664,
+          "name": "chromium",
+          "rss": 179273728,
+          "pss": 80033792,
+          "uss": 42479616
+        },
+        {
+          "pid": 117744,
+          "ppid": 117664,
+          "name": "chromium",
+          "rss": 88809472,
+          "pss": 22394880,
+          "uss": 6201344
+        },
+        {
+          "pid": 117746,
+          "ppid": 117664,
+          "name": "chromium",
+          "rss": 264474624,
+          "pss": 162272256,
+          "uss": 120352768
+        },
+        {
+          "pid": 117683,
+          "ppid": 117663,
+          "name": "chromium",
+          "rss": 89964544,
+          "pss": 39823360,
+          "uss": 20885504
+        }
+      ],
+      "fixture_free_bytes": 84008734720,
+      "anon": 1733697536,
+      "file": 163995648,
+      "shmem": 9273344,
+      "inactive_file": 154718208,
+      "active_file": 4096,
+      "kernel": 34279424,
+      "kernel_peak": 2017079296,
+      "process_samples_truncated": false,
+      "zombies": 0,
+      "sampling_window_ms": 46.157391000178905
+    },
+    {
+      "time": 1794703227.4664528,
+      "monotonic": 2957.071787264,
+      "memory": {
+        "rss_bytes": 47386624,
+        "vms_bytes": 137617408,
+        "system_available_bytes": 13778006016,
+        "memory_accounting_scope": "cgroup",
+        "cgroup_current_bytes": 1827467264,
+        "cgroup_limit_bytes": 2147483648,
+        "cgroup_inactive_file_bytes": 154722304,
+        "cgroup_anonymous_bytes": 1624645632,
+        "cgroup_memory_events": {
+          "low": 0,
+          "high": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_kill": 0,
+          "oom_group_kill": 0,
+          "sock_throttled": 0
+        }
+      },
+      "processes": [
+        {
+          "pid": 7,
+          "ppid": 1,
+          "name": "python",
+          "rss": 47386624,
+          "pss": 38431744,
+          "uss": 34119680
+        },
+        {
+          "pid": 16,
+          "ppid": 7,
+          "name": "python",
+          "rss": 37371904,
+          "pss": 31367168,
+          "uss": 29806592
+        },
+        {
+          "pid": 32,
+          "ppid": 16,
+          "name": "python",
+          "rss": 949993472,
+          "pss": 939826176,
+          "uss": 935149568
+        },
+        {
+          "pid": 44341,
+          "ppid": 32,
+          "name": "python",
+          "rss": 20340736,
+          "pss": 15010816,
+          "uss": 13713408
+        },
+        {
+          "pid": 117630,
+          "ppid": 32,
+          "name": "MainThread",
+          "rss": 409968640,
+          "pss": 406883328,
+          "uss": 406507520
+        },
+        {
+          "pid": 117642,
+          "ppid": 117630,
+          "name": "chromium",
+          "rss": 247058432,
+          "pss": 145987584,
+          "uss": 112349184
+        },
+        {
+          "pid": 117663,
+          "ppid": 117642,
+          "name": "chromium",
+          "rss": 86175744,
+          "pss": 22427648,
+          "uss": 954368
+        },
+        {
+          "pid": 117664,
+          "ppid": 117642,
+          "name": "chromium",
+          "rss": 85704704,
+          "pss": 17370112,
+          "uss": 593920
+        },
+        {
+          "pid": 117686,
+          "ppid": 117642,
+          "name": "chromium",
+          "rss": 113094656,
+          "pss": 39367680,
+          "uss": 19652608
+        },
+        {
+          "pid": 117700,
+          "ppid": 117664,
+          "name": "chromium",
+          "rss": 53960704,
+          "pss": 11064320,
+          "uss": 2433024
+        },
+        {
+          "pid": 117733,
+          "ppid": 117664,
+          "name": "chromium",
+          "rss": 179277824,
+          "pss": 80005120,
+          "uss": 42450944
+        },
+        {
+          "pid": 117744,
+          "ppid": 117664,
+          "name": "chromium",
+          "rss": 88809472,
+          "pss": 22394880,
+          "uss": 6201344
+        },
+        {
+          "pid": 117746,
+          "ppid": 117664,
+          "name": "chromium",
+          "rss": 271970304,
+          "pss": 168201216,
+          "uss": 124813312
+        },
+        {
+          "pid": 117683,
+          "ppid": 117663,
+          "name": "chromium",
+          "rss": 92762112,
+          "pss": 41227264,
+          "uss": 20905984
+        }
+      ],
+      "fixture_free_bytes": 84008730624,
+      "anon": 1624645632,
+      "file": 167948288,
+      "shmem": 13221888,
+      "inactive_file": 154722304,
+      "active_file": 4096,
+      "kernel": 34095104,
+      "kernel_peak": 2017079296,
+      "process_samples_truncated": false,
+      "zombies": 0,
+      "sampling_window_ms": 30.98950700041314
+    },
+    {
+      "time": 1794703227.9976604,
+      "monotonic": 2957.602995066,
+      "memory": {
+        "rss_bytes": 47386624,
+        "vms_bytes": 137617408,
+        "system_available_bytes": 13786521600,
+        "memory_accounting_scope": "cgroup",
+        "cgroup_current_bytes": 1827434496,
+        "cgroup_limit_bytes": 2147483648,
+        "cgroup_inactive_file_bytes": 154722304,
+        "cgroup_anonymous_bytes": 1624666112,
+        "cgroup_memory_events": {
+          "low": 0,
+          "high": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_kill": 0,
+          "oom_group_kill": 0,
+          "sock_throttled": 0
+        }
+      },
+      "processes": [
+        {
+          "pid": 7,
+          "ppid": 1,
+          "name": "python",
+          "rss": 47386624,
+          "pss": 38431744,
+          "uss": 34119680
+        },
+        {
+          "pid": 16,
+          "ppid": 7,
+          "name": "python",
+          "rss": 37371904,
+          "pss": 31367168,
+          "uss": 29806592
+        },
+        {
+          "pid": 32,
+          "ppid": 16,
+          "name": "python",
+          "rss": 949993472,
+          "pss": 939826176,
+          "uss": 935149568
+        },
+        {
+          "pid": 44341,
+          "ppid": 32,
+          "name": "python",
+          "rss": 20340736,
+          "pss": 15010816,
+          "uss": 13713408
+        },
+        {
+          "pid": 117630,
+          "ppid": 32,
+          "name": "MainThread",
+          "rss": 409968640,
+          "pss": 406883328,
+          "uss": 406507520
+        },
+        {
+          "pid": 117642,
+          "ppid": 117630,
+          "name": "chromium",
+          "rss": 247066624,
+          "pss": 145995776,
+          "uss": 112357376
+        },
+        {
+          "pid": 117663,
+          "ppid": 117642,
+          "name": "chromium",
+          "rss": 86175744,
+          "pss": 22427648,
+          "uss": 954368
+        },
+        {
+          "pid": 117664,
+          "ppid": 117642,
+          "name": "chromium",
+          "rss": 85704704,
+          "pss": 17370112,
+          "uss": 593920
+        },
+        {
+          "pid": 117686,
+          "ppid": 117642,
+          "name": "chromium",
+          "rss": 113094656,
+          "pss": 39367680,
+          "uss": 19652608
+        },
+        {
+          "pid": 117700,
+          "ppid": 117664,
+          "name": "chromium",
+          "rss": 53960704,
+          "pss": 11064320,
+          "uss": 2433024
+        },
+        {
+          "pid": 117733,
+          "ppid": 117664,
+          "name": "chromium",
+          "rss": 179277824,
+          "pss": 80005120,
+          "uss": 42450944
+        },
+        {
+          "pid": 117744,
+          "ppid": 117664,
+          "name": "chromium",
+          "rss": 88809472,
+          "pss": 22394880,
+          "uss": 6201344
+        },
+        {
+          "pid": 117746,
+          "ppid": 117664,
+          "name": "chromium",
+          "rss": 270139392,
+          "pss": 167283712,
+          "uss": 124809216
+        },
+        {
+          "pid": 117683,
+          "ppid": 117663,
+          "name": "chromium",
+          "rss": 92762112,
+          "pss": 42140672,
+          "uss": 22732800
+        }
+      ],
+      "fixture_free_bytes": 84008730624,
+      "anon": 1624666112,
+      "file": 167948288,
+      "shmem": 13221888,
+      "inactive_file": 154722304,
+      "active_file": 4096,
+      "kernel": 34099200,
+      "kernel_peak": 2017079296,
+      "process_samples_truncated": false,
+      "zombies": 0,
+      "sampling_window_ms": 30.80008100005216
+    },
+    {
+      "time": 1794703228.5287032,
+      "monotonic": 2958.13403823,
+      "memory": {
+        "rss_bytes": 47386624,
+        "vms_bytes": 137617408,
+        "system_available_bytes": 13786525696,
+        "memory_accounting_scope": "cgroup",
+        "cgroup_current_bytes": 1827434496,
+        "cgroup_limit_bytes": 2147483648,
+        "cgroup_inactive_file_bytes": 154726400,
+        "cgroup_anonymous_bytes": 1624670208,
+        "cgroup_memory_events": {
+          "low": 0,
+          "high": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_kill": 0,
+          "oom_group_kill": 0,
+          "sock_throttled": 0
+        }
+      },
+      "processes": [
+        {
+          "pid": 7,
+          "ppid": 1,
+          "name": "python",
+          "rss": 47386624,
+          "pss": 38431744,
+          "uss": 34119680
+        },
+        {
+          "pid": 16,
+          "ppid": 7,
+          "name": "python",
+          "rss": 37371904,
+          "pss": 31367168,
+          "uss": 29806592
+        },
+        {
+          "pid": 32,
+          "ppid": 16,
+          "name": "python",
+          "rss": 949993472,
+          "pss": 939826176,
+          "uss": 935149568
+        },
+        {
+          "pid": 44341,
+          "ppid": 32,
+          "name": "python",
+          "rss": 20340736,
+          "pss": 15010816,
+          "uss": 13713408
+        },
+        {
+          "pid": 117630,
+          "ppid": 32,
+          "name": "MainThread",
+          "rss": 409968640,
+          "pss": 406883328,
+          "uss": 406507520
+        },
+        {
+          "pid": 117642,
+          "ppid": 117630,
+          "name": "chromium",
+          "rss": 247066624,
+          "pss": 145995776,
+          "uss": 112357376
+        },
+        {
+          "pid": 117663,
+          "ppid": 117642,
+          "name": "chromium",
+          "rss": 86175744,
+          "pss": 22427648,
+          "uss": 954368
+        },
+        {
+          "pid": 117664,
+          "ppid": 117642,
+          "name": "chromium",
+          "rss": 85704704,
+          "pss": 17370112,
+          "uss": 593920
+        },
+        {
+          "pid": 117686,
+          "ppid": 117642,
+          "name": "chromium",
+          "rss": 113094656,
+          "pss": 39367680,
+          "uss": 19652608
+        },
+        {
+          "pid": 117700,
+          "ppid": 117664,
+          "name": "chromium",
+          "rss": 53960704,
+          "pss": 11064320,
+          "uss": 2433024
+        },
+        {
+          "pid": 117733,
+          "ppid": 117664,
+          "name": "chromium",
+          "rss": 179277824,
+          "pss": 80005120,
+          "uss": 42450944
+        },
+        {
+          "pid": 117744,
+          "ppid": 117664,
+          "name": "chromium",
+          "rss": 88809472,
+          "pss": 22394880,
+          "uss": 6201344
+        },
+        {
+          "pid": 117746,
+          "ppid": 117664,
+          "name": "chromium",
+          "rss": 270143488,
+          "pss": 167287808,
+          "uss": 124813312
+        },
+        {
+          "pid": 117683,
+          "ppid": 117663,
+          "name": "chromium",
+          "rss": 92762112,
+          "pss": 42140672,
+          "uss": 22732800
+        }
+      ],
+      "fixture_free_bytes": 84008726528,
+      "anon": 1624670208,
+      "file": 167952384,
+      "shmem": 13221888,
+      "inactive_file": 154726400,
+      "active_file": 4096,
+      "kernel": 34103296,
+      "kernel_peak": 2017079296,
+      "process_samples_truncated": false,
+      "zombies": 0,
+      "sampling_window_ms": 30.64822299984371
+    }
+  ]
+}

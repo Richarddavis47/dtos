@@ -1,0 +1,21 @@
+{"phase": "full-collect", "exit": 0, "at": "2026-11-15T03:38:10.110498+00:00"}
+{"phase": "restore-closed-baseline", "exit": 0, "at": "2026-11-15T03:38:12.297749+00:00"}
+{"phase": "normal-start", "exit": 0, "at": "2026-11-15T03:38:34.916679+00:00"}
+{"phase": "normal-collect", "exit": 0, "at": "2026-11-15T03:41:26.829067+00:00"}
+{"phase": "features-start", "exit": 0, "at": "2026-11-15T03:41:44.362195+00:00"}
+{"phase": "features-collect", "exit": 0, "at": "2026-11-15T03:43:56.852934+00:00"}
+{"phase": "harness-start", "exit": 0, "at": "2026-11-15T03:44:14.828100+00:00"}
+{"phase": "harness-collect", "exit": 0, "at": "2026-11-15T03:44:26.018979+00:00"}
+{"phase": "run-local-resource", "exit": 0, "at": "2026-11-15T03:46:37.647117+00:00"}
+{"phase": "run-local-capital-capture", "exit": 0, "at": "2026-11-15T03:47:15.134400+00:00"}
+{"phase": "run-retained-history-probe", "exit": 0, "at": "2026-11-15T03:47:38.509070+00:00"}
+{"phase": "run-local-history-capture", "exit": 0, "at": "2026-11-15T03:48:22.315144+00:00"}
+{"phase": "run-supplement-candidate-capture", "exit": 1, "at": "2026-11-15T03:49:31.870043+00:00"}
+Traceback (most recent call last):
+  File "/workspace/2256-analysis-goal/finish-current-local.py", line 23, in <module>
+    for name,args in [('run-local-resource.py',[]),('run-local-capital-capture.py',[]),('run-retained-history-probe.py',[]),('run-local-history-capture.py',[]),('run-supplement-candidate-capture.py',[]),('run-extra-candidate-capture.py',['after']),('run-native-candidate-capture.py',[])]:run(name.removesuffix('.py'),['python',name]+args)
+                                                                                                                                                                                                                                                                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/2256-analysis-goal/finish-current-local.py", line 12, in run
+    print(json.dumps(dict(phase=label,exit=r.returncode,at=datetime.datetime.now(datetime.timezone.utc).isoformat())),flush=True);assert r.returncode==0,label
+                                                                                                                                         ^^^^^^^^^^^^^^^
+AssertionError: run-supplement-candidate-capture

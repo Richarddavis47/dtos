@@ -1,0 +1,1 @@
+Supplemental harness supplied strategy empty-string, which the existing strict API correctly rejects422. No-goal UI submitsnull. No source or API policy changed. Original one-test failure/invocation/code preserved; later comparisons were not reached. Rerun only this supplemental control with actualUI-compatible null.
