@@ -126,5 +126,6 @@ class ScopedSourceHealthTests(unittest.TestCase):
         f = fixtures.ProductionViewFixture(self)
         response = f.f.client.get('/players/1?front_office=4')
         self.assertEqual(response.status_code, 200)
-        self.assertIn('Retained completed-week Sleeper scores are available', response.text)
+        self.assertNotIn('this legacy context does not attach a production window', response.text)
+        self.assertIn('18.00 fantasy points per score observation', response.text)
         self.assertIn('8 of 8 completed-week score observations', response.text)
