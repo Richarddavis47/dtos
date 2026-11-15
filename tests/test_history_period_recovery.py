@@ -117,10 +117,11 @@ class HistoryPeriodRecoveryTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_rendered_history_updates_coverage_and_keeps_supporting_events(self):
         from tests import test_current_season_franchise_history as fixtures
-        f=fixtures.CurrentSeasonRuntimeHistoryTests()
-        f.setUp()
-        self.addCleanup(f.doCleanups)
-        await f.restore()
+        # Reuse the fixture on this running async test case so its patches and
+        # async cleanups are owned by the real runner, not an unrun nested case.
+        fixtures.CurrentSeasonRuntimeHistoryTests.setUp(self)
+        await fixtures.CurrentSeasonRuntimeHistoryTests.restore(self)
+        f=self
         lid=f.runtime.league_id
         year=int(f.data['league']['season'])-1
         original=facts(lid,year)
