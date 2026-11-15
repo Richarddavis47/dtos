@@ -1228,8 +1228,8 @@
       out.append(detail);
     }
   }
-  function strategyAction(out) {
-    const button = node('button', 'Choose analysis strategy'); button.type = 'button'; button.dataset.selectStrategy = 'true';
+  function strategyAction(out, label = 'Choose analysis strategy') {
+    const button = node('button', label); button.type = 'button'; button.dataset.selectStrategy = 'true';
     button.onclick = () => { const detail = root.querySelector('.tw-strategy-detail'); if (detail?.tagName === 'DETAILS') detail.open = true; el('trade-strategy').focus(); };
     out.append(button);
   }
@@ -1539,6 +1539,7 @@
     return card;
   }
   function searchDetails(body, out) {
+    if (body.zero_result_guidance?.analysis_goal?.selection_required) strategyAction(out, 'Choose temporary analysis goal');
     if (body.other_trade_ideas?.length) {
       const section = node('section'); section.setAttribute('aria-label', 'Other trade ideas');
       section.append(node('h3', 'Other trade ideas'), node('p', 'These change your requested incoming target. Your original trade stays intact unless you explicitly preview and adopt one.'));
@@ -1573,7 +1574,7 @@
         detail.append(node('p', names(row.proposal_presentation?.send, p.assets_sent) + ' → ' + names(row.proposal_presentation?.receive, p.assets_received)),
           node('p', row.conflict_explanation || row.blocker_type + ': ' + (row.blockers || []).join(', ').replaceAll('_', ' ')));
         for (const id of row.blocking_asset_ids || []) detail.append(node('p', 'Blocking asset: ' + label(asset(id) || {label: id}) + ' · ' + id));
-        if (row.smallest_optional_relaxation) detail.append(node('p', (row.blocker_type === 'MISSING REQUIRED EVIDENCE' ? 'Evidence limit: ' : 'Optional change: ') + row.smallest_optional_relaxation));
+        if (row.smallest_optional_relaxation) detail.append(node('p', (row.blocker_type === 'MISSING REQUIRED EVIDENCE' ? 'Evidence limit: ' : row.blocker_type === 'ANALYSIS GOAL REQUIRED' ? 'Analysis choice: ' : 'Optional change: ') + row.smallest_optional_relaxation));
         detail.append(node('p', 'Other franchise: ' + (team(p.partner_roster_id)?.team_name || 'selected counterparty')));
         const diagnosed = decisionPresentation(row.evaluation);
         for (const key of ['their_side_summary', 'decision_conditions', 'evidence_next_action']) if (diagnosed[key]) detail.append(node('p', diagnosed[key]));

@@ -34,8 +34,9 @@ def final_decision(result, *, _admissions=None):
     state = classify(result)
     label = result.get("recommendation")
     qualified = result.get("generated_trade_eligible") is True
-    headline = label or "Recommendation unavailable"
-    qualification = None
+    headline = label or ("Choose an analysis goal" if state == 'ANALYSIS GOAL REQUIRED' else "Recommendation unavailable")
+    qualification = ("A temporary analysis choice is needed for this draft-capital trade-off; no recommendation is established."
+                     if state == 'ANALYSIS GOAL REQUIRED' else None)
     if not qualified and label in ("SMASH ACCEPT", "WORTH PURSUING"):
         headline = {
             "COUNTERPARTY LIMITED": "COUNTERPARTY LIMITED",

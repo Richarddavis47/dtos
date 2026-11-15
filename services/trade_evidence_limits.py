@@ -59,7 +59,9 @@ def evidence_limitations(result, *, admissions=None):
             qualifications.append({'cause': 'manager_direction', 'side': side,
                 'message': 'Manager direction is unconfirmed; this alone does not invalidate compatible production evidence.'})
     reasons = (result.get('recommendation_trace') or {}).get('rule_reasons') or []
-    if 'FUTURE_CAPITAL_TRADEOFF_UNRESOLVED' in reasons:
+    from services.trade_search_policy import analysis_goal_required
+    goal = analysis_goal_required(result)
+    if 'FUTURE_CAPITAL_TRADEOFF_UNRESOLVED' in reasons and not goal:
         blocking.append({'cause': 'future_capital_tradeoff',
             'message': 'The recorded future-capital strategy trade-off remains unresolved; this is not proof of a missing source price.'})
     history = dimensions.get('historical_counterparty_evidence') or {}
@@ -67,4 +69,6 @@ def evidence_limitations(result, *, admissions=None):
         qualifications.append({'cause': 'manager_history',
             'message': 'Historical manager evidence is limited; it is context, not a promise of acceptance.'})
     return {'blocking_requirements': blocking, 'contextual_qualifications': qualifications,
+            'analysis_requirements': [{'input': 'analysis_strategy', 'side': 'active',
+                'message': 'Choose a temporary analysis goal for the draft-capital trade-off; source updates cannot supply that choice.'}] if goal else [],
             'meaning': 'Recorded assessment limitations; categories may overlap. A missing downstream value does not establish upstream absence.'}

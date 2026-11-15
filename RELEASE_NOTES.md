@@ -1,3 +1,7 @@
+# DTOS v1.22.41 / build 2256
+
+Trade searches distinguish a needed temporary analysis goal from missing prices or lineup evidence. Choose Win Now, Retool or Rebuild explicitly when the recorded draft-capital assessment requires it; syncing cannot supply this choice. Real coverage gaps remain visible and a selected goal does not promise a qualified trade. Saved preferences, valuation and recommendation standards, and memory safeguards are unchanged.
+
 # DTOS v1.22.40 / build 2255
 
 Display the recorded Custom valuation method using its exact supported identifier. Preserve bounded recorded current-week analytical lineup disclosures and readable comparison evidence across review and return navigation, explicitly NOT REVALIDATED. No valuation, qualification, source or admission-policy changes.

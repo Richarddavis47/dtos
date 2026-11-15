@@ -1,3 +1,7 @@
+## v1.22.41 / build 2256 — Trade Analysis Goal Clarity
+
+Separate a recorded unresolved analysis-goal choice from missing source evidence in Trade diagnostics and guidance. Preserve overlapping lineup gaps and rejected verdicts; offer the existing temporary goal control without changing saved goals or starting work automatically. Valuation, scoring, qualification and resource policies unchanged.
+
 ## v1.22.40 / build 2255 — Recorded Trade Assessment Context
 
 Display the recorded Custom valuation method using its exact supported identifier. Preserve bounded recorded current-week analytical lineup disclosures and readable comparison evidence across review and return navigation, explicitly NOT REVALIDATED. No valuation, qualification, source or admission-policy changes.

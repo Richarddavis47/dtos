@@ -46,7 +46,14 @@ class RebuildRosterSpaceBrowserTests(unittest.TestCase):
                             self.assertEqual(request['partner_roster_id'], 0)
                             self.assertEqual(response['search_evidence']['hard_invalid'], 0)
                             self.assertLessEqual(response['search_evidence']['full_evaluations'], 180)
-                        self.assertGreater(response['count'], 0)
+                            # These HTTP copies belong only to the test ledger.
+                            # Keep the checked count, not three obsolete full
+                            # responses beside the live browser/publication.
+                            last_count = response['count']
+                            records.clear()
+                            del request, response
+                            workflow._collect_retired_fixture_objects('validated_strategy_response_record')
+                        self.assertGreater(last_count, 0)
                         self.assertIn('Qualified recommendations', page.locator('#trade-result').inner_text())
                         if output:
                             output.mkdir(parents=True, exist_ok=True)

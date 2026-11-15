@@ -89,5 +89,8 @@ def decision_summary(result, admissions, *, lineup_view=None):
     personal = result.get('personal_value_evidence')
     if personal and personal.get('availability') != 'full':
         next_action = 'Personal Custom rank-slot evidence is incomplete for this package. Review affected assets in My DTOS or use the independent Neutral mode; no ranking reset is required.\n' + next_action
+    from services.trade_search_policy import analysis_goal_required, analysis_goal_guidance
+    if analysis_goal_required(result):
+        next_action = analysis_goal_guidance() + ('\n' + next_action if missing else '')
     return {'your_side_summary': summaries['active'], 'their_side_summary': summaries['partner'],
             'decision_conditions': condition, 'evidence_next_action': next_action}
