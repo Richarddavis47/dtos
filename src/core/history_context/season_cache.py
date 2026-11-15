@@ -29,6 +29,10 @@ class SeasonSourceUnavailable(ValueError):
     """Retained evidence could not be decoded; the source is not an empty season."""
 
 
+class SeasonPublicationChanged(ValueError):
+    """An admitted recovery may not replace a different source publication."""
+
+
 class SleeperSeasonCache:
     # Bounded compact sections, including optional acquisition metadata.
     # The separate 8 MiB object budget matches the existing historical memo's
@@ -214,7 +218,8 @@ class SleeperSeasonCache:
         with self._checksum_lock:
             self._invalidate(path)
 
-    def write(self, season: CachedSeason, *, verified_evictions: dict[int, str] | None = None) -> Path:
+    def write(self, season: CachedSeason, *, verified_evictions: dict[int, str] | None = None,
+              expected_identity: tuple | None = None) -> Path:
         path = self.path(season.league_id, season.season)
         path.parent.mkdir(parents=True, exist_ok=True)
         payload = json.dumps({
@@ -230,6 +235,13 @@ class SleeperSeasonCache:
             epoch = self._epoch
         try:
             with database_gate(self.root / '.season-cache-quota', exclusive=True):
+                if expected_identity is not None:
+                    try:
+                        unchanged = self._identity(path) == expected_identity
+                    except FileNotFoundError:
+                        unchanged = False
+                    if not unchanged:
+                        raise SeasonPublicationChanged('Season publication changed during gap recovery.')
                 evictions = verified_evictions or {}
                 for year, checksum in evictions.items():
                     old = self.read(season.league_id, year)
@@ -382,10 +394,23 @@ class SleeperSeasonCache:
         fetch_facts: Callable[[str, int], Awaitable[dict[str, Any] | None]],
         *, recover_transactions=None,
     ) -> CachedSeason:
+        identity = None
+        if recover_transactions is not None:
+            try:
+                identity = self._identity(self.path(league_id, season))
+            except FileNotFoundError:
+                pass
         cached = self.read(league_id, season)
         if cached is not None:
             if recover_transactions is not None:
-                return await self._recover_transactions(cached, recover_transactions)
+                # Seal the same file that was checksum-verified by read().
+                try:
+                    stable = identity is not None and self._identity(self.path(league_id, season)) == identity
+                except FileNotFoundError:
+                    stable = False
+                if not stable:
+                    return self._latest_season(cached)
+                return await self._recover_transactions(cached, recover_transactions, identity)
             return cached
         facts = await fetch_facts(str(league_id), int(season))
         rebuilt = self.normalize(league_id, season, facts or {})
@@ -393,7 +418,13 @@ class SleeperSeasonCache:
             self.write(rebuilt)
         return rebuilt
 
-    async def _recover_transactions(self, cached, recover):
+    def _latest_season(self, cached):
+        latest = self.read(cached.league_id, cached.season)
+        if latest is None:
+            raise SeasonPublicationChanged('Season publication removed during gap recovery.')
+        return latest
+
+    async def _recover_transactions(self, cached, recover, identity):
         """Fill only unobserved transaction periods during existing preparation.
 
         Read paths do not invoke this. Complete buckets are never refetched;
@@ -425,9 +456,12 @@ class SleeperSeasonCache:
             buckets, acquired = {}, {}
         # A concurrent writer's newer publication wins; never overwrite it with
         # a response prepared against this older archive.
-        current = self.read(cached.league_id, cached.season)
-        if current is None or current.checksum != cached.checksum:
-            return current or cached
+        try:
+            unchanged = self._identity(self.path(cached.league_id, cached.season)) == identity
+        except FileNotFoundError:
+            unchanged = False
+        if not unchanged:
+            return self._latest_season(cached)
         old = cached.facts.get('transactions')
         merged = dict(old) if isinstance(old, dict) else {}
         meta = {**meta, 'schema': SCHEMA, 'league_id': cached.league_id, 'season': str(cached.season)}
@@ -446,7 +480,12 @@ class SleeperSeasonCache:
                                  state=None if observed else record.get('state') if record.get('state') in {'failed','unavailable','malformed'} else 'failed')
         recovered = self.normalize(cached.league_id, cached.season,
                                    {**cached.facts, 'transactions': merged, 'transaction_acquisition': meta})
-        self.write(recovered)
+        try:
+            # Recheck under the existing cross-process atomic write/quota gate.
+            # No second full decode on the ordinary unchanged-file path.
+            self.write(recovered, expected_identity=identity)
+        except SeasonPublicationChanged:
+            return self._latest_season(cached)
         return recovered
 
     def storage_estimate(self, league_id: str, season_count: int) -> dict[str, int]:

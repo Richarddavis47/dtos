@@ -103,6 +103,23 @@ class HistoryPeriodRecoveryTests(unittest.IsolatedAsyncioTestCase):
             return {},{}
         result=await self.cache.get_or_rebuild('A',2025,self.full,recover_transactions=recover)
         self.assertEqual(result.facts['transactions']['0'],newer['transactions']['0'])
+        # The writer can also arrive after the optimistic read/check, directly
+        # before commit. Only a compare-and-publish inside the write gate wins.
+        self.cache.write(self.cache.normalize('A',2025,self.original))
+        from src.core.history_context.transaction_periods import SCHEMA, record_period
+        from datetime import datetime, timezone
+        async def observed(*args):
+            meta=record_period({'schema':SCHEMA,'league_id':'A','season':'2025','periods':{}},0,[],
+                               observed_at=datetime.now(timezone.utc).isoformat())
+            return {'0':[]},meta
+        writer=self.cache.write
+        def late_writer(candidate,**kwargs):
+            writer(self.cache.normalize('A',2025,newer))
+            return writer(candidate,**kwargs)
+        with patch.object(self.cache,'write',side_effect=late_writer):
+            result=await self.cache.get_or_rebuild('A',2025,self.full,recover_transactions=observed)
+        self.assertEqual(result.facts['transactions']['0'],newer['transactions']['0'])
+        self.assertEqual(self.cache.read('A',2025).checksum,result.checksum)
 
     async def test_ordinary_cache_reads_and_warm_metadata_do_not_call_source_or_decode_again(self):
         result,_=await self.recover((200,[]))
