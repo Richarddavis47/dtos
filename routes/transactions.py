@@ -481,6 +481,10 @@ def create_transactions_router(
         if production_summary(production):
             reasons['production'] = production_summary(production)
         canonical_panel = production_panel(production, refresh_failed=bool(state.get('last_error')))
+        from services.global_evidence import player_usage_evidence
+        from src.ui.recent_workload import workload_panel
+        usage = await asyncio.to_thread(player_usage_evidence, player_id, data, expected_league_id=selected_league)
+        workload_html = workload_panel(usage)
         fantasycalc = live["provider_details"].get("FantasyCalc") or {}
         trend_value = fantasycalc.get("trend_30_day")
         trend_label = f"{trend_value:+}" if isinstance(trend_value, (int, float)) else "No historical provider trend is available."
@@ -543,6 +547,7 @@ def create_transactions_router(
 {player_dossier(report, selected_team, teams, weekly_projection_html=weekly_panel, ownership=ownership)}
 <p class="player-reported-status">Sleeper reported status: {escape(str(player.get("injury_status") or player.get("status") or "Unavailable"))}</p>
 {canonical_panel}
+{workload_html}
 <details class="cx-evidence"><summary>Player assessment explanation</summary>{profile_explanation}</details>
 {live_panel}
 {historical_panel}

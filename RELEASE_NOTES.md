@@ -1,5 +1,9 @@
 # v1.22.42 / build 2257
 
+## v1.22.43 / build 2258 — Recent player workload
+
+Player dossiers compare targets and carries across the latest three eligible regular-season game observations and the preceding three. Dates, sample sizes and differences remain visible; missing or conflicting statistics withhold only the affected comparison. Missing game records block a comparison rather than becoming zero. Shared retained corrections appear on reload without provider work. Fantasy scores, projections, valuations and Trade standards are unchanged.
+
 Source reporting now distinguishes configured access from the selected player’s prepared evidence, freshness and failed refreshes. Available Sleeper scores and projections are no longer described as disabled; auxiliary football statistics remain separate from fantasy results.
 
 Existing admitted historical preparation can acquire missing transaction periods, including Week 0, without replacing already observed records or fetching a whole retained season. A successful empty response establishes an observed-empty period; failure or an unqueried period does not. Rendering does not fetch sources. Legacy observation times remain unknown, and retained historical grades are not revalidated.
