@@ -1,0 +1,1294 @@
+diff --git a/.github/workflows/product-browser.yml b/.github/workflows/product-browser.yml
+index 7bbedf1a..2a39a4cc 100644
+--- a/.github/workflows/product-browser.yml
++++ b/.github/workflows/product-browser.yml
+@@ -46,7 +46,7 @@ jobs:
+         timeout-minutes: 5
+         run: |
+           mkdir -p .validation/current-season-history .validation/history-followthrough .validation/market-history-coverage .validation/current-production-coverage
+-          docker run --rm --init --memory=2g --memory-swap=2g --cpus=2 --network=none -e NODE_OPTIONS -e DTOS_CURRENT_HISTORY_EVIDENCE=.validation/current-season-history -e DTOS_FOLLOWTHROUGH_EVIDENCE=.validation/history-followthrough -e DTOS_COMPLETED_TRADE_OBSERVATIONS_EVIDENCE=.validation/history-followthrough/completed-trade-observations -e DTOS_MARKET_HISTORY_EVIDENCE=.validation/market-history-coverage -e DTOS_PRODUCTION_COVERAGE_EVIDENCE=.validation/current-production-coverage -v "$PWD:$PWD" -w "$PWD" -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0="$PWD" dtos-browser-validation python -m unittest -v tests.test_current_season_franchise_history tests.test_current_season_history_browser tests.test_history_followthrough tests.test_history_followthrough_browser tests.test_market_history_coverage tests.test_market_history_coverage_browser tests.test_sleeper_actual_results tests.test_sleeper_actual_restoration tests.test_current_production_coverage tests.test_current_production_browser tests.test_completed_trade_observations tests.test_franchise_trade_progress tests.test_completed_trade_observations_browser
++          docker run --rm --init --memory=2g --memory-swap=2g --cpus=2 --network=none -e NODE_OPTIONS -e DTOS_CURRENT_HISTORY_EVIDENCE=.validation/current-season-history -e DTOS_FOLLOWTHROUGH_EVIDENCE=.validation/history-followthrough -e DTOS_COMPLETED_TRADE_OBSERVATIONS_EVIDENCE=.validation/history-followthrough/completed-trade-observations -e DTOS_MARKET_HISTORY_EVIDENCE=.validation/market-history-coverage -e DTOS_PRODUCTION_COVERAGE_EVIDENCE=.validation/current-production-coverage -v "$PWD:$PWD" -w "$PWD" -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0="$PWD" dtos-browser-validation python -m unittest -v tests.test_current_season_franchise_history tests.test_current_season_history_browser tests.test_history_followthrough tests.test_history_followthrough_browser tests.test_market_history_coverage tests.test_market_history_coverage_browser tests.test_sleeper_actual_results tests.test_sleeper_actual_restoration tests.test_current_production_coverage tests.test_current_production_browser tests.test_completed_trade_observations tests.test_franchise_trade_progress tests.test_completed_trade_observations_browser tests.test_recent_workload tests.test_recent_workload_browser
+       - name: Preserve current-season history evidence
+         if: always()
+         uses: actions/upload-artifact@v4
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index 80d42311..db30ea6a 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -1,5 +1,9 @@
+ ## v1.22.41 / build 2256 — Trade Analysis Goal Clarity
+ 
++## v1.22.43 / build 2258 — Recent player workload
++
++Player dossiers compare targets and carries across the latest three eligible regular-season game observations and the preceding three. Dates, sample sizes and differences remain visible; missing or conflicting statistics withhold only the affected comparison. Missing game records block a comparison rather than becoming zero. Shared retained corrections appear on reload without provider work. Fantasy scores, projections, valuations and Trade standards are unchanged.
++
+ ## v1.22.42 / build 2257
+ 
+ - Report selected-player Sleeper projections/results and separate auxiliary usage from actual retained evidence, including unknown clocks and failed refreshes. Configuration is not complete source coverage.
+diff --git a/RELEASE_NOTES.md b/RELEASE_NOTES.md
+index 91e5bdb6..906395fb 100644
+--- a/RELEASE_NOTES.md
++++ b/RELEASE_NOTES.md
+@@ -1,5 +1,9 @@
+ # v1.22.42 / build 2257
+ 
++## v1.22.43 / build 2258 — Recent player workload
++
++Player dossiers compare targets and carries across the latest three eligible regular-season game observations and the preceding three. Dates, sample sizes and differences remain visible; missing or conflicting statistics withhold only the affected comparison. Missing game records block a comparison rather than becoming zero. Shared retained corrections appear on reload without provider work. Fantasy scores, projections, valuations and Trade standards are unchanged.
++
+ Source reporting now distinguishes configured access from the selected player’s prepared evidence, freshness and failed refreshes. Available Sleeper scores and projections are no longer described as disabled; auxiliary football statistics remain separate from fantasy results.
+ 
+ Existing admitted historical preparation can acquire missing transaction periods, including Week 0, without replacing already observed records or fetching a whole retained season. A successful empty response establishes an observed-empty period; failure or an unqueried period does not. Rendering does not fetch sources. Legacy observation times remain unknown, and retained historical grades are not revalidated.
+diff --git a/app_metadata.py b/app_metadata.py
+index 579d37ad..b609273b 100644
+--- a/app_metadata.py
++++ b/app_metadata.py
+@@ -7,10 +7,10 @@ from datetime import datetime, timezone
+ from pathlib import Path
+ 
+ APPLICATION_NAME = "DTOS"
+-VERSION = "1.22.42"
+-PRODUCT_VERSION = "1.22.42"
+-BUILD_NUMBER = 2257
+-RELEASE_CODENAME = "Scoped Source Health and Historical Recovery"
++VERSION = "1.22.43"
++PRODUCT_VERSION = "1.22.43"
++BUILD_NUMBER = 2258
++RELEASE_CODENAME = "Recent Player Workload"
+ APPLICATION_STARTED_AT = datetime.now(timezone.utc).isoformat()
+ 
+ _REPOSITORY_ROOT = Path(__file__).resolve().parent
+diff --git a/docs/RECENT_PLAYER_WORKLOAD.md b/docs/RECENT_PLAYER_WORKLOAD.md
+new file mode 100644
+index 00000000..2c469500
+--- /dev/null
++++ b/docs/RECENT_PLAYER_WORKLOAD.md
+@@ -0,0 +1,46 @@
++# Recent carries and targets
++
++Player dossiers reuse shared retained nflverse auxiliary statistics. They do not
++use those statistics for fantasy scores or projections: Sleeper remains their
++exclusive authority. No Trade, valuation or ranking input changes.
++
++The comparison uses the latest six eligible regular-season game observations in
++the selected league season, ordered by actual source game date and split into
++preceding three versus latest three. The existing admitted NFL completed-week
++boundary excludes current and future weeks. A missing boundary withholds the
++comparison; this version does not infer historical or postseason completion from
++today's calendar. Future game dates and facts not known at the observation
++boundary are excluded. Game identity, week, type and historical team are required.
++These are observed-game samples, not full-season coverage or participation proof.
++
++Zero counts are retained. Each metric requires all six counts. Missing counts do
++not shift the sample, and carries may remain supported when targets are missing.
++Missing weeks within or after the sample withhold comparison, except a bye proven
++by the existing complete-schedule contract. Do not infer a bye/DNP from absence.
++A team change is disclosed without claiming its causal effect.
++
++The shared store resolves temporal revisions. Opt-in tied-revision detection
++prevents a fingerprint tie-break from supplying a workload result. Duplicate
++source keys for one game count once; contradictory counts withhold that metric.
++Unknown identities/order withhold the comparison. Newly acquired observations are
++not backdated as evidence available at earlier trades.
++
++A bounded local read builds the view on each dossier/API request; it owns no
++runtime, creates no database, stores no duplicate payload and makes no provider
++calls. Newly published source facts change the semantic generation and are
++visible on reload across leagues. Failed source checks preserve the valid sample
++with a retained-data notice. Observation dates and latest source-check status are
++separate; an old complete check does not establish current season completeness.
++The existing admitted background refresh schedule and all resource policies are
++unchanged. This is not a real-time feed.
++
++Normal presentation leads with the supported change, averages, difference and
++sample dates. Game identities, exact knowledge timestamps, totals and methodology
++are available under “Game samples and sources.” No snaps, routes, injuries,
++forecasts, player-specific upgrades or buy/sell claims are inferred.
++
++Validation uses disposable deterministic retained facts and actual rendered
++routes, with responsive Chromium at 320, 375, 390 and desktop widths. Such evidence
++is distinct from authenticated live or physical iPhone/Safari acceptance. Exact
++candidate identities, originals, limitations and measurements accompany release
++evidence; this document alone is not proof of validation or publication.
+diff --git a/routes/transactions.py b/routes/transactions.py
+index 04c9c2fb..ad6c997b 100644
+--- a/routes/transactions.py
++++ b/routes/transactions.py
+@@ -481,6 +481,10 @@ def create_transactions_router(
+         if production_summary(production):
+             reasons['production'] = production_summary(production)
+         canonical_panel = production_panel(production, refresh_failed=bool(state.get('last_error')))
++        from services.global_evidence import player_usage_evidence
++        from src.ui.recent_workload import workload_panel
++        usage = await asyncio.to_thread(player_usage_evidence, player_id, data, expected_league_id=selected_league)
++        workload_html = workload_panel(usage)
+         fantasycalc = live["provider_details"].get("FantasyCalc") or {}
+         trend_value = fantasycalc.get("trend_30_day")
+         trend_label = f"{trend_value:+}" if isinstance(trend_value, (int, float)) else "No historical provider trend is available."
+@@ -543,6 +547,7 @@ def create_transactions_router(
+ {player_dossier(report, selected_team, teams, weekly_projection_html=weekly_panel, ownership=ownership)}
+ <p class="player-reported-status">Sleeper reported status: {escape(str(player.get("injury_status") or player.get("status") or "Unavailable"))}</p>
+ {canonical_panel}
++{workload_html}
+ <details class="cx-evidence"><summary>Player assessment explanation</summary>{profile_explanation}</details>
+ {live_panel}
+ {historical_panel}
+diff --git a/services/global_evidence.py b/services/global_evidence.py
+index 8e7dbf3e..57699055 100644
+--- a/services/global_evidence.py
++++ b/services/global_evidence.py
+@@ -107,3 +107,31 @@ def _sleeper_production(data, player_id, as_of, *, require_receipt=False):
+             'ppg': None, 'points_per_observation': window.fantasy_points if current and window else None,
+             'denominator': 'completed-week score observations, not games played',
+             'availability': context.status.value if current else 'unavailable'}
++
++
++def player_usage_evidence(player_id: str, data: dict, *, expected_league_id: str,
++                          path: Path = GLOBAL_EVIDENCE_FILE, as_of: str | None = None) -> dict:
++    """Read one player's shared retained usage; no scoring or runtime ownership.
++
++    Fresh local reads deliberately bypass league publication caches: a correction
++    or new source revision is visible on the next request in every league. A
++    historical query cannot borrow today's NFL completed-week state.
++    """
++    league = data.get('league') or {}
++    league_id = str(league.get('league_id') or '')
++    if not league_id or league_id != str(expected_league_id):
++        raise ValueError('Usage requires the selected league context.')
++    boundary = as_of or datetime.now(timezone.utc).isoformat()
++    season = league.get('season')
++    if not str(season).isdigit():
++        return {'availability': 'unavailable', 'reason': 'league_season_unknown'}
++    store = retained_global_evidence(path)
++    if store is None:
++        return {'availability': 'not_connected', 'reason': 'usage_not_retained'}
++    usage = player_usage(store, player_id, season=int(season), as_of=boundary,
++        through_week=GlobalProduction.completed_week_boundary(data, int(season)) if as_of is None else None)
++    receipt = store.source_check(f'nflverse/production/{season}')
++    if receipt and utc(receipt['checked_at']) > utc(boundary):
++        receipt = None
++    usage.update(league_id=league_id, source_check=receipt, provider_calls=0)
++    return usage
+diff --git a/src/core/data_platform/global_evidence.py b/src/core/data_platform/global_evidence.py
+index b6c2c5ab..95ccb59d 100644
+--- a/src/core/data_platform/global_evidence.py
++++ b/src/core/data_platform/global_evidence.py
+@@ -268,16 +268,21 @@ class GlobalEvidenceStore:
+         return {**dict(row), 'details': json.loads(row['details'])} if row else None
+ 
+     def read(self, family: str, subject_id: str | None, *, as_of: str, limit: int = 1000,
+-             season: int | None = None) -> list[dict[str, Any]]:
++             season: int | None = None, revision_conflicts: bool = False) -> list[dict[str, Any]]:
+         if not 1 <= limit <= 1000:
+             raise ValueError("Evidence read limit must be bounded.")
+         if subject_id is None and (family != 'schedule' or season is None):
+             raise ValueError('Family-wide reads require a bounded schedule season.')
+         boundary = utc(as_of)
++        # Existing consumers keep their original query cost and selection. Usage
++        # optionally detects tied contradictory revisions instead of a hash winner.
++        conflicts_sql = ("COUNT(*) OVER (PARTITION BY f.provider,f.source_record_id,r.known_at,r.observed_at)"
++                         if revision_conflicts else "1")
+         with closing(self._connect(readonly=True)) as connection:
+-            rows = connection.execute("""
+-                SELECT fingerprint,payload,known_at,first_seen FROM (
++            rows = connection.execute(f"""
++                SELECT fingerprint,payload,known_at,first_seen,revision_count FROM (
+                     SELECT f.fingerprint,f.payload,r.known_at,r.observed_at AS first_seen,
++                    {conflicts_sql} AS revision_count,
+                     ROW_NUMBER() OVER (
+                         PARTITION BY f.provider,f.source_record_id
+                         ORDER BY r.known_at DESC,r.observed_at DESC,f.fingerprint DESC
+@@ -293,7 +298,9 @@ class GlobalEvidenceStore:
+             raise ValueError('Evidence result exceeds the requested bound; refusing silent truncation.')
+         return [{**json.loads(zlib.decompress(row["payload"])),
+                  "fingerprint": row["fingerprint"], "knowledge_boundary": row["known_at"],
+-                 "first_seen": row["first_seen"]} for row in rows]
++                 "first_seen": row["first_seen"],
++                 **({"revision_conflict": row["revision_count"] > 1} if revision_conflicts else {})}
++                for row in rows]
+ 
+     def counts(self) -> dict[str, int]:
+         with closing(self._connect(readonly=True)) as connection:
+diff --git a/src/core/data_platform/global_usage.py b/src/core/data_platform/global_usage.py
+index 9fbaa837..e11ac2ae 100644
+--- a/src/core/data_platform/global_usage.py
++++ b/src/core/data_platform/global_usage.py
+@@ -1,23 +1,49 @@
+ """Usage derivation from shared production facts without another durable copy."""
+ from __future__ import annotations
+ 
++import math
++
+ from .global_evidence import GlobalEvidenceStore
++from .recent_workload import recent_workload
+ 
+ 
+ def player_usage(store: GlobalEvidenceStore, player_id: str, *, season: int, as_of: str,
+                  through_week: int | None = None) -> dict:
+-    facts = store.read('production', f'sleeper:{player_id}', as_of=as_of, season=season)
++    facts = store.read('production', f'sleeper:{player_id}', as_of=as_of, season=season, revision_conflicts=True)
+     games = [{'game_id': fact['values'].get('game_id'), 'week': fact['week'],
+               'targets': fact['values'].get('rec_tgt'), 'carries': fact['values'].get('rush_att'),
+               'target_share': fact['values'].get('target_share'),
+               'air_yards_share': fact['values'].get('air_yards_share'),
++              'date': fact['effective_at'], 'team': fact['values'].get('team'),
++              'knowledge_boundaries': [fact['knowledge_boundary']],
+               'evidence_fingerprint': fact['fingerprint']} for fact in facts if through_week is None or (fact["week"] is not None and fact["week"] <= through_week)]
+ 
++    # Revisions are resolved by the store; alternate source keys for one game
++    # must not double-count an observation or conceal contradictory totals.
++    unique = {}
++    for fact, game in zip((f for f in facts if through_week is None or (f['week'] is not None and f['week'] <= through_week)), games):
++        if fact.get('revision_conflict'):
++            game['targets'] = game['carries'] = None
++        key = game['game_id'] or game['evidence_fingerprint']
++        if key not in unique:
++            unique[key] = game
++        else:
++            prior = unique[key]
++            for metric in ('targets', 'carries', 'target_share', 'air_yards_share'):
++                if prior[metric] != game[metric]:
++                    prior[metric] = None
++    games = list(unique.values())
++
+     def total(key):
+         values = [game[key] for game in games]
+-        return sum(values) if values and all(value is not None for value in values) else None
++        return sum(values) if values and all(type(value) in (int, float) and math.isfinite(value)
++            and value >= 0 and value == int(value) for value in values) else None
++
++    # A bounded local schedule read verifies byes; it does not acquire evidence.
++    schedule = store.read('schedule', None, season=season, as_of=as_of)
++    comparison = recent_workload(facts, season=season, as_of=as_of, through_week=through_week, schedule=schedule)
+ 
+-    return {'player_id': player_id, 'season': season, 'as_of': as_of,
++    return {'recent_workload': comparison, 'player_id': player_id, 'season': season, 'as_of': as_of,
+             'completed_week_boundary': through_week,
+             'availability': 'cached' if games else 'unavailable',
+             'source': 'nflverse production', 'games': games,
+diff --git a/src/core/data_platform/recent_workload.py b/src/core/data_platform/recent_workload.py
+new file mode 100644
+index 00000000..ad019746
+--- /dev/null
++++ b/src/core/data_platform/recent_workload.py
+@@ -0,0 +1,184 @@
++"""Bounded observed-game workload comparisons; never fantasy scoring or prediction."""
++
++from __future__ import annotations
++
++import hashlib
++import json
++import math
++from collections import defaultdict
++
++from .global_evidence import utc
++from .global_schedule import schedule_from_facts
++
++METHOD = "observed-workload-3-vs-3-v1"
++
++
++def recent_workload(
++    facts: list[dict],
++    *,
++    season: int,
++    as_of: str,
++    through_week: int | None,
++    schedule: list[dict] | None = None,
++) -> dict:
++    """Caller supplies the admitted NFL completed-week boundary, not a wall-clock guess.
++
++    Require the latest six REG observations, never the latest six non-null/positive
++    statistics. Missing periods within that span or after it block comparison,
++    unless a complete retained schedule establishes a bye. Older missing periods
++    are outside the selected sample, not represented as complete season coverage.
++    """
++    boundary = utc(as_of)
++    groups = defaultdict(list)
++    reasons = []
++    result = dict(
++        method=METHOD,
++        season=season,
++        game_type="REG",
++        as_of=boundary,
++        completed_week_boundary=through_week,
++        sample_basis="observed games, not complete season coverage",
++        source="nflverse player statistics",
++        status="unavailable",
++        reasons=reasons,
++        metrics={},
++        previous=[],
++        recent=[],
++        qualifications=[],
++        provider_calls=0,
++    )
++    for fact in facts:
++        if fact.get("season") != season or fact.get("provider") != "nflverse":
++            continue
++        if (
++            utc(fact["effective_at"]) > boundary
++            or utc(fact["knowledge_boundary"]) > boundary
++        ):
++            continue
++        values = fact["values"]
++        week = fact.get("week")
++        if type(week) is not int or week < 1:
++            reasons.append("game_week_unknown")
++            continue
++        if through_week is not None and week > through_week:
++            continue
++        if values.get("season_type") != "REG":
++            if values.get("season_type") is None:
++                reasons.append("game_type_unknown")
++            continue
++        game = values.get("game_id")
++        if not game or not values.get("team"):
++            reasons.append("game_identity_unknown")
++            continue
++        groups[str(game)].append(fact)
++
++    games = []
++    for game_id, rows in groups.items():
++        identities = {
++            (
++                r["week"],
++                utc(r["effective_at"]),
++                r["values"].get("team"),
++                r["values"].get("opponent"),
++            )
++            for r in rows
++        }
++        conflict = len(identities) != 1 or any(r.get("revision_conflict") for r in rows)
++        row = rows[0]
++        game = dict(
++            game_id=game_id,
++            week=row["week"],
++            date=utc(row["effective_at"]),
++            team=row["values"].get("team"),
++            opponent=row["values"].get("opponent"),
++            knowledge_boundaries=sorted({utc(r["knowledge_boundary"]) for r in rows}),
++            fingerprints=sorted({r["fingerprint"] for r in rows}),
++            conflicts=[],
++        )
++        for label, field in (("targets", "rec_tgt"), ("carries", "rush_att")):
++            values = [r["values"].get(field) for r in rows]
++            valid = all(
++                type(v) in (int, float) and math.isfinite(v) and v >= 0 and v == int(v)
++                for v in values
++            )
++            if conflict or (valid and len(set(values)) != 1):
++                game[label] = None
++                game["conflicts"].append(label)
++            else:
++                game[label] = values[0] if valid else None
++        games.append(game)
++    games.sort(key=lambda r: (r["date"], r["game_id"]))
++    result["eligible_observations"] = len(games)
++    if type(through_week) is not int or through_week < 0:
++        reasons.append("completed_week_boundary_unknown")
++    if len(games) < 6:
++        reasons.append("six_observations_not_available")
++    selected = games[-6:]
++    if selected:
++        weeks = [r["week"] for r in selected]
++        if len(set(weeks)) != len(weeks) or weeks != sorted(weeks):
++            reasons.append("game_order_or_identity_conflict")
++        if through_week is not None:
++            missing = set(range(min(weeks), through_week + 1)) - set(weeks)
++            byes = {}
++            for week in missing:
++                # At a transfer boundary, both adjacent observed teams must have
++                # a proven bye; do not invent which team employed an absent player.
++                before = next((g for g in reversed(selected) if g["week"] < week), None)
++                after = next((g for g in selected if g["week"] > week), None)
++                teams = {g["team"] for g in (before, after) if g}
++                for team in teams:
++                    if team not in byes:
++                        byes[team] = schedule_from_facts(
++                            schedule or [], team, season=season, as_of=boundary
++                        )["bye_week"]
++                if not teams or any(byes[team] != week for team in teams):
++                    result.setdefault("unobserved_weeks", []).append(week)
++            if result.get("unobserved_weeks"):
++                reasons.append("game_observations_missing")
++        if len({g["team"] for g in selected}) > 1:
++            result["qualifications"].append("teams_changed")
++    if not reasons:
++        previous, recent = selected[:3], selected[3:]
++        result.update(previous=previous, recent=recent)
++        for metric in ("targets", "carries"):
++            metric_reasons = []
++            if any(metric in g["conflicts"] for g in selected):
++                metric_reasons.append("conflicting_stat_records")
++            elif any(g[metric] is None for g in selected):
++                metric_reasons.append("stat_fields_missing")
++            if metric_reasons:
++                result["metrics"][metric] = dict(
++                    status="unavailable", reasons=metric_reasons
++                )
++            else:
++                earlier = sum(int(g[metric]) for g in previous) / 3
++                latest = sum(int(g[metric]) for g in recent) / 3
++                result["metrics"][metric] = dict(
++                    status="supported",
++                    previous_average=earlier,
++                    recent_average=latest,
++                    difference=latest - earlier,
++                    previous_count=3,
++                    recent_count=3,
++                )
++        supported = sum(m["status"] == "supported" for m in result["metrics"].values())
++        result["status"] = (
++            "supported" if supported == 2 else "partial" if supported else "unavailable"
++        )
++    result["reasons"] = sorted(set(reasons))
++    result["generation"] = hashlib.sha256(
++        json.dumps(
++            [
++                METHOD,
++                season,
++                through_week,
++                games,
++                result["reasons"],
++                sorted(r["fingerprint"] for r in schedule or []),
++            ],
++            sort_keys=True,
++            separators=(",", ":"),
++        ).encode()
++    ).hexdigest()
++    return result
+diff --git a/src/ui/recent_workload.py b/src/ui/recent_workload.py
+new file mode 100644
+index 00000000..6da5e59e
+--- /dev/null
++++ b/src/ui/recent_workload.py
+@@ -0,0 +1,195 @@
++"""Plain-language recent carries and targets; source detail stays optional."""
++
++from html import escape
++from datetime import datetime
++
++from src.ui.customer_experience import readable_time
++
++_REASONS = {
++    "completed_week_boundary_unknown": "The completed NFL week is not confirmed for this comparison.",
++    "six_observations_not_available": "Six eligible regular-season game observations are not retained.",
++    "game_observations_missing": "Game records are missing within or after the recent sample; absent records are not zero.",
++    "stat_fields_missing": "Some selected games do not report this statistic; missing values are not zero.",
++    "conflicting_stat_records": "Retained records disagree about this statistic.",
++    "game_type_unknown": "Some retained records do not confirm the game type.",
++    "game_week_unknown": "Some retained records do not confirm the week.",
++    "game_identity_unknown": "Some retained records do not confirm the game or historical team.",
++    "game_order_or_identity_conflict": "The selected game identities or order cannot be reconciled.",
++    "league_season_unknown": "The selected league season is not confirmed.",
++    "usage_not_retained": "Game-level carries and targets are not prepared yet.",
++}
++
++
++def _number(value):
++    return f"{value:.2f}".rstrip("0").rstrip(".")
++
++
++def _dates(games):
++    first, last = (datetime.fromisoformat(games[i]["date"]) for i in (0, -1))
++
++    def label(d):
++        return d.strftime("%b") + " " + str(d.day)
++
++    return f"{label(first)} – {label(last)}, {last.year} UTC"
++
++
++def workload_panel(usage: dict) -> str:
++    comparison = usage.get("recent_workload") or {}
++    parts = []
++    for metric, item in comparison.get("metrics", {}).items():
++        label = metric.title()
++        if item["status"] == "supported":
++            before, after, delta = (
++                item["previous_average"],
++                item["recent_average"],
++                item["difference"],
++            )
++            verb = (
++                "increased"
++                if delta > 0
++                else "decreased"
++                if delta < 0
++                else "were unchanged"
++            )
++            sentence = (
++                f"{label} {verb} from {_number(before)} to {_number(after)} per observed game."
++                if delta
++                else f"{label} were unchanged at {_number(after)} per observed game."
++            )
++            parts.append(
++                "<p><b>"
++                + escape(sentence)
++                + "</b> "
++                + escape(
++                    "Difference: "
++                    + ("+" if delta > 0 else "")
++                    + _number(delta)
++                    + " per observed game."
++                )
++                + "</p>"
++            )
++        else:
++            parts.append(
++                "<p><b>"
++                + label
++                + " comparison unavailable.</b> "
++                + escape(_REASONS[item["reasons"][0]])
++                + "</p>"
++            )
++    if not parts:
++        reasons = comparison.get("reasons") or [
++            usage.get("reason", "six_observations_not_available")
++        ]
++        parts.append(
++            "<p>"
++            + escape(
++                _REASONS.get(
++                    reasons[0],
++                    "A recent workload comparison is not supported by the retained evidence.",
++                )
++            )
++            + "</p>"
++        )
++    if comparison.get("unobserved_weeks"):
++        parts.append(
++            "<p>Unobserved weeks: "
++            + escape(", ".join(map(str, comparison["unobserved_weeks"])))
++            + ".</p>"
++        )
++    previous, recent = comparison.get("previous") or [], comparison.get("recent") or []
++    if previous and recent:
++        parts.append(
++            "<p>Previous 3: "
++            + escape(_dates(previous))
++            + "<br>Latest 3: "
++            + escape(_dates(recent))
++            + "</p>"
++        )
++    if "teams_changed" in comparison.get("qualifications", []):
++        parts.append(
++            "<p>The sample spans an NFL team change. These observations do not establish why workload changed.</p>"
++        )
++    receipt = usage.get("source_check") or {}
++    if receipt and receipt.get("status") != "complete":
++        parts.append(
++            "<p>The latest source update did not complete. These are retained observations.</p>"
++        )
++    parts.append(
++        '<p class="muted">Observed regular-season games, not complete season coverage or a forecast.</p>'
++    )
++    records = previous + recent or (usage.get("games") or [])[-6:]
++    rows = []
++    for row in records:
++        rows.append(
++            "<li>"
++            + escape(
++                " · ".join(
++                    (
++                        str(row.get("date") or "Date not retained"),
++                        "Week " + str(row.get("week")),
++                        str(row.get("team") or "Team not retained"),
++                        "Carries: "
++                        + str(
++                            row.get("carries")
++                            if row.get("carries") is not None
++                            else "Unknown"
++                        ),
++                        "Targets: "
++                        + str(
++                            row.get("targets")
++                            if row.get("targets") is not None
++                            else "Unknown"
++                        ),
++                    )
++                )
++            )
++            + (
++                "<br><small>"
++                + escape(
++                    "Game: "
++                    + str(row["game_id"])
++                    + " · First eligible knowledge: "
++                    + ", ".join(row.get("knowledge_boundaries") or [])
++                )
++                + "</small>"
++                if row.get("game_id")
++                else ""
++            )
++            + "</li>"
++        )
++    totals = "; ".join(
++        key.title()
++        + ": "
++        + str(usage.get(key) if usage.get(key) is not None else "Unknown")
++        for key in ("carries", "targets")
++    )
++    detail = (
++        "<p>Source: nflverse player statistics, separate from Sleeper fantasy scores. "
++        "The latest six eligible observations form two consecutive samples of three. "
++        "Zeros are included; missing fields are not skipped. Live and later weeks are excluded by the admitted NFL completed-week boundary. "
++        "Missing game records block comparison unless a complete retained schedule establishes a bye. "
++        "A game observation does not establish snaps, routes, injury status or future performance.</p>"
++        "<p>Retained usage totals: "
++        + escape(totals)
++        + " · "
++        + escape(str(usage.get("sample_count", 0)))
++        + " source game observations. Totals have their own retained sample.</p>"
++        "<p>Last source check: "
++        + escape(readable_time(receipt.get("checked_at")))
++        + " · "
++        + escape(str(receipt.get("status") or "No receipt retained"))
++        + "</p><ul>"
++        + "".join(rows)
++        + "</ul>"
++        "<p>Comparison generation: <code>"
++        + escape(str(comparison.get("generation") or "Unknown"))
++        + "</code></p>"
++    )
++    return (
++        '<section class="card recent-workload" style="min-width:0;overflow-wrap:anywhere" aria-labelledby="recent-workload-title">'
++        '<h3 id="recent-workload-title">Recent carries and targets</h3>'
++        + "".join(parts)
++        + "<details><summary>Game samples and sources</summary>"
++        + detail
++        + "</details></section>"
++    )
+diff --git a/tests/test_recent_workload.py b/tests/test_recent_workload.py
+new file mode 100644
+index 00000000..c58b6a38
+--- /dev/null
++++ b/tests/test_recent_workload.py
+@@ -0,0 +1,460 @@
++"""Matched retained-source → shared read model → actual dossier/API controls."""
++
++from dataclasses import replace
++from datetime import datetime, timedelta, timezone
++from pathlib import Path
++import tempfile
++import unittest
++from unittest.mock import patch
++
++from services.global_evidence import player_usage_evidence
++from src.core.data_platform.global_evidence import GlobalEvidenceStore, GlobalFact
++from src.core.data_platform.global_usage import player_usage
++from tests import test_player_api as api_fixtures
++
++STAMP = "2026-10-20T00:00:00Z"
++NOW = "2026-11-15T12:00:00Z"
++
++
++def fact(week, targets, carries, **changes):
++    date = datetime(2026, 9, 6, 17, tzinfo=timezone.utc) + timedelta(weeks=week - 1)
++    row = GlobalFact(
++        "production",
++        "sleeper:player one",
++        "nflverse",
++        f"g{week}:id",
++        date.isoformat(),
++        None,
++        dict(
++            game_id=f"g{week}",
++            season_type="REG",
++            team="BUF",
++            opponent="NYJ",
++            rec_tgt=targets,
++            rush_att=carries,
++        ),
++        season=2026,
++        week=week,
++    )
++    return replace(row, **changes)
++
++
++def seed(store):
++    rows = [fact(w, 2 if w <= 3 else 5, 12 if w <= 3 else 6) for w in range(1, 7)]
++    store.publish(rows, retrieved_at=STAMP)
++    return rows
++
++
++def data(league="league-1"):
++    value = api_fixtures.fixture_data()
++    value["league"].update(league_id=league, season="2026")
++    value["nfl_state"] = dict(season="2026", season_type="regular", week=7)
++    value["scoring_settings"] = {"rec": 1}
++    return value
++
++
++class RecentWorkloadTests(unittest.TestCase):
++    def setUp(self):
++        self.tmp = self.enterContext(tempfile.TemporaryDirectory())
++        self.store = GlobalEvidenceStore(Path(self.tmp) / "global.sqlite3")
++        self.rows = seed(self.store)
++
++    def usage(self, **kwargs):
++        return player_usage(
++            self.store, "player one", season=2026, as_of=NOW, through_week=6, **kwargs
++        )
++
++    def comparison(self):
++        return self.usage()["recent_workload"]
++
++    def test_increase_decrease_dates_and_exact_samples(self):
++        r = self.comparison()
++        self.assertEqual(r["status"], "supported")
++        self.assertEqual(
++            r["metrics"]["targets"],
++            dict(
++                status="supported",
++                previous_average=2,
++                recent_average=5,
++                difference=3,
++                previous_count=3,
++                recent_count=3,
++            ),
++        )
++        self.assertEqual(r["metrics"]["carries"]["difference"], -6)
++        self.assertEqual([g["week"] for g in r["previous"]], [1, 2, 3])
++        self.assertEqual([g["week"] for g in r["recent"]], [4, 5, 6])
++        self.assertTrue(r["recent"][0]["date"].startswith("2026-09-27"))
++
++    def test_explicit_zero_and_unchanged_not_missing(self):
++        self.store.publish(
++            [
++                replace(r, values={**r.values, "rush_att": 0, "rec_tgt": 0})
++                for r in self.rows
++            ],
++            retrieved_at="2026-10-21T00:00:00Z",
++        )
++        self.assertEqual(self.comparison()["metrics"]["targets"]["difference"], 0)
++        self.assertEqual(self.comparison()["metrics"]["carries"]["recent_average"], 0)
++
++    def test_missing_stat_does_not_shift_sample_or_hide_other_metric(self):
++        self.store.publish(
++            [replace(self.rows[4], values={**self.rows[4].values, "rec_tgt": None})],
++            retrieved_at="2026-10-21T00:00:00Z",
++        )
++        r = self.comparison()
++        self.assertEqual(r["metrics"]["targets"]["reasons"], ["stat_fields_missing"])
++        self.assertEqual(r["metrics"]["carries"]["difference"], -6)
++        self.assertEqual([g["week"] for g in r["recent"]], [4, 5, 6])
++
++    def test_negative_invalid_count_is_not_a_zero(self):
++        self.store.publish(
++            [replace(self.rows[4], values={**self.rows[4].values, "rec_tgt": -1})],
++            retrieved_at="2026-10-21T00:00:00Z",
++        )
++        self.assertEqual(
++            self.comparison()["metrics"]["targets"]["status"], "unavailable"
++        )
++
++    def test_missing_game_is_not_omitted_to_manufacture_trend(self):
++        self.store.publish([fact(8, 50, 50)], retrieved_at=STAMP)
++        r = player_usage(
++            self.store, "player one", season=2026, as_of=NOW, through_week=8
++        )["recent_workload"]
++        self.assertIn("game_observations_missing", r["reasons"])
++        self.assertEqual(r["unobserved_weeks"], [7])
++        self.assertEqual(r["metrics"], {})
++
++    def test_trailing_missing_game_blocks_stale_six_game_comparison(self):
++        r = player_usage(
++            self.store, "player one", season=2026, as_of=NOW, through_week=7
++        )["recent_workload"]
++        self.assertEqual(r["unobserved_weeks"], [7])
++        self.assertEqual(r["metrics"], {})
++
++    def test_missing_is_not_invented_bye_in_partial_schedule(self):
++        self.store.publish(
++            [
++                GlobalFact(
++                    "schedule",
++                    "nfl-game:other",
++                    "nflverse",
++                    "other",
++                    self.rows[0].effective_at,
++                    None,
++                    dict(
++                        game_id="other",
++                        home_team="NYJ",
++                        away_team="KC",
++                        game_type="REG",
++                    ),
++                    season=2026,
++                    week=7,
++                )
++            ],
++            retrieved_at=STAMP,
++        )
++        self.test_trailing_missing_game_blocks_stale_six_game_comparison()
++
++    def test_only_complete_schedule_shape_can_establish_bye(self):
++        # Existing canonical 32-team complete-schedule rule, not absence inference.
++        teams = ["BUF"] + [f"T{i}" for i in range(31)]
++        scheduled = []
++        for week in range(1, 18):
++            for i in range(0, 32, 2):
++                if week == (7 if i == 0 else 1 + i // 2):
++                    continue
++                game = f"{week}-{i}"
++                scheduled.append(
++                    GlobalFact(
++                        "schedule",
++                        f"nfl-game:{game}",
++                        "nflverse",
++                        game,
++                        self.rows[0].effective_at,
++                        None,
++                        dict(
++                            game_id=game,
++                            home_team=teams[i],
++                            away_team=teams[i + 1],
++                            game_type="REG",
++                        ),
++                        season=2026,
++                        week=week,
++                    )
++                )
++        self.store.publish(scheduled, retrieved_at=STAMP)
++        r = player_usage(
++            self.store, "player one", season=2026, as_of=NOW, through_week=7
++        )["recent_workload"]
++        self.assertEqual(r["status"], "supported")
++        self.assertNotIn("unobserved_weeks", r)
++
++    def test_revision_replaces_prior_result_and_historical_query_does_not_see_it(self):
++        before = self.comparison()["generation"]
++        self.store.publish(
++            [replace(self.rows[-1], values={**self.rows[-1].values, "rec_tgt": 11})],
++            retrieved_at="2026-10-22T00:00:00Z",
++        )
++        self.assertEqual(self.comparison()["metrics"]["targets"]["recent_average"], 7)
++        self.assertNotEqual(self.comparison()["generation"], before)
++        old = player_usage(
++            self.store,
++            "player one",
++            season=2026,
++            as_of="2026-10-21T00:00:00Z",
++            through_week=6,
++        )["recent_workload"]
++        self.assertEqual(old["metrics"]["targets"]["recent_average"], 5)
++
++    def test_duplicate_same_game_is_one_observation(self):
++        self.store.publish(
++            [replace(self.rows[-1], source_record_id="alternate-record")],
++            retrieved_at=STAMP,
++        )
++        self.assertEqual(self.comparison()["eligible_observations"], 6)
++        self.assertEqual(self.comparison()["metrics"]["targets"]["recent_average"], 5)
++
++    def test_conflicting_duplicate_does_not_select_a_statistic(self):
++        self.store.publish(
++            [
++                replace(
++                    self.rows[-1],
++                    source_record_id="alternate-record",
++                    values={**self.rows[-1].values, "rec_tgt": 99},
++                )
++            ],
++            retrieved_at=STAMP,
++        )
++        r = self.comparison()
++        self.assertEqual(
++            r["metrics"]["targets"]["reasons"], ["conflicting_stat_records"]
++        )
++        self.assertEqual(r["metrics"]["carries"]["recent_average"], 6)
++
++    def test_tied_source_revisions_are_not_resolved_by_fingerprint(self):
++        self.store.publish(
++            [replace(self.rows[-1], values={**self.rows[-1].values, "rec_tgt": 99})],
++            retrieved_at=STAMP,
++        )
++        self.assertEqual(
++            self.comparison()["metrics"]["targets"]["reasons"],
++            ["conflicting_stat_records"],
++        )
++
++    def test_insufficient_sample_keeps_totals_and_records(self):
++        r = player_usage(
++            self.store, "player one", season=2026, as_of=NOW, through_week=5
++        )
++        self.assertEqual(len(r["games"]), 5)
++        self.assertEqual(r["targets"], 16)
++        self.assertIn("six_observations_not_available", r["recent_workload"]["reasons"])
++
++    def test_live_future_postseason_other_season_and_unconfirmed_excluded(self):
++        extra = [
++            fact(7, 99, 99),
++            fact(6, 99, 99, season=2025, source_record_id="old"),
++            fact(
++                6,
++                99,
++                99,
++                values={**self.rows[-1].values, "season_type": "POST"},
++                source_record_id="post",
++            ),
++            fact(
++                6,
++                99,
++                99,
++                effective_at="2026-12-01T00:00:00Z",
++                source_record_id="future",
++            ),
++        ]
++        self.store.publish(extra, retrieved_at=STAMP)
++        self.assertEqual(self.comparison()["metrics"]["targets"]["recent_average"], 5)
++        unknown = player_usage(self.store, "player one", season=2026, as_of=NOW)[
++            "recent_workload"
++        ]
++        self.assertIn("completed_week_boundary_unknown", unknown["reasons"])
++
++    def test_unknown_game_type_blocks_unproven_comparison(self):
++        self.store.publish(
++            [
++                fact(
++                    1,
++                    5,
++                    5,
++                    values={**self.rows[0].values, "season_type": None},
++                    source_record_id="unknown",
++                )
++            ],
++            retrieved_at=STAMP,
++        )
++        self.assertIn("game_type_unknown", self.comparison()["reasons"])
++
++    def test_transfer_uses_historical_team_not_catalog_and_qualifies(self):
++        self.store.publish(
++            [replace(r, values={**r.values, "team": "KC"}) for r in self.rows[3:]],
++            retrieved_at="2026-10-21T00:00:00Z",
++        )
++        r = self.comparison()
++        self.assertEqual(r["qualifications"], ["teams_changed"])
++        self.assertEqual(r["recent"][0]["team"], "KC")
++        self.assertEqual(r["previous"][0]["team"], "BUF")
++
++    def test_no_hindsight_before_first_retrieval(self):
++        r = player_usage(
++            self.store,
++            "player one",
++            season=2026,
++            as_of="2026-10-19T00:00:00Z",
++            through_week=6,
++        )
++        self.assertEqual(r["games"], [])
++        self.assertEqual(r["recent_workload"]["metrics"], {})
++
++    def test_shared_updates_new_game_and_failure_preservation_across_leagues(self):
++        with patch(
++            "services.global_evidence.retained_global_evidence", return_value=self.store
++        ):
++            leagues = [data("a"), data("b")]
++            for d in leagues:
++                d["nfl_state"]["week"] = 8
++
++            def get(d):
++                return player_usage_evidence(
++                    "player one", d, expected_league_id=d["league"]["league_id"]
++                )
++
++            self.assertIn(
++                "game_observations_missing",
++                get(leagues[0])["recent_workload"]["reasons"],
++            )
++            self.store.publish([fact(7, 8, 3)], retrieved_at="2026-10-26T00:00:00Z")
++            results = [get(d) for d in leagues]
++            self.assertEqual(
++                results[0]["recent_workload"]["metrics"],
++                results[1]["recent_workload"]["metrics"],
++            )
++            self.assertEqual(
++                results[0]["recent_workload"]["generation"],
++                results[1]["recent_workload"]["generation"],
++            )
++            self.assertEqual(
++                results[0]["recent_workload"]["metrics"]["targets"]["recent_average"], 6
++            )
++            self.store.record_source_check(
++                "nflverse/production/2026",
++                source_identity=None,
++                checked_at="2026-11-01T00:00:00Z",
++                status="failed",
++                details={"reason": "source_unavailable"},
++            )
++            self.assertEqual(
++                get(leagues[0])["recent_workload"]["metrics"],
++                results[0]["recent_workload"]["metrics"],
++            )
++            self.assertEqual(get(leagues[0])["source_check"]["status"], "failed")
++            with self.assertRaises(ValueError):
++                player_usage_evidence("player one", leagues[0], expected_league_id="b")
++            past = player_usage_evidence(
++                "player one",
++                leagues[0],
++                expected_league_id="a",
++                as_of="2026-10-25T00:00:00Z",
++            )
++            self.assertIsNone(past["source_check"])
++            self.assertEqual(past["recent_workload"]["metrics"], {})
++
++    def test_read_only_derivation_does_not_retain_duplicate_payload(self):
++        before = self.store.path.read_bytes()
++        for _ in range(12):
++            self.usage()
++        self.assertEqual(before, self.store.path.read_bytes())
++
++
++class RecentWorkloadRenderedTests(unittest.TestCase):
++    def setUp(self):
++        self.tmp = self.enterContext(tempfile.TemporaryDirectory())
++        self.store = GlobalEvidenceStore(Path(self.tmp) / "global.sqlite3")
++        self.rows = seed(self.store)
++        self.enterContext(
++            patch(
++                "services.global_evidence.retained_global_evidence",
++                return_value=self.store,
++            )
++        )
++        self.fixture = api_fixtures.PlayerApiContractTests()
++        self.fixture.setUp()
++        self.addCleanup(self.fixture.client.close)
++        self.fixture.data.update(data())
++        self.download = self.enterContext(
++            patch(
++                "src.core.data_platform.source_snapshot.download_snapshot",
++                side_effect=AssertionError("No acquisition on render"),
++            )
++        )
++
++    def page(self):
++        r = self.fixture.client.get("/players/player%20one?front_office=1")
++        self.assertEqual(r.status_code, 200)
++        return r.text
++
++    def test_actual_dossier_and_api_match_retained_source_values(self):
++        html = self.page()
++        self.assertIn("Targets increased from 2 to 5 per observed game.", html)
++        self.assertIn("Carries decreased from 12 to 6 per observed game.", html)
++        self.assertIn("Difference: +3 per observed game.", html)
++        self.assertIn("Sep 6 – Sep 20, 2026 UTC", html)
++        self.assertIn("Game samples and sources", html)
++        api = self.fixture.client.get("/api/players/player%20one/intelligence").json()
++        self.assertEqual(
++            api["canonical_evidence"]["usage"]["recent_workload"]["metrics"]["targets"][
++                "recent_average"
++            ],
++            5,
++        )
++        self.download.assert_not_called()
++
++    def test_reload_reflects_correction_and_failed_refresh_without_reevaluation(self):
++        self.assertIn("Targets increased from 2 to 5", self.page())
++        self.store.publish(
++            [replace(self.rows[-1], values={**self.rows[-1].values, "rec_tgt": 11})],
++            retrieved_at="2026-10-22T00:00:00Z",
++        )
++        self.assertIn("Targets increased from 2 to 7", self.page())
++        self.store.record_source_check(
++            "nflverse/production/2026",
++            source_identity=None,
++            checked_at="2026-11-01T00:00:00Z",
++            status="failed",
++            details={},
++        )
++        html = self.page()
++        self.assertIn("Targets increased from 2 to 7", html)
++        self.assertIn("latest source update did not complete", html)
++
++    def test_missing_stat_withholds_only_affected_result_and_zero_renders(self):
++        self.store.publish(
++            [
++                replace(
++                    self.rows[-1],
++                    values={**self.rows[-1].values, "rec_tgt": None, "rush_att": 0},
++                )
++            ],
++            retrieved_at="2026-10-22T00:00:00Z",
++        )
++        html = self.page()
++        self.assertIn("Targets comparison unavailable.", html)
++        self.assertNotIn("Targets increased from", html)
++        self.assertIn("Carries decreased from 12 to 4", html)
++        self.assertIn("Targets: Unknown", html)
++        self.assertIn("Carries: 0", html)
++
++    def test_unknown_boundary_keeps_usage_records_without_claiming_completed_samples(
++        self,
++    ):
++        self.fixture.data["nfl_state"]["season_type"] = "post"
++        html = self.page()
++        self.assertIn("completed NFL week is not confirmed", html)
++        self.assertNotIn("Targets increased from", html)
++        self.assertIn("Retained usage totals", html)
+diff --git a/tests/test_recent_workload_browser.py b/tests/test_recent_workload_browser.py
+new file mode 100644
+index 00000000..0e64ef46
+--- /dev/null
++++ b/tests/test_recent_workload_browser.py
+@@ -0,0 +1,173 @@
++"""Real dossier HTML and Chromium; disposable evidence, never live owner proof."""
++
++from dataclasses import replace
++import json
++import os
++from pathlib import Path
++from urllib.parse import urlsplit
++import unittest
++from unittest.mock import AsyncMock, patch
++
++from fastapi import FastAPI
++from fastapi.testclient import TestClient
++from playwright.sync_api import sync_playwright
++
++from routes.transactions import create_transactions_router
++from tests import test_recent_workload as fixtures
++from tools.validation.browser_runtime import launch_chromium
++
++
++class RecentWorkloadBrowserTests(unittest.TestCase):
++    def test_dossier_complete_partial_missing_phone_keyboard_and_touch(self):
++        import dtos_app
++
++        f = fixtures.RecentWorkloadRenderedTests()
++        f.setUp()
++        self.addCleanup(f.doCleanups)
++        data = f.fixture.data
++        data["players"]["player one"]["full_name"] = (
++            "Alexanderson Montgomery Long Player Name"
++        )
++        app = FastAPI()
++        app.include_router(
++            create_transactions_router(
++                ensure_fresh=AsyncMock(),
++                refresh_transactions=AsyncMock(),
++                require_data=lambda: data,
++                state=f.fixture.state,
++                page=dtos_app.page,
++            )
++        )
++        measurements = []
++        folder = os.environ.get("DTOS_WORKLOAD_EVIDENCE")
++        if folder:
++            Path(folder).mkdir(parents=True, exist_ok=True)
++        with (
++            TestClient(app) as client,
++            patch.dict(dtos_app.STATE, {"data": data}),
++            sync_playwright() as pw,
++        ):
++            browser = launch_chromium(pw, headless=True)
++            try:
++                for state in ("complete", "partial", "missing"):
++                    if state == "partial":
++                        f.store.publish(
++                            [
++                                replace(
++                                    f.rows[-1],
++                                    values={**f.rows[-1].values, "rec_tgt": None},
++                                )
++                            ],
++                            retrieved_at="2026-10-22T00:00:00Z",
++                        )
++                    if state == "missing":
++                        data["nfl_state"]["season_type"] = "post"
++                    for width, height in (
++                        (320, 432),
++                        (375, 667),
++                        (390, 844),
++                        (1280, 900),
++                    ):
++                        page = browser.new_page(
++                            viewport={"width": width, "height": height},
++                            has_touch=width < 1000,
++                        )
++                        requests = []
++
++                        def transport(route):
++                            u = urlsplit(route.request.url)
++                            requests.append(u.path)
++                            if u.netloc != "fixture":
++                                route.fulfill(status=404)
++                                return
++                            if u.path.startswith("/static/"):
++                                p = Path(u.path.lstrip("/"))
++                                if p.is_file():
++                                    route.fulfill(path=str(p))
++                                    return
++                            r = client.get(u.path + "?" + u.query)
++                            route.fulfill(
++                                status=r.status_code,
++                                body=r.content,
++                                content_type=r.headers.get("content-type", "text/html"),
++                            )
++
++                        page.route("**/*", transport)
++                        r = page.goto(
++                            "http://fixture/players/player%20one?front_office=1&from_team=1"
++                        )
++                        self.assertEqual(r.status, 200)
++                        panel = page.locator(".recent-workload")
++                        panel.scroll_into_view_if_needed()
++                        visible = panel.inner_text()
++                        self.assertNotIn("Comparison generation:", visible)
++                        if state == "complete":
++                            self.assertIn(
++                                "Targets increased from 2 to 5 per observed game.",
++                                visible,
++                            )
++                        if state == "partial":
++                            self.assertIn("Targets comparison unavailable.", visible)
++                            self.assertIn("Carries decreased from 12 to 6", visible)
++                        if state == "missing":
++                            self.assertIn(
++                                "completed NFL week is not confirmed", visible
++                            )
++                        self.assertLessEqual(
++                            page.evaluate("document.documentElement.scrollWidth"), width
++                        )
++                        if folder:
++                            page.screenshot(
++                                path=str(Path(folder) / f"{state}-{width}-default.png")
++                            )
++                        summary = panel.locator("summary")
++                        summary.focus()
++                        self.assertNotEqual(
++                            summary.evaluate("e=>getComputedStyle(e).outlineStyle"),
++                            "none",
++                        )
++                        summary.press("Enter")
++                        self.assertTrue(panel.locator("details").evaluate("e=>e.open"))
++                        self.assertIn(
++                            "separate from Sleeper fantasy scores", panel.inner_text()
++                        )
++                        if folder:
++                            page.screenshot(
++                                path=str(Path(folder) / f"{state}-{width}-expanded.png")
++                            )
++                        if width < 1000:
++                            summary.tap()
++                        else:
++                            summary.press("Enter")
++                        self.assertFalse(panel.locator("details").evaluate("e=>e.open"))
++                        self.assertLessEqual(
++                            page.evaluate("document.documentElement.scrollWidth"), width
++                        )
++                        self.assertFalse(
++                            any("generate" in p or "sync" in p for p in requests)
++                        )
++                        back = page.get_by_role("link", name="← Back to My Team roster")
++                        self.assertIn("/teams/1", back.get_attribute("href"))
++                        measurements.append(
++                            dict(
++                                state=state,
++                                width=width,
++                                height=height,
++                                text=visible,
++                                panel_height=panel.bounding_box()["height"],
++                                document_width=page.evaluate(
++                                    "document.documentElement.scrollWidth"
++                                ),
++                                keyboard=True,
++                                touch=width < 1000,
++                                requests=requests,

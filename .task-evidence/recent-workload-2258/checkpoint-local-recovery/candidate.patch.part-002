@@ -1,0 +1,11 @@
+
++                                source_calls=0,
++                            )
++                        )
++                        page.close()
++            finally:
++                browser.close()
++        if folder:
++            (Path(folder) / "measurements.json").write_text(
++                json.dumps(measurements, indent=2) + "\n"
++            )

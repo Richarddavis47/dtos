@@ -1,0 +1,24 @@
+{
+  "source": {
+    "baseline": "66a54635df075b2a120606ae3e6e3e5a96bd7b21",
+    "baseline_tree": "129b9423d529d3a5fea70603474f22088a662389",
+    "candidate": "ca685099dd6f7d95090fcee732f0ad3287a50ca6",
+    "tree": "4d455c93174f246f242f724e23de5fed44ecb4fb",
+    "branch": "feat/recent-player-workload-2258",
+    "version": "1.22.43",
+    "build": 2258,
+    "expected_test_count": 4555,
+    "pr": 347
+  },
+  "budgets": [
+    256,
+    128
+  ],
+  "tests": [
+    "tests.test_rebuild_discovery_browser.RebuildDiscoveryBrowserTests.test_real_unseeded_generation_and_zero_results_at_four_viewports",
+    "tests.test_rebuild_roster_space_browser.RebuildRosterSpaceBrowserTests.test_full_rosters_unseeded_strategies_and_qualified_zero_states_at_four_sizes",
+    "tests.test_trade_response_browser.TradeResponseBrowserTests.test_bounded_timeout_late_response_and_explicit_retry_at_four_sizes",
+    "tests.test_trade_strategy_state_browser.StrategyStateBrowserTests.test_discovery_scope_and_explicit_save_controls_at_four_viewports"
+  ],
+  "policy": "One matched run per budget, all four original cases; no assertion, source, admission, timeout or workload changes. Diagnostic failures remain failures. Isolated passes cannot establish full-prefix recovery."
+}
