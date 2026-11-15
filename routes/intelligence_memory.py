@@ -102,6 +102,7 @@ def create_intelligence_memory_router(
             return JSONResponse({"status": "feature_gated"}, status_code=403)
         result = await sleeper_season_cache.get_or_rebuild(
             str(league_id), int(season), source.completed_season_facts,
+            recover_transactions=getattr(source, 'recover_transaction_periods', None),
         )
         return JSONResponse({
             "status": result.status, "season": result.season,

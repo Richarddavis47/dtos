@@ -448,7 +448,8 @@ def create_transactions_router(
         name = player.get("full_name") or " ".join(
             value for value in (player.get("first_name"), player.get("last_name")) if value
         ) or player_id
-        live = data_platform.player_report(player_id, data, market_fact=report.market_fact)
+        live = data_platform.player_report(player_id, data, market_fact=report.market_fact,
+            projection_service=active.projection if active else projection_service)
         # Reuse the same selected-week/scoring/generation as the numeric panel.
         projection_availability = (
             f"Available · Sleeper week {projection_view['week']} · {projection_view['display']} points"
