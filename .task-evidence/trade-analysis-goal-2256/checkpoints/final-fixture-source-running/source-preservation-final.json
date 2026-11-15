@@ -1,0 +1,74 @@
+{
+  "source": {
+    "baseline": "7dafa5cc44197752ced5469c84e66fe3dd80da06",
+    "baseline_tree": "b9c099c84cfe5590ef1dc10af28f9755dbb01ee9",
+    "candidate": "b207fd46c14deac0315191a0efc39420cbbb279d",
+    "tree": "bb1cc8346184de92e9be29a49824f3da3cde9894",
+    "branch": "fix/trade-analysis-goal-2256",
+    "version": "1.22.41",
+    "build": 2256,
+    "expected_test_count": 4513,
+    "pr": 345
+  },
+  "unchanged_subtrees": [
+    {
+      "path": "src/core/trade_intelligence",
+      "tree": "f72b275b81ea7bcda910cd250c957f0810d04d71",
+      "all_tree_bytes_and_modes_unchanged": true
+    },
+    {
+      "path": "src/core/valuation",
+      "tree": "0f3c8ee50c01ffe034778a12980871d4aaf24779",
+      "all_tree_bytes_and_modes_unchanged": true
+    },
+    {
+      "path": "src/core/projection_intelligence",
+      "tree": "de8268bbd71982f426946f081aa0d1096df3f958",
+      "all_tree_bytes_and_modes_unchanged": true
+    },
+    {
+      "path": "src/platform",
+      "tree": "a3be834279fab69157ba4217a25f378d250683c5",
+      "all_tree_bytes_and_modes_unchanged": true
+    }
+  ],
+  "unchanged_critical_files": [
+    {
+      "path": "services/trade_intelligence.py",
+      "sha256": "1373b65270b4a41cdbdc1cd7cb200a448dfa352b18b14246c4e797b42f60e098",
+      "unchanged": true
+    },
+    {
+      "path": "services/sleeper.py",
+      "sha256": "829d4528b32c07cf0f759eab35d4b57e81d77486ada40b1095e941d3cea646d1",
+      "unchanged": true
+    },
+    {
+      "path": "services/player_evidence.py",
+      "sha256": "cb923f637c145dd6cd8a94330527aa11a681bd7615943e1f569af874278cd1ea",
+      "unchanged": true
+    },
+    {
+      "path": "services/league_preparation.py",
+      "sha256": "e4b97ff3cc50b852a096e4fe4fb8d41df241481aa48211bbe73354171914bc98",
+      "unchanged": true
+    }
+  ],
+  "changed_files": [
+    "CHANGELOG.md",
+    "RELEASE_NOTES.md",
+    "app_metadata.py",
+    "services/recommended_trade_search.py",
+    "services/trade_decision.py",
+    "services/trade_decision_summary.py",
+    "services/trade_evidence_limits.py",
+    "services/trade_explanation.py",
+    "services/trade_search_policy.py",
+    "static/js/trade_workspace.js",
+    "tests/test_plain_english_browser.py",
+    "tests/test_rebuild_roster_space_browser.py",
+    "tests/test_trade_analysis_goal.py",
+    "tests/test_trade_analysis_goal_browser.py"
+  ],
+  "scope": "Exact baseline/candidate tree and bytes verification; diagnostic/presentation changes do not alter these evaluator, valuation, source, scoring or resource files."
+}
