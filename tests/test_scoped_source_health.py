@@ -50,6 +50,30 @@ class ScopedSourceHealthTests(unittest.TestCase):
             self.assertIsNone(row['last_refresh'])
             self.assertIsNone(row['records_retrieved'])
 
+    def test_one_supported_player_never_marks_another_player_or_catalog_complete(self):
+        self.data['players']['other'] = {'full_name':'Other Fixture', 'position':'RB'}
+        report = self.platform.player_report('other', self.data)
+        for family in ('Projections','Production','Usage'):
+            self.assertEqual(report['provider_health'][family]['status'],'unavailable')
+            self.assertEqual(report['provider_health'][family]['prepared_observations'],0)
+            self.assertEqual(report['provider_health'][family]['scope']['player_id'],'other')
+        self.assertEqual(self.report()['provider_health']['Projections']['status'],'available')
+
+    def test_default_and_connected_restore_report_same_native_result_coverage(self):
+        from tests import test_sleeper_actual_restoration as fixtures
+        f = fixtures.ActualRestorationTests()
+        self.addCleanup(f.doCleanups)
+        _, data = f.fixture()
+        reports = []
+        for default in (True,False):
+            restored = f.restore(deepcopy(data),default=default)
+            report = self.platform.player_report('1',restored)
+            health = report['provider_health']['Production']
+            self.assertEqual(health['status'],'available')
+            self.assertEqual(health['prepared_observations'],8)
+            reports.append(health)
+        self.assertEqual(reports[0],reports[1])
+
     def test_zero_negative_missing_and_placeholder_only_projection_remain_distinct(self):
         row = self.data['projection_intelligence']['players']['4984']
         for value in (0, -2.125, None):
