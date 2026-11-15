@@ -201,7 +201,11 @@ def create_api_router(
         if str((data.get("league") or {}).get("league_id") or "") != str(selected_league()):
             return JSONResponse({"detail": "Selected league context is not ready"}, status_code=503)
         try:
-            report = data_platform.player_report(player_id, data)
+            from src.platform.league_context import current_league_context
+            from src.core.projection_intelligence import projection_service
+            active = current_league_context()
+            report = data_platform.player_report(player_id, data,
+                projection_service=active.projection if active else projection_service)
         except KeyError:
             return JSONResponse({"detail": "Player not found"}, status_code=404)
         from src.core.player_ownership import PlayerOwnershipIndex

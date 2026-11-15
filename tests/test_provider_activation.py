@@ -126,7 +126,7 @@ class ProviderActivationTests(unittest.IsolatedAsyncioTestCase):
 
     def test_unsupported_providers_have_specific_reasons(self) -> None:
         catalog = provider_catalog()
-        for name in ("Sleeper ADP", "Underdog ADP", "KeepTradeCut", "Projections"):
+        for name in ("Sleeper ADP", "Underdog ADP", "KeepTradeCut"):
             self.assertFalse(catalog[name]["enabled"])
             self.assertTrue(catalog[name]["reason"])
 
@@ -139,10 +139,10 @@ class ProviderActivationTests(unittest.IsolatedAsyncioTestCase):
         self.assertIn("canonical_evidence", context["availability"]["production"])
 
     def test_projection_availability_uses_only_active_league_canonical_snapshot(self) -> None:
-        data = {"players": self.players, "league": {"league_id": "A"},
-                "projection_intelligence": {"league_id": "A", "season": 2026,
+        data = {"players": self.players, "league": {"league_id": "A", "season": "2026"}, "week": 1, "scoring_settings": {"rec": 1},
+                "projection_intelligence": {"league_id": "A", "season": 2026, "scoring_settings": {"rec": 1},
                     "week": 1, "projection_snapshot_id": "generation-a",
-                    "players": {"9509": {"weekly_projected_points": 0.0,
+                    "players": {"9509": {"provider": "Sleeper", "canonical_projection": 0.0, "weekly_projected_points": 0.0,
                                           "source_freshness": "fresh"}}}}
         context = player_context("9509", data)
         self.assertEqual(context["availability"]["projection"], "Available · Sleeper week 1 · 0.0 points")

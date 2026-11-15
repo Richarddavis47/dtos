@@ -22,16 +22,16 @@ from urllib.parse import parse_qs, urlsplit
 
 ALLOWED_PATHS = {
     ".github/workflows/canonical-release-recovery.yml",
-    ".github/release-plans/2257.json",
-    ".github/release-plans/2257-recovery-001.part",
-    ".github/release-plans/2257-recovery-002.part",
-    ".github/release-plans/2257-recovery-003.part",
-    ".github/release-plans/2257-recovery-004.part",
-    ".github/release-plans/2257-prior.zip",
-    ".github/release-plans/2257-prior-001.part",
-    ".github/release-plans/2257-prior-002.part",
-    ".github/release-plans/2257-prior-003.part",
-    ".github/release-plans/2257-prior-004.part",
+    ".github/release-plans/2258.json",
+    ".github/release-plans/2258-recovery-001.part",
+    ".github/release-plans/2258-recovery-002.part",
+    ".github/release-plans/2258-recovery-003.part",
+    ".github/release-plans/2258-recovery-004.part",
+    ".github/release-plans/2258-prior.zip",
+    ".github/release-plans/2258-prior-001.part",
+    ".github/release-plans/2258-prior-002.part",
+    ".github/release-plans/2258-prior-003.part",
+    ".github/release-plans/2258-prior-004.part",
     ".github/release-plans/README.md",
     "tools/release/__init__.py",
     "tools/release/publish.py",
@@ -3154,7 +3154,7 @@ def validate_recovery_parts(plan, family="recovery"):
     file_key = "recovery_file" if family == "recovery" else "prior_evidence_file"
     parts_key = "recovery_parts" if family == "recovery" else "prior_evidence_parts"
     require(
-        plan.get(file_key) == ".github/release-plans/2257-" + family + ".zip",
+        plan.get(file_key) == ".github/release-plans/2258-" + family + ".zip",
         "Unexpected recovery archive identity",
     )
     parts = plan.get(parts_key)
@@ -3170,7 +3170,7 @@ def validate_recovery_parts(plan, family="recovery"):
         )
         require(
             item["path"]
-            == ".github/release-plans/2257-"
+            == ".github/release-plans/2258-"
             + family
             + "-"
             + str(index).zfill(3)
@@ -3229,7 +3229,7 @@ def materialize_recovery(plan, root, repository=None, family="recovery"):
 
 def materialize_prior_evidence(plan, root, repository=None):
     require(
-        plan.get("prior_evidence_file") == ".github/release-plans/2257-prior.zip",
+        plan.get("prior_evidence_file") == ".github/release-plans/2258-prior.zip",
         "Unexpected prior archive identity",
     )
     if "prior_evidence_parts" in plan:
@@ -3444,7 +3444,7 @@ def collect(plan, root):
     shutil.copyfile(recovery, assets / "Customer-Experience.zip")
     prior_evidence = materialize_prior_evidence(plan, root)
     require(
-        plan["prior_evidence_file"] == ".github/release-plans/2257-prior.zip",
+        plan["prior_evidence_file"] == ".github/release-plans/2258-prior.zip",
         "Unexpected prior archive path",
     )
     verify_prior_evidence(prior_evidence, plan)
@@ -3669,7 +3669,7 @@ def verify_preparation(plan, root, expected, run_id):
     found = [
         x
         for x in artifacts
-        if x["name"] == "guarded-release-2257-prepare-" + str(run_id)
+        if x["name"] == "guarded-release-2258-prepare-" + str(run_id)
         and not x["expired"]
     ]
     require(len(found) == 1, "Preparation certificate missing")

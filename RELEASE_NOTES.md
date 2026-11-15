@@ -1,3 +1,9 @@
+# v1.22.42 / build 2257
+
+Source reporting now distinguishes configured access from the selected player’s prepared evidence, freshness and failed refreshes. Available Sleeper scores and projections are no longer described as disabled; auxiliary football statistics remain separate from fantasy results.
+
+Existing admitted historical preparation can acquire missing transaction periods, including Week 0, without replacing already observed records or fetching a whole retained season. A successful empty response establishes an observed-empty period; failure or an unqueried period does not. Rendering does not fetch sources. Legacy observation times remain unknown, and retained historical grades are not revalidated.
+
 # DTOS v1.22.41 / build 2256
 
 Trade searches distinguish a needed temporary analysis goal from missing prices or lineup evidence. Choose Win Now, Retool or Rebuild explicitly when the recorded draft-capital assessment requires it; syncing cannot supply this choice. Real coverage gaps remain visible and a selected goal does not promise a qualified trade. Saved preferences, valuation and recommendation standards, and memory safeguards are unchanged.

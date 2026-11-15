@@ -543,6 +543,7 @@ def start_background_backfill(fetch: Any, *, league_id: str | None = None) -> as
                         season = await sleeper_season_cache.get_or_rebuild(
                             reference.league_id, reference.season,
                             source.completed_season_facts,
+                            recover_transactions=getattr(source, 'recover_transaction_periods', None),
                         )
                         if not season.facts:
                             raise RuntimeError("provider_season_unavailable")

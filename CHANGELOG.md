@@ -1,5 +1,10 @@
 ## v1.22.41 / build 2256 — Trade Analysis Goal Clarity
 
+## v1.22.42 / build 2257
+
+- Report selected-player Sleeper projections/results and separate auxiliary usage from actual retained evidence, including unknown clocks and failed refreshes. Configuration is not complete source coverage.
+- Recover only missing historical transaction buckets during existing cache preparation, retaining source facts on failure and recording successful empty observations without inventing legacy retrieval times. Page reads remain provider-free.
+
 Separate a recorded unresolved analysis-goal choice from missing source evidence in Trade diagnostics and guidance. Preserve overlapping lineup gaps and rejected verdicts; offer the existing temporary goal control without changing saved goals or starting work automatically. Valuation, scoring, qualification and resource policies unchanged.
 
 ## v1.22.40 / build 2255 — Recorded Trade Assessment Context

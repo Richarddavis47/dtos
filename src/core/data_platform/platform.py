@@ -104,7 +104,7 @@ class DataPlatform:
     def trend(self, key: str, category: str | None = None):
         return trend(key, self.warehouse.history(key, category))
 
-    def player_report(self, player_id: str, data: dict[str, Any], *, market_fact=None) -> dict[str, Any]:
+    def player_report(self, player_id: str, data: dict[str, Any], *, market_fact=None, projection_service=None) -> dict[str, Any]:
         players = data.get("players") or {}
         resolver = PlayerIdentityResolver(players)
         player = resolver.resolve(player_id)
@@ -146,7 +146,13 @@ class DataPlatform:
             provider.metadata.name: ((market_data.get("providers") or {}).get(provider.metadata.name) or {}).get(player_id)
             for provider in providers
         }
-        return {"normalized_player": asdict(player), "provider_values": tuple(asdict(row) for row in values), "provider_details": details, "consensus": canonical, "market_fact": fact.to_dict(), "market_trend": asdict(self.trend(player_id, "market")), "provider_availability": availability, "provider_health": market_data.get("provider_status") or {}, "attribution": market_data.get("attribution") or {}, "player_context": player_context(player_id, data), "normalization": {"identity": "canonical DTOS player", "contract": "NormalizedPlayer + DataEnvelope", "provider_ids": player.provider_ids}, "unavailable_reasons": tuple(sorted({row.limitations[0] for row in values if row.value is None and row.limitations}))}
+        from .evidence_health import player_source_health
+        health = player_source_health(player_id, data, market_data.get("provider_status") or {},
+                                      projection_service=projection_service)
+        player_details = player_context(player_id, data)
+        for family in ('Production', 'Usage'):
+            player_details['availability'][family.lower()] = health[family]['reason']
+        return {"normalized_player": asdict(player), "provider_values": tuple(asdict(row) for row in values), "provider_details": details, "consensus": canonical, "market_fact": fact.to_dict(), "market_trend": asdict(self.trend(player_id, "market")), "provider_availability": availability, "provider_health": health, "attribution": market_data.get("attribution") or {}, "player_context": player_details, "normalization": {"identity": "canonical DTOS player", "contract": "NormalizedPlayer + DataEnvelope", "provider_ids": player.provider_ids}, "unavailable_reasons": tuple(sorted({row.limitations[0] for row in values if row.value is None and row.limitations}))}
 
     def refresh(self, category: str, context: dict[str, Any], keys: tuple[str, ...], *, provider_name: str | None = None) -> tuple[RefreshResult, ...]:
         providers = (self.registry.provider(provider_name),) if provider_name else self.registry.providers(category)

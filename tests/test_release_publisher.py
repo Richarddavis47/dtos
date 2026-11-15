@@ -312,7 +312,7 @@ class RemoteAttachmentTests(unittest.TestCase):
 
 class ContextAdmissionTests(unittest.TestCase):
     def setUp(self):
-        self.plan = json.loads(Path(".github/release-plans/2257.json").read_text())
+        self.plan = json.loads(Path(".github/release-plans/2258.json").read_text())
         self.publisher = "c" * 40
         self.merge = "d" * 40
         self.env = {
@@ -437,7 +437,7 @@ class ContextAdmissionTests(unittest.TestCase):
 
 class RunAdmissionTests(unittest.TestCase):
     def setUp(self):
-        self.plan = json.loads(Path(".github/release-plans/2257.json").read_text())
+        self.plan = json.loads(Path(".github/release-plans/2258.json").read_text())
         self.plan["runs"] = [
             run | {"id": 100000 + index * 1000}
             for index, run in enumerate(self.plan["runs"])
@@ -1286,14 +1286,14 @@ class NativeRestorationAdmissionTests(unittest.TestCase):
 
 class PlanFinalizationTests(unittest.TestCase):
     def test_placeholder_or_incomplete_evidence_cannot_publish(self):
-        plan = json.loads(Path(".github/release-plans/2257.json").read_text())
+        plan = json.loads(Path(".github/release-plans/2258.json").read_text())
         with self.assertRaisesRegex(RuntimeError, "not finalized"):
             p.verify_plan(plan | {"finalized": False})
         ready = plan | {
-            "recovery_file": ".github/release-plans/2257-recovery.zip",
+            "recovery_file": ".github/release-plans/2258-recovery.zip",
             "recovery_parts": [
                 {
-                    "path": ".github/release-plans/2257-recovery-001.part",
+                    "path": ".github/release-plans/2258-recovery-001.part",
                     "bytes": 1,
                     "sha256": "c" * 64,
                 }
@@ -1309,7 +1309,7 @@ class PlanFinalizationTests(unittest.TestCase):
             ],
             "prior_evidence_parts": [
                 {
-                    "path": ".github/release-plans/2257-prior-001.part",
+                    "path": ".github/release-plans/2258-prior-001.part",
                     "bytes": 1,
                     "sha256": "e" * 64,
                 }
@@ -3426,13 +3426,13 @@ class RecoveryTransportTests(unittest.TestCase):
         raw = archive.read_bytes()
         pivot = len(raw) // 2
         self.plan = {
-            "recovery_file": ".github/release-plans/2257-recovery.zip",
+            "recovery_file": ".github/release-plans/2258-recovery.zip",
             "recovery_sha256": p.digest(archive),
             "recovery_parts": [],
         }
         for index, part in enumerate((raw[:pivot], raw[pivot:]), 1):
             path = (
-                ".github/release-plans/2257-recovery-" + str(index).zfill(3) + ".part"
+                ".github/release-plans/2258-recovery-" + str(index).zfill(3) + ".part"
             )
             (self.repo / path).write_bytes(part)
             self.plan["recovery_parts"].append(
@@ -3497,7 +3497,7 @@ class RecoveryTransportTests(unittest.TestCase):
                 | {
                     "recovery_parts": [
                         {
-                            "path": ".github/release-plans/2257-recovery-001.part",
+                            "path": ".github/release-plans/2258-recovery-001.part",
                             "bytes": 64 * 1024**2 + 1,
                             "sha256": "a" * 64,
                         }
@@ -3708,16 +3708,16 @@ class WorkflowPublisherWiringTests(unittest.TestCase):
             "checks: read",
             "pull-requests: read",
             "actions: read",
-            "group: dtos-guarded-release-2257",
+            "group: dtos-guarded-release-2258",
             "cancel-in-progress: false",
             "ref: ${{ github.sha }}",
             "persist-credentials: false",
             "python -m unittest -v tests.test_release_publisher",
             "GH_TOKEN: ${{ github.token }}",
             "PREPARATION_RUN_ID: ${{ inputs.preparation_run_id }}",
-            "--plan .github/release-plans/2257.json",
+            "--plan .github/release-plans/2258.json",
             'arguments+=(--prepared-run "$PREPARATION_RUN_ID")',
-            "name: guarded-release-2257-${{ inputs.release_operation }}-${{ github.run_id }}",
+            "name: guarded-release-2258-${{ inputs.release_operation }}-${{ github.run_id }}",
             "if-no-files-found: error",
         ]:
             with self.subTest(required=required):
@@ -4139,12 +4139,12 @@ class PriorPartIntegrityTests(unittest.TestCase):
         )
         raw = payload.read_bytes()
         plan = {
-            "prior_evidence_file": ".github/release-plans/2257-prior.zip",
+            "prior_evidence_file": ".github/release-plans/2258-prior.zip",
             "prior_evidence_sha256": hashlib.sha256(raw).hexdigest(),
             "prior_evidence_parts": [],
         }
         for i, data in enumerate((raw[: len(raw) // 2], raw[len(raw) // 2 :]), 1):
-            name = ".github/release-plans/2257-prior-" + str(i).zfill(3) + ".part"
+            name = ".github/release-plans/2258-prior-" + str(i).zfill(3) + ".part"
             target = root / name
             target.parent.mkdir(parents=True, exist_ok=True)
             target.write_bytes(data)
@@ -4612,7 +4612,7 @@ class CustomerBaselineAliasTests(unittest.TestCase):
 
     def test_finalized_plan_transport_leaves_room_under_unchanged_aggregate_cap(self):
         plan = json.loads(
-            (Path(__file__).parents[1] / ".github/release-plans/2257.json").read_text()
+            (Path(__file__).parents[1] / ".github/release-plans/2258.json").read_text()
         )
         originals = sum(row["bytes"] for row in plan["artifacts"])
         recovery = sum(row["bytes"] for row in plan["recovery_parts"])
@@ -4621,7 +4621,7 @@ class CustomerBaselineAliasTests(unittest.TestCase):
         self.assertLess(originals + recovery + prior, 508 * 1024**2)
 
     def test_final_release_plan_aliases_match_its_actual_baseline(self):
-        plan_path = Path(__file__).parents[1] / ".github/release-plans/2257.json"
+        plan_path = Path(__file__).parents[1] / ".github/release-plans/2258.json"
         plan = json.loads(plan_path.read_text())
         aliases = plan["baseline_snapshot_aliases"]
         self.assertTrue(aliases)
@@ -4674,7 +4674,7 @@ class CustomerBaselineAliasTests(unittest.TestCase):
             }
             <= set(p.collect.__code__.co_names)
         )
-        plan = json.loads(Path(".github/release-plans/2257.json").read_text())
+        plan = json.loads(Path(".github/release-plans/2258.json").read_text())
         with self.assertRaisesRegex(RuntimeError, "not finalized"):
             p.verify_plan(plan | {"finalized": False})
 

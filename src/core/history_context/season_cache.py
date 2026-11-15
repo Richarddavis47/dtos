@@ -29,8 +29,12 @@ class SeasonSourceUnavailable(ValueError):
     """Retained evidence could not be decoded; the source is not an empty season."""
 
 
+class SeasonPublicationChanged(ValueError):
+    """An admitted recovery may not replace a different source publication."""
+
+
 class SleeperSeasonCache:
-    # Two idle runtime contexts x six retained seasons x three compact sections.
+    # Bounded compact sections, including optional acquisition metadata.
     # The separate 8 MiB object budget matches the existing historical memo's
     # small-footprint allowance; this is not a larger decoded-history cache.
     MAX_SECTIONS = 36
@@ -106,7 +110,7 @@ class SleeperSeasonCache:
                     'maximum_resident_bytes': self.MAX_RESIDENT_BYTES,
                     'maximum_checksums': self.MAX_CHECKSUMS}
 
-    def _remember(self, path, identity, archive, epoch, names=('league', 'rosters', 'transactions'), *, checksum=False):
+    def _remember(self, path, identity, archive, epoch, names=('league', 'rosters', 'transactions', 'transaction_acquisition'), *, checksum=False):
         # Size traversal is outside the short publication/metadata lock.
         rows = [(name, archive.facts.get(name)) for name in names]
         rows = [(name, value, self._object_bytes(value) + self._object_bytes((path, name, identity)))
@@ -164,6 +168,13 @@ class SleeperSeasonCache:
             "draft_picks", "traded_picks", "winners_bracket", "losers_bracket",
         )
         normalized = {key: facts.get(key) for key in supported if key in facts}
+        # Optional acquisition clocks are not a required source family. Legacy
+        # readable buckets retain unknown retrieval times rather than file ages.
+        if 'transaction_acquisition' in facts:
+            from .transaction_periods import admitted_metadata
+            league = facts.get('league') or {}
+            normalized['transaction_acquisition'] = admitted_metadata(
+                facts, league.get('league_id'), league.get('season'))
         completeness = {
             key: "available" if facts.get(key) is not None else "unavailable"
             for key in supported
@@ -207,7 +218,8 @@ class SleeperSeasonCache:
         with self._checksum_lock:
             self._invalidate(path)
 
-    def write(self, season: CachedSeason, *, verified_evictions: dict[int, str] | None = None) -> Path:
+    def write(self, season: CachedSeason, *, verified_evictions: dict[int, str] | None = None,
+              expected_identity: tuple | None = None) -> Path:
         path = self.path(season.league_id, season.season)
         path.parent.mkdir(parents=True, exist_ok=True)
         payload = json.dumps({
@@ -223,6 +235,13 @@ class SleeperSeasonCache:
             epoch = self._epoch
         try:
             with database_gate(self.root / '.season-cache-quota', exclusive=True):
+                if expected_identity is not None:
+                    try:
+                        unchanged = self._identity(path) == expected_identity
+                    except FileNotFoundError:
+                        unchanged = False
+                    if not unchanged:
+                        raise SeasonPublicationChanged('Season publication changed during gap recovery.')
                 evictions = verified_evictions or {}
                 for year, checksum in evictions.items():
                     old = self.read(season.league_id, year)
@@ -373,15 +392,101 @@ class SleeperSeasonCache:
     async def get_or_rebuild(
         self, league_id: str, season: int,
         fetch_facts: Callable[[str, int], Awaitable[dict[str, Any] | None]],
+        *, recover_transactions=None,
     ) -> CachedSeason:
+        identity = None
+        if recover_transactions is not None:
+            try:
+                identity = self._identity(self.path(league_id, season))
+            except FileNotFoundError:
+                pass
         cached = self.read(league_id, season)
         if cached is not None:
+            if recover_transactions is not None:
+                # Seal the same file that was checksum-verified by read().
+                try:
+                    stable = identity is not None and self._identity(self.path(league_id, season)) == identity
+                except FileNotFoundError:
+                    stable = False
+                if not stable:
+                    return self._latest_season(cached)
+                return await self._recover_transactions(cached, recover_transactions, identity)
             return cached
         facts = await fetch_facts(str(league_id), int(season))
         rebuilt = self.normalize(league_id, season, facts or {})
         if facts:
             self.write(rebuilt)
         return rebuilt
+
+    def _latest_season(self, cached):
+        latest = self.read(cached.league_id, cached.season)
+        if latest is None:
+            raise SeasonPublicationChanged('Season publication removed during gap recovery.')
+        return latest
+
+    async def _recover_transactions(self, cached, recover, identity):
+        """Fill only unobserved transaction periods during existing preparation.
+
+        Read paths do not invoke this. Complete buckets are never refetched;
+        failed attempts retain source facts and are bounded by a5minute cooldown.
+        """
+        from datetime import datetime, timezone
+        from .coverage import periods
+        from .transaction_periods import SCHEMA, admitted_metadata, record_period
+        from .timestamps import canonical_utc_timestamp
+        league = cached.facts.get('league') or {}
+        if (str(league.get('league_id')) != cached.league_id
+                or str(league.get('season')) != str(cached.season)):
+            return cached  # An alias or unverifiable legacy source is not authority to fetch.
+        coverage = periods(cached.facts, 'transactions')
+        meta = admitted_metadata(cached.facts, cached.league_id, cached.season)
+        now = datetime.now(timezone.utc)
+        missing = []
+        for week in sorted(set(coverage['unacquired'] + coverage['unavailable'] + coverage['malformed'])):
+            attempt = (meta.get('periods', {}).get(str(week)) or {}).get('last_attempt_at')
+            stamp = canonical_utc_timestamp(attempt) if attempt else None
+            if stamp and (now-datetime.fromisoformat(stamp.replace('Z', '+00:00'))).total_seconds() < 300:
+                continue
+            missing.append(week)
+        if not missing:
+            return cached
+        try:
+            buckets, acquired = await recover(cached.league_id, cached.season, tuple(missing))
+        except Exception:
+            buckets, acquired = {}, {}
+        # A concurrent writer's newer publication wins; never overwrite it with
+        # a response prepared against this older archive.
+        try:
+            unchanged = self._identity(self.path(cached.league_id, cached.season)) == identity
+        except FileNotFoundError:
+            unchanged = False
+        if not unchanged:
+            return self._latest_season(cached)
+        old = cached.facts.get('transactions')
+        merged = dict(old) if isinstance(old, dict) else {}
+        meta = {**meta, 'schema': SCHEMA, 'league_id': cached.league_id, 'season': str(cached.season)}
+        valid_meta = admitted_metadata({'transaction_acquisition': acquired}, cached.league_id, cached.season)
+        for week in missing:
+            key = str(week)
+            record = (valid_meta.get('periods') or {}).get(key) or {}
+            rows = buckets.get(key) if isinstance(buckets, dict) else None
+            observed = record.get('state') in {'observed', 'observed_empty'} and isinstance(rows, list) and all(isinstance(r, dict) for r in rows)
+            stamp = record.get('last_attempt_at') or now.isoformat()
+            if observed and not record.get('retrieved_at'):
+                observed = False  # Never invent a successful retrieval clock.
+            if observed:
+                merged[key] = rows
+            meta = record_period(meta, week, rows if observed else None, observed_at=stamp,
+                                 state=None if observed else record.get('state') if record.get('state') in {'failed','unavailable','malformed'} else 'failed')
+        recovered = self.normalize(cached.league_id, cached.season,
+                                   {**cached.facts, 'transactions': merged, 'transaction_acquisition': meta})
+        try:
+            # Recheck under the existing cross-process atomic write/quota gate.
+            # No second full decode on the ordinary unchanged-file path.
+            self.write(recovered, expected_identity=identity)
+        except SeasonPublicationChanged:
+            return self._latest_season(cached)
+        return recovered
 
     def storage_estimate(self, league_id: str, season_count: int) -> dict[str, int]:
         """Estimate a complete root namespace from existing compact archives."""

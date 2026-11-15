@@ -1,8 +1,12 @@
 # Historical Player Data Providers
 
-## nflverse
+## Sleeper fantasy-point authority
 
-DTOS selects nflverse player summary statistics as the v1.5.1 enrichment source.
+Sleeper is the exclusive source of fantasy projections and actual fantasy scores. Retained matchup scores and league-scoped projection publications are admitted independently of auxiliary box-score coverage. Explicit zero, negative, missing and conflicting results remain distinct.
+
+## nflverse — separate auxiliary football analysis
+
+DTOS retains nflverse player summary statistics as auxiliary analysis, not a fantasy-point projection or actual-results authority.
 
 Weekly release files are seasonally available. DTOS treats a missing completed
 historical season as a provider gap, while an unpublished current preseason or
