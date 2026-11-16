@@ -840,13 +840,24 @@ class HistoricalAssetGraph:
 
     def trade_timeline(self, transaction_id: str):
         from .timeline import timeline
+        before = self.store.dataset_version(self.league_id)
+        def unknown_packages(result):
+            result = copy.deepcopy(result)
+            result['next_exchanges'] = []
+            for branch in result['branches']:
+                branch['next_exchange'] = {'state': 'unknown', 'trade_id': None,
+                    'reason': 'Source evidence changed while reading; reload before following a package.'}
+            return result
         if transaction_id in self._timelines:
             self._timelines.move_to_end(transaction_id)
-            return copy.deepcopy(self._timelines[transaction_id])
+            cached = self._timelines[transaction_id]
+            return copy.deepcopy(cached) if cached['generation'] == before else unknown_packages(cached)
         dossier = self.trade_dossier(transaction_id)
         if dossier is None or dossier['status'].casefold() not in COMPLETED_STATUSES:
             return None
         result = timeline(self, dossier)
+        if self.store.dataset_version(self.league_id) != before:
+            return unknown_packages(result)  # Never cache a mixed-generation package.
         self._timelines[transaction_id] = result
         while len(self._timelines) > 32:
             self._timelines.popitem(last=False)

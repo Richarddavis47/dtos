@@ -17,6 +17,7 @@ from typing import Any, Iterable
 from config import SLEEPER_SEASON_CACHE_ROOT
 from .season_cache import SleeperSeasonCache
 from .timestamps import canonical_transaction_timestamp
+from .transaction_versions import conflicting_transactions, qualify_transaction_rows
 from .playoffs import playoff_facts
 from .assets import draft_pick, future_pick_id, reconcile_player_weeks, PlayerWeekIndexLimit
 
@@ -794,7 +795,7 @@ class CanonicalHistoryStore:
             rows.append(self._record(
                 league_id, season, "playoff_result", "final", playoff_facts(winners),
             ))
-        return rows
+        return qualify_transaction_rows(rows)
 
     def _admit_checkpoint_rows(self, league_id, season, checkpoint):
         """Requalify existing compact evidence without rewriting its source."""
@@ -866,7 +867,7 @@ class CanonicalHistoryStore:
                 processed += 1
                 if processed % 32 == 0:
                     time.sleep(0)
-        return rows
+        return qualify_transaction_rows(rows)
 
     def _current_records(self, league_id: str, season: int, families=None) -> list[dict[str, Any]]:
         """Project bounded active state through the same canonical record shape."""
@@ -882,6 +883,9 @@ class CanonicalHistoryStore:
         if current_season != int(season):
             return []
         rows = [self._record(league_id, season, "league_season", league_id, {
+            "sleeper_season_league_id": league.get("league_id") or league_id,
+            "sleeper_season": league.get("season"),
+            "previous_league_id": league.get("previous_league_id"),
             "league_name": league.get("name") or "Sleeper League",
             "status": league.get("status"),
             "total_rosters": league.get("total_rosters"),
@@ -943,6 +947,8 @@ class CanonicalHistoryStore:
                 rows.append(self._record(league_id, season, 'draft_pick', pick['selection_id'], pick,
                     player_id=str(pick.get('player_id') or '') or None,
                     franchise_id=f"{league_id}:franchise:{pick['selecting_roster_id']}", occurred_at=pick.get('selected_at')))
+        if families is not None and not set(families) & {'trade', 'transaction'}:
+            return rows
         buckets = data.get('season_transactions') or {}
         current_transactions = data.get('transactions') or ()
         if isinstance(current_transactions, dict):
@@ -964,6 +970,7 @@ class CanonicalHistoryStore:
                 row = {**row, 'leg': next(iter(known))}
             active_rows.append(row)
         transactions = bucket_rows + active_rows
+        conflicts = conflicting_transactions(transactions)
         transactions = list({str(row.get('transaction_id') or _digest(row)): row for row in transactions}.values())
         if isinstance(transactions, dict):
             transaction_rows = [row for values in transactions.values() for row in values or ()]
@@ -972,6 +979,8 @@ class CanonicalHistoryStore:
         for transaction in transaction_rows:
             transaction_id = str(transaction.get("transaction_id") or _digest(transaction)[:16])
             payload = dict(transaction)
+            if transaction_id in conflicts:
+                payload['history_transaction_conflict'] = True
             occurred_at, timestamp_provenance = canonical_transaction_timestamp(payload)
             entity = "trade" if transaction.get("type") == "trade" else "transaction"
             rows.append(self._record(

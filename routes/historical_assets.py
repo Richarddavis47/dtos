@@ -236,10 +236,11 @@ def create_historical_assets_router(
 
     @router.get("/api/trades/history/{transaction_id}")
     async def historical_trade_api(transaction_id: str) -> JSONResponse:
-        dossier = graph().trade_dossier(transaction_id)
+        model_graph = graph()
+        dossier = model_graph.trade_dossier(transaction_id)
         if dossier is None:
             raise HTTPException(404, "Historical trade not found")
-        dossier['timeline'] = graph().trade_timeline(transaction_id)
+        dossier['timeline'] = model_graph.trade_timeline(transaction_id)
         return JSONResponse(jsonable_encoder(dossier))
 
     @router.get("/api/history/trades/coverage")
@@ -248,14 +249,15 @@ def create_historical_assets_router(
 
     @router.get("/trades/history/{transaction_id}", response_class=HTMLResponse)
     async def historical_trade_page(transaction_id: str, from_trade: str | None = Query(default=None, max_length=100), from_home: bool = Query(default=False)) -> HTMLResponse:
-        dossier = graph().trade_dossier(transaction_id)
+        model_graph = graph()
+        dossier = model_graph.trade_dossier(transaction_id)
         if dossier is None:
             raise HTTPException(404, "Historical trade not found")
         from src.ui.trade_timeline import render_timeline
-        model = graph().trade_timeline(transaction_id)
+        model = model_graph.trade_timeline(transaction_id)
         if model is None:
             raise HTTPException(404, 'Completed trade evidence unavailable')
-        origin = validated_trade_origin(graph(), from_trade)
+        origin = validated_trade_origin(model_graph, from_trade)
         return_url = f"/trades/history/{origin['transaction_id']}" if origin and origin['transaction_id'] != dossier['transaction_id'] else '/' if from_home and str(dossier['source']['source_league_id']) == str(selected_league()) else '/transactions'
         return page('Historical Trade Timeline', render_timeline(model, dossier, return_url=return_url, origin_id=origin['transaction_id'] if origin else None))
 

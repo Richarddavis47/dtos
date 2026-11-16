@@ -116,6 +116,49 @@ def _quote_card(row, label):
 <p>{safe(row.get('limitation') or '') if row.get('match_state') == 'DATED_ESTIMATE' else ''}</p><details><summary>Retained raw observations · excluded unless admitted above</summary><ul>{raw or '<li>No raw quote in available exact asset/context evidence.</li>'}</ul></details></details></li>'''
 
 
+def render_next_exchanges(model, origin_id):
+    """One native disclosure per later deal, shared by all followed receipts."""
+    cards = []
+    for index, package in enumerate(model.get('next_exchanges') or ()):
+        followed = package['followed_branches']
+        references = []
+        for branch in followed:
+            text = escape(branch['label'])
+            if branch['converted']:
+                text += ' → selected ' + escape(branch['outgoing_label'])
+            references.append(text)
+        groups = []
+        parties = sorted(package['participants'], key=lambda p: not any(b['recipient_id'] == p['id'] for b in followed))
+        for party in parties:
+            sent, received = [], []
+            for move in package['movements']:
+                marker = ' · followed asset' if any(b['outgoing_asset_id'] == move['asset_id']
+                    and b['recipient_id'] == party['id'] for b in followed) else ' · other package asset'
+                text = '<li>' + escape(move['label'])
+                if move['sender']['id'] == party['id']:
+                    sent.append(text + marker + ' → ' + escape(move['receiver']['name']) + '</li>')
+                if move['receiver']['id'] == party['id']:
+                    received.append(text + ' ← ' + escape(move['sender']['name']) + '</li>')
+            empty = '<li>No supported movement recorded for this side; completeness is not established.</li>'
+            groups.append('<article><h4>' + escape(party['name']) + '</h4><p><b>Sent</b></p><ul>'
+                + (''.join(sent) or empty) + '</ul><p><b>Received</b></p><ul>'
+                + (''.join(received) or empty) + '</ul></article>')
+        note = ('The full return was for this package. It is not attributed to the followed asset alone.'
+                if package['complete'] else 'The full package return is unknown. Only supported movements are shown.')
+        link = package['url'] + '?from_trade=' + quote(origin_id, safe='')
+        cards.append(f'''<section class="card next-exchange" id="next-exchange-{index}">
+<h4>Later included in this trade</h4><p>{'; '.join(references)}</p>
+<p>{escape(readable_time(package['occurred_at']))} · {escape(' ↔ '.join(p['name'] for p in package['participants']))}</p>
+<p>{escape(note)}</p><details><summary>See the later trade’s package</summary>
+<div class="timeline-sides">{''.join(groups)}</div>
+{''.join('<p>' + escape(reason) + '</p>' for reason in package['limitations'])}
+<p>Manager names are season observations, not verified trade-time decision-makers. This is an observed continuation; missing history may conceal other movements. No value or production is divided among package assets.</p>
+<a class="timeline-link" href="{escape(link, quote=True)}">Review the full later trade</a>
+<details><summary>Package source</summary><p>Source league: {escape(str(package['source_league_id']))} · Transaction: {escape(str(package['transaction_id']))} · Exact timestamp: {escape(package['occurred_at'])}</p></details>
+</details></section>''')
+    return '<section class="next-exchanges"><h3>Next observed exchanges</h3>' + ''.join(cards) + '</section>' if cards else ''
+
+
 def render_timeline(model, dossier, *, return_url="/transactions", origin_id=None):
     origin_id = origin_id or dossier['transaction_id']
     def safe(v):
@@ -168,6 +211,12 @@ def render_timeline(model, dossier, *, return_url="/transactions", origin_id=Non
             current_state = f"<p class='timeline-state'>Pick consumed → <a class='timeline-link' href='{href(endpoint['url'])}?from_trade={quote(origin_id, safe='')}'>{safe(endpoint['name'])}</a> · Current observed owner: {safe(endpoint.get('current_observed_owner_name') or 'Unavailable')} · as of {safe(endpoint.get('as_of') or 'date unavailable')}.</p>"
         elif branch.get('current_observed_owner'):
             current_state = f"<p>Current observed owner: {safe(branch.get('current_observed_owner_name') or 'Unavailable')} · as of {safe((branch.get('current_owner_observation') or {}).get('as_of') or 'date unavailable')}.</p>"
+        follow = branch.get('next_exchange') or {}
+        if follow.get('trade_id'):
+            index = next(i for i, p in enumerate(model['next_exchanges']) if p['trade_id'] == follow['trade_id'])
+            current_state += f'<p><a class="timeline-link" href="#next-exchange-{index}">See the next observed exchange</a></p>'
+        elif follow.get('reason'):
+            warnings += '<p class="muted">Next exchange: ' + safe(follow['reason']) + '</p>'
         last = branch.get('last_verified_event')
         last_note = f"<p>Last admitted event: {safe(last['type'].replace('_', ' '))} · {safe(last.get('occurred_at') or 'bounded draft time')} · {safe(', '.join(last.get('to_names') or []) or 'Ownership exit')}.</p>" if last else ''
         branches.append(
@@ -205,7 +254,7 @@ def render_timeline(model, dossier, *, return_url="/transactions", origin_id=Non
     technical.append('Exact transaction timestamp: ' + str(model.get('occurred_at') or 'not recorded'))
     return (
         CSS
-        + f'''<section class="trade-timeline"><a class="back" href="{href(return_url)}">← {back_label}</a><h2>Original completed trade</h2><p><b>{safe(model["league_name"])} · {safe(model["season"])} · {safe(trade_date)}</b></p><section><h3>Assets sent and received</h3><p>{safe(' ↔ '.join(p['name'] for p in model['participants']))}</p><div class="timeline-sides">{participants}</div>{'<h4>FAAB consideration</h4><ul>' + ''.join(cash) + '</ul>' if cash else ''}<details><summary>Historical manager context</summary><p>Managers are season observations; exact trade-time takeover timing is not established.</p></details></section><h3>What happened next</h3><p>Recorded movements and the latest observed owner are shown separately. Gaps do not establish continuous ownership.</p>{"".join(branches)}{production}<section class="card"><h3>At the time: Market evidence</h3><p>{price_text}</p><p>{evidence.get('valued_assets', 0)} / {evidence.get('total_assets', 0)} assets have supported pre-trade values. Partial coverage cannot establish a package comparison.</p><p>Historical grades: RETAINED / NOT REVALIDATED. These prices do not judge the manager’s decision.</p><details class="timeline-evidence"><summary>Prices, dates and limitations</summary><p>{safe(package_policy)}</p><ul>{"".join(quotes)}</ul><p>Retained quote coverage check: {safe(str(evidence.get('reason') or 'Unavailable').replace('_', ' '))}. This does not certify whole-package freshness or historical league-format parity. Trade reference date: {safe(trade_date)}. Production, present Market value and later team outcomes are separate.</p></details></section>{render_source_coverage(model.get('source_coverage') or {})}<details class="card timeline-evidence"><summary>Source provenance and branch limitations</summary><p>Current-owner as-of dates, where recorded, describe DTOS Sleeper retrieval/sync observations, not acquisition or ownership-change times. Missing intervals do not establish uninterrupted ownership.</p>{"".join("<p>" + safe(x) + "</p>" for x in model["limitations"])}<pre>{safe(chr(10).join(technical))}</pre></details></section>'''
+        + f'''<section class="trade-timeline"><a class="back" href="{href(return_url)}">← {back_label}</a><h2>Original completed trade</h2><p><b>{safe(model["league_name"])} · {safe(model["season"])} · {safe(trade_date)}</b></p><section><h3>Assets sent and received</h3><p>{safe(' ↔ '.join(p['name'] for p in model['participants']))}</p><div class="timeline-sides">{participants}</div>{'<h4>FAAB consideration</h4><ul>' + ''.join(cash) + '</ul>' if cash else ''}<details><summary>Historical manager context</summary><p>Managers are season observations; exact trade-time takeover timing is not established.</p></details></section>{render_next_exchanges(model, origin_id)}<h3>What happened next</h3><p>Recorded movements and the latest observed owner are shown separately. Gaps do not establish continuous ownership.</p>{"".join(branches)}{production}<section class="card"><h3>At the time: Market evidence</h3><p>{price_text}</p><p>{evidence.get('valued_assets', 0)} / {evidence.get('total_assets', 0)} assets have supported pre-trade values. Partial coverage cannot establish a package comparison.</p><p>Historical grades: RETAINED / NOT REVALIDATED. These prices do not judge the manager’s decision.</p><details class="timeline-evidence"><summary>Prices, dates and limitations</summary><p>{safe(package_policy)}</p><ul>{"".join(quotes)}</ul><p>Retained quote coverage check: {safe(str(evidence.get('reason') or 'Unavailable').replace('_', ' '))}. This does not certify whole-package freshness or historical league-format parity. Trade reference date: {safe(trade_date)}. Production, present Market value and later team outcomes are separate.</p></details></section>{render_source_coverage(model.get('source_coverage') or {})}<details class="card timeline-evidence"><summary>Source provenance and branch limitations</summary><p>Current-owner as-of dates, where recorded, describe DTOS Sleeper retrieval/sync observations, not acquisition or ownership-change times. Missing intervals do not establish uninterrupted ownership.</p>{"".join("<p>" + safe(x) + "</p>" for x in model["limitations"])}<pre>{safe(chr(10).join(technical))}</pre></details></section>'''
     )
 
 

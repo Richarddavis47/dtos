@@ -1,5 +1,10 @@
 ## v1.22.41 / build 2256 — Trade Analysis Goal Clarity
 
+## v1.22.44 / build 2259 — Next observed trade packages
+
+Completed trade timelines show the next supported exchange by an original recipient, including an exact pick’s observed draft conversion. The full later package is shown once, with all supported directions and original-franchise picks. Releases, missing transitions, conflicting records and uncertain dates withhold attribution. Partial consideration stays partial; no return, value or production is allocated to one asset. Opening details uses retained evidence only. Valuations, fantasy scores, Trade standards and memory safeguards are unchanged.
+
+
 ## v1.22.43 / build 2258 — Recent player workload
 
 Player dossiers compare targets and carries across the latest three eligible regular-season game observations and the preceding three. Dates, sample sizes and differences remain visible; missing or conflicting statistics withhold only the affected comparison. Missing game records block a comparison rather than becoming zero. Shared retained corrections appear on reload without provider work. Fantasy scores, projections, valuations and Trade standards are unchanged.

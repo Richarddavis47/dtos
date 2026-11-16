@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections import OrderedDict
+from datetime import datetime
 from src.core.history_context.assets import future_pick_id
 
 from src.core.history_context.timestamps import canonical_utc_timestamp
@@ -126,9 +127,9 @@ def timeline(graph, dossier):
                     )
                     unresolved_clock = True
                     continue
-                if high <= boundary:
+                if datetime.fromisoformat(high) <= datetime.fromisoformat(boundary):
                     continue
-                if low <= boundary:
+                if datetime.fromisoformat(low) <= datetime.fromisoformat(boundary):
                     limits.append(
                         "Overlapping event time bounds leave this branch unresolved."
                     )
@@ -147,7 +148,7 @@ def timeline(graph, dossier):
             ordered = sorted(
                 groups.values(),
                 key=lambda rows: (
-                    bounds(rows[0])[0] or "",
+                    datetime.fromisoformat(bounds(rows[0])[0]),
                     rows[0]["source_record_id"],
                 ),
             )
@@ -313,7 +314,12 @@ def timeline(graph, dossier):
             unresolved.append({'label': f"{pick.get('season') or 'Year unavailable'} Round {pick.get('round') or '?'} · original franchise unavailable",
                                'sender': franchise(f"{graph.league_id}:franchise:{pick['previous_owner_id']}", dossier['season']) if pick.get('previous_owner_id') else None,
                                'receiver': franchise(f"{graph.league_id}:franchise:{pick['owner_id']}", dossier['season']) if pick.get('owner_id') else None})
+    from .next_exchange import next_exchanges
+    packages = next_exchanges(graph, dossier, branches, franchise=franchise, label=label,
+                             bounds=bounds, selections=selections,
+                             max_events=MAX_EVENTS, max_assets=MAX_ASSETS)
     return {
+        "next_exchanges": packages,
         "league_id": graph.league_id,
         "league_name": (graph.current_data.get("league") or {}).get("name")
         or "Selected league",
