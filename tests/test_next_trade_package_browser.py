@@ -5,7 +5,6 @@ import os
 from pathlib import Path
 from urllib.parse import urlsplit
 import unittest
-from unittest.mock import patch
 
 from playwright.sync_api import sync_playwright
 from tools.validation.browser_runtime import launch_chromium

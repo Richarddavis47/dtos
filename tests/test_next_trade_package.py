@@ -1,6 +1,5 @@
 """Canonical retained-record package controls; synthetic edits are explicit."""
 import copy
-import json
 import unittest
 from unittest.mock import patch
 
@@ -243,7 +242,7 @@ class NextTradePackageTests(unittest.TestCase):
         self.assertEqual(model['league_id'], DAY)
 
     def test_source_generation_invalidates_read_model(self):
-        graph = self.publish()
+        self.publish()
         cache = HistoricalReadModelCache()
         before = cache.get(self.f.store, DAY, self.f.data[DAY])
         first = before.trade_timeline(ROOT)
