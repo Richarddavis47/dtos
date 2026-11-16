@@ -101,6 +101,20 @@ def select_insights(facts, attention, offers):
     capital_action = (facts.get('outlook') or {}).get('capital_action')
     if capital_action:
         capital_action = dict(capital_action)
+        # Refresh display names only for exact records already admitted by the
+        # independent inventory formatter. Pricing rows cannot add ownership.
+        if (capital and capital.get('league_id') == facts['league_id']
+                and capital.get('roster_id') == rid and capital.get('generation') == facts['generation']):
+            labels = []
+            for row in capital.get('picks', ()):
+                pick = row.get('identity') or {}
+                year, rnd = pick.get('year', pick.get('season')), pick.get('round')
+                original, owner = pick.get('original_roster_id'), pick.get('current_owner_id')
+                identity = f'{year} round {rnd} · original {original} · owner {owner}'
+                if identity in capital_action.get('details', ()):
+                    round_label = 'first' if rnd == 1 else f'round {rnd}'
+                    labels.append(f"Recorded {year} {round_label} · {pick.get('original_team') or f'original franchise {original}'} · owned by your team")
+            capital_action['reason'] = facts['outlook']['future'] + (' ' + '; '.join(labels[:2]) + '.' if labels else '')
         if not facts.get('market_compatible'):
             capital_action['drawback'] = 'Current pick pricing is unconfirmed. ' + capital_action['drawback']
         candidates.append(_item('capital', 'capital', **capital_action, issues=['capital']))

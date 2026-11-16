@@ -108,7 +108,9 @@ def franchise_outlook(data, result, *, players=(), strategy='', overview=None):
             if inventory['complete'] and list(key) not in inventory['before']:
                 continue
             seen.add(key)
-            recorded.append((f'Recorded {year} round {round_number} · original franchise {original} · owned by your team',
+            round_label = 'first' if round_number == 1 else f'round {round_number}'
+            original_label = pick.get('original_team') or f'original franchise {original}'
+            recorded.append((f'Recorded {year} {round_label} · {original_label} · owned by your team',
                              f'{year} round {round_number} · original {original} · owner {owner}'))
     outlook['capital_action'] = dict(
         title='Review recorded draft picks', reason=outlook['future'] + (' ' + '; '.join(r[0] for r in recorded[:2]) + '.' if recorded else ''),
