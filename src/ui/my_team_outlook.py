@@ -24,7 +24,7 @@ def outlook_panel(outlook, *, editable, roster_id):
     choices = escape(json.dumps(goal_options(roster_id), separators=(',', ':')), quote=True) if editable else '{}'
     return (f'<section id="my-team-outlook" class="thq-outlook" data-outlook-goals="{choices}" data-dtos-component="recommendation" aria-labelledby="my-team-outlook-title">'
             '<h2 id="my-team-outlook-title">Your roster at a glance</h2>'
-            + ('<p id="my-team-outlook-lead">Lineup strength and depth need matching evidence.</p>'
+            + ('<p id="my-team-outlook-lead">Comparison pending: lineup and depth.</p>'
                + f'<p>{escape(outlook["future_summary"])}</p>' if unprepared else ''.join('<p' + (' id="my-team-outlook-lead"' if label == 'Current position' else '') + f'><b>{label}:</b> {escape(text)}</p>' for label, text in rows))
             + '<details id="my-team-outlook-evidence" class="thq-strength-detail">'
             '<summary aria-label="Why this outlook? Expand the assessment and evidence" aria-describedby="my-team-outlook-lead">'
