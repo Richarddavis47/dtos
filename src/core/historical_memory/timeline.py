@@ -313,7 +313,12 @@ def timeline(graph, dossier):
             unresolved.append({'label': f"{pick.get('season') or 'Year unavailable'} Round {pick.get('round') or '?'} · original franchise unavailable",
                                'sender': franchise(f"{graph.league_id}:franchise:{pick['previous_owner_id']}", dossier['season']) if pick.get('previous_owner_id') else None,
                                'receiver': franchise(f"{graph.league_id}:franchise:{pick['owner_id']}", dossier['season']) if pick.get('owner_id') else None})
+    from .next_exchange import next_exchanges
+    packages = next_exchanges(graph, dossier, branches, franchise=franchise, label=label,
+                             bounds=bounds, selections=selections,
+                             max_events=MAX_EVENTS, max_assets=MAX_ASSETS)
     return {
+        "next_exchanges": packages,
         "league_id": graph.league_id,
         "league_name": (graph.current_data.get("league") or {}).get("name")
         or "Selected league",
