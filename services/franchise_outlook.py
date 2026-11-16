@@ -2,7 +2,7 @@
 
 No scoring, acquisition, solver, new cache or retained runtime owner.
 """
-from services.my_team_outlook import goal_options
+from services.my_team_outlook import goal_options, _slot_description
 from src.ui.intelligence_presentation import manager_points
 from math import isfinite
 from services.my_team_overview import roster_overview
@@ -25,7 +25,7 @@ def franchise_outlook(data, result, *, players=(), strategy='', overview=None):
     # Reapply the existing diagnostic reader's effective qualification. Never
     # pair a saved roster claim with a newer availability-adjusted comparison.
     own = ((comparison or {}).get('teams') or {}).get(str(assessment.roster_id)) or {}
-    outlook['comparison_prepared'] = bool(own)
+    outlook['comparison_prepared'] = 'optimal_ids' in own
     positions = own.get('positions') or {}
     supported = [(pos, row) for pos, row in positions.items()
                  if (row.get('evidence') or {}).get('calculation_supported')
@@ -53,6 +53,20 @@ def franchise_outlook(data, result, *, players=(), strategy='', overview=None):
     # retained multi-horizon profile with a different availability baseline.
     outlook['details'].append(outlook['position'])
     outlook['details'].extend(own.get('limitations') or [])
+    if outlook['comparison_prepared']:
+        cohort = comparison.get('teams') or {}
+        comparable = {rid for rid, row in cohort.items() if row.get('optimal_points') is not None
+                      and (row.get('evidence') or {}).get('calculation_supported')}
+        outlook['details'].append(f'Lineup comparison: {len(comparable)}/{len(cohort)} franchises can fill the configured starting slots with supported eligible projections. Incomplete bench coverage alone does not exclude a franchise; this is separate from official standings and full replacement-depth support.')
+        names = {str(team.get('roster_id')): team.get('team_name') or team.get('name') for team in data.get('teams') or []}
+        for rid, row in cohort.items():
+            if rid in comparable:
+                continue
+            slots = _slot_description(row.get('unsupported_slots'))
+            reason = ('Starting slots without supported eligible players: ' + slots + '.' if slots else
+                      ' '.join(row.get('lineup_limitations') or row.get('independent_limitations') or row.get('limitations') or ['Starting-slot coverage is not established.']))
+            outlook['details'].append(f"{names.get(str(rid)) or f'Franchise {rid}'}: excluded from this modeled comparison. {reason} Missing points are not zero.")
+    outlook['details'].append('Roster projection coverage is a different measure. This counts player-week numbers, including reserve/taxi players; it is separate from playable starting-slot eligibility.')
     for pos, row in supported:
         if row.get('base_reason'):
             outlook['details'].append(row['base_reason'])

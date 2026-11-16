@@ -118,7 +118,8 @@ class AssessmentCoverageTests(unittest.TestCase):
                 lead = text.split('</summary>', 1)[0] if index == 0 else text
                 if index == 0:
                     self.assertIn('Comparison pending:', lead)
-                    self.assertIn('current availability and source evidence need matching preparation', lead)
+                    self.assertIn('lineup and depth', lead)
+                    self.assertIn('current availability and source evidence need matching preparation', text.split('</summary>', 1)[1])
                 else:
                     self.assertIn('This week’s lineup comparison is not ready.', lead)
                     self.assertIn('Current projections and player availability are needed.', lead)
