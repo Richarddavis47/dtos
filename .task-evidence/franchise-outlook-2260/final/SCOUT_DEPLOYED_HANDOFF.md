@@ -1,0 +1,32 @@
+# Scout — released franchise outlook
+
+Candidate 5f4f621848fa62bd445598071a53dad000a4b3e5; source tree 595e3cff24a75120d538d02410230b12ea09dbba; PR349. Released v1.22.45/build2260; deployed commit `2c25fc70cbab23130609db48ab2d4c7db668a20e`. The guarded publication and production receipts verify the same validated source tree.
+
+My Team exposes its weekly comparison, a supported positional strength and concern, independently qualified future picks and existing contextual actions. Home reuses the already prepared assessment and the same capital qualification; its main actions stay first, followed by a short expandable outlook. No overall grade, championship window or new scoring model is added. Saved goals remain preferences. A need invites editable exploration, not a transaction recommendation.
+
+## Independent bounded acceptance
+
+1. Verify release/source/tree and checksums. Separate cancelled/superseded and development attempts from final source. Counts overlap across suites. Review current original consoles and screenshots, not only a narrative or large ZIP.
+2. Use an existing authorised warm connected league. Stop on capacity deferral. No forced cold entry, sync, cache clearing, FOIS rebuild, search, saved-setting changes or real transactions. Keep inspection credentials inside Render; prefer GitHub sign-in if needed. Opera is prohibited.
+3. Open My Team. Check week, points, slot coverage, comparable-team count, rank and qualification against the same prepared diagnostic. Partial lineups withhold unsupported totals/rank. Unknown coverage is not zero. One strong week is not a proven competitive window.
+4. Inspect strength and concern. They use existing position-specific supported flags and effective qualification. Unrelated gaps do not manufacture weaknesses; a provisional finding stays provisional. Expand Why this outlook for coverage, source explanations and legal backup scenarios. Sleeper submitted starters remain separate from the analytical lineup.
+5. Reconcile future capital against exact configured-season/round ownership records. Complete inventory can establish zero. Partial or conflicting inventory cannot establish remaining totals; individually supported recorded picks may remain visible. Original franchise and current observed ownership remain distinct. No pick range, class quality or future production is inferred.
+6. Open Home. If a compatible cached assessment exists, its short outlook should agree with My Team. Otherwise the existing preparation explanation and My Team action must stay truthful. The prioritised capital action must not reintroduce a total that the outlook withholds. Expand the short outlook by keyboard/touch. No provider work or new evaluation should start.
+7. Where a supported current need provides an existing Trade handoff, inspect its editable filter and reason, then contextual Back without generating. Preserve the existing draft, protections, valuation method and saved goal under that handoff's contract. The established explicit Home-entry boundary still ends this tab's proposal; this update does not change it or claim a Home round trip preserves that ended proposal.
+8. Check320/375/390px and desktop, long names, focus, touch targets, overflow and expanded explanations. Chromium emulation is not physical iPhone/Safari or a real user study. Known unsupported models and legitimately incomplete ownership/projections remain unknown.
+
+## Evidence boundaries
+
+Final107focused controls passed, including unchanged600pxroster/44pxcontrols and source-qualification regressions. Original in-container source/result and enforced2GiBstate are captured; cgroup peak1157451776bytes, no OOM. The separate original five-viewport893 target also passed but belongs to the older candidate; final107independently executes the unchanged journey. Full/native telemetry is separate. Current screenshots use disposable fixtures. No authenticated owner or physical-device acceptance is claimed. This session's supported owner browser/Render Shell access must be verified separately; no credential workaround is authorised. Public readiness cannot prove live franchise values.
+
+Actual screenshot review rejected candidate9a for contradictory capital counts and9bb for pushing the Home action beyond its unchanged550pxbound. Their incomplete full runs and original records remain separate. Candidate67da had a failing retained-pick observation case; the corrected presentation preserves observations without inventing a complete inventory. Source/scoring/valuation/Trade/admission files are byte-checked independently against baseline; all mandatory final-source gates still govern publication.
+
+Final-source mandatory results: local4599/all10 gates; hosted4599/all10 gates and all13 required jobs; Product1069; focused107. Kernel peaks local2009931776 and hosted1991573504 bytes under2147483648, no OOM. Counts overlap. Publisher controls and actual deployment receipts separately govern release. Current five-viewport normal navigation executes within the107; the separate targeted893 replay is older-source evidence, not a new final-source run. Known original-franchise names are resolved only for exact admitted capital records; pricing cannot complete inventory.
+
+## Verified release records
+
+- Exact-source focused:107passed (10new controls); focused peak was recorded in its cgroup result. Full local:4599tests/all10gates; hosted:4599tests/all10gates. All13required hosted jobs passed. Product original executions:1069. Publisher:181controls. Counts overlap and must not be summed as unique tests.
+- Enforced2GiB full-local kernel peak:2009931776bytes. Full and native original telemetry/cleanup receipts are separate from focused results. No cap, reserve, timing threshold or assertion was weakened.
+- Immutable release:https://github.com/Richarddavis47/dtos/releases/tag/v1.22.45;23attachments verified by guarded prepare/publish, including byte readback. Candidate, merged and deployed trees match.
+- Public readiness/static parity and bounded public smokes passed. No supported owner-browser controller or RenderShell/SSH session was exposed; authenticated owner values and actions remain independently unverified. Opera was unused. No physicaliPhone/Safari or real-user study occurred.
+- Final screenshots and original split consoles are linked from the readable evidence index. Prior failures, superseded incomplete runs and scratch/controller holds remain separate original records.

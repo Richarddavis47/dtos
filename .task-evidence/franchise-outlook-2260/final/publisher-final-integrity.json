@@ -1,0 +1,47 @@
+{
+  "passed": true,
+  "source": {
+    "baseline": "01fac5fd355a747250073ae04c4fa5ec5bf2039f",
+    "baseline_tree": "004803fa657610381559371fe86e904e92bf2394",
+    "candidate": "5f4f621848fa62bd445598071a53dad000a4b3e5",
+    "tree": "595e3cff24a75120d538d02410230b12ea09dbba",
+    "branch": "feat/franchise-outlook-2260",
+    "version": "1.22.45",
+    "build": 2260,
+    "expected_test_count": 4599,
+    "pr": 349
+  },
+  "controller": {
+    "commit": "f228322b7576527983ab887963b19e10a8490390",
+    "tree": "39bcfa350cef4bf346a6a7feb7b099644509ce12",
+    "branch": "release/2260-actions-publisher",
+    "ref": "refs/heads/release/2260-actions-publisher",
+    "source": {
+      "baseline": "01fac5fd355a747250073ae04c4fa5ec5bf2039f",
+      "baseline_tree": "004803fa657610381559371fe86e904e92bf2394",
+      "candidate": "5f4f621848fa62bd445598071a53dad000a4b3e5",
+      "tree": "595e3cff24a75120d538d02410230b12ea09dbba",
+      "branch": "feat/franchise-outlook-2260",
+      "version": "1.22.45",
+      "build": 2260,
+      "expected_test_count": 4599,
+      "pr": 349
+    },
+    "tooling_only": true,
+    "not_merged_into_main": true
+  },
+  "sha256": {
+    "tools/release/publish.py": "e8e68918d276eb3ef03d01eb827ca3ba569ca934d5390b803b2b286b4a51e003",
+    "tests/test_release_publisher.py": "6ecd56494c6548a754317c5c219da87a4281b56a370f662ec78f39217c9c03b5",
+    ".github/workflows/canonical-release-recovery.yml": "a45cb8e2a2f5d41b9ef08bc709125480962c7b6a80c6a0cf690a6106fe456ec7",
+    ".github/release-plans/2260.json": "c97942aa7943ecb6d327a4d20079844b0772549a86b8138eaee98f0511f54b28"
+  },
+  "tests": 181,
+  "lint": true,
+  "compile": true,
+  "diff_check": true,
+  "reused_exact_unchanged_controls": true,
+  "original_controls_sha256": "d160675c7d3199f099a73b8abfda29e9a326cd0a15850675961c12f4016af250",
+  "sparse_recovery": "Original checks passed before Git refused the new sparse paths. No source/guard/plan bytes changed; only explicit --sparse staging and commit/push were completed.",
+  "scope": "Real finalized plan and unchanged publisher guards; no validation bypass."
+}
