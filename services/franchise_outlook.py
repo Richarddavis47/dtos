@@ -2,7 +2,9 @@
 
 No scoring, acquisition, solver, new cache or retained runtime owner.
 """
-from services.my_team_outlook import prepared_outlook
+from services.my_team_outlook import goal_options
+from src.ui.intelligence_presentation import manager_points
+from math import isfinite
 from services.my_team_overview import roster_overview
 from services.team_assessment_presentation import prepared_comparison, weekly_comparison
 from services.trade_capital_inventory import inventory_baseline
@@ -11,7 +13,12 @@ from services.trade_capital_inventory import inventory_baseline
 def franchise_outlook(data, result, *, players=(), strategy='', overview=None):
     assessment = result.team_assessment
     overview = roster_overview(data, result, players) if overview is None else overview
-    outlook = prepared_outlook(data, assessment, overview, players, strategy=strategy)
+    goal = strategy if strategy in {'WIN NOW', 'RETOOL', 'REBUILD'} else ''
+    outlook = {**goal_options(assessment.roster_id)[goal], 'details': [
+        'Standing: ' + (overview.get('standing_reason') or 'Official standing evidence is unavailable.'),
+        'Current strength is not championship probability or future sustainability.',
+        'Original-franchise identity is separate from current ownership; unknown pick ranges remain unknown.',
+        'Ages and current projections do not establish years remaining or a multi-season forecast.']}
     comparison = prepared_comparison(data, result.context.projection_snapshot)
     outlook['position'] = weekly_comparison(assessment.team, data.get('week') or assessment.projection_week, diagnostics=comparison)
     outlook['brief'] = weekly_comparison(assessment.team, data.get('week') or assessment.projection_week, compact=True, diagnostics=comparison)
@@ -41,6 +48,18 @@ def franchise_outlook(data, result, *, players=(), strategy='', overview=None):
     else:
         outlook['concern'] = ('No supported shortfall is established; incomplete evidence is not proof of strong depth.'
                               if supported else 'Compatible lineup and backup evidence is not prepared; missing or incompatible projections are not zero production, and no roster weakness is inferred.')
+    # Explanation and numbers come from this same admitted diagnostic, never a
+    # retained multi-horizon profile with a different availability baseline.
+    outlook['details'].append(outlook['position'])
+    outlook['details'].extend(own.get('limitations') or [])
+    for pos, row in supported:
+        if row.get('base_reason'):
+            outlook['details'].append(row['base_reason'])
+        values = row.get('observed_replacement_points') or []
+        if values and all(isinstance(v, (int, float)) and not isinstance(v, bool) and isfinite(v) for v in values):
+            low, high = min(values), max(values)
+            points = manager_points(low) if low == high else manager_points(low) + '–' + manager_points(high)
+            outlook['details'].append(('Provisional · ' if row.get('conclusion_state') != 'current' else '') + f'{pos} observed replacement projection: {points} points across separate starter-absence scenarios; not simultaneous coverage.')
     inventory = inventory_baseline(data, assessment.roster_id)
     if inventory['complete']:
         picks = inventory['before']

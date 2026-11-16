@@ -12,9 +12,9 @@ class FranchiseOutlookTests(unittest.TestCase):
         card=SimpleNamespace(league_id='L',roster_id=1,future_capital_evidence={})
         result=SimpleNamespace(team_assessment=SimpleNamespace(team=card,roster_id=1,projection_week=10,league_id='L',generation='g'),context=SimpleNamespace(projection_snapshot=None))
         diagnostic={'league_id':'L','week':10,'projection_generation':'p','required_slot_count':10,'teams':{'1':{'positions':positions or {},'optimal_points':0,'optimal_ids':list(range(10)), 'evidence':{'calculation_supported':True,'conclusion_state':'current'}}}}
-        old=dict(position='old position',brief='old rank',strength='old strength',concern='old concern',future='old inventory',details=[])
+        old=dict(position='old position',brief='old rank',strength='old strength',concern='old concern',future='old inventory',details=['Prepared Team Strength covers 1/1 current weeks; complete-horizon points: 900.'])
         inventory=inventory or dict(complete=False,reason='Ownership incomplete; remaining totals unknown.',before=[])
-        with patch('services.franchise_outlook.roster_overview',return_value={}),patch('services.franchise_outlook.prepared_outlook',return_value=deepcopy(old)),patch('services.franchise_outlook.prepared_comparison',return_value=diagnostic),patch('services.franchise_outlook.inventory_baseline',return_value=inventory):
+        with patch('services.franchise_outlook.roster_overview',return_value={}),patch('services.franchise_outlook.prepared_outlook',return_value=deepcopy(old),create=True),patch('services.franchise_outlook.prepared_comparison',return_value=diagnostic),patch('services.franchise_outlook.inventory_baseline',return_value=inventory):
             return franchise_outlook(data,result)
 
     def test_current_zero_is_not_missing_and_saved_rank_is_not_reused(self):
@@ -62,3 +62,8 @@ class FranchiseOutlookTests(unittest.TestCase):
         self.assertEqual(capital['title'],'Review recorded draft picks')
         self.assertIn('unknown',capital['reason'])
         self.assertNotIn('1 owned',capital['title']+capital['reason'])
+
+    def test_recorded_horizon_cannot_explain_current_diagnostic(self):
+        row=self.render()
+        self.assertIn('0.00',row['position'])
+        self.assertNotIn('900', ' '.join(row['details']))

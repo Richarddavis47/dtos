@@ -122,7 +122,7 @@ class MyTeamOutlookTests(unittest.TestCase):
         for player in self.f.data['teams'][0]['players']:
             player['age'] = 24
         view = self.view()
-        text = ' '.join(view['outlook']['details'])
+        text = ' '.join(self.format(view)['details'])
         self.assertIn('Reported ages cover 7/7', text)
         self.assertIn('not establish years remaining', text)
         for player in self.f.data['teams'][0]['players']:
@@ -157,7 +157,7 @@ class MyTeamOutlookTests(unittest.TestCase):
         evidence = view['assessment'].roster_evidence
         self.assertEqual(evidence.optimal_lineup_projection, 59)
         self.assertEqual(evidence.positions['QB']['best_reserve_points'], 28)
-        self.assertIn('best supported eligible reserve 28 points', ' '.join(view['outlook']['details']))
+        self.assertIn('observed replacement projection: 28 points', ' '.join(view['outlook']['details']))
         self.assertIn('not automatically expendable', view['outlook']['strength'])
 
     def test_foreign_capital_and_missing_age_are_not_future_certainty(self):
