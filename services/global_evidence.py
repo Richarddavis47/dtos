@@ -107,3 +107,31 @@ def _sleeper_production(data, player_id, as_of, *, require_receipt=False):
             'ppg': None, 'points_per_observation': window.fantasy_points if current and window else None,
             'denominator': 'completed-week score observations, not games played',
             'availability': context.status.value if current else 'unavailable'}
+
+
+def player_usage_evidence(player_id: str, data: dict, *, expected_league_id: str,
+                          path: Path = GLOBAL_EVIDENCE_FILE, as_of: str | None = None) -> dict:
+    """Read one player's shared retained usage; no scoring or runtime ownership.
+
+    Fresh local reads deliberately bypass league publication caches: a correction
+    or new source revision is visible on the next request in every league. A
+    historical query cannot borrow today's NFL completed-week state.
+    """
+    league = data.get('league') or {}
+    league_id = str(league.get('league_id') or '')
+    if not league_id or league_id != str(expected_league_id):
+        raise ValueError('Usage requires the selected league context.')
+    boundary = as_of or datetime.now(timezone.utc).isoformat()
+    season = league.get('season')
+    if not str(season).isdigit():
+        return {'availability': 'unavailable', 'reason': 'league_season_unknown'}
+    store = retained_global_evidence(path)
+    if store is None:
+        return {'availability': 'not_connected', 'reason': 'usage_not_retained'}
+    usage = player_usage(store, player_id, season=int(season), as_of=boundary,
+        through_week=GlobalProduction.completed_week_boundary(data, int(season)) if as_of is None else None)
+    receipt = store.source_check(f'nflverse/production/{season}')
+    if receipt and utc(receipt['checked_at']) > utc(boundary):
+        receipt = None
+    usage.update(league_id=league_id, source_check=receipt, provider_calls=0)
+    return usage

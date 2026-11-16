@@ -268,16 +268,21 @@ class GlobalEvidenceStore:
         return {**dict(row), 'details': json.loads(row['details'])} if row else None
 
     def read(self, family: str, subject_id: str | None, *, as_of: str, limit: int = 1000,
-             season: int | None = None) -> list[dict[str, Any]]:
+             season: int | None = None, revision_conflicts: bool = False) -> list[dict[str, Any]]:
         if not 1 <= limit <= 1000:
             raise ValueError("Evidence read limit must be bounded.")
         if subject_id is None and (family != 'schedule' or season is None):
             raise ValueError('Family-wide reads require a bounded schedule season.')
         boundary = utc(as_of)
+        # Existing consumers keep their original query cost and selection. Usage
+        # optionally detects tied contradictory revisions instead of a hash winner.
+        conflicts_sql = ("COUNT(*) OVER (PARTITION BY f.provider,f.source_record_id,r.known_at,r.observed_at)"
+                         if revision_conflicts else "1")
         with closing(self._connect(readonly=True)) as connection:
-            rows = connection.execute("""
-                SELECT fingerprint,payload,known_at,first_seen FROM (
+            rows = connection.execute(f"""
+                SELECT fingerprint,payload,known_at,first_seen,revision_count FROM (
                     SELECT f.fingerprint,f.payload,r.known_at,r.observed_at AS first_seen,
+                    {conflicts_sql} AS revision_count,
                     ROW_NUMBER() OVER (
                         PARTITION BY f.provider,f.source_record_id
                         ORDER BY r.known_at DESC,r.observed_at DESC,f.fingerprint DESC
@@ -293,7 +298,9 @@ class GlobalEvidenceStore:
             raise ValueError('Evidence result exceeds the requested bound; refusing silent truncation.')
         return [{**json.loads(zlib.decompress(row["payload"])),
                  "fingerprint": row["fingerprint"], "knowledge_boundary": row["known_at"],
-                 "first_seen": row["first_seen"]} for row in rows]
+                 "first_seen": row["first_seen"],
+                 **({"revision_conflict": row["revision_count"] > 1} if revision_conflicts else {})}
+                for row in rows]
 
     def counts(self) -> dict[str, int]:
         with closing(self._connect(readonly=True)) as connection:

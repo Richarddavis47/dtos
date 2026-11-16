@@ -1,5 +1,9 @@
 ## v1.22.41 / build 2256 — Trade Analysis Goal Clarity
 
+## v1.22.43 / build 2258 — Recent player workload
+
+Player dossiers compare targets and carries across the latest three eligible regular-season game observations and the preceding three. Dates, sample sizes and differences remain visible; missing or conflicting statistics withhold only the affected comparison. Missing game records block a comparison rather than becoming zero. Shared retained corrections appear on reload without provider work. Fantasy scores, projections, valuations and Trade standards are unchanged.
+
 ## v1.22.42 / build 2257
 
 - Report selected-player Sleeper projections/results and separate auxiliary usage from actual retained evidence, including unknown clocks and failed refreshes. Configuration is not complete source coverage.
