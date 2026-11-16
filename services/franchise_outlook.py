@@ -53,5 +53,11 @@ def franchise_outlook(data, result, *, players=(), strategy='', overview=None):
         outlook['future'] = inventory['reason']
         if inventory['before']:
             outlook['future'] += f" {len(inventory['before'])} individually supported owned picks are listed in Draft capital; this is not a complete inventory."
+    # Home must not restore an unqualified total through its older capital card.
+    # Reuse this independently reconciled family, not assessment price coverage.
+    outlook['capital_action'] = dict(
+        title='Review recorded draft picks', reason=outlook['future'],
+        drawback='Recorded ownership is separate from future performance. Review exact identities before considering a trade.',
+        action='Review exact draft capital', href=f'/teams/{assessment.roster_id}#draft-capital')
     outlook['details'] = list(dict.fromkeys([*outlook['details'], 'Weekly lineup strength is separate from overall franchise health. A saved goal is your preference, not a proven competitive window.']))
     return outlook

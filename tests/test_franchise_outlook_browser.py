@@ -47,6 +47,7 @@ class FranchiseOutlookBrowserTests(unittest.TestCase):
                         shared=page.locator('[aria-label="Franchise outlook"]')
                         self.assertEqual(shared.count(),1)
                         self.assertIn('Future flexibility:',shared.inner_text())
+                        self.assertNotIn('1 owned future first-round pick',page.locator('#home-opportunity-cards').inner_text())
                         self.assertLessEqual(page.evaluate('document.documentElement.scrollWidth-innerWidth'),0)
                         if root:
                             page.screenshot(path=str(root/f'home-{width}.png'),full_page=True)

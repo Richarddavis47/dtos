@@ -51,3 +51,14 @@ class FranchiseOutlookTests(unittest.TestCase):
     def test_own_and_acquired_exact_firsts_stay_distinct(self):
         row=self.render(inventory=dict(complete=True,before=[[2027,1,1],[2027,1,2]],seasons=[2027],reason=''))
         self.assertIn('2 first-round picks (1 originally yours)',row['future'])
+
+    def test_home_cannot_restore_unconfirmed_totals_from_assessment_prices(self):
+        from services.front_office_brief import select_insights
+        outlook=self.render()
+        facts=dict(roster_id=1,strategy='REBUILD',league_id='L',generation='g',week=10,league_name='Fixture',outlook=outlook,
+            assessment=SimpleNamespace(team=SimpleNamespace(future_capital_evidence=dict(league_id='L',roster_id=1,generation='g',picks=[dict(identity=dict(round=1,year=2027))],priced_pick_count=1))))
+        cards=select_insights(facts,[],[])
+        capital=next(c for c in cards if c['family']=='capital')
+        self.assertEqual(capital['title'],'Review recorded draft picks')
+        self.assertIn('unknown',capital['reason'])
+        self.assertNotIn('1 owned',capital['title']+capital['reason'])
