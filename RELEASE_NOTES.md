@@ -1,3 +1,7 @@
+## v1.22.45 / build 2260 — Franchise outlook
+
+My Team and Home reuse an evidence-qualified outlook with weekly lineup strength, a supported positional strength and vulnerability, and independently verified draft-pick flexibility. Missing inventory is not zero capital; a saved goal is a preference, not a competitive-window verdict. Details remain expandable. No scoring, valuation, Trade qualification or resource policies change.
+
 ## v1.22.44 / build 2259 — Next observed trade packages
 
 Completed trade timelines show the next supported exchange by an original recipient, including an exact pick’s observed draft conversion. The full later package is shown once, with all supported directions and original-franchise picks. Releases, missing transitions, conflicting records and uncertain dates withhold attribution. Partial consideration stays partial; no return, value or production is allocated to one asset. Opening details uses retained evidence only. Valuations, fantasy scores, Trade standards and memory safeguards are unchanged.

@@ -725,6 +725,7 @@ def _compute(inputs, snapshot, key):
             "positions": positions,
             "optimal_points": base.projected_points,
             "optimal_ids": [e.asset_id for e in base.entries],
+            "unsupported_slots": list(base.unsupported_slots),
             "reserve_ids": [e.asset_id for e in reserve.entries],
             "missing_projection_ids": missing,
             "lineup_limitations": slot_limitations,

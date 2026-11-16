@@ -118,7 +118,8 @@ class AssessmentCoverageTests(unittest.TestCase):
                 lead = text.split('</summary>', 1)[0] if index == 0 else text
                 if index == 0:
                     self.assertIn('Comparison pending:', lead)
-                    self.assertIn('current availability and source evidence need matching preparation', lead)
+                    self.assertIn('lineup and depth', lead)
+                    self.assertIn('current availability and source evidence need matching preparation', text.split('</summary>', 1)[1])
                 else:
                     self.assertIn('This week’s lineup comparison is not ready.', lead)
                     self.assertIn('Current projections and player availability are needed.', lead)
@@ -144,7 +145,7 @@ class AssessmentCoverageTests(unittest.TestCase):
             page=lambda title, body: HTMLResponse(body), generation_provider=lambda: self.id()))
         # Inject an already-prepared diagnostic at the presentation boundary.
         # These are disposable contracts, not a claim of live league coverage.
-        with patch('routes.teams.prepared_comparison', return_value=diagnostic), patch(
+        with patch('services.franchise_outlook.prepared_comparison', return_value=diagnostic), patch(
                 'services.team_headquarters.prepared_comparison', return_value=diagnostic):
             own = f.client.get('/teams/1')
             home = f.client.get('/')

@@ -29,7 +29,8 @@ class FrontOfficeBriefHTTPTests(unittest.TestCase):
         self.f.f.seed()
         self.assertEqual(self.client.get('/teams/1').status_code, 200)
         meta = self.read()
-        self.assertIn('owned future first-round', meta['brief_html'])
+        self.assertIn('Review recorded draft picks', meta['brief_html'])
+        self.assertIn('remaining totals are unknown', meta['brief_html'])
         self.assertIn('2028', meta['brief_html'])
         self.assertIn('Explore / Edit', meta['brief_html'])
         self.assertIn(self.f.f.token, meta['brief_html'])
@@ -70,7 +71,8 @@ class FrontOfficeBriefHTTPTests(unittest.TestCase):
         with patch('services.home_trade_opportunities.source_identity', return_value=None):
             meta = self.read()
         self.assertIsNone(meta['source_identity'])
-        self.assertIn('owned future first-round', meta['brief_html'])
+        self.assertIn('Review recorded draft picks', meta['brief_html'])
+        self.assertIn('remaining totals are unknown', meta['brief_html'])
         self.assertIn('Current pick pricing is unconfirmed', meta['brief_html'])
         self.assertNotIn('RECOMMENDED TRADE', meta['brief_html'])
 
