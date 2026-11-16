@@ -234,11 +234,11 @@ def create_trades_router(*, ensure_fresh: EnsureFresh, require_data: RequireData
             if facts.get('outlook'):
                 from html import escape
                 outlook = facts['outlook']
-                rendered = ('<section class="home-brief-insight" aria-label="Franchise outlook"><h3>Your franchise outlook</h3>'
+                rendered += ('<section class="home-brief-insight" aria-label="Franchise outlook"><h3>Your franchise outlook</h3>'
+                    + '<p>' + escape(outlook['brief']) + '</p><details><summary>Strength, depth and picks</summary>'
                     + ''.join('<p><b>' + label + ':</b> ' + escape(outlook[field]) + '</p>' for label, field in
-                        [('This week', 'brief'), ('Strength', 'strength'), ('Watch', 'concern'), ('Future flexibility', 'future')])
-                    + '<a class="ds-action" href="/teams/' + str(rid) + '">Review My Team</a></section>' + brief_cards(items[:1])
-                    + ('<details class="ds-home-detail"><summary>Other prepared ideas</summary>' + brief_cards(items[1:]) + '</details>' if len(items) > 1 else ''))
+                        [('Strength', 'strength'), ('Watch', 'concern'), ('Future flexibility', 'future')])
+                    + '</details><a class="ds-action" href="/teams/' + str(rid) + '">Review My Team</a></section>')
             current = require_data()
             from services.front_office_brief import intelligence_orchestrator
             same_generation = intelligence_orchestrator.context(current, rid, {'strategy': strategy}).evidence_generation == facts['generation']

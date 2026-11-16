@@ -111,7 +111,8 @@ class FrontOfficeBriefBrowserTests(unittest.TestCase):
                 with patch('services.home_trade_opportunities.source_identity',return_value=None):
                     page.goto('https://dtos.test/')
                     page.get_by_text('Trade prices are unavailable or changing.',exact=False).wait_for()
-                    self.assertIn('owned future first-round',page.locator('#home-opportunity-cards').inner_text())
+                    self.assertIn('Review recorded draft picks',page.locator('#home-opportunity-cards').inner_text())
+                    self.assertIn('remaining totals are unknown',page.locator('#home-opportunity-cards').inner_text())
                     self.assertEqual(page.locator('.home-opportunity').count(),0)
                 page.reload()
                 page.locator('.home-opportunity').wait_for()
