@@ -1,0 +1,22 @@
+# Scout — franchise outlook (pre-publication)
+
+Candidate 893ed9bd63d7c78f28657fbe7858d25edc58c52e; source tree ff0e066e7b2e9b4a06e00429ab88b3d5af444e16; PR349. Proposed v1.22.45/build2260. This handoff is not evidence of publication or completed mandatory gates; use actual final receipts.
+
+My Team exposes its weekly comparison, a supported positional strength and concern, independently qualified future picks and existing contextual actions. Home reuses the already prepared assessment and the same capital qualification; its main actions stay first, followed by a short expandable outlook. No overall grade, championship window or new scoring model is added. Saved goals remain preferences. A need invites editable exploration, not a transaction recommendation.
+
+## Independent bounded acceptance
+
+1. Verify release/source/tree and checksums. Separate cancelled/superseded and development attempts from final source. Counts overlap across suites. Review current original consoles and screenshots, not only a narrative or large ZIP.
+2. Use an existing authorised warm connected league. Stop on capacity deferral. No forced cold entry, sync, cache clearing, FOIS rebuild, search, saved-setting changes or real transactions. Keep inspection credentials inside Render; prefer GitHub sign-in if needed. Opera is prohibited.
+3. Open My Team. Check week, points, slot coverage, comparable-team count, rank and qualification against the same prepared diagnostic. Partial lineups withhold unsupported totals/rank. Unknown coverage is not zero. One strong week is not a proven competitive window.
+4. Inspect strength and concern. They use existing position-specific supported flags and effective qualification. Unrelated gaps do not manufacture weaknesses; a provisional finding stays provisional. Expand Why this outlook for coverage, source explanations and legal backup scenarios. Sleeper submitted starters remain separate from the analytical lineup.
+5. Reconcile future capital against exact configured-season/round ownership records. Complete inventory can establish zero. Partial or conflicting inventory cannot establish remaining totals; individually supported recorded picks may remain visible. Original franchise and current observed ownership remain distinct. No pick range, class quality or future production is inferred.
+6. Open Home. If a compatible cached assessment exists, its short outlook should agree with My Team. Otherwise the existing preparation explanation and My Team action must stay truthful. The prioritised capital action must not reintroduce a total that the outlook withholds. Expand the short outlook by keyboard/touch. No provider work or new evaluation should start.
+7. Where a supported current need provides an existing Trade handoff, inspect its editable filter and reason, then contextual Back without generating. Preserve the existing draft, protections, valuation method and saved goal under that handoff's contract. The established explicit Home-entry boundary still ends this tab's proposal; this update does not change it or claim a Home round trip preserves that ended proposal.
+8. Check320/375/390px and desktop, long names, focus, touch targets, overflow and expanded explanations. Chromium emulation is not physical iPhone/Safari or a real user study. Known unsupported models and legitimately incomplete ownership/projections remain unknown.
+
+## Evidence boundaries
+
+Final99focused controls passed, including unchanged600pxroster/44pxcontrols and source-qualification regressions. Original in-container source/result and enforced2GiBstate are captured; cgroup peak1152303104bytes, no OOM. The separate original five-viewport target also passed and overlaps those99controls. Full/native telemetry is separate. Current screenshots use disposable fixtures. No authenticated owner or physical-device acceptance is claimed. This session's supported owner browser/Render Shell access must be verified separately; no credential workaround is authorised. Public readiness cannot prove live franchise values.
+
+Actual screenshot review rejected candidate9a for contradictory capital counts and9bb for pushing the Home action beyond its unchanged550pxbound. Their incomplete full runs and original records remain separate. Candidate67da had a failing retained-pick observation case; the corrected presentation preserves observations without inventing a complete inventory. Source/scoring/valuation/Trade/admission files are byte-checked independently against baseline; all mandatory final-source gates still govern publication.
