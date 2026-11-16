@@ -9,8 +9,8 @@ from services.franchise_outlook import franchise_outlook
 class FranchiseOutlookTests(unittest.TestCase):
     def render(self, positions=None, inventory=None):
         data={'league':{'league_id':'L'},'week':10}
-        card=SimpleNamespace(league_id='L',roster_id=1)
-        result=SimpleNamespace(team_assessment=SimpleNamespace(team=card,roster_id=1,projection_week=10),context=SimpleNamespace(projection_snapshot=None))
+        card=SimpleNamespace(league_id='L',roster_id=1,future_capital_evidence={})
+        result=SimpleNamespace(team_assessment=SimpleNamespace(team=card,roster_id=1,projection_week=10,league_id='L',generation='g'),context=SimpleNamespace(projection_snapshot=None))
         diagnostic={'league_id':'L','week':10,'projection_generation':'p','required_slot_count':10,'teams':{'1':{'positions':positions or {},'optimal_points':0,'optimal_ids':list(range(10)), 'evidence':{'calculation_supported':True,'conclusion_state':'current'}}}}
         old=dict(position='old position',brief='old rank',strength='old strength',concern='old concern',future='old inventory',details=[])
         inventory=inventory or dict(complete=False,reason='Ownership incomplete; remaining totals unknown.',before=[])

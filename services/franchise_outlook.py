@@ -55,9 +55,29 @@ def franchise_outlook(data, result, *, players=(), strategy='', overview=None):
             outlook['future'] += f" {len(inventory['before'])} individually supported owned picks are listed in Draft capital; this is not a complete inventory."
     # Home must not restore an unqualified total through its older capital card.
     # Reuse this independently reconciled family, not assessment price coverage.
+    recorded = []
+    capital = assessment.team.future_capital_evidence or {}
+    if (not inventory.get('invalid') and capital.get('league_id') == assessment.league_id
+            and capital.get('roster_id') == assessment.roster_id
+            and capital.get('generation') == assessment.generation):
+        seen = set()
+        for row in capital.get('picks', ()):
+            pick = row.get('identity') or {}
+            fields = [pick.get('year', pick.get('season')), pick.get('round'), pick.get('original_roster_id'), pick.get('current_owner_id')]
+            if any(isinstance(v, bool) or not str(v).isdigit() or int(v) <= 0 for v in fields):
+                continue
+            year, round_number, original, owner = map(int, fields)
+            key = (year, round_number, original)
+            if owner != assessment.roster_id or key in seen or pick.get('league_id') not in (None, assessment.league_id):
+                continue
+            if inventory['complete'] and list(key) not in inventory['before']:
+                continue
+            seen.add(key)
+            recorded.append((f'Recorded {year} round {round_number} · original franchise {original} · owned by your team',
+                             f'{year} round {round_number} · original {original} · owner {owner}'))
     outlook['capital_action'] = dict(
-        title='Review recorded draft picks', reason=outlook['future'],
-        drawback='Recorded ownership is separate from future performance. Review exact identities before considering a trade.',
-        action='Review exact draft capital', href=f'/teams/{assessment.roster_id}#draft-capital')
+        title='Review recorded draft picks', reason=outlook['future'] + (' ' + '; '.join(r[0] for r in recorded[:2]) + '.' if recorded else ''),
+        drawback='Unknown ranges are not guaranteed early picks. Recorded ownership is separate from future performance. Review exact identities before considering a trade.',
+        action='Review exact draft capital', href=f'/teams/{assessment.roster_id}#draft-capital', details=[r[1] for r in recorded])
     outlook['details'] = list(dict.fromkeys([*outlook['details'], 'Weekly lineup strength is separate from overall franchise health. A saved goal is your preference, not a proven competitive window.']))
     return outlook
