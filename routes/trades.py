@@ -231,6 +231,14 @@ def create_trades_router(*, ensure_fresh: EnsureFresh, require_data: RequireData
             attention = attention_state(data, rid, reader.snapshot(), change_rows=changes, change_coverage=coverage)
             items = select_insights(facts, attention['items'], result['rows'])
             rendered = brief_cards(items)
+            if facts.get('outlook'):
+                from html import escape
+                outlook = facts['outlook']
+                rendered = ('<section class="home-brief-insight" aria-label="Franchise outlook"><h3>Your franchise outlook</h3>'
+                    + ''.join('<p><b>' + label + ':</b> ' + escape(outlook[field]) + '</p>' for label, field in
+                        [('This week', 'brief'), ('Strength', 'strength'), ('Watch', 'concern'), ('Future flexibility', 'future')])
+                    + '<a class="ds-action" href="/teams/' + str(rid) + '">Review My Team</a></section>' + brief_cards(items[:1])
+                    + ('<details class="ds-home-detail"><summary>Other prepared ideas</summary>' + brief_cards(items[1:]) + '</details>' if len(items) > 1 else ''))
             current = require_data()
             from services.front_office_brief import intelligence_orchestrator
             same_generation = intelligence_orchestrator.context(current, rid, {'strategy': strategy}).evidence_generation == facts['generation']

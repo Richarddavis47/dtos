@@ -13,7 +13,7 @@ from fastapi.responses import HTMLResponse
 from config import LEAGUE_ID
 from services.asset_intelligence import contextual_player_url
 from services.team_headquarters import build_team_directory, build_team_headquarters
-from services.team_assessment_presentation import MODEL_NOTE, weekly_comparison, prepared_comparison
+from services.team_assessment_presentation import prepared_comparison
 from src.ui.customer_experience import plain_reason, readable_time
 from src.ui.intelligence_presentation import record_evidence
 from src.core.historical_memory.read_model import historical_graph
@@ -510,15 +510,6 @@ def create_teams_router(
         comparison = prepared_comparison(data, view['projection_snapshot'])
         from services.team_trade_need import prepared_need
         assessment_outlook = {**assessment_outlook, 'trade_need': prepared_need(data, roster_id, comparison) if editable else None}
-        if view['team_intelligence'].overall.score is None:
-            assessment_outlook = {
-                **assessment_outlook,
-                'brief': weekly_comparison(view['team_intelligence'], data.get('week'), compact=True,
-                                           diagnostics=comparison),
-                'position': f"Standing {overview['standing']} by Sleeper record/PF. " + weekly_comparison(
-                    view['team_intelligence'], data.get('week'), diagnostics=comparison),
-                'details': [MODEL_NOTE, *assessment_outlook['details']],
-            }
         body = f"""
 {TEAM_HQ_CSS}
 <style>

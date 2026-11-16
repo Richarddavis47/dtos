@@ -6,7 +6,7 @@ from services.my_team_outlook import goal_options
 
 
 def outlook_panel(outlook, *, editable, roster_id):
-    rows = [('Current position', outlook['position']), ('Main strength', outlook['strength']),
+    rows = [('Current position', outlook['brief']), ('Main strength', outlook['strength']),
             ('Depth and uncertainty', outlook['concern']), ('Future flexibility', outlook['future'])]
     action = (f'<a id="my-team-outlook-action" class="thq-action" href="{escape(outlook["href"], quote=True)}">{escape(outlook["action"])}</a>'
               if editable else '')
@@ -23,11 +23,14 @@ def outlook_panel(outlook, *, editable, roster_id):
                   '<a class="thq-action" href="#draft-capital" aria-label="Draft capital">Capital</a></nav>')
     choices = escape(json.dumps(goal_options(roster_id), separators=(',', ':')), quote=True) if editable else '{}'
     return (f'<section id="my-team-outlook" class="thq-outlook" data-outlook-goals="{choices}" data-dtos-component="recommendation" aria-labelledby="my-team-outlook-title">'
-            '<details id="my-team-outlook-evidence" class="thq-strength-detail">'
-            '<summary aria-label="Why this outlook? Expand the assessment and evidence" aria-describedby="my-team-outlook-lead">'
             '<h2 id="my-team-outlook-title">Your roster at a glance</h2>'
-            f'<p id="my-team-outlook-lead">{escape(outlook["brief"])}</p></summary>'
-            + ''.join(f'<p><b>{label}:</b> {escape(text)}</p>' for label, text in rows)
+            + ''.join('<p' + (' id="my-team-outlook-lead"' if label == 'Current position' else '') + f'><b>{label}:</b> {escape(text)}</p>' for label, text in rows)
+            + '<details id="my-team-outlook-evidence" class="thq-strength-detail">'
+            '<summary aria-label="Why this outlook? Expand the assessment and evidence" aria-describedby="my-team-outlook-lead">'
+            '<span>Why this outlook?</span>'
+            '</summary>'
+            + f'<p>{escape(outlook["position"])}</p>'
+            + '<p>Standing and record are separate from this projected lineup comparison.</p>'
             + (f'<p><b>Your goal:</b> <span id="my-team-outlook-goal">{escape(outlook["guidance"])}</span></p>' if editable else '<p>Read-only franchise view. Manager intent is not inferred.</p>')
             + '<ul>' + ''.join(f'<li>{escape(text)}</li>' for text in outlook['details'])
             + '</ul>' + ('<nav class="thq-actions" aria-label="Trade shortcuts">' + trade + '</nav>' if trade else '')

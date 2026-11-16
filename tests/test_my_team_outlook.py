@@ -65,7 +65,8 @@ class MyTeamOutlookTests(unittest.TestCase):
         self.f.data['teams'][0]['picks_owned'] = picks
         before = deepcopy(picks)
         view = self.view('REBUILD')
-        self.assertIn('4 owned picks, including 4 first-round picks (2027, 2028, 2029)', view['outlook']['future'])
+        self.assertIn('remaining totals are unknown', view['outlook']['future'])
+        self.assertIn('4 owned picks, including 4 first-round picks (2027, 2028, 2029)', self.format(view)['future'])
         self.assertIn('REBUILD:', view['outlook']['guidance'])
         self.assertEqual(self.f.data['teams'][0]['picks_owned'], before)
         self.assertEqual(len(view['team_intelligence'].future_capital_evidence['picks']), 4)

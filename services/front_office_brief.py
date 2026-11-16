@@ -25,9 +25,11 @@ def prepared_evidence(data, roster_id, strategy, *, market_compatible=False):
         assessment = None
     diagnostics = prepared_diagnostics(data, context.projection_snapshot)
     trade_need = prepared_need(data, roster_id, diagnostics) if diagnostics else None
+    from services.franchise_outlook import franchise_outlook
+    outlook = franchise_outlook(data, result, strategy=strategy) if assessment is not None else None
     return {'league_id': context.league_id, 'roster_id': roster_id,
             'strategy': strategy if strategy in {'WIN NOW', 'REBUILD', 'RETOOL'} else '',
-            'generation': context.evidence_generation, 'assessment': assessment,
+            'generation': context.evidence_generation, 'assessment': assessment, 'outlook': outlook,
             'market_compatible': market_compatible,
             'trade_need': trade_need,
             'diagnostics': diagnostics, 'strength': compatible_profile(data, context.projection_snapshot),

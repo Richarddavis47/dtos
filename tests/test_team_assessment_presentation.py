@@ -144,7 +144,7 @@ class AssessmentCoverageTests(unittest.TestCase):
             page=lambda title, body: HTMLResponse(body), generation_provider=lambda: self.id()))
         # Inject an already-prepared diagnostic at the presentation boundary.
         # These are disposable contracts, not a claim of live league coverage.
-        with patch('routes.teams.prepared_comparison', return_value=diagnostic), patch(
+        with patch('services.franchise_outlook.prepared_comparison', return_value=diagnostic), patch(
                 'services.team_headquarters.prepared_comparison', return_value=diagnostic):
             own = f.client.get('/teams/1')
             home = f.client.get('/')

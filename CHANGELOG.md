@@ -1,3 +1,7 @@
+## v1.22.45 / build 2260 — Franchise outlook
+
+My Team and Home reuse an evidence-qualified outlook with weekly lineup strength, a supported positional strength and vulnerability, and independently verified draft-pick flexibility. Missing inventory is not zero capital; a saved goal is a preference, not a competitive-window verdict. Details remain expandable. No scoring, valuation, Trade qualification or resource policies change.
+
 ## v1.22.41 / build 2256 — Trade Analysis Goal Clarity
 
 ## v1.22.44 / build 2259 — Next observed trade packages
