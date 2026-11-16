@@ -1,0 +1,16 @@
+...........................................F.........................................................................................................................................
+======================================================================
+FAIL: test_final_release_plan_aliases_match_its_actual_baseline (tests.test_release_publisher.CustomerBaselineAliasTests.test_final_release_plan_aliases_match_its_actual_baseline)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/dtos-publisher-2259/tests/test_release_publisher.py", line 4630, in test_final_release_plan_aliases_match_its_actual_baseline
+    self.assertEqual(alias["tree"], plan["baseline_tree"])
+AssertionError: '129b9423d529d3a5fea70603474f22088a662389' != '4d455c93174f246f242f724e23de5fed44ecb4fb'
+- 129b9423d529d3a5fea70603474f22088a662389
++ 4d455c93174f246f242f724e23de5fed44ecb4fb
+
+
+----------------------------------------------------------------------
+Ran 181 tests in 3.012s
+
+FAILED (failures=1)

@@ -1,0 +1,9 @@
+Completed collect-local-completion.py
+Completed start-controls-durable.py
+Traceback (most recent call last):
+  File "/workspace/2259-next-trade-package/after-local.py", line 24, in <module>
+    run('start-controls-durable.py',mode)
+  File "/workspace/2259-next-trade-package/after-local.py", line 8, in run
+    path=B/script;log=B/(script.removesuffix('.py')+'-controller-original.log');assert not log.exists(),log
+                                                                                       ^^^^^^^^^^^^^^^^
+AssertionError: /workspace/2259-next-trade-package/start-controls-durable-controller-original.log

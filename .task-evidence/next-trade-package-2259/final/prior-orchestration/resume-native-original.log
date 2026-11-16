@@ -1,0 +1,13 @@
+Completed start-controls-durable.py normal
+Completed collect-controls-durable.py normal
+Completed start-harness-contract.py
+Completed collect-harness-contract.py
+Completed run-local-resource.py
+Traceback (most recent call last):
+  File "/workspace/2259-next-trade-package/resume-native.py", line 25, in <module>
+    for script in ('run-local-resource.py','run-local-capital-capture.py','run-local-history-capture.py','run-retained-history-probe.py','run-native-candidate-capture.py','run-extra-candidate-capture.py','materialize-final-main-visual.py'):run(script)
+                                                                                                                                                                                                                                                ^^^^^^^^^^^
+  File "/workspace/2259-next-trade-package/resume-native.py", line 13, in run
+    assert r.returncode==0,(script,r.returncode,str(log))
+           ^^^^^^^^^^^^^^^
+AssertionError: ('run-local-capital-capture.py', 1, '/workspace/2259-next-trade-package/run-local-capital-capture-resumed-controller-original.log')

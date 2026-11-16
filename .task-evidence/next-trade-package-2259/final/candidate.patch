@@ -1,0 +1,1019 @@
+diff --git a/.github/workflows/product-browser.yml b/.github/workflows/product-browser.yml
+index 2a39a4cc..cad7ebf1 100644
+--- a/.github/workflows/product-browser.yml
++++ b/.github/workflows/product-browser.yml
+@@ -46,7 +46,7 @@ jobs:
+         timeout-minutes: 5
+         run: |
+           mkdir -p .validation/current-season-history .validation/history-followthrough .validation/market-history-coverage .validation/current-production-coverage
+-          docker run --rm --init --memory=2g --memory-swap=2g --cpus=2 --network=none -e NODE_OPTIONS -e DTOS_CURRENT_HISTORY_EVIDENCE=.validation/current-season-history -e DTOS_FOLLOWTHROUGH_EVIDENCE=.validation/history-followthrough -e DTOS_COMPLETED_TRADE_OBSERVATIONS_EVIDENCE=.validation/history-followthrough/completed-trade-observations -e DTOS_MARKET_HISTORY_EVIDENCE=.validation/market-history-coverage -e DTOS_PRODUCTION_COVERAGE_EVIDENCE=.validation/current-production-coverage -v "$PWD:$PWD" -w "$PWD" -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0="$PWD" dtos-browser-validation python -m unittest -v tests.test_current_season_franchise_history tests.test_current_season_history_browser tests.test_history_followthrough tests.test_history_followthrough_browser tests.test_market_history_coverage tests.test_market_history_coverage_browser tests.test_sleeper_actual_results tests.test_sleeper_actual_restoration tests.test_current_production_coverage tests.test_current_production_browser tests.test_completed_trade_observations tests.test_franchise_trade_progress tests.test_completed_trade_observations_browser tests.test_recent_workload tests.test_recent_workload_browser
++          docker run --rm --init --memory=2g --memory-swap=2g --cpus=2 --network=none -e NODE_OPTIONS -e DTOS_CURRENT_HISTORY_EVIDENCE=.validation/current-season-history -e DTOS_FOLLOWTHROUGH_EVIDENCE=.validation/history-followthrough -e DTOS_COMPLETED_TRADE_OBSERVATIONS_EVIDENCE=.validation/history-followthrough/completed-trade-observations -e DTOS_MARKET_HISTORY_EVIDENCE=.validation/market-history-coverage -e DTOS_PRODUCTION_COVERAGE_EVIDENCE=.validation/current-production-coverage -v "$PWD:$PWD" -w "$PWD" -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0="$PWD" dtos-browser-validation python -m unittest -v tests.test_current_season_franchise_history tests.test_current_season_history_browser tests.test_history_followthrough tests.test_history_followthrough_browser tests.test_market_history_coverage tests.test_market_history_coverage_browser tests.test_sleeper_actual_results tests.test_sleeper_actual_restoration tests.test_current_production_coverage tests.test_current_production_browser tests.test_completed_trade_observations tests.test_franchise_trade_progress tests.test_completed_trade_observations_browser tests.test_recent_workload tests.test_recent_workload_browser tests.test_next_trade_package tests.test_next_trade_package_browser
+       - name: Preserve current-season history evidence
+         if: always()
+         uses: actions/upload-artifact@v4
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index db30ea6a..29aef29d 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -1,5 +1,10 @@
+ ## v1.22.41 / build 2256 — Trade Analysis Goal Clarity
+ 
++## v1.22.44 / build 2259 — Next observed trade packages
++
++Completed trade timelines show the next supported exchange by an original recipient, including an exact pick’s observed draft conversion. The full later package is shown once, with all supported directions and original-franchise picks. Releases, missing transitions, conflicting records and uncertain dates withhold attribution. Partial consideration stays partial; no return, value or production is allocated to one asset. Opening details uses retained evidence only. Valuations, fantasy scores, Trade standards and memory safeguards are unchanged.
++
++
+ ## v1.22.43 / build 2258 — Recent player workload
+ 
+ Player dossiers compare targets and carries across the latest three eligible regular-season game observations and the preceding three. Dates, sample sizes and differences remain visible; missing or conflicting statistics withhold only the affected comparison. Missing game records block a comparison rather than becoming zero. Shared retained corrections appear on reload without provider work. Fantasy scores, projections, valuations and Trade standards are unchanged.
+diff --git a/RELEASE_NOTES.md b/RELEASE_NOTES.md
+index 906395fb..dc6ab65b 100644
+--- a/RELEASE_NOTES.md
++++ b/RELEASE_NOTES.md
+@@ -1,4 +1,6 @@
+-# v1.22.42 / build 2257
++## v1.22.44 / build 2259 — Next observed trade packages
++
++Completed trade timelines show the next supported exchange by an original recipient, including an exact pick’s observed draft conversion. The full later package is shown once, with all supported directions and original-franchise picks. Releases, missing transitions, conflicting records and uncertain dates withhold attribution. Partial consideration stays partial; no return, value or production is allocated to one asset. Opening details uses retained evidence only. Valuations, fantasy scores, Trade standards and memory safeguards are unchanged.
+ 
+ ## v1.22.43 / build 2258 — Recent player workload
+ 
+diff --git a/app_metadata.py b/app_metadata.py
+index b609273b..ee1957bf 100644
+--- a/app_metadata.py
++++ b/app_metadata.py
+@@ -7,9 +7,9 @@ from datetime import datetime, timezone
+ from pathlib import Path
+ 
+ APPLICATION_NAME = "DTOS"
+-VERSION = "1.22.43"
+-PRODUCT_VERSION = "1.22.43"
+-BUILD_NUMBER = 2258
++VERSION = "1.22.44"
++PRODUCT_VERSION = "1.22.44"
++BUILD_NUMBER = 2259
+ RELEASE_CODENAME = "Recent Player Workload"
+ APPLICATION_STARTED_AT = datetime.now(timezone.utc).isoformat()
+ 
+diff --git a/docs/audits/NEXT_OBSERVED_TRADE_PACKAGES.md b/docs/audits/NEXT_OBSERVED_TRADE_PACKAGES.md
+new file mode 100644
+index 00000000..643bfbc9
+--- /dev/null
++++ b/docs/audits/NEXT_OBSERVED_TRADE_PACKAGES.md
+@@ -0,0 +1,25 @@
++# Next observed trade packages
++
++The original timeline showed later trade links, exact pick conversions and independent current-owner observations. It did not show a later deal’s complete consideration beside the original receipt.
++
++## Evidence and scope
++
++The existing October 12 retained partial Sleeper replay contains two Day Traders trades: `1333655835015942144` and `1414718106177122304`. The former’s exact 2026 second originally belonging to franchise 7 was selected by its recipient, franchise 4, as player 13346. The latter records franchise 4 sending that player to franchise 1 and receiving player 13417 plus the exact 2029 second originally belonging to franchise 1. This is retained replay, not authenticated current production or complete historical coverage. The Arkham control contains no completed trades in its retained fixture; it cannot establish absence of trades in the league. Synthetic edits cover the other boundaries.
++
++## Admission
++
++The added read model follows one original receipt, optionally through one exact observed draft conversion, to its recipient’s first supported outgoing completed trade. It uses the existing canonical graph, source-season chain, timestamp normalization, directed-consideration parser and generation cache. A source timestamp is an occurrence observation, never a reconstructed trade-time manager identity. Equal or overlapping times do not establish order. Dates are compared as UTC instants, including fractional seconds.
++
++A release, unexplained acquisition, different sender, uncertain conversion, conflicting completed records, missing clocks or exceeded bounds withholds attribution. It does not resume after reacquisition. Pending/rejected/cancelled/failed events are excluded. Current ownership and roster snapshots do not establish uninterrupted historical ownership. Missing periods may hide transitions; the presentation says **observed** continuation, never exhaustive lineage.
++
++Contradictory completed endpoint rows are qualified inside each source publication before existing key collapse. Exact semantic duplicates collapse. A legitimate new authoritative publication can supersede retained data; old and new generations are not treated as concurrent conflicting observations. A compact legacy checkpoint cannot recover source variants already discarded before this qualification existed.
++
++## Presentation
++
++A later transaction is shown once even if it contains several original receipts. Every supported directed leg and counterparty remains attached to the package. The followed outgoing asset is distinguished from other outgoing consideration. Partial consideration preserves supported legs while withholding a full-return claim. Exact pick identities retain year, round and original franchise; a drafted player never substitutes for the historical pick in an earlier package.
++
++There is no value, production, benefit, winner, intention or championship-credit allocation. Historical FOIS grades remain RETAINED / NOT REVALIDATED. Season-observed manager names remain separate from verified trade-time decision makers.
++
++## Bounds and lifecycle
++
++At most 40 original assets, 100 eligible event groups across branches, one conversion and one subsequent exchange per branch; at most 40 movements/participants in a displayed package. No recursive traversal of returned consideration. Packages share one request-local deduplication map and the existing bounded generation cache. Source changes during assembly withhold packages and prevent caching; a held graph cannot reuse a package from a superseded generation. No provider acquisition, synchronization, projection calculation, Trade evaluation or heavyweight lease is added to rendering or disclosure expansion. The existing 2 GiB cap and all admission/reservation policies remain unchanged.
+diff --git a/routes/historical_assets.py b/routes/historical_assets.py
+index 6ec44a08..10f6ac8c 100644
+--- a/routes/historical_assets.py
++++ b/routes/historical_assets.py
+@@ -236,10 +236,11 @@ def create_historical_assets_router(
+ 
+     @router.get("/api/trades/history/{transaction_id}")
+     async def historical_trade_api(transaction_id: str) -> JSONResponse:
+-        dossier = graph().trade_dossier(transaction_id)
++        model_graph = graph()
++        dossier = model_graph.trade_dossier(transaction_id)
+         if dossier is None:
+             raise HTTPException(404, "Historical trade not found")
+-        dossier['timeline'] = graph().trade_timeline(transaction_id)
++        dossier['timeline'] = model_graph.trade_timeline(transaction_id)
+         return JSONResponse(jsonable_encoder(dossier))
+ 
+     @router.get("/api/history/trades/coverage")
+@@ -248,14 +249,15 @@ def create_historical_assets_router(
+ 
+     @router.get("/trades/history/{transaction_id}", response_class=HTMLResponse)
+     async def historical_trade_page(transaction_id: str, from_trade: str | None = Query(default=None, max_length=100), from_home: bool = Query(default=False)) -> HTMLResponse:
+-        dossier = graph().trade_dossier(transaction_id)
++        model_graph = graph()
++        dossier = model_graph.trade_dossier(transaction_id)
+         if dossier is None:
+             raise HTTPException(404, "Historical trade not found")
+         from src.ui.trade_timeline import render_timeline
+-        model = graph().trade_timeline(transaction_id)
++        model = model_graph.trade_timeline(transaction_id)
+         if model is None:
+             raise HTTPException(404, 'Completed trade evidence unavailable')
+-        origin = validated_trade_origin(graph(), from_trade)
++        origin = validated_trade_origin(model_graph, from_trade)
+         return_url = f"/trades/history/{origin['transaction_id']}" if origin and origin['transaction_id'] != dossier['transaction_id'] else '/' if from_home and str(dossier['source']['source_league_id']) == str(selected_league()) else '/transactions'
+         return page('Historical Trade Timeline', render_timeline(model, dossier, return_url=return_url, origin_id=origin['transaction_id'] if origin else None))
+ 
+diff --git a/src/core/historical_memory/graph.py b/src/core/historical_memory/graph.py
+index 4b42213a..66b5e132 100644
+--- a/src/core/historical_memory/graph.py
++++ b/src/core/historical_memory/graph.py
+@@ -840,13 +840,24 @@ class HistoricalAssetGraph:
+ 
+     def trade_timeline(self, transaction_id: str):
+         from .timeline import timeline
++        before = self.store.dataset_version(self.league_id)
++        def unknown_packages(result):
++            result = copy.deepcopy(result)
++            result['next_exchanges'] = []
++            for branch in result['branches']:
++                branch['next_exchange'] = {'state': 'unknown', 'trade_id': None,
++                    'reason': 'Source evidence changed while reading; reload before following a package.'}
++            return result
+         if transaction_id in self._timelines:
+             self._timelines.move_to_end(transaction_id)
+-            return copy.deepcopy(self._timelines[transaction_id])
++            cached = self._timelines[transaction_id]
++            return copy.deepcopy(cached) if cached['generation'] == before else unknown_packages(cached)
+         dossier = self.trade_dossier(transaction_id)
+         if dossier is None or dossier['status'].casefold() not in COMPLETED_STATUSES:
+             return None
+         result = timeline(self, dossier)
++        if self.store.dataset_version(self.league_id) != before:
++            return unknown_packages(result)  # Never cache a mixed-generation package.
+         self._timelines[transaction_id] = result
+         while len(self._timelines) > 32:
+             self._timelines.popitem(last=False)
+diff --git a/src/core/historical_memory/next_exchange.py b/src/core/historical_memory/next_exchange.py
+new file mode 100644
+index 00000000..ae13de86
+--- /dev/null
++++ b/src/core/historical_memory/next_exchange.py
+@@ -0,0 +1,156 @@
++"""One observed subsequent package per original receipt, never allocated proceeds.
++
++Uses the canonical graph and directed-consideration contract. No acquisition,
++prices, persistent lineage, recursion into returned assets or new runtime owner.
++"""
++from collections import OrderedDict
++from datetime import datetime
++
++from src.core.gm_behavioral_intelligence.diagnostics import _movement_evidence
++from src.core.history_context.timestamps import canonical_utc_timestamp
++
++COMPLETED = {'complete', 'completed'}
++
++
++def next_exchanges(graph, dossier, branches, *, franchise, label, bounds, selections,
++                   max_events=100, max_assets=40):
++    packages = OrderedDict()
++    stamp = canonical_utc_timestamp(dossier.get('occurred_at'))
++    root_time = datetime.fromisoformat(stamp) if stamp else None
++    def interval(event):
++        low, high = bounds(event)
++        return (datetime.fromisoformat(low) if low else None,
++                datetime.fromisoformat(high) if high else None)
++    root_source = str(dossier['source']['source_league_id'])
++    root_raw = dossier.get('raw_transaction') or {}
++    _, root_moves, _, _ = _movement_evidence(root_raw)
++    root_record = graph.store.transaction_record(graph.league_id, dossier['transaction_id'])
++    root_conflict = not root_record or root_record['payload'].get('history_transaction_conflict')
++    seasons = graph._records('league_season')
++    links = {}
++    for row in seasons:
++        source = str(row['payload'].get('sleeper_season_league_id') or graph.league_id)
++        links.setdefault(source, set()).add((row['season'], str(row['payload'].get('previous_league_id') or '')))
++    remaining = max_events
++
++    def source_supported(event):
++        source = str(event.get('source_league_id') or '')
++        if event['season'] < dossier['season']:
++            return False
++        if source == root_source:
++            return event['season'] == dossier['season']
++        visited = set()
++        while source != root_source and source not in visited:
++            visited.add(source)
++            rows = links.get(source) or set()
++            if len(rows) != 1:
++                return False
++            season, previous = next(iter(rows))
++            previous_rows = links.get(previous) or set()
++            if len(previous_rows) != 1 or next(iter(previous_rows))[0] >= season:
++                return False
++            source = previous
++        return source == root_source
++
++    def identity(move):
++        kind, asset, *_ = move
++        return 'DTOS-P-' + asset if kind == 'player' else asset
++
++    def resolve(branch):
++        nonlocal remaining
++        original = branch['asset_id']
++        receipts = [m for m in root_moves if identity(m) == original]
++        if root_conflict or not root_time or len(receipts) != 1:
++            return None, 'Original receipt identity, transaction agreement or time is not established.'
++        owner = f'{graph.league_id}:franchise:{receipts[0][3]}'
++        current, boundary, converted_selection = original, root_time, None
++        conversion_low = None
++        for _ in range(2):  # At most the original asset and its exact selected player.
++            grouped = OrderedDict()
++            for event in graph.events(asset_id=current):
++                if event['event_status'].casefold() not in COMPLETED or event['event_type'] in {'pick_snapshot', 'roster_snapshot'}:
++                    continue
++                if event.get('parent_id') == dossier['trade_id']:
++                    continue
++                if converted_selection and event['event_type'] == 'draft_selection' and str(event['source_record_id']) == converted_selection:
++                    continue
++                low, high = interval(event)
++                if not low or not high or low > high:
++                    return None, 'Missing event dates prevent identifying the first later exchange.'
++                if conversion_low is not None and high >= conversion_low and low <= boundary:
++                    return None, 'Equal or overlapping conversion and movement dates leave the continuation unknown.'
++                if high < boundary:
++                    continue
++                if low <= boundary:
++                    return None, 'Equal or overlapping event dates leave the continuation unknown.'
++                key = (event.get('parent_id'), event['source_record_id'], event['event_type'])
++                grouped.setdefault(key, []).append(event)
++            if len(grouped) > remaining:
++                remaining = 0
++                return None, 'The bounded event limit was reached; the first later exchange is unknown.'
++            remaining -= len(grouped)
++            ordered = sorted(grouped.values(), key=lambda rows: interval(rows[0]))
++            if not ordered:
++                return None, 'No supported next exchange in the retained records; missing history may contain later movements.'
++            rows = ordered[0]
++            event = rows[0]
++            low, high = interval(event)
++            if len(ordered) > 1 and interval(ordered[1][0])[0] <= high:
++                return None, 'Equal or overlapping event dates leave the continuation unknown.'
++            if not source_supported(event):
++                return None, 'The source league-season chain does not establish this continuation.'
++            senders = {e['from_franchise_id'] for e in rows if e.get('from_franchise_id')}
++            receivers = {e['to_franchise_id'] for e in rows if e.get('to_franchise_id')}
++            if event['event_type'] == 'pick_exercise' and current == original:
++                selection = selections.get(str(event['source_record_id']))
++                if not selection or not selection.get('player_id') or receivers != {owner} or senders:
++                    return None, 'The exact pick conversion and recipient ownership are not established.'
++                current = 'DTOS-P-' + str(selection['player_id'])
++                converted_selection = str(event['source_record_id'])
++                conversion_low, boundary = low, high
++                continue
++            if event['event_type'] not in {'trade', 'pick_transfer'} or not str(event.get('parent_id') or '').startswith('TRADE-'):
++                return None, 'A release, acquisition or other intervening movement ends this original receipt’s continuation.'
++            if senders != {owner} or len(receivers) != 1 or owner in receivers:
++                return None, 'A missing or conflicting ownership transition prevents attributing this return to the original recipient.'
++            record = graph.store.transaction_record(graph.league_id, event['source_record_id'])
++            reference = graph.trade_reference(event['parent_id'])
++            if (not record or str(graph._source_league(record)) != str(event['source_league_id'])
++                    or record['season'] != event['season'] or not reference
++                    or record['payload'].get('history_transaction_conflict')):
++                return None, 'Conflicting or unresolved transaction identity prevents a supported package.'
++            raw = record['payload']
++            parties, moves, complete, categories = _movement_evidence(raw)
++            valid = [m for m in moves if identity(m) == current and m[2] == receipts[0][3]]
++            if (str(raw.get('status', '')).casefold() not in COMPLETED or raw.get('type') != 'trade'
++                    or len(valid) != 1 or not parties):
++                return None, 'The completed transaction does not establish the exact outgoing asset.'
++            if len(moves) > max_assets or len(parties) > max_assets:
++                return None, 'The package presentation limit was reached; open the later trade for its source evidence.'
++            pid = event['parent_id']
++            if pid not in packages:
++                movements = []
++                for kind, asset, sender, receiver, amount in moves:
++                    asset_id = 'DTOS-P-' + asset if kind == 'player' else asset
++                    movements.append({'kind': kind, 'asset_id': asset_id,
++                        'label': f'{amount:g} FAAB' if kind == 'faab' else label(asset_id),
++                        'sender': franchise(f'{graph.league_id}:franchise:{sender}', event['season']),
++                        'receiver': franchise(f'{graph.league_id}:franchise:{receiver}', event['season'])})
++                packages[pid] = {'trade_id': pid, 'transaction_id': event['source_record_id'],
++                    'source_league_id': event['source_league_id'], 'occurred_at': low.isoformat().replace('+00:00', 'Z'),
++                    'season': event['season'], 'url': reference['url'], 'complete': complete,
++                    'supported_categories': categories, 'movements': movements,
++                    'participants': [franchise(f'{graph.league_id}:franchise:{p}', event['season']) for p in parties],
++                    'followed_branches': [], 'limitations': [] if complete else [
++                        'Some consideration is missing or invalid. Supported movements are shown; the full package return is unknown.']}
++            packages[pid]['followed_branches'].append({'asset_id': original, 'label': branch['label'],
++                'outgoing_asset_id': current, 'outgoing_label': label(current), 'recipient_id': owner,
++                'converted': current != original})
++            return pid, None
++        return None, 'The bounded conversion could not establish a subsequent exchange.'
++
++    for branch in branches[:max_assets]:
++        pid, reason = resolve(branch)
++        branch['next_exchange'] = {'trade_id': pid, 'reason': reason,
++            'state': 'observed' if pid else 'unknown'}
++    return list(packages.values())
+diff --git a/src/core/historical_memory/read_model.py b/src/core/historical_memory/read_model.py
+index 4e4130f5..cb293452 100644
+--- a/src/core/historical_memory/read_model.py
++++ b/src/core/historical_memory/read_model.py
+@@ -19,7 +19,7 @@ from src.core.historical_memory.models import (
+ )
+ from src.core.history_context.store import CanonicalHistoryStore as HistoricalStore
+ 
+-READ_MODEL_VERSION = "1.5"
++READ_MODEL_VERSION = "1.6"
+ MAX_CACHE_ENTRIES = 1
+ 
+ 
+diff --git a/src/core/historical_memory/timeline.py b/src/core/historical_memory/timeline.py
+index 89cbf655..58f64057 100644
+--- a/src/core/historical_memory/timeline.py
++++ b/src/core/historical_memory/timeline.py
+@@ -3,6 +3,7 @@
+ from __future__ import annotations
+ 
+ from collections import OrderedDict
++from datetime import datetime
+ from src.core.history_context.assets import future_pick_id
+ 
+ from src.core.history_context.timestamps import canonical_utc_timestamp
+@@ -126,9 +127,9 @@ def timeline(graph, dossier):
+                     )
+                     unresolved_clock = True
+                     continue
+-                if high <= boundary:
++                if datetime.fromisoformat(high) <= datetime.fromisoformat(boundary):
+                     continue
+-                if low <= boundary:
++                if datetime.fromisoformat(low) <= datetime.fromisoformat(boundary):
+                     limits.append(
+                         "Overlapping event time bounds leave this branch unresolved."
+                     )
+@@ -147,7 +148,7 @@ def timeline(graph, dossier):
+             ordered = sorted(
+                 groups.values(),
+                 key=lambda rows: (
+-                    bounds(rows[0])[0] or "",
++                    datetime.fromisoformat(bounds(rows[0])[0]),
+                     rows[0]["source_record_id"],
+                 ),
+             )
+@@ -313,7 +314,12 @@ def timeline(graph, dossier):
+             unresolved.append({'label': f"{pick.get('season') or 'Year unavailable'} Round {pick.get('round') or '?'} · original franchise unavailable",
+                                'sender': franchise(f"{graph.league_id}:franchise:{pick['previous_owner_id']}", dossier['season']) if pick.get('previous_owner_id') else None,
+                                'receiver': franchise(f"{graph.league_id}:franchise:{pick['owner_id']}", dossier['season']) if pick.get('owner_id') else None})
++    from .next_exchange import next_exchanges
++    packages = next_exchanges(graph, dossier, branches, franchise=franchise, label=label,
++                             bounds=bounds, selections=selections,
++                             max_events=MAX_EVENTS, max_assets=MAX_ASSETS)
+     return {
++        "next_exchanges": packages,
+         "league_id": graph.league_id,
+         "league_name": (graph.current_data.get("league") or {}).get("name")
+         or "Selected league",
+diff --git a/src/core/history_context/store.py b/src/core/history_context/store.py
+index d11fba68..77d7a0a4 100644
+--- a/src/core/history_context/store.py
++++ b/src/core/history_context/store.py
+@@ -17,6 +17,7 @@ from typing import Any, Iterable
+ from config import SLEEPER_SEASON_CACHE_ROOT
+ from .season_cache import SleeperSeasonCache
+ from .timestamps import canonical_transaction_timestamp
++from .transaction_versions import conflicting_transactions, qualify_transaction_rows
+ from .playoffs import playoff_facts
+ from .assets import draft_pick, future_pick_id, reconcile_player_weeks, PlayerWeekIndexLimit
+ 
+@@ -794,7 +795,7 @@ class CanonicalHistoryStore:
+             rows.append(self._record(
+                 league_id, season, "playoff_result", "final", playoff_facts(winners),
+             ))
+-        return rows
++        return qualify_transaction_rows(rows)
+ 
+     def _admit_checkpoint_rows(self, league_id, season, checkpoint):
+         """Requalify existing compact evidence without rewriting its source."""
+@@ -866,7 +867,7 @@ class CanonicalHistoryStore:
+                 processed += 1
+                 if processed % 32 == 0:
+                     time.sleep(0)
+-        return rows
++        return qualify_transaction_rows(rows)
+ 
+     def _current_records(self, league_id: str, season: int, families=None) -> list[dict[str, Any]]:
+         """Project bounded active state through the same canonical record shape."""
+@@ -882,6 +883,9 @@ class CanonicalHistoryStore:
+         if current_season != int(season):
+             return []
+         rows = [self._record(league_id, season, "league_season", league_id, {
++            "sleeper_season_league_id": league.get("league_id") or league_id,
++            "sleeper_season": league.get("season"),
++            "previous_league_id": league.get("previous_league_id"),
+             "league_name": league.get("name") or "Sleeper League",
+             "status": league.get("status"),
+             "total_rosters": league.get("total_rosters"),
+@@ -943,6 +947,8 @@ class CanonicalHistoryStore:
+                 rows.append(self._record(league_id, season, 'draft_pick', pick['selection_id'], pick,
+                     player_id=str(pick.get('player_id') or '') or None,
+                     franchise_id=f"{league_id}:franchise:{pick['selecting_roster_id']}", occurred_at=pick.get('selected_at')))
++        if families is not None and not set(families) & {'trade', 'transaction'}:
++            return rows
+         buckets = data.get('season_transactions') or {}
+         current_transactions = data.get('transactions') or ()
+         if isinstance(current_transactions, dict):
+@@ -964,6 +970,7 @@ class CanonicalHistoryStore:
+                 row = {**row, 'leg': next(iter(known))}
+             active_rows.append(row)
+         transactions = bucket_rows + active_rows
++        conflicts = conflicting_transactions(transactions)
+         transactions = list({str(row.get('transaction_id') or _digest(row)): row for row in transactions}.values())
+         if isinstance(transactions, dict):
+             transaction_rows = [row for values in transactions.values() for row in values or ()]
+@@ -972,6 +979,8 @@ class CanonicalHistoryStore:
+         for transaction in transaction_rows:
+             transaction_id = str(transaction.get("transaction_id") or _digest(transaction)[:16])
+             payload = dict(transaction)
++            if transaction_id in conflicts:
++                payload['history_transaction_conflict'] = True
+             occurred_at, timestamp_provenance = canonical_transaction_timestamp(payload)
+             entity = "trade" if transaction.get("type") == "trade" else "transaction"
+             rows.append(self._record(
+diff --git a/src/core/history_context/transaction_versions.py b/src/core/history_context/transaction_versions.py
+new file mode 100644
+index 00000000..8ac0c142
+--- /dev/null
++++ b/src/core/history_context/transaction_versions.py
+@@ -0,0 +1,35 @@
++"""Qualify contradictory completed records before canonical key collapse."""
++from hashlib import sha256
++import json
++
++from .timestamps import canonical_transaction_timestamp
++
++
++def conflicting_transactions(transactions):
++    # Per publication, not across older caches and their authoritative refresh.
++    # Repeated endpoint buckets are observations, not ordered corrections.
++    from src.core.gm_behavioral_intelligence.diagnostics import _movement_evidence
++    versions, conflicts = {}, set()
++    for raw in transactions:
++        identity = str(raw.get('transaction_id') or '')
++        if not identity or str(raw.get('status', '')).casefold() not in {'complete', 'completed'}:
++            continue
++        parties, moves, complete, categories = _movement_evidence(raw)
++        stamp = canonical_transaction_timestamp(raw)[0]
++        semantic = (raw.get('type'), stamp, parties, sorted(moves), complete, categories)
++        if not complete:
++            # Unsupported legs must not disappear from the conflict test.
++            semantic += ({k: raw.get(k) for k in ('adds', 'drops', 'draft_picks', 'waiver_budget', 'roster_ids')},)
++        digest = sha256(json.dumps(semantic, sort_keys=True, default=str).encode()).digest()
++        if identity in versions and versions[identity] != digest:
++            conflicts.add(identity)
++        versions[identity] = digest
++    return conflicts
++
++
++def qualify_transaction_rows(rows):
++    conflicts = conflicting_transactions(r['payload'] for r in rows if r['entity_type'] in {'trade', 'transaction'})
++    for row in rows:
++        if row['entity_type'] in {'trade', 'transaction'} and str(row['source_record_id']) in conflicts:
++            row['payload'] = {**row['payload'], 'history_transaction_conflict': True}
++    return rows
+diff --git a/src/ui/trade_timeline.py b/src/ui/trade_timeline.py
+index cde064f7..ae404824 100644
+--- a/src/ui/trade_timeline.py
++++ b/src/ui/trade_timeline.py
+@@ -116,6 +116,49 @@ def _quote_card(row, label):
+ <p>{safe(row.get('limitation') or '') if row.get('match_state') == 'DATED_ESTIMATE' else ''}</p><details><summary>Retained raw observations · excluded unless admitted above</summary><ul>{raw or '<li>No raw quote in available exact asset/context evidence.</li>'}</ul></details></details></li>'''
+ 
+ 
++def render_next_exchanges(model, origin_id):
++    """One native disclosure per later deal, shared by all followed receipts."""
++    cards = []
++    for index, package in enumerate(model.get('next_exchanges') or ()):
++        followed = package['followed_branches']
++        references = []
++        for branch in followed:
++            text = escape(branch['label'])
++            if branch['converted']:
++                text += ' → selected ' + escape(branch['outgoing_label'])
++            references.append(text)
++        groups = []
++        parties = sorted(package['participants'], key=lambda p: not any(b['recipient_id'] == p['id'] for b in followed))
++        for party in parties:
++            sent, received = [], []
++            for move in package['movements']:
++                marker = ' · followed asset' if any(b['outgoing_asset_id'] == move['asset_id']
++                    and b['recipient_id'] == party['id'] for b in followed) else ' · other package asset'
++                text = '<li>' + escape(move['label'])
++                if move['sender']['id'] == party['id']:
++                    sent.append(text + marker + ' → ' + escape(move['receiver']['name']) + '</li>')
++                if move['receiver']['id'] == party['id']:
++                    received.append(text + ' ← ' + escape(move['sender']['name']) + '</li>')
++            empty = '<li>No supported movement recorded for this side; completeness is not established.</li>'
++            groups.append('<article><h4>' + escape(party['name']) + '</h4><p><b>Sent</b></p><ul>'
++                + (''.join(sent) or empty) + '</ul><p><b>Received</b></p><ul>'
++                + (''.join(received) or empty) + '</ul></article>')
++        note = ('The full return was for this package. It is not attributed to the followed asset alone.'
++                if package['complete'] else 'The full package return is unknown. Only supported movements are shown.')
++        link = package['url'] + '?from_trade=' + quote(origin_id, safe='')
++        cards.append(f'''<section class="card next-exchange" id="next-exchange-{index}">
++<h4>Later included in this trade</h4><p>{'; '.join(references)}</p>
++<p>{escape(readable_time(package['occurred_at']))} · {escape(' ↔ '.join(p['name'] for p in package['participants']))}</p>
++<p>{escape(note)}</p><details><summary>See the later trade’s package</summary>
++<div class="timeline-sides">{''.join(groups)}</div>
++{''.join('<p>' + escape(reason) + '</p>' for reason in package['limitations'])}
++<p>Manager names are season observations, not verified trade-time decision-makers. This is an observed continuation; missing history may conceal other movements. No value or production is divided among package assets.</p>
++<a class="timeline-link" href="{escape(link, quote=True)}">Review the full later trade</a>
++<details><summary>Package source</summary><p>Source league: {escape(str(package['source_league_id']))} · Transaction: {escape(str(package['transaction_id']))} · Exact timestamp: {escape(package['occurred_at'])}</p></details>
++</details></section>''')
++    return '<section class="next-exchanges"><h3>Next observed exchanges</h3>' + ''.join(cards) + '</section>' if cards else ''
++
++
+ def render_timeline(model, dossier, *, return_url="/transactions", origin_id=None):
+     origin_id = origin_id or dossier['transaction_id']
+     def safe(v):
+@@ -168,6 +211,12 @@ def render_timeline(model, dossier, *, return_url="/transactions", origin_id=Non
+             current_state = f"<p class='timeline-state'>Pick consumed → <a class='timeline-link' href='{href(endpoint['url'])}?from_trade={quote(origin_id, safe='')}'>{safe(endpoint['name'])}</a> · Current observed owner: {safe(endpoint.get('current_observed_owner_name') or 'Unavailable')} · as of {safe(endpoint.get('as_of') or 'date unavailable')}.</p>"
+         elif branch.get('current_observed_owner'):
+             current_state = f"<p>Current observed owner: {safe(branch.get('current_observed_owner_name') or 'Unavailable')} · as of {safe((branch.get('current_owner_observation') or {}).get('as_of') or 'date unavailable')}.</p>"
++        follow = branch.get('next_exchange') or {}
++        if follow.get('trade_id'):
++            index = next(i for i, p in enumerate(model['next_exchanges']) if p['trade_id'] == follow['trade_id'])
++            current_state += f'<p><a class="timeline-link" href="#next-exchange-{index}">See the next observed exchange</a></p>'
++        elif follow.get('reason'):
++            warnings += '<p class="muted">Next exchange: ' + safe(follow['reason']) + '</p>'
+         last = branch.get('last_verified_event')
+         last_note = f"<p>Last admitted event: {safe(last['type'].replace('_', ' '))} · {safe(last.get('occurred_at') or 'bounded draft time')} · {safe(', '.join(last.get('to_names') or []) or 'Ownership exit')}.</p>" if last else ''
+         branches.append(
+@@ -205,7 +254,7 @@ def render_timeline(model, dossier, *, return_url="/transactions", origin_id=Non
+     technical.append('Exact transaction timestamp: ' + str(model.get('occurred_at') or 'not recorded'))
+     return (
+         CSS
+-        + f'''<section class="trade-timeline"><a class="back" href="{href(return_url)}">← {back_label}</a><h2>Original completed trade</h2><p><b>{safe(model["league_name"])} · {safe(model["season"])} · {safe(trade_date)}</b></p><section><h3>Assets sent and received</h3><p>{safe(' ↔ '.join(p['name'] for p in model['participants']))}</p><div class="timeline-sides">{participants}</div>{'<h4>FAAB consideration</h4><ul>' + ''.join(cash) + '</ul>' if cash else ''}<details><summary>Historical manager context</summary><p>Managers are season observations; exact trade-time takeover timing is not established.</p></details></section><h3>What happened next</h3><p>Recorded movements and the latest observed owner are shown separately. Gaps do not establish continuous ownership.</p>{"".join(branches)}{production}<section class="card"><h3>At the time: Market evidence</h3><p>{price_text}</p><p>{evidence.get('valued_assets', 0)} / {evidence.get('total_assets', 0)} assets have supported pre-trade values. Partial coverage cannot establish a package comparison.</p><p>Historical grades: RETAINED / NOT REVALIDATED. These prices do not judge the manager’s decision.</p><details class="timeline-evidence"><summary>Prices, dates and limitations</summary><p>{safe(package_policy)}</p><ul>{"".join(quotes)}</ul><p>Retained quote coverage check: {safe(str(evidence.get('reason') or 'Unavailable').replace('_', ' '))}. This does not certify whole-package freshness or historical league-format parity. Trade reference date: {safe(trade_date)}. Production, present Market value and later team outcomes are separate.</p></details></section>{render_source_coverage(model.get('source_coverage') or {})}<details class="card timeline-evidence"><summary>Source provenance and branch limitations</summary><p>Current-owner as-of dates, where recorded, describe DTOS Sleeper retrieval/sync observations, not acquisition or ownership-change times. Missing intervals do not establish uninterrupted ownership.</p>{"".join("<p>" + safe(x) + "</p>" for x in model["limitations"])}<pre>{safe(chr(10).join(technical))}</pre></details></section>'''
++        + f'''<section class="trade-timeline"><a class="back" href="{href(return_url)}">← {back_label}</a><h2>Original completed trade</h2><p><b>{safe(model["league_name"])} · {safe(model["season"])} · {safe(trade_date)}</b></p><section><h3>Assets sent and received</h3><p>{safe(' ↔ '.join(p['name'] for p in model['participants']))}</p><div class="timeline-sides">{participants}</div>{'<h4>FAAB consideration</h4><ul>' + ''.join(cash) + '</ul>' if cash else ''}<details><summary>Historical manager context</summary><p>Managers are season observations; exact trade-time takeover timing is not established.</p></details></section>{render_next_exchanges(model, origin_id)}<h3>What happened next</h3><p>Recorded movements and the latest observed owner are shown separately. Gaps do not establish continuous ownership.</p>{"".join(branches)}{production}<section class="card"><h3>At the time: Market evidence</h3><p>{price_text}</p><p>{evidence.get('valued_assets', 0)} / {evidence.get('total_assets', 0)} assets have supported pre-trade values. Partial coverage cannot establish a package comparison.</p><p>Historical grades: RETAINED / NOT REVALIDATED. These prices do not judge the manager’s decision.</p><details class="timeline-evidence"><summary>Prices, dates and limitations</summary><p>{safe(package_policy)}</p><ul>{"".join(quotes)}</ul><p>Retained quote coverage check: {safe(str(evidence.get('reason') or 'Unavailable').replace('_', ' '))}. This does not certify whole-package freshness or historical league-format parity. Trade reference date: {safe(trade_date)}. Production, present Market value and later team outcomes are separate.</p></details></section>{render_source_coverage(model.get('source_coverage') or {})}<details class="card timeline-evidence"><summary>Source provenance and branch limitations</summary><p>Current-owner as-of dates, where recorded, describe DTOS Sleeper retrieval/sync observations, not acquisition or ownership-change times. Missing intervals do not establish uninterrupted ownership.</p>{"".join("<p>" + safe(x) + "</p>" for x in model["limitations"])}<pre>{safe(chr(10).join(technical))}</pre></details></section>'''
+     )
+ 
+ 
+diff --git a/tests/test_next_trade_package.py b/tests/test_next_trade_package.py
+new file mode 100644
+index 00000000..20d03e94
+--- /dev/null
++++ b/tests/test_next_trade_package.py
+@@ -0,0 +1,332 @@
++"""Canonical retained-record package controls; synthetic edits are explicit."""
++import copy
++import unittest
++from unittest.mock import patch
++
++from fastapi.testclient import TestClient
++from src.core.historical_memory.graph import HistoricalAssetGraph
++from src.core.historical_memory.read_model import HistoricalReadModelCache
++from src.ui.trade_timeline import render_timeline
++from tests import test_trade_timeline as fixtures
++
++DAY, ARK = fixtures.DAY, fixtures.ARK
++
++ROOT = '90001'
++LATER = '90002'
++JAN = 1767225600000
++FEB = 1769904000000
++MAR = 1772323200000
++
++
++def trade(identity, stamp, *, adds=None, drops=None, picks=None, parties=None):
++    return {'transaction_id': identity, 'type': 'trade', 'status': 'complete',
++            'created': stamp, 'status_updated': stamp, 'roster_ids': parties or [1, 2],
++            'adds': adds or {}, 'drops': drops or {}, 'draft_picks': picks or [], 'waiver_budget': []}
++
++
++def player_exchange(identity, stamp, *, package=False):
++    return trade(identity, stamp, adds={'100': 2, '200': 1, **({'101': 2} if package else {})},
++                 drops={'100': 1, '200': 2, **({'101': 1} if package else {})})
++
++
++class NextTradePackageTests(unittest.TestCase):
++    def setUp(self):
++        self.f = fixtures.TradeTimelineTests()
++        self.f.setUp()
++        self.f.load()
++        self.f.load(1)
++        self.facts = copy.deepcopy(self.f.sources[0])
++        self.root = trade(ROOT, JAN, adds={'100': 1, '110': 2}, drops={'100': 2, '110': 1})
++        self.later = player_exchange(LATER, FEB)
++
++    def tearDown(self):
++        self.f.tearDown()
++
++    def publish(self, rows=None, *, current=False):
++        facts = copy.deepcopy(self.facts)
++        facts['transactions'] = {'1': rows if rows is not None else [self.root, self.later]}
++        self.f.cache.write(self.f.cache.normalize(DAY, 2026, facts))
++        if current:
++            self.f.data[DAY]['season_transactions'] = facts['transactions']
++        self.f.store.update_current(DAY, self.f.data[DAY])
++        return HistoricalAssetGraph(self.f.store, DAY, self.f.data[DAY], self.f.memory)
++
++    def model(self, rows=None, **kw):
++        graph = self.publish(rows, **kw)
++        return graph, graph.trade_timeline(ROOT)
++
++    def followed(self, model, asset='DTOS-P-100'):
++        return next(b for b in model['branches'] if b['asset_id'] == asset)['next_exchange']
++
++    def test_player_alone_exact_package_from_independent_raw_source(self):
++        _, model = self.model()
++        self.assertEqual(self.followed(model)['state'], 'observed')
++        package = model['next_exchanges'][0]
++        # Expected direction comes directly from the fixture's native source maps.
++        expected = {(p, str(self.later['drops'][p]), str(r)) for p, r in self.later['adds'].items()}
++        actual = {(m['asset_id'].removeprefix('DTOS-P-'), m['sender']['id'].rsplit(':', 1)[1],
++                   m['receiver']['id'].rsplit(':', 1)[1]) for m in package['movements']}
++        self.assertEqual(actual, expected)
++        self.assertTrue(package['complete'])
++        self.assertEqual(package['url'], '/trades/history/' + LATER)
++
++    def test_multi_asset_full_return_not_individual_allocation(self):
++        self.later = player_exchange(LATER, FEB, package=True)
++        graph, model = self.model()
++        html = render_timeline(model, graph.trade_dossier(ROOT))
++        self.assertIn('The full return was for this package', html)
++        self.assertIn('other package asset', html)
++        self.assertIn('not attributed to the followed asset alone', html)
++        self.assertNotIn('value_total', str(model['next_exchanges']))
++
++    def test_two_original_receipts_share_one_package(self):
++        self.root['adds']['101'] = 1
++        self.root['drops']['101'] = 2
++        self.later = player_exchange(LATER, FEB, package=True)
++        _, model = self.model()
++        self.assertEqual(len(model['next_exchanges']), 1)
++        self.assertEqual({b['asset_id'] for b in model['next_exchanges'][0]['followed_branches']},
++                         {'DTOS-P-100', 'DTOS-P-101'})
++
++    def test_retained_exact_pick_conversion_then_complete_package(self):
++        graph = self.f.load()
++        model = graph.trade_timeline('1333655835015942144')
++        package = model['next_exchanges'][0]
++        followed = next(b for b in package['followed_branches'] if b['converted'])
++        self.assertEqual(followed['asset_id'], 'PICK-2026-R2-ORIG7')
++        self.assertEqual(followed['outgoing_asset_id'], 'DTOS-P-13346')
++        self.assertEqual(package['transaction_id'], '1414718106177122304')
++        self.assertEqual({m['asset_id'] for m in package['movements']},
++                         {'DTOS-P-13346', 'DTOS-P-13417', 'PICK-2029-R2-ORIG1'})
++
++    def test_exact_same_round_picks_keep_original_franchises(self):
++        self.later['draft_picks'] = [{'season': '2029', 'round': 1, 'roster_id': r,
++            'previous_owner_id': 2, 'owner_id': 1} for r in (1, 2)]
++        _, model = self.model()
++        picks = [m for m in model['next_exchanges'][0]['movements'] if m['kind'] == 'pick']
++        self.assertEqual({m['asset_id'] for m in picks}, {'PICK-2029-R1-ORIG1', 'PICK-2029-R1-ORIG2'})
++        self.assertTrue(all('originally' in m['label'] for m in picks))
++
++    def test_multi_party_directions_and_counterparties(self):
++        self.later = trade(LATER, FEB, parties=[1, 2, 3], adds={'100': 3, '200': 1, '300': 2},
++                           drops={'100': 1, '200': 2, '300': 3})
++        _, model = self.model()
++        package = model['next_exchanges'][0]
++        self.assertEqual(len(package['participants']), 3)
++        self.assertEqual(len(package['movements']), 3)
++        self.assertEqual(next(m for m in package['movements'] if m['asset_id'] == 'DTOS-P-100')['receiver']['id'], DAY + ':franchise:3')
++
++    def test_release_then_reacquisition_stops_original_receipt(self):
++        drop = {'transaction_id': 'drop', 'type': 'free_agent', 'status': 'complete',
++                'created': JAN + 1000, 'drops': {'100': 1}, 'adds': {}}
++        acquire = {**drop, 'transaction_id': 'acquire', 'created': JAN + 2000,
++                   'drops': {}, 'adds': {'100': 1}}
++        _, model = self.model([self.root, drop, acquire, self.later])
++        self.assertFalse(model['next_exchanges'])
++        self.assertIn('intervening', self.followed(model)['reason'])
++
++    def test_different_sender_is_not_original_recipient_proceeds(self):
++        self.later['drops']['100'] = 3
++        self.later['roster_ids'] = [1, 2, 3]
++        _, model = self.model()
++        self.assertFalse(model['next_exchanges'])
++        self.assertIn('ownership', self.followed(model)['reason'])
++
++    def test_fractional_second_later_clock_is_not_sorted_before_original(self):
++        self.later['created'] = self.later['status_updated'] = JAN + 1
++        _, model = self.model()
++        self.assertEqual(model['next_exchanges'][0]['transaction_id'], LATER)
++        branch = next(b for b in model['branches'] if b['asset_id'] == 'DTOS-P-100')
++        self.assertTrue(any(e['source_record_id'] == LATER for e in branch['events']))
++
++    def test_pick_conversion_overlap_with_later_trade_withholds_continuation(self):
++        facts = copy.deepcopy(self.facts)
++        for draft in facts['drafts']:
++            draft['last_picked'] = 1791657590006 + 1000
++        self.f.data[DAY]['drafts'] = facts['drafts']
++        self.f.cache.write(self.f.cache.normalize(DAY, 2026, facts))
++        self.f.store.update_current(DAY, self.f.data[DAY])
++        graph = HistoricalAssetGraph(self.f.store, DAY, self.f.data[DAY], self.f.memory)
++        model = graph.trade_timeline('1333655835015942144')
++        branch = next(b for b in model['branches'] if b['asset_id'] == 'PICK-2026-R2-ORIG7')
++        self.assertEqual(branch['next_exchange']['state'], 'unknown')
++        self.assertIn('overlapping', branch['next_exchange']['reason'])
++
++    def test_equal_original_clock_withheld(self):
++        self.later['created'] = JAN
++        _, model = self.model()
++        self.assertFalse(model['next_exchanges'])
++        self.assertIn('Equal', self.followed(model)['reason'])
++
++    def test_equal_later_clocks_do_not_choose_by_id(self):
++        another = player_exchange('90003', FEB)
++        _, model = self.model([self.root, self.later, another])
++        self.assertFalse(model['next_exchanges'])
++
++    def test_unknown_clock_withheld_not_assumed_later(self):
++        self.later['created'] = self.later['status_updated'] = None
++        _, model = self.model()
++        self.assertFalse(model['next_exchanges'])
++        self.assertIn('Missing event dates', self.followed(model)['reason'])
++
++    def test_exact_duplicate_does_not_duplicate_package(self):
++        _, model = self.model([self.root, self.later, copy.deepcopy(self.later)])
++        self.assertEqual(len(model['next_exchanges']), 1)
++
++    def test_conflicting_completed_native_rows_withheld_before_key_collapse(self):
++        conflict = copy.deepcopy(self.later)
++        conflict['adds']['200'] = 3
++        conflict['roster_ids'] = [1, 2, 3]
++        _, model = self.model([self.root, self.later, conflict])
++        self.assertFalse(model['next_exchanges'])
++        self.assertIn('Conflicting', self.followed(model)['reason'])
++
++    def test_conflicting_current_publication_also_withheld(self):
++        conflict = copy.deepcopy(self.later)
++        conflict['adds']['200'] = 2
++        _, model = self.model([self.root, self.later, conflict], current=True)
++        self.assertFalse(model['next_exchanges'])
++
++    def test_original_transaction_conflict_withholds_receipt(self):
++        conflict = copy.deepcopy(self.root)
++        conflict['drops']['100'] = 3
++        conflict['roster_ids'] = [1, 2, 3]
++        _, model = self.model([self.root, conflict, self.later])
++        self.assertFalse(model['next_exchanges'])
++
++    def test_pending_rejected_and_cancelled_do_not_replace_completed(self):
++        rows = [self.root, self.later]
++        for n, status in enumerate(('pending', 'rejected', 'cancelled', 'failed')):
++            rows.append({**player_exchange(str(91000 + n), JAN + 1000 + n), 'status': status})
++        _, model = self.model(rows)
++        self.assertEqual(model['next_exchanges'][0]['transaction_id'], LATER)
++
++    def test_partial_consideration_keeps_supported_movements(self):
++        self.later['adds']['missing-sender'] = 1
++        graph, model = self.model()
++        package = model['next_exchanges'][0]
++        self.assertFalse(package['complete'])
++        self.assertEqual(len(package['movements']), 2)
++        html = render_timeline(model, graph.trade_dossier(ROOT))
++        self.assertIn('full package return is unknown', html)
++        self.assertNotIn('The full return was for this package', html)
++
++    def test_missing_outgoing_identity_cannot_be_inferred(self):
++        self.later['drops'].pop('100')
++        _, model = self.model()
++        self.assertFalse(model['next_exchanges'])
++
++    def test_first_exchange_only_even_if_later_record_more_complete(self):
++        later2 = player_exchange('90003', MAR)
++        self.later['adds']['missing-sender'] = 1
++        _, model = self.model([self.root, self.later, later2])
++        self.assertEqual(model['next_exchanges'][0]['transaction_id'], LATER)
++        self.assertFalse(model['next_exchanges'][0]['complete'])
++
++    def test_bounded_event_limit_withholds_first_claim(self):
++        rows = [self.root] + [player_exchange(str(92000 + n), FEB + n * 1000) for n in range(101)]
++        _, model = self.model(rows)
++        self.assertFalse(model['next_exchanges'])
++        self.assertIn('limit', self.followed(model)['reason'])
++
++    def test_bounded_package_does_not_claim_truncated_full_return(self):
++        for n in range(50):
++            self.later['adds'][str(500 + n)] = 1
++            self.later['drops'][str(500 + n)] = 2
++        _, model = self.model()
++        self.assertFalse(model['next_exchanges'])
++        self.assertIn('limit', self.followed(model)['reason'])
++
++    def test_other_league_cannot_supply_transaction(self):
++        graph, model = self.model()
++        foreign = HistoricalAssetGraph(self.f.store, ARK, self.f.data[ARK], self.f.memory)
++        self.assertIsNone(foreign.trade_timeline(ROOT))
++        self.assertEqual(model['league_id'], DAY)
++
++    def test_source_generation_invalidates_read_model(self):
++        self.publish()
++        cache = HistoricalReadModelCache()
++        before = cache.get(self.f.store, DAY, self.f.data[DAY])
++        first = before.trade_timeline(ROOT)
++        self.later['draft_picks'] = [{'season': '2029', 'round': 1, 'roster_id': 2,
++                                    'previous_owner_id': 2, 'owner_id': 1}]
++        self.publish()
++        after = cache.get(self.f.store, DAY, self.f.data[DAY])
++        self.assertIsNot(before, after)
++        self.assertNotEqual(first['next_exchanges'], after.trade_timeline(ROOT)['next_exchanges'])
++
++    def test_generation_changes_during_read_withhold_packages(self):
++        graph = self.publish()
++        from src.core.historical_memory.timeline import timeline
++        changed = False
++        version = self.f.store.dataset_version
++        def read_and_replace(*args):
++            nonlocal changed
++            result = timeline(*args)
++            changed = True
++            return result
++        with patch('src.core.historical_memory.timeline.timeline', side_effect=read_and_replace), patch.object(
++                self.f.store, 'dataset_version', side_effect=lambda league: version(league) + ('-replacement' if changed else '')):
++            model = graph.trade_timeline(ROOT)
++        self.assertFalse(model['next_exchanges'])
++        self.assertFalse(graph._timelines)
++
++    def test_rendered_route_exact_packages_retained_labels_no_provider_work(self):
++        self.publish()
++        with patch('routes.historical_assets.historical_store', self.f.store), TestClient(self.f.app()) as client:
++            response = client.get('/trades/history/' + ROOT)
++            self.assertEqual(response.status_code, 200)
++            self.assertIn('See the later trade’s package', response.text)
++            self.assertIn('RETAINED / NOT REVALIDATED', response.text)
++            later = client.get('/trades/history/' + LATER + '?from_trade=' + ROOT)
++            self.assertIn('Back to original trade timeline', later.text)
++            self.assertIn('href="/trades/history/' + ROOT + '"', later.text)
++
++    def test_held_graph_does_not_reuse_package_after_source_update(self):
++        graph, model = self.model()
++        self.assertTrue(model['next_exchanges'])
++        self.later['draft_picks'] = [{'season': '2029', 'round': 1, 'roster_id': 2,
++                                    'previous_owner_id': 2, 'owner_id': 1}]
++        self.publish()
++        held = graph.trade_timeline(ROOT)
++        self.assertFalse(held['next_exchanges'])
++        self.assertIn('Source evidence changed', self.followed(held)['reason'])
++
++    def test_unlinked_source_league_cannot_supply_recipient_return(self):
++        graph = self.publish()
++        events = graph.events
++        def foreign_events(*args, **kwargs):
++            return [{**e, 'source_league_id': ARK} if e['source_record_id'] == LATER else e
++                    for e in events(*args, **kwargs)]
++        with patch.object(graph, 'events', side_effect=foreign_events):
++            model = graph.trade_timeline(ROOT)
++        self.assertFalse(model['next_exchanges'])
++        self.assertIn('source league-season chain', self.followed(model)['reason'])
++
++    def test_faab_is_original_consideration_separate_from_asset_valuation(self):
++        self.later['waiver_budget'] = [{'sender': 2, 'receiver': 1, 'amount': 0},
++                                      {'sender': 1, 'receiver': 2, 'amount': 12}]
++        _, model = self.model()
++        cash = [m for m in model['next_exchanges'][0]['movements'] if m['kind'] == 'faab']
++        self.assertEqual({m['label'] for m in cash}, {'0 FAAB', '12 FAAB'})
++        self.assertFalse(any('market_value' in m for m in cash))
++
++    def test_semantic_duplicate_order_does_not_create_conflict(self):
++        duplicate = copy.deepcopy(self.later)
++        duplicate['roster_ids'].reverse()
++        duplicate['adds'] = dict(reversed(list(duplicate['adds'].items())))
++        _, model = self.model([self.root, self.later, duplicate])
++        self.assertEqual(len(model['next_exchanges']), 1)
++
++    def test_repeated_expansion_reads_do_not_create_storage_or_runtime_owners(self):
++        graph = self.publish()
++        first = graph.trade_timeline(ROOT)
++        with patch.object(self.f.store, 'records', wraps=self.f.store.records) as reads:
++            for _ in range(12):
++                self.assertEqual(graph.trade_timeline(ROOT)['next_exchanges'], first['next_exchanges'])
++            self.assertEqual(reads.call_count, 0)
++        self.assertLessEqual(len(graph._timelines), 32)
++
++
++if __name__ == '__main__':
++    unittest.main()
+diff --git a/tests/test_next_trade_package_browser.py b/tests/test_next_trade_package_browser.py
+new file mode 100644
+index 00000000..65dd5549
+--- /dev/null
++++ b/tests/test_next_trade_package_browser.py
+@@ -0,0 +1,116 @@
++"""Real authenticated fixture routes; retained replay, Chromium phone emulation."""
++from copy import deepcopy
++import json
++import os
++from pathlib import Path
++from urllib.parse import urlsplit
++import unittest
++
++from playwright.sync_api import sync_playwright
++from tools.validation.browser_runtime import launch_chromium
++from tests.test_history_followthrough import FollowThroughFixture, ROOT, LATER, source
++
++
++class NextTradePackageBrowserTests(unittest.TestCase):
++    def test_history_package_later_review_contextual_back_and_disclosure(self):
++        f = FollowThroughFixture(self)
++        folder = os.getenv('DTOS_NEXT_PACKAGE_EVIDENCE')
++        destination = Path(folder) if folder else None
++        if destination:
++            destination.mkdir(parents=True, exist_ok=True)
++        root, later = '/trades/history/' + ROOT, '/trades/history/' + LATER + '?from_trade=' + ROOT
++        history = '/history/team/' + source.DAY + ':franchise:4?events_page=2'
++        records, requests = [], []
++        before = deepcopy(f.data)
++        with sync_playwright() as pw:
++            browser = launch_chromium(pw, headless=True)
++            try:
++                for width, height in ((320, 432), (375, 667), (390, 844), (1280, 900)):
++                    page = browser.new_page(viewport={'width': width, 'height': height}, has_touch=width < 500)
++                    def transport(route):
++                        parsed = urlsplit(route.request.url)
++                        if parsed.netloc != 'fixture':
++                            route.fulfill(status=404)
++                            return
++                        path = parsed.path + ('?' + parsed.query if parsed.query else '')
++                        requests.append(path)
++                        result = (f.static if path.startswith('/static/') else f.client).get(path)
++                        route.fulfill(status=result.status_code, body=result.content,
++                                      content_type=result.headers.get('content-type', 'text/html'))
++                    page.route('**/*', transport)
++                    response = page.goto('http://fixture' + history)
++                    self.assertEqual(response.status, 200)
++                    page.locator('.franchise-timeline a[href="' + root + '"]').click()
++                    page.wait_for_url('**' + root)
++                    package = page.locator('.next-exchange')
++                    self.assertEqual(package.count(), 1)
++                    self.assertIn('Denzel Boston', package.inner_text())
++                    details = package.locator('details').first
++                    summary = details.locator('summary').first
++                    self.assertFalse(details.evaluate('e=>e.open'))
++                    if destination:
++                        page.screenshot(path=str(destination / f'package-collapsed-{width}.png'), full_page=True)
++                    summary.focus()
++                    self.assertNotEqual(summary.evaluate('e=>getComputedStyle(e).outlineStyle'), 'none')
++                    count = len(requests)
++                    summary.press('Enter')
++                    self.assertTrue(details.evaluate('e=>e.open'))
++                    self.assertEqual(len(requests), count)
++                    self.assertIn('2029 Round 2', details.inner_text())
++                    self.assertIn('originally', details.inner_text())
++                    self.assertIn('Sent', details.inner_text())
++                    self.assertIn('Received', details.inner_text())
++                    self.assertLessEqual(page.evaluate('document.documentElement.scrollWidth'), width)
++                    if destination:
++                        page.screenshot(path=str(destination / f'package-expanded-{width}.png'), full_page=True)
++                    if width < 500:
++                        summary.tap()
++                        self.assertFalse(details.evaluate('e=>e.open'))
++                        summary.tap()
++                    package.get_by_role('link', name='Review the full later trade').click()
++                    page.wait_for_url('**' + later)
++                    page.locator('#dtos-back').click()
++                    page.wait_for_url('**' + root)
++                    page.locator('#dtos-back').click()
++                    page.wait_for_url('**' + history)
++                    self.assertIn('page 2 of', page.locator('.franchise-timeline').inner_text())
++                    records.append({'width': width, 'height': height, 'extra_disclosure_requests': 0,
++                                    'keyboard': True, 'touch_emulated': width < 500, 'pagination_retained': True})
++                    page.close()
++            finally:
++                browser.close()
++        self.assertEqual(f.data, before)
++        if destination:
++            (destination / 'browser.json').write_text(json.dumps({'evidence': 'retained partial replay plus disposable pagination, not live',
++                'physical_device_tested': False, 'records': records, 'requests': requests}, indent=2))
++
++    def test_partial_package_phone_preserves_supported_directions(self):
++        f = FollowThroughFixture(self)
++        facts = deepcopy(f.facts)
++        later = next(row for bucket in facts['transactions'].values() for row in bucket
++                     if row['transaction_id'] == LATER)
++        later['adds']['unresolved-fixture-player'] = 4
++        f.source.publish(facts)
++        from src.ui.trade_timeline import render_timeline
++        graph = f.graph()
++        model = graph.trade_timeline(ROOT)
++        page_html = render_timeline(model, graph.trade_dossier(ROOT))
++        folder = os.getenv('DTOS_NEXT_PACKAGE_EVIDENCE')
++        with sync_playwright() as pw:
++            browser = launch_chromium(pw, headless=True)
++            try:
++                for width, height in ((320, 432), (375, 667), (390, 844), (1280, 900)):
++                    page = browser.new_page(viewport={'width': width, 'height': height})
++                    page.set_content('<style>body{margin:12px;background:#071b12;color:white;font:16px sans-serif}a{color:#86efac}</style>' + page_html)
++                    package = page.locator('.next-exchange')
++                    self.assertIn('full package return is unknown', package.inner_text())
++                    package.locator('details').first.locator('summary').first.click()
++                    self.assertIn('2029 Round 2', package.inner_text())
++                    self.assertIn('Denzel Boston', package.inner_text())
++                    self.assertNotIn('The full return was for this package', package.inner_text())
++                    self.assertLessEqual(page.evaluate('document.documentElement.scrollWidth'), width)
++                    if folder:
++                        page.screenshot(path=str(Path(folder) / f'package-partial-expanded-{width}.png'), full_page=True)
++                    page.close()
++            finally:
++                browser.close()

@@ -1,0 +1,43 @@
+{
+  "command": [
+    "docker",
+    "run",
+    "--rm",
+    "--init",
+    "--name",
+    "dtos-next-package-baseline-2259",
+    "--user",
+    "1000:1000",
+    "--memory=2g",
+    "--memory-swap=2g",
+    "--cpus=2",
+    "--network=none",
+    "-e",
+    "HOME=/tmp",
+    "-e",
+    "NODE_OPTIONS=--max-old-space-size=128",
+    "-v",
+    "/workspace/2259-next-trade-package/baseline-source:/app:ro",
+    "-v",
+    "/workspace/2259-next-trade-package:/evidence:ro",
+    "-v",
+    "/workspace/2259-next-trade-package/baseline-rendered:/output",
+    "-w",
+    "/app",
+    "sha256:f70a0c6402700dfb954c99d8163d4164926f74435c34d2e7e462407151663ae6",
+    "python",
+    "/evidence/capture-baseline.py"
+  ],
+  "exit_code": 0,
+  "all_source_bytes_still_match": true,
+  "scope": "Read-only prepared source replay. No owner authentication or physical device.",
+  "baseline": {
+    "source_commit": "01da0c00f8b657222ed6af719933c3c3da8db3be",
+    "source_tree": "4d455c93174f246f242f724e23de5fed44ecb4fb",
+    "exported_tracked_files": 2644,
+    "all_git_blob_bytes_verified": true,
+    "export_manifest_sha256": "9d1d253069a817f86648d38fa557c18363708da03c44ac494b24802007e55976",
+    "scope": "Exact git archive; no .git directory in fixture container. File bytes externally verified, never inferred from a label.",
+    "observed_at": "2026-11-16T03:20:57.929582+00:00"
+  }
+}

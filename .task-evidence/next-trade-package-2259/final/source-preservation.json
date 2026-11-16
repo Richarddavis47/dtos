@@ -1,0 +1,109 @@
+{
+  "source": {
+    "baseline": "01da0c00f8b657222ed6af719933c3c3da8db3be",
+    "baseline_tree": "4d455c93174f246f242f724e23de5fed44ecb4fb",
+    "candidate": "79e2b104da0b3f1eda6ecfc13efe72e1b2a709a7",
+    "tree": "004803fa657610381559371fe86e904e92bf2394",
+    "branch": "feat/next-trade-package-2259",
+    "version": "1.22.44",
+    "build": 2259,
+    "expected_test_count": 4589,
+    "pr": 348
+  },
+  "passed": true,
+  "changed_paths": [
+    ".github/workflows/product-browser.yml",
+    "CHANGELOG.md",
+    "RELEASE_NOTES.md",
+    "app_metadata.py",
+    "docs/audits/NEXT_OBSERVED_TRADE_PACKAGES.md",
+    "routes/historical_assets.py",
+    "src/core/historical_memory/graph.py",
+    "src/core/historical_memory/next_exchange.py",
+    "src/core/historical_memory/read_model.py",
+    "src/core/historical_memory/timeline.py",
+    "src/core/history_context/store.py",
+    "src/core/history_context/transaction_versions.py",
+    "src/ui/trade_timeline.py",
+    "tests/test_next_trade_package.py",
+    "tests/test_next_trade_package_browser.py"
+  ],
+  "protected_files": [
+    {
+      "path": "dtos_app.py",
+      "sha256": "f566954adb56f9162c4a4c44134ac56bd1211a6d1ed0badb9d9f5924879cec75",
+      "unchanged": true
+    },
+    {
+      "path": "src/platform/lifecycle.py",
+      "sha256": "0f0802d3cc802a91432bee0af2753d26c21ec655414cab230398720c1a1dcd36",
+      "unchanged": true
+    },
+    {
+      "path": "src/core/data_platform/global_production.py",
+      "sha256": "1c78b5930a3f8ecdb23111791567eaab9509e47c55573b5b9cf401df0200f7b7",
+      "unchanged": true
+    },
+    {
+      "path": "services/player_evidence.py",
+      "sha256": "cb923f637c145dd6cd8a94330527aa11a681bd7615943e1f569af874278cd1ea",
+      "unchanged": true
+    },
+    {
+      "path": "src/core/player_value_projection/canonical_production.py",
+      "sha256": "f186cf75d5b41c930437e60c33708dba66db940b0250a914ae1152273fefb096",
+      "unchanged": true
+    },
+    {
+      "path": "src/core/player_value_projection/sleeper_actuals.py",
+      "sha256": "553c291fbaa05b06d16e2b68e91d6e5d033dac45678f6187b7364c0017cafe4e",
+      "unchanged": true
+    },
+    {
+      "path": "src/core/trade_intelligence/capital_assessment.py",
+      "sha256": "330672945cd929a8ea60334daeebac7735cf39492ec12a38378ba5c8d97827aa",
+      "unchanged": true
+    },
+    {
+      "path": "services/trade_search_policy.py",
+      "sha256": "3ba7087cfe3795830ed88f18dd55a18f1d80f2d602fe79c79fe443d6360ef5bd",
+      "unchanged": true
+    },
+    {
+      "path": "services/trade_intelligence.py",
+      "sha256": "1373b65270b4a41cdbdc1cd7cb200a448dfa352b18b14246c4e797b42f60e098",
+      "unchanged": true
+    },
+    {
+      "path": "services/recommended_trade_search.py",
+      "sha256": "1ec25e2652321f05a2c33adea53b56ccc34659ebdf76c9388e9362a81794cb0d",
+      "unchanged": true
+    },
+    {
+      "path": "services/league_preparation.py",
+      "sha256": "e4b97ff3cc50b852a096e4fe4fb8d41df241481aa48211bbe73354171914bc98",
+      "unchanged": true
+    },
+    {
+      "path": "services/sleeper.py",
+      "sha256": "829d4528b32c07cf0f759eab35d4b57e81d77486ada40b1095e941d3cea646d1",
+      "unchanged": true
+    },
+    {
+      "path": "src/platform/cache_restoration_admission.py",
+      "sha256": "eab12d1ebc43200bb170f79e7bb5cda26d6ea8a189f4554cfff7d09b31eeaa8c",
+      "unchanged": true
+    },
+    {
+      "path": "src/platform/fois_admission.py",
+      "sha256": "6a0423b28d3d6fbc06a8e81743c1716bfc7faa882a991ee7062c0e41fdc6153c",
+      "unchanged": true
+    },
+    {
+      "path": "services/trade_candidate_admission.py",
+      "sha256": "47223ec056ac902a3ae46878400e048047800ab3fa197c687436517da53e17df",
+      "unchanged": true
+    }
+  ],
+  "scope": "Byte identity of fantasy results/projections, valuation and Trade policy, restore and lifecycle files; executable checks are separate."
+}

@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "/workspace/2259-next-trade-package/prepare-final-readable-evidence.py", line 34, in <module>
+    if p.is_file()and p.suffix in ['.png','.json','.log','.txt']and '__pycache__'not in p.parts and p.name!='process-samples.json' and not (folder.startswith('driver-budget-') and p.name=='original-console.log'):stage(folder+'/'+str(p.relative_to(B/folder)),p)
+                                                                                                                                                                                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/2259-next-trade-package/prepare-final-readable-evidence.py", line 8, in stage
+    seen.add(name);assert p.is_file()and not p.is_symlink();raw=p.read_bytes();binary=p.suffix.lower()in ['.png','.jpg'];assert binary or not token.search(raw),name
+                                                                                                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: prior-candidate-3f787293/job-133027951934-log-unavailable.txt

@@ -1,0 +1,66 @@
+{
+  "source": {
+    "baseline": "01da0c00f8b657222ed6af719933c3c3da8db3be",
+    "baseline_tree": "4d455c93174f246f242f724e23de5fed44ecb4fb",
+    "candidate": "79e2b104da0b3f1eda6ecfc13efe72e1b2a709a7",
+    "tree": "004803fa657610381559371fe86e904e92bf2394",
+    "branch": "feat/next-trade-package-2259",
+    "version": "1.22.44",
+    "build": 2259,
+    "expected_test_count": 4589,
+    "pr": 348
+  },
+  "scope": "Post-publication evidence correction; no source, validation or production change.",
+  "finding": "Four unavailable-log retrieval messages in immutable Prior-attempts.zip contain expired GitHub/Azure signed redirect URLs. These are not Render inspection tokens, application credentials or successful original logs. All expired before publication. Earlier immutable bytes are preserved; new readable derivatives omit the complete query and never republish the signature.",
+  "immutable_prior_archive_sha256": "16150c38edc7f839d424b270b9f82f170e63249576d3deaffe47a7f90fb2c030",
+  "records": [
+    {
+      "file": "prior-candidate-3f787293/job-133027952214-log-unavailable.txt",
+      "original_sha256": "0859240a13b6adc85e796cc38f85332b7b752c80caa755f8215045061bdcf9d5",
+      "sanitized_facts": [
+        {
+          "host": "productionresultssa5.blob.core.windows.net",
+          "expired_at": "2026-11-16T01:22:26Z",
+          "signature_omitted": true
+        }
+      ],
+      "scope": "Failed retrieval message, not an original execution console. Original retained privately and in immutable prior-attempts archive; short-lived GitHub redirect expired before draft upload."
+    },
+    {
+      "file": "prior-candidate-3f787293/job-133027952379-log-unavailable.txt",
+      "original_sha256": "23c28f1a56c7e1a5980ad63d2c839e245e4d846a77732dd85f5e859bb17df1b6",
+      "sanitized_facts": [
+        {
+          "host": "productionresultssa6.blob.core.windows.net",
+          "expired_at": "2026-11-16T01:22:27Z",
+          "signature_omitted": true
+        }
+      ],
+      "scope": "Failed retrieval message, not an original execution console. Original retained privately and in immutable prior-attempts archive; short-lived GitHub redirect expired before draft upload."
+    },
+    {
+      "file": "prior-candidate-3f787293/job-133027951934-log-unavailable.txt",
+      "original_sha256": "49f8f5950c65b3198805f8c31eb86d83f4099d81d26fd284dc2faca4d27ab721",
+      "sanitized_facts": [
+        {
+          "host": "productionresultssa5.blob.core.windows.net",
+          "expired_at": "2026-11-16T01:22:25Z",
+          "signature_omitted": true
+        }
+      ],
+      "scope": "Failed retrieval message, not an original execution console. Original retained privately and in immutable prior-attempts archive; short-lived GitHub redirect expired before draft upload."
+    },
+    {
+      "file": "prior-candidate-da83c4a0/job-133028513934-log-unavailable.txt",
+      "original_sha256": "f85f270462076391e39d3c4f676dc7533dd8821844a499d4bbf8718339700381",
+      "sanitized_facts": [
+        {
+          "host": "productionresultssa12.blob.core.windows.net",
+          "expired_at": "2026-11-16T01:22:29Z",
+          "signature_omitted": true
+        }
+      ],
+      "scope": "Failed retrieval message, not an original execution console. Original retained privately and in immutable prior-attempts archive; short-lived GitHub redirect expired before draft upload."
+    }
+  ]
+}

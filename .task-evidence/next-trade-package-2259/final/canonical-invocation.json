@@ -1,0 +1,70 @@
+{
+  "source": {
+    "baseline": "01da0c00f8b657222ed6af719933c3c3da8db3be",
+    "baseline_tree": "4d455c93174f246f242f724e23de5fed44ecb4fb",
+    "candidate": "79e2b104da0b3f1eda6ecfc13efe72e1b2a709a7",
+    "tree": "004803fa657610381559371fe86e904e92bf2394",
+    "branch": "feat/next-trade-package-2259",
+    "version": "1.22.44",
+    "build": 2259,
+    "expected_test_count": 4589,
+    "pr": 348
+  },
+  "command": [
+    "docker",
+    "create",
+    "--name",
+    "dtos-next-package-canonical-2259",
+    "--init",
+    "--user",
+    "1000:1000",
+    "--memory=2g",
+    "--memory-swap=2g",
+    "--cpus=2",
+    "--network=none",
+    "-v",
+    "/workspace/dtos-draft-capital-2247:/app",
+    "-v",
+    "/workspace/dtos/.git:/workspace/dtos/.git:ro",
+    "-v",
+    "/workspace/2259-next-trade-package/local-canonical:/output",
+    "-v",
+    "/workspace/2259-next-trade-package/fixture:/fixture",
+    "-e",
+    "HOME=/tmp",
+    "-e",
+    "NODE_OPTIONS=--max-old-space-size=128",
+    "-e",
+    "GIT_CONFIG_COUNT=1",
+    "-e",
+    "GIT_CONFIG_KEY_0=safe.directory",
+    "-e",
+    "GIT_CONFIG_VALUE_0=/app",
+    "-e",
+    "DTOS_EXPECTED_HEAD=79e2b104da0b3f1eda6ecfc13efe72e1b2a709a7",
+    "-e",
+    "DTOS_EXPECTED_TREE=004803fa657610381559371fe86e904e92bf2394",
+    "-e",
+    "DTOS_EXPECTED_TEST_COUNT=4589",
+    "-w",
+    "/app",
+    "sha256:f70a0c6402700dfb954c99d8163d4164926f74435c34d2e7e462407151663ae6",
+    "python",
+    "/output/runner.py"
+  ],
+  "container": "9c3973fa288bef6278d432c11008d47b4fa07665bcc4f3e63bc13291f161877a",
+  "files": [
+    {
+      "name": "runner.py",
+      "sha256": "574308d9f64252575970aa19ce113f603ccb9927f2c6a523e8c228869fd37cac"
+    },
+    {
+      "name": "observer/sitecustomize.py",
+      "sha256": "3f43288a099e49a3ed2dea36f977b596707589eaefd2656b40a3b9c6533be2d4"
+    }
+  ],
+  "created_at": "2026-11-16T01:11:27.865266+00:00",
+  "status": "RUNNING_NOT_PASSED",
+  "fixture_free_after_container_creation": 8741339136,
+  "official_scratch_gate_unchanged": true
+}

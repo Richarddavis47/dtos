@@ -1,0 +1,11 @@
+Traceback (most recent call last):
+  File "/workspace/2259-next-trade-package/run-local-capital-capture.py", line 7, in <module>
+    record=dict(source=s,command=cmd,runner_sha256=digest(runner),started_at=datetime.datetime.now(datetime.timezone.utc).isoformat(),reason='Successful complete canonical tests did not request DTOS_COMPARE_EVIDENCE sidecars; two unchanged methods are rerun solely for independent local captures. The original canonical publication remains unchanged.',original_local_manifest_sha256=digest(B/'local-canonical/manifest.json'))
+                                                   ^^^^^^^^^^^^^^
+  File "/workspace/2259-next-trade-package/common.py", line 13, in digest
+    with Path(path).open('rb') as f:return hashlib.file_digest(f,'sha256').hexdigest()
+         ^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/pathlib.py", line 1013, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/workspace/2259-next-trade-package/local-capital-capture-runner.py'
