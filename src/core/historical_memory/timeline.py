@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections import OrderedDict
+from datetime import datetime
 from src.core.history_context.assets import future_pick_id
 
 from src.core.history_context.timestamps import canonical_utc_timestamp
@@ -126,9 +127,9 @@ def timeline(graph, dossier):
                     )
                     unresolved_clock = True
                     continue
-                if high <= boundary:
+                if datetime.fromisoformat(high) <= datetime.fromisoformat(boundary):
                     continue
-                if low <= boundary:
+                if datetime.fromisoformat(low) <= datetime.fromisoformat(boundary):
                     limits.append(
                         "Overlapping event time bounds leave this branch unresolved."
                     )
@@ -147,7 +148,7 @@ def timeline(graph, dossier):
             ordered = sorted(
                 groups.values(),
                 key=lambda rows: (
-                    bounds(rows[0])[0] or "",
+                    datetime.fromisoformat(bounds(rows[0])[0]),
                     rows[0]["source_record_id"],
                 ),
             )

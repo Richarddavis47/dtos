@@ -136,6 +136,8 @@ class NextTradePackageTests(unittest.TestCase):
         self.later['created'] = self.later['status_updated'] = JAN + 1
         _, model = self.model()
         self.assertEqual(model['next_exchanges'][0]['transaction_id'], LATER)
+        branch = next(b for b in model['branches'] if b['asset_id'] == 'DTOS-P-100')
+        self.assertTrue(any(e['source_record_id'] == LATER for e in branch['events']))
 
     def test_pick_conversion_overlap_with_later_trade_withholds_continuation(self):
         facts = copy.deepcopy(self.facts)
