@@ -1,0 +1,123 @@
+{
+  "source": {
+    "baseline": "66a54635df075b2a120606ae3e6e3e5a96bd7b21",
+    "baseline_tree": "129b9423d529d3a5fea70603474f22088a662389",
+    "candidate": "ca685099dd6f7d95090fcee732f0ad3287a50ca6",
+    "tree": "4d455c93174f246f242f724e23de5fed44ecb4fb",
+    "branch": "feat/recent-player-workload-2258",
+    "version": "1.22.43",
+    "build": 2258,
+    "expected_test_count": 4555,
+    "pr": 347
+  },
+  "observed_at": "2026-11-15T23:47:08.048829+00:00",
+  "scope": "Disposable warmed one-player shared-read plus HTML rendering. Includes executor/sampler overhead; not production, worker or restoration sizing, and not long-term leak proof.",
+  "cycles": 12,
+  "concurrent_reads": 4,
+  "source_games": 6,
+  "source_schedule_games": 256,
+  "source_database_bytes": 299008,
+  "source_database_unchanged": true,
+  "permanent_new_store": false,
+  "before": {
+    "rss": 70860800,
+    "cgroup": 54677504,
+    "kernel_peak": 54677504,
+    "anonymous": 52498432,
+    "file": 524288,
+    "inactive_file": 360448,
+    "fds": 4,
+    "threads": 1
+  },
+  "after": {
+    "rss": 77623296,
+    "cgroup": 61194240,
+    "kernel_peak": 61231104,
+    "anonymous": 59166720,
+    "file": 524288,
+    "inactive_file": 286720,
+    "fds": 4,
+    "threads": 1
+  },
+  "sampled_rss_peak": 77656064,
+  "sample_interval_seconds": 0.001,
+  "sampling_limitations": "Short allocations between samples can be missed; kernel whole-container peak and Python tracemalloc are separate measurements.",
+  "samples": 89,
+  "python_allocation_current": 194562,
+  "python_allocation_peak": 1710589,
+  "results": [
+    {
+      "ms": 363.8216920080595,
+      "generation": "4dd1607cb107661b4985dad8d6ba751683e47f054bd85c47af12beb92680ce2c",
+      "html_bytes": 2374
+    },
+    {
+      "ms": 175.9144890238531,
+      "generation": "4dd1607cb107661b4985dad8d6ba751683e47f054bd85c47af12beb92680ce2c",
+      "html_bytes": 2374
+    },
+    {
+      "ms": 370.78151397872716,
+      "generation": "4dd1607cb107661b4985dad8d6ba751683e47f054bd85c47af12beb92680ce2c",
+      "html_bytes": 2374
+    },
+    {
+      "ms": 260.7545180362649,
+      "generation": "4dd1607cb107661b4985dad8d6ba751683e47f054bd85c47af12beb92680ce2c",
+      "html_bytes": 2374
+    },
+    {
+      "ms": 189.609118970111,
+      "generation": "4dd1607cb107661b4985dad8d6ba751683e47f054bd85c47af12beb92680ce2c",
+      "html_bytes": 2374
+    },
+    {
+      "ms": 293.4301960049197,
+      "generation": "4dd1607cb107661b4985dad8d6ba751683e47f054bd85c47af12beb92680ce2c",
+      "html_bytes": 2374
+    },
+    {
+      "ms": 331.69512200402096,
+      "generation": "4dd1607cb107661b4985dad8d6ba751683e47f054bd85c47af12beb92680ce2c",
+      "html_bytes": 2374
+    },
+    {
+      "ms": 131.51773501886055,
+      "generation": "4dd1607cb107661b4985dad8d6ba751683e47f054bd85c47af12beb92680ce2c",
+      "html_bytes": 2374
+    },
+    {
+      "ms": 342.813469003886,
+      "generation": "4dd1607cb107661b4985dad8d6ba751683e47f054bd85c47af12beb92680ce2c",
+      "html_bytes": 2374
+    },
+    {
+      "ms": 159.60386500228196,
+      "generation": "4dd1607cb107661b4985dad8d6ba751683e47f054bd85c47af12beb92680ce2c",
+      "html_bytes": 2374
+    },
+    {
+      "ms": 212.32157200574875,
+      "generation": "4dd1607cb107661b4985dad8d6ba751683e47f054bd85c47af12beb92680ce2c",
+      "html_bytes": 2374
+    },
+    {
+      "ms": 115.10857101529837,
+      "generation": "4dd1607cb107661b4985dad8d6ba751683e47f054bd85c47af12beb92680ce2c",
+      "html_bytes": 2374
+    }
+  ],
+  "all_threads_joined": true,
+  "memory_limit": 2147483648,
+  "memory_events": {
+    "low": "0",
+    "high": "0",
+    "max": "0",
+    "oom": "0",
+    "oom_kill": "0",
+    "oom_group_kill": "0"
+  },
+  "passed": true,
+  "sampled_incremental_rss": 6795264,
+  "post_collection_rss_delta": 6762496
+}

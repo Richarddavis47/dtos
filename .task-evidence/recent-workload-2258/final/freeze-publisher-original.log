@@ -1,0 +1,17 @@
+The following paths and/or pathspecs matched paths that exist
+outside of your sparse-checkout definition, so will not be
+updated in the index:
+.github/release-plans/2258.json
+hint: If you intend to update such entries, try one of the following:
+hint: * Use the --sparse option.
+hint: * Disable or modify the sparsity rules.
+hint: Disable this message with "git config set advice.updateSparsePath false"
+Traceback (most recent call last):
+  File "/workspace/2258-player-workload/freeze-publisher.py", line 10, in <module>
+    run(['git','add','.github/workflows/canonical-release-recovery.yml','.github/release-plans/2258.json','tools/release/publish.py','tests/test_release_publisher.py'])
+  File "/workspace/2258-player-workload/freeze-publisher.py", line 4, in run
+    def run(cmd,**kw):return subprocess.run(cmd,cwd=P,check=True,**kw)
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/subprocess.py", line 571, in run
+    raise CalledProcessError(retcode, process.args,
+subprocess.CalledProcessError: Command '['git', 'add', '.github/workflows/canonical-release-recovery.yml', '.github/release-plans/2258.json', 'tools/release/publish.py', 'tests/test_release_publisher.py']' returned non-zero exit status 1.

@@ -1,0 +1,19 @@
+{
+  "source": {
+    "baseline": "66a54635df075b2a120606ae3e6e3e5a96bd7b21",
+    "baseline_tree": "129b9423d529d3a5fea70603474f22088a662389",
+    "candidate": "ca685099dd6f7d95090fcee732f0ad3287a50ca6",
+    "tree": "4d455c93174f246f242f724e23de5fed44ecb4fb",
+    "branch": "feat/recent-player-workload-2258",
+    "version": "1.22.43",
+    "build": 2258,
+    "expected_test_count": 4555,
+    "pr": 347
+  },
+  "operation": "assemble-customer-acceptance.py",
+  "error": "AssertionError: Actual image not manually reviewed or changed: after-extra-ca685099/account-320.png",
+  "verified_cause": "Screenshot SHA256matches. Reviewer records contained an extra inspection field; established assembler intentionally compares the exact two-field path/sha256 schema. Move per-image inspection annotations to a separate table; preserve the strict comparison.",
+  "application_test_failure": false,
+  "original_review_preserved": "visual-review-first-assembly-attempt.json",
+  "console_provenance": "The original exception was emitted in this task tool transcript; no separate original console file was captured. This receipt quotes the observed error and verified schema cause; it is not a reconstructed log."
+}

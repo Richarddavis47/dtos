@@ -1,0 +1,29 @@
+{
+  "source": {
+    "baseline": "66a54635df075b2a120606ae3e6e3e5a96bd7b21",
+    "baseline_tree": "129b9423d529d3a5fea70603474f22088a662389",
+    "candidate": "ca685099dd6f7d95090fcee732f0ad3287a50ca6",
+    "tree": "4d455c93174f246f242f724e23de5fed44ecb4fb",
+    "branch": "feat/recent-player-workload-2258",
+    "version": "1.22.43",
+    "build": 2258,
+    "expected_test_count": 4555,
+    "pr": 347
+  },
+  "scope": "Bounded shared retained usage read plusHTML rendering; no new background worker or provider acquisition.",
+  "cycles": 12,
+  "concurrent_reads": 4,
+  "source_database_unchanged": true,
+  "sampled_incremental_rss": 6795264,
+  "post_collection_rss_delta": 6762496,
+  "kernel_whole_container_peak": 61231104,
+  "kernel_peak_increment": 6553600,
+  "python_tracemalloc_peak": 1710589,
+  "before_fds": 4,
+  "after_fds": 4,
+  "before_threads": 1,
+  "after_threads": 1,
+  "sampling_limitations": "Short allocations between samples can be missed; kernel whole-container peak and Python tracemalloc are separate measurements.",
+  "interpretation": "RSS, cgroup and Python allocator measurements have different accounting scopes. Post-operation RSSdidnotreturntobaseline. Finite12cycles do not establish long-term leak freedom, private league restoration demand or production performance.",
+  "no_reserve_or_policy_change": true
+}

@@ -1,0 +1,40 @@
+{
+  "source": {
+    "baseline": "66a54635df075b2a120606ae3e6e3e5a96bd7b21",
+    "baseline_tree": "129b9423d529d3a5fea70603474f22088a662389",
+    "candidate": "ca685099dd6f7d95090fcee732f0ad3287a50ca6",
+    "tree": "4d455c93174f246f242f724e23de5fed44ecb4fb",
+    "branch": "feat/recent-player-workload-2258",
+    "version": "1.22.43",
+    "build": 2258,
+    "expected_test_count": 4555,
+    "pr": 347
+  },
+  "test_ids": [
+    "test_recent_workload.RecentWorkloadRenderedTests.test_actual_dossier_and_api_match_retained_source_values",
+    "test_recent_workload.RecentWorkloadRenderedTests.test_missing_stat_withholds_only_affected_result_and_zero_renders",
+    "test_recent_workload.RecentWorkloadRenderedTests.test_reload_reflects_correction_and_failed_refresh_without_reevaluation",
+    "test_recent_workload.RecentWorkloadRenderedTests.test_unknown_boundary_keeps_usage_records_without_claiming_completed_samples",
+    "test_recent_workload.RecentWorkloadTests.test_conflicting_duplicate_does_not_select_a_statistic",
+    "test_recent_workload.RecentWorkloadTests.test_duplicate_same_game_is_one_observation",
+    "test_recent_workload.RecentWorkloadTests.test_explicit_zero_and_unchanged_not_missing",
+    "test_recent_workload.RecentWorkloadTests.test_increase_decrease_dates_and_exact_samples",
+    "test_recent_workload.RecentWorkloadTests.test_insufficient_sample_keeps_totals_and_records",
+    "test_recent_workload.RecentWorkloadTests.test_live_future_postseason_other_season_and_unconfirmed_excluded",
+    "test_recent_workload.RecentWorkloadTests.test_missing_game_is_not_omitted_to_manufacture_trend",
+    "test_recent_workload.RecentWorkloadTests.test_missing_is_not_invented_bye_in_partial_schedule",
+    "test_recent_workload.RecentWorkloadTests.test_missing_stat_does_not_shift_sample_or_hide_other_metric",
+    "test_recent_workload.RecentWorkloadTests.test_negative_invalid_count_is_not_a_zero",
+    "test_recent_workload.RecentWorkloadTests.test_no_hindsight_before_first_retrieval",
+    "test_recent_workload.RecentWorkloadTests.test_only_complete_schedule_shape_can_establish_bye",
+    "test_recent_workload.RecentWorkloadTests.test_read_only_derivation_does_not_retain_duplicate_payload",
+    "test_recent_workload.RecentWorkloadTests.test_revision_replaces_prior_result_and_historical_query_does_not_see_it",
+    "test_recent_workload.RecentWorkloadTests.test_shared_updates_new_game_and_failure_preservation_across_leagues",
+    "test_recent_workload.RecentWorkloadTests.test_tied_source_revisions_are_not_resolved_by_fingerprint",
+    "test_recent_workload.RecentWorkloadTests.test_trailing_missing_game_blocks_stale_six_game_comparison",
+    "test_recent_workload.RecentWorkloadTests.test_transfer_uses_historical_team_not_catalog_and_qualifies",
+    "test_recent_workload.RecentWorkloadTests.test_unknown_game_type_blocks_unproven_comparison",
+    "test_recent_workload_browser.RecentWorkloadBrowserTests.test_dossier_complete_partial_missing_phone_keyboard_and_touch"
+  ],
+  "count": 24
+}
