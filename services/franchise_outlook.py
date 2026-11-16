@@ -25,6 +25,7 @@ def franchise_outlook(data, result, *, players=(), strategy='', overview=None):
     # Reapply the existing diagnostic reader's effective qualification. Never
     # pair a saved roster claim with a newer availability-adjusted comparison.
     own = ((comparison or {}).get('teams') or {}).get(str(assessment.roster_id)) or {}
+    outlook['comparison_prepared'] = bool(own)
     positions = own.get('positions') or {}
     supported = [(pos, row) for pos, row in positions.items()
                  if (row.get('evidence') or {}).get('calculation_supported')
@@ -72,6 +73,7 @@ def franchise_outlook(data, result, *, players=(), strategy='', overview=None):
         outlook['future'] = inventory['reason']
         if inventory['before']:
             outlook['future'] += f" {len(inventory['before'])} individually supported owned picks are listed in Draft capital; this is not a complete inventory."
+    outlook['future_summary'] = outlook['future'] if inventory['complete'] else 'Draft-pick totals unknown.'
     # Home must not restore an unqualified total through its older capital card.
     # Reuse this independently reconciled family, not assessment price coverage.
     recorded = []
