@@ -22,18 +22,22 @@ def outlook_panel(outlook, *, editable, roster_id):
                   '<a class="thq-action" href="#positional-depth">Depth</a>'
                   '<a class="thq-action" href="#draft-capital" aria-label="Draft capital">Capital</a></nav>')
     choices = escape(json.dumps(goal_options(roster_id), separators=(',', ':')), quote=True) if editable else '{}'
+    heading = '<h2 id="my-team-outlook-title">Your roster at a glance</h2>'
+    lead = (f'<p id="my-team-outlook-lead">Comparison pending: lineup and depth. {escape(outlook["future_summary"])}</p>'
+            if unprepared else ''.join('<p' + (' id="my-team-outlook-lead"' if label == 'Current position' else '')
+                + f'><b>{label}:</b> {escape(text)}</p>' for label, text in rows))
+    details = ('<details id="my-team-outlook-evidence" class="thq-strength-detail">'
+               '<summary aria-label="Why this outlook? Expand the assessment and evidence" aria-describedby="my-team-outlook-lead">'
+               + (heading if unprepared else '<span>Why this outlook?</span>') + '</summary>'
+               + f'<p>{escape(outlook["position"])}</p>'
+               + (f'<p>{escape(outlook["brief"])}</p>' if unprepared else '')
+               + ''.join(f'<p><b>{label}:</b> {escape(text)}</p>' for label, text in rows[1:])
+               + '<p>Standing and record are separate from this projected lineup comparison.</p>'
+               + (f'<p><b>Your goal:</b> <span id="my-team-outlook-goal">{escape(outlook["guidance"])}</span></p>'
+                  if editable else '<p>Read-only franchise view. Manager intent is not inferred.</p>')
+               + '<ul>' + ''.join(f'<li>{escape(text)}</li>' for text in outlook['details']) + '</ul>'
+               + ('<nav class="thq-actions" aria-label="Trade shortcuts">' + trade + '</nav>' if trade else '')
+               + '</details>')
     return (f'<section id="my-team-outlook" class="thq-outlook" data-outlook-goals="{choices}" data-dtos-component="recommendation" aria-labelledby="my-team-outlook-title">'
-            '<h2 id="my-team-outlook-title">Your roster at a glance</h2>'
-            + (f'<p id="my-team-outlook-lead">Comparison pending: lineup and depth. {escape(outlook["future_summary"])}</p>' if unprepared else ''.join('<p' + (' id="my-team-outlook-lead"' if label == 'Current position' else '') + f'><b>{label}:</b> {escape(text)}</p>' for label, text in rows))
-            + '<details id="my-team-outlook-evidence" class="thq-strength-detail">'
-            '<summary aria-label="Why this outlook? Expand the assessment and evidence" aria-describedby="my-team-outlook-lead">'
-            '<span>Why this outlook?</span>'
-            '</summary>'
-            + f'<p>{escape(outlook["position"])}</p>'
-            + (f'<p>{escape(outlook["brief"])}</p>' if unprepared else '')
-            + ''.join(f'<p><b>{label}:</b> {escape(text)}</p>' for label, text in rows[1:])
-            + '<p>Standing and record are separate from this projected lineup comparison.</p>'
-            + (f'<p><b>Your goal:</b> <span id="my-team-outlook-goal">{escape(outlook["guidance"])}</span></p>' if editable else '<p>Read-only franchise view. Manager intent is not inferred.</p>')
-            + '<ul>' + ''.join(f'<li>{escape(text)}</li>' for text in outlook['details'])
-            + '</ul>' + ('<nav class="thq-actions" aria-label="Trade shortcuts">' + trade + '</nav>' if trade else '')
-            + '</details><div class="thq-outlook-next">' + action + navigation + '</div></section>')
+            + (details + lead if unprepared else heading + lead + details)
+            + '<div class="thq-outlook-next">' + action + '</div>' + navigation + '</section>')
