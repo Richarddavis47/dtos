@@ -28,7 +28,7 @@ def outlook_panel(outlook, *, editable, roster_id):
                 + f'><b>{label}:</b> {escape(text)}</p>' for label, text in rows))
     details = ('<details id="my-team-outlook-evidence" class="thq-strength-detail">'
                '<summary aria-label="Why this outlook? Expand the assessment and evidence" aria-describedby="my-team-outlook-lead">'
-               + (heading if unprepared else '<span>Why this outlook?</span>') + '</summary>'
+               + (heading + lead if unprepared else '<span>Why this outlook?</span>') + '</summary>'
                + f'<p>{escape(outlook["position"])}</p>'
                + (f'<p>{escape(outlook["brief"])}</p>' if unprepared else '')
                + ''.join(f'<p><b>{label}:</b> {escape(text)}</p>' for label, text in rows[1:])
@@ -39,5 +39,5 @@ def outlook_panel(outlook, *, editable, roster_id):
                + ('<nav class="thq-actions" aria-label="Trade shortcuts">' + trade + '</nav>' if trade else '')
                + '</details>')
     return (f'<section id="my-team-outlook" class="thq-outlook" data-outlook-goals="{choices}" data-dtos-component="recommendation" aria-labelledby="my-team-outlook-title">'
-            + (details + lead if unprepared else heading + lead + details)
+            + (details if unprepared else heading + lead + details)
             + '<div class="thq-outlook-next">' + action + '</div>' + navigation + '</section>')
