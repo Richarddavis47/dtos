@@ -36,5 +36,4 @@ def outlook_panel(outlook, *, editable, roster_id):
             + (f'<p><b>Your goal:</b> <span id="my-team-outlook-goal">{escape(outlook["guidance"])}</span></p>' if editable else '<p>Read-only franchise view. Manager intent is not inferred.</p>')
             + '<ul>' + ''.join(f'<li>{escape(text)}</li>' for text in outlook['details'])
             + '</ul>' + ('<nav class="thq-actions" aria-label="Trade shortcuts">' + trade + '</nav>' if trade else '')
-            + '</details><div class="thq-outlook-next">' + action + '</div>'
-            + navigation + '</section>')
+            + '</details><div class="thq-outlook-next">' + action + navigation + '</div></section>')
