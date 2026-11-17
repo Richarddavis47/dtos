@@ -1,3 +1,7 @@
+## v1.22.46 / build 2261 — Scoped positional evidence
+
+My Team and Home preserve independently supported positional comparisons when unrelated roster evidence is missing. Legal FLEX, Superflex and multi-position dependencies remain material. Modeled comparisons stay provisional; missing backup evidence does not imply weak depth or expendable players. Trade qualification, scoring, source authority and resource policies are unchanged.
+
 ## v1.22.45 / build 2260 — Franchise outlook
 
 My Team and Home reuse an evidence-qualified outlook with weekly lineup strength, a supported positional strength and vulnerability, and independently verified draft-pick flexibility. Missing inventory is not zero capital; a saved goal is a preference, not a competitive-window verdict. Details remain expandable. No scoring, valuation, Trade qualification or resource policies change.

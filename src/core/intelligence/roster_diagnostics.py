@@ -16,7 +16,7 @@ from src.core.trade_intelligence.lineup_memo import LineupStore, SearchLineupMem
 from src.core.trade_intelligence.capital_assessment import resolve_strategy
 
 POSITIONS = ("QB", "RB", "WR", "TE")
-METHOD = "legal-roster-diagnostics-v3-source-eligibility"
+METHOD = "legal-roster-diagnostics-v4-presentation-scope"
 diagnostic_store = LineupStore(max_entries=12, max_bytes=2_097_152, ttl=180)
 
 
@@ -310,6 +310,8 @@ def diagnostic_inputs(data, snapshot):
                     "name": source.get("name") or source.get("full_name") or pid,
                     "position": source.get("position") or row.get("position"),
                     "fantasy_positions": row.get('fantasy_positions'),
+                    "presentation_eligibility": ([str(p).upper() for p in source.get('fantasy_positions', [])]
+                                                 if isinstance(source.get('fantasy_positions'), (list, tuple)) else []),
                     "projected_points": points,
                 }
             )
@@ -380,6 +382,40 @@ def _delta(before, after):
         if before.available and after.available
         else None
     )
+
+
+def _presentation_scope(pos, slots, pools, uncertain):
+    """Close over actual eligible slot connections, including every peer roster.
+
+    A missing player can displace a known FLEX/Superflex starter without sharing
+    its nominal position. Unknown eligibility cannot establish independence.
+    This metadata never authorizes surplus, Trade needs or dependable cover.
+    """
+    active = set(slot for slot in slots if slot not in BENCH_SLOTS)
+    component = {slot for slot in active if _eligible(pos, slot)}
+    connections = []
+    for owner, pool in pools.items():
+        for player in pool:
+            extra = player.get('presentation_eligibility') or []
+            positions = tuple(set(eligible_positions(player)) | set(extra))
+            connected = {slot for slot in active
+                         if any(_eligible(p, slot) for p in positions)}
+            if not positions or any(p not in (*POSITIONS, "K", "DEF") for p in positions):
+                connected = active
+            connections.append((owner, player, connected))
+    while True:
+        expanded = component | set().union(*(c for _, _, c in connections if c & component))
+        if expanded == component:
+            break
+        component = expanded
+    dependencies = [(owner, p) for owner, p, c in connections if c & component]
+    blockers = [dict(roster_id=owner, player_id=p['id'],
+                     reason='Missing eligible projection' if p['projected_points'] is None
+                     else 'Uncertain availability')
+                for owner, p in dependencies
+                if p['projected_points'] is None or p['id'] in uncertain[owner]]
+    return dict(slots=sorted(component), blockers=blockers,
+                dependency_count=len(dependencies), independent=bool(component) and not blockers)
 
 
 def _compute(inputs, snapshot, key):
@@ -472,6 +508,7 @@ def _compute(inputs, snapshot, key):
         ]
         for pos in POSITIONS
     }
+    presentation_scopes = {pos: _presentation_scope(pos, slots, pools, uncertain) for pos in POSITIONS}
     result = {
         "methodology": METHOD,
         "league_id": lid,
@@ -538,6 +575,7 @@ def _compute(inputs, snapshot, key):
                 "preserves_disjoint_reserve": _same(reserve, after_reserve),
             }
         positions = {}
+        presentation_positions = {}
         for pos in POSITIONS:
             members = [p for p in pool if pos in eligible_positions(p)]
             candidates = [(owner, p) for owner, p in references[pos] if owner != rid]
@@ -671,6 +709,24 @@ def _compute(inputs, snapshot, key):
                 reason += "Observed legal replacements project below the peer reserve reference; cross-position flex substitutions remain allowed."
             else:
                 reason += "Player count alone does not establish expendability; review removal effects and reserve assignments."
+            scope = presentation_scopes[pos]
+            assignments_covered = all(
+                not set(lineup.unsupported_slots) & set(scope['slots'])
+                for lineup in optimal.values())
+            independent = scope['independent'] and assignments_covered
+            presentation_positions[pos] = dict(
+                dependency_scope=scope, calculation_supported=True,
+                strength=bool(independent and starters and target is not None
+                              and min(e.projected_points for e in starters) >= target),
+                starter_need=bool(independent and relevant and base.available
+                                  and (added_slots > 0 or (gain is not None and gain > 0))),
+                starter_points=sum(e.projected_points for e in starters) if starters else None,
+                starting_ids=[e.asset_id for e in starters],
+                reason=('Eligible slot dependencies and peer assignments support this modeled comparison.'
+                        if independent else
+                        'Positional comparison withheld: eligible slot dependencies have missing projections, uncertain availability or incomplete assignments.'),
+                conclusion_state='provisional',
+                limitation='Projected scenarios are not confirmed participation, dependable backup cover or permission to trade a player.')
             position_evidence = team_evidence
             positions[pos] = {
                 "evidence": position_evidence,
@@ -723,6 +779,7 @@ def _compute(inputs, snapshot, key):
             "evidence": team_evidence,
             "eligibility": qualification["eligibility"][rid],
             "positions": positions,
+            "presentation_positions": presentation_positions,
             "optimal_points": base.projected_points,
             "optimal_ids": [e.asset_id for e in base.entries],
             "unsupported_slots": list(base.unsupported_slots),
@@ -779,6 +836,10 @@ def _requalify(result, qualification):
         ):
             evidence["conclusion_state"] = "unavailable"
         team["evidence"] = evidence
+        for row in (team.get('presentation_positions') or {}).values():
+            row['conclusion_state'] = ('provisional' if evidence.get('calculation_supported')
+                                       and shared.get('calculation_supported') else 'unavailable')
+            row['source_limitations'] = list(shared.get('limitations') or [])
         for facts in team["positions"].values():
             facts["evidence"] = evidence
             facts["conclusion_state"] = evidence["conclusion_state"]

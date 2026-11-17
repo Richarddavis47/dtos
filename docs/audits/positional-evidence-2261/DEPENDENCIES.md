@@ -1,0 +1,11 @@
+# Positional evidence dependency boundary
+
+Baseline live public readiness verified1.22.45/build2260/2c25fc70; source595e3cff. Owner Day Traders observation is user-supplied, not reproduced owner-live here. No existing related open feature PR found.
+
+Confirmed: `_compute` intentionally guards all shared classification flags with roster-wide completeness; `_requalify` propagates team state. These same fields are consumed by Trade engine need coverage, impact scoring and package diagnostics. They must not be relaxed for a presentation change.
+
+Additive presentation-only prepared rows use the existing legal assignments, peer reference and add-one gain. Slot-dependency closure connects every eligible slot for every eligible player across all league rosters. FLEX and Superflex can connect nominally different positions; multi-position source eligibility is conservatively included even if a missing canonical row lacks it. Unknown eligibility prevents independence. Missing/Questionable/Doubtful dependencies or uncovered component slots withhold comparative findings. Observed selected-starter totals remain separately described; they do not prove optimality with unknown dependencies, strong backups or participation. No new solver call, provider call, scoring formula or expendability verdict is added. All recovered comparisons are explicitly modeled/provisional; original source freshness/failed-refresh limitations remain available.
+
+Existing eligibility exclusions (confirmed bye, noneligible, unavailable, IR/taxi storage) are consumed from the canonical diagnostic pool, not reinvented by nominal-position filters. This does not authorize activating an IR/taxi player. Any resulting roster in package evaluation gets its own prepared scope; Trade consumers continue to use unchanged original classifications.
+
+Development original88-test pass includes imported fixture TestCase discovery duplicates, not88unique new tests. Imports were corrected to module references before final test counting. All final exact-source suites must run independently; no development claim substitutes for them.
