@@ -11,7 +11,9 @@ class FranchiseOutlookTests(unittest.TestCase):
         data={'league':{'league_id':'L'},'week':10}
         card=SimpleNamespace(league_id='L',roster_id=1,future_capital_evidence={})
         result=SimpleNamespace(team_assessment=SimpleNamespace(team=card,roster_id=1,projection_week=10,league_id='L',generation='g'),context=SimpleNamespace(projection_snapshot=None))
-        diagnostic={'league_id':'L','week':10,'projection_generation':'p','required_slot_count':10,'teams':{'1':{'presentation_positions':presentation or {},'positions':positions or {},'optimal_points':0,'optimal_ids':list(range(10)), 'evidence':{'calculation_supported':True,'conclusion_state':'current'}}}}
+        diagnostic={'league_id':'L','week':10,'projection_generation':'p','required_slot_count':10,'teams':{'1':{'positions':positions or {},'optimal_points':0,'optimal_ids':list(range(10)), 'evidence':{'calculation_supported':True,'conclusion_state':'current'}}}}
+        if presentation is not None:
+            diagnostic['teams']['1']['presentation_positions']=presentation
         old=dict(position='old position',brief='old rank',strength='old strength',concern='old concern',future='old inventory',details=['Prepared Team Strength covers 1/1 current weeks; complete-horizon points: 900.'])
         inventory=inventory or dict(complete=False,reason='Ownership incomplete; remaining totals unknown.',before=[])
         with patch('services.franchise_outlook.roster_overview',return_value={}),patch('services.franchise_outlook.prepared_outlook',return_value=deepcopy(old),create=True),patch('services.franchise_outlook.prepared_comparison',return_value=diagnostic),patch('services.franchise_outlook.inventory_baseline',return_value=inventory):
@@ -77,4 +79,4 @@ class FranchiseOutlookTests(unittest.TestCase):
         scoped=dict(calculation_supported=True,conclusion_state='provisional',comparisons_supported=False,starter_points=5,starting_ids=['a'],strength=False,starter_need=False,reason='Relevant peer availability is uncertain.',limitation='Not confirmed participation.',dependency_scope={'blockers':[]})
         row=self.render(positions={'QB':dict(strength=True,conclusion_state='current',evidence={'calculation_supported':True})},presentation={'QB':scoped})
         self.assertNotIn('Supported positional strength',row['strength'])
-        self.assertIn('5.00',row['strength'])
+        self.assertIn('5 projected points',row['strength'])
