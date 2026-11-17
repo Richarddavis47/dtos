@@ -1,0 +1,9 @@
+# Season performance — incomplete candidate
+
+Prepared native Sleeper team totals now reach My Team and a compact Home reference. The existing official record/standing stays intact. Custom points are treated as source overrides; zero/negative totals survive. Each franchise contributes once per week. Conflicting duplicate scores become missing. Recent means the last three completed regular-season week buckets, including explicit unknown gaps; no player-roster reconstruction is used. League averages require complete matched cohort coverage. No scoring, Trade or resource policies changed.
+
+Ten focused controls and targeted Ruff pass. First attempt passed nine tests but failed13 lint findings; that original is preserved. Follow-up style correction preserved assertions. Rendered Chromium controls exercised320/375/390/1280px, keyboard disclosure and Home-to-team link. Screenshots are disposable fixtures, not owner-live or physicalSafari. Inspected MyTeam320 andHome390; complete visual acceptance remains unfinished.
+
+The full local validator has NOT run. local-preflight-original.json records insufficient safe scratch for the unchanged existing controller. No gate waived and no release prepared. Hosted push executions require reconciliation; do not call them passed. Remaining required coverage/validation is listed in WORK_STATUS.json. This is a recoverable draft, not a completion or production claim. Production remains v1.22.46/build2261.
+
+Resume the existing branch and candidate, preserve original logs, restore sufficient executor scratch without changing the official8GiB guard or application2GiB controls, complete missing acceptance and all mandatory validation, then the existing guarded publisher. No forced sync/search/user settings changes. Use already prepared authenticated owner evidence only if existing authorized access becomes available. Check source score averages directly against prepared team totals, not player production.

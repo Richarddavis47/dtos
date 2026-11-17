@@ -1,0 +1,149 @@
+test_corrections_and_player_transfers_do_not_reconstruct_scores (tests.test_season_performance.SeasonPerformanceTests.test_corrections_and_player_transfers_do_not_reconstruct_scores) ... ok
+test_custom_override_and_invalid_override (tests.test_season_performance.SeasonPerformanceTests.test_custom_override_and_invalid_override) ... ok
+test_failed_refresh_retains_qualification (tests.test_season_performance.SeasonPerformanceTests.test_failed_refresh_retains_qualification) ... ok
+test_home_and_team_same_values_no_new_action (tests.test_season_performance.SeasonPerformanceTests.test_home_and_team_same_values_no_new_action) ... ok
+test_identity_scoring_calendar_isolation (tests.test_season_performance.SeasonPerformanceTests.test_identity_scoring_calendar_isolation) ... ok
+test_missing_latest_week_not_replaced_with_older_week (tests.test_season_performance.SeasonPerformanceTests.test_missing_latest_week_not_replaced_with_older_week) ... ok
+test_native_zero_negative_and_live_boundary (tests.test_season_performance.SeasonPerformanceTests.test_native_zero_negative_and_live_boundary) ... ok
+test_repeated_doubleheader_dedup_and_conflict (tests.test_season_performance.SeasonPerformanceTests.test_repeated_doubleheader_dedup_and_conflict) ... ok
+test_unequal_coverage_withholds_comparison_not_own_results (tests.test_season_performance.SeasonPerformanceTests.test_unequal_coverage_withholds_comparison_not_own_results) ... ok
+
+----------------------------------------------------------------------
+Ran 9 tests in 0.003s
+
+OK
+E731 Do not assign a `lambda` expression, use a `def`
+  --> src/ui/season_performance.py:9:5
+   |
+ 7 | def season_panel(data, roster_id, *, compact=False):
+ 8 |     view = season_performance(data, roster_id)
+ 9 |     points = lambda value: f'{value:.2f}' if value is not None else 'Unknown'
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+10 |     supported = len(view['weeks'])
+11 |     heading = 'Season so far'
+   |
+help: Rewrite `points` as a `def`
+
+E702 Multiple statements on one line (semicolon)
+  --> tests/test_season_performance.py:36:22
+   |
+35 |     def test_custom_override_and_invalid_override(self):
+36 |         d = fixture(); row = d['season_matchups']['weeks']['1']['rows'][0]
+   |                      ^
+37 |         row['custom_points'] = -4
+38 |         self.assertEqual(season_performance(d, 1)['weeks'][0]['points'], -4)
+   |
+
+E702 Multiple statements on one line (semicolon)
+  --> tests/test_season_performance.py:43:22
+   |
+42 |     def test_repeated_doubleheader_dedup_and_conflict(self):
+43 |         d = fixture(); rows = d['season_matchups']['weeks']['4']['rows']
+   |                      ^
+44 |         rows.append(copy.deepcopy(rows[0]))
+45 |         self.assertEqual(season_performance(d, 1)['average'], 12)
+   |
+
+E702 Multiple statements on one line (semicolon)
+  --> tests/test_season_performance.py:48:39
+   |
+46 |         rows[-1]['points'] = 31
+47 |         v = season_performance(d, 1)
+48 |         self.assertIn(4, v['missing']); self.assertIsNone(v['recent'][-1]['points'])
+   |                                       ^
+49 |
+50 |     def test_unequal_coverage_withholds_comparison_not_own_results(self):
+   |
+
+E702 Multiple statements on one line (semicolon)
+  --> tests/test_season_performance.py:51:22
+   |
+50 |     def test_unequal_coverage_withholds_comparison_not_own_results(self):
+51 |         d = fixture(); d['season_matchups']['weeks']['2']['rows'].pop()
+   |                      ^
+52 |         v = season_performance(d, 1)
+53 |         self.assertEqual(v['average'], 12); self.assertIsNone(v['league_average'])
+   |
+
+E702 Multiple statements on one line (semicolon)
+  --> tests/test_season_performance.py:53:43
+   |
+51 |         d = fixture(); d['season_matchups']['weeks']['2']['rows'].pop()
+52 |         v = season_performance(d, 1)
+53 |         self.assertEqual(v['average'], 12); self.assertIsNone(v['league_average'])
+   |                                           ^
+54 |         self.assertIn('comparison withheld', season_panel(d, 1))
+   |
+
+E702 Multiple statements on one line (semicolon)
+  --> tests/test_season_performance.py:57:22
+   |
+56 |     def test_missing_latest_week_not_replaced_with_older_week(self):
+57 |         d = fixture(); d['season_matchups']['weeks']['4']['rows'] = []
+   |                      ^
+58 |         v = season_performance(d, 1)
+59 |         self.assertEqual([r['week'] for r in v['recent']], [2, 3, 4])
+   |
+
+E702 Multiple statements on one line (semicolon)
+  --> tests/test_season_performance.py:63:22
+   |
+62 |     def test_failed_refresh_retains_qualification(self):
+63 |         d = fixture(); w = d['season_matchups']['weeks']['4']
+   |                      ^
+64 |         w['retained_rows'] = w.pop('rows'); w['availability'] = 'unavailable'
+65 |         self.assertTrue(season_performance(d, 1)['retained'])
+   |
+
+E702 Multiple statements on one line (semicolon)
+  --> tests/test_season_performance.py:64:43
+   |
+62 |     def test_failed_refresh_retains_qualification(self):
+63 |         d = fixture(); w = d['season_matchups']['weeks']['4']
+64 |         w['retained_rows'] = w.pop('rows'); w['availability'] = 'unavailable'
+   |                                           ^
+65 |         self.assertTrue(season_performance(d, 1)['retained'])
+66 |         self.assertIn('retained results', season_panel(d, 1, compact=True))
+   |
+
+E702 Multiple statements on one line (semicolon)
+  --> tests/test_season_performance.py:69:22
+   |
+68 |     def test_corrections_and_player_transfers_do_not_reconstruct_scores(self):
+69 |         d = fixture(); d['teams'][0]['players'] = [{'id': 'new-player', 'points': 5000}]
+   |                      ^
+70 |         self.assertEqual(season_performance(d, 1)['average'], 12)
+71 |         d['season_matchups']['weeks']['4']['rows'][0]['points'] = 34
+   |
+
+E702 Multiple statements on one line (semicolon)
+  --> tests/test_season_performance.py:79:26
+   |
+77 |         for key, value in [('league_id', 'B'), ('season', '2025'),
+78 |                            ('scoring_fingerprint', 'other'), ('calendar_reference', 'other')]:
+79 |             d = fixture(); d['season_matchups'][key] = value
+   |                          ^
+80 |             self.assertIsNone(season_performance(d, 1)['average'])
+81 |         self.assertIsNone(season_performance(fixture(), 3)['average'])
+   |
+
+E702 Multiple statements on one line (semicolon)
+  --> tests/test_season_performance.py:87:38
+   |
+85 |         for compact in [False, True]:
+86 |             h = season_panel(d, 1, compact=compact)
+87 |             self.assertIn('12.00', h); self.assertIn('4/4', h)
+   |                                      ^
+88 |             self.assertNotIn('contender', h); self.assertNotIn('<form', h)
+   |
+
+E702 Multiple statements on one line (semicolon)
+  --> tests/test_season_performance.py:88:45
+   |
+86 |             h = season_panel(d, 1, compact=compact)
+87 |             self.assertIn('12.00', h); self.assertIn('4/4', h)
+88 |             self.assertNotIn('contender', h); self.assertNotIn('<form', h)
+   |                                             ^
+
+Found 13 errors.
+No fixes available (1 hidden fix can be enabled with the `--unsafe-fixes` option).
