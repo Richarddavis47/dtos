@@ -39,6 +39,10 @@ class SeasonPerformanceBrowserTests(unittest.TestCase):
                     page = f.f.browser_page(browser, width, height)
                     try:
                         page.goto('https://dtos.test/teams/1')
+                        record_link = page.locator('.thq-record-link')
+                        self.assertEqual(record_link.get_attribute('href'), '#season-so-far')
+                        record_link.click()
+                        self.assertTrue(page.url.endswith('#season-so-far'))
                         panel = page.locator('#season-so-far')
                         if not panel.evaluate('e=>e.open'):
                             panel.locator(':scope > summary').press('Enter')
