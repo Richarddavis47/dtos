@@ -1,3 +1,7 @@
+## v1.22.47 / build 2262 — Season performance
+
+My Team and Home show supported completed regular-season team scoring from prepared Sleeper matchup totals. Native custom-point overrides, zero and negative results remain intact. Matched league averages and the latest three completed team weeks disclose missing coverage. Season results stay separate from current lineup projections and official cumulative standings. Season details follow the roster so phone access stays clear. No valuation, Trade qualification, source acquisition or memory policy changes.
+
 ## v1.22.46 / build 2261 — Scoped positional evidence
 
 My Team and Home preserve independently supported positional comparisons when unrelated roster evidence is missing. Legal FLEX, Superflex and multi-position dependencies remain material. Modeled comparisons stay provisional; missing backup evidence does not imply weak depth or expendable players. Trade qualification, scoring, source authority and resource policies are unchanged.

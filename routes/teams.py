@@ -21,6 +21,7 @@ from src.core.history_context import canonical_history_store
 from src.core.request_execution import run_manager_read
 from src.ui import player_summary
 from src.ui.my_team_outlook import outlook_panel
+from src.ui.season_performance import season_panel
 from src.ui.league_gm_diagnostics import team_observations
 from src.ui.badges import champion_badge, defending_champion, you_badge
 from src.platform.league_context import current_league_context
@@ -517,14 +518,16 @@ def create_teams_router(
 @media(max-width:760px){{.thq-header{{padding:8px}}#full-roster{{margin-top:12px}}.thq-outlook a,.thq-outlook summary{{scroll-margin-bottom:100px}}body:has([data-my-team-context]) .wrap{{padding-top:8px}}body:has([data-my-team-context]) .account-context{{padding:4px 0;margin-bottom:4px}}.thq-header .thq-title h1,.thq-header .thq-title p{{margin:0}}.thq-header .identity-kicker{{line-height:1.2}}.thq-outlook{{padding:8px}}body:has([data-my-team-context]) .brand p{{display:none}}body:has([data-my-team-context]) .secondary-nav{{margin-bottom:4px}}.thq-header>div:last-child{{margin-top:8px}}.thq-header .thq-title p{{font-size:14px}}.thq-identity{{gap:8px}}}}
 .thq-strategy{{display:block}}#my-team-goal-form{{display:grid;grid-template-columns:60px minmax(104px,1fr) auto;gap:6px;align-items:center}}#my-team-strategy-feedback{{grid-column:1/-1}}#my-team-goal-help{{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}}#my-team-save-goal{{min-height:44px;min-width:0;padding:8px;white-space:nowrap}}
 
+.thq-record-link{{display:inline-flex;align-items:center;min-height:44px;max-width:100%;text-decoration:underline;text-underline-offset:3px}}#season-so-far>summary{{display:list-item;list-style:disclosure-closed inside;align-content:center}}#season-so-far[open]>summary{{list-style-type:disclosure-open}}
 @media(max-width:360px){{.thq-strategy{{grid-template-columns:56px minmax(0,1fr)}}.thq-strategy label{{white-space:normal;overflow-wrap:normal;line-height:1.3}}.thq-strategy select{{padding-left:4px;padding-right:4px}}}}
 </style>
 <section class="thq-content" data-my-team-context="{context_json}">
 {scope_notice}
-<header class="thq-header"><div class="thq-identity">{avatar}<div class="thq-title"><div class="identity-kicker">Manager: {escape(team['owner'])}</div><div class="thq-name-row"><h1>{escape(team['team_name'])}{you_badge(data, roster_id)}</h1>{champion_badge(defending_champion(data), roster_id)}</div><p>{escape(performance["record"])} · {escape(performance["standing"])}</p></div></div><div class="thq-strategy">{strategy_control}<small>League evidence updated: {escape(view['last_updated'])}</small></div></header>
+<header class="thq-header"><div class="thq-identity">{avatar}<div class="thq-title"><div class="identity-kicker">Manager: {escape(team['owner'])}</div><div class="thq-name-row"><h1>{escape(team['team_name'])}{you_badge(data, roster_id)}</h1>{champion_badge(defending_champion(data), roster_id)}</div><p><a class="thq-record-link" href="#season-so-far" aria-label="Season results: {escape(performance["record"], quote=True)} · {escape(performance["standing"], quote=True)}">{escape(performance["record"])} · {escape(performance["standing"])}</a></p></div></div><div class="thq-strategy">{strategy_control}<small>League evidence updated: {escape(view['last_updated'])}</small></div></header>
 {outlook_panel(assessment_outlook, editable=editable, roster_id=roster_id)}
 {lineup_alert}
 <section class="thq-section" id="full-roster"><details class="thq-strength-detail" id="my-team-roster" open><summary>Full Roster · {escape(_roster_projection_coverage(view))}</summary><div class="thq-roster">{_roster_rooms(view)}</div></details><details class="thq-strength-detail" id="my-team-key-players"><summary>Key players by Market value</summary>{_key_players(view)}</details></section>
+{season_panel(data, roster_id)}
 <section class="thq-section" id="draft-capital"><div class="thq-section-head"><h2>Draft Capital</h2><span>Your owned future picks</span></div><div class="thq-picks">{_draft_capital(view)}</div><p class="muted">Pick details preserve the original franchise and current owner. A pick’s future draft position is unknown unless a supported range is shown.</p></section>
 
 <section class="thq-section" id="positional-depth"><div class="thq-section-head"><h2>Starter strength and positional depth</h2><span>{escape('Week ' + str(overview['projection_week']) + ' · ' if overview['projection_week'] is not None else 'Current roster · ')}Lineup and backup projections from Sleeper</span></div>{_positional_depth(view)}</section>
