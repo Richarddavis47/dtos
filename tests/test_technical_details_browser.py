@@ -34,20 +34,24 @@ class TechnicalDetailsBrowserTests(unittest.TestCase):
             browser = launch_chromium(pw, headless=True)
             try:
                 for width in WIDTHS:
-                    with browser.new_context(viewport={'width': width, 'height': 900}, has_touch=width < 600) as context:
-                        def transport(route):
-                            from urllib.parse import urlsplit
-                            url = urlsplit(route.request.url)
-                            key = url.path + ('?' + url.query if url.query else '')
-                            if key in pages:
-                                route.fulfill(content_type='text/html', body=pages[key])
-                            elif url.path.endswith('.css'):
-                                route.fulfill(content_type='text/css', body=styles.get(Path(url.path).name, ''))
-                            else:
-                                route.fulfill(status=404)
-                        context.route('**/*', transport)
-                        page = context.new_page()
-                        for path in pages:
+                    for path in pages:
+                        # These are independent prepared-page checks, not a return
+                        # journey. Isolate focus, selection and native input state
+                        # after each page's wheel/keyboard/touch gestures. Actual
+                        # navigation continuity has separate normal-entry controls.
+                        with browser.new_context(viewport={'width': width, 'height': 900}, has_touch=width < 600) as context:
+                            def transport(route):
+                                from urllib.parse import urlsplit
+                                url = urlsplit(route.request.url)
+                                key = url.path + ('?' + url.query if url.query else '')
+                                if key in pages:
+                                    route.fulfill(content_type='text/html', body=pages[key])
+                                elif url.path.endswith('.css'):
+                                    route.fulfill(content_type='text/css', body=styles.get(Path(url.path).name, ''))
+                                else:
+                                    route.fulfill(status=404)
+                            context.route('**/*', transport)
+                            page = context.new_page()
                             with self.subTest(width=width, route=path):
                                 page.goto('https://dtos.test' + path)
                                 inspect(page, width)
