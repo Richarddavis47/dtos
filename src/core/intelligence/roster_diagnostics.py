@@ -400,20 +400,23 @@ def _presentation_scope(pos, slots, pools, uncertain):
             positions = tuple(set(eligible_positions(player)) | set(extra))
             connected = {slot for slot in active
                          if any(_eligible(p, slot) for p in positions)}
-            if not positions or any(p not in (*POSITIONS, "K", "DEF") for p in positions):
+            unknown = not eligible_positions(player) or any(p not in (*POSITIONS, "K", "DEF") for p in positions)
+            if unknown:
                 connected = active
-            connections.append((owner, player, connected))
+            connections.append((owner, player, connected, unknown))
     while True:
-        expanded = component | set().union(*(c for _, _, c in connections if c & component))
+        expanded = component | set().union(*(c for _, _, c, _ in connections if c & component))
         if expanded == component:
             break
         component = expanded
-    dependencies = [(owner, p) for owner, p, c in connections if c & component]
+    dependencies = [(owner, p, unknown) for owner, p, c, unknown in connections if c & component]
     blockers = [dict(roster_id=owner, player_id=p['id'],
-                     reason='Missing eligible projection' if p['projected_points'] is None
-                     else 'Uncertain availability')
-                for owner, p in dependencies
-                if p['projected_points'] is None or p['id'] in uncertain[owner]]
+                     reason='; '.join(reason for applies, reason in (
+                         (unknown, 'Unknown eligibility'),
+                         (p['projected_points'] is None, 'Missing eligible projection'),
+                         (p['id'] in uncertain[owner], 'Uncertain availability')) if applies))
+                for owner, p, unknown in dependencies
+                if unknown or p['projected_points'] is None or p['id'] in uncertain[owner]]
     return dict(slots=sorted(component), blockers=blockers,
                 dependency_count=len(dependencies), independent=bool(component) and not blockers)
 
@@ -715,7 +718,7 @@ def _compute(inputs, snapshot, key):
                 for lineup in optimal.values())
             independent = scope['independent'] and assignments_covered
             presentation_positions[pos] = dict(
-                dependency_scope=scope, calculation_supported=True,
+                dependency_scope=scope, calculation_supported=True, comparisons_supported=independent,
                 strength=bool(independent and starters and target is not None
                               and min(e.projected_points for e in starters) >= target),
                 starter_need=bool(independent and relevant and base.available

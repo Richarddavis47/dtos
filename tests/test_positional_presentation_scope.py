@@ -83,6 +83,10 @@ class PositionalPresentationScopeTests(unittest.TestCase):
         self.assertFalse(row["strength"])
         self.assertIn("RB", row["dependency_scope"]["slots"])
 
+        scope = d._presentation_scope('QB', ['QB', 'RB'], {'1': [dict(id='unknown', position='WR', fantasy_positions=[], projected_points=5)]}, {'1': []})
+        self.assertFalse(scope['independent'])
+        self.assertIn('Unknown eligibility',scope['blockers'][0]['reason'])
+
     def test_age_and_failed_refresh_keep_provisional_scope(self):
         self.control()
         saved = deepcopy(self.f.data)

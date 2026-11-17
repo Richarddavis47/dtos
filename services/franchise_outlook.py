@@ -33,9 +33,13 @@ def franchise_outlook(data, result, *, players=(), strategy='', overview=None):
     # Optional presentation-only findings cannot enter Trade or surplus policy.
     scoped = [(pos, row) for pos, row in (own.get('presentation_positions') or {}).items()
               if row.get('calculation_supported') and row.get('conclusion_state') == 'provisional']
-    strengths = [(pos, row) for pos, row in supported if row.get('strength')]
-    if not strengths:
+    if 'presentation_positions' in own:
+        scoped_by_position = dict(scoped)
+        supported = [(pos, row) for pos, row in supported
+                     if scoped_by_position.get(pos, {}).get('comparisons_supported')]
         strengths = [(pos, row) for pos, row in scoped if row.get('strength')]
+    else:
+        strengths = [(pos, row) for pos, row in supported if row.get('strength')]
     if strengths:
         pos, row = strengths[0]
         outlook['strength'] = ('Provisional: ' if row['conclusion_state'] != 'current' else '') + f'Supported positional strength: {pos}. Backups are not automatically expendable.'

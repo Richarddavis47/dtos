@@ -73,3 +73,8 @@ class FranchiseOutlookTests(unittest.TestCase):
         self.assertNotIn('Some starter projections are supported',row['concern'])
         self.assertIn('no roster weakness',row['concern'])
         self.assertNotIn('selected starters contribute',row['strength'])
+
+        scoped=dict(calculation_supported=True,conclusion_state='provisional',comparisons_supported=False,starter_points=5,starting_ids=['a'],strength=False,starter_need=False,reason='Relevant peer availability is uncertain.',limitation='Not confirmed participation.',dependency_scope={'blockers':[]})
+        row=self.render(positions={'QB':dict(strength=True,conclusion_state='current',evidence={'calculation_supported':True})},presentation={'QB':scoped})
+        self.assertNotIn('Supported positional strength',row['strength'])
+        self.assertIn('5.00',row['strength'])
