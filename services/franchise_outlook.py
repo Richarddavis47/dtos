@@ -57,9 +57,9 @@ def franchise_outlook(data, result, *, players=(), strategy='', overview=None):
         outlook['concern'] = ('No supported shortfall is established; incomplete evidence is not proof of strong depth.'
                               if supported else 'Compatible lineup and backup evidence is not prepared; missing or incompatible projections are not zero production, and no roster weakness is inferred.')
     if not supported and scoped:
-        if not needs:
-            outlook['concern'] = 'Some starter projections are supported; positional and backup comparisons remain incomplete. Unknown depth is not a weakness.'
         observations = [(pos, row) for pos, row in scoped if row.get('starter_points') is not None]
+        if not needs and observations:
+            outlook['concern'] = 'Some starter projections are supported; positional and backup comparisons remain incomplete. Unknown depth is not a weakness.'
         if not strengths and observations:
             pos, row = observations[0]
             outlook['strength'] = (f'{pos}: selected starters contribute {manager_points(row["starter_points"])} projected points. '
