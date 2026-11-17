@@ -62,3 +62,32 @@ def weekly_comparison(card, week, *, compact=False, diagnostics=None):
             f'{len(supported)} of {len(teams)} league teams comparable. '
             'This compares analytical lineups, not submitted Sleeper starters or overall franchise quality.'
             + (' ' + reason if reason else ''))
+
+
+def positional_display_rows(team):
+    """Qualify existing positional claims for display, without altering Trade facts.
+
+    Recovery flags remain a separate prepared presentation family. This reader
+    only combines qualifications when displaying existing classified findings.
+    """
+    positions = team.get('positions') or {}
+    if 'presentation_positions' not in team:
+        return positions
+    scopes = team.get('presentation_positions') or {}
+    result = {}
+    for pos, row in positions.items():
+        scope = scopes.get(pos) or {}
+        old_state = row.get('conclusion_state')
+        scope_state = scope.get('conclusion_state')
+        state = ('unavailable' if not scope.get('comparisons_supported')
+                 or old_state not in {'current', 'provisional'}
+                 or scope_state not in {'current', 'provisional'} else
+                 'current' if old_state == scope_state == 'current' else 'provisional')
+        evidence = row.get('evidence') or {}
+        limits = [*(evidence.get('limitations') or []), *(scope.get('source_limitations') or [])]
+        if (scope.get('dependency_scope') or {}).get('unknown_availability'):
+            limits.append('Availability is unknown for a player used in this positional comparison; projected scenarios are not confirmed participation.')
+        result[pos] = {**row, 'conclusion_state': state,
+                       'evidence': {**evidence, 'conclusion_state': state,
+                                    'limitations': list(dict.fromkeys(limits))}}
+    return result

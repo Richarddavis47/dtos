@@ -6,7 +6,7 @@ from services.my_team_outlook import goal_options, _slot_description
 from src.ui.intelligence_presentation import manager_points
 from math import isfinite
 from services.my_team_overview import roster_overview
-from services.team_assessment_presentation import prepared_comparison, weekly_comparison
+from services.team_assessment_presentation import prepared_comparison, weekly_comparison, positional_display_rows
 from services.trade_capital_inventory import inventory_baseline
 
 
@@ -26,7 +26,7 @@ def franchise_outlook(data, result, *, players=(), strategy='', overview=None):
     # pair a saved roster claim with a newer availability-adjusted comparison.
     own = ((comparison or {}).get('teams') or {}).get(str(assessment.roster_id)) or {}
     outlook['comparison_prepared'] = 'optimal_ids' in own
-    positions = own.get('positions') or {}
+    positions = positional_display_rows(own)
     supported = [(pos, row) for pos, row in positions.items()
                  if (row.get('evidence') or {}).get('calculation_supported')
                  and row.get('conclusion_state') in {'current', 'provisional'}]
@@ -34,9 +34,6 @@ def franchise_outlook(data, result, *, players=(), strategy='', overview=None):
     scoped = [(pos, row) for pos, row in (own.get('presentation_positions') or {}).items()
               if row.get('calculation_supported') and row.get('conclusion_state') in {'current', 'provisional'}]
     if 'presentation_positions' in own:
-        scoped_by_position = dict(scoped)
-        supported = [(pos, row) for pos, row in supported
-                     if scoped_by_position.get(pos, {}).get('comparisons_supported')]
         strengths = [(pos, row) for pos, row in scoped if row.get('strength')]
     else:
         strengths = [(pos, row) for pos, row in supported if row.get('strength')]
@@ -91,6 +88,7 @@ def franchise_outlook(data, result, *, players=(), strategy='', overview=None):
             outlook['details'].append(f"{names.get(str(rid)) or f'Franchise {rid}'}: excluded from this modeled comparison. {reason} Missing points are not zero.")
     outlook['details'].append('Roster projection coverage is a different measure. This counts player-week numbers, including reserve/taxi players; it is separate from playable starting-slot eligibility.')
     for pos, row in supported:
+        outlook['details'].extend((row.get('evidence') or {}).get('limitations') or [])
         if row.get('base_reason'):
             outlook['details'].append(row['base_reason'])
         values = row.get('observed_replacement_points') or []

@@ -81,3 +81,9 @@ class FranchiseOutlookTests(unittest.TestCase):
         self.assertNotIn('Supported positional strength',row['strength'])
         self.assertIn('5 projected points',row['strength'])
         self.assertTrue(row['strength'].startswith('Provisional:'))
+
+        scoped={**scoped,'comparisons_supported':True,'starter_need':True}
+        original={'QB':dict(starter_need=True,conclusion_state='current',evidence={'calculation_supported':True})}
+        row=self.render(positions=original,presentation={'QB':scoped})
+        self.assertTrue(row['concern'].startswith('Provisional:'))
+        self.assertEqual(original['QB']['conclusion_state'],'current')

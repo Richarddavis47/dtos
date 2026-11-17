@@ -6,6 +6,7 @@ across goals. Each family admits its own evidence, independently of Market.
 from math import isfinite
 
 from services.team_trade_need import prepared_need
+from services.team_assessment_presentation import positional_display_rows
 from src.core.intelligence import intelligence_orchestrator
 from src.core.intelligence.roster_diagnostics import prepared_diagnostics
 from src.core.intelligence.team_strength import compatible_profile
@@ -56,7 +57,7 @@ def select_insights(facts, attention, offers):
     candidates = []
     diagnostics = facts.get('diagnostics') or {}
     own = (diagnostics.get('teams') or {}).get(str(rid)) or {}
-    positions = own.get('positions') or {}
+    positions = positional_display_rows(own)
     trade_need = facts.get('trade_need') or {}
     profile = facts.get('strength') or {}
     strength = (profile.get('teams') or {}).get(str(rid)) or {}
