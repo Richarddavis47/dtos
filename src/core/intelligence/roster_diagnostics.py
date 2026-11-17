@@ -729,7 +729,8 @@ def _compute(inputs, snapshot, key):
                                   and (added_slots > 0 or (gain is not None and gain > 0))),
                 starter_points=sum(e.projected_points for e in starters) if starters else None,
                 starting_ids=[e.asset_id for e in starters],
-                reason=('Eligible slot dependencies and peer assignments support this modeled comparison.'
+                reason=('Not required by this league’s starting slots.' if not relevant else
+                        'Eligible slot dependencies and peer assignments support this modeled comparison.'
                         if independent else
                         'Positional comparison withheld: eligible slot dependencies have missing projections, uncertain availability or incomplete assignments.'),
                 conclusion_state='provisional',

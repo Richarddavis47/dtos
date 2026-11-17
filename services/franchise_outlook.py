@@ -66,7 +66,7 @@ def franchise_outlook(data, result, *, players=(), strategy='', overview=None):
             outlook['concern'] = 'Some starter projections are supported; positional and backup comparisons remain incomplete. Unknown depth is not a weakness.'
         if not strengths and observations:
             pos, row = observations[0]
-            outlook['strength'] = (f'{pos}: selected starters contribute {manager_points(row["starter_points"])} projected points. '
+            outlook['strength'] = (('Provisional: ' if row['conclusion_state'] != 'current' else '') + f'{pos}: selected starters contribute {manager_points(row["starter_points"])} projected points. '
                                    'This observation does not establish a positional advantage or strong backups.')
         for pos, row in scoped:
             outlook['details'].append(f'{pos}: ' + row['reason'] + ' ' + row['limitation'])
