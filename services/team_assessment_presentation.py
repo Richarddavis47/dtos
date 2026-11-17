@@ -79,14 +79,25 @@ def positional_display_rows(team):
         scope = scopes.get(pos) or {}
         old_state = row.get('conclusion_state')
         scope_state = scope.get('conclusion_state')
+        # Existing local absence scenarios do not depend on the peer reference.
+        # Comparative needs, quality/depth and recipient opportunities do.
+        comparative = bool(row.get('starter_need') or row.get('quality_depth_need')
+                           or row.get('surplus_assets')
+                           or (row.get('strength') and not row.get('resilience_need')))
         state = ('unavailable' if not scope.get('comparisons_supported')
                  or old_state not in {'current', 'provisional'}
                  or scope_state not in {'current', 'provisional'} else
                  'current' if old_state == scope_state == 'current' else 'provisional')
+        if not comparative:
+            own_ids = {e.get('player_id') for e in team.get('eligibility') or []}
+            blockers = (scope.get('dependency_scope') or {}).get('blockers') or []
+            own_blockers = [gap for gap in blockers if not own_ids or gap.get('player_id') in own_ids]
+            state = (old_state if not own_blockers and scope_state in {'current', 'provisional'}
+                     else 'unavailable')
         evidence = row.get('evidence') or {}
         limits = [*(evidence.get('limitations') or []), *(scope.get('source_limitations') or [])]
         if (scope.get('dependency_scope') or {}).get('unknown_availability'):
-            limits.append('Availability is unknown for a player used in this positional comparison; projected scenarios are not confirmed participation.')
+            limits.append('Availability is unknown for a player used in the league-reference comparison; projected scenarios are not confirmed participation.')
         result[pos] = {**row, 'conclusion_state': state,
                        'evidence': {**evidence, 'conclusion_state': state,
                                     'limitations': list(dict.fromkeys(limits))}}

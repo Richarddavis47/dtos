@@ -87,3 +87,14 @@ class FranchiseOutlookTests(unittest.TestCase):
         row=self.render(positions=original,presentation={'QB':scoped})
         self.assertTrue(row['concern'].startswith('Provisional:'))
         self.assertEqual(original['QB']['conclusion_state'],'current')
+
+    def test_local_resilience_does_not_inherit_unrelated_peer_qualification(self):
+        from services.team_assessment_presentation import positional_display_rows
+        old=dict(resilience_need=True,strength=True,conclusion_state='current',evidence={'calculation_supported':True})
+        own=dict(eligibility=[{'player_id':'own-qb'}],positions={'QB':old},presentation_positions={'QB':dict(comparisons_supported=False,conclusion_state='provisional',dependency_scope={'blockers':[{'player_id':'peer-gap','reason':'Unknown eligibility'}],'unknown_availability':True})})
+        view=positional_display_rows(own)['QB']
+        self.assertEqual(view['conclusion_state'],'current')
+        self.assertTrue(view['resilience_need'])
+        self.assertEqual(own['positions']['QB'],old)
+        own['presentation_positions']['QB']['dependency_scope']['blockers'].append({'player_id':'own-qb','reason':'Unknown eligibility'})
+        self.assertEqual(positional_display_rows(own)['QB']['conclusion_state'],'unavailable')
