@@ -1,0 +1,47 @@
+{
+  "passed": true,
+  "source": {
+    "baseline": "2c25fc70cbab23130609db48ab2d4c7db668a20e",
+    "baseline_tree": "595e3cff24a75120d538d02410230b12ea09dbba",
+    "candidate": "3e2274f2acbac8972f79fead476df5fbe464008a",
+    "tree": "d95cd2f5f75e68d0d914b1185f07dce4ff13303f",
+    "branch": "fix/positional-evidence-2261",
+    "version": "1.22.46",
+    "build": 2261,
+    "expected_test_count": 4611,
+    "pr": 350
+  },
+  "controller": {
+    "commit": "5d1a2e90fe296d75c10db4793f0fdb2dba749cf1",
+    "tree": "00c05974bf31b1e77af706bc74397f932e1717de",
+    "branch": "release/2261-actions-publisher",
+    "ref": "refs/heads/release/2261-actions-publisher",
+    "source": {
+      "baseline": "2c25fc70cbab23130609db48ab2d4c7db668a20e",
+      "baseline_tree": "595e3cff24a75120d538d02410230b12ea09dbba",
+      "candidate": "3e2274f2acbac8972f79fead476df5fbe464008a",
+      "tree": "d95cd2f5f75e68d0d914b1185f07dce4ff13303f",
+      "branch": "fix/positional-evidence-2261",
+      "version": "1.22.46",
+      "build": 2261,
+      "expected_test_count": 4611,
+      "pr": 350
+    },
+    "tooling_only": true,
+    "not_merged_into_main": true
+  },
+  "sha256": {
+    "tools/release/publish.py": "5eafef2097420f35dda3b0876cdbcaec75a19c21b7abdb971de727ffe7702fdc",
+    "tests/test_release_publisher.py": "774a233224957ed577f5dc4ee6a817db7349467219daa993b071e4902eee537f",
+    ".github/workflows/canonical-release-recovery.yml": "a0a5247d14f2f7732324eb61a5ee9896a899a1c1bfcf1cec91310990e508a621",
+    ".github/release-plans/2261.json": "0d29eb1a7efe292ebba2be1d1dbda25b260662036739bb8d6b61300271d6a330"
+  },
+  "tests": 181,
+  "lint": true,
+  "compile": true,
+  "diff_check": true,
+  "reused_exact_unchanged_controls": false,
+  "original_controls_sha256": "9c605bafff5bda025e6c2e8be010b1d48dd5492b8c3a857535d9c2b6641e540b",
+  "sparse_recovery": "Corrected prior archive flat candidate/tree association; actual guard verified archive before 181 controls, lint/compile/diff. Frozen only plan and prior-part changes.",
+  "scope": "181 publisher controls rerun on corrected real finalized plan; unchanged application canonical/hosted/native checks reused by exact source. No guard, threshold or application changes."
+}

@@ -1,0 +1,37 @@
+{"timestamp":"2026-11-17T06:04:17.129190+00:00","event":"validator_start","pid":16,"parent_pid":7,"process_group":16}
+{"timestamp":"2026-11-17T06:04:17.129398+00:00","event":"validation_run_id_created","pid":16,"parent_pid":7,"run_id":"dd27cf4ecfd74cd39a63623174cd11cd"}
+{"timestamp":"2026-11-17T06:04:17.129446+00:00","event":"release_validation_start","pid":16,"parent_pid":7,"root":"/app","run_id":"dd27cf4ecfd74cd39a63623174cd11cd"}
+{"timestamp":"2026-11-17T06:04:17.142551+00:00","event":"documentation_validation_complete","pid":16,"parent_pid":7}
+{"timestamp":"2026-11-17T06:04:17.167516+00:00","event":"validation_step_launch","pid":16,"parent_pid":7,"step":"Committed whitespace","command":["git","show","--check","--oneline","HEAD"],"run_id":"dd27cf4ecfd74cd39a63623174cd11cd"}
+{"timestamp":"2026-11-17T06:04:17.168373+00:00","event":"validation_child_started","pid":16,"parent_pid":7,"step":"Committed whitespace","child_pid":17}
+{"timestamp":"2026-11-17T06:04:17.185010+00:00","event":"validation_child_completed","pid":16,"parent_pid":7,"step":"Committed whitespace","child_pid":17,"return_code":0}
+{"timestamp":"2026-11-17T06:04:17.185132+00:00","event":"validation_step_launch","pid":16,"parent_pid":7,"step":"Working-tree whitespace","command":["git","diff","--check"],"run_id":"dd27cf4ecfd74cd39a63623174cd11cd"}
+{"timestamp":"2026-11-17T06:04:17.185982+00:00","event":"validation_child_started","pid":16,"parent_pid":7,"step":"Working-tree whitespace","child_pid":18}
+{"timestamp":"2026-11-17T06:04:17.214436+00:00","event":"validation_child_completed","pid":16,"parent_pid":7,"step":"Working-tree whitespace","child_pid":18,"return_code":0}
+{"timestamp":"2026-11-17T06:04:17.214544+00:00","event":"validation_step_launch","pid":16,"parent_pid":7,"step":"Staged whitespace","command":["git","diff","--cached","--check"],"run_id":"dd27cf4ecfd74cd39a63623174cd11cd"}
+{"timestamp":"2026-11-17T06:04:17.215128+00:00","event":"validation_child_started","pid":16,"parent_pid":7,"step":"Staged whitespace","child_pid":24}
+{"timestamp":"2026-11-17T06:04:17.229256+00:00","event":"validation_child_completed","pid":16,"parent_pid":7,"step":"Staged whitespace","child_pid":24,"return_code":0}
+{"timestamp":"2026-11-17T06:04:17.229358+00:00","event":"validation_step_launch","pid":16,"parent_pid":7,"step":"Python compilation","command":["/usr/local/bin/python","-m","compileall","-q","."],"run_id":"dd27cf4ecfd74cd39a63623174cd11cd"}
+{"timestamp":"2026-11-17T06:04:17.230076+00:00","event":"validation_child_started","pid":16,"parent_pid":7,"step":"Python compilation","child_pid":25}
+{"timestamp":"2026-11-17T06:04:21.697686+00:00","event":"validation_child_completed","pid":16,"parent_pid":7,"step":"Python compilation","child_pid":25,"return_code":0}
+{"timestamp":"2026-11-17T06:04:21.698696+00:00","event":"validation_step_launch","pid":16,"parent_pid":7,"step":"Ruff","command":["/usr/local/bin/python","-m","ruff","check","."],"run_id":"dd27cf4ecfd74cd39a63623174cd11cd"}
+{"timestamp":"2026-11-17T06:04:21.701270+00:00","event":"validation_child_started","pid":16,"parent_pid":7,"step":"Ruff","child_pid":26}
+{"timestamp":"2026-11-17T06:04:22.105699+00:00","event":"validation_child_completed","pid":16,"parent_pid":7,"step":"Ruff","child_pid":26,"return_code":0}
+{"timestamp":"2026-11-17T06:04:22.106089+00:00","event":"validation_step_launch","pid":16,"parent_pid":7,"step":"Dependency integrity","command":["/usr/local/bin/python","-m","pip","check"],"run_id":"dd27cf4ecfd74cd39a63623174cd11cd"}
+{"timestamp":"2026-11-17T06:04:22.106927+00:00","event":"validation_child_started","pid":16,"parent_pid":7,"step":"Dependency integrity","child_pid":31}
+{"timestamp":"2026-11-17T06:04:23.853093+00:00","event":"validation_child_completed","pid":16,"parent_pid":7,"step":"Dependency integrity","child_pid":31,"return_code":0}
+{"timestamp":"2026-11-17T06:04:23.853270+00:00","event":"validation_step_launch","pid":16,"parent_pid":7,"step":"Unit and regression tests","command":["/usr/local/bin/python","-m","unittest","discover","-s","tests"],"run_id":"dd27cf4ecfd74cd39a63623174cd11cd"}
+{"timestamp":"2026-11-17T06:04:23.854621+00:00","event":"validation_child_started","pid":16,"parent_pid":7,"step":"Unit and regression tests","child_pid":32}
+{"timestamp":"2026-11-17T07:57:13.490627+00:00","event":"validation_child_completed","pid":16,"parent_pid":7,"step":"Unit and regression tests","child_pid":32,"return_code":0}
+{"timestamp":"2026-11-17T07:57:13.494993+00:00","event":"validation_step_launch","pid":16,"parent_pid":7,"step":"Route and OpenAPI validation","command":["/usr/local/bin/python","-m","tools.validation.validate_routes"],"run_id":"dd27cf4ecfd74cd39a63623174cd11cd"}
+{"timestamp":"2026-11-17T07:57:13.503683+00:00","event":"validation_child_started","pid":16,"parent_pid":7,"step":"Route and OpenAPI validation","child_pid":194211}
+{"timestamp":"2026-11-17T07:57:16.183131+00:00","event":"validation_child_completed","pid":16,"parent_pid":7,"step":"Route and OpenAPI validation","child_pid":194211,"return_code":0}
+{"timestamp":"2026-11-17T07:57:16.184611+00:00","event":"validation_step_launch","pid":16,"parent_pid":7,"step":"Tracked HTTP smoke validation","command":["/usr/local/bin/python","-m","tools.validation.run_http_validation"],"run_id":"dd27cf4ecfd74cd39a63623174cd11cd"}
+{"timestamp":"2026-11-17T07:57:16.187150+00:00","event":"validation_child_started","pid":16,"parent_pid":7,"step":"Tracked HTTP smoke validation","child_pid":194213}
+{"timestamp":"2026-11-17T07:57:43.598995+00:00","event":"validation_child_completed","pid":16,"parent_pid":7,"step":"Tracked HTTP smoke validation","child_pid":194213,"return_code":0}
+{"timestamp":"2026-11-17T07:57:43.599596+00:00","event":"validation_step_launch","pid":16,"parent_pid":7,"step":"Process cleanup","command":["/usr/local/bin/python","-m","tools.validation.process_check"],"run_id":"dd27cf4ecfd74cd39a63623174cd11cd"}
+{"timestamp":"2026-11-17T07:57:43.600845+00:00","event":"validation_child_started","pid":16,"parent_pid":7,"step":"Process cleanup","child_pid":194273}
+{"timestamp":"2026-11-17T07:57:44.127017+00:00","event":"validation_child_completed","pid":16,"parent_pid":7,"step":"Process cleanup","child_pid":194273,"return_code":0}
+{"timestamp":"2026-11-17T07:57:44.127405+00:00","event":"release_validation_complete","pid":16,"parent_pid":7,"gates":10,"run_id":"dd27cf4ecfd74cd39a63623174cd11cd"}
+{"timestamp":"2026-11-17T07:57:44.127607+00:00","event":"validator_final_summary","pid":16,"parent_pid":7,"gates":10,"total_seconds":6806.9580000000005}
+{"timestamp":"2026-11-17T07:57:44.127667+00:00","event":"validator_exit","pid":16,"parent_pid":7,"exit_code":0}

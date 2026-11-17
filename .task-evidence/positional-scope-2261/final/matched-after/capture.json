@@ -1,0 +1,611 @@
+{
+  "source": {
+    "commit": "3e2274f2acbac8972f79fead476df5fbe464008a",
+    "tree": "d95cd2f5f75e68d0d914b1185f07dce4ff13303f",
+    "label": "after",
+    "expected_clean": true
+  },
+  "fixture_input_sha256": "fc2558a16d0817f91054a7d1daac9b1491c3d741660bdbb0f339e7989d52cd67",
+  "source_publication": "3a7f3ccc800f08cd9550eef0eeb0edc43d12629b44ba6a5fda1c0b43cca7f931",
+  "observed_at": "2026-11-17T08:13:18.625658+00:00",
+  "scope": "Disposable matched fixture, separately published fresh clocks; not historical private replay or owner-live",
+  "diagnostic_memo_solve_calls_on_pages": 0,
+  "prepared_diagnostic_before_pages": true,
+  "own_diagnostic": {
+    "evidence": {
+      "scoring": "supported",
+      "calculation_supported": true,
+      "projection_freshness": [
+        "Fresh",
+        "Unavailable"
+      ],
+      "retained": true,
+      "refresh": {},
+      "source_observations": [
+        "2026-11-17T08:13:06.271341+00:00",
+        "Unavailable"
+      ],
+      "freshness_source_scope": "league_rosters_excluding_explicit_reserve_storage",
+      "conclusion_state": "unavailable",
+      "limitations": [
+        "Projection evidence is Fresh, Unavailable; retained numerical evidence is provisional, not freshly verified.",
+        "Availability is uncertain for named rostered players; numerical scenarios are provisional, not verified active cover."
+      ],
+      "projection_coverage": {
+        "supported": 3,
+        "eligible": 4,
+        "missing_player_ids": [
+          "missing-rb"
+        ]
+      }
+    },
+    "eligibility": [
+      {
+        "player_id": "a",
+        "name": "a",
+        "position": "QB",
+        "fantasy_positions": [
+          "QB"
+        ],
+        "status": "unsigned",
+        "excluded": false,
+        "reason": "Unsigned"
+      },
+      {
+        "player_id": "b",
+        "name": "b",
+        "position": "QB",
+        "fantasy_positions": [
+          "QB"
+        ],
+        "status": "unsigned",
+        "excluded": false,
+        "reason": "Unsigned"
+      },
+      {
+        "player_id": "e",
+        "name": "e",
+        "position": "QB",
+        "fantasy_positions": [
+          "QB"
+        ],
+        "status": "unsigned",
+        "excluded": false,
+        "reason": "Unsigned"
+      },
+      {
+        "player_id": "missing-rb",
+        "name": "Missing reserve",
+        "position": "RB",
+        "fantasy_positions": [
+          "RB"
+        ],
+        "status": "unsigned",
+        "excluded": false,
+        "reason": "Unsigned"
+      }
+    ],
+    "positions": {
+      "QB": {
+        "evidence": {
+          "scoring": "supported",
+          "calculation_supported": true,
+          "projection_freshness": [
+            "Fresh",
+            "Unavailable"
+          ],
+          "retained": true,
+          "refresh": {},
+          "source_observations": [
+            "2026-11-17T08:13:06.271341+00:00",
+            "Unavailable"
+          ],
+          "freshness_source_scope": "league_rosters_excluding_explicit_reserve_storage",
+          "conclusion_state": "unavailable",
+          "limitations": [
+            "Projection evidence is Fresh, Unavailable; retained numerical evidence is provisional, not freshly verified.",
+            "Availability is uncertain for named rostered players; numerical scenarios are provisional, not verified active cover."
+          ],
+          "projection_coverage": {
+            "supported": 3,
+            "eligible": 4,
+            "missing_player_ids": [
+              "missing-rb"
+            ]
+          }
+        },
+        "eligibility": [
+          {
+            "player_id": "a",
+            "name": "a",
+            "position": "QB",
+            "fantasy_positions": [
+              "QB"
+            ],
+            "status": "unsigned",
+            "excluded": false,
+            "reason": "Unsigned"
+          },
+          {
+            "player_id": "b",
+            "name": "b",
+            "position": "QB",
+            "fantasy_positions": [
+              "QB"
+            ],
+            "status": "unsigned",
+            "excluded": false,
+            "reason": "Unsigned"
+          },
+          {
+            "player_id": "e",
+            "name": "e",
+            "position": "QB",
+            "fantasy_positions": [
+              "QB"
+            ],
+            "status": "unsigned",
+            "excluded": false,
+            "reason": "Unsigned"
+          }
+        ],
+        "classification": "Uncertain",
+        "starter_need": false,
+        "resilience_need": false,
+        "quality_depth_need": false,
+        "replacement_reference_points": 4.0,
+        "observed_replacement_points": [
+          6.0
+        ],
+        "strength": false,
+        "surplus_assets": [],
+        "reason": "QB: uncertain. Missing compatible projections or uncertain availability prevents a dependable depth conclusion. Projection evidence is Fresh, Unavailable; retained numerical evidence is provisional, not freshly verified. Availability is uncertain for named rostered players; numerical scenarios are provisional, not verified active cover.",
+        "base_reason": "QB: uncertain. Missing compatible projections or uncertain availability prevents a dependable depth conclusion.",
+        "conclusion_state": "unavailable",
+        "coverage": "partial / unavailable",
+        "eligible_players": 3,
+        "supported_players": 3,
+        "starting_ids": [
+          "a"
+        ],
+        "reserve_ids": [
+          "b",
+          "e"
+        ],
+        "disjoint_reserve_ids": [
+          "e"
+        ],
+        "remove_one": {
+          "a": {
+            "replacement_names": [
+              "e"
+            ],
+            "replacement_points": [
+              6.0
+            ],
+            "lineup_loss": 4.0,
+            "supported_slots_after": 1,
+            "preserves_lineup": false,
+            "preserves_disjoint_reserve": false
+          },
+          "b": {
+            "replacement_names": [],
+            "replacement_points": [],
+            "lineup_loss": -0.0,
+            "supported_slots_after": 1,
+            "preserves_lineup": true,
+            "preserves_disjoint_reserve": true
+          },
+          "e": {
+            "replacement_names": [],
+            "replacement_points": [],
+            "lineup_loss": -0.0,
+            "supported_slots_after": 1,
+            "preserves_lineup": true,
+            "preserves_disjoint_reserve": false
+          }
+        },
+        "reference": {
+          "player_id": "c",
+          "roster_id": "2",
+          "points": 8.0
+        },
+        "add_one_gain": 0.0,
+        "add_one_supported_slots": 0,
+        "league_starter_observations": 2,
+        "league_reference_points": 8.0,
+        "availability_context": "Observed roster reference, not an available trade or acceptance prediction."
+      },
+      "RB": {
+        "evidence": {
+          "scoring": "supported",
+          "calculation_supported": true,
+          "projection_freshness": [
+            "Fresh",
+            "Unavailable"
+          ],
+          "retained": true,
+          "refresh": {},
+          "source_observations": [
+            "2026-11-17T08:13:06.271341+00:00",
+            "Unavailable"
+          ],
+          "freshness_source_scope": "league_rosters_excluding_explicit_reserve_storage",
+          "conclusion_state": "unavailable",
+          "limitations": [
+            "Projection evidence is Fresh, Unavailable; retained numerical evidence is provisional, not freshly verified.",
+            "Availability is uncertain for named rostered players; numerical scenarios are provisional, not verified active cover."
+          ],
+          "projection_coverage": {
+            "supported": 3,
+            "eligible": 4,
+            "missing_player_ids": [
+              "missing-rb"
+            ]
+          }
+        },
+        "eligibility": [
+          {
+            "player_id": "missing-rb",
+            "name": "Missing reserve",
+            "position": "RB",
+            "fantasy_positions": [
+              "RB"
+            ],
+            "status": "unsigned",
+            "excluded": false,
+            "reason": "Unsigned"
+          }
+        ],
+        "classification": "Uncertain",
+        "starter_need": false,
+        "resilience_need": false,
+        "quality_depth_need": false,
+        "replacement_reference_points": null,
+        "observed_replacement_points": [],
+        "strength": false,
+        "surplus_assets": [],
+        "reason": "RB: uncertain. Missing compatible projections or uncertain availability prevents a dependable depth conclusion. Projection evidence is Fresh, Unavailable; retained numerical evidence is provisional, not freshly verified. Availability is uncertain for named rostered players; numerical scenarios are provisional, not verified active cover.",
+        "base_reason": "RB: uncertain. Missing compatible projections or uncertain availability prevents a dependable depth conclusion.",
+        "conclusion_state": "unavailable",
+        "coverage": "partial / unavailable",
+        "eligible_players": 1,
+        "supported_players": 0,
+        "starting_ids": [],
+        "reserve_ids": [
+          "missing-rb"
+        ],
+        "disjoint_reserve_ids": [],
+        "remove_one": {
+          "missing-rb": {
+            "replacement_names": [],
+            "replacement_points": [],
+            "lineup_loss": -0.0,
+            "supported_slots_after": 1,
+            "preserves_lineup": true,
+            "preserves_disjoint_reserve": true
+          }
+        },
+        "reference": null,
+        "add_one_gain": null,
+        "add_one_supported_slots": 0,
+        "league_starter_observations": 0,
+        "league_reference_points": null,
+        "availability_context": "Observed roster reference, not an available trade or acceptance prediction."
+      },
+      "WR": {
+        "evidence": {
+          "scoring": "supported",
+          "calculation_supported": true,
+          "projection_freshness": [
+            "Fresh",
+            "Unavailable"
+          ],
+          "retained": true,
+          "refresh": {},
+          "source_observations": [
+            "2026-11-17T08:13:06.271341+00:00",
+            "Unavailable"
+          ],
+          "freshness_source_scope": "league_rosters_excluding_explicit_reserve_storage",
+          "conclusion_state": "unavailable",
+          "limitations": [
+            "Projection evidence is Fresh, Unavailable; retained numerical evidence is provisional, not freshly verified.",
+            "Availability is uncertain for named rostered players; numerical scenarios are provisional, not verified active cover."
+          ],
+          "projection_coverage": {
+            "supported": 3,
+            "eligible": 4,
+            "missing_player_ids": [
+              "missing-rb"
+            ]
+          }
+        },
+        "eligibility": [],
+        "classification": "Uncertain",
+        "starter_need": false,
+        "resilience_need": false,
+        "quality_depth_need": false,
+        "replacement_reference_points": null,
+        "observed_replacement_points": [],
+        "strength": false,
+        "surplus_assets": [],
+        "reason": "WR: uncertain. Missing compatible projections or uncertain availability prevents a dependable depth conclusion. Projection evidence is Fresh, Unavailable; retained numerical evidence is provisional, not freshly verified. Availability is uncertain for named rostered players; numerical scenarios are provisional, not verified active cover.",
+        "base_reason": "WR: uncertain. Missing compatible projections or uncertain availability prevents a dependable depth conclusion.",
+        "conclusion_state": "unavailable",
+        "coverage": "partial / unavailable",
+        "eligible_players": 0,
+        "supported_players": 0,
+        "starting_ids": [],
+        "reserve_ids": [],
+        "disjoint_reserve_ids": [],
+        "remove_one": {},
+        "reference": null,
+        "add_one_gain": null,
+        "add_one_supported_slots": 0,
+        "league_starter_observations": 0,
+        "league_reference_points": null,
+        "availability_context": "Observed roster reference, not an available trade or acceptance prediction."
+      },
+      "TE": {
+        "evidence": {
+          "scoring": "supported",
+          "calculation_supported": true,
+          "projection_freshness": [
+            "Fresh",
+            "Unavailable"
+          ],
+          "retained": true,
+          "refresh": {},
+          "source_observations": [
+            "2026-11-17T08:13:06.271341+00:00",
+            "Unavailable"
+          ],
+          "freshness_source_scope": "league_rosters_excluding_explicit_reserve_storage",
+          "conclusion_state": "unavailable",
+          "limitations": [
+            "Projection evidence is Fresh, Unavailable; retained numerical evidence is provisional, not freshly verified.",
+            "Availability is uncertain for named rostered players; numerical scenarios are provisional, not verified active cover."
+          ],
+          "projection_coverage": {
+            "supported": 3,
+            "eligible": 4,
+            "missing_player_ids": [
+              "missing-rb"
+            ]
+          }
+        },
+        "eligibility": [],
+        "classification": "Uncertain",
+        "starter_need": false,
+        "resilience_need": false,
+        "quality_depth_need": false,
+        "replacement_reference_points": null,
+        "observed_replacement_points": [],
+        "strength": false,
+        "surplus_assets": [],
+        "reason": "TE: uncertain. Missing compatible projections or uncertain availability prevents a dependable depth conclusion. Projection evidence is Fresh, Unavailable; retained numerical evidence is provisional, not freshly verified. Availability is uncertain for named rostered players; numerical scenarios are provisional, not verified active cover.",
+        "base_reason": "TE: uncertain. Missing compatible projections or uncertain availability prevents a dependable depth conclusion.",
+        "conclusion_state": "unavailable",
+        "coverage": "partial / unavailable",
+        "eligible_players": 0,
+        "supported_players": 0,
+        "starting_ids": [],
+        "reserve_ids": [],
+        "disjoint_reserve_ids": [],
+        "remove_one": {},
+        "reference": null,
+        "add_one_gain": null,
+        "add_one_supported_slots": 0,
+        "league_starter_observations": 0,
+        "league_reference_points": null,
+        "availability_context": "Observed roster reference, not an available trade or acceptance prediction."
+      }
+    },
+    "presentation_positions": {
+      "QB": {
+        "dependency_scope": {
+          "slots": [
+            "QB"
+          ],
+          "blockers": [],
+          "unknown_availability": true,
+          "dependency_count": 6,
+          "independent": true
+        },
+        "calculation_supported": true,
+        "comparisons_supported": true,
+        "strength": true,
+        "starter_need": false,
+        "starter_points": 10.0,
+        "starting_ids": [
+          "a"
+        ],
+        "reason": "Eligible slot dependencies and peer assignments support this modeled comparison.",
+        "conclusion_state": "provisional",
+        "limitation": "Projected scenarios are not confirmed participation, dependable backup cover or permission to trade a player.",
+        "source_limitations": [
+          "Projection evidence is Fresh, Unavailable; retained numerical evidence is provisional, not freshly verified."
+        ]
+      },
+      "RB": {
+        "dependency_scope": {
+          "slots": [],
+          "blockers": [],
+          "unknown_availability": false,
+          "dependency_count": 0,
+          "independent": false
+        },
+        "calculation_supported": true,
+        "comparisons_supported": false,
+        "strength": false,
+        "starter_need": false,
+        "starter_points": null,
+        "starting_ids": [],
+        "reason": "Not required by this league\u2019s starting slots.",
+        "conclusion_state": "provisional",
+        "limitation": "Projected scenarios are not confirmed participation, dependable backup cover or permission to trade a player.",
+        "source_limitations": [
+          "Projection evidence is Fresh, Unavailable; retained numerical evidence is provisional, not freshly verified."
+        ]
+      },
+      "WR": {
+        "dependency_scope": {
+          "slots": [],
+          "blockers": [],
+          "unknown_availability": false,
+          "dependency_count": 0,
+          "independent": false
+        },
+        "calculation_supported": true,
+        "comparisons_supported": false,
+        "strength": false,
+        "starter_need": false,
+        "starter_points": null,
+        "starting_ids": [],
+        "reason": "Not required by this league\u2019s starting slots.",
+        "conclusion_state": "provisional",
+        "limitation": "Projected scenarios are not confirmed participation, dependable backup cover or permission to trade a player.",
+        "source_limitations": [
+          "Projection evidence is Fresh, Unavailable; retained numerical evidence is provisional, not freshly verified."
+        ]
+      },
+      "TE": {
+        "dependency_scope": {
+          "slots": [],
+          "blockers": [],
+          "unknown_availability": false,
+          "dependency_count": 0,
+          "independent": false
+        },
+        "calculation_supported": true,
+        "comparisons_supported": false,
+        "strength": false,
+        "starter_need": false,
+        "starter_points": null,
+        "starting_ids": [],
+        "reason": "Not required by this league\u2019s starting slots.",
+        "conclusion_state": "provisional",
+        "limitation": "Projected scenarios are not confirmed participation, dependable backup cover or permission to trade a player.",
+        "source_limitations": [
+          "Projection evidence is Fresh, Unavailable; retained numerical evidence is provisional, not freshly verified."
+        ]
+      }
+    },
+    "optimal_points": 10.0,
+    "optimal_ids": [
+      "a"
+    ],
+    "unsupported_slots": [],
+    "reserve_ids": [
+      "e"
+    ],
+    "missing_projection_ids": [
+      "missing-rb"
+    ],
+    "lineup_limitations": [],
+    "excluded_player_ids": [],
+    "uncertain_player_ids": [],
+    "coverage": "partial / unavailable",
+    "limitations": [
+      "Projection evidence is Fresh, Unavailable; retained numerical evidence is provisional, not freshly verified.",
+      "Availability is uncertain for named rostered players; numerical scenarios are provisional, not verified active cover.",
+      "Current-week diagnostic; future projections, byes and long-term quality are not inferred.",
+      "Removal/addition effects are separate scenarios and must not be summed.",
+      "Reserve support is a disjoint legal assignment, not an injury probability or guaranteed replacement."
+    ],
+    "independent_limitations": [
+      "Current-week diagnostic; future projections, byes and long-term quality are not inferred.",
+      "Removal/addition effects are separate scenarios and must not be summed.",
+      "Reserve support is a disjoint legal assignment, not an injury probability or guaranteed replacement."
+    ]
+  },
+  "no_post_requests": true,
+  "records": [
+    {
+      "name": "my-team-320.png",
+      "sha256": "84c483bcda0b2b70c9d5b2bf8dc57b6d90ce5d12e69b157ca8a115777c5b4424",
+      "width": 320,
+      "kind": "default",
+      "text": "Your roster at a glance\n\nCurrent position: Provisional \u00b7 Week 2 optimal lineup \u00b7 10.00 projected points \u00b7 1/1 slots \u00b7 #1 of 2 comparable teams (2 total).\n\nMain strength: Provisional: Supported positional strength: QB. Backups are not automatically expendable.\n\nDepth and uncertainty: Some starter projections are supported; positional and backup comparisons remain incomplete. Unknown depth is not a weakness.\n\nFuture flexibility: Compatible complete pick inventory is unavailable; remaining totals are unknown.\n\nWhy this outlook?\nReview your draft capital\nRoster\nDepth\nCapital"
+    },
+    {
+      "name": "my-team-expanded-320.png",
+      "sha256": "89a99d348d26bbce253db7386cffb0772b6ca3110d8d0e239577ce6129b5cbee",
+      "width": 320,
+      "kind": "expanded",
+      "text": "Your roster at a glance\n\nCurrent position: Provisional \u00b7 Week 2 optimal lineup \u00b7 10.00 projected points \u00b7 1/1 slots \u00b7 #1 of 2 comparable teams (2 total).\n\nMain strength: Provisional: Supported positional strength: QB. Backups are not automatically expendable.\n\nDepth and uncertainty: Some starter projections are supported; positional and backup comparisons remain incomplete. Unknown depth is not a weakness.\n\nFuture flexibility: Compatible complete pick inventory is unavailable; remaining totals are unknown.\n\nWhy this outlook?\n\nProvisional \u00b7 Week 2 projected optimal lineup: 10.00 points; 1/1 slots covered; #1 among 2 comparable teams; 2 of 2 league teams comparable. This compares analytical lineups, not submitted Sleeper starters or overall franchise quality. Projection evidence is Fresh, Unavailable; retained numerical evidence is provisional, not freshly verified. Availability is uncertain for named rostered players; numerical scenarios are provisional, not verified active cover.\n\nMain strength: Provisional: Supported positional strength: QB. Backups are not automatically expendable.\n\nDepth and uncertainty: Some starter projections are supported; positional and backup comparisons remain incomplete. Unknown depth is not a weakness.\n\nFuture flexibility: Compatible complete pick inventory is unavailable; remaining totals are unknown.\n\nStanding and record are separate from this projected lineup comparison.\n\nYour goal: REBUILD: review exact future capital before exchanging it for short-term production.\n\nStanding: Standings ranked by Sleeper record, then Points For.\nCurrent strength is not championship probability or future sustainability.\nOriginal-franchise identity is separate from current ownership; unknown pick ranges remain unknown.\nAges and current projections do not establish years remaining or a multi-season forecast.\nQB: Eligible slot dependencies and peer assignments support this modeled comparison. Projected scenarios are not confirmed participation, dependable backup cover or permission to trade a player.\nRB: Not required by this league\u2019s starting slots. Projected scenarios are not confirmed participation, dependable backup cover or permission to trade a player.\nWR: Not required by this league\u2019s starting slots. Projected scenarios are not confirmed participation, dependable backup cover or permission to trade a player.\nTE: Not required by this league\u2019s starting slots. Projected scenarios are not confirmed participation, dependable backup cover or permission to trade a player.\nProvisional \u00b7 Week 2 projected optimal lineup: 10.00 points; 1/1 slots covered; #1 among 2 comparable teams; 2 of 2 league teams comparable. This compares analytical lineups, not submitted Sleeper starters or overall franchise quality. Projection evidence is Fresh, Unavailable; retained numerical evidence is provisional, not freshly verified. Availability is uncertain for named rostered players; numerical scenarios are provisional, not verified active cover.\nProjection evidence is Fresh, Unavailable; retained numerical evidence is provisional, not freshly verified.\nAvailability is uncertain for named rostered players; numerical scenarios are provisional, not verified active cover.\nCurrent-week diagnostic; future projections, byes and long-term quality are not inferred.\nRemoval/addition effects are separate scenarios and must not be summed.\nReserve support is a disjoint legal assignment, not an injury probability or guaranteed replacement.\nLineup comparison: 2/2 franchises can fill the configured starting slots with supported eligible projections. Incomplete bench coverage alone does not exclude a franchise; this is separate from official standings and full replacement-depth support.\nRoster projection coverage is a different measure. This counts player-week numbers, including reserve/taxi players; it is separate from playable starting-slot eligibility.\nWeekly lineup strength is separate from overall franchise health. A saved goal is your preference, not a proven competitive window.\nEvaluate a trade\nRecommended Trades\nReview your draft capital\nRoster\nDepth\nCapital"
+    },
+    {
+      "name": "home-320.png",
+      "sha256": "863b8569826e05efe7a07de7e35dfea04986fb1692fe0fbc12c9a2b0daf9e4f5",
+      "width": 320,
+      "kind": "expanded-summary",
+      "text": "Your franchise outlook\n\nProvisional \u00b7 Week 2 optimal lineup \u00b7 10.00 projected points \u00b7 1/1 slots \u00b7 #1 of 2 comparable teams (2 total).\n\nStrength, depth and picks\n\nStrength: Provisional: Supported positional strength: QB. Backups are not automatically expendable.\n\nWatch: Some starter projections are supported; positional and backup comparisons remain incomplete. Unknown depth is not a weakness.\n\nFuture flexibility: Compatible complete pick inventory is unavailable; remaining totals are unknown.\n\nReview My Team"
+    },
+    {
+      "name": "my-team-375.png",
+      "sha256": "46b332630e3b727dbb97dd033fd67d665b1aa81887c46def55f3706fc4d5a75d",
+      "width": 375,
+      "kind": "default",
+      "text": "Your roster at a glance\n\nCurrent position: Provisional \u00b7 Week 2 optimal lineup \u00b7 10.00 projected points \u00b7 1/1 slots \u00b7 #1 of 2 comparable teams (2 total).\n\nMain strength: Provisional: Supported positional strength: QB. Backups are not automatically expendable.\n\nDepth and uncertainty: Some starter projections are supported; positional and backup comparisons remain incomplete. Unknown depth is not a weakness.\n\nFuture flexibility: Compatible complete pick inventory is unavailable; remaining totals are unknown.\n\nWhy this outlook?\nReview your draft capital\nRoster\nDepth\nCapital"
+    },
+    {
+      "name": "my-team-expanded-375.png",
+      "sha256": "805349dcc225d1116dc09b062a0e377434d70fa4e855a099770a01cfd22be568",
+      "width": 375,
+      "kind": "expanded",
+      "text": "Your roster at a glance\n\nCurrent position: Provisional \u00b7 Week 2 optimal lineup \u00b7 10.00 projected points \u00b7 1/1 slots \u00b7 #1 of 2 comparable teams (2 total).\n\nMain strength: Provisional: Supported positional strength: QB. Backups are not automatically expendable.\n\nDepth and uncertainty: Some starter projections are supported; positional and backup comparisons remain incomplete. Unknown depth is not a weakness.\n\nFuture flexibility: Compatible complete pick inventory is unavailable; remaining totals are unknown.\n\nWhy this outlook?\n\nProvisional \u00b7 Week 2 projected optimal lineup: 10.00 points; 1/1 slots covered; #1 among 2 comparable teams; 2 of 2 league teams comparable. This compares analytical lineups, not submitted Sleeper starters or overall franchise quality. Projection evidence is Fresh, Unavailable; retained numerical evidence is provisional, not freshly verified. Availability is uncertain for named rostered players; numerical scenarios are provisional, not verified active cover.\n\nMain strength: Provisional: Supported positional strength: QB. Backups are not automatically expendable.\n\nDepth and uncertainty: Some starter projections are supported; positional and backup comparisons remain incomplete. Unknown depth is not a weakness.\n\nFuture flexibility: Compatible complete pick inventory is unavailable; remaining totals are unknown.\n\nStanding and record are separate from this projected lineup comparison.\n\nYour goal: REBUILD: review exact future capital before exchanging it for short-term production.\n\nStanding: Standings ranked by Sleeper record, then Points For.\nCurrent strength is not championship probability or future sustainability.\nOriginal-franchise identity is separate from current ownership; unknown pick ranges remain unknown.\nAges and current projections do not establish years remaining or a multi-season forecast.\nQB: Eligible slot dependencies and peer assignments support this modeled comparison. Projected scenarios are not confirmed participation, dependable backup cover or permission to trade a player.\nRB: Not required by this league\u2019s starting slots. Projected scenarios are not confirmed participation, dependable backup cover or permission to trade a player.\nWR: Not required by this league\u2019s starting slots. Projected scenarios are not confirmed participation, dependable backup cover or permission to trade a player.\nTE: Not required by this league\u2019s starting slots. Projected scenarios are not confirmed participation, dependable backup cover or permission to trade a player.\nProvisional \u00b7 Week 2 projected optimal lineup: 10.00 points; 1/1 slots covered; #1 among 2 comparable teams; 2 of 2 league teams comparable. This compares analytical lineups, not submitted Sleeper starters or overall franchise quality. Projection evidence is Fresh, Unavailable; retained numerical evidence is provisional, not freshly verified. Availability is uncertain for named rostered players; numerical scenarios are provisional, not verified active cover.\nProjection evidence is Fresh, Unavailable; retained numerical evidence is provisional, not freshly verified.\nAvailability is uncertain for named rostered players; numerical scenarios are provisional, not verified active cover.\nCurrent-week diagnostic; future projections, byes and long-term quality are not inferred.\nRemoval/addition effects are separate scenarios and must not be summed.\nReserve support is a disjoint legal assignment, not an injury probability or guaranteed replacement.\nLineup comparison: 2/2 franchises can fill the configured starting slots with supported eligible projections. Incomplete bench coverage alone does not exclude a franchise; this is separate from official standings and full replacement-depth support.\nRoster projection coverage is a different measure. This counts player-week numbers, including reserve/taxi players; it is separate from playable starting-slot eligibility.\nWeekly lineup strength is separate from overall franchise health. A saved goal is your preference, not a proven competitive window.\nEvaluate a trade\nRecommended Trades\nReview your draft capital\nRoster\nDepth\nCapital"
+    },
+    {
+      "name": "home-375.png",
+      "sha256": "61a83306a6c526bff4dac8b8757677c62146cfceae1a5fb9654a2aa0b35ee80c",
+      "width": 375,
+      "kind": "expanded-summary",
+      "text": "Your franchise outlook\n\nProvisional \u00b7 Week 2 optimal lineup \u00b7 10.00 projected points \u00b7 1/1 slots \u00b7 #1 of 2 comparable teams (2 total).\n\nStrength, depth and picks\n\nStrength: Provisional: Supported positional strength: QB. Backups are not automatically expendable.\n\nWatch: Some starter projections are supported; positional and backup comparisons remain incomplete. Unknown depth is not a weakness.\n\nFuture flexibility: Compatible complete pick inventory is unavailable; remaining totals are unknown.\n\nReview My Team"
+    },
+    {
+      "name": "my-team-390.png",
+      "sha256": "23fb146ef38ad8aaf30993452219cc456da0b7d1853df541dcbde218e3862c0d",
+      "width": 390,
+      "kind": "default",
+      "text": "Your roster at a glance\n\nCurrent position: Provisional \u00b7 Week 2 optimal lineup \u00b7 10.00 projected points \u00b7 1/1 slots \u00b7 #1 of 2 comparable teams (2 total).\n\nMain strength: Provisional: Supported positional strength: QB. Backups are not automatically expendable.\n\nDepth and uncertainty: Some starter projections are supported; positional and backup comparisons remain incomplete. Unknown depth is not a weakness.\n\nFuture flexibility: Compatible complete pick inventory is unavailable; remaining totals are unknown.\n\nWhy this outlook?\nReview your draft capital\nRoster\nDepth\nCapital"
+    },
+    {
+      "name": "my-team-expanded-390.png",
+      "sha256": "c5083bc171f26e952d3e1d2b499beb9d82d3afbcbac240d20a488d6262728697",
+      "width": 390,
+      "kind": "expanded",
+      "text": "Your roster at a glance\n\nCurrent position: Provisional \u00b7 Week 2 optimal lineup \u00b7 10.00 projected points \u00b7 1/1 slots \u00b7 #1 of 2 comparable teams (2 total).\n\nMain strength: Provisional: Supported positional strength: QB. Backups are not automatically expendable.\n\nDepth and uncertainty: Some starter projections are supported; positional and backup comparisons remain incomplete. Unknown depth is not a weakness.\n\nFuture flexibility: Compatible complete pick inventory is unavailable; remaining totals are unknown.\n\nWhy this outlook?\n\nProvisional \u00b7 Week 2 projected optimal lineup: 10.00 points; 1/1 slots covered; #1 among 2 comparable teams; 2 of 2 league teams comparable. This compares analytical lineups, not submitted Sleeper starters or overall franchise quality. Projection evidence is Fresh, Unavailable; retained numerical evidence is provisional, not freshly verified. Availability is uncertain for named rostered players; numerical scenarios are provisional, not verified active cover.\n\nMain strength: Provisional: Supported positional strength: QB. Backups are not automatically expendable.\n\nDepth and uncertainty: Some starter projections are supported; positional and backup comparisons remain incomplete. Unknown depth is not a weakness.\n\nFuture flexibility: Compatible complete pick inventory is unavailable; remaining totals are unknown.\n\nStanding and record are separate from this projected lineup comparison.\n\nYour goal: REBUILD: review exact future capital before exchanging it for short-term production.\n\nStanding: Standings ranked by Sleeper record, then Points For.\nCurrent strength is not championship probability or future sustainability.\nOriginal-franchise identity is separate from current ownership; unknown pick ranges remain unknown.\nAges and current projections do not establish years remaining or a multi-season forecast.\nQB: Eligible slot dependencies and peer assignments support this modeled comparison. Projected scenarios are not confirmed participation, dependable backup cover or permission to trade a player.\nRB: Not required by this league\u2019s starting slots. Projected scenarios are not confirmed participation, dependable backup cover or permission to trade a player.\nWR: Not required by this league\u2019s starting slots. Projected scenarios are not confirmed participation, dependable backup cover or permission to trade a player.\nTE: Not required by this league\u2019s starting slots. Projected scenarios are not confirmed participation, dependable backup cover or permission to trade a player.\nProvisional \u00b7 Week 2 projected optimal lineup: 10.00 points; 1/1 slots covered; #1 among 2 comparable teams; 2 of 2 league teams comparable. This compares analytical lineups, not submitted Sleeper starters or overall franchise quality. Projection evidence is Fresh, Unavailable; retained numerical evidence is provisional, not freshly verified. Availability is uncertain for named rostered players; numerical scenarios are provisional, not verified active cover.\nProjection evidence is Fresh, Unavailable; retained numerical evidence is provisional, not freshly verified.\nAvailability is uncertain for named rostered players; numerical scenarios are provisional, not verified active cover.\nCurrent-week diagnostic; future projections, byes and long-term quality are not inferred.\nRemoval/addition effects are separate scenarios and must not be summed.\nReserve support is a disjoint legal assignment, not an injury probability or guaranteed replacement.\nLineup comparison: 2/2 franchises can fill the configured starting slots with supported eligible projections. Incomplete bench coverage alone does not exclude a franchise; this is separate from official standings and full replacement-depth support.\nRoster projection coverage is a different measure. This counts player-week numbers, including reserve/taxi players; it is separate from playable starting-slot eligibility.\nWeekly lineup strength is separate from overall franchise health. A saved goal is your preference, not a proven competitive window.\nEvaluate a trade\nRecommended Trades\nReview your draft capital\nRoster\nDepth\nCapital"
+    },
+    {
+      "name": "home-390.png",
+      "sha256": "4540922188ab359bd8f5c4d6f2acce2cb8ed2d3c0b7d45bf644811b840a286fa",
+      "width": 390,
+      "kind": "expanded-summary",
+      "text": "Your franchise outlook\n\nProvisional \u00b7 Week 2 optimal lineup \u00b7 10.00 projected points \u00b7 1/1 slots \u00b7 #1 of 2 comparable teams (2 total).\n\nStrength, depth and picks\n\nStrength: Provisional: Supported positional strength: QB. Backups are not automatically expendable.\n\nWatch: Some starter projections are supported; positional and backup comparisons remain incomplete. Unknown depth is not a weakness.\n\nFuture flexibility: Compatible complete pick inventory is unavailable; remaining totals are unknown.\n\nReview My Team"
+    },
+    {
+      "name": "my-team-1280.png",
+      "sha256": "e24073fdc093b47d849230e8fc8a2fee3cd68200e23f47e06de036fdfe3f005e",
+      "width": 1280,
+      "kind": "default",
+      "text": "Your roster at a glance\n\nCurrent position: Provisional \u00b7 Week 2 optimal lineup \u00b7 10.00 projected points \u00b7 1/1 slots \u00b7 #1 of 2 comparable teams (2 total).\n\nMain strength: Provisional: Supported positional strength: QB. Backups are not automatically expendable.\n\nDepth and uncertainty: Some starter projections are supported; positional and backup comparisons remain incomplete. Unknown depth is not a weakness.\n\nFuture flexibility: Compatible complete pick inventory is unavailable; remaining totals are unknown.\n\nWhy this outlook?\nReview your draft capital\nRoster\nDepth\nCapital"
+    },
+    {
+      "name": "my-team-expanded-1280.png",
+      "sha256": "8e731b9185ed40be03332efaa61178c77d9ebd2b0db6fcf0d8cffa5d9289b575",
+      "width": 1280,
+      "kind": "expanded",
+      "text": "Your roster at a glance\n\nCurrent position: Provisional \u00b7 Week 2 optimal lineup \u00b7 10.00 projected points \u00b7 1/1 slots \u00b7 #1 of 2 comparable teams (2 total).\n\nMain strength: Provisional: Supported positional strength: QB. Backups are not automatically expendable.\n\nDepth and uncertainty: Some starter projections are supported; positional and backup comparisons remain incomplete. Unknown depth is not a weakness.\n\nFuture flexibility: Compatible complete pick inventory is unavailable; remaining totals are unknown.\n\nWhy this outlook?\n\nProvisional \u00b7 Week 2 projected optimal lineup: 10.00 points; 1/1 slots covered; #1 among 2 comparable teams; 2 of 2 league teams comparable. This compares analytical lineups, not submitted Sleeper starters or overall franchise quality. Projection evidence is Fresh, Unavailable; retained numerical evidence is provisional, not freshly verified. Availability is uncertain for named rostered players; numerical scenarios are provisional, not verified active cover.\n\nMain strength: Provisional: Supported positional strength: QB. Backups are not automatically expendable.\n\nDepth and uncertainty: Some starter projections are supported; positional and backup comparisons remain incomplete. Unknown depth is not a weakness.\n\nFuture flexibility: Compatible complete pick inventory is unavailable; remaining totals are unknown.\n\nStanding and record are separate from this projected lineup comparison.\n\nYour goal: REBUILD: review exact future capital before exchanging it for short-term production.\n\nStanding: Standings ranked by Sleeper record, then Points For.\nCurrent strength is not championship probability or future sustainability.\nOriginal-franchise identity is separate from current ownership; unknown pick ranges remain unknown.\nAges and current projections do not establish years remaining or a multi-season forecast.\nQB: Eligible slot dependencies and peer assignments support this modeled comparison. Projected scenarios are not confirmed participation, dependable backup cover or permission to trade a player.\nRB: Not required by this league\u2019s starting slots. Projected scenarios are not confirmed participation, dependable backup cover or permission to trade a player.\nWR: Not required by this league\u2019s starting slots. Projected scenarios are not confirmed participation, dependable backup cover or permission to trade a player.\nTE: Not required by this league\u2019s starting slots. Projected scenarios are not confirmed participation, dependable backup cover or permission to trade a player.\nProvisional \u00b7 Week 2 projected optimal lineup: 10.00 points; 1/1 slots covered; #1 among 2 comparable teams; 2 of 2 league teams comparable. This compares analytical lineups, not submitted Sleeper starters or overall franchise quality. Projection evidence is Fresh, Unavailable; retained numerical evidence is provisional, not freshly verified. Availability is uncertain for named rostered players; numerical scenarios are provisional, not verified active cover.\nProjection evidence is Fresh, Unavailable; retained numerical evidence is provisional, not freshly verified.\nAvailability is uncertain for named rostered players; numerical scenarios are provisional, not verified active cover.\nCurrent-week diagnostic; future projections, byes and long-term quality are not inferred.\nRemoval/addition effects are separate scenarios and must not be summed.\nReserve support is a disjoint legal assignment, not an injury probability or guaranteed replacement.\nLineup comparison: 2/2 franchises can fill the configured starting slots with supported eligible projections. Incomplete bench coverage alone does not exclude a franchise; this is separate from official standings and full replacement-depth support.\nRoster projection coverage is a different measure. This counts player-week numbers, including reserve/taxi players; it is separate from playable starting-slot eligibility.\nWeekly lineup strength is separate from overall franchise health. A saved goal is your preference, not a proven competitive window.\nEvaluate a trade\nRecommended Trades\nReview your draft capital\nRoster\nDepth\nCapital"
+    },
+    {
+      "name": "home-1280.png",
+      "sha256": "fe4f27a4a74563b60139452294b4c494e0ffd9489f0b8ba03b09aa1911301ae8",
+      "width": 1280,
+      "kind": "expanded-summary",
+      "text": "Your franchise outlook\n\nProvisional \u00b7 Week 2 optimal lineup \u00b7 10.00 projected points \u00b7 1/1 slots \u00b7 #1 of 2 comparable teams (2 total).\n\nStrength, depth and picks\n\nStrength: Provisional: Supported positional strength: QB. Backups are not automatically expendable.\n\nWatch: Some starter projections are supported; positional and backup comparisons remain incomplete. Unknown depth is not a weakness.\n\nFuture flexibility: Compatible complete pick inventory is unavailable; remaining totals are unknown.\n\nReview My Team"
+    }
+  ],
+  "physical_safari": false
+}

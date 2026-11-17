@@ -1,0 +1,750 @@
+diff --git a/.github/workflows/product-browser.yml b/.github/workflows/product-browser.yml
+index 391e7d76..f25f2bf3 100644
+--- a/.github/workflows/product-browser.yml
++++ b/.github/workflows/product-browser.yml
+@@ -46,7 +46,7 @@ jobs:
+         timeout-minutes: 5
+         run: |
+           mkdir -p .validation/current-season-history .validation/history-followthrough .validation/market-history-coverage .validation/current-production-coverage
+-          docker run --rm --init --memory=2g --memory-swap=2g --cpus=2 --network=none -e NODE_OPTIONS -e DTOS_CURRENT_HISTORY_EVIDENCE=.validation/current-season-history -e DTOS_FOLLOWTHROUGH_EVIDENCE=.validation/history-followthrough -e DTOS_COMPLETED_TRADE_OBSERVATIONS_EVIDENCE=.validation/history-followthrough/completed-trade-observations -e DTOS_MARKET_HISTORY_EVIDENCE=.validation/market-history-coverage -e DTOS_PRODUCTION_COVERAGE_EVIDENCE=.validation/current-production-coverage -v "$PWD:$PWD" -w "$PWD" -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0="$PWD" dtos-browser-validation python -m unittest -v tests.test_current_season_franchise_history tests.test_current_season_history_browser tests.test_history_followthrough tests.test_history_followthrough_browser tests.test_market_history_coverage tests.test_market_history_coverage_browser tests.test_sleeper_actual_results tests.test_sleeper_actual_restoration tests.test_current_production_coverage tests.test_current_production_browser tests.test_completed_trade_observations tests.test_franchise_trade_progress tests.test_completed_trade_observations_browser tests.test_recent_workload tests.test_recent_workload_browser tests.test_next_trade_package tests.test_next_trade_package_browser tests.test_franchise_outlook tests.test_franchise_outlook_browser
++          docker run --rm --init --memory=2g --memory-swap=2g --cpus=2 --network=none -e NODE_OPTIONS -e DTOS_CURRENT_HISTORY_EVIDENCE=.validation/current-season-history -e DTOS_FOLLOWTHROUGH_EVIDENCE=.validation/history-followthrough -e DTOS_COMPLETED_TRADE_OBSERVATIONS_EVIDENCE=.validation/history-followthrough/completed-trade-observations -e DTOS_MARKET_HISTORY_EVIDENCE=.validation/market-history-coverage -e DTOS_PRODUCTION_COVERAGE_EVIDENCE=.validation/current-production-coverage -v "$PWD:$PWD" -w "$PWD" -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0="$PWD" dtos-browser-validation python -m unittest -v tests.test_current_season_franchise_history tests.test_current_season_history_browser tests.test_history_followthrough tests.test_history_followthrough_browser tests.test_market_history_coverage tests.test_market_history_coverage_browser tests.test_sleeper_actual_results tests.test_sleeper_actual_restoration tests.test_current_production_coverage tests.test_current_production_browser tests.test_completed_trade_observations tests.test_franchise_trade_progress tests.test_completed_trade_observations_browser tests.test_recent_workload tests.test_recent_workload_browser tests.test_next_trade_package tests.test_next_trade_package_browser tests.test_franchise_outlook tests.test_franchise_outlook_browser tests.test_positional_presentation_scope tests.test_positional_presentation_browser
+       - name: Preserve current-season history evidence
+         if: always()
+         uses: actions/upload-artifact@v4
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index 1e557639..172e8b16 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -1,3 +1,7 @@
++## v1.22.46 / build 2261 — Scoped positional evidence
++
++My Team and Home preserve independently supported positional comparisons when unrelated roster evidence is missing. Legal FLEX, Superflex and multi-position dependencies remain material. Modeled comparisons stay provisional; missing backup evidence does not imply weak depth or expendable players. Trade qualification, scoring, source authority and resource policies are unchanged.
++
+ ## v1.22.45 / build 2260 — Franchise outlook
+ 
+ My Team and Home reuse an evidence-qualified outlook with weekly lineup strength, a supported positional strength and vulnerability, and independently verified draft-pick flexibility. Missing inventory is not zero capital; a saved goal is a preference, not a competitive-window verdict. Details remain expandable. No scoring, valuation, Trade qualification or resource policies change.
+diff --git a/RELEASE_NOTES.md b/RELEASE_NOTES.md
+index 9f293b09..322fb70a 100644
+--- a/RELEASE_NOTES.md
++++ b/RELEASE_NOTES.md
+@@ -1,3 +1,7 @@
++## v1.22.46 / build 2261 — Scoped positional evidence
++
++My Team and Home preserve independently supported positional comparisons when unrelated roster evidence is missing. Legal FLEX, Superflex and multi-position dependencies remain material. Modeled comparisons stay provisional; missing backup evidence does not imply weak depth or expendable players. Trade qualification, scoring, source authority and resource policies are unchanged.
++
+ ## v1.22.45 / build 2260 — Franchise outlook
+ 
+ My Team and Home reuse an evidence-qualified outlook with weekly lineup strength, a supported positional strength and vulnerability, and independently verified draft-pick flexibility. Missing inventory is not zero capital; a saved goal is a preference, not a competitive-window verdict. Details remain expandable. No scoring, valuation, Trade qualification or resource policies change.
+diff --git a/app_metadata.py b/app_metadata.py
+index 922273e6..ee7d473f 100644
+--- a/app_metadata.py
++++ b/app_metadata.py
+@@ -7,10 +7,10 @@ from datetime import datetime, timezone
+ from pathlib import Path
+ 
+ APPLICATION_NAME = "DTOS"
+-VERSION = "1.22.45"
+-PRODUCT_VERSION = "1.22.45"
+-BUILD_NUMBER = 2260
+-RELEASE_CODENAME = "Recent Player Workload"
++VERSION = "1.22.46"
++PRODUCT_VERSION = "1.22.46"
++BUILD_NUMBER = 2261
++RELEASE_CODENAME = "Scoped Positional Evidence"
+ APPLICATION_STARTED_AT = datetime.now(timezone.utc).isoformat()
+ 
+ _REPOSITORY_ROOT = Path(__file__).resolve().parent
+diff --git a/docs/audits/positional-evidence-2261/2260-EVIDENCE-CORRECTION.json b/docs/audits/positional-evidence-2261/2260-EVIDENCE-CORRECTION.json
+new file mode 100644
+index 00000000..03e17363
+--- /dev/null
++++ b/docs/audits/positional-evidence-2261/2260-EVIDENCE-CORRECTION.json
+@@ -0,0 +1,59 @@
++{
++  "scope": "Separate correction; immutable originals unchanged",
++  "records": [
++    {
++      "build": 2258,
++      "records": {
++        "local-verified.json": {
++          "sha256": "827283e2e9b9e0f2c5a5c764e03593e91470da844ecb0245647ffaacbccfe0a0",
++          "candidate": "ca685099dd6f7d95090fcee732f0ad3287a50ca6",
++          "tree": "4d455c93174f246f242f724e23de5fed44ecb4fb",
++          "tests": 4555,
++          "console_sha256": "86a78fd7f0da3b7391f9b53a814c3b3a1602154ca2c3cf9e7202d0e1a359dc51"
++        },
++        "host-canonical-verified.json": {
++          "sha256": "0fd859433b2b582cb623d780204fd5bbd664fc74c0c7870e6a65255ef04a9d1e",
++          "candidate": "ca685099dd6f7d95090fcee732f0ad3287a50ca6",
++          "tree": "4d455c93174f246f242f724e23de5fed44ecb4fb",
++          "tests": 4555,
++          "console_sha256": "4127308dba09d024a8c79e3351758b6861ffe7a7f1a606fa915d820972d5ea92"
++        },
++        "product-test-counts.json": {
++          "sha256": "3f299217b8b0fb65367e0e1d5c2f6d48f976c571d2911806430a6dc1c3a38d72",
++          "candidate": "ca685099dd6f7d95090fcee732f0ad3287a50ca6",
++          "tree": "4d455c93174f246f242f724e23de5fed44ecb4fb",
++          "tests": 1025,
++          "console_sha256": "034c3eafb19ddd6d2e1085fa5df5f982c002fdea998d2d220381d92c44ad36f5"
++        }
++      }
++    },
++    {
++      "build": 2260,
++      "records": {
++        "local-verified.json": {
++          "sha256": "de608775bcd69a77355da2025383a5c468e950b6eed66256ba7f9f1a0b94b9d7",
++          "candidate": "5f4f621848fa62bd445598071a53dad000a4b3e5",
++          "tree": "595e3cff24a75120d538d02410230b12ea09dbba",
++          "tests": 4599,
++          "console_sha256": "e0825d91a9a0f3fba7bde3ffe17053bfd07e80041b89253ab7c6e74ae854fa15"
++        },
++        "host-canonical-verified.json": {
++          "sha256": "7d05f228328e7417afa23ce6aa00ccb542668dbc3dce930d5573be4d8f3a269c",
++          "candidate": "5f4f621848fa62bd445598071a53dad000a4b3e5",
++          "tree": "595e3cff24a75120d538d02410230b12ea09dbba",
++          "tests": 4599,
++          "console_sha256": "cb82c35fbd5c87c68286636e3815c042cfb8fec02c50ed57c5ba8637b43eb7c2"
++        },
++        "product-test-counts.json": {
++          "sha256": "13d2f2601e218efb993cd377d3623588a6bc717f8d9e1d87bd064873ce9da5b9",
++          "candidate": "5f4f621848fa62bd445598071a53dad000a4b3e5",
++          "tree": "595e3cff24a75120d538d02410230b12ea09dbba",
++          "tests": 1069,
++          "console_sha256": "c831cb1ec75b65a95e5afd6972824e87afd9105fe16fb8644c17cb2db0b8a3a5"
++        }
++      }
++    }
++  ],
++  "conclusion": "Build2258 figures4555canonical/1025Product belong to ca685099 only. Build2260 exact-source originals establish4599canonical/1069Product,107focused. Older figures cannot establish2260 completion. Public release metadata also carried the stale Recent Player Workload codename; next-source codename is corrected. This correction does not change past test bytes or prove any production positional verdict.",
++  "original_2260_evidence": "https://github.com/Richarddavis47/dtos/tree/cb2d49a2dba83a62ac03338d536f064f971de633/.task-evidence/franchise-outlook-2260/final"
++}
+diff --git a/docs/audits/positional-evidence-2261/DEPENDENCIES.md b/docs/audits/positional-evidence-2261/DEPENDENCIES.md
+new file mode 100644
+index 00000000..aebba498
+--- /dev/null
++++ b/docs/audits/positional-evidence-2261/DEPENDENCIES.md
+@@ -0,0 +1,11 @@
++# Positional evidence dependency boundary
++
++Baseline live public readiness verified1.22.45/build2260/2c25fc70; source595e3cff. Owner Day Traders observation is user-supplied, not reproduced owner-live here. No existing related open feature PR found.
++
++Confirmed: `_compute` intentionally guards all shared classification flags with roster-wide completeness; `_requalify` propagates team state. These same fields are consumed by Trade engine need coverage, impact scoring and package diagnostics. They must not be relaxed for a presentation change.
++
++Additive presentation-only prepared rows use the existing legal assignments, peer reference and add-one gain. Slot-dependency closure connects every eligible slot for every eligible player across all league rosters. FLEX and Superflex can connect nominally different positions; multi-position source eligibility is conservatively included even if a missing canonical row lacks it. Unknown eligibility prevents independence. Missing/Questionable/Doubtful dependencies or uncovered component slots withhold comparative findings. Observed selected-starter totals remain separately described; they do not prove optimality with unknown dependencies, strong backups or participation. No new solver call, provider call, scoring formula or expendability verdict is added. Recovered comparisons retain current qualification only with fresh compatible source evidence and known availability throughout the relevant slot component. Otherwise they remain provisional or withheld; current never means confirmed participation. Original source freshness/failed-refresh limitations remain available.
++
++Existing eligibility exclusions (confirmed bye, noneligible, unavailable, IR/taxi storage) are consumed from the canonical diagnostic pool, not reinvented by nominal-position filters. This does not authorize activating an IR/taxi player. Any resulting roster in package evaluation gets its own prepared scope; Trade consumers continue to use unchanged original classifications.
++
++Development original88-test pass includes imported fixture TestCase discovery duplicates, not88unique new tests. Imports were corrected to module references before final test counting. All final exact-source suites must run independently; no development claim substitutes for them.
+diff --git a/services/franchise_outlook.py b/services/franchise_outlook.py
+index 726ebafd..00e672c8 100644
+--- a/services/franchise_outlook.py
++++ b/services/franchise_outlook.py
+@@ -6,7 +6,7 @@ from services.my_team_outlook import goal_options, _slot_description
+ from src.ui.intelligence_presentation import manager_points
+ from math import isfinite
+ from services.my_team_overview import roster_overview
+-from services.team_assessment_presentation import prepared_comparison, weekly_comparison
++from services.team_assessment_presentation import prepared_comparison, weekly_comparison, positional_display_rows
+ from services.trade_capital_inventory import inventory_baseline
+ 
+ 
+@@ -26,11 +26,17 @@ def franchise_outlook(data, result, *, players=(), strategy='', overview=None):
+     # pair a saved roster claim with a newer availability-adjusted comparison.
+     own = ((comparison or {}).get('teams') or {}).get(str(assessment.roster_id)) or {}
+     outlook['comparison_prepared'] = 'optimal_ids' in own
+-    positions = own.get('positions') or {}
++    positions = positional_display_rows(own)
+     supported = [(pos, row) for pos, row in positions.items()
+                  if (row.get('evidence') or {}).get('calculation_supported')
+                  and row.get('conclusion_state') in {'current', 'provisional'}]
+-    strengths = [(pos, row) for pos, row in supported if row.get('strength')]
++    # Optional presentation-only findings cannot enter Trade or surplus policy.
++    scoped = [(pos, row) for pos, row in (own.get('presentation_positions') or {}).items()
++              if row.get('calculation_supported') and row.get('conclusion_state') in {'current', 'provisional'}]
++    if 'presentation_positions' in own:
++        strengths = [(pos, row) for pos, row in scoped if row.get('strength')]
++    else:
++        strengths = [(pos, row) for pos, row in supported if row.get('strength')]
+     if strengths:
+         pos, row = strengths[0]
+         outlook['strength'] = ('Provisional: ' if row['conclusion_state'] != 'current' else '') + f'Supported positional strength: {pos}. Backups are not automatically expendable.'
+@@ -38,6 +44,8 @@ def franchise_outlook(data, result, *, players=(), strategy='', overview=None):
+         outlook['strength'] = 'A positional advantage is not established by the available comparisons.'
+     needs = sorted([(pos, row) for pos, row in supported if any(row.get(k) for k in ('starter_need', 'resilience_need', 'quality_depth_need'))],
+                    key=lambda item: not item[1].get('starter_need'))
++    if not needs:
++        needs = [(pos, row) for pos, row in scoped if row.get('starter_need')]
+     if needs:
+         pos, row = needs[0]
+         outlook['concern'] = ('Provisional: ' if row['conclusion_state'] != 'current' else '') + (
+@@ -49,6 +57,18 @@ def franchise_outlook(data, result, *, players=(), strategy='', overview=None):
+     else:
+         outlook['concern'] = ('No supported shortfall is established; incomplete evidence is not proof of strong depth.'
+                               if supported else 'Compatible lineup and backup evidence is not prepared; missing or incompatible projections are not zero production, and no roster weakness is inferred.')
++    if not supported and scoped:
++        observations = [(pos, row) for pos, row in scoped if row.get('starter_points') is not None]
++        if not needs and observations:
++            outlook['concern'] = 'Some starter projections are supported; positional and backup comparisons remain incomplete. Unknown depth is not a weakness.'
++        if not strengths and observations:
++            pos, row = observations[0]
++            outlook['strength'] = (('Provisional: ' if row['conclusion_state'] != 'current' else '') + f'{pos}: selected starters contribute {manager_points(row["starter_points"])} projected points. '
++                                   'This observation does not establish a positional advantage or strong backups.')
++        for pos, row in scoped:
++            outlook['details'].append(f'{pos}: ' + row['reason'] + ' ' + row['limitation'])
++            for gap in row['dependency_scope']['blockers']:
++                outlook['details'].append(f"{pos}: franchise {gap['roster_id']}, player {gap['player_id']}: {gap['reason']}.")
+     # Explanation and numbers come from this same admitted diagnostic, never a
+     # retained multi-horizon profile with a different availability baseline.
+     outlook['details'].append(outlook['position'])
+@@ -68,6 +88,7 @@ def franchise_outlook(data, result, *, players=(), strategy='', overview=None):
+             outlook['details'].append(f"{names.get(str(rid)) or f'Franchise {rid}'}: excluded from this modeled comparison. {reason} Missing points are not zero.")
+     outlook['details'].append('Roster projection coverage is a different measure. This counts player-week numbers, including reserve/taxi players; it is separate from playable starting-slot eligibility.')
+     for pos, row in supported:
++        outlook['details'].extend((row.get('evidence') or {}).get('limitations') or [])
+         if row.get('base_reason'):
+             outlook['details'].append(row['base_reason'])
+         values = row.get('observed_replacement_points') or []
+diff --git a/services/front_office_brief.py b/services/front_office_brief.py
+index 86e14f91..674fc3f5 100644
+--- a/services/front_office_brief.py
++++ b/services/front_office_brief.py
+@@ -6,6 +6,7 @@ across goals. Each family admits its own evidence, independently of Market.
+ from math import isfinite
+ 
+ from services.team_trade_need import prepared_need
++from services.team_assessment_presentation import positional_display_rows
+ from src.core.intelligence import intelligence_orchestrator
+ from src.core.intelligence.roster_diagnostics import prepared_diagnostics
+ from src.core.intelligence.team_strength import compatible_profile
+@@ -56,7 +57,7 @@ def select_insights(facts, attention, offers):
+     candidates = []
+     diagnostics = facts.get('diagnostics') or {}
+     own = (diagnostics.get('teams') or {}).get(str(rid)) or {}
+-    positions = own.get('positions') or {}
++    positions = positional_display_rows(own)
+     trade_need = facts.get('trade_need') or {}
+     profile = facts.get('strength') or {}
+     strength = (profile.get('teams') or {}).get(str(rid)) or {}
+diff --git a/services/team_assessment_presentation.py b/services/team_assessment_presentation.py
+index 1153041c..e5a407ac 100644
+--- a/services/team_assessment_presentation.py
++++ b/services/team_assessment_presentation.py
+@@ -62,3 +62,43 @@ def weekly_comparison(card, week, *, compact=False, diagnostics=None):
+             f'{len(supported)} of {len(teams)} league teams comparable. '
+             'This compares analytical lineups, not submitted Sleeper starters or overall franchise quality.'
+             + (' ' + reason if reason else ''))
++
++
++def positional_display_rows(team):
++    """Qualify existing positional claims for display, without altering Trade facts.
++
++    Recovery flags remain a separate prepared presentation family. This reader
++    only combines qualifications when displaying existing classified findings.
++    """
++    positions = team.get('positions') or {}
++    if 'presentation_positions' not in team:
++        return positions
++    scopes = team.get('presentation_positions') or {}
++    result = {}
++    for pos, row in positions.items():
++        scope = scopes.get(pos) or {}
++        old_state = row.get('conclusion_state')
++        scope_state = scope.get('conclusion_state')
++        # Existing local absence scenarios do not depend on the peer reference.
++        # Comparative needs, quality/depth and recipient opportunities do.
++        comparative = bool(row.get('starter_need') or row.get('quality_depth_need')
++                           or row.get('surplus_assets')
++                           or (row.get('strength') and not row.get('resilience_need')))
++        state = ('unavailable' if not scope.get('comparisons_supported')
++                 or old_state not in {'current', 'provisional'}
++                 or scope_state not in {'current', 'provisional'} else
++                 'current' if old_state == scope_state == 'current' else 'provisional')
++        if not comparative:
++            own_ids = {e.get('player_id') for e in team.get('eligibility') or []}
++            blockers = (scope.get('dependency_scope') or {}).get('blockers') or []
++            own_blockers = [gap for gap in blockers if not own_ids or gap.get('player_id') in own_ids]
++            state = (old_state if not own_blockers and scope_state in {'current', 'provisional'}
++                     else 'unavailable')
++        evidence = row.get('evidence') or {}
++        limits = [*(evidence.get('limitations') or []), *(scope.get('source_limitations') or [])]
++        if (scope.get('dependency_scope') or {}).get('unknown_availability'):
++            limits.append('Availability is unknown for a player used in the league-reference comparison; projected scenarios are not confirmed participation.')
++        result[pos] = {**row, 'conclusion_state': state,
++                       'evidence': {**evidence, 'conclusion_state': state,
++                                    'limitations': list(dict.fromkeys(limits))}}
++    return result
+diff --git a/src/core/intelligence/roster_diagnostics.py b/src/core/intelligence/roster_diagnostics.py
+index baa719d2..12219351 100644
+--- a/src/core/intelligence/roster_diagnostics.py
++++ b/src/core/intelligence/roster_diagnostics.py
+@@ -16,7 +16,7 @@ from src.core.trade_intelligence.lineup_memo import LineupStore, SearchLineupMem
+ from src.core.trade_intelligence.capital_assessment import resolve_strategy
+ 
+ POSITIONS = ("QB", "RB", "WR", "TE")
+-METHOD = "legal-roster-diagnostics-v3-source-eligibility"
++METHOD = "legal-roster-diagnostics-v4-presentation-scope"
+ diagnostic_store = LineupStore(max_entries=12, max_bytes=2_097_152, ttl=180)
+ 
+ 
+@@ -310,6 +310,8 @@ def diagnostic_inputs(data, snapshot):
+                     "name": source.get("name") or source.get("full_name") or pid,
+                     "position": source.get("position") or row.get("position"),
+                     "fantasy_positions": row.get('fantasy_positions'),
++                    "presentation_eligibility": ([str(p).upper() for p in source.get('fantasy_positions', [])]
++                                                 if isinstance(source.get('fantasy_positions'), (list, tuple)) else []),
+                     "projected_points": points,
+                 }
+             )
+@@ -382,6 +384,47 @@ def _delta(before, after):
+     )
+ 
+ 
++def _presentation_scope(pos, slots, pools, uncertain, eligibility=None):
++    """Close over actual eligible slot connections, including every peer roster.
++
++    A missing player can displace a known FLEX/Superflex starter without sharing
++    its nominal position. Unknown eligibility cannot establish independence.
++    This metadata never authorizes surplus, Trade needs or dependable cover.
++    """
++    active = set(slot for slot in slots if slot not in BENCH_SLOTS)
++    component = {slot for slot in active if _eligible(pos, slot)}
++    connections = []
++    for owner, pool in pools.items():
++        for player in pool:
++            extra = player.get('presentation_eligibility') or []
++            positions = tuple(set(eligible_positions(player)) | set(extra))
++            connected = {slot for slot in active
++                         if any(_eligible(p, slot) for p in positions)}
++            unknown = not eligible_positions(player) or any(p not in (*POSITIONS, "K", "DEF") for p in positions)
++            if unknown:
++                connected = active
++            connections.append((owner, player, connected, unknown))
++    while True:
++        expanded = component | set().union(*(c for _, _, c, _ in connections if c & component))
++        if expanded == component:
++            break
++        component = expanded
++    dependencies = [(owner, p, unknown) for owner, p, c, unknown in connections if c & component]
++    blockers = [dict(roster_id=owner, player_id=p['id'],
++                     reason='; '.join(reason for applies, reason in (
++                         (unknown, 'Unknown eligibility'),
++                         (p['projected_points'] is None, 'Missing eligible projection'),
++                         (p['id'] in uncertain[owner], 'Uncertain availability')) if applies))
++                for owner, p, unknown in dependencies
++                if unknown or p['projected_points'] is None or p['id'] in uncertain[owner]]
++    availability = {(owner, row['player_id']): row['status']
++                    for owner, rows in (eligibility or {}).items() for row in rows}
++    return dict(slots=sorted(component), blockers=blockers,
++                unknown_availability=any(availability.get((owner, p['id'])) != 'active'
++                                         for owner, p, _ in dependencies),
++                dependency_count=len(dependencies), independent=bool(component) and not blockers)
++
++
+ def _compute(inputs, snapshot, key):
+     lid, week, slots, admitted, pools, excluded, uncertain, qualification = inputs
+     shared_evidence = {
+@@ -472,6 +515,7 @@ def _compute(inputs, snapshot, key):
+         ]
+         for pos in POSITIONS
+     }
++    presentation_scopes = {pos: _presentation_scope(pos, slots, pools, uncertain, qualification["eligibility"]) for pos in POSITIONS}
+     result = {
+         "methodology": METHOD,
+         "league_id": lid,
+@@ -538,6 +582,7 @@ def _compute(inputs, snapshot, key):
+                 "preserves_disjoint_reserve": _same(reserve, after_reserve),
+             }
+         positions = {}
++        presentation_positions = {}
+         for pos in POSITIONS:
+             members = [p for p in pool if pos in eligible_positions(p)]
+             candidates = [(owner, p) for owner, p in references[pos] if owner != rid]
+@@ -671,6 +716,25 @@ def _compute(inputs, snapshot, key):
+                 reason += "Observed legal replacements project below the peer reserve reference; cross-position flex substitutions remain allowed."
+             else:
+                 reason += "Player count alone does not establish expendability; review removal effects and reserve assignments."
++            scope = presentation_scopes[pos]
++            assignments_covered = all(
++                not set(lineup.unsupported_slots) & set(scope['slots'])
++                for lineup in optimal.values())
++            independent = scope['independent'] and assignments_covered
++            presentation_positions[pos] = dict(
++                dependency_scope=scope, calculation_supported=True, comparisons_supported=independent,
++                strength=bool(independent and starters and target is not None
++                              and min(e.projected_points for e in starters) >= target),
++                starter_need=bool(independent and relevant and base.available
++                                  and (added_slots > 0 or (gain is not None and gain > 0))),
++                starter_points=sum(e.projected_points for e in starters) if starters else None,
++                starting_ids=[e.asset_id for e in starters],
++                reason=('Not required by this league’s starting slots.' if not relevant else
++                        'Eligible slot dependencies and peer assignments support this modeled comparison.'
++                        if independent else
++                        'Positional comparison withheld: eligible slot dependencies have missing projections, uncertain availability or incomplete assignments.'),
++                conclusion_state='provisional',
++                limitation='Projected scenarios are not confirmed participation, dependable backup cover or permission to trade a player.')
+             position_evidence = team_evidence
+             positions[pos] = {
+                 "evidence": position_evidence,
+@@ -723,6 +787,7 @@ def _compute(inputs, snapshot, key):
+             "evidence": team_evidence,
+             "eligibility": qualification["eligibility"][rid],
+             "positions": positions,
++            "presentation_positions": presentation_positions,
+             "optimal_points": base.projected_points,
+             "optimal_ids": [e.asset_id for e in base.entries],
+             "unsupported_slots": list(base.unsupported_slots),
+@@ -779,6 +844,13 @@ def _requalify(result, qualification):
+         ):
+             evidence["conclusion_state"] = "unavailable"
+         team["evidence"] = evidence
++        for row in (team.get('presentation_positions') or {}).values():
++            row['conclusion_state'] = (
++                ('current' if shared.get('conclusion_state') == 'current'
++                 and not row['dependency_scope'].get('unknown_availability') else 'provisional')
++                if evidence.get('calculation_supported') and shared.get('calculation_supported')
++                else 'unavailable')
++            row['source_limitations'] = list(shared.get('limitations') or [])
+         for facts in team["positions"].values():
+             facts["evidence"] = evidence
+             facts["conclusion_state"] = evidence["conclusion_state"]
+diff --git a/tests/test_franchise_outlook.py b/tests/test_franchise_outlook.py
+index 66c37ed9..1318c555 100644
+--- a/tests/test_franchise_outlook.py
++++ b/tests/test_franchise_outlook.py
+@@ -7,11 +7,13 @@ from services.franchise_outlook import franchise_outlook
+ 
+ 
+ class FranchiseOutlookTests(unittest.TestCase):
+-    def render(self, positions=None, inventory=None):
++    def render(self, positions=None, inventory=None, presentation=None):
+         data={'league':{'league_id':'L'},'week':10}
+         card=SimpleNamespace(league_id='L',roster_id=1,future_capital_evidence={})
+         result=SimpleNamespace(team_assessment=SimpleNamespace(team=card,roster_id=1,projection_week=10,league_id='L',generation='g'),context=SimpleNamespace(projection_snapshot=None))
+         diagnostic={'league_id':'L','week':10,'projection_generation':'p','required_slot_count':10,'teams':{'1':{'positions':positions or {},'optimal_points':0,'optimal_ids':list(range(10)), 'evidence':{'calculation_supported':True,'conclusion_state':'current'}}}}
++        if presentation is not None:
++            diagnostic['teams']['1']['presentation_positions']=presentation
+         old=dict(position='old position',brief='old rank',strength='old strength',concern='old concern',future='old inventory',details=['Prepared Team Strength covers 1/1 current weeks; complete-horizon points: 900.'])
+         inventory=inventory or dict(complete=False,reason='Ownership incomplete; remaining totals unknown.',before=[])
+         with patch('services.franchise_outlook.roster_overview',return_value={}),patch('services.franchise_outlook.prepared_outlook',return_value=deepcopy(old),create=True),patch('services.franchise_outlook.prepared_comparison',return_value=diagnostic),patch('services.franchise_outlook.inventory_baseline',return_value=inventory):
+@@ -67,3 +69,32 @@ class FranchiseOutlookTests(unittest.TestCase):
+         row=self.render()
+         self.assertIn('0.00',row['position'])
+         self.assertNotIn('900', ' '.join(row['details']))
++
++    def test_missing_starters_never_claim_supported_projection_observations(self):
++        row=self.render(presentation={'QB':dict(calculation_supported=True,conclusion_state='provisional',starter_points=None,starting_ids=[],strength=False,starter_need=False,reason='Missing eligible projections.',limitation='Not confirmed participation.',dependency_scope={'blockers':[]})})
++        self.assertNotIn('Some starter projections are supported',row['concern'])
++        self.assertIn('no roster weakness',row['concern'])
++        self.assertNotIn('selected starters contribute',row['strength'])
++
++        scoped=dict(calculation_supported=True,conclusion_state='provisional',comparisons_supported=False,starter_points=5,starting_ids=['a'],strength=False,starter_need=False,reason='Relevant peer availability is uncertain.',limitation='Not confirmed participation.',dependency_scope={'blockers':[]})
++        row=self.render(positions={'QB':dict(strength=True,conclusion_state='current',evidence={'calculation_supported':True})},presentation={'QB':scoped})
++        self.assertNotIn('Supported positional strength',row['strength'])
++        self.assertIn('5 projected points',row['strength'])
++        self.assertTrue(row['strength'].startswith('Provisional:'))
++
++        scoped={**scoped,'comparisons_supported':True,'starter_need':True}
++        original={'QB':dict(starter_need=True,conclusion_state='current',evidence={'calculation_supported':True})}
++        row=self.render(positions=original,presentation={'QB':scoped})
++        self.assertTrue(row['concern'].startswith('Provisional:'))
++        self.assertEqual(original['QB']['conclusion_state'],'current')
++
++    def test_local_resilience_does_not_inherit_unrelated_peer_qualification(self):
++        from services.team_assessment_presentation import positional_display_rows
++        old=dict(resilience_need=True,strength=True,conclusion_state='current',evidence={'calculation_supported':True})
++        own=dict(eligibility=[{'player_id':'own-qb'}],positions={'QB':old},presentation_positions={'QB':dict(comparisons_supported=False,conclusion_state='provisional',dependency_scope={'blockers':[{'player_id':'peer-gap','reason':'Unknown eligibility'}],'unknown_availability':True})})
++        view=positional_display_rows(own)['QB']
++        self.assertEqual(view['conclusion_state'],'current')
++        self.assertTrue(view['resilience_need'])
++        self.assertEqual(own['positions']['QB'],old)
++        own['presentation_positions']['QB']['dependency_scope']['blockers'].append({'player_id':'own-qb','reason':'Unknown eligibility'})
++        self.assertEqual(positional_display_rows(own)['QB']['conclusion_state'],'unavailable')
+diff --git a/tests/test_positional_presentation_browser.py b/tests/test_positional_presentation_browser.py
+new file mode 100644
+index 00000000..7339ba23
+--- /dev/null
++++ b/tests/test_positional_presentation_browser.py
+@@ -0,0 +1,128 @@
++"""Real prepared publication and rendered shared outlook; disposable fixtures."""
++
++from datetime import datetime, timezone
++import os
++from pathlib import Path
++import unittest
++from playwright.sync_api import sync_playwright
++from tools.validation.browser_runtime import launch_chromium
++from tests import test_roster_diagnostic_http as fixtures
++
++
++class PositionalPresentationBrowserTests(unittest.TestCase):
++    def test_missing_rb_evidence_keeps_independent_qb_on_home_and_my_team(self):
++        f = fixtures.DiagnosticHTTPTests()
++        f.setUp()
++        self.addCleanup(f.doCleanups)
++        data = f.f.f.data
++        data["teams"][0]["players"].append(
++            dict(
++                id="missing-rb",
++                name="Missing reserve",
++                position="RB",
++                roster_slot="Bench",
++            )
++        )
++        data["players"]["missing-rb"] = dict(position="RB", full_name="Missing reserve")
++        f.publish(datetime.now(timezone.utc).isoformat())
++        root = (
++            Path(os.environ["DTOS_POSITION_SCOPE_EVIDENCE"])
++            if os.environ.get("DTOS_POSITION_SCOPE_EVIDENCE")
++            else None
++        )
++        if root:
++            root.mkdir(parents=True, exist_ok=True)
++        with sync_playwright() as pw:
++            browser = launch_chromium(pw, headless=True)
++            try:
++                for width, height in ((320, 432), (375, 667), (390, 844), (1280, 900)):
++                    page = f.f.browser_page(browser, width, height)
++                    requests = []
++                    page.on("request", lambda r: requests.append((r.method, r.url)))
++                    try:
++                        for path, label, selector in (
++                            ("/teams/1", "my-team", "#my-team-outlook"),
++                            ("/", "home", '[aria-label="Franchise outlook"]'),
++                        ):
++                            page.goto("https://dtos.test" + path)
++                            page.wait_for_load_state("networkidle")
++                            card = page.locator(selector)
++                            if label == "home":
++                                card.locator("summary").press("Enter")
++                            self.assertIn(
++                                "Supported positional strength: QB", card.inner_text()
++                            )
++                            self.assertIn("Provisional", card.inner_text())
++                            self.assertIn(
++                                "Unknown depth is not a weakness", card.inner_text()
++                            )
++                            self.assertLessEqual(
++                                page.evaluate(
++                                    "document.documentElement.scrollWidth-innerWidth"
++                                ),
++                                0,
++                            )
++                            if root:
++                                page.screenshot(
++                                    path=str(root / f"{label}-{width}.png"),
++                                    full_page=True,
++                                )
++                            if label == "my-team":
++                                card.locator("summary").focus()
++                                card.locator("summary").press("Enter")
++                                self.assertIn(
++                                    "not confirmed participation", card.inner_text()
++                                )
++                                if root:
++                                    page.screenshot(
++                                        path=str(
++                                            root / f"{label}-expanded-{width}.png"
++                                        ),
++                                        full_page=True,
++                                    )
++                        self.assertFalse(
++                            any(method == "POST" for method, url in requests)
++                        )
++                    finally:
++                        page.close()
++            finally:
++                browser.close()
++
++    def test_relevant_peer_uncertainty_qualifies_existing_need_on_both_pages(self):
++        from src.core.intelligence import roster_diagnostics
++        f = fixtures.DiagnosticHTTPTests()
++        f.setUp()
++        self.addCleanup(f.doCleanups)
++        data = f.f.f.data
++        for player in data['teams'][0]['players']:
++            player['status'] = 'Active'
++            data['players'][player['id']]['status'] = 'Active'
++        f.f.source.points['a'] = 2
++        f.publish(datetime.now(timezone.utc).isoformat())
++        own = roster_diagnostics.diagnose_league(data, f.f.source.reader.snapshot(), projection_reader=f.f.source.reader)['teams']['1']
++        self.assertTrue(own['positions']['QB']['starter_need'])
++        self.assertEqual(own['positions']['QB']['conclusion_state'], 'current')
++        self.assertEqual(own['presentation_positions']['QB']['conclusion_state'], 'provisional')
++        with sync_playwright() as pw:
++            browser = launch_chromium(pw, headless=True)
++            try:
++                for width, height in ((320,432),(390,844)):
++                    page = f.f.browser_page(browser, width, height)
++                    try:
++                        page.goto('https://dtos.test/teams/1')
++                        page.wait_for_load_state('networkidle')
++                        self.assertIn('Provisional: QB: supported evidence identifies a starting-lineup need.', page.locator('#my-team-outlook').inner_text())
++                        page.goto('https://dtos.test/')
++                        page.wait_for_load_state('networkidle')
++                        outlook = page.locator('[aria-label="Franchise outlook"]')
++                        outlook.locator('summary').press('Enter')
++                        self.assertIn('Provisional: QB: supported evidence identifies a starting-lineup need.', outlook.inner_text())
++                        self.assertIn('Provisional: A supported QB addition could improve the lineup', page.locator('#home-opportunity-cards').inner_text())
++                        self.assertLessEqual(page.evaluate('document.documentElement.scrollWidth-innerWidth'), 0)
++                    finally:
++                        page.close()
++            finally:
++                browser.close()
++        after = roster_diagnostics.prepared_diagnostics(data, f.f.source.reader.snapshot(), projection_reader=f.f.source.reader)['teams']['1']
++        self.assertEqual(after['positions']['QB']['conclusion_state'], 'current')
++        self.assertTrue(after['positions']['QB']['starter_need'])
+diff --git a/tests/test_positional_presentation_scope.py b/tests/test_positional_presentation_scope.py
+new file mode 100644
+index 00000000..25b69039
+--- /dev/null
++++ b/tests/test_positional_presentation_scope.py
+@@ -0,0 +1,105 @@
++"""Legal dependency closure; presentation findings never relax Trade diagnostics."""
++
++from copy import deepcopy
++from datetime import timedelta
++import unittest
++from unittest.mock import patch
++from tests import test_dynamic_needs as fixtures
++from src.core.intelligence import roster_diagnostics as d
++
++
++class PositionalPresentationScopeTests(unittest.TestCase):
++    def setUp(self):
++        self.f = fixtures.CanonicalDiagnosticTests()
++        self.f.setUp()
++        self.addCleanup(self.f.doCleanups)
++
++    def control(self, slots=None, status=None, missing=True):
++        return self.f.publish(
++            [
++                [
++                    ("a", "QB", 30),
++                    ("b", "QB", 20),
++                    ("r", "RB", 10),
++                    ("gap", "RB", None if missing else 0),
++                ],
++                [("x", "QB", 15), ("y", "QB", 12), ("s", "RB", 9)],
++            ],
++            slots or ["QB", "RB", "FLEX", "BN"],
++            statuses={"gap": status or {}},
++        )
++
++    def test_unrelated_missing_reserve_preserves_qb_comparison_not_trade_strength(self):
++        team = self.control()["teams"]["1"]
++        self.assertFalse(team["positions"]["QB"]["strength"])
++        self.assertEqual(team["positions"]["QB"]["surplus_assets"], [])
++        scoped = team["presentation_positions"]["QB"]
++        self.assertTrue(scoped["strength"])
++        self.assertEqual(scoped["starter_points"], 30)
++        self.assertFalse(team["presentation_positions"]["RB"]["strength"])
++        self.assertEqual(scoped["dependency_scope"]["slots"], ["QB"])
++
++    def test_superflex_makes_rb_gap_relevant_to_qb(self):
++        row = self.control(["QB", "RB", "SUPER_FLEX", "BN"])["teams"]["1"][
++            "presentation_positions"
++        ]["QB"]
++        self.assertFalse(row["strength"])
++        self.assertIn(
++            "gap", [g["player_id"] for g in row["dependency_scope"]["blockers"]]
++        )
++
++    def test_questionable_reserve_is_not_dependable_cover(self):
++        team = self.control(status={"status": "Questionable"}, missing=False)["teams"][
++            "1"
++        ]
++        self.assertTrue(team["presentation_positions"]["QB"]["strength"])
++        self.assertFalse(
++            team["presentation_positions"]["RB"]["dependency_scope"]["independent"]
++        )
++        self.assertFalse(team["positions"]["RB"]["quality_depth_need"])
++
++    def test_explicit_zero_is_supported_dependency(self):
++        row = self.control(missing=False)["teams"]["1"]["presentation_positions"]["RB"]
++        self.assertEqual(row["dependency_scope"]["blockers"], [])
++
++    def test_excluded_ir_and_bye_do_not_enter_legal_scope(self):
++        for status in ({"roster_slot": "IR"}, {"roster_slot": "Taxi"}, {"bye_week": 1}):
++            with self.subTest(status=status):
++                team = self.control(status=status)["teams"]["1"]
++                self.assertIn("gap", team["excluded_player_ids"])
++                self.assertEqual(
++                    team["presentation_positions"]["RB"]["dependency_scope"][
++                        "blockers"
++                    ],
++                    [],
++                )
++
++    def test_multi_position_player_connects_otherwise_separate_slots(self):
++        self.control()
++        self.f.data["teams"][0]["players"][-1]["fantasy_positions"] = ["RB", "QB"]
++        row = d.diagnose_league(self.f.data, self.f.snapshot)["teams"]["1"][
++            "presentation_positions"
++        ]["QB"]
++        self.assertFalse(row["strength"])
++        self.assertIn("RB", row["dependency_scope"]["slots"])
++
++        scope = d._presentation_scope('QB', ['QB', 'RB'], {'1': [dict(id='unknown', position='WR', fantasy_positions=[], projected_points=5)]}, {'1': []})
++        self.assertFalse(scope['independent'])
++        self.assertIn('Unknown eligibility',scope['blockers'][0]['reason'])
++
++    def test_age_and_failed_refresh_keep_provisional_scope(self):
++        self.control()
++        saved = deepcopy(self.f.data)
++        with patch.object(d, "_now", return_value=d._now() + timedelta(days=10)):
++            row = d.diagnose_league(self.f.data, self.f.snapshot)["teams"]["1"][
++                "presentation_positions"
++            ]["QB"]
++        self.assertEqual(row["conclusion_state"], "provisional")
++        self.assertTrue(row["source_limitations"])
++        self.assertEqual(self.f.data, saved)
++
++    def test_incompatible_scoring_withholds_all_presentation_findings(self):
++        self.control()
++        self.f.data["league"]["scoring_settings"] = {"pass_yd": 2}
++        team = d.diagnose_league(self.f.data, self.f.snapshot)["teams"]["1"]
++        self.assertNotIn("presentation_positions", team)
+diff --git a/tests/test_technical_details_browser.py b/tests/test_technical_details_browser.py
+index 1dab85c7..7cb75c2c 100644
+--- a/tests/test_technical_details_browser.py
++++ b/tests/test_technical_details_browser.py
+@@ -34,20 +34,24 @@ class TechnicalDetailsBrowserTests(unittest.TestCase):
+             browser = launch_chromium(pw, headless=True)
+             try:
+                 for width in WIDTHS:
+-                    with browser.new_context(viewport={'width': width, 'height': 900}, has_touch=width < 600) as context:
+-                        def transport(route):
+-                            from urllib.parse import urlsplit
+-                            url = urlsplit(route.request.url)
+-                            key = url.path + ('?' + url.query if url.query else '')
+-                            if key in pages:
+-                                route.fulfill(content_type='text/html', body=pages[key])
+-                            elif url.path.endswith('.css'):
+-                                route.fulfill(content_type='text/css', body=styles.get(Path(url.path).name, ''))
+-                            else:
+-                                route.fulfill(status=404)
+-                        context.route('**/*', transport)
+-                        page = context.new_page()
+-                        for path in pages:
++                    for path in pages:
++                        # These are independent prepared-page checks, not a return
++                        # journey. Isolate focus, selection and native input state
++                        # after each page's wheel/keyboard/touch gestures. Actual
++                        # navigation continuity has separate normal-entry controls.
++                        with browser.new_context(viewport={'width': width, 'height': 900}, has_touch=width < 600) as context:
++                            def transport(route):
++                                from urllib.parse import urlsplit
++                                url = urlsplit(route.request.url)
++                                key = url.path + ('?' + url.query if url.query else '')
++                                if key in pages:
++                                    route.fulfill(content_type='text/html', body=pages[key])
++                                elif url.path.endswith('.css'):
++                                    route.fulfill(content_type='text/css', body=styles.get(Path(url.path).name, ''))
++                                else:
++                                    route.fulfill(status=404)
++                            context.route('**/*', transport)
++                            page = context.new_page()
+                             with self.subTest(width=width, route=path):
+                                 page.goto('https://dtos.test' + path)
+                                 inspect(page, width)
