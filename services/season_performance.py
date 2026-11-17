@@ -2,14 +2,14 @@
 from statistics import mean
 
 from services.matchup_season import METHOD, number
-from src.core.intelligence.season_calendar import season_calendar
+from src.core.intelligence.season_calendar import matchup_calendar
 from src.core.player_value_projection.sleeper_actuals import scoring_identity
 
 
 def season_performance(data, roster_id):
     league = data.get('league') or {}
     prepared = data.get('season_matchups') or {}
-    calendar = season_calendar(league)
+    calendar = matchup_calendar(league, data.get('week'), data.get('nfl_state'))
     result = dict(season=league.get('season'), weeks=[], recent=[], average=None,
                   league_average=None, expected_weeks=[], missing=[], retained=False,
                   observed_at=prepared.get('observed_at'), generation=prepared.get('semantic_generation'),

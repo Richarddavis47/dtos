@@ -230,6 +230,7 @@ async def _sync_sleeper(
                     league, matchup_week, matchups,
                     lambda path: sleeper_get(client, path), observed_at=utcnow().isoformat(),
                     previous=(state.get("data") or {}).get("season_matchups"),
+                    nfl_state=nfl_state,
                 )
                 from src.core.history_context.transaction_periods import acquire_previous_periods
                 season_transactions, transaction_acquisition = await acquire_previous_periods(

@@ -84,3 +84,18 @@ def season_calendar(league: dict, *, nfl_state: dict | None = None) -> dict:
                   bye_meaning='structural slots only; no projected team is guaranteed qualification',
                   round_membership={str(w): i + 1 for i, weeks in enumerate(rounds) for w in weeks})
     return result
+
+
+def matchup_calendar(league: dict, current_week: int, nfl_state: dict | None) -> dict:
+    """Resolve a one-week Sleeper rollover without changing league identity.
+
+    The reference continues to identify the exact league settings. The retained
+    NFL clock corroborates the selected week; it does not set completed weeks.
+    """
+    calendar = season_calendar(league)
+    if calendar['availability'] == 'supported' or not nfl_state:
+        return calendar
+    contextual = season_calendar(league, nfl_state=nfl_state)
+    if contextual['availability'] == 'supported' and contextual['current_week'] == current_week:
+        return {**contextual, 'reference': calendar['reference']}
+    return calendar

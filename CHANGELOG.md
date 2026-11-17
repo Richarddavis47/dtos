@@ -1,3 +1,7 @@
+## v1.22.48 / build 2263 — Season scores at week rollover
+
+Normal Sleeper preparation now includes completed matchup weeks when the NFL clock advances one week after the league's final scores post. Home, My Team and Matchups use the same prepared schedule.
+
 ## v1.22.47 / build 2262 — Season performance
 
 My Team and Home show supported completed regular-season team scoring from prepared Sleeper matchup totals. Native custom-point overrides, zero and negative results remain intact. Matched league averages and the latest three completed team weeks disclose missing coverage. Season results stay separate from current lineup projections and official cumulative standings. Season details follow the roster so phone access stays clear. No valuation, Trade qualification, source acquisition or memory policy changes.
