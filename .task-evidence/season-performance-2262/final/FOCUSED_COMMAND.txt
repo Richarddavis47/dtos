@@ -1,0 +1,5 @@
+Final exact-source command, pinned dtos-canonical314:2245 container; memory=memory-swap=2g,cpus=2,network=none,user1000,HOME=/tmp,PYTHONPYCACHEPREFIX=/tmp/pycache,PYTHONPATH=/app:
+python -m unittest tests.test_season_performance tests.test_season_performance_browser tests.test_beginner_browser.BeginnerBrowserTests.test_visible_roster_picker_full_reset_and_two_league_intent tests.test_beginner_final_browser.FinalResetBrowserTests.test_visible_roster_picker_full_reset_and_two_league_intent -v
+python -m ruff check routes/teams.py routes/home.py services/season_performance.py src/ui/season_performance.py tests/test_season_performance*.py
+python /evidence/capture-final-season.py
+Original combined console: final-source-controls-original.log. Visual/kernel receipt: visual-final-receipt.json.

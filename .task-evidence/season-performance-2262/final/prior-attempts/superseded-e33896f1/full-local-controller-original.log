@@ -1,0 +1,9 @@
+Original full local started 1e040ea195dd4b4d9c643df90acf0530df4c3d1ac22798377002d7b6d259e144
+143
+Traceback (most recent call last):
+  File "/workspace/2262-season-performance/after-focused-local.py", line 15, in <module>
+    with (BASE/'full-local-completion-original.log').open('x')as out:subprocess.run([sys.executable,str(BASE/'collect-local-completion.py')],stdout=out,stderr=subprocess.STDOUT,check=True)
+                                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/subprocess.py", line 571, in run
+    raise CalledProcessError(retcode, process.args,
+subprocess.CalledProcessError: Command '['/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python', '/workspace/2262-season-performance/collect-local-completion.py']' returned non-zero exit status 1.

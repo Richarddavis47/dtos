@@ -1,0 +1,70 @@
+{
+  "source": {
+    "baseline": "2a926e0a2f3b9376a3861b29b3dbaa402c827e8f",
+    "baseline_tree": "d95cd2f5f75e68d0d914b1185f07dce4ff13303f",
+    "candidate": "f17952719967250ec4f4a152286847ad98adfcb5",
+    "tree": "7ea1439a8ab32f848fc59c095e03746e48820b3e",
+    "branch": "feat/season-performance-2262",
+    "version": "1.22.47",
+    "build": 2262,
+    "expected_test_count": 4630,
+    "pr": 351
+  },
+  "command": [
+    "docker",
+    "create",
+    "--name",
+    "dtos-season-performance-canonical-2262",
+    "--init",
+    "--user",
+    "1000:1000",
+    "--memory=2g",
+    "--memory-swap=2g",
+    "--cpus=2",
+    "--network=none",
+    "-v",
+    "/workspace/dtos-draft-capital-2247:/app",
+    "-v",
+    "/workspace/dtos/.git:/workspace/dtos/.git:ro",
+    "-v",
+    "/workspace/2262-season-performance/local-canonical:/output",
+    "-v",
+    "/workspace/2262-season-performance/fixture:/fixture",
+    "-e",
+    "HOME=/tmp",
+    "-e",
+    "NODE_OPTIONS=--max-old-space-size=128",
+    "-e",
+    "GIT_CONFIG_COUNT=1",
+    "-e",
+    "GIT_CONFIG_KEY_0=safe.directory",
+    "-e",
+    "GIT_CONFIG_VALUE_0=/app",
+    "-e",
+    "DTOS_EXPECTED_HEAD=f17952719967250ec4f4a152286847ad98adfcb5",
+    "-e",
+    "DTOS_EXPECTED_TREE=7ea1439a8ab32f848fc59c095e03746e48820b3e",
+    "-e",
+    "DTOS_EXPECTED_TEST_COUNT=4630",
+    "-w",
+    "/app",
+    "sha256:f70a0c6402700dfb954c99d8163d4164926f74435c34d2e7e462407151663ae6",
+    "python",
+    "/output/runner.py"
+  ],
+  "container": "f15c66c7fba2a001732b461a66f39febe124ef784a42ae83168d219e1c5d5265",
+  "files": [
+    {
+      "name": "runner.py",
+      "sha256": "574308d9f64252575970aa19ce113f603ccb9927f2c6a523e8c228869fd37cac"
+    },
+    {
+      "name": "observer/sitecustomize.py",
+      "sha256": "3f43288a099e49a3ed2dea36f977b596707589eaefd2656b40a3b9c6533be2d4"
+    }
+  ],
+  "created_at": "2026-11-17T17:37:53.808709+00:00",
+  "status": "RUNNING_NOT_PASSED",
+  "fixture_free_after_container_creation": 8779296768,
+  "official_scratch_gate_unchanged": true
+}
