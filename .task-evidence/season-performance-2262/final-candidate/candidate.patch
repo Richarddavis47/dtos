@@ -1,0 +1,593 @@
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index 172e8b16..c14db2ff 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -1,3 +1,7 @@
++## v1.22.47 / build 2262 — Season performance
++
++My Team and Home show supported completed regular-season team scoring from prepared Sleeper matchup totals. Native custom-point overrides, zero and negative results remain intact. Matched league averages and the latest three completed team weeks disclose missing coverage. Season results stay separate from current lineup projections and official cumulative standings. Season details follow the roster so phone access stays clear. No valuation, Trade qualification, source acquisition or memory policy changes.
++
+ ## v1.22.46 / build 2261 — Scoped positional evidence
+ 
+ My Team and Home preserve independently supported positional comparisons when unrelated roster evidence is missing. Legal FLEX, Superflex and multi-position dependencies remain material. Modeled comparisons stay provisional; missing backup evidence does not imply weak depth or expendable players. Trade qualification, scoring, source authority and resource policies are unchanged.
+diff --git a/RELEASE_NOTES.md b/RELEASE_NOTES.md
+index 322fb70a..49829fbc 100644
+--- a/RELEASE_NOTES.md
++++ b/RELEASE_NOTES.md
+@@ -1,3 +1,7 @@
++## v1.22.47 / build 2262 — Season performance
++
++My Team and Home show supported completed regular-season team scoring from prepared Sleeper matchup totals. Native custom-point overrides, zero and negative results remain intact. Matched league averages and the latest three completed team weeks disclose missing coverage. Season results stay separate from current lineup projections and official cumulative standings. Season details follow the roster so phone access stays clear. No valuation, Trade qualification, source acquisition or memory policy changes.
++
+ ## v1.22.46 / build 2261 — Scoped positional evidence
+ 
+ My Team and Home preserve independently supported positional comparisons when unrelated roster evidence is missing. Legal FLEX, Superflex and multi-position dependencies remain material. Modeled comparisons stay provisional; missing backup evidence does not imply weak depth or expendable players. Trade qualification, scoring, source authority and resource policies are unchanged.
+diff --git a/app_metadata.py b/app_metadata.py
+index ee7d473f..1cc9197e 100644
+--- a/app_metadata.py
++++ b/app_metadata.py
+@@ -7,10 +7,10 @@ from datetime import datetime, timezone
+ from pathlib import Path
+ 
+ APPLICATION_NAME = "DTOS"
+-VERSION = "1.22.46"
+-PRODUCT_VERSION = "1.22.46"
+-BUILD_NUMBER = 2261
+-RELEASE_CODENAME = "Scoped Positional Evidence"
++VERSION = "1.22.47"
++PRODUCT_VERSION = "1.22.47"
++BUILD_NUMBER = 2262
++RELEASE_CODENAME = "Season Performance"
+ APPLICATION_STARTED_AT = datetime.now(timezone.utc).isoformat()
+ 
+ _REPOSITORY_ROOT = Path(__file__).resolve().parent
+diff --git a/routes/home.py b/routes/home.py
+index 8fa8bf8e..ddc2e113 100644
+--- a/routes/home.py
++++ b/routes/home.py
+@@ -17,6 +17,7 @@ from src.ui.home_trade_opportunities import section as opportunity_section, CSS
+ from src.ui.home_trade_news import render_news, NEWS_CSS
+ from services.matchup_season import current_matchup_groups
+ from services.standings import standings_order
++from src.ui.season_performance import season_panel
+ from src.ui.intelligence_presentation import league_is_preseason, record_evidence
+ from src.ui.badges import champion_badge, defending_champion, standing_badge, you_badge
+ from src.platform.account_context import current_account
+@@ -184,7 +185,7 @@ def create_home_router(
+         facts = weekly_facts(data, report_week)
+         report_state = {"completed": "Final", "in_progress": "In progress", "preview": "Preview"}.get(facts["state"], "Unavailable")
+         body = (
+-            header + '<!--home-opportunities-->' + secondary + '<!--home-trade-news-->' + '<details class="ds-home-detail"><summary>League standings</summary>' + _section('Standings', 'Records and scoring from Sleeper', render_standings(data, champion=champion)) + '</details>'
++            header + '<!--home-opportunities-->' + secondary + season_panel(data, roster_id, compact=True) + '<!--home-trade-news-->' + '<details class="ds-home-detail"><summary>League standings</summary>' + _section('Standings', 'Records and scoring from Sleeper', render_standings(data, champion=champion)) + '</details>'
+             + _section("Weekly Report", report_state + " · current week evidence", f'<div class="card ux-recap"><a href="/reports/weekly?week={report_week}">Open Week {report_week} report · {report_state} →</a></div>')
+             + _section("Explore", "Your team, matchup and trade workspace", action_html)
+             + '<details class="ds-home-detail"><summary>Team comparisons</summary>' + _section("Team Assessment Rankings" if rankings else "Projected lineup comparison", "Team assessments, separate from official standings" if rankings else "This week’s best projected legal lineups, with coverage shown for each team", rank_html) + '</details>'
+diff --git a/routes/teams.py b/routes/teams.py
+index b7b41cb6..085f315c 100644
+--- a/routes/teams.py
++++ b/routes/teams.py
+@@ -21,6 +21,7 @@ from src.core.history_context import canonical_history_store
+ from src.core.request_execution import run_manager_read
+ from src.ui import player_summary
+ from src.ui.my_team_outlook import outlook_panel
++from src.ui.season_performance import season_panel
+ from src.ui.league_gm_diagnostics import team_observations
+ from src.ui.badges import champion_badge, defending_champion, you_badge
+ from src.platform.league_context import current_league_context
+@@ -517,14 +518,16 @@ def create_teams_router(
+ @media(max-width:760px){{.thq-header{{padding:8px}}#full-roster{{margin-top:12px}}.thq-outlook a,.thq-outlook summary{{scroll-margin-bottom:100px}}body:has([data-my-team-context]) .wrap{{padding-top:8px}}body:has([data-my-team-context]) .account-context{{padding:4px 0;margin-bottom:4px}}.thq-header .thq-title h1,.thq-header .thq-title p{{margin:0}}.thq-header .identity-kicker{{line-height:1.2}}.thq-outlook{{padding:8px}}body:has([data-my-team-context]) .brand p{{display:none}}body:has([data-my-team-context]) .secondary-nav{{margin-bottom:4px}}.thq-header>div:last-child{{margin-top:8px}}.thq-header .thq-title p{{font-size:14px}}.thq-identity{{gap:8px}}}}
+ .thq-strategy{{display:block}}#my-team-goal-form{{display:grid;grid-template-columns:60px minmax(104px,1fr) auto;gap:6px;align-items:center}}#my-team-strategy-feedback{{grid-column:1/-1}}#my-team-goal-help{{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}}#my-team-save-goal{{min-height:44px;min-width:0;padding:8px;white-space:nowrap}}
+ 
++.thq-record-link{{display:inline-flex;align-items:center;min-height:44px;max-width:100%;text-decoration:underline;text-underline-offset:3px}}#season-so-far>summary{{display:list-item;list-style:disclosure-closed inside;align-content:center}}#season-so-far[open]>summary{{list-style-type:disclosure-open}}
+ @media(max-width:360px){{.thq-strategy{{grid-template-columns:56px minmax(0,1fr)}}.thq-strategy label{{white-space:normal;overflow-wrap:normal;line-height:1.3}}.thq-strategy select{{padding-left:4px;padding-right:4px}}}}
+ </style>
+ <section class="thq-content" data-my-team-context="{context_json}">
+ {scope_notice}
+-<header class="thq-header"><div class="thq-identity">{avatar}<div class="thq-title"><div class="identity-kicker">Manager: {escape(team['owner'])}</div><div class="thq-name-row"><h1>{escape(team['team_name'])}{you_badge(data, roster_id)}</h1>{champion_badge(defending_champion(data), roster_id)}</div><p>{escape(performance["record"])} · {escape(performance["standing"])}</p></div></div><div class="thq-strategy">{strategy_control}<small>League evidence updated: {escape(view['last_updated'])}</small></div></header>
++<header class="thq-header"><div class="thq-identity">{avatar}<div class="thq-title"><div class="identity-kicker">Manager: {escape(team['owner'])}</div><div class="thq-name-row"><h1>{escape(team['team_name'])}{you_badge(data, roster_id)}</h1>{champion_badge(defending_champion(data), roster_id)}</div><p><a class="thq-record-link" href="#season-so-far" aria-label="Season results: {escape(performance["record"], quote=True)} · {escape(performance["standing"], quote=True)}">{escape(performance["record"])} · {escape(performance["standing"])}</a></p></div></div><div class="thq-strategy">{strategy_control}<small>League evidence updated: {escape(view['last_updated'])}</small></div></header>
+ {outlook_panel(assessment_outlook, editable=editable, roster_id=roster_id)}
+ {lineup_alert}
+ <section class="thq-section" id="full-roster"><details class="thq-strength-detail" id="my-team-roster" open><summary>Full Roster · {escape(_roster_projection_coverage(view))}</summary><div class="thq-roster">{_roster_rooms(view)}</div></details><details class="thq-strength-detail" id="my-team-key-players"><summary>Key players by Market value</summary>{_key_players(view)}</details></section>
++{season_panel(data, roster_id)}
+ <section class="thq-section" id="draft-capital"><div class="thq-section-head"><h2>Draft Capital</h2><span>Your owned future picks</span></div><div class="thq-picks">{_draft_capital(view)}</div><p class="muted">Pick details preserve the original franchise and current owner. A pick’s future draft position is unknown unless a supported range is shown.</p></section>
+ 
+ <section class="thq-section" id="positional-depth"><div class="thq-section-head"><h2>Starter strength and positional depth</h2><span>{escape('Week ' + str(overview['projection_week']) + ' · ' if overview['projection_week'] is not None else 'Current roster · ')}Lineup and backup projections from Sleeper</span></div>{_positional_depth(view)}</section>
+diff --git a/services/season_performance.py b/services/season_performance.py
+new file mode 100644
+index 00000000..16cd8811
+--- /dev/null
++++ b/services/season_performance.py
+@@ -0,0 +1,116 @@
++"""Bounded read of prepared native Sleeper franchise scores; no acquisition."""
++from statistics import mean
++
++from services.matchup_season import METHOD, number
++from src.core.intelligence.season_calendar import season_calendar
++from src.core.player_value_projection.sleeper_actuals import scoring_identity
++
++
++def season_performance(data, roster_id):
++    league = data.get('league') or {}
++    prepared = data.get('season_matchups') or {}
++    calendar = season_calendar(league)
++    result = dict(season=league.get('season'), weeks=[], recent=[], average=None,
++                  league_average=None, expected_weeks=[], missing=[], retained=False,
++                  observed_at=prepared.get('observed_at'), generation=prepared.get('semantic_generation'),
++                  reason=None, recent_reason=None, gaps=[], cohort_size=None)
++    if (calendar['availability'] != 'supported'
++            or prepared.get('league_id') != str(league.get('league_id') or '')
++            or prepared.get('season') != str(league.get('season') or '')
++            or prepared.get('methodology') != METHOD
++            or prepared.get('calendar_reference') != calendar['reference']
++            or prepared.get('scoring_fingerprint') != scoring_identity(league.get('scoring_settings') or {})):
++        result['reason'] = 'Compatible season team results are not prepared.'
++        return result
++    completed = (league.get('settings') or {}).get('last_scored_leg')
++    expected = [w for w in calendar['regular_season_weeks'] if w <= completed]
++    result['expected_weeks'] = expected
++    teams = data.get('teams') or []
++    ids = [t.get('roster_id') for t in teams]
++    count = (league.get('settings') or {}).get('num_teams')
++    cohort = (bool(ids) and all(type(i) is int and i > 0 for i in ids)
++              and len(set(ids)) == len(ids) and type(count) is int and count == len(ids)
++              and roster_id in ids)
++    if type(roster_id) is not int or ids.count(roster_id) != 1:
++        result['reason'] = 'The selected franchise is not uniquely identified in this league.'
++        return result
++    result['cohort_size'] = count if cohort else None
++    comparisons = []
++    for week in expected:
++        evidence = (prepared.get('weeks') or {}).get(str(week)) or {}
++        retained = evidence.get('availability') != 'available'
++        rows = evidence.get('retained_rows') if retained else evidence.get('rows')
++        scores = {}
++        conflicts = set()
++        for row in rows or []:
++            if not isinstance(row, dict) or type(row.get('roster_id')) is not int:
++                continue
++            rid = row['roster_id']
++            # An explicit invalid adjustment cannot silently become the base score.
++            value = number(row.get('custom_points') if row.get('custom_points') is not None else row.get('points'))
++            if rid in scores and scores[rid] != value:
++                conflicts.add(rid)
++            scores[rid] = value
++        for rid in conflicts:
++            scores[rid] = None
++        score = scores.get(roster_id)
++        if score is None:
++            result['missing'].append(week)
++            if not evidence:
++                reason = 'Week not acquired'
++            elif evidence.get('availability') != 'available':
++                reason = 'Week retrieval failed or is unavailable; no supported retained team score'
++            elif not rows:
++                reason = 'Source returned an empty week; no team score established'
++            elif roster_id in conflicts:
++                reason = 'Conflicting team scores'
++            else:
++                reason = 'Team score missing or invalid'
++            result['gaps'].append(dict(week=week, reason=reason))
++        else:
++            item = dict(week=week, points=score, retained=retained,
++                        observed_at=evidence.get('observed_at'))
++            result['weeks'].append(item)
++            result['retained'] |= retained
++            if cohort and all(scores.get(rid) is not None for rid in ids):
++                comparisons.append(mean(scores[rid] for rid in ids))
++        if week in expected[-3:]:
++            result['recent'].append(dict(week=week, points=score, retained=retained))
++    values = [row['points'] for row in result['weeks']]
++    if values:
++        result['average'] = mean(values)
++        if len(comparisons) == len(values):
++            result['league_average'] = mean(comparisons)
++    result['reason'] = ('Some completed weeks are missing or conflicting.' if result['missing'] else
++                        'No completed regular-season weeks are available.' if not values else None)
++    _recent_postseason(prepared, calendar, completed, roster_id, result)
++    return result
++
++
++def _recent_postseason(prepared, calendar, completed, roster_id, result):
++    """Reuse prepared bracket participation; a bye's placeholder zero is no game."""
++    from services.matchup_season import _postseason
++
++    weeks = [w for group in calendar['playoff_rounds'] for w in group if w <= completed]
++    observations = []
++    for week in weeks:
++        context = _postseason(prepared, calendar, week, completed)
++        matches = [pair for pair in context['pairs'] if roster_id in pair]
++        bye = roster_id in context['byes']
++        if not matches and bye:
++            continue
++        if len(matches) != 1 or bye:
++            result['recent'] = []
++            result['recent_reason'] = 'Recent postseason participation is not established by the prepared bracket.'
++            return
++        evidence = (prepared.get('weeks') or {}).get(str(week)) or {}
++        retained = evidence.get('availability') != 'available'
++        rows = evidence.get('retained_rows') if retained else evidence.get('rows')
++        values = {number(row.get('custom_points') if row.get('custom_points') is not None else row.get('points'))
++                  for row in rows or [] if row.get('roster_id') == roster_id}
++        score = next(iter(values)) if len(values) == 1 and None not in values else None
++        observations.append(dict(week=week, points=score, retained=retained,
++                                 observed_at=evidence.get('observed_at'), postseason=True))
++    if observations:
++        result['recent'] = (result['recent'] + observations)[-3:]
++        result['retained'] |= any(r['retained'] for r in observations)
+diff --git a/src/ui/season_performance.py b/src/ui/season_performance.py
+new file mode 100644
+index 00000000..7a24065a
+--- /dev/null
++++ b/src/ui/season_performance.py
+@@ -0,0 +1,51 @@
++"""Small season-results disclosure, separate from roster projections."""
++from html import escape
++
++from services.season_performance import season_performance
++
++
++def season_panel(data, roster_id, *, compact=False):
++    view = season_performance(data, roster_id)
++    def points(value):
++        return f'{value:.2f}' if value is not None else 'Unknown'
++    supported = len(view['weeks'])
++    heading = 'Season so far'
++    lead = (f"{points(view['average'])} points per observed completed team week · "
++            f"{supported}/{len(view['expected_weeks'])} regular-season weeks covered."
++            if view['average'] is not None else view['reason'])
++    if view['average'] is None and view['expected_weeks']:
++        lead = f"Scoring unavailable · 0/{len(view['expected_weeks'])} completed regular-season weeks covered. " + lead
++    if view['retained']:
++        lead += ' Includes retained results after a failed refresh.'
++    if compact:
++        return (f'<section class="card"><h3>{heading}</h3><p>{escape(lead)}</p>'
++                f'<a href="/teams/{roster_id}#season-so-far">Review season results</a></section>')
++    comparison = (f"League average: {points(view['league_average'])} across {view['cohort_size']} franchises over the same {supported} observed weeks, "
++                  "counting each franchise once per week."
++                  if view['league_average'] is not None else
++                  'League comparison withheld: complete matched team coverage is unavailable.')
++    recent = ' · '.join(f"Week {r['week']}: {points(r['points'])}" + (' (retained)' if r['retained'] else '') for r in view['recent'])
++    details = (f"Season {view['season']}. Supported weeks: "
++               + (', '.join(str(r['week']) for r in view['weeks']) or 'None')
++               + '. Missing or conflicting weeks: ' + (', '.join(map(str, view['missing'])) or 'None')
++               + '. ' + '; '.join(f"Week {g['week']}: {g['reason']}" for g in view['gaps'])
++               + '. Native Sleeper team totals include explicit score overrides. '
++               'These observed regular-season samples are separate from official cumulative standings, '
++               'the current roster’s projected optimal lineup. Recent postseason weeks require prepared bracket participation; byes are excluded. '
++               'Repeated games or median matchups do not add another scoring observation. '
++               'Recent scoring describes results, not future roster strength. '
++               + (view['reason'] or '')
++               + ' Week observations: ' + '; '.join(f"Week {r['week']}: {r['observed_at'] or 'Unknown retrieval time'}" + (' (retained)' if r['retained'] else '') for r in view['weeks'] + [item for item in view['recent'] if item.get('postseason')])
++               + f" Publication retrieved: {view['observed_at'] or 'Unknown'}. Generation: {view['generation'] or 'Unknown'}.")
++    short = (f"{points(view['average'])} pts/week" if view['average'] is not None else 'Scoring unavailable')
++    if view['missing'] or view['recent_reason'] or any(r['points'] is None for r in view['recent']):
++        short += ' · partial'
++    if view['retained']:
++        short += ' · retained'
++    return (f'<details id="season-so-far" class="thq-strength-detail"><summary>{heading} · {escape(short)}</summary>'
++            f'<div class="card"><p>{escape(lead)}</p>'
++            f'<p>{escape(comparison)}</p>' + (f'<p>Recent completed weeks: {escape(recent)}</p>' if recent else '')
++            + (f'<p>{escape(view["recent_reason"])}</p>' if view['recent_reason'] else '')
++            + '<p>Past team results are separate from this week’s projected lineup.</p>'
++            + f'<details><summary>Weeks, coverage and sources</summary><p>{escape(details)}</p></details>'
++            + '<a href="/matchups">Review matchups</a></div></details>')
+diff --git a/tests/test_season_performance.py b/tests/test_season_performance.py
+new file mode 100644
+index 00000000..e0984afc
+--- /dev/null
++++ b/tests/test_season_performance.py
+@@ -0,0 +1,185 @@
++"""Native team-score controls
++expectations are retained source values."""
++import copy
++import unittest
++
++from services.matchup_season import METHOD
++from services.season_performance import season_performance
++from src.core.intelligence.season_calendar import season_calendar
++from src.core.player_value_projection.sleeper_actuals import scoring_identity
++from src.ui.season_performance import season_panel
++
++
++def fixture():
++    league = dict(league_id='A', season='2026', sport='nfl', status='in_season',
++                  scoring_settings={'rec': 1}, settings=dict(leg=5, last_scored_leg=4,
++                  start_week=1, playoff_week_start=15, playoff_teams=4,
++                  playoff_round_type=0, playoff_type=0, num_teams=2))
++    weeks = {str(w): dict(availability='available', observed_at='2026-11-01T12:00:00Z',
++                          rows=[dict(roster_id=1, points=p), dict(roster_id=2, points=10)])
++             for w, p in [(1, 0), (2, -2), (3, 20), (4, 30), (5, 999)]}
++    return dict(league=league, teams=[dict(roster_id=1), dict(roster_id=2)],
++                season_matchups=dict(league_id='A', season='2026', methodology=METHOD,
++                scoring_fingerprint=scoring_identity(league['scoring_settings']),
++                calendar_reference=season_calendar(league)['reference'], weeks=weeks,
++                semantic_generation='g1', observed_at='2026-11-01T12:00:00Z'))
++
++
++class SeasonPerformanceTests(unittest.TestCase):
++    def test_native_zero_negative_and_live_boundary(self):
++        v = season_performance(fixture(), 1)
++        self.assertEqual([r['points'] for r in v['weeks']], [0, -2, 20, 30])
++        self.assertEqual(v['average'], 12)
++        self.assertEqual(v['league_average'], 11)
++        self.assertEqual([r['week'] for r in v['recent']], [2, 3, 4])
++
++    def test_custom_override_and_invalid_override(self):
++        d = fixture()
++        row = d['season_matchups']['weeks']['1']['rows'][0]
++        row['custom_points'] = -4
++        self.assertEqual(season_performance(d, 1)['weeks'][0]['points'], -4)
++        row['custom_points'] = 'invalid'
++        self.assertIn(1, season_performance(d, 1)['missing'])
++
++    def test_repeated_doubleheader_dedup_and_conflict(self):
++        d = fixture()
++        rows = d['season_matchups']['weeks']['4']['rows']
++        rows.append(copy.deepcopy(rows[0]))
++        self.assertEqual(season_performance(d, 1)['average'], 12)
++        rows[-1]['points'] = 31
++        v = season_performance(d, 1)
++        self.assertIn(4, v['missing'])
++        self.assertIsNone(v['recent'][-1]['points'])
++
++    def test_unequal_coverage_withholds_comparison_not_own_results(self):
++        d = fixture()
++        d['season_matchups']['weeks']['2']['rows'].pop()
++        v = season_performance(d, 1)
++        self.assertEqual(v['average'], 12)
++        self.assertIsNone(v['league_average'])
++        self.assertIn('comparison withheld', season_panel(d, 1))
++
++    def test_missing_latest_week_not_replaced_with_older_week(self):
++        d = fixture()
++        d['season_matchups']['weeks']['4']['rows'] = []
++        v = season_performance(d, 1)
++        self.assertEqual([r['week'] for r in v['recent']], [2, 3, 4])
++        self.assertIsNone(v['recent'][-1]['points'])
++
++    def test_failed_refresh_retains_qualification(self):
++        d = fixture()
++        w = d['season_matchups']['weeks']['4']
++        w['retained_rows'] = w.pop('rows')
++        w['availability'] = 'unavailable'
++        self.assertTrue(season_performance(d, 1)['retained'])
++        self.assertIn('retained results', season_panel(d, 1, compact=True))
++
++    def test_corrections_and_player_transfers_do_not_reconstruct_scores(self):
++        d = fixture()
++        d['teams'][0]['players'] = [{'id': 'new-player', 'points': 5000}]
++        self.assertEqual(season_performance(d, 1)['average'], 12)
++        d['season_matchups']['weeks']['4']['rows'][0]['points'] = 34
++        d['season_matchups']['semantic_generation'] = 'g2'
++        self.assertEqual(season_performance(d, 1)['average'], 13)
++        self.assertIn('g2', season_panel(d, 1))
++
++    def test_identity_scoring_calendar_isolation(self):
++        for key, value in [('league_id', 'B'), ('season', '2025'),
++                           ('scoring_fingerprint', 'other'), ('calendar_reference', 'other')]:
++            d = fixture()
++            d['season_matchups'][key] = value
++            self.assertIsNone(season_performance(d, 1)['average'])
++        self.assertIsNone(season_performance(fixture(), 3)['average'])
++
++    def test_home_and_team_same_values_no_new_action(self):
++        d = fixture()
++        for compact in [False, True]:
++            h = season_panel(d, 1, compact=compact)
++            self.assertIn('12.00', h)
++            self.assertIn('4/4', h)
++            self.assertNotIn('contender', h)
++            self.assertNotIn('<form', h)
++
++    def test_complete_empty_and_unacquired_are_not_zero(self):
++        for evidence in [dict(availability='available', rows=[]), {},
++                         dict(availability='unavailable', rows=[])]:
++            d = fixture()
++            d['season_matchups']['weeks']['4'] = evidence
++            v = season_performance(d, 1)
++            self.assertEqual(v['missing'], [4])
++            self.assertEqual(v['average'], 6)
++            self.assertIn('Missing or conflicting weeks: 4', season_panel(d, 1))
++
++    def test_completed_season_includes_final_regular_week_not_playoffs(self):
++        d = fixture()
++        d['league']['status'] = 'complete'
++        d['league']['settings'].update(leg=17, last_scored_leg=17)
++        d['season_matchups']['calendar_reference'] = season_calendar(d['league'])['reference']
++        v = season_performance(d, 1)
++        self.assertEqual(v['expected_weeks'], list(range(1, 15)))
++        self.assertNotIn(15, v['expected_weeks'])
++
++    def test_median_and_ties_do_not_change_score_sample(self):
++        d = fixture()
++        d['league']['settings']['league_average_match'] = 1
++        for team in d['teams']:
++            team.update(wins=3, losses=3, ties=2)
++        self.assertEqual(season_performance(d, 1)['average'], 12)
++        self.assertEqual(len(season_performance(d, 1)['weeks']), 4)
++
++    def test_scoring_and_starter_formats_keep_native_totals(self):
++        for slots, coefficients in [(['QB','RB','FLEX','K','DEF'], {'pass_td':4}),
++                                    (['QB','SUPER_FLEX'], {'pass_td':6,'rec':1})]:
++            d = fixture()
++            d['league']['roster_positions'] = slots
++            d['league']['scoring_settings'] = coefficients
++            d['season_matchups']['scoring_fingerprint'] = scoring_identity(coefficients)
++            self.assertEqual(season_performance(d, 1)['average'], 12)
++
++    def test_unknown_franchise_and_duplicate_inventory_withhold(self):
++        d = fixture()
++        self.assertIsNone(season_performance(d, True)['average'])
++        d['teams'].append(dict(roster_id=1))
++        self.assertIsNone(season_performance(d, 1)['average'])
++
++    def test_recent_completed_postseason_uses_bracket_not_placeholder_zeros(self):
++        d = fixture()
++        d['league']['status'] = 'complete'
++        d['league']['settings'].update(leg=16, last_scored_leg=16)
++        prepared = d['season_matchups']
++        prepared['calendar_reference'] = season_calendar(d['league'])['reference']
++        prepared['brackets'] = {'winners_bracket': [
++            dict(m=1, r=1, t1=1, t2=2, w=1, l=2), dict(m=2, r=2, t1=1, t2=2)]}
++        for week, score in [(14, 11), (15, 0), (16, -3)]:
++            prepared['weeks'][str(week)] = dict(availability='available', rows=[dict(roster_id=1, points=score)])
++        v = season_performance(d, 1)
++        self.assertEqual([(r['week'], r['points']) for r in v['recent']], [(14, 11), (15, 0), (16, -3)])
++        self.assertNotIn(15, v['expected_weeks'])
++        prepared['brackets'] = {}
++        v = season_performance(d, 1)
++        self.assertEqual(v['recent'], [])
++        self.assertIn('participation', v['recent_reason'])
++
++    def test_postseason_bye_does_not_become_completed_team_score(self):
++        d = fixture()
++        d['league']['settings'].update(leg=16, last_scored_leg=15, playoff_teams=6)
++        p = d['season_matchups']
++        p['calendar_reference'] = season_calendar(d['league'])['reference']
++        p['brackets'] = {'winners_bracket': [dict(m=1, r=1, t1=3, t2=6),
++            dict(m=2, r=1, t1=4, t2=5), dict(m=3, r=2, t1=1, t2_from={'w': 1}),
++            dict(m=4, r=2, t1=2, t2_from={'w': 2})]}
++        p['weeks']['15'] = dict(availability='available', rows=[dict(roster_id=1, points=0)])
++        self.assertEqual([r['week'] for r in season_performance(d, 1)['recent']], [12, 13, 14])
++
++    def test_gap_kinds_and_comparison_cohort_are_explicit(self):
++        d = fixture()
++        d['season_matchups']['weeks'].pop('1')
++        d['season_matchups']['weeks']['2'] = dict(availability='available', rows=[])
++        d['season_matchups']['weeks']['3'] = dict(availability='unavailable', rows=[])
++        d['season_matchups']['weeks']['4']['rows'].append(dict(roster_id=1, points=31))
++        v = season_performance(d, 1)
++        self.assertEqual(v['cohort_size'], 2)
++        self.assertEqual([g['reason'] for g in v['gaps']], [
++            'Week not acquired', 'Source returned an empty week; no team score established',
++            'Week retrieval failed or is unavailable; no supported retained team score',
++            'Conflicting team scores'])
+diff --git a/tests/test_season_performance_browser.py b/tests/test_season_performance_browser.py
+new file mode 100644
+index 00000000..0c7adc17
+--- /dev/null
++++ b/tests/test_season_performance_browser.py
+@@ -0,0 +1,123 @@
++"""Rendered prepared-source checks; Chromium fixtures, not owner-live acceptance."""
++from datetime import datetime, timezone
++import os
++from pathlib import Path
++import unittest
++
++from playwright.sync_api import sync_playwright
++from tools.validation.browser_runtime import launch_chromium
++from tests import test_roster_diagnostic_http as fixtures
++from services.matchup_season import METHOD
++from src.core.intelligence.season_calendar import season_calendar
++from src.core.player_value_projection.sleeper_actuals import scoring_identity
++
++
++class SeasonPerformanceBrowserTests(unittest.TestCase):
++    def test_team_home_results_disclosure_and_return(self):
++        f = fixtures.DiagnosticHTTPTests()
++        f.setUp()
++        self.addCleanup(f.doCleanups)
++        f.publish(datetime.now(timezone.utc).isoformat())
++        data = f.f.f.data
++        league = data['league']
++        calendar = season_calendar(league)
++        self.assertEqual(calendar['availability'], 'supported')
++        league['settings']['num_teams'] = len(data['teams'])
++        data['season_matchups'] = dict(league_id=str(league['league_id']),
++            season=str(league['season']), methodology=METHOD,
++            scoring_fingerprint=scoring_identity(league.get('scoring_settings') or {}),
++            calendar_reference=season_calendar(league)['reference'], semantic_generation='native-fixture',
++            observed_at='2026-11-01T12:00:00Z', weeks={'1': dict(availability='available',
++                rows=[dict(roster_id=t['roster_id'], points=0) for t in data['teams']])})
++        root = Path(os.environ['DTOS_SEASON_EVIDENCE']) if os.environ.get('DTOS_SEASON_EVIDENCE') else None
++        if root:
++            root.mkdir(parents=True, exist_ok=True)
++        with sync_playwright() as pw:
++            browser = launch_chromium(pw, headless=True)
++            try:
++                for width, height in [(320, 432), (375, 667), (390, 844), (1280, 900)]:
++                    page = f.f.browser_page(browser, width, height)
++                    try:
++                        page.goto('https://dtos.test/teams/1')
++                        record_link = page.locator('.thq-record-link')
++                        self.assertEqual(record_link.get_attribute('href'), '#season-so-far')
++                        record_link.click()
++                        self.assertTrue(page.url.endswith('#season-so-far'))
++                        panel = page.locator('#season-so-far')
++                        if not panel.evaluate('e=>e.open'):
++                            panel.locator(':scope > summary').press('Enter')
++                        self.assertTrue(panel.evaluate('e=>e.open'))
++                        self.assertIn('0.00 points', panel.inner_text())
++                        self.assertIn('Week 1: 0.00', panel.inner_text())
++                        self.assertLessEqual(page.evaluate('document.documentElement.scrollWidth-innerWidth'), 0)
++                        panel.locator('details summary').focus()
++                        panel.locator('details summary').press('Enter')
++                        self.assertIn('native-fixture', panel.inner_text())
++                        if root:
++                            page.screenshot(path=str(root / f'team-expanded-{width}.png'), full_page=True)
++                        page.goto('https://dtos.test/')
++                        link = page.get_by_role('link', name='Review season results')
++                        self.assertEqual(link.count(), 1)
++                        if root:
++                            page.screenshot(path=str(root / f'home-{width}.png'), full_page=True)
++                        link.click()
++                        self.assertIn('/teams/1#season-so-far', page.url)
++                    finally:
++                        page.close()
++            finally:
++                browser.close()
++
++    def test_missing_conflicting_and_retained_scores_on_real_routes(self):
++        f = fixtures.DiagnosticHTTPTests()
++        f.setUp()
++        self.addCleanup(f.doCleanups)
++        f.publish(datetime.now(timezone.utc).isoformat())
++        data = f.f.f.data
++        league = data['league']
++        league['settings']['num_teams'] = len(data['teams'])
++        prepared = dict(league_id=str(league['league_id']), season=str(league['season']),
++                        methodology=METHOD, calendar_reference=season_calendar(league)['reference'],
++                        scoring_fingerprint=scoring_identity(league.get('scoring_settings') or {}),
++                        semantic_generation='partial-native', observed_at='2026-11-01T12:00:00Z')
++        data['season_matchups'] = prepared
++        cases = [
++            (dict(availability='available', rows=[]), '0/1', 'Unknown'),
++            (dict(availability='available', rows=[dict(roster_id=1, points=3),
++                                                  dict(roster_id=1, points=4)]), '0/1', 'Unknown'),
++            (dict(availability='unavailable', retained_rows=[dict(roster_id=1, points=-2)]),
++             '1/1', '-2.00'),
++        ]
++        with sync_playwright() as pw:
++            browser = launch_chromium(pw, headless=True)
++            try:
++                page = f.f.browser_page(browser, 390, 844)
++                try:
++                    for index, (row, coverage, points) in enumerate(cases):
++                        # Mirror normal atomic publication, including the native source generation.
++                        f.f.f.data = {**data, 'season_matchups': {**prepared,
++                            'weeks': {'1': row}, 'semantic_generation': f'partial-native-{index}'}}
++                        page.goto('https://dtos.test/teams/1')
++                        panel = page.locator('#season-so-far')
++                        if not panel.evaluate('e=>e.open'):
++                            panel.locator(':scope > summary').press('Enter')
++                        self.assertTrue(panel.evaluate('e=>e.open'))
++                        if points == 'Unknown':
++                            self.assertNotIn('0.00 points', panel.inner_text())
++                        else:
++                            self.assertIn(points, panel.inner_text())
++                            self.assertIn('retained results', panel.inner_text())
++                        self.assertIn('League comparison withheld', panel.inner_text())
++                        panel.locator('details summary').click()
++                        self.assertIn('partial-native', panel.inner_text())
++                        page.goto('https://dtos.test/')
++                        lead = page.get_by_role('heading', name='Season so far').locator('..')
++                        if points == 'Unknown':
++                            self.assertNotIn('0.00 points', lead.inner_text())
++                        else:
++                            self.assertIn(points, lead.inner_text())
++                            self.assertIn(coverage, lead.inner_text())
++                            self.assertIn('retained results', lead.inner_text())
++                finally:
++                    page.close()
++            finally:
++                browser.close()
