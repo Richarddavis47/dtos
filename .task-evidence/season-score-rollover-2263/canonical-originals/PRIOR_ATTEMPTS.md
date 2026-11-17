@@ -1,0 +1,3 @@
+# Prior fixture attempts
+
+The first temporary rollover fixture and a subsequent 43-test focused run omitted the live league status in their disposable data. Both stopped at the expected-week assertion. They used working-tree source and do not establish an exact deployed baseline run. Original consoles are preserved. The final fixture explicitly represents an in-season league, reproduces the build 2262 preparation call without the NFL clock, and compares it with the corrected call. The final focused suite passed 43 tests. Full mandatory results are independently tied to the committed candidate.

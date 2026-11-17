@@ -1,0 +1,27 @@
+# Original build 2263 validation consoles
+
+The local and hosted canonical runs each completed 4,631 tests and all ten gates. The earlier failed console is from a different candidate. Concatenating each listed set of parts reconstructs the original bytes.
+
+## local-canonical/unittest-console.log
+
+Original SHA-256 `3983ecd159b6c74ae34f5af6677a779e1a63c3726f2e06114fda322d3e4ce277`
+
+[1](local-canonical/unittest-console.log.part-001) [2](local-canonical/unittest-console.log.part-002) [3](local-canonical/unittest-console.log.part-003) [4](local-canonical/unittest-console.log.part-004) [5](local-canonical/unittest-console.log.part-005) [6](local-canonical/unittest-console.log.part-006) [7](local-canonical/unittest-console.log.part-007) [8](local-canonical/unittest-console.log.part-008) [9](local-canonical/unittest-console.log.part-009) [10](local-canonical/unittest-console.log.part-010) [11](local-canonical/unittest-console.log.part-011) [12](local-canonical/unittest-console.log.part-012) [13](local-canonical/unittest-console.log.part-013) [14](local-canonical/unittest-console.log.part-014) [15](local-canonical/unittest-console.log.part-015) [16](local-canonical/unittest-console.log.part-016) [17](local-canonical/unittest-console.log.part-017) [18](local-canonical/unittest-console.log.part-018) [19](local-canonical/unittest-console.log.part-019) [20](local-canonical/unittest-console.log.part-020) [21](local-canonical/unittest-console.log.part-021) [22](local-canonical/unittest-console.log.part-022) [23](local-canonical/unittest-console.log.part-023) [24](local-canonical/unittest-console.log.part-024) [25](local-canonical/unittest-console.log.part-025) [26](local-canonical/unittest-console.log.part-026) [27](local-canonical/unittest-console.log.part-027) [28](local-canonical/unittest-console.log.part-028) [29](local-canonical/unittest-console.log.part-029) [30](local-canonical/unittest-console.log.part-030) [31](local-canonical/unittest-console.log.part-031) [32](local-canonical/unittest-console.log.part-032) [33](local-canonical/unittest-console.log.part-033) [34](local-canonical/unittest-console.log.part-034) [35](local-canonical/unittest-console.log.part-035) [36](local-canonical/unittest-console.log.part-036) [37](local-canonical/unittest-console.log.part-037) [38](local-canonical/unittest-console.log.part-038) [39](local-canonical/unittest-console.log.part-039) [40](local-canonical/unittest-console.log.part-040) [41](local-canonical/unittest-console.log.part-041) [42](local-canonical/unittest-console.log.part-042)
+
+## host-canonical-readable/unittest-console.log
+
+Original SHA-256 `b78d5e500be4d342d29724eb35850c71261c29e151dec6f7fc48d3a923c00c22`
+
+[1](host-canonical-readable/unittest-console.log.part-001) [2](host-canonical-readable/unittest-console.log.part-002) [3](host-canonical-readable/unittest-console.log.part-003) [4](host-canonical-readable/unittest-console.log.part-004) [5](host-canonical-readable/unittest-console.log.part-005) [6](host-canonical-readable/unittest-console.log.part-006) [7](host-canonical-readable/unittest-console.log.part-007) [8](host-canonical-readable/unittest-console.log.part-008) [9](host-canonical-readable/unittest-console.log.part-009) [10](host-canonical-readable/unittest-console.log.part-010) [11](host-canonical-readable/unittest-console.log.part-011) [12](host-canonical-readable/unittest-console.log.part-012) [13](host-canonical-readable/unittest-console.log.part-013) [14](host-canonical-readable/unittest-console.log.part-014) [15](host-canonical-readable/unittest-console.log.part-015) [16](host-canonical-readable/unittest-console.log.part-016) [17](host-canonical-readable/unittest-console.log.part-017) [18](host-canonical-readable/unittest-console.log.part-018) [19](host-canonical-readable/unittest-console.log.part-019) [20](host-canonical-readable/unittest-console.log.part-020) [21](host-canonical-readable/unittest-console.log.part-021) [22](host-canonical-readable/unittest-console.log.part-022) [23](host-canonical-readable/unittest-console.log.part-023) [24](host-canonical-readable/unittest-console.log.part-024) [25](host-canonical-readable/unittest-console.log.part-025) [26](host-canonical-readable/unittest-console.log.part-026) [27](host-canonical-readable/unittest-console.log.part-027) [28](host-canonical-readable/unittest-console.log.part-028) [29](host-canonical-readable/unittest-console.log.part-029) [30](host-canonical-readable/unittest-console.log.part-030) [31](host-canonical-readable/unittest-console.log.part-031) [32](host-canonical-readable/unittest-console.log.part-032) [33](host-canonical-readable/unittest-console.log.part-033) [34](host-canonical-readable/unittest-console.log.part-034) [35](host-canonical-readable/unittest-console.log.part-035) [36](host-canonical-readable/unittest-console.log.part-036) [37](host-canonical-readable/unittest-console.log.part-037) [38](host-canonical-readable/unittest-console.log.part-038) [39](host-canonical-readable/unittest-console.log.part-039) [40](host-canonical-readable/unittest-console.log.part-040) [41](host-canonical-readable/unittest-console.log.part-041)
+
+## local-canonical/canonical.log
+
+Original SHA-256 `a29104eb498d1eb2ca110cea77b87f735226d30bb939236e7199c50c2ec1a45a`
+
+[1](local-canonical/canonical.log.part-001)
+
+## host-canonical-readable/canonical.log
+
+Original SHA-256 `088e41dd5d519aa7c41746a4d158b3322631155e817ac47ad15e6e07b9854509`
+
+[1](host-canonical-readable/canonical.log.part-001)
