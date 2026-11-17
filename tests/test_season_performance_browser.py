@@ -40,11 +40,14 @@ class SeasonPerformanceBrowserTests(unittest.TestCase):
                     try:
                         page.goto('https://dtos.test/teams/1')
                         panel = page.locator('#season-so-far')
+                        if not panel.evaluate('e=>e.open'):
+                            panel.locator(':scope > summary').press('Enter')
+                        self.assertTrue(panel.evaluate('e=>e.open'))
                         self.assertIn('0.00 points', panel.inner_text())
                         self.assertIn('Week 1: 0.00', panel.inner_text())
                         self.assertLessEqual(page.evaluate('document.documentElement.scrollWidth-innerWidth'), 0)
-                        panel.locator('summary').focus()
-                        panel.locator('summary').press('Enter')
+                        panel.locator('details summary').focus()
+                        panel.locator('details summary').press('Enter')
                         self.assertIn('native-fixture', panel.inner_text())
                         if root:
                             page.screenshot(path=str(root / f'team-expanded-{width}.png'), full_page=True)
@@ -57,5 +60,60 @@ class SeasonPerformanceBrowserTests(unittest.TestCase):
                         self.assertIn('/teams/1#season-so-far', page.url)
                     finally:
                         page.close()
+            finally:
+                browser.close()
+
+    def test_missing_conflicting_and_retained_scores_on_real_routes(self):
+        f = fixtures.DiagnosticHTTPTests()
+        f.setUp()
+        self.addCleanup(f.doCleanups)
+        f.publish(datetime.now(timezone.utc).isoformat())
+        data = f.f.f.data
+        league = data['league']
+        league['settings']['num_teams'] = len(data['teams'])
+        prepared = dict(league_id=str(league['league_id']), season=str(league['season']),
+                        methodology=METHOD, calendar_reference=season_calendar(league)['reference'],
+                        scoring_fingerprint=scoring_identity(league.get('scoring_settings') or {}),
+                        semantic_generation='partial-native', observed_at='2026-11-01T12:00:00Z')
+        data['season_matchups'] = prepared
+        cases = [
+            (dict(availability='available', rows=[]), '0/1', 'Unknown'),
+            (dict(availability='available', rows=[dict(roster_id=1, points=3),
+                                                  dict(roster_id=1, points=4)]), '0/1', 'Unknown'),
+            (dict(availability='unavailable', retained_rows=[dict(roster_id=1, points=-2)]),
+             '1/1', '-2.00'),
+        ]
+        with sync_playwright() as pw:
+            browser = launch_chromium(pw, headless=True)
+            try:
+                page = f.f.browser_page(browser, 390, 844)
+                try:
+                    for index, (row, coverage, points) in enumerate(cases):
+                        # Mirror normal atomic publication, including the native source generation.
+                        f.f.f.data = {**data, 'season_matchups': {**prepared,
+                            'weeks': {'1': row}, 'semantic_generation': f'partial-native-{index}'}}
+                        page.goto('https://dtos.test/teams/1')
+                        panel = page.locator('#season-so-far')
+                        if not panel.evaluate('e=>e.open'):
+                            panel.locator(':scope > summary').press('Enter')
+                        self.assertTrue(panel.evaluate('e=>e.open'))
+                        if points == 'Unknown':
+                            self.assertNotIn('0.00 points', panel.inner_text())
+                        else:
+                            self.assertIn(points, panel.inner_text())
+                            self.assertIn('retained results', panel.inner_text())
+                        self.assertIn('League comparison withheld', panel.inner_text())
+                        panel.locator('details summary').click()
+                        self.assertIn('partial-native', panel.inner_text())
+                        page.goto('https://dtos.test/')
+                        lead = page.get_by_role('heading', name='Season so far').locator('..')
+                        if points == 'Unknown':
+                            self.assertNotIn('0.00 points', lead.inner_text())
+                        else:
+                            self.assertIn(points, lead.inner_text())
+                            self.assertIn(coverage, lead.inner_text())
+                            self.assertIn('retained results', lead.inner_text())
+                finally:
+                    page.close()
             finally:
                 browser.close()

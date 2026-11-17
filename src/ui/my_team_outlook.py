@@ -20,7 +20,8 @@ def outlook_panel(outlook, *, editable, roster_id):
     navigation = ('<nav class="thq-actions" aria-label="Roster sections">'
                   '<a class="thq-action" href="#full-roster" aria-label="View full roster">Roster</a>'
                   '<a class="thq-action" href="#positional-depth">Depth</a>'
-                  '<a class="thq-action" href="#draft-capital" aria-label="Draft capital">Capital</a></nav>')
+                  '<a class="thq-action" href="#draft-capital" aria-label="Draft capital">Capital</a>'
+                  '<a class="thq-action" href="#season-so-far" aria-label="Season results">Season</a></nav>')
     choices = escape(json.dumps(goal_options(roster_id), separators=(',', ':')), quote=True) if editable else '{}'
     heading = '<h2 id="my-team-outlook-title">Your roster at a glance</h2>'
     lead = (f'<p id="my-team-outlook-lead">Comparison pending: lineup and depth. {escape(outlook["future_summary"])}</p>'
