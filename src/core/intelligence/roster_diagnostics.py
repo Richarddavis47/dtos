@@ -384,7 +384,7 @@ def _delta(before, after):
     )
 
 
-def _presentation_scope(pos, slots, pools, uncertain):
+def _presentation_scope(pos, slots, pools, uncertain, eligibility=None):
     """Close over actual eligible slot connections, including every peer roster.
 
     A missing player can displace a known FLEX/Superflex starter without sharing
@@ -417,7 +417,11 @@ def _presentation_scope(pos, slots, pools, uncertain):
                          (p['id'] in uncertain[owner], 'Uncertain availability')) if applies))
                 for owner, p, unknown in dependencies
                 if unknown or p['projected_points'] is None or p['id'] in uncertain[owner]]
+    availability = {(owner, row['player_id']): row['status']
+                    for owner, rows in (eligibility or {}).items() for row in rows}
     return dict(slots=sorted(component), blockers=blockers,
+                unknown_availability=any(availability.get((owner, p['id'])) != 'active'
+                                         for owner, p, _ in dependencies),
                 dependency_count=len(dependencies), independent=bool(component) and not blockers)
 
 
@@ -511,7 +515,7 @@ def _compute(inputs, snapshot, key):
         ]
         for pos in POSITIONS
     }
-    presentation_scopes = {pos: _presentation_scope(pos, slots, pools, uncertain) for pos in POSITIONS}
+    presentation_scopes = {pos: _presentation_scope(pos, slots, pools, uncertain, qualification["eligibility"]) for pos in POSITIONS}
     result = {
         "methodology": METHOD,
         "league_id": lid,
@@ -840,8 +844,11 @@ def _requalify(result, qualification):
             evidence["conclusion_state"] = "unavailable"
         team["evidence"] = evidence
         for row in (team.get('presentation_positions') or {}).values():
-            row['conclusion_state'] = ('provisional' if evidence.get('calculation_supported')
-                                       and shared.get('calculation_supported') else 'unavailable')
+            row['conclusion_state'] = (
+                ('current' if shared.get('conclusion_state') == 'current'
+                 and not row['dependency_scope'].get('unknown_availability') else 'provisional')
+                if evidence.get('calculation_supported') and shared.get('calculation_supported')
+                else 'unavailable')
             row['source_limitations'] = list(shared.get('limitations') or [])
         for facts in team["positions"].values():
             facts["evidence"] = evidence

@@ -32,7 +32,7 @@ def franchise_outlook(data, result, *, players=(), strategy='', overview=None):
                  and row.get('conclusion_state') in {'current', 'provisional'}]
     # Optional presentation-only findings cannot enter Trade or surplus policy.
     scoped = [(pos, row) for pos, row in (own.get('presentation_positions') or {}).items()
-              if row.get('calculation_supported') and row.get('conclusion_state') == 'provisional']
+              if row.get('calculation_supported') and row.get('conclusion_state') in {'current', 'provisional'}]
     if 'presentation_positions' in own:
         scoped_by_position = dict(scoped)
         supported = [(pos, row) for pos, row in supported
