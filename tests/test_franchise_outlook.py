@@ -7,11 +7,13 @@ from services.franchise_outlook import franchise_outlook
 
 
 class FranchiseOutlookTests(unittest.TestCase):
-    def render(self, positions=None, inventory=None):
+    def render(self, positions=None, inventory=None, presentation=None):
         data={'league':{'league_id':'L'},'week':10}
         card=SimpleNamespace(league_id='L',roster_id=1,future_capital_evidence={})
         result=SimpleNamespace(team_assessment=SimpleNamespace(team=card,roster_id=1,projection_week=10,league_id='L',generation='g'),context=SimpleNamespace(projection_snapshot=None))
         diagnostic={'league_id':'L','week':10,'projection_generation':'p','required_slot_count':10,'teams':{'1':{'positions':positions or {},'optimal_points':0,'optimal_ids':list(range(10)), 'evidence':{'calculation_supported':True,'conclusion_state':'current'}}}}
+        if presentation is not None:
+            diagnostic['teams']['1']['presentation_positions']=presentation
         old=dict(position='old position',brief='old rank',strength='old strength',concern='old concern',future='old inventory',details=['Prepared Team Strength covers 1/1 current weeks; complete-horizon points: 900.'])
         inventory=inventory or dict(complete=False,reason='Ownership incomplete; remaining totals unknown.',before=[])
         with patch('services.franchise_outlook.roster_overview',return_value={}),patch('services.franchise_outlook.prepared_outlook',return_value=deepcopy(old),create=True),patch('services.franchise_outlook.prepared_comparison',return_value=diagnostic),patch('services.franchise_outlook.inventory_baseline',return_value=inventory):
@@ -67,3 +69,32 @@ class FranchiseOutlookTests(unittest.TestCase):
         row=self.render()
         self.assertIn('0.00',row['position'])
         self.assertNotIn('900', ' '.join(row['details']))
+
+    def test_missing_starters_never_claim_supported_projection_observations(self):
+        row=self.render(presentation={'QB':dict(calculation_supported=True,conclusion_state='provisional',starter_points=None,starting_ids=[],strength=False,starter_need=False,reason='Missing eligible projections.',limitation='Not confirmed participation.',dependency_scope={'blockers':[]})})
+        self.assertNotIn('Some starter projections are supported',row['concern'])
+        self.assertIn('no roster weakness',row['concern'])
+        self.assertNotIn('selected starters contribute',row['strength'])
+
+        scoped=dict(calculation_supported=True,conclusion_state='provisional',comparisons_supported=False,starter_points=5,starting_ids=['a'],strength=False,starter_need=False,reason='Relevant peer availability is uncertain.',limitation='Not confirmed participation.',dependency_scope={'blockers':[]})
+        row=self.render(positions={'QB':dict(strength=True,conclusion_state='current',evidence={'calculation_supported':True})},presentation={'QB':scoped})
+        self.assertNotIn('Supported positional strength',row['strength'])
+        self.assertIn('5 projected points',row['strength'])
+        self.assertTrue(row['strength'].startswith('Provisional:'))
+
+        scoped={**scoped,'comparisons_supported':True,'starter_need':True}
+        original={'QB':dict(starter_need=True,conclusion_state='current',evidence={'calculation_supported':True})}
+        row=self.render(positions=original,presentation={'QB':scoped})
+        self.assertTrue(row['concern'].startswith('Provisional:'))
+        self.assertEqual(original['QB']['conclusion_state'],'current')
+
+    def test_local_resilience_does_not_inherit_unrelated_peer_qualification(self):
+        from services.team_assessment_presentation import positional_display_rows
+        old=dict(resilience_need=True,strength=True,conclusion_state='current',evidence={'calculation_supported':True})
+        own=dict(eligibility=[{'player_id':'own-qb'}],positions={'QB':old},presentation_positions={'QB':dict(comparisons_supported=False,conclusion_state='provisional',dependency_scope={'blockers':[{'player_id':'peer-gap','reason':'Unknown eligibility'}],'unknown_availability':True})})
+        view=positional_display_rows(own)['QB']
+        self.assertEqual(view['conclusion_state'],'current')
+        self.assertTrue(view['resilience_need'])
+        self.assertEqual(own['positions']['QB'],old)
+        own['presentation_positions']['QB']['dependency_scope']['blockers'].append({'player_id':'own-qb','reason':'Unknown eligibility'})
+        self.assertEqual(positional_display_rows(own)['QB']['conclusion_state'],'unavailable')

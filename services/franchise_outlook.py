@@ -6,7 +6,7 @@ from services.my_team_outlook import goal_options, _slot_description
 from src.ui.intelligence_presentation import manager_points
 from math import isfinite
 from services.my_team_overview import roster_overview
-from services.team_assessment_presentation import prepared_comparison, weekly_comparison
+from services.team_assessment_presentation import prepared_comparison, weekly_comparison, positional_display_rows
 from services.trade_capital_inventory import inventory_baseline
 
 
@@ -26,11 +26,17 @@ def franchise_outlook(data, result, *, players=(), strategy='', overview=None):
     # pair a saved roster claim with a newer availability-adjusted comparison.
     own = ((comparison or {}).get('teams') or {}).get(str(assessment.roster_id)) or {}
     outlook['comparison_prepared'] = 'optimal_ids' in own
-    positions = own.get('positions') or {}
+    positions = positional_display_rows(own)
     supported = [(pos, row) for pos, row in positions.items()
                  if (row.get('evidence') or {}).get('calculation_supported')
                  and row.get('conclusion_state') in {'current', 'provisional'}]
-    strengths = [(pos, row) for pos, row in supported if row.get('strength')]
+    # Optional presentation-only findings cannot enter Trade or surplus policy.
+    scoped = [(pos, row) for pos, row in (own.get('presentation_positions') or {}).items()
+              if row.get('calculation_supported') and row.get('conclusion_state') in {'current', 'provisional'}]
+    if 'presentation_positions' in own:
+        strengths = [(pos, row) for pos, row in scoped if row.get('strength')]
+    else:
+        strengths = [(pos, row) for pos, row in supported if row.get('strength')]
     if strengths:
         pos, row = strengths[0]
         outlook['strength'] = ('Provisional: ' if row['conclusion_state'] != 'current' else '') + f'Supported positional strength: {pos}. Backups are not automatically expendable.'
@@ -38,6 +44,8 @@ def franchise_outlook(data, result, *, players=(), strategy='', overview=None):
         outlook['strength'] = 'A positional advantage is not established by the available comparisons.'
     needs = sorted([(pos, row) for pos, row in supported if any(row.get(k) for k in ('starter_need', 'resilience_need', 'quality_depth_need'))],
                    key=lambda item: not item[1].get('starter_need'))
+    if not needs:
+        needs = [(pos, row) for pos, row in scoped if row.get('starter_need')]
     if needs:
         pos, row = needs[0]
         outlook['concern'] = ('Provisional: ' if row['conclusion_state'] != 'current' else '') + (
@@ -49,6 +57,18 @@ def franchise_outlook(data, result, *, players=(), strategy='', overview=None):
     else:
         outlook['concern'] = ('No supported shortfall is established; incomplete evidence is not proof of strong depth.'
                               if supported else 'Compatible lineup and backup evidence is not prepared; missing or incompatible projections are not zero production, and no roster weakness is inferred.')
+    if not supported and scoped:
+        observations = [(pos, row) for pos, row in scoped if row.get('starter_points') is not None]
+        if not needs and observations:
+            outlook['concern'] = 'Some starter projections are supported; positional and backup comparisons remain incomplete. Unknown depth is not a weakness.'
+        if not strengths and observations:
+            pos, row = observations[0]
+            outlook['strength'] = (('Provisional: ' if row['conclusion_state'] != 'current' else '') + f'{pos}: selected starters contribute {manager_points(row["starter_points"])} projected points. '
+                                   'This observation does not establish a positional advantage or strong backups.')
+        for pos, row in scoped:
+            outlook['details'].append(f'{pos}: ' + row['reason'] + ' ' + row['limitation'])
+            for gap in row['dependency_scope']['blockers']:
+                outlook['details'].append(f"{pos}: franchise {gap['roster_id']}, player {gap['player_id']}: {gap['reason']}.")
     # Explanation and numbers come from this same admitted diagnostic, never a
     # retained multi-horizon profile with a different availability baseline.
     outlook['details'].append(outlook['position'])
@@ -68,6 +88,7 @@ def franchise_outlook(data, result, *, players=(), strategy='', overview=None):
             outlook['details'].append(f"{names.get(str(rid)) or f'Franchise {rid}'}: excluded from this modeled comparison. {reason} Missing points are not zero.")
     outlook['details'].append('Roster projection coverage is a different measure. This counts player-week numbers, including reserve/taxi players; it is separate from playable starting-slot eligibility.')
     for pos, row in supported:
+        outlook['details'].extend((row.get('evidence') or {}).get('limitations') or [])
         if row.get('base_reason'):
             outlook['details'].append(row['base_reason'])
         values = row.get('observed_replacement_points') or []
