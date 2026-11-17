@@ -21,6 +21,7 @@ from src.core.history_context import canonical_history_store
 from src.core.request_execution import run_manager_read
 from src.ui import player_summary
 from src.ui.my_team_outlook import outlook_panel
+from src.ui.season_performance import season_panel
 from src.ui.league_gm_diagnostics import team_observations
 from src.ui.badges import champion_badge, defending_champion, you_badge
 from src.platform.league_context import current_league_context
@@ -522,6 +523,7 @@ def create_teams_router(
 <section class="thq-content" data-my-team-context="{context_json}">
 {scope_notice}
 <header class="thq-header"><div class="thq-identity">{avatar}<div class="thq-title"><div class="identity-kicker">Manager: {escape(team['owner'])}</div><div class="thq-name-row"><h1>{escape(team['team_name'])}{you_badge(data, roster_id)}</h1>{champion_badge(defending_champion(data), roster_id)}</div><p>{escape(performance["record"])} · {escape(performance["standing"])}</p></div></div><div class="thq-strategy">{strategy_control}<small>League evidence updated: {escape(view['last_updated'])}</small></div></header>
+{season_panel(data, roster_id)}
 {outlook_panel(assessment_outlook, editable=editable, roster_id=roster_id)}
 {lineup_alert}
 <section class="thq-section" id="full-roster"><details class="thq-strength-detail" id="my-team-roster" open><summary>Full Roster · {escape(_roster_projection_coverage(view))}</summary><div class="thq-roster">{_roster_rooms(view)}</div></details><details class="thq-strength-detail" id="my-team-key-players"><summary>Key players by Market value</summary>{_key_players(view)}</details></section>

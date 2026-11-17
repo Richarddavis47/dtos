@@ -17,6 +17,7 @@ from src.ui.home_trade_opportunities import section as opportunity_section, CSS 
 from src.ui.home_trade_news import render_news, NEWS_CSS
 from services.matchup_season import current_matchup_groups
 from services.standings import standings_order
+from src.ui.season_performance import season_panel
 from src.ui.intelligence_presentation import league_is_preseason, record_evidence
 from src.ui.badges import champion_badge, defending_champion, standing_badge, you_badge
 from src.platform.account_context import current_account
@@ -184,7 +185,7 @@ def create_home_router(
         facts = weekly_facts(data, report_week)
         report_state = {"completed": "Final", "in_progress": "In progress", "preview": "Preview"}.get(facts["state"], "Unavailable")
         body = (
-            header + '<!--home-opportunities-->' + secondary + '<!--home-trade-news-->' + '<details class="ds-home-detail"><summary>League standings</summary>' + _section('Standings', 'Records and scoring from Sleeper', render_standings(data, champion=champion)) + '</details>'
+            header + season_panel(data, roster_id, compact=True) + '<!--home-opportunities-->' + secondary + '<!--home-trade-news-->' + '<details class="ds-home-detail"><summary>League standings</summary>' + _section('Standings', 'Records and scoring from Sleeper', render_standings(data, champion=champion)) + '</details>'
             + _section("Weekly Report", report_state + " · current week evidence", f'<div class="card ux-recap"><a href="/reports/weekly?week={report_week}">Open Week {report_week} report · {report_state} →</a></div>')
             + _section("Explore", "Your team, matchup and trade workspace", action_html)
             + '<details class="ds-home-detail"><summary>Team comparisons</summary>' + _section("Team Assessment Rankings" if rankings else "Projected lineup comparison", "Team assessments, separate from official standings" if rankings else "This week’s best projected legal lineups, with coverage shown for each team", rank_html) + '</details>'
