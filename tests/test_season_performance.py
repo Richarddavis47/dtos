@@ -183,3 +183,49 @@ class SeasonPerformanceTests(unittest.TestCase):
             'Week not acquired', 'Source returned an empty week; no team score established',
             'Week retrieval failed or is unavailable; no supported retained team score',
             'Conflicting team scores'])
+
+    def test_peer_results_are_independent_of_official_and_median_results(self):
+        for record, own, expected in [((4, 0), 20, (4, 8, 0)), ((0, 4), 30, (8, 4, 0))]:
+            for median in (0, 1):
+                with self.subTest(record=record, median=median):
+                    data = fixture()
+                    data['league']['settings'].update(num_teams=4, league_average_match=median)
+                    data['teams'] = [dict(roster_id=rid) for rid in range(1, 5)]
+                    data['teams'][0].update(wins=record[0], losses=record[1])
+                    for week in data['season_matchups']['weeks'].values():
+                        week['rows'] = [dict(roster_id=rid, points=score)
+                                        for rid, score in enumerate((own, 10, 25, 40), 1)]
+                    peer = season_performance(data, 1)['peer_record']
+                    self.assertEqual(peer['weeks'], [1, 2, 3, 4])
+                    self.assertEqual(tuple(peer[k] for k in ('wins', 'losses', 'ties')), expected)
+
+    def test_peer_results_skip_incomplete_weeks_and_apply_native_corrections(self):
+        data = fixture()
+        weeks = data['season_matchups']['weeks']
+        weeks['1']['rows'][1]['custom_points'] = 0  # Explicitly overrides the peer's 10.
+        weeks['1']['rows'].append(copy.deepcopy(weeks['1']['rows'][0]))
+        weeks['2']['rows'][1]['custom_points'] = -3
+        weeks['3']['rows'].pop()
+        weeks['4']['rows'].append(dict(roster_id=2, points=11))
+        view = season_performance(data, 1)
+        self.assertEqual(view['peer_record'], dict(wins=1, losses=0, ties=1, weeks=[1, 2], retained_weeks=[]))
+        self.assertEqual(view['missing'], [])  # Own scores still support the season average.
+        html = season_panel(data, 1)
+        self.assertIn('2/4 completed regular-season weeks used.', html)
+        self.assertIn('Skipped weeks without complete league scores: 3, 4.', html)
+        weeks['1']['rows'][1]['custom_points'] = 1
+        weeks['2']['retained_rows'] = weeks['2'].pop('rows')
+        weeks['2']['availability'] = 'unavailable'
+        self.assertEqual(season_performance(data, 1)['peer_record'],
+                         dict(wins=1, losses=1, ties=0, weeks=[1, 2], retained_weeks=[2]))
+
+    def test_peer_results_withhold_without_a_complete_compatible_cohort(self):
+        data = fixture()
+        for week in data['season_matchups']['weeks'].values():
+            week['rows'][1]['custom_points'] = 'invalid'
+        self.assertEqual(season_performance(data, 1)['peer_record']['weeks'], [])
+        self.assertIn('0/4 completed regular-season weeks used.', season_panel(data, 1))
+        self.assertNotIn('Wins: 0 · Losses: 0', season_panel(data, 1))
+        data['season_matchups']['scoring_fingerprint'] = 'foreign'
+        self.assertEqual(season_performance(data, 1)['peer_record']['weeks'], [])
+        self.assertNotIn('How often did we outscore', season_panel(data, 1, compact=True))

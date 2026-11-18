@@ -4,6 +4,24 @@ from html import escape
 from services.season_performance import season_performance
 
 
+
+def _peer_record(view):
+    record = view['peer_record']
+    weeks = record['weeks']
+    expected = view['expected_weeks']
+    coverage = f"{len(weeks)}/{len(expected)} completed regular-season weeks used." if expected else ''
+    summary = (
+        f"Wins: {record['wins']} · Losses: {record['losses']} · Ties: {record['ties']}."
+        if weeks else "No comparison available. This needs a completed week with scores for every team."
+    )
+    skipped = sorted(set(expected) - set(weeks))
+    gaps = ' Skipped weeks without complete league scores: ' + ', '.join(map(str, skipped)) + '.' if skipped else ''
+    retained = ' Includes retained scores after a failed refresh.' if record['retained_weeks'] else ''
+    return ('<details><summary>How often did we outscore the rest of the league?</summary>'
+            f'<p>{summary} {coverage}{gaps}{retained}</p>'
+            '<p>Each week, your Sleeper score is compared once with each other team’s score. '
+            'These comparisons are separate from your official record and any league median game.</p></details>')
+
 def season_panel(data, roster_id, *, compact=False):
     view = season_performance(data, roster_id)
     def points(value):
@@ -47,5 +65,6 @@ def season_panel(data, roster_id, *, compact=False):
             f'<p>{escape(comparison)}</p>' + (f'<p>Recent completed weeks: {escape(recent)}</p>' if recent else '')
             + (f'<p>{escape(view["recent_reason"])}</p>' if view['recent_reason'] else '')
             + '<p>Past team results are separate from this week’s projected lineup.</p>'
+            + _peer_record(view)
             + f'<details><summary>Weeks, coverage and sources</summary><p>{escape(details)}</p></details>'
             + '<a href="/matchups">Review matchups</a></div></details>')

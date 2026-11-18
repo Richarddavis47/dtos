@@ -1,3 +1,7 @@
+## v1.22.49 / build 2264 — Weekly league score comparisons
+
+My Team compares completed Sleeper scores with each other franchise in weeks with full league coverage. The season disclosure shows wins, losses, ties and skipped weeks separately from the official record.
+
 ## v1.22.48 / build 2263 — Season scores at week rollover
 
 Normal Sleeper preparation now includes completed matchup weeks when the NFL clock advances one week after the league's final scores post. Home, My Team and Matchups use the same prepared schedule.
