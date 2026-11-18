@@ -194,6 +194,37 @@ def _prepared_schedule(data: dict, current: int) -> tuple[dict, dict]:
     return calendar, prepared if compatible else {}
 
 
+
+def lineup_recheck_context(data, account, week=None):
+    """Bind the control to the selected week and its native lineup observation."""
+    from src.core.intelligence.lineup_review import timestamp
+    from src.platform.account_context import lineup_recheck_subject
+
+    subject = lineup_recheck_subject(account)
+    league = data.get("league") or {}
+    season = str(league.get("season") or "")
+    current = data.get("week")
+    if (not subject or not season.isascii() or not season.isdecimal() or len(season) != 4
+            or league.get("sport") != "nfl" or league.get("status") != "in_season"
+            or type(current) is not int or not 1 <= current <= 18
+            or (week is not None and week != current)
+            or str(league.get("league_id")) != account.membership.league_id):
+        return None
+    completed = (league.get("settings") or {}).get("last_scored_leg")
+    if type(completed) is int and current <= completed:
+        return None
+    _, prepared = _prepared_schedule(data, current)
+    evidence = (prepared.get("weeks") or {}).get(str(current)) or {}
+    stamp = None
+    if evidence.get("availability") == "available" and any(
+        row.get("roster_id") == account.membership.roster_id and row.get("starters")
+        for row in evidence.get("rows") or []
+    ):
+        stamp = timestamp(evidence.get("observed_at") or prepared.get("observed_at"))
+    return {"scope": f"{subject}:{season}:{current}", "observed_at": stamp.isoformat() if stamp else None}
+
+
+
 def remaining_regular_opponents(data: dict, roster_id: int) -> dict:
     """Read only confirmed head-to-head rows; do not build lineup views."""
     calendar, prepared = _prepared_schedule(data, int(data.get("week") or 0))
@@ -375,12 +406,12 @@ def season_week_view(data: dict, week: int, projection_service, *, evidence_thro
                     if (((snapshot or {}).get('players') or {}).get(player['player_id']) or {}).get('nfl_team_state') == 'unassigned' else None)
         from src.core.intelligence.lineup_review import review_lineup
         side['lineup_review'] = review_lineup(data, side, snapshot, strength, week=week,
-                                             observed_at=prepared.get('observed_at'),
+                                             observed_at=evidence.get('observed_at') or prepared.get('observed_at'),
                                              retained_projection=bool(refresh.get('retained_publication')))
         if not historical and week == current:
             from src.core.intelligence.lineup_fallback import read_fallback
             side['lineup_review']['fallback'] = read_fallback(
-                data, side, snapshot, strength, week=week, observed_at=prepared.get('observed_at'),
+                data, side, snapshot, strength, week=week, observed_at=evidence.get('observed_at') or prepared.get('observed_at'),
                 retained_projection=bool(refresh.get('retained_publication')),
             )
         if component:

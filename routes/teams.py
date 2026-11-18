@@ -473,9 +473,11 @@ def create_teams_router(
                 player_availability(catalog.get(str(player.get('id'))) or {}, None) in UNCERTAIN
                 for player in starters
             )
+            from services.matchup_season import lineup_recheck_context, season_week_view
+            from src.ui.lineup_review import lineup_recheck_panel, review_panel
+            recheck = lineup_recheck_context(data, account)
+            fallback = None
             if prepared_strength.get('lineup_review_schedule') or uncertain_starter:
-                from services.matchup_season import season_week_view
-                from src.ui.lineup_review import fallback_panel, review_panel
                 week_view = await run_manager_read(lambda: season_week_view(data, data['week'], pinned_service))
                 own_side = next((side for sides in week_view['groups'].values() for side in sides
                                  if side['roster_id'] == roster_id), {})
@@ -485,10 +487,10 @@ def create_teams_router(
                 fallback = review.get('fallback')
                 if not own_side and uncertain_starter:
                     fallback = {'reason': 'The current submitted lineup is not prepared for review.'}
-                lineup_fallback = fallback_panel(fallback)
-                if lineup_alert or lineup_fallback:
-                    lineup_assets = ('<link rel="stylesheet" href="/static/css/matchups.css">'
-                                     '<script src="/static/lineup-review.js" defer></script>')
+            lineup_fallback = lineup_recheck_panel(recheck, fallback)
+            if lineup_alert or lineup_fallback:
+                lineup_assets = ('<link rel="stylesheet" href="/static/css/matchups.css">'
+                                 '<script src="/static/lineup-review.js" defer></script>')
         starter_cards = "".join(
             f'<a class="card" href="{escape(contextual_player_url(str(player.get("id") or ""), from_team=roster_id, section="my-team-advanced", week=view["overview"]["projection_week"]))}">{player_summary(player_id=str(player.get("id") or ""), name=str(player.get("name") or "Unknown player"), position=str(player.get("position") or ""), nfl_team=str(player.get("team") or player.get("nfl_team") or "Free Agent"), context="Submitted starter", projection=card_projections.get(str(player.get("id") or "")))}</a>'
             for player in starters

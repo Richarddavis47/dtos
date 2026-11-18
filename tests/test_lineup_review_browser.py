@@ -298,3 +298,99 @@ class LineupFallbackBrowserTests(unittest.TestCase):
                     context.close()
             finally:
                 browser.close()
+
+
+class LineupRecheckBrowserTests(unittest.TestCase):
+    def test_same_page_recheck_updates_rb_fallback_and_uses_local_date(self):
+        from datetime import datetime
+        from urllib.parse import urlsplit
+        from zoneinfo import ZoneInfo
+
+        from tests.lineup_review_fixture import publish_rb_lineup, recheck_fixture
+
+        fixture, client, data, service, state, sync = recheck_fixture(self)
+        game = datetime.fromisoformat(data["team_strength"]["lineup_review_schedule"]["games"]["8:BUF"]["kickoff"])
+        timezone = "Pacific/Kiritimati" if game.hour >= 10 else "Etc/GMT+12"
+        local = game.astimezone(ZoneInfo(timezone))
+        self.assertNotEqual(game.date(), local.date())
+        backup_starts = True
+        result = "updated"
+        requests = []
+
+        async def refresh(**_):
+            state["preparation_state"] = "waiting_for_capacity" if result == "deferred" else "ready"
+            state["last_error"] = "fixture method failed" if result == "failed" else None
+            if result == "updated":
+                await publish_rb_lineup(data, service, backup_starts=backup_starts)
+            return state
+
+        sync.side_effect = refresh
+        with sync_playwright() as pw:
+            browser = launch_chromium(pw, headless=True)
+            context = browser.new_context(viewport={"width": 320, "height": 844},
+                                          locale="en-US", timezone_id=timezone)
+
+            def transport(route):
+                request = route.request
+                url = urlsplit(request.url)
+                if url.hostname != "dtos.test":
+                    route.abort()
+                    return
+                path = url.path + ("?" + url.query if url.query else "")
+                if request.method == "POST":
+                    requests.append(path)
+                response = client.request(request.method, path, headers={
+                    k: v for k, v in request.headers.items()
+                    if k in {"accept", "x-csrf-token", "x-dtos-lineup-recheck"}
+                })
+                if response.status_code == 404 and url.path.startswith("/static/"):
+                    response = fixture.f.static.get(path)
+                route.fulfill(status=response.status_code, headers=dict(response.headers), body=response.content)
+
+            context.route("**/*", transport)
+            page = context.new_page()
+            try:
+                for path in ("/teams/1", "/matchups/1?week=8"):
+                    backup_starts = True
+                    result = "updated"
+                    page.goto("https://dtos.test" + path)
+                    panel = page.locator("#lineup-recheck")
+                    old = panel.get_attribute("data-lineup-observed")
+                    button = page.get_by_role("button", name="Recheck lineup")
+                    sync_before = len(requests)
+                    page.reload()
+                    self.assertEqual(len(requests), sync_before)
+                    self.assertFalse(panel.get_by_text("can cover RB").count())
+                    button.click()
+                    message = panel.get_by_text("Submitted lineup rechecked.", exact=True)
+                    message.wait_for()
+                    self.assertEqual(page.url, "https://dtos.test" + path)
+                    self.assertGreater(panel.get_attribute("data-lineup-observed"), old)
+                    fallback = panel.get_by_role("region", name="Lineup fallback")
+                    self.assertIn("If Example BQ 1 is ruled out, Example R 1 can cover RB.", fallback.inner_text())
+                    game_lock = fallback.locator("time").first
+                    self.assertIn(local.strftime("%b ") + str(local.day), game_lock.inner_text())
+                    self.assertEqual(datetime.fromisoformat(game_lock.get_attribute("datetime")), game)
+                    self.assertIn("Submitted lineup last checked:", panel.inner_text())
+                    self.assertLessEqual(page.evaluate("document.documentElement.scrollWidth"), 320)
+                    evidence = os.environ.get("DTOS_LINEUP_REVIEW_EVIDENCE")
+                    if evidence:
+                        name = "my-team" if path.startswith("/teams") else "matchups"
+                        panel.screenshot(path=str(Path(evidence, f"lineup-recheck-{name}-320.png")))
+                    if path.startswith("/teams"):
+                        for status, wording in (
+                            ("deferred", "waiting for capacity"),
+                            ("failed", "The lineup recheck failed"),
+                        ):
+                            result = status
+                            button.click()
+                            page.get_by_text(wording, exact=False).wait_for()
+                            self.assertFalse(fallback.get_by_text("can cover RB").is_visible())
+                            self.assertEqual(page.url, "https://dtos.test" + path)
+                    result = "updated"
+                    backup_starts = False
+                    button.click()
+                    panel.get_by_text("No conditional fallback is shown.", exact=False).wait_for()
+                    self.assertEqual(fallback.count(), 0)
+            finally:
+                browser.close()

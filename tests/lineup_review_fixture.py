@@ -28,6 +28,7 @@ def prepared(
     schedule_team=None,
     uncertain=None,
     earlier_backup=False,
+    bench_position="QB",
 ):
     tmp = TemporaryDirectory()
     owner.addCleanup(tmp.cleanup)
@@ -75,7 +76,7 @@ def prepared(
             starters[0] = "0"
         for label, pos in [
             ("q", "QB"),
-            ("bq", "QB"),
+            ("bq", bench_position),
             ("r", "RB"),
             ("w", "WR"),
             ("s", "RB"),
@@ -236,3 +237,54 @@ def authenticated_prepared(owner, *, empty=True, **fixture_options):
         )
     )
     return f, base, service, now
+
+
+def recheck_fixture(owner):
+    from routes.api import create_api_router
+
+    fixture, data, service, now = authenticated_prepared(
+        owner, empty=False, uncertain="bq", bench_position="RB",
+    )
+    client = fixture.f.f.client
+    state = {"data": data, "last_error": None, "preparation_state": "ready"}
+    sync = AsyncMock(return_value=state)
+    client.app.include_router(create_api_router(
+        ensure_fresh=AsyncMock(), require_data=lambda: state["data"],
+        sync_sleeper=sync, state=state, league_id="league-1",
+    ))
+    published = data["season_matchups"]
+    published["observed_at"] = published["weeks"]["8"]["observed_at"] = (
+        now - timedelta(minutes=5)
+    ).isoformat()
+    return fixture, client, data, service, state, sync
+
+
+async def publish_rb_lineup(data, service, *, backup_starts):
+    """Replay conflicting stale and fresh submitted slots through preparation."""
+    previous = data["season_matchups"]
+    source = deepcopy(previous["weeks"]["8"]["rows"])
+    original = source[0]["starters"][1]
+    starter = "1-bq" if backup_starts else "1-r"
+    for player in data["teams"][0]["players"]:
+        if player["id"] in {original, starter}:
+            player.update(roster_slot="Starter" if player["id"] == starter else "Bench",
+                          starter_index=1 if player["id"] == starter else None)
+    source[0]["starters"][1] = starter
+
+    async def fetch(path):
+        return deepcopy(previous["weeks"].get(path.rsplit("/", 1)[-1], {}).get("rows") or [])
+
+    data["season_matchups"] = await prepare_season_matchups(
+        data["league"], 8, source, fetch, previous=previous,
+        observed_at=datetime.now(timezone.utc).isoformat(),
+    )
+    games = (data["team_strength"].get("lineup_review_schedule") or {}).get("games") or {}
+    facts = []
+    for key, row in games.items():
+        week, team = key.split(":")
+        if team == "BUF" and row:
+            facts.append(dict(provider="nflverse", family="schedule", season=2026, week=int(week),
+                              fingerprint=row["reference"], values=dict(
+                                  game_type="REG", home_team=team, away_team="NYJ", kickoff=row["kickoff"])))
+    with patch("services.global_evidence.retained_global_evidence", return_value=SimpleNamespace(read=lambda *a, **k: facts)):
+        prepare_for_data(service, data)

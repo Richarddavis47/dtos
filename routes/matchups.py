@@ -20,7 +20,7 @@ from src.ui.intelligence_presentation import (
     projection_presentation_value,
 )
 from src.ui import player_summary
-from services.matchup_season import season_week_view
+from services.matchup_season import lineup_recheck_context, season_week_view
 from src.core.projection_intelligence import projection_service
 from src.platform.league_context import current_league_context
 from src.platform.account_context import current_account
@@ -202,6 +202,7 @@ def create_matchups_router(
         membership = account.membership if account else None
         viewer = membership.roster_id if membership and membership.league_id == view['league_id'] else None
         view['viewer_roster_id'] = viewer
+        view['lineup_recheck'] = lineup_recheck_context(data, account, selected)
         for sides in view['groups'].values():
             for side in sides:
                 side['is_viewer'] = side['roster_id'] == viewer

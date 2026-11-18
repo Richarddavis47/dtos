@@ -1,6 +1,7 @@
 """Authentication and league-scoped authorization at the ASGI boundary."""
 from __future__ import annotations
 
+from hashlib import sha256
 import os
 import re
 from contextvars import ContextVar
@@ -19,6 +20,15 @@ _CURRENT_ACCOUNT: ContextVar[AccountContext | None] = ContextVar("dtos_account",
 
 def current_account() -> AccountContext | None:
     return _CURRENT_ACCOUNT.get()
+
+
+def lineup_recheck_subject(account: AccountContext | None) -> str | None:
+    """Bind a recheck to the same session and selected franchise as the page."""
+    membership = account.membership if account else None
+    if not membership or membership.roster_id is None or not getattr(account, "csrf_token", None) or not getattr(account, "session_id", None):
+        return None
+    subject = f"{account.session_id}:{membership.league_id}:{membership.roster_id}"
+    return sha256(subject.encode()).hexdigest()
 
 
 def _cookies(scope: dict[str, Any]) -> dict[str, str]:
@@ -154,6 +164,14 @@ class AccountContextMiddleware:
                 response = JSONResponse({"status": "csrf_rejected"}, status_code=403, headers=denial_headers)
                 await response(scope, receive, send)
                 return
+        recheck = _header(scope, b"x-dtos-lineup-recheck") if method == "POST" and path == "/sync" else ""
+        if recheck:
+            subject = lineup_recheck_subject(context)
+            if not subject or not re.fullmatch(subject + r":[0-9]{4}:[0-9]{1,2}", recheck):
+                await JSONResponse({"status": "scope_changed"}, status_code=409,
+                                   headers=denial_headers)(scope, receive, send)
+                return
+            scope["dtos_lineup_recheck"] = recheck
         if diagnostic and context is not None and context.membership is not None:
             membership = context.membership
             query_items = parse_qsl(scope.get("query_string", b"").decode("latin-1"), keep_blank_values=True)

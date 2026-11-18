@@ -156,7 +156,7 @@ class LeagueContextMiddleware:
                     }, status_code=403)
                     await response(scope, receive, send)
                     return
-                runtime = await self.manager.acquire_request(str(requested))
+                runtime = await self.manager.acquire_request(str(requested), hydrate=not scope.get("dtos_lineup_recheck"))
         except LeagueRuntimeNotFound as exc:
             log_runtime_failure(exc, operation="request_acquisition", status=422)
             await _unavailable_response(scope, status=422)(scope, receive, send)
