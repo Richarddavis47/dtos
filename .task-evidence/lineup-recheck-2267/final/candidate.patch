@@ -1,0 +1,693 @@
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index d91c20ac..c0fb4794 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -1,3 +1,7 @@
++## v1.22.52 / build 2267 — Recheck the weekly lineup
++
++My Team and Matchups show when the submitted Sleeper lineup was checked and display fallback deadlines in the browser’s time zone. Recheck lineup uses guarded league sync and returns to the same view after a newer check.
++
+ ## v1.22.51 / build 2266 — Conditional lineup fallback
+ 
+ My Team and Matchups show one verified backup plan for a questionable or doubtful submitted starter, including any FLEX moves and the earliest decision deadline. DTOS leaves lineup changes to Sleeper.
+diff --git a/RELEASE_NOTES.md b/RELEASE_NOTES.md
+index 33ab9257..66c8562a 100644
+--- a/RELEASE_NOTES.md
++++ b/RELEASE_NOTES.md
+@@ -1,3 +1,7 @@
++## v1.22.52 / build 2267 — Recheck the weekly lineup
++
++My Team and Matchups show when the submitted Sleeper lineup was checked and display fallback deadlines in the browser’s time zone. Recheck lineup uses guarded league sync and returns to the same view after a newer check.
++
+ ## v1.22.51 / build 2266 — Conditional lineup fallback
+ 
+ My Team and Matchups show one verified backup plan for a questionable or doubtful submitted starter, including any FLEX moves and the earliest decision deadline. DTOS leaves lineup changes to Sleeper.
+diff --git a/app_metadata.py b/app_metadata.py
+index d4e83665..bf222820 100644
+--- a/app_metadata.py
++++ b/app_metadata.py
+@@ -7,10 +7,10 @@ from datetime import datetime, timezone
+ from pathlib import Path
+ 
+ APPLICATION_NAME = "DTOS"
+-VERSION = "1.22.51"
+-PRODUCT_VERSION = "1.22.51"
+-BUILD_NUMBER = 2266
+-RELEASE_CODENAME = "Conditional Lineup Fallback"
++VERSION = "1.22.52"
++PRODUCT_VERSION = "1.22.52"
++BUILD_NUMBER = 2267
++RELEASE_CODENAME = "Weekly Lineup Recheck"
+ APPLICATION_STARTED_AT = datetime.now(timezone.utc).isoformat()
+ 
+ _REPOSITORY_ROOT = Path(__file__).resolve().parent
+diff --git a/routes/api.py b/routes/api.py
+index 39139369..4a1b23d0 100644
+--- a/routes/api.py
++++ b/routes/api.py
+@@ -220,6 +220,35 @@ def create_api_router(
+ 
+     @router.post("/sync")
+     async def manual_sync(request: Request):
++        requested_scope = request.scope.get("dtos_lineup_recheck")
++        if requested_scope:
++            from services.matchup_season import lineup_recheck_context
++            from src.platform.account_context import current_account
++            from src.platform.lifecycle import HeavyWorkDeferred
++            from src.platform.runtime_errors import PRIVATE_HEADERS, log_sync_failure, runtime_error_response
++
++            account = current_account()
++            before = lineup_recheck_context(state.get("data") or {}, account)
++            if not before or before["scope"] != requested_scope:
++                return JSONResponse({"status": "scope_changed"}, status_code=409, headers=PRIVATE_HEADERS)
++            try:
++                await sync_sleeper(force_players=False)
++            except HeavyWorkDeferred:
++                return runtime_error_response(503, deferred=True)
++            except Exception as error:
++                log_sync_failure(error, operation="lineup_recheck")
++                return runtime_error_response(503)
++            if state.get("preparation_state") == "waiting_for_capacity":
++                return runtime_error_response(503, deferred=True)
++            if state.get("last_error") or state.get("preparation_state") == "failed":
++                return runtime_error_response(503)
++            after = lineup_recheck_context(state.get("data") or {}, account)
++            if not after or after["scope"] != requested_scope:
++                return JSONResponse({"status": "scope_changed"}, status_code=409, headers=PRIVATE_HEADERS)
++            observed = after["observed_at"]
++            if not observed or (before["observed_at"] and observed <= before["observed_at"]):
++                return JSONResponse({"status": "not_updated"}, status_code=503, headers=PRIVATE_HEADERS)
++            return JSONResponse({"status": "updated", **after}, headers=PRIVATE_HEADERS)
+         await sync_sleeper(force_players=False)
+         if "application/json" in request.headers.get("accept", ""):
+             if state.get('preparation_state') == 'waiting_for_capacity':
+diff --git a/routes/matchups.py b/routes/matchups.py
+index 5061bf06..438f0ad0 100644
+--- a/routes/matchups.py
++++ b/routes/matchups.py
+@@ -20,7 +20,7 @@ from src.ui.intelligence_presentation import (
+     projection_presentation_value,
+ )
+ from src.ui import player_summary
+-from services.matchup_season import season_week_view
++from services.matchup_season import lineup_recheck_context, season_week_view
+ from src.core.projection_intelligence import projection_service
+ from src.platform.league_context import current_league_context
+ from src.platform.account_context import current_account
+@@ -202,6 +202,7 @@ def create_matchups_router(
+         membership = account.membership if account else None
+         viewer = membership.roster_id if membership and membership.league_id == view['league_id'] else None
+         view['viewer_roster_id'] = viewer
++        view['lineup_recheck'] = lineup_recheck_context(data, account, selected)
+         for sides in view['groups'].values():
+             for side in sides:
+                 side['is_viewer'] = side['roster_id'] == viewer
+diff --git a/routes/teams.py b/routes/teams.py
+index fba9b67e..ef2fb8df 100644
+--- a/routes/teams.py
++++ b/routes/teams.py
+@@ -473,9 +473,11 @@ def create_teams_router(
+                 player_availability(catalog.get(str(player.get('id'))) or {}, None) in UNCERTAIN
+                 for player in starters
+             )
++            from services.matchup_season import lineup_recheck_context, season_week_view
++            from src.ui.lineup_review import lineup_recheck_panel, review_panel
++            recheck = lineup_recheck_context(data, account)
++            fallback = None
+             if prepared_strength.get('lineup_review_schedule') or uncertain_starter:
+-                from services.matchup_season import season_week_view
+-                from src.ui.lineup_review import fallback_panel, review_panel
+                 week_view = await run_manager_read(lambda: season_week_view(data, data['week'], pinned_service))
+                 own_side = next((side for sides in week_view['groups'].values() for side in sides
+                                  if side['roster_id'] == roster_id), {})
+@@ -485,10 +487,10 @@ def create_teams_router(
+                 fallback = review.get('fallback')
+                 if not own_side and uncertain_starter:
+                     fallback = {'reason': 'The current submitted lineup is not prepared for review.'}
+-                lineup_fallback = fallback_panel(fallback)
+-                if lineup_alert or lineup_fallback:
+-                    lineup_assets = ('<link rel="stylesheet" href="/static/css/matchups.css">'
+-                                     '<script src="/static/lineup-review.js" defer></script>')
++            lineup_fallback = lineup_recheck_panel(recheck, fallback)
++            if lineup_alert or lineup_fallback:
++                lineup_assets = ('<link rel="stylesheet" href="/static/css/matchups.css">'
++                                 '<script src="/static/lineup-review.js" defer></script>')
+         starter_cards = "".join(
+             f'<a class="card" href="{escape(contextual_player_url(str(player.get("id") or ""), from_team=roster_id, section="my-team-advanced", week=view["overview"]["projection_week"]))}">{player_summary(player_id=str(player.get("id") or ""), name=str(player.get("name") or "Unknown player"), position=str(player.get("position") or ""), nfl_team=str(player.get("team") or player.get("nfl_team") or "Free Agent"), context="Submitted starter", projection=card_projections.get(str(player.get("id") or "")))}</a>'
+             for player in starters
+diff --git a/services/matchup_season.py b/services/matchup_season.py
+index e0c41373..9a4dec24 100644
+--- a/services/matchup_season.py
++++ b/services/matchup_season.py
+@@ -194,6 +194,37 @@ def _prepared_schedule(data: dict, current: int) -> tuple[dict, dict]:
+     return calendar, prepared if compatible else {}
+ 
+ 
++
++def lineup_recheck_context(data, account, week=None):
++    """Bind the control to the selected week and its native lineup observation."""
++    from src.core.intelligence.lineup_review import timestamp
++    from src.platform.account_context import lineup_recheck_subject
++
++    subject = lineup_recheck_subject(account)
++    league = data.get("league") or {}
++    season = str(league.get("season") or "")
++    current = data.get("week")
++    if (not subject or not season.isascii() or not season.isdecimal() or len(season) != 4
++            or league.get("sport") != "nfl" or league.get("status") != "in_season"
++            or type(current) is not int or not 1 <= current <= 18
++            or (week is not None and week != current)
++            or str(league.get("league_id")) != account.membership.league_id):
++        return None
++    completed = (league.get("settings") or {}).get("last_scored_leg")
++    if type(completed) is int and current <= completed:
++        return None
++    _, prepared = _prepared_schedule(data, current)
++    evidence = (prepared.get("weeks") or {}).get(str(current)) or {}
++    stamp = None
++    if evidence.get("availability") == "available" and any(
++        row.get("roster_id") == account.membership.roster_id and row.get("starters")
++        for row in evidence.get("rows") or []
++    ):
++        stamp = timestamp(evidence.get("observed_at") or prepared.get("observed_at"))
++    return {"scope": f"{subject}:{season}:{current}", "observed_at": stamp.isoformat() if stamp else None}
++
++
++
+ def remaining_regular_opponents(data: dict, roster_id: int) -> dict:
+     """Read only confirmed head-to-head rows; do not build lineup views."""
+     calendar, prepared = _prepared_schedule(data, int(data.get("week") or 0))
+@@ -375,12 +406,12 @@ def season_week_view(data: dict, week: int, projection_service, *, evidence_thro
+                     if (((snapshot or {}).get('players') or {}).get(player['player_id']) or {}).get('nfl_team_state') == 'unassigned' else None)
+         from src.core.intelligence.lineup_review import review_lineup
+         side['lineup_review'] = review_lineup(data, side, snapshot, strength, week=week,
+-                                             observed_at=prepared.get('observed_at'),
++                                             observed_at=evidence.get('observed_at') or prepared.get('observed_at'),
+                                              retained_projection=bool(refresh.get('retained_publication')))
+         if not historical and week == current:
+             from src.core.intelligence.lineup_fallback import read_fallback
+             side['lineup_review']['fallback'] = read_fallback(
+-                data, side, snapshot, strength, week=week, observed_at=prepared.get('observed_at'),
++                data, side, snapshot, strength, week=week, observed_at=evidence.get('observed_at') or prepared.get('observed_at'),
+                 retained_projection=bool(refresh.get('retained_publication')),
+             )
+         if component:
+diff --git a/src/platform/account_context.py b/src/platform/account_context.py
+index 8336feab..a9c355f0 100644
+--- a/src/platform/account_context.py
++++ b/src/platform/account_context.py
+@@ -1,6 +1,7 @@
+ """Authentication and league-scoped authorization at the ASGI boundary."""
+ from __future__ import annotations
+ 
++from hashlib import sha256
+ import os
+ import re
+ from contextvars import ContextVar
+@@ -21,6 +22,15 @@ def current_account() -> AccountContext | None:
+     return _CURRENT_ACCOUNT.get()
+ 
+ 
++def lineup_recheck_subject(account: AccountContext | None) -> str | None:
++    """Bind a recheck to the same session and selected franchise as the page."""
++    membership = account.membership if account else None
++    if not membership or membership.roster_id is None or not getattr(account, "csrf_token", None) or not getattr(account, "session_id", None):
++        return None
++    subject = f"{account.session_id}:{membership.league_id}:{membership.roster_id}"
++    return sha256(subject.encode()).hexdigest()
++
++
+ def _cookies(scope: dict[str, Any]) -> dict[str, str]:
+     headers = {key.lower(): value for key, value in scope.get("headers") or ()}
+     raw = headers.get(b"cookie", b"").decode("latin-1")
+@@ -154,6 +164,14 @@ class AccountContextMiddleware:
+                 response = JSONResponse({"status": "csrf_rejected"}, status_code=403, headers=denial_headers)
+                 await response(scope, receive, send)
+                 return
++        recheck = _header(scope, b"x-dtos-lineup-recheck") if method == "POST" and path == "/sync" else ""
++        if recheck:
++            subject = lineup_recheck_subject(context)
++            if not subject or not re.fullmatch(subject + r":[0-9]{4}:[0-9]{1,2}", recheck):
++                await JSONResponse({"status": "scope_changed"}, status_code=409,
++                                   headers=denial_headers)(scope, receive, send)
++                return
++            scope["dtos_lineup_recheck"] = recheck
+         if diagnostic and context is not None and context.membership is not None:
+             membership = context.membership
+             query_items = parse_qsl(scope.get("query_string", b"").decode("latin-1"), keep_blank_values=True)
+diff --git a/src/platform/league_context.py b/src/platform/league_context.py
+index 95c91b0c..922229bf 100644
+--- a/src/platform/league_context.py
++++ b/src/platform/league_context.py
+@@ -156,7 +156,7 @@ class LeagueContextMiddleware:
+                     }, status_code=403)
+                     await response(scope, receive, send)
+                     return
+-                runtime = await self.manager.acquire_request(str(requested))
++                runtime = await self.manager.acquire_request(str(requested), hydrate=not scope.get("dtos_lineup_recheck"))
+         except LeagueRuntimeNotFound as exc:
+             log_runtime_failure(exc, operation="request_acquisition", status=422)
+             await _unavailable_response(scope, status=422)(scope, receive, send)
+diff --git a/src/ui/lineup_review.py b/src/ui/lineup_review.py
+index 623b2e88..152e2eec 100644
+--- a/src/ui/lineup_review.py
++++ b/src/ui/lineup_review.py
+@@ -4,6 +4,14 @@ from html import escape
+ from src.core.intelligence.lineup_review import timestamp
+ 
+ 
++def local_check_time(value):
++    instant = timestamp(value)
++    if instant is None:
++        return "Not recorded"
++    return (f'<time data-lineup-local-time datetime="{instant.isoformat()}">'
++            f'{instant.strftime("%a %b %d, %H:%M UTC")}</time>')
++
++
+ def _primary_panel(review):
+     if not review or review.get("state") == "no_improvement":
+         return ""
+@@ -41,7 +49,7 @@ def _primary_panel(review):
+             + "</ul>"
+         )
+         changes += "<p>Apply these changes together in Sleeper. DTOS has not changed your lineup.</p>"
+-        checked = timestamp(review["observed_at"]).strftime("%H:%M UTC")
++        checked = local_check_time(review["observed_at"])
+         changes += f"<p>Roster checked {checked} · roster and projection checks within 15 minutes.</p>"
+         changes += (
+             f"<details><summary>Check times and limitations</summary><p>Roster retrieved {escape(review['observed_at'])}; projections prepared "
+@@ -77,22 +85,33 @@ def fallback_panel(fallback):
+         plan = f"<p>If {starter} is ruled out, make these moves together.</p><ul>"
+         plan += "".join(f"<li>{slot_name(slot)}: {escape(incoming)} in for {escape(outgoing)}.</li>"
+                         for slot, incoming, outgoing in moves) + "</ul>"
+-    def clock(key):
+-        return timestamp(fallback[key]).strftime("%a %b %d, %H:%M UTC")
+     note = " A required game starts before the starter’s game." if fallback["earlier_game"] else ""
+     return (
+         f'<section class="lineup-review" data-lineup-review="fallback" data-review-until="{escape(fallback["valid_until"])}"'
+         f' data-review-checked-at="{escape(fallback["verified_at"])}" aria-label="Lineup fallback">'
+         f'<h3>Lineup fallback</h3><div data-review-current>{plan}'
+-        f'<p>Decide before {clock("kickoff_deadline")} game lock.{note} '
+-        f'This check expires {clock("valid_until")}.</p></div>'
++        f'<p>Decide before {local_check_time(fallback["kickoff_deadline"])} game lock.{note} '
++        f'Recheck by {local_check_time(fallback["valid_until"])}.</p></div>'
+         '<p data-review-expired role="status" aria-live="polite" hidden>'
+         'This fallback check has expired. Check Sleeper before making any lineup changes.</p>'
+         '<p><a class="button" href="https://sleeper.com/" rel="noopener noreferrer">Review in Sleeper</a></p></section>'
+     )
+ 
+ 
+-def review_panel(review):
+-    if not review:
+-        return ""
+-    return _primary_panel(review) + fallback_panel(review.get("fallback"))
++def lineup_recheck_panel(recheck, fallback):
++    if not recheck:
++        return fallback_panel(fallback)
++    return (
++        f'<div class="lineup-recheck" id="lineup-recheck" data-lineup-recheck-scope="{escape(recheck["scope"])}"'
++        f' data-lineup-observed="{escape(recheck["observed_at"] or "")}"'
++        f' data-lineup-has-fallback="{str(bool(fallback)).lower()}">'
++        + fallback_panel(fallback)
++        + '<div class="lineup-recheck-controls">'
++        f'<p>Submitted lineup last checked: {local_check_time(recheck["observed_at"])}.</p>'
++        '<button type="button" class="btn" data-lineup-recheck hidden>Recheck lineup</button>'
++        '<p data-lineup-recheck-status role="status" tabindex="-1" hidden></p></div></div>'
++    )
++
++
++def review_panel(review, *, recheck=None):
++    return _primary_panel(review) + lineup_recheck_panel(recheck, (review or {}).get("fallback"))
+diff --git a/src/ui/matchup_season.py b/src/ui/matchup_season.py
+index 6d04b8e1..5616ded8 100644
+--- a/src/ui/matchup_season.py
++++ b/src/ui/matchup_season.py
+@@ -127,10 +127,13 @@ def render_season_week(view: dict, *, matchup_id: str | None = None) -> str:
+         heading += ' · Playoff round'
+         description += ' Component weeks: ' + ', '.join(map(str, view['round_weeks'])) + '.'
+         description += ' Round complete.' if view['round_complete'] else ' Round unresolved until all component weeks finish.'
+-    from src.ui.lineup_review import review_panel
+-    own_reviews = ''.join(review_panel(side.get('lineup_review')) for identity, sides in view['groups'].items()
++    from src.ui.lineup_review import lineup_recheck_panel, review_panel
++    recheck = view.get('lineup_recheck')
++    own_reviews = ''.join(review_panel(side.get('lineup_review'), recheck=recheck) for identity, sides in view['groups'].items()
+                           for side in sides if side.get('is_viewer') and view['period'] != 'historical'
+                           and (matchup_id is None or identity == matchup_id))
++    if recheck and not own_reviews and matchup_id is None:
++        own_reviews = lineup_recheck_panel(recheck, None)
+     body = nav + own_reviews + f'<section class="card matchup-heading"><h2>{escape(heading)}</h2><p>{escape(description)}</p></section>'
+     if own_reviews:
+         body += '<script src="/static/lineup-review.js" defer></script>'
+diff --git a/static/css/matchups.css b/static/css/matchups.css
+index 3c4452e4..ff31242e 100644
+--- a/static/css/matchups.css
++++ b/static/css/matchups.css
+@@ -62,3 +62,5 @@
+  .matchup-player .player-summary-copy b{font-size:.875rem}
+  .matchup-player-points{gap:12px;margin-bottom:6px}
+ }
++
++.lineup-recheck{margin-block:12px}.lineup-recheck-controls{display:flex;align-items:center;gap:8px 12px;flex-wrap:wrap}.lineup-recheck-controls p{margin:0}.lineup-recheck-controls [role="status"]{flex-basis:100%}.lineup-recheck-controls button{min-height:44px}.lineup-recheck-controls [hidden]{display:none}
+diff --git a/static/lineup-review.js b/static/lineup-review.js
+index 765ea6fa..b4a9ea7b 100644
+--- a/static/lineup-review.js
++++ b/static/lineup-review.js
+@@ -1,4 +1,4 @@
+-/* Time-only invalidation; no polling, fetching, analytics or lineup mutation. */
++/* Local clocks and an explicit, scoped recheck through the existing league sync. */
+ (() => {
+   let timer;
+   const check = () => {
+@@ -25,6 +25,86 @@
+     });
+     if (document.querySelector('[data-review-until]')) timer = setTimeout(check, delay);
+   };
++  const formatter = new Intl.DateTimeFormat(undefined, {
++    weekday: 'short', month: 'short', day: 'numeric',
++    hour: 'numeric', minute: '2-digit', timeZoneName: 'short',
++  });
++  document.querySelectorAll('[data-lineup-local-time]').forEach(element => {
++    const value = Date.parse(element.dateTime);
++    if (Number.isFinite(value)) element.textContent = formatter.format(value);
++  });
++
++  function recheckControl(panel) {
++    const token = document.querySelector('form[action="/sync"] input[name="csrf_token"]')?.value;
++    if (!panel || !token) return;
++    const button = panel.querySelector('[data-lineup-recheck]');
++    const status = panel.querySelector('[data-lineup-recheck-status]');
++    const scope = panel.dataset.lineupRecheckScope;
++    const receiptKey = 'dtos-lineup-recheck';
++    const show = text => { status.textContent = text; status.hidden = false; };
++    button.hidden = false;
++    try {
++      const receipt = JSON.parse(sessionStorage.getItem(receiptKey));
++      sessionStorage.removeItem(receiptKey);
++      if (receipt?.scope === scope && receipt.url === location.href &&
++          Date.parse(panel.dataset.lineupObserved) === Date.parse(receipt.observed)) {
++        show(panel.dataset.lineupHasFallback === 'true' ?
++          'Submitted lineup rechecked.' : 'Submitted lineup rechecked. No conditional fallback is shown.');
++        status.focus();
++      }
++    } catch { /* Saved feedback is optional. */ }
++
++    let attempt = 0;
++    window.addEventListener('pagehide', () => {
++      if (button.disabled) {
++        attempt += 1;
++        button.disabled = false;
++        show('Recheck to confirm the current submitted lineup.');
++      }
++    });
++    button.addEventListener('click', async () => {
++      const selected = ++attempt;
++      const url = location.href;
++      const current = () => selected === attempt && location.href === url && panel.isConnected;
++      button.disabled = true;
++      show('Checking the submitted lineup with Sleeper…');
++      document.querySelectorAll('[data-review-until]').forEach(review => {
++        review.querySelector('[data-review-current]').hidden = true;
++        review.querySelector('h3').textContent = 'Review your lineup';
++        review.removeAttribute('data-review-until');
++        review.dataset.lineupReview = 'rechecking';
++      });
++      let text = 'The lineup recheck failed. The previous lineup is still displayed. Try again when ready.';
++      try {
++        const response = await fetch('/sync', {
++          method: 'POST', redirect: 'error',
++          headers: {'Accept': 'application/json', 'X-CSRF-Token': token, 'X-DTOS-Lineup-Recheck': scope},
++        });
++        const result = await response.json();
++        if (!current()) return;
++        if (response.ok && result.status === 'updated' && result.scope === scope &&
++            Number.isFinite(Date.parse(result.observed_at))) {
++          try {
++            sessionStorage.setItem(receiptKey, JSON.stringify({scope, url, observed: result.observed_at}));
++          } catch { /* Rechecking still works without saved feedback. */ }
++          location.reload();
++          return;
++        }
++        if (result.status === 'deferred')
++          text = 'The lineup recheck is waiting for capacity. Try again in a minute.';
++        else if (result.status === 'scope_changed' || (response.ok && result.scope !== scope))
++          text = 'The league or week changed. Open your current lineup before rechecking.';
++        else if (result.status === 'not_updated')
++          text = 'Sleeper did not return a newer submitted lineup. Try again when current data is available.';
++      } catch { /* Keep advice withheld on transport or session failure. */ }
++      if (current()) {
++        show(text);
++        button.disabled = false;
++      }
++    });
++  }
++  recheckControl(document.querySelector('[data-lineup-recheck-scope]'));
++
+   check();
+   document.addEventListener('visibilitychange', check);
+ })();
+diff --git a/tests/lineup_review_fixture.py b/tests/lineup_review_fixture.py
+index 0cbdaac5..29db8ae2 100644
+--- a/tests/lineup_review_fixture.py
++++ b/tests/lineup_review_fixture.py
+@@ -28,6 +28,7 @@ def prepared(
+     schedule_team=None,
+     uncertain=None,
+     earlier_backup=False,
++    bench_position="QB",
+ ):
+     tmp = TemporaryDirectory()
+     owner.addCleanup(tmp.cleanup)
+@@ -75,7 +76,7 @@ def prepared(
+             starters[0] = "0"
+         for label, pos in [
+             ("q", "QB"),
+-            ("bq", "QB"),
++            ("bq", bench_position),
+             ("r", "RB"),
+             ("w", "WR"),
+             ("s", "RB"),
+@@ -236,3 +237,54 @@ def authenticated_prepared(owner, *, empty=True, **fixture_options):
+         )
+     )
+     return f, base, service, now
++
++
++def recheck_fixture(owner):
++    from routes.api import create_api_router
++
++    fixture, data, service, now = authenticated_prepared(
++        owner, empty=False, uncertain="bq", bench_position="RB",
++    )
++    client = fixture.f.f.client
++    state = {"data": data, "last_error": None, "preparation_state": "ready"}
++    sync = AsyncMock(return_value=state)
++    client.app.include_router(create_api_router(
++        ensure_fresh=AsyncMock(), require_data=lambda: state["data"],
++        sync_sleeper=sync, state=state, league_id="league-1",
++    ))
++    published = data["season_matchups"]
++    published["observed_at"] = published["weeks"]["8"]["observed_at"] = (
++        now - timedelta(minutes=5)
++    ).isoformat()
++    return fixture, client, data, service, state, sync
++
++
++async def publish_rb_lineup(data, service, *, backup_starts):
++    """Replay conflicting stale and fresh submitted slots through preparation."""
++    previous = data["season_matchups"]
++    source = deepcopy(previous["weeks"]["8"]["rows"])
++    original = source[0]["starters"][1]
++    starter = "1-bq" if backup_starts else "1-r"
++    for player in data["teams"][0]["players"]:
++        if player["id"] in {original, starter}:
++            player.update(roster_slot="Starter" if player["id"] == starter else "Bench",
++                          starter_index=1 if player["id"] == starter else None)
++    source[0]["starters"][1] = starter
++
++    async def fetch(path):
++        return deepcopy(previous["weeks"].get(path.rsplit("/", 1)[-1], {}).get("rows") or [])
++
++    data["season_matchups"] = await prepare_season_matchups(
++        data["league"], 8, source, fetch, previous=previous,
++        observed_at=datetime.now(timezone.utc).isoformat(),
++    )
++    games = (data["team_strength"].get("lineup_review_schedule") or {}).get("games") or {}
++    facts = []
++    for key, row in games.items():
++        week, team = key.split(":")
++        if team == "BUF" and row:
++            facts.append(dict(provider="nflverse", family="schedule", season=2026, week=int(week),
++                              fingerprint=row["reference"], values=dict(
++                                  game_type="REG", home_team=team, away_team="NYJ", kickoff=row["kickoff"])))
++    with patch("services.global_evidence.retained_global_evidence", return_value=SimpleNamespace(read=lambda *a, **k: facts)):
++        prepare_for_data(service, data)
+diff --git a/tests/test_lineup_review.py b/tests/test_lineup_review.py
+index a98fe2a6..cc2c8516 100644
+--- a/tests/test_lineup_review.py
++++ b/tests/test_lineup_review.py
+@@ -427,3 +427,61 @@ class LineupFallbackTests(unittest.TestCase):
+         self.assertIn("compatible fallback has not been prepared", self.read(data, service, now)["reason"])
+         client = http(self, data, service, roster_id=2)
+         self.assertNotIn("Lineup fallback", client.get("/matchups/1?week=8").text)
++
++
++class LineupRecheckTests(unittest.TestCase):
++    def setup_recheck(self):
++        import re
++        from tests.lineup_review_fixture import recheck_fixture
++
++        _, client, data, service, state, sync = recheck_fixture(self)
++        body = client.get("/teams/1").text
++        csrf = re.search(r'name="csrf_token" value="([^"]+)"', body)[1]
++        scope = re.search(r'data-lineup-recheck-scope="([^"]+)"', body)[1]
++        headers = {"Accept": "application/json", "X-CSRF-Token": csrf, "X-DTOS-Lineup-Recheck": scope}
++        return client, data, service, state, sync, headers
++
++    def test_recheck_requires_current_session_week_and_newer_observation(self):
++        client, _, _, _, sync, headers = self.setup_recheck()
++        wrong = {**headers, "X-DTOS-Lineup-Recheck": "0"*64 + ":2026:8"}
++        self.assertEqual(client.post("/sync", headers=wrong).json()["status"], "scope_changed")
++        week = {**headers, "X-DTOS-Lineup-Recheck": headers["X-DTOS-Lineup-Recheck"][:-1] + "9"}
++        self.assertEqual(client.post("/sync", headers=week).json()["status"], "scope_changed")
++        csrf = {**headers, "X-CSRF-Token": "invalid"}
++        self.assertEqual(client.post("/sync", headers=csrf).status_code, 403)
++        sync.assert_not_awaited()
++        self.assertNotIn("data-lineup-recheck-scope", client.get("/matchups?week=9").text)
++        self.assertNotIn("data-lineup-recheck-scope", client.get("/teams/2").text)
++        pending = client.post("/sync", headers=headers)
++        self.assertEqual((pending.status_code, pending.json()["status"]), (503, "not_updated"))
++        sync.assert_awaited_once_with(force_players=False)
++
++    def test_recheck_distinguishes_capacity_failure_and_week_rollover(self):
++        from src.platform.lifecycle import HeavyWorkDeferred
++
++        client, data, _, state, sync, headers = self.setup_recheck()
++        sync.side_effect = HeavyWorkDeferred("fixture capacity")
++        deferred = client.post("/sync", headers=headers)
++        self.assertEqual((deferred.status_code, deferred.json()["status"]), (503, "deferred"))
++        self.assertEqual(deferred.headers["retry-after"], "60")
++        sync.side_effect = None
++        state["last_error"] = "private fixture error"
++        failed = client.post("/sync", headers=headers)
++        self.assertEqual((failed.status_code, failed.json()["status"]), (503, "failed"))
++        self.assertNotIn(state["last_error"], failed.text)
++        state["last_error"] = None
++
++        for changed_scope in ("week", "league"):
++            with self.subTest(changed_scope=changed_scope):
++                async def advance(**_):
++                    if changed_scope == "week":
++                        data["week"] = 9
++                    else:
++                        data["league"]["league_id"] = "other-league"
++                    return state
++
++                sync.side_effect = advance
++                changed = client.post("/sync", headers=headers)
++                self.assertEqual((changed.status_code, changed.json()["status"]), (409, "scope_changed"))
++                self.assertNotIn("observed_at", changed.json())
++                data["week"] = 8
+diff --git a/tests/test_lineup_review_browser.py b/tests/test_lineup_review_browser.py
+index b23f1064..78695d67 100644
+--- a/tests/test_lineup_review_browser.py
++++ b/tests/test_lineup_review_browser.py
+@@ -298,3 +298,99 @@ class LineupFallbackBrowserTests(unittest.TestCase):
+                     context.close()
+             finally:
+                 browser.close()
++
++
++class LineupRecheckBrowserTests(unittest.TestCase):
++    def test_same_page_recheck_updates_rb_fallback_and_uses_local_date(self):
++        from datetime import datetime
++        from urllib.parse import urlsplit
++        from zoneinfo import ZoneInfo
++
++        from tests.lineup_review_fixture import publish_rb_lineup, recheck_fixture
++
++        fixture, client, data, service, state, sync = recheck_fixture(self)
++        game = datetime.fromisoformat(data["team_strength"]["lineup_review_schedule"]["games"]["8:BUF"]["kickoff"])
++        timezone = "Pacific/Kiritimati" if game.hour >= 10 else "Etc/GMT+12"
++        local = game.astimezone(ZoneInfo(timezone))
++        self.assertNotEqual(game.date(), local.date())
++        backup_starts = True
++        result = "updated"
++        requests = []
++
++        async def refresh(**_):
++            state["preparation_state"] = "waiting_for_capacity" if result == "deferred" else "ready"
++            state["last_error"] = "fixture method failed" if result == "failed" else None
++            if result == "updated":
++                await publish_rb_lineup(data, service, backup_starts=backup_starts)
++            return state
++
++        sync.side_effect = refresh
++        with sync_playwright() as pw:
++            browser = launch_chromium(pw, headless=True)
++            context = browser.new_context(viewport={"width": 320, "height": 844},
++                                          locale="en-US", timezone_id=timezone)
++
++            def transport(route):
++                request = route.request
++                url = urlsplit(request.url)
++                if url.hostname != "dtos.test":
++                    route.abort()
++                    return
++                path = url.path + ("?" + url.query if url.query else "")
++                if request.method == "POST":
++                    requests.append(path)
++                response = client.request(request.method, path, headers={
++                    k: v for k, v in request.headers.items()
++                    if k in {"accept", "x-csrf-token", "x-dtos-lineup-recheck"}
++                })
++                if response.status_code == 404 and url.path.startswith("/static/"):
++                    response = fixture.f.static.get(path)
++                route.fulfill(status=response.status_code, headers=dict(response.headers), body=response.content)
++
++            context.route("**/*", transport)
++            page = context.new_page()
++            try:
++                for path in ("/teams/1", "/matchups/1?week=8"):
++                    backup_starts = True
++                    result = "updated"
++                    page.goto("https://dtos.test" + path)
++                    panel = page.locator("#lineup-recheck")
++                    old = panel.get_attribute("data-lineup-observed")
++                    button = page.get_by_role("button", name="Recheck lineup")
++                    sync_before = len(requests)
++                    page.reload()
++                    self.assertEqual(len(requests), sync_before)
++                    self.assertFalse(panel.get_by_text("can cover RB").count())
++                    button.click()
++                    message = panel.get_by_text("Submitted lineup rechecked.", exact=True)
++                    message.wait_for()
++                    self.assertEqual(page.url, "https://dtos.test" + path)
++                    self.assertGreater(panel.get_attribute("data-lineup-observed"), old)
++                    fallback = panel.get_by_role("region", name="Lineup fallback")
++                    self.assertIn("If Example BQ 1 is ruled out, Example R 1 can cover RB.", fallback.inner_text())
++                    game_lock = fallback.locator("time").first
++                    self.assertIn(local.strftime("%b ") + str(local.day), game_lock.inner_text())
++                    self.assertEqual(datetime.fromisoformat(game_lock.get_attribute("datetime")), game)
++                    self.assertIn("Submitted lineup last checked:", panel.inner_text())
++                    self.assertLessEqual(page.evaluate("document.documentElement.scrollWidth"), 320)
++                    evidence = os.environ.get("DTOS_LINEUP_REVIEW_EVIDENCE")
++                    if evidence:
++                        name = "my-team" if path.startswith("/teams") else "matchups"
++                        panel.screenshot(path=str(Path(evidence, f"lineup-recheck-{name}-320.png")))
++                    if path.startswith("/teams"):
++                        for status, wording in (
++                            ("deferred", "waiting for capacity"),
++                            ("failed", "The lineup recheck failed"),
++                        ):
++                            result = status
++                            button.click()
++                            page.get_by_text(wording, exact=False).wait_for()
++                            self.assertFalse(fallback.get_by_text("can cover RB").is_visible())
++                            self.assertEqual(page.url, "https://dtos.test" + path)
++                    result = "updated"
++                    backup_starts = False
++                    button.click()
++                    panel.get_by_text("No conditional fallback is shown.", exact=False).wait_for()
++                    self.assertEqual(fallback.count(), 0)
++            finally:
++                browser.close()

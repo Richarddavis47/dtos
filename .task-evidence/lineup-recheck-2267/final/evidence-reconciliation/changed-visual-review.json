@@ -1,0 +1,42 @@
+{
+  "source": {
+    "baseline": "e64b59c22c71cb3378f40f2dbf69b0379ad42255",
+    "baseline_tree": "b67554151cf5612ce0011941a25b4fc0ac6bc010",
+    "candidate": "50425621b657012cfcfab20cd459c88b1871b4c9",
+    "tree": "81c163b88696ed1f8957fc3cdd24f39440b13e11",
+    "branch": "feat/lineup-recheck-2267",
+    "version": "1.22.52",
+    "build": 2267,
+    "expected_test_count": 4645,
+    "pr": 356
+  },
+  "reviewed_images": [
+    {
+      "path": "visual-pixel-comparison/commissioner-320-default.png",
+      "sha256": "dbc84e851789bef083e8c836247963e8bd52be21a99f9fb0019f8274721991bc",
+      "review": "Commissioner fixture visit time changed; text and layout remain readable."
+    },
+    {
+      "path": "visual-pixel-comparison/commissioner-390-default.png",
+      "sha256": "1da6b43d1945d1788e20caeb8f66d0891233b563454b279f7d9b982b7671b832",
+      "review": "Commissioner fixture visit time changed; text and layout remain readable."
+    },
+    {
+      "path": "visual-pixel-comparison/commissioner-1280-default.png",
+      "sha256": "68726977c97bd0b6eb6c9927e041d77d868f7f5c3da86d5b733a74f925cfa7ae",
+      "review": "Commissioner fixture visit time changed; text and layout remain readable."
+    },
+    {
+      "path": "visual-pixel-comparison/home-390-default.png",
+      "sha256": "66425258c61604df52f2ffc83b80a3dfe15d6e3949ac3937e03a980b3be9b3ea",
+      "review": "Home fixture states differ: the earlier image shows optional draft-pick and outlook blocks and Trade shortcuts; the current image shows Season so far, Weekly Report and Explore higher in the flow. Both are readable. This is not an identical state comparison."
+    },
+    {
+      "path": "visual-pixel-comparison/trade-1280-default.png",
+      "sha256": "89607a56f6c143f53082f4ed8a255818c7f5a11beecc482a9acbac361d8c291d",
+      "review": "Desktop Trade fixture shows two small unavailable portrait placeholders; labels and valuation layout remain aligned."
+    }
+  ],
+  "material_visual_defects": [],
+  "scope": "Inspected five changed fixture comparisons and the exact 320px recheck card, whose two route captures are pixel-identical. Chromium emulation."
+}

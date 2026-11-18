@@ -1,0 +1,47 @@
+{
+  "passed": true,
+  "source": {
+    "baseline": "e64b59c22c71cb3378f40f2dbf69b0379ad42255",
+    "baseline_tree": "b67554151cf5612ce0011941a25b4fc0ac6bc010",
+    "candidate": "50425621b657012cfcfab20cd459c88b1871b4c9",
+    "tree": "81c163b88696ed1f8957fc3cdd24f39440b13e11",
+    "branch": "feat/lineup-recheck-2267",
+    "version": "1.22.52",
+    "build": 2267,
+    "expected_test_count": 4645,
+    "pr": 356
+  },
+  "controller": {
+    "commit": "f7359dc256c3f0900279da19596c2f73fffae96b",
+    "tree": "86af36f6bd5f693d3ce0a38bf401365636a99186",
+    "branch": "release/2267-actions-publisher",
+    "ref": "refs/heads/release/2267-actions-publisher",
+    "source": {
+      "baseline": "e64b59c22c71cb3378f40f2dbf69b0379ad42255",
+      "baseline_tree": "b67554151cf5612ce0011941a25b4fc0ac6bc010",
+      "candidate": "50425621b657012cfcfab20cd459c88b1871b4c9",
+      "tree": "81c163b88696ed1f8957fc3cdd24f39440b13e11",
+      "branch": "feat/lineup-recheck-2267",
+      "version": "1.22.52",
+      "build": 2267,
+      "expected_test_count": 4645,
+      "pr": 356
+    },
+    "tooling_only": true,
+    "not_merged_into_main": true
+  },
+  "sha256": {
+    "tools/release/publish.py": "78d0e9456724ff060c7b3bec866a98e1b36d615d91badb92321621a1a524c9c9",
+    "tests/test_release_publisher.py": "5215411b5a5fe8b274c201cc6958c12bc0cb834dbdc4751ad8f7cb88d95a5675",
+    ".github/workflows/canonical-release-recovery.yml": "26f622cd8280b4e25d343941d2e5845b6df456ff9e6ea76f40be615d49bf5e41",
+    ".github/release-plans/2267.json": "289cfbb75a83d9129ef1973a4a1d3110dc26b433a9338dc04f6bc6d85345c917"
+  },
+  "tests": 181,
+  "lint": true,
+  "compile": true,
+  "diff_check": true,
+  "reused_exact_unchanged_controls": true,
+  "original_controls_sha256": "8d68d220eabe0db7ed586ddf64b915086e5fee1a94eea6e94f4816cb92b0be96",
+  "sparse_recovery": "Finalized-plan181controls, lint, compile and diff passed before explicit allowed sparse staging. No guard/source/plan bytes changed after checks.",
+  "scope": "Real finalized plan and unchanged publisher guards; no validation bypass."
+}

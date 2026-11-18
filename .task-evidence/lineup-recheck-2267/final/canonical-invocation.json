@@ -1,0 +1,70 @@
+{
+  "source": {
+    "baseline": "e64b59c22c71cb3378f40f2dbf69b0379ad42255",
+    "baseline_tree": "b67554151cf5612ce0011941a25b4fc0ac6bc010",
+    "candidate": "50425621b657012cfcfab20cd459c88b1871b4c9",
+    "tree": "81c163b88696ed1f8957fc3cdd24f39440b13e11",
+    "branch": "feat/lineup-recheck-2267",
+    "version": "1.22.52",
+    "build": 2267,
+    "expected_test_count": 4645,
+    "pr": 356
+  },
+  "command": [
+    "docker",
+    "create",
+    "--name",
+    "dtos-lineup-recheck-canonical-2267",
+    "--init",
+    "--user",
+    "1000:1000",
+    "--memory=2g",
+    "--memory-swap=2g",
+    "--cpus=2",
+    "--network=none",
+    "-v",
+    "/workspace/dtos-draft-capital-2247:/app",
+    "-v",
+    "/workspace/dtos/.git:/workspace/dtos/.git:ro",
+    "-v",
+    "/workspace/2267-lineup-recheck/local-canonical:/output",
+    "-v",
+    "/dev/shm/dtos-2267-fixture:/fixture",
+    "-e",
+    "HOME=/tmp",
+    "-e",
+    "NODE_OPTIONS=--max-old-space-size=128",
+    "-e",
+    "GIT_CONFIG_COUNT=1",
+    "-e",
+    "GIT_CONFIG_KEY_0=safe.directory",
+    "-e",
+    "GIT_CONFIG_VALUE_0=/app",
+    "-e",
+    "DTOS_EXPECTED_HEAD=50425621b657012cfcfab20cd459c88b1871b4c9",
+    "-e",
+    "DTOS_EXPECTED_TREE=81c163b88696ed1f8957fc3cdd24f39440b13e11",
+    "-e",
+    "DTOS_EXPECTED_TEST_COUNT=4645",
+    "-w",
+    "/app",
+    "sha256:f70a0c6402700dfb954c99d8163d4164926f74435c34d2e7e462407151663ae6",
+    "python",
+    "/output/runner.py"
+  ],
+  "container": "21125fb6681cfd1581d017091b34a5c2916d824f99763955bd2f63618116324a",
+  "files": [
+    {
+      "name": "runner.py",
+      "sha256": "574308d9f64252575970aa19ce113f603ccb9927f2c6a523e8c228869fd37cac"
+    },
+    {
+      "name": "observer/sitecustomize.py",
+      "sha256": "3f43288a099e49a3ed2dea36f977b596707589eaefd2656b40a3b9c6533be2d4"
+    }
+  ],
+  "created_at": "2026-11-18T18:18:32.289821+00:00",
+  "status": "RUNNING_NOT_PASSED",
+  "fixture_free_after_container_creation": 9427300352,
+  "official_scratch_gate_unchanged": true
+}
