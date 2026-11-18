@@ -13,7 +13,8 @@ def season_performance(data, roster_id):
     result = dict(season=league.get('season'), weeks=[], recent=[], average=None,
                   league_average=None, expected_weeks=[], missing=[], retained=False,
                   observed_at=prepared.get('observed_at'), generation=prepared.get('semantic_generation'),
-                  reason=None, recent_reason=None, gaps=[], cohort_size=None)
+                  reason=None, recent_reason=None, gaps=[], cohort_size=None,
+                  peer_record=dict(wins=0, losses=0, ties=0, weeks=[], retained_weeks=[]))
     if (calendar['availability'] != 'supported'
             or prepared.get('league_id') != str(league.get('league_id') or '')
             or prepared.get('season') != str(league.get('season') or '')
@@ -36,6 +37,8 @@ def season_performance(data, roster_id):
         return result
     result['cohort_size'] = count if cohort else None
     comparisons = []
+    cohort_ids = set(ids) if cohort else set()
+    peer_record = result['peer_record']
     for week in expected:
         evidence = (prepared.get('weeks') or {}).get(str(week)) or {}
         retained = evidence.get('availability') != 'available'
@@ -74,6 +77,16 @@ def season_performance(data, roster_id):
             result['retained'] |= retained
             if cohort and all(scores.get(rid) is not None for rid in ids):
                 comparisons.append(mean(scores[rid] for rid in ids))
+                if len(cohort_ids) > 1 and scores.keys() == cohort_ids:
+                    peer_record['weeks'].append(week)
+                    if retained:
+                        peer_record['retained_weeks'].append(week)
+                    for rid in ids:
+                        if rid == roster_id:
+                            continue
+                        other = scores[rid]
+                        outcome = 'wins' if score > other else 'losses' if score < other else 'ties'
+                        peer_record[outcome] += 1
         if week in expected[-3:]:
             result['recent'].append(dict(week=week, points=score, retained=retained))
     values = [row['points'] for row in result['weeks']]
