@@ -1,0 +1,720 @@
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index 40dc1962..d91c20ac 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -1,3 +1,7 @@
++## v1.22.51 / build 2266 — Conditional lineup fallback
++
++My Team and Matchups show one verified backup plan for a questionable or doubtful submitted starter, including any FLEX moves and the earliest decision deadline. DTOS leaves lineup changes to Sleeper.
++
+ ## v1.22.50 / build 2265 — Playoff race context
+ 
+ My Team shows current playoff positioning, the relevant record and Points For benchmark, and confirmed remaining regular-season opponents. Published brackets and unresolved or unsupported qualification rules are identified separately.
+diff --git a/RELEASE_NOTES.md b/RELEASE_NOTES.md
+index 81cdd99c..33ab9257 100644
+--- a/RELEASE_NOTES.md
++++ b/RELEASE_NOTES.md
+@@ -1,3 +1,7 @@
++## v1.22.51 / build 2266 — Conditional lineup fallback
++
++My Team and Matchups show one verified backup plan for a questionable or doubtful submitted starter, including any FLEX moves and the earliest decision deadline. DTOS leaves lineup changes to Sleeper.
++
+ ## v1.22.50 / build 2265 — Playoff race context
+ 
+ My Team shows current playoff positioning, the relevant record and Points For benchmark, and confirmed remaining regular-season opponents. Published brackets and unresolved or unsupported qualification rules are identified separately.
+diff --git a/app_metadata.py b/app_metadata.py
+index 84f2481a..d4e83665 100644
+--- a/app_metadata.py
++++ b/app_metadata.py
+@@ -7,10 +7,10 @@ from datetime import datetime, timezone
+ from pathlib import Path
+ 
+ APPLICATION_NAME = "DTOS"
+-VERSION = "1.22.50"
+-PRODUCT_VERSION = "1.22.50"
+-BUILD_NUMBER = 2265
+-RELEASE_CODENAME = "Playoff Race Context"
++VERSION = "1.22.51"
++PRODUCT_VERSION = "1.22.51"
++BUILD_NUMBER = 2266
++RELEASE_CODENAME = "Conditional Lineup Fallback"
+ APPLICATION_STARTED_AT = datetime.now(timezone.utc).isoformat()
+ 
+ _REPOSITORY_ROOT = Path(__file__).resolve().parent
+diff --git a/routes/teams.py b/routes/teams.py
+index 085f315c..fba9b67e 100644
+--- a/routes/teams.py
++++ b/routes/teams.py
+@@ -458,22 +458,37 @@ def create_teams_router(
+         starters = [player for player in team.get("players") or [] if player.get("roster_slot") == "Starter"]
+         card_projections = view['projection_views']
+         lineup_alert = ''
++        lineup_fallback = ''
++        lineup_assets = ''
+         # Reuse prepared facts only, and only for the authenticated controlled
+         # franchise. Unknown lock evidence never adds a positive alert.
+         if (account and account.membership and account.membership.roster_id == roster_id
+                 and str(account.membership.league_id) == league_id):
++            from src.core.intelligence.lineup_fallback import UNCERTAIN
+             from src.core.intelligence.team_strength import compatible_profile
++            from src.core.projection_intelligence.service import player_availability
+             prepared_strength = compatible_profile(data, view['projection_snapshot']) or {}
+-            if prepared_strength.get('lineup_review_schedule'):
++            catalog = data.get('players') or {}
++            uncertain_starter = any(
++                player_availability(catalog.get(str(player.get('id'))) or {}, None) in UNCERTAIN
++                for player in starters
++            )
++            if prepared_strength.get('lineup_review_schedule') or uncertain_starter:
+                 from services.matchup_season import season_week_view
+-                from src.ui.lineup_review import review_panel
++                from src.ui.lineup_review import fallback_panel, review_panel
+                 week_view = await run_manager_read(lambda: season_week_view(data, data['week'], pinned_service))
+                 own_side = next((side for sides in week_view['groups'].values() for side in sides
+                                  if side['roster_id'] == roster_id), {})
+                 review = own_side.get('lineup_review') or {}
+                 if review.get('actionable'):
+-                    lineup_alert = ('<link rel="stylesheet" href="/static/css/matchups.css">'
+-                                    + review_panel(review) + '<script src="/static/lineup-review.js" defer></script>')
++                    lineup_alert = review_panel({**review, 'fallback': None})
++                fallback = review.get('fallback')
++                if not own_side and uncertain_starter:
++                    fallback = {'reason': 'The current submitted lineup is not prepared for review.'}
++                lineup_fallback = fallback_panel(fallback)
++                if lineup_alert or lineup_fallback:
++                    lineup_assets = ('<link rel="stylesheet" href="/static/css/matchups.css">'
++                                     '<script src="/static/lineup-review.js" defer></script>')
+         starter_cards = "".join(
+             f'<a class="card" href="{escape(contextual_player_url(str(player.get("id") or ""), from_team=roster_id, section="my-team-advanced", week=view["overview"]["projection_week"]))}">{player_summary(player_id=str(player.get("id") or ""), name=str(player.get("name") or "Unknown player"), position=str(player.get("position") or ""), nfl_team=str(player.get("team") or player.get("nfl_team") or "Free Agent"), context="Submitted starter", projection=card_projections.get(str(player.get("id") or "")))}</a>'
+             for player in starters
+@@ -525,8 +540,9 @@ def create_teams_router(
+ {scope_notice}
+ <header class="thq-header"><div class="thq-identity">{avatar}<div class="thq-title"><div class="identity-kicker">Manager: {escape(team['owner'])}</div><div class="thq-name-row"><h1>{escape(team['team_name'])}{you_badge(data, roster_id)}</h1>{champion_badge(defending_champion(data), roster_id)}</div><p><a class="thq-record-link" href="#season-so-far" aria-label="Season results: {escape(performance["record"], quote=True)} · {escape(performance["standing"], quote=True)}">{escape(performance["record"])} · {escape(performance["standing"])}</a></p></div></div><div class="thq-strategy">{strategy_control}<small>League evidence updated: {escape(view['last_updated'])}</small></div></header>
+ {outlook_panel(assessment_outlook, editable=editable, roster_id=roster_id)}
+-{lineup_alert}
++{lineup_assets}{lineup_alert}
+ <section class="thq-section" id="full-roster"><details class="thq-strength-detail" id="my-team-roster" open><summary>Full Roster · {escape(_roster_projection_coverage(view))}</summary><div class="thq-roster">{_roster_rooms(view)}</div></details><details class="thq-strength-detail" id="my-team-key-players"><summary>Key players by Market value</summary>{_key_players(view)}</details></section>
++{lineup_fallback}
+ {season_panel(data, roster_id)}
+ <section class="thq-section" id="draft-capital"><div class="thq-section-head"><h2>Draft Capital</h2><span>Your owned future picks</span></div><div class="thq-picks">{_draft_capital(view)}</div><p class="muted">Pick details preserve the original franchise and current owner. A pick’s future draft position is unknown unless a supported range is shown.</p></section>
+ 
+diff --git a/services/matchup_season.py b/services/matchup_season.py
+index 27a3c572..e0c41373 100644
+--- a/services/matchup_season.py
++++ b/services/matchup_season.py
+@@ -377,6 +377,12 @@ def season_week_view(data: dict, week: int, projection_service, *, evidence_thro
+         side['lineup_review'] = review_lineup(data, side, snapshot, strength, week=week,
+                                              observed_at=prepared.get('observed_at'),
+                                              retained_projection=bool(refresh.get('retained_publication')))
++        if not historical and week == current:
++            from src.core.intelligence.lineup_fallback import read_fallback
++            side['lineup_review']['fallback'] = read_fallback(
++                data, side, snapshot, strength, week=week, observed_at=prepared.get('observed_at'),
++                retained_projection=bool(refresh.get('retained_publication')),
++            )
+         if component:
+             round_scores = []
+             for component_week in component:
+diff --git a/src/core/intelligence/lineup_fallback.py b/src/core/intelligence/lineup_fallback.py
+new file mode 100644
+index 00000000..b134eb70
+--- /dev/null
++++ b/src/core/intelligence/lineup_fallback.py
+@@ -0,0 +1,219 @@
++"""One conditional replacement for a submitted starter, prepared off-request."""
++
++from collections import deque
++from datetime import datetime, timezone
++
++from src.core.intelligence.lineup_review import (
++    MAX_REVIEW_AGE, METHOD, manual_substitutions_supported, player_identity,
++    player_kickoff, timestamp,
++)
++from src.core.projection_intelligence.service import (
++    UNAVAILABLE_PLAYER_STATUSES, player_availability, projection_row_compatible,
++)
++from src.core.trade_intelligence.lineup import BENCH_SLOTS, _eligible, eligible_positions
++
++UNCERTAIN = {"questionable", "doubtful"}
++MAX_STARTERS = 20
++MAX_ROSTER = 100
++
++
++def _replacement_path(slots, starters, target, positions, available):
++    """Find one vacancy-to-bench path using the established slot eligibility.
++
++    Each occupied slot is visited once. Swapping along the path preserves all
++    other submitted players and requires exactly one bench player.
++    """
++    starts = {pid: index for index, pid in enumerate(starters)}
++    pending = deque([(target, [])])
++    visited = {target}
++    while pending:
++        index, moves = pending.popleft()
++        if starters[index] not in available:
++            continue
++        for pid in available:
++            if pid == starters[target] or not any(
++                _eligible(pos, slots[index]) for pos in positions.get(pid, ())
++            ):
++                continue
++            path = moves + [(index, pid)]
++            occupied = starts.get(pid)
++            if occupied is None:
++                return path
++            if occupied not in visited:
++                pending.append((occupied, path))
++                visited.add(occupied)
++    return None
++
++
++def prepare_fallbacks(data, snapshot, schedule, profile, *, now=None):
++    """Bounded current-week preparation. No provider, persistence or solver calls."""
++    now = now or datetime.now(timezone.utc)
++    league = data.get("league") or {}
++    if league.get("sport") != "nfl" or league.get("status") != "in_season":
++        return {}
++    week = data.get("week")
++    slots = [slot for slot in league.get("roster_positions") or [] if slot.upper() not in BENCH_SLOTS]
++    if not slots or len(slots) > MAX_STARTERS:
++        return {}
++    catalog = data.get("players") or {}
++    rows = snapshot.get("players") or {}
++    plans = {}
++    for team in data.get("teams") or []:
++        roster = team.get("players") or []
++        if len(roster) > MAX_ROSTER:
++            continue
++        owned = {str(p.get("id")): p for p in roster}
++        statuses = {pid: player_availability(catalog.get(pid) or {}, rows.get(pid)) for pid in owned}
++        submitted = sorted(
++            (p for p in roster if p.get("roster_slot") == "Starter"),
++            key=lambda p: p["starter_index"] if type(p.get("starter_index")) is int else -1,
++        )
++        target = next((p for p in submitted if statuses[str(p.get("id"))] in UNCERTAIN), None)
++        if target is None:
++            continue
++        rid = str(team["roster_id"])
++        pid = str(target["id"])
++        starters = [str(p.get("id")) for p in submitted]
++        result = plans[rid] = {"starter_id": pid, "submitted": starters, "slots": slots}
++        if (len(owned) != len(roster)
++                or [p.get("starter_index") for p in submitted] != list(range(len(slots)))):
++            result["reason"] = "The submitted slots could not be verified."
++            continue
++        if not manual_substitutions_supported(league):
++            result["reason"] = "This league’s manual lineup lock rules could not be verified."
++            continue
++        if not schedule or schedule.get("method") != METHOD or schedule.get("season") != snapshot.get("season"):
++            result["reason"] = "Verified game times are not prepared."
++            continue
++        weekly = profile["teams"][rid]["weekly"].get(week) or {}
++        byes = set(weekly.get("known_bye_player_ids") or [])
++        _prepare_plan(data, snapshot, schedule, now, owned, statuses, byes, result)
++    return plans
++
++
++def _prepare_plan(data, snapshot, schedule, now, owned, statuses, byes, result):
++    league = data["league"]
++    slots, starters = result["slots"], result["submitted"]
++    target = result["starter_id"]
++    week = data["week"]
++    rows, catalog = snapshot.get("players") or {}, data.get("players") or {}
++    allowed = {
++        pid for pid, player in owned.items()
++        if player.get("roster_slot") in {"Starter", "Bench"}
++        and pid not in byes and statuses[pid] not in UNAVAILABLE_PLAYER_STATUSES
++    }
++    positions = {
++        pid: eligible_positions(catalog.get(pid) or {}) for pid in allowed
++    }
++    target_index = starters.index(target)
++    if any(
++        not any(_eligible(pos, slot) for pos in positions.get(pid, ()))
++        for pid, slot in zip(starters, slots)
++    ):
++        result["reason"] = "The complete submitted lineup could not be verified."
++        return
++
++    def verified(pid):
++        row = rows.get(pid) or {}
++        status = str(row.get("availability") or "").casefold()
++        return (
++            projection_row_compatible(snapshot, pid, row)
++            and status == statuses[pid]
++            and (status in UNCERTAIN if pid == target else status == "active")
++            and eligible_positions(row) == positions[pid]
++            and player_identity(catalog, pid, season=league["season"], league_id=league["league_id"])["identity_available"]
++        )
++
++    kickoffs = {
++        pid: player_kickoff(data, schedule, week, pid, rows.get(pid) or {}, owned[pid])
++        for pid in sorted(allowed) if verified(pid)
++    }
++    unlocked = {pid: when for pid, when in kickoffs.items() if when and when > now}
++    path = _replacement_path(slots, starters, target_index, positions, unlocked)
++    if path is None:
++        structurally_possible = _replacement_path(slots, starters, target_index, positions, sorted(allowed))
++        if not structurally_possible and all(positions.values()):
++            result["reason"] = "No eligible player or legal rearrangement covers this submitted slot."
++        elif _replacement_path(slots, starters, target_index, positions, [pid for pid, when in kickoffs.items() if when]):
++            result["reason"] = "A required player or slot has already locked. Check Sleeper before making changes."
++        else:
++            result["reason"] = "A complete fallback could not be verified from the available player evidence and game times."
++        return
++    # The vacancy path changes only these slots and always terminates at a bench player.
++    result["moves"] = [[index, pid] for index, pid in path]
++
++
++def read_fallback(data, side, snapshot, prepared, *, week, observed_at, retained_projection, now=None):
++    """Recheck the recorded moves without searching for another assignment."""
++    league = data.get("league") or {}
++    if week != data.get("week") or league.get("sport") != "nfl" or league.get("status") != "in_season":
++        return None
++    plan = ((prepared or {}).get("lineup_fallbacks") or {}).get(str(side["roster_id"]))
++    if plan is None:
++        players = data.get("players") or {}
++        if any(player_availability(players.get(p["player_id"]) or {}, None) in UNCERTAIN
++               for p in side.get("lineup") or []):
++            return {"reason": "A compatible fallback has not been prepared for the submitted lineup."}
++        return None
++    now = now or datetime.now(timezone.utc)
++    unavailable = {"reason": "The submitted lineup no longer matches this fallback."}
++    source = side.get("lineup") or []
++    if ([p["player_id"] for p in source] != plan["submitted"]
++            or [p["slot"] for p in source] != plan["slots"]):
++        return unavailable
++    times = [timestamp(observed_at), timestamp((snapshot or {}).get("generated_at"))]
++    if retained_projection or any(stamp is None or not 0 <= (now - stamp).total_seconds()
++                                  < MAX_REVIEW_AGE.total_seconds() for stamp in times):
++        return {"reason": "The roster or projection check needs a fresh update before a fallback can be confirmed."}
++    if not manual_substitutions_supported(league):
++        return {"reason": "This league’s manual lineup lock rules could not be verified."}
++    if not plan.get("moves"):
++        return {"reason": plan["reason"]}
++
++    catalog, rows = data.get("players") or {}, snapshot.get("players") or {}
++    team = next((t for t in data.get("teams") or [] if t["roster_id"] == side["roster_id"]), {})
++    owned = {str(p["id"]): p for p in team.get("players") or []}
++    schedule = prepared.get("lineup_review_schedule") or {}
++    if schedule.get("method") != METHOD or schedule.get("season") != snapshot.get("season"):
++        return {"reason": "Verified game times are not prepared."}
++    line = [(source[index], incoming) for index, incoming in plan["moves"]]
++    target = plan["starter_id"]
++    involved = {incoming for _, incoming in line} | {before["player_id"] for before, _ in line}
++    started = {p["player_id"] for section in ("lineup", "bench") for p in side.get(section) or []
++               if p.get("actual") not in (None, 0)}
++    identities, kickoffs = {}, {}
++    for pid in involved:
++        row = rows.get(pid) or {}
++        player = catalog.get(pid) or {}
++        roster_player = owned.get(pid) or {}
++        expected_status = UNCERTAIN if pid == target else {"active"}
++        expected_slot = "Starter" if pid in plan["submitted"] else "Bench"
++        identity = player_identity(catalog, pid, season=league["season"], league_id=league["league_id"])
++        if (roster_player.get("roster_slot") != expected_slot
++                or not identity["identity_available"]
++                or not projection_row_compatible(snapshot, pid, row)
++                or row.get("availability") not in expected_status
++                or player_availability(player, row) != row.get("availability")
++                or eligible_positions(player) != eligible_positions(row)):
++            return {"reason": "Player identity, eligibility or availability no longer supports this fallback."}
++        when = player_kickoff(data, schedule, week, pid, row, roster_player)
++        if when is None:
++            return {"reason": "A required player’s kickoff could not be verified."}
++        if when <= now or pid in started:
++            return {"reason": "A required player or slot may already be locked. Check Sleeper before making changes."}
++        kickoffs[pid] = when
++        identities[pid] = identity["name"]
++    if any(not any(_eligible(pos, before["slot"]) for pos in eligible_positions(catalog[pid]))
++           for before, pid in line):
++        return unavailable
++
++    kickoff = min(kickoffs.values())
++    return {
++        "starter": identities[target],
++        "moves": [(before["slot"], identities[pid], identities[before["player_id"]])
++                  for before, pid in line],
++        "kickoff_deadline": kickoff.isoformat(),
++        "earlier_game": kickoff < kickoffs[target],
++        "valid_until": min(kickoff, *(stamp + MAX_REVIEW_AGE for stamp in times)).isoformat(),
++        "verified_at": now.isoformat(),
++    }
+diff --git a/src/core/intelligence/lineup_review.py b/src/core/intelligence/lineup_review.py
+index 85e2ca9f..40454579 100644
+--- a/src/core/intelligence/lineup_review.py
++++ b/src/core/intelligence/lineup_review.py
+@@ -75,6 +75,43 @@ def prepared_games(facts, season):
+     return {"method": METHOD, "season": season, "games": games}
+ 
+ 
++def manual_substitutions_supported(league):
++    settings = league.get("settings") or {}
++    return (
++        settings.get("best_ball") == 0
++        and settings.get("sub_start_time_eligibility") in (None, 0)
++        and settings.get("sub_lock_if_starter_active") in (None, 0)
++    )
++
++
++def player_kickoff(data, schedule, week, pid, row, roster_player):
++    catalog = (data.get("players") or {}).get(pid) or {}
++
++    def team_id(player):
++        value = (
++            str(player.get("team") or player.get("nfl_team") or "").strip().upper()
++        )
++        return (
++            normalize_team(value)
++            if value not in {"", "VACANT", "UNKNOWN", "—", "-"}
++            else None
++        )
++
++    source_team, current_team, roster_team = (
++        team_id(row),
++        team_id(catalog),
++        team_id(roster_player),
++    )
++    if (
++        not source_team
++        or source_team != current_team
++        or (roster_team and roster_team != source_team)
++    ):
++        return None
++    game = (schedule.get("games") or {}).get(f"{week}:{source_team}") or {}
++    return timestamp(game.get("kickoff")) if game.get("reference") else None
++
++
+ def review_lineup(
+     data,
+     side,
+@@ -140,7 +177,6 @@ def review_lineup(
+         )
+         return result
+     league = data.get("league") or {}
+-    settings = league.get("settings") or {}
+     if (
+         week != data.get("week")
+         or league.get("sport") != "nfl"
+@@ -150,11 +186,7 @@ def review_lineup(
+             "This comparison is not for the current active week; it is not a lineup-change alert."
+         )
+         return result
+-    if (
+-        settings.get("best_ball") != 0
+-        or settings.get("sub_start_time_eligibility") not in (None, 0)
+-        or settings.get("sub_lock_if_starter_active") not in (None, 0)
+-    ):
++    if not manual_substitutions_supported(league):
+         result["reason"] = (
+             "Manual substitution rules for this league are not verified here. Review the lineup in Sleeper."
+         )
+@@ -223,34 +255,6 @@ def review_lineup(
+         player_availability,
+     )
+ 
+-    def kickoff(pid):
+-        row = rows.get(pid) or {}
+-        catalog = (data.get("players") or {}).get(pid) or {}
+-
+-        def team_id(player):
+-            value = (
+-                str(player.get("team") or player.get("nfl_team") or "").strip().upper()
+-            )
+-            return (
+-                normalize_team(value)
+-                if value not in {"", "VACANT", "UNKNOWN", "—", "-"}
+-                else None
+-            )
+-
+-        source_team, current_team, roster_team = (
+-            team_id(row),
+-            team_id(catalog),
+-            team_id(owned[pid]),
+-        )
+-        if (
+-            not source_team
+-            or source_team != current_team
+-            or (roster_team and roster_team != source_team)
+-        ):
+-            return None
+-        game = (schedule.get("games") or {}).get(f"{week}:{source_team}") or {}
+-        return timestamp(game.get("kickoff")) if game.get("reference") else None
+-
+     # Keep equivalent slots stable, especially an already locked starter in a
+     # repeated RB/WR/FLEX slot. This changes no selected athlete or total.
+     remaining = list(entries)
+@@ -344,7 +348,7 @@ def review_lineup(
+                     "A player’s position changed after these projections were prepared. Refresh the league before comparing these moves."
+                 )
+                 return result
+-            when = kickoff(involved_pid)
++            when = player_kickoff(data, schedule, week, involved_pid, rows.get(involved_pid) or {}, owned[involved_pid])
+             if when is None or when <= now:
+                 result["reason"] = (
+                     "At least one proposed change involves a started game or an unverified game time. "
+diff --git a/src/core/intelligence/team_strength.py b/src/core/intelligence/team_strength.py
+index ba4df2f8..dc8dfebf 100644
+--- a/src/core/intelligence/team_strength.py
++++ b/src/core/intelligence/team_strength.py
+@@ -330,8 +330,14 @@ def prepare_for_data(service: Any, data: dict, *, next_n: int = 3, bye_evidence:
+     preparation_key = hashlib.sha256(json.dumps({
+         'next_n': next_n, 'bye_evidence': bye_evidence, 'lineup_review_schedule': lineup_schedule,
+     }, sort_keys=True).encode()).hexdigest()
++    from .lineup_fallback import prepare_fallbacks
+     if existing is not None and existing.get('preparation_key') == preparation_key:
+-        return existing
++        fallbacks = prepare_fallbacks(data, pinned, lineup_schedule, existing)
++        if fallbacks == (existing.get('lineup_fallbacks') or {}):
++            return existing
++        profile = dict(existing, lineup_fallbacks=fallbacks)
++        data['team_strength'] = profile
++        return profile
+     profile = prepare_team_strength(service, league_id=str(league['league_id']), season=int(league['season']),
+         current_week=data['week'], rosters=canonical_rosters(data), roster_positions=league.get('roster_positions') or [],
+         regular_season_weeks=calendar['regular_season_weeks'], playoff_rounds=calendar['playoff_rounds'],
+@@ -341,6 +347,7 @@ def prepare_for_data(service: Any, data: dict, *, next_n: int = 3, bye_evidence:
+     profile['lineup_review_schedule'] = lineup_schedule
+     profile['preparation_key'] = preparation_key
+     profile['scoring_reference'] = hashlib.sha256(json.dumps(scoring, sort_keys=True).encode()).hexdigest()
++    profile['lineup_fallbacks'] = prepare_fallbacks(data, pinned, lineup_schedule, profile)
+     data['team_strength'] = profile
+     return profile
+ 
+diff --git a/src/ui/lineup_review.py b/src/ui/lineup_review.py
+index 65516f21..623b2e88 100644
+--- a/src/ui/lineup_review.py
++++ b/src/ui/lineup_review.py
+@@ -4,7 +4,7 @@ from html import escape
+ from src.core.intelligence.lineup_review import timestamp
+ 
+ 
+-def review_panel(review):
++def _primary_panel(review):
+     if not review or review.get("state") == "no_improvement":
+         return ""
+     active = bool(review.get("actionable"))
+@@ -59,3 +59,40 @@ def review_panel(review):
+         '<p data-review-expired role="status" aria-live="polite" hidden>This lineup check has expired. Reload to recheck game locks and evidence before changing your lineup.</p>'
+         '<p><a class="button" href="https://sleeper.com/" rel="noopener noreferrer">Review in Sleeper</a></p></section>'
+     )
++
++
++def fallback_panel(fallback):
++    if not fallback:
++        return ""
++    if not fallback.get("moves"):
++        return f'<section class="lineup-review"><h3>Lineup fallback</h3><p>{escape(fallback["reason"])}</p></section>'
++    starter = escape(fallback["starter"])
++    moves = fallback["moves"]
++    def slot_name(slot):
++        return escape("Superflex" if slot in {"SUPER_FLEX", "SUPERFLEX"} else slot)
++    slot, backup, _ = moves[0]
++    if len(moves) == 1:
++        plan = f"<p>If {starter} is ruled out, {escape(backup)} can cover {slot_name(slot)}.</p>"
++    else:
++        plan = f"<p>If {starter} is ruled out, make these moves together.</p><ul>"
++        plan += "".join(f"<li>{slot_name(slot)}: {escape(incoming)} in for {escape(outgoing)}.</li>"
++                        for slot, incoming, outgoing in moves) + "</ul>"
++    def clock(key):
++        return timestamp(fallback[key]).strftime("%a %b %d, %H:%M UTC")
++    note = " A required game starts before the starter’s game." if fallback["earlier_game"] else ""
++    return (
++        f'<section class="lineup-review" data-lineup-review="fallback" data-review-until="{escape(fallback["valid_until"])}"'
++        f' data-review-checked-at="{escape(fallback["verified_at"])}" aria-label="Lineup fallback">'
++        f'<h3>Lineup fallback</h3><div data-review-current>{plan}'
++        f'<p>Decide before {clock("kickoff_deadline")} game lock.{note} '
++        f'This check expires {clock("valid_until")}.</p></div>'
++        '<p data-review-expired role="status" aria-live="polite" hidden>'
++        'This fallback check has expired. Check Sleeper before making any lineup changes.</p>'
++        '<p><a class="button" href="https://sleeper.com/" rel="noopener noreferrer">Review in Sleeper</a></p></section>'
++    )
++
++
++def review_panel(review):
++    if not review:
++        return ""
++    return _primary_panel(review) + fallback_panel(review.get("fallback"))
+diff --git a/tests/lineup_review_fixture.py b/tests/lineup_review_fixture.py
+index 13fa3d1e..0cbdaac5 100644
+--- a/tests/lineup_review_fixture.py
++++ b/tests/lineup_review_fixture.py
+@@ -26,6 +26,8 @@ def prepared(
+     slots=None,
+     nfl_team="BUF",
+     schedule_team=None,
++    uncertain=None,
++    earlier_backup=False,
+ ):
+     tmp = TemporaryDirectory()
+     owner.addCleanup(tmp.cleanup)
+@@ -79,6 +81,7 @@ def prepared(
+             ("s", "RB"),
+         ]:
+             pid = f"{rid}-{label}"
++            player_team = "KC" if earlier_backup and label == "bq" else nfl_team
+             player = dict(
+                 id=pid,
+                 player_id=pid,
+@@ -86,8 +89,9 @@ def prepared(
+                 name=f"Example {label.upper()} {rid}",
+                 position=pos,
+                 fantasy_positions=[pos],
+-                team=nfl_team,
++                team=player_team,
+                 status="Active",
++                injury_status="Questionable" if rid == 1 and label == uncertain else None,
+                 roster_slot="Starter" if pid in starters else "Bench",
+                 starter_index=starters.index(pid) if pid in starters else None,
+             )
+@@ -101,7 +105,7 @@ def prepared(
+                         player_id=pid,
+                         week=week,
+                         season=2026,
+-                        team=nfl_team,
++                        team=player_team,
+                         opponent="NYJ",
+                         player=dict(position=pos, fantasy_positions=[pos]),
+                         updated_at=now.isoformat(),
+@@ -153,6 +157,13 @@ def prepared(
+         )
+         for week in (8, 9)
+     ]
++    if earlier_backup:
++        facts.append(dict(
++            family="schedule", season=2026, week=8, provider="nflverse",
++            fingerprint="fixture-early-game",
++            values=dict(home_team="KC", away_team="DEN", game_type="REG",
++                        kickoff=(now + timedelta(minutes=5)).isoformat()),
++        ))
+     store = SimpleNamespace(read=lambda *a, **kw: deepcopy(facts))
+     with patch("services.global_evidence.retained_global_evidence", return_value=store):
+         prepare_for_data(service, data)
+@@ -195,14 +206,14 @@ def http(owner, data, service, *, membership_league=None, roster_id=1):
+     return client
+ 
+ 
+-def authenticated_prepared(owner, *, empty=True):
++def authenticated_prepared(owner, *, empty=True, **fixture_options):
+     """Disposable real account/session -> normal shared page renderer."""
+     from tests.test_roster_diagnostic_http import DiagnosticHTTPTests
+ 
+     f = DiagnosticHTTPTests()
+     f.setUp()
+     owner.addCleanup(f.doCleanups)
+-    data, service, now = prepared(owner, league_id="league-1", empty=empty)
++    data, service, now = prepared(owner, league_id="league-1", empty=empty, **fixture_options)
+     base = f.f.f.data
+     template = deepcopy(base["teams"][0])
+     data["teams"] = [{**deepcopy(template), **team} for team in data["teams"]]
+diff --git a/tests/test_lineup_review.py b/tests/test_lineup_review.py
+index 72a43854..a98fe2a6 100644
+--- a/tests/test_lineup_review.py
++++ b/tests/test_lineup_review.py
+@@ -378,3 +378,52 @@ class LineupReviewTests(unittest.TestCase):
+         review = self.review(data, service, now)
+         self.assertFalse(review["actionable"], review)
+         self.assertIn("position changed", review["reason"])
++
++
++class LineupFallbackTests(unittest.TestCase):
++    def read(self, data, service, now):
++        from src.core.intelligence.lineup_fallback import read_fallback
++
++        side = season_week_view(data, 8, service)["groups"]["1"][0]
++        return read_fallback(
++            data, side, service.snapshot(), data["team_strength"], week=8,
++            observed_at=data["season_matchups"]["observed_at"], retained_projection=False, now=now,
++        )
++
++    def test_superflex_chain_uses_the_earlier_backup_lock(self):
++        from src.core.intelligence.lineup_review import timestamp
++
++        data, service, now = prepared(self, uncertain="w", earlier_backup=True)
++        result = self.read(data, service, now)
++        self.assertEqual(result["starter"], "Example W 1")
++        self.assertEqual(result["moves"], [
++            ("FLEX", "Example S 1", "Example W 1"),
++            ("SUPER_FLEX", "Example BQ 1", "Example S 1"),
++        ])
++        self.assertTrue(result["earlier_game"])
++        deadline = timestamp(result["valid_until"])
++        self.assertEqual(deadline, timestamp(result["kickoff_deadline"]))
++        locked = self.read(data, service, deadline)
++        self.assertIn("already be locked", locked["reason"])
++        self.assertNotIn("moves", locked)
++
++    def test_one_qb_direct_fallback_and_stale_or_unsupported_evidence(self):
++        data, service, now = prepared(self, uncertain="q", slots=["QB", "RB", "WR", "FLEX", "BN"])
++        self.assertEqual(self.read(data, service, now)["moves"], [
++            ("QB", "Example BQ 1", "Example Q 1"),
++        ])
++        self.assertIn("fresh update", self.read(data, service, now + timedelta(minutes=16))["reason"])
++        data["league"]["settings"]["sub_lock_if_starter_active"] = 1
++        self.assertIn("lock rules", self.read(data, service, now)["reason"])
++        data["league"]["settings"]["sub_lock_if_starter_active"] = 0
++        data["team_strength"]["lineup_review_schedule"]["games"].clear()
++        self.assertIn("kickoff could not be verified", self.read(data, service, now)["reason"])
++
++    def test_missing_verification_differs_from_no_eligible_cover(self):
++        data, service, now = prepared(self, uncertain="w", slots=["QB", "RB", "WR", "FLEX", "BN"])
++        result = self.read(data, service, now)
++        self.assertIn("No eligible player", result["reason"])
++        data["team_strength"].pop("lineup_fallbacks")
++        self.assertIn("compatible fallback has not been prepared", self.read(data, service, now)["reason"])
++        client = http(self, data, service, roster_id=2)
++        self.assertNotIn("Lineup fallback", client.get("/matchups/1?week=8").text)
+diff --git a/tests/test_lineup_review_browser.py b/tests/test_lineup_review_browser.py
+index ca6f5536..b23f1064 100644
+--- a/tests/test_lineup_review_browser.py
++++ b/tests/test_lineup_review_browser.py
+@@ -252,3 +252,49 @@ class LineupReviewBrowserTests(unittest.TestCase):
+                 self.assertIn("expired", panel.get_by_role("status").inner_text())
+             finally:
+                 browser.close()
++
++
++class LineupFallbackBrowserTests(unittest.TestCase):
++    def test_phone_fallback_below_roster_and_expiry(self):
++        from urllib.parse import urlsplit
++
++        fixture, _, _, _ = authenticated_prepared(self, empty=False, uncertain="w", earlier_backup=True)
++        directory = os.environ.get("DTOS_LINEUP_REVIEW_EVIDENCE")
++        with sync_playwright() as pw:
++            browser = launch_chromium(pw, headless=True)
++            try:
++                for width in (320, 390, 1280):
++                    context = browser.new_context(viewport={"width": width, "height": 844})
++                    def transport(route):
++                        url = urlsplit(route.request.url)
++                        if url.hostname != "dtos.test":
++                            route.abort()
++                            return
++                        response = fixture.f.f.client.get(url.path + ("?" + url.query if url.query else ""))
++                        if response.status_code == 404 and url.path.startswith("/static/"):
++                            response = fixture.f.static.get(url.path)
++                        route.fulfill(status=response.status_code, headers=dict(response.headers), body=response.content)
++                    context.route("**/*", transport)
++                    page = context.new_page()
++                    self.assertEqual(page.goto("https://dtos.test/teams/1").status, 200)
++                    panel = page.get_by_role("region", name="Lineup fallback")
++                    self.assertIn("Example W 1 is ruled out", panel.inner_text())
++                    self.assertIn("Example BQ 1 in for Example S 1", panel.inner_text())
++                    self.assertIn("starts before the starter", panel.inner_text())
++                    roster = page.locator("#full-roster")
++                    self.assertGreaterEqual(panel.bounding_box()["y"],
++                                            roster.bounding_box()["y"] + roster.bounding_box()["height"])
++                    self.assertLessEqual(page.evaluate("document.documentElement.scrollWidth"), width)
++                    action = panel.get_by_role("link", name="Review in Sleeper")
++                    action.focus()
++                    self.assertGreaterEqual(action.bounding_box()["height"], 44)
++                    if directory:
++                        Path(directory).mkdir(parents=True, exist_ok=True)
++                        panel.screenshot(path=str(Path(directory, f"fallback-{width}.png")))
++                    panel.evaluate('e=>e.dataset.reviewUntil="2000-01-01T00:00:00Z"')
++                    page.evaluate('document.dispatchEvent(new Event("visibilitychange"))')
++                    self.assertIn("fallback check has expired", panel.inner_text())
++                    self.assertNotIn("Example W 1 is ruled out", panel.inner_text())
++                    context.close()
++            finally:
++                browser.close()

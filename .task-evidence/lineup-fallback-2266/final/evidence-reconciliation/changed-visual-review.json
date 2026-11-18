@@ -1,0 +1,32 @@
+{
+  "source": {
+    "baseline": "cafd9930af8c86b8b152a0849f3d8233923670d6",
+    "baseline_tree": "da4aee4c48eb7f1ddd312503e31145dc2cc26de7",
+    "candidate": "1985ef260865897d8f36fe09369c2159a2d9a43d",
+    "tree": "b67554151cf5612ce0011941a25b4fc0ac6bc010",
+    "branch": "feat/lineup-fallback-2266",
+    "version": "1.22.51",
+    "build": 2266,
+    "expected_test_count": 4642,
+    "pr": 355
+  },
+  "reviewed_images": [
+    {
+      "path": "visual-pixel-comparison/commissioner-320-default.png",
+      "sha256": "d8d963bbefa535c5602ae9cf25db54ae6ee5b8b1341957b14d68b8ad7ddc5103",
+      "review": "The fixture\u2019s last-visit timestamp changed. The same text and controls remain readable without clipping."
+    },
+    {
+      "path": "visual-pixel-comparison/commissioner-390-default.png",
+      "sha256": "d819c08c489501b0f59d442c2ebee39b50d17d470359b21a7a8aa903dc8f5d90",
+      "review": "The fixture\u2019s last-visit timestamp changed. The same text and controls remain readable without clipping."
+    },
+    {
+      "path": "visual-pixel-comparison/commissioner-1280-default.png",
+      "sha256": "606025a7f15b49f24fa7d485a02be055a88255da6370d66f3d684897e0b5d020",
+      "review": "The fixture\u2019s last-visit timestamp changed. The same text and controls remain readable without clipping."
+    }
+  ],
+  "material_visual_defects": [],
+  "scope": "Reviewed all three changed comparisons and the focused fallback captures at 320, 390 and 1280 pixels. Chromium fixture inspection."
+}

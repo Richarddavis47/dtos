@@ -1,0 +1,12 @@
+Completed start-controls-durable.py
+Completed start-controls-durable.py
+Completed start-harness-contract.py
+Completed collect-harness-contract.py
+Traceback (most recent call last):
+  File "/workspace/2266-lineup-fallback/after-local.py", line 41, in <module>
+    run(script, 'after') if script == 'run-extra-candidate-capture.py' else run(script)
+                                                                            ^^^^^^^^^^^
+  File "/workspace/2266-lineup-fallback/after-local.py", line 17, in run
+    assert result.returncode==0,(script,result.returncode,str(log))
+           ^^^^^^^^^^^^^^^^^^^^
+AssertionError: ('run-local-resource.py', 1, '/workspace/2266-lineup-fallback/run-local-resource-controller-original.log')

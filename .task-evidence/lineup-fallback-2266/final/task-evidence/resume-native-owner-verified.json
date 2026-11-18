@@ -1,0 +1,88 @@
+{
+  "source": {
+    "baseline": "cafd9930af8c86b8b152a0849f3d8233923670d6",
+    "baseline_tree": "da4aee4c48eb7f1ddd312503e31145dc2cc26de7",
+    "candidate": "1985ef260865897d8f36fe09369c2159a2d9a43d",
+    "tree": "b67554151cf5612ce0011941a25b4fc0ac6bc010",
+    "branch": "feat/lineup-fallback-2266",
+    "version": "1.22.51",
+    "build": 2266,
+    "expected_test_count": 4642,
+    "pr": 355
+  },
+  "passed": true,
+  "original": {
+    "after-native-1985ef26-invocation.json": "bad87f72b1e3f4a2f3b35cafc8dfb07c74c002c1c620f2174d1a8c09b9530c5a",
+    "after-native-1985ef26-original.log": "e8841a96c9aa71d7c34fbbd7a39841322ff2d9be7fff0ca1d883f697659c3ea9",
+    "after-native-1985ef26/combined-result.json": "733aca71cbcd744e636cfcf93030464b472dc0e3aab9a3113c0f35ee6d070ac6"
+  },
+  "restored_helper_sha256": "31282c5c51f96533d211d287b2146d7efe2b0966cbe6bce1eb5390bf21332265",
+  "command": [
+    "docker",
+    "--host=unix:///var/run/docker.sock",
+    "run",
+    "--rm",
+    "--cidfile",
+    "/workspace/2266-lineup-fallback/after-native-1985ef26/resumed-owner-container-id.txt",
+    "--init",
+    "--name",
+    "dtos-customer-native-1985ef26-2253-owner-only",
+    "--user",
+    "1000:1000",
+    "--memory=2g",
+    "--memory-swap=2g",
+    "--cpus=2",
+    "--network=none",
+    "-e",
+    "HOME=/tmp",
+    "-e",
+    "NODE_OPTIONS=--max-old-space-size=256",
+    "-e",
+    "GIT_CONFIG_COUNT=1",
+    "-e",
+    "GIT_CONFIG_KEY_0=safe.directory",
+    "-e",
+    "GIT_CONFIG_VALUE_0=/app",
+    "-v",
+    "/workspace/dtos-draft-capital-2247:/app:ro",
+    "-v",
+    "/workspace/dtos/.git:/workspace/dtos/.git:ro",
+    "-v",
+    "/workspace/2266-lineup-fallback:/evidence:ro",
+    "-v",
+    "/tmp/dtos-2255-closed-originals/1/before-page-families:/baseline:ro",
+    "-v",
+    "/tmp/dtos-2255-closed-originals/1/after-native-85984a56:/released-baseline:ro",
+    "-v",
+    "/workspace/2266-lineup-fallback/after-native-1985ef26:/output",
+    "-w",
+    "/app",
+    "sha256:f70a0c6402700dfb954c99d8163d4164926f74435c34d2e7e462407151663ae6",
+    "python",
+    "/evidence/capture-missing-owner-only.py"
+  ],
+  "records": [
+    {
+      "path": "after-native-1985ef26/baseline-target-owner-1280.json",
+      "sha256": "1202ca5cba38fc265ee5ceafcb08c19f36dcae7791f00f58c73bb957b19a8b65"
+    },
+    {
+      "path": "after-native-1985ef26/candidate-target-owner-320.json",
+      "sha256": "baa14328d90344f204162c9ca6b3223cd38dc0c6acf08b479f3b9752def57e79"
+    },
+    {
+      "path": "after-native-1985ef26/candidate-target-owner-375.json",
+      "sha256": "b0af29b252ec31d0306115e72ce077d5bd321b84344d0c614d29bf449651623a"
+    },
+    {
+      "path": "after-native-1985ef26/candidate-target-owner-390.json",
+      "sha256": "b23aa4384ada3f25e9368025a9e29f86dbe5b87bb3b3f5becbded2d25bc2fe10"
+    },
+    {
+      "path": "after-native-1985ef26/candidate-target-owner-1280.json",
+      "sha256": "6a9a874328cb87300fdf44427f057178254d9eba7841bafb183f87e039e3c8cf"
+    }
+  ],
+  "existing_native_results_reused": true,
+  "observed_at": "2026-11-18T09:56:42.234761+00:00"
+}

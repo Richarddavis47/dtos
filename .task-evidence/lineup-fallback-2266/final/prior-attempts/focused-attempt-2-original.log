@@ -1,0 +1,36 @@
+/usr/local/lib/python3.14/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+  from starlette.testclient import TestClient as TestClient  # noqa
+test_phone_fallback_below_roster_and_expiry (tests.test_lineup_review_browser.LineupFallbackBrowserTests.test_phone_fallback_below_roster_and_expiry) ... {"timestamp":"2026-11-18T07:44:33.868060+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":75796480,"limit_bytes":2147483648,"raw_headroom_bytes":2071687168,"clean_inactive_file_bytes":577536,"conditional_file_credit_bytes":288768,"admission_headroom_bytes":2071975936,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-18T07:44:33.871320+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/workspace?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-18T07:44:33.881391+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_admission","request_id":"system","event":"trade_admission","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":75681792,"limit_bytes":2147483648,"raw_headroom_bytes":2071801856,"clean_inactive_file_bytes":577536,"conditional_file_credit_bytes":288768,"admission_headroom_bytes":2072090624,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"recovery":null}}
+{"timestamp":"2026-11-18T07:44:33.943544+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_execution_finished","request_id":"system","event":"trade_execution_finished","duration_ms":63.357,"diagnostic":{"schema":"trade-resource-v1","outcome":"complete"}}
+{"timestamp":"2026-11-18T07:44:33.946666+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/trades/evaluate \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-18T07:44:33.965237+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-18T07:44:33.980745+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+Validation Chromium: /usr/bin/chromium
+Validation Chromium version: 156.0.8078.79
+{"timestamp":"2026-11-18T07:44:35.113890+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/teams/1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-18T07:44:35.219429+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-18T07:44:35.520492+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-18T07:44:35.524312+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"3622d0f0fa1e437cae37b77109f10a0d","event":"request_complete","duration_ms":299.565,"status_code":200,"method":"GET","path":"/static/css/contextual_navigation.css"}
+{"timestamp":"2026-11-18T07:44:35.537766+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-18T07:44:35.549976+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-18T07:44:35.551045+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"82a3b1e8212549d39ce94666af2b4b0f","event":"request_complete","duration_ms":4.758,"status_code":200,"method":"GET","path":"/static/js/contextual_navigation.js"}
+{"timestamp":"2026-11-18T07:44:35.584113+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-18T07:44:35.592747+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/lineup-review.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-18T07:44:35.604462+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/strategy_session.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+FAIL
+
+======================================================================
+FAIL: test_phone_fallback_below_roster_and_expiry (tests.test_lineup_review_browser.LineupFallbackBrowserTests.test_phone_fallback_below_roster_and_expiry)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_lineup_review_browser.py", line 284, in test_phone_fallback_below_roster_and_expiry
+    self.assertLessEqual(page.locator("#my-team-roster .thq-player").first.bounding_box()["y"], 600)
+    ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 998.15625 not less than or equal to 600
+
+----------------------------------------------------------------------
+Ran 1 test in 2.793s
+
+FAILED (failures=1)
