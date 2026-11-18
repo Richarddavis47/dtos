@@ -49,6 +49,11 @@ class SeasonPerformanceBrowserTests(unittest.TestCase):
                         self.assertTrue(panel.evaluate('e=>e.open'))
                         self.assertIn('0.00 points', panel.inner_text())
                         self.assertIn('Week 1: 0.00', panel.inner_text())
+                        race = panel.get_by_text('Playoff race', exact=True)
+                        race.press('Enter')
+                        self.assertIn('Playoff position unavailable.', race.locator('..').inner_text())
+                        self.assertEqual(race.locator('..').get_by_role('link', name='Review standings').get_attribute('href'),
+                                         '/league#standings-evidence')
                         peer = panel.get_by_text('How often did we outscore the rest of the league?', exact=True)
                         peer.press('Enter')
                         detail = peer.locator('..')

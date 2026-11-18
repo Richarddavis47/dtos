@@ -95,7 +95,9 @@ def standings_order(data):
 def playoff_position(data, order):
     """Current positions under named standard/division rules, never clinching."""
     settings = (data.get("league") or {}).get("settings") or {}
-    result = {"boundary": None, "qualifiers": set(), "kind": None, "reason": None}
+    result = {"boundary": None, "qualifiers": set(), "kind": None, "reason": None,
+              "cutoff_ids": [], "cutoff_tied": False, "division_leaders": {},
+              "at_large_cutoff_id": None}
     count = settings.get("playoff_teams")
     teams = order["teams"]
     if type(count) is not int or not 0 < count < len(teams):
@@ -158,6 +160,12 @@ def playoff_position(data, order):
             "Playoff positioning unavailable: custom qualification/seeding rules are not supported."
         )
         return result
+    if divisions == 0:
+        cutoff_ids = [
+            rid for rid, (first, last) in order["placements"].items()
+            if first <= count <= last
+        ]
+        result.update(cutoff_ids=cutoff_ids, cutoff_tied=len(cutoff_ids) > 1)
     if len(order["ranks"]) != len(teams):
         # A tie wholly inside/outside the cutoff still admits a current boundary.
         placements = order["placements"]
@@ -195,12 +203,18 @@ def playoff_position(data, order):
             "Playoff positioning unavailable: a configured division has no supported membership."
         )
         return result
-    winners = {int(group[0]["roster_id"]) for group in groups}
+    division_leaders = {
+        division: int(group[0]["roster_id"]) for division, group in enumerate(groups, 1)
+    }
+    winners = set(division_leaders.values())
     remaining = [
         int(t["roster_id"]) for t in teams if int(t["roster_id"]) not in winners
     ]
+    at_large = remaining[: count - divisions]
     result.update(
-        qualifiers=winners | set(remaining[: count - divisions]),
+        qualifiers=winners | set(at_large),
+        division_leaders=division_leaders,
+        at_large_cutoff_id=at_large[-1] if at_large else None,
         kind="divisions",
         reason="Current division leaders plus remaining record/PF positions under standard division qualification, assuming no commissioner overrides. Indicators are per team; not final seeds or clinched berths.",
     )

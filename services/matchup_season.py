@@ -180,16 +180,55 @@ def _postseason(prepared: dict, calendar: dict, week: int, completed: int) -> di
     return result
 
 
+def _prepared_schedule(data: dict, current: int) -> tuple[dict, dict]:
+    """Use the same publication compatibility checks for schedule-only reads."""
+    league = data.get("league") or {}
+    calendar = matchup_calendar(league, current, data.get("nfl_state"))
+    prepared = data.get("season_matchups") or {}
+    compatible = (
+        prepared.get("league_id") == calendar["league_id"]
+        and prepared.get("season") == str(league.get("season") or "")
+        and prepared.get("calendar_reference") == calendar["reference"]
+        and prepared.get("methodology") == METHOD
+    )
+    return calendar, prepared if compatible else {}
+
+
+def remaining_regular_opponents(data: dict, roster_id: int) -> dict:
+    """Read only confirmed head-to-head rows; do not build lineup views."""
+    calendar, prepared = _prepared_schedule(data, int(data.get("week") or 0))
+    weeks = calendar.get("remaining_regular_season_weeks")
+    matches = {}
+    teams = [t["roster_id"] for t in data.get("teams") or [] if type(t.get("roster_id")) is int]
+    for week in weeks or []:
+        evidence = (prepared.get("weeks") or {}).get(str(week)) or {}
+        if evidence.get("availability") != "available" or teams.count(roster_id) != 1:
+            continue
+        rows = evidence.get("rows") or []
+        own = [row for row in rows if row.get("roster_id") == roster_id]
+        if len(own) != 1:
+            continue
+        matchup_id = own[0].get("matchup_id")
+        if type(matchup_id) is not int or matchup_id <= 0:
+            continue
+        pair = [row.get("roster_id") for row in rows if row.get("matchup_id") == matchup_id]
+        if len(pair) != 2:
+            continue
+        opponent = pair[1] if pair[0] == roster_id else pair[0]
+        if (type(opponent) is int and opponent != roster_id and teams.count(opponent) == 1
+                and sum(row.get("roster_id") == opponent for row in rows) == 1):
+            matches[week] = opponent
+    return {"weeks": weeks, "matches": matches,
+            "gaps": [week for week in weeks or [] if week not in matches]}
+
+
 def season_week_view(data: dict, week: int, projection_service, *, evidence_through_week: int | None = None) -> dict:
     """Pin one projection generation; never substitute another week/league."""
     league = data.get("league") or {}
     current = int(data.get("week") or 0)
-    calendar = matchup_calendar(league, current, data.get("nfl_state"))
-    prepared = data.get("season_matchups") or {}
-    league_id, season = str(league.get("league_id") or ""), str(league.get("season") or "")
-    compatible = (prepared.get("league_id") == league_id and prepared.get("season") == season
-                  and prepared.get("calendar_reference") == calendar["reference"]
-                  and prepared.get("methodology") == METHOD)
+    calendar, prepared = _prepared_schedule(data, current)
+    league_id, season = calendar["league_id"], str(league.get("season") or "")
+    compatible = bool(prepared)
     evidence = (prepared.get("weeks") or {}).get(str(week), {}) if compatible else {}
     rounds = calendar.get("playoff_rounds") or []
     component = next((group for group in rounds if week in group), [])

@@ -1,8 +1,10 @@
 """Small season-results disclosure, separate from roster projections."""
 from html import escape
 
+from services.matchup_season import number, remaining_regular_opponents
 from services.season_performance import season_performance
-
+from services.standings import playoff_position, standings_order
+from src.ui.intelligence_presentation import league_is_preseason, record_evidence
 
 
 def _peer_record(view):
@@ -21,6 +23,67 @@ def _peer_record(view):
             f'<p>{summary} {coverage}{gaps}{retained}</p>'
             '<p>Each week, your Sleeper score is compared once with each other team’s score. '
             'These comparisons are separate from your official record and any league median game.</p></details>')
+
+def _playoff_race(data, roster_id):
+    order = standings_order(data)
+    position = playoff_position(data, order)
+    teams = {team["roster_id"]: team for team in order["teams"]}
+    kind = position["kind"]
+    qualified = roster_id in position["qualifiers"]
+    started = not league_is_preseason(data)
+
+    def name(rid):
+        return escape(str(teams[rid].get("team_name") or f"Franchise {rid}"))
+
+    def record_line(label, rid):
+        team = teams[rid]
+        record = record_evidence(team.get("wins"), team.get("losses"), team.get("ties"), season_started=started)
+        pf = number(team.get("points_for")) if started else None
+        points = f"{pf:.2f} Points For" if pf is not None else "Points For unavailable"
+        return f"<li>{label}: {name(rid)} · {escape(record)} · {points}</li>"
+
+    facts = []
+    if kind == "bracket":
+        status = "In the published championship bracket." if qualified else "Outside the published championship bracket."
+    elif kind in {"standard", "divisions"}:
+        status = "Currently in a playoff position." if qualified else "Currently outside the playoff positions."
+    elif position["cutoff_tied"]:
+        status = "Playoff position unresolved at the cutoff tie."
+    else:
+        status = "Playoff position unavailable."
+    if roster_id in teams:
+        facts.append(record_line("This franchise", roster_id))
+    for rid in position["cutoff_ids"]:
+        facts.append(record_line("Tied at cutoff" if position["cutoff_tied"] else "Current cutoff", rid))
+    if kind == "divisions" and roster_id in teams:
+        leader = position["division_leaders"][teams[roster_id]["division"]]
+        if qualified:
+            route = "division leader" if roster_id == leader else "at-large position"
+            status += f" Qualification route: {route}."
+        facts.append(record_line("Current division leader", leader))
+        cutoff = position["at_large_cutoff_id"]
+        if cutoff is not None:
+            facts.append(record_line("Current at-large cutoff", cutoff))
+
+    schedule = remaining_regular_opponents(data, roster_id)
+    weeks = schedule["weeks"]
+    planned = schedule["matches"]
+    if weeks is None:
+        coverage = "Remaining regular-season weeks are unavailable for this calendar."
+    elif not weeks:
+        coverage = "No regular-season weeks remain on the prepared calendar."
+    else:
+        coverage = f"{len(planned)}/{len(weeks)} remaining regular-season opponents confirmed."
+        if schedule["gaps"]:
+            coverage += " Opponents unavailable for weeks " + ", ".join(map(str, schedule["gaps"])) + "."
+    games = "".join(f'<li><a href="/matchups?week={week}">Week {week}: {name(opponent)}</a></li>'
+                    for week, opponent in planned.items())
+    return ('<details><summary>Playoff race</summary>'
+            f'<p><strong>{status}</strong> {escape(position["reason"] or "")}</p>'
+            + (f'<ul>{"".join(facts)}</ul>' if facts else '')
+            + f'<p>{coverage}</p>' + (f'<ul>{games}</ul>' if games else '')
+            + '<p><a href="/league#standings-evidence">Review standings</a></p></details>')
+
 
 def season_panel(data, roster_id, *, compact=False):
     view = season_performance(data, roster_id)
@@ -65,6 +128,7 @@ def season_panel(data, roster_id, *, compact=False):
             f'<p>{escape(comparison)}</p>' + (f'<p>Recent completed weeks: {escape(recent)}</p>' if recent else '')
             + (f'<p>{escape(view["recent_reason"])}</p>' if view['recent_reason'] else '')
             + '<p>Past team results are separate from this week’s projected lineup.</p>'
+            + _playoff_race(data, roster_id)
             + _peer_record(view)
             + f'<details><summary>Weeks, coverage and sources</summary><p>{escape(details)}</p></details>'
             + '<a href="/matchups">Review matchups</a></div></details>')

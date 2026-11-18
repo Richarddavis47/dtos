@@ -12,7 +12,7 @@ from unittest.mock import patch
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from services.matchup_season import prepare_season_matchups
+from services.matchup_season import prepare_season_matchups, remaining_regular_opponents
 from services.standings import (
     record_fields,
     standings_order,
@@ -25,6 +25,7 @@ from src.core.league_runtime.manager import LeagueRuntime
 from src.core.projection_intelligence.service import ProjectionService
 from src.ui.badges import official_ranks
 from src.ui.standings import render_standings, completed_streak
+from src.ui.season_performance import season_panel
 
 SOURCES = json.loads(Path("tests/fixtures/standings_source_2132.json").read_text())[
     "leagues"
@@ -309,6 +310,76 @@ class StandingsPositioningTests(unittest.TestCase):
         self.assertEqual(result["qualifiers"], {1, 2, 3, 4, 5, 6})
         self.assertEqual(result["kind"], "bracket")
         self.assertIsNone(result["boundary"])
+
+    def test_day_traders_race_and_partial_prepared_schedule(self):
+        data = source_fixture()
+        order = standings_order(data)
+        rank = SOURCES[0]["expected_order"]
+        cutoff = next(t for t in data["teams"] if t["roster_id"] == rank[5])
+        for rid, status in [(rank[0], "Currently in"), (rank[-1], "Currently outside")]:
+            with self.subTest(roster=rid):
+                matches = remaining_regular_opponents(data, rid)
+                self.assertEqual(matches["weeks"], list(range(5, 14)))
+                self.assertEqual(set(matches["matches"]), {5, 6})
+                for week, opponent in matches["matches"].items():
+                    rows = SOURCES[0]["weeks"][str(week)]
+                    own = next(row for row in rows if row["roster_id"] == rid)
+                    expected = [r["roster_id"] for r in rows
+                                if r["matchup_id"] == own["matchup_id"] and r["roster_id"] != rid]
+                    self.assertEqual([opponent], expected)
+                self.assertEqual(matches["gaps"], list(range(7, 14)))
+                rendered = season_panel(data, rid)
+                self.assertIn(status, rendered)
+                self.assertIn(f'{cutoff["points_for"]:.2f} Points For', rendered)
+                self.assertIn("2/9 remaining regular-season opponents confirmed.", rendered)
+                self.assertIn('href="/matchups?week=5"', rendered)
+        self.assertEqual(playoff_position(data, order)["cutoff_ids"], [rank[5]])
+        data["season_matchups"]["league_id"] = "foreign"
+        self.assertEqual(remaining_regular_opponents(data, rank[0])["matches"], {})
+        self.assertIn("0/9 remaining regular-season opponents confirmed.", season_panel(data, rank[0]))
+
+    def test_race_requires_division_route_not_global_rank(self):
+        data = controlled([(4, 0, 0, pf) for pf in [150, 140, 130, 120, 110, 100]],
+                          divisions=2)
+        data["league"]["settings"]["playoff_teams"] = 4
+        for team in data["teams"]:
+            team["division"] = 1 if team["roster_id"] <= 4 else 2
+        division_leader = season_panel(data, 5)
+        self.assertIn("Qualification route: division leader.", division_leader)
+        self.assertIn("Current at-large cutoff: Franchise 3", division_leader)
+        self.assertIn("Qualification route: at-large position.", season_panel(data, 3))
+        self.assertIn("Currently outside the playoff positions.", season_panel(data, 4))
+
+    def test_race_withholds_cutoff_on_override_and_unresolved_tie(self):
+        data = controlled([(3, 1, 0, 100), (2, 2, 0, 95), (2, 2, 0, 95), (1, 3, 0, 90)])
+        tied = season_panel(data, 2)
+        self.assertIn("Playoff position unresolved at the cutoff tie.", tied)
+        for rid in (2, 3):
+            self.assertIn(f"Tied at cutoff: Franchise {rid} · 2-2-0 · 95.00 Points For", tied)
+        data["league"]["settings"]["playoff_seed_type"] = 1
+        unsupported = season_panel(data, 2)
+        self.assertIn("custom qualification/seeding rules are not supported", unsupported)
+        self.assertNotIn("Tied at cutoff:", unsupported)
+        self.assertNotIn("Currently in a playoff position", unsupported)
+
+    def test_race_preserves_postseason_bracket_and_regular_season_boundary(self):
+        data = source_fixture()
+        data["week"] = 14
+        data["league"]["settings"].update(leg=14, last_scored_leg=13)
+        weeks = {"14": [{"roster_id": 3, "matchup_id": 1}, {"roster_id": 6, "matchup_id": 1}]}
+        prepare(data, weeks)
+        data["season_matchups"]["brackets"]["winners_bracket"] = [
+            {"m": 1, "r": 1, "t1": 3, "t2": 6, "w": None, "l": None},
+            {"m": 2, "r": 1, "t1": 4, "t2": 5, "w": None, "l": None},
+            {"m": 3, "r": 2, "t1": 1, "t2": {"w": 1}, "w": None, "l": None},
+            {"m": 4, "r": 2, "t1": 2, "t2": {"w": 2}, "w": None, "l": None},
+        ]
+        rendered = season_panel(data, 3)
+        self.assertIn("In the published championship bracket.", rendered)
+        self.assertIn("Outside the published championship bracket.", season_panel(data, 7))
+        self.assertIn("No regular-season weeks remain", rendered)
+        self.assertNotIn("Current cutoff:", rendered)
+        self.assertNotIn("Week 14:", rendered)
 
     def test_historical_movement_complete_reconciled_and_period(self):
         for index in (0, 1):
