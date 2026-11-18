@@ -127,10 +127,13 @@ def render_season_week(view: dict, *, matchup_id: str | None = None) -> str:
         heading += ' · Playoff round'
         description += ' Component weeks: ' + ', '.join(map(str, view['round_weeks'])) + '.'
         description += ' Round complete.' if view['round_complete'] else ' Round unresolved until all component weeks finish.'
-    from src.ui.lineup_review import review_panel
-    own_reviews = ''.join(review_panel(side.get('lineup_review')) for identity, sides in view['groups'].items()
+    from src.ui.lineup_review import lineup_recheck_panel, review_panel
+    recheck = view.get('lineup_recheck')
+    own_reviews = ''.join(review_panel(side.get('lineup_review'), recheck=recheck) for identity, sides in view['groups'].items()
                           for side in sides if side.get('is_viewer') and view['period'] != 'historical'
                           and (matchup_id is None or identity == matchup_id))
+    if recheck and not own_reviews and matchup_id is None:
+        own_reviews = lineup_recheck_panel(recheck, None)
     body = nav + own_reviews + f'<section class="card matchup-heading"><h2>{escape(heading)}</h2><p>{escape(description)}</p></section>'
     if own_reviews:
         body += '<script src="/static/lineup-review.js" defer></script>'

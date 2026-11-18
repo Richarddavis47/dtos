@@ -1,3 +1,7 @@
+## v1.22.52 / build 2267 — Recheck the weekly lineup
+
+My Team and Matchups show when the submitted Sleeper lineup was checked and display fallback deadlines in the browser’s time zone. Recheck lineup uses guarded league sync and returns to the same view after a newer check.
+
 ## v1.22.51 / build 2266 — Conditional lineup fallback
 
 My Team and Matchups show one verified backup plan for a questionable or doubtful submitted starter, including any FLEX moves and the earliest decision deadline. DTOS leaves lineup changes to Sleeper.

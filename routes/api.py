@@ -220,6 +220,35 @@ def create_api_router(
 
     @router.post("/sync")
     async def manual_sync(request: Request):
+        requested_scope = request.scope.get("dtos_lineup_recheck")
+        if requested_scope:
+            from services.matchup_season import lineup_recheck_context
+            from src.platform.account_context import current_account
+            from src.platform.lifecycle import HeavyWorkDeferred
+            from src.platform.runtime_errors import PRIVATE_HEADERS, log_sync_failure, runtime_error_response
+
+            account = current_account()
+            before = lineup_recheck_context(state.get("data") or {}, account)
+            if not before or before["scope"] != requested_scope:
+                return JSONResponse({"status": "scope_changed"}, status_code=409, headers=PRIVATE_HEADERS)
+            try:
+                await sync_sleeper(force_players=False)
+            except HeavyWorkDeferred:
+                return runtime_error_response(503, deferred=True)
+            except Exception as error:
+                log_sync_failure(error, operation="lineup_recheck")
+                return runtime_error_response(503)
+            if state.get("preparation_state") == "waiting_for_capacity":
+                return runtime_error_response(503, deferred=True)
+            if state.get("last_error") or state.get("preparation_state") == "failed":
+                return runtime_error_response(503)
+            after = lineup_recheck_context(state.get("data") or {}, account)
+            if not after or after["scope"] != requested_scope:
+                return JSONResponse({"status": "scope_changed"}, status_code=409, headers=PRIVATE_HEADERS)
+            observed = after["observed_at"]
+            if not observed or (before["observed_at"] and observed <= before["observed_at"]):
+                return JSONResponse({"status": "not_updated"}, status_code=503, headers=PRIVATE_HEADERS)
+            return JSONResponse({"status": "updated", **after}, headers=PRIVATE_HEADERS)
         await sync_sleeper(force_players=False)
         if "application/json" in request.headers.get("accept", ""):
             if state.get('preparation_state') == 'waiting_for_capacity':

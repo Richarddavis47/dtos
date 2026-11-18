@@ -427,3 +427,61 @@ class LineupFallbackTests(unittest.TestCase):
         self.assertIn("compatible fallback has not been prepared", self.read(data, service, now)["reason"])
         client = http(self, data, service, roster_id=2)
         self.assertNotIn("Lineup fallback", client.get("/matchups/1?week=8").text)
+
+
+class LineupRecheckTests(unittest.TestCase):
+    def setup_recheck(self):
+        import re
+        from tests.lineup_review_fixture import recheck_fixture
+
+        _, client, data, service, state, sync = recheck_fixture(self)
+        body = client.get("/teams/1").text
+        csrf = re.search(r'name="csrf_token" value="([^"]+)"', body)[1]
+        scope = re.search(r'data-lineup-recheck-scope="([^"]+)"', body)[1]
+        headers = {"Accept": "application/json", "X-CSRF-Token": csrf, "X-DTOS-Lineup-Recheck": scope}
+        return client, data, service, state, sync, headers
+
+    def test_recheck_requires_current_session_week_and_newer_observation(self):
+        client, _, _, _, sync, headers = self.setup_recheck()
+        wrong = {**headers, "X-DTOS-Lineup-Recheck": "0"*64 + ":2026:8"}
+        self.assertEqual(client.post("/sync", headers=wrong).json()["status"], "scope_changed")
+        week = {**headers, "X-DTOS-Lineup-Recheck": headers["X-DTOS-Lineup-Recheck"][:-1] + "9"}
+        self.assertEqual(client.post("/sync", headers=week).json()["status"], "scope_changed")
+        csrf = {**headers, "X-CSRF-Token": "invalid"}
+        self.assertEqual(client.post("/sync", headers=csrf).status_code, 403)
+        sync.assert_not_awaited()
+        self.assertNotIn("data-lineup-recheck-scope", client.get("/matchups?week=9").text)
+        self.assertNotIn("data-lineup-recheck-scope", client.get("/teams/2").text)
+        pending = client.post("/sync", headers=headers)
+        self.assertEqual((pending.status_code, pending.json()["status"]), (503, "not_updated"))
+        sync.assert_awaited_once_with(force_players=False)
+
+    def test_recheck_distinguishes_capacity_failure_and_week_rollover(self):
+        from src.platform.lifecycle import HeavyWorkDeferred
+
+        client, data, _, state, sync, headers = self.setup_recheck()
+        sync.side_effect = HeavyWorkDeferred("fixture capacity")
+        deferred = client.post("/sync", headers=headers)
+        self.assertEqual((deferred.status_code, deferred.json()["status"]), (503, "deferred"))
+        self.assertEqual(deferred.headers["retry-after"], "60")
+        sync.side_effect = None
+        state["last_error"] = "private fixture error"
+        failed = client.post("/sync", headers=headers)
+        self.assertEqual((failed.status_code, failed.json()["status"]), (503, "failed"))
+        self.assertNotIn(state["last_error"], failed.text)
+        state["last_error"] = None
+
+        for changed_scope in ("week", "league"):
+            with self.subTest(changed_scope=changed_scope):
+                async def advance(**_):
+                    if changed_scope == "week":
+                        data["week"] = 9
+                    else:
+                        data["league"]["league_id"] = "other-league"
+                    return state
+
+                sync.side_effect = advance
+                changed = client.post("/sync", headers=headers)
+                self.assertEqual((changed.status_code, changed.json()["status"]), (409, "scope_changed"))
+                self.assertNotIn("observed_at", changed.json())
+                data["week"] = 8
