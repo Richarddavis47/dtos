@@ -1,0 +1,70 @@
+{
+  "source": {
+    "baseline": "cafd9930af8c86b8b152a0849f3d8233923670d6",
+    "baseline_tree": "da4aee4c48eb7f1ddd312503e31145dc2cc26de7",
+    "candidate": "1985ef260865897d8f36fe09369c2159a2d9a43d",
+    "tree": "b67554151cf5612ce0011941a25b4fc0ac6bc010",
+    "branch": "feat/lineup-fallback-2266",
+    "version": "1.22.51",
+    "build": 2266,
+    "expected_test_count": 4642,
+    "pr": 355
+  },
+  "command": [
+    "docker",
+    "create",
+    "--name",
+    "dtos-lineup-fallback-canonical-2266",
+    "--init",
+    "--user",
+    "1000:1000",
+    "--memory=2g",
+    "--memory-swap=2g",
+    "--cpus=2",
+    "--network=none",
+    "-v",
+    "/workspace/dtos-draft-capital-2247:/app",
+    "-v",
+    "/workspace/dtos/.git:/workspace/dtos/.git:ro",
+    "-v",
+    "/workspace/2266-lineup-fallback/local-canonical:/output",
+    "-v",
+    "/dev/shm/dtos-2266-fixture:/fixture",
+    "-e",
+    "HOME=/tmp",
+    "-e",
+    "NODE_OPTIONS=--max-old-space-size=128",
+    "-e",
+    "GIT_CONFIG_COUNT=1",
+    "-e",
+    "GIT_CONFIG_KEY_0=safe.directory",
+    "-e",
+    "GIT_CONFIG_VALUE_0=/app",
+    "-e",
+    "DTOS_EXPECTED_HEAD=1985ef260865897d8f36fe09369c2159a2d9a43d",
+    "-e",
+    "DTOS_EXPECTED_TREE=b67554151cf5612ce0011941a25b4fc0ac6bc010",
+    "-e",
+    "DTOS_EXPECTED_TEST_COUNT=4642",
+    "-w",
+    "/app",
+    "sha256:f70a0c6402700dfb954c99d8163d4164926f74435c34d2e7e462407151663ae6",
+    "python",
+    "/output/runner.py"
+  ],
+  "container": "87e8bdd445831ffd7c130166d8f42ca1cfb84bd05192352facc87e8bf3feaf75",
+  "files": [
+    {
+      "name": "runner.py",
+      "sha256": "574308d9f64252575970aa19ce113f603ccb9927f2c6a523e8c228869fd37cac"
+    },
+    {
+      "name": "observer/sitecustomize.py",
+      "sha256": "3f43288a099e49a3ed2dea36f977b596707589eaefd2656b40a3b9c6533be2d4"
+    }
+  ],
+  "created_at": "2026-11-18T07:47:25.109588+00:00",
+  "status": "RUNNING_NOT_PASSED",
+  "fixture_free_after_container_creation": 9441329152,
+  "official_scratch_gate_unchanged": true
+}

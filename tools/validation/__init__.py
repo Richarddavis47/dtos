@@ -1,1 +1,0 @@
-"""Executable validation entry points."""
