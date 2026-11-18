@@ -121,3 +121,75 @@ class SeasonPerformanceBrowserTests(unittest.TestCase):
                     page.close()
             finally:
                 browser.close()
+
+    def test_sleeper_rollover_prepares_completed_scores_on_both_pages(self):
+        import asyncio
+        from services.matchup_season import prepare_season_matchups, season_week_view
+
+        f = fixtures.DiagnosticHTTPTests()
+        f.setUp()
+        self.addCleanup(f.doCleanups)
+        stamp = datetime.now(timezone.utc).isoformat()
+        f.publish(stamp)
+        data = f.f.f.data
+        league = {**data['league'], 'status': 'in_season', 'sport': 'nfl',
+                  'settings': {**data['league']['settings'], 'start_week': 1, 'playoff_type': 0,
+            'leg': 10, 'last_scored_leg': 10, 'playoff_week_start': 14,
+            'playoff_teams': 6, 'playoff_round_type': 1, 'num_teams': len(data['teams'])}}
+        nfl_state = {'season': league['season'], 'week': 11, 'season_type': 'regular'}
+        source_scores = [181.48, 147.70, 188.16, 171.18, 212.78,
+                         132.32, 171.58, 202.80, 176.02, 169.44]
+        requests = []
+
+        def rows(score):
+            return [dict(roster_id=1, matchup_id=1, points=score),
+                    dict(roster_id=2, matchup_id=1, points=0)]
+
+        async def fetch(path):
+            week = int(path.rsplit('/', 1)[-1])
+            requests.append(week)
+            return rows(source_scores[week - 1]) if week <= 10 else []
+
+        # Replay build 2262's preparation call with only the league clock.
+        legacy = asyncio.run(prepare_season_matchups(
+            league, 11, rows(999), fetch, observed_at=stamp))
+        self.assertEqual(list(legacy['weeks']), ['11'])
+        self.assertEqual(requests, [])
+
+        prepared = asyncio.run(prepare_season_matchups(
+            league, 11, rows(999), fetch, observed_at=stamp, previous=legacy,
+            nfl_state=nfl_state))
+        self.assertEqual({week for week in requests if week <= 10}, set(range(1, 11)))
+        self.assertEqual(len(requests), len(set(requests)))
+        self.assertLessEqual(len(requests), 18)
+        published = {**data, 'league': league, 'nfl_state': nfl_state, 'week': 11,
+                     'season_matchups': prepared}
+        matchup = season_week_view(published, 10, None)
+        self.assertEqual(matchup['period'], 'historical')
+        self.assertEqual(matchup['groups']['1'][0]['actual'], 169.44)
+        f.f.f.data = published
+        with sync_playwright() as pw:
+            browser = launch_chromium(pw, headless=True)
+            try:
+                page = f.f.browser_page(browser, 390, 844)
+                page.goto('https://dtos.test/')
+                home = page.get_by_role('heading', name='Season so far').locator('..')
+                self.assertIn('175.35', home.inner_text())
+                self.assertIn('10/10', home.inner_text())
+                page.goto('https://dtos.test/teams/1')
+                panel = page.locator('#season-so-far')
+                if not panel.evaluate('e=>e.open'):
+                    panel.locator(':scope > summary').press('Enter')
+                for value in ('175.35', 'Week 8: 202.80', 'Week 9: 176.02', 'Week 10: 169.44'):
+                    self.assertIn(value, panel.inner_text())
+                self.assertNotIn('999.00', panel.inner_text())
+                self.assertLessEqual(page.evaluate('document.documentElement.scrollWidth-innerWidth'), 0)
+                # Foreign NFL clock cannot establish the in-season rollover.
+                f.f.f.data = {**published, 'nfl_state': {**nfl_state, 'season': '2025'},
+                              'season_matchups': {**prepared, 'semantic_generation': 'foreign-clock'}}
+                page.goto('https://dtos.test/')
+                self.assertIn('Compatible season team results are not prepared.', home.inner_text())
+                page.goto('https://dtos.test/teams/1')
+                self.assertNotIn('175.35', panel.inner_text())
+            finally:
+                browser.close()

@@ -11,7 +11,7 @@ import math
 from decimal import Decimal
 from typing import Any
 
-from src.core.intelligence.season_calendar import season_calendar
+from src.core.intelligence.season_calendar import matchup_calendar
 from src.core.history_context.playoffs import playoff_facts
 from src.core.intelligence.team_strength import compatible_profile
 from src.ui.intelligence_presentation import matchup_game_state
@@ -66,7 +66,8 @@ def compact_week(rows: Any) -> list[dict] | None:
 
 
 async def prepare_season_matchups(league: dict, current_week: int, current_rows: list,
-                                  fetch, *, observed_at: str, previous: dict | None = None) -> dict:
+                                  fetch, *, observed_at: str, previous: dict | None = None,
+                                  nfl_state: dict | None = None) -> dict:
     """Normal synchronization only. At most 18 week and two bracket source reads.
 
     A failed/withdrawn week is explicit; prior current availability is not revived.
@@ -78,7 +79,7 @@ async def prepare_season_matchups(league: dict, current_week: int, current_rows:
     compatible_previous = (str(previous.get('league_id')) == str(league.get('league_id'))
         and str(previous.get('season')) == str(league.get('season'))
         and previous.get('methodology') == METHOD and previous.get('scoring_fingerprint') == fingerprint)
-    calendar = season_calendar(league)
+    calendar = matchup_calendar(league, current_week, nfl_state)
     weeks = sorted(set(calendar.get("regular_season_weeks") or []) | {
         week for group in calendar.get("playoff_rounds") or [] for week in group
     } | {current_week})
@@ -182,7 +183,8 @@ def _postseason(prepared: dict, calendar: dict, week: int, completed: int) -> di
 def season_week_view(data: dict, week: int, projection_service, *, evidence_through_week: int | None = None) -> dict:
     """Pin one projection generation; never substitute another week/league."""
     league = data.get("league") or {}
-    calendar = season_calendar(league)
+    current = int(data.get("week") or 0)
+    calendar = matchup_calendar(league, current, data.get("nfl_state"))
     prepared = data.get("season_matchups") or {}
     league_id, season = str(league.get("league_id") or ""), str(league.get("season") or "")
     compatible = (prepared.get("league_id") == league_id and prepared.get("season") == season
@@ -198,7 +200,6 @@ def season_week_view(data: dict, week: int, projection_service, *, evidence_thro
             raise ValueError('Invalid historical evidence boundary')
         completed = min(completed, evidence_through_week)
     historical = week <= completed
-    current = int(data.get("week") or 0)
     # A scheduled future playoff placeholder is NOT a locked opponent. Even
     # concrete IDs are withheld until all preceding rounds have completed.
     postseason = _postseason(prepared, calendar, week, completed) if compatible else {"pairs": {}, "byes": []}
