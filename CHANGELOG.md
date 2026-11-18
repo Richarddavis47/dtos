@@ -1,3 +1,7 @@
+## v1.22.50 / build 2265 — Playoff race context
+
+My Team shows current playoff positioning, the relevant record and Points For benchmark, and confirmed remaining regular-season opponents. Published brackets and unresolved or unsupported qualification rules are identified separately.
+
 ## v1.22.49 / build 2264 — Weekly league score comparisons
 
 My Team compares completed Sleeper scores with each other franchise in weeks with full league coverage. The season disclosure shows wins, losses, ties and skipped weeks separately from the official record.
