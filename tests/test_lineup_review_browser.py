@@ -252,3 +252,49 @@ class LineupReviewBrowserTests(unittest.TestCase):
                 self.assertIn("expired", panel.get_by_role("status").inner_text())
             finally:
                 browser.close()
+
+
+class LineupFallbackBrowserTests(unittest.TestCase):
+    def test_phone_fallback_below_roster_and_expiry(self):
+        from urllib.parse import urlsplit
+
+        fixture, _, _, _ = authenticated_prepared(self, empty=False, uncertain="w", earlier_backup=True)
+        directory = os.environ.get("DTOS_LINEUP_REVIEW_EVIDENCE")
+        with sync_playwright() as pw:
+            browser = launch_chromium(pw, headless=True)
+            try:
+                for width in (320, 390, 1280):
+                    context = browser.new_context(viewport={"width": width, "height": 844})
+                    def transport(route):
+                        url = urlsplit(route.request.url)
+                        if url.hostname != "dtos.test":
+                            route.abort()
+                            return
+                        response = fixture.f.f.client.get(url.path + ("?" + url.query if url.query else ""))
+                        if response.status_code == 404 and url.path.startswith("/static/"):
+                            response = fixture.f.static.get(url.path)
+                        route.fulfill(status=response.status_code, headers=dict(response.headers), body=response.content)
+                    context.route("**/*", transport)
+                    page = context.new_page()
+                    self.assertEqual(page.goto("https://dtos.test/teams/1").status, 200)
+                    panel = page.get_by_role("region", name="Lineup fallback")
+                    self.assertIn("Example W 1 is ruled out", panel.inner_text())
+                    self.assertIn("Example BQ 1 in for Example S 1", panel.inner_text())
+                    self.assertIn("starts before the starter", panel.inner_text())
+                    roster = page.locator("#full-roster")
+                    self.assertGreaterEqual(panel.bounding_box()["y"],
+                                            roster.bounding_box()["y"] + roster.bounding_box()["height"])
+                    self.assertLessEqual(page.evaluate("document.documentElement.scrollWidth"), width)
+                    action = panel.get_by_role("link", name="Review in Sleeper")
+                    action.focus()
+                    self.assertGreaterEqual(action.bounding_box()["height"], 44)
+                    if directory:
+                        Path(directory).mkdir(parents=True, exist_ok=True)
+                        panel.screenshot(path=str(Path(directory, f"fallback-{width}.png")))
+                    panel.evaluate('e=>e.dataset.reviewUntil="2000-01-01T00:00:00Z"')
+                    page.evaluate('document.dispatchEvent(new Event("visibilitychange"))')
+                    self.assertIn("fallback check has expired", panel.inner_text())
+                    self.assertNotIn("Example W 1 is ruled out", panel.inner_text())
+                    context.close()
+            finally:
+                browser.close()

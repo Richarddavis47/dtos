@@ -1,3 +1,7 @@
+## v1.22.51 / build 2266 — Conditional lineup fallback
+
+My Team and Matchups show one verified backup plan for a questionable or doubtful submitted starter, including any FLEX moves and the earliest decision deadline. DTOS leaves lineup changes to Sleeper.
+
 ## v1.22.50 / build 2265 — Playoff race context
 
 My Team shows current playoff positioning, the relevant record and Points For benchmark, and confirmed remaining regular-season opponents. Published brackets and unresolved or unsupported qualification rules are identified separately.

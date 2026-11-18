@@ -378,3 +378,52 @@ class LineupReviewTests(unittest.TestCase):
         review = self.review(data, service, now)
         self.assertFalse(review["actionable"], review)
         self.assertIn("position changed", review["reason"])
+
+
+class LineupFallbackTests(unittest.TestCase):
+    def read(self, data, service, now):
+        from src.core.intelligence.lineup_fallback import read_fallback
+
+        side = season_week_view(data, 8, service)["groups"]["1"][0]
+        return read_fallback(
+            data, side, service.snapshot(), data["team_strength"], week=8,
+            observed_at=data["season_matchups"]["observed_at"], retained_projection=False, now=now,
+        )
+
+    def test_superflex_chain_uses_the_earlier_backup_lock(self):
+        from src.core.intelligence.lineup_review import timestamp
+
+        data, service, now = prepared(self, uncertain="w", earlier_backup=True)
+        result = self.read(data, service, now)
+        self.assertEqual(result["starter"], "Example W 1")
+        self.assertEqual(result["moves"], [
+            ("FLEX", "Example S 1", "Example W 1"),
+            ("SUPER_FLEX", "Example BQ 1", "Example S 1"),
+        ])
+        self.assertTrue(result["earlier_game"])
+        deadline = timestamp(result["valid_until"])
+        self.assertEqual(deadline, timestamp(result["kickoff_deadline"]))
+        locked = self.read(data, service, deadline)
+        self.assertIn("already be locked", locked["reason"])
+        self.assertNotIn("moves", locked)
+
+    def test_one_qb_direct_fallback_and_stale_or_unsupported_evidence(self):
+        data, service, now = prepared(self, uncertain="q", slots=["QB", "RB", "WR", "FLEX", "BN"])
+        self.assertEqual(self.read(data, service, now)["moves"], [
+            ("QB", "Example BQ 1", "Example Q 1"),
+        ])
+        self.assertIn("fresh update", self.read(data, service, now + timedelta(minutes=16))["reason"])
+        data["league"]["settings"]["sub_lock_if_starter_active"] = 1
+        self.assertIn("lock rules", self.read(data, service, now)["reason"])
+        data["league"]["settings"]["sub_lock_if_starter_active"] = 0
+        data["team_strength"]["lineup_review_schedule"]["games"].clear()
+        self.assertIn("kickoff could not be verified", self.read(data, service, now)["reason"])
+
+    def test_missing_verification_differs_from_no_eligible_cover(self):
+        data, service, now = prepared(self, uncertain="w", slots=["QB", "RB", "WR", "FLEX", "BN"])
+        result = self.read(data, service, now)
+        self.assertIn("No eligible player", result["reason"])
+        data["team_strength"].pop("lineup_fallbacks")
+        self.assertIn("compatible fallback has not been prepared", self.read(data, service, now)["reason"])
+        client = http(self, data, service, roster_id=2)
+        self.assertNotIn("Lineup fallback", client.get("/matchups/1?week=8").text)
