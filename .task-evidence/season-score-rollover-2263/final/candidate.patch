@@ -1,0 +1,229 @@
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index c14db2ff..1ada1d25 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -1,3 +1,7 @@
++## v1.22.48 / build 2263 — Season scores at week rollover
++
++Normal Sleeper preparation now includes completed matchup weeks when the NFL clock advances one week after the league's final scores post. Home, My Team and Matchups use the same prepared schedule.
++
+ ## v1.22.47 / build 2262 — Season performance
+ 
+ My Team and Home show supported completed regular-season team scoring from prepared Sleeper matchup totals. Native custom-point overrides, zero and negative results remain intact. Matched league averages and the latest three completed team weeks disclose missing coverage. Season results stay separate from current lineup projections and official cumulative standings. Season details follow the roster so phone access stays clear. No valuation, Trade qualification, source acquisition or memory policy changes.
+diff --git a/RELEASE_NOTES.md b/RELEASE_NOTES.md
+index 49829fbc..484b4c3b 100644
+--- a/RELEASE_NOTES.md
++++ b/RELEASE_NOTES.md
+@@ -1,3 +1,7 @@
++## v1.22.48 / build 2263 — Season scores at week rollover
++
++Normal Sleeper preparation now includes completed matchup weeks when the NFL clock advances one week after the league's final scores post. Home, My Team and Matchups use the same prepared schedule.
++
+ ## v1.22.47 / build 2262 — Season performance
+ 
+ My Team and Home show supported completed regular-season team scoring from prepared Sleeper matchup totals. Native custom-point overrides, zero and negative results remain intact. Matched league averages and the latest three completed team weeks disclose missing coverage. Season results stay separate from current lineup projections and official cumulative standings. Season details follow the roster so phone access stays clear. No valuation, Trade qualification, source acquisition or memory policy changes.
+diff --git a/app_metadata.py b/app_metadata.py
+index 1cc9197e..99a01a7c 100644
+--- a/app_metadata.py
++++ b/app_metadata.py
+@@ -7,10 +7,10 @@ from datetime import datetime, timezone
+ from pathlib import Path
+ 
+ APPLICATION_NAME = "DTOS"
+-VERSION = "1.22.47"
+-PRODUCT_VERSION = "1.22.47"
+-BUILD_NUMBER = 2262
+-RELEASE_CODENAME = "Season Performance"
++VERSION = "1.22.48"
++PRODUCT_VERSION = "1.22.48"
++BUILD_NUMBER = 2263
++RELEASE_CODENAME = "Season Score Rollover"
+ APPLICATION_STARTED_AT = datetime.now(timezone.utc).isoformat()
+ 
+ _REPOSITORY_ROOT = Path(__file__).resolve().parent
+diff --git a/services/matchup_season.py b/services/matchup_season.py
+index 1b9aa949..365a3965 100644
+--- a/services/matchup_season.py
++++ b/services/matchup_season.py
+@@ -11,7 +11,7 @@ import math
+ from decimal import Decimal
+ from typing import Any
+ 
+-from src.core.intelligence.season_calendar import season_calendar
++from src.core.intelligence.season_calendar import matchup_calendar
+ from src.core.history_context.playoffs import playoff_facts
+ from src.core.intelligence.team_strength import compatible_profile
+ from src.ui.intelligence_presentation import matchup_game_state
+@@ -66,7 +66,8 @@ def compact_week(rows: Any) -> list[dict] | None:
+ 
+ 
+ async def prepare_season_matchups(league: dict, current_week: int, current_rows: list,
+-                                  fetch, *, observed_at: str, previous: dict | None = None) -> dict:
++                                  fetch, *, observed_at: str, previous: dict | None = None,
++                                  nfl_state: dict | None = None) -> dict:
+     """Normal synchronization only. At most 18 week and two bracket source reads.
+ 
+     A failed/withdrawn week is explicit; prior current availability is not revived.
+@@ -78,7 +79,7 @@ async def prepare_season_matchups(league: dict, current_week: int, current_rows:
+     compatible_previous = (str(previous.get('league_id')) == str(league.get('league_id'))
+         and str(previous.get('season')) == str(league.get('season'))
+         and previous.get('methodology') == METHOD and previous.get('scoring_fingerprint') == fingerprint)
+-    calendar = season_calendar(league)
++    calendar = matchup_calendar(league, current_week, nfl_state)
+     weeks = sorted(set(calendar.get("regular_season_weeks") or []) | {
+         week for group in calendar.get("playoff_rounds") or [] for week in group
+     } | {current_week})
+@@ -182,7 +183,8 @@ def _postseason(prepared: dict, calendar: dict, week: int, completed: int) -> di
+ def season_week_view(data: dict, week: int, projection_service, *, evidence_through_week: int | None = None) -> dict:
+     """Pin one projection generation; never substitute another week/league."""
+     league = data.get("league") or {}
+-    calendar = season_calendar(league)
++    current = int(data.get("week") or 0)
++    calendar = matchup_calendar(league, current, data.get("nfl_state"))
+     prepared = data.get("season_matchups") or {}
+     league_id, season = str(league.get("league_id") or ""), str(league.get("season") or "")
+     compatible = (prepared.get("league_id") == league_id and prepared.get("season") == season
+@@ -198,7 +200,6 @@ def season_week_view(data: dict, week: int, projection_service, *, evidence_thro
+             raise ValueError('Invalid historical evidence boundary')
+         completed = min(completed, evidence_through_week)
+     historical = week <= completed
+-    current = int(data.get("week") or 0)
+     # A scheduled future playoff placeholder is NOT a locked opponent. Even
+     # concrete IDs are withheld until all preceding rounds have completed.
+     postseason = _postseason(prepared, calendar, week, completed) if compatible else {"pairs": {}, "byes": []}
+diff --git a/services/season_performance.py b/services/season_performance.py
+index 16cd8811..5169b039 100644
+--- a/services/season_performance.py
++++ b/services/season_performance.py
+@@ -2,14 +2,14 @@
+ from statistics import mean
+ 
+ from services.matchup_season import METHOD, number
+-from src.core.intelligence.season_calendar import season_calendar
++from src.core.intelligence.season_calendar import matchup_calendar
+ from src.core.player_value_projection.sleeper_actuals import scoring_identity
+ 
+ 
+ def season_performance(data, roster_id):
+     league = data.get('league') or {}
+     prepared = data.get('season_matchups') or {}
+-    calendar = season_calendar(league)
++    calendar = matchup_calendar(league, data.get('week'), data.get('nfl_state'))
+     result = dict(season=league.get('season'), weeks=[], recent=[], average=None,
+                   league_average=None, expected_weeks=[], missing=[], retained=False,
+                   observed_at=prepared.get('observed_at'), generation=prepared.get('semantic_generation'),
+diff --git a/services/sleeper.py b/services/sleeper.py
+index b13f1e52..3ecae418 100644
+--- a/services/sleeper.py
++++ b/services/sleeper.py
+@@ -230,6 +230,7 @@ async def _sync_sleeper(
+                     league, matchup_week, matchups,
+                     lambda path: sleeper_get(client, path), observed_at=utcnow().isoformat(),
+                     previous=(state.get("data") or {}).get("season_matchups"),
++                    nfl_state=nfl_state,
+                 )
+                 from src.core.history_context.transaction_periods import acquire_previous_periods
+                 season_transactions, transaction_acquisition = await acquire_previous_periods(
+diff --git a/src/core/intelligence/season_calendar.py b/src/core/intelligence/season_calendar.py
+index 1919f8bf..b002623f 100644
+--- a/src/core/intelligence/season_calendar.py
++++ b/src/core/intelligence/season_calendar.py
+@@ -84,3 +84,18 @@ def season_calendar(league: dict, *, nfl_state: dict | None = None) -> dict:
+                   bye_meaning='structural slots only; no projected team is guaranteed qualification',
+                   round_membership={str(w): i + 1 for i, weeks in enumerate(rounds) for w in weeks})
+     return result
++
++
++def matchup_calendar(league: dict, current_week: int, nfl_state: dict | None) -> dict:
++    """Resolve a one-week Sleeper rollover without changing league identity.
++
++    The reference continues to identify the exact league settings. The retained
++    NFL clock corroborates the selected week; it does not set completed weeks.
++    """
++    calendar = season_calendar(league)
++    if calendar['availability'] == 'supported' or not nfl_state:
++        return calendar
++    contextual = season_calendar(league, nfl_state=nfl_state)
++    if contextual['availability'] == 'supported' and contextual['current_week'] == current_week:
++        return {**contextual, 'reference': calendar['reference']}
++    return calendar
+diff --git a/tests/test_season_performance_browser.py b/tests/test_season_performance_browser.py
+index 0c7adc17..301ff602 100644
+--- a/tests/test_season_performance_browser.py
++++ b/tests/test_season_performance_browser.py
+@@ -121,3 +121,75 @@ class SeasonPerformanceBrowserTests(unittest.TestCase):
+                     page.close()
+             finally:
+                 browser.close()
++
++    def test_sleeper_rollover_prepares_completed_scores_on_both_pages(self):
++        import asyncio
++        from services.matchup_season import prepare_season_matchups, season_week_view
++
++        f = fixtures.DiagnosticHTTPTests()
++        f.setUp()
++        self.addCleanup(f.doCleanups)
++        stamp = datetime.now(timezone.utc).isoformat()
++        f.publish(stamp)
++        data = f.f.f.data
++        league = {**data['league'], 'status': 'in_season', 'sport': 'nfl',
++                  'settings': {**data['league']['settings'], 'start_week': 1, 'playoff_type': 0,
++            'leg': 10, 'last_scored_leg': 10, 'playoff_week_start': 14,
++            'playoff_teams': 6, 'playoff_round_type': 1, 'num_teams': len(data['teams'])}}
++        nfl_state = {'season': league['season'], 'week': 11, 'season_type': 'regular'}
++        source_scores = [181.48, 147.70, 188.16, 171.18, 212.78,
++                         132.32, 171.58, 202.80, 176.02, 169.44]
++        requests = []
++
++        def rows(score):
++            return [dict(roster_id=1, matchup_id=1, points=score),
++                    dict(roster_id=2, matchup_id=1, points=0)]
++
++        async def fetch(path):
++            week = int(path.rsplit('/', 1)[-1])
++            requests.append(week)
++            return rows(source_scores[week - 1]) if week <= 10 else []
++
++        # Replay build 2262's preparation call with only the league clock.
++        legacy = asyncio.run(prepare_season_matchups(
++            league, 11, rows(999), fetch, observed_at=stamp))
++        self.assertEqual(list(legacy['weeks']), ['11'])
++        self.assertEqual(requests, [])
++
++        prepared = asyncio.run(prepare_season_matchups(
++            league, 11, rows(999), fetch, observed_at=stamp, previous=legacy,
++            nfl_state=nfl_state))
++        self.assertEqual({week for week in requests if week <= 10}, set(range(1, 11)))
++        self.assertEqual(len(requests), len(set(requests)))
++        self.assertLessEqual(len(requests), 18)
++        published = {**data, 'league': league, 'nfl_state': nfl_state, 'week': 11,
++                     'season_matchups': prepared}
++        matchup = season_week_view(published, 10, None)
++        self.assertEqual(matchup['period'], 'historical')
++        self.assertEqual(matchup['groups']['1'][0]['actual'], 169.44)
++        f.f.f.data = published
++        with sync_playwright() as pw:
++            browser = launch_chromium(pw, headless=True)
++            try:
++                page = f.f.browser_page(browser, 390, 844)
++                page.goto('https://dtos.test/')
++                home = page.get_by_role('heading', name='Season so far').locator('..')
++                self.assertIn('175.35', home.inner_text())
++                self.assertIn('10/10', home.inner_text())
++                page.goto('https://dtos.test/teams/1')
++                panel = page.locator('#season-so-far')
++                if not panel.evaluate('e=>e.open'):
++                    panel.locator(':scope > summary').press('Enter')
++                for value in ('175.35', 'Week 8: 202.80', 'Week 9: 176.02', 'Week 10: 169.44'):
++                    self.assertIn(value, panel.inner_text())
++                self.assertNotIn('999.00', panel.inner_text())
++                self.assertLessEqual(page.evaluate('document.documentElement.scrollWidth-innerWidth'), 0)
++                # Foreign NFL clock cannot establish the in-season rollover.
++                f.f.f.data = {**published, 'nfl_state': {**nfl_state, 'season': '2025'},
++                              'season_matchups': {**prepared, 'semantic_generation': 'foreign-clock'}}
++                page.goto('https://dtos.test/')
++                self.assertIn('Compatible season team results are not prepared.', home.inner_text())
++                page.goto('https://dtos.test/teams/1')
++                self.assertNotIn('175.35', panel.inner_text())
++            finally:
++                browser.close()

@@ -1,0 +1,32 @@
+{
+  "source": {
+    "baseline": "537b52fdfdf02c9ccecac642b3d0a2a9bcc4cae5",
+    "baseline_tree": "7ea1439a8ab32f848fc59c095e03746e48820b3e",
+    "candidate": "9f5dba05dd44700ad8b27e675d8a28d15ad2ba42",
+    "tree": "45b6859fa5c02dc53b9dafb992df54b53c8d5a9d",
+    "branch": "fix/season-score-rollover-2263",
+    "version": "1.22.48",
+    "build": 2263,
+    "expected_test_count": 4631,
+    "pr": 352
+  },
+  "reviewed_images": [
+    {
+      "path": "visual-pixel-comparison/commissioner-320-default.png",
+      "sha256": "8d16411d0ee06709f496faa98fe69ceb7a69ec991474043c4f0073d951dc54d8",
+      "review": "Inspected original baseline and candidate regions. Only the fixture last-visit timestamp differs; no layout change."
+    },
+    {
+      "path": "visual-pixel-comparison/commissioner-390-default.png",
+      "sha256": "9d358adaea8c5a86589dd616cd2f542bb40d98ccc52aff11401a160fd885de01",
+      "review": "Inspected original baseline and candidate regions. Only the fixture last-visit timestamp differs; no layout change."
+    },
+    {
+      "path": "visual-pixel-comparison/commissioner-1280-default.png",
+      "sha256": "d9424eee9562ad36721e4b2d917e5e15723bf8df3ccc387a18edf0eab2cbcf4a",
+      "review": "Inspected original baseline and candidate regions. Only the fixture last-visit timestamp differs; no layout change."
+    }
+  ],
+  "material_visual_defects": [],
+  "scope": "Inspected all changed current-source screenshots. Chromium emulation."
+}

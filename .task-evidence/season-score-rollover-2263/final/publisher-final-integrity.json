@@ -1,0 +1,47 @@
+{
+  "passed": true,
+  "source": {
+    "baseline": "537b52fdfdf02c9ccecac642b3d0a2a9bcc4cae5",
+    "baseline_tree": "7ea1439a8ab32f848fc59c095e03746e48820b3e",
+    "candidate": "9f5dba05dd44700ad8b27e675d8a28d15ad2ba42",
+    "tree": "45b6859fa5c02dc53b9dafb992df54b53c8d5a9d",
+    "branch": "fix/season-score-rollover-2263",
+    "version": "1.22.48",
+    "build": 2263,
+    "expected_test_count": 4631,
+    "pr": 352
+  },
+  "controller": {
+    "commit": "d310727fb3ca290e252380cb1639b29c72c5c127",
+    "tree": "e879ac8372440a7222d1fbc95a47fb2507f16429",
+    "branch": "release/2263-actions-publisher",
+    "ref": "refs/heads/release/2263-actions-publisher",
+    "source": {
+      "baseline": "537b52fdfdf02c9ccecac642b3d0a2a9bcc4cae5",
+      "baseline_tree": "7ea1439a8ab32f848fc59c095e03746e48820b3e",
+      "candidate": "9f5dba05dd44700ad8b27e675d8a28d15ad2ba42",
+      "tree": "45b6859fa5c02dc53b9dafb992df54b53c8d5a9d",
+      "branch": "fix/season-score-rollover-2263",
+      "version": "1.22.48",
+      "build": 2263,
+      "expected_test_count": 4631,
+      "pr": 352
+    },
+    "tooling_only": true,
+    "not_merged_into_main": true
+  },
+  "sha256": {
+    "tools/release/publish.py": "8ba5b9b6a5d81cbdc9b89c0875fb29e45f45d33a351660cdca1ffb5bc82d8174",
+    "tests/test_release_publisher.py": "28921e98b68d6f7963b0e8fef976f9a389bd6b581cc0fc08d94c869ee7a35aa2",
+    ".github/workflows/canonical-release-recovery.yml": "c69d809ff561e8643da885173060b2d338c82ab2917fcfe0d82d6e1a1206a961",
+    ".github/release-plans/2263.json": "1a79cef188286a942293153292c79be1a61c00d599c6b6de9a1338b942b07ab1"
+  },
+  "tests": 181,
+  "lint": true,
+  "compile": true,
+  "diff_check": true,
+  "reused_exact_unchanged_controls": true,
+  "original_controls_sha256": "8c02c4c147d472d283211a9a6e91f96f9ca045e4714bab955accb2adece44915",
+  "sparse_recovery": "Finalized-plan181controls, lint, compile and diff passed before explicit allowed sparse staging. No guard/source/plan bytes changed after checks.",
+  "scope": "Real finalized plan and unchanged publisher guards; no validation bypass."
+}
