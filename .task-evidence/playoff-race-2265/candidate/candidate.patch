@@ -1,0 +1,364 @@
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index 51552de8..40dc1962 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -1,3 +1,7 @@
++## v1.22.50 / build 2265 — Playoff race context
++
++My Team shows current playoff positioning, the relevant record and Points For benchmark, and confirmed remaining regular-season opponents. Published brackets and unresolved or unsupported qualification rules are identified separately.
++
+ ## v1.22.49 / build 2264 — Weekly league score comparisons
+ 
+ My Team compares completed Sleeper scores with each other franchise in weeks with full league coverage. The season disclosure shows wins, losses, ties and skipped weeks separately from the official record.
+diff --git a/RELEASE_NOTES.md b/RELEASE_NOTES.md
+index 143d78c4..81cdd99c 100644
+--- a/RELEASE_NOTES.md
++++ b/RELEASE_NOTES.md
+@@ -1,3 +1,7 @@
++## v1.22.50 / build 2265 — Playoff race context
++
++My Team shows current playoff positioning, the relevant record and Points For benchmark, and confirmed remaining regular-season opponents. Published brackets and unresolved or unsupported qualification rules are identified separately.
++
+ ## v1.22.49 / build 2264 — Weekly league score comparisons
+ 
+ My Team compares completed Sleeper scores with each other franchise in weeks with full league coverage. The season disclosure shows wins, losses, ties and skipped weeks separately from the official record.
+diff --git a/app_metadata.py b/app_metadata.py
+index 9857312e..84f2481a 100644
+--- a/app_metadata.py
++++ b/app_metadata.py
+@@ -7,10 +7,10 @@ from datetime import datetime, timezone
+ from pathlib import Path
+ 
+ APPLICATION_NAME = "DTOS"
+-VERSION = "1.22.49"
+-PRODUCT_VERSION = "1.22.49"
+-BUILD_NUMBER = 2264
+-RELEASE_CODENAME = "Weekly League Score Comparisons"
++VERSION = "1.22.50"
++PRODUCT_VERSION = "1.22.50"
++BUILD_NUMBER = 2265
++RELEASE_CODENAME = "Playoff Race Context"
+ APPLICATION_STARTED_AT = datetime.now(timezone.utc).isoformat()
+ 
+ _REPOSITORY_ROOT = Path(__file__).resolve().parent
+diff --git a/services/matchup_season.py b/services/matchup_season.py
+index 365a3965..27a3c572 100644
+--- a/services/matchup_season.py
++++ b/services/matchup_season.py
+@@ -180,16 +180,55 @@ def _postseason(prepared: dict, calendar: dict, week: int, completed: int) -> di
+     return result
+ 
+ 
++def _prepared_schedule(data: dict, current: int) -> tuple[dict, dict]:
++    """Use the same publication compatibility checks for schedule-only reads."""
++    league = data.get("league") or {}
++    calendar = matchup_calendar(league, current, data.get("nfl_state"))
++    prepared = data.get("season_matchups") or {}
++    compatible = (
++        prepared.get("league_id") == calendar["league_id"]
++        and prepared.get("season") == str(league.get("season") or "")
++        and prepared.get("calendar_reference") == calendar["reference"]
++        and prepared.get("methodology") == METHOD
++    )
++    return calendar, prepared if compatible else {}
++
++
++def remaining_regular_opponents(data: dict, roster_id: int) -> dict:
++    """Read only confirmed head-to-head rows; do not build lineup views."""
++    calendar, prepared = _prepared_schedule(data, int(data.get("week") or 0))
++    weeks = calendar.get("remaining_regular_season_weeks")
++    matches = {}
++    teams = [t["roster_id"] for t in data.get("teams") or [] if type(t.get("roster_id")) is int]
++    for week in weeks or []:
++        evidence = (prepared.get("weeks") or {}).get(str(week)) or {}
++        if evidence.get("availability") != "available" or teams.count(roster_id) != 1:
++            continue
++        rows = evidence.get("rows") or []
++        own = [row for row in rows if row.get("roster_id") == roster_id]
++        if len(own) != 1:
++            continue
++        matchup_id = own[0].get("matchup_id")
++        if type(matchup_id) is not int or matchup_id <= 0:
++            continue
++        pair = [row.get("roster_id") for row in rows if row.get("matchup_id") == matchup_id]
++        if len(pair) != 2:
++            continue
++        opponent = pair[1] if pair[0] == roster_id else pair[0]
++        if (type(opponent) is int and opponent != roster_id and teams.count(opponent) == 1
++                and sum(row.get("roster_id") == opponent for row in rows) == 1):
++            matches[week] = opponent
++    return {"weeks": weeks, "matches": matches,
++            "gaps": [week for week in weeks or [] if week not in matches]}
++
++
+ def season_week_view(data: dict, week: int, projection_service, *, evidence_through_week: int | None = None) -> dict:
+     """Pin one projection generation; never substitute another week/league."""
+     league = data.get("league") or {}
+     current = int(data.get("week") or 0)
+-    calendar = matchup_calendar(league, current, data.get("nfl_state"))
+-    prepared = data.get("season_matchups") or {}
+-    league_id, season = str(league.get("league_id") or ""), str(league.get("season") or "")
+-    compatible = (prepared.get("league_id") == league_id and prepared.get("season") == season
+-                  and prepared.get("calendar_reference") == calendar["reference"]
+-                  and prepared.get("methodology") == METHOD)
++    calendar, prepared = _prepared_schedule(data, current)
++    league_id, season = calendar["league_id"], str(league.get("season") or "")
++    compatible = bool(prepared)
+     evidence = (prepared.get("weeks") or {}).get(str(week), {}) if compatible else {}
+     rounds = calendar.get("playoff_rounds") or []
+     component = next((group for group in rounds if week in group), [])
+diff --git a/services/standings.py b/services/standings.py
+index 2fd1e827..2089e58e 100644
+--- a/services/standings.py
++++ b/services/standings.py
+@@ -95,7 +95,9 @@ def standings_order(data):
+ def playoff_position(data, order):
+     """Current positions under named standard/division rules, never clinching."""
+     settings = (data.get("league") or {}).get("settings") or {}
+-    result = {"boundary": None, "qualifiers": set(), "kind": None, "reason": None}
++    result = {"boundary": None, "qualifiers": set(), "kind": None, "reason": None,
++              "cutoff_ids": [], "cutoff_tied": False, "division_leaders": {},
++              "at_large_cutoff_id": None}
+     count = settings.get("playoff_teams")
+     teams = order["teams"]
+     if type(count) is not int or not 0 < count < len(teams):
+@@ -158,6 +160,12 @@ def playoff_position(data, order):
+             "Playoff positioning unavailable: custom qualification/seeding rules are not supported."
+         )
+         return result
++    if divisions == 0:
++        cutoff_ids = [
++            rid for rid, (first, last) in order["placements"].items()
++            if first <= count <= last
++        ]
++        result.update(cutoff_ids=cutoff_ids, cutoff_tied=len(cutoff_ids) > 1)
+     if len(order["ranks"]) != len(teams):
+         # A tie wholly inside/outside the cutoff still admits a current boundary.
+         placements = order["placements"]
+@@ -195,12 +203,18 @@ def playoff_position(data, order):
+             "Playoff positioning unavailable: a configured division has no supported membership."
+         )
+         return result
+-    winners = {int(group[0]["roster_id"]) for group in groups}
++    division_leaders = {
++        division: int(group[0]["roster_id"]) for division, group in enumerate(groups, 1)
++    }
++    winners = set(division_leaders.values())
+     remaining = [
+         int(t["roster_id"]) for t in teams if int(t["roster_id"]) not in winners
+     ]
++    at_large = remaining[: count - divisions]
+     result.update(
+-        qualifiers=winners | set(remaining[: count - divisions]),
++        qualifiers=winners | set(at_large),
++        division_leaders=division_leaders,
++        at_large_cutoff_id=at_large[-1] if at_large else None,
+         kind="divisions",
+         reason="Current division leaders plus remaining record/PF positions under standard division qualification, assuming no commissioner overrides. Indicators are per team; not final seeds or clinched berths.",
+     )
+diff --git a/src/ui/season_performance.py b/src/ui/season_performance.py
+index 2f7d0962..47d30c7e 100644
+--- a/src/ui/season_performance.py
++++ b/src/ui/season_performance.py
+@@ -1,8 +1,10 @@
+ """Small season-results disclosure, separate from roster projections."""
+ from html import escape
+ 
++from services.matchup_season import number, remaining_regular_opponents
+ from services.season_performance import season_performance
+-
++from services.standings import playoff_position, standings_order
++from src.ui.intelligence_presentation import league_is_preseason, record_evidence
+ 
+ 
+ def _peer_record(view):
+@@ -22,6 +24,67 @@ def _peer_record(view):
+             '<p>Each week, your Sleeper score is compared once with each other team’s score. '
+             'These comparisons are separate from your official record and any league median game.</p></details>')
+ 
++def _playoff_race(data, roster_id):
++    order = standings_order(data)
++    position = playoff_position(data, order)
++    teams = {team["roster_id"]: team for team in order["teams"]}
++    kind = position["kind"]
++    qualified = roster_id in position["qualifiers"]
++    started = not league_is_preseason(data)
++
++    def name(rid):
++        return escape(str(teams[rid].get("team_name") or f"Franchise {rid}"))
++
++    def record_line(label, rid):
++        team = teams[rid]
++        record = record_evidence(team.get("wins"), team.get("losses"), team.get("ties"), season_started=started)
++        pf = number(team.get("points_for")) if started else None
++        points = f"{pf:.2f} Points For" if pf is not None else "Points For unavailable"
++        return f"<li>{label}: {name(rid)} · {escape(record)} · {points}</li>"
++
++    facts = []
++    if kind == "bracket":
++        status = "In the published championship bracket." if qualified else "Outside the published championship bracket."
++    elif kind in {"standard", "divisions"}:
++        status = "Currently in a playoff position." if qualified else "Currently outside the playoff positions."
++    elif position["cutoff_tied"]:
++        status = "Playoff position unresolved at the cutoff tie."
++    else:
++        status = "Playoff position unavailable."
++    if roster_id in teams:
++        facts.append(record_line("This franchise", roster_id))
++    for rid in position["cutoff_ids"]:
++        facts.append(record_line("Tied at cutoff" if position["cutoff_tied"] else "Current cutoff", rid))
++    if kind == "divisions" and roster_id in teams:
++        leader = position["division_leaders"][teams[roster_id]["division"]]
++        if qualified:
++            route = "division leader" if roster_id == leader else "at-large position"
++            status += f" Qualification route: {route}."
++        facts.append(record_line("Current division leader", leader))
++        cutoff = position["at_large_cutoff_id"]
++        if cutoff is not None:
++            facts.append(record_line("Current at-large cutoff", cutoff))
++
++    schedule = remaining_regular_opponents(data, roster_id)
++    weeks = schedule["weeks"]
++    planned = schedule["matches"]
++    if weeks is None:
++        coverage = "Remaining regular-season weeks are unavailable for this calendar."
++    elif not weeks:
++        coverage = "No regular-season weeks remain on the prepared calendar."
++    else:
++        coverage = f"{len(planned)}/{len(weeks)} remaining regular-season opponents confirmed."
++        if schedule["gaps"]:
++            coverage += " Opponents unavailable for weeks " + ", ".join(map(str, schedule["gaps"])) + "."
++    games = "".join(f'<li><a href="/matchups?week={week}">Week {week}: {name(opponent)}</a></li>'
++                    for week, opponent in planned.items())
++    return ('<details><summary>Playoff race</summary>'
++            f'<p><strong>{status}</strong> {escape(position["reason"] or "")}</p>'
++            + (f'<ul>{"".join(facts)}</ul>' if facts else '')
++            + f'<p>{coverage}</p>' + (f'<ul>{games}</ul>' if games else '')
++            + '<p><a href="/league#standings-evidence">Review standings</a></p></details>')
++
++
+ def season_panel(data, roster_id, *, compact=False):
+     view = season_performance(data, roster_id)
+     def points(value):
+@@ -65,6 +128,7 @@ def season_panel(data, roster_id, *, compact=False):
+             f'<p>{escape(comparison)}</p>' + (f'<p>Recent completed weeks: {escape(recent)}</p>' if recent else '')
+             + (f'<p>{escape(view["recent_reason"])}</p>' if view['recent_reason'] else '')
+             + '<p>Past team results are separate from this week’s projected lineup.</p>'
++            + _playoff_race(data, roster_id)
+             + _peer_record(view)
+             + f'<details><summary>Weeks, coverage and sources</summary><p>{escape(details)}</p></details>'
+             + '<a href="/matchups">Review matchups</a></div></details>')
+diff --git a/tests/test_season_performance_browser.py b/tests/test_season_performance_browser.py
+index f7672fdd..4795f4a9 100644
+--- a/tests/test_season_performance_browser.py
++++ b/tests/test_season_performance_browser.py
+@@ -49,6 +49,11 @@ class SeasonPerformanceBrowserTests(unittest.TestCase):
+                         self.assertTrue(panel.evaluate('e=>e.open'))
+                         self.assertIn('0.00 points', panel.inner_text())
+                         self.assertIn('Week 1: 0.00', panel.inner_text())
++                        race = panel.get_by_text('Playoff race', exact=True)
++                        race.press('Enter')
++                        self.assertIn('Playoff position unavailable.', race.locator('..').inner_text())
++                        self.assertEqual(race.locator('..').get_by_role('link', name='Review standings').get_attribute('href'),
++                                         '/league#standings-evidence')
+                         peer = panel.get_by_text('How often did we outscore the rest of the league?', exact=True)
+                         peer.press('Enter')
+                         detail = peer.locator('..')
+diff --git a/tests/test_standings_positioning.py b/tests/test_standings_positioning.py
+index c8356a17..8c57ce2a 100644
+--- a/tests/test_standings_positioning.py
++++ b/tests/test_standings_positioning.py
+@@ -12,7 +12,7 @@ from unittest.mock import patch
+ from fastapi import FastAPI
+ from fastapi.testclient import TestClient
+ 
+-from services.matchup_season import prepare_season_matchups
++from services.matchup_season import prepare_season_matchups, remaining_regular_opponents
+ from services.standings import (
+     record_fields,
+     standings_order,
+@@ -25,6 +25,7 @@ from src.core.league_runtime.manager import LeagueRuntime
+ from src.core.projection_intelligence.service import ProjectionService
+ from src.ui.badges import official_ranks
+ from src.ui.standings import render_standings, completed_streak
++from src.ui.season_performance import season_panel
+ 
+ SOURCES = json.loads(Path("tests/fixtures/standings_source_2132.json").read_text())[
+     "leagues"
+@@ -310,6 +311,76 @@ class StandingsPositioningTests(unittest.TestCase):
+         self.assertEqual(result["kind"], "bracket")
+         self.assertIsNone(result["boundary"])
+ 
++    def test_day_traders_race_and_partial_prepared_schedule(self):
++        data = source_fixture()
++        order = standings_order(data)
++        rank = SOURCES[0]["expected_order"]
++        cutoff = next(t for t in data["teams"] if t["roster_id"] == rank[5])
++        for rid, status in [(rank[0], "Currently in"), (rank[-1], "Currently outside")]:
++            with self.subTest(roster=rid):
++                matches = remaining_regular_opponents(data, rid)
++                self.assertEqual(matches["weeks"], list(range(5, 14)))
++                self.assertEqual(set(matches["matches"]), {5, 6})
++                for week, opponent in matches["matches"].items():
++                    rows = SOURCES[0]["weeks"][str(week)]
++                    own = next(row for row in rows if row["roster_id"] == rid)
++                    expected = [r["roster_id"] for r in rows
++                                if r["matchup_id"] == own["matchup_id"] and r["roster_id"] != rid]
++                    self.assertEqual([opponent], expected)
++                self.assertEqual(matches["gaps"], list(range(7, 14)))
++                rendered = season_panel(data, rid)
++                self.assertIn(status, rendered)
++                self.assertIn(f'{cutoff["points_for"]:.2f} Points For', rendered)
++                self.assertIn("2/9 remaining regular-season opponents confirmed.", rendered)
++                self.assertIn('href="/matchups?week=5"', rendered)
++        self.assertEqual(playoff_position(data, order)["cutoff_ids"], [rank[5]])
++        data["season_matchups"]["league_id"] = "foreign"
++        self.assertEqual(remaining_regular_opponents(data, rank[0])["matches"], {})
++        self.assertIn("0/9 remaining regular-season opponents confirmed.", season_panel(data, rank[0]))
++
++    def test_race_requires_division_route_not_global_rank(self):
++        data = controlled([(4, 0, 0, pf) for pf in [150, 140, 130, 120, 110, 100]],
++                          divisions=2)
++        data["league"]["settings"]["playoff_teams"] = 4
++        for team in data["teams"]:
++            team["division"] = 1 if team["roster_id"] <= 4 else 2
++        division_leader = season_panel(data, 5)
++        self.assertIn("Qualification route: division leader.", division_leader)
++        self.assertIn("Current at-large cutoff: Franchise 3", division_leader)
++        self.assertIn("Qualification route: at-large position.", season_panel(data, 3))
++        self.assertIn("Currently outside the playoff positions.", season_panel(data, 4))
++
++    def test_race_withholds_cutoff_on_override_and_unresolved_tie(self):
++        data = controlled([(3, 1, 0, 100), (2, 2, 0, 95), (2, 2, 0, 95), (1, 3, 0, 90)])
++        tied = season_panel(data, 2)
++        self.assertIn("Playoff position unresolved at the cutoff tie.", tied)
++        for rid in (2, 3):
++            self.assertIn(f"Tied at cutoff: Franchise {rid} · 2-2-0 · 95.00 Points For", tied)
++        data["league"]["settings"]["playoff_seed_type"] = 1
++        unsupported = season_panel(data, 2)
++        self.assertIn("custom qualification/seeding rules are not supported", unsupported)
++        self.assertNotIn("Tied at cutoff:", unsupported)
++        self.assertNotIn("Currently in a playoff position", unsupported)
++
++    def test_race_preserves_postseason_bracket_and_regular_season_boundary(self):
++        data = source_fixture()
++        data["week"] = 14
++        data["league"]["settings"].update(leg=14, last_scored_leg=13)
++        weeks = {"14": [{"roster_id": 3, "matchup_id": 1}, {"roster_id": 6, "matchup_id": 1}]}
++        prepare(data, weeks)
++        data["season_matchups"]["brackets"]["winners_bracket"] = [
++            {"m": 1, "r": 1, "t1": 3, "t2": 6, "w": None, "l": None},
++            {"m": 2, "r": 1, "t1": 4, "t2": 5, "w": None, "l": None},
++            {"m": 3, "r": 2, "t1": 1, "t2": {"w": 1}, "w": None, "l": None},
++            {"m": 4, "r": 2, "t1": 2, "t2": {"w": 2}, "w": None, "l": None},
++        ]
++        rendered = season_panel(data, 3)
++        self.assertIn("In the published championship bracket.", rendered)
++        self.assertIn("Outside the published championship bracket.", season_panel(data, 7))
++        self.assertIn("No regular-season weeks remain", rendered)
++        self.assertNotIn("Current cutoff:", rendered)
++        self.assertNotIn("Week 14:", rendered)
++
+     def test_historical_movement_complete_reconciled_and_period(self):
+         for index in (0, 1):
+             data = source_fixture(index)
