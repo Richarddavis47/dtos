@@ -1,0 +1,211 @@
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index 1ada1d25..51552de8 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -1,3 +1,7 @@
++## v1.22.49 / build 2264 — Weekly league score comparisons
++
++My Team compares completed Sleeper scores with each other franchise in weeks with full league coverage. The season disclosure shows wins, losses, ties and skipped weeks separately from the official record.
++
+ ## v1.22.48 / build 2263 — Season scores at week rollover
+ 
+ Normal Sleeper preparation now includes completed matchup weeks when the NFL clock advances one week after the league's final scores post. Home, My Team and Matchups use the same prepared schedule.
+diff --git a/RELEASE_NOTES.md b/RELEASE_NOTES.md
+index 484b4c3b..143d78c4 100644
+--- a/RELEASE_NOTES.md
++++ b/RELEASE_NOTES.md
+@@ -1,3 +1,7 @@
++## v1.22.49 / build 2264 — Weekly league score comparisons
++
++My Team compares completed Sleeper scores with each other franchise in weeks with full league coverage. The season disclosure shows wins, losses, ties and skipped weeks separately from the official record.
++
+ ## v1.22.48 / build 2263 — Season scores at week rollover
+ 
+ Normal Sleeper preparation now includes completed matchup weeks when the NFL clock advances one week after the league's final scores post. Home, My Team and Matchups use the same prepared schedule.
+diff --git a/app_metadata.py b/app_metadata.py
+index 99a01a7c..9857312e 100644
+--- a/app_metadata.py
++++ b/app_metadata.py
+@@ -7,10 +7,10 @@ from datetime import datetime, timezone
+ from pathlib import Path
+ 
+ APPLICATION_NAME = "DTOS"
+-VERSION = "1.22.48"
+-PRODUCT_VERSION = "1.22.48"
+-BUILD_NUMBER = 2263
+-RELEASE_CODENAME = "Season Score Rollover"
++VERSION = "1.22.49"
++PRODUCT_VERSION = "1.22.49"
++BUILD_NUMBER = 2264
++RELEASE_CODENAME = "Weekly League Score Comparisons"
+ APPLICATION_STARTED_AT = datetime.now(timezone.utc).isoformat()
+ 
+ _REPOSITORY_ROOT = Path(__file__).resolve().parent
+diff --git a/services/season_performance.py b/services/season_performance.py
+index 5169b039..2268bbe0 100644
+--- a/services/season_performance.py
++++ b/services/season_performance.py
+@@ -13,7 +13,8 @@ def season_performance(data, roster_id):
+     result = dict(season=league.get('season'), weeks=[], recent=[], average=None,
+                   league_average=None, expected_weeks=[], missing=[], retained=False,
+                   observed_at=prepared.get('observed_at'), generation=prepared.get('semantic_generation'),
+-                  reason=None, recent_reason=None, gaps=[], cohort_size=None)
++                  reason=None, recent_reason=None, gaps=[], cohort_size=None,
++                  peer_record=dict(wins=0, losses=0, ties=0, weeks=[], retained_weeks=[]))
+     if (calendar['availability'] != 'supported'
+             or prepared.get('league_id') != str(league.get('league_id') or '')
+             or prepared.get('season') != str(league.get('season') or '')
+@@ -36,6 +37,8 @@ def season_performance(data, roster_id):
+         return result
+     result['cohort_size'] = count if cohort else None
+     comparisons = []
++    cohort_ids = set(ids) if cohort else set()
++    peer_record = result['peer_record']
+     for week in expected:
+         evidence = (prepared.get('weeks') or {}).get(str(week)) or {}
+         retained = evidence.get('availability') != 'available'
+@@ -74,6 +77,16 @@ def season_performance(data, roster_id):
+             result['retained'] |= retained
+             if cohort and all(scores.get(rid) is not None for rid in ids):
+                 comparisons.append(mean(scores[rid] for rid in ids))
++                if len(cohort_ids) > 1 and scores.keys() == cohort_ids:
++                    peer_record['weeks'].append(week)
++                    if retained:
++                        peer_record['retained_weeks'].append(week)
++                    for rid in ids:
++                        if rid == roster_id:
++                            continue
++                        other = scores[rid]
++                        outcome = 'wins' if score > other else 'losses' if score < other else 'ties'
++                        peer_record[outcome] += 1
+         if week in expected[-3:]:
+             result['recent'].append(dict(week=week, points=score, retained=retained))
+     values = [row['points'] for row in result['weeks']]
+diff --git a/src/ui/season_performance.py b/src/ui/season_performance.py
+index 7a24065a..2f7d0962 100644
+--- a/src/ui/season_performance.py
++++ b/src/ui/season_performance.py
+@@ -4,6 +4,24 @@ from html import escape
+ from services.season_performance import season_performance
+ 
+ 
++
++def _peer_record(view):
++    record = view['peer_record']
++    weeks = record['weeks']
++    expected = view['expected_weeks']
++    coverage = f"{len(weeks)}/{len(expected)} completed regular-season weeks used." if expected else ''
++    summary = (
++        f"Wins: {record['wins']} · Losses: {record['losses']} · Ties: {record['ties']}."
++        if weeks else "No comparison available. This needs a completed week with scores for every team."
++    )
++    skipped = sorted(set(expected) - set(weeks))
++    gaps = ' Skipped weeks without complete league scores: ' + ', '.join(map(str, skipped)) + '.' if skipped else ''
++    retained = ' Includes retained scores after a failed refresh.' if record['retained_weeks'] else ''
++    return ('<details><summary>How often did we outscore the rest of the league?</summary>'
++            f'<p>{summary} {coverage}{gaps}{retained}</p>'
++            '<p>Each week, your Sleeper score is compared once with each other team’s score. '
++            'These comparisons are separate from your official record and any league median game.</p></details>')
++
+ def season_panel(data, roster_id, *, compact=False):
+     view = season_performance(data, roster_id)
+     def points(value):
+@@ -47,5 +65,6 @@ def season_panel(data, roster_id, *, compact=False):
+             f'<p>{escape(comparison)}</p>' + (f'<p>Recent completed weeks: {escape(recent)}</p>' if recent else '')
+             + (f'<p>{escape(view["recent_reason"])}</p>' if view['recent_reason'] else '')
+             + '<p>Past team results are separate from this week’s projected lineup.</p>'
++            + _peer_record(view)
+             + f'<details><summary>Weeks, coverage and sources</summary><p>{escape(details)}</p></details>'
+             + '<a href="/matchups">Review matchups</a></div></details>')
+diff --git a/tests/test_season_performance.py b/tests/test_season_performance.py
+index e0984afc..63b1fec0 100644
+--- a/tests/test_season_performance.py
++++ b/tests/test_season_performance.py
+@@ -183,3 +183,49 @@ class SeasonPerformanceTests(unittest.TestCase):
+             'Week not acquired', 'Source returned an empty week; no team score established',
+             'Week retrieval failed or is unavailable; no supported retained team score',
+             'Conflicting team scores'])
++
++    def test_peer_results_are_independent_of_official_and_median_results(self):
++        for record, own, expected in [((4, 0), 20, (4, 8, 0)), ((0, 4), 30, (8, 4, 0))]:
++            for median in (0, 1):
++                with self.subTest(record=record, median=median):
++                    data = fixture()
++                    data['league']['settings'].update(num_teams=4, league_average_match=median)
++                    data['teams'] = [dict(roster_id=rid) for rid in range(1, 5)]
++                    data['teams'][0].update(wins=record[0], losses=record[1])
++                    for week in data['season_matchups']['weeks'].values():
++                        week['rows'] = [dict(roster_id=rid, points=score)
++                                        for rid, score in enumerate((own, 10, 25, 40), 1)]
++                    peer = season_performance(data, 1)['peer_record']
++                    self.assertEqual(peer['weeks'], [1, 2, 3, 4])
++                    self.assertEqual(tuple(peer[k] for k in ('wins', 'losses', 'ties')), expected)
++
++    def test_peer_results_skip_incomplete_weeks_and_apply_native_corrections(self):
++        data = fixture()
++        weeks = data['season_matchups']['weeks']
++        weeks['1']['rows'][1]['custom_points'] = 0  # Explicitly overrides the peer's 10.
++        weeks['1']['rows'].append(copy.deepcopy(weeks['1']['rows'][0]))
++        weeks['2']['rows'][1]['custom_points'] = -3
++        weeks['3']['rows'].pop()
++        weeks['4']['rows'].append(dict(roster_id=2, points=11))
++        view = season_performance(data, 1)
++        self.assertEqual(view['peer_record'], dict(wins=1, losses=0, ties=1, weeks=[1, 2], retained_weeks=[]))
++        self.assertEqual(view['missing'], [])  # Own scores still support the season average.
++        html = season_panel(data, 1)
++        self.assertIn('2/4 completed regular-season weeks used.', html)
++        self.assertIn('Skipped weeks without complete league scores: 3, 4.', html)
++        weeks['1']['rows'][1]['custom_points'] = 1
++        weeks['2']['retained_rows'] = weeks['2'].pop('rows')
++        weeks['2']['availability'] = 'unavailable'
++        self.assertEqual(season_performance(data, 1)['peer_record'],
++                         dict(wins=1, losses=1, ties=0, weeks=[1, 2], retained_weeks=[2]))
++
++    def test_peer_results_withhold_without_a_complete_compatible_cohort(self):
++        data = fixture()
++        for week in data['season_matchups']['weeks'].values():
++            week['rows'][1]['custom_points'] = 'invalid'
++        self.assertEqual(season_performance(data, 1)['peer_record']['weeks'], [])
++        self.assertIn('0/4 completed regular-season weeks used.', season_panel(data, 1))
++        self.assertNotIn('Wins: 0 · Losses: 0', season_panel(data, 1))
++        data['season_matchups']['scoring_fingerprint'] = 'foreign'
++        self.assertEqual(season_performance(data, 1)['peer_record']['weeks'], [])
++        self.assertNotIn('How often did we outscore', season_panel(data, 1, compact=True))
+diff --git a/tests/test_season_performance_browser.py b/tests/test_season_performance_browser.py
+index 301ff602..f7672fdd 100644
+--- a/tests/test_season_performance_browser.py
++++ b/tests/test_season_performance_browser.py
+@@ -49,15 +49,22 @@ class SeasonPerformanceBrowserTests(unittest.TestCase):
+                         self.assertTrue(panel.evaluate('e=>e.open'))
+                         self.assertIn('0.00 points', panel.inner_text())
+                         self.assertIn('Week 1: 0.00', panel.inner_text())
++                        peer = panel.get_by_text('How often did we outscore the rest of the league?', exact=True)
++                        peer.press('Enter')
++                        detail = peer.locator('..')
++                        self.assertIn('Wins: 0 · Losses: 0 · Ties: 1.', detail.inner_text())
++                        self.assertIn('separate from your official record', detail.inner_text())
++                        self.assertIn('1/1 completed regular-season weeks used.', detail.inner_text())
+                         self.assertLessEqual(page.evaluate('document.documentElement.scrollWidth-innerWidth'), 0)
+-                        panel.locator('details summary').focus()
+-                        panel.locator('details summary').press('Enter')
++                        panel.get_by_text('Weeks, coverage and sources', exact=True).focus()
++                        panel.get_by_text('Weeks, coverage and sources', exact=True).press('Enter')
+                         self.assertIn('native-fixture', panel.inner_text())
+                         if root:
+                             page.screenshot(path=str(root / f'team-expanded-{width}.png'), full_page=True)
+                         page.goto('https://dtos.test/')
+                         link = page.get_by_role('link', name='Review season results')
+                         self.assertEqual(link.count(), 1)
++                        self.assertEqual(page.get_by_text('How often did we outscore', exact=False).count(), 0)
+                         if root:
+                             page.screenshot(path=str(root / f'home-{width}.png'), full_page=True)
+                         link.click()
+@@ -107,7 +114,7 @@ class SeasonPerformanceBrowserTests(unittest.TestCase):
+                             self.assertIn(points, panel.inner_text())
+                             self.assertIn('retained results', panel.inner_text())
+                         self.assertIn('League comparison withheld', panel.inner_text())
+-                        panel.locator('details summary').click()
++                        panel.get_by_text('Weeks, coverage and sources', exact=True).click()
+                         self.assertIn('partial-native', panel.inner_text())
+                         page.goto('https://dtos.test/')
+                         lead = page.get_by_role('heading', name='Season so far').locator('..')

@@ -1,0 +1,42 @@
+{
+  "source": {
+    "baseline": "d21327682a892826404d0d72531c1cb0e9582fe5",
+    "baseline_tree": "45b6859fa5c02dc53b9dafb992df54b53c8d5a9d",
+    "candidate": "9324d761b9ea065d751549774f3f44d32463e1f3",
+    "tree": "1057964151b6a9b7e6f1737c7c280d666569d972",
+    "branch": "feat/season-peer-record-2264",
+    "version": "1.22.49",
+    "build": 2264,
+    "expected_test_count": 4634,
+    "pr": 353
+  },
+  "reviewed_images": [
+    {
+      "path": "visual-pixel-comparison/commissioner-320-default.png",
+      "sha256": "b14ba5cba358d24333eaee63d9c0af7563a7da3df2fc6fe1238953d3eb1fe78e",
+      "review": "Fixture last-visit timestamp differs. Same panel layout."
+    },
+    {
+      "path": "visual-pixel-comparison/commissioner-375-default.png",
+      "sha256": "1dfeb80097b3388f6b52bdfe32ebded08af1f6072c3dce53e2a0414971bdf69d",
+      "review": "Fixture last-visit timestamp differs. Same panel layout."
+    },
+    {
+      "path": "visual-pixel-comparison/commissioner-390-default.png",
+      "sha256": "d817bee31d28924ea5fd30d67e6057e6e216f5ef5f2e365e1749f5af54a41e1a",
+      "review": "Fixture last-visit timestamp differs. Same panel layout."
+    },
+    {
+      "path": "visual-pixel-comparison/commissioner-1280-default.png",
+      "sha256": "ec15c160319532179e88e349aac848dfe9ae225548daa61ff487ef1d6be3146b",
+      "review": "Fixture last-visit timestamp differs. Same panel layout."
+    },
+    {
+      "path": "visual-pixel-comparison/home-390-default.png",
+      "sha256": "ab785f9518abfb0cc3d617f2cabe5ffd4d4369faa52764da3bc5e280a8c4426e",
+      "review": "Optional Home brief and weekly-report content differs between captures. Source route is byte-identical and the compact season block retains its wording and link. No clipping or sideways overflow is visible. The cause of differing optional fixture content was not independently established."
+    }
+  ],
+  "material_visual_defects": [],
+  "scope": "Inspected all changed paired screenshots and the expanded 320px score comparison. Chromium fixtures; exact unchanged images reuse baseline inspection."
+}

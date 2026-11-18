@@ -1,0 +1,47 @@
+{
+  "passed": true,
+  "source": {
+    "baseline": "d21327682a892826404d0d72531c1cb0e9582fe5",
+    "baseline_tree": "45b6859fa5c02dc53b9dafb992df54b53c8d5a9d",
+    "candidate": "9324d761b9ea065d751549774f3f44d32463e1f3",
+    "tree": "1057964151b6a9b7e6f1737c7c280d666569d972",
+    "branch": "feat/season-peer-record-2264",
+    "version": "1.22.49",
+    "build": 2264,
+    "expected_test_count": 4634,
+    "pr": 353
+  },
+  "controller": {
+    "commit": "83b855eb9093cf6db635fc1a88ee24ba62f4d69d",
+    "tree": "1ff58d988865be9b5bb390ee33ec390e72b3da3b",
+    "branch": "release/2264-actions-publisher",
+    "ref": "refs/heads/release/2264-actions-publisher",
+    "source": {
+      "baseline": "d21327682a892826404d0d72531c1cb0e9582fe5",
+      "baseline_tree": "45b6859fa5c02dc53b9dafb992df54b53c8d5a9d",
+      "candidate": "9324d761b9ea065d751549774f3f44d32463e1f3",
+      "tree": "1057964151b6a9b7e6f1737c7c280d666569d972",
+      "branch": "feat/season-peer-record-2264",
+      "version": "1.22.49",
+      "build": 2264,
+      "expected_test_count": 4634,
+      "pr": 353
+    },
+    "tooling_only": true,
+    "not_merged_into_main": true
+  },
+  "sha256": {
+    "tools/release/publish.py": "cbf0b4fe3505f1932aefb97521e7b64f09cccc9ee0e9ee382e09ec828713eefe",
+    "tests/test_release_publisher.py": "572d50a8a10324f886518b87eb39bf5de968ac6be140c38658476d1b82065937",
+    ".github/workflows/canonical-release-recovery.yml": "5a8128d6e42c8e86803d54f45aa983351670290501e5e7e7ec240ec6410df92e",
+    ".github/release-plans/2264.json": "2ed66653b28e9ab8e5b4694d3f9d53f25ca360a1524c02d78c9af638e65014cc"
+  },
+  "tests": 181,
+  "lint": true,
+  "compile": true,
+  "diff_check": true,
+  "reused_exact_unchanged_controls": true,
+  "original_controls_sha256": "f7a13e4ce1f89bc7afda774c5ddbd322dc163073378966d2d5a7cc802625d3cf",
+  "sparse_recovery": "Finalized-plan181controls, lint, compile and diff passed before explicit allowed sparse staging. No guard/source/plan bytes changed after checks.",
+  "scope": "Real finalized plan and unchanged publisher guards; no validation bypass."
+}
