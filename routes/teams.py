@@ -540,9 +540,9 @@ def create_teams_router(
 {scope_notice}
 <header class="thq-header"><div class="thq-identity">{avatar}<div class="thq-title"><div class="identity-kicker">Manager: {escape(team['owner'])}</div><div class="thq-name-row"><h1>{escape(team['team_name'])}{you_badge(data, roster_id)}</h1>{champion_badge(defending_champion(data), roster_id)}</div><p><a class="thq-record-link" href="#season-so-far" aria-label="Season results: {escape(performance["record"], quote=True)} · {escape(performance["standing"], quote=True)}">{escape(performance["record"])} · {escape(performance["standing"])}</a></p></div></div><div class="thq-strategy">{strategy_control}<small>League evidence updated: {escape(view['last_updated'])}</small></div></header>
 {outlook_panel(assessment_outlook, editable=editable, roster_id=roster_id)}
-{lineup_assets}
+{lineup_assets}{lineup_alert}
 <section class="thq-section" id="full-roster"><details class="thq-strength-detail" id="my-team-roster" open><summary>Full Roster · {escape(_roster_projection_coverage(view))}</summary><div class="thq-roster">{_roster_rooms(view)}</div></details><details class="thq-strength-detail" id="my-team-key-players"><summary>Key players by Market value</summary>{_key_players(view)}</details></section>
-{lineup_alert}{lineup_fallback}
+{lineup_fallback}
 {season_panel(data, roster_id)}
 <section class="thq-section" id="draft-capital"><div class="thq-section-head"><h2>Draft Capital</h2><span>Your owned future picks</span></div><div class="thq-picks">{_draft_capital(view)}</div><p class="muted">Pick details preserve the original franchise and current owner. A pick’s future draft position is unknown unless a supported range is shown.</p></section>
 
