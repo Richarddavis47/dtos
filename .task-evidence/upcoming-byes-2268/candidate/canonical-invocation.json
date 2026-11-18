@@ -1,0 +1,69 @@
+{
+  "source": {
+    "baseline": "a2ab131751e6cc2c7c6c8aa13e0b09bcfe5dea25",
+    "baseline_tree": "81c163b88696ed1f8957fc3cdd24f39440b13e11",
+    "candidate": "26cf4d2212b4be004551327a59e2ec1fa739f4d6",
+    "tree": "11517e7e49d6dee4b6c51453f909b5c40f24cc1c",
+    "branch": "feat/upcoming-byes-2268",
+    "version": "1.22.53",
+    "build": 2268,
+    "expected_test_count": 4650
+  },
+  "command": [
+    "docker",
+    "create",
+    "--name",
+    "dtos-upcoming-byes-canonical-2268",
+    "--init",
+    "--user",
+    "1000:1000",
+    "--memory=2g",
+    "--memory-swap=2g",
+    "--cpus=2",
+    "--network=none",
+    "-v",
+    "/workspace/dtos-draft-capital-2247:/app",
+    "-v",
+    "/workspace/dtos/.git:/workspace/dtos/.git:ro",
+    "-v",
+    "/workspace/2268-upcoming-byes/local-canonical:/output",
+    "-v",
+    "/dev/shm/dtos-2268-fixture:/fixture",
+    "-e",
+    "HOME=/tmp",
+    "-e",
+    "NODE_OPTIONS=--max-old-space-size=128",
+    "-e",
+    "GIT_CONFIG_COUNT=1",
+    "-e",
+    "GIT_CONFIG_KEY_0=safe.directory",
+    "-e",
+    "GIT_CONFIG_VALUE_0=/app",
+    "-e",
+    "DTOS_EXPECTED_HEAD=26cf4d2212b4be004551327a59e2ec1fa739f4d6",
+    "-e",
+    "DTOS_EXPECTED_TREE=11517e7e49d6dee4b6c51453f909b5c40f24cc1c",
+    "-e",
+    "DTOS_EXPECTED_TEST_COUNT=4650",
+    "-w",
+    "/app",
+    "sha256:f70a0c6402700dfb954c99d8163d4164926f74435c34d2e7e462407151663ae6",
+    "python",
+    "/output/runner.py"
+  ],
+  "container": "3175736ee93882ff99a4401a3045115f6fa480faab0c4d5f2e72f98fb62b5d1d",
+  "files": [
+    {
+      "name": "runner.py",
+      "sha256": "574308d9f64252575970aa19ce113f603ccb9927f2c6a523e8c228869fd37cac"
+    },
+    {
+      "name": "observer/sitecustomize.py",
+      "sha256": "3f43288a099e49a3ed2dea36f977b596707589eaefd2656b40a3b9c6533be2d4"
+    }
+  ],
+  "created_at": "2026-11-18T21:37:47.138414+00:00",
+  "status": "RUNNING_NOT_PASSED",
+  "fixture_free_after_container_creation": 9413271552,
+  "official_scratch_gate_unchanged": true
+}
