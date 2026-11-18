@@ -459,6 +459,7 @@ def create_teams_router(
         card_projections = view['projection_views']
         lineup_alert = ''
         lineup_fallback = ''
+        upcoming_byes = ''
         lineup_assets = ''
         # Reuse prepared facts only, and only for the authenticated controlled
         # franchise. Unknown lock evidence never adds a positive alert.
@@ -468,6 +469,11 @@ def create_teams_router(
             from src.core.intelligence.team_strength import compatible_profile
             from src.core.projection_intelligence.service import player_availability
             prepared_strength = compatible_profile(data, view['projection_snapshot']) or {}
+            from src.ui.upcoming_byes import upcoming_byes_panel
+            upcoming_byes = upcoming_byes_panel(
+                (prepared_strength.get('upcoming_byes') or {}).get(str(roster_id)), team['players'],
+                active=(data.get('league') or {}).get('status') == 'in_season',
+            )
             catalog = data.get('players') or {}
             uncertain_starter = any(
                 player_availability(catalog.get(str(player.get('id'))) or {}, None) in UNCERTAIN
@@ -545,6 +551,7 @@ def create_teams_router(
 {lineup_assets}{lineup_alert}
 <section class="thq-section" id="full-roster"><details class="thq-strength-detail" id="my-team-roster" open><summary>Full Roster · {escape(_roster_projection_coverage(view))}</summary><div class="thq-roster">{_roster_rooms(view)}</div></details><details class="thq-strength-detail" id="my-team-key-players"><summary>Key players by Market value</summary>{_key_players(view)}</details></section>
 {lineup_fallback}
+{upcoming_byes}
 {season_panel(data, roster_id)}
 <section class="thq-section" id="draft-capital"><div class="thq-section-head"><h2>Draft Capital</h2><span>Your owned future picks</span></div><div class="thq-picks">{_draft_capital(view)}</div><p class="muted">Pick details preserve the original franchise and current owner. A pick’s future draft position is unknown unless a supported range is shown.</p></section>
 

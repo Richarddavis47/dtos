@@ -7,10 +7,10 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 APPLICATION_NAME = "DTOS"
-VERSION = "1.22.52"
-PRODUCT_VERSION = "1.22.52"
-BUILD_NUMBER = 2267
-RELEASE_CODENAME = "Weekly Lineup Recheck"
+VERSION = "1.22.53"
+PRODUCT_VERSION = "1.22.53"
+BUILD_NUMBER = 2268
+RELEASE_CODENAME = "Upcoming Bye Weeks"
 APPLICATION_STARTED_AT = datetime.now(timezone.utc).isoformat()
 
 _REPOSITORY_ROOT = Path(__file__).resolve().parent
