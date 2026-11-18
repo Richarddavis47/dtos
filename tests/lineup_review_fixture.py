@@ -26,6 +26,8 @@ def prepared(
     slots=None,
     nfl_team="BUF",
     schedule_team=None,
+    uncertain=None,
+    earlier_backup=False,
 ):
     tmp = TemporaryDirectory()
     owner.addCleanup(tmp.cleanup)
@@ -79,6 +81,7 @@ def prepared(
             ("s", "RB"),
         ]:
             pid = f"{rid}-{label}"
+            player_team = "KC" if earlier_backup and label == "bq" else nfl_team
             player = dict(
                 id=pid,
                 player_id=pid,
@@ -86,8 +89,9 @@ def prepared(
                 name=f"Example {label.upper()} {rid}",
                 position=pos,
                 fantasy_positions=[pos],
-                team=nfl_team,
+                team=player_team,
                 status="Active",
+                injury_status="Questionable" if rid == 1 and label == uncertain else None,
                 roster_slot="Starter" if pid in starters else "Bench",
                 starter_index=starters.index(pid) if pid in starters else None,
             )
@@ -101,7 +105,7 @@ def prepared(
                         player_id=pid,
                         week=week,
                         season=2026,
-                        team=nfl_team,
+                        team=player_team,
                         opponent="NYJ",
                         player=dict(position=pos, fantasy_positions=[pos]),
                         updated_at=now.isoformat(),
@@ -153,6 +157,13 @@ def prepared(
         )
         for week in (8, 9)
     ]
+    if earlier_backup:
+        facts.append(dict(
+            family="schedule", season=2026, week=8, provider="nflverse",
+            fingerprint="fixture-early-game",
+            values=dict(home_team="KC", away_team="DEN", game_type="REG",
+                        kickoff=(now + timedelta(minutes=5)).isoformat()),
+        ))
     store = SimpleNamespace(read=lambda *a, **kw: deepcopy(facts))
     with patch("services.global_evidence.retained_global_evidence", return_value=store):
         prepare_for_data(service, data)
@@ -195,14 +206,14 @@ def http(owner, data, service, *, membership_league=None, roster_id=1):
     return client
 
 
-def authenticated_prepared(owner, *, empty=True):
+def authenticated_prepared(owner, *, empty=True, **fixture_options):
     """Disposable real account/session -> normal shared page renderer."""
     from tests.test_roster_diagnostic_http import DiagnosticHTTPTests
 
     f = DiagnosticHTTPTests()
     f.setUp()
     owner.addCleanup(f.doCleanups)
-    data, service, now = prepared(owner, league_id="league-1", empty=empty)
+    data, service, now = prepared(owner, league_id="league-1", empty=empty, **fixture_options)
     base = f.f.f.data
     template = deepcopy(base["teams"][0])
     data["teams"] = [{**deepcopy(template), **team} for team in data["teams"]]

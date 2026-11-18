@@ -458,22 +458,37 @@ def create_teams_router(
         starters = [player for player in team.get("players") or [] if player.get("roster_slot") == "Starter"]
         card_projections = view['projection_views']
         lineup_alert = ''
+        lineup_fallback = ''
+        lineup_assets = ''
         # Reuse prepared facts only, and only for the authenticated controlled
         # franchise. Unknown lock evidence never adds a positive alert.
         if (account and account.membership and account.membership.roster_id == roster_id
                 and str(account.membership.league_id) == league_id):
+            from src.core.intelligence.lineup_fallback import UNCERTAIN
             from src.core.intelligence.team_strength import compatible_profile
+            from src.core.projection_intelligence.service import player_availability
             prepared_strength = compatible_profile(data, view['projection_snapshot']) or {}
-            if prepared_strength.get('lineup_review_schedule'):
+            catalog = data.get('players') or {}
+            uncertain_starter = any(
+                player_availability(catalog.get(str(player.get('id'))) or {}, None) in UNCERTAIN
+                for player in starters
+            )
+            if prepared_strength.get('lineup_review_schedule') or uncertain_starter:
                 from services.matchup_season import season_week_view
-                from src.ui.lineup_review import review_panel
+                from src.ui.lineup_review import fallback_panel, review_panel
                 week_view = await run_manager_read(lambda: season_week_view(data, data['week'], pinned_service))
                 own_side = next((side for sides in week_view['groups'].values() for side in sides
                                  if side['roster_id'] == roster_id), {})
                 review = own_side.get('lineup_review') or {}
                 if review.get('actionable'):
-                    lineup_alert = ('<link rel="stylesheet" href="/static/css/matchups.css">'
-                                    + review_panel(review) + '<script src="/static/lineup-review.js" defer></script>')
+                    lineup_alert = review_panel({**review, 'fallback': None})
+                fallback = review.get('fallback')
+                if not own_side and uncertain_starter:
+                    fallback = {'reason': 'The current submitted lineup is not prepared for review.'}
+                lineup_fallback = fallback_panel(fallback)
+                if lineup_alert or lineup_fallback:
+                    lineup_assets = ('<link rel="stylesheet" href="/static/css/matchups.css">'
+                                     '<script src="/static/lineup-review.js" defer></script>')
         starter_cards = "".join(
             f'<a class="card" href="{escape(contextual_player_url(str(player.get("id") or ""), from_team=roster_id, section="my-team-advanced", week=view["overview"]["projection_week"]))}">{player_summary(player_id=str(player.get("id") or ""), name=str(player.get("name") or "Unknown player"), position=str(player.get("position") or ""), nfl_team=str(player.get("team") or player.get("nfl_team") or "Free Agent"), context="Submitted starter", projection=card_projections.get(str(player.get("id") or "")))}</a>'
             for player in starters
@@ -525,8 +540,9 @@ def create_teams_router(
 {scope_notice}
 <header class="thq-header"><div class="thq-identity">{avatar}<div class="thq-title"><div class="identity-kicker">Manager: {escape(team['owner'])}</div><div class="thq-name-row"><h1>{escape(team['team_name'])}{you_badge(data, roster_id)}</h1>{champion_badge(defending_champion(data), roster_id)}</div><p><a class="thq-record-link" href="#season-so-far" aria-label="Season results: {escape(performance["record"], quote=True)} · {escape(performance["standing"], quote=True)}">{escape(performance["record"])} · {escape(performance["standing"])}</a></p></div></div><div class="thq-strategy">{strategy_control}<small>League evidence updated: {escape(view['last_updated'])}</small></div></header>
 {outlook_panel(assessment_outlook, editable=editable, roster_id=roster_id)}
-{lineup_alert}
+{lineup_assets}{lineup_alert}
 <section class="thq-section" id="full-roster"><details class="thq-strength-detail" id="my-team-roster" open><summary>Full Roster · {escape(_roster_projection_coverage(view))}</summary><div class="thq-roster">{_roster_rooms(view)}</div></details><details class="thq-strength-detail" id="my-team-key-players"><summary>Key players by Market value</summary>{_key_players(view)}</details></section>
+{lineup_fallback}
 {season_panel(data, roster_id)}
 <section class="thq-section" id="draft-capital"><div class="thq-section-head"><h2>Draft Capital</h2><span>Your owned future picks</span></div><div class="thq-picks">{_draft_capital(view)}</div><p class="muted">Pick details preserve the original franchise and current owner. A pick’s future draft position is unknown unless a supported range is shown.</p></section>
 

@@ -377,6 +377,12 @@ def season_week_view(data: dict, week: int, projection_service, *, evidence_thro
         side['lineup_review'] = review_lineup(data, side, snapshot, strength, week=week,
                                              observed_at=prepared.get('observed_at'),
                                              retained_projection=bool(refresh.get('retained_publication')))
+        if not historical and week == current:
+            from src.core.intelligence.lineup_fallback import read_fallback
+            side['lineup_review']['fallback'] = read_fallback(
+                data, side, snapshot, strength, week=week, observed_at=prepared.get('observed_at'),
+                retained_projection=bool(refresh.get('retained_publication')),
+            )
         if component:
             round_scores = []
             for component_week in component:

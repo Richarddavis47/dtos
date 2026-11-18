@@ -75,6 +75,43 @@ def prepared_games(facts, season):
     return {"method": METHOD, "season": season, "games": games}
 
 
+def manual_substitutions_supported(league):
+    settings = league.get("settings") or {}
+    return (
+        settings.get("best_ball") == 0
+        and settings.get("sub_start_time_eligibility") in (None, 0)
+        and settings.get("sub_lock_if_starter_active") in (None, 0)
+    )
+
+
+def player_kickoff(data, schedule, week, pid, row, roster_player):
+    catalog = (data.get("players") or {}).get(pid) or {}
+
+    def team_id(player):
+        value = (
+            str(player.get("team") or player.get("nfl_team") or "").strip().upper()
+        )
+        return (
+            normalize_team(value)
+            if value not in {"", "VACANT", "UNKNOWN", "—", "-"}
+            else None
+        )
+
+    source_team, current_team, roster_team = (
+        team_id(row),
+        team_id(catalog),
+        team_id(roster_player),
+    )
+    if (
+        not source_team
+        or source_team != current_team
+        or (roster_team and roster_team != source_team)
+    ):
+        return None
+    game = (schedule.get("games") or {}).get(f"{week}:{source_team}") or {}
+    return timestamp(game.get("kickoff")) if game.get("reference") else None
+
+
 def review_lineup(
     data,
     side,
@@ -140,7 +177,6 @@ def review_lineup(
         )
         return result
     league = data.get("league") or {}
-    settings = league.get("settings") or {}
     if (
         week != data.get("week")
         or league.get("sport") != "nfl"
@@ -150,11 +186,7 @@ def review_lineup(
             "This comparison is not for the current active week; it is not a lineup-change alert."
         )
         return result
-    if (
-        settings.get("best_ball") != 0
-        or settings.get("sub_start_time_eligibility") not in (None, 0)
-        or settings.get("sub_lock_if_starter_active") not in (None, 0)
-    ):
+    if not manual_substitutions_supported(league):
         result["reason"] = (
             "Manual substitution rules for this league are not verified here. Review the lineup in Sleeper."
         )
@@ -222,34 +254,6 @@ def review_lineup(
         projection_row_compatible,
         player_availability,
     )
-
-    def kickoff(pid):
-        row = rows.get(pid) or {}
-        catalog = (data.get("players") or {}).get(pid) or {}
-
-        def team_id(player):
-            value = (
-                str(player.get("team") or player.get("nfl_team") or "").strip().upper()
-            )
-            return (
-                normalize_team(value)
-                if value not in {"", "VACANT", "UNKNOWN", "—", "-"}
-                else None
-            )
-
-        source_team, current_team, roster_team = (
-            team_id(row),
-            team_id(catalog),
-            team_id(owned[pid]),
-        )
-        if (
-            not source_team
-            or source_team != current_team
-            or (roster_team and roster_team != source_team)
-        ):
-            return None
-        game = (schedule.get("games") or {}).get(f"{week}:{source_team}") or {}
-        return timestamp(game.get("kickoff")) if game.get("reference") else None
 
     # Keep equivalent slots stable, especially an already locked starter in a
     # repeated RB/WR/FLEX slot. This changes no selected athlete or total.
@@ -344,7 +348,7 @@ def review_lineup(
                     "A player’s position changed after these projections were prepared. Refresh the league before comparing these moves."
                 )
                 return result
-            when = kickoff(involved_pid)
+            when = player_kickoff(data, schedule, week, involved_pid, rows.get(involved_pid) or {}, owned[involved_pid])
             if when is None or when <= now:
                 result["reason"] = (
                     "At least one proposed change involves a started game or an unverified game time. "
