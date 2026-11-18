@@ -1,0 +1,1 @@
+The final application candidate has no earlier failed test attempt in this task. Scratch recovery receipts preserve the verified immutable copy checks and byte-preserved relocation used before the final local run. These records do not constitute validation passes.

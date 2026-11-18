@@ -1,0 +1,80 @@
+{
+  "reads": [
+    {
+      "path": "/health/ready",
+      "status": 200,
+      "observed_at": "2026-11-18T05:56:09.589138+00:00",
+      "elapsed_network_seconds": 0.1556814149953425,
+      "bytes": 213,
+      "readiness": {
+        "status": "ready",
+        "version": "1.22.50",
+        "build": 2265,
+        "deployment": {
+          "branch": "main",
+          "commit": "cafd9930af8c86b8b152a0849f3d8233923670d6",
+          "deployed_at": "2026-11-18T05:54:02.893143+00:00"
+        },
+        "reason": "Application ready."
+      }
+    },
+    {
+      "path": "/health/live",
+      "status": 200,
+      "observed_at": "2026-11-18T05:56:09.744868+00:00",
+      "elapsed_network_seconds": 0.14513874298427254,
+      "bytes": 38
+    },
+    {
+      "path": "/welcome",
+      "status": 200,
+      "observed_at": "2026-11-18T05:56:09.890013+00:00",
+      "elapsed_network_seconds": 0.10565412801224738,
+      "bytes": 53196
+    },
+    {
+      "path": "/account/sign-in",
+      "status": 200,
+      "observed_at": "2026-11-18T05:56:09.995673+00:00",
+      "elapsed_network_seconds": 0.16805263597052544,
+      "bytes": 35831
+    },
+    {
+      "path": "/api/my-dtos",
+      "status": 401,
+      "observed_at": "2026-11-18T05:56:10.163732+00:00",
+      "elapsed_network_seconds": 0.1325121179688722,
+      "bytes": 91
+    },
+    {
+      "path": "/static/js/trade_comparison.js",
+      "status": 200,
+      "observed_at": "2026-11-18T05:56:10.296251+00:00",
+      "elapsed_network_seconds": 0.348383619915694,
+      "bytes": 27116,
+      "sha256": "d95f213aac953961f80173776ee55881dd8e80ab3bc9bb96f7c5828c65705137",
+      "matches_exact_merged_source": true
+    },
+    {
+      "path": "/static/js/trade_workspace.js",
+      "status": 200,
+      "observed_at": "2026-11-18T05:56:10.652132+00:00",
+      "elapsed_network_seconds": 0.14139171899296343,
+      "bytes": 194535,
+      "sha256": "78d3d6430969ac926e98289aaf8c7fcf4073317062d0ea8803eebc198af52a0e",
+      "matches_exact_merged_source": true
+    }
+  ],
+  "readiness": {
+    "status": "ready",
+    "version": "1.22.50",
+    "build": 2265,
+    "deployment": {
+      "branch": "main",
+      "commit": "cafd9930af8c86b8b152a0849f3d8233923670d6",
+      "deployed_at": "2026-11-18T05:54:02.893143+00:00"
+    },
+    "reason": "Application ready."
+  },
+  "scope": "Seven bounded public read-only requests; no owner authentication, heavy work or data mutations. Timing includes network and is not isolated server liveness latency."
+}

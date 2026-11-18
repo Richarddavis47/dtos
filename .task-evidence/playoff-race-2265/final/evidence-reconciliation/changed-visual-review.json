@@ -1,0 +1,37 @@
+{
+  "source": {
+    "baseline": "5396b1d20f318a05f34b72cd6734d9b132f51fd7",
+    "baseline_tree": "1057964151b6a9b7e6f1737c7c280d666569d972",
+    "candidate": "4f51238e585fe81bdcb9b0e0bebbffc746c68e45",
+    "tree": "da4aee4c48eb7f1ddd312503e31145dc2cc26de7",
+    "branch": "feat/playoff-race-2265",
+    "version": "1.22.50",
+    "build": 2265,
+    "expected_test_count": 4638,
+    "pr": 354
+  },
+  "reviewed_images": [
+    {
+      "path": "visual-pixel-comparison/commissioner-320-default.png",
+      "sha256": "7f78f942ec3b2fff9ac9371cceb2cf5fc14530a91a55b80919a8b62595664926",
+      "review": "The last-visit timestamp differs; heading and controls retain their layout."
+    },
+    {
+      "path": "visual-pixel-comparison/commissioner-390-default.png",
+      "sha256": "f4ea19761d2c6db6603c4c73a167eb12c839e919e941e7f59facc58e21f2ef8b",
+      "review": "The last-visit timestamp differs; heading and controls retain their layout."
+    },
+    {
+      "path": "visual-pixel-comparison/commissioner-1280-default.png",
+      "sha256": "2aa44cb8ce08e3d2e64ea8d4e17161314cb354302bf9a9dc2778b82a0e8f4283",
+      "review": "The last-visit timestamp differs; heading and controls retain their layout."
+    },
+    {
+      "path": "visual-pixel-comparison/home-390-default.png",
+      "sha256": "41eec21f3cc95c1c1ecc6b4de615bdfe97931403fa12f92ce7df5a9da68fb6d5",
+      "review": "The candidate fixture has additional Front Office brief and draft-capital content. The existing Season so far summary and its link remain visible and unchanged in wording."
+    }
+  ],
+  "material_visual_defects": [],
+  "scope": "Inspected all four changed image comparisons and the expanded 320px My Team screenshot in Chromium. The screenshot shows the unsupported-format and incomplete-schedule fixture. The keyboard focus outline is visible. The full-page capture shows the sticky Back bar at the viewport boundary."
+}
