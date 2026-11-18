@@ -28,7 +28,7 @@ def upcoming_byes_panel(weeks, players, *, active):
             return f"{week} · The roster has legal cover for {positions}."
         if row['state'] == 'unknown':
             if positions:
-                return f"{week} · Bye affects {positions}. Replacement coverage is unconfirmed."
+                return f"{week} · Bye affects {positions}. The roster and schedule do not confirm full cover."
             return f"{week} · Schedule or roster coverage is incomplete."
         return f"{week} · No material bye gap identified."
 
@@ -38,9 +38,9 @@ def upcoming_byes_panel(weeks, players, *, active):
                         for slot, pid in row['moves'])
         vacancy = _slots(row['unfilled'])
         notes = (
-            (f'<p>Players on bye in this planning lineup: {bye_names}.</p>' if bye_names else '')
-            + (f'<p>One legal set of changes:</p><ul>{moves}</ul>' if moves else '')
-            + (f'<p>Unfilled in one best legal fit: {vacancy}.</p>' if vacancy else '')
+            (f'<p>{bye_names} on bye in this plan.</p>' if bye_names else '')
+            + (f'<p>One legal set of changes</p><ul>{moves}</ul>' if moves else '')
+            + (f'<p>One legal fit leaves {vacancy} unfilled.</p>' if vacancy else '')
             + ('<p>A complete projected lineup is unavailable for this week.</p>'
                if not row['projection_ready'] else '')
         )
