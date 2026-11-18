@@ -1,0 +1,429 @@
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index c0fb4794..4cd7252b 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -1,3 +1,7 @@
++## v1.22.53 / build 2268 — Upcoming bye weeks
++
++My Team shows the next two scheduled fantasy weeks and whether the current roster can cover material bye gaps together. Open the details for legal moves, evidence limits and the week’s Matchups. This planning view leaves submitted lineups unchanged.
++
+ ## v1.22.52 / build 2267 — Recheck the weekly lineup
+ 
+ My Team and Matchups show when the submitted Sleeper lineup was checked and display fallback deadlines in the browser’s time zone. Recheck lineup uses guarded league sync and returns to the same view after a newer check.
+diff --git a/RELEASE_NOTES.md b/RELEASE_NOTES.md
+index 66c8562a..2276f7c4 100644
+--- a/RELEASE_NOTES.md
++++ b/RELEASE_NOTES.md
+@@ -1,3 +1,7 @@
++## v1.22.53 / build 2268 — Upcoming bye weeks
++
++My Team shows the next two scheduled fantasy weeks and whether the current roster can cover material bye gaps together. Open the details for legal moves, evidence limits and the week’s Matchups. This planning view leaves submitted lineups unchanged.
++
+ ## v1.22.52 / build 2267 — Recheck the weekly lineup
+ 
+ My Team and Matchups show when the submitted Sleeper lineup was checked and display fallback deadlines in the browser’s time zone. Recheck lineup uses guarded league sync and returns to the same view after a newer check.
+diff --git a/app_metadata.py b/app_metadata.py
+index bf222820..5572c41a 100644
+--- a/app_metadata.py
++++ b/app_metadata.py
+@@ -7,10 +7,10 @@ from datetime import datetime, timezone
+ from pathlib import Path
+ 
+ APPLICATION_NAME = "DTOS"
+-VERSION = "1.22.52"
+-PRODUCT_VERSION = "1.22.52"
+-BUILD_NUMBER = 2267
+-RELEASE_CODENAME = "Weekly Lineup Recheck"
++VERSION = "1.22.53"
++PRODUCT_VERSION = "1.22.53"
++BUILD_NUMBER = 2268
++RELEASE_CODENAME = "Upcoming Bye Weeks"
+ APPLICATION_STARTED_AT = datetime.now(timezone.utc).isoformat()
+ 
+ _REPOSITORY_ROOT = Path(__file__).resolve().parent
+diff --git a/routes/teams.py b/routes/teams.py
+index ef2fb8df..59adf940 100644
+--- a/routes/teams.py
++++ b/routes/teams.py
+@@ -459,6 +459,7 @@ def create_teams_router(
+         card_projections = view['projection_views']
+         lineup_alert = ''
+         lineup_fallback = ''
++        upcoming_byes = ''
+         lineup_assets = ''
+         # Reuse prepared facts only, and only for the authenticated controlled
+         # franchise. Unknown lock evidence never adds a positive alert.
+@@ -468,6 +469,11 @@ def create_teams_router(
+             from src.core.intelligence.team_strength import compatible_profile
+             from src.core.projection_intelligence.service import player_availability
+             prepared_strength = compatible_profile(data, view['projection_snapshot']) or {}
++            from src.ui.upcoming_byes import upcoming_byes_panel
++            upcoming_byes = upcoming_byes_panel(
++                (prepared_strength.get('upcoming_byes') or {}).get(str(roster_id)), team['players'],
++                active=(data.get('league') or {}).get('status') == 'in_season',
++            )
+             catalog = data.get('players') or {}
+             uncertain_starter = any(
+                 player_availability(catalog.get(str(player.get('id'))) or {}, None) in UNCERTAIN
+@@ -545,6 +551,7 @@ def create_teams_router(
+ {lineup_assets}{lineup_alert}
+ <section class="thq-section" id="full-roster"><details class="thq-strength-detail" id="my-team-roster" open><summary>Full Roster · {escape(_roster_projection_coverage(view))}</summary><div class="thq-roster">{_roster_rooms(view)}</div></details><details class="thq-strength-detail" id="my-team-key-players"><summary>Key players by Market value</summary>{_key_players(view)}</details></section>
+ {lineup_fallback}
++{upcoming_byes}
+ {season_panel(data, roster_id)}
+ <section class="thq-section" id="draft-capital"><div class="thq-section-head"><h2>Draft Capital</h2><span>Your owned future picks</span></div><div class="thq-picks">{_draft_capital(view)}</div><p class="muted">Pick details preserve the original franchise and current owner. A pick’s future draft position is unknown unless a supported range is shown.</p></section>
+ 
+diff --git a/src/core/intelligence/team_strength.py b/src/core/intelligence/team_strength.py
+index dc8dfebf..fd324506 100644
+--- a/src/core/intelligence/team_strength.py
++++ b/src/core/intelligence/team_strength.py
+@@ -331,11 +331,13 @@ def prepare_for_data(service: Any, data: dict, *, next_n: int = 3, bye_evidence:
+         'next_n': next_n, 'bye_evidence': bye_evidence, 'lineup_review_schedule': lineup_schedule,
+     }, sort_keys=True).encode()).hexdigest()
+     from .lineup_fallback import prepare_fallbacks
++    from .upcoming_byes import prepare_upcoming_byes
+     if existing is not None and existing.get('preparation_key') == preparation_key:
+         fallbacks = prepare_fallbacks(data, pinned, lineup_schedule, existing)
+-        if fallbacks == (existing.get('lineup_fallbacks') or {}):
++        upcoming_byes = prepare_upcoming_byes(data, calendar, lineup_schedule, bye_evidence, existing)
++        if fallbacks == (existing.get('lineup_fallbacks') or {}) and upcoming_byes == existing.get('upcoming_byes'):
+             return existing
+-        profile = dict(existing, lineup_fallbacks=fallbacks)
++        profile = dict(existing, lineup_fallbacks=fallbacks, upcoming_byes=upcoming_byes)
+         data['team_strength'] = profile
+         return profile
+     profile = prepare_team_strength(service, league_id=str(league['league_id']), season=int(league['season']),
+@@ -348,6 +350,7 @@ def prepare_for_data(service: Any, data: dict, *, next_n: int = 3, bye_evidence:
+     profile['preparation_key'] = preparation_key
+     profile['scoring_reference'] = hashlib.sha256(json.dumps(scoring, sort_keys=True).encode()).hexdigest()
+     profile['lineup_fallbacks'] = prepare_fallbacks(data, pinned, lineup_schedule, profile)
++    profile['upcoming_byes'] = prepare_upcoming_byes(data, calendar, lineup_schedule, bye_evidence, profile)
+     data['team_strength'] = profile
+     return profile
+ 
+diff --git a/src/core/intelligence/upcoming_byes.py b/src/core/intelligence/upcoming_byes.py
+new file mode 100644
+index 00000000..f14dd62b
+--- /dev/null
++++ b/src/core/intelligence/upcoming_byes.py
+@@ -0,0 +1,123 @@
++"""Prepare schedule-backed roster coverage without using fantasy points."""
++from collections import Counter
++
++from src.core.data_platform.normalization.identity import normalize_team
++from src.core.intelligence.lineup_review import METHOD
++from src.core.trade_intelligence.lineup import BENCH_SLOTS, _eligible, eligible_positions
++
++
++def _fit(slots, candidates, preferred=None):
++    """Maximum legal slot coverage via augmenting paths, one player per slot."""
++    preferred = preferred or {}
++    options = [
++        sorted((pid for pid, positions in candidates.items()
++                if positions is None or any(_eligible(pos, slot) for pos in positions)),
++               key=lambda pid: pid != preferred.get(index))
++        for index, slot in enumerate(slots)
++    ]
++    occupied = {}
++
++    def fill(index, visited):
++        for pid in options[index]:
++            if pid not in occupied:
++                occupied[pid] = index
++                return True
++        for pid in options[index]:
++            if pid not in visited:
++                visited.add(pid)
++                if fill(occupied[pid], visited):
++                    occupied[pid] = index
++                    return True
++        return False
++
++    for index in range(len(slots)):
++        fill(index, set())
++    return {index: pid for pid, index in occupied.items()}
++
++
++def _eligible_roster(team, catalog, league):
++    # Roster rows hold assignments; the native catalog supplies fantasy eligibility.
++    people = {}
++    for player in sorted(team.get('players') or [], key=lambda p: p.get('roster_slot') != 'Starter'):
++        pid = str(player['id'])
++        if player.get('roster_slot') in {'IR', 'Taxi', 'Reserve'}:
++            continue
++        row = catalog.get(pid) or {}
++        if any(row.get(key) is not None and str(row[key]) != str(expected)
++               for key, expected in (('player_id', pid), ('id', pid), ('season', league['season']),
++                                     ('league_id', league['league_id']))):
++            row = {}
++        observed = player.get('team') or player.get('nfl_team')
++        listed = row.get('team') or row.get('nfl_team')
++        club = normalize_team(observed) if observed and listed else None
++        if listed and club and normalize_team(listed) != club:
++            club = None
++        positions = eligible_positions(row)
++        slot_known = player.get('roster_slot') in {'Starter', 'Bench'}
++        people[pid] = (club, positions, slot_known)
++    return people
++
++
++def _week(slots, people, games, byes, week, projection):
++    bye_ids = {pid for pid, (club, _, _) in people.items()
++               if byes.get(pid) == week and club and f'{week}:{club}' not in games}
++    playing = {pid: positions for pid, (club, positions, slot_known) in people.items()
++               if pid not in bye_ids and positions and slot_known and games.get(f'{week}:{club}')}
++    # Unknown schedule, eligibility or assignment gets the benefit of the
++    # doubt for the upper bound, and never establishes positive cover.
++    possible = {pid: positions or None for pid, (_, positions, _) in people.items() if pid not in bye_ids}
++    baseline = _fit(slots, {
++        pid: positions for pid, (_, positions, slot_known) in people.items()
++        if slot_known and positions and (pid in playing or pid in bye_ids)
++    })
++    after = _fit(slots, playing, baseline)
++    upper = _fit(slots, possible, baseline)
++    affected = [index for index, pid in baseline.items() if pid in bye_ids]
++    if len(baseline) > len(upper):
++        state = 'shortfall'
++    elif affected and len(after) == len(slots):
++        state = 'covered'
++    elif affected or playing.keys() != possible.keys():
++        state = 'unknown'
++    else:
++        state = 'no_gap'
++    # Include the whole legal rearrangement, including displaced FLEX players.
++    return {
++        'week': week, 'state': state,
++        'affected': [slots[index] for index in sorted(affected)],
++        'byes': [baseline[index] for index in sorted(affected)],
++        'unfilled': list((Counter(slots) - Counter(slots[index] for index in upper)).elements())
++        if state == 'shortfall' else [],
++        'moves': [[slots[index], pid] for index, pid in sorted(after.items())
++                  if pid != baseline.get(index)] if state == 'covered' else [],
++        'projection_ready': projection.get('available') is True,
++    }
++
++
++def prepare_upcoming_byes(data, calendar, schedule, bye_evidence, profile):
++    """Bounded two-week summary derived during existing admitted preparation."""
++    league = data['league']
++    if league.get('status') != 'in_season' or league.get('sport') != 'nfl':
++        return {}
++    weeks = sorted(week for week in (
++        (calendar.get('regular_season_weeks') or [])
++        + [w for round_weeks in calendar.get('playoff_rounds') or [] for w in round_weeks]
++    ) if week > data['week'])[:2]
++    if not weeks:
++        return {}
++    slots = [slot.upper() for slot in (league.get('roster_positions') or []) if slot.upper() not in BENCH_SLOTS]
++    if not 1 <= len(slots) <= 20:
++        return {}
++    games = (schedule.get('games') or {}) if (
++        schedule and schedule.get('method') == METHOD and schedule.get('season') == profile['season']
++    ) else {}
++    byes = (bye_evidence or {}).get('player_weeks') or {}
++    result = {}
++    for team in data.get('teams') or []:
++        if len(team.get('players') or []) > 100:
++            continue
++        rid = str(team['roster_id'])
++        people = _eligible_roster(team, data.get('players') or {}, league)
++        weekly = profile['teams'][rid]['weekly']
++        result[rid] = [_week(slots, people, games, byes, week, weekly.get(week) or {}) for week in weeks]
++    return result
+diff --git a/src/ui/upcoming_byes.py b/src/ui/upcoming_byes.py
+new file mode 100644
+index 00000000..d212a0e0
+--- /dev/null
++++ b/src/ui/upcoming_byes.py
+@@ -0,0 +1,59 @@
++"""Compact disclosure for the prepared two-week bye outlook."""
++from html import escape
++
++
++def _slots(slots):
++    return escape(', '.join(
++        'Superflex' if slot in {'SUPER_FLEX', 'SF'} else slot.replace('_', ' ')
++        for slot in slots
++    ))
++
++
++def upcoming_byes_panel(weeks, players, *, active):
++    if not active:
++        return ''
++    if not weeks:
++        return ('<section class="thq-section" id="upcoming-byes"><h2>Upcoming bye weeks</h2>'
++                '<p>Future-week roster coverage is unavailable for this lineup snapshot.</p></section>')
++    order = {'shortfall': 0, 'unknown': 1, 'covered': 2, 'no_gap': 3}
++    priority = sorted(weeks, key=lambda row: (order[row['state']], row['week']))
++    names = {str(player['id']): escape(player.get('name') or 'Unnamed player') for player in players}
++
++    def finding(row):
++        week = f"Week {row['week']}"
++        positions = _slots(row['affected'])
++        if row['state'] == 'shortfall':
++            return f"{week} · Bye affects {positions}. This roster cannot fill every starting spot."
++        if row['state'] == 'covered':
++            return f"{week} · The roster has legal cover for {positions}."
++        if row['state'] == 'unknown':
++            if positions:
++                return f"{week} · Bye affects {positions}. The roster and schedule do not confirm full cover."
++            return f"{week} · Schedule or roster coverage is incomplete."
++        return f"{week} · No material bye gap identified."
++
++    def detail(row, *, leading):
++        bye_names = ', '.join(names.get(pid, 'Unnamed player') for pid in row['byes'])
++        moves = ''.join(f'<li>{_slots([slot])} — {names.get(pid, "Unnamed player")}</li>'
++                        for slot, pid in row['moves'])
++        vacancy = _slots(row['unfilled'])
++        notes = (
++            (f'<p>{bye_names} on bye in this plan.</p>' if bye_names else '')
++            + (f'<p>One legal set of changes</p><ul>{moves}</ul>' if moves else '')
++            + (f'<p>One legal fit leaves {vacancy} unfilled.</p>' if vacancy else '')
++            + ('<p>A complete projected lineup is unavailable for this week.</p>'
++               if not row['projection_ready'] else '')
++        )
++        href = f'/matchups?week={row["week"]}'
++        heading = f"Week {row['week']} details" if leading else finding(row)
++        return (f'<h3>{heading}</h3>{notes}'
++                f'<a class="thq-record-link" href="{href}">View Week {row["week"]} Matchups</a>')
++
++    return (
++        '<section class="thq-section" id="upcoming-byes"><h2>Upcoming bye weeks</h2>'
++        f'<p>{finding(priority[0])}</p>'
++        '<details class="thq-strength-detail"><summary>See weeks and possible moves</summary>'
++        '<p>This plan uses the latest prepared roster and NFL schedule. It shows who fits together under your league’s rules. '
++        'Check player availability again before setting your Sleeper lineup.</p>'
++        + ''.join(detail(row, leading=index == 0) for index, row in enumerate(priority)) + '</details></section>'
++    )
+diff --git a/tests/test_upcoming_byes.py b/tests/test_upcoming_byes.py
+new file mode 100644
+index 00000000..769caffe
+--- /dev/null
++++ b/tests/test_upcoming_byes.py
+@@ -0,0 +1,126 @@
++import os
++from datetime import timedelta
++from pathlib import Path
++import unittest
++from urllib.parse import urlsplit
++from unittest.mock import patch
++
++from playwright.sync_api import sync_playwright
++
++from src.core.intelligence.team_strength import prepare_for_data
++from src.core.intelligence.upcoming_byes import _week, prepare_upcoming_byes
++from tests.lineup_review_fixture import authenticated_prepared
++from tools.validation.browser_runtime import launch_chromium
++
++
++class UpcomingByeTests(unittest.TestCase):
++    def test_kicker_and_defense_coverage_does_not_require_points(self):
++        roster = {
++            'idle': ('BUF', ('K',), True), 'backup': ('KC', ('K',), True),
++            'defense': ('KC', ('DEF',), True),
++        }
++        row = _week(['K', 'DEF'], roster, {'9:KC': True}, {'idle': 9}, 9, {})
++        self.assertEqual((row['state'], row['affected'], row['moves']), ('covered', ['K'], [['K', 'backup']]))
++        self.assertFalse(row['projection_ready'])
++
++    def test_two_byes_compete_for_one_replacement(self):
++        roster = {
++            'qb': ('KC', ('QB',), True), 'rb': ('BUF', ('RB',), True),
++            'wr': ('BUF', ('WR',), True), 'only_sub': ('KC', ('RB', 'WR'), True),
++        }
++        byes = {'rb': 9, 'wr': 9}
++        row = _week(['QB', 'FLEX', 'SUPER_FLEX'], roster, {'9:KC': True}, byes, 9, {})
++        self.assertEqual(row['state'], 'shortfall')
++        self.assertEqual(len(row['unfilled']), 1)
++        self.assertEqual(set(row['byes']), set(byes))
++        roster['unknown_player'] = (None, (), True)
++        unknown = _week(['QB', 'FLEX', 'SUPER_FLEX'], roster, {'9:KC': True}, byes, 9, {})
++        self.assertEqual(unknown['state'], 'unknown')
++        self.assertEqual(unknown['unfilled'], [])
++
++    def test_superflex_fit_reports_the_complete_set_of_moves(self):
++        roster = {
++            'starter-qb': ('KC', ('QB',), True), 'bye-rb': ('BUF', ('RB',), True),
++            'starter-flex': ('KC', ('RB',), True), 'backup-qb': ('KC', ('QB',), True),
++        }
++        row = _week(['QB', 'RB', 'SUPER_FLEX'], roster, {'9:KC': True}, {'bye-rb': 9}, 9, {'available': True})
++        self.assertEqual(row['state'], 'covered')
++        self.assertEqual(row['moves'], [['RB', 'starter-flex'], ['SUPER_FLEX', 'backup-qb']])
++
++    def test_no_rollover_forecast_outside_the_scheduled_league_season(self):
++        data = {'league': {'sport': 'nfl', 'status': 'in_season'}, 'week': 18}
++        self.assertEqual(prepare_upcoming_byes(data, {'regular_season_weeks': list(range(1, 19))},
++                                              None, None, {}), {})
++        data['league']['status'] = 'pre_draft'
++        self.assertEqual(prepare_upcoming_byes(data, {}, None, None, {}), {})
++
++    def test_owner_phone_roster_to_prepared_bye_and_future_matchups(self):
++        fixture, data, service, now = authenticated_prepared(
++            self, empty=False, earlier_backup=True, bench_position='RB', points={'bq': 1},
++        )
++        client = fixture.f.f.client
++
++        # Complete disposable schedule shape, including the named teams' byes.
++        facts = []
++        clubs = ['BUF', 'KC'] + [f'X{i:02}' for i in range(30)]
++        for week in range(1, 19):
++            for index, (home, away) in enumerate(zip(clubs[::2], clubs[1::2])):
++                if week == (9 if index == 0 else ((index + 8) % 18) + 1):
++                    continue
++                facts.append(dict(
++                    family='schedule', season=2026, provider='nflverse', week=week,
++                    fingerprint=f'game-{week}-{index}',
++                    values=dict(game_type='REG', home_team=home, away_team=away,
++                                kickoff=(now + timedelta(days=(week - 8) * 7)).isoformat()),
++                ))
++        # Put the backup on a team that plays Week 9 while the starter is on bye.
++        data['teams'][0]['players'][1]['team'] = 'X00'
++        data['players']['1-bq']['team'] = 'X00'
++        with patch('services.global_evidence.retained_global_evidence') as store:
++            store.return_value.read.return_value = facts
++            prepared = prepare_for_data(service, data)
++        self.assertEqual(prepared['upcoming_byes']['1'][0]['week'], 9)
++        with patch('src.core.intelligence.upcoming_byes._fit', side_effect=AssertionError('page used solver')):
++            with sync_playwright() as pw:
++                browser = launch_chromium(pw, headless=True)
++                try:
++                    page = browser.new_page(viewport={'width': 390, 'height': 844}, has_touch=True)
++
++                    def transport(route):
++                        path = urlsplit(route.request.url)
++                        if path.hostname != 'dtos.test':
++                            return route.fulfill(status=200, body='')
++                        response = client.get(path.path + (f'?{path.query}' if path.query else ''))
++                        if response.status_code == 404 and path.path.startswith('/static/'):
++                            response = fixture.f.static.get(path.path)
++                        route.fulfill(status=response.status_code, headers=dict(response.headers), body=response.content)
++
++                    page.route('**/*', transport)
++                    self.assertEqual(page.goto('https://dtos.test/teams/1').status, 200)
++                    first = page.locator('#full-roster .thq-player').first
++                    self.assertTrue(first.is_visible())
++                    before = first.evaluate('e => e.getBoundingClientRect().top + scrollY')
++                    # Compare the same prepared state with the new section absent.
++                    # The standing phone journey retains its independent 600px check.
++                    with patch('src.ui.upcoming_byes.upcoming_byes_panel', return_value=''):
++                        page.reload()
++                        self.assertEqual(before, first.evaluate('e => e.getBoundingClientRect().top + scrollY'))
++                    page.reload()
++                    summary = page.get_by_text('See weeks and possible moves', exact=True)
++                    summary.focus()
++                    summary.press('Enter')
++                    panel = page.locator('#upcoming-byes')
++                    self.assertIn('Week 9', panel.inner_text())
++                    self.assertIn('Week 10', panel.inner_text())
++                    self.assertIn('cannot fill every starting spot', panel.inner_text())
++                    self.assertLessEqual(page.evaluate('document.documentElement.scrollWidth'), 390)
++                    if directory := os.environ.get('DTOS_BYE_SCREENSHOTS'):
++                        Path(directory).mkdir(parents=True, exist_ok=True)
++                        panel.screenshot(path=str(Path(directory) / 'my-team-upcoming-byes-390.png'))
++                    panel.get_by_role('link', name='View Week 9 Matchups').tap()
++                    page.wait_for_url('https://dtos.test/matchups?week=9')
++                    self.assertEqual(page.locator('#lineup-recheck').count(), 0)
++                    page.go_back()
++                    self.assertEqual(page.locator('#upcoming-byes').count(), 1)
++                finally:
++                    browser.close()

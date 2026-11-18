@@ -1,0 +1,81 @@
+All checks passed!
+/usr/local/lib/python3.14/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+  from starlette.testclient import TestClient as TestClient  # noqa
+test_kicker_and_defense_coverage_does_not_require_points (tests.test_upcoming_byes.UpcomingByeTests.test_kicker_and_defense_coverage_does_not_require_points) ... ok
+test_no_rollover_forecast_outside_the_scheduled_league_season (tests.test_upcoming_byes.UpcomingByeTests.test_no_rollover_forecast_outside_the_scheduled_league_season) ... ok
+test_owner_phone_roster_to_prepared_bye_and_future_matchups (tests.test_upcoming_byes.UpcomingByeTests.test_owner_phone_roster_to_prepared_bye_and_future_matchups) ... {"timestamp":"2026-11-18T21:50:37.637109+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":76099584,"limit_bytes":2147483648,"raw_headroom_bytes":2071384064,"clean_inactive_file_bytes":581632,"conditional_file_credit_bytes":290816,"admission_headroom_bytes":2071674880,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-18T21:50:37.640229+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/workspace?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-18T21:50:37.649920+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_admission","request_id":"system","event":"trade_admission","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":75980800,"limit_bytes":2147483648,"raw_headroom_bytes":2071502848,"clean_inactive_file_bytes":581632,"conditional_file_credit_bytes":290816,"admission_headroom_bytes":2071793664,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"recovery":null}}
+{"timestamp":"2026-11-18T21:50:37.708984+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_execution_finished","request_id":"system","event":"trade_execution_finished","duration_ms":59.873,"diagnostic":{"schema":"trade-resource-v1","outcome":"complete"}}
+{"timestamp":"2026-11-18T21:50:37.712502+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/trades/evaluate \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-18T21:50:37.728717+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-18T21:50:37.747950+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+Validation Chromium: /usr/bin/chromium
+Validation Chromium version: 156.0.8078.79
+{"timestamp":"2026-11-18T21:50:39.503575+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/teams/1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-18T21:50:39.678514+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-18T21:50:39.992709+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-18T21:50:39.994018+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"96fe96da349b4821a7c8e194ef5e48f9","event":"request_complete","duration_ms":298.934,"status_code":200,"method":"GET","path":"/static/css/contextual_navigation.css"}
+{"timestamp":"2026-11-18T21:50:40.003104+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-18T21:50:40.009977+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-18T21:50:40.011162+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"ef1de2535cef4cbf8b47eaf24d54b15b","event":"request_complete","duration_ms":3.286,"status_code":200,"method":"GET","path":"/static/js/contextual_navigation.js"}
+{"timestamp":"2026-11-18T21:50:40.021706+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-18T21:50:40.033675+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/lineup-review.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-18T21:50:40.074152+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/strategy_session.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-18T21:50:40.542089+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/teams/1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-18T21:50:40.591986+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-18T21:50:40.599390+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-18T21:50:40.600666+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"e9983677f1fe4bdabdd558342c6ad573","event":"request_complete","duration_ms":4.582,"status_code":200,"method":"GET","path":"/static/css/contextual_navigation.css"}
+{"timestamp":"2026-11-18T21:50:40.613284+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-18T21:50:40.620026+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-18T21:50:40.621490+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"7433e3b46bfd4c04b51bd00dc8cf316f","event":"request_complete","duration_ms":3.998,"status_code":200,"method":"GET","path":"/static/js/contextual_navigation.js"}
+{"timestamp":"2026-11-18T21:50:40.636155+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-18T21:50:40.645173+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/lineup-review.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-18T21:50:40.651602+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/strategy_session.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-18T21:50:40.840069+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/teams/1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-18T21:50:40.889616+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-18T21:50:40.895224+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-18T21:50:40.895920+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"dd4134f43a3d41fdbb495f9d55ea6e56","event":"request_complete","duration_ms":2.43,"status_code":200,"method":"GET","path":"/static/css/contextual_navigation.css"}
+{"timestamp":"2026-11-18T21:50:40.903105+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-18T21:50:40.909042+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-18T21:50:40.909785+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"be9bf77683e0408098566ab263e6b066","event":"request_complete","duration_ms":2.366,"status_code":200,"method":"GET","path":"/static/js/contextual_navigation.js"}
+{"timestamp":"2026-11-18T21:50:40.925041+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-18T21:50:40.933866+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/lineup-review.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-18T21:50:40.940953+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/strategy_session.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-18T21:50:41.454957+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/matchups?week=9 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-18T21:50:41.506598+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-18T21:50:41.512278+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-18T21:50:41.512965+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"828118f7b6134f159c3c12523cd69c19","event":"request_complete","duration_ms":2.234,"status_code":200,"method":"GET","path":"/static/css/contextual_navigation.css"}
+{"timestamp":"2026-11-18T21:50:41.518656+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-18T21:50:41.524697+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-18T21:50:41.525803+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"2872599fdc674d99a1f0b7c843c57d48","event":"request_complete","duration_ms":3.51,"status_code":200,"method":"GET","path":"/static/js/contextual_navigation.js"}
+{"timestamp":"2026-11-18T21:50:41.534869+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-18T21:50:41.545444+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/lineup-review.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-18T21:50:41.628954+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/teams/1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-18T21:50:41.683130+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-18T21:50:41.689167+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-18T21:50:41.690045+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"795d1a25bdba40c09ccd7d6fb657042d","event":"request_complete","duration_ms":2.85,"status_code":200,"method":"GET","path":"/static/css/contextual_navigation.css"}
+{"timestamp":"2026-11-18T21:50:41.697645+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-18T21:50:41.703260+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-18T21:50:41.704246+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"332af80199dd4d25a0dcc1d57c193063","event":"request_complete","duration_ms":2.81,"status_code":200,"method":"GET","path":"/static/js/contextual_navigation.js"}
+{"timestamp":"2026-11-18T21:50:41.711581+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-18T21:50:41.720732+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/lineup-review.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-18T21:50:41.728749+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/strategy_session.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+ok
+test_superflex_fit_reports_the_complete_set_of_moves (tests.test_upcoming_byes.UpcomingByeTests.test_superflex_fit_reports_the_complete_set_of_moves) ... ok
+test_two_byes_compete_for_one_replacement (tests.test_upcoming_byes.UpcomingByeTests.test_two_byes_compete_for_one_replacement) ... ok
+test_partial_display_never_labels_subtotal_complete (tests.test_batch5_team_strength_active.ActiveStrengthTests.test_partial_display_never_labels_subtotal_complete) ... ok
+test_real_consumer_chain_rejects_stale_profile (tests.test_batch5_team_strength_active.ActiveStrengthTests.test_real_consumer_chain_rejects_stale_profile) ... ok
+test_complete_horizons_preserve_actual_and_round_components (tests.test_batch5_team_strength.TeamStrengthTests.test_complete_horizons_preserve_actual_and_round_components) ... ok
+test_generation_is_pinned_even_if_publication_changes_during_read (tests.test_batch5_team_strength.TeamStrengthTests.test_generation_is_pinned_even_if_publication_changes_during_read) ... ok
+test_known_bye_uses_week_specific_replacement_without_injury_forecast (tests.test_batch5_team_strength.TeamStrengthTests.test_known_bye_uses_week_specific_replacement_without_injury_forecast) ... ok
+test_replay_and_restart_are_deterministic_without_writes (tests.test_batch5_team_strength.TeamStrengthTests.test_replay_and_restart_are_deterministic_without_writes) ... ok
+test_scope_and_calendar_fail_closed (tests.test_batch5_team_strength.TeamStrengthTests.test_scope_and_calendar_fail_closed) ... ok
+test_unknown_lineup_does_not_rank_as_zero (tests.test_batch5_team_strength.TeamStrengthTests.test_unknown_lineup_does_not_rank_as_zero) ... ok
+test_unsupported_week_is_not_extrapolated (tests.test_batch5_team_strength.TeamStrengthTests.test_unsupported_week_is_not_extrapolated) ... ok
+test_zero_supported_and_reserves_are_week_specific (tests.test_batch5_team_strength.TeamStrengthTests.test_zero_supported_and_reserves_are_week_specific) ... ok
+
+----------------------------------------------------------------------
+Ran 15 tests in 6.077s
+
+OK
