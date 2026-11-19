@@ -331,11 +331,13 @@ def prepare_for_data(service: Any, data: dict, *, next_n: int = 3, bye_evidence:
         'next_n': next_n, 'bye_evidence': bye_evidence, 'lineup_review_schedule': lineup_schedule,
     }, sort_keys=True).encode()).hexdigest()
     from .lineup_fallback import prepare_fallbacks
+    from .upcoming_byes import prepare_upcoming_byes
     if existing is not None and existing.get('preparation_key') == preparation_key:
         fallbacks = prepare_fallbacks(data, pinned, lineup_schedule, existing)
-        if fallbacks == (existing.get('lineup_fallbacks') or {}):
+        upcoming_byes = prepare_upcoming_byes(data, calendar, lineup_schedule, bye_evidence, existing)
+        if fallbacks == (existing.get('lineup_fallbacks') or {}) and upcoming_byes == existing.get('upcoming_byes'):
             return existing
-        profile = dict(existing, lineup_fallbacks=fallbacks)
+        profile = dict(existing, lineup_fallbacks=fallbacks, upcoming_byes=upcoming_byes)
         data['team_strength'] = profile
         return profile
     profile = prepare_team_strength(service, league_id=str(league['league_id']), season=int(league['season']),
@@ -348,6 +350,7 @@ def prepare_for_data(service: Any, data: dict, *, next_n: int = 3, bye_evidence:
     profile['preparation_key'] = preparation_key
     profile['scoring_reference'] = hashlib.sha256(json.dumps(scoring, sort_keys=True).encode()).hexdigest()
     profile['lineup_fallbacks'] = prepare_fallbacks(data, pinned, lineup_schedule, profile)
+    profile['upcoming_byes'] = prepare_upcoming_byes(data, calendar, lineup_schedule, bye_evidence, profile)
     data['team_strength'] = profile
     return profile
 

@@ -1,3 +1,7 @@
+## v1.22.53 / build 2268 — Upcoming bye weeks
+
+My Team shows the next two scheduled fantasy weeks and whether the current roster can cover material bye gaps together. Open the details for legal moves, evidence limits and the week’s Matchups. This planning view leaves submitted lineups unchanged.
+
 ## v1.22.52 / build 2267 — Recheck the weekly lineup
 
 My Team and Matchups show when the submitted Sleeper lineup was checked and display fallback deadlines in the browser’s time zone. Recheck lineup uses guarded league sync and returns to the same view after a newer check.
