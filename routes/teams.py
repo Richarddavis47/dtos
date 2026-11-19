@@ -469,9 +469,10 @@ def create_teams_router(
             from src.core.intelligence.team_strength import compatible_profile
             from src.core.projection_intelligence.service import player_availability
             prepared_strength = compatible_profile(data, view['projection_snapshot']) or {}
+            from src.core.intelligence.upcoming_byes import read_upcoming_byes
             from src.ui.upcoming_byes import upcoming_byes_panel
             upcoming_byes = upcoming_byes_panel(
-                (prepared_strength.get('upcoming_byes') or {}).get(str(roster_id)), team['players'],
+                read_upcoming_byes(prepared_strength, data.get('league') or {}, team), team['players'],
                 active=(data.get('league') or {}).get('status') == 'in_season',
             )
             catalog = data.get('players') or {}

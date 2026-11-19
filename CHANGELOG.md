@@ -1,3 +1,7 @@
+## v1.22.54 / build 2269 — Cover upcoming byes
+
+My Team names the starters on bye and shows the moves that fill their spots together, including FLEX and Superflex rearrangements. The plan follows the submitted slots and uses the schedule and roster evidence for each target week.
+
 ## v1.22.53 / build 2268 — Upcoming bye weeks
 
 My Team shows the next two scheduled fantasy weeks and whether the current roster can cover material bye gaps together. Open the details for legal moves, evidence limits and the week’s Matchups. This planning view leaves submitted lineups unchanged.
