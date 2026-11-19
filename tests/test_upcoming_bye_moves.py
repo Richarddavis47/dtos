@@ -28,6 +28,7 @@ def install_schedule(service, data, now, *, byes, missing=()):
         if week != (9 if idx == 0 else (idx + 8) % 18 + 1)
         and (week, idx) not in missing
     ]
+    data.setdefault('players_fetched_at', now.isoformat())
     team = data['teams'][0]
     for row in team['players']:
         club = 'BUF' if row['id'] in byes else 'X02'

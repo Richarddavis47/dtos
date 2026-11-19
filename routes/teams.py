@@ -472,7 +472,8 @@ def create_teams_router(
             from src.core.intelligence.upcoming_byes import read_upcoming_byes
             from src.ui.upcoming_byes import upcoming_byes_panel
             upcoming_byes = upcoming_byes_panel(
-                read_upcoming_byes(prepared_strength, data.get('league') or {}, team), team['players'],
+                read_upcoming_byes(prepared_strength, data.get('league') or {}, team,
+                                   players_fetched_at=data.get('players_fetched_at')), team['players'],
                 active=(data.get('league') or {}).get('status') == 'in_season',
             )
             catalog = data.get('players') or {}

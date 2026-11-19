@@ -2148,7 +2148,7 @@
       el('trade-search-readiness').textContent = [data.lineup_preparation?.state === 'prepared' ? 'Projections prepared.' : 'Team-impact projections needed. Neutral Market works.', capacityText[data.search_readiness.state] || data.search_readiness.message].filter(Boolean).join(' ');
       el('trade-search-readiness').dataset.state = data.search_readiness.state;
     }
-    if (flow === 'recommended') searchStatus(data.search_readiness && data.search_readiness.state !== 'ready' ? 'Search capacity is temporarily unconfirmed. Generate rechecks it before starting; no search has run.' : 'Choose Generate to search eligible teams; choosing a goal is optional.', data.search_readiness && data.search_readiness.state !== 'ready' ? 'deferred' : 'ready');
+    if (flow === 'recommended') searchStatus(data.search_readiness && data.search_readiness.state !== 'ready' ? 'Search capacity is temporarily unconfirmed. Generate rechecks it before searching eligible teams; no search has run.' : 'Choose Generate to search eligible teams; choosing a goal is optional.', data.search_readiness && data.search_readiness.state !== 'ready' ? 'deferred' : 'ready');
     if (flow === 'create') operationStatus('Choose assets to evaluate below.', 'ready');
     comparison = window.DTOSOfferComparison.create({node, points: displayPoints, market: displayMarket,
       tray: el('trade-comparison-tray'), panel: el('trade-comparison'),
