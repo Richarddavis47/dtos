@@ -1,0 +1,563 @@
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index 4cd7252b..b5c5478d 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -1,3 +1,7 @@
++## v1.22.54 / build 2269 — Cover upcoming byes
++
++My Team names the starters on bye and shows the moves that fill their spots together, including FLEX and Superflex rearrangements. The plan follows the submitted slots and uses the schedule and roster evidence for each target week.
++
+ ## v1.22.53 / build 2268 — Upcoming bye weeks
+ 
+ My Team shows the next two scheduled fantasy weeks and whether the current roster can cover material bye gaps together. Open the details for legal moves, evidence limits and the week’s Matchups. This planning view leaves submitted lineups unchanged.
+diff --git a/RELEASE_NOTES.md b/RELEASE_NOTES.md
+index 2276f7c4..c42e82d6 100644
+--- a/RELEASE_NOTES.md
++++ b/RELEASE_NOTES.md
+@@ -1,3 +1,7 @@
++## v1.22.54 / build 2269 — Cover upcoming byes
++
++My Team names the starters on bye and shows the moves that fill their spots together, including FLEX and Superflex rearrangements. The plan follows the submitted slots and uses the schedule and roster evidence for each target week.
++
+ ## v1.22.53 / build 2268 — Upcoming bye weeks
+ 
+ My Team shows the next two scheduled fantasy weeks and whether the current roster can cover material bye gaps together. Open the details for legal moves, evidence limits and the week’s Matchups. This planning view leaves submitted lineups unchanged.
+diff --git a/app_metadata.py b/app_metadata.py
+index 5572c41a..a400df92 100644
+--- a/app_metadata.py
++++ b/app_metadata.py
+@@ -7,10 +7,10 @@ from datetime import datetime, timezone
+ from pathlib import Path
+ 
+ APPLICATION_NAME = "DTOS"
+-VERSION = "1.22.53"
+-PRODUCT_VERSION = "1.22.53"
+-BUILD_NUMBER = 2268
+-RELEASE_CODENAME = "Upcoming Bye Weeks"
++VERSION = "1.22.54"
++PRODUCT_VERSION = "1.22.54"
++BUILD_NUMBER = 2269
++RELEASE_CODENAME = "Cover Upcoming Byes"
+ APPLICATION_STARTED_AT = datetime.now(timezone.utc).isoformat()
+ 
+ _REPOSITORY_ROOT = Path(__file__).resolve().parent
+diff --git a/routes/teams.py b/routes/teams.py
+index 59adf940..21db1e32 100644
+--- a/routes/teams.py
++++ b/routes/teams.py
+@@ -469,9 +469,10 @@ def create_teams_router(
+             from src.core.intelligence.team_strength import compatible_profile
+             from src.core.projection_intelligence.service import player_availability
+             prepared_strength = compatible_profile(data, view['projection_snapshot']) or {}
++            from src.core.intelligence.upcoming_byes import read_upcoming_byes
+             from src.ui.upcoming_byes import upcoming_byes_panel
+             upcoming_byes = upcoming_byes_panel(
+-                (prepared_strength.get('upcoming_byes') or {}).get(str(roster_id)), team['players'],
++                read_upcoming_byes(prepared_strength, data.get('league') or {}, team), team['players'],
+                 active=(data.get('league') or {}).get('status') == 'in_season',
+             )
+             catalog = data.get('players') or {}
+diff --git a/src/core/intelligence/upcoming_byes.py b/src/core/intelligence/upcoming_byes.py
+index f14dd62b..712b8d66 100644
+--- a/src/core/intelligence/upcoming_byes.py
++++ b/src/core/intelligence/upcoming_byes.py
+@@ -1,6 +1,4 @@
+ """Prepare schedule-backed roster coverage without using fantasy points."""
+-from collections import Counter
+-
+ from src.core.data_platform.normalization.identity import normalize_team
+ from src.core.intelligence.lineup_review import METHOD
+ from src.core.trade_intelligence.lineup import BENCH_SLOTS, _eligible, eligible_positions
+@@ -12,10 +10,12 @@ def _fit(slots, candidates, preferred=None):
+     options = [
+         sorted((pid for pid, positions in candidates.items()
+                 if positions is None or any(_eligible(pos, slot) for pos in positions)),
+-               key=lambda pid: pid != preferred.get(index))
++               key=lambda pid: (pid != preferred.get(index), pid))
+         for index, slot in enumerate(slots)
+     ]
+-    occupied = {}
++    # Keep verified starters in place where possible. An augmenting path
++    # may move a starter if that is needed to fill another slot.
++    occupied = {pid: index for index, pid in preferred.items() if pid in options[index]}
+ 
+     def fill(index, visited):
+         for pid in options[index]:
+@@ -31,14 +31,15 @@ def _fit(slots, candidates, preferred=None):
+         return False
+ 
+     for index in range(len(slots)):
+-        fill(index, set())
++        if index not in occupied.values():
++            fill(index, set())
+     return {index: pid for pid, index in occupied.items()}
+ 
+ 
+ def _eligible_roster(team, catalog, league):
+     # Roster rows hold assignments; the native catalog supplies fantasy eligibility.
+     people = {}
+-    for player in sorted(team.get('players') or [], key=lambda p: p.get('roster_slot') != 'Starter'):
++    for player in team.get('players') or []:
+         pid = str(player['id'])
+         if player.get('roster_slot') in {'IR', 'Taxi', 'Reserve'}:
+             continue
+@@ -58,42 +59,81 @@ def _eligible_roster(team, catalog, league):
+     return people
+ 
+ 
+-def _week(slots, people, games, byes, week, projection):
++def _starting_slots(players, slots):
++    """Read the submitted slot indexes, independent of roster iteration order."""
++    starters = [None] * len(slots)
++    seen = set()
++    for player in players:
++        pid = str(player['id'])
++        if pid in seen:
++            return None
++        seen.add(pid)
++        if player.get('roster_slot') != 'Starter':
++            continue
++        index = player.get('starter_index')
++        recorded_slot = player.get('starter_slot')
++        if (type(index) is not int or not 0 <= index < len(slots) or starters[index] is not None
++                or (recorded_slot and str(recorded_slot).upper() != slots[index])):
++            return None
++        starters[index] = pid
++    return starters
++
++
++def _week(slots, people, games, byes, week, projection, *, starters):
+     bye_ids = {pid for pid, (club, _, _) in people.items()
+                if byes.get(pid) == week and club and f'{week}:{club}' not in games}
+     playing = {pid: positions for pid, (club, positions, slot_known) in people.items()
+                if pid not in bye_ids and positions and slot_known and games.get(f'{week}:{club}')}
+-    # Unknown schedule, eligibility or assignment gets the benefit of the
+-    # doubt for the upper bound, and never establishes positive cover.
+-    possible = {pid: positions or None for pid, (_, positions, _) in people.items() if pid not in bye_ids}
+-    baseline = _fit(slots, {
+-        pid: positions for pid, (_, positions, slot_known) in people.items()
+-        if slot_known and positions and (pid in playing or pid in bye_ids)
+-    })
+-    after = _fit(slots, playing, baseline)
+-    upper = _fit(slots, possible, baseline)
+-    affected = [index for index, pid in baseline.items() if pid in bye_ids]
+-    if len(baseline) > len(upper):
+-        state = 'shortfall'
+-    elif affected and len(after) == len(slots):
+-        state = 'covered'
+-    elif affected or playing.keys() != possible.keys():
+-        state = 'unknown'
+-    else:
++    initial = {index: pid for index, pid in enumerate(starters or ()) if pid is not None}
++    affected = [(index, pid) for index, pid in initial.items() if pid in bye_ids]
++    moves, unfilled = [], []
++    if affected:
++        after = _fit(slots, playing, initial)
++        if len(after) == len(slots):
++            state = 'covered'
++            prior = {pid: index for index, pid in initial.items()}
++            moves = [[index, pid, prior.get(pid)] for index, pid in sorted(after.items())
++                     if pid != initial.get(index)]
++        else:
++            # Unconfirmed candidates can prevent a proof of shortfall, but
++            # cannot establish positive cover.
++            possible = {pid: positions or None for pid, (_, positions, _) in people.items()
++                        if pid not in bye_ids}
++            upper = _fit(slots, possible, initial)
++            state = 'shortfall' if len(upper) < len(slots) else 'unknown'
++            if state == 'shortfall':
++                unfilled = [slot for index, slot in enumerate(slots) if index not in upper]
++    elif len(initial) == len(slots) and all(
++        any(_eligible(position, slots[index]) for position in playing.get(pid, ()))
++        for index, pid in initial.items()
++    ):
+         state = 'no_gap'
+-    # Include the whole legal rearrangement, including displaced FLEX players.
++    else:
++        state = 'unknown'
+     return {
+-        'week': week, 'state': state,
+-        'affected': [slots[index] for index in sorted(affected)],
+-        'byes': [baseline[index] for index in sorted(affected)],
+-        'unfilled': list((Counter(slots) - Counter(slots[index] for index in upper)).elements())
+-        if state == 'shortfall' else [],
+-        'moves': [[slots[index], pid] for index, pid in sorted(after.items())
+-                  if pid != baseline.get(index)] if state == 'covered' else [],
++        'week': week, 'state': state, 'slots': slots,
++        'bye_starters': [list(row) for row in affected],
++        'unfilled': unfilled, 'moves': moves,
+         'projection_ready': projection.get('available') is True,
+     }
+ 
+ 
++def _starter_positions(league):
++    return [slot.upper() for slot in league.get('roster_positions') or [] if slot.upper() not in BENCH_SLOTS]
++
++
++def read_upcoming_byes(profile, league, team):
++    """Withhold legacy or changed assignments until preparation catches up."""
++    record = (profile.get('upcoming_byes') or {}).get(str(team['roster_id']))
++    if not isinstance(record, dict) or not isinstance(record.get('weeks'), list):
++        return None
++    slots = _starter_positions(league)
++    players = team.get('players') or []
++    if len(players) <= 100 and 'starting_slots' in record and record['starting_slots'] == _starting_slots(players, slots):
++        return record['weeks']
++    return None
++
++
+ def prepare_upcoming_byes(data, calendar, schedule, bye_evidence, profile):
+     """Bounded two-week summary derived during existing admitted preparation."""
+     league = data['league']
+@@ -105,7 +145,7 @@ def prepare_upcoming_byes(data, calendar, schedule, bye_evidence, profile):
+     ) if week > data['week'])[:2]
+     if not weeks:
+         return {}
+-    slots = [slot.upper() for slot in (league.get('roster_positions') or []) if slot.upper() not in BENCH_SLOTS]
++    slots = _starter_positions(league)
+     if not 1 <= len(slots) <= 20:
+         return {}
+     games = (schedule.get('games') or {}) if (
+@@ -119,5 +159,10 @@ def prepare_upcoming_byes(data, calendar, schedule, bye_evidence, profile):
+         rid = str(team['roster_id'])
+         people = _eligible_roster(team, data.get('players') or {}, league)
+         weekly = profile['teams'][rid]['weekly']
+-        result[rid] = [_week(slots, people, games, byes, week, weekly.get(week) or {}) for week in weeks]
++        starters = _starting_slots(team.get('players') or [], slots)
++        result[rid] = {
++            'starting_slots': starters,
++            'weeks': [_week(slots, people, games, byes, week, weekly.get(week) or {}, starters=starters)
++                      for week in weeks],
++        }
+     return result
+diff --git a/src/ui/upcoming_byes.py b/src/ui/upcoming_byes.py
+index d212a0e0..3be3e187 100644
+--- a/src/ui/upcoming_byes.py
++++ b/src/ui/upcoming_byes.py
+@@ -2,11 +2,20 @@
+ from html import escape
+ 
+ 
++def _slot_name(slot):
++    return 'Superflex' if slot in {'SUPER_FLEX', 'SF'} else slot.replace('_', ' ')
++
++
+ def _slots(slots):
+-    return escape(', '.join(
+-        'Superflex' if slot in {'SUPER_FLEX', 'SF'} else slot.replace('_', ' ')
+-        for slot in slots
+-    ))
++    return escape(', '.join(map(_slot_name, slots)))
++
++
++def _indexed_slot(slots, index):
++    slot = slots[index]
++    name = _slot_name(slot)
++    if slots.count(slot) > 1:
++        name += f' {slots[:index + 1].count(slot)}'
++    return escape(name)
+ 
+ 
+ def upcoming_byes_panel(weeks, players, *, active):
+@@ -21,33 +30,45 @@ def upcoming_byes_panel(weeks, players, *, active):
+ 
+     def finding(row):
+         week = f"Week {row['week']}"
+-        positions = _slots(row['affected'])
++        positions = _slots(dict.fromkeys(row['slots'][index] for index, _ in row['bye_starters']))
+         if row['state'] == 'shortfall':
+             return f"{week} · Bye affects {positions}. This roster cannot fill every starting spot."
+         if row['state'] == 'covered':
+-            return f"{week} · The roster has legal cover for {positions}."
++            return f"{week} · A legal lineup change can cover the {positions} bye."
+         if row['state'] == 'unknown':
+             if positions:
+                 return f"{week} · Bye affects {positions}. The roster and schedule do not confirm full cover."
+             return f"{week} · Schedule or roster coverage is incomplete."
+-        return f"{week} · No material bye gap identified."
++        return f"{week} · No starters on bye."
+ 
+     def detail(row, *, leading):
+-        bye_names = ', '.join(names.get(pid, 'Unnamed player') for pid in row['byes'])
+-        moves = ''.join(f'<li>{_slots([slot])} — {names.get(pid, "Unnamed player")}</li>'
+-                        for slot, pid in row['moves'])
++        slots = row['slots']
++        absent = ''.join(
++            f'<li data-bye-starter="{escape(pid, quote=True)}" data-slot-index="{index}">'
++            f'{names.get(pid, "Unnamed player")} is on bye in {_indexed_slot(slots, index)}.</li>'
++            for index, pid in row['bye_starters']
++        )
++        moves = []
++        for index, pid, prior in row['moves']:
++            name = names.get(pid, 'Unnamed player')
++            destination = _indexed_slot(slots, index)
++            instruction = (f'Start {name} at {destination}.' if prior is None else
++                           f'Move {name} from {_indexed_slot(slots, prior)} to {destination}.')
++            moves.append(f'<li data-bye-move="{escape(pid, quote=True)}" data-slot-index="{index}">{instruction}</li>')
++        instruction_heading = 'Make this change.' if len(moves) == 1 else 'Make these changes together.'
+         vacancy = _slots(row['unfilled'])
+         notes = (
+-            (f'<p>{bye_names} on bye in this plan.</p>' if bye_names else '')
+-            + (f'<p>One legal set of changes</p><ul>{moves}</ul>' if moves else '')
++            (f'<ul>{absent}</ul>' if absent else '')
++            + (f'<p>{instruction_heading}</p><ul>{"".join(moves)}</ul>' if moves else '')
+             + (f'<p>One legal fit leaves {vacancy} unfilled.</p>' if vacancy else '')
+             + ('<p>A complete projected lineup is unavailable for this week.</p>'
+                if not row['projection_ready'] else '')
+         )
+         href = f'/matchups?week={row["week"]}'
+         heading = f"Week {row['week']} details" if leading else finding(row)
+-        return (f'<h3>{heading}</h3>{notes}'
+-                f'<a class="thq-record-link" href="{href}">View Week {row["week"]} Matchups</a>')
++        return (f'<section data-bye-week="{row["week"]}" data-bye-state="{row["state"]}">'
++                f'<h3>{heading}</h3>{notes}'
++                f'<a class="thq-record-link" href="{href}">View Week {row["week"]} Matchups</a></section>')
+ 
+     return (
+         '<section class="thq-section" id="upcoming-byes"><h2>Upcoming bye weeks</h2>'
+diff --git a/tests/test_upcoming_bye_moves.py b/tests/test_upcoming_bye_moves.py
+new file mode 100644
+index 00000000..432488be
+--- /dev/null
++++ b/tests/test_upcoming_bye_moves.py
+@@ -0,0 +1,187 @@
++"""Rendered coverage from prepared submitted slots and retained schedule facts."""
++from contextlib import contextmanager
++from datetime import timedelta
++import os
++from pathlib import Path
++import unittest
++from urllib.parse import urlsplit
++from unittest.mock import patch
++
++from playwright.sync_api import sync_playwright
++
++from src.core.intelligence.team_strength import prepare_for_data
++from tests.lineup_review_fixture import authenticated_prepared
++from tools.validation.browser_runtime import launch_chromium
++
++
++def install_schedule(service, data, now, *, byes, missing=()):
++    # A complete schedule establishes byes. Removing a single game invalidates
++    # inferred byes for this revision, while present games are still known.
++    clubs = ['BUF', 'KC'] + [f'X{i:02}' for i in range(30)]
++    facts = [
++        dict(family='schedule', season=2026, provider='nflverse', week=week,
++             fingerprint=f'bye-moves-{week}-{idx}',
++             values=dict(game_type='REG', home_team=home, away_team=away,
++                         kickoff=(now + timedelta(days=7 * (week - 8))).isoformat()))
++        for week in range(1, 19)
++        for idx, (home, away) in enumerate(zip(clubs[::2], clubs[1::2]))
++        if week != (9 if idx == 0 else (idx + 8) % 18 + 1)
++        and (week, idx) not in missing
++    ]
++    team = data['teams'][0]
++    for row in team['players']:
++        club = 'BUF' if row['id'] in byes else 'X02'
++        row['team'] = data['players'][row['id']]['team'] = club
++    with patch('services.global_evidence.retained_global_evidence') as store:
++        store.return_value.read.return_value = facts
++        return prepare_for_data(service, data)
++
++
++@contextmanager
++def phone(fixture):
++    client = fixture.f.f.client
++    with sync_playwright() as pw:
++        browser = launch_chromium(pw, headless=True)
++        try:
++            page = browser.new_page(viewport={'width': 390, 'height': 844}, has_touch=True)
++            def transport(route):
++                path = urlsplit(route.request.url)
++                if path.hostname != 'dtos.test':
++                    return route.fulfill(status=200, body='')
++                response = client.get(path.path + (f'?{path.query}' if path.query else ''))
++                if response.status_code == 404 and path.path.startswith('/static/'):
++                    response = fixture.f.static.get(path.path)
++                route.fulfill(status=response.status_code, headers=dict(response.headers), body=response.content)
++            page.route('**/*', transport)
++            yield page
++        finally:
++            browser.close()
++
++
++class UpcomingByeMovesTests(unittest.TestCase):
++    def _owner_fixture(self, **kwargs):
++        return authenticated_prepared(self, empty=False, points={'bq': 1}, **kwargs)
++
++    def _render_week(self, page):
++        self.assertEqual(page.goto('https://dtos.test/teams/1').status, 200)
++        disclosure = page.get_by_text('See weeks and possible moves', exact=True)
++        disclosure.focus()
++        disclosure.press('Enter')
++        return page.locator('[data-bye-week="9"]')
++
++    def _verify_moves(self, row, data, bye_ids, expected):
++        # Apply the rendered changes together to the original recorded slots.
++        # Check expected eligible positions independently of the matching engine.
++        slots = [slot for slot in data['league']['roster_positions'] if slot != 'BN']
++        assigned = {p['starter_index']: p['id'] for p in data['teams'][0]['players']
++                    if p['roster_slot'] == 'Starter'}
++        bench = {p['id'] for p in data['teams'][0]['players'] if p['roster_slot'] == 'Bench'}
++        absent = row.locator('[data-bye-starter]').evaluate_all(
++            "(nodes) => nodes.map(n => [Number(n.dataset.slotIndex), n.dataset.byeStarter])")
++        self.assertEqual({pid for _, pid in absent}, bye_ids)
++        for index, pid in absent:
++            self.assertEqual(assigned[index], pid)
++        moves = dict(row.locator('[data-bye-move]').evaluate_all(
++            "(nodes) => nodes.map(n => [Number(n.dataset.slotIndex), n.dataset.byeMove])"))
++        self.assertEqual(moves, expected)
++        self.assertLessEqual(set(moves.values()), set(assigned.values()) | bench)
++        assigned.update(moves)
++        self.assertEqual(set(assigned), set(range(len(slots))))
++        self.assertEqual(len(set(assigned.values())), len(slots))
++        self.assertTrue(bye_ids.isdisjoint(assigned.values()))
++        extras = {'FLEX': {'RB', 'WR', 'TE'}, 'SUPER_FLEX': {'QB', 'RB', 'WR', 'TE'}}
++        for index, pid in assigned.items():
++            positions = set(data['players'][pid]['fantasy_positions'])
++            self.assertTrue(positions.intersection(extras.get(slots[index], {slots[index]})))
++
++    def test_rendered_wr_flex_bye_and_moves_are_roster_order_independent(self):
++        fixture, data, service, now = self._owner_fixture(
++            bench_position='RB', slots=['QB', 'RB', 'FLEX', 'RB', 'BN'],
++        )
++        players = data['teams'][0]['players']
++        order = ['1-q', '1-r', '1-s', '1-w', '1-bq']
++        players.sort(key=lambda row: order.index(row['id']))
++        with phone(fixture) as page:
++            prior = None
++            for arrangement in (players[:], players[::-1], players[2:] + players[:2]):
++                players[:] = arrangement
++                install_schedule(service, data, now, byes={'1-w'})
++                row = self._render_week(page)
++                self.assertEqual(row.get_attribute('data-bye-state'), 'covered')
++                self.assertIn('Example W 1 is on bye in FLEX.', row.inner_text())
++                self.assertIn('Start Example BQ 1 at FLEX.', row.inner_text())
++                self._verify_moves(row, data, {'1-w'}, {2: '1-bq'})
++                text = row.inner_text()
++                if prior is not None:
++                    self.assertEqual(text, prior)
++                prior = text
++            self.assertEqual(page.locator('[data-bye-week="10"]').get_attribute('data-bye-state'), 'no_gap')
++            panel = page.locator('#upcoming-byes')
++            self.assertLessEqual(page.evaluate('document.documentElement.scrollWidth'), 390)
++            if directory := os.environ.get('DTOS_BYE_SCREENSHOTS'):
++                Path(directory).mkdir(parents=True, exist_ok=True)
++                panel.screenshot(path=str(Path(directory, 'my-team-upcoming-bye-moves-390.png')))
++            row.get_by_role('link', name='View Week 9 Matchups').tap()
++            page.wait_for_url('https://dtos.test/matchups?week=9')
++            page.go_back()
++            self.assertEqual(page.locator('#upcoming-byes').count(), 1)
++
++    def test_rendered_superflex_chain_preserves_legal_slots(self):
++        fixture, data, service, now = self._owner_fixture()
++        install_schedule(service, data, now, byes={'1-r'})
++        with phone(fixture) as page:
++            row = self._render_week(page)
++            self.assertEqual(row.get_attribute('data-bye-state'), 'covered')
++            self.assertIn('Move Example S 1 from Superflex to RB.', row.inner_text())
++            self.assertIn('Start Example BQ 1 at Superflex.', row.inner_text())
++            self._verify_moves(row, data, {'1-r'}, {1: '1-s', 3: '1-bq'})
++
++    def test_rendered_competing_replacement_shortfall_and_incomplete_eligibility(self):
++        fixture, data, service, now = self._owner_fixture(bench_position='RB')
++        install_schedule(service, data, now, byes={'1-r', '1-s'})
++        with phone(fixture) as page:
++            row = self._render_week(page)
++            self.assertEqual(row.get_attribute('data-bye-state'), 'shortfall')
++            self.assertIn('Example R 1 is on bye in RB.', row.inner_text())
++            self.assertIn('Example S 1 is on bye in Superflex.', row.inner_text())
++            self.assertEqual(row.locator('[data-bye-move]').count(), 0)
++            self.assertIn('leaves Superflex unfilled', row.inner_text())
++            extra = dict(id='1-x', player_id='1-x', name='Example X 1', position=None,
++                         fantasy_positions=[], roster_slot='Bench', status='Active')
++            data['teams'][0]['players'].append(extra)
++            data['players']['1-x'] = dict(extra)
++            install_schedule(service, data, now, byes={'1-r', '1-s'})
++            row = self._render_week(page)
++            self.assertEqual(row.get_attribute('data-bye-state'), 'unknown')
++            self.assertEqual(row.locator('[data-bye-starter]').count(), 2)
++            self.assertEqual(row.locator('[data-bye-move]').count(), 0)
++            self.assertNotIn('unfilled', row.inner_text())
++            data['players']['1-x'].update(position='QB', fantasy_positions=['QB'])
++            install_schedule(service, data, now, byes={'1-r', '1-s'})
++            row = self._render_week(page)
++            self.assertEqual(row.get_attribute('data-bye-state'), 'covered')
++            self._verify_moves(row, data, {'1-r', '1-s'}, {1: '1-bq', 3: '1-x'})
++            install_schedule(service, data, now, byes={'1-r', '1-s'}, missing={(9, 2)})
++            row = self._render_week(page)
++            self.assertEqual(row.get_attribute('data-bye-state'), 'unknown')
++            self.assertEqual(row.locator('[data-bye-move]').count(), 0)
++
++    def test_rendered_changed_slots_and_legacy_read_models_are_withheld(self):
++        fixture, data, service, now = self._owner_fixture(bench_position='RB')
++        profile = install_schedule(service, data, now, byes={'1-w'})
++        with phone(fixture) as page:
++            row = self._render_week(page)
++            self.assertIn('Example W 1 is on bye in FLEX.', row.inner_text())
++            current = profile['upcoming_byes']['1']
++            profile['upcoming_byes']['1'] = current['weeks']
++            page.reload()
++            self.assertIn('coverage is unavailable', page.locator('#upcoming-byes').inner_text())
++            profile['upcoming_byes']['1'] = current
++            by_id = {p['id']: p for p in data['teams'][0]['players']}
++            by_id['1-w']['starter_index'], by_id['1-s']['starter_index'] = 3, 2
++            page.reload()
++            self.assertIn('coverage is unavailable', page.locator('#upcoming-byes').inner_text())
++            install_schedule(service, data, now, byes={'1-w'})
++            row = self._render_week(page)
++            self.assertIn('Example W 1 is on bye in Superflex.', row.inner_text())
++            self._verify_moves(row, data, {'1-w'}, {3: '1-bq'})
+diff --git a/tests/test_upcoming_byes.py b/tests/test_upcoming_byes.py
+index 769caffe..18b95eb0 100644
+--- a/tests/test_upcoming_byes.py
++++ b/tests/test_upcoming_byes.py
+@@ -19,8 +19,8 @@ class UpcomingByeTests(unittest.TestCase):
+             'idle': ('BUF', ('K',), True), 'backup': ('KC', ('K',), True),
+             'defense': ('KC', ('DEF',), True),
+         }
+-        row = _week(['K', 'DEF'], roster, {'9:KC': True}, {'idle': 9}, 9, {})
+-        self.assertEqual((row['state'], row['affected'], row['moves']), ('covered', ['K'], [['K', 'backup']]))
++        row = _week(['K', 'DEF'], roster, {'9:KC': True}, {'idle': 9}, 9, {}, starters=['idle', 'defense'])
++        self.assertEqual((row['state'], row['bye_starters'], row['moves']), ('covered', [[0, 'idle']], [[0, 'backup', None]]))
+         self.assertFalse(row['projection_ready'])
+ 
+     def test_two_byes_compete_for_one_replacement(self):
+@@ -29,12 +29,12 @@ class UpcomingByeTests(unittest.TestCase):
+             'wr': ('BUF', ('WR',), True), 'only_sub': ('KC', ('RB', 'WR'), True),
+         }
+         byes = {'rb': 9, 'wr': 9}
+-        row = _week(['QB', 'FLEX', 'SUPER_FLEX'], roster, {'9:KC': True}, byes, 9, {})
++        row = _week(['QB', 'FLEX', 'SUPER_FLEX'], roster, {'9:KC': True}, byes, 9, {}, starters=['qb', 'rb', 'wr'])
+         self.assertEqual(row['state'], 'shortfall')
+         self.assertEqual(len(row['unfilled']), 1)
+-        self.assertEqual(set(row['byes']), set(byes))
++        self.assertEqual({pid for _, pid in row['bye_starters']}, set(byes))
+         roster['unknown_player'] = (None, (), True)
+-        unknown = _week(['QB', 'FLEX', 'SUPER_FLEX'], roster, {'9:KC': True}, byes, 9, {})
++        unknown = _week(['QB', 'FLEX', 'SUPER_FLEX'], roster, {'9:KC': True}, byes, 9, {}, starters=['qb', 'rb', 'wr'])
+         self.assertEqual(unknown['state'], 'unknown')
+         self.assertEqual(unknown['unfilled'], [])
+ 
+@@ -43,9 +43,10 @@ class UpcomingByeTests(unittest.TestCase):
+             'starter-qb': ('KC', ('QB',), True), 'bye-rb': ('BUF', ('RB',), True),
+             'starter-flex': ('KC', ('RB',), True), 'backup-qb': ('KC', ('QB',), True),
+         }
+-        row = _week(['QB', 'RB', 'SUPER_FLEX'], roster, {'9:KC': True}, {'bye-rb': 9}, 9, {'available': True})
++        row = _week(['QB', 'RB', 'SUPER_FLEX'], roster, {'9:KC': True}, {'bye-rb': 9}, 9, {'available': True},
++                    starters=['starter-qb', 'bye-rb', 'starter-flex'])
+         self.assertEqual(row['state'], 'covered')
+-        self.assertEqual(row['moves'], [['RB', 'starter-flex'], ['SUPER_FLEX', 'backup-qb']])
++        self.assertEqual(row['moves'], [[1, 'starter-flex', 2], [2, 'backup-qb', None]])
+ 
+     def test_no_rollover_forecast_outside_the_scheduled_league_season(self):
+         data = {'league': {'sport': 'nfl', 'status': 'in_season'}, 'week': 18}
+@@ -79,7 +80,7 @@ class UpcomingByeTests(unittest.TestCase):
+         with patch('services.global_evidence.retained_global_evidence') as store:
+             store.return_value.read.return_value = facts
+             prepared = prepare_for_data(service, data)
+-        self.assertEqual(prepared['upcoming_byes']['1'][0]['week'], 9)
++        self.assertEqual(prepared['upcoming_byes']['1']['weeks'][0]['week'], 9)
+         with patch('src.core.intelligence.upcoming_byes._fit', side_effect=AssertionError('page used solver')):
+             with sync_playwright() as pw:
+                 browser = launch_chromium(pw, headless=True)

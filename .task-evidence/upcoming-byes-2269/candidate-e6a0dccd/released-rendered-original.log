@@ -1,0 +1,36 @@
+/usr/local/lib/python3.14/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+  from starlette.testclient import TestClient as TestClient  # noqa
+test_released_wr_flex_bye_has_cover_but_omits_the_move (tests.test_upcoming_bye_moves.UpcomingByeMovesTests.test_released_wr_flex_bye_has_cover_but_omits_the_move) ... {"timestamp":"2026-11-19T04:47:18.275203+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":76484608,"limit_bytes":2147483648,"raw_headroom_bytes":2070999040,"clean_inactive_file_bytes":573440,"conditional_file_credit_bytes":286720,"admission_headroom_bytes":2071285760,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-19T04:47:18.277835+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/workspace?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-19T04:47:18.291509+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_admission","request_id":"system","event":"trade_admission","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":76464128,"limit_bytes":2147483648,"raw_headroom_bytes":2071019520,"clean_inactive_file_bytes":573440,"conditional_file_credit_bytes":286720,"admission_headroom_bytes":2071306240,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"recovery":null}}
+{"timestamp":"2026-11-19T04:47:18.363008+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_execution_finished","request_id":"system","event":"trade_execution_finished","duration_ms":73.568,"diagnostic":{"schema":"trade-resource-v1","outcome":"complete"}}
+{"timestamp":"2026-11-19T04:47:18.366636+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/trades/evaluate \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-19T04:47:18.383168+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-19T04:47:18.404110+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+Validation Chromium: /usr/bin/chromium
+Validation Chromium version: 156.0.8078.79
+{"timestamp":"2026-11-19T04:47:20.635463+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/teams/1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-19T04:47:20.819282+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-19T04:47:21.219866+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-19T04:47:21.224127+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"af980036ffd64be3a7c2a1c62c105e08","event":"request_complete","duration_ms":395.271,"status_code":200,"method":"GET","path":"/static/css/contextual_navigation.css"}
+{"timestamp":"2026-11-19T04:47:21.234072+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-19T04:47:21.244235+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-19T04:47:21.245071+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"30fec10700324607882388fa7e69fc4f","event":"request_complete","duration_ms":2.567,"status_code":200,"method":"GET","path":"/static/js/contextual_navigation.js"}
+{"timestamp":"2026-11-19T04:47:21.290193+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-19T04:47:21.300829+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/lineup-review.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-19T04:47:21.309241+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/strategy_session.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+FAIL
+
+======================================================================
+FAIL: test_released_wr_flex_bye_has_cover_but_omits_the_move (tests.test_upcoming_bye_moves.UpcomingByeMovesTests.test_released_wr_flex_bye_has_cover_but_omits_the_move)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_upcoming_bye_moves.py", line 77, in test_released_wr_flex_bye_has_cover_but_omits_the_move
+    self.assertNotIn('Example BQ 1', panel.inner_text())
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'Example BQ 1' unexpectedly found in 'Upcoming bye weeks\n\nWeek 10 · Bye affects QB, RB, FLEX, RB. This roster cannot fill every starting spot.\n\nSee weeks and possible moves\n\nThis plan uses the latest prepared roster and NFL schedule. It shows who fits together under your league’s rules. Check player availability again before setting your Sleeper lineup.\n\nWeek 10 details\n\nExample Q 1, Example R 1, Example S 1, Example BQ 1 on bye in this plan.\n\nOne legal fit leaves QB, RB, RB unfilled.\n\nA complete projected lineup is unavailable for this week.\n\nView Week 10 Matchups\nWeek 9 · No material bye gap identified.\nView Week 9 Matchups'
+
+----------------------------------------------------------------------
+Ran 1 test in 4.830s
+
+FAILED (failures=1)
