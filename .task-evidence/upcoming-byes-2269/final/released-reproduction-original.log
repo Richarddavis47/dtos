@@ -1,0 +1,18 @@
+test_upcoming_bye_moves (unittest.loader._FailedTest.test_upcoming_bye_moves) ... ERROR
+
+======================================================================
+ERROR: test_upcoming_bye_moves (unittest.loader._FailedTest.test_upcoming_bye_moves)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: test_upcoming_bye_moves
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.14/unittest/loader.py", line 137, in loadTestsFromName
+    module = __import__(module_name)
+  File "/app/tests/test_upcoming_bye_moves.py", line 9, in <module>
+    from bs4 import BeautifulSoup
+ModuleNotFoundError: No module named 'bs4'
+
+
+----------------------------------------------------------------------
+Ran 1 test in 0.000s
+
+FAILED (errors=1)

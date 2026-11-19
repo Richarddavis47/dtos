@@ -1,0 +1,3029 @@
+EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE.....E..EEEEEEE.....EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE.EEEEEEEEEEEEE.EEEEEEEEEEEEEEEEEEEEEEEEEEE.EEEEE...EEEEEEEEEEEEEEEEEE.E.EEEEEEEEEE..E.EEEEEEEEEEEEEEEEE.
+======================================================================
+ERROR: test_acquisition_controls_cannot_be_omitted_from_plan (tests.test_release_publisher.AcquisitionPublicationTests.test_acquisition_controls_cannot_be_omitted_from_plan)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 4062, in test_acquisition_controls_cannot_be_omitted_from_plan
+    with tempfile.TemporaryDirectory() as directory:
+         ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmptkt0p55h'
+
+======================================================================
+ERROR: test_recovery_requires_exact_source_completed_resources_and_phone_data (tests.test_release_publisher.AcquisitionPublicationTests.test_recovery_requires_exact_source_completed_resources_and_phone_data)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 4069, in test_recovery_requires_exact_source_completed_resources_and_phone_data
+    with tempfile.TemporaryDirectory() as directory:
+         ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmprk9l5zps'
+
+======================================================================
+ERROR: test_twenty_exact_completed_controls_required (tests.test_release_publisher.AcquisitionPublicationTests.test_twenty_exact_completed_controls_required)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 4014, in test_twenty_exact_completed_controls_required
+    with tempfile.TemporaryDirectory() as directory:
+         ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpvu18i2ds'
+
+======================================================================
+ERROR: test_complete_typed_and_actual_retry_controls (tests.test_release_publisher.ActivationEvidenceIntegrityTests.test_complete_typed_and_actual_retry_controls)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 2545, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmp4j1x6yjh'
+
+======================================================================
+ERROR: test_deferred_retry_is_not_completion (tests.test_release_publisher.ActivationEvidenceIntegrityTests.test_deferred_retry_is_not_completion)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 2545, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmp05k22muj'
+
+======================================================================
+ERROR: test_fixture_cannot_claim_live_access (tests.test_release_publisher.ActivationEvidenceIntegrityTests.test_fixture_cannot_claim_live_access)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 2545, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpghuvclu7'
+
+======================================================================
+ERROR: test_generic_error_is_not_typed_deferral (tests.test_release_publisher.ActivationEvidenceIntegrityTests.test_generic_error_is_not_typed_deferral)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 2545, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpx1q3mzjo'
+
+======================================================================
+ERROR: test_missing_phone_or_changed_account_cannot_pass (tests.test_release_publisher.ActivationEvidenceIntegrityTests.test_missing_phone_or_changed_account_cannot_pass)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 2545, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmplzo6ux8t'
+
+======================================================================
+ERROR: test_wrong_source_cannot_pass (tests.test_release_publisher.ActivationEvidenceIntegrityTests.test_wrong_source_cannot_pass)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 2545, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmp_l43fpls'
+
+======================================================================
+ERROR: test_canonical_checksum_sidecar_cannot_disagree_with_manifest (tests.test_release_publisher.ArchiveIntegrityTests.test_canonical_checksum_sidecar_cannot_disagree_with_manifest)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 19, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmp6_robsvo'
+
+======================================================================
+ERROR: test_complete_local_validation_is_required_in_recovery (tests.test_release_publisher.ArchiveIntegrityTests.test_complete_local_validation_is_required_in_recovery)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 19, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmp1pmp1d9g'
+
+======================================================================
+ERROR: test_complete_source_pinned_evidence (tests.test_release_publisher.ArchiveIntegrityTests.test_complete_source_pinned_evidence)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 19, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmp2wrwlnyn'
+
+======================================================================
+ERROR: test_credential_shaped_payload_holds_publication (tests.test_release_publisher.ArchiveIntegrityTests.test_credential_shaped_payload_holds_publication)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 19, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmp0ifxpizw'
+
+======================================================================
+ERROR: test_failure_skip_and_incomplete_tests_fail (tests.test_release_publisher.ArchiveIntegrityTests.test_failure_skip_and_incomplete_tests_fail)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 19, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpmn68zrn8'
+
+======================================================================
+ERROR: test_incomplete_local_validation_holds_publication (tests.test_release_publisher.ArchiveIntegrityTests.test_incomplete_local_validation_holds_publication)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 19, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmphq5w732p'
+
+======================================================================
+ERROR: test_local_checksum_sidecar_is_required (tests.test_release_publisher.ArchiveIntegrityTests.test_local_checksum_sidecar_is_required)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 19, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpq1txs_1t'
+
+======================================================================
+ERROR: test_local_manifest_and_every_payload_are_required (tests.test_release_publisher.ArchiveIntegrityTests.test_local_manifest_and_every_payload_are_required)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 19, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpw_0kzuvl'
+
+======================================================================
+ERROR: test_missing_gate_completion_fails (tests.test_release_publisher.ArchiveIntegrityTests.test_missing_gate_completion_fails)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 19, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpzd04c27u'
+
+======================================================================
+ERROR: test_older_python_cannot_replace_local_canonical (tests.test_release_publisher.ArchiveIntegrityTests.test_older_python_cannot_replace_local_canonical)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 19, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpb0eh7nyp'
+
+======================================================================
+ERROR: test_older_python_cannot_replace_production_canonical (tests.test_release_publisher.ArchiveIntegrityTests.test_older_python_cannot_replace_production_canonical)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 19, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpcz4hcnqw'
+
+======================================================================
+ERROR: test_path_escape_and_symlink_fail (tests.test_release_publisher.ArchiveIntegrityTests.test_path_escape_and_symlink_fail)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 19, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpxxuoy7ym'
+
+======================================================================
+ERROR: test_payload_changed_after_manifest_fails (tests.test_release_publisher.ArchiveIntegrityTests.test_payload_changed_after_manifest_fails)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 19, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpgba6k185'
+
+======================================================================
+ERROR: test_prior_archive_hash_cannot_be_substituted (tests.test_release_publisher.ArchiveIntegrityTests.test_prior_archive_hash_cannot_be_substituted)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 19, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmp76x7btt0'
+
+======================================================================
+ERROR: test_prior_attempts_require_their_own_source_association_and_payload_manifest (tests.test_release_publisher.ArchiveIntegrityTests.test_prior_attempts_require_their_own_source_association_and_payload_manifest)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 19, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpsj1ycc_e'
+
+======================================================================
+ERROR: test_wrong_source_and_resource_limit_fail (tests.test_release_publisher.ArchiveIntegrityTests.test_wrong_source_and_resource_limit_fail)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 19, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmp93yzhlbg'
+
+======================================================================
+ERROR: test_completed_feature_fail_closed_source_counts_unknown_and_interaction (tests.test_release_publisher.CompletedTradePublisherTests.test_completed_feature_fail_closed_source_counts_unknown_and_interaction) (change='control')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 1843, in test_completed_feature_fail_closed_source_counts_unknown_and_interaction
+    tempfile.TemporaryDirectory() as directory,
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpiot7_xe9'
+
+======================================================================
+ERROR: test_completed_feature_fail_closed_source_counts_unknown_and_interaction (tests.test_release_publisher.CompletedTradePublisherTests.test_completed_feature_fail_closed_source_counts_unknown_and_interaction) (change='source')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 1843, in test_completed_feature_fail_closed_source_counts_unknown_and_interaction
+    tempfile.TemporaryDirectory() as directory,
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpupv70m2m'
+
+======================================================================
+ERROR: test_completed_feature_fail_closed_source_counts_unknown_and_interaction (tests.test_release_publisher.CompletedTradePublisherTests.test_completed_feature_fail_closed_source_counts_unknown_and_interaction) (change='dirty')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 1843, in test_completed_feature_fail_closed_source_counts_unknown_and_interaction
+    tempfile.TemporaryDirectory() as directory,
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmp_musbu4q'
+
+======================================================================
+ERROR: test_completed_feature_fail_closed_source_counts_unknown_and_interaction (tests.test_release_publisher.CompletedTradePublisherTests.test_completed_feature_fail_closed_source_counts_unknown_and_interaction) (change='live')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 1843, in test_completed_feature_fail_closed_source_counts_unknown_and_interaction
+    tempfile.TemporaryDirectory() as directory,
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmp8yhjnc5g'
+
+======================================================================
+ERROR: test_completed_feature_fail_closed_source_counts_unknown_and_interaction (tests.test_release_publisher.CompletedTradePublisherTests.test_completed_feature_fail_closed_source_counts_unknown_and_interaction) (change='unknown_zero')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 1843, in test_completed_feature_fail_closed_source_counts_unknown_and_interaction
+    tempfile.TemporaryDirectory() as directory,
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmppdx90z1p'
+
+======================================================================
+ERROR: test_completed_feature_fail_closed_source_counts_unknown_and_interaction (tests.test_release_publisher.CompletedTradePublisherTests.test_completed_feature_fail_closed_source_counts_unknown_and_interaction) (change='unknown_omitted')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 1843, in test_completed_feature_fail_closed_source_counts_unknown_and_interaction
+    tempfile.TemporaryDirectory() as directory,
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpm8fk9hwn'
+
+======================================================================
+ERROR: test_completed_feature_fail_closed_source_counts_unknown_and_interaction (tests.test_release_publisher.CompletedTradePublisherTests.test_completed_feature_fail_closed_source_counts_unknown_and_interaction) (change='overcount')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 1843, in test_completed_feature_fail_closed_source_counts_unknown_and_interaction
+    tempfile.TemporaryDirectory() as directory,
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmp_5viky_s'
+
+======================================================================
+ERROR: test_completed_feature_fail_closed_source_counts_unknown_and_interaction (tests.test_release_publisher.CompletedTradePublisherTests.test_completed_feature_fail_closed_source_counts_unknown_and_interaction) (change='back')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 1843, in test_completed_feature_fail_closed_source_counts_unknown_and_interaction
+    tempfile.TemporaryDirectory() as directory,
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmp3zfbe3x6'
+
+======================================================================
+ERROR: test_completed_feature_fail_closed_source_counts_unknown_and_interaction (tests.test_release_publisher.CompletedTradePublisherTests.test_completed_feature_fail_closed_source_counts_unknown_and_interaction) (change='touch')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 1843, in test_completed_feature_fail_closed_source_counts_unknown_and_interaction
+    tempfile.TemporaryDirectory() as directory,
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpj4354w4g'
+
+======================================================================
+ERROR: test_completed_feature_fail_closed_source_counts_unknown_and_interaction (tests.test_release_publisher.CompletedTradePublisherTests.test_completed_feature_fail_closed_source_counts_unknown_and_interaction) (change='errors')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 1843, in test_completed_feature_fail_closed_source_counts_unknown_and_interaction
+    tempfile.TemporaryDirectory() as directory,
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmp_xhhcw4z'
+
+======================================================================
+ERROR: test_completed_feature_fail_closed_source_counts_unknown_and_interaction (tests.test_release_publisher.CompletedTradePublisherTests.test_completed_feature_fail_closed_source_counts_unknown_and_interaction) (change='cleanup')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 1843, in test_completed_feature_fail_closed_source_counts_unknown_and_interaction
+    tempfile.TemporaryDirectory() as directory,
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpky4dtolb'
+
+======================================================================
+ERROR: test_completed_feature_fail_closed_source_counts_unknown_and_interaction (tests.test_release_publisher.CompletedTradePublisherTests.test_completed_feature_fail_closed_source_counts_unknown_and_interaction) (change='coverage')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 1843, in test_completed_feature_fail_closed_source_counts_unknown_and_interaction
+    tempfile.TemporaryDirectory() as directory,
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpii3xorw0'
+
+======================================================================
+ERROR: test_completed_feature_fail_closed_source_counts_unknown_and_interaction (tests.test_release_publisher.CompletedTradePublisherTests.test_completed_feature_fail_closed_source_counts_unknown_and_interaction) (change='pick_direction')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 1843, in test_completed_feature_fail_closed_source_counts_unknown_and_interaction
+    tempfile.TemporaryDirectory() as directory,
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpx4tgq9nz'
+
+======================================================================
+ERROR: test_completed_feature_fail_closed_source_counts_unknown_and_interaction (tests.test_release_publisher.CompletedTradePublisherTests.test_completed_feature_fail_closed_source_counts_unknown_and_interaction) (change='raw')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 1843, in test_completed_feature_fail_closed_source_counts_unknown_and_interaction
+    tempfile.TemporaryDirectory() as directory,
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmp2l4w833p'
+
+======================================================================
+ERROR: test_completed_feature_fail_closed_source_counts_unknown_and_interaction (tests.test_release_publisher.CompletedTradePublisherTests.test_completed_feature_fail_closed_source_counts_unknown_and_interaction) (change='partial_zero')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 1843, in test_completed_feature_fail_closed_source_counts_unknown_and_interaction
+    tempfile.TemporaryDirectory() as directory,
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpx16oaylq'
+
+======================================================================
+ERROR: test_completed_feature_fail_closed_source_counts_unknown_and_interaction (tests.test_release_publisher.CompletedTradePublisherTests.test_completed_feature_fail_closed_source_counts_unknown_and_interaction) (change='screenshots')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 1843, in test_completed_feature_fail_closed_source_counts_unknown_and_interaction
+    tempfile.TemporaryDirectory() as directory,
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmp27v_a61x'
+
+======================================================================
+ERROR: test_new_browser_namespace_does_not_replace_original_history_screenshots (tests.test_release_publisher.CompletedTradePublisherTests.test_new_browser_namespace_does_not_replace_original_history_screenshots)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 1900, in test_new_browser_namespace_does_not_replace_original_history_screenshots
+    with tempfile.TemporaryDirectory() as directory:
+         ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpg0cmu_hk'
+
+======================================================================
+ERROR: test_rejected_context_has_no_upload_or_tag_side_effect (tests.test_release_publisher.ContextAdmissionTests.test_rejected_context_has_no_upload_or_tag_side_effect)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 427, in test_rejected_context_has_no_upload_or_tag_side_effect
+    tempfile.TemporaryDirectory() as folder,
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmp2az7h0r4'
+
+======================================================================
+ERROR: test_only_complete_exact_source_browser_evidence_is_accepted (tests.test_release_publisher.CurrentHistoryArtifactTests.test_only_complete_exact_source_browser_evidence_is_accepted)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 876, in test_only_complete_exact_source_browser_evidence_is_accepted
+    with tempfile.TemporaryDirectory() as folder:
+         ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpegu6r1kg'
+
+======================================================================
+ERROR: test_exact_coverage_missing_safety_and_rendered_controls_are_required (tests.test_release_publisher.CurrentProductionIntegrityTests.test_exact_coverage_missing_safety_and_rendered_controls_are_required)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 1429, in test_exact_coverage_missing_safety_and_rendered_controls_are_required
+    with tempfile.TemporaryDirectory() as folder:
+         ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpyy0pr5uu'
+
+======================================================================
+ERROR: test_changed_png_bytes_and_missing_qualification_fail (tests.test_release_publisher.CustomerAcceptancePublicationTests.test_changed_png_bytes_and_missing_qualification_fail)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 4718, in setUp
+    helper.setUp()
+    ~~~~~~~~~~~~^^
+  File "/app/tests/test_release_publisher.py", line 4218, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpqpq_kokd'
+
+======================================================================
+ERROR: test_complete_corrective_proof (tests.test_release_publisher.CustomerAcceptancePublicationTests.test_complete_corrective_proof)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 4718, in setUp
+    helper.setUp()
+    ~~~~~~~~~~~~^^
+  File "/app/tests/test_release_publisher.py", line 4218, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpuu_zmcx6'
+
+======================================================================
+ERROR: test_missing_source_or_viewport_is_rejected (tests.test_release_publisher.CustomerAcceptancePublicationTests.test_missing_source_or_viewport_is_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 4718, in setUp
+    helper.setUp()
+    ~~~~~~~~~~~~^^
+  File "/app/tests/test_release_publisher.py", line 4218, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpja9n1exr'
+
+======================================================================
+ERROR: test_json_zero_integer_and_float_are_same_exact_score_not_boolean (tests.test_release_publisher.CustomerActualContractFormattingTests.test_json_zero_integer_and_float_are_same_exact_score_not_boolean)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 4218, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmp1joxs0wj'
+
+======================================================================
+ERROR: test_primary_copy_can_remain_same_size_without_invented_larger_measurement (tests.test_release_publisher.CustomerActualContractFormattingTests.test_primary_copy_can_remain_same_size_without_invented_larger_measurement)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 4218, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmp_c6s1ltw'
+
+======================================================================
+ERROR: test_all_families_four_sizes_states_and_matched_visuals_required (tests.test_release_publisher.CustomerExperiencePublicationTests.test_all_families_four_sizes_states_and_matched_visuals_required)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 4218, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpkibbudz8'
+
+======================================================================
+ERROR: test_equal_fabricated_summary_cannot_override_the_retained_missing_value (tests.test_release_publisher.CustomerExperiencePublicationTests.test_equal_fabricated_summary_cannot_override_the_retained_missing_value)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 4218, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmp5b9o5o0p'
+
+======================================================================
+ERROR: test_exact_new_test_ids_must_finish_once_in_both_canonical_streams (tests.test_release_publisher.CustomerExperiencePublicationTests.test_exact_new_test_ids_must_finish_once_in_both_canonical_streams)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 4218, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpp7bji3bt'
+
+======================================================================
+ERROR: test_hidden_risk_extra_http_or_lost_state_cannot_pass (tests.test_release_publisher.CustomerExperiencePublicationTests.test_hidden_risk_extra_http_or_lost_state_cannot_pass)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 4218, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpfpdkr27g'
+
+======================================================================
+ERROR: test_missing_is_not_zero_and_decision_is_not_promoted (tests.test_release_publisher.CustomerExperiencePublicationTests.test_missing_is_not_zero_and_decision_is_not_promoted)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 4218, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpmdinm8mq'
+
+======================================================================
+ERROR: test_missing_page_size_or_expanded_evidence_cannot_pass (tests.test_release_publisher.CustomerExperiencePublicationTests.test_missing_page_size_or_expanded_evidence_cannot_pass)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 4218, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmp399w0pqb'
+
+======================================================================
+ERROR: test_missing_screenshots_checksum_or_visual_review_cannot_pass (tests.test_release_publisher.CustomerExperiencePublicationTests.test_missing_screenshots_checksum_or_visual_review_cannot_pass)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 4218, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpzzihmp0x'
+
+======================================================================
+ERROR: test_missing_states_or_unknown_qualifications_cannot_pass (tests.test_release_publisher.CustomerExperiencePublicationTests.test_missing_states_or_unknown_qualifications_cannot_pass)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 4218, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpi5hmh90d'
+
+======================================================================
+ERROR: test_resolved_data_loss_requires_a_matched_regression (tests.test_release_publisher.CustomerExperiencePublicationTests.test_resolved_data_loss_requires_a_matched_regression)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 4218, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmptnkmetxn'
+
+======================================================================
+ERROR: test_smaller_fonts_cannot_substitute_for_compact_cards (tests.test_release_publisher.CustomerExperiencePublicationTests.test_smaller_fonts_cannot_substitute_for_compact_cards)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 4218, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmp7mq37_1k'
+
+======================================================================
+ERROR: test_unchanged_or_only_slightly_shorter_cards_cannot_pass (tests.test_release_publisher.CustomerExperiencePublicationTests.test_unchanged_or_only_slightly_shorter_cards_cannot_pass)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 4218, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpax3squx5'
+
+======================================================================
+ERROR: test_unknown_publication_state_is_explicitly_unsupported_not_complete (tests.test_release_publisher.CustomerExperiencePublicationTests.test_unknown_publication_state_is_explicitly_unsupported_not_complete)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 4218, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmprmv12lli'
+
+======================================================================
+ERROR: test_wrong_source_or_unqualified_alias_is_rejected (tests.test_release_publisher.CustomerExperiencePublicationTests.test_wrong_source_or_unqualified_alias_is_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 4218, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpf04_jqul'
+
+======================================================================
+ERROR: test_actual_regression_population_and_required_bound_case (tests.test_release_publisher.DraftCapitalEvidenceTests.test_actual_regression_population_and_required_bound_case)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 3291, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmp4shqv2xz'
+
+======================================================================
+ERROR: test_complete_two_alternatives_at_both_league_shapes_and_four_sizes (tests.test_release_publisher.DraftCapitalEvidenceTests.test_complete_two_alternatives_at_both_league_shapes_and_four_sizes)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 3291, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmp37z2ycch'
+
+======================================================================
+ERROR: test_disclosure_requests_are_rejected (tests.test_release_publisher.DraftCapitalEvidenceTests.test_disclosure_requests_are_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 3291, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpr4gp_6jy'
+
+======================================================================
+ERROR: test_distinct_original_firsts_cannot_be_replaced_by_another_scope (tests.test_release_publisher.DraftCapitalEvidenceTests.test_distinct_original_firsts_cannot_be_replaced_by_another_scope)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 3291, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmp09_aepeg'
+
+======================================================================
+ERROR: test_foreign_source_is_rejected (tests.test_release_publisher.DraftCapitalEvidenceTests.test_foreign_source_is_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 3291, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmph6m62z8u'
+
+======================================================================
+ERROR: test_mismatched_phone_capture_is_rejected (tests.test_release_publisher.DraftCapitalEvidenceTests.test_mismatched_phone_capture_is_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 3291, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpt96c8mjf'
+
+======================================================================
+ERROR: test_missing_alternative_is_rejected (tests.test_release_publisher.DraftCapitalEvidenceTests.test_missing_alternative_is_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 3291, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpcrnamdhn'
+
+======================================================================
+ERROR: test_truncated_record_is_rejected (tests.test_release_publisher.DraftCapitalEvidenceTests.test_truncated_record_is_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 3291, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpygrpflpy'
+
+======================================================================
+ERROR: test_actual_test_population_needs_completion_without_failure (tests.test_release_publisher.FranchiseProgressPublicationTests.test_actual_test_population_needs_completion_without_failure) (change=None)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 3854, in test_actual_test_population_needs_completion_without_failure
+    with self.subTest(change=change), tempfile.TemporaryDirectory() as folder:
+                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpc6fg42xu'
+
+======================================================================
+ERROR: test_actual_test_population_needs_completion_without_failure (tests.test_release_publisher.FranchiseProgressPublicationTests.test_actual_test_population_needs_completion_without_failure) (change='missing_stop')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 3854, in test_actual_test_population_needs_completion_without_failure
+    with self.subTest(change=change), tempfile.TemporaryDirectory() as folder:
+                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpgnbxvkxc'
+
+======================================================================
+ERROR: test_actual_test_population_needs_completion_without_failure (tests.test_release_publisher.FranchiseProgressPublicationTests.test_actual_test_population_needs_completion_without_failure) (change='duplicate')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 3854, in test_actual_test_population_needs_completion_without_failure
+    with self.subTest(change=change), tempfile.TemporaryDirectory() as folder:
+                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmptm5ej1it'
+
+======================================================================
+ERROR: test_actual_test_population_needs_completion_without_failure (tests.test_release_publisher.FranchiseProgressPublicationTests.test_actual_test_population_needs_completion_without_failure) (change='failure')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 3854, in test_actual_test_population_needs_completion_without_failure
+    with self.subTest(change=change), tempfile.TemporaryDirectory() as folder:
+                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpjg0yl_kq'
+
+======================================================================
+ERROR: test_actual_test_population_needs_completion_without_failure (tests.test_release_publisher.FranchiseProgressPublicationTests.test_actual_test_population_needs_completion_without_failure) (change='plan')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 3854, in test_actual_test_population_needs_completion_without_failure
+    with self.subTest(change=change), tempfile.TemporaryDirectory() as folder:
+                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpfiyeb7tw'
+
+======================================================================
+ERROR: test_partial_unknown_and_conversion_boundaries_cannot_be_promoted (tests.test_release_publisher.FranchiseProgressPublicationTests.test_partial_unknown_and_conversion_boundaries_cannot_be_promoted) (change=None)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 3938, in test_partial_unknown_and_conversion_boundaries_cannot_be_promoted
+    with self.subTest(change=change), tempfile.TemporaryDirectory() as folder:
+                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpuuad4gr8'
+
+======================================================================
+ERROR: test_partial_unknown_and_conversion_boundaries_cannot_be_promoted (tests.test_release_publisher.FranchiseProgressPublicationTests.test_partial_unknown_and_conversion_boundaries_cannot_be_promoted) (change='gross')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 3938, in test_partial_unknown_and_conversion_boundaries_cannot_be_promoted
+    with self.subTest(change=change), tempfile.TemporaryDirectory() as folder:
+                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmph42qkkzl'
+
+======================================================================
+ERROR: test_partial_unknown_and_conversion_boundaries_cannot_be_promoted (tests.test_release_publisher.FranchiseProgressPublicationTests.test_partial_unknown_and_conversion_boundaries_cannot_be_promoted) (change='net')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 3938, in test_partial_unknown_and_conversion_boundaries_cannot_be_promoted
+    with self.subTest(change=change), tempfile.TemporaryDirectory() as folder:
+                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmp8zzxl7ib'
+
+======================================================================
+ERROR: test_partial_unknown_and_conversion_boundaries_cannot_be_promoted (tests.test_release_publisher.FranchiseProgressPublicationTests.test_partial_unknown_and_conversion_boundaries_cannot_be_promoted) (change='unknown')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 3938, in test_partial_unknown_and_conversion_boundaries_cannot_be_promoted
+    with self.subTest(change=change), tempfile.TemporaryDirectory() as folder:
+                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmp7ne9apbh'
+
+======================================================================
+ERROR: test_partial_unknown_and_conversion_boundaries_cannot_be_promoted (tests.test_release_publisher.FranchiseProgressPublicationTests.test_partial_unknown_and_conversion_boundaries_cannot_be_promoted) (change='partial')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 3938, in test_partial_unknown_and_conversion_boundaries_cannot_be_promoted
+    with self.subTest(change=change), tempfile.TemporaryDirectory() as folder:
+                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpxj_5upx8'
+
+======================================================================
+ERROR: test_partial_unknown_and_conversion_boundaries_cannot_be_promoted (tests.test_release_publisher.FranchiseProgressPublicationTests.test_partial_unknown_and_conversion_boundaries_cannot_be_promoted) (change='player')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 3938, in test_partial_unknown_and_conversion_boundaries_cannot_be_promoted
+    with self.subTest(change=change), tempfile.TemporaryDirectory() as folder:
+                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpfaa4vwfk'
+
+======================================================================
+ERROR: test_partial_unknown_and_conversion_boundaries_cannot_be_promoted (tests.test_release_publisher.FranchiseProgressPublicationTests.test_partial_unknown_and_conversion_boundaries_cannot_be_promoted) (change='conversion')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 3938, in test_partial_unknown_and_conversion_boundaries_cannot_be_promoted
+    with self.subTest(change=change), tempfile.TemporaryDirectory() as folder:
+                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpoe_5mgjo'
+
+======================================================================
+ERROR: test_partial_unknown_and_conversion_boundaries_cannot_be_promoted (tests.test_release_publisher.FranchiseProgressPublicationTests.test_partial_unknown_and_conversion_boundaries_cannot_be_promoted) (change='bound')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 3938, in test_partial_unknown_and_conversion_boundaries_cannot_be_promoted
+    with self.subTest(change=change), tempfile.TemporaryDirectory() as folder:
+                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmp19ldf_n0'
+
+======================================================================
+ERROR: test_phone_journey_requires_period_and_conversion_return (tests.test_release_publisher.FranchiseProgressPublicationTests.test_phone_journey_requires_period_and_conversion_return) (change=None)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 3888, in test_phone_journey_requires_period_and_conversion_return
+    with self.subTest(change=change), tempfile.TemporaryDirectory() as folder:
+                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmp0zknakqb'
+
+======================================================================
+ERROR: test_phone_journey_requires_period_and_conversion_return (tests.test_release_publisher.FranchiseProgressPublicationTests.test_phone_journey_requires_period_and_conversion_return) (change='period')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 3888, in test_phone_journey_requires_period_and_conversion_return
+    with self.subTest(change=change), tempfile.TemporaryDirectory() as folder:
+                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpi640258c'
+
+======================================================================
+ERROR: test_phone_journey_requires_period_and_conversion_return (tests.test_release_publisher.FranchiseProgressPublicationTests.test_phone_journey_requires_period_and_conversion_return) (change='conversion')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 3888, in test_phone_journey_requires_period_and_conversion_return
+    with self.subTest(change=change), tempfile.TemporaryDirectory() as folder:
+                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmptr4qpj5m'
+
+======================================================================
+ERROR: test_phone_journey_requires_period_and_conversion_return (tests.test_release_publisher.FranchiseProgressPublicationTests.test_phone_journey_requires_period_and_conversion_return) (change='gross')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 3888, in test_phone_journey_requires_period_and_conversion_return
+    with self.subTest(change=change), tempfile.TemporaryDirectory() as folder:
+                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmps2t1y284'
+
+======================================================================
+ERROR: test_phone_journey_requires_period_and_conversion_return (tests.test_release_publisher.FranchiseProgressPublicationTests.test_phone_journey_requires_period_and_conversion_return) (change='unknown')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 3888, in test_phone_journey_requires_period_and_conversion_return
+    with self.subTest(change=change), tempfile.TemporaryDirectory() as folder:
+                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmp4vurr9r8'
+
+======================================================================
+ERROR: test_all_four_distinct_viewports_and_images_are_required (tests.test_release_publisher.FrontOfficeWorkflowIntegrityTests.test_all_four_distinct_viewports_and_images_are_required)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 2706, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmp53cnday4'
+
+======================================================================
+ERROR: test_comparison_source_package_order_and_supported_numbers_are_required (tests.test_release_publisher.FrontOfficeWorkflowIntegrityTests.test_comparison_source_package_order_and_supported_numbers_are_required)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 2706, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpngxmfkkv'
+
+======================================================================
+ERROR: test_distinct_actual_league_configurations_are_required (tests.test_release_publisher.FrontOfficeWorkflowIntegrityTests.test_distinct_actual_league_configurations_are_required)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 2706, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpw_pwsrhv'
+
+======================================================================
+ERROR: test_effective_and_prior_protections_cannot_be_relabelled (tests.test_release_publisher.FrontOfficeWorkflowIntegrityTests.test_effective_and_prior_protections_cannot_be_relabelled)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 2706, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpgh1dpiys'
+
+======================================================================
+ERROR: test_explicit_zero_lineup_change_remains_supported_recorded_evidence (tests.test_release_publisher.FrontOfficeWorkflowIntegrityTests.test_explicit_zero_lineup_change_remains_supported_recorded_evidence)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 2706, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmp2k8hmyy0'
+
+======================================================================
+ERROR: test_extra_search_or_comparison_and_missing_replacement_requests_block (tests.test_release_publisher.FrontOfficeWorkflowIntegrityTests.test_extra_search_or_comparison_and_missing_replacement_requests_block)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 2706, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpewkbcnor'
+
+======================================================================
+ERROR: test_fingerprint_reason_and_editable_choice_are_bound (tests.test_release_publisher.FrontOfficeWorkflowIntegrityTests.test_fingerprint_reason_and_editable_choice_are_bound)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 2706, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpo_vuaruj'
+
+======================================================================
+ERROR: test_foreign_or_dirty_source_and_claimed_live_scope_block (tests.test_release_publisher.FrontOfficeWorkflowIntegrityTests.test_foreign_or_dirty_source_and_claimed_live_scope_block)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 2706, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpkb8buja_'
+
+======================================================================
+ERROR: test_history_reload_replacement_and_league_clearing_are_required (tests.test_release_publisher.FrontOfficeWorkflowIntegrityTests.test_history_reload_replacement_and_league_clearing_are_required)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 2706, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmp0wsgcawn'
+
+======================================================================
+ERROR: test_independent_evaluate_locks_and_authorized_scope_are_required (tests.test_release_publisher.FrontOfficeWorkflowIntegrityTests.test_independent_evaluate_locks_and_authorized_scope_are_required)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 2706, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpdiq_lh_v'
+
+======================================================================
+ERROR: test_missing_native_population_and_leaked_or_promoted_offers_block (tests.test_release_publisher.FrontOfficeWorkflowIntegrityTests.test_missing_native_population_and_leaked_or_promoted_offers_block)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 2706, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpfqmc14gr'
+
+======================================================================
+ERROR: test_missing_near_miss_verdict_is_retained_without_becoming_an_offer (tests.test_release_publisher.FrontOfficeWorkflowIntegrityTests.test_missing_near_miss_verdict_is_retained_without_becoming_an_offer)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 2706, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmp_bo5exyg'
+
+======================================================================
+ERROR: test_missing_null_empty_or_malformed_pools_never_prove_exclusion (tests.test_release_publisher.FrontOfficeWorkflowIntegrityTests.test_missing_null_empty_or_malformed_pools_never_prove_exclusion)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 2706, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmp1z533lny'
+
+======================================================================
+ERROR: test_missing_overall_verdict_and_partial_market_do_not_erase_supported_lineup (tests.test_release_publisher.FrontOfficeWorkflowIntegrityTests.test_missing_overall_verdict_and_partial_market_do_not_erase_supported_lineup)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 2706, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmp4op2v1cv'
+
+======================================================================
+ERROR: test_native_qualification_is_preserved_without_requiring_endorsement (tests.test_release_publisher.FrontOfficeWorkflowIntegrityTests.test_native_qualification_is_preserved_without_requiring_endorsement)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 2706, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpcdyrwytr'
+
+======================================================================
+ERROR: test_recovery_uses_the_same_guard (tests.test_release_publisher.FrontOfficeWorkflowIntegrityTests.test_recovery_uses_the_same_guard)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 2706, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmphmlvd_1w'
+
+======================================================================
+ERROR: test_zero_offers_are_valid_with_actual_nonempty_exclusion_pools (tests.test_release_publisher.FrontOfficeWorkflowIntegrityTests.test_zero_offers_are_valid_with_actual_nonempty_exclusion_pools)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 2706, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmp2ig6fdvc'
+
+======================================================================
+ERROR: test_exact_source_complete_chain_context_and_cleanup_are_required (tests.test_release_publisher.HistoryFollowThroughArtifactTests.test_exact_source_complete_chain_context_and_cleanup_are_required)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 990, in test_exact_source_complete_chain_context_and_cleanup_are_required
+    with tempfile.TemporaryDirectory() as folder:
+         ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpyg1ws_ze'
+
+======================================================================
+ERROR: test_real_execution_deferral_recovery_ownership_and_liveness_are_required (tests.test_release_publisher.LeagueEntryIntegrityTests.test_real_execution_deferral_recovery_ownership_and_liveness_are_required)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 631, in test_real_execution_deferral_recovery_ownership_and_liveness_are_required
+    with tempfile.TemporaryDirectory() as folder:
+         ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmp353a_hsi'
+
+======================================================================
+ERROR: test_complete_cache_transition_compatibility_and_cleanup_required (tests.test_release_publisher.MarketHistoryArtifactTests.test_complete_cache_transition_compatibility_and_cleanup_required)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 1100, in test_complete_cache_transition_compatibility_and_cleanup_required
+    with tempfile.TemporaryDirectory() as folder:
+         ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmp7bveo8f1'
+
+======================================================================
+ERROR: test_complete_source_bound_roundtrip_required (tests.test_release_publisher.MarketRosterEvidenceGuards.test_complete_source_bound_roundtrip_required)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 3517, in setUp
+    self.directory = tempfile.TemporaryDirectory()
+                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpdntwks99'
+
+======================================================================
+ERROR: test_implicit_search_or_lost_state_rejected (tests.test_release_publisher.MarketRosterEvidenceGuards.test_implicit_search_or_lost_state_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 3517, in setUp
+    self.directory = tempfile.TemporaryDirectory()
+                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmppdqq_27b'
+
+======================================================================
+ERROR: test_mismatched_phone_capture_rejected (tests.test_release_publisher.MarketRosterEvidenceGuards.test_mismatched_phone_capture_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 3517, in setUp
+    self.directory = tempfile.TemporaryDirectory()
+                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpzmbys_o8'
+
+======================================================================
+ERROR: test_missing_stale_protection_rejected (tests.test_release_publisher.MarketRosterEvidenceGuards.test_missing_stale_protection_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 3517, in setUp
+    self.directory = tempfile.TemporaryDirectory()
+                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpi1k1uk4v'
+
+======================================================================
+ERROR: test_partial_viewport_population_rejected (tests.test_release_publisher.MarketRosterEvidenceGuards.test_partial_viewport_population_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 3517, in setUp
+    self.directory = tempfile.TemporaryDirectory()
+                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpwq7ctebt'
+
+======================================================================
+ERROR: test_touch_and_keyboard_proof_required (tests.test_release_publisher.MarketRosterEvidenceGuards.test_touch_and_keyboard_proof_required)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 3517, in setUp
+    self.directory = tempfile.TemporaryDirectory()
+                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpmofzl79m'
+
+======================================================================
+ERROR: test_wrong_source_rejected (tests.test_release_publisher.MarketRosterEvidenceGuards.test_wrong_source_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 3517, in setUp
+    self.directory = tempfile.TemporaryDirectory()
+                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpax8qvp46'
+
+======================================================================
+ERROR: test_complete_execution_population (tests.test_release_publisher.MarketRosterTestPopulationGuards.test_complete_execution_population)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 3652, in setUp
+    self.tmp = tempfile.TemporaryDirectory()
+               ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmp_prlqflt'
+
+======================================================================
+ERROR: test_duplicate_execution_rejected (tests.test_release_publisher.MarketRosterTestPopulationGuards.test_duplicate_execution_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 3652, in setUp
+    self.tmp = tempfile.TemporaryDirectory()
+               ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpaejrghjd'
+
+======================================================================
+ERROR: test_missing_completion_rejected (tests.test_release_publisher.MarketRosterTestPopulationGuards.test_missing_completion_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 3652, in setUp
+    self.tmp = tempfile.TemporaryDirectory()
+               ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmph5l92sy7'
+
+======================================================================
+ERROR: test_unrelated_tests_do_not_fill_population (tests.test_release_publisher.MarketRosterTestPopulationGuards.test_unrelated_tests_do_not_fill_population)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 3652, in setUp
+    self.tmp = tempfile.TemporaryDirectory()
+               ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmp85on4kob'
+
+======================================================================
+ERROR: test_changed_child_original_is_rejected (tests.test_release_publisher.NestedPriorEvidenceTests.test_changed_child_original_is_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 4800, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpn1t03pqy'
+
+======================================================================
+ERROR: test_checked_child_preserves_original_records (tests.test_release_publisher.NestedPriorEvidenceTests.test_checked_child_preserves_original_records)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 4800, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpdq93q3t1'
+
+======================================================================
+ERROR: test_child_source_mismatch_is_rejected (tests.test_release_publisher.NestedPriorEvidenceTests.test_child_source_mismatch_is_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 4800, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpkjaewcp_'
+
+======================================================================
+ERROR: test_second_nested_layer_is_rejected (tests.test_release_publisher.NestedPriorEvidenceTests.test_second_nested_layer_is_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 4800, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmppt5a_zx8'
+
+======================================================================
+ERROR: test_unsafe_child_path_is_rejected (tests.test_release_publisher.NestedPriorEvidenceTests.test_unsafe_child_path_is_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 4800, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpy2sukjy7'
+
+======================================================================
+ERROR: test_all_ten_real_normal_execution_controls_are_required (tests.test_release_publisher.NormalExecutionRecoveryTests.test_all_ten_real_normal_execution_controls_are_required)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 4086, in test_all_ten_real_normal_execution_controls_are_required
+    with tempfile.TemporaryDirectory() as folder:
+         ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpxxmiurw6'
+
+======================================================================
+ERROR: test_missing_duplicate_or_failed_execution_cannot_be_promoted (tests.test_release_publisher.NormalExecutionRecoveryTests.test_missing_duplicate_or_failed_execution_cannot_be_promoted) (fault='missing')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 4101, in test_missing_duplicate_or_failed_execution_cannot_be_promoted
+    with self.subTest(fault=fault), tempfile.TemporaryDirectory() as folder:
+                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpiutwrjh2'
+
+======================================================================
+ERROR: test_missing_duplicate_or_failed_execution_cannot_be_promoted (tests.test_release_publisher.NormalExecutionRecoveryTests.test_missing_duplicate_or_failed_execution_cannot_be_promoted) (fault='duplicate')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 4101, in test_missing_duplicate_or_failed_execution_cannot_be_promoted
+    with self.subTest(fault=fault), tempfile.TemporaryDirectory() as folder:
+                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpdy20be54'
+
+======================================================================
+ERROR: test_missing_duplicate_or_failed_execution_cannot_be_promoted (tests.test_release_publisher.NormalExecutionRecoveryTests.test_missing_duplicate_or_failed_execution_cannot_be_promoted) (fault='error')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 4101, in test_missing_duplicate_or_failed_execution_cannot_be_promoted
+    with self.subTest(fault=fault), tempfile.TemporaryDirectory() as folder:
+                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmp9pj3ovs6'
+
+======================================================================
+ERROR: test_missing_duplicate_or_failed_execution_cannot_be_promoted (tests.test_release_publisher.NormalExecutionRecoveryTests.test_missing_duplicate_or_failed_execution_cannot_be_promoted) (fault='skip')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 4101, in test_missing_duplicate_or_failed_execution_cannot_be_promoted
+    with self.subTest(fault=fault), tempfile.TemporaryDirectory() as folder:
+                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpou3136i2'
+
+======================================================================
+ERROR: test_missing_duplicate_or_failed_execution_cannot_be_promoted (tests.test_release_publisher.NormalExecutionRecoveryTests.test_missing_duplicate_or_failed_execution_cannot_be_promoted) (fault='old_module')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 4101, in test_missing_duplicate_or_failed_execution_cannot_be_promoted
+    with self.subTest(fault=fault), tempfile.TemporaryDirectory() as folder:
+                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpdrfduyv3'
+
+======================================================================
+ERROR: test_normal_execution_population_cannot_be_omitted_from_plan (tests.test_release_publisher.NormalExecutionRecoveryTests.test_normal_execution_population_cannot_be_omitted_from_plan)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 4125, in test_normal_execution_population_cannot_be_omitted_from_plan
+    with tempfile.TemporaryDirectory() as folder:
+         ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmprwglz8m4'
+
+======================================================================
+ERROR: test_complete_source_bound_native_controls (tests.test_release_publisher.OfferComparisonEvidenceTests.test_complete_source_bound_native_controls)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 2164, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmp5d4yr6dj'
+
+======================================================================
+ERROR: test_extra_http_or_mutated_draft_blocks (tests.test_release_publisher.OfferComparisonEvidenceTests.test_extra_http_or_mutated_draft_blocks)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 2164, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmp76h_4_gd'
+
+======================================================================
+ERROR: test_fabricated_gain_or_cost_controls_block (tests.test_release_publisher.OfferComparisonEvidenceTests.test_fabricated_gain_or_cost_controls_block)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 2164, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpe6b8gkwp'
+
+======================================================================
+ERROR: test_fixture_cannot_claim_physical_or_live_scope (tests.test_release_publisher.OfferComparisonEvidenceTests.test_fixture_cannot_claim_physical_or_live_scope)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 2164, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpnotrmven'
+
+======================================================================
+ERROR: test_missing_depth_stale_scope_and_custom_controls_block (tests.test_release_publisher.OfferComparisonEvidenceTests.test_missing_depth_stale_scope_and_custom_controls_block)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 2164, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpxc7tttui'
+
+======================================================================
+ERROR: test_missing_real_evaluation_or_qualified_control_blocks (tests.test_release_publisher.OfferComparisonEvidenceTests.test_missing_real_evaluation_or_qualified_control_blocks)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 2164, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmp50wh47u8'
+
+======================================================================
+ERROR: test_missing_viewport_or_screenshot_blocks (tests.test_release_publisher.OfferComparisonEvidenceTests.test_missing_viewport_or_screenshot_blocks)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 2164, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmp5ibxjuti'
+
+======================================================================
+ERROR: test_source_revision_or_dirty_tree_cannot_pass (tests.test_release_publisher.OfferComparisonEvidenceTests.test_source_revision_or_dirty_tree_cannot_pass)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 2164, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpzl6g7h1l'
+
+======================================================================
+ERROR: test_extra_work_lost_draft_filters_preview_or_exact_picks_block_publication (tests.test_release_publisher.PartnerHistoryLinkIntegrityTests.test_extra_work_lost_draft_filters_preview_or_exact_picks_block_publication) (change=<function PartnerHistoryLinkIntegrityTests.test_extra_work_lost_draft_filters_preview_or_exact_picks_block_publication.<locals>.<lambda> at 0x7fdc8a4f4ca0>)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 2026, in test_extra_work_lost_draft_filters_preview_or_exact_picks_block_publication
+    self.verify(change)
+    ~~~~~~~~~~~^^^^^^^^
+  File "/app/tests/test_release_publisher.py", line 1991, in verify
+    with tempfile.TemporaryDirectory() as folder:
+         ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpez3v63s0'
+
+======================================================================
+ERROR: test_extra_work_lost_draft_filters_preview_or_exact_picks_block_publication (tests.test_release_publisher.PartnerHistoryLinkIntegrityTests.test_extra_work_lost_draft_filters_preview_or_exact_picks_block_publication) (change=<function PartnerHistoryLinkIntegrityTests.test_extra_work_lost_draft_filters_preview_or_exact_picks_block_publication.<locals>.<lambda> at 0x7fdc8a4f4bf0>)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 2026, in test_extra_work_lost_draft_filters_preview_or_exact_picks_block_publication
+    self.verify(change)
+    ~~~~~~~~~~~^^^^^^^^
+  File "/app/tests/test_release_publisher.py", line 1991, in verify
+    with tempfile.TemporaryDirectory() as folder:
+         ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpu0q5piof'
+
+======================================================================
+ERROR: test_extra_work_lost_draft_filters_preview_or_exact_picks_block_publication (tests.test_release_publisher.PartnerHistoryLinkIntegrityTests.test_extra_work_lost_draft_filters_preview_or_exact_picks_block_publication) (change=<function PartnerHistoryLinkIntegrityTests.test_extra_work_lost_draft_filters_preview_or_exact_picks_block_publication.<locals>.<lambda> at 0x7fdc8a4f4670>)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 2026, in test_extra_work_lost_draft_filters_preview_or_exact_picks_block_publication
+    self.verify(change)
+    ~~~~~~~~~~~^^^^^^^^
+  File "/app/tests/test_release_publisher.py", line 1991, in verify
+    with tempfile.TemporaryDirectory() as folder:
+         ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmphb1acumb'
+
+======================================================================
+ERROR: test_extra_work_lost_draft_filters_preview_or_exact_picks_block_publication (tests.test_release_publisher.PartnerHistoryLinkIntegrityTests.test_extra_work_lost_draft_filters_preview_or_exact_picks_block_publication) (change=<function PartnerHistoryLinkIntegrityTests.test_extra_work_lost_draft_filters_preview_or_exact_picks_block_publication.<locals>.<lambda> at 0x7fdc8a4f4d50>)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 2026, in test_extra_work_lost_draft_filters_preview_or_exact_picks_block_publication
+    self.verify(change)
+    ~~~~~~~~~~~^^^^^^^^
+  File "/app/tests/test_release_publisher.py", line 1991, in verify
+    with tempfile.TemporaryDirectory() as folder:
+         ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpsn_r7k8g'
+
+======================================================================
+ERROR: test_extra_work_lost_draft_filters_preview_or_exact_picks_block_publication (tests.test_release_publisher.PartnerHistoryLinkIntegrityTests.test_extra_work_lost_draft_filters_preview_or_exact_picks_block_publication) (change=<function PartnerHistoryLinkIntegrityTests.test_extra_work_lost_draft_filters_preview_or_exact_picks_block_publication.<locals>.<lambda> at 0x7fdc8a4f4e00>)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 2026, in test_extra_work_lost_draft_filters_preview_or_exact_picks_block_publication
+    self.verify(change)
+    ~~~~~~~~~~~^^^^^^^^
+  File "/app/tests/test_release_publisher.py", line 1991, in verify
+    with tempfile.TemporaryDirectory() as folder:
+         ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmphedw3omv'
+
+======================================================================
+ERROR: test_extra_work_lost_draft_filters_preview_or_exact_picks_block_publication (tests.test_release_publisher.PartnerHistoryLinkIntegrityTests.test_extra_work_lost_draft_filters_preview_or_exact_picks_block_publication) (change=<function PartnerHistoryLinkIntegrityTests.test_extra_work_lost_draft_filters_preview_or_exact_picks_block_publication.<locals>.<lambda> at 0x7fdc8a4f4eb0>)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 2026, in test_extra_work_lost_draft_filters_preview_or_exact_picks_block_publication
+    self.verify(change)
+    ~~~~~~~~~~~^^^^^^^^
+  File "/app/tests/test_release_publisher.py", line 1991, in verify
+    with tempfile.TemporaryDirectory() as folder:
+         ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmp_qnmggkd'
+
+======================================================================
+ERROR: test_two_source_bound_four_viewport_round_trips_are_required (tests.test_release_publisher.PartnerHistoryLinkIntegrityTests.test_two_source_bound_four_viewport_round_trips_are_required)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 1999, in test_two_source_bound_four_viewport_round_trips_are_required
+    self.assertTrue(self.verify()["passed"])
+                    ~~~~~~~~~~~^^
+  File "/app/tests/test_release_publisher.py", line 1991, in verify
+    with tempfile.TemporaryDirectory() as folder:
+         ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpyzny7qan'
+
+======================================================================
+ERROR: test_advisory_scope_compatibility_and_reservations_are_required (tests.test_release_publisher.PreflightIntegrityTests.test_advisory_scope_compatibility_and_reservations_are_required)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 667, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpxzwfpqzj'
+
+======================================================================
+ERROR: test_changed_original_payload_holds_preflight (tests.test_release_publisher.PreflightIntegrityTests.test_changed_original_payload_holds_preflight)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 667, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpl2y6fesl'
+
+======================================================================
+ERROR: test_exact_five_case_metadata_acceptance (tests.test_release_publisher.PreflightIntegrityTests.test_exact_five_case_metadata_acceptance)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 667, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmp2_shafct'
+
+======================================================================
+ERROR: test_fois_recovery_requires_same_pressure_and_live_reservation (tests.test_release_publisher.PreflightIntegrityTests.test_fois_recovery_requires_same_pressure_and_live_reservation)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 667, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpxp7_j__c'
+
+======================================================================
+ERROR: test_source_resource_cleanup_and_completion_are_required (tests.test_release_publisher.PreflightIntegrityTests.test_source_resource_cleanup_and_completion_are_required)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 667, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmphhvefqx9'
+
+======================================================================
+ERROR: test_declared_missing_parts_cannot_fall_back_to_a_legacy_zip (tests.test_release_publisher.PriorPartIntegrityTests.test_declared_missing_parts_cannot_fall_back_to_a_legacy_zip)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 4202, in test_declared_missing_parts_cannot_fall_back_to_a_legacy_zip
+    with tempfile.TemporaryDirectory() as folder:
+         ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpjmknunqf'
+
+======================================================================
+ERROR: test_missing_tampered_reordered_and_wrong_full_checksum_fail_closed (tests.test_release_publisher.PriorPartIntegrityTests.test_missing_tampered_reordered_and_wrong_full_checksum_fail_closed) (fault='missing')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 4169, in test_missing_tampered_reordered_and_wrong_full_checksum_fail_closed
+    with self.subTest(fault=fault), tempfile.TemporaryDirectory() as folder:
+                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmp3xt55dex'
+
+======================================================================
+ERROR: test_missing_tampered_reordered_and_wrong_full_checksum_fail_closed (tests.test_release_publisher.PriorPartIntegrityTests.test_missing_tampered_reordered_and_wrong_full_checksum_fail_closed) (fault='tampered')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 4169, in test_missing_tampered_reordered_and_wrong_full_checksum_fail_closed
+    with self.subTest(fault=fault), tempfile.TemporaryDirectory() as folder:
+                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmp1_a5mphe'
+
+======================================================================
+ERROR: test_missing_tampered_reordered_and_wrong_full_checksum_fail_closed (tests.test_release_publisher.PriorPartIntegrityTests.test_missing_tampered_reordered_and_wrong_full_checksum_fail_closed) (fault='reordered')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 4169, in test_missing_tampered_reordered_and_wrong_full_checksum_fail_closed
+    with self.subTest(fault=fault), tempfile.TemporaryDirectory() as folder:
+                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpybr3dmyz'
+
+======================================================================
+ERROR: test_missing_tampered_reordered_and_wrong_full_checksum_fail_closed (tests.test_release_publisher.PriorPartIntegrityTests.test_missing_tampered_reordered_and_wrong_full_checksum_fail_closed) (fault='whole-checksum')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 4169, in test_missing_tampered_reordered_and_wrong_full_checksum_fail_closed
+    with self.subTest(fault=fault), tempfile.TemporaryDirectory() as folder:
+                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpps4zzuhn'
+
+======================================================================
+ERROR: test_prior_family_preserves_path_size_checksum_and_population_bounds (tests.test_release_publisher.PriorPartIntegrityTests.test_prior_family_preserves_path_size_checksum_and_population_bounds)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 4184, in test_prior_family_preserves_path_size_checksum_and_population_bounds
+    with tempfile.TemporaryDirectory() as folder:
+         ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmppx8gvu22'
+
+======================================================================
+ERROR: test_prior_parts_reassemble_original_bytes (tests.test_release_publisher.PriorPartIntegrityTests.test_prior_parts_reassemble_original_bytes)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 4161, in test_prior_parts_reassemble_original_bytes
+    with tempfile.TemporaryDirectory() as folder:
+         ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpxa7ybmzm'
+
+======================================================================
+ERROR: test_complete_native_contract (tests.test_release_publisher.RecommendedProtectionIntegrityTests.test_complete_native_contract)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 2518, in test_complete_native_contract
+    self.assertTrue(self.check()["passed"])
+                    ~~~~~~~~~~^^
+  File "/app/tests/test_release_publisher.py", line 2512, in check
+    with tempfile.TemporaryDirectory() as folder:
+         ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpq0fw2kyy'
+
+======================================================================
+ERROR: test_foreign_source_and_missing_phone_are_rejected (tests.test_release_publisher.RecommendedProtectionIntegrityTests.test_foreign_source_and_missing_phone_are_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 2538, in test_foreign_source_and_missing_phone_are_rejected
+    self.check(change)
+    ~~~~~~~~~~^^^^^^^^
+  File "/app/tests/test_release_publisher.py", line 2512, in check
+    with tempfile.TemporaryDirectory() as folder:
+         ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpw9ajy1e4'
+
+======================================================================
+ERROR: test_protected_asset_in_result_is_rejected (tests.test_release_publisher.RecommendedProtectionIntegrityTests.test_protected_asset_in_result_is_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 2530, in test_protected_asset_in_result_is_rejected
+    self.check(change)
+    ~~~~~~~~~~^^^^^^^^
+  File "/app/tests/test_release_publisher.py", line 2512, in check
+    with tempfile.TemporaryDirectory() as folder:
+         ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpojpu1q2s'
+
+======================================================================
+ERROR: test_bad_full_archive_checksum_is_rejected (tests.test_release_publisher.RecoveryTransportTests.test_bad_full_archive_checksum_is_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 3419, in setUp
+    self.directory = tempfile.TemporaryDirectory()
+                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpiq0eoxl0'
+
+======================================================================
+ERROR: test_bad_part_bytes_are_rejected (tests.test_release_publisher.RecoveryTransportTests.test_bad_part_bytes_are_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 3419, in setUp
+    self.directory = tempfile.TemporaryDirectory()
+                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpnlwr5yss'
+
+======================================================================
+ERROR: test_missing_part_is_rejected (tests.test_release_publisher.RecoveryTransportTests.test_missing_part_is_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 3419, in setUp
+    self.directory = tempfile.TemporaryDirectory()
+                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpc7ufjnva'
+
+======================================================================
+ERROR: test_original_archive_bytes_are_reassembled_before_existing_guards (tests.test_release_publisher.RecoveryTransportTests.test_original_archive_bytes_are_reassembled_before_existing_guards)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 3419, in setUp
+    self.directory = tempfile.TemporaryDirectory()
+                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpoy1eap17'
+
+======================================================================
+ERROR: test_part_size_bound_and_existing_output_are_rejected (tests.test_release_publisher.RecoveryTransportTests.test_part_size_bound_and_existing_output_are_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 3419, in setUp
+    self.directory = tempfile.TemporaryDirectory()
+                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmp543k6gb1'
+
+======================================================================
+ERROR: test_path_traversal_is_rejected (tests.test_release_publisher.RecoveryTransportTests.test_path_traversal_is_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 3419, in setUp
+    self.directory = tempfile.TemporaryDirectory()
+                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpgjxg61nh'
+
+======================================================================
+ERROR: test_reversed_or_duplicate_parts_are_rejected (tests.test_release_publisher.RecoveryTransportTests.test_reversed_or_duplicate_parts_are_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 3419, in setUp
+    self.directory = tempfile.TemporaryDirectory()
+                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpa5zs569l'
+
+======================================================================
+ERROR: test_symlink_part_is_rejected (tests.test_release_publisher.RecoveryTransportTests.test_symlink_part_is_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 3419, in setUp
+    self.directory = tempfile.TemporaryDirectory()
+                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmp4bxdwaeq'
+
+======================================================================
+ERROR: test_log_escape_bytes_are_retained_in_file_only (tests.test_release_publisher.RemoteAttachmentTests.test_log_escape_bytes_are_retained_in_file_only)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 303, in test_log_escape_bytes_are_retained_in_file_only
+    tempfile.TemporaryDirectory() as folder,
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpbhu4wx7d'
+
+======================================================================
+ERROR: test_resource_source_cleanup_execution_and_checksums_are_required (tests.test_release_publisher.ResidentRefreshIntegrityTests.test_resource_source_cleanup_execution_and_checksums_are_required)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 1623, in test_resource_source_cleanup_execution_and_checksums_are_required
+    with tempfile.TemporaryDirectory() as folder:
+         ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmp33le5hp7'
+
+======================================================================
+ERROR: test_incomplete_or_weakened_restoration_records_cannot_publish (tests.test_release_publisher.RestorationAdmissionEvidenceTests.test_incomplete_or_weakened_restoration_records_cannot_publish)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 1233, in test_incomplete_or_weakened_restoration_records_cannot_publish
+    with tempfile.TemporaryDirectory() as folder:
+         ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpr0miq679'
+
+======================================================================
+ERROR: test_automatic_generation_or_wrong_target_is_rejected (tests.test_release_publisher.RosterSourceScopePublicationTests.test_automatic_generation_or_wrong_target_is_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 3730, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmp_0vwdc32'
+
+======================================================================
+ERROR: test_duplicate_execution_does_not_replace_a_missing_case (tests.test_release_publisher.RosterSourceScopePublicationTests.test_duplicate_execution_does_not_replace_a_missing_case)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 3730, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmp2e0ax85u'
+
+======================================================================
+ERROR: test_exact_new_population_is_required (tests.test_release_publisher.RosterSourceScopePublicationTests.test_exact_new_population_is_required)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 3730, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmplg5e5mf_'
+
+======================================================================
+ERROR: test_foreign_source_is_rejected (tests.test_release_publisher.RosterSourceScopePublicationTests.test_foreign_source_is_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 3730, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmp5ih8rgbj'
+
+======================================================================
+ERROR: test_genuine_uncertainty_cannot_be_promoted (tests.test_release_publisher.RosterSourceScopePublicationTests.test_genuine_uncertainty_cannot_be_promoted)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 3730, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmp98lquqly'
+
+======================================================================
+ERROR: test_missing_image_cannot_be_replaced_by_a_summary (tests.test_release_publisher.RosterSourceScopePublicationTests.test_missing_image_cannot_be_replaced_by_a_summary)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 3730, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpnvb30chx'
+
+======================================================================
+ERROR: test_native_supported_and_withheld_controls_are_both_required (tests.test_release_publisher.RosterSourceScopePublicationTests.test_native_supported_and_withheld_controls_are_both_required)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 3730, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmprqj1r5ks'
+
+======================================================================
+ERROR: test_plan_cannot_omit_the_new_population (tests.test_release_publisher.RosterSourceScopePublicationTests.test_plan_cannot_omit_the_new_population)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 3730, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpwi3ltfxu'
+
+======================================================================
+ERROR: test_publish_cannot_omit_preparation_certificate (tests.test_release_publisher.RunAdmissionTests.test_publish_cannot_omit_preparation_certificate)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 516, in test_publish_cannot_omit_preparation_certificate
+    with tempfile.TemporaryDirectory() as folder, patch.object(p, "api") as api:
+         ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpzt1zr6s8'
+
+======================================================================
+ERROR: test_complete_original_controls_required_in_hosted_and_local (tests.test_release_publisher.SourceHealthExecutionTests.test_complete_original_controls_required_in_hosted_and_local)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 4867, in setUp
+    self.directory = tempfile.TemporaryDirectory()
+                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmp25l73zuw'
+
+======================================================================
+ERROR: test_missing_repeated_failed_and_skipped_controls_are_rejected (tests.test_release_publisher.SourceHealthExecutionTests.test_missing_repeated_failed_and_skipped_controls_are_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 4867, in setUp
+    self.directory = tempfile.TemporaryDirectory()
+                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpr2mhqbxn'
+
+======================================================================
+ERROR: test_auto_search_blocks_publication (tests.test_release_publisher.TeamNeedHandoffGuardTests.test_auto_search_blocks_publication)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 2035, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpf4ec2259'
+
+======================================================================
+ERROR: test_complete_source_bound_fixture_passes (tests.test_release_publisher.TeamNeedHandoffGuardTests.test_complete_source_bound_fixture_passes)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 2035, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmp9o014ktu'
+
+======================================================================
+ERROR: test_deferred_does_not_count_as_real_execution (tests.test_release_publisher.TeamNeedHandoffGuardTests.test_deferred_does_not_count_as_real_execution)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 2035, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpam111f4d'
+
+======================================================================
+ERROR: test_explicit_reset_retaining_context_blocks_publication (tests.test_release_publisher.TeamNeedHandoffGuardTests.test_explicit_reset_retaining_context_blocks_publication)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 2035, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpl5ur6g_n'
+
+======================================================================
+ERROR: test_hidden_position_blocks_publication (tests.test_release_publisher.TeamNeedHandoffGuardTests.test_hidden_position_blocks_publication)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 2035, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpo_yob_yx'
+
+======================================================================
+ERROR: test_lost_draft_or_custom_blocks_publication (tests.test_release_publisher.TeamNeedHandoffGuardTests.test_lost_draft_or_custom_blocks_publication)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 2035, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmptfeaod7f'
+
+======================================================================
+ERROR: test_missing_phone_is_blocked (tests.test_release_publisher.TeamNeedHandoffGuardTests.test_missing_phone_is_blocked)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 2035, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmp333x1wgt'
+
+======================================================================
+ERROR: test_missing_report_is_blocked (tests.test_release_publisher.TeamNeedHandoffGuardTests.test_missing_report_is_blocked)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 2035, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpmgarzf9y'
+
+======================================================================
+ERROR: test_obscured_label_blocks_publication (tests.test_release_publisher.TeamNeedHandoffGuardTests.test_obscured_label_blocks_publication)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 2035, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmp7x1jet2_'
+
+======================================================================
+ERROR: test_stale_league_hint_blocks_publication (tests.test_release_publisher.TeamNeedHandoffGuardTests.test_stale_league_hint_blocks_publication)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 2035, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpx2ynv2bc'
+
+======================================================================
+ERROR: test_stale_manual_override_lost_blocks_publication (tests.test_release_publisher.TeamNeedHandoffGuardTests.test_stale_manual_override_lost_blocks_publication)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 2035, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpz7ccq70j'
+
+======================================================================
+ERROR: test_type_change_losing_reason_blocks_publication (tests.test_release_publisher.TeamNeedHandoffGuardTests.test_type_change_losing_reason_blocks_publication)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 2035, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmp5h0b4tcb'
+
+======================================================================
+ERROR: test_wrong_candidate_is_blocked (tests.test_release_publisher.TeamNeedHandoffGuardTests.test_wrong_candidate_is_blocked)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 2035, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmpc69pskf7'
+
+======================================================================
+ERROR: test_exact_source_and_complete_real_work_are_required (tests.test_release_publisher.TradeResourceIntegrityTests.test_exact_source_and_complete_real_work_are_required)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 555, in test_exact_source_and_complete_real_work_are_required
+    with tempfile.TemporaryDirectory() as tmp:
+         ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmp71ql4s5t'
+
+======================================================================
+ERROR: test_feature_source_phone_and_package_boundaries (tests.test_release_publisher.TradeTimeMarketPublisherTests.test_feature_source_phone_and_package_boundaries)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_release_publisher.py", line 1702, in test_feature_source_phone_and_package_boundaries
+    with tempfile.TemporaryDirectory() as directory:
+         ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmp52__0qfx'
+
+----------------------------------------------------------------------
+Ran 181 tests in 0.115s
+
+FAILED (errors=199)
