@@ -1,0 +1,503 @@
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index b5c5478d..9816fd31 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -1,3 +1,7 @@
++## v1.22.55 / build 2270 — Prefer available bye cover
++
++My Team prefers complete bye-week lineups supported by current Sleeper player status. If cover depends on uncertain availability, the plan names the dependency and shows the age of the status check.
++
+ ## v1.22.54 / build 2269 — Cover upcoming byes
+ 
+ My Team names the starters on bye and shows the moves that fill their spots together, including FLEX and Superflex rearrangements. The plan follows the submitted slots and uses the schedule and roster evidence for each target week.
+diff --git a/RELEASE_NOTES.md b/RELEASE_NOTES.md
+index c42e82d6..445b04af 100644
+--- a/RELEASE_NOTES.md
++++ b/RELEASE_NOTES.md
+@@ -1,3 +1,7 @@
++## v1.22.55 / build 2270 — Prefer available bye cover
++
++My Team prefers complete bye-week lineups supported by current Sleeper player status. If cover depends on uncertain availability, the plan names the dependency and shows the age of the status check.
++
+ ## v1.22.54 / build 2269 — Cover upcoming byes
+ 
+ My Team names the starters on bye and shows the moves that fill their spots together, including FLEX and Superflex rearrangements. The plan follows the submitted slots and uses the schedule and roster evidence for each target week.
+diff --git a/app_metadata.py b/app_metadata.py
+index a400df92..1759a06f 100644
+--- a/app_metadata.py
++++ b/app_metadata.py
+@@ -7,10 +7,10 @@ from datetime import datetime, timezone
+ from pathlib import Path
+ 
+ APPLICATION_NAME = "DTOS"
+-VERSION = "1.22.54"
+-PRODUCT_VERSION = "1.22.54"
+-BUILD_NUMBER = 2269
+-RELEASE_CODENAME = "Cover Upcoming Byes"
++VERSION = "1.22.55"
++PRODUCT_VERSION = "1.22.55"
++BUILD_NUMBER = 2270
++RELEASE_CODENAME = "Prefer Available Bye Cover"
+ APPLICATION_STARTED_AT = datetime.now(timezone.utc).isoformat()
+ 
+ _REPOSITORY_ROOT = Path(__file__).resolve().parent
+diff --git a/routes/teams.py b/routes/teams.py
+index 21db1e32..a0e36908 100644
+--- a/routes/teams.py
++++ b/routes/teams.py
+@@ -472,7 +472,8 @@ def create_teams_router(
+             from src.core.intelligence.upcoming_byes import read_upcoming_byes
+             from src.ui.upcoming_byes import upcoming_byes_panel
+             upcoming_byes = upcoming_byes_panel(
+-                read_upcoming_byes(prepared_strength, data.get('league') or {}, team), team['players'],
++                read_upcoming_byes(prepared_strength, data.get('league') or {}, team,
++                                   players_fetched_at=data.get('players_fetched_at')), team['players'],
+                 active=(data.get('league') or {}).get('status') == 'in_season',
+             )
+             catalog = data.get('players') or {}
+diff --git a/src/core/intelligence/upcoming_byes.py b/src/core/intelligence/upcoming_byes.py
+index 712b8d66..beef3d9e 100644
+--- a/src/core/intelligence/upcoming_byes.py
++++ b/src/core/intelligence/upcoming_byes.py
+@@ -1,6 +1,10 @@
+ """Prepare schedule-backed roster coverage without using fantasy points."""
++from datetime import datetime, timezone
++
+ from src.core.data_platform.normalization.identity import normalize_team
+-from src.core.intelligence.lineup_review import METHOD
++from src.core.intelligence.lineup_review import METHOD, timestamp
++from src.core.projection_intelligence.service import UNAVAILABLE_PLAYER_STATUSES, player_availability
++from src.core.projection_intelligence.sleeper_provider import freshness_state
+ from src.core.trade_intelligence.lineup import BENCH_SLOTS, _eligible, eligible_positions
+ 
+ 
+@@ -38,7 +42,7 @@ def _fit(slots, candidates, preferred=None):
+ 
+ def _eligible_roster(team, catalog, league):
+     # Roster rows hold assignments; the native catalog supplies fantasy eligibility.
+-    people = {}
++    people, statuses = {}, {}
+     for player in team.get('players') or []:
+         pid = str(player['id'])
+         if player.get('roster_slot') in {'IR', 'Taxi', 'Reserve'}:
+@@ -56,7 +60,8 @@ def _eligible_roster(team, catalog, league):
+         positions = eligible_positions(row)
+         slot_known = player.get('roster_slot') in {'Starter', 'Bench'}
+         people[pid] = (club, positions, slot_known)
+-    return people
++        statuses[pid] = player_availability(row, None)
++    return people, statuses
+ 
+ 
+ def _starting_slots(players, slots):
+@@ -79,21 +84,54 @@ def _starting_slots(players, slots):
+     return starters
+ 
+ 
+-def _week(slots, people, games, byes, week, projection, *, starters):
++def _availability_fit(slots, playing, initial, statuses, fresh):
++    """Extend a maximum fit in each better-supported tier before adding another."""
++    tiers = [{}, {}, {}, {}]
++    for pid, positions in playing.items():
++        status = statuses.get(pid)
++        if fresh and status == 'active':
++            tier = 0
++        elif fresh and status in {'questionable', 'doubtful'}:
++            tier = 1
++        elif status in UNAVAILABLE_PLAYER_STATUSES:
++            tier = 3
++        else:
++            tier = 2
++        tiers[tier][pid] = positions
++
++    pool, fit = {}, {}
++    for tier, candidates in enumerate(tiers):
++        if not candidates:
++            continue
++        pool.update(candidates)
++        # Preserve the better-supported match while admitting other eligible
++        # starters in unchanged slots. Augmenting paths only add players.
++        matched = set(fit.values())
++        preferred = {i: pid for i, pid in initial.items() if i not in fit and pid not in matched}
++        fit = _fit(slots, pool, preferred | fit)
++        if len(fit) == len(slots):
++            return fit, tier == 0
++    return fit, False
++
++
++def _week(slots, people, games, byes, week, projection, *, starters, statuses=None, fresh=False):
+     bye_ids = {pid for pid, (club, _, _) in people.items()
+                if byes.get(pid) == week and club and f'{week}:{club}' not in games}
+     playing = {pid: positions for pid, (club, positions, slot_known) in people.items()
+                if pid not in bye_ids and positions and slot_known and games.get(f'{week}:{club}')}
+     initial = {index: pid for index, pid in enumerate(starters or ()) if pid is not None}
+     affected = [(index, pid) for index, pid in initial.items() if pid in bye_ids]
+-    moves, unfilled = [], []
++    statuses = statuses or {}
++    moves, unfilled, dependencies = [], [], []
+     if affected:
+-        after = _fit(slots, playing, initial)
++        after, supported = _availability_fit(slots, playing, initial, statuses, fresh)
+         if len(after) == len(slots):
+-            state = 'covered'
++            state = 'covered' if supported else 'conditional'
+             prior = {pid: index for index, pid in initial.items()}
+             moves = [[index, pid, prior.get(pid)] for index, pid in sorted(after.items())
+                      if pid != initial.get(index)]
++            dependencies = [[pid, statuses.get(pid) or 'unknown'] for _, pid in sorted(after.items())
++                            if statuses.get(pid) != 'active']
+         else:
+             # Unconfirmed candidates can prevent a proof of shortfall, but
+             # cannot establish positive cover.
+@@ -113,7 +151,7 @@ def _week(slots, people, games, byes, week, projection, *, starters):
+     return {
+         'week': week, 'state': state, 'slots': slots,
+         'bye_starters': [list(row) for row in affected],
+-        'unfilled': unfilled, 'moves': moves,
++        'unfilled': unfilled, 'moves': moves, 'availability_dependencies': dependencies,
+         'projection_ready': projection.get('available') is True,
+     }
+ 
+@@ -122,16 +160,29 @@ def _starter_positions(league):
+     return [slot.upper() for slot in league.get('roster_positions') or [] if slot.upper() not in BENCH_SLOTS]
+ 
+ 
+-def read_upcoming_byes(profile, league, team):
++def read_upcoming_byes(profile, league, team, *, players_fetched_at=None):
+     """Withhold legacy or changed assignments until preparation catches up."""
+     record = (profile.get('upcoming_byes') or {}).get(str(team['roster_id']))
+-    if not isinstance(record, dict) or not isinstance(record.get('weeks'), list):
++    if (not isinstance(record, dict) or not isinstance(record.get('weeks'), list)
++            or 'availability_observed_at' not in record
++            or record['availability_observed_at'] != players_fetched_at):
+         return None
+     slots = _starter_positions(league)
+     players = team.get('players') or []
+-    if len(players) <= 100 and 'starting_slots' in record and record['starting_slots'] == _starting_slots(players, slots):
+-        return record['weeks']
+-    return None
++    if (len(players) > 100 or 'starting_slots' not in record
++            or record['starting_slots'] != _starting_slots(players, slots)):
++        return None
++
++    # Retained coverage can age between preparation and a page read.
++    now = datetime.now(timezone.utc)
++    freshness = freshness_state(players_fetched_at, now=now)
++    observed = timestamp(players_fetched_at)
++    age = int((now - observed).total_seconds() // 60) if observed and freshness != 'Unavailable' else None
++    return [
++        dict(row, state='conditional' if row['state'] == 'covered' and freshness != 'Fresh' else row['state'],
++             availability_freshness=freshness, availability_age_minutes=age)
++        for row in record['weeks']
++    ]
+ 
+ 
+ def prepare_upcoming_byes(data, calendar, schedule, bye_evidence, profile):
+@@ -152,17 +203,20 @@ def prepare_upcoming_byes(data, calendar, schedule, bye_evidence, profile):
+         schedule and schedule.get('method') == METHOD and schedule.get('season') == profile['season']
+     ) else {}
+     byes = (bye_evidence or {}).get('player_weeks') or {}
++    observed = data.get('players_fetched_at')
++    fresh = freshness_state(observed) == 'Fresh'
+     result = {}
+     for team in data.get('teams') or []:
+         if len(team.get('players') or []) > 100:
+             continue
+         rid = str(team['roster_id'])
+-        people = _eligible_roster(team, data.get('players') or {}, league)
++        people, statuses = _eligible_roster(team, data.get('players') or {}, league)
+         weekly = profile['teams'][rid]['weekly']
+         starters = _starting_slots(team.get('players') or [], slots)
+         result[rid] = {
+-            'starting_slots': starters,
+-            'weeks': [_week(slots, people, games, byes, week, weekly.get(week) or {}, starters=starters)
++            'starting_slots': starters, 'availability_observed_at': observed,
++            'weeks': [_week(slots, people, games, byes, week, weekly.get(week) or {},
++                            starters=starters, statuses=statuses, fresh=fresh)
+                       for week in weeks],
+         }
+     return result
+diff --git a/src/ui/upcoming_byes.py b/src/ui/upcoming_byes.py
+index 3be3e187..6b556589 100644
+--- a/src/ui/upcoming_byes.py
++++ b/src/ui/upcoming_byes.py
+@@ -18,13 +18,35 @@ def _indexed_slot(slots, index):
+     return escape(name)
+ 
+ 
++def _status_age(row):
++    minutes = row.get('availability_age_minutes')
++    if minutes is None:
++        return 'The time of the Sleeper status check is unavailable.'
++    if minutes < 1:
++        age = 'less than a minute ago'
++    else:
++        count, unit = ((minutes // 1440, 'day') if minutes >= 1440 else
++                       (minutes // 60, 'hour') if minutes >= 60 else (minutes, 'minute'))
++        age = f"{count} {unit}{'s' if count != 1 else ''} ago"
++    note = ' That check is stale.' if row.get('availability_freshness') == 'Stale' else ''
++    return f'Sleeper player status checked {age}.{note}'
++
++
++def _status_dependency(name, status):
++    labels = {'ir': 'on injured reserve', 'pup': 'on PUP', 'out': 'out', 'inactive': 'inactive',
++              'suspended': 'suspended', 'retired': 'retired', 'questionable': 'questionable', 'doubtful': 'doubtful'}
++    if status in labels:
++        return f'Sleeper listed {name} as {labels[status]} at the status check.'
++    return f'{name} has unconfirmed availability.'
++
++
+ def upcoming_byes_panel(weeks, players, *, active):
+     if not active:
+         return ''
+     if not weeks:
+         return ('<section class="thq-section" id="upcoming-byes"><h2>Upcoming bye weeks</h2>'
+                 '<p>Future-week roster coverage is unavailable for this lineup snapshot.</p></section>')
+-    order = {'shortfall': 0, 'unknown': 1, 'covered': 2, 'no_gap': 3}
++    order = {'shortfall': 0, 'unknown': 1, 'conditional': 2, 'covered': 3, 'no_gap': 4}
+     priority = sorted(weeks, key=lambda row: (order[row['state']], row['week']))
+     names = {str(player['id']): escape(player.get('name') or 'Unnamed player') for player in players}
+ 
+@@ -32,7 +54,9 @@ def upcoming_byes_panel(weeks, players, *, active):
+         week = f"Week {row['week']}"
+         positions = _slots(dict.fromkeys(row['slots'][index] for index, _ in row['bye_starters']))
+         if row['state'] == 'shortfall':
+-            return f"{week} · Bye affects {positions}. This roster cannot fill every starting spot."
++            return f"{week} · Bye affects {positions}. This roster cannot fill every starting spot with its current eligible slots."
++        if row['state'] == 'conditional':
++            return f"{week} · Legal cover for the {positions} bye depends on player availability."
+         if row['state'] == 'covered':
+             return f"{week} · A legal lineup change can cover the {positions} bye."
+         if row['state'] == 'unknown':
+@@ -55,11 +79,19 @@ def upcoming_byes_panel(weeks, players, *, active):
+             instruction = (f'Start {name} at {destination}.' if prior is None else
+                            f'Move {name} from {_indexed_slot(slots, prior)} to {destination}.')
+             moves.append(f'<li data-bye-move="{escape(pid, quote=True)}" data-slot-index="{index}">{instruction}</li>')
+-        instruction_heading = 'Make this change.' if len(moves) == 1 else 'Make these changes together.'
++        if row['state'] == 'conditional':
++            instruction_heading = 'Use this lineup only if all its players are available.'
++        else:
++            instruction_heading = 'Make this change.' if len(moves) == 1 else 'Make these changes together.'
++        dependencies = ''.join(
++            f'<li>{_status_dependency(names.get(pid, "Unnamed player"), status)}</li>'
++            for pid, status in row['availability_dependencies']
++        )
+         vacancy = _slots(row['unfilled'])
+         notes = (
+             (f'<ul>{absent}</ul>' if absent else '')
+-            + (f'<p>{instruction_heading}</p><ul>{"".join(moves)}</ul>' if moves else '')
++            + (f'<p>{instruction_heading}</p><ul>{"".join(moves)}</ul><p>{_status_age(row)}</p>' if moves else '')
++            + (f'<ul>{dependencies}</ul>' if dependencies else '')
+             + (f'<p>One legal fit leaves {vacancy} unfilled.</p>' if vacancy else '')
+             + ('<p>A complete projected lineup is unavailable for this week.</p>'
+                if not row['projection_ready'] else '')
+diff --git a/static/js/trade_workspace.js b/static/js/trade_workspace.js
+index d9d04826..86a5e9a0 100644
+--- a/static/js/trade_workspace.js
++++ b/static/js/trade_workspace.js
+@@ -2148,7 +2148,7 @@
+       el('trade-search-readiness').textContent = [data.lineup_preparation?.state === 'prepared' ? 'Projections prepared.' : 'Team-impact projections needed. Neutral Market works.', capacityText[data.search_readiness.state] || data.search_readiness.message].filter(Boolean).join(' ');
+       el('trade-search-readiness').dataset.state = data.search_readiness.state;
+     }
+-    if (flow === 'recommended') searchStatus(data.search_readiness && data.search_readiness.state !== 'ready' ? 'Search capacity is temporarily unconfirmed. Generate rechecks it before starting; no search has run.' : 'Choose Generate to search eligible teams; choosing a goal is optional.', data.search_readiness && data.search_readiness.state !== 'ready' ? 'deferred' : 'ready');
++    if (flow === 'recommended') searchStatus(data.search_readiness && data.search_readiness.state !== 'ready' ? 'Search capacity is temporarily unconfirmed. Generate rechecks it before searching eligible teams; no search has run.' : 'Choose Generate to search eligible teams; choosing a goal is optional.', data.search_readiness && data.search_readiness.state !== 'ready' ? 'deferred' : 'ready');
+     if (flow === 'create') operationStatus('Choose assets to evaluate below.', 'ready');
+     comparison = window.DTOSOfferComparison.create({node, points: displayPoints, market: displayMarket,
+       tray: el('trade-comparison-tray'), panel: el('trade-comparison'),
+diff --git a/tests/test_trade_resource_browser.py b/tests/test_trade_resource_browser.py
+index 13adb8ee..ec959410 100644
+--- a/tests/test_trade_resource_browser.py
++++ b/tests/test_trade_resource_browser.py
+@@ -84,7 +84,7 @@ class TradeResourceBrowserTests(unittest.TestCase):
+             browser = launch_chromium(playwright, headless=True)
+             try:
+                 for width, height in [(320, 432), (375, 667), (390, 844), (1280, 900)]:
+-                    control = {'pressure': False}
++                    control = {'pressure': True}
+                     posts = []
+                     context = browser.new_context(viewport={'width': width, 'height': height},
+                         has_touch=True, is_mobile=width < 1000)
+@@ -96,7 +96,7 @@ class TradeResourceBrowserTests(unittest.TestCase):
+                             if u.hostname != 'dtos.test':
+                                 return route.fulfill(status=200, body='')
+                             headers = {k:v for k,v in request.headers.items() if k in ('content-type', 'x-csrf-token')}
+-                            if u.path == '/api/trades/generate' and control['pressure']:
++                            if u.path in {'/api/trades/generate', '/api/trades/workspace'} and control['pressure']:
+                                 with patch.object(execution, 'observe_memory', return_value=memory_fixtures.sample(2000 * execution.MIB)):
+                                     response = f.f.client.request(request.method, u.path, content=request.post_data, headers=headers)
+                             else:
+@@ -111,10 +111,13 @@ class TradeResourceBrowserTests(unittest.TestCase):
+                         page.goto('https://dtos.test/trades/recommended?front_office=1')
+                         page.wait_for_function("!document.querySelector('#trade-context').textContent.includes('Loading')")
+                         self.assertIn('Projections prepared.', page.locator('#trade-search-readiness').inner_text())
++                        status = page.locator('#recommendation-status')
++                        self.assertEqual(status.get_attribute('data-state'), 'deferred')
++                        self.assertIn('searching eligible teams', status.inner_text())
++                        self.assertIn('no search has run', status.inner_text())
+                         self.assertEqual(posts, [])
+                         # Temporary strategy is retained through deferral and retry.
+                         page.locator('#trade-strategy').select_option('REBUILD')
+-                        control['pressure'] = True
+                         page.locator('#trade-find').focus()
+                         page.keyboard.press('Enter')
+                         page.wait_for_function("document.querySelector('#recommendation-status').dataset.state==='deferred'")
+diff --git a/tests/test_upcoming_bye_availability.py b/tests/test_upcoming_bye_availability.py
+new file mode 100644
+index 00000000..da1135e0
+--- /dev/null
++++ b/tests/test_upcoming_bye_availability.py
+@@ -0,0 +1,118 @@
++"""Future-week availability through normal preparation and rendered My Team."""
++from datetime import timedelta
++import os
++from pathlib import Path
++import unittest
++from unittest.mock import patch
++
++from tests.lineup_review_fixture import authenticated_prepared
++from tests import test_upcoming_bye_moves as fixtures
++
++
++def add_bench(data, pid, position, *, status='Active', injury_status=None):
++    row = dict(id=pid, player_id=pid, name=f'Example {pid} reserve', position=position,
++               fantasy_positions=[position], roster_slot='Bench', status=status, injury_status=injury_status)
++    data['teams'][0]['players'].append(row)
++    data['players'][pid] = dict(row)
++
++
++def open_week(page):
++    if page.goto('https://dtos.test/teams/1').status != 200:
++        raise AssertionError('My Team unavailable')
++    page.get_by_text('See weeks and possible moves', exact=True).click()
++    return page.locator('[data-bye-week="9"]')
++
++
++def capture(page, name):
++    if directory := os.environ.get('DTOS_BYE_SCREENSHOTS'):
++        Path(directory).mkdir(parents=True, exist_ok=True)
++        page.locator('#upcoming-byes').screenshot(path=str(Path(directory, name)))
++
++
++class UpcomingByeAvailabilityTests(unittest.TestCase):
++    def _fixture(self, *, bench='RB'):
++        return authenticated_prepared(self, empty=False, bench_position=bench, points={'bq': 1})
++
++    def _check_moves(self, week, data, byes, moves):
++        fixtures.UpcomingByeMovesTests._verify_moves(self, week, data, byes, moves)
++
++    def test_prefers_available_alternative_to_ir_across_roster_orders(self):
++        fixture, data, service, now = self._fixture()
++        data['players']['1-bq']['injury_status'] = 'IR'
++        add_bench(data, '1-z', 'RB')
++        data['players_fetched_at'] = (now - timedelta(minutes=12)).isoformat()
++        roster = data['teams'][0]['players']
++        with fixtures.phone(fixture) as page:
++            for order in (roster[:], roster[::-1], roster[2:] + roster[:2]):
++                roster[:] = order
++                fixtures.install_schedule(service, data, now, byes={'1-r'})
++                week = open_week(page)
++                self.assertEqual(week.get_attribute('data-bye-state'), 'covered')
++                self.assertIn('Start Example 1-z reserve at RB.', week.inner_text())
++                self.assertNotIn('Example BQ 1', week.inner_text())
++                self.assertIn('Sleeper player status checked 12 minutes ago.', week.inner_text())
++                self._check_moves(week, data, {'1-r'}, {1: '1-z'})
++            self.assertLessEqual(page.evaluate('document.documentElement.scrollWidth'), 390)
++            capture(page, 'available-alternative-390.png')
++
++    def test_available_superflex_chain_wins_over_shorter_out_plan(self):
++        fixture, data, service, now = self._fixture(bench='QB')
++        add_bench(data, '1-a', 'RB', injury_status='O')
++        fixtures.install_schedule(service, data, now, byes={'1-r'})
++        with fixtures.phone(fixture) as page:
++            week = open_week(page)
++            self.assertEqual(week.get_attribute('data-bye-state'), 'covered')
++            self.assertIn('Move Example S 1 from Superflex to RB.', week.inner_text())
++            self.assertIn('Start Example BQ 1 at Superflex.', week.inner_text())
++            self._check_moves(week, data, {'1-r'}, {1: '1-s', 3: '1-bq'})
++            week.get_by_role('link', name='View Week 9 Matchups').tap()
++            page.wait_for_url('https://dtos.test/matchups?week=9')
++            page.go_back()
++            self.assertEqual(page.locator('#upcoming-byes').count(), 1)
++
++    def test_competing_replacements_render_conditional_cover_and_dependency(self):
++        fixture, data, service, now = self._fixture()
++        add_bench(data, '1-a', 'QB', injury_status='IR')
++        add_bench(data, '1-z', 'QB', injury_status='D')
++        fixtures.install_schedule(service, data, now, byes={'1-r', '1-s'})
++        with fixtures.phone(fixture) as page:
++            week = open_week(page)
++            self.assertEqual(week.get_attribute('data-bye-state'), 'conditional')
++            self.assertIn('Sleeper listed Example 1-z reserve as doubtful', week.inner_text())
++            self.assertNotIn('Example 1-a reserve', week.inner_text())
++            self.assertIn('Use this lineup only if all its players are available.', week.inner_text())
++            self._check_moves(week, data, {'1-r', '1-s'}, {1: '1-bq', 3: '1-z'})
++            capture(page, 'conditional-cover-390.png')
++            # Both replacements remain necessary. No verified status for the
++            # second player can establish an eligibility shortfall.
++            data['players']['1-z'].update(status=None, injury_status=None)
++            fixtures.install_schedule(service, data, now, byes={'1-r', '1-s'})
++            week = open_week(page)
++            self.assertEqual(week.get_attribute('data-bye-state'), 'conditional')
++            self.assertIn('Example 1-z reserve has unconfirmed availability.', week.inner_text())
++            self._check_moves(week, data, {'1-r', '1-s'}, {1: '1-bq', 3: '1-z'})
++            data['players']['1-z']['injury_status'] = 'Out'
++            fixtures.install_schedule(service, data, now, byes={'1-r', '1-s'})
++            week = open_week(page)
++            self.assertEqual(week.get_attribute('data-bye-state'), 'conditional')
++            self.assertIn('Sleeper listed Example 1-a reserve as on injured reserve', week.inner_text())
++            self._check_moves(week, data, {'1-r', '1-s'}, {1: '1-bq', 3: '1-a'})
++
++    def test_aged_retained_plan_and_missing_status_clock_are_conditional(self):
++        fixture, data, service, now = self._fixture()
++        fixtures.install_schedule(service, data, now, byes={'1-r'})
++        with fixtures.phone(fixture) as page:
++            week = open_week(page)
++            self.assertEqual(week.get_attribute('data-bye-state'), 'covered')
++            with patch('src.core.intelligence.upcoming_byes.datetime') as clock:
++                clock.now.return_value = now + timedelta(hours=8)
++                week = open_week(page)
++                self.assertEqual(week.get_attribute('data-bye-state'), 'conditional')
++                self.assertIn('Sleeper player status checked 8 hours ago. That check is stale.', week.inner_text())
++                self._check_moves(week, data, {'1-r'}, {1: '1-bq'})
++            data['players_fetched_at'] = None
++            fixtures.install_schedule(service, data, now, byes={'1-r'})
++            week = open_week(page)
++            self.assertEqual(week.get_attribute('data-bye-state'), 'conditional')
++            self.assertIn('The time of the Sleeper status check is unavailable.', week.inner_text())
++            self._check_moves(week, data, {'1-r'}, {1: '1-bq'})
+diff --git a/tests/test_upcoming_bye_moves.py b/tests/test_upcoming_bye_moves.py
+index 432488be..bfec8c75 100644
+--- a/tests/test_upcoming_bye_moves.py
++++ b/tests/test_upcoming_bye_moves.py
+@@ -28,6 +28,7 @@ def install_schedule(service, data, now, *, byes, missing=()):
+         if week != (9 if idx == 0 else (idx + 8) % 18 + 1)
+         and (week, idx) not in missing
+     ]
++    data.setdefault('players_fetched_at', now.isoformat())
+     team = data['teams'][0]
+     for row in team['players']:
+         club = 'BUF' if row['id'] in byes else 'X02'
+diff --git a/tests/test_upcoming_byes.py b/tests/test_upcoming_byes.py
+index 18b95eb0..bfdc47aa 100644
+--- a/tests/test_upcoming_byes.py
++++ b/tests/test_upcoming_byes.py
+@@ -19,7 +19,8 @@ class UpcomingByeTests(unittest.TestCase):
+             'idle': ('BUF', ('K',), True), 'backup': ('KC', ('K',), True),
+             'defense': ('KC', ('DEF',), True),
+         }
+-        row = _week(['K', 'DEF'], roster, {'9:KC': True}, {'idle': 9}, 9, {}, starters=['idle', 'defense'])
++        row = _week(['K', 'DEF'], roster, {'9:KC': True}, {'idle': 9}, 9, {}, starters=['idle', 'defense'],
++                    statuses={pid: 'active' for pid in roster}, fresh=True)
+         self.assertEqual((row['state'], row['bye_starters'], row['moves']), ('covered', [[0, 'idle']], [[0, 'backup', None]]))
+         self.assertFalse(row['projection_ready'])
+ 
+@@ -44,7 +45,8 @@ class UpcomingByeTests(unittest.TestCase):
+             'starter-flex': ('KC', ('RB',), True), 'backup-qb': ('KC', ('QB',), True),
+         }
+         row = _week(['QB', 'RB', 'SUPER_FLEX'], roster, {'9:KC': True}, {'bye-rb': 9}, 9, {'available': True},
+-                    starters=['starter-qb', 'bye-rb', 'starter-flex'])
++                    starters=['starter-qb', 'bye-rb', 'starter-flex'],
++                    statuses={pid: 'active' for pid in roster}, fresh=True)
+         self.assertEqual(row['state'], 'covered')
+         self.assertEqual(row['moves'], [[1, 'starter-flex', 2], [2, 'backup-qb', None]])
+ 

@@ -1,0 +1,35 @@
+/usr/local/lib/python3.14/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+  from starlette.testclient import TestClient as TestClient  # noqa
+test_released_plan_preferred_lower_id_on_injury_ir (tests.test_upcoming_bye_availability.UpcomingByeAvailabilityTests.test_released_plan_preferred_lower_id_on_injury_ir) ... ERROR
+
+======================================================================
+ERROR: test_released_plan_preferred_lower_id_on_injury_ir (tests.test_upcoming_bye_availability.UpcomingByeAvailabilityTests.test_released_plan_preferred_lower_id_on_injury_ir)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_upcoming_bye_availability.py", line 33, in test_released_plan_preferred_lower_id_on_injury_ir
+    fixture, data, service, now = authenticated_prepared(self, empty=False, bench_position='RB', points={'bq': 1})
+                                  ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/tests/lineup_review_fixture.py", line 215, in authenticated_prepared
+    f.setUp()
+    ~~~~~~~^^
+  File "/app/tests/test_roster_diagnostic_http.py", line 16, in setUp
+    self.f.setUp()
+    ~~~~~~~~~~~~^^
+  File "/app/tests/test_home_opportunity_integrity.py", line 27, in setUp
+    self.f.setUp()
+    ~~~~~~~~~~~~^^
+  File "/app/tests/test_trade_workspace_batch1.py", line 20, in setUp
+    self.folder = tempfile.TemporaryDirectory()
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 907, in __init__
+    self.name = mkdtemp(suffix, prefix, dir)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/tempfile.py", line 385, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+OSError: [Errno 28] No space left on device: '/tmp/tmptepz6ix1'
+
+----------------------------------------------------------------------
+Ran 1 test in 1.099s
+
+FAILED (errors=1)
