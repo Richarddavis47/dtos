@@ -1,6 +1,4 @@
 """Prepare schedule-backed roster coverage without using fantasy points."""
-from collections import Counter
-
 from src.core.data_platform.normalization.identity import normalize_team
 from src.core.intelligence.lineup_review import METHOD
 from src.core.trade_intelligence.lineup import BENCH_SLOTS, _eligible, eligible_positions
@@ -12,10 +10,12 @@ def _fit(slots, candidates, preferred=None):
     options = [
         sorted((pid for pid, positions in candidates.items()
                 if positions is None or any(_eligible(pos, slot) for pos in positions)),
-               key=lambda pid: pid != preferred.get(index))
+               key=lambda pid: (pid != preferred.get(index), pid))
         for index, slot in enumerate(slots)
     ]
-    occupied = {}
+    # Keep verified starters in place where possible. An augmenting path
+    # may move a starter if that is needed to fill another slot.
+    occupied = {pid: index for index, pid in preferred.items() if pid in options[index]}
 
     def fill(index, visited):
         for pid in options[index]:
@@ -31,14 +31,15 @@ def _fit(slots, candidates, preferred=None):
         return False
 
     for index in range(len(slots)):
-        fill(index, set())
+        if index not in occupied.values():
+            fill(index, set())
     return {index: pid for pid, index in occupied.items()}
 
 
 def _eligible_roster(team, catalog, league):
     # Roster rows hold assignments; the native catalog supplies fantasy eligibility.
     people = {}
-    for player in sorted(team.get('players') or [], key=lambda p: p.get('roster_slot') != 'Starter'):
+    for player in team.get('players') or []:
         pid = str(player['id'])
         if player.get('roster_slot') in {'IR', 'Taxi', 'Reserve'}:
             continue
@@ -58,40 +59,79 @@ def _eligible_roster(team, catalog, league):
     return people
 
 
-def _week(slots, people, games, byes, week, projection):
+def _starting_slots(players, slots):
+    """Read the submitted slot indexes, independent of roster iteration order."""
+    starters = [None] * len(slots)
+    seen = set()
+    for player in players:
+        pid = str(player['id'])
+        if pid in seen:
+            return None
+        seen.add(pid)
+        if player.get('roster_slot') != 'Starter':
+            continue
+        index = player.get('starter_index')
+        recorded_slot = player.get('starter_slot')
+        if (type(index) is not int or not 0 <= index < len(slots) or starters[index] is not None
+                or (recorded_slot and str(recorded_slot).upper() != slots[index])):
+            return None
+        starters[index] = pid
+    return starters
+
+
+def _week(slots, people, games, byes, week, projection, *, starters):
     bye_ids = {pid for pid, (club, _, _) in people.items()
                if byes.get(pid) == week and club and f'{week}:{club}' not in games}
     playing = {pid: positions for pid, (club, positions, slot_known) in people.items()
                if pid not in bye_ids and positions and slot_known and games.get(f'{week}:{club}')}
-    # Unknown schedule, eligibility or assignment gets the benefit of the
-    # doubt for the upper bound, and never establishes positive cover.
-    possible = {pid: positions or None for pid, (_, positions, _) in people.items() if pid not in bye_ids}
-    baseline = _fit(slots, {
-        pid: positions for pid, (_, positions, slot_known) in people.items()
-        if slot_known and positions and (pid in playing or pid in bye_ids)
-    })
-    after = _fit(slots, playing, baseline)
-    upper = _fit(slots, possible, baseline)
-    affected = [index for index, pid in baseline.items() if pid in bye_ids]
-    if len(baseline) > len(upper):
-        state = 'shortfall'
-    elif affected and len(after) == len(slots):
-        state = 'covered'
-    elif affected or playing.keys() != possible.keys():
-        state = 'unknown'
-    else:
+    initial = {index: pid for index, pid in enumerate(starters or ()) if pid is not None}
+    affected = [(index, pid) for index, pid in initial.items() if pid in bye_ids]
+    moves, unfilled = [], []
+    if affected:
+        after = _fit(slots, playing, initial)
+        if len(after) == len(slots):
+            state = 'covered'
+            prior = {pid: index for index, pid in initial.items()}
+            moves = [[index, pid, prior.get(pid)] for index, pid in sorted(after.items())
+                     if pid != initial.get(index)]
+        else:
+            # Unconfirmed candidates can prevent a proof of shortfall, but
+            # cannot establish positive cover.
+            possible = {pid: positions or None for pid, (_, positions, _) in people.items()
+                        if pid not in bye_ids}
+            upper = _fit(slots, possible, initial)
+            state = 'shortfall' if len(upper) < len(slots) else 'unknown'
+            if state == 'shortfall':
+                unfilled = [slot for index, slot in enumerate(slots) if index not in upper]
+    elif len(initial) == len(slots) and all(
+        any(_eligible(position, slots[index]) for position in playing.get(pid, ()))
+        for index, pid in initial.items()
+    ):
         state = 'no_gap'
-    # Include the whole legal rearrangement, including displaced FLEX players.
+    else:
+        state = 'unknown'
     return {
-        'week': week, 'state': state,
-        'affected': [slots[index] for index in sorted(affected)],
-        'byes': [baseline[index] for index in sorted(affected)],
-        'unfilled': list((Counter(slots) - Counter(slots[index] for index in upper)).elements())
-        if state == 'shortfall' else [],
-        'moves': [[slots[index], pid] for index, pid in sorted(after.items())
-                  if pid != baseline.get(index)] if state == 'covered' else [],
+        'week': week, 'state': state, 'slots': slots,
+        'bye_starters': [list(row) for row in affected],
+        'unfilled': unfilled, 'moves': moves,
         'projection_ready': projection.get('available') is True,
     }
+
+
+def _starter_positions(league):
+    return [slot.upper() for slot in league.get('roster_positions') or [] if slot.upper() not in BENCH_SLOTS]
+
+
+def read_upcoming_byes(profile, league, team):
+    """Withhold legacy or changed assignments until preparation catches up."""
+    record = (profile.get('upcoming_byes') or {}).get(str(team['roster_id']))
+    if not isinstance(record, dict) or not isinstance(record.get('weeks'), list):
+        return None
+    slots = _starter_positions(league)
+    players = team.get('players') or []
+    if len(players) <= 100 and 'starting_slots' in record and record['starting_slots'] == _starting_slots(players, slots):
+        return record['weeks']
+    return None
 
 
 def prepare_upcoming_byes(data, calendar, schedule, bye_evidence, profile):
@@ -105,7 +145,7 @@ def prepare_upcoming_byes(data, calendar, schedule, bye_evidence, profile):
     ) if week > data['week'])[:2]
     if not weeks:
         return {}
-    slots = [slot.upper() for slot in (league.get('roster_positions') or []) if slot.upper() not in BENCH_SLOTS]
+    slots = _starter_positions(league)
     if not 1 <= len(slots) <= 20:
         return {}
     games = (schedule.get('games') or {}) if (
@@ -119,5 +159,10 @@ def prepare_upcoming_byes(data, calendar, schedule, bye_evidence, profile):
         rid = str(team['roster_id'])
         people = _eligible_roster(team, data.get('players') or {}, league)
         weekly = profile['teams'][rid]['weekly']
-        result[rid] = [_week(slots, people, games, byes, week, weekly.get(week) or {}) for week in weeks]
+        starters = _starting_slots(team.get('players') or [], slots)
+        result[rid] = {
+            'starting_slots': starters,
+            'weeks': [_week(slots, people, games, byes, week, weekly.get(week) or {}, starters=starters)
+                      for week in weeks],
+        }
     return result

@@ -19,8 +19,8 @@ class UpcomingByeTests(unittest.TestCase):
             'idle': ('BUF', ('K',), True), 'backup': ('KC', ('K',), True),
             'defense': ('KC', ('DEF',), True),
         }
-        row = _week(['K', 'DEF'], roster, {'9:KC': True}, {'idle': 9}, 9, {})
-        self.assertEqual((row['state'], row['affected'], row['moves']), ('covered', ['K'], [['K', 'backup']]))
+        row = _week(['K', 'DEF'], roster, {'9:KC': True}, {'idle': 9}, 9, {}, starters=['idle', 'defense'])
+        self.assertEqual((row['state'], row['bye_starters'], row['moves']), ('covered', [[0, 'idle']], [[0, 'backup', None]]))
         self.assertFalse(row['projection_ready'])
 
     def test_two_byes_compete_for_one_replacement(self):
@@ -29,12 +29,12 @@ class UpcomingByeTests(unittest.TestCase):
             'wr': ('BUF', ('WR',), True), 'only_sub': ('KC', ('RB', 'WR'), True),
         }
         byes = {'rb': 9, 'wr': 9}
-        row = _week(['QB', 'FLEX', 'SUPER_FLEX'], roster, {'9:KC': True}, byes, 9, {})
+        row = _week(['QB', 'FLEX', 'SUPER_FLEX'], roster, {'9:KC': True}, byes, 9, {}, starters=['qb', 'rb', 'wr'])
         self.assertEqual(row['state'], 'shortfall')
         self.assertEqual(len(row['unfilled']), 1)
-        self.assertEqual(set(row['byes']), set(byes))
+        self.assertEqual({pid for _, pid in row['bye_starters']}, set(byes))
         roster['unknown_player'] = (None, (), True)
-        unknown = _week(['QB', 'FLEX', 'SUPER_FLEX'], roster, {'9:KC': True}, byes, 9, {})
+        unknown = _week(['QB', 'FLEX', 'SUPER_FLEX'], roster, {'9:KC': True}, byes, 9, {}, starters=['qb', 'rb', 'wr'])
         self.assertEqual(unknown['state'], 'unknown')
         self.assertEqual(unknown['unfilled'], [])
 
@@ -43,9 +43,10 @@ class UpcomingByeTests(unittest.TestCase):
             'starter-qb': ('KC', ('QB',), True), 'bye-rb': ('BUF', ('RB',), True),
             'starter-flex': ('KC', ('RB',), True), 'backup-qb': ('KC', ('QB',), True),
         }
-        row = _week(['QB', 'RB', 'SUPER_FLEX'], roster, {'9:KC': True}, {'bye-rb': 9}, 9, {'available': True})
+        row = _week(['QB', 'RB', 'SUPER_FLEX'], roster, {'9:KC': True}, {'bye-rb': 9}, 9, {'available': True},
+                    starters=['starter-qb', 'bye-rb', 'starter-flex'])
         self.assertEqual(row['state'], 'covered')
-        self.assertEqual(row['moves'], [['RB', 'starter-flex'], ['SUPER_FLEX', 'backup-qb']])
+        self.assertEqual(row['moves'], [[1, 'starter-flex', 2], [2, 'backup-qb', None]])
 
     def test_no_rollover_forecast_outside_the_scheduled_league_season(self):
         data = {'league': {'sport': 'nfl', 'status': 'in_season'}, 'week': 18}
@@ -79,7 +80,7 @@ class UpcomingByeTests(unittest.TestCase):
         with patch('services.global_evidence.retained_global_evidence') as store:
             store.return_value.read.return_value = facts
             prepared = prepare_for_data(service, data)
-        self.assertEqual(prepared['upcoming_byes']['1'][0]['week'], 9)
+        self.assertEqual(prepared['upcoming_byes']['1']['weeks'][0]['week'], 9)
         with patch('src.core.intelligence.upcoming_byes._fit', side_effect=AssertionError('page used solver')):
             with sync_playwright() as pw:
                 browser = launch_chromium(pw, headless=True)
