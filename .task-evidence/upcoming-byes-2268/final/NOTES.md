@@ -1,0 +1,5 @@
+# Source and evidence
+
+The released My Team page has future projection horizons in Calculations and sources. Future Matchups can render week-specific evidence. Neither presents a compact combined bye and eligibility check. The new section is a separate two-week planning snapshot in the existing admitted team-strength preparation. It reuses the retained NFL schedule and canonical slot eligibility. A bounded maximum matching checks whether unique eligible players fit across all slots. Unknown players can increase the optimistic ceiling for a shortage, while only players with confirmed games and fantasy eligibility establish cover. No projected points are used to represent legal coverage or vice versa. The view uses the existing compatible preparation and does not call the matching engine.
+
+The first disposable phone fixture put an unrelated pre-existing rendering state beyond the 600px target. The next phone fixture compared the same roster with and without the new section. The original standing browser navigation tests retain their 600px target and overflow assertions. The early harness and validation outputs should be retained independently of the final pass.

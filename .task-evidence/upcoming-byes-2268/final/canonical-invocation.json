@@ -1,0 +1,70 @@
+{
+  "source": {
+    "baseline": "a2ab131751e6cc2c7c6c8aa13e0b09bcfe5dea25",
+    "baseline_tree": "81c163b88696ed1f8957fc3cdd24f39440b13e11",
+    "candidate": "fac0dca7f578a06de4b7e78e7db07578cfcb8cb4",
+    "tree": "bd02964c262002259f9e8390c6933d8fd285aedb",
+    "branch": "feat/upcoming-byes-2268",
+    "version": "1.22.53",
+    "build": 2268,
+    "expected_test_count": 4650,
+    "pr": 357
+  },
+  "command": [
+    "docker",
+    "create",
+    "--name",
+    "dtos-upcoming-byes-canonical-2268-final",
+    "--init",
+    "--user",
+    "1000:1000",
+    "--memory=2g",
+    "--memory-swap=2g",
+    "--cpus=2",
+    "--network=none",
+    "-v",
+    "/workspace/dtos-draft-capital-2247:/app",
+    "-v",
+    "/workspace/dtos/.git:/workspace/dtos/.git:ro",
+    "-v",
+    "/workspace/2268-upcoming-byes/local-canonical:/output",
+    "-v",
+    "/dev/shm/dtos-2268-final-fixture:/fixture",
+    "-e",
+    "HOME=/tmp",
+    "-e",
+    "NODE_OPTIONS=--max-old-space-size=128",
+    "-e",
+    "GIT_CONFIG_COUNT=1",
+    "-e",
+    "GIT_CONFIG_KEY_0=safe.directory",
+    "-e",
+    "GIT_CONFIG_VALUE_0=/app",
+    "-e",
+    "DTOS_EXPECTED_HEAD=fac0dca7f578a06de4b7e78e7db07578cfcb8cb4",
+    "-e",
+    "DTOS_EXPECTED_TREE=bd02964c262002259f9e8390c6933d8fd285aedb",
+    "-e",
+    "DTOS_EXPECTED_TEST_COUNT=4650",
+    "-w",
+    "/app",
+    "sha256:f70a0c6402700dfb954c99d8163d4164926f74435c34d2e7e462407151663ae6",
+    "python",
+    "/output/runner.py"
+  ],
+  "container": "1fcfb549b0f174eab8002305bbbd3e99cf8ed8e2ffe5e4c7ae7594df36934ae1",
+  "files": [
+    {
+      "name": "runner.py",
+      "sha256": "574308d9f64252575970aa19ce113f603ccb9927f2c6a523e8c228869fd37cac"
+    },
+    {
+      "name": "observer/sitecustomize.py",
+      "sha256": "3f43288a099e49a3ed2dea36f977b596707589eaefd2656b40a3b9c6533be2d4"
+    }
+  ],
+  "created_at": "2026-11-18T21:51:00.058838+00:00",
+  "status": "RUNNING_NOT_PASSED",
+  "fixture_free_after_container_creation": 9409773568,
+  "official_scratch_gate_unchanged": true
+}

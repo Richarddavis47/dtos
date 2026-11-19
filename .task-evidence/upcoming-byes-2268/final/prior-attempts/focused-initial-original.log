@@ -1,0 +1,50 @@
+/usr/local/lib/python3.14/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+  from starlette.testclient import TestClient as TestClient  # noqa
+test_kicker_and_defense_coverage_does_not_require_points (tests.test_upcoming_byes.UpcomingByeTests.test_kicker_and_defense_coverage_does_not_require_points) ... ok
+test_no_rollover_forecast_outside_the_scheduled_league_season (tests.test_upcoming_byes.UpcomingByeTests.test_no_rollover_forecast_outside_the_scheduled_league_season) ... ok
+test_owner_phone_roster_to_prepared_bye_and_future_matchups (tests.test_upcoming_byes.UpcomingByeTests.test_owner_phone_roster_to_prepared_bye_and_future_matchups) ... {"timestamp":"2026-11-18T21:34:16.834345+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":76308480,"limit_bytes":2147483648,"raw_headroom_bytes":2071175168,"clean_inactive_file_bytes":655360,"conditional_file_credit_bytes":327680,"admission_headroom_bytes":2071502848,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-18T21:34:16.836879+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/workspace?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-18T21:34:16.846450+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_admission","request_id":"system","event":"trade_admission","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":76288000,"limit_bytes":2147483648,"raw_headroom_bytes":2071195648,"clean_inactive_file_bytes":655360,"conditional_file_credit_bytes":327680,"admission_headroom_bytes":2071523328,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"recovery":null}}
+{"timestamp":"2026-11-18T21:34:16.899170+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_execution_finished","request_id":"system","event":"trade_execution_finished","duration_ms":53.714,"diagnostic":{"schema":"trade-resource-v1","outcome":"complete"}}
+{"timestamp":"2026-11-18T21:34:16.902668+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/trades/evaluate \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-18T21:34:16.920093+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-18T21:34:16.947909+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+Validation Chromium: /usr/bin/chromium
+Validation Chromium version: 156.0.8078.79
+{"timestamp":"2026-11-18T21:34:18.663597+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/teams/1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-18T21:34:18.844008+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-18T21:34:19.117104+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-18T21:34:19.118448+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"f990285821754072a6a78c34629bd17b","event":"request_complete","duration_ms":257.074,"status_code":200,"method":"GET","path":"/static/css/contextual_navigation.css"}
+{"timestamp":"2026-11-18T21:34:19.144206+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-18T21:34:19.154130+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-18T21:34:19.155272+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"1e8e515ac0d4471389c7892fbc5321d4","event":"request_complete","duration_ms":4.292,"status_code":200,"method":"GET","path":"/static/js/contextual_navigation.js"}
+{"timestamp":"2026-11-18T21:34:19.168491+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-18T21:34:19.179591+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/lineup-review.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-18T21:34:19.193998+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/strategy_session.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+FAIL
+test_superflex_fit_reports_the_complete_set_of_moves (tests.test_upcoming_byes.UpcomingByeTests.test_superflex_fit_reports_the_complete_set_of_moves) ... ok
+test_two_byes_compete_for_one_replacement (tests.test_upcoming_byes.UpcomingByeTests.test_two_byes_compete_for_one_replacement) ... ok
+test_partial_display_never_labels_subtotal_complete (tests.test_batch5_team_strength_active.ActiveStrengthTests.test_partial_display_never_labels_subtotal_complete) ... ok
+test_real_consumer_chain_rejects_stale_profile (tests.test_batch5_team_strength_active.ActiveStrengthTests.test_real_consumer_chain_rejects_stale_profile) ... ok
+test_complete_horizons_preserve_actual_and_round_components (tests.test_batch5_team_strength.TeamStrengthTests.test_complete_horizons_preserve_actual_and_round_components) ... ok
+test_generation_is_pinned_even_if_publication_changes_during_read (tests.test_batch5_team_strength.TeamStrengthTests.test_generation_is_pinned_even_if_publication_changes_during_read) ... ok
+test_known_bye_uses_week_specific_replacement_without_injury_forecast (tests.test_batch5_team_strength.TeamStrengthTests.test_known_bye_uses_week_specific_replacement_without_injury_forecast) ... ok
+test_replay_and_restart_are_deterministic_without_writes (tests.test_batch5_team_strength.TeamStrengthTests.test_replay_and_restart_are_deterministic_without_writes) ... ok
+test_scope_and_calendar_fail_closed (tests.test_batch5_team_strength.TeamStrengthTests.test_scope_and_calendar_fail_closed) ... ok
+test_unknown_lineup_does_not_rank_as_zero (tests.test_batch5_team_strength.TeamStrengthTests.test_unknown_lineup_does_not_rank_as_zero) ... ok
+test_unsupported_week_is_not_extrapolated (tests.test_batch5_team_strength.TeamStrengthTests.test_unsupported_week_is_not_extrapolated) ... ok
+test_zero_supported_and_reserves_are_week_specific (tests.test_batch5_team_strength.TeamStrengthTests.test_zero_supported_and_reserves_are_week_specific) ... ok
+
+======================================================================
+FAIL: test_owner_phone_roster_to_prepared_bye_and_future_matchups (tests.test_upcoming_byes.UpcomingByeTests.test_owner_phone_roster_to_prepared_bye_and_future_matchups)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_upcoming_byes.py", line 100, in test_owner_phone_roster_to_prepared_bye_and_future_matchups
+    self.assertLessEqual(page.locator('#full-roster .thq-player').first.bounding_box()['y'], 600)
+    ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 934.765625 not less than or equal to 600
+
+----------------------------------------------------------------------
+Ran 15 tests in 4.355s
+
+FAILED (failures=1)
