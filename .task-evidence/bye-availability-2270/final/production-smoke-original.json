@@ -1,0 +1,89 @@
+{
+  "reads": [
+    {
+      "path": "/health/ready",
+      "status": 200,
+      "observed_at": "2026-11-19T23:58:09.800511+00:00",
+      "elapsed_network_seconds": 0.1663774810731411,
+      "bytes": 213,
+      "readiness": {
+        "status": "ready",
+        "version": "1.22.55",
+        "build": 2270,
+        "deployment": {
+          "branch": "main",
+          "commit": "06da5e579c80438c2a4abaadedee95e0b9f911f5",
+          "deployed_at": "2026-11-19T23:57:02.047140+00:00"
+        },
+        "reason": "Application ready."
+      }
+    },
+    {
+      "path": "/health/live",
+      "status": 200,
+      "observed_at": "2026-11-19T23:58:09.966924+00:00",
+      "elapsed_network_seconds": 0.15290931798517704,
+      "bytes": 38
+    },
+    {
+      "path": "/welcome",
+      "status": 200,
+      "observed_at": "2026-11-19T23:58:10.119838+00:00",
+      "elapsed_network_seconds": 0.2204461699584499,
+      "bytes": 53196
+    },
+    {
+      "path": "/account/sign-in",
+      "status": 200,
+      "observed_at": "2026-11-19T23:58:10.340290+00:00",
+      "elapsed_network_seconds": 0.16658147203270346,
+      "bytes": 35831
+    },
+    {
+      "path": "/api/my-dtos",
+      "status": 401,
+      "observed_at": "2026-11-19T23:58:10.506877+00:00",
+      "elapsed_network_seconds": 0.1112667580600828,
+      "bytes": 91
+    },
+    {
+      "path": "/static/js/trade_comparison.js",
+      "status": 200,
+      "observed_at": "2026-11-19T23:58:10.618148+00:00",
+      "elapsed_network_seconds": 0.4567588899517432,
+      "bytes": 27116,
+      "sha256": "d95f213aac953961f80173776ee55881dd8e80ab3bc9bb96f7c5828c65705137",
+      "matches_exact_merged_source": true
+    },
+    {
+      "path": "/static/js/trade_workspace.js",
+      "status": 200,
+      "observed_at": "2026-11-19T23:58:11.086380+00:00",
+      "elapsed_network_seconds": 0.1676183530362323,
+      "bytes": 194551,
+      "sha256": "4742f67777b12c26e266fab4983fd3051c4afdc9ae76ee05a8c10768e2c2fa00",
+      "matches_exact_merged_source": true
+    },
+    {
+      "path": "/static/lineup-review.js",
+      "status": 200,
+      "observed_at": "2026-11-19T23:58:11.261844+00:00",
+      "elapsed_network_seconds": 0.13736811105627567,
+      "bytes": 5296,
+      "sha256": "4a3a789c34d0b196f990c9dd568a97afba77ca3546b4f3d272073616c05fe71d",
+      "matches_exact_merged_source": true
+    }
+  ],
+  "readiness": {
+    "status": "ready",
+    "version": "1.22.55",
+    "build": 2270,
+    "deployment": {
+      "branch": "main",
+      "commit": "06da5e579c80438c2a4abaadedee95e0b9f911f5",
+      "deployed_at": "2026-11-19T23:57:02.047140+00:00"
+    },
+    "reason": "Application ready."
+  },
+  "scope": "Eight bounded public read-only requests; no owner authentication, heavy work or data mutations. Timing includes network and is not isolated server liveness latency."
+}
