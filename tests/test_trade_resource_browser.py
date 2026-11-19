@@ -84,7 +84,7 @@ class TradeResourceBrowserTests(unittest.TestCase):
             browser = launch_chromium(playwright, headless=True)
             try:
                 for width, height in [(320, 432), (375, 667), (390, 844), (1280, 900)]:
-                    control = {'pressure': False}
+                    control = {'pressure': True}
                     posts = []
                     context = browser.new_context(viewport={'width': width, 'height': height},
                         has_touch=True, is_mobile=width < 1000)
@@ -96,7 +96,7 @@ class TradeResourceBrowserTests(unittest.TestCase):
                             if u.hostname != 'dtos.test':
                                 return route.fulfill(status=200, body='')
                             headers = {k:v for k,v in request.headers.items() if k in ('content-type', 'x-csrf-token')}
-                            if u.path == '/api/trades/generate' and control['pressure']:
+                            if u.path in {'/api/trades/generate', '/api/trades/workspace'} and control['pressure']:
                                 with patch.object(execution, 'observe_memory', return_value=memory_fixtures.sample(2000 * execution.MIB)):
                                     response = f.f.client.request(request.method, u.path, content=request.post_data, headers=headers)
                             else:
@@ -111,10 +111,13 @@ class TradeResourceBrowserTests(unittest.TestCase):
                         page.goto('https://dtos.test/trades/recommended?front_office=1')
                         page.wait_for_function("!document.querySelector('#trade-context').textContent.includes('Loading')")
                         self.assertIn('Projections prepared.', page.locator('#trade-search-readiness').inner_text())
+                        status = page.locator('#recommendation-status')
+                        self.assertEqual(status.get_attribute('data-state'), 'deferred')
+                        self.assertIn('searching eligible teams', status.inner_text())
+                        self.assertIn('no search has run', status.inner_text())
                         self.assertEqual(posts, [])
                         # Temporary strategy is retained through deferral and retry.
                         page.locator('#trade-strategy').select_option('REBUILD')
-                        control['pressure'] = True
                         page.locator('#trade-find').focus()
                         page.keyboard.press('Enter')
                         page.wait_for_function("document.querySelector('#recommendation-status').dataset.state==='deferred'")
