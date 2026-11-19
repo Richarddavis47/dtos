@@ -19,7 +19,8 @@ class UpcomingByeTests(unittest.TestCase):
             'idle': ('BUF', ('K',), True), 'backup': ('KC', ('K',), True),
             'defense': ('KC', ('DEF',), True),
         }
-        row = _week(['K', 'DEF'], roster, {'9:KC': True}, {'idle': 9}, 9, {}, starters=['idle', 'defense'])
+        row = _week(['K', 'DEF'], roster, {'9:KC': True}, {'idle': 9}, 9, {}, starters=['idle', 'defense'],
+                    statuses={pid: 'active' for pid in roster}, fresh=True)
         self.assertEqual((row['state'], row['bye_starters'], row['moves']), ('covered', [[0, 'idle']], [[0, 'backup', None]]))
         self.assertFalse(row['projection_ready'])
 
@@ -44,7 +45,8 @@ class UpcomingByeTests(unittest.TestCase):
             'starter-flex': ('KC', ('RB',), True), 'backup-qb': ('KC', ('QB',), True),
         }
         row = _week(['QB', 'RB', 'SUPER_FLEX'], roster, {'9:KC': True}, {'bye-rb': 9}, 9, {'available': True},
-                    starters=['starter-qb', 'bye-rb', 'starter-flex'])
+                    starters=['starter-qb', 'bye-rb', 'starter-flex'],
+                    statuses={pid: 'active' for pid in roster}, fresh=True)
         self.assertEqual(row['state'], 'covered')
         self.assertEqual(row['moves'], [[1, 'starter-flex', 2], [2, 'backup-qb', None]])
 

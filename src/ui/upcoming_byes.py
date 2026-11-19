@@ -18,13 +18,35 @@ def _indexed_slot(slots, index):
     return escape(name)
 
 
+def _status_age(row):
+    minutes = row.get('availability_age_minutes')
+    if minutes is None:
+        return 'The time of the Sleeper status check is unavailable.'
+    if minutes < 1:
+        age = 'less than a minute ago'
+    else:
+        count, unit = ((minutes // 1440, 'day') if minutes >= 1440 else
+                       (minutes // 60, 'hour') if minutes >= 60 else (minutes, 'minute'))
+        age = f"{count} {unit}{'s' if count != 1 else ''} ago"
+    note = ' That check is stale.' if row.get('availability_freshness') == 'Stale' else ''
+    return f'Sleeper player status checked {age}.{note}'
+
+
+def _status_dependency(name, status):
+    labels = {'ir': 'on injured reserve', 'pup': 'on PUP', 'out': 'out', 'inactive': 'inactive',
+              'suspended': 'suspended', 'retired': 'retired', 'questionable': 'questionable', 'doubtful': 'doubtful'}
+    if status in labels:
+        return f'Sleeper listed {name} as {labels[status]} at the status check.'
+    return f'{name} has unconfirmed availability.'
+
+
 def upcoming_byes_panel(weeks, players, *, active):
     if not active:
         return ''
     if not weeks:
         return ('<section class="thq-section" id="upcoming-byes"><h2>Upcoming bye weeks</h2>'
                 '<p>Future-week roster coverage is unavailable for this lineup snapshot.</p></section>')
-    order = {'shortfall': 0, 'unknown': 1, 'covered': 2, 'no_gap': 3}
+    order = {'shortfall': 0, 'unknown': 1, 'conditional': 2, 'covered': 3, 'no_gap': 4}
     priority = sorted(weeks, key=lambda row: (order[row['state']], row['week']))
     names = {str(player['id']): escape(player.get('name') or 'Unnamed player') for player in players}
 
@@ -32,7 +54,9 @@ def upcoming_byes_panel(weeks, players, *, active):
         week = f"Week {row['week']}"
         positions = _slots(dict.fromkeys(row['slots'][index] for index, _ in row['bye_starters']))
         if row['state'] == 'shortfall':
-            return f"{week} · Bye affects {positions}. This roster cannot fill every starting spot."
+            return f"{week} · Bye affects {positions}. This roster cannot fill every starting spot with its current eligible slots."
+        if row['state'] == 'conditional':
+            return f"{week} · Legal cover for the {positions} bye depends on player availability."
         if row['state'] == 'covered':
             return f"{week} · A legal lineup change can cover the {positions} bye."
         if row['state'] == 'unknown':
@@ -55,11 +79,19 @@ def upcoming_byes_panel(weeks, players, *, active):
             instruction = (f'Start {name} at {destination}.' if prior is None else
                            f'Move {name} from {_indexed_slot(slots, prior)} to {destination}.')
             moves.append(f'<li data-bye-move="{escape(pid, quote=True)}" data-slot-index="{index}">{instruction}</li>')
-        instruction_heading = 'Make this change.' if len(moves) == 1 else 'Make these changes together.'
+        if row['state'] == 'conditional':
+            instruction_heading = 'Use this lineup only if all its players are available.'
+        else:
+            instruction_heading = 'Make this change.' if len(moves) == 1 else 'Make these changes together.'
+        dependencies = ''.join(
+            f'<li>{_status_dependency(names.get(pid, "Unnamed player"), status)}</li>'
+            for pid, status in row['availability_dependencies']
+        )
         vacancy = _slots(row['unfilled'])
         notes = (
             (f'<ul>{absent}</ul>' if absent else '')
-            + (f'<p>{instruction_heading}</p><ul>{"".join(moves)}</ul>' if moves else '')
+            + (f'<p>{instruction_heading}</p><ul>{"".join(moves)}</ul><p>{_status_age(row)}</p>' if moves else '')
+            + (f'<ul>{dependencies}</ul>' if dependencies else '')
             + (f'<p>One legal fit leaves {vacancy} unfilled.</p>' if vacancy else '')
             + ('<p>A complete projected lineup is unavailable for this week.</p>'
                if not row['projection_ready'] else '')

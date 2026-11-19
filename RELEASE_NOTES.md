@@ -1,3 +1,7 @@
+## v1.22.55 / build 2270 — Prefer available bye cover
+
+My Team prefers complete bye-week lineups supported by current Sleeper player status. If cover depends on uncertain availability, the plan names the dependency and shows the age of the status check.
+
 ## v1.22.54 / build 2269 — Cover upcoming byes
 
 My Team names the starters on bye and shows the moves that fill their spots together, including FLEX and Superflex rearrangements. The plan follows the submitted slots and uses the schedule and roster evidence for each target week.
