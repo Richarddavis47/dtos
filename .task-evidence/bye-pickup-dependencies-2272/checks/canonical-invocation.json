@@ -1,0 +1,70 @@
+{
+  "source": {
+    "baseline": "5f1ee1d1d0119fc945d6d40b9a2a7843bfcd2cfd",
+    "baseline_tree": "59fd614204c99f6a4bff60e33044c404ef0a7eb7",
+    "candidate": "05669cf734d6f002b769682f0e286b2b6cb1fd2d",
+    "tree": "86eb797b00d2214bd9bb676e9a2b5330d695f95c",
+    "branch": "fix/bye-pickup-dependencies-2272",
+    "version": "1.22.57",
+    "build": 2272,
+    "expected_test_count": 4663,
+    "pr": 361
+  },
+  "command": [
+    "docker",
+    "create",
+    "--name",
+    "dtos-bye-dependencies-canonical-2272",
+    "--init",
+    "--user",
+    "1000:1000",
+    "--memory=2g",
+    "--memory-swap=2g",
+    "--cpus=2",
+    "--network=none",
+    "-v",
+    "/workspace/dtos-draft-capital-2247:/app",
+    "-v",
+    "/workspace/dtos/.git:/workspace/dtos/.git:ro",
+    "-v",
+    "/workspace/2272-bye-dependencies/local-canonical:/output",
+    "-v",
+    "/dev/shm/dtos-2272-fixture:/fixture",
+    "-e",
+    "HOME=/tmp",
+    "-e",
+    "NODE_OPTIONS=--max-old-space-size=128",
+    "-e",
+    "GIT_CONFIG_COUNT=1",
+    "-e",
+    "GIT_CONFIG_KEY_0=safe.directory",
+    "-e",
+    "GIT_CONFIG_VALUE_0=/app",
+    "-e",
+    "DTOS_EXPECTED_HEAD=05669cf734d6f002b769682f0e286b2b6cb1fd2d",
+    "-e",
+    "DTOS_EXPECTED_TREE=86eb797b00d2214bd9bb676e9a2b5330d695f95c",
+    "-e",
+    "DTOS_EXPECTED_TEST_COUNT=4663",
+    "-w",
+    "/app",
+    "sha256:057f57aa0ffe1f0833e1f772a0fd5afb2976c5eaafaf9e0c056310718a58d211",
+    "python",
+    "/output/runner.py"
+  ],
+  "container": "f8d4d3af6f009db5280c735c51fc05e88638e060bdf5ce725892c636ece5d411",
+  "files": [
+    {
+      "name": "runner.py",
+      "sha256": "574308d9f64252575970aa19ce113f603ccb9927f2c6a523e8c228869fd37cac"
+    },
+    {
+      "name": "observer/sitecustomize.py",
+      "sha256": "3f43288a099e49a3ed2dea36f977b596707589eaefd2656b40a3b9c6533be2d4"
+    }
+  ],
+  "created_at": "2026-11-20T18:35:09.043878+00:00",
+  "status": "RUNNING_NOT_PASSED",
+  "fixture_free_after_container_creation": 9440956416,
+  "official_scratch_gate_unchanged": true
+}
