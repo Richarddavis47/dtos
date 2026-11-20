@@ -1,7 +1,7 @@
 # Scout acceptance for build 2273
 
-Candidate `644a5c1fa7ed0d210880dcdf6d6968de9f70ba21`  
-Expected validated application tree `223fa3cae13a71abc84364461f505a7662aa1d5b`
+Candidate `93c249b22ff46f4eb3827022d00041f4ae06eb33`  
+Expected validated application tree `e4914d82bd08938e7605df4be77037a422e7d3d8`
 
 1. In a prepared disposable team, open My Team, expand **See weeks and possible moves**, and follow the Week 9 pickup link.
 2. Check the roster-space line next to the pickup’s lineup fit and target-week Sleeper projection. The open fixture shows 5 of 6 active spots used. The Superflex fixture shows 5 of 5 and tells you to make room. That fixture has a spare IR place and spare taxi places. Neither adds an active spot.

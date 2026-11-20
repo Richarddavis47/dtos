@@ -42,14 +42,14 @@ index a326b33..a8f8b99 100644
  
  _REPOSITORY_ROOT = Path(__file__).resolve().parent
 diff --git a/routes/market.py b/routes/market.py
-index 78397c2..f5bfda3 100644
+index 78397c2..382ff8b 100644
 --- a/routes/market.py
 +++ b/routes/market.py
 @@ -409,6 +409,7 @@ def create_market_router(
      def bye_pickups_page(bye_week, market_league, season, from_team):
          from src.core.intelligence.team_strength import compatible_profile
          from src.core.intelligence.upcoming_byes import read_upcoming_byes
-+        from src.core.trade_intelligence.roster_space import pickup_roster_space
++        from src.core.intelligence import pickup_roster_space
          from src.ui.upcoming_byes import bye_pickup_panel
  
          selected_state, selected_league, _ = dependencies()
@@ -64,14 +64,14 @@ index 78397c2..f5bfda3 100644
                      f'<p class="evidence-unavailable">{escape(reason)}</p></section>')
  
 diff --git a/services/sleeper.py b/services/sleeper.py
-index 3ecae41..16f64a7 100644
+index 3ecae41..6ec9c4b 100644
 --- a/services/sleeper.py
 +++ b/services/sleeper.py
 @@ -29,6 +29,7 @@ from src.platform.lifecycle import HeavyWorkDeferred, lifecycle_coordinator
  from src.platform.sync_diagnostics import SyncDiagnostics
  from src.platform.runtime_errors import log_sync_failure
  from src.core.sync_status import safe_sync_state, synchronization_warning
-+from src.core.trade_intelligence.roster_space import sleeper_membership_verified
++from src.core.intelligence import sleeper_membership_verified
  from src.platform.request_diagnostics import diagnosed, source_hooks, span
  from src.core.valuation.automation import audit_market_calibration
  from src.core.valuation_intelligence import build_valuation_intelligence
@@ -83,6 +83,25 @@ index 3ecae41..16f64a7 100644
                      "players": player_rows,
                  })
              team_rows = standings_order({"league": league, "teams": team_rows})["teams"]
+diff --git a/src/core/intelligence/__init__.py b/src/core/intelligence/__init__.py
+index 11de1cc..f7a195b 100644
+--- a/src/core/intelligence/__init__.py
++++ b/src/core/intelligence/__init__.py
+@@ -26,6 +26,8 @@ from src.core.trade_intelligence.market_balance import market_balance as trade_m
+ from src.core.trade_intelligence.roster_space import (
+     active_player_ids as trade_active_player_ids,
+     configured_active_slots as trade_configured_active_slots,
++    pickup_roster_space,
++    sleeper_membership_verified,
+ )
+ from src.core.trade_intelligence.evidence_context import (
+     TradeEvidenceContext, build_trade_evidence_context, qualify_partner_explanation,
+@@ -37,4 +39,4 @@ def evaluate_horizon_impact(data, proposal, service):
+     return evaluate(data, proposal, service)
+ 
+ 
+-__all__ = ["AssetContext", "IntelligenceCache", "IntelligenceContext", "IntelligenceOrchestrator", "IntelligenceRegistry", "IntelligenceResult", "SearchLineupMemo", "TradeAsset", "TradeEvidenceContext", "TradeProposal", "TRADE_EVALUATION_POLICY_VERSION", "UnifiedConfidence", "UnifiedEvidence", "UnifiedRecommendation", "apply_positional_ranks", "build_asset_pool", "build_context", "build_league_model", "build_trade_evidence_context", "calculate_confidence", "evaluate_bilateral", "evaluate_horizon_impact", "generate_proposals", "intelligence_cache", "intelligence_orchestrator", "intelligence_registry", "lineup_slot_eligible", "lineup_bench_slots", "lineup_eligible_positions", "qualify_partner_explanation", "resolve_trade_strategy", "trade_active_player_ids", "trade_configured_active_slots", "trade_market_balance", "trade_pick_identity_errors"]
++__all__ = ["AssetContext", "IntelligenceCache", "IntelligenceContext", "IntelligenceOrchestrator", "IntelligenceRegistry", "IntelligenceResult", "SearchLineupMemo", "TradeAsset", "TradeEvidenceContext", "TradeProposal", "TRADE_EVALUATION_POLICY_VERSION", "UnifiedConfidence", "UnifiedEvidence", "UnifiedRecommendation", "apply_positional_ranks", "build_asset_pool", "build_context", "build_league_model", "build_trade_evidence_context", "calculate_confidence", "evaluate_bilateral", "evaluate_horizon_impact", "generate_proposals", "intelligence_cache", "intelligence_orchestrator", "intelligence_registry", "lineup_slot_eligible", "lineup_bench_slots", "lineup_eligible_positions", "pickup_roster_space", "qualify_partner_explanation", "resolve_trade_strategy", "sleeper_membership_verified", "trade_active_player_ids", "trade_configured_active_slots", "trade_market_balance", "trade_pick_identity_errors"]
 diff --git a/src/core/trade_intelligence/roster_space.py b/src/core/trade_intelligence/roster_space.py
 index 8e5c55f..22dd015 100644
 --- a/src/core/trade_intelligence/roster_space.py
@@ -200,14 +219,14 @@ index 7b7ccb3..67d7ab7 100644
                'or locks apply in Sleeper. Use Sleeper for all lineup changes, adds, drops, and claims.</p>'
              + f'<p>{_status_age(row)}</p><div class="market-grid">{"".join(cards)}</div>'
 diff --git a/tests/test_bye_pickups.py b/tests/test_bye_pickups.py
-index aefe9a4..50a07a2 100644
+index aefe9a4..7e0a39c 100644
 --- a/tests/test_bye_pickups.py
 +++ b/tests/test_bye_pickups.py
 @@ -11,6 +11,7 @@ import unittest
  from routes.market import create_market_router
  from routes.navigation import create_navigation_router
  from services.market_navigation import market_return
-+from src.core.trade_intelligence.roster_space import pickup_roster_space, sleeper_membership_verified
++from src.core.intelligence import pickup_roster_space, sleeper_membership_verified
  from tests.lineup_review_fixture import authenticated_prepared
  from tests.test_upcoming_bye_moves import install_schedule, phone
  

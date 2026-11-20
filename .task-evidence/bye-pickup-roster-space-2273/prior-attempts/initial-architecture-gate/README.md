@@ -1,0 +1,1 @@
+The initial candidate's canonical architecture check rejected direct imports into the Trade implementation from a service and a route. The corrected head uses the existing public intelligence API. The architecture rule and its validation remain in place. The run stopped before the full regression suite.

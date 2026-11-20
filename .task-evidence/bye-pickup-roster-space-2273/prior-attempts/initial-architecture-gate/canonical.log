@@ -1,0 +1,11 @@
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/app/tools/validation/validate_release.py", line 44, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/app/tools/validation/validate_release.py", line 30, in main
+    results = run_release_validation(ROOT, run_id)
+  File "/app/src/platform/validation/release.py", line 115, in run_release_validation
+    raise RuntimeError("Architecture validation failed: " + "; ".join(violations))
+RuntimeError: Architecture validation failed: services/sleeper.py imports src.core.trade_intelligence; routes/market.py imports src.core.trade_intelligence

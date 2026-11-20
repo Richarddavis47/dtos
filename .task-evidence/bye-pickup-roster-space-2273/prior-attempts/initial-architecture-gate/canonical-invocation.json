@@ -1,0 +1,70 @@
+{
+  "source": {
+    "baseline": "c0c087ecf61a43849341216fa2eca14e97a456f0",
+    "baseline_tree": "86eb797b00d2214bd9bb676e9a2b5330d695f95c",
+    "candidate": "644a5c1fa7ed0d210880dcdf6d6968de9f70ba21",
+    "tree": "223fa3cae13a71abc84364461f505a7662aa1d5b",
+    "branch": "feat/bye-pickup-roster-space-2273",
+    "version": "1.22.58",
+    "build": 2273,
+    "expected_test_count": 4665,
+    "pr": 362
+  },
+  "command": [
+    "docker",
+    "create",
+    "--name",
+    "dtos-bye-roster-space-canonical-2273",
+    "--init",
+    "--user",
+    "1000:1000",
+    "--memory=2g",
+    "--memory-swap=2g",
+    "--cpus=2",
+    "--network=none",
+    "-v",
+    "/workspace/dtos-draft-capital-2247:/app",
+    "-v",
+    "/workspace/dtos/.git:/workspace/dtos/.git:ro",
+    "-v",
+    "/workspace/2273-bye-roster-space/local-canonical:/output",
+    "-v",
+    "/dev/shm/dtos-2273-fixture:/fixture",
+    "-e",
+    "HOME=/tmp",
+    "-e",
+    "NODE_OPTIONS=--max-old-space-size=128",
+    "-e",
+    "GIT_CONFIG_COUNT=1",
+    "-e",
+    "GIT_CONFIG_KEY_0=safe.directory",
+    "-e",
+    "GIT_CONFIG_VALUE_0=/app",
+    "-e",
+    "DTOS_EXPECTED_HEAD=644a5c1fa7ed0d210880dcdf6d6968de9f70ba21",
+    "-e",
+    "DTOS_EXPECTED_TREE=223fa3cae13a71abc84364461f505a7662aa1d5b",
+    "-e",
+    "DTOS_EXPECTED_TEST_COUNT=4665",
+    "-w",
+    "/app",
+    "sha256:057f57aa0ffe1f0833e1f772a0fd5afb2976c5eaafaf9e0c056310718a58d211",
+    "python",
+    "/output/runner.py"
+  ],
+  "container": "cb11a7c490ae41397a0f63285c58c90f7cf72e5a7d1c7ab9b9e9eaf38ba28a4d",
+  "files": [
+    {
+      "name": "runner.py",
+      "sha256": "574308d9f64252575970aa19ce113f603ccb9927f2c6a523e8c228869fd37cac"
+    },
+    {
+      "name": "observer/sitecustomize.py",
+      "sha256": "3f43288a099e49a3ed2dea36f977b596707589eaefd2656b40a3b9c6533be2d4"
+    }
+  ],
+  "created_at": "2026-11-20T23:49:22.021811+00:00",
+  "status": "RUNNING_NOT_PASSED",
+  "fixture_free_after_container_creation": 9426690048,
+  "official_scratch_gate_unchanged": true
+}
