@@ -1,5 +1,6 @@
 """Compact disclosure for the prepared two-week bye outlook."""
 from html import escape
+from urllib.parse import quote, urlencode
 
 
 def _slot_name(slot):
@@ -40,7 +41,7 @@ def _status_dependency(name, status):
     return f'{name} has unconfirmed availability.'
 
 
-def upcoming_byes_panel(weeks, players, *, active):
+def upcoming_byes_panel(weeks, players, *, active, league_id=None, season=None, roster_id=None):
     if not active:
         return ''
     if not weeks:
@@ -49,6 +50,16 @@ def upcoming_byes_panel(weeks, players, *, active):
     order = {'shortfall': 0, 'unknown': 1, 'conditional': 2, 'covered': 3, 'no_gap': 4}
     priority = sorted(weeks, key=lambda row: (order[row['state']], row['week']))
     names = {str(player['id']): escape(player.get('name') or 'Unnamed player') for player in players}
+    pickup_links = []
+    for row in priority:
+        if row['state'] != 'shortfall' or not (league_id and season and roster_id):
+            continue
+        week = row['week']
+        query = urlencode(dict(bye_week=week, market_league=league_id, season=season, from_team=roster_id,
+                               availability='day_traders_free_agent'))
+        needs = _slots(dict.fromkeys(row['unfilled']))
+        pickup_links.append(f'<a class="thq-action" id="bye-pickup-{week}" href="/market?{escape(query)}">'
+                            f'Find Week {week} {needs} cover</a>')
 
     def finding(row):
         week = f"Week {row['week']}"
@@ -105,8 +116,46 @@ def upcoming_byes_panel(weeks, players, *, active):
     return (
         '<section class="thq-section" id="upcoming-byes"><h2>Upcoming bye weeks</h2>'
         f'<p>{finding(priority[0])}</p>'
+        + ('<div class="thq-actions">' + ''.join(pickup_links) + '</div>' if pickup_links else '') +
         '<details class="thq-strength-detail"><summary>See weeks and possible moves</summary>'
         '<p>This plan uses the latest prepared roster and NFL schedule. It shows who fits together under your league’s rules. '
         'Check player availability again before setting your Sleeper lineup.</p>'
         + ''.join(detail(row, leading=index == 0) for index, row in enumerate(priority)) + '</details></section>'
     )
+
+
+def bye_pickup_panel(row, ownership, *, origin, league_id, roster_id):
+    cards = []
+    shortage = len(row['unfilled'])
+    for candidate in row['pickups']['candidates']:
+        pid = candidate['player_id']
+        if ownership.resolve(pid)['state'] != 'FREE_AGENT':
+            continue
+        catalog = ownership.players[pid]
+        name = escape(str(catalog.get('full_name') or catalog.get('name') or pid))
+        positions = _slots(candidate['positions'])
+        slot, gap = _slot_name(candidate['slot']), _slot_name(candidate['gap'])
+        fit = (f'Can fill one {gap} opening by starting at {slot} and moving eligible roster players.'
+               if slot != gap else f'Can fill one {gap} opening.')
+        points = candidate['points']
+        projection = 'Sleeper projection unavailable.' if points is None else f'Sleeper projection: {points:.2f} pts.'
+        if points is not None and candidate['projection_freshness'] in {'Aging', 'Stale'}:
+            projection += f" Projection freshness: {candidate['projection_freshness'].lower()}."
+        status = (_status_dependency(name, candidate['status'])
+                  if candidate['status'] != 'active' else '')
+        href = '/players/' + quote(pid, safe='') + '?' + urlencode(
+            dict(from_market=origin, market_league=league_id, front_office=roster_id))
+        cards.append(f'<article class="card"><h3><a href="{escape(href)}">{name}</a></h3>'
+                     f'<p>{positions} · Unrostered in this league</p><p>{fit} {projection}</p>'
+                     + (f'<p>{status}</p>' if status else '') + '</article>')
+    if not cards:
+        cards.append('<p>No confirmed unrostered player has a supported lineup fit in the prepared evidence.</p>')
+    coverage = (f'Each result covers one opening. This roster has {shortage}, so one pickup cannot fill them all.'
+                if shortage > 1 else 'Each result can cover the opening in a legal lineup.')
+    return (f'<section id="bye-pickup-results" class="ux-section"><h2>Week {row["week"]} bye cover</h2>'
+            f'<p>Unfilled slots: {_slots(row["unfilled"])}.</p>'
+            + (f'<p>{coverage}</p>' if row['pickups']['candidates'] else '')
+            + '<p>These fits use the prepared roster and NFL schedule. Verify who can play and whether waivers '
+              'or locks apply in Sleeper. Use Sleeper for all lineup changes, adds, drops, and claims.</p>'
+            + f'<p>{_status_age(row)}</p><div class="market-grid">{"".join(cards)}</div>'
+            '<p><a href="/market?availability=day_traders_free_agent">Browse all Market free agents</a></p></section>')

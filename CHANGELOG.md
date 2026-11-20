@@ -1,3 +1,7 @@
+## v1.22.56 / build 2271 — Find bye-week pickups
+
+A confirmed My Team bye gap links to prepared Market results. See which unrostered players can fill one opening, their Sleeper projections for that week when available, and what to verify in Sleeper before acting.
+
 ## v1.22.55 / build 2270 — Prefer available bye cover
 
 My Team prefers complete bye-week lineups supported by current Sleeper player status. If cover depends on uncertain availability, the plan names the dependency and shows the age of the status check.

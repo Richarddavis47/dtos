@@ -114,6 +114,22 @@ def _availability_fit(slots, playing, initial, statuses, fresh):
     return fit, False
 
 
+def _pickup_slots(slots, playing, fit):
+    """Map each reachable pickup slot to the vacancy it can help close."""
+    paths = {}
+    for gap in range(len(slots)):
+        if gap in fit:
+            continue
+        queue = [gap]
+        paths[gap] = gap
+        for vacancy in queue:
+            for index, pid in sorted(fit.items()):
+                if index not in paths and any(_eligible(pos, slots[vacancy]) for pos in playing[pid]):
+                    paths[index] = gap
+                    queue.append(index)
+    return [[index, gap] for index, gap in sorted(paths.items(), key=lambda pair: (pair[0] != pair[1], pair))]
+
+
 def _week(slots, people, games, byes, week, projection, *, starters, statuses=None, fresh=False):
     bye_ids = {pid for pid, (club, _, _) in people.items()
                if byes.get(pid) == week and club and f'{week}:{club}' not in games}
@@ -122,7 +138,7 @@ def _week(slots, people, games, byes, week, projection, *, starters, statuses=No
     initial = {index: pid for index, pid in enumerate(starters or ()) if pid is not None}
     affected = [(index, pid) for index, pid in initial.items() if pid in bye_ids]
     statuses = statuses or {}
-    moves, unfilled, dependencies = [], [], []
+    moves, unfilled, dependencies, pickup_slots = [], [], [], []
     if affected:
         after, supported = _availability_fit(slots, playing, initial, statuses, fresh)
         if len(after) == len(slots):
@@ -140,7 +156,11 @@ def _week(slots, people, games, byes, week, projection, *, starters, statuses=No
             upper = _fit(slots, possible, initial)
             state = 'shortfall' if len(upper) < len(slots) else 'unknown'
             if state == 'shortfall':
-                unfilled = [slot for index, slot in enumerate(slots) if index not in upper]
+                fit = upper
+                if len(after) == len(upper):
+                    fit = after
+                    pickup_slots = _pickup_slots(slots, playing, fit)
+                unfilled = [slot for index, slot in enumerate(slots) if index not in fit]
     elif len(initial) == len(slots) and all(
         any(_eligible(position, slots[index]) for position in playing.get(pid, ()))
         for index, pid in initial.items()
@@ -152,6 +172,7 @@ def _week(slots, people, games, byes, week, projection, *, starters, statuses=No
         'week': week, 'state': state, 'slots': slots,
         'bye_starters': [list(row) for row in affected],
         'unfilled': unfilled, 'moves': moves, 'availability_dependencies': dependencies,
+        'pickup_slots': pickup_slots,
         'projection_ready': projection.get('available') is True,
     }
 

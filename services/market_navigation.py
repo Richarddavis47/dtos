@@ -15,9 +15,20 @@ def market_return(origin, source_league, selected_league):
         return None
     allowed = {"q", "position", "availability", "sort", "direction", "front_office", "selected", "offset", "limit"}
     pairs = parse_qsl(parsed.query, keep_blank_values=True)
-    if any(key not in allowed for key, _ in pairs) or len({k for k, _ in pairs}) != len(pairs):
+    if len({k for k, _ in pairs}) != len(pairs):
         return None
     values = dict(pairs)
+    if "bye_week" in values:
+        if (set(values) != {"bye_week", "market_league", "season", "from_team", "availability"}
+                or values["market_league"] != str(selected_league)
+                or values["availability"] != "day_traders_free_agent"
+                or not all(values[key].isascii() and values[key].isdecimal() and len(values[key]) <= 6
+                           for key in ("bye_week", "season", "from_team"))
+                or not 1 <= int(values["bye_week"]) <= 18 or int(values["from_team"]) < 1):
+            return None
+        return "/market?" + urlencode(pairs)
+    if not set(values).issubset(allowed):
+        return None
     for key, supported in {
         "position": {"", "QB", "RB", "WR", "TE", "PICK"},
         "availability": {"", "rostered", "day_traders_free_agent", "taxi", "retired", "owned_pick"},
