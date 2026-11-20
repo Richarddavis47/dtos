@@ -1,0 +1,50 @@
+3.14.3-slim-bookworm: Pulling from library/python
+Digest: sha256:f21c0d5a44c56805654c15abccc1b2fd576c8d93aca0a3f74b4aba2dc92510e2
+Status: Image is up to date for python:3.14.3-slim-bookworm
+docker.io/library/python:3.14.3-slim-bookworm
+Resolved Python image: python@sha256:f21c0d5a44c56805654c15abccc1b2fd576c8d93aca0a3f74b4aba2dc92510e2
+#0 building with "default" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 640B done
+#1 DONE 0.0s
+
+#2 [internal] load metadata for docker.io/library/python@sha256:f21c0d5a44c56805654c15abccc1b2fd576c8d93aca0a3f74b4aba2dc92510e2
+#2 DONE 0.0s
+
+#3 [internal] load .dockerignore
+#3 transferring context: 2B done
+#3 DONE 0.0s
+
+#4 [1/6] FROM docker.io/library/python@sha256:f21c0d5a44c56805654c15abccc1b2fd576c8d93aca0a3f74b4aba2dc92510e2
+#4 DONE 0.0s
+
+#5 [2/6] RUN apt-get update && apt-get install -y --no-install-recommends chromium git && rm -rf /var/lib/apt/lists/*
+#5 CACHED
+
+#6 [internal] load build context
+#6 transferring context: 1.44kB done
+#6 DONE 0.0s
+
+#7 [3/6] COPY environment-proxy-ca.crt /usr/local/share/ca-certificates/
+#7 DONE 10.0s
+
+#8 [4/6] COPY requirements.txt requirements-validation.txt /build/
+#8 DONE 7.5s
+
+#9 [5/6] RUN update-ca-certificates && PIP_CERT=/etc/ssl/certs/ca-certificates.crt python -m pip install --no-cache-dir -r /build/requirements-validation.txt
+#9 6.099 Updating certificates in /etc/ssl/certs...
+#9 7.673 rehash: warning: skipping ca-certificates.crt,it does not contain exactly one certificate or CRL
+#9 7.679 1 added, 0 removed; done.
+#9 7.679 Running hooks in /etc/ca-certificates/update.d...
+#9 7.682 done.
+#9 10.23 Collecting fastapi<1.0,>=0.116 (from -r /build/requirements.txt (line 1))
+#9 10.51   Downloading fastapi-0.165.0-py3-none-any.whl.metadata (27 kB)
+#9 10.59 Collecting uvicorn<1.0,>=0.35 (from uvicorn[standard]<1.0,>=0.35->-r /build/requirements.txt (line 2))
+#9 10.64   Downloading uvicorn-0.54.0-py3-none-any.whl.metadata (6.6 kB)
+#9 10.76 Collecting httpx<1.0,>=0.28 (from -r /build/requirements.txt (line 3))
+#9 10.88   Downloading httpx-0.28.1-py3-none-any.whl.metadata (7.1 kB)
+#9 11.03 Collecting psutil<8.0,>=6.0 (from -r /build/requirements.txt (line 4))
+#9 11.08   Downloading psutil-7.2.2-cp36-abi3-manylinux2010_x86_64.manylinux_2_12_x86_64.manylinux_2_28_x86_64.whl.metadata (22 kB)
+#9 11.14 Collecting pwdlib<1.0,>=0.2 (from pwdlib[argon2]<1.0,>=0.2->-r /build/requirements.txt (line 5))
+#9 11.26   Downloading pwdlib-0.4.2-py3-none-any.whl.metadata (6.2 kB)
