@@ -117,7 +117,7 @@ def upcoming_byes_panel(weeks, players, *, active, league_id=None, season=None, 
         '<section class="thq-section" id="upcoming-byes"><h2>Upcoming bye weeks</h2>'
         f'<p>{finding(priority[0])}</p>'
         + ('<div class="thq-actions">' + ''.join(pickup_links) + '</div>' if pickup_links else '') +
-        '<details class="thq-strength-detail" id="bye-week-details"><summary>See weeks and possible moves</summary>'
+        '<details class="thq-strength-detail" id="bye-week-details" data-nav-disclosure><summary>See weeks and possible moves</summary>'
         '<p>This plan uses the latest prepared roster and NFL schedule. It shows who fits together under your league’s rules. '
         'Check player availability again before setting your Sleeper lineup.</p>'
         + ''.join(detail(row, leading=index == 0) for index, row in enumerate(priority)) + '</details></section>'
