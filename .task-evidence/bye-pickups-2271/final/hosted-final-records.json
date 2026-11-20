@@ -1,0 +1,1642 @@
+[
+  {
+    "run": {
+      "id": 44646906004,
+      "name": "Canonical release recovery",
+      "path": ".github/workflows/canonical-release-recovery.yml",
+      "event": "pull_request",
+      "head_sha": "f27f8be2f184814f8c033b0b617f0ed4235c7f04",
+      "head_branch": "feat/bye-pickups-2271",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-11-20T00:34:11Z",
+      "updated_at": "2026-11-20T01:38:06Z",
+      "html_url": "https://github.com/Richarddavis47/dtos/actions/runs/44646906004",
+      "run_attempt": 1
+    },
+    "jobs": [
+      {
+        "id": 135991698066,
+        "run_id": 44646906004,
+        "name": "canonical-release",
+        "head_sha": "f27f8be2f184814f8c033b0b617f0ed4235c7f04",
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-11-20T00:34:15Z",
+        "completed_at": "2026-11-20T01:38:05Z",
+        "html_url": "https://github.com/Richarddavis47/dtos/actions/runs/44646906004/job/135991698066",
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-11-20T00:34:16Z",
+            "completed_at": "2026-11-20T00:34:19Z"
+          },
+          {
+            "name": "Run actions/checkout@v4",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2,
+            "started_at": "2026-11-20T00:34:19Z",
+            "completed_at": "2026-11-20T00:36:24Z"
+          },
+          {
+            "name": "Prepare disposable validation harness",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3,
+            "started_at": "2026-11-20T00:36:24Z",
+            "completed_at": "2026-11-20T00:36:24Z"
+          },
+          {
+            "name": "Build production Python and browser validation image",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4,
+            "started_at": "2026-11-20T00:36:24Z",
+            "completed_at": "2026-11-20T00:36:59Z"
+          },
+          {
+            "name": "Run unchanged ten-gate validator under actual 2 GiB",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5,
+            "started_at": "2026-11-20T00:36:59Z",
+            "completed_at": "2026-11-20T01:37:57Z"
+          },
+          {
+            "name": "Preserve container outcome",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 6,
+            "started_at": "2026-11-20T01:37:57Z",
+            "completed_at": "2026-11-20T01:37:57Z"
+          },
+          {
+            "name": "Upload source-pinned raw validation and phone evidence",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 7,
+            "started_at": "2026-11-20T01:37:57Z",
+            "completed_at": "2026-11-20T01:38:02Z"
+          },
+          {
+            "name": "Retire owned container",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 8,
+            "started_at": "2026-11-20T01:38:02Z",
+            "completed_at": "2026-11-20T01:38:02Z"
+          },
+          {
+            "name": "Post Run actions/checkout@v4",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 16,
+            "started_at": "2026-11-20T01:38:02Z",
+            "completed_at": "2026-11-20T01:38:02Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 17,
+            "started_at": "2026-11-20T01:38:02Z",
+            "completed_at": "2026-11-20T01:38:02Z"
+          }
+        ]
+      },
+      {
+        "id": 135991700180,
+        "run_id": 44646906004,
+        "name": "publish-2191",
+        "head_sha": "f27f8be2f184814f8c033b0b617f0ed4235c7f04",
+        "status": "completed",
+        "conclusion": "skipped",
+        "started_at": "2026-11-20T00:34:12Z",
+        "completed_at": "2026-11-20T00:34:12Z",
+        "html_url": "https://github.com/Richarddavis47/dtos/actions/runs/44646906004/job/135991700180",
+        "steps": []
+      }
+    ],
+    "artifacts": [
+      {
+        "id": 14591679357,
+        "name": "canonical-release-2g-python314",
+        "size_in_bytes": 93327898,
+        "expired": false,
+        "digest": "sha256:9e18ea20ec72cd00a68cab695a739e711404d932d0320a37efa2ba18cab995a7",
+        "created_at": "2026-11-20T01:38:02Z",
+        "updated_at": "2026-11-20T01:38:02Z",
+        "workflow_run": {
+          "id": 44646906004,
+          "repository_id": 1303175701,
+          "head_repository_id": 1303175701,
+          "head_branch": "feat/bye-pickups-2271",
+          "head_sha": "f27f8be2f184814f8c033b0b617f0ed4235c7f04"
+        }
+      }
+    ],
+    "scope": "Whitelisted unchanged validation facts; actor/account/contact fields excluded. Raw API response retained privately."
+  },
+  {
+    "run": {
+      "id": 44646906180,
+      "name": "Product browser journeys",
+      "path": ".github/workflows/product-browser.yml",
+      "event": "pull_request",
+      "head_sha": "f27f8be2f184814f8c033b0b617f0ed4235c7f04",
+      "head_branch": "feat/bye-pickups-2271",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-11-20T00:34:11Z",
+      "updated_at": "2026-11-20T01:00:42Z",
+      "html_url": "https://github.com/Richarddavis47/dtos/actions/runs/44646906180",
+      "run_attempt": 1
+    },
+    "jobs": [
+      {
+        "id": 135991698497,
+        "run_id": 44646906180,
+        "name": "my-team-browser",
+        "head_sha": "f27f8be2f184814f8c033b0b617f0ed4235c7f04",
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-11-20T00:34:15Z",
+        "completed_at": "2026-11-20T00:41:21Z",
+        "html_url": "https://github.com/Richarddavis47/dtos/actions/runs/44646906180/job/135991698497",
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-11-20T00:34:15Z",
+            "completed_at": "2026-11-20T00:34:17Z"
+          },
+          {
+            "name": "Run actions/checkout@v4",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2,
+            "started_at": "2026-11-20T00:34:17Z",
+            "completed_at": "2026-11-20T00:35:24Z"
+          },
+          {
+            "name": "Run actions/setup-python@v5",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3,
+            "started_at": "2026-11-20T00:35:24Z",
+            "completed_at": "2026-11-20T00:35:25Z"
+          },
+          {
+            "name": "Build bounded browser validation dependencies",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4,
+            "started_at": "2026-11-20T00:35:25Z",
+            "completed_at": "2026-11-20T00:36:07Z"
+          },
+          {
+            "name": "My Team evidence and authenticated session journeys",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5,
+            "started_at": "2026-11-20T00:36:07Z",
+            "completed_at": "2026-11-20T00:41:19Z"
+          },
+          {
+            "name": "Post Run actions/setup-python@v5",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 9,
+            "started_at": "2026-11-20T00:41:19Z",
+            "completed_at": "2026-11-20T00:41:19Z"
+          },
+          {
+            "name": "Post Run actions/checkout@v4",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 10,
+            "started_at": "2026-11-20T00:41:19Z",
+            "completed_at": "2026-11-20T00:41:19Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 11,
+            "started_at": "2026-11-20T00:41:19Z",
+            "completed_at": "2026-11-20T00:41:19Z"
+          }
+        ]
+      },
+      {
+        "id": 135991698857,
+        "run_id": 44646906180,
+        "name": "projection-display-cross-version",
+        "head_sha": "f27f8be2f184814f8c033b0b617f0ed4235c7f04",
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-11-20T00:34:15Z",
+        "completed_at": "2026-11-20T00:42:48Z",
+        "html_url": "https://github.com/Richarddavis47/dtos/actions/runs/44646906180/job/135991698857",
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-11-20T00:34:16Z",
+            "completed_at": "2026-11-20T00:34:19Z"
+          },
+          {
+            "name": "Run actions/checkout@v4",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2,
+            "started_at": "2026-11-20T00:34:19Z",
+            "completed_at": "2026-11-20T00:35:53Z"
+          },
+          {
+            "name": "Run actions/setup-python@v5",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3,
+            "started_at": "2026-11-20T00:35:53Z",
+            "completed_at": "2026-11-20T00:35:53Z"
+          },
+          {
+            "name": "Run python -m pip install -r requirements-validation.txt",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4,
+            "started_at": "2026-11-20T00:35:53Z",
+            "completed_at": "2026-11-20T00:36:07Z"
+          },
+          {
+            "name": "Install browser dependencies and Chromium",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5,
+            "started_at": "2026-11-20T00:36:07Z",
+            "completed_at": "2026-11-20T00:42:32Z"
+          },
+          {
+            "name": "Real prior publisher and isolated current reader",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 6,
+            "started_at": "2026-11-20T00:42:32Z",
+            "completed_at": "2026-11-20T00:42:44Z"
+          },
+          {
+            "name": "Post Run actions/setup-python@v5",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 11,
+            "started_at": "2026-11-20T00:42:44Z",
+            "completed_at": "2026-11-20T00:42:44Z"
+          },
+          {
+            "name": "Post Run actions/checkout@v4",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 12,
+            "started_at": "2026-11-20T00:42:44Z",
+            "completed_at": "2026-11-20T00:42:44Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 13,
+            "started_at": "2026-11-20T00:42:44Z",
+            "completed_at": "2026-11-20T00:42:45Z"
+          }
+        ]
+      },
+      {
+        "id": 135991698897,
+        "run_id": 44646906180,
+        "name": "public-welcome-browser",
+        "head_sha": "f27f8be2f184814f8c033b0b617f0ed4235c7f04",
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-11-20T00:34:15Z",
+        "completed_at": "2026-11-20T00:42:32Z",
+        "html_url": "https://github.com/Richarddavis47/dtos/actions/runs/44646906180/job/135991698897",
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-11-20T00:34:16Z",
+            "completed_at": "2026-11-20T00:34:18Z"
+          },
+          {
+            "name": "Run actions/checkout@v4",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2,
+            "started_at": "2026-11-20T00:34:18Z",
+            "completed_at": "2026-11-20T00:35:26Z"
+          },
+          {
+            "name": "Run actions/setup-python@v5",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3,
+            "started_at": "2026-11-20T00:35:26Z",
+            "completed_at": "2026-11-20T00:35:26Z"
+          },
+          {
+            "name": "Build bounded browser validation dependencies",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4,
+            "started_at": "2026-11-20T00:35:26Z",
+            "completed_at": "2026-11-20T00:36:18Z"
+          },
+          {
+            "name": "Verify source-pinned public routing demo security and browser controls",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5,
+            "started_at": "2026-11-20T00:36:18Z",
+            "completed_at": "2026-11-20T00:42:23Z"
+          },
+          {
+            "name": "Actual 2 GiB metadata-only restoration preflight",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 6,
+            "started_at": "2026-11-20T00:42:23Z",
+            "completed_at": "2026-11-20T00:42:26Z"
+          },
+          {
+            "name": "Preserve restoration preflight including incomplete attempts",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 7,
+            "started_at": "2026-11-20T00:42:26Z",
+            "completed_at": "2026-11-20T00:42:27Z"
+          },
+          {
+            "name": "Preserve source and public phone evidence including failed attempts",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 8,
+            "started_at": "2026-11-20T00:42:27Z",
+            "completed_at": "2026-11-20T00:42:30Z"
+          },
+          {
+            "name": "Post Run actions/setup-python@v5",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 15,
+            "started_at": "2026-11-20T00:42:30Z",
+            "completed_at": "2026-11-20T00:42:30Z"
+          },
+          {
+            "name": "Post Run actions/checkout@v4",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 16,
+            "started_at": "2026-11-20T00:42:30Z",
+            "completed_at": "2026-11-20T00:42:30Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 17,
+            "started_at": "2026-11-20T00:42:30Z",
+            "completed_at": "2026-11-20T00:42:30Z"
+          }
+        ]
+      },
+      {
+        "id": 135991698900,
+        "run_id": 44646906180,
+        "name": "product-browser",
+        "head_sha": "f27f8be2f184814f8c033b0b617f0ed4235c7f04",
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-11-20T00:34:15Z",
+        "completed_at": "2026-11-20T01:00:41Z",
+        "html_url": "https://github.com/Richarddavis47/dtos/actions/runs/44646906180/job/135991698900",
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-11-20T00:34:15Z",
+            "completed_at": "2026-11-20T00:34:18Z"
+          },
+          {
+            "name": "Run actions/checkout@v4",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2,
+            "started_at": "2026-11-20T00:34:18Z",
+            "completed_at": "2026-11-20T00:35:25Z"
+          },
+          {
+            "name": "Run actions/setup-python@v5",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3,
+            "started_at": "2026-11-20T00:35:25Z",
+            "completed_at": "2026-11-20T00:35:26Z"
+          },
+          {
+            "name": "Prepare runner-owned Trade evidence directories",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4,
+            "started_at": "2026-11-20T00:35:26Z",
+            "completed_at": "2026-11-20T00:35:26Z"
+          },
+          {
+            "name": "Build bounded browser validation dependencies",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5,
+            "started_at": "2026-11-20T00:35:26Z",
+            "completed_at": "2026-11-20T00:36:21Z"
+          },
+          {
+            "name": "Authenticated product, interaction and accessibility contracts",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 6,
+            "started_at": "2026-11-20T00:36:21Z",
+            "completed_at": "2026-11-20T00:56:03Z"
+          },
+          {
+            "name": "Retained history lifecycle and phone routes",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 7,
+            "started_at": "2026-11-20T00:56:03Z",
+            "completed_at": "2026-11-20T00:59:08Z"
+          },
+          {
+            "name": "Preserve current-season history evidence",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 8,
+            "started_at": "2026-11-20T00:59:08Z",
+            "completed_at": "2026-11-20T00:59:09Z"
+          },
+          {
+            "name": "Preserve history follow-through evidence",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 9,
+            "started_at": "2026-11-20T00:59:09Z",
+            "completed_at": "2026-11-20T00:59:10Z"
+          },
+          {
+            "name": "Preserve Market history coverage evidence",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 10,
+            "started_at": "2026-11-20T00:59:10Z",
+            "completed_at": "2026-11-20T00:59:11Z"
+          },
+          {
+            "name": "Preserve current-production coverage evidence",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 11,
+            "started_at": "2026-11-20T00:59:11Z",
+            "completed_at": "2026-11-20T00:59:12Z"
+          },
+          {
+            "name": "Actual 2 GiB Trade admission execution and recovery",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 12,
+            "started_at": "2026-11-20T00:59:12Z",
+            "completed_at": "2026-11-20T01:00:10Z"
+          },
+          {
+            "name": "Preserve Trade resource evidence including incomplete attempts",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 13,
+            "started_at": "2026-11-20T01:00:10Z",
+            "completed_at": "2026-11-20T01:00:12Z"
+          },
+          {
+            "name": "League entry with active FOIS, pressure and explicit recovery",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 14,
+            "started_at": "2026-11-20T01:00:12Z",
+            "completed_at": "2026-11-20T01:00:25Z"
+          },
+          {
+            "name": "Preserve league entry evidence including incomplete attempts",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 15,
+            "started_at": "2026-11-20T01:00:25Z",
+            "completed_at": "2026-11-20T01:00:26Z"
+          },
+          {
+            "name": "Cached restoration unused-memory recovery under 2 GiB",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 16,
+            "started_at": "2026-11-20T01:00:26Z",
+            "completed_at": "2026-11-20T01:00:31Z"
+          },
+          {
+            "name": "Preserve restoration recovery including incomplete attempts",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 17,
+            "started_at": "2026-11-20T01:00:31Z",
+            "completed_at": "2026-11-20T01:00:33Z"
+          },
+          {
+            "name": "Native actuals through constrained connected-runtime restoration",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 18,
+            "started_at": "2026-11-20T01:00:33Z",
+            "completed_at": "2026-11-20T01:00:39Z"
+          },
+          {
+            "name": "Preserve native actuals restoration including incomplete attempts",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 19,
+            "started_at": "2026-11-20T01:00:39Z",
+            "completed_at": "2026-11-20T01:00:40Z"
+          },
+          {
+            "name": "Post Run actions/setup-python@v5",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 37,
+            "started_at": "2026-11-20T01:00:40Z",
+            "completed_at": "2026-11-20T01:00:40Z"
+          },
+          {
+            "name": "Post Run actions/checkout@v4",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 38,
+            "started_at": "2026-11-20T01:00:40Z",
+            "completed_at": "2026-11-20T01:00:40Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 39,
+            "started_at": "2026-11-20T01:00:40Z",
+            "completed_at": "2026-11-20T01:00:40Z"
+          }
+        ]
+      },
+      {
+        "id": 135991698930,
+        "run_id": 44646906180,
+        "name": "beginner-navigation",
+        "head_sha": "f27f8be2f184814f8c033b0b617f0ed4235c7f04",
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-11-20T00:34:15Z",
+        "completed_at": "2026-11-20T00:38:49Z",
+        "html_url": "https://github.com/Richarddavis47/dtos/actions/runs/44646906180/job/135991698930",
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-11-20T00:34:15Z",
+            "completed_at": "2026-11-20T00:34:16Z"
+          },
+          {
+            "name": "Run actions/checkout@v4",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2,
+            "started_at": "2026-11-20T00:34:16Z",
+            "completed_at": "2026-11-20T00:34:19Z"
+          },
+          {
+            "name": "Run actions/setup-python@v5",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3,
+            "started_at": "2026-11-20T00:34:19Z",
+            "completed_at": "2026-11-20T00:34:19Z"
+          },
+          {
+            "name": "Build bounded browser validation dependencies",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4,
+            "started_at": "2026-11-20T00:34:19Z",
+            "completed_at": "2026-11-20T00:35:04Z"
+          },
+          {
+            "name": "Market pagination, visible roster and scoped fresh-start journeys",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5,
+            "started_at": "2026-11-20T00:35:04Z",
+            "completed_at": "2026-11-20T00:38:48Z"
+          },
+          {
+            "name": "Post Run actions/setup-python@v5",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 9,
+            "started_at": "2026-11-20T00:38:48Z",
+            "completed_at": "2026-11-20T00:38:48Z"
+          },
+          {
+            "name": "Post Run actions/checkout@v4",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 10,
+            "started_at": "2026-11-20T00:38:48Z",
+            "completed_at": "2026-11-20T00:38:48Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 11,
+            "started_at": "2026-11-20T00:38:48Z",
+            "completed_at": "2026-11-20T00:38:48Z"
+          }
+        ]
+      },
+      {
+        "id": 135991698968,
+        "run_id": 44646906180,
+        "name": "historical-trade-timeline",
+        "head_sha": "f27f8be2f184814f8c033b0b617f0ed4235c7f04",
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-11-20T00:34:16Z",
+        "completed_at": "2026-11-20T00:38:01Z",
+        "html_url": "https://github.com/Richarddavis47/dtos/actions/runs/44646906180/job/135991698968",
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-11-20T00:34:17Z",
+            "completed_at": "2026-11-20T00:34:17Z"
+          },
+          {
+            "name": "Run actions/checkout@v4",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2,
+            "started_at": "2026-11-20T00:34:17Z",
+            "completed_at": "2026-11-20T00:35:48Z"
+          },
+          {
+            "name": "Run actions/setup-python@v5",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3,
+            "started_at": "2026-11-20T00:35:48Z",
+            "completed_at": "2026-11-20T00:35:48Z"
+          },
+          {
+            "name": "Run python -m pip install -r requirements-validation.txt",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4,
+            "started_at": "2026-11-20T00:35:48Z",
+            "completed_at": "2026-11-20T00:35:55Z"
+          },
+          {
+            "name": "Install browser dependencies and Chromium",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5,
+            "started_at": "2026-11-20T00:35:55Z",
+            "completed_at": "2026-11-20T00:36:14Z"
+          },
+          {
+            "name": "Historical evidence, source identity and phone routes",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 6,
+            "started_at": "2026-11-20T00:36:14Z",
+            "completed_at": "2026-11-20T00:37:56Z"
+          },
+          {
+            "name": "Real prior quote publisher and current reader",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 7,
+            "started_at": "2026-11-20T00:37:56Z",
+            "completed_at": "2026-11-20T00:37:58Z"
+          },
+          {
+            "name": "Post Run actions/setup-python@v5",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 13,
+            "started_at": "2026-11-20T00:37:58Z",
+            "completed_at": "2026-11-20T00:37:59Z"
+          },
+          {
+            "name": "Post Run actions/checkout@v4",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 14,
+            "started_at": "2026-11-20T00:37:59Z",
+            "completed_at": "2026-11-20T00:37:59Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 15,
+            "started_at": "2026-11-20T00:37:59Z",
+            "completed_at": "2026-11-20T00:37:59Z"
+          }
+        ]
+      },
+      {
+        "id": 135991699214,
+        "run_id": 44646906180,
+        "name": "resident-refresh-memory",
+        "head_sha": "f27f8be2f184814f8c033b0b617f0ed4235c7f04",
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-11-20T00:34:15Z",
+        "completed_at": "2026-11-20T00:37:04Z",
+        "html_url": "https://github.com/Richarddavis47/dtos/actions/runs/44646906180/job/135991699214",
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-11-20T00:34:16Z",
+            "completed_at": "2026-11-20T00:34:16Z"
+          },
+          {
+            "name": "Run actions/checkout@v4",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2,
+            "started_at": "2026-11-20T00:34:16Z",
+            "completed_at": "2026-11-20T00:35:34Z"
+          },
+          {
+            "name": "Build established bounded validation runtime",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3,
+            "started_at": "2026-11-20T00:35:34Z",
+            "completed_at": "2026-11-20T00:36:17Z"
+          },
+          {
+            "name": "Acquire only pinned public disposable fixtures",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4,
+            "started_at": "2026-11-20T00:36:17Z",
+            "completed_at": "2026-11-20T00:36:21Z"
+          },
+          {
+            "name": "Prove real publication, ownership, deferral and recovery under 2 GiB",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5,
+            "started_at": "2026-11-20T00:36:21Z",
+            "completed_at": "2026-11-20T00:37:01Z"
+          },
+          {
+            "name": "Preserve completed and incomplete ownership evidence",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 6,
+            "started_at": "2026-11-20T00:37:01Z",
+            "completed_at": "2026-11-20T00:37:02Z"
+          },
+          {
+            "name": "Post Run actions/checkout@v4",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 12,
+            "started_at": "2026-11-20T00:37:02Z",
+            "completed_at": "2026-11-20T00:37:02Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 13,
+            "started_at": "2026-11-20T00:37:02Z",
+            "completed_at": "2026-11-20T00:37:02Z"
+          }
+        ]
+      }
+    ],
+    "artifacts": [
+      {
+        "id": 14591410699,
+        "name": "trade-resource-2g",
+        "size_in_bytes": 48711558,
+        "expired": false,
+        "digest": "sha256:f55f14f2a149e43d8b1615c186c5f7ffc61628a401ea2663ad10275c31b453ec",
+        "created_at": "2026-11-20T01:00:12Z",
+        "updated_at": "2026-11-20T01:00:12Z",
+        "workflow_run": {
+          "id": 44646906180,
+          "repository_id": 1303175701,
+          "head_repository_id": 1303175701,
+          "head_branch": "feat/bye-pickups-2271",
+          "head_sha": "f27f8be2f184814f8c033b0b617f0ed4235c7f04"
+        }
+      },
+      {
+        "id": 14591300997,
+        "name": "restoration-unused-2g",
+        "size_in_bytes": 7341125,
+        "expired": false,
+        "digest": "sha256:a926abc9ebf8d6af7379d5f00ad64f5866f0669d15868fa25c69bb346de3f46a",
+        "created_at": "2026-11-20T01:00:32Z",
+        "updated_at": "2026-11-20T01:00:32Z",
+        "workflow_run": {
+          "id": 44646906180,
+          "repository_id": 1303175701,
+          "head_repository_id": 1303175701,
+          "head_branch": "feat/bye-pickups-2271",
+          "head_sha": "f27f8be2f184814f8c033b0b617f0ed4235c7f04"
+        }
+      },
+      {
+        "id": 14591041345,
+        "name": "actuals-restoration-2g",
+        "size_in_bytes": 7341413,
+        "expired": false,
+        "digest": "sha256:6a8529521a9fc6a61f3c33e3f9fb5cd3ef904fd934faa73860eef2bb13400040",
+        "created_at": "2026-11-20T01:00:40Z",
+        "updated_at": "2026-11-20T01:00:40Z",
+        "workflow_run": {
+          "id": 44646906180,
+          "repository_id": 1303175701,
+          "head_repository_id": 1303175701,
+          "head_branch": "feat/bye-pickups-2271",
+          "head_sha": "f27f8be2f184814f8c033b0b617f0ed4235c7f04"
+        }
+      },
+      {
+        "id": 14590995653,
+        "name": "market-history-coverage-browser",
+        "size_in_bytes": 1422970,
+        "expired": false,
+        "digest": "sha256:fa12cec200fcbee602f8ae5e700b85ac60d87fdcdd291c9091d5c1c253416abb",
+        "created_at": "2026-11-20T00:59:11Z",
+        "updated_at": "2026-11-20T00:59:11Z",
+        "workflow_run": {
+          "id": 44646906180,
+          "repository_id": 1303175701,
+          "head_repository_id": 1303175701,
+          "head_branch": "feat/bye-pickups-2271",
+          "head_sha": "f27f8be2f184814f8c033b0b617f0ed4235c7f04"
+        }
+      },
+      {
+        "id": 14590765836,
+        "name": "current-season-history-browser",
+        "size_in_bytes": 876177,
+        "expired": false,
+        "digest": "sha256:e6ace9a7e8d8d4cf0f348e5de1154bcce98398de2041e8397a3350c9498766f7",
+        "created_at": "2026-11-20T00:59:09Z",
+        "updated_at": "2026-11-20T00:59:09Z",
+        "workflow_run": {
+          "id": 44646906180,
+          "repository_id": 1303175701,
+          "head_repository_id": 1303175701,
+          "head_branch": "feat/bye-pickups-2271",
+          "head_sha": "f27f8be2f184814f8c033b0b617f0ed4235c7f04"
+        }
+      },
+      {
+        "id": 14590306546,
+        "name": "current-production-coverage-browser",
+        "size_in_bytes": 2798524,
+        "expired": false,
+        "digest": "sha256:27311e8762914f4b950db80b4c1ecd5baf56b9c0d813f63e037dfe64f6861450",
+        "created_at": "2026-11-20T00:59:12Z",
+        "updated_at": "2026-11-20T00:59:12Z",
+        "workflow_run": {
+          "id": 44646906180,
+          "repository_id": 1303175701,
+          "head_repository_id": 1303175701,
+          "head_branch": "feat/bye-pickups-2271",
+          "head_sha": "f27f8be2f184814f8c033b0b617f0ed4235c7f04"
+        }
+      },
+      {
+        "id": 14590082191,
+        "name": "history-followthrough-browser",
+        "size_in_bytes": 987562,
+        "expired": false,
+        "digest": "sha256:72bc0321545e32565b3de835647101fa35e346c90a2125cebad5636883ddda64",
+        "created_at": "2026-11-20T00:59:10Z",
+        "updated_at": "2026-11-20T00:59:10Z",
+        "workflow_run": {
+          "id": 44646906180,
+          "repository_id": 1303175701,
+          "head_repository_id": 1303175701,
+          "head_branch": "feat/bye-pickups-2271",
+          "head_sha": "f27f8be2f184814f8c033b0b617f0ed4235c7f04"
+        }
+      },
+      {
+        "id": 14589963848,
+        "name": "league-entry-2g",
+        "size_in_bytes": 11836,
+        "expired": false,
+        "digest": "sha256:da5b3201a503f9b128a47b71ff581e9b1a744151f3ed43e0bfb3b3e634869796",
+        "created_at": "2026-11-20T01:00:25Z",
+        "updated_at": "2026-11-20T01:00:25Z",
+        "workflow_run": {
+          "id": 44646906180,
+          "repository_id": 1303175701,
+          "head_repository_id": 1303175701,
+          "head_branch": "feat/bye-pickups-2271",
+          "head_sha": "f27f8be2f184814f8c033b0b617f0ed4235c7f04"
+        }
+      },
+      {
+        "id": 14588987138,
+        "name": "resident-refresh-ownership-2g",
+        "size_in_bytes": 5625,
+        "expired": false,
+        "digest": "sha256:7bb8ff0d415d069a690b579a80088e5552966f1bfcddc5386854625444b5d836",
+        "created_at": "2026-11-20T00:37:02Z",
+        "updated_at": "2026-11-20T00:37:02Z",
+        "workflow_run": {
+          "id": 44646906180,
+          "repository_id": 1303175701,
+          "head_repository_id": 1303175701,
+          "head_branch": "feat/bye-pickups-2271",
+          "head_sha": "f27f8be2f184814f8c033b0b617f0ed4235c7f04"
+        }
+      },
+      {
+        "id": 14588279080,
+        "name": "restoration-preflight-2g",
+        "size_in_bytes": 3701,
+        "expired": false,
+        "digest": "sha256:923ba38b766c5b6e3d2ae92e0956054e9246be325cd1973725e4c5048aedb96a",
+        "created_at": "2026-11-20T00:42:27Z",
+        "updated_at": "2026-11-20T00:42:27Z",
+        "workflow_run": {
+          "id": 44646906180,
+          "repository_id": 1303175701,
+          "head_repository_id": 1303175701,
+          "head_branch": "feat/bye-pickups-2271",
+          "head_sha": "f27f8be2f184814f8c033b0b617f0ed4235c7f04"
+        }
+      },
+      {
+        "id": 14588169725,
+        "name": "public-welcome-security-browser",
+        "size_in_bytes": 53842632,
+        "expired": false,
+        "digest": "sha256:0ed7f3aa687250a1680b6ed4c46ad349ef9ec768f468ccffc8829fbb246a4a69",
+        "created_at": "2026-11-20T00:42:30Z",
+        "updated_at": "2026-11-20T00:42:30Z",
+        "workflow_run": {
+          "id": 44646906180,
+          "repository_id": 1303175701,
+          "head_repository_id": 1303175701,
+          "head_branch": "feat/bye-pickups-2271",
+          "head_sha": "f27f8be2f184814f8c033b0b617f0ed4235c7f04"
+        }
+      }
+    ],
+    "scope": "Whitelisted unchanged validation facts; actor/account/contact fields excluded. Raw API response retained privately."
+  },
+  {
+    "run": {
+      "id": 44646905995,
+      "name": "Validation tooling",
+      "path": ".github/workflows/validation-tooling.yml",
+      "event": "pull_request",
+      "head_sha": "f27f8be2f184814f8c033b0b617f0ed4235c7f04",
+      "head_branch": "feat/bye-pickups-2271",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-11-20T00:34:11Z",
+      "updated_at": "2026-11-20T00:36:34Z",
+      "html_url": "https://github.com/Richarddavis47/dtos/actions/runs/44646905995",
+      "run_attempt": 1
+    },
+    "jobs": [
+      {
+        "id": 135991697745,
+        "run_id": 44646905995,
+        "name": "tooling (ubuntu-24.04)",
+        "head_sha": "f27f8be2f184814f8c033b0b617f0ed4235c7f04",
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-11-20T00:34:15Z",
+        "completed_at": "2026-11-20T00:35:42Z",
+        "html_url": "https://github.com/Richarddavis47/dtos/actions/runs/44646905995/job/135991697745",
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-11-20T00:34:15Z",
+            "completed_at": "2026-11-20T00:34:18Z"
+          },
+          {
+            "name": "Run actions/checkout@v4",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2,
+            "started_at": "2026-11-20T00:34:18Z",
+            "completed_at": "2026-11-20T00:34:24Z"
+          },
+          {
+            "name": "Run actions/setup-python@v5",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3,
+            "started_at": "2026-11-20T00:34:24Z",
+            "completed_at": "2026-11-20T00:34:28Z"
+          },
+          {
+            "name": "Install validation dependencies",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4,
+            "started_at": "2026-11-20T00:34:28Z",
+            "completed_at": "2026-11-20T00:34:43Z"
+          },
+          {
+            "name": "Platform ownership and validation tooling contracts",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5,
+            "started_at": "2026-11-20T00:34:43Z",
+            "completed_at": "2026-11-20T00:34:46Z"
+          },
+          {
+            "name": "Build bounded Linux worker validation image",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 6,
+            "started_at": "2026-11-20T00:34:46Z",
+            "completed_at": "2026-11-20T00:35:10Z"
+          },
+          {
+            "name": "Scratch preparation cancellation controls",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 7,
+            "started_at": "2026-11-20T00:35:10Z",
+            "completed_at": "2026-11-20T00:35:14Z"
+          },
+          {
+            "name": "Authoritative repository lint gate",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 8,
+            "started_at": "2026-11-20T00:35:14Z",
+            "completed_at": "2026-11-20T00:35:14Z"
+          },
+          {
+            "name": "Owned full-history execution and retained evidence controls",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 9,
+            "started_at": "2026-11-20T00:35:14Z",
+            "completed_at": "2026-11-20T00:35:37Z"
+          },
+          {
+            "name": "Tooling compilation and whitespace",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 10,
+            "started_at": "2026-11-20T00:35:37Z",
+            "completed_at": "2026-11-20T00:35:38Z"
+          },
+          {
+            "name": "Post Run actions/setup-python@v5",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 19,
+            "started_at": "2026-11-20T00:35:38Z",
+            "completed_at": "2026-11-20T00:35:40Z"
+          },
+          {
+            "name": "Post Run actions/checkout@v4",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 20,
+            "started_at": "2026-11-20T00:35:40Z",
+            "completed_at": "2026-11-20T00:35:40Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 21,
+            "started_at": "2026-11-20T00:35:40Z",
+            "completed_at": "2026-11-20T00:35:40Z"
+          }
+        ]
+      },
+      {
+        "id": 135991698103,
+        "run_id": 44646905995,
+        "name": "tooling (windows-latest)",
+        "head_sha": "f27f8be2f184814f8c033b0b617f0ed4235c7f04",
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-11-20T00:34:15Z",
+        "completed_at": "2026-11-20T00:36:33Z",
+        "html_url": "https://github.com/Richarddavis47/dtos/actions/runs/44646905995/job/135991698103",
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-11-20T00:34:16Z",
+            "completed_at": "2026-11-20T00:34:17Z"
+          },
+          {
+            "name": "Run actions/checkout@v4",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2,
+            "started_at": "2026-11-20T00:34:17Z",
+            "completed_at": "2026-11-20T00:34:26Z"
+          },
+          {
+            "name": "Run actions/setup-python@v5",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3,
+            "started_at": "2026-11-20T00:34:26Z",
+            "completed_at": "2026-11-20T00:34:29Z"
+          },
+          {
+            "name": "Install validation dependencies",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4,
+            "started_at": "2026-11-20T00:34:29Z",
+            "completed_at": "2026-11-20T00:34:50Z"
+          },
+          {
+            "name": "Platform ownership and validation tooling contracts",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5,
+            "started_at": "2026-11-20T00:34:50Z",
+            "completed_at": "2026-11-20T00:34:57Z"
+          },
+          {
+            "name": "Build bounded Linux worker validation image",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 6,
+            "started_at": "2026-11-20T00:34:57Z",
+            "completed_at": "2026-11-20T00:34:57Z"
+          },
+          {
+            "name": "Scratch preparation cancellation controls",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 7,
+            "started_at": "2026-11-20T00:34:57Z",
+            "completed_at": "2026-11-20T00:35:13Z"
+          },
+          {
+            "name": "Authoritative repository lint gate",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 8,
+            "started_at": "2026-11-20T00:35:13Z",
+            "completed_at": "2026-11-20T00:35:13Z"
+          },
+          {
+            "name": "Owned full-history execution and retained evidence controls",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 9,
+            "started_at": "2026-11-20T00:35:13Z",
+            "completed_at": "2026-11-20T00:36:22Z"
+          },
+          {
+            "name": "Tooling compilation and whitespace",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 10,
+            "started_at": "2026-11-20T00:36:22Z",
+            "completed_at": "2026-11-20T00:36:25Z"
+          },
+          {
+            "name": "Post Run actions/setup-python@v5",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 19,
+            "started_at": "2026-11-20T00:36:25Z",
+            "completed_at": "2026-11-20T00:36:29Z"
+          },
+          {
+            "name": "Post Run actions/checkout@v4",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 20,
+            "started_at": "2026-11-20T00:36:29Z",
+            "completed_at": "2026-11-20T00:36:31Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 21,
+            "started_at": "2026-11-20T00:36:31Z",
+            "completed_at": "2026-11-20T00:36:31Z"
+          }
+        ]
+      }
+    ],
+    "artifacts": [],
+    "scope": "Whitelisted unchanged validation facts; actor/account/contact fields excluded. Raw API response retained privately."
+  },
+  {
+    "run": {
+      "id": 44646906316,
+      "name": "Linux Asset Market lifecycle",
+      "path": ".github/workflows/linux-market-lifecycle.yml",
+      "event": "pull_request",
+      "head_sha": "f27f8be2f184814f8c033b0b617f0ed4235c7f04",
+      "head_branch": "feat/bye-pickups-2271",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-11-20T00:34:12Z",
+      "updated_at": "2026-11-20T00:36:37Z",
+      "html_url": "https://github.com/Richarddavis47/dtos/actions/runs/44646906316",
+      "run_attempt": 1
+    },
+    "jobs": [
+      {
+        "id": 135991698708,
+        "run_id": 44646906316,
+        "name": "cgroup-lifecycle (archive-warmed)",
+        "head_sha": "f27f8be2f184814f8c033b0b617f0ed4235c7f04",
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-11-20T00:34:15Z",
+        "completed_at": "2026-11-20T00:36:36Z",
+        "html_url": "https://github.com/Richarddavis47/dtos/actions/runs/44646906316/job/135991698708",
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-11-20T00:34:16Z",
+            "completed_at": "2026-11-20T00:34:18Z"
+          },
+          {
+            "name": "Run actions/checkout@v4",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2,
+            "started_at": "2026-11-20T00:34:18Z",
+            "completed_at": "2026-11-20T00:34:25Z"
+          },
+          {
+            "name": "Build production-equivalent image",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3,
+            "started_at": "2026-11-20T00:34:25Z",
+            "completed_at": "2026-11-20T00:34:55Z"
+          },
+          {
+            "name": "Guarded recovery lifecycle on Linux",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 4,
+            "started_at": "2026-11-20T00:34:55Z",
+            "completed_at": "2026-11-20T00:34:55Z"
+          },
+          {
+            "name": "Run 2 GiB cgroup lifecycle",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5,
+            "started_at": "2026-11-20T00:34:55Z",
+            "completed_at": "2026-11-20T00:36:34Z"
+          },
+          {
+            "name": "Authenticated navigation residency under 2 GiB",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 6,
+            "started_at": "2026-11-20T00:36:34Z",
+            "completed_at": "2026-11-20T00:36:34Z"
+          },
+          {
+            "name": "Verify sanitized result",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 7,
+            "started_at": "2026-11-20T00:36:34Z",
+            "completed_at": "2026-11-20T00:36:34Z"
+          },
+          {
+            "name": "Upload sanitized benchmark summary",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 8,
+            "started_at": "2026-11-20T00:36:34Z",
+            "completed_at": "2026-11-20T00:36:35Z"
+          },
+          {
+            "name": "Post Run actions/checkout@v4",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 16,
+            "started_at": "2026-11-20T00:36:35Z",
+            "completed_at": "2026-11-20T00:36:35Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 17,
+            "started_at": "2026-11-20T00:36:35Z",
+            "completed_at": "2026-11-20T00:36:35Z"
+          }
+        ]
+      },
+      {
+        "id": 135991699076,
+        "run_id": 44646906316,
+        "name": "cgroup-lifecycle (ordinary)",
+        "head_sha": "f27f8be2f184814f8c033b0b617f0ed4235c7f04",
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-11-20T00:34:15Z",
+        "completed_at": "2026-11-20T00:36:20Z",
+        "html_url": "https://github.com/Richarddavis47/dtos/actions/runs/44646906316/job/135991699076",
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-11-20T00:34:16Z",
+            "completed_at": "2026-11-20T00:34:18Z"
+          },
+          {
+            "name": "Run actions/checkout@v4",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2,
+            "started_at": "2026-11-20T00:34:18Z",
+            "completed_at": "2026-11-20T00:34:24Z"
+          },
+          {
+            "name": "Build production-equivalent image",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3,
+            "started_at": "2026-11-20T00:34:24Z",
+            "completed_at": "2026-11-20T00:34:41Z"
+          },
+          {
+            "name": "Guarded recovery lifecycle on Linux",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4,
+            "started_at": "2026-11-20T00:34:41Z",
+            "completed_at": "2026-11-20T00:35:08Z"
+          },
+          {
+            "name": "Run 2 GiB cgroup lifecycle",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5,
+            "started_at": "2026-11-20T00:35:08Z",
+            "completed_at": "2026-11-20T00:36:16Z"
+          },
+          {
+            "name": "Authenticated navigation residency under 2 GiB",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 6,
+            "started_at": "2026-11-20T00:36:16Z",
+            "completed_at": "2026-11-20T00:36:18Z"
+          },
+          {
+            "name": "Verify sanitized result",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 7,
+            "started_at": "2026-11-20T00:36:18Z",
+            "completed_at": "2026-11-20T00:36:18Z"
+          },
+          {
+            "name": "Upload sanitized benchmark summary",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 8,
+            "started_at": "2026-11-20T00:36:18Z",
+            "completed_at": "2026-11-20T00:36:19Z"
+          },
+          {
+            "name": "Post Run actions/checkout@v4",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 16,
+            "started_at": "2026-11-20T00:36:19Z",
+            "completed_at": "2026-11-20T00:36:19Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 17,
+            "started_at": "2026-11-20T00:36:19Z",
+            "completed_at": "2026-11-20T00:36:19Z"
+          }
+        ]
+      },
+      {
+        "id": 135991699239,
+        "run_id": 44646906316,
+        "name": "cgroup-lifecycle (combined-read)",
+        "head_sha": "f27f8be2f184814f8c033b0b617f0ed4235c7f04",
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-11-20T00:34:15Z",
+        "completed_at": "2026-11-20T00:36:11Z",
+        "html_url": "https://github.com/Richarddavis47/dtos/actions/runs/44646906316/job/135991699239",
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-11-20T00:34:16Z",
+            "completed_at": "2026-11-20T00:34:16Z"
+          },
+          {
+            "name": "Run actions/checkout@v4",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2,
+            "started_at": "2026-11-20T00:34:16Z",
+            "completed_at": "2026-11-20T00:34:20Z"
+          },
+          {
+            "name": "Build production-equivalent image",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3,
+            "started_at": "2026-11-20T00:34:20Z",
+            "completed_at": "2026-11-20T00:34:32Z"
+          },
+          {
+            "name": "Guarded recovery lifecycle on Linux",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 4,
+            "started_at": "2026-11-20T00:34:32Z",
+            "completed_at": "2026-11-20T00:34:32Z"
+          },
+          {
+            "name": "Run 2 GiB cgroup lifecycle",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5,
+            "started_at": "2026-11-20T00:34:32Z",
+            "completed_at": "2026-11-20T00:36:08Z"
+          },
+          {
+            "name": "Authenticated navigation residency under 2 GiB",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 6,
+            "started_at": "2026-11-20T00:36:08Z",
+            "completed_at": "2026-11-20T00:36:08Z"
+          },
+          {
+            "name": "Verify sanitized result",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 7,
+            "started_at": "2026-11-20T00:36:08Z",
+            "completed_at": "2026-11-20T00:36:08Z"
+          },
+          {
+            "name": "Upload sanitized benchmark summary",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 8,
+            "started_at": "2026-11-20T00:36:08Z",
+            "completed_at": "2026-11-20T00:36:09Z"
+          },
+          {
+            "name": "Post Run actions/checkout@v4",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 16,
+            "started_at": "2026-11-20T00:36:09Z",
+            "completed_at": "2026-11-20T00:36:09Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 17,
+            "started_at": "2026-11-20T00:36:09Z",
+            "completed_at": "2026-11-20T00:36:09Z"
+          }
+        ]
+      }
+    ],
+    "artifacts": [
+      {
+        "id": 14589860714,
+        "name": "linux-market-lifecycle-combined-read-summary",
+        "size_in_bytes": 14756,
+        "expired": false,
+        "digest": "sha256:e4f8cd4b7030614db125c9048d31f050c3c855b3bff0aec6e59d24561db4d891",
+        "created_at": "2026-11-20T00:36:09Z",
+        "updated_at": "2026-11-20T00:36:09Z",
+        "workflow_run": {
+          "id": 44646906316,
+          "repository_id": 1303175701,
+          "head_repository_id": 1303175701,
+          "head_branch": "feat/bye-pickups-2271",
+          "head_sha": "f27f8be2f184814f8c033b0b617f0ed4235c7f04"
+        }
+      },
+      {
+        "id": 14589795849,
+        "name": "linux-market-lifecycle-archive-warmed-summary",
+        "size_in_bytes": 12840,
+        "expired": false,
+        "digest": "sha256:cf8f4861acaf03f22d70c71aa50d3f776a8a8929e33a603a443f2f4dd1e05783",
+        "created_at": "2026-11-20T00:36:35Z",
+        "updated_at": "2026-11-20T00:36:35Z",
+        "workflow_run": {
+          "id": 44646906316,
+          "repository_id": 1303175701,
+          "head_repository_id": 1303175701,
+          "head_branch": "feat/bye-pickups-2271",
+          "head_sha": "f27f8be2f184814f8c033b0b617f0ed4235c7f04"
+        }
+      },
+      {
+        "id": 14589101674,
+        "name": "linux-market-lifecycle-ordinary-summary",
+        "size_in_bytes": 12958,
+        "expired": false,
+        "digest": "sha256:052881813b5dca98604f9764487a1d8a38f02e186007403d9e460853f0f5c39e",
+        "created_at": "2026-11-20T00:36:19Z",
+        "updated_at": "2026-11-20T00:36:19Z",
+        "workflow_run": {
+          "id": 44646906316,
+          "repository_id": 1303175701,
+          "head_repository_id": 1303175701,
+          "head_branch": "feat/bye-pickups-2271",
+          "head_sha": "f27f8be2f184814f8c033b0b617f0ed4235c7f04"
+        }
+      }
+    ],
+    "scope": "Whitelisted unchanged validation facts; actor/account/contact fields excluded. Raw API response retained privately."
+  }
+]

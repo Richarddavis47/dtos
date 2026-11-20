@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "/workspace/2271-bye-pickups/run-native-candidate-capture.py", line 7, in <module>
+    record.update(exit_code=r.returncode,finished_at=datetime.datetime.now(datetime.timezone.utc).isoformat(),container_absent=not subprocess.check_output(['docker','--host=unix:///var/run/docker.sock','ps','-a','--filter','name=^/'+name+'$','--format','{{.ID}}'],text=True).strip());(B/('after-native-'+key+'-invocation.json')).write_text(json.dumps(record,indent=2)+'\n');assert r.returncode==0 and record['container_absent'];print(json.dumps(record))
+                                                                                                                                                                                                                                                                                                                                                                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError

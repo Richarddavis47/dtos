@@ -1,0 +1,537 @@
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index 9816fd31..a3b7462e 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -1,3 +1,7 @@
++## v1.22.56 / build 2271 — Find bye-week pickups
++
++A confirmed My Team bye gap links to prepared Market results. See which unrostered players can fill one opening, their Sleeper projections for that week when available, and what to verify in Sleeper before acting.
++
+ ## v1.22.55 / build 2270 — Prefer available bye cover
+ 
+ My Team prefers complete bye-week lineups supported by current Sleeper player status. If cover depends on uncertain availability, the plan names the dependency and shows the age of the status check.
+diff --git a/RELEASE_NOTES.md b/RELEASE_NOTES.md
+index 445b04af..b23c6c89 100644
+--- a/RELEASE_NOTES.md
++++ b/RELEASE_NOTES.md
+@@ -1,3 +1,7 @@
++## v1.22.56 / build 2271 — Find bye-week pickups
++
++A confirmed My Team bye gap links to prepared Market results. See which unrostered players can fill one opening, their Sleeper projections for that week when available, and what to verify in Sleeper before acting.
++
+ ## v1.22.55 / build 2270 — Prefer available bye cover
+ 
+ My Team prefers complete bye-week lineups supported by current Sleeper player status. If cover depends on uncertain availability, the plan names the dependency and shows the age of the status check.
+diff --git a/app_metadata.py b/app_metadata.py
+index 1759a06f..159bcf1c 100644
+--- a/app_metadata.py
++++ b/app_metadata.py
+@@ -7,10 +7,10 @@ from datetime import datetime, timezone
+ from pathlib import Path
+ 
+ APPLICATION_NAME = "DTOS"
+-VERSION = "1.22.55"
+-PRODUCT_VERSION = "1.22.55"
+-BUILD_NUMBER = 2270
+-RELEASE_CODENAME = "Prefer Available Bye Cover"
++VERSION = "1.22.56"
++PRODUCT_VERSION = "1.22.56"
++BUILD_NUMBER = 2271
++RELEASE_CODENAME = "Find Bye Week Pickups"
+ APPLICATION_STARTED_AT = datetime.now(timezone.utc).isoformat()
+ 
+ _REPOSITORY_ROOT = Path(__file__).resolve().parent
+diff --git a/routes/market.py b/routes/market.py
+index 216e538b..78397c27 100644
+--- a/routes/market.py
++++ b/routes/market.py
+@@ -406,13 +406,57 @@ def create_market_router(
+             "provider_calls": 0, "raw_history_scans": 0,
+         })
+ 
++    def bye_pickups_page(bye_week, market_league, season, from_team):
++        from src.core.intelligence.team_strength import compatible_profile
++        from src.core.intelligence.upcoming_byes import read_upcoming_byes
++        from src.ui.upcoming_byes import bye_pickup_panel
++
++        selected_state, selected_league, _ = dependencies()
++        membership = getattr(current_account(), 'membership', None)
++        team_url = '/teams'
++        if membership and str(membership.league_id) == str(selected_league) and membership.roster_id:
++            team_url = f'/teams/{membership.roster_id}#upcoming-byes'
++        back = f'<p><a class="back ds-action" href="{escape(team_url)}">Back to My Team</a></p>'
++        reason = 'This link does not match a confirmed upcoming bye gap for your selected team.'
++        data = selected_state.get('data') or {}
++        league = data.get('league') or {}
++        if (membership and from_team == membership.roster_id
++                and str(membership.league_id) == str(selected_league) == market_league == str(league.get('league_id'))
++                and str(season) == str(league.get('season'))):
++            team = next((t for t in data.get('teams') or [] if t['roster_id'] == from_team), None)
++            context = context_resolver() if context_resolver is not None else None
++            reader = getattr(context, 'projection', None) or projection_service
++            profile = compatible_profile(data, reader.snapshot())
++            if team and profile:
++                weeks = read_upcoming_byes(profile, league, team, players_fetched_at=data.get('players_fetched_at')) or ()
++                row = next((w for w in weeks if w['week'] == bye_week and w['state'] == 'shortfall'), None)
++                if row:
++                    ownership = PlayerOwnershipIndex(data)
++                    if not ownership.complete:
++                        reason = 'League ownership is incomplete, so no player can be confirmed unrostered.'
++                    elif (row.get('pickups') or {}).get('ownership_generation') != ownership.generation:
++                        reason = 'Pickup results are unavailable for this prepared roster snapshot.'
++                    elif not row.get('pickup_slots'):
++                        reason = 'The gap is confirmed, but the prepared roster cannot establish a legal fit for a pickup.'
++                    else:
++                        origin = '/market?' + _market_query(bye_week=bye_week, market_league=market_league,
++                            season=season, from_team=from_team, availability='day_traders_free_agent')
++                        return page('Asset Market', back + bye_pickup_panel(
++                            row, ownership, origin=origin, league_id=market_league, roster_id=from_team))
++        return page('Asset Market', back + f'<section class="ux-section"><h2>Week {bye_week} bye cover</h2>'
++                    f'<p class="evidence-unavailable">{escape(reason)}</p></section>')
++
+     def market_page(
+         request: Request,
+         q: str = "", position: str = "", availability: str = "",
+         sort: str = "market", direction: str = "desc",
+         front_office: int | None = None, selected: str = "",
+         offset: int = Query(0, ge=0), limit: int = Query(10, ge=10, le=100),
++        bye_week: int | None = Query(None, ge=1, le=18), market_league: str = "",
++        season: int | None = None, from_team: int | None = None,
+     ) -> HTMLResponse:
++        if bye_week is not None:
++            return bye_pickups_page(bye_week, market_league, season, from_team)
+         try:
+             market = model()
+         except HTTPException as exc:
+diff --git a/routes/teams.py b/routes/teams.py
+index a0e36908..b092f5d5 100644
+--- a/routes/teams.py
++++ b/routes/teams.py
+@@ -475,6 +475,7 @@ def create_teams_router(
+                 read_upcoming_byes(prepared_strength, data.get('league') or {}, team,
+                                    players_fetched_at=data.get('players_fetched_at')), team['players'],
+                 active=(data.get('league') or {}).get('status') == 'in_season',
++                league_id=league_id, season=(data.get('league') or {}).get('season'), roster_id=roster_id,
+             )
+             catalog = data.get('players') or {}
+             uncertain_starter = any(
+diff --git a/services/market_navigation.py b/services/market_navigation.py
+index 1502cabb..edf01b1d 100644
+--- a/services/market_navigation.py
++++ b/services/market_navigation.py
+@@ -15,9 +15,20 @@ def market_return(origin, source_league, selected_league):
+         return None
+     allowed = {"q", "position", "availability", "sort", "direction", "front_office", "selected", "offset", "limit"}
+     pairs = parse_qsl(parsed.query, keep_blank_values=True)
+-    if any(key not in allowed for key, _ in pairs) or len({k for k, _ in pairs}) != len(pairs):
++    if len({k for k, _ in pairs}) != len(pairs):
+         return None
+     values = dict(pairs)
++    if "bye_week" in values:
++        if (set(values) != {"bye_week", "market_league", "season", "from_team", "availability"}
++                or values["market_league"] != str(selected_league)
++                or values["availability"] != "day_traders_free_agent"
++                or not all(values[key].isascii() and values[key].isdecimal() and len(values[key]) <= 6
++                           for key in ("bye_week", "season", "from_team"))
++                or not 1 <= int(values["bye_week"]) <= 18 or int(values["from_team"]) < 1):
++            return None
++        return "/market?" + urlencode(pairs)
++    if not set(values).issubset(allowed):
++        return None
+     for key, supported in {
+         "position": {"", "QB", "RB", "WR", "TE", "PICK"},
+         "availability": {"", "rostered", "day_traders_free_agent", "taxi", "retired", "owned_pick"},
+diff --git a/src/core/intelligence/bye_pickups.py b/src/core/intelligence/bye_pickups.py
+new file mode 100644
+index 00000000..884805bc
+--- /dev/null
++++ b/src/core/intelligence/bye_pickups.py
+@@ -0,0 +1,86 @@
++"""Prepare small league-scoped free-agent results for proven bye shortages."""
++
++from math import isfinite
++
++from src.core.data_platform.normalization.identity import normalize_team
++from src.core.player_ownership import PlayerOwnershipIndex
++from src.core.projection_intelligence.service import (
++    UNAVAILABLE_PLAYER_STATUSES,
++    player_availability,
++    projection_row_compatible,
++)
++from src.core.projection_intelligence.sleeper_provider import freshness_state
++from src.core.trade_intelligence.lineup import _eligible, eligible_positions
++
++
++def _week_projections(service, pinned, week):
++    snapshot = service.week_snapshot(week, generation_snapshot=pinned)
++    if not snapshot or snapshot.get('week') != week or any(
++        snapshot.get(key) != pinned.get(key)
++        for key in ('league_id', 'season', 'horizon_generation', 'scoring_profile_id')
++    ):
++        return {}
++    return snapshot
++
++
++def _candidates(ownership, games, week, slots, projection, *, fresh):
++    for pid, row in ownership.players.items():
++        if not isinstance(row, dict) or ownership.resolve(pid)['state'] != 'FREE_AGENT':
++            continue
++        if any(row.get(key) is not None and str(row[key]) != pid for key in ('id', 'player_id')):
++            continue
++        team = normalize_team(row.get('team') or row.get('nfl_team') or '')
++        if not team or not games.get(f'{week}:{team}'):
++            continue
++        status = player_availability(row, None)
++        if status in UNAVAILABLE_PLAYER_STATUSES:
++            continue
++        positions = eligible_positions(row)
++        eligible = frozenset(index for index, slot in enumerate(slots)
++                             if any(_eligible(pos, slot) for pos in positions))
++        if not eligible:
++            continue
++        evidence = (projection.get('players') or {}).get(pid) or {}
++        points = evidence.get('canonical_projection')
++        if (evidence.get('provider_id') != 'sleeper_projections'
++                or not projection_row_compatible(projection, pid, evidence)
++                or not isinstance(points, (int, float)) or isinstance(points, bool)
++                or not isfinite(points)):
++            points = None
++        rank = (not (fresh and status == 'active'), points is None, -(points or 0), pid)
++        yield rank, eligible, dict(
++            player_id=pid, status=status, positions=list(positions), points=points,
++            projection_freshness=evidence.get('source_freshness') if points is not None else None,
++        )
++
++
++def prepare_bye_pickups(data, service, pinned, schedule, outlook):
++    """Compute once during admission. Retain up to six results per shortfall."""
++    weeks = {}
++    for record in outlook.values():
++        for row in record['weeks']:
++            if row['state'] == 'shortfall':
++                weeks.setdefault(row['week'], []).append(row)
++    if not weeks:
++        return
++
++    ownership = PlayerOwnershipIndex(data)
++    games = (schedule or {}).get('games') or {}
++    fresh = freshness_state(data.get('players_fetched_at')) == 'Fresh'
++    for week, shortages in weeks.items():
++        choices = []
++        if ownership.complete and any(row['pickup_slots'] for row in shortages):
++            projection = _week_projections(service, pinned, week)
++            choices = sorted(_candidates(ownership, games, week, shortages[0]['slots'], projection, fresh=fresh),
++                             key=lambda candidate: candidate[0])
++        for row in shortages:
++            matches = []
++            for _, eligible, candidate in choices:
++                path = next(((index, gap) for index, gap in row['pickup_slots'] if index in eligible), None)
++                if path is None:
++                    continue
++                index, gap = path
++                matches.append(dict(candidate, slot=row['slots'][index], gap=row['slots'][gap]))
++                if len(matches) == 6:
++                    break
++            row['pickups'] = dict(ownership_generation=ownership.generation, candidates=matches)
+diff --git a/src/core/intelligence/team_strength.py b/src/core/intelligence/team_strength.py
+index fd324506..fdb52535 100644
+--- a/src/core/intelligence/team_strength.py
++++ b/src/core/intelligence/team_strength.py
+@@ -332,9 +332,11 @@ def prepare_for_data(service: Any, data: dict, *, next_n: int = 3, bye_evidence:
+     }, sort_keys=True).encode()).hexdigest()
+     from .lineup_fallback import prepare_fallbacks
+     from .upcoming_byes import prepare_upcoming_byes
++    from .bye_pickups import prepare_bye_pickups
+     if existing is not None and existing.get('preparation_key') == preparation_key:
+         fallbacks = prepare_fallbacks(data, pinned, lineup_schedule, existing)
+         upcoming_byes = prepare_upcoming_byes(data, calendar, lineup_schedule, bye_evidence, existing)
++        prepare_bye_pickups(data, service, pinned, lineup_schedule, upcoming_byes)
+         if fallbacks == (existing.get('lineup_fallbacks') or {}) and upcoming_byes == existing.get('upcoming_byes'):
+             return existing
+         profile = dict(existing, lineup_fallbacks=fallbacks, upcoming_byes=upcoming_byes)
+@@ -351,6 +353,7 @@ def prepare_for_data(service: Any, data: dict, *, next_n: int = 3, bye_evidence:
+     profile['scoring_reference'] = hashlib.sha256(json.dumps(scoring, sort_keys=True).encode()).hexdigest()
+     profile['lineup_fallbacks'] = prepare_fallbacks(data, pinned, lineup_schedule, profile)
+     profile['upcoming_byes'] = prepare_upcoming_byes(data, calendar, lineup_schedule, bye_evidence, profile)
++    prepare_bye_pickups(data, service, pinned, lineup_schedule, profile['upcoming_byes'])
+     data['team_strength'] = profile
+     return profile
+ 
+diff --git a/src/core/intelligence/upcoming_byes.py b/src/core/intelligence/upcoming_byes.py
+index beef3d9e..90cf5fef 100644
+--- a/src/core/intelligence/upcoming_byes.py
++++ b/src/core/intelligence/upcoming_byes.py
+@@ -114,6 +114,22 @@ def _availability_fit(slots, playing, initial, statuses, fresh):
+     return fit, False
+ 
+ 
++def _pickup_slots(slots, playing, fit):
++    """Map each reachable pickup slot to the vacancy it can help close."""
++    paths = {}
++    for gap in range(len(slots)):
++        if gap in fit:
++            continue
++        queue = [gap]
++        paths[gap] = gap
++        for vacancy in queue:
++            for index, pid in sorted(fit.items()):
++                if index not in paths and any(_eligible(pos, slots[vacancy]) for pos in playing[pid]):
++                    paths[index] = gap
++                    queue.append(index)
++    return [[index, gap] for index, gap in sorted(paths.items(), key=lambda pair: (pair[0] != pair[1], pair))]
++
++
+ def _week(slots, people, games, byes, week, projection, *, starters, statuses=None, fresh=False):
+     bye_ids = {pid for pid, (club, _, _) in people.items()
+                if byes.get(pid) == week and club and f'{week}:{club}' not in games}
+@@ -122,7 +138,7 @@ def _week(slots, people, games, byes, week, projection, *, starters, statuses=No
+     initial = {index: pid for index, pid in enumerate(starters or ()) if pid is not None}
+     affected = [(index, pid) for index, pid in initial.items() if pid in bye_ids]
+     statuses = statuses or {}
+-    moves, unfilled, dependencies = [], [], []
++    moves, unfilled, dependencies, pickup_slots = [], [], [], []
+     if affected:
+         after, supported = _availability_fit(slots, playing, initial, statuses, fresh)
+         if len(after) == len(slots):
+@@ -140,7 +156,11 @@ def _week(slots, people, games, byes, week, projection, *, starters, statuses=No
+             upper = _fit(slots, possible, initial)
+             state = 'shortfall' if len(upper) < len(slots) else 'unknown'
+             if state == 'shortfall':
+-                unfilled = [slot for index, slot in enumerate(slots) if index not in upper]
++                fit = upper
++                if len(after) == len(upper):
++                    fit = after
++                    pickup_slots = _pickup_slots(slots, playing, fit)
++                unfilled = [slot for index, slot in enumerate(slots) if index not in fit]
+     elif len(initial) == len(slots) and all(
+         any(_eligible(position, slots[index]) for position in playing.get(pid, ()))
+         for index, pid in initial.items()
+@@ -152,6 +172,7 @@ def _week(slots, people, games, byes, week, projection, *, starters, statuses=No
+         'week': week, 'state': state, 'slots': slots,
+         'bye_starters': [list(row) for row in affected],
+         'unfilled': unfilled, 'moves': moves, 'availability_dependencies': dependencies,
++        'pickup_slots': pickup_slots,
+         'projection_ready': projection.get('available') is True,
+     }
+ 
+diff --git a/src/ui/upcoming_byes.py b/src/ui/upcoming_byes.py
+index 6b556589..9d5dd219 100644
+--- a/src/ui/upcoming_byes.py
++++ b/src/ui/upcoming_byes.py
+@@ -1,5 +1,6 @@
+ """Compact disclosure for the prepared two-week bye outlook."""
+ from html import escape
++from urllib.parse import quote, urlencode
+ 
+ 
+ def _slot_name(slot):
+@@ -40,7 +41,7 @@ def _status_dependency(name, status):
+     return f'{name} has unconfirmed availability.'
+ 
+ 
+-def upcoming_byes_panel(weeks, players, *, active):
++def upcoming_byes_panel(weeks, players, *, active, league_id=None, season=None, roster_id=None):
+     if not active:
+         return ''
+     if not weeks:
+@@ -49,6 +50,16 @@ def upcoming_byes_panel(weeks, players, *, active):
+     order = {'shortfall': 0, 'unknown': 1, 'conditional': 2, 'covered': 3, 'no_gap': 4}
+     priority = sorted(weeks, key=lambda row: (order[row['state']], row['week']))
+     names = {str(player['id']): escape(player.get('name') or 'Unnamed player') for player in players}
++    pickup_links = []
++    for row in priority:
++        if row['state'] != 'shortfall' or not (league_id and season and roster_id):
++            continue
++        week = row['week']
++        query = urlencode(dict(bye_week=week, market_league=league_id, season=season, from_team=roster_id,
++                               availability='day_traders_free_agent'))
++        needs = _slots(dict.fromkeys(row['unfilled']))
++        pickup_links.append(f'<a class="thq-action" id="bye-pickup-{week}" href="/market?{escape(query)}">'
++                            f'Find Week {week} {needs} cover</a>')
+ 
+     def finding(row):
+         week = f"Week {row['week']}"
+@@ -105,8 +116,46 @@ def upcoming_byes_panel(weeks, players, *, active):
+     return (
+         '<section class="thq-section" id="upcoming-byes"><h2>Upcoming bye weeks</h2>'
+         f'<p>{finding(priority[0])}</p>'
++        + ('<div class="thq-actions">' + ''.join(pickup_links) + '</div>' if pickup_links else '') +
+         '<details class="thq-strength-detail"><summary>See weeks and possible moves</summary>'
+         '<p>This plan uses the latest prepared roster and NFL schedule. It shows who fits together under your league’s rules. '
+         'Check player availability again before setting your Sleeper lineup.</p>'
+         + ''.join(detail(row, leading=index == 0) for index, row in enumerate(priority)) + '</details></section>'
+     )
++
++
++def bye_pickup_panel(row, ownership, *, origin, league_id, roster_id):
++    cards = []
++    shortage = len(row['unfilled'])
++    for candidate in row['pickups']['candidates']:
++        pid = candidate['player_id']
++        if ownership.resolve(pid)['state'] != 'FREE_AGENT':
++            continue
++        catalog = ownership.players[pid]
++        name = escape(str(catalog.get('full_name') or catalog.get('name') or pid))
++        positions = _slots(candidate['positions'])
++        slot, gap = _slot_name(candidate['slot']), _slot_name(candidate['gap'])
++        fit = (f'Can fill one {gap} opening by starting at {slot} and moving eligible roster players.'
++               if slot != gap else f'Can fill one {gap} opening.')
++        points = candidate['points']
++        projection = 'Sleeper projection unavailable.' if points is None else f'Sleeper projection: {points:.2f} pts.'
++        if points is not None and candidate['projection_freshness'] in {'Aging', 'Stale'}:
++            projection += f" Projection freshness: {candidate['projection_freshness'].lower()}."
++        status = (_status_dependency(name, candidate['status'])
++                  if candidate['status'] != 'active' else '')
++        href = '/players/' + quote(pid, safe='') + '?' + urlencode(
++            dict(from_market=origin, market_league=league_id, front_office=roster_id))
++        cards.append(f'<article class="card"><h3><a href="{escape(href)}">{name}</a></h3>'
++                     f'<p>{positions} · Unrostered in this league</p><p>{fit} {projection}</p>'
++                     + (f'<p>{status}</p>' if status else '') + '</article>')
++    if not cards:
++        cards.append('<p>No confirmed unrostered player has a supported lineup fit in the prepared evidence.</p>')
++    coverage = (f'Each result covers one opening. This roster has {shortage}, so one pickup cannot fill them all.'
++                if shortage > 1 else 'Each result can cover the opening in a legal lineup.')
++    return (f'<section id="bye-pickup-results" class="ux-section"><h2>Week {row["week"]} bye cover</h2>'
++            f'<p>Unfilled slots: {_slots(row["unfilled"])}.</p>'
++            + (f'<p>{coverage}</p>' if row['pickups']['candidates'] else '')
++            + '<p>These fits use the prepared roster and NFL schedule. Verify who can play and whether waivers '
++              'or locks apply in Sleeper. Use Sleeper for all lineup changes, adds, drops, and claims.</p>'
++            + f'<p>{_status_age(row)}</p><div class="market-grid">{"".join(cards)}</div>'
++            '<p><a href="/market?availability=day_traders_free_agent">Browse all Market free agents</a></p></section>')
+diff --git a/static/js/contextual_navigation.js b/static/js/contextual_navigation.js
+index 960bf9e9..d06ca812 100644
+--- a/static/js/contextual_navigation.js
++++ b/static/js/contextual_navigation.js
+@@ -11,8 +11,8 @@
+   const tab = window.name.match(/\|dtos-trade-tab=([a-zA-Z0-9-]+)$/)?.[1] || uuid();
+   if (!window.name.endsWith('|dtos-trade-tab=' + tab)) window.name += '|dtos-trade-tab=' + tab;
+   const paths = new Set(['', 'teams', 'league', 'matchups', 'market', 'players', 'trades', 'picks', 'history', 'fois', 'front-offices', 'transactions', 'reports', 'settings', 'brain', 'valuation', 'commissioner', 'account', 'search']);
+-  const queryKeys = new Set(['q','position','availability','sort','direction','front_office','selected','offset','limit','week','season','year','round','from_team','from_section','from_trade','from_market','market_league','matchup','asset_id','owner_roster_id','home_offer','partner_roster_id','shop_preference','league','league_id','view','tab','format','team','scope','owner','type','player','draft_pick','date_from','date_to','status','page','events_page','per_page','from_home','since','team_need']);
+-  const sections = new Set(['#full-roster','#positional-depth','#draft-capital','#my-team-advanced']);
++  const queryKeys = new Set(['q','position','availability','sort','direction','front_office','selected','offset','limit','week','season','year','round','from_team','from_section','from_trade','from_market','market_league','matchup','asset_id','owner_roster_id','home_offer','partner_roster_id','shop_preference','league','league_id','view','tab','format','team','scope','owner','type','player','draft_pick','date_from','date_to','status','page','events_page','per_page','from_home','since','team_need','bye_week']);
++  const sections = new Set(['#full-roster','#positional-depth','#draft-capital','#my-team-advanced','#upcoming-byes']);
+   function safeUrl(raw) {
+     if (!raw || typeof raw !== 'string' || raw.length > 2400 || /[\x00-\x1f\\]/.test(raw)) return null;
+     try {
+diff --git a/tests/test_bye_pickups.py b/tests/test_bye_pickups.py
+new file mode 100644
+index 00000000..ff672c25
+--- /dev/null
++++ b/tests/test_bye_pickups.py
+@@ -0,0 +1,116 @@
++"""Prepared bye gaps through the authenticated My Team and Market routes."""
++
++from types import SimpleNamespace
++from pathlib import Path
++import os
++from unittest.mock import Mock, patch
++from urllib.parse import parse_qs, urlsplit
++import unittest
++
++from routes.market import create_market_router
++from routes.navigation import create_navigation_router
++from services.market_navigation import market_return
++from tests.lineup_review_fixture import authenticated_prepared
++from tests.test_upcoming_bye_moves import install_schedule, phone
++
++
++class ByePickupTests(unittest.TestCase):
++    def setup_league(self, **options):
++        import dtos_app
++
++        fixture, data, service, now = authenticated_prepared(self, empty=False, **options)
++        state = {'data': data}
++        cache = Mock()
++        context = SimpleNamespace(state=state, league_id='league-1', projection=service, market=cache)
++        fixture.f.f.client.app.include_router(create_navigation_router())
++        fixture.f.f.client.app.include_router(create_market_router(
++            require_data=lambda: data, state=state, league_id='league-1', page=dtos_app.page,
++            context_resolver=lambda: context,
++        ))
++        self.addCleanup(cache.get.assert_not_called)
++        return fixture, data, service, now
++
++    def add_players(self, data, service, now):
++        def add(pid, name, pos, *, team='X02', status='Active'):
++            data['players'][pid] = dict(id=pid, player_id=pid, full_name=name, name=name, team=team,
++                                        position=pos, fantasy_positions=[pos], status=status)
++
++        add('free-rb', 'Free Runner', 'RB')
++        add('free-qb', 'Free Quarterback', 'QB')
++        add('free-te', 'Unprojected Tight End', 'TE')
++        add('bye-te', 'Off This Week', 'TE', team='BUF')
++        add('out-rb', 'Currently Out', 'RB', status='Out')
++        def points(week, yards):
++            return dict(player_id='free-rb', week=week, season=2026, team='X02', opponent='BUF',
++                        player=dict(position='RB', fantasy_positions=['RB']), updated_at=now.isoformat(),
++                        stats={'rush_yd': yards})
++
++        service.publish_horizon({8: [points(8, 120)], 9: [points(9, 35)]}, data=data,
++                                league_id='league-1', season=2026, current_week=8)
++
++    def test_phone_flex_gap_target_week_and_back(self):
++        fixture, data, service, now = self.setup_league(slots=['QB', 'RB', 'FLEX', 'RB', 'BN'])
++        self.add_players(data, service, now)
++        install_schedule(service, data, now, byes={'1-w'})
++        with phone(fixture) as page:
++            page.goto('https://dtos.test/teams/1')
++            action = page.get_by_role('link', name='Find Week 9 FLEX cover')
++            href = action.get_attribute('href')
++            self.assertEqual(parse_qs(urlsplit(href).query)['availability'], ['day_traders_free_agent'])
++            self.assertEqual(market_return(href, 'league-1', 'league-1'), href)
++            self.assertIsNone(market_return(href, 'league-1', 'other-league'))
++            directory = os.environ.get('DTOS_BYE_PICKUP_SCREENSHOTS')
++            if directory:
++                Path(directory).mkdir(parents=True, exist_ok=True)
++                page.locator('#upcoming-byes').screenshot(path=str(Path(directory, 'my-team-390.png')))
++            with patch.object(service, 'week_snapshot', side_effect=AssertionError('Market must use the prepared shortlist')):
++                action.tap()
++                page.wait_for_url('**/market?**')
++            results = page.locator('#bye-pickup-results')
++            copy = results.inner_text()
++            self.assertIn('Free Runner', copy)
++            self.assertIn('Sleeper projection: 3.50 pts.', copy)
++            self.assertNotIn('12.00 pts', copy)
++            self.assertIn('Unprojected Tight End', copy)
++            self.assertIn('Sleeper projection unavailable.', copy)
++            self.assertIn('waivers or locks', copy)
++            self.assertNotIn('Free Quarterback', copy)
++            self.assertNotIn('Off This Week', copy)
++            self.assertNotIn('Currently Out', copy)
++            self.assertNotIn('Example', copy)
++            self.assertLessEqual(page.evaluate('document.documentElement.scrollWidth'), 390)
++            if directory:
++                results.screenshot(path=str(Path(directory, 'market-390.png')))
++            page.locator('#dtos-back').click()
++            page.wait_for_url('**/teams/1')
++            action.wait_for()
++
++    def test_superflex_plan_each_unrostered_candidate_fills_only_one_of_two_openings(self):
++        fixture, data, service, now = self.setup_league(bench_position='RB')
++        self.add_players(data, service, now)
++        install_schedule(service, data, now, byes={'1-q', '1-s', '1-w'})
++        client = fixture.f.f.client
++        response = client.get('/market?bye_week=9&market_league=league-1&season=2026&from_team=1')
++        self.assertEqual(response.status_code, 200)
++        self.assertIn('one pickup cannot fill them all', response.text)
++        self.assertIn('Free Quarterback', response.text)
++        self.assertIn('Can fill one Superflex opening', response.text)
++        row = data['team_strength']['upcoming_byes']['1']['weeks'][0]
++        self.assertEqual(len(row['unfilled']), 2)
++        self.assertLessEqual(len(row['pickups']['candidates']), 6)
++
++    def test_withholds_incomplete_ownership_stale_link_and_unknown_gap(self):
++        fixture, data, service, now = self.setup_league(slots=['QB', 'RB', 'FLEX', 'RB', 'BN'])
++        self.add_players(data, service, now)
++        data['league']['total_rosters'] = 3
++        install_schedule(service, data, now, byes={'1-w'})
++        client = fixture.f.f.client
++        url = '/market?bye_week=9&market_league=league-1&season=2026&from_team=1'
++        self.assertIn('League ownership is incomplete', client.get(url).text)
++        self.assertNotIn('Free Runner', client.get(url).text)
++        self.assertIn('does not match a confirmed', client.get(url.replace('league-1', 'league-2')).text)
++        self.assertIn('does not match a confirmed', client.get(url.replace('2026', '2025')).text)
++        self.assertIn('does not match a confirmed', client.get(url.replace('from_team=1', 'from_team=2')).text)
++        install_schedule(service, data, now, byes={'1-w'}, missing={(9, 1)})
++        self.assertNotIn('Find Week 9', client.get('/teams/1').text)
++        self.assertIn('does not match a confirmed', client.get(url).text)
