@@ -1,5 +1,9 @@
 # Scout acceptance for DTOS build 2272
 
+Candidate `05669cf734d6f002b769682f0e286b2b6cb1fd2d`
+
+Validated source tree to require `86eb797b00d2214bd9bb676e9a2b5330d695f95c`
+
 Scope is the prepared bye-week pickup shortlist in PR #361. Use a disposable prepared league for the deterministic cases. A production owner check should use an already prepared context and should leave the roster and saved settings untouched.
 
 1. Open My Team, expand **See weeks and possible moves**, and verify the confirmed Week 9 RB gap in the fixture.
