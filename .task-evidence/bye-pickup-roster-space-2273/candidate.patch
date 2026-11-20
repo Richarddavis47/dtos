@@ -1,0 +1,319 @@
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index 8b83c46..5b9e0e8 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -1,3 +1,7 @@
++## v1.22.58 / build 2273 — Show roster space for bye pickups
++
++Bye pickup cards show open, full or unconfirmed active roster space alongside lineup fit. IR and taxi vacancies do not count as active spots.
++
+ ## v1.22.57 / build 2272 — Show bye pickup availability
+ 
+ Bye pickup suggestions show the legal lineup moves and name availability dependencies. My Team keeps the bye details expanded when you return from the shortlist.
+diff --git a/RELEASE_NOTES.md b/RELEASE_NOTES.md
+index 9be666d..7b28b5b 100644
+--- a/RELEASE_NOTES.md
++++ b/RELEASE_NOTES.md
+@@ -1,3 +1,7 @@
++## v1.22.58 / build 2273 — Show roster space for bye pickups
++
++Bye pickup cards show whether the latest prepared Sleeper roster has an active spot open or needs room. If the roster or league limit cannot be confirmed, the shortlist explains what is missing.
++
+ ## v1.22.57 / build 2272 — Show bye pickup availability
+ 
+ Bye pickup suggestions show the legal lineup moves and name availability dependencies. My Team keeps the bye details expanded when you return from the shortlist.
+diff --git a/app_metadata.py b/app_metadata.py
+index a326b33..a8f8b99 100644
+--- a/app_metadata.py
++++ b/app_metadata.py
+@@ -7,10 +7,10 @@ from datetime import datetime, timezone
+ from pathlib import Path
+ 
+ APPLICATION_NAME = "DTOS"
+-VERSION = "1.22.57"
+-PRODUCT_VERSION = "1.22.57"
+-BUILD_NUMBER = 2272
+-RELEASE_CODENAME = "Show Bye Pickup Availability"
++VERSION = "1.22.58"
++PRODUCT_VERSION = "1.22.58"
++BUILD_NUMBER = 2273
++RELEASE_CODENAME = "Show Bye Pickup Roster Space"
+ APPLICATION_STARTED_AT = datetime.now(timezone.utc).isoformat()
+ 
+ _REPOSITORY_ROOT = Path(__file__).resolve().parent
+diff --git a/routes/market.py b/routes/market.py
+index 78397c2..f5bfda3 100644
+--- a/routes/market.py
++++ b/routes/market.py
+@@ -409,6 +409,7 @@ def create_market_router(
+     def bye_pickups_page(bye_week, market_league, season, from_team):
+         from src.core.intelligence.team_strength import compatible_profile
+         from src.core.intelligence.upcoming_byes import read_upcoming_byes
++        from src.core.trade_intelligence.roster_space import pickup_roster_space
+         from src.ui.upcoming_byes import bye_pickup_panel
+ 
+         selected_state, selected_league, _ = dependencies()
+@@ -442,7 +443,8 @@ def create_market_router(
+                         origin = '/market?' + _market_query(bye_week=bye_week, market_league=market_league,
+                             season=season, from_team=from_team, availability='day_traders_free_agent')
+                         return page('Asset Market', back + bye_pickup_panel(
+-                            row, ownership, origin=origin, league_id=market_league, roster_id=from_team))
++                            row, ownership, origin=origin, league_id=market_league, roster_id=from_team,
++                            roster_space=pickup_roster_space(league, team)))
+         return page('Asset Market', back + f'<section class="ux-section"><h2>Week {bye_week} bye cover</h2>'
+                     f'<p class="evidence-unavailable">{escape(reason)}</p></section>')
+ 
+diff --git a/services/sleeper.py b/services/sleeper.py
+index 3ecae41..16f64a7 100644
+--- a/services/sleeper.py
++++ b/services/sleeper.py
+@@ -29,6 +29,7 @@ from src.platform.lifecycle import HeavyWorkDeferred, lifecycle_coordinator
+ from src.platform.sync_diagnostics import SyncDiagnostics
+ from src.platform.runtime_errors import log_sync_failure
+ from src.core.sync_status import safe_sync_state, synchronization_warning
++from src.core.trade_intelligence.roster_space import sleeper_membership_verified
+ from src.platform.request_diagnostics import diagnosed, source_hooks, span
+ from src.core.valuation.automation import audit_market_calibration
+ from src.core.valuation_intelligence import build_valuation_intelligence
+@@ -359,6 +360,7 @@ async def _sync_sleeper(
+                     "points_for": standing_points(settings, "fpts"),
+                     "points_against": standing_points(settings, "fpts_against"),
+                     "max_points": standing_points(settings, 'ppts'),
++                    "sleeper_membership_verified": sleeper_membership_verified(roster),
+                     "players": player_rows,
+                 })
+             team_rows = standings_order({"league": league, "teams": team_rows})["teams"]
+diff --git a/src/core/trade_intelligence/roster_space.py b/src/core/trade_intelligence/roster_space.py
+index 8e5c55f..22dd015 100644
+--- a/src/core/trade_intelligence/roster_space.py
++++ b/src/core/trade_intelligence/roster_space.py
+@@ -1,5 +1,13 @@
+ """Exact configured active-roster arithmetic, independent of trade quality."""
+ 
++from src.core.trade_intelligence.lineup import BENCH_SLOTS, FLEX_ELIGIBILITY
++
++
++_SLEEPER_SLOTS = frozenset(BENCH_SLOTS | FLEX_ELIGIBILITY.keys() | {
++    'QB', 'RB', 'WR', 'TE', 'K', 'DEF', 'DL', 'LB', 'DB', 'DE', 'DT', 'CB', 'S', 'IDP_FLEX',
++})
++_MISSING_MEMBERSHIP = 'DTOS could not confirm which players occupy active, IR, and taxi spots in this roster snapshot.'
++
+ 
+ def active_player_ids(roster):
+     return set(roster['players']) - set(roster['reserve']) - set(roster['taxi'])
+@@ -16,3 +24,54 @@ def capacity_evidence(before, after, roster_positions):
+             'post_active_players': len(active_player_ids(after)),
+             'additional_spots_to_resolve': max(0, len(active_player_ids(after)) - capacity),
+             'meaning': 'configured active roster pressure; cut selection and temporary league exceptions not inferred'}
++
++
++def _member_ids(values):
++    if not isinstance(values, list):
++        return None
++    if any(type(value) not in (str, int) or not str(value).strip()
++           or str(value) != str(value).strip() or value in ('0', 0) for value in values):
++        return None
++    ids = {str(value) for value in values}
++    return ids if len(ids) == len(values) else None
++
++
++def sleeper_membership_verified(roster):
++    """Capture native completeness before normalization replaces missing fields."""
++    if not all(key in roster for key in ('players', 'reserve', 'taxi')):
++        return False
++    players = _member_ids(roster['players'])
++    reserve = _member_ids([] if roster['reserve'] is None else roster['reserve'])
++    taxi = _member_ids([] if roster['taxi'] is None else roster['taxi'])
++    if players is None or reserve is None or taxi is None:
++        return False
++    starters = roster.get('starters')
++    if starters is not None and not isinstance(starters, list):
++        return False
++    return (reserve.isdisjoint(taxi) and (reserve | taxi) <= players
++            and (reserve | taxi).isdisjoint(str(value) for value in starters or ()))
++
++
++def pickup_roster_space(league, team):
++    """Report one ordinary add against the admitted roster, independently of lineup fit."""
++    slots = league.get('roster_positions')
++    if (not isinstance(slots, list) or not slots
++            or any(not isinstance(slot, str) or slot.upper() not in _SLEEPER_SLOTS for slot in slots)):
++        return {'reason': 'DTOS could not confirm the league’s active roster limit.'}
++    capacity = configured_active_slots(slots)
++    if not capacity:
++        return {'reason': 'DTOS could not confirm the league’s active roster limit.'}
++    rows = team.get('players')
++    if (team.get('sleeper_membership_verified') is not True or not isinstance(rows, list)
++            or any(not isinstance(row, dict) or row.get('roster_slot') not in
++                   ('Starter', 'Bench', 'IR', 'Taxi') for row in rows)):
++        return {'reason': _MISSING_MEMBERSHIP}
++    ids = [row.get('id') for row in rows]
++    if _member_ids(ids) is None:
++        return {'reason': _MISSING_MEMBERSHIP}
++    roster = {
++        'players': ids,
++        'reserve': [row['id'] for row in rows if row['roster_slot'] == 'IR'],
++        'taxi': [row['id'] for row in rows if row['roster_slot'] == 'Taxi'],
++    }
++    return {'active': len(active_player_ids(roster)), 'capacity': capacity}
+diff --git a/src/ui/upcoming_byes.py b/src/ui/upcoming_byes.py
+index 7b7ccb3..67d7ab7 100644
+--- a/src/ui/upcoming_byes.py
++++ b/src/ui/upcoming_byes.py
+@@ -124,12 +124,20 @@ def upcoming_byes_panel(weeks, players, *, active, league_id=None, season=None,
+     )
+ 
+ 
+-def bye_pickup_panel(row, ownership, *, origin, league_id, roster_id):
++def bye_pickup_panel(row, ownership, *, origin, league_id, roster_id, roster_space):
+     cards = []
+     shortage = len(row['unfilled'])
+     fresh = row['availability_freshness'] == 'Fresh'
+     slots = row['slots']
+     recorded = row['pickups']['candidates']
++    space_detail = roster_space.get('reason')
++    if space_detail:
++        space = 'Could not confirm an open spot.'
++    else:
++        active, capacity = roster_space['active'], roster_space['capacity']
++        space = ('Open active spot' if active < capacity else 'Make room before adding')
++        space += f' · {active} of {capacity} active spots used.'
++        space_detail = 'Roster space reflects this Sleeper snapshot. IR and taxi vacancies do not count as active spots.'
+ 
+     def player_name(player_id):
+         catalog = ownership.players.get(player_id) or {}
+@@ -173,6 +181,7 @@ def bye_pickup_panel(row, ownership, *, origin, league_id, roster_id):
+             dict(from_market=origin, market_league=league_id, front_office=roster_id))
+         cards.append(f'<article class="card"><h3><a href="{escape(href)}">{name}</a></h3>'
+                      f'<p>{positions} · Unrostered in this league</p><p>{fit} {projection}</p>'
++                     + f'<p><strong>Roster space</strong> · {escape(space)}</p>'
+                      + f'<details{" open" if conditional else ""}><summary>Lineup moves and availability</summary>'
+                      + f'<ul>{"".join(moves)}{notes}</ul></details></article>')
+     has_cards = bool(cards)
+@@ -185,7 +194,7 @@ def bye_pickup_panel(row, ownership, *, origin, league_id, roster_id):
+                 if shortage > 1 else 'Each plan addresses one opening.')
+     return (f'<section id="bye-pickup-results" class="ux-section"><h2>Week {row["week"]} bye cover</h2>'
+             f'<p>Unfilled slots: {_slots(row["unfilled"])}.</p>'
+-            + (f'<p>{coverage}</p>' if has_cards else '')
++            + (f'<p>{coverage} {escape(space_detail)}</p>' if has_cards else '')
+             + '<p>These fits use the prepared roster and NFL schedule. Verify who can play and whether waivers '
+               'or locks apply in Sleeper. Use Sleeper for all lineup changes, adds, drops, and claims.</p>'
+             + f'<p>{_status_age(row)}</p><div class="market-grid">{"".join(cards)}</div>'
+diff --git a/tests/test_bye_pickups.py b/tests/test_bye_pickups.py
+index aefe9a4..50a07a2 100644
+--- a/tests/test_bye_pickups.py
++++ b/tests/test_bye_pickups.py
+@@ -11,6 +11,7 @@ import unittest
+ from routes.market import create_market_router
+ from routes.navigation import create_navigation_router
+ from services.market_navigation import market_return
++from src.core.trade_intelligence.roster_space import pickup_roster_space, sleeper_membership_verified
+ from tests.lineup_review_fixture import authenticated_prepared
+ from tests.test_upcoming_bye_moves import install_schedule, phone
+ 
+@@ -171,3 +172,71 @@ class ByePickupTests(unittest.TestCase):
+                 self.assertIn('Move Example W 1 from FLEX to RB.', receiver)
+                 self.assertIn('Start Free Receiver at FLEX.', receiver)
+                 self.assertEqual('Conditional cover' in receiver, status is None or check_time is not None)
++
++    def test_roster_space_preserves_native_membership_uncertainty(self):
++        observed = dict(players=['1', '2'], reserve=None, taxi=['2'], starters=['1'])
++        self.assertTrue(sleeper_membership_verified(observed))
++        self.assertTrue(sleeper_membership_verified(dict(players=[], reserve=None, taxi=None)))
++        for bad in (
++            {key: value for key, value in observed.items() if key != 'taxi'},
++            dict(observed, players=None),
++            dict(observed, players=['1', 1, '2']),
++            dict(observed, reserve=['2']),
++            dict(observed, taxi=['3']),
++            dict(observed, starters=['2']),
++        ):
++            with self.subTest(bad=bad):
++                self.assertFalse(sleeper_membership_verified(bad))
++        team = dict(sleeper_membership_verified=True, players=[dict(id='1', roster_slot='Starter')])
++        self.assertIn('roster limit', pickup_roster_space({'roster_positions': ['QB', 'new slot']}, team)['reason'])
++        self.assertIn('occupy', pickup_roster_space({'roster_positions': ['QB', 'BN']},
++                                                    dict(team, players=[{'id': '1'}]))['reason'])
++
++    def test_roster_space_and_return_on_phone(self):
++        cases = (
++            ('open', ['QB', 'RB', 'FLEX', 'RB', 'BN', 'BN'], True, 'Open active spot · 5 of 6'),
++            ('full', ['QB', 'RB', 'FLEX', 'SUPER_FLEX', 'BN'], True, 'Make room before adding · 5 of 5'),
++            ('unknown', ['QB', 'RB', 'FLEX', 'RB', 'BN'], False, 'Could not confirm an open spot'),
++        )
++        for label, slots, verified, expected in cases:
++            with self.subTest(state=label):
++                fixture, data, service, now = self.setup_league(slots=slots, bench_position='RB')
++                team = data['teams'][0]
++                data['league']['settings'].update(reserve_slots=2, taxi_slots=2)
++                extra = dict(id='1-ir', name='Injured Reserve Fixture', position='RB',
++                             fantasy_positions=['RB'], roster_slot='IR')
++                team['players'].append(extra)
++                data['players'][extra['id']] = dict(extra)
++                # One IR and two taxi vacancies are listed by the league. The
++                # occupied IR spot is excluded, and the vacancies add no space.
++                native = dict(players=[row['id'] for row in team['players']], reserve=[extra['id']])
++                if verified:
++                    native['taxi'] = None
++                team['sleeper_membership_verified'] = sleeper_membership_verified(native)
++                self.add_players(data, service, now)
++                install_schedule(service, data, now, byes={'1-r', '1-w'})
++                with phone(fixture) as page:
++                    page.goto('https://dtos.test/teams/1')
++                    details = page.locator('#bye-week-details')
++                    details.locator('summary').press('Enter')
++                    page.get_by_role('link', name='Find Week 9', exact=False).tap()
++                    page.wait_for_url('**/market?**')
++                    results = page.locator('#bye-pickup-results')
++                    runner = results.locator('article').filter(has_text='Free Runner')
++                    copy = runner.inner_text()
++                    self.assertIn(expected, copy)
++                    self.assertIn('Unrostered in this league', copy)
++                    self.assertIn('Sleeper projection: 3.50 pts.', copy)
++                    if verified:
++                        self.assertIn('IR and taxi vacancies do not count as active spots.', results.inner_text())
++                    else:
++                        self.assertIn('could not confirm which players occupy', results.inner_text())
++                    self.assertIn('waivers or locks', results.inner_text())
++                    self.assertLessEqual(page.evaluate('document.documentElement.scrollWidth'), 390)
++                    if directory := os.environ.get('DTOS_BYE_PICKUP_SCREENSHOTS'):
++                        destination = Path(directory)
++                        destination.mkdir(parents=True, exist_ok=True)
++                        results.screenshot(path=str(destination / f'roster-space-{label}-390.png'))
++                    page.locator('#dtos-back').click()
++                    page.wait_for_url('**/teams/1')
++                    details.locator('[data-bye-week="9"]').wait_for()
+diff --git a/tests/test_current_season_franchise_history.py b/tests/test_current_season_franchise_history.py
+index c8d2438..4e8ca4d 100644
+--- a/tests/test_current_season_franchise_history.py
++++ b/tests/test_current_season_franchise_history.py
+@@ -310,7 +310,10 @@ class CurrentSeasonFreshSyncTests(unittest.IsolatedAsyncioTestCase):
+             if path.endswith('/users'):
+                 return [dict(user_id=f'owner-{i}',display_name=f'Owner {i}') for i in (1,2)]
+             if path.endswith('/rosters'):
+-                return [dict(roster_id=i,owner_id=f'owner-{i}',players=[],starters=[],settings={}) for i in (1,2)]
++                return [
++                    dict(roster_id=1, owner_id='owner-1', players=[], starters=[], reserve=None, taxi=None, settings={}),
++                    dict(roster_id=2, owner_id='owner-2', players=[], starters=[], settings={}),
++                ]
+             if path == '/state/nfl':
+                 return dict(season='2032',week=8,season_type='regular')
+             if '/transactions/' in path:
+@@ -342,6 +345,8 @@ class CurrentSeasonFreshSyncTests(unittest.IsolatedAsyncioTestCase):
+                 projections=self.projection,publish_data=self.runtime.publish_source)
+         self.assertIsNone(self.runtime.state['last_error'])
+         self.assertEqual(self.runtime.state['preparation_state'],'ready')
++        self.assertEqual({team['roster_id']: team['sleeper_membership_verified']
++                          for team in self.runtime.state['data']['teams']}, {1: True, 2: False})
+         self.app_module._publish_runtime_context(self.runtime,self.projection)
+         before = self.page()
+         self.assertIn('observed-trade',before)
+@@ -352,6 +357,8 @@ class CurrentSeasonFreshSyncTests(unittest.IsolatedAsyncioTestCase):
+         self.runtime = LeagueRuntime(league['league_id'])
+         await self.app_module._hydrate_league_runtime(self.runtime)
+         self.assertEqual(self.runtime.state['data']['transaction_acquisition'],metadata)
++        self.assertEqual({team['roster_id']: team['sleeper_membership_verified']
++                          for team in self.runtime.state['data']['teams']}, {1: True, 2: False})
+         self.assertIn('observed-trade',self.page())
+         self.assertIn('Refresh failed: weeks 4',self.page())
+         self.sync.assert_not_called()

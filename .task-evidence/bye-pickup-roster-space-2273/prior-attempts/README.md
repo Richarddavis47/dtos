@@ -1,0 +1,1 @@
+The preliminary focused run covered 20 checks before the actual sync/cache restoration assertion was added to the release-candidate test selection. It is not the final-source focused evidence. The final focused run has 21 passing checks.
