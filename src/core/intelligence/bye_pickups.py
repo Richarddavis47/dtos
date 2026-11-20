@@ -61,6 +61,8 @@ def prepare_bye_pickups(data, service, pinned, schedule, outlook):
         for row in record['weeks']:
             if row['state'] == 'shortfall':
                 weeks.setdefault(row['week'], []).append(row)
+            else:
+                row.pop('pickup_basis', None)
     if not weeks:
         return
 
@@ -75,12 +77,25 @@ def prepare_bye_pickups(data, service, pinned, schedule, outlook):
                              key=lambda candidate: candidate[0])
         for row in shortages:
             matches = []
+            basis = row.pop('pickup_basis')
+            paths = row['pickup_slots']
+            row['pickup_slots'] = [[index, gap] for index, gap, _ in paths]
             for _, eligible, candidate in choices:
-                path = next(((index, gap) for index, gap in row['pickup_slots'] if index in eligible), None)
+                path = next((path for path in paths if path[0] in eligible), None)
                 if path is None:
                     continue
-                index, gap = path
-                matches.append(dict(candidate, slot=row['slots'][index], gap=row['slots'][gap]))
+                index, gap, chain = path
+                after = dict(basis['fit'])
+                after.update(chain)
+                after[index] = candidate['player_id']
+                prior = {pid: slot for slot, pid in basis['initial'].items()}
+                states = basis['statuses'] | {candidate['player_id']: candidate['status']}
+                dependencies = [[slot, pid, states[pid]] for slot, pid in sorted(after.items())
+                                if states[pid] != 'active']
+                moves = [[slot, pid, prior.get(pid)] for slot, pid in sorted(after.items())
+                         if basis['initial'].get(slot) != pid]
+                matches.append(dict(candidate, slot=row['slots'][index], gap=row['slots'][gap],
+                                    dependencies=dependencies, moves=moves))
                 if len(matches) == 6:
                     break
             row['pickups'] = dict(ownership_generation=ownership.generation, candidates=matches)
