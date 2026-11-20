@@ -117,7 +117,7 @@ def upcoming_byes_panel(weeks, players, *, active, league_id=None, season=None, 
         '<section class="thq-section" id="upcoming-byes"><h2>Upcoming bye weeks</h2>'
         f'<p>{finding(priority[0])}</p>'
         + ('<div class="thq-actions">' + ''.join(pickup_links) + '</div>' if pickup_links else '') +
-        '<details class="thq-strength-detail"><summary>See weeks and possible moves</summary>'
+        '<details class="thq-strength-detail" id="bye-week-details" data-nav-disclosure><summary>See weeks and possible moves</summary>'
         '<p>This plan uses the latest prepared roster and NFL schedule. It shows who fits together under your league’s rules. '
         'Check player availability again before setting your Sleeper lineup.</p>'
         + ''.join(detail(row, leading=index == 0) for index, row in enumerate(priority)) + '</details></section>'
@@ -127,12 +127,19 @@ def upcoming_byes_panel(weeks, players, *, active, league_id=None, season=None, 
 def bye_pickup_panel(row, ownership, *, origin, league_id, roster_id):
     cards = []
     shortage = len(row['unfilled'])
-    for candidate in row['pickups']['candidates']:
+    fresh = row['availability_freshness'] == 'Fresh'
+    slots = row['slots']
+    recorded = row['pickups']['candidates']
+
+    def player_name(player_id):
+        catalog = ownership.players.get(player_id) or {}
+        return escape(str(catalog.get('full_name') or catalog.get('name') or player_id))
+
+    for candidate in recorded:
         pid = candidate['player_id']
-        if ownership.resolve(pid)['state'] != 'FREE_AGENT':
+        if 'dependencies' not in candidate or ownership.resolve(pid)['state'] != 'FREE_AGENT':
             continue
-        catalog = ownership.players[pid]
-        name = escape(str(catalog.get('full_name') or catalog.get('name') or pid))
+        name = player_name(pid)
         positions = _slots(candidate['positions'])
         slot, gap = _slot_name(candidate['slot']), _slot_name(candidate['gap'])
         fit = (f'Can fill one {gap} opening by starting at {slot} and moving eligible roster players.'
@@ -141,20 +148,44 @@ def bye_pickup_panel(row, ownership, *, origin, league_id, roster_id):
         projection = 'Sleeper projection unavailable.' if points is None else f'Sleeper projection: {points:.2f} pts.'
         if points is not None and candidate['projection_freshness'] in {'Aging', 'Stale'}:
             projection += f" Projection freshness: {candidate['projection_freshness'].lower()}."
-        status = (_status_dependency(name, candidate['status'])
-                  if candidate['status'] != 'active' else '')
+        dependencies = candidate['dependencies']
+        conditional = bool(dependencies) or not fresh
+        moves = []
+        for destination, player, prior in candidate['moves']:
+            label = player_name(player)
+            target = _indexed_slot(slots, destination)
+            instruction = (f'Start {label} at {target}.' if prior is None else
+                           f'Move {label} from {_indexed_slot(slots, prior)} to {target}.')
+            moves.append(f'<li>{instruction}</li>')
+        moved_players = {player for _, player, _ in candidate['moves']}
+        notes = ''
+        for destination, player, status in dependencies:
+            label = player_name(player)
+            stays = f'{label} stays at {_indexed_slot(slots, destination)}. ' if player not in moved_players else ''
+            notes += f'<li>{stays}{_status_dependency(label, status)}</li>'
+        if conditional:
+            fit = f'Conditional cover for one {gap} opening. This plan depends on player availability.'
+        if not fresh:
+            status_limit = row['availability_freshness'].lower()
+            moved = ', '.join(player_name(player) for _, player, _ in candidate['moves'])
+            notes += f'<li>Player status check is {status_limit}. Recheck the lineup, including {moved}.</li>'
         href = '/players/' + quote(pid, safe='') + '?' + urlencode(
             dict(from_market=origin, market_league=league_id, front_office=roster_id))
         cards.append(f'<article class="card"><h3><a href="{escape(href)}">{name}</a></h3>'
                      f'<p>{positions} · Unrostered in this league</p><p>{fit} {projection}</p>'
-                     + (f'<p>{status}</p>' if status else '') + '</article>')
-    if not cards:
-        cards.append('<p>No confirmed unrostered player has a supported lineup fit in the prepared evidence.</p>')
-    coverage = (f'Each result covers one opening. This roster has {shortage}, so one pickup cannot fill them all.'
-                if shortage > 1 else 'Each result can cover the opening in a legal lineup.')
+                     + f'<details{" open" if conditional else ""}><summary>Lineup moves and availability</summary>'
+                     + f'<ul>{"".join(moves)}{notes}</ul></details></article>')
+    has_cards = bool(cards)
+    if not has_cards:
+        reason = ('Lineup availability has not been prepared for this snapshot.'
+                  if recorded and all('dependencies' not in candidate for candidate in recorded)
+                  else 'No confirmed unrostered player has a supported lineup fit in the prepared evidence.')
+        cards.append(f'<p>{reason}</p>')
+    coverage = (f'This roster has {shortage} openings, so one pickup cannot fill them all.'
+                if shortage > 1 else 'Each plan addresses one opening.')
     return (f'<section id="bye-pickup-results" class="ux-section"><h2>Week {row["week"]} bye cover</h2>'
             f'<p>Unfilled slots: {_slots(row["unfilled"])}.</p>'
-            + (f'<p>{coverage}</p>' if row['pickups']['candidates'] else '')
+            + (f'<p>{coverage}</p>' if has_cards else '')
             + '<p>These fits use the prepared roster and NFL schedule. Verify who can play and whether waivers '
               'or locks apply in Sleeper. Use Sleeper for all lineup changes, adds, drops, and claims.</p>'
             + f'<p>{_status_age(row)}</p><div class="market-grid">{"".join(cards)}</div>'

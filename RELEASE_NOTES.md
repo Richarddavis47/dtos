@@ -1,3 +1,7 @@
+## v1.22.57 / build 2272 — Show bye pickup availability
+
+Bye pickup suggestions show the legal lineup moves and name availability dependencies. My Team keeps the bye details expanded when you return from the shortlist.
+
 ## v1.22.56 / build 2271 — Find bye-week pickups
 
 A confirmed My Team bye gap links to prepared Market results. See which unrostered players can fill one opening, their Sleeper projections for that week when available, and what to verify in Sleeper before acting.

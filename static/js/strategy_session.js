@@ -47,10 +47,11 @@
     const keys = Object.keys(sessionStorage).filter(k => k.startsWith('dtos-my-team:'));
     while (keys.length >= 64 && !keys.includes(key)) sessionStorage.removeItem(keys.shift());
     const saved = JSON.parse(sessionStorage.getItem(key) || '{}');
-    root.querySelectorAll('details[id]').forEach(detail => {
+    const details = root.querySelectorAll('details[id]:not([data-nav-disclosure])');
+    details.forEach(detail => {
       if (detail.id !== 'my-team-roster' && Object.hasOwn(saved, detail.id)) detail.open = saved[detail.id];
       detail.addEventListener('toggle', () => {
-        const state = {}; root.querySelectorAll('details[id]').forEach(d => { state[d.id] = d.open; });
+        const state = {}; details.forEach(d => { state[d.id] = d.open; });
         sessionStorage.setItem(key, JSON.stringify(state));
       });
     });

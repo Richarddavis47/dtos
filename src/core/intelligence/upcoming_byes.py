@@ -121,13 +121,15 @@ def _pickup_slots(slots, playing, fit):
         if gap in fit:
             continue
         queue = [gap]
-        paths[gap] = gap
+        paths[gap] = (gap, [])
         for vacancy in queue:
+            _, moves = paths[vacancy]
             for index, pid in sorted(fit.items()):
                 if index not in paths and any(_eligible(pos, slots[vacancy]) for pos in playing[pid]):
-                    paths[index] = gap
+                    paths[index] = (gap, [*moves, [vacancy, pid]])
                     queue.append(index)
-    return [[index, gap] for index, gap in sorted(paths.items(), key=lambda pair: (pair[0] != pair[1], pair))]
+    return [[index, gap, moves] for index, (gap, moves) in
+            sorted(paths.items(), key=lambda pair: (pair[0] != pair[1][0], pair[0]))]
 
 
 def _week(slots, people, games, byes, week, projection, *, starters, statuses=None, fresh=False):
@@ -139,6 +141,7 @@ def _week(slots, people, games, byes, week, projection, *, starters, statuses=No
     affected = [(index, pid) for index, pid in initial.items() if pid in bye_ids]
     statuses = statuses or {}
     moves, unfilled, dependencies, pickup_slots = [], [], [], []
+    pickup_basis = None
     if affected:
         after, supported = _availability_fit(slots, playing, initial, statuses, fresh)
         if len(after) == len(slots):
@@ -160,6 +163,8 @@ def _week(slots, people, games, byes, week, projection, *, starters, statuses=No
                 if len(after) == len(upper):
                     fit = after
                     pickup_slots = _pickup_slots(slots, playing, fit)
+                    pickup_basis = dict(fit=sorted(fit.items()), initial=initial,
+                                        statuses={pid: statuses.get(pid) or 'unknown' for pid in fit.values()})
                 unfilled = [slot for index, slot in enumerate(slots) if index not in fit]
     elif len(initial) == len(slots) and all(
         any(_eligible(position, slots[index]) for position in playing.get(pid, ()))
@@ -172,7 +177,7 @@ def _week(slots, people, games, byes, week, projection, *, starters, statuses=No
         'week': week, 'state': state, 'slots': slots,
         'bye_starters': [list(row) for row in affected],
         'unfilled': unfilled, 'moves': moves, 'availability_dependencies': dependencies,
-        'pickup_slots': pickup_slots,
+        'pickup_slots': pickup_slots, 'pickup_basis': pickup_basis,
         'projection_ready': projection.get('available') is True,
     }
 

@@ -77,7 +77,8 @@
       return {version:1,scope,tab,expires:x.expires,cursor:x.cursor,
         entries:x.entries.map(e=>({id:e.id,pos:e.pos,url:e.url,
           scroll:Number.isFinite(e.scroll)?Math.max(0,Math.min(1000000,e.scroll)):0,
-          focusId:typeof e.focusId==='string'?e.focusId.slice(0,80):'',focusHref:safeUrl(e.focusHref)})),
+          focusId:typeof e.focusId==='string'?e.focusId.slice(0,80):'',focusHref:safeUrl(e.focusHref),
+          byeDetailsOpen:e.byeDetailsOpen===true})),
         pending:x.pending && typeof x.pending.from==='string' && safeUrl(x.pending.to) && x.pending.until>=now() && x.pending.until<=now()+30000 ? {from:x.pending.from,to:safeUrl(x.pending.to),until:x.pending.until,replace:x.pending.replace===true}:null,
         left:x.left && typeof x.left.id==='string' && x.left.until>=now() && x.left.until<=now()+30000 ? {id:x.left.id,until:x.left.until}:null};
     } catch (_) { return fresh(); }
@@ -102,6 +103,7 @@
     const active = document.activeElement;
     entry.focusId = active?.id?.slice(0,80) || '';
     entry.focusHref = active?.closest('a[href]') ? safeUrl(active.closest('a[href]').href) : null;
+    entry.byeDetailsOpen = document.getElementById('bye-week-details')?.open === true;
     save();
   }
   function setMeta() {
@@ -136,10 +138,16 @@
     }
     ledger.cursor=entry.id;delete ledger.pending;delete ledger.left;setMeta();save();paint();
   }
+  let restoreByeOnReturn = performance.getEntriesByType('navigation')[0]?.type === 'back_forward';
   function restoreView() {
     if (!restoring || !entry || document.documentElement.classList.contains('dtos-nav-suspended')) return;
     const apply = () => {
       if (!active || !restoring) return;
+      if (restoreByeOnReturn) {
+        restoreByeOnReturn = false;
+        const byeDetails = document.getElementById('bye-week-details');
+        if (byeDetails && entry.byeDetailsOpen) byeDetails.open = true;
+      }
       const focused = document.activeElement;
       if (focused && focused !== document.body && focused !== document.documentElement && focused !== lastRestoredFocus) {restoring=false;return;}
       let focus = entry.focusId ? document.getElementById(entry.focusId) : null;
@@ -251,7 +259,11 @@
   addEventListener('hashchange',()=>{if(lastHref !== location.href)traversed();});
   addEventListener('pageshow',async event=>{
     active=true;
-    if(event.persisted){suspend();if(!(await verify()))return;ledger=load();traversed();}
+    if(event.persisted){
+      suspend();if(!(await verify()))return;
+      restoreByeOnReturn = true;
+      ledger=load();traversed();
+    }
     else restoreView();
   });
   for (const name of ['pointerdown','keydown','wheel','touchstart']) addEventListener(name,event=>{if(event.isTrusted)restoring=false;},{passive:true});
