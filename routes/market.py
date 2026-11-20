@@ -406,13 +406,57 @@ def create_market_router(
             "provider_calls": 0, "raw_history_scans": 0,
         })
 
+    def bye_pickups_page(bye_week, market_league, season, from_team):
+        from src.core.intelligence.team_strength import compatible_profile
+        from src.core.intelligence.upcoming_byes import read_upcoming_byes
+        from src.ui.upcoming_byes import bye_pickup_panel
+
+        selected_state, selected_league, _ = dependencies()
+        membership = getattr(current_account(), 'membership', None)
+        team_url = '/teams'
+        if membership and str(membership.league_id) == str(selected_league) and membership.roster_id:
+            team_url = f'/teams/{membership.roster_id}#upcoming-byes'
+        back = f'<p><a class="back ds-action" href="{escape(team_url)}">Back to My Team</a></p>'
+        reason = 'This link does not match a confirmed upcoming bye gap for your selected team.'
+        data = selected_state.get('data') or {}
+        league = data.get('league') or {}
+        if (membership and from_team == membership.roster_id
+                and str(membership.league_id) == str(selected_league) == market_league == str(league.get('league_id'))
+                and str(season) == str(league.get('season'))):
+            team = next((t for t in data.get('teams') or [] if t['roster_id'] == from_team), None)
+            context = context_resolver() if context_resolver is not None else None
+            reader = getattr(context, 'projection', None) or projection_service
+            profile = compatible_profile(data, reader.snapshot())
+            if team and profile:
+                weeks = read_upcoming_byes(profile, league, team, players_fetched_at=data.get('players_fetched_at')) or ()
+                row = next((w for w in weeks if w['week'] == bye_week and w['state'] == 'shortfall'), None)
+                if row:
+                    ownership = PlayerOwnershipIndex(data)
+                    if not ownership.complete:
+                        reason = 'League ownership is incomplete, so no player can be confirmed unrostered.'
+                    elif (row.get('pickups') or {}).get('ownership_generation') != ownership.generation:
+                        reason = 'Pickup results are unavailable for this prepared roster snapshot.'
+                    elif not row.get('pickup_slots'):
+                        reason = 'The gap is confirmed, but the prepared roster cannot establish a legal fit for a pickup.'
+                    else:
+                        origin = '/market?' + _market_query(bye_week=bye_week, market_league=market_league,
+                            season=season, from_team=from_team, availability='day_traders_free_agent')
+                        return page('Asset Market', back + bye_pickup_panel(
+                            row, ownership, origin=origin, league_id=market_league, roster_id=from_team))
+        return page('Asset Market', back + f'<section class="ux-section"><h2>Week {bye_week} bye cover</h2>'
+                    f'<p class="evidence-unavailable">{escape(reason)}</p></section>')
+
     def market_page(
         request: Request,
         q: str = "", position: str = "", availability: str = "",
         sort: str = "market", direction: str = "desc",
         front_office: int | None = None, selected: str = "",
         offset: int = Query(0, ge=0), limit: int = Query(10, ge=10, le=100),
+        bye_week: int | None = Query(None, ge=1, le=18), market_league: str = "",
+        season: int | None = None, from_team: int | None = None,
     ) -> HTMLResponse:
+        if bye_week is not None:
+            return bye_pickups_page(bye_week, market_league, season, from_team)
         try:
             market = model()
         except HTTPException as exc:

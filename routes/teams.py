@@ -475,6 +475,7 @@ def create_teams_router(
                 read_upcoming_byes(prepared_strength, data.get('league') or {}, team,
                                    players_fetched_at=data.get('players_fetched_at')), team['players'],
                 active=(data.get('league') or {}).get('status') == 'in_season',
+                league_id=league_id, season=(data.get('league') or {}).get('season'), roster_id=roster_id,
             )
             catalog = data.get('players') or {}
             uncertain_starter = any(

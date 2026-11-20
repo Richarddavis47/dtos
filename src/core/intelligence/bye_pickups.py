@@ -1,0 +1,86 @@
+"""Prepare small league-scoped free-agent results for proven bye shortages."""
+
+from math import isfinite
+
+from src.core.data_platform.normalization.identity import normalize_team
+from src.core.player_ownership import PlayerOwnershipIndex
+from src.core.projection_intelligence.service import (
+    UNAVAILABLE_PLAYER_STATUSES,
+    player_availability,
+    projection_row_compatible,
+)
+from src.core.projection_intelligence.sleeper_provider import freshness_state
+from src.core.trade_intelligence.lineup import _eligible, eligible_positions
+
+
+def _week_projections(service, pinned, week):
+    snapshot = service.week_snapshot(week, generation_snapshot=pinned)
+    if not snapshot or snapshot.get('week') != week or any(
+        snapshot.get(key) != pinned.get(key)
+        for key in ('league_id', 'season', 'horizon_generation', 'scoring_profile_id')
+    ):
+        return {}
+    return snapshot
+
+
+def _candidates(ownership, games, week, slots, projection, *, fresh):
+    for pid, row in ownership.players.items():
+        if not isinstance(row, dict) or ownership.resolve(pid)['state'] != 'FREE_AGENT':
+            continue
+        if any(row.get(key) is not None and str(row[key]) != pid for key in ('id', 'player_id')):
+            continue
+        team = normalize_team(row.get('team') or row.get('nfl_team') or '')
+        if not team or not games.get(f'{week}:{team}'):
+            continue
+        status = player_availability(row, None)
+        if status in UNAVAILABLE_PLAYER_STATUSES:
+            continue
+        positions = eligible_positions(row)
+        eligible = frozenset(index for index, slot in enumerate(slots)
+                             if any(_eligible(pos, slot) for pos in positions))
+        if not eligible:
+            continue
+        evidence = (projection.get('players') or {}).get(pid) or {}
+        points = evidence.get('canonical_projection')
+        if (evidence.get('provider_id') != 'sleeper_projections'
+                or not projection_row_compatible(projection, pid, evidence)
+                or not isinstance(points, (int, float)) or isinstance(points, bool)
+                or not isfinite(points)):
+            points = None
+        rank = (not (fresh and status == 'active'), points is None, -(points or 0), pid)
+        yield rank, eligible, dict(
+            player_id=pid, status=status, positions=list(positions), points=points,
+            projection_freshness=evidence.get('source_freshness') if points is not None else None,
+        )
+
+
+def prepare_bye_pickups(data, service, pinned, schedule, outlook):
+    """Compute once during admission. Retain up to six results per shortfall."""
+    weeks = {}
+    for record in outlook.values():
+        for row in record['weeks']:
+            if row['state'] == 'shortfall':
+                weeks.setdefault(row['week'], []).append(row)
+    if not weeks:
+        return
+
+    ownership = PlayerOwnershipIndex(data)
+    games = (schedule or {}).get('games') or {}
+    fresh = freshness_state(data.get('players_fetched_at')) == 'Fresh'
+    for week, shortages in weeks.items():
+        choices = []
+        if ownership.complete and any(row['pickup_slots'] for row in shortages):
+            projection = _week_projections(service, pinned, week)
+            choices = sorted(_candidates(ownership, games, week, shortages[0]['slots'], projection, fresh=fresh),
+                             key=lambda candidate: candidate[0])
+        for row in shortages:
+            matches = []
+            for _, eligible, candidate in choices:
+                path = next(((index, gap) for index, gap in row['pickup_slots'] if index in eligible), None)
+                if path is None:
+                    continue
+                index, gap = path
+                matches.append(dict(candidate, slot=row['slots'][index], gap=row['slots'][gap]))
+                if len(matches) == 6:
+                    break
+            row['pickups'] = dict(ownership_generation=ownership.generation, candidates=matches)
