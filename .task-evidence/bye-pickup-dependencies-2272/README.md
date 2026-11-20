@@ -9,4 +9,4 @@ The build 2271 replay presents Free Receiver as legal cover without naming the I
 - [Prior attempts](prior-attempts). Separate files preserve the proxy trust failure, the interrupted image build, and the two candidate runs that failed repeated-visit disclosure checks. The failed publisher unit invocation used the unfinished plan before its run inventory was populated. The original cloud provisioning error was reported as a gateway 503. That unavailable run produced no local test result.
 - [Release acceptance route](SCOUT_HANDOFF.md). Owner and physical iPhone/Safari observations require separate evidence.
 
-The complete local canonical and final hosted checks are independent release gates. This index records the focused results and startup receipt. See PR #361 for their current disposition.
+Released as **v1.22.57 build 2272**. The [local and hosted canonical receipts](checks) each verify 4,663 tests and all ten gates with enforced 2 GiB. All 13 required hosted jobs and both guarded publisher phases passed. [Production receipt, original publisher logs and immutable attachment checksums](release).
