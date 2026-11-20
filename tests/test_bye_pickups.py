@@ -11,7 +11,7 @@ import unittest
 from routes.market import create_market_router
 from routes.navigation import create_navigation_router
 from services.market_navigation import market_return
-from src.core.trade_intelligence.roster_space import pickup_roster_space, sleeper_membership_verified
+from src.core.intelligence import pickup_roster_space, sleeper_membership_verified
 from tests.lineup_review_fixture import authenticated_prepared
 from tests.test_upcoming_bye_moves import install_schedule, phone
 
