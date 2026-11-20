@@ -29,6 +29,7 @@ from src.platform.lifecycle import HeavyWorkDeferred, lifecycle_coordinator
 from src.platform.sync_diagnostics import SyncDiagnostics
 from src.platform.runtime_errors import log_sync_failure
 from src.core.sync_status import safe_sync_state, synchronization_warning
+from src.core.trade_intelligence.roster_space import sleeper_membership_verified
 from src.platform.request_diagnostics import diagnosed, source_hooks, span
 from src.core.valuation.automation import audit_market_calibration
 from src.core.valuation_intelligence import build_valuation_intelligence
@@ -359,6 +360,7 @@ async def _sync_sleeper(
                     "points_for": standing_points(settings, "fpts"),
                     "points_against": standing_points(settings, "fpts_against"),
                     "max_points": standing_points(settings, 'ppts'),
+                    "sleeper_membership_verified": sleeper_membership_verified(roster),
                     "players": player_rows,
                 })
             team_rows = standings_order({"league": league, "teams": team_rows})["teams"]

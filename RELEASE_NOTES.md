@@ -1,3 +1,7 @@
+## v1.22.58 / build 2273 — Show roster space for bye pickups
+
+Bye pickup cards show whether the latest prepared Sleeper roster has an active spot open or needs room. If the roster or league limit cannot be confirmed, the shortlist explains what is missing.
+
 ## v1.22.57 / build 2272 — Show bye pickup availability
 
 Bye pickup suggestions show the legal lineup moves and name availability dependencies. My Team keeps the bye details expanded when you return from the shortlist.
