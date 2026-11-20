@@ -149,6 +149,10 @@ class ByePickupTests(unittest.TestCase):
             page.locator('#dtos-back').click()
             page.wait_for_url('**/teams/1')
             page.locator('#bye-week-details[open] [data-bye-week="9"]').wait_for()
+            page.reload()
+            self.assertFalse(details.locator('[data-bye-week="9"]').is_visible())
+            details.locator('summary').press('Enter')
+            self.assertTrue(details.locator('[data-bye-week="9"]').is_visible())
 
     def test_chained_pickup_support_tracks_fresh_stale_and_missing_status(self):
         cases = [

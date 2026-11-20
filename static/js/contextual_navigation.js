@@ -138,12 +138,16 @@
     }
     ledger.cursor=entry.id;delete ledger.pending;delete ledger.left;setMeta();save();paint();
   }
+  let restoreByeOnReturn = performance.getEntriesByType('navigation')[0]?.type === 'back_forward';
   function restoreView() {
     if (!restoring || !entry || document.documentElement.classList.contains('dtos-nav-suspended')) return;
     const apply = () => {
       if (!active || !restoring) return;
-      const byeDetails = document.getElementById('bye-week-details');
-      if (byeDetails && entry.byeDetailsOpen) byeDetails.open = true;
+      if (restoreByeOnReturn) {
+        restoreByeOnReturn = false;
+        const byeDetails = document.getElementById('bye-week-details');
+        if (byeDetails && entry.byeDetailsOpen) byeDetails.open = true;
+      }
       const focused = document.activeElement;
       if (focused && focused !== document.body && focused !== document.documentElement && focused !== lastRestoredFocus) {restoring=false;return;}
       let focus = entry.focusId ? document.getElementById(entry.focusId) : null;
@@ -255,7 +259,11 @@
   addEventListener('hashchange',()=>{if(lastHref !== location.href)traversed();});
   addEventListener('pageshow',async event=>{
     active=true;
-    if(event.persisted){suspend();if(!(await verify()))return;ledger=load();traversed();}
+    if(event.persisted){
+      suspend();if(!(await verify()))return;
+      restoreByeOnReturn = true;
+      ledger=load();traversed();
+    }
     else restoreView();
   });
   for (const name of ['pointerdown','keydown','wheel','touchstart']) addEventListener(name,event=>{if(event.isTrusted)restoring=false;},{passive:true});
