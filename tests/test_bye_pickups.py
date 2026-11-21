@@ -11,6 +11,7 @@ import unittest
 from routes.market import create_market_router
 from routes.navigation import create_navigation_router
 from services.market_navigation import market_return
+from src.core.intelligence import pickup_roster_space, sleeper_membership_verified
 from tests.lineup_review_fixture import authenticated_prepared
 from tests.test_upcoming_bye_moves import install_schedule, phone
 
@@ -171,3 +172,71 @@ class ByePickupTests(unittest.TestCase):
                 self.assertIn('Move Example W 1 from FLEX to RB.', receiver)
                 self.assertIn('Start Free Receiver at FLEX.', receiver)
                 self.assertEqual('Conditional cover' in receiver, status is None or check_time is not None)
+
+    def test_roster_space_preserves_native_membership_uncertainty(self):
+        observed = dict(players=['1', '2'], reserve=None, taxi=['2'], starters=['1'])
+        self.assertTrue(sleeper_membership_verified(observed))
+        self.assertTrue(sleeper_membership_verified(dict(players=[], reserve=None, taxi=None)))
+        for bad in (
+            {key: value for key, value in observed.items() if key != 'taxi'},
+            dict(observed, players=None),
+            dict(observed, players=['1', 1, '2']),
+            dict(observed, reserve=['2']),
+            dict(observed, taxi=['3']),
+            dict(observed, starters=['2']),
+        ):
+            with self.subTest(bad=bad):
+                self.assertFalse(sleeper_membership_verified(bad))
+        team = dict(sleeper_membership_verified=True, players=[dict(id='1', roster_slot='Starter')])
+        self.assertIn('roster limit', pickup_roster_space({'roster_positions': ['QB', 'new slot']}, team)['reason'])
+        self.assertIn('occupy', pickup_roster_space({'roster_positions': ['QB', 'BN']},
+                                                    dict(team, players=[{'id': '1'}]))['reason'])
+
+    def test_roster_space_and_return_on_phone(self):
+        cases = (
+            ('open', ['QB', 'RB', 'FLEX', 'RB', 'BN', 'BN'], True, 'Open active spot · 5 of 6'),
+            ('full', ['QB', 'RB', 'FLEX', 'SUPER_FLEX', 'BN'], True, 'Make room before adding · 5 of 5'),
+            ('unknown', ['QB', 'RB', 'FLEX', 'RB', 'BN'], False, 'Could not confirm an open spot'),
+        )
+        for label, slots, verified, expected in cases:
+            with self.subTest(state=label):
+                fixture, data, service, now = self.setup_league(slots=slots, bench_position='RB')
+                team = data['teams'][0]
+                data['league']['settings'].update(reserve_slots=2, taxi_slots=2)
+                extra = dict(id='1-ir', name='Injured Reserve Fixture', position='RB',
+                             fantasy_positions=['RB'], roster_slot='IR')
+                team['players'].append(extra)
+                data['players'][extra['id']] = dict(extra)
+                # One IR and two taxi vacancies are listed by the league. The
+                # occupied IR spot is excluded, and the vacancies add no space.
+                native = dict(players=[row['id'] for row in team['players']], reserve=[extra['id']])
+                if verified:
+                    native['taxi'] = None
+                team['sleeper_membership_verified'] = sleeper_membership_verified(native)
+                self.add_players(data, service, now)
+                install_schedule(service, data, now, byes={'1-r', '1-w'})
+                with phone(fixture) as page:
+                    page.goto('https://dtos.test/teams/1')
+                    details = page.locator('#bye-week-details')
+                    details.locator('summary').press('Enter')
+                    page.get_by_role('link', name='Find Week 9', exact=False).tap()
+                    page.wait_for_url('**/market?**')
+                    results = page.locator('#bye-pickup-results')
+                    runner = results.locator('article').filter(has_text='Free Runner')
+                    copy = runner.inner_text()
+                    self.assertIn(expected, copy)
+                    self.assertIn('Unrostered in this league', copy)
+                    self.assertIn('Sleeper projection: 3.50 pts.', copy)
+                    if verified:
+                        self.assertIn('IR and taxi vacancies do not count as active spots.', results.inner_text())
+                    else:
+                        self.assertIn('could not confirm which players occupy', results.inner_text())
+                    self.assertIn('waivers or locks', results.inner_text())
+                    self.assertLessEqual(page.evaluate('document.documentElement.scrollWidth'), 390)
+                    if directory := os.environ.get('DTOS_BYE_PICKUP_SCREENSHOTS'):
+                        destination = Path(directory)
+                        destination.mkdir(parents=True, exist_ok=True)
+                        results.screenshot(path=str(destination / f'roster-space-{label}-390.png'))
+                    page.locator('#dtos-back').click()
+                    page.wait_for_url('**/teams/1')
+                    details.locator('[data-bye-week="9"]').wait_for()

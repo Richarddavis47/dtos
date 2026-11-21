@@ -310,7 +310,10 @@ class CurrentSeasonFreshSyncTests(unittest.IsolatedAsyncioTestCase):
             if path.endswith('/users'):
                 return [dict(user_id=f'owner-{i}',display_name=f'Owner {i}') for i in (1,2)]
             if path.endswith('/rosters'):
-                return [dict(roster_id=i,owner_id=f'owner-{i}',players=[],starters=[],settings={}) for i in (1,2)]
+                return [
+                    dict(roster_id=1, owner_id='owner-1', players=[], starters=[], reserve=None, taxi=None, settings={}),
+                    dict(roster_id=2, owner_id='owner-2', players=[], starters=[], settings={}),
+                ]
             if path == '/state/nfl':
                 return dict(season='2032',week=8,season_type='regular')
             if '/transactions/' in path:
@@ -342,6 +345,8 @@ class CurrentSeasonFreshSyncTests(unittest.IsolatedAsyncioTestCase):
                 projections=self.projection,publish_data=self.runtime.publish_source)
         self.assertIsNone(self.runtime.state['last_error'])
         self.assertEqual(self.runtime.state['preparation_state'],'ready')
+        self.assertEqual({team['roster_id']: team['sleeper_membership_verified']
+                          for team in self.runtime.state['data']['teams']}, {1: True, 2: False})
         self.app_module._publish_runtime_context(self.runtime,self.projection)
         before = self.page()
         self.assertIn('observed-trade',before)
@@ -352,6 +357,8 @@ class CurrentSeasonFreshSyncTests(unittest.IsolatedAsyncioTestCase):
         self.runtime = LeagueRuntime(league['league_id'])
         await self.app_module._hydrate_league_runtime(self.runtime)
         self.assertEqual(self.runtime.state['data']['transaction_acquisition'],metadata)
+        self.assertEqual({team['roster_id']: team['sleeper_membership_verified']
+                          for team in self.runtime.state['data']['teams']}, {1: True, 2: False})
         self.assertIn('observed-trade',self.page())
         self.assertIn('Refresh failed: weeks 4',self.page())
         self.sync.assert_not_called()

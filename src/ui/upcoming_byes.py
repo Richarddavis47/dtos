@@ -124,12 +124,20 @@ def upcoming_byes_panel(weeks, players, *, active, league_id=None, season=None, 
     )
 
 
-def bye_pickup_panel(row, ownership, *, origin, league_id, roster_id):
+def bye_pickup_panel(row, ownership, *, origin, league_id, roster_id, roster_space):
     cards = []
     shortage = len(row['unfilled'])
     fresh = row['availability_freshness'] == 'Fresh'
     slots = row['slots']
     recorded = row['pickups']['candidates']
+    space_detail = roster_space.get('reason')
+    if space_detail:
+        space = 'Could not confirm an open spot.'
+    else:
+        active, capacity = roster_space['active'], roster_space['capacity']
+        space = ('Open active spot' if active < capacity else 'Make room before adding')
+        space += f' · {active} of {capacity} active spots used.'
+        space_detail = 'Roster space reflects this Sleeper snapshot. IR and taxi vacancies do not count as active spots.'
 
     def player_name(player_id):
         catalog = ownership.players.get(player_id) or {}
@@ -173,6 +181,7 @@ def bye_pickup_panel(row, ownership, *, origin, league_id, roster_id):
             dict(from_market=origin, market_league=league_id, front_office=roster_id))
         cards.append(f'<article class="card"><h3><a href="{escape(href)}">{name}</a></h3>'
                      f'<p>{positions} · Unrostered in this league</p><p>{fit} {projection}</p>'
+                     + f'<p><strong>Roster space</strong> · {escape(space)}</p>'
                      + f'<details{" open" if conditional else ""}><summary>Lineup moves and availability</summary>'
                      + f'<ul>{"".join(moves)}{notes}</ul></details></article>')
     has_cards = bool(cards)
@@ -185,7 +194,7 @@ def bye_pickup_panel(row, ownership, *, origin, league_id, roster_id):
                 if shortage > 1 else 'Each plan addresses one opening.')
     return (f'<section id="bye-pickup-results" class="ux-section"><h2>Week {row["week"]} bye cover</h2>'
             f'<p>Unfilled slots: {_slots(row["unfilled"])}.</p>'
-            + (f'<p>{coverage}</p>' if has_cards else '')
+            + (f'<p>{coverage} {escape(space_detail)}</p>' if has_cards else '')
             + '<p>These fits use the prepared roster and NFL schedule. Verify who can play and whether waivers '
               'or locks apply in Sleeper. Use Sleeper for all lineup changes, adds, drops, and claims.</p>'
             + f'<p>{_status_age(row)}</p><div class="market-grid">{"".join(cards)}</div>'

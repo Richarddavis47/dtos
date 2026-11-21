@@ -1,3 +1,7 @@
+## v1.22.58 / build 2273 — Show roster space for bye pickups
+
+Bye pickup cards show open, full or unconfirmed active roster space alongside lineup fit. IR and taxi vacancies do not count as active spots.
+
 ## v1.22.57 / build 2272 — Show bye pickup availability
 
 Bye pickup suggestions show the legal lineup moves and name availability dependencies. My Team keeps the bye details expanded when you return from the shortlist.
