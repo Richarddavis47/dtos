@@ -1,7 +1,7 @@
 # Scout acceptance for build 2274
 
-Candidate `d882a8b50554cf08d0f2c32346eb75cbb051f0bd`
-Validated application tree `28719d3404610dc584e353e0b21c91a7969d84f5`
+Candidate `3ffc907fd2340100afb762b133a5533fe0ad52dc`
+Validated application tree `137d5aa04f710a36bcf1bb54008d0f915ab880fc`
 [PR #363](https://github.com/Richarddavis47/dtos/pull/363)
 
 1. In the prepared test league, open My Team and expand **See weeks and possible moves**. Tap **Find Week 9** to open the pickup shortlist.
