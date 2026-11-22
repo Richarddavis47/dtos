@@ -14,7 +14,7 @@ from tests.lineup_review_fixture import authenticated_prepared
 from tools.validation.browser_runtime import launch_chromium
 
 
-def install_schedule(service, data, now, *, byes, missing=()):
+def install_schedule(service, data, now, *, byes, missing=(), unknown_clubs=()):
     # A complete schedule establishes byes. Removing a single game invalidates
     # inferred byes for this revision, while present games are still known.
     clubs = ['BUF', 'KC'] + [f'X{i:02}' for i in range(30)]
@@ -31,7 +31,7 @@ def install_schedule(service, data, now, *, byes, missing=()):
     data.setdefault('players_fetched_at', now.isoformat())
     team = data['teams'][0]
     for row in team['players']:
-        club = 'BUF' if row['id'] in byes else 'X02'
+        club = 'UNMAPPED' if row['id'] in unknown_clubs else 'BUF' if row['id'] in byes else 'X02'
         row['team'] = data['players'][row['id']]['team'] = club
     with patch('services.global_evidence.retained_global_evidence') as store:
         store.return_value.read.return_value = facts

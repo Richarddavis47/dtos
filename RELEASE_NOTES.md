@@ -1,3 +1,7 @@
+## v1.22.60 / build 2275 — Compare a drop for a bye pickup
+
+When an active spot is needed, compare adding an unrostered pickup and dropping one of your active players. See the resulting lineup gaps for that week, availability dependencies, and the outgoing player’s prepared Market value when supported. All roster moves stay in Sleeper.
+
 ## v1.22.59 / build 2274 — Flag IR blockers on bye pickups
 
 Bye pickup cards flag players who no longer qualify for their Sleeper IR slots. They keep the active roster count visible and explain when moving a player out of IR would use the last open spot.

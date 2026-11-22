@@ -406,13 +406,14 @@ def create_market_router(
             "provider_calls": 0, "raw_history_scans": 0,
         })
 
-    def bye_pickups_page(bye_week, market_league, season, from_team):
+    def bye_pickups_page(bye_week, market_league, season, from_team, compare_pickup, compare_drop):
+        from src.core.intelligence.bye_pickups import compare_pickup_drop
         from src.core.intelligence.team_strength import compatible_profile
         from src.core.intelligence.upcoming_byes import read_upcoming_byes
         from src.core.intelligence import pickup_ir_evidence, pickup_roster_space
         from src.ui.upcoming_byes import bye_pickup_panel
 
-        selected_state, selected_league, _ = dependencies()
+        selected_state, selected_league, market_cache = dependencies()
         membership = getattr(current_account(), 'membership', None)
         team_url = '/teams'
         if membership and str(membership.league_id) == str(selected_league) and membership.roster_id:
@@ -442,12 +443,46 @@ def create_market_router(
                     else:
                         origin = '/market?' + _market_query(bye_week=bye_week, market_league=market_league,
                             season=season, from_team=from_team, availability='day_traders_free_agent')
+                        space = pickup_roster_space(league, team)
+                        ir = pickup_ir_evidence(
+                            league, team, ownership, roster_checked_at=selected_state.get('last_sync'),
+                            players_fetched_at=data.get('players_fetched_at'))
+                        comparison = {}
+                        if 'capacity' in space and space['active'] + len(ir['blockers']) >= space['capacity']:
+                            comparison['enabled'] = True
+                            pickup = next((item for item in row['pickups']['candidates']
+                                           if item['player_id'] == compare_pickup
+                                           and ownership.resolve(compare_pickup)['state'] == 'FREE_AGENT'), None)
+                            if pickup:
+                                comparison['pickup'] = compare_pickup
+                                comparison['drop'] = compare_drop
+                                active = {str(p['id']): str(p.get('name') or p['id']) for p in team['players']
+                                          if p['roster_slot'] in {'Starter', 'Bench'}}
+                                basis = row['pickups'].get('drop_basis')
+                                if not basis or set(basis['active_ids']) != active.keys():
+                                    comparison['note'] = 'A matching target-week roster plan is unavailable. Recheck after league preparation.'
+                                else:
+                                    choices = {pid: name for pid, name in active.items()
+                                               if ownership.resolve(pid, from_team)['state'] == 'OWNED_BY_ME'}
+                                    comparison['choices'] = choices
+                                    if compare_drop and compare_drop not in choices:
+                                        comparison['note'] = 'Choose a confirmed player from an active roster spot.'
+                                    elif compare_drop:
+                                        comparison['result'] = compare_pickup_drop(row, pickup, compare_drop)
+                                        market = market_cache.current()
+                                        price = None
+                                        if (market is not None and str(market.league_id) == market_league
+                                                and market.compatible_prepared_inputs(data) is True):
+                                            asset = market.by_id.get(f'player:{compare_drop}') or {}
+                                            price = (asset.get('values') or {}).get('market_value')
+                                        if (isinstance(price, (int, float)) and not isinstance(price, bool)
+                                                and isfinite(price) and 0 <= price <= 1000):
+                                            comparison['market_value'] = price
+                            elif compare_pickup or compare_drop:
+                                comparison['note'] = 'This pickup is unavailable in the current shortlist.'
                         return page('Asset Market', back + bye_pickup_panel(
                             row, ownership, origin=origin, league_id=market_league, roster_id=from_team,
-                            roster_space=pickup_roster_space(league, team),
-                            ir_evidence=pickup_ir_evidence(
-                                league, team, ownership, roster_checked_at=selected_state.get('last_sync'),
-                                players_fetched_at=data.get('players_fetched_at'))))
+                            roster_space=space, ir_evidence=ir, comparison=comparison))
         return page('Asset Market', back + f'<section class="ux-section"><h2>Week {bye_week} bye cover</h2>'
                     f'<p class="evidence-unavailable">{escape(reason)}</p></section>')
 
@@ -459,9 +494,10 @@ def create_market_router(
         offset: int = Query(0, ge=0), limit: int = Query(10, ge=10, le=100),
         bye_week: int | None = Query(None, ge=1, le=18), market_league: str = "",
         season: int | None = None, from_team: int | None = None,
+        compare_pickup: str = Query('', max_length=128), compare_drop: str = Query('', max_length=128),
     ) -> HTMLResponse:
         if bye_week is not None:
-            return bye_pickups_page(bye_week, market_league, season, from_team)
+            return bye_pickups_page(bye_week, market_league, season, from_team, compare_pickup, compare_drop)
         try:
             market = model()
         except HTTPException as exc:

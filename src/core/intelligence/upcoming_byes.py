@@ -164,7 +164,9 @@ def _week(slots, people, games, byes, week, projection, *, starters, statuses=No
                     fit = after
                     pickup_slots = _pickup_slots(slots, playing, fit)
                     pickup_basis = dict(fit=sorted(fit.items()), initial=initial,
-                                        statuses={pid: statuses.get(pid) or 'unknown' for pid in fit.values()})
+                                        statuses=statuses, playing=playing,
+                                        uncertain={pid: pos for pid, pos in possible.items() if pid not in playing},
+                                        active_ids=sorted(people))
                 unfilled = [slot for index, slot in enumerate(slots) if index not in fit]
     elif len(initial) == len(slots) and all(
         any(_eligible(position, slots[index]) for position in playing.get(pid, ()))
