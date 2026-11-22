@@ -1,0 +1,36 @@
+/usr/local/lib/python3.14/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+  from starlette.testclient import TestClient as TestClient  # noqa
+test_ir_blockers_and_active_space_on_phone (tests.test_bye_pickups.ByePickupTests.test_ir_blockers_and_active_space_on_phone) ... {"timestamp":"2026-11-22T00:58:50.067517+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":84467712,"limit_bytes":2147483648,"raw_headroom_bytes":2063015936,"clean_inactive_file_bytes":7958528,"conditional_file_credit_bytes":3979264,"admission_headroom_bytes":2066995200,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-22T00:58:50.069792+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/workspace?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-22T00:58:50.080454+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_admission","request_id":"system","event":"trade_admission","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":84447232,"limit_bytes":2147483648,"raw_headroom_bytes":2063036416,"clean_inactive_file_bytes":7958528,"conditional_file_credit_bytes":3979264,"admission_headroom_bytes":2067015680,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"recovery":null}}
+{"timestamp":"2026-11-22T00:58:50.140540+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_execution_finished","request_id":"system","event":"trade_execution_finished","duration_ms":60.679,"diagnostic":{"schema":"trade-resource-v1","outcome":"complete"}}
+{"timestamp":"2026-11-22T00:58:50.143713+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/trades/evaluate \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-22T00:58:50.159820+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-22T00:58:50.173510+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+Validation Chromium: /usr/bin/chromium
+Validation Chromium version: 156.0.8078.79
+{"timestamp":"2026-11-22T00:58:52.227885+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/teams/1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-22T00:58:52.415883+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-22T00:58:52.433668+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-22T00:58:52.512388+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-22T00:58:52.523935+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/lineup-review.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-22T00:58:52.532717+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/strategy_session.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-22T00:58:53.163631+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/market?bye_week=9&market_league=league-1&season=2026&from_team=1&availability=day_traders_free_agent \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-22T00:58:53.214695+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-22T00:58:53.220344+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+
+  test_ir_blockers_and_active_space_on_phone (tests.test_bye_pickups.ByePickupTests.test_ir_blockers_and_active_space_on_phone) (case='last-spot') ... FAIL
+
+======================================================================
+FAIL: test_ir_blockers_and_active_space_on_phone (tests.test_bye_pickups.ByePickupTests.test_ir_blockers_and_active_space_on_phone) (case='last-spot')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_bye_pickups.py", line 288, in test_ir_blockers_and_active_space_on_phone
+    self.assertEqual('Sleeper IR blocker' in copy, label in ('last-spot', 'room-left'))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: False != True
+
+----------------------------------------------------------------------
+Ran 1 test in 4.793s
+
+FAILED (failures=1)

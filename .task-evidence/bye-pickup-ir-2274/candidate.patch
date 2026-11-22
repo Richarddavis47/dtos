@@ -1,0 +1,365 @@
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index 5b9e0e8..abd2dad 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -1,3 +1,7 @@
++## v1.22.59 / build 2274 — Flag IR blockers on bye pickups
++
++Bye pickup cards flag players who no longer qualify for their Sleeper IR slots. They keep the active roster count visible and explain when moving a player out of IR would use the last open spot.
++
+ ## v1.22.58 / build 2273 — Show roster space for bye pickups
+ 
+ Bye pickup cards show open, full or unconfirmed active roster space alongside lineup fit. IR and taxi vacancies do not count as active spots.
+diff --git a/RELEASE_NOTES.md b/RELEASE_NOTES.md
+index 7b28b5b..36e1523 100644
+--- a/RELEASE_NOTES.md
++++ b/RELEASE_NOTES.md
+@@ -1,3 +1,7 @@
++## v1.22.59 / build 2274 — Flag IR blockers on bye pickups
++
++Bye pickup cards flag players who no longer qualify for their Sleeper IR slots. They keep the active roster count visible and explain when moving a player out of IR would use the last open spot.
++
+ ## v1.22.58 / build 2273 — Show roster space for bye pickups
+ 
+ Bye pickup cards show whether the latest prepared Sleeper roster has an active spot open or needs room. If the roster or league limit cannot be confirmed, the shortlist explains what is missing.
+diff --git a/app_metadata.py b/app_metadata.py
+index a8f8b99..1b94700 100644
+--- a/app_metadata.py
++++ b/app_metadata.py
+@@ -7,10 +7,10 @@ from datetime import datetime, timezone
+ from pathlib import Path
+ 
+ APPLICATION_NAME = "DTOS"
+-VERSION = "1.22.58"
+-PRODUCT_VERSION = "1.22.58"
+-BUILD_NUMBER = 2273
+-RELEASE_CODENAME = "Show Bye Pickup Roster Space"
++VERSION = "1.22.59"
++PRODUCT_VERSION = "1.22.59"
++BUILD_NUMBER = 2274
++RELEASE_CODENAME = "Flag Bye Pickup IR Blockers"
+ APPLICATION_STARTED_AT = datetime.now(timezone.utc).isoformat()
+ 
+ _REPOSITORY_ROOT = Path(__file__).resolve().parent
+diff --git a/routes/market.py b/routes/market.py
+index 382ff8b..78bc557 100644
+--- a/routes/market.py
++++ b/routes/market.py
+@@ -409,7 +409,7 @@ def create_market_router(
+     def bye_pickups_page(bye_week, market_league, season, from_team):
+         from src.core.intelligence.team_strength import compatible_profile
+         from src.core.intelligence.upcoming_byes import read_upcoming_byes
+-        from src.core.intelligence import pickup_roster_space
++        from src.core.intelligence import pickup_ir_evidence, pickup_roster_space
+         from src.ui.upcoming_byes import bye_pickup_panel
+ 
+         selected_state, selected_league, _ = dependencies()
+@@ -444,7 +444,10 @@ def create_market_router(
+                             season=season, from_team=from_team, availability='day_traders_free_agent')
+                         return page('Asset Market', back + bye_pickup_panel(
+                             row, ownership, origin=origin, league_id=market_league, roster_id=from_team,
+-                            roster_space=pickup_roster_space(league, team)))
++                            roster_space=pickup_roster_space(league, team),
++                            ir_evidence=pickup_ir_evidence(
++                                league, team, ownership, roster_checked_at=selected_state.get('last_sync'),
++                                players_fetched_at=data.get('players_fetched_at'))))
+         return page('Asset Market', back + f'<section class="ux-section"><h2>Week {bye_week} bye cover</h2>'
+                     f'<p class="evidence-unavailable">{escape(reason)}</p></section>')
+ 
+diff --git a/src/core/intelligence/__init__.py b/src/core/intelligence/__init__.py
+index f7a195b..350dbd5 100644
+--- a/src/core/intelligence/__init__.py
++++ b/src/core/intelligence/__init__.py
+@@ -26,6 +26,7 @@ from src.core.trade_intelligence.market_balance import market_balance as trade_m
+ from src.core.trade_intelligence.roster_space import (
+     active_player_ids as trade_active_player_ids,
+     configured_active_slots as trade_configured_active_slots,
++    pickup_ir_evidence,
+     pickup_roster_space,
+     sleeper_membership_verified,
+ )
+@@ -39,4 +40,4 @@ def evaluate_horizon_impact(data, proposal, service):
+     return evaluate(data, proposal, service)
+ 
+ 
+-__all__ = ["AssetContext", "IntelligenceCache", "IntelligenceContext", "IntelligenceOrchestrator", "IntelligenceRegistry", "IntelligenceResult", "SearchLineupMemo", "TradeAsset", "TradeEvidenceContext", "TradeProposal", "TRADE_EVALUATION_POLICY_VERSION", "UnifiedConfidence", "UnifiedEvidence", "UnifiedRecommendation", "apply_positional_ranks", "build_asset_pool", "build_context", "build_league_model", "build_trade_evidence_context", "calculate_confidence", "evaluate_bilateral", "evaluate_horizon_impact", "generate_proposals", "intelligence_cache", "intelligence_orchestrator", "intelligence_registry", "lineup_slot_eligible", "lineup_bench_slots", "lineup_eligible_positions", "pickup_roster_space", "qualify_partner_explanation", "resolve_trade_strategy", "sleeper_membership_verified", "trade_active_player_ids", "trade_configured_active_slots", "trade_market_balance", "trade_pick_identity_errors"]
++__all__ = ["AssetContext", "IntelligenceCache", "IntelligenceContext", "IntelligenceOrchestrator", "IntelligenceRegistry", "IntelligenceResult", "SearchLineupMemo", "TradeAsset", "TradeEvidenceContext", "TradeProposal", "TRADE_EVALUATION_POLICY_VERSION", "UnifiedConfidence", "UnifiedEvidence", "UnifiedRecommendation", "apply_positional_ranks", "build_asset_pool", "build_context", "build_league_model", "build_trade_evidence_context", "calculate_confidence", "evaluate_bilateral", "evaluate_horizon_impact", "generate_proposals", "intelligence_cache", "intelligence_orchestrator", "intelligence_registry", "lineup_slot_eligible", "lineup_bench_slots", "lineup_eligible_positions", "pickup_ir_evidence", "pickup_roster_space", "qualify_partner_explanation", "resolve_trade_strategy", "sleeper_membership_verified", "trade_active_player_ids", "trade_configured_active_slots", "trade_market_balance", "trade_pick_identity_errors"]
+diff --git a/src/core/trade_intelligence/roster_space.py b/src/core/trade_intelligence/roster_space.py
+index 22dd015..df147bf 100644
+--- a/src/core/trade_intelligence/roster_space.py
++++ b/src/core/trade_intelligence/roster_space.py
+@@ -1,5 +1,6 @@
+ """Exact configured active-roster arithmetic, independent of trade quality."""
+ 
++from src.core.projection_intelligence.sleeper_provider import freshness_state
+ from src.core.trade_intelligence.lineup import BENCH_SLOTS, FLEX_ELIGIBILITY
+ 
+ 
+@@ -7,6 +8,14 @@ _SLEEPER_SLOTS = frozenset(BENCH_SLOTS | FLEX_ELIGIBILITY.keys() | {
+     'QB', 'RB', 'WR', 'TE', 'K', 'DEF', 'DL', 'LB', 'DB', 'DE', 'DT', 'CB', 'S', 'IDP_FLEX',
+ })
+ _MISSING_MEMBERSHIP = 'DTOS could not confirm which players occupy active, IR, and taxi spots in this roster snapshot.'
++_IR_OPTIONS = {
++    'out': 'reserve_allow_out', 'suspended': 'reserve_allow_sus',
++    'na': 'reserve_allow_na', 'dnr': 'reserve_allow_dnr', 'doubtful': 'reserve_allow_doubtful',
++}
++_IR_ALWAYS = {'ir', 'pup'}
++_IR_INELIGIBLE = {'active', 'questionable', 'probable'}
++_STATUS_ALIASES = {'o': 'out', 'd': 'doubtful', 'q': 'questionable', 'sus': 'suspended',
++                   'injured reserve': 'ir', 'holdout': 'dnr'}
+ 
+ 
+ def active_player_ids(roster):
+@@ -52,26 +61,102 @@ def sleeper_membership_verified(roster):
+             and (reserve | taxi).isdisjoint(str(value) for value in starters or ()))
+ 
+ 
+-def pickup_roster_space(league, team):
+-    """Report one ordinary add against the admitted roster, independently of lineup fit."""
+-    slots = league.get('roster_positions')
+-    if (not isinstance(slots, list) or not slots
+-            or any(not isinstance(slot, str) or slot.upper() not in _SLEEPER_SLOTS for slot in slots)):
+-        return {'reason': 'DTOS could not confirm the league’s active roster limit.'}
+-    capacity = configured_active_slots(slots)
+-    if not capacity:
+-        return {'reason': 'DTOS could not confirm the league’s active roster limit.'}
++def _prepared_membership(team):
+     rows = team.get('players')
+     if (team.get('sleeper_membership_verified') is not True or not isinstance(rows, list)
+             or any(not isinstance(row, dict) or row.get('roster_slot') not in
+                    ('Starter', 'Bench', 'IR', 'Taxi') for row in rows)):
+-        return {'reason': _MISSING_MEMBERSHIP}
++        return None
+     ids = [row.get('id') for row in rows]
+     if _member_ids(ids) is None:
+-        return {'reason': _MISSING_MEMBERSHIP}
+-    roster = {
++        return None
++    return {
+         'players': ids,
+         'reserve': [row['id'] for row in rows if row['roster_slot'] == 'IR'],
+         'taxi': [row['id'] for row in rows if row['roster_slot'] == 'Taxi'],
+     }
++
++
++def pickup_roster_space(league, team):
++    """Report one ordinary add against the admitted roster, independently of lineup fit."""
++    slots = league.get('roster_positions')
++    if (not isinstance(slots, list) or not slots
++            or any(not isinstance(slot, str) or slot.upper() not in _SLEEPER_SLOTS for slot in slots)):
++        return {'reason': 'DTOS could not confirm the league’s active roster limit.'}
++    capacity = configured_active_slots(slots)
++    if not capacity:
++        return {'reason': 'DTOS could not confirm the league’s active roster limit.'}
++    roster = _prepared_membership(team)
++    if roster is None:
++        return {'reason': _MISSING_MEMBERSHIP}
+     return {'active': len(active_player_ids(roster)), 'capacity': capacity}
++
++
++def _ir_designation(row, player_id, league):
++    if not isinstance(row, dict) or 'injury_status' not in row or any(
++        row.get(key) is not None and str(row[key]) != str(expected)
++        for key, expected in (('player_id', player_id), ('id', player_id),
++                              ('league_id', league.get('league_id')), ('season', league.get('season')))
++    ):
++        return None
++    status = str(row.get('status') or '').strip().casefold()
++    injury = str(row['injury_status'] or '').strip().casefold()
++    status = _STATUS_ALIASES.get(status, status)
++    injury = _STATUS_ALIASES.get(injury, injury)
++    if not injury:
++        return status if row['injury_status'] is None and status == 'active' else None
++    # Sleeper's general Active/Inactive field can coexist with an injury tag.
++    # A second, different designation does not establish which rule applies.
++    generic = {'', 'active', 'inactive', 'practice squad'}
++    if status not in generic and status != injury:
++        return None
++    if injury in _IR_INELIGIBLE and status != 'active':
++        return None
++    return injury
++
++
++def pickup_ir_evidence(league, team, ownership, *, roster_checked_at, players_fetched_at):
++    """Evaluate only actual Sleeper IR placements using fresh native evidence."""
++    result = {'blockers': [], 'limits': []}
++    membership = _prepared_membership(team)
++    if membership is None:
++        result['limits'].append(('could not confirm which players are in Sleeper IR slots', None))
++        return result
++    reserve = membership['reserve']
++    if not reserve:
++        return result
++    settings = league.get('settings')
++    capacity = settings.get('reserve_slots') if isinstance(settings, dict) else None
++    if type(capacity) is not int or not len(reserve) <= capacity <= 10:
++        result['limits'].append(('could not confirm Sleeper IR placement against the league’s IR limit', None))
++        return result
++    roster_freshness = freshness_state(roster_checked_at)
++    player_freshness = freshness_state(players_fetched_at)
++    if roster_freshness != 'Fresh':
++        result['limits'].append((f'roster check is {roster_freshness.lower()}', None))
++    if player_freshness != 'Fresh':
++        result['limits'].append((f'player status check is {player_freshness.lower()}', None))
++    if result['limits']:
++        return result
++    result['names'] = {str(row['id']): row.get('name') for row in team['players'] if row['roster_slot'] == 'IR'}
++    for player_id in sorted(map(str, reserve)):
++        owners = ownership.owners.get(player_id, [])
++        if len(owners) != 1 or owners[0]['roster_slot'] != 'IR':
++            result['limits'].append(('could not confirm Sleeper IR placement', player_id))
++            continue
++        designation = _ir_designation(ownership.players.get(player_id), player_id, league)
++        if designation in _IR_ALWAYS:
++            continue
++        rule = _IR_OPTIONS.get(designation)
++        if rule is not None:
++            allowed = settings.get(rule)
++            if type(allowed) not in (int, bool) or allowed not in (0, 1):
++                result['limits'].append(('could not confirm the league’s IR rule', player_id))
++                continue
++            if allowed:
++                continue
++        elif designation not in _IR_INELIGIBLE:
++            result['limits'].append(('could not confirm the Sleeper status', player_id))
++            continue
++        result['blockers'].append(player_id)
++    return result
+diff --git a/src/ui/upcoming_byes.py b/src/ui/upcoming_byes.py
+index 67d7ab7..e6473ca 100644
+--- a/src/ui/upcoming_byes.py
++++ b/src/ui/upcoming_byes.py
+@@ -124,7 +124,37 @@ def upcoming_byes_panel(weeks, players, *, active, league_id=None, season=None,
+     )
+ 
+ 
+-def bye_pickup_panel(row, ownership, *, origin, league_id, roster_id, roster_space):
++def _pickup_ir_note(evidence, roster_space, player_name):
++    def name(player_id):
++        roster_name = evidence.get('names', {}).get(player_id)
++        return escape(str(roster_name)) if roster_name else player_name(player_id)
++
++    blocked = evidence['blockers']
++    note = ''
++    if blocked:
++        subject = ', '.join(name(player_id) for player_id in blocked)
++        verb = 'is' if len(blocked) == 1 else 'are'
++        note = (f'<p><strong>Sleeper IR blocker</strong> · {subject} {verb} no longer eligible for IR. '
++                'Sleeper blocks adds and waiver claims until this is resolved.')
++        if 'capacity' in roster_space:
++            open_spots = roster_space['capacity'] - roster_space['active']
++            remaining = open_spots - len(blocked)
++            if remaining < 0:
++                note += ' You would need to make room to move everyone out of IR and add this pickup.'
++            elif remaining == 0:
++                note += ' Moving out of IR would use the last open active spot. You would then need to make room for this pickup.'
++            else:
++                spots = 'spot' if remaining == 1 else 'spots'
++                note += f' If moved to the active roster, {remaining} active {spots} would remain.'
++        note += '</p>'
++    if evidence['limits']:
++        limits = ' and '.join(escape(reason) + (f' for {name(pid)}' if pid else '')
++                              for reason, pid in evidence['limits'])
++        note += f'<p><strong>IR eligibility unconfirmed</strong> · {limits}. Check Sleeper before adding.</p>'
++    return note
++
++
++def bye_pickup_panel(row, ownership, *, origin, league_id, roster_id, roster_space, ir_evidence):
+     cards = []
+     shortage = len(row['unfilled'])
+     fresh = row['availability_freshness'] == 'Fresh'
+@@ -143,6 +173,7 @@ def bye_pickup_panel(row, ownership, *, origin, league_id, roster_id, roster_spa
+         catalog = ownership.players.get(player_id) or {}
+         return escape(str(catalog.get('full_name') or catalog.get('name') or player_id))
+ 
++    ir_note = _pickup_ir_note(ir_evidence, roster_space, player_name)
+     for candidate in recorded:
+         pid = candidate['player_id']
+         if 'dependencies' not in candidate or ownership.resolve(pid)['state'] != 'FREE_AGENT':
+@@ -182,6 +213,7 @@ def bye_pickup_panel(row, ownership, *, origin, league_id, roster_id, roster_spa
+         cards.append(f'<article class="card"><h3><a href="{escape(href)}">{name}</a></h3>'
+                      f'<p>{positions} · Unrostered in this league</p><p>{fit} {projection}</p>'
+                      + f'<p><strong>Roster space</strong> · {escape(space)}</p>'
++                     + ir_note
+                      + f'<details{" open" if conditional else ""}><summary>Lineup moves and availability</summary>'
+                      + f'<ul>{"".join(moves)}{notes}</ul></details></article>')
+     has_cards = bool(cards)
+diff --git a/tests/test_bye_pickups.py b/tests/test_bye_pickups.py
+index 7e0a39c..6785a4f 100644
+--- a/tests/test_bye_pickups.py
++++ b/tests/test_bye_pickups.py
+@@ -17,11 +17,11 @@ from tests.test_upcoming_bye_moves import install_schedule, phone
+ 
+ 
+ class ByePickupTests(unittest.TestCase):
+-    def setup_league(self, **options):
++    def setup_league(self, *, roster_age=timedelta(), **options):
+         import dtos_app
+ 
+         fixture, data, service, now = authenticated_prepared(self, empty=False, **options)
+-        state = {'data': data}
++        state = {'data': data, 'last_sync': (now - roster_age).isoformat()}
+         cache = Mock()
+         context = SimpleNamespace(state=state, league_id='league-1', projection=service, market=cache)
+         fixture.f.f.client.app.include_router(create_navigation_router())
+@@ -240,3 +240,60 @@ class ByePickupTests(unittest.TestCase):
+                     page.locator('#dtos-back').click()
+                     page.wait_for_url('**/teams/1')
+                     details.locator('[data-bye-week="9"]').wait_for()
++
++    def test_ir_blockers_and_active_space_on_phone(self):
++        cases = (
++            ('last-spot', 1, 'Active', None, 1, timedelta(), 'last open active spot'),
++            ('room-left', 2, 'Active', 'Out', 0, timedelta(), '1 active spot would remain'),
++            ('out-allowed', 1, 'Active', 'Out', 1, timedelta(), None),
++            ('pup', 1, 'Inactive', 'PUP', 0, timedelta(), None),
++            ('stale', 1, 'Active', None, 1, timedelta(hours=8), 'player status check is stale'),
++            ('stale-roster', 1, 'Active', None, 1, timedelta(), 'roster check is stale'),
++            ('missing', 1, None, None, 1, timedelta(), 'could not confirm the Sleeper status for Example IR 1'),
++            ('missing-rule', 1, 'Active', 'Out', None, timedelta(), 'could not confirm the league’s IR rule for Example IR 1'),
++            ('conflicting', 1, 'IR', 'Out', 0, timedelta(), 'could not confirm the Sleeper status for Example IR 1'),
++        )
++        for label, open_spots, status, injury, allow_out, age, expected in cases:
++            with self.subTest(case=label):
++                fixture, data, service, now = self.setup_league(
++                    slots=['QB', 'RB', 'FLEX', 'RB'] + ['BN'] * (open_spots + 1),
++                    bench_position='RB',
++                    roster_age=timedelta(hours=8) if label == 'stale-roster' else timedelta(),
++                )
++                settings = data['league']['settings']
++                settings['reserve_slots'] = 1
++                if allow_out is not None:
++                    settings['reserve_allow_out'] = allow_out
++                team = data['teams'][0]
++                team['players'].append(dict(id='1-ir', name='Example IR 1', position='RB', roster_slot='IR'))
++                team['sleeper_membership_verified'] = sleeper_membership_verified(dict(
++                    players=[row['id'] for row in team['players']], reserve=['1-ir'], taxi=None))
++                data['players']['1-ir'] = dict(
++                    player_id='1-ir', full_name='Example IR 1', status=status, injury_status=injury)
++                self.add_players(data, service, now)
++                data['players_fetched_at'] = (now - age).isoformat()
++                install_schedule(service, data, now, byes={'1-r', '1-w'})
++                with phone(fixture) as page:
++                    page.goto('https://dtos.test/teams/1')
++                    page.locator('#bye-week-details summary').press('Enter')
++                    page.get_by_role('link', name='Find Week 9', exact=False).tap()
++                    page.wait_for_url('**/market?**')
++                    results = page.locator('#bye-pickup-results')
++                    card = results.locator('article').filter(has_text='Free Runner')
++                    copy = card.inner_text()
++                    if directory := os.environ.get('DTOS_BYE_PICKUP_SCREENSHOTS'):
++                        destination = Path(directory)
++                        destination.mkdir(parents=True, exist_ok=True)
++                        results.screenshot(path=str(destination / f'ir-{label}-390.png'))
++                    self.assertIn(f'Open active spot · 5 of {5 + open_spots} active spots used.', copy)
++                    self.assertIn('Unrostered in this league', copy)
++                    self.assertEqual('Sleeper IR blocker' in copy, label in ('last-spot', 'room-left'))
++                    if expected:
++                        self.assertIn(expected, copy)
++                    if label == 'last-spot':
++                        self.assertIn('make room for this pickup', copy)
++                    self.assertIn('waivers or locks', results.inner_text())
++                    self.assertLessEqual(page.evaluate('document.documentElement.scrollWidth'), 390)
++                    page.locator('#dtos-back').click()
++                    page.wait_for_url('**/teams/1')
++                    page.locator('#bye-week-details[open] [data-bye-week="9"]').wait_for()
