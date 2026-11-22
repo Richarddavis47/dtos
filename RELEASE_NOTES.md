@@ -1,3 +1,7 @@
+## v1.22.59 / build 2274 — Flag IR blockers on bye pickups
+
+Bye pickup cards flag players who no longer qualify for their Sleeper IR slots. They keep the active roster count visible and explain when moving a player out of IR would use the last open spot.
+
 ## v1.22.58 / build 2273 — Show roster space for bye pickups
 
 Bye pickup cards show whether the latest prepared Sleeper roster has an active spot open or needs room. If the roster or league limit cannot be confirmed, the shortlist explains what is missing.

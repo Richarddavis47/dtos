@@ -409,7 +409,7 @@ def create_market_router(
     def bye_pickups_page(bye_week, market_league, season, from_team):
         from src.core.intelligence.team_strength import compatible_profile
         from src.core.intelligence.upcoming_byes import read_upcoming_byes
-        from src.core.intelligence import pickup_roster_space
+        from src.core.intelligence import pickup_ir_evidence, pickup_roster_space
         from src.ui.upcoming_byes import bye_pickup_panel
 
         selected_state, selected_league, _ = dependencies()
@@ -444,7 +444,10 @@ def create_market_router(
                             season=season, from_team=from_team, availability='day_traders_free_agent')
                         return page('Asset Market', back + bye_pickup_panel(
                             row, ownership, origin=origin, league_id=market_league, roster_id=from_team,
-                            roster_space=pickup_roster_space(league, team)))
+                            roster_space=pickup_roster_space(league, team),
+                            ir_evidence=pickup_ir_evidence(
+                                league, team, ownership, roster_checked_at=selected_state.get('last_sync'),
+                                players_fetched_at=data.get('players_fetched_at'))))
         return page('Asset Market', back + f'<section class="ux-section"><h2>Week {bye_week} bye cover</h2>'
                     f'<p class="evidence-unavailable">{escape(reason)}</p></section>')
 
