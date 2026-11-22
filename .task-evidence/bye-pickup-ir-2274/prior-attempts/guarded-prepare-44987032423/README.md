@@ -1,0 +1,1 @@
+The first guard correctly rejected the draft plan before uploading attachments. The plan used a full Git ref in the field compared with GitHub’s short pull-request head branch. The candidate SHA, source tree and branch matched the actual PR. The correction changes the publisher plan field and leaves the application and guard checks unchanged.

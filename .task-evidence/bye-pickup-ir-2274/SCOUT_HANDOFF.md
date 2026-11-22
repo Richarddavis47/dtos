@@ -11,3 +11,12 @@ Validated application tree `137d5aa04f710a36bcf1bb54008d0f915ab880fc`
 5. Use contextual Back and check that Week 9 remains expanded. Check the shortlist at 390px for overflow. Test a real prepared owner league only if already safely available, and report it separately from the disposable Chromium fixtures.
 
 Production baseline was v1.22.58 / build 2273, commit `2cf52c454e28fe0ac9442dd006473a3807c2f4ab`, tree `e4914d82bd08938e7605df4be77037a422e7d3d8`.
+
+## Release and verification
+
+- [PR #363](https://github.com/Richarddavis47/dtos/pull/363) shipped in [immutable v1.22.59 / build 2274](https://github.com/Richarddavis47/dtos/releases/tag/v1.22.59), merge commit . The annotated tag and deployed commit resolve to the validated application tree above.
+- Local and hosted canonical validation each passed 4,666 tests and all ten gates under an actual 2 GiB cap. All 13 required hosted checks passed. The exact candidate passed 22 focused tests, including the Chromium phone journey. The publisher unit run passed 181 checks.
+- [Guarded prepare](https://github.com/Richarddavis47/dtos/actions/runs/44987197147) and [guarded publish](https://github.com/Richarddavis47/dtos/actions/runs/44987582774) verified all 23 attachments and the immutable publication. Public readiness, welcome and sign-in checks passed. Private routes rejected unsigned requests.
+- Read the [original consoles](checks/), [screenshots](screenshots/), [release records](release/) and [earlier attempts](prior-attempts/). To check the readable evidence from this folder, run . The immutable release includes the full archives and its evidence manifest.
+- The first hosted run correctly deferred a Trade request under pressure. An isolated Chromium process for each viewport lowered measured overhead while preserving the full test and admission policy. See the [first run](prior-attempts/hosted-canonical-44969401958/) and [matched replay](prior-attempts/trade-viewport-isolation-control/).
+- Production acceptance was public and read-only. A signed-in owner session and physical iPhone/Safari were unavailable. The short-list and Back checks use Chromium fixtures with disposable prepared leagues.
