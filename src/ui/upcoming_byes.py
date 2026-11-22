@@ -124,7 +124,37 @@ def upcoming_byes_panel(weeks, players, *, active, league_id=None, season=None, 
     )
 
 
-def bye_pickup_panel(row, ownership, *, origin, league_id, roster_id, roster_space):
+def _pickup_ir_note(evidence, roster_space, player_name):
+    def name(player_id):
+        roster_name = evidence.get('names', {}).get(player_id)
+        return escape(str(roster_name)) if roster_name else player_name(player_id)
+
+    blocked = evidence['blockers']
+    note = ''
+    if blocked:
+        subject = ', '.join(name(player_id) for player_id in blocked)
+        verb = 'is' if len(blocked) == 1 else 'are'
+        note = (f'<p><strong>Sleeper IR blocker</strong> · {subject} {verb} no longer eligible for IR. '
+                'Sleeper blocks adds and waiver claims until this is resolved.')
+        if 'capacity' in roster_space:
+            open_spots = roster_space['capacity'] - roster_space['active']
+            remaining = open_spots - len(blocked)
+            if remaining < 0:
+                note += ' You would need to make room to move everyone out of IR and add this pickup.'
+            elif remaining == 0:
+                note += ' Moving out of IR would use the last open active spot. You would then need to make room for this pickup.'
+            else:
+                spots = 'spot' if remaining == 1 else 'spots'
+                note += f' If moved to the active roster, {remaining} active {spots} would remain.'
+        note += '</p>'
+    if evidence['limits']:
+        limits = ' and '.join(escape(reason) + (f' for {name(pid)}' if pid else '')
+                              for reason, pid in evidence['limits'])
+        note += f'<p><strong>IR eligibility unconfirmed</strong> · {limits}. Check Sleeper before adding.</p>'
+    return note
+
+
+def bye_pickup_panel(row, ownership, *, origin, league_id, roster_id, roster_space, ir_evidence):
     cards = []
     shortage = len(row['unfilled'])
     fresh = row['availability_freshness'] == 'Fresh'
@@ -143,6 +173,7 @@ def bye_pickup_panel(row, ownership, *, origin, league_id, roster_id, roster_spa
         catalog = ownership.players.get(player_id) or {}
         return escape(str(catalog.get('full_name') or catalog.get('name') or player_id))
 
+    ir_note = _pickup_ir_note(ir_evidence, roster_space, player_name)
     for candidate in recorded:
         pid = candidate['player_id']
         if 'dependencies' not in candidate or ownership.resolve(pid)['state'] != 'FREE_AGENT':
@@ -182,6 +213,7 @@ def bye_pickup_panel(row, ownership, *, origin, league_id, roster_id, roster_spa
         cards.append(f'<article class="card"><h3><a href="{escape(href)}">{name}</a></h3>'
                      f'<p>{positions} · Unrostered in this league</p><p>{fit} {projection}</p>'
                      + f'<p><strong>Roster space</strong> · {escape(space)}</p>'
+                     + ir_note
                      + f'<details{" open" if conditional else ""}><summary>Lineup moves and availability</summary>'
                      + f'<ul>{"".join(moves)}{notes}</ul></details></article>')
     has_cards = bool(cards)

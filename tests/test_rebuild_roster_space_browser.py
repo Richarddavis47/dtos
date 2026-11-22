@@ -26,9 +26,12 @@ class RebuildRosterSpaceBrowserTests(unittest.TestCase):
         measurements = []
         output = Path(os.environ['DTOS_REBUILD_SPACE_EVIDENCE']) if os.getenv('DTOS_REBUILD_SPACE_EVIDENCE') else None
         with sync_playwright() as pw:
-            browser = launch_chromium(pw, headless=True)
-            try:
-                for width, height in ((320, 432), (375, 667), (390, 844), (1280, 900)):
+            for width, height in ((320, 432), (375, 667), (390, 844), (1280, 900)):
+                # Each width is an independent browser journey. Close Chromium
+                # before the next one so its previous renderer and browser
+                # caches cannot compete with Trade under the same 2 GiB cap.
+                browser = launch_chromium(pw, headless=True)
+                try:
                     page, records, _, errors, _ = helper.page(browser, f, width, height)
                     try:
                         helper.ready(page)
@@ -101,7 +104,7 @@ class RebuildRosterSpaceBrowserTests(unittest.TestCase):
                             page.screenshot(path=str(output / f'full-roster-zero-{width}.png'))
                     finally:
                         page.close()
-            finally:
-                browser.close()
+                finally:
+                    browser.close()
         if output:
             (output / 'browser-summary.json').write_text(json.dumps(measurements, indent=2))

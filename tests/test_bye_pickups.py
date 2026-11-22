@@ -17,11 +17,11 @@ from tests.test_upcoming_bye_moves import install_schedule, phone
 
 
 class ByePickupTests(unittest.TestCase):
-    def setup_league(self, **options):
+    def setup_league(self, *, roster_age=timedelta(), **options):
         import dtos_app
 
         fixture, data, service, now = authenticated_prepared(self, empty=False, **options)
-        state = {'data': data}
+        state = {'data': data, 'last_sync': (now - roster_age).isoformat()}
         cache = Mock()
         context = SimpleNamespace(state=state, league_id='league-1', projection=service, market=cache)
         fixture.f.f.client.app.include_router(create_navigation_router())
@@ -240,3 +240,60 @@ class ByePickupTests(unittest.TestCase):
                     page.locator('#dtos-back').click()
                     page.wait_for_url('**/teams/1')
                     details.locator('[data-bye-week="9"]').wait_for()
+
+    def test_ir_blockers_and_active_space_on_phone(self):
+        cases = (
+            ('last-spot', 1, 'Active', None, 1, timedelta(), 'last open active spot'),
+            ('room-left', 2, 'Active', 'Out', 0, timedelta(), '1 active spot would remain'),
+            ('out-allowed', 1, 'Active', 'Out', 1, timedelta(), None),
+            ('pup', 1, 'Inactive', 'PUP', 0, timedelta(), None),
+            ('stale', 1, 'Active', None, 1, timedelta(hours=8), 'player status check is stale'),
+            ('stale-roster', 1, 'Active', None, 1, timedelta(), 'roster check is stale'),
+            ('missing', 1, None, None, 1, timedelta(), 'could not confirm the Sleeper status for Example IR 1'),
+            ('missing-rule', 1, 'Active', 'Out', None, timedelta(), 'could not confirm the league’s IR rule for Example IR 1'),
+            ('conflicting', 1, 'IR', 'Out', 0, timedelta(), 'could not confirm the Sleeper status for Example IR 1'),
+        )
+        for label, open_spots, status, injury, allow_out, age, expected in cases:
+            with self.subTest(case=label):
+                fixture, data, service, now = self.setup_league(
+                    slots=['QB', 'RB', 'FLEX', 'RB'] + ['BN'] * (open_spots + 1),
+                    bench_position='RB',
+                    roster_age=timedelta(hours=8) if label == 'stale-roster' else timedelta(),
+                )
+                settings = data['league']['settings']
+                settings['reserve_slots'] = 1
+                if allow_out is not None:
+                    settings['reserve_allow_out'] = allow_out
+                team = data['teams'][0]
+                team['players'].append(dict(id='1-ir', name='Example IR 1', position='RB', roster_slot='IR'))
+                team['sleeper_membership_verified'] = sleeper_membership_verified(dict(
+                    players=[row['id'] for row in team['players']], reserve=['1-ir'], taxi=None))
+                data['players']['1-ir'] = dict(
+                    player_id='1-ir', full_name='Example IR 1', status=status, injury_status=injury)
+                self.add_players(data, service, now)
+                data['players_fetched_at'] = (now - age).isoformat()
+                install_schedule(service, data, now, byes={'1-r', '1-w'})
+                with phone(fixture) as page:
+                    page.goto('https://dtos.test/teams/1')
+                    page.locator('#bye-week-details summary').press('Enter')
+                    page.get_by_role('link', name='Find Week 9', exact=False).tap()
+                    page.wait_for_url('**/market?**')
+                    results = page.locator('#bye-pickup-results')
+                    card = results.locator('article').filter(has_text='Free Runner')
+                    copy = card.inner_text()
+                    if directory := os.environ.get('DTOS_BYE_PICKUP_SCREENSHOTS'):
+                        destination = Path(directory)
+                        destination.mkdir(parents=True, exist_ok=True)
+                        results.screenshot(path=str(destination / f'ir-{label}-390.png'))
+                    self.assertIn(f'Open active spot · 5 of {5 + open_spots} active spots used.', copy)
+                    self.assertIn('Unrostered in this league', copy)
+                    self.assertEqual('Sleeper IR blocker' in copy, label in ('last-spot', 'room-left'))
+                    if expected:
+                        self.assertIn(expected, copy)
+                    if label == 'last-spot':
+                        self.assertIn('make room for this pickup', copy)
+                    self.assertIn('waivers or locks', results.inner_text())
+                    self.assertLessEqual(page.evaluate('document.documentElement.scrollWidth'), 390)
+                    page.locator('#dtos-back').click()
+                    page.wait_for_url('**/teams/1')
+                    page.locator('#bye-week-details[open] [data-bye-week="9"]').wait_for()
