@@ -1,0 +1,447 @@
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index abd2dad..45c8d0f 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -1,3 +1,7 @@
++## v1.22.60 / build 2275 — Compare a drop for a bye pickup
++
++When an active spot is needed, compare adding an unrostered pickup and dropping one of your active players. See the resulting lineup gaps for that week, availability dependencies, and the outgoing player’s prepared Market value when supported. All roster moves stay in Sleeper.
++
+ ## v1.22.59 / build 2274 — Flag IR blockers on bye pickups
+ 
+ Bye pickup cards flag players who no longer qualify for their Sleeper IR slots. They keep the active roster count visible and explain when moving a player out of IR would use the last open spot.
+diff --git a/RELEASE_NOTES.md b/RELEASE_NOTES.md
+index 36e1523..364c875 100644
+--- a/RELEASE_NOTES.md
++++ b/RELEASE_NOTES.md
+@@ -1,3 +1,7 @@
++## v1.22.60 / build 2275 — Compare a drop for a bye pickup
++
++When an active spot is needed, compare adding an unrostered pickup and dropping one of your active players. See the resulting lineup gaps for that week, availability dependencies, and the outgoing player’s prepared Market value when supported. All roster moves stay in Sleeper.
++
+ ## v1.22.59 / build 2274 — Flag IR blockers on bye pickups
+ 
+ Bye pickup cards flag players who no longer qualify for their Sleeper IR slots. They keep the active roster count visible and explain when moving a player out of IR would use the last open spot.
+diff --git a/app_metadata.py b/app_metadata.py
+index 1b94700..e80e5ee 100644
+--- a/app_metadata.py
++++ b/app_metadata.py
+@@ -7,10 +7,10 @@ from datetime import datetime, timezone
+ from pathlib import Path
+ 
+ APPLICATION_NAME = "DTOS"
+-VERSION = "1.22.59"
+-PRODUCT_VERSION = "1.22.59"
+-BUILD_NUMBER = 2274
+-RELEASE_CODENAME = "Flag Bye Pickup IR Blockers"
++VERSION = "1.22.60"
++PRODUCT_VERSION = "1.22.60"
++BUILD_NUMBER = 2275
++RELEASE_CODENAME = "Compare Bye Pickup Drops"
+ APPLICATION_STARTED_AT = datetime.now(timezone.utc).isoformat()
+ 
+ _REPOSITORY_ROOT = Path(__file__).resolve().parent
+diff --git a/routes/market.py b/routes/market.py
+index 78bc557..3068d71 100644
+--- a/routes/market.py
++++ b/routes/market.py
+@@ -406,13 +406,14 @@ def create_market_router(
+             "provider_calls": 0, "raw_history_scans": 0,
+         })
+ 
+-    def bye_pickups_page(bye_week, market_league, season, from_team):
++    def bye_pickups_page(bye_week, market_league, season, from_team, compare_pickup, compare_drop):
++        from src.core.intelligence.bye_pickups import compare_pickup_drop
+         from src.core.intelligence.team_strength import compatible_profile
+         from src.core.intelligence.upcoming_byes import read_upcoming_byes
+         from src.core.intelligence import pickup_ir_evidence, pickup_roster_space
+         from src.ui.upcoming_byes import bye_pickup_panel
+ 
+-        selected_state, selected_league, _ = dependencies()
++        selected_state, selected_league, market_cache = dependencies()
+         membership = getattr(current_account(), 'membership', None)
+         team_url = '/teams'
+         if membership and str(membership.league_id) == str(selected_league) and membership.roster_id:
+@@ -442,12 +443,46 @@ def create_market_router(
+                     else:
+                         origin = '/market?' + _market_query(bye_week=bye_week, market_league=market_league,
+                             season=season, from_team=from_team, availability='day_traders_free_agent')
++                        space = pickup_roster_space(league, team)
++                        ir = pickup_ir_evidence(
++                            league, team, ownership, roster_checked_at=selected_state.get('last_sync'),
++                            players_fetched_at=data.get('players_fetched_at'))
++                        comparison = {}
++                        if 'capacity' in space and space['active'] + len(ir['blockers']) >= space['capacity']:
++                            comparison['enabled'] = True
++                            pickup = next((item for item in row['pickups']['candidates']
++                                           if item['player_id'] == compare_pickup
++                                           and ownership.resolve(compare_pickup)['state'] == 'FREE_AGENT'), None)
++                            if pickup:
++                                comparison['pickup'] = compare_pickup
++                                comparison['drop'] = compare_drop
++                                active = {str(p['id']): str(p.get('name') or p['id']) for p in team['players']
++                                          if p['roster_slot'] in {'Starter', 'Bench'}}
++                                basis = row['pickups'].get('drop_basis')
++                                if not basis or set(basis['active_ids']) != active.keys():
++                                    comparison['note'] = 'A matching target-week roster plan is unavailable. Recheck after league preparation.'
++                                else:
++                                    choices = {pid: name for pid, name in active.items()
++                                               if ownership.resolve(pid, from_team)['state'] == 'OWNED_BY_ME'}
++                                    comparison['choices'] = choices
++                                    if compare_drop and compare_drop not in choices:
++                                        comparison['note'] = 'Choose a confirmed player from an active roster spot.'
++                                    elif compare_drop:
++                                        comparison['result'] = compare_pickup_drop(row, pickup, compare_drop)
++                                        market = market_cache.current()
++                                        price = None
++                                        if (market is not None and str(market.league_id) == market_league
++                                                and market.compatible_prepared_inputs(data) is True):
++                                            asset = market.by_id.get(f'player:{compare_drop}') or {}
++                                            price = (asset.get('values') or {}).get('market_value')
++                                        if (isinstance(price, (int, float)) and not isinstance(price, bool)
++                                                and isfinite(price) and 0 <= price <= 1000):
++                                            comparison['market_value'] = price
++                            elif compare_pickup or compare_drop:
++                                comparison['note'] = 'This pickup is unavailable in the current shortlist.'
+                         return page('Asset Market', back + bye_pickup_panel(
+                             row, ownership, origin=origin, league_id=market_league, roster_id=from_team,
+-                            roster_space=pickup_roster_space(league, team),
+-                            ir_evidence=pickup_ir_evidence(
+-                                league, team, ownership, roster_checked_at=selected_state.get('last_sync'),
+-                                players_fetched_at=data.get('players_fetched_at'))))
++                            roster_space=space, ir_evidence=ir, comparison=comparison))
+         return page('Asset Market', back + f'<section class="ux-section"><h2>Week {bye_week} bye cover</h2>'
+                     f'<p class="evidence-unavailable">{escape(reason)}</p></section>')
+ 
+@@ -459,9 +494,10 @@ def create_market_router(
+         offset: int = Query(0, ge=0), limit: int = Query(10, ge=10, le=100),
+         bye_week: int | None = Query(None, ge=1, le=18), market_league: str = "",
+         season: int | None = None, from_team: int | None = None,
++        compare_pickup: str = Query('', max_length=128), compare_drop: str = Query('', max_length=128),
+     ) -> HTMLResponse:
+         if bye_week is not None:
+-            return bye_pickups_page(bye_week, market_league, season, from_team)
++            return bye_pickups_page(bye_week, market_league, season, from_team, compare_pickup, compare_drop)
+         try:
+             market = model()
+         except HTTPException as exc:
+diff --git a/src/core/intelligence/bye_pickups.py b/src/core/intelligence/bye_pickups.py
+index d19e4f8..bf267c5 100644
+--- a/src/core/intelligence/bye_pickups.py
++++ b/src/core/intelligence/bye_pickups.py
+@@ -3,6 +3,7 @@
+ from math import isfinite
+ 
+ from src.core.data_platform.normalization.identity import normalize_team
++from src.core.intelligence.upcoming_byes import _availability_fit, _fit
+ from src.core.player_ownership import PlayerOwnershipIndex
+ from src.core.projection_intelligence.service import (
+     UNAVAILABLE_PLAYER_STATUSES,
+@@ -90,12 +91,41 @@ def prepare_bye_pickups(data, service, pinned, schedule, outlook):
+                 after[index] = candidate['player_id']
+                 prior = {pid: slot for slot, pid in basis['initial'].items()}
+                 states = basis['statuses'] | {candidate['player_id']: candidate['status']}
+-                dependencies = [[slot, pid, states[pid]] for slot, pid in sorted(after.items())
+-                                if states[pid] != 'active']
++                dependencies = [[slot, pid, states.get(pid, 'unknown')] for slot, pid in sorted(after.items())
++                                if states.get(pid) != 'active']
+                 moves = [[slot, pid, prior.get(pid)] for slot, pid in sorted(after.items())
+                          if basis['initial'].get(slot) != pid]
+-                matches.append(dict(candidate, slot=row['slots'][index], gap=row['slots'][gap],
++                matches.append(dict(candidate, slot=row['slots'][index], gap=row['slots'][gap], gap_index=gap,
+                                     dependencies=dependencies, moves=moves))
+                 if len(matches) == 6:
+                     break
+-            row['pickups'] = dict(ownership_generation=ownership.generation, candidates=matches)
++            if matches:
++                del basis['initial']
++            row['pickups'] = dict(ownership_generation=ownership.generation, candidates=matches,
++                                  drop_basis=basis if matches else None)
++
++
++def compare_pickup_drop(row, pickup, drop_id):
++    """Run one bounded legal assignment against the prepared target-week roster."""
++    basis = row['pickups']['drop_basis']
++    pickup_id = pickup['player_id']
++    slots = row['slots']
++    before = dict(basis['fit'])
++    before.update((slot, pid) for slot, pid, _ in pickup['moves'])
++    preferred = {slot: pid for slot, pid in before.items() if pid != drop_id}
++    playing = {pid: positions for pid, positions in basis['playing'].items() if pid != drop_id}
++    playing[pickup_id] = pickup['positions']
++    possible = playing | {pid: positions for pid, positions in basis['uncertain'].items() if pid != drop_id}
++    statuses = basis['statuses'] | {pickup_id: pickup['status']}
++    fresh = row['availability_freshness'] == 'Fresh'
++    fit, _ = _availability_fit(slots, playing, preferred, statuses, fresh)
++    incomplete = len(fit) < len(_fit(slots, possible, preferred))
++    return dict(
++        gap=pickup['gap_index'], original_filled=pickup['gap_index'] in fit,
++        open_slots=[slot for slot in range(len(slots)) if slot not in fit],
++        newly_open=[slot for slot in sorted(before) if slot != pickup['gap_index'] and slot not in fit],
++        lost_pickup_plan_player=drop_id in before.values(),
++        incomplete=incomplete, lineup=[
++            (slot, pid, statuses.get(pid, 'unknown')) for slot, pid in sorted(fit.items())
++        ],
++    )
+diff --git a/src/core/intelligence/upcoming_byes.py b/src/core/intelligence/upcoming_byes.py
+index 8669309..7f08cec 100644
+--- a/src/core/intelligence/upcoming_byes.py
++++ b/src/core/intelligence/upcoming_byes.py
+@@ -164,7 +164,9 @@ def _week(slots, people, games, byes, week, projection, *, starters, statuses=No
+                     fit = after
+                     pickup_slots = _pickup_slots(slots, playing, fit)
+                     pickup_basis = dict(fit=sorted(fit.items()), initial=initial,
+-                                        statuses={pid: statuses.get(pid) or 'unknown' for pid in fit.values()})
++                                        statuses=statuses, playing=playing,
++                                        uncertain={pid: pos for pid, pos in possible.items() if pid not in playing},
++                                        active_ids=sorted(people))
+                 unfilled = [slot for index, slot in enumerate(slots) if index not in fit]
+     elif len(initial) == len(slots) and all(
+         any(_eligible(position, slots[index]) for position in playing.get(pid, ()))
+diff --git a/src/ui/upcoming_byes.py b/src/ui/upcoming_byes.py
+index e6473ca..94d2305 100644
+--- a/src/ui/upcoming_byes.py
++++ b/src/ui/upcoming_byes.py
+@@ -1,6 +1,6 @@
+ """Compact disclosure for the prepared two-week bye outlook."""
+ from html import escape
+-from urllib.parse import quote, urlencode
++from urllib.parse import parse_qsl, quote, urlencode, urlsplit
+ 
+ 
+ def _slot_name(slot):
+@@ -154,7 +154,81 @@ def _pickup_ir_note(evidence, roster_space, player_name):
+     return note
+ 
+ 
+-def bye_pickup_panel(row, ownership, *, origin, league_id, roster_id, roster_space, ir_evidence):
++def _drop_comparison(row, comparison, origin, name, space, ir):
++    pickup = comparison['pickup']
++    choices = comparison.get('choices') or {}
++    selected = comparison['drop']
++    note = comparison.get('note')
++    html = '<section id="bye-drop-comparison" aria-label="Compare a drop"><h4>Compare a drop</h4>'
++    if note:
++        html += f'<p>{escape(note)}</p>'
++    if not choices:
++        return html + '</section>'
++    query = parse_qsl(urlsplit(origin).query) + [('compare_pickup', pickup)]
++    inputs = ''.join(f'<input type="hidden" name="{escape(key)}" value="{escape(value)}">' for key, value in query)
++    options = ''.join(
++        f'<option value="{escape(pid)}"{" selected" if pid == selected else ""}>{escape(label)}</option>'
++        for pid, label in sorted(choices.items(), key=lambda pair: (pair[1].casefold(), pair[0]))
++    )
++    html += (
++        '<form method="get" action="/market#bye-drop-comparison">'
++        + inputs + '<p><label for="bye-compare-drop">Player to drop</label><br>'
++        '<select id="bye-compare-drop" name="compare_drop" required style="max-width:100%">'
++        '<option value="">Choose a player</option>' + options + '</select></p>'
++        '<button type="submit">Preview add and drop</button></form>'
++    )
++    result = comparison.get('result')
++    if not result:
++        return html + '</section>'
++
++    slots = row['slots']
++    gap = _indexed_slot(slots, result['gap'])
++    html += f'<h4>Add {name(pickup)} · Drop {escape(choices[selected])}</h4>'
++    if result['lost_pickup_plan_player']:
++        html += '<p>This drop removes a player from the pickup-only plan. The lineup below accounts for that drop.</p>'
++    if result['original_filled']:
++        html += f'<p><strong>{gap} gap filled in this plan.</strong></p>'
++    elif result['incomplete']:
++        html += f'<p><strong>Could not confirm cover for the original {gap} gap.</strong></p>'
++    else:
++        html += f'<p><strong>Original {gap} gap stays open.</strong></p>'
++    if result['newly_open']:
++        label = 'Could not confirm cover for previously filled slots' if result['incomplete'] else 'Newly uncovered'
++        html += f'<p>{label} · {", ".join(_indexed_slot(slots, slot) for slot in result["newly_open"])}.</p>'
++    other_open = set(result['open_slots']) - {result['gap'], *result['newly_open']}
++    if other_open:
++        html += f'<p>Other slots still open · {", ".join(_indexed_slot(slots, slot) for slot in sorted(other_open))}.</p>'
++    if not result['open_slots']:
++        html += '<p>All starting slots covered in this plan.</p>'
++    if result['incomplete']:
++        html += '<p>Missing schedule or eligibility information could change which slots can be filled.</p>'
++    fresh = row['availability_freshness'] == 'Fresh'
++    dependencies = [(pid, status) for _, pid, status in result['lineup'] if status != 'active']
++    if dependencies or not fresh:
++        html += '<p><strong>Conditional lineup.</strong> Recheck the players below before acting.</p>'
++    if dependencies:
++        html += '<ul>' + ''.join(f'<li>{_status_dependency(name(pid), status)}</li>' for pid, status in dependencies) + '</ul>'
++    if not fresh:
++        html += f'<p>{_status_age(row)}</p>'
++    lineup = ''.join(f'<li>{_indexed_slot(slots, slot)} · {name(pid)}</li>' for slot, pid, _ in result['lineup'])
++    html += f'<details><summary>See the proposed Week {row["week"]} lineup</summary><ul>{lineup}</ul></details>'
++
++    limit = space['capacity']
++    remaining = space['active'] + len(ir['blockers']) - limit
++    html += f'<p><strong>After the swap</strong> · {space["active"]} of {limit} active spots used.</p>'
++    if ir['blockers']:
++        html += '<p>The IR blocker still needs to be resolved in Sleeper.</p>'
++    if remaining > 0:
++        spots = 'spot' if remaining == 1 else 'spots'
++        subject = 'Returning the ineligible IR players to active spots' if ir['blockers'] else 'The active roster limit'
++        html += f'<p>{subject} would still require {remaining} more active {spots}.</p>'
++    value = comparison.get('market_value')
++    price = f'{value:,.0f} / 1,000' if value is not None else 'A compatible prepared price is unavailable.'
++    html += f'<p><strong>Outgoing player’s Market value</strong> · {price}</p>'
++    return html + '</section>'
++
++
++def bye_pickup_panel(row, ownership, *, origin, league_id, roster_id, roster_space, ir_evidence, comparison):
+     cards = []
+     shortage = len(row['unfilled'])
+     fresh = row['availability_freshness'] == 'Fresh'
+@@ -210,12 +284,18 @@ def bye_pickup_panel(row, ownership, *, origin, league_id, roster_id, roster_spa
+             notes += f'<li>Player status check is {status_limit}. Recheck the lineup, including {moved}.</li>'
+         href = '/players/' + quote(pid, safe='') + '?' + urlencode(
+             dict(from_market=origin, market_league=league_id, front_office=roster_id))
++        compare = ''
++        if comparison.get('pickup') == pid:
++            compare = _drop_comparison(row, comparison, origin, player_name, roster_space, ir_evidence)
++        elif comparison.get('enabled'):
++            url = origin + '&' + urlencode({'compare_pickup': pid}) + '#bye-drop-comparison'
++            compare = f'<p><a class="ds-action" href="{escape(url)}">Compare a drop</a></p>'
+         cards.append(f'<article class="card"><h3><a href="{escape(href)}">{name}</a></h3>'
+                      f'<p>{positions} · Unrostered in this league</p><p>{fit} {projection}</p>'
+                      + f'<p><strong>Roster space</strong> · {escape(space)}</p>'
+                      + ir_note
+                      + f'<details{" open" if conditional else ""}><summary>Lineup moves and availability</summary>'
+-                     + f'<ul>{"".join(moves)}{notes}</ul></details></article>')
++                     + f'<ul>{"".join(moves)}{notes}</ul></details>' + compare + '</article>')
+     has_cards = bool(cards)
+     if not has_cards:
+         reason = ('Lineup availability has not been prepared for this snapshot.'
+@@ -229,5 +309,6 @@ def bye_pickup_panel(row, ownership, *, origin, league_id, roster_id, roster_spa
+             + (f'<p>{coverage} {escape(space_detail)}</p>' if has_cards else '')
+             + '<p>These fits use the prepared roster and NFL schedule. Verify who can play and whether waivers '
+               'or locks apply in Sleeper. Use Sleeper for all lineup changes, adds, drops, and claims.</p>'
++            + (f'<p>{escape(comparison["note"])}</p>' if comparison.get('note') and not comparison.get('pickup') else '')
+             + f'<p>{_status_age(row)}</p><div class="market-grid">{"".join(cards)}</div>'
+             '<p><a href="/market?availability=day_traders_free_agent">Browse all Market free agents</a></p></section>')
+diff --git a/tests/test_bye_pickups.py b/tests/test_bye_pickups.py
+index 6785a4f..ff81497 100644
+--- a/tests/test_bye_pickups.py
++++ b/tests/test_bye_pickups.py
+@@ -23,6 +23,8 @@ class ByePickupTests(unittest.TestCase):
+         fixture, data, service, now = authenticated_prepared(self, empty=False, **options)
+         state = {'data': data, 'last_sync': (now - roster_age).isoformat()}
+         cache = Mock()
++        cache.current.return_value = None
++        self.market_cache = cache
+         context = SimpleNamespace(state=state, league_id='league-1', projection=service, market=cache)
+         fixture.f.f.client.app.include_router(create_navigation_router())
+         fixture.f.f.client.app.include_router(create_market_router(
+@@ -297,3 +299,89 @@ class ByePickupTests(unittest.TestCase):
+                     page.locator('#dtos-back').click()
+                     page.wait_for_url('**/teams/1')
+                     page.locator('#bye-week-details[open] [data-bye-week="9"]').wait_for()
++
++    def test_compare_drop_rechecks_the_target_week_lineup_on_phone(self):
++        fixture, data, service, now = self.setup_league(
++            slots=['QB', 'RB', 'FLEX', 'RB', 'BN'], bench_position='QB')
++        self.add_players(data, service, now)
++        league, team = data['league'], data['teams'][0]
++        league['settings']['reserve_slots'] = 1
++        team['players'].append(dict(id='1-ir', name='Example IR', position='RB', roster_slot='IR'))
++        team['sleeper_membership_verified'] = sleeper_membership_verified(dict(
++            players=[p['id'] for p in team['players']], reserve=['1-ir'], taxi=None))
++        data['players']['1-ir'] = dict(player_id='1-ir', full_name='Example IR', status='Active', injury_status=None)
++        data['players']['1-s']['injury_status'] = 'Questionable'
++        install_schedule(service, data, now, byes={'1-r'}, unknown_clubs={'1-bq'})
++        active_market = Mock(league_id='league-1')
++        active_market.compatible_prepared_inputs.return_value = True
++        active_market.by_id = {'player:1-r': {'values': {'market_value': 0}}}
++        self.market_cache.current.return_value = active_market
++
++        with phone(fixture) as page:
++            page.goto('https://dtos.test/teams/1')
++            page.locator('#bye-week-details summary').press('Enter')
++            page.get_by_role('link', name='Find Week 9', exact=False).tap()
++            runner = page.locator('#bye-pickup-results article').filter(has_text='Free Runner')
++            runner.get_by_role('link', name='Compare a drop').tap()
++            comparison = runner.locator('#bye-drop-comparison')
++            choice = comparison.get_by_label('Player to drop')
++            choice.wait_for()
++            self.assertEqual(set(choice.locator('option').evaluate_all('(rows) => rows.map(row => row.value)')),
++                             {'', '1-q', '1-r', '1-w', '1-s', '1-bq'})
++            self.market_cache.current.assert_not_called()
++
++            for outgoing, expected in (
++                ('1-r', ('RB 1 gap filled', 'All starting slots covered', '0 / 1,000')),
++                ('1-w', ('RB 1 gap filled', 'Newly uncovered · FLEX', 'compatible prepared price is unavailable')),
++                ('1-q', ('RB 1 gap filled', 'Could not confirm cover for previously filled slots · QB',
++                         'Missing schedule or eligibility information')),
++            ):
++                with self.subTest(outgoing=outgoing):
++                    choice.select_option(outgoing)
++                    comparison.get_by_role('button', name='Preview add and drop').tap()
++                    page.wait_for_url(f'**compare_drop={outgoing}#bye-drop-comparison')
++                    comparison.get_by_text('Outgoing player’s Market value', exact=True).wait_for()
++                    copy = comparison.inner_text()
++                    for text in expected:
++                        self.assertIn(text, copy)
++                    self.assertIn('After the swap · 5 of 5 active spots used', copy)
++                    self.assertIn('The IR blocker still needs to be resolved in Sleeper.', copy)
++                    self.assertIn('would still require 1 more active spot', copy)
++                    self.assertIn('Sleeper listed Example S 1 as questionable', copy)
++                    self.assertIn('Sleeper IR blocker', runner.inner_text())
++                    self.assertLessEqual(page.evaluate('document.documentElement.scrollWidth'), 390)
++                    comparison.locator('summary').press('Enter')
++                    self.assertIn('RB 1 · Free Runner', comparison.locator('details').inner_text())
++                    if directory := os.environ.get('DTOS_BYE_PICKUP_SCREENSHOTS'):
++                        comparison.screenshot(path=str(Path(directory, f'drop-{outgoing}-390.png')))
++            page.locator('#dtos-back').click()
++            page.wait_for_url('**/teams/1')
++            page.locator('#bye-week-details[open] [data-bye-week="9"]').wait_for()
++
++        client = fixture.f.f.client
++        preview = '/market?bye_week=9&market_league=league-1&season=2026&from_team=1&compare_pickup=free-rb'
++        forged = client.get(preview + '&compare_drop=1-ir').text
++        self.assertIn('Choose a confirmed player from an active roster spot.', forged)
++        self.assertNotIn('Outgoing player’s Market value', forged)
++        active_market.compatible_prepared_inputs.return_value = False
++        self.assertIn('A compatible prepared price is unavailable',
++                      client.get(preview + '&compare_drop=1-r').text)
++
++    def test_compare_drop_can_remove_the_only_superflex_chain(self):
++        fixture, data, service, now = self.setup_league(bench_position='QB')
++        self.add_players(data, service, now)
++        for pid, pos in (('1-w', 'RB'), ('1-s', 'QB')):
++            row = next(p for p in data['teams'][0]['players'] if p['id'] == pid)
++            row.update(position=pos, fantasy_positions=[pos])
++            data['players'][pid].update(position=pos, fantasy_positions=[pos])
++        data['teams'][0]['sleeper_membership_verified'] = True
++        data['players']['free-wr'] = dict(player_id='free-wr', full_name='Free Receiver', team='X02',
++                                         position='WR', fantasy_positions=['WR'], status='Active')
++        install_schedule(service, data, now, byes={'1-r'})
++        client = fixture.f.f.client
++        response = client.get('/market?bye_week=9&market_league=league-1&season=2026&from_team=1'
++                              '&compare_pickup=free-wr&compare_drop=1-w')
++        self.assertEqual(response.status_code, 200)
++        self.assertIn('This drop removes a player from the pickup-only plan.', response.text)
++        self.assertIn('Original RB gap stays open.', response.text)
++        self.assertIn('FLEX · Free Receiver', response.text)
+diff --git a/tests/test_upcoming_bye_moves.py b/tests/test_upcoming_bye_moves.py
+index bfec8c7..1114444 100644
+--- a/tests/test_upcoming_bye_moves.py
++++ b/tests/test_upcoming_bye_moves.py
+@@ -14,7 +14,7 @@ from tests.lineup_review_fixture import authenticated_prepared
+ from tools.validation.browser_runtime import launch_chromium
+ 
+ 
+-def install_schedule(service, data, now, *, byes, missing=()):
++def install_schedule(service, data, now, *, byes, missing=(), unknown_clubs=()):
+     # A complete schedule establishes byes. Removing a single game invalidates
+     # inferred byes for this revision, while present games are still known.
+     clubs = ['BUF', 'KC'] + [f'X{i:02}' for i in range(30)]
+@@ -31,7 +31,7 @@ def install_schedule(service, data, now, *, byes, missing=()):
+     data.setdefault('players_fetched_at', now.isoformat())
+     team = data['teams'][0]
+     for row in team['players']:
+-        club = 'BUF' if row['id'] in byes else 'X02'
++        club = 'UNMAPPED' if row['id'] in unknown_clubs else 'BUF' if row['id'] in byes else 'X02'
+         row['team'] = data['players'][row['id']]['team'] = club
+     with patch('services.global_evidence.retained_global_evidence') as store:
+         store.return_value.read.return_value = facts
