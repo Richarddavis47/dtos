@@ -23,6 +23,8 @@ class ByePickupTests(unittest.TestCase):
         fixture, data, service, now = authenticated_prepared(self, empty=False, **options)
         state = {'data': data, 'last_sync': (now - roster_age).isoformat()}
         cache = Mock()
+        cache.current.return_value = None
+        self.market_cache = cache
         context = SimpleNamespace(state=state, league_id='league-1', projection=service, market=cache)
         fixture.f.f.client.app.include_router(create_navigation_router())
         fixture.f.f.client.app.include_router(create_market_router(
@@ -297,3 +299,89 @@ class ByePickupTests(unittest.TestCase):
                     page.locator('#dtos-back').click()
                     page.wait_for_url('**/teams/1')
                     page.locator('#bye-week-details[open] [data-bye-week="9"]').wait_for()
+
+    def test_compare_drop_rechecks_the_target_week_lineup_on_phone(self):
+        fixture, data, service, now = self.setup_league(
+            slots=['QB', 'RB', 'FLEX', 'RB', 'BN'], bench_position='QB')
+        self.add_players(data, service, now)
+        league, team = data['league'], data['teams'][0]
+        league['settings']['reserve_slots'] = 1
+        team['players'].append(dict(id='1-ir', name='Example IR', position='RB', roster_slot='IR'))
+        team['sleeper_membership_verified'] = sleeper_membership_verified(dict(
+            players=[p['id'] for p in team['players']], reserve=['1-ir'], taxi=None))
+        data['players']['1-ir'] = dict(player_id='1-ir', full_name='Example IR', status='Active', injury_status=None)
+        data['players']['1-s']['injury_status'] = 'Questionable'
+        install_schedule(service, data, now, byes={'1-r'}, unknown_clubs={'1-bq'})
+        active_market = Mock(league_id='league-1')
+        active_market.compatible_prepared_inputs.return_value = True
+        active_market.by_id = {'player:1-r': {'values': {'market_value': 0}}}
+        self.market_cache.current.return_value = active_market
+
+        with phone(fixture) as page:
+            page.goto('https://dtos.test/teams/1')
+            page.locator('#bye-week-details summary').press('Enter')
+            page.get_by_role('link', name='Find Week 9', exact=False).tap()
+            runner = page.locator('#bye-pickup-results article').filter(has_text='Free Runner')
+            runner.get_by_role('link', name='Compare a drop').tap()
+            comparison = runner.locator('#bye-drop-comparison')
+            choice = comparison.get_by_label('Player to drop')
+            choice.wait_for()
+            self.assertEqual(set(choice.locator('option').evaluate_all('(rows) => rows.map(row => row.value)')),
+                             {'', '1-q', '1-r', '1-w', '1-s', '1-bq'})
+            self.market_cache.current.assert_not_called()
+
+            for outgoing, expected in (
+                ('1-r', ('RB 1 gap filled', 'All starting slots covered', '0 / 1,000')),
+                ('1-w', ('RB 1 gap filled', 'Newly uncovered · FLEX', 'compatible prepared price is unavailable')),
+                ('1-q', ('RB 1 gap filled', 'Could not confirm cover for previously filled slots · QB',
+                         'Missing schedule or eligibility information')),
+            ):
+                with self.subTest(outgoing=outgoing):
+                    choice.select_option(outgoing)
+                    comparison.get_by_role('button', name='Preview add and drop').tap()
+                    page.wait_for_url(f'**compare_drop={outgoing}#bye-drop-comparison')
+                    comparison.get_by_text('Outgoing player’s Market value', exact=True).wait_for()
+                    copy = comparison.inner_text()
+                    for text in expected:
+                        self.assertIn(text, copy)
+                    self.assertIn('After the swap · 5 of 5 active spots used', copy)
+                    self.assertIn('The IR blocker still needs to be resolved in Sleeper.', copy)
+                    self.assertIn('would still require 1 more active spot', copy)
+                    self.assertIn('Sleeper listed Example S 1 as questionable', copy)
+                    self.assertIn('Sleeper IR blocker', runner.inner_text())
+                    self.assertLessEqual(page.evaluate('document.documentElement.scrollWidth'), 390)
+                    comparison.locator('summary').press('Enter')
+                    self.assertIn('RB 1 · Free Runner', comparison.locator('details').inner_text())
+                    if directory := os.environ.get('DTOS_BYE_PICKUP_SCREENSHOTS'):
+                        comparison.screenshot(path=str(Path(directory, f'drop-{outgoing}-390.png')))
+            page.locator('#dtos-back').click()
+            page.wait_for_url('**/teams/1')
+            page.locator('#bye-week-details[open] [data-bye-week="9"]').wait_for()
+
+        client = fixture.f.f.client
+        preview = '/market?bye_week=9&market_league=league-1&season=2026&from_team=1&compare_pickup=free-rb'
+        forged = client.get(preview + '&compare_drop=1-ir').text
+        self.assertIn('Choose a confirmed player from an active roster spot.', forged)
+        self.assertNotIn('Outgoing player’s Market value', forged)
+        active_market.compatible_prepared_inputs.return_value = False
+        self.assertIn('A compatible prepared price is unavailable',
+                      client.get(preview + '&compare_drop=1-r').text)
+
+    def test_compare_drop_can_remove_the_only_superflex_chain(self):
+        fixture, data, service, now = self.setup_league(bench_position='QB')
+        self.add_players(data, service, now)
+        for pid, pos in (('1-w', 'RB'), ('1-s', 'QB')):
+            row = next(p for p in data['teams'][0]['players'] if p['id'] == pid)
+            row.update(position=pos, fantasy_positions=[pos])
+            data['players'][pid].update(position=pos, fantasy_positions=[pos])
+        data['teams'][0]['sleeper_membership_verified'] = True
+        data['players']['free-wr'] = dict(player_id='free-wr', full_name='Free Receiver', team='X02',
+                                         position='WR', fantasy_positions=['WR'], status='Active')
+        install_schedule(service, data, now, byes={'1-r'})
+        client = fixture.f.f.client
+        response = client.get('/market?bye_week=9&market_league=league-1&season=2026&from_team=1'
+                              '&compare_pickup=free-wr&compare_drop=1-w')
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('This drop removes a player from the pickup-only plan.', response.text)
+        self.assertIn('Original RB gap stays open.', response.text)
+        self.assertIn('FLEX · Free Receiver', response.text)

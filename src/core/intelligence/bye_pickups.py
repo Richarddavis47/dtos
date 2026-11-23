@@ -3,6 +3,7 @@
 from math import isfinite
 
 from src.core.data_platform.normalization.identity import normalize_team
+from src.core.intelligence.upcoming_byes import _availability_fit, _fit
 from src.core.player_ownership import PlayerOwnershipIndex
 from src.core.projection_intelligence.service import (
     UNAVAILABLE_PLAYER_STATUSES,
@@ -90,12 +91,41 @@ def prepare_bye_pickups(data, service, pinned, schedule, outlook):
                 after[index] = candidate['player_id']
                 prior = {pid: slot for slot, pid in basis['initial'].items()}
                 states = basis['statuses'] | {candidate['player_id']: candidate['status']}
-                dependencies = [[slot, pid, states[pid]] for slot, pid in sorted(after.items())
-                                if states[pid] != 'active']
+                dependencies = [[slot, pid, states.get(pid, 'unknown')] for slot, pid in sorted(after.items())
+                                if states.get(pid) != 'active']
                 moves = [[slot, pid, prior.get(pid)] for slot, pid in sorted(after.items())
                          if basis['initial'].get(slot) != pid]
-                matches.append(dict(candidate, slot=row['slots'][index], gap=row['slots'][gap],
+                matches.append(dict(candidate, slot=row['slots'][index], gap=row['slots'][gap], gap_index=gap,
                                     dependencies=dependencies, moves=moves))
                 if len(matches) == 6:
                     break
-            row['pickups'] = dict(ownership_generation=ownership.generation, candidates=matches)
+            if matches:
+                del basis['initial']
+            row['pickups'] = dict(ownership_generation=ownership.generation, candidates=matches,
+                                  drop_basis=basis if matches else None)
+
+
+def compare_pickup_drop(row, pickup, drop_id):
+    """Run one bounded legal assignment against the prepared target-week roster."""
+    basis = row['pickups']['drop_basis']
+    pickup_id = pickup['player_id']
+    slots = row['slots']
+    before = dict(basis['fit'])
+    before.update((slot, pid) for slot, pid, _ in pickup['moves'])
+    preferred = {slot: pid for slot, pid in before.items() if pid != drop_id}
+    playing = {pid: positions for pid, positions in basis['playing'].items() if pid != drop_id}
+    playing[pickup_id] = pickup['positions']
+    possible = playing | {pid: positions for pid, positions in basis['uncertain'].items() if pid != drop_id}
+    statuses = basis['statuses'] | {pickup_id: pickup['status']}
+    fresh = row['availability_freshness'] == 'Fresh'
+    fit, _ = _availability_fit(slots, playing, preferred, statuses, fresh)
+    incomplete = len(fit) < len(_fit(slots, possible, preferred))
+    return dict(
+        gap=pickup['gap_index'], original_filled=pickup['gap_index'] in fit,
+        open_slots=[slot for slot in range(len(slots)) if slot not in fit],
+        newly_open=[slot for slot in sorted(before) if slot != pickup['gap_index'] and slot not in fit],
+        lost_pickup_plan_player=drop_id in before.values(),
+        incomplete=incomplete, lineup=[
+            (slot, pid, statuses.get(pid, 'unknown')) for slot, pid in sorted(fit.items())
+        ],
+    )

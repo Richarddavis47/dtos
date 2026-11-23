@@ -1,6 +1,6 @@
 """Compact disclosure for the prepared two-week bye outlook."""
 from html import escape
-from urllib.parse import quote, urlencode
+from urllib.parse import parse_qsl, quote, urlencode, urlsplit
 
 
 def _slot_name(slot):
@@ -154,7 +154,81 @@ def _pickup_ir_note(evidence, roster_space, player_name):
     return note
 
 
-def bye_pickup_panel(row, ownership, *, origin, league_id, roster_id, roster_space, ir_evidence):
+def _drop_comparison(row, comparison, origin, name, space, ir):
+    pickup = comparison['pickup']
+    choices = comparison.get('choices') or {}
+    selected = comparison['drop']
+    note = comparison.get('note')
+    html = '<section id="bye-drop-comparison" aria-label="Compare a drop"><h4>Compare a drop</h4>'
+    if note:
+        html += f'<p>{escape(note)}</p>'
+    if not choices:
+        return html + '</section>'
+    query = parse_qsl(urlsplit(origin).query) + [('compare_pickup', pickup)]
+    inputs = ''.join(f'<input type="hidden" name="{escape(key)}" value="{escape(value)}">' for key, value in query)
+    options = ''.join(
+        f'<option value="{escape(pid)}"{" selected" if pid == selected else ""}>{escape(label)}</option>'
+        for pid, label in sorted(choices.items(), key=lambda pair: (pair[1].casefold(), pair[0]))
+    )
+    html += (
+        '<form method="get" action="/market#bye-drop-comparison">'
+        + inputs + '<p><label for="bye-compare-drop">Player to drop</label><br>'
+        '<select id="bye-compare-drop" name="compare_drop" required style="max-width:100%">'
+        '<option value="">Choose a player</option>' + options + '</select></p>'
+        '<button type="submit">Preview add and drop</button></form>'
+    )
+    result = comparison.get('result')
+    if not result:
+        return html + '</section>'
+
+    slots = row['slots']
+    gap = _indexed_slot(slots, result['gap'])
+    html += f'<h4>Add {name(pickup)} · Drop {escape(choices[selected])}</h4>'
+    if result['lost_pickup_plan_player']:
+        html += '<p>This drop removes a player from the pickup-only plan. The lineup below accounts for that drop.</p>'
+    if result['original_filled']:
+        html += f'<p><strong>{gap} gap filled in this plan.</strong></p>'
+    elif result['incomplete']:
+        html += f'<p><strong>Could not confirm cover for the original {gap} gap.</strong></p>'
+    else:
+        html += f'<p><strong>Original {gap} gap stays open.</strong></p>'
+    if result['newly_open']:
+        label = 'Could not confirm cover for previously filled slots' if result['incomplete'] else 'Newly uncovered'
+        html += f'<p>{label} · {", ".join(_indexed_slot(slots, slot) for slot in result["newly_open"])}.</p>'
+    other_open = set(result['open_slots']) - {result['gap'], *result['newly_open']}
+    if other_open:
+        html += f'<p>Other slots still open · {", ".join(_indexed_slot(slots, slot) for slot in sorted(other_open))}.</p>'
+    if not result['open_slots']:
+        html += '<p>All starting slots covered in this plan.</p>'
+    if result['incomplete']:
+        html += '<p>Missing schedule or eligibility information could change which slots can be filled.</p>'
+    fresh = row['availability_freshness'] == 'Fresh'
+    dependencies = [(pid, status) for _, pid, status in result['lineup'] if status != 'active']
+    if dependencies or not fresh:
+        html += '<p><strong>Conditional lineup.</strong> Recheck the players below before acting.</p>'
+    if dependencies:
+        html += '<ul>' + ''.join(f'<li>{_status_dependency(name(pid), status)}</li>' for pid, status in dependencies) + '</ul>'
+    if not fresh:
+        html += f'<p>{_status_age(row)}</p>'
+    lineup = ''.join(f'<li>{_indexed_slot(slots, slot)} · {name(pid)}</li>' for slot, pid, _ in result['lineup'])
+    html += f'<details><summary>See the proposed Week {row["week"]} lineup</summary><ul>{lineup}</ul></details>'
+
+    limit = space['capacity']
+    remaining = space['active'] + len(ir['blockers']) - limit
+    html += f'<p><strong>After the swap</strong> · {space["active"]} of {limit} active spots used.</p>'
+    if ir['blockers']:
+        html += '<p>The IR blocker still needs to be resolved in Sleeper.</p>'
+    if remaining > 0:
+        spots = 'spot' if remaining == 1 else 'spots'
+        subject = 'Returning the ineligible IR players to active spots' if ir['blockers'] else 'The active roster limit'
+        html += f'<p>{subject} would still require {remaining} more active {spots}.</p>'
+    value = comparison.get('market_value')
+    price = f'{value:,.0f} / 1,000' if value is not None else 'A compatible prepared price is unavailable.'
+    html += f'<p><strong>Outgoing player’s Market value</strong> · {price}</p>'
+    return html + '</section>'
+
+
+def bye_pickup_panel(row, ownership, *, origin, league_id, roster_id, roster_space, ir_evidence, comparison):
     cards = []
     shortage = len(row['unfilled'])
     fresh = row['availability_freshness'] == 'Fresh'
@@ -210,12 +284,18 @@ def bye_pickup_panel(row, ownership, *, origin, league_id, roster_id, roster_spa
             notes += f'<li>Player status check is {status_limit}. Recheck the lineup, including {moved}.</li>'
         href = '/players/' + quote(pid, safe='') + '?' + urlencode(
             dict(from_market=origin, market_league=league_id, front_office=roster_id))
+        compare = ''
+        if comparison.get('pickup') == pid:
+            compare = _drop_comparison(row, comparison, origin, player_name, roster_space, ir_evidence)
+        elif comparison.get('enabled'):
+            url = origin + '&' + urlencode({'compare_pickup': pid}) + '#bye-drop-comparison'
+            compare = f'<p><a class="ds-action" href="{escape(url)}">Compare a drop</a></p>'
         cards.append(f'<article class="card"><h3><a href="{escape(href)}">{name}</a></h3>'
                      f'<p>{positions} · Unrostered in this league</p><p>{fit} {projection}</p>'
                      + f'<p><strong>Roster space</strong> · {escape(space)}</p>'
                      + ir_note
                      + f'<details{" open" if conditional else ""}><summary>Lineup moves and availability</summary>'
-                     + f'<ul>{"".join(moves)}{notes}</ul></details></article>')
+                     + f'<ul>{"".join(moves)}{notes}</ul></details>' + compare + '</article>')
     has_cards = bool(cards)
     if not has_cards:
         reason = ('Lineup availability has not been prepared for this snapshot.'
@@ -229,5 +309,6 @@ def bye_pickup_panel(row, ownership, *, origin, league_id, roster_id, roster_spa
             + (f'<p>{coverage} {escape(space_detail)}</p>' if has_cards else '')
             + '<p>These fits use the prepared roster and NFL schedule. Verify who can play and whether waivers '
               'or locks apply in Sleeper. Use Sleeper for all lineup changes, adds, drops, and claims.</p>'
+            + (f'<p>{escape(comparison["note"])}</p>' if comparison.get('note') and not comparison.get('pickup') else '')
             + f'<p>{_status_age(row)}</p><div class="market-grid">{"".join(cards)}</div>'
             '<p><a href="/market?availability=day_traders_free_agent">Browse all Market free agents</a></p></section>')
