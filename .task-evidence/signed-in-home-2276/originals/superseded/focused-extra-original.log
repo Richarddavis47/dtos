@@ -1,0 +1,897 @@
+/usr/local/lib/python3.14/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+  from starlette.testclient import TestClient as TestClient  # noqa
+test_capacity_deferral_and_failure_preserve_prior_results_without_false_completion (tests.test_customer_home_team.CustomerHomeFailureBrowserTests.test_capacity_deferral_and_failure_preserve_prior_results_without_false_completion) ... {"timestamp":"2026-11-23T18:39:31.371288+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":78819328,"limit_bytes":2147483648,"raw_headroom_bytes":2068664320,"clean_inactive_file_bytes":577536,"conditional_file_credit_bytes":288768,"admission_headroom_bytes":2068953088,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-23T18:39:31.374323+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/workspace?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:39:31.381460+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_admission","request_id":"system","event":"trade_admission","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":79237120,"limit_bytes":2147483648,"raw_headroom_bytes":2068246528,"clean_inactive_file_bytes":577536,"conditional_file_credit_bytes":288768,"admission_headroom_bytes":2068535296,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"recovery":null}}
+{"timestamp":"2026-11-23T18:39:31.454289+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_execution_finished","request_id":"system","event":"trade_execution_finished","duration_ms":73.433,"diagnostic":{"schema":"trade-resource-v1","outcome":"complete"}}
+{"timestamp":"2026-11-23T18:39:31.476912+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/trades/evaluate \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:39:31.504305+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:39:31.519205+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:39:31.562299+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:39:31.575907+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:39:31.619522+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/teams/1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+Validation Chromium: /usr/bin/chromium
+Validation Chromium version: 156.0.8078.79
+{"timestamp":"2026-11-23T18:39:32.433664+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/ \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:39:32.768298+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:39:32.769248+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"4fa2b4d362c04e3ca19e597b5e64bce6","event":"request_complete","duration_ms":237.47,"status_code":200,"method":"GET","path":"/static/css/contextual_navigation.css"}
+{"timestamp":"2026-11-23T18:39:32.775159+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:39:32.777576+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"37ea5376724a4223b9720e51c3584d73","event":"request_complete","duration_ms":4.469,"status_code":200,"method":"GET","path":"/static/js/contextual_navigation.js"}
+{"timestamp":"2026-11-23T18:39:32.786466+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/strategy_session.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:39:32.812470+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/home-opportunities.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:39:32.821675+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:39:32.823241+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"7b384b79b3f9448a9624fe8f86628361","event":"request_complete","duration_ms":5.115,"status_code":200,"method":"GET","path":"/static/css/matchups.css"}
+{"timestamp":"2026-11-23T18:39:32.835435+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/trade_workspace.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:39:32.943660+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1&protected=%5B%5D&excluded=%5B%5D \"HTTP/1.1 200 OK\"","request_id":"system"}
+
+  test_capacity_deferral_and_failure_preserve_prior_results_without_false_completion (tests.test_customer_home_team.CustomerHomeFailureBrowserTests.test_capacity_deferral_and_failure_preserve_prior_results_without_false_completion) (state='capacity_deferred') ... ERROR
+{"timestamp":"2026-11-23T18:39:48.271414+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/ \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:39:48.340360+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:39:48.341501+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"82594fd63626481397e60bedf4246a06","event":"request_complete","duration_ms":2.5,"status_code":200,"method":"GET","path":"/static/css/contextual_navigation.css"}
+{"timestamp":"2026-11-23T18:39:48.352418+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:39:48.353269+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"8bc37a3df03d432dae7f92601a64a909","event":"request_complete","duration_ms":2.746,"status_code":200,"method":"GET","path":"/static/js/contextual_navigation.js"}
+{"timestamp":"2026-11-23T18:39:48.363047+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/strategy_session.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:39:48.517475+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/home-opportunities.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:39:48.529546+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:39:48.530375+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"33185ff33f094cff8d581f425b6a6327","event":"request_complete","duration_ms":3.603,"status_code":200,"method":"GET","path":"/static/css/matchups.css"}
+{"timestamp":"2026-11-23T18:39:48.539240+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/trade_workspace.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:39:48.609768+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1&protected=%5B%5D&excluded=%5B%5D \"HTTP/1.1 200 OK\"","request_id":"system"}
+  test_capacity_deferral_and_failure_preserve_prior_results_without_false_completion (tests.test_customer_home_team.CustomerHomeFailureBrowserTests.test_capacity_deferral_and_failure_preserve_prior_results_without_false_completion) (state='failed') ... ERROR
+test_directory_omits_unimplemented_forecasts_but_keeps_prepared_weekly_comparison (tests.test_customer_home_team.CustomerHomeTeamHTTPTests.test_directory_omits_unimplemented_forecasts_but_keeps_prepared_weekly_comparison) ... {"timestamp":"2026-11-23T18:40:04.105751+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":95944704,"limit_bytes":2147483648,"raw_headroom_bytes":2051538944,"clean_inactive_file_bytes":540672,"conditional_file_credit_bytes":270336,"admission_headroom_bytes":2051809280,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-23T18:40:04.110011+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/workspace?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:40:04.117019+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_admission","request_id":"system","event":"trade_admission","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":95858688,"limit_bytes":2147483648,"raw_headroom_bytes":2051624960,"clean_inactive_file_bytes":540672,"conditional_file_credit_bytes":270336,"admission_headroom_bytes":2051895296,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"recovery":null}}
+{"timestamp":"2026-11-23T18:40:04.165203+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_execution_finished","request_id":"system","event":"trade_execution_finished","duration_ms":48.908,"diagnostic":{"schema":"trade-resource-v1","outcome":"complete"}}
+{"timestamp":"2026-11-23T18:40:04.166975+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/trades/evaluate \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:40:04.180646+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:40:04.212953+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:40:04.268622+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/teams \"HTTP/1.1 200 OK\"","request_id":"system"}
+ok
+test_home_manager_grades_stay_secondary_and_retained_status_is_exact (tests.test_customer_home_team.CustomerHomeTeamHTTPTests.test_home_manager_grades_stay_secondary_and_retained_status_is_exact) ... {"timestamp":"2026-11-23T18:40:04.522614+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":99074048,"limit_bytes":2147483648,"raw_headroom_bytes":2048409600,"clean_inactive_file_bytes":561152,"conditional_file_credit_bytes":280576,"admission_headroom_bytes":2048690176,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-23T18:40:04.525450+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/workspace?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:40:04.532951+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_admission","request_id":"system","event":"trade_admission","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":98779136,"limit_bytes":2147483648,"raw_headroom_bytes":2048704512,"clean_inactive_file_bytes":561152,"conditional_file_credit_bytes":280576,"admission_headroom_bytes":2048985088,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"recovery":null}}
+{"timestamp":"2026-11-23T18:40:04.571871+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_execution_finished","request_id":"system","event":"trade_execution_finished","duration_ms":41.181,"diagnostic":{"schema":"trade-resource-v1","outcome":"complete"}}
+{"timestamp":"2026-11-23T18:40:04.575413+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/trades/evaluate \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:40:04.593220+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:40:04.612987+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:40:04.670565+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/ \"HTTP/1.1 200 OK\"","request_id":"system"}
+ok
+test_normal_my_team_keeps_supported_comparison_without_internal_market_labels (tests.test_customer_home_team.CustomerHomeTeamHTTPTests.test_normal_my_team_keeps_supported_comparison_without_internal_market_labels) ... {"timestamp":"2026-11-23T18:40:04.890957+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":101613568,"limit_bytes":2147483648,"raw_headroom_bytes":2045870080,"clean_inactive_file_bytes":561152,"conditional_file_credit_bytes":280576,"admission_headroom_bytes":2046150656,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-23T18:40:04.893014+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/workspace?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:40:04.899459+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_admission","request_id":"system","event":"trade_admission","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":101597184,"limit_bytes":2147483648,"raw_headroom_bytes":2045886464,"clean_inactive_file_bytes":561152,"conditional_file_credit_bytes":280576,"admission_headroom_bytes":2046167040,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"recovery":null}}
+{"timestamp":"2026-11-23T18:40:04.933889+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_execution_finished","request_id":"system","event":"trade_execution_finished","duration_ms":34.88,"diagnostic":{"schema":"trade-resource-v1","outcome":"complete"}}
+{"timestamp":"2026-11-23T18:40:04.935055+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/trades/evaluate \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:40:04.947336+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:40:04.960447+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:40:05.019595+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/teams/1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+ok
+test_depth_claim_and_uncertainty_are_short_with_original_details_retained (tests.test_customer_home_team.CustomerTeamPresentationTests.test_depth_claim_and_uncertainty_are_short_with_original_details_retained) ... ok
+test_depth_missing_totals_are_summarized_once_and_zero_and_negative_stay_visible (tests.test_customer_home_team.CustomerTeamPresentationTests.test_depth_missing_totals_are_summarized_once_and_zero_and_negative_stay_visible) ... ok
+test_empty_home_does_not_turn_missing_rosters_into_weakness (tests.test_customer_home_team.CustomerTeamPresentationTests.test_empty_home_does_not_turn_missing_rosters_into_weakness) ... {"timestamp":"2026-11-23T18:40:05.034843+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/ \"HTTP/1.1 200 OK\"","request_id":"system"}
+ok
+test_existing_normalized_transaction_clock_is_not_lost (tests.test_customer_home_team.CustomerTeamPresentationTests.test_existing_normalized_transaction_clock_is_not_lost) ... ok
+test_owned_exact_picks_zero_missing_and_unknown_origin (tests.test_customer_home_team.CustomerTeamPresentationTests.test_owned_exact_picks_zero_missing_and_unknown_origin) ... ok
+test_roster_coverage_consolidates_unknowns_but_keeps_known_risks_and_scores (tests.test_customer_home_team.CustomerTeamPresentationTests.test_roster_coverage_consolidates_unknowns_but_keeps_known_risks_and_scores) ... ok
+test_unknown_pick_range_sentinels_do_not_create_forecast_claims (tests.test_customer_home_team.CustomerTeamPresentationTests.test_unknown_pick_range_sentinels_do_not_create_forecast_claims) ... ok
+test_no_durable_growth_repeat_and_home_order (tests.test_home_opportunities.HomeOpportunityTests.test_no_durable_growth_repeat_and_home_order) ... {"timestamp":"2026-11-23T18:40:05.213436+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:40:05.248969+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_admission","request_id":"system","event":"trade_admission","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":105254912,"limit_bytes":2147483648,"raw_headroom_bytes":2042228736,"clean_inactive_file_bytes":421888,"conditional_file_credit_bytes":210944,"admission_headroom_bytes":2042439680,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"recovery":null}}
+{"timestamp":"2026-11-23T18:40:05.257323+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_execution_finished","request_id":"system","event":"trade_execution_finished","duration_ms":8.819,"diagnostic":{"schema":"trade-resource-v1","outcome":"complete"}}
+{"timestamp":"2026-11-23T18:40:05.258539+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/trades/generate \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:40:05.276024+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:40:05.291031+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/ \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:40:05.459615+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:40:05.472257+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/ \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:40:05.484421+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:40:05.493806+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/ \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:40:05.508438+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:40:05.517195+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/ \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:40:05.533271+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:40:05.545037+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/ \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:40:05.555678+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:40:05.562211+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/ \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:40:05.570245+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:40:05.576819+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/ \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:40:05.584806+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:40:05.589473+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/ \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:40:05.597019+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:40:05.602839+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/ \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:40:05.611794+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:40:05.616871+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/ \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:40:05.626226+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:40:05.634571+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/ \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:40:05.645646+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:40:05.652047+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/ \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:40:05.660525+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:40:05.665501+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/ \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:40:05.674873+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:40:05.679796+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/ \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:40:05.687575+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:40:05.694180+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/ \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:40:05.701411+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:40:05.710308+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/ \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:40:05.717764+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:40:05.721973+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/ \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:40:05.731007+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:40:05.738700+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/ \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:40:05.746796+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:40:05.758209+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/ \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:40:05.773940+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:40:05.782471+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/ \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:40:05.791783+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:40:05.799605+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/ \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:40:05.813334+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:40:05.821441+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/ \"HTTP/1.1 200 OK\"","request_id":"system"}
+ok
+test_authenticated_product_navigation_and_league_switching (tests.test_phone_design_browser.SharedPhoneDesignBrowserTests.test_authenticated_product_navigation_and_league_switching) ... Validation Chromium: /usr/bin/chromium
+Validation Chromium version: 156.0.8078.79
+
+  test_authenticated_product_navigation_and_league_switching (tests.test_phone_design_browser.SharedPhoneDesignBrowserTests.test_authenticated_product_navigation_and_league_switching) (viewport={'width': 320, 'height': 844}, account='alpha', league='100', route='/') ... FAIL
+{"timestamp":"2026-11-23T18:40:10.801550+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":495190016,"limit_bytes":2147483648,"raw_headroom_bytes":1652293632,"clean_inactive_file_bytes":1507328,"conditional_file_credit_bytes":753664,"admission_headroom_bytes":1653047296,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-23T18:40:11.737621+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":526733312,"limit_bytes":2147483648,"raw_headroom_bytes":1620750336,"clean_inactive_file_bytes":1507328,"conditional_file_credit_bytes":753664,"admission_headroom_bytes":1621504000,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-23T18:40:12.320825+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":538927104,"limit_bytes":2147483648,"raw_headroom_bytes":1608556544,"clean_inactive_file_bytes":1507328,"conditional_file_credit_bytes":753664,"admission_headroom_bytes":1609310208,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-23T18:40:13.426523+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":536530944,"limit_bytes":2147483648,"raw_headroom_bytes":1610952704,"clean_inactive_file_bytes":1507328,"conditional_file_credit_bytes":753664,"admission_headroom_bytes":1611706368,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+  test_authenticated_product_navigation_and_league_switching (tests.test_phone_design_browser.SharedPhoneDesignBrowserTests.test_authenticated_product_navigation_and_league_switching) (viewport={'width': 320, 'height': 844}, account='alpha', league='200', route='/') ... FAIL
+{"timestamp":"2026-11-23T18:40:20.092534+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":592457728,"limit_bytes":2147483648,"raw_headroom_bytes":1555025920,"clean_inactive_file_bytes":1523712,"conditional_file_credit_bytes":761856,"admission_headroom_bytes":1555787776,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-23T18:40:21.707009+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":586043392,"limit_bytes":2147483648,"raw_headroom_bytes":1561440256,"clean_inactive_file_bytes":1523712,"conditional_file_credit_bytes":761856,"admission_headroom_bytes":1562202112,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-23T18:40:22.335436+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":590594048,"limit_bytes":2147483648,"raw_headroom_bytes":1556889600,"clean_inactive_file_bytes":1523712,"conditional_file_credit_bytes":761856,"admission_headroom_bytes":1557651456,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-23T18:40:23.532699+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":594673664,"limit_bytes":2147483648,"raw_headroom_bytes":1552809984,"clean_inactive_file_bytes":1523712,"conditional_file_credit_bytes":761856,"admission_headroom_bytes":1553571840,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+  test_authenticated_product_navigation_and_league_switching (tests.test_phone_design_browser.SharedPhoneDesignBrowserTests.test_authenticated_product_navigation_and_league_switching) (viewport={'width': 320, 'height': 844}, account='alpha', league='100', route='/') ... FAIL
+{"timestamp":"2026-11-23T18:40:29.266508+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":679227392,"limit_bytes":2147483648,"raw_headroom_bytes":1468256256,"clean_inactive_file_bytes":1523712,"conditional_file_credit_bytes":761856,"admission_headroom_bytes":1469018112,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-23T18:40:30.744778+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":673198080,"limit_bytes":2147483648,"raw_headroom_bytes":1474285568,"clean_inactive_file_bytes":1523712,"conditional_file_credit_bytes":761856,"admission_headroom_bytes":1475047424,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-23T18:40:31.372999+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":680407040,"limit_bytes":2147483648,"raw_headroom_bytes":1467076608,"clean_inactive_file_bytes":1523712,"conditional_file_credit_bytes":761856,"admission_headroom_bytes":1467838464,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-23T18:40:32.547672+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":684068864,"limit_bytes":2147483648,"raw_headroom_bytes":1463414784,"clean_inactive_file_bytes":1523712,"conditional_file_credit_bytes":761856,"admission_headroom_bytes":1464176640,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+  test_authenticated_product_navigation_and_league_switching (tests.test_phone_design_browser.SharedPhoneDesignBrowserTests.test_authenticated_product_navigation_and_league_switching) (viewport={'width': 320, 'height': 844}, account='beta', league='300', route='/') ... FAIL
+{"timestamp":"2026-11-23T18:40:38.886410+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":563707904,"limit_bytes":2147483648,"raw_headroom_bytes":1583775744,"clean_inactive_file_bytes":1593344,"conditional_file_credit_bytes":796672,"admission_headroom_bytes":1584572416,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-23T18:40:39.617364+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":574439424,"limit_bytes":2147483648,"raw_headroom_bytes":1573044224,"clean_inactive_file_bytes":1593344,"conditional_file_credit_bytes":796672,"admission_headroom_bytes":1573840896,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-23T18:40:40.143595+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":589893632,"limit_bytes":2147483648,"raw_headroom_bytes":1557590016,"clean_inactive_file_bytes":1593344,"conditional_file_credit_bytes":796672,"admission_headroom_bytes":1558386688,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-23T18:40:41.240947+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":592805888,"limit_bytes":2147483648,"raw_headroom_bytes":1554677760,"clean_inactive_file_bytes":1593344,"conditional_file_credit_bytes":796672,"admission_headroom_bytes":1555474432,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+  test_authenticated_product_navigation_and_league_switching (tests.test_phone_design_browser.SharedPhoneDesignBrowserTests.test_authenticated_product_navigation_and_league_switching) (viewport={'width': 375, 'height': 844}, account='alpha', league='100', route='/') ... FAIL
+{"timestamp":"2026-11-23T18:40:46.993563+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":584499200,"limit_bytes":2147483648,"raw_headroom_bytes":1562984448,"clean_inactive_file_bytes":1593344,"conditional_file_credit_bytes":796672,"admission_headroom_bytes":1563781120,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-23T18:40:47.846690+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":587157504,"limit_bytes":2147483648,"raw_headroom_bytes":1560326144,"clean_inactive_file_bytes":1593344,"conditional_file_credit_bytes":796672,"admission_headroom_bytes":1561122816,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-23T18:40:48.413153+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":600018944,"limit_bytes":2147483648,"raw_headroom_bytes":1547464704,"clean_inactive_file_bytes":1593344,"conditional_file_credit_bytes":796672,"admission_headroom_bytes":1548261376,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-23T18:40:49.584755+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":600129536,"limit_bytes":2147483648,"raw_headroom_bytes":1547354112,"clean_inactive_file_bytes":1593344,"conditional_file_credit_bytes":796672,"admission_headroom_bytes":1548150784,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+  test_authenticated_product_navigation_and_league_switching (tests.test_phone_design_browser.SharedPhoneDesignBrowserTests.test_authenticated_product_navigation_and_league_switching) (viewport={'width': 375, 'height': 844}, account='alpha', league='200', route='/') ... FAIL
+{"timestamp":"2026-11-23T18:40:55.691227+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":673624064,"limit_bytes":2147483648,"raw_headroom_bytes":1473859584,"clean_inactive_file_bytes":1593344,"conditional_file_credit_bytes":796672,"admission_headroom_bytes":1474656256,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-23T18:40:56.744193+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":669257728,"limit_bytes":2147483648,"raw_headroom_bytes":1478225920,"clean_inactive_file_bytes":1593344,"conditional_file_credit_bytes":796672,"admission_headroom_bytes":1479022592,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-23T18:40:57.295488+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":675467264,"limit_bytes":2147483648,"raw_headroom_bytes":1472016384,"clean_inactive_file_bytes":1593344,"conditional_file_credit_bytes":796672,"admission_headroom_bytes":1472813056,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-23T18:40:58.179414+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":682921984,"limit_bytes":2147483648,"raw_headroom_bytes":1464561664,"clean_inactive_file_bytes":1593344,"conditional_file_credit_bytes":796672,"admission_headroom_bytes":1465358336,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+  test_authenticated_product_navigation_and_league_switching (tests.test_phone_design_browser.SharedPhoneDesignBrowserTests.test_authenticated_product_navigation_and_league_switching) (viewport={'width': 375, 'height': 844}, account='alpha', league='100', route='/') ... FAIL
+{"timestamp":"2026-11-23T18:41:04.736936+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":744935424,"limit_bytes":2147483648,"raw_headroom_bytes":1402548224,"clean_inactive_file_bytes":1593344,"conditional_file_credit_bytes":796672,"admission_headroom_bytes":1403344896,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-23T18:41:05.843877+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":734298112,"limit_bytes":2147483648,"raw_headroom_bytes":1413185536,"clean_inactive_file_bytes":1593344,"conditional_file_credit_bytes":796672,"admission_headroom_bytes":1413982208,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-23T18:41:06.408955+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":740192256,"limit_bytes":2147483648,"raw_headroom_bytes":1407291392,"clean_inactive_file_bytes":1593344,"conditional_file_credit_bytes":796672,"admission_headroom_bytes":1408088064,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-23T18:41:07.619350+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":741756928,"limit_bytes":2147483648,"raw_headroom_bytes":1405726720,"clean_inactive_file_bytes":1593344,"conditional_file_credit_bytes":796672,"admission_headroom_bytes":1406523392,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+  test_authenticated_product_navigation_and_league_switching (tests.test_phone_design_browser.SharedPhoneDesignBrowserTests.test_authenticated_product_navigation_and_league_switching) (viewport={'width': 375, 'height': 844}, account='beta', league='300', route='/') ... FAIL
+{"timestamp":"2026-11-23T18:41:14.781417+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":614854656,"limit_bytes":2147483648,"raw_headroom_bytes":1532628992,"clean_inactive_file_bytes":1593344,"conditional_file_credit_bytes":796672,"admission_headroom_bytes":1533425664,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-23T18:41:15.903988+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":624406528,"limit_bytes":2147483648,"raw_headroom_bytes":1523077120,"clean_inactive_file_bytes":1593344,"conditional_file_credit_bytes":796672,"admission_headroom_bytes":1523873792,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-23T18:41:16.587758+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":640782336,"limit_bytes":2147483648,"raw_headroom_bytes":1506701312,"clean_inactive_file_bytes":1593344,"conditional_file_credit_bytes":796672,"admission_headroom_bytes":1507497984,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-23T18:41:17.511614+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":643915776,"limit_bytes":2147483648,"raw_headroom_bytes":1503567872,"clean_inactive_file_bytes":1593344,"conditional_file_credit_bytes":796672,"admission_headroom_bytes":1504364544,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+  test_authenticated_product_navigation_and_league_switching (tests.test_phone_design_browser.SharedPhoneDesignBrowserTests.test_authenticated_product_navigation_and_league_switching) (viewport={'width': 390, 'height': 844}, account='alpha', league='100', route='/') ... FAIL
+{"timestamp":"2026-11-23T18:41:22.916858+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":635965440,"limit_bytes":2147483648,"raw_headroom_bytes":1511518208,"clean_inactive_file_bytes":1593344,"conditional_file_credit_bytes":796672,"admission_headroom_bytes":1512314880,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-23T18:41:23.970540+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":643747840,"limit_bytes":2147483648,"raw_headroom_bytes":1503735808,"clean_inactive_file_bytes":1593344,"conditional_file_credit_bytes":796672,"admission_headroom_bytes":1504532480,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-23T18:41:24.387487+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":659603456,"limit_bytes":2147483648,"raw_headroom_bytes":1487880192,"clean_inactive_file_bytes":1593344,"conditional_file_credit_bytes":796672,"admission_headroom_bytes":1488676864,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-23T18:41:25.121430+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":666198016,"limit_bytes":2147483648,"raw_headroom_bytes":1481285632,"clean_inactive_file_bytes":1593344,"conditional_file_credit_bytes":796672,"admission_headroom_bytes":1482082304,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+  test_authenticated_product_navigation_and_league_switching (tests.test_phone_design_browser.SharedPhoneDesignBrowserTests.test_authenticated_product_navigation_and_league_switching) (viewport={'width': 390, 'height': 844}, account='alpha', league='200', route='/') ... FAIL
+{"timestamp":"2026-11-23T18:41:29.899366+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":723472384,"limit_bytes":2147483648,"raw_headroom_bytes":1424011264,"clean_inactive_file_bytes":1593344,"conditional_file_credit_bytes":796672,"admission_headroom_bytes":1424807936,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-23T18:41:30.893528+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":705556480,"limit_bytes":2147483648,"raw_headroom_bytes":1441927168,"clean_inactive_file_bytes":1585152,"conditional_file_credit_bytes":792576,"admission_headroom_bytes":1442719744,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-23T18:41:31.281546+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":712863744,"limit_bytes":2147483648,"raw_headroom_bytes":1434619904,"clean_inactive_file_bytes":1585152,"conditional_file_credit_bytes":792576,"admission_headroom_bytes":1435412480,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-23T18:41:31.950368+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":717463552,"limit_bytes":2147483648,"raw_headroom_bytes":1430020096,"clean_inactive_file_bytes":1585152,"conditional_file_credit_bytes":792576,"admission_headroom_bytes":1430812672,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+  test_authenticated_product_navigation_and_league_switching (tests.test_phone_design_browser.SharedPhoneDesignBrowserTests.test_authenticated_product_navigation_and_league_switching) (viewport={'width': 390, 'height': 844}, account='alpha', league='100', route='/') ... FAIL
+{"timestamp":"2026-11-23T18:41:37.214896+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":778379264,"limit_bytes":2147483648,"raw_headroom_bytes":1369104384,"clean_inactive_file_bytes":1589248,"conditional_file_credit_bytes":794624,"admission_headroom_bytes":1369899008,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-23T18:41:37.994107+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":793055232,"limit_bytes":2147483648,"raw_headroom_bytes":1354428416,"clean_inactive_file_bytes":1589248,"conditional_file_credit_bytes":794624,"admission_headroom_bytes":1355223040,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-23T18:41:38.443801+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":803405824,"limit_bytes":2147483648,"raw_headroom_bytes":1344077824,"clean_inactive_file_bytes":1589248,"conditional_file_credit_bytes":794624,"admission_headroom_bytes":1344872448,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-23T18:41:39.386955+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":810741760,"limit_bytes":2147483648,"raw_headroom_bytes":1336741888,"clean_inactive_file_bytes":1589248,"conditional_file_credit_bytes":794624,"admission_headroom_bytes":1337536512,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+  test_authenticated_product_navigation_and_league_switching (tests.test_phone_design_browser.SharedPhoneDesignBrowserTests.test_authenticated_product_navigation_and_league_switching) (viewport={'width': 390, 'height': 844}, account='beta', league='300', route='/') ... FAIL
+{"timestamp":"2026-11-23T18:41:45.678428+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":660836352,"limit_bytes":2147483648,"raw_headroom_bytes":1486647296,"clean_inactive_file_bytes":1597440,"conditional_file_credit_bytes":798720,"admission_headroom_bytes":1487446016,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-23T18:41:46.423062+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":669753344,"limit_bytes":2147483648,"raw_headroom_bytes":1477730304,"clean_inactive_file_bytes":1597440,"conditional_file_credit_bytes":798720,"admission_headroom_bytes":1478529024,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-23T18:41:46.828581+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":682299392,"limit_bytes":2147483648,"raw_headroom_bytes":1465184256,"clean_inactive_file_bytes":1597440,"conditional_file_credit_bytes":798720,"admission_headroom_bytes":1465982976,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-23T18:41:47.585439+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":701087744,"limit_bytes":2147483648,"raw_headroom_bytes":1446395904,"clean_inactive_file_bytes":1597440,"conditional_file_credit_bytes":798720,"admission_headroom_bytes":1447194624,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+  test_authenticated_product_navigation_and_league_switching (tests.test_phone_design_browser.SharedPhoneDesignBrowserTests.test_authenticated_product_navigation_and_league_switching) (viewport={'width': 1280, 'height': 900}, account='alpha', league='100', route='/') ... FAIL
+{"timestamp":"2026-11-23T18:41:53.149631+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":695066624,"limit_bytes":2147483648,"raw_headroom_bytes":1452417024,"clean_inactive_file_bytes":1597440,"conditional_file_credit_bytes":798720,"admission_headroom_bytes":1453215744,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-23T18:41:54.022201+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":702537728,"limit_bytes":2147483648,"raw_headroom_bytes":1444945920,"clean_inactive_file_bytes":1597440,"conditional_file_credit_bytes":798720,"admission_headroom_bytes":1445744640,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-23T18:41:54.858418+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":721891328,"limit_bytes":2147483648,"raw_headroom_bytes":1425592320,"clean_inactive_file_bytes":1597440,"conditional_file_credit_bytes":798720,"admission_headroom_bytes":1426391040,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-23T18:41:55.816454+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":719949824,"limit_bytes":2147483648,"raw_headroom_bytes":1427533824,"clean_inactive_file_bytes":1597440,"conditional_file_credit_bytes":798720,"admission_headroom_bytes":1428332544,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+  test_authenticated_product_navigation_and_league_switching (tests.test_phone_design_browser.SharedPhoneDesignBrowserTests.test_authenticated_product_navigation_and_league_switching) (viewport={'width': 1280, 'height': 900}, account='alpha', league='200', route='/') ... FAIL
+{"timestamp":"2026-11-23T18:42:02.325225+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":776667136,"limit_bytes":2147483648,"raw_headroom_bytes":1370816512,"clean_inactive_file_bytes":1597440,"conditional_file_credit_bytes":798720,"admission_headroom_bytes":1371615232,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-23T18:42:03.344502+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":769839104,"limit_bytes":2147483648,"raw_headroom_bytes":1377644544,"clean_inactive_file_bytes":1597440,"conditional_file_credit_bytes":798720,"admission_headroom_bytes":1378443264,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-23T18:42:04.333557+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":774135808,"limit_bytes":2147483648,"raw_headroom_bytes":1373347840,"clean_inactive_file_bytes":1597440,"conditional_file_credit_bytes":798720,"admission_headroom_bytes":1374146560,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-23T18:42:05.398374+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":780537856,"limit_bytes":2147483648,"raw_headroom_bytes":1366945792,"clean_inactive_file_bytes":1597440,"conditional_file_credit_bytes":798720,"admission_headroom_bytes":1367744512,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+  test_authenticated_product_navigation_and_league_switching (tests.test_phone_design_browser.SharedPhoneDesignBrowserTests.test_authenticated_product_navigation_and_league_switching) (viewport={'width': 1280, 'height': 900}, account='alpha', league='100', route='/') ... FAIL
+{"timestamp":"2026-11-23T18:42:11.187298+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":921223168,"limit_bytes":2147483648,"raw_headroom_bytes":1226260480,"clean_inactive_file_bytes":1597440,"conditional_file_credit_bytes":798720,"admission_headroom_bytes":1227059200,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-23T18:42:12.356712+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":899125248,"limit_bytes":2147483648,"raw_headroom_bytes":1248358400,"clean_inactive_file_bytes":1597440,"conditional_file_credit_bytes":798720,"admission_headroom_bytes":1249157120,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-23T18:42:13.489641+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":902868992,"limit_bytes":2147483648,"raw_headroom_bytes":1244614656,"clean_inactive_file_bytes":1597440,"conditional_file_credit_bytes":798720,"admission_headroom_bytes":1245413376,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-23T18:42:14.607148+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":906137600,"limit_bytes":2147483648,"raw_headroom_bytes":1241346048,"clean_inactive_file_bytes":1597440,"conditional_file_credit_bytes":798720,"admission_headroom_bytes":1242144768,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+  test_authenticated_product_navigation_and_league_switching (tests.test_phone_design_browser.SharedPhoneDesignBrowserTests.test_authenticated_product_navigation_and_league_switching) (viewport={'width': 1280, 'height': 900}, account='beta', league='300', route='/') ... FAIL
+{"timestamp":"2026-11-23T18:42:23.128345+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":743968768,"limit_bytes":2147483648,"raw_headroom_bytes":1403514880,"clean_inactive_file_bytes":1597440,"conditional_file_credit_bytes":798720,"admission_headroom_bytes":1404313600,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-23T18:42:24.372096+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":744681472,"limit_bytes":2147483648,"raw_headroom_bytes":1402802176,"clean_inactive_file_bytes":1597440,"conditional_file_credit_bytes":798720,"admission_headroom_bytes":1403600896,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-23T18:42:25.505415+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":771362816,"limit_bytes":2147483648,"raw_headroom_bytes":1376120832,"clean_inactive_file_bytes":1597440,"conditional_file_credit_bytes":798720,"admission_headroom_bytes":1376919552,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-23T18:42:26.698273+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":773468160,"limit_bytes":2147483648,"raw_headroom_bytes":1374015488,"clean_inactive_file_bytes":1597440,"conditional_file_credit_bytes":798720,"admission_headroom_bytes":1374814208,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+test_missing_conflicting_and_retained_scores_on_real_routes (tests.test_season_performance_browser.SeasonPerformanceBrowserTests.test_missing_conflicting_and_retained_scores_on_real_routes) ... {"timestamp":"2026-11-23T18:42:30.989473+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":317816832,"limit_bytes":2147483648,"raw_headroom_bytes":1829666816,"clean_inactive_file_bytes":589824,"conditional_file_credit_bytes":294912,"admission_headroom_bytes":1829961728,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-23T18:42:30.998161+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/workspace?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:31.011027+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_admission","request_id":"system","event":"trade_admission","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":317526016,"limit_bytes":2147483648,"raw_headroom_bytes":1829957632,"clean_inactive_file_bytes":589824,"conditional_file_credit_bytes":294912,"admission_headroom_bytes":1830252544,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"recovery":null}}
+{"timestamp":"2026-11-23T18:42:31.057381+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_execution_finished","request_id":"system","event":"trade_execution_finished","duration_ms":46.912,"diagnostic":{"schema":"trade-resource-v1","outcome":"complete"}}
+{"timestamp":"2026-11-23T18:42:31.058643+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/trades/evaluate \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:31.074539+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:31.094449+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+Validation Chromium: /usr/bin/chromium
+Validation Chromium version: 156.0.8078.79
+{"timestamp":"2026-11-23T18:42:32.725886+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/teams/1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:32.826482+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:32.827546+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"ad76e67afaba4dcf80545a1e9baf8bbd","event":"request_complete","duration_ms":7.166,"status_code":200,"method":"GET","path":"/static/css/contextual_navigation.css"}
+{"timestamp":"2026-11-23T18:42:32.846117+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:32.847966+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"c8ffec8ddeb5437fb97803a7827e190b","event":"request_complete","duration_ms":5.136,"status_code":200,"method":"GET","path":"/static/js/contextual_navigation.js"}
+{"timestamp":"2026-11-23T18:42:32.859278+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/strategy_session.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:33.174587+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/ \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:33.235845+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:33.236250+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"7b55b3e152ec4d81838f733cbf45dff1","event":"request_complete","duration_ms":1.786,"status_code":200,"method":"GET","path":"/static/css/contextual_navigation.css"}
+{"timestamp":"2026-11-23T18:42:33.240696+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:33.241202+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"c0c0f4102b4b4968bc2b0b0ea2df1de0","event":"request_complete","duration_ms":2.153,"status_code":200,"method":"GET","path":"/static/js/contextual_navigation.js"}
+{"timestamp":"2026-11-23T18:42:33.245925+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/strategy_session.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:33.252405+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/home-opportunities.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:33.258545+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:33.259243+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"bc1d28ddccc94348b4bb9629ab300f8f","event":"request_complete","duration_ms":2.277,"status_code":200,"method":"GET","path":"/static/css/matchups.css"}
+{"timestamp":"2026-11-23T18:42:33.272205+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/trade_workspace.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:33.324009+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1&protected=%5B%5D&excluded=%5B%5D \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:33.455484+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/teams/1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:33.513179+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:33.514804+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"03a61044ba28400a82184420649fe245","event":"request_complete","duration_ms":3.369,"status_code":200,"method":"GET","path":"/static/css/contextual_navigation.css"}
+{"timestamp":"2026-11-23T18:42:33.525950+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:33.526885+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"31872784782e48c0aab3b59faa876bb4","event":"request_complete","duration_ms":3.342,"status_code":200,"method":"GET","path":"/static/js/contextual_navigation.js"}
+{"timestamp":"2026-11-23T18:42:33.540171+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/strategy_session.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:33.708027+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/ \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:33.764257+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:33.765472+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"35c3c3d30b474586851cb3d76daf9e99","event":"request_complete","duration_ms":11.815,"status_code":200,"method":"GET","path":"/static/css/contextual_navigation.css"}
+{"timestamp":"2026-11-23T18:42:33.772320+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:33.773309+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"6b16e354c4c14d32b33689337943fd26","event":"request_complete","duration_ms":3.153,"status_code":200,"method":"GET","path":"/static/js/contextual_navigation.js"}
+{"timestamp":"2026-11-23T18:42:33.779927+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/strategy_session.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:33.788299+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/home-opportunities.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:33.795890+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:33.796676+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"5fcaee7398ac44dfb51129d9a099f70a","event":"request_complete","duration_ms":2.097,"status_code":200,"method":"GET","path":"/static/css/matchups.css"}
+{"timestamp":"2026-11-23T18:42:33.805655+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/trade_workspace.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:33.860149+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1&protected=%5B%5D&excluded=%5B%5D \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:33.991445+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/teams/1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:34.043477+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:34.044406+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"a054cda0dfd24d0ca43e04257209edb5","event":"request_complete","duration_ms":5.264,"status_code":200,"method":"GET","path":"/static/css/contextual_navigation.css"}
+{"timestamp":"2026-11-23T18:42:34.068585+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:34.077199+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/strategy_session.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:34.069892+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"741e3f0a39704b0fbde083587d19d400","event":"request_complete","duration_ms":4.529,"status_code":200,"method":"GET","path":"/static/js/contextual_navigation.js"}
+{"timestamp":"2026-11-23T18:42:34.269025+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/ \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:34.313112+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:34.313922+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"336f995377664aeb9c81a550bba96a5f","event":"request_complete","duration_ms":2.585,"status_code":200,"method":"GET","path":"/static/css/contextual_navigation.css"}
+{"timestamp":"2026-11-23T18:42:34.323993+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:34.324499+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"ec04be099a714803b65b4bfeb2d4e353","event":"request_complete","duration_ms":2.941,"status_code":200,"method":"GET","path":"/static/js/contextual_navigation.js"}
+{"timestamp":"2026-11-23T18:42:34.332797+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/strategy_session.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:34.341025+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/home-opportunities.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:34.350543+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:34.351161+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"769a96bc46414a3d89493af0decabd8b","event":"request_complete","duration_ms":3.335,"status_code":200,"method":"GET","path":"/static/css/matchups.css"}
+{"timestamp":"2026-11-23T18:42:34.365546+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/trade_workspace.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:34.400409+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1&protected=%5B%5D&excluded=%5B%5D \"HTTP/1.1 200 OK\"","request_id":"system"}
+ok
+test_sleeper_rollover_prepares_completed_scores_on_both_pages (tests.test_season_performance_browser.SeasonPerformanceBrowserTests.test_sleeper_rollover_prepares_completed_scores_on_both_pages) ... {"timestamp":"2026-11-23T18:42:35.037313+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":320303104,"limit_bytes":2147483648,"raw_headroom_bytes":1827180544,"clean_inactive_file_bytes":552960,"conditional_file_credit_bytes":276480,"admission_headroom_bytes":1827457024,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-23T18:42:35.040023+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/workspace?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:35.046335+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_admission","request_id":"system","event":"trade_admission","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":320303104,"limit_bytes":2147483648,"raw_headroom_bytes":1827180544,"clean_inactive_file_bytes":552960,"conditional_file_credit_bytes":276480,"admission_headroom_bytes":1827457024,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"recovery":null}}
+{"timestamp":"2026-11-23T18:42:35.087761+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_execution_finished","request_id":"system","event":"trade_execution_finished","duration_ms":41.919,"diagnostic":{"schema":"trade-resource-v1","outcome":"complete"}}
+{"timestamp":"2026-11-23T18:42:35.089338+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/trades/evaluate \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:35.101911+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:35.115964+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+Validation Chromium: /usr/bin/chromium
+Validation Chromium version: 156.0.8078.79
+{"timestamp":"2026-11-23T18:42:35.888585+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/ \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:35.951297+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:35.952310+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"da7af220f26a489a8dc1b5bfff63841f","event":"request_complete","duration_ms":5.889,"status_code":200,"method":"GET","path":"/static/css/contextual_navigation.css"}
+{"timestamp":"2026-11-23T18:42:35.963277+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:35.965156+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"f5d521fb5b1c451880366b84926bc277","event":"request_complete","duration_ms":5.887,"status_code":200,"method":"GET","path":"/static/js/contextual_navigation.js"}
+{"timestamp":"2026-11-23T18:42:35.979018+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/strategy_session.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:35.987616+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/home-opportunities.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:36.025970+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:36.027404+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"0e1efdb4d6944fbba13a1c0e13d17b7d","event":"request_complete","duration_ms":7.54,"status_code":200,"method":"GET","path":"/static/css/matchups.css"}
+{"timestamp":"2026-11-23T18:42:36.042275+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/trade_workspace.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:36.110101+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1&protected=%5B%5D&excluded=%5B%5D \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:36.360168+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/teams/1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:36.420182+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:36.421002+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"fc99b994d8e64f90964b413bc09b059c","event":"request_complete","duration_ms":2.855,"status_code":200,"method":"GET","path":"/static/css/contextual_navigation.css"}
+{"timestamp":"2026-11-23T18:42:36.426980+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:36.428210+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"7613f8ffae1c4e96bbb418a00fb32e40","event":"request_complete","duration_ms":2.994,"status_code":200,"method":"GET","path":"/static/js/contextual_navigation.js"}
+{"timestamp":"2026-11-23T18:42:36.439366+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:36.440402+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"324115086fa74cdca20a4396ec4b150f","event":"request_complete","duration_ms":3.04,"status_code":200,"method":"GET","path":"/static/css/matchups.css"}
+{"timestamp":"2026-11-23T18:42:36.448456+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/lineup-review.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:36.449307+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"62cc7004f85145e98a4659922878f70e","event":"request_complete","duration_ms":2.567,"status_code":200,"method":"GET","path":"/static/lineup-review.js"}
+{"timestamp":"2026-11-23T18:42:36.456116+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/strategy_session.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:36.647573+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/ \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:36.696131+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:36.697145+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"5a1dc4be097f4d289e2a7f70f3b968c7","event":"request_complete","duration_ms":3.191,"status_code":200,"method":"GET","path":"/static/css/contextual_navigation.css"}
+{"timestamp":"2026-11-23T18:42:36.704836+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:36.705470+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"8bd9861d9d67431bbf8b438881e638fd","event":"request_complete","duration_ms":2.454,"status_code":200,"method":"GET","path":"/static/js/contextual_navigation.js"}
+{"timestamp":"2026-11-23T18:42:36.714841+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/strategy_session.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:36.730917+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/home-opportunities.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:36.740640+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:36.741598+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"4338090d85ec43d985ddc48adadb9e61","event":"request_complete","duration_ms":2.746,"status_code":200,"method":"GET","path":"/static/css/matchups.css"}
+{"timestamp":"2026-11-23T18:42:36.752244+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/trade_workspace.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:36.771248+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1&protected=%5B%5D&excluded=%5B%5D \"HTTP/1.1 200 OK\"","request_id":"system"}
+ERROR
+test_team_home_results_disclosure_and_return (tests.test_season_performance_browser.SeasonPerformanceBrowserTests.test_team_home_results_disclosure_and_return) ... {"timestamp":"2026-11-23T18:42:52.168930+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":321163264,"limit_bytes":2147483648,"raw_headroom_bytes":1826320384,"clean_inactive_file_bytes":532480,"conditional_file_credit_bytes":266240,"admission_headroom_bytes":1826586624,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-23T18:42:52.173953+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/workspace?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:52.181380+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_admission","request_id":"system","event":"trade_admission","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":321024000,"limit_bytes":2147483648,"raw_headroom_bytes":1826459648,"clean_inactive_file_bytes":532480,"conditional_file_credit_bytes":266240,"admission_headroom_bytes":1826725888,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"recovery":null}}
+{"timestamp":"2026-11-23T18:42:52.218978+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_execution_finished","request_id":"system","event":"trade_execution_finished","duration_ms":38.335,"diagnostic":{"schema":"trade-resource-v1","outcome":"complete"}}
+{"timestamp":"2026-11-23T18:42:52.220332+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/trades/evaluate \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:52.240197+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:52.260533+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+Validation Chromium: /usr/bin/chromium
+Validation Chromium version: 156.0.8078.79
+{"timestamp":"2026-11-23T18:42:53.048497+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/teams/1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:53.127590+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:53.128853+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"b85aadf9fcb049e2a1cfbf2674e04c94","event":"request_complete","duration_ms":4.183,"status_code":200,"method":"GET","path":"/static/css/contextual_navigation.css"}
+{"timestamp":"2026-11-23T18:42:53.143625+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:53.145650+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"a630cebe05504978a2f506b7efba57c6","event":"request_complete","duration_ms":4.528,"status_code":200,"method":"GET","path":"/static/js/contextual_navigation.js"}
+{"timestamp":"2026-11-23T18:42:53.153103+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/strategy_session.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:53.802621+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/ \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:53.847968+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:53.849049+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"9ac28fa9bd654faeb3edad5098ac4cd0","event":"request_complete","duration_ms":2.931,"status_code":200,"method":"GET","path":"/static/css/contextual_navigation.css"}
+{"timestamp":"2026-11-23T18:42:53.856921+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:53.857425+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"faea2ad1366d463cae5b03433c8dcb6e","event":"request_complete","duration_ms":2.047,"status_code":200,"method":"GET","path":"/static/js/contextual_navigation.js"}
+{"timestamp":"2026-11-23T18:42:53.869826+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/strategy_session.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:53.878620+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/home-opportunities.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:53.889431+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:53.891411+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"e5635866620c413db619087dc078316f","event":"request_complete","duration_ms":6.175,"status_code":200,"method":"GET","path":"/static/css/matchups.css"}
+{"timestamp":"2026-11-23T18:42:53.900318+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/trade_workspace.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:53.917243+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1&protected=%5B%5D&excluded=%5B%5D \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:54.088688+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/teams/1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:54.137029+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:54.138825+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"80c30dde555f43ca86134aea10145f19","event":"request_complete","duration_ms":3.379,"status_code":200,"method":"GET","path":"/static/css/contextual_navigation.css"}
+{"timestamp":"2026-11-23T18:42:54.147476+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:54.148206+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"bfbb9ed4c4984acdb8b56f6f8afaf8a6","event":"request_complete","duration_ms":3.023,"status_code":200,"method":"GET","path":"/static/js/contextual_navigation.js"}
+{"timestamp":"2026-11-23T18:42:54.160643+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/strategy_session.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:54.456606+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/teams/1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:54.525964+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:54.527145+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"83552894bc4c4b22927a14d72317fdc1","event":"request_complete","duration_ms":3.813,"status_code":200,"method":"GET","path":"/static/css/contextual_navigation.css"}
+{"timestamp":"2026-11-23T18:42:54.550899+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:54.553612+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"b7d13bfc26a8480cbb23f9eeaef26236","event":"request_complete","duration_ms":6.033,"status_code":200,"method":"GET","path":"/static/js/contextual_navigation.js"}
+{"timestamp":"2026-11-23T18:42:54.567991+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/strategy_session.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:55.050195+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/ \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:55.106877+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:55.107983+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"53789eb74ee0433cb71dd11b7f037786","event":"request_complete","duration_ms":3.169,"status_code":200,"method":"GET","path":"/static/css/contextual_navigation.css"}
+{"timestamp":"2026-11-23T18:42:55.115100+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:55.116077+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"504168f4000f4881abb610304986dcaa","event":"request_complete","duration_ms":2.708,"status_code":200,"method":"GET","path":"/static/js/contextual_navigation.js"}
+{"timestamp":"2026-11-23T18:42:55.121645+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/strategy_session.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:55.127620+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/home-opportunities.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:55.136281+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:55.136856+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"36ac0cfe10ba46aea34a99d33e9b0513","event":"request_complete","duration_ms":2.934,"status_code":200,"method":"GET","path":"/static/css/matchups.css"}
+{"timestamp":"2026-11-23T18:42:55.150663+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/trade_workspace.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:55.181223+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1&protected=%5B%5D&excluded=%5B%5D \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:55.363328+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/teams/1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:55.640900+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/teams/1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:55.741916+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:55.751980+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"bd72e9bbfc9248a49546e7addde85bb2","event":"request_complete","duration_ms":15.381,"status_code":200,"method":"GET","path":"/static/css/contextual_navigation.css"}
+{"timestamp":"2026-11-23T18:42:55.850124+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:55.854972+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"0423ca2eb4234f4c94202c077048e162","event":"request_complete","duration_ms":12.767,"status_code":200,"method":"GET","path":"/static/js/contextual_navigation.js"}
+{"timestamp":"2026-11-23T18:42:55.871901+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/strategy_session.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:56.345844+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/ \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:56.388555+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:56.389624+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"ae86d5b56a234f459bcfcdeda5c1e77c","event":"request_complete","duration_ms":4.699,"status_code":200,"method":"GET","path":"/static/css/contextual_navigation.css"}
+{"timestamp":"2026-11-23T18:42:56.398843+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:56.399985+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"039a78d186a74dcebab4355adda6ecd9","event":"request_complete","duration_ms":2.988,"status_code":200,"method":"GET","path":"/static/js/contextual_navigation.js"}
+{"timestamp":"2026-11-23T18:42:56.405873+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/strategy_session.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:56.416831+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/home-opportunities.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:56.426297+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:56.427669+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"8053edc41e5a4c0db2882850376dbd7d","event":"request_complete","duration_ms":2.855,"status_code":200,"method":"GET","path":"/static/css/matchups.css"}
+{"timestamp":"2026-11-23T18:42:56.432699+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/trade_workspace.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:56.462420+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1&protected=%5B%5D&excluded=%5B%5D \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:56.651941+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/teams/1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:56.700765+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:56.702423+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"c499c73e75894799bb5ea363cae06c74","event":"request_complete","duration_ms":4.19,"status_code":200,"method":"GET","path":"/static/css/contextual_navigation.css"}
+{"timestamp":"2026-11-23T18:42:56.710970+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:56.712340+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"5137e4d771124af780e3d0f1c1f3f9f3","event":"request_complete","duration_ms":4.164,"status_code":200,"method":"GET","path":"/static/js/contextual_navigation.js"}
+{"timestamp":"2026-11-23T18:42:56.720970+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/strategy_session.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:56.978882+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/teams/1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:57.049862+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:57.055161+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"f0c984b0766c4a6cb01aab0e16c2acf3","event":"request_complete","duration_ms":10.654,"status_code":200,"method":"GET","path":"/static/css/contextual_navigation.css"}
+{"timestamp":"2026-11-23T18:42:57.072145+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:57.073149+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"b695016f7345405096705ad2605cc1d0","event":"request_complete","duration_ms":4.66,"status_code":200,"method":"GET","path":"/static/js/contextual_navigation.js"}
+{"timestamp":"2026-11-23T18:42:57.120926+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/strategy_session.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:57.662649+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/ \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:57.716371+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:57.717927+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"40e8ddfdeeb94474a9b3048c3ae6afb0","event":"request_complete","duration_ms":5.505,"status_code":200,"method":"GET","path":"/static/css/contextual_navigation.css"}
+{"timestamp":"2026-11-23T18:42:57.728227+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:57.729543+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"b4461dcfc38041e7a20e858c43620d35","event":"request_complete","duration_ms":4.113,"status_code":200,"method":"GET","path":"/static/js/contextual_navigation.js"}
+{"timestamp":"2026-11-23T18:42:57.738039+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/strategy_session.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:57.748062+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/home-opportunities.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:57.754209+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:57.755253+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"41ba32a6a80b4239b6740e4616935097","event":"request_complete","duration_ms":2.729,"status_code":200,"method":"GET","path":"/static/css/matchups.css"}
+{"timestamp":"2026-11-23T18:42:57.767090+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/trade_workspace.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:57.804374+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1&protected=%5B%5D&excluded=%5B%5D \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:58.027869+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/teams/1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:58.073326+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:58.074201+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"b149fa297b474c3183229b9be445111a","event":"request_complete","duration_ms":5.598,"status_code":200,"method":"GET","path":"/static/css/contextual_navigation.css"}
+{"timestamp":"2026-11-23T18:42:58.081041+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:58.082576+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"4b7e5d13c1374faebc46bbd49fd0f680","event":"request_complete","duration_ms":3.045,"status_code":200,"method":"GET","path":"/static/js/contextual_navigation.js"}
+{"timestamp":"2026-11-23T18:42:58.092994+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/strategy_session.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+ok
+test_two_leagues_home_league_order_cutoff_full_width_explanations (tests.test_standings_positioning_browser.StandingsPositioningBrowserTests.test_two_leagues_home_league_order_cutoff_full_width_explanations) ... Validation Chromium: /usr/bin/chromium
+Validation Chromium version: 156.0.8078.79
+{"timestamp":"2026-11-23T18:42:58.968228+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/ \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:59.084152+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/strategy_session.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:59.098195+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/home-opportunities.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:59.122698+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:59.142494+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/trade_workspace.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:42:59.220190+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1&protected=%5B%5D&excluded=%5B%5D \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:00.969857+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/league \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:01.024818+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:02.711828+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/ \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:02.769350+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/strategy_session.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:02.786296+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/home-opportunities.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:02.834667+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:02.852294+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/trade_workspace.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:02.925816+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1&protected=%5B%5D&excluded=%5B%5D \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:04.313305+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/league \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:04.351493+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:05.876219+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/ \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:05.953008+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/strategy_session.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:05.976773+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/home-opportunities.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:06.154592+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:06.185272+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/trade_workspace.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:06.247781+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1&protected=%5B%5D&excluded=%5B%5D \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:08.236856+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/league \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:08.280460+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:09.678981+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/ \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:09.756482+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/strategy_session.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:09.817534+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/home-opportunities.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:09.832983+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:09.846269+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/trade_workspace.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:09.941611+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1&protected=%5B%5D&excluded=%5B%5D \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:11.621919+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/league \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:11.667062+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:13.223086+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/ \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:13.318166+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/strategy_session.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:13.335437+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/home-opportunities.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:13.354860+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:13.373729+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/trade_workspace.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:13.429107+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1&protected=%5B%5D&excluded=%5B%5D \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:15.155854+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/league \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:15.195093+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:16.557846+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/ \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:16.635133+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/strategy_session.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:16.646006+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/home-opportunities.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:16.657901+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:16.726457+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/trade_workspace.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:16.770799+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1&protected=%5B%5D&excluded=%5B%5D \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:18.337907+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/league \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:18.393721+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:20.227673+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/ \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:20.260548+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/strategy_session.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:20.267921+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/home-opportunities.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:20.323439+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:20.331573+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/trade_workspace.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:20.358509+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1&protected=%5B%5D&excluded=%5B%5D \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:22.098059+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/league \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:22.134721+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:23.761880+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/ \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:23.880325+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/strategy_session.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:23.894533+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/home-opportunities.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:23.924274+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:23.938589+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/trade_workspace.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:24.006188+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=2&protected=%5B%5D&excluded=%5B%5D \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:25.384109+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/league \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:25.425821+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:27.119444+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/ \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:27.225785+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/strategy_session.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:27.241475+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/home-opportunities.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:27.258169+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:27.274420+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/trade_workspace.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:27.327716+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=2&protected=%5B%5D&excluded=%5B%5D \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:29.076108+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/league \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:29.103106+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:30.771750+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/ \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:30.869974+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/strategy_session.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:30.921996+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/home-opportunities.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:30.928302+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:30.933380+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/trade_workspace.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:31.018965+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=2&protected=%5B%5D&excluded=%5B%5D \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:32.499465+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/league \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:32.538235+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:33.818660+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/ \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:33.886672+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/strategy_session.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:33.918590+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/home-opportunities.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:33.937560+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:33.954054+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/trade_workspace.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:33.981980+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=2&protected=%5B%5D&excluded=%5B%5D \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:35.643174+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/league \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:35.675583+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:37.157137+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/ \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:37.248695+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/strategy_session.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:37.257327+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/home-opportunities.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:37.321114+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:37.330858+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/trade_workspace.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:37.418266+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=2&protected=%5B%5D&excluded=%5B%5D \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:39.235656+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/league \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:39.300618+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:41.072606+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/ \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:41.486490+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/strategy_session.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:41.532302+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/home-opportunities.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:41.552248+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:41.570503+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/trade_workspace.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:41.639875+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=2&protected=%5B%5D&excluded=%5B%5D \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:43.008018+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/league \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:43.057243+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:44.941867+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/ \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:45.145187+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/strategy_session.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:45.213827+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/home-opportunities.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:45.224123+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:45.246936+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/trade_workspace.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:45.311782+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=2&protected=%5B%5D&excluded=%5B%5D \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:47.326660+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/league \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:47.403552+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:50.452087+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/ \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:50.643197+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/strategy_session.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:50.746472+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/home-opportunities.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:50.832697+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:50.846326+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/trade_workspace.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:50.859422+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1&protected=%5B%5D&excluded=%5B%5D \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:53.371052+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/league \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:53.415607+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:55.412547+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/ \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:55.548886+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/strategy_session.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:55.612751+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/home-opportunities.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:55.624366+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:55.644658+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/trade_workspace.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:55.661312+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1&protected=%5B%5D&excluded=%5B%5D \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:57.919426+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/league \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:57.975340+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:59.414641+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/ \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:59.559669+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/strategy_session.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:59.625917+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/home-opportunities.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:59.636632+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:59.656680+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/trade_workspace.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:43:59.713033+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1&protected=%5B%5D&excluded=%5B%5D \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:44:01.733171+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/league \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:44:01.819781+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:44:03.619796+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/ \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:44:03.649232+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/strategy_session.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:44:03.663934+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/home-opportunities.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:44:03.722440+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:44:03.734734+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/trade_workspace.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:44:03.811558+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1&protected=%5B%5D&excluded=%5B%5D \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:44:05.247091+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/league \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:44:05.280997+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:44:06.637318+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/ \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:44:06.713373+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/strategy_session.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:44:06.722615+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/home-opportunities.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:44:06.738074+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:44:06.749794+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/trade_workspace.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:44:06.845873+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1&protected=%5B%5D&excluded=%5B%5D \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:44:08.475645+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/league \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:44:08.518623+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:44:09.950482+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/ \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:44:10.033141+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/strategy_session.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:44:10.048566+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/home-opportunities.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:44:10.059066+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:44:10.120335+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/trade_workspace.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:44:10.149124+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1&protected=%5B%5D&excluded=%5B%5D \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:44:11.273544+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/league \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:44:11.303602+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:44:12.627910+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/ \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:44:12.713891+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/strategy_session.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:44:12.733120+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/home-opportunities.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:44:12.738598+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:44:12.749164+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/trade_workspace.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:44:12.816066+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1&protected=%5B%5D&excluded=%5B%5D \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:44:14.031376+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/league \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:44:14.063107+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+ok
+test_anonymous_root_only_changes_the_get_head_destination (tests.test_public_entry.PublicEntryTests.test_anonymous_root_only_changes_the_get_head_destination) ... {"timestamp":"2026-11-23T18:44:15.491886+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/?league=foreign \"HTTP/1.1 303 See Other\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:44:15.494729+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: HEAD http://testserver/?league=foreign \"HTTP/1.1 303 See Other\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:44:15.497121+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/ \"HTTP/1.1 303 See Other\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:44:15.500580+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/welcome \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:44:15.503851+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/ \"HTTP/1.1 303 See Other\"","request_id":"system"}
+ok
+test_authenticated_home_onboarding_revocation_and_private_boundaries (tests.test_public_entry.PublicEntryTests.test_authenticated_home_onboarding_revocation_and_private_boundaries) ... {"timestamp":"2026-11-23T18:44:15.636506+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/ \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:44:15.640539+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/fois/leagues/foreign \"HTTP/1.1 403 Forbidden\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:44:15.644986+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/welcome \"HTTP/1.1 403 Forbidden\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:44:15.650548+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/ \"HTTP/1.1 303 See Other\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:44:15.653682+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/workspace \"HTTP/1.1 401 Unauthorized\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:44:15.656710+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/teams/1 \"HTTP/1.1 303 See Other\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:44:15.742950+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/ \"HTTP/1.1 303 See Other\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:44:15.747325+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/workspace \"HTTP/1.1 403 Forbidden\"","request_id":"system"}
+ok
+test_exact_paths_head_methods_and_public_security_headers (tests.test_public_entry.PublicEntryTests.test_exact_paths_head_methods_and_public_security_headers) ... {"timestamp":"2026-11-23T18:44:15.837555+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/welcome-private \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:44:15.841633+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/welcome/anything \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:44:15.844853+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/WELCOME \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:44:15.848442+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/welcome/ \"HTTP/1.1 303 See Other\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:44:15.851567+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/welcome \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:44:15.854337+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: HEAD http://testserver/welcome \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:44:15.856507+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/welcome \"HTTP/1.1 405 Method Not Allowed\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:44:15.858616+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: PUT http://testserver/welcome \"HTTP/1.1 405 Method Not Allowed\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:44:15.860890+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: DELETE http://testserver/welcome \"HTTP/1.1 405 Method Not Allowed\"","request_id":"system"}
+ok
+test_existing_account_destinations_remain_available_without_submission (tests.test_public_entry.PublicEntryTests.test_existing_account_destinations_remain_available_without_submission) ... {"timestamp":"2026-11-23T18:44:15.899605+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/account/sign-in \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:44:15.902459+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/account/create \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:44:15.905023+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/account/recover \"HTTP/1.1 200 OK\"","request_id":"system"}
+ok
+test_opted_in_root_is_public_in_auth_optional_development (tests.test_public_entry.PublicEntryTests.test_opted_in_root_is_public_in_auth_optional_development) ... {"timestamp":"2026-11-23T18:44:15.938817+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/ \"HTTP/1.1 303 See Other\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:44:15.941012+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/welcome \"HTTP/1.1 200 OK\"","request_id":"system"}
+ok
+test_public_bytes_do_not_vary_by_account_preferences_or_private_scope (tests.test_public_entry.PublicEntryTests.test_public_bytes_do_not_vary_by_account_preferences_or_private_scope) ... {"timestamp":"2026-11-23T18:44:15.973760+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/welcome \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:44:16.038591+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/welcome?league=foreign&front_office=12 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:44:16.133905+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/welcome?league=foreign&front_office=12 \"HTTP/1.1 200 OK\"","request_id":"system"}
+ok
+test_public_gets_are_source_independent_without_disk_or_runtime_reads (tests.test_public_entry.PublicEntryTests.test_public_gets_are_source_independent_without_disk_or_runtime_reads) ... {"timestamp":"2026-11-23T18:44:16.168770+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/welcome \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:44:16.171513+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/welcome \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:44:16.174157+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/welcome?league=foreign&league_id=other&front_office=999 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:44:16.176537+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/welcome?asset_id=private-player&inspection=true&mode=custom&revision=9 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:44:16.179029+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/welcome \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:44:16.181579+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/welcome?league=foreign&league_id=other&front_office=999 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:44:16.183934+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/welcome?asset_id=private-player&inspection=true&mode=custom&revision=9 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:44:16.186246+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/welcome \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:44:16.188440+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/welcome?league=foreign&league_id=other&front_office=999 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:44:16.190970+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/welcome?asset_id=private-player&inspection=true&mode=custom&revision=9 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:44:16.193586+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/welcome \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:44:16.195741+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/welcome?league=foreign&league_id=other&front_office=999 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:44:16.197850+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/welcome?asset_id=private-player&inspection=true&mode=custom&revision=9 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:44:16.200209+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/welcome \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:44:16.202414+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/welcome?league=foreign&league_id=other&front_office=999 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-23T18:44:16.204864+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/welcome?asset_id=private-player&inspection=true&mode=custom&revision=9 \"HTTP/1.1 200 OK\"","request_id":"system"}
+ok
+test_public_openapi_has_one_unique_documented_operation (tests.test_public_entry.PublicEntryTests.test_public_openapi_has_one_unique_documented_operation) ... ok
+
+======================================================================
+ERROR: test_capacity_deferral_and_failure_preserve_prior_results_without_false_completion (tests.test_customer_home_team.CustomerHomeFailureBrowserTests.test_capacity_deferral_and_failure_preserve_prior_results_without_false_completion) (state='capacity_deferred')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_customer_home_team.py", line 287, in test_capacity_deferral_and_failure_preserve_prior_results_without_false_completion
+    page.locator('.home-opportunity').wait_for()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/site-packages/playwright/sync_api/_generated.py", line 20696, in wait_for
+    self._sync(
+    ~~~~~~~~~~^
+        self._impl_obj.wait_for(timeout=to_milliseconds(timeout), state=state)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/usr/local/lib/python3.14/site-packages/playwright/_impl/_sync_base.py", line 115, in _sync
+    return task.result()
+           ~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/site-packages/playwright/_impl/_locator.py", line 752, in wait_for
+    await self._frame.wait_for_selector(
+        self._selector, strict=True, timeout=timeout, state=state
+    )
+  File "/usr/local/lib/python3.14/site-packages/playwright/_impl/_frame.py", line 395, in wait_for_selector
+    await self._channel.send(
+        "waitForSelector", self._timeout, locals_to_params(locals())
+    )
+  File "/usr/local/lib/python3.14/site-packages/playwright/_impl/_connection.py", line 76, in send
+    return await self._connection.wrap_api_call(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    )
+    ^
+  File "/usr/local/lib/python3.14/site-packages/playwright/_impl/_connection.py", line 632, in wrap_api_call
+    raise rewrite_error(error, f"{parsed_st['apiName']}: {error}") from None
+playwright._impl._errors.TimeoutError: Locator.wait_for: Timeout 15000ms exceeded.
+Call log:
+  - waiting for locator(".home-opportunity") to be visible
+    33 × locator resolved to hidden <article class="home-opportunity">…</article>
+
+
+======================================================================
+ERROR: test_capacity_deferral_and_failure_preserve_prior_results_without_false_completion (tests.test_customer_home_team.CustomerHomeFailureBrowserTests.test_capacity_deferral_and_failure_preserve_prior_results_without_false_completion) (state='failed')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_customer_home_team.py", line 287, in test_capacity_deferral_and_failure_preserve_prior_results_without_false_completion
+    page.locator('.home-opportunity').wait_for()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/site-packages/playwright/sync_api/_generated.py", line 20696, in wait_for
+    self._sync(
+    ~~~~~~~~~~^
+        self._impl_obj.wait_for(timeout=to_milliseconds(timeout), state=state)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/usr/local/lib/python3.14/site-packages/playwright/_impl/_sync_base.py", line 115, in _sync
+    return task.result()
+           ~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/site-packages/playwright/_impl/_locator.py", line 752, in wait_for
+    await self._frame.wait_for_selector(
+        self._selector, strict=True, timeout=timeout, state=state
+    )
+  File "/usr/local/lib/python3.14/site-packages/playwright/_impl/_frame.py", line 395, in wait_for_selector
+    await self._channel.send(
+        "waitForSelector", self._timeout, locals_to_params(locals())
+    )
+  File "/usr/local/lib/python3.14/site-packages/playwright/_impl/_connection.py", line 76, in send
+    return await self._connection.wrap_api_call(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    )
+    ^
+  File "/usr/local/lib/python3.14/site-packages/playwright/_impl/_connection.py", line 632, in wrap_api_call
+    raise rewrite_error(error, f"{parsed_st['apiName']}: {error}") from None
+playwright._impl._errors.TimeoutError: Locator.wait_for: Timeout 15000ms exceeded.
+Call log:
+  - waiting for locator(".home-opportunity") to be visible
+    33 × locator resolved to hidden <article class="home-opportunity">…</article>
+
+
+======================================================================
+ERROR: test_sleeper_rollover_prepares_completed_scores_on_both_pages (tests.test_season_performance_browser.SeasonPerformanceBrowserTests.test_sleeper_rollover_prepares_completed_scores_on_both_pages)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_season_performance_browser.py", line 206, in test_sleeper_rollover_prepares_completed_scores_on_both_pages
+    self.assertIn('Compatible season team results are not prepared.', home.inner_text())
+                                                                      ~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/site-packages/playwright/sync_api/_generated.py", line 19603, in inner_text
+    self._sync(self._impl_obj.inner_text(timeout=to_milliseconds(timeout)))
+    ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.14/site-packages/playwright/_impl/_sync_base.py", line 115, in _sync
+    return task.result()
+           ~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.14/site-packages/playwright/_impl/_locator.py", line 502, in inner_text
+    return await self._frame.inner_text(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    )
+    ^
+  File "/usr/local/lib/python3.14/site-packages/playwright/_impl/_frame.py", line 744, in inner_text
+    return await self._channel.send(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+        "innerText", self._timeout, locals_to_params(locals())
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/usr/local/lib/python3.14/site-packages/playwright/_impl/_connection.py", line 76, in send
+    return await self._connection.wrap_api_call(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    )
+    ^
+  File "/usr/local/lib/python3.14/site-packages/playwright/_impl/_connection.py", line 632, in wrap_api_call
+    raise rewrite_error(error, f"{parsed_st['apiName']}: {error}") from None
+playwright._impl._errors.TimeoutError: Locator.inner_text: Timeout 15000ms exceeded.
+Call log:
+  - waiting for get_by_role("heading", name="Season so far").locator("..")
+
+
+======================================================================
+FAIL: test_authenticated_product_navigation_and_league_switching (tests.test_phone_design_browser.SharedPhoneDesignBrowserTests.test_authenticated_product_navigation_and_league_switching) (viewport={'width': 320, 'height': 844}, account='alpha', league='100', route='/')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_product_browser_journey.py", line 186, in test_authenticated_product_navigation_and_league_switching
+    self.assertIn(f"Franchise {league}", chrome)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'Franchise 100' not found in 'League 100\nSwitch league'
+
+======================================================================
+FAIL: test_authenticated_product_navigation_and_league_switching (tests.test_phone_design_browser.SharedPhoneDesignBrowserTests.test_authenticated_product_navigation_and_league_switching) (viewport={'width': 320, 'height': 844}, account='alpha', league='200', route='/')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_product_browser_journey.py", line 186, in test_authenticated_product_navigation_and_league_switching
+    self.assertIn(f"Franchise {league}", chrome)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'Franchise 200' not found in 'League 200\nSwitch league'
+
+======================================================================
+FAIL: test_authenticated_product_navigation_and_league_switching (tests.test_phone_design_browser.SharedPhoneDesignBrowserTests.test_authenticated_product_navigation_and_league_switching) (viewport={'width': 320, 'height': 844}, account='alpha', league='100', route='/')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_product_browser_journey.py", line 186, in test_authenticated_product_navigation_and_league_switching
+    self.assertIn(f"Franchise {league}", chrome)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'Franchise 100' not found in 'League 100\nSwitch league'
+
+======================================================================
+FAIL: test_authenticated_product_navigation_and_league_switching (tests.test_phone_design_browser.SharedPhoneDesignBrowserTests.test_authenticated_product_navigation_and_league_switching) (viewport={'width': 320, 'height': 844}, account='beta', league='300', route='/')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_product_browser_journey.py", line 186, in test_authenticated_product_navigation_and_league_switching
+    self.assertIn(f"Franchise {league}", chrome)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'Franchise 300' not found in 'League 300\nSwitch league'
+
+======================================================================
+FAIL: test_authenticated_product_navigation_and_league_switching (tests.test_phone_design_browser.SharedPhoneDesignBrowserTests.test_authenticated_product_navigation_and_league_switching) (viewport={'width': 375, 'height': 844}, account='alpha', league='100', route='/')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_product_browser_journey.py", line 186, in test_authenticated_product_navigation_and_league_switching
+    self.assertIn(f"Franchise {league}", chrome)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'Franchise 100' not found in 'League 100\nSwitch league'
+
+======================================================================
+FAIL: test_authenticated_product_navigation_and_league_switching (tests.test_phone_design_browser.SharedPhoneDesignBrowserTests.test_authenticated_product_navigation_and_league_switching) (viewport={'width': 375, 'height': 844}, account='alpha', league='200', route='/')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_product_browser_journey.py", line 186, in test_authenticated_product_navigation_and_league_switching
+    self.assertIn(f"Franchise {league}", chrome)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'Franchise 200' not found in 'League 200\nSwitch league'
+
+======================================================================
+FAIL: test_authenticated_product_navigation_and_league_switching (tests.test_phone_design_browser.SharedPhoneDesignBrowserTests.test_authenticated_product_navigation_and_league_switching) (viewport={'width': 375, 'height': 844}, account='alpha', league='100', route='/')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_product_browser_journey.py", line 186, in test_authenticated_product_navigation_and_league_switching
+    self.assertIn(f"Franchise {league}", chrome)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'Franchise 100' not found in 'League 100\nSwitch league'
+
+======================================================================
+FAIL: test_authenticated_product_navigation_and_league_switching (tests.test_phone_design_browser.SharedPhoneDesignBrowserTests.test_authenticated_product_navigation_and_league_switching) (viewport={'width': 375, 'height': 844}, account='beta', league='300', route='/')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_product_browser_journey.py", line 186, in test_authenticated_product_navigation_and_league_switching
+    self.assertIn(f"Franchise {league}", chrome)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'Franchise 300' not found in 'League 300\nSwitch league'
+
+======================================================================
+FAIL: test_authenticated_product_navigation_and_league_switching (tests.test_phone_design_browser.SharedPhoneDesignBrowserTests.test_authenticated_product_navigation_and_league_switching) (viewport={'width': 390, 'height': 844}, account='alpha', league='100', route='/')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_product_browser_journey.py", line 186, in test_authenticated_product_navigation_and_league_switching
+    self.assertIn(f"Franchise {league}", chrome)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'Franchise 100' not found in 'League 100\nSwitch league'
+
+======================================================================
+FAIL: test_authenticated_product_navigation_and_league_switching (tests.test_phone_design_browser.SharedPhoneDesignBrowserTests.test_authenticated_product_navigation_and_league_switching) (viewport={'width': 390, 'height': 844}, account='alpha', league='200', route='/')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_product_browser_journey.py", line 186, in test_authenticated_product_navigation_and_league_switching
+    self.assertIn(f"Franchise {league}", chrome)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'Franchise 200' not found in 'League 200\nSwitch league'
+
+======================================================================
+FAIL: test_authenticated_product_navigation_and_league_switching (tests.test_phone_design_browser.SharedPhoneDesignBrowserTests.test_authenticated_product_navigation_and_league_switching) (viewport={'width': 390, 'height': 844}, account='alpha', league='100', route='/')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_product_browser_journey.py", line 186, in test_authenticated_product_navigation_and_league_switching
+    self.assertIn(f"Franchise {league}", chrome)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'Franchise 100' not found in 'League 100\nSwitch league'
+
+======================================================================
+FAIL: test_authenticated_product_navigation_and_league_switching (tests.test_phone_design_browser.SharedPhoneDesignBrowserTests.test_authenticated_product_navigation_and_league_switching) (viewport={'width': 390, 'height': 844}, account='beta', league='300', route='/')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_product_browser_journey.py", line 186, in test_authenticated_product_navigation_and_league_switching
+    self.assertIn(f"Franchise {league}", chrome)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'Franchise 300' not found in 'League 300\nSwitch league'
+
+======================================================================
+FAIL: test_authenticated_product_navigation_and_league_switching (tests.test_phone_design_browser.SharedPhoneDesignBrowserTests.test_authenticated_product_navigation_and_league_switching) (viewport={'width': 1280, 'height': 900}, account='alpha', league='100', route='/')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_product_browser_journey.py", line 186, in test_authenticated_product_navigation_and_league_switching
+    self.assertIn(f"Franchise {league}", chrome)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'Franchise 100' not found in 'League 100\nSwitch league'
+
+======================================================================
+FAIL: test_authenticated_product_navigation_and_league_switching (tests.test_phone_design_browser.SharedPhoneDesignBrowserTests.test_authenticated_product_navigation_and_league_switching) (viewport={'width': 1280, 'height': 900}, account='alpha', league='200', route='/')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_product_browser_journey.py", line 186, in test_authenticated_product_navigation_and_league_switching
+    self.assertIn(f"Franchise {league}", chrome)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'Franchise 200' not found in 'League 200\nSwitch league'
+
+======================================================================
+FAIL: test_authenticated_product_navigation_and_league_switching (tests.test_phone_design_browser.SharedPhoneDesignBrowserTests.test_authenticated_product_navigation_and_league_switching) (viewport={'width': 1280, 'height': 900}, account='alpha', league='100', route='/')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_product_browser_journey.py", line 186, in test_authenticated_product_navigation_and_league_switching
+    self.assertIn(f"Franchise {league}", chrome)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'Franchise 100' not found in 'League 100\nSwitch league'
+
+======================================================================
+FAIL: test_authenticated_product_navigation_and_league_switching (tests.test_phone_design_browser.SharedPhoneDesignBrowserTests.test_authenticated_product_navigation_and_league_switching) (viewport={'width': 1280, 'height': 900}, account='beta', league='300', route='/')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_product_browser_journey.py", line 186, in test_authenticated_product_navigation_and_league_switching
+    self.assertIn(f"Franchise {league}", chrome)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'Franchise 300' not found in 'League 300\nSwitch league'
+
+----------------------------------------------------------------------
+Ran 25 tests in 285.563s
+
+FAILED (failures=16, errors=3)
