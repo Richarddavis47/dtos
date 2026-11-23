@@ -11,6 +11,6 @@
 
 Screenshots and consoles use disposable Chromium fixtures. The captured baseline signed-in Home comes from the previous release’s exact-source visual evidence. Before and after trade cards use the same retained completed-trade fixture. Mockup names and example values are illustrative, so independently verify each rendered figure against the prepared source.
 
-Validated candidate identity for the focused fixture run: `d48b53348b6867083e00acdd8550c756019581e4`. Tree `6c3df4e5fbe2b981fcd09c3bb4abf8d5693509b0`.
+Exact final candidate `96c9697a865d9725bb8d9e3a5c403530bad80b76`, tree `9bf70f099ca65ea9a137fdda1b8cf60f0335353c`. The fresh disposable Chromium captures and seven focused checks are tied to that source. The shared header and primary-action markers were restored after the prior candidate failed its HTTP smoke. The original failed run and the partial superseded local run are kept separately. The unchanged HTTP smoke and nine focused checks passed on the corrected application bytes before the final exact-source runs.
 
-Final release candidate `5d3b4fa4e02ed2b4221314020dfbe9b729809ce2`, tree `118d2680bdbc4a83973807c8eab5d1ed0ec935ad`. The [visual-source receipt](originals/visual-source-equivalence.json) proves the application bytes match the reviewed screenshot source. The repaired Trade Center entry passed on this candidate. Earlier failed gate consoles remain separate from the final exact-tree evidence.
+The desktop layout keeps the established top navigation. Phone captures use the existing fixed bottom navigation. At the shortest 320px viewport, scroll to reveal content below that navigation. Verify the primary action and focused controls scroll into usable view.
