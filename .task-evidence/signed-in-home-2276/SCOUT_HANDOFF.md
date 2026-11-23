@@ -13,4 +13,4 @@ Screenshots and consoles use disposable Chromium fixtures. The captured baseline
 
 Validated candidate identity for the focused fixture run: `d48b53348b6867083e00acdd8550c756019581e4`. Tree `6c3df4e5fbe2b981fcd09c3bb4abf8d5693509b0`.
 
-Final application commit `5b43983c5f572ff410f6a185e899f5426965c729`. Target tree `9d9822f72737babf273a611175c832fdfe050ff9`. The [visual-source receipt](originals/visual-source-equivalence.json) ties the screenshots to identical non-test project bytes. The 165-test Beginner Navigation batch passed on this exact candidate. Full exact-tree gates remain the release authority.
+Final release candidate `eaf226ee8c42a2fd629169df3f3f1da6636dfaac`, tree `d9626b1a94bf8b5f3725f47d000105cfdafa7afb`. The [visual-source receipt](originals/visual-source-equivalence.json) proves the application bytes match the reviewed screenshot source. The final candidate passed the repaired keyboard journey. The full current-tree gates remain the release authority.
