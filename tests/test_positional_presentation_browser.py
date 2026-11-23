@@ -48,6 +48,7 @@ class PositionalPresentationBrowserTests(unittest.TestCase):
                             page.wait_for_load_state("networkidle")
                             card = page.locator(selector)
                             if label == "home":
+                                page.locator("#home-brief-details > summary").click()
                                 card.locator("summary").press("Enter")
                             self.assertIn(
                                 "Supported positional strength: QB", card.inner_text()

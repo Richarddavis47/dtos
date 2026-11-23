@@ -257,7 +257,7 @@ class OpportunityIntegrityTests(unittest.TestCase):
                         self.row["evaluation"]["why_you_would_do_it"],
                         page.locator(".home-opportunity").inner_text(),
                     )
-                    page.get_by_role("link", name="Explore / Edit").click()
+                    page.locator(".home-opportunity").get_by_role("link", name="Explore / Edit").click()
                     page.get_by_text("Trade review", exact=True).wait_for()
                     moved = self.move()
                     page.get_by_role(
@@ -386,7 +386,7 @@ class OpportunityIntegrityTests(unittest.TestCase):
                     page.goto("https://dtos.test/")
                     page.locator("#home-brief-details > summary").click()
                     page.locator(".home-opportunity").wait_for()
-                    page.get_by_role("link", name="Explore / Edit").click()
+                    page.locator(".home-opportunity").get_by_role("link", name="Explore / Edit").click()
                     page.get_by_text("Trade review", exact=True).wait_for()
                     if change == "market":
                         self.source.prices(a=300)
@@ -495,7 +495,7 @@ class OpportunityIntegrityTests(unittest.TestCase):
                 page.goto("https://dtos.test/")
                 page.locator("#home-brief-details > summary").click()
                 page.locator(".home-opportunity").wait_for()
-                page.get_by_role("link", name="Explore / Edit").click()
+                page.locator(".home-opportunity").get_by_role("link", name="Explore / Edit").click()
                 page.get_by_role("button", name="Use this offer in my draft", exact=True).click()
                 pending = []
                 page.route(
