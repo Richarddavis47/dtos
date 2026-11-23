@@ -12,3 +12,5 @@
 Screenshots and consoles use disposable Chromium fixtures. The captured baseline signed-in Home comes from the previous release’s exact-source visual evidence. Before and after trade cards use the same retained completed-trade fixture. Mockup names and example values are illustrative, so independently verify each rendered figure against the prepared source.
 
 Validated candidate identity for the focused fixture run: `d48b53348b6867083e00acdd8550c756019581e4`. Tree `6c3df4e5fbe2b981fcd09c3bb4abf8d5693509b0`.
+
+Final application commit . Validated-source target tree . The [visual-source receipt](originals/visual-source-equivalence.json) binds the screenshots to identical non-test project bytes. Ten repaired navigation controls passed on this new candidate. Full exact-tree gates remain the release authority.
