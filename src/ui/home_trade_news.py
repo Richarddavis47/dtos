@@ -488,8 +488,8 @@ NEWS_CSS += """
 .news-card-compact .news-advantage{font-size:14px;text-align:center;margin-bottom:5px}
 .news-card-compact .news-evaluation{border-top:1px solid var(--line)}
 .news-card-compact .news-evaluation summary{font-weight:650}
-.news-section-head{display:flex;align-items:center;justify-content:space-between;gap:0 6px;flex-wrap:wrap}
+.league-trade-news .news-section-head{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:0 8px}
 .league-trade-news .news-section-head h2{font-size:20px;color:var(--text);text-transform:none;letter-spacing:0;margin:0}
-.news-section-head p{flex-basis:100%}
+.news-section-head p{grid-column:1/-1}
 .news-history{display:inline-flex;align-items:center;min-height:44px;color:var(--accent);font-size:13px;font-weight:650}
 """

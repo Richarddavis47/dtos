@@ -70,8 +70,8 @@ CSS = """.home-opportunity{background:var(--surface,#202628);border:1px solid #3
 """
 
 CSS += """
-.home-top{justify-content:space-between;align-items:flex-start;gap:10px}
-.home-top aside{min-width:0;max-width:70%}
+.ds-shell .top.home-top{grid-template-columns:minmax(0,1fr) fit-content(68%);align-items:start;gap:10px}
+.home-top aside{min-width:0;justify-self:end}
 .home-top .account-context{padding:0;border:0;margin:0}
 .home-top .account-context summary{padding:3px 10px;border:1px solid var(--line);border-radius:9px;background:var(--surface-elevated);gap:6px;min-height:44px}
 .home-top .account-context summary b{font-size:14px;overflow-wrap:anywhere}
