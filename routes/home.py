@@ -16,6 +16,7 @@ from services.home_trade_news import recent_candidates, news_identity, build_new
 from src.ui.home_trade_opportunities import section as opportunity_section, CSS as OPPORTUNITY_CSS
 from src.ui.home_trade_news import render_news, NEWS_CSS
 from services.matchup_season import current_matchup_groups
+from services.season_performance import season_performance
 from services.standings import standings_order
 from src.ui.season_performance import season_panel
 from src.ui.intelligence_presentation import league_is_preseason, record_evidence
@@ -93,10 +94,12 @@ def create_home_router(
         account = current_account()
         viewer = account.membership.roster_id if account and account.membership else None
         front_office = front_office if front_office is not None else viewer
-        cache_key = (retained_generation, front_office, repr(directory), champion, viewer, data.get("week"))
+        owner_home = bool(viewer and front_office == viewer and account.membership
+                          and str(account.membership.league_id) == str((data.get("league") or {}).get("league_id")))
+        cache_key = (retained_generation, front_office, repr(directory), champion, viewer, owner_home, data.get("week"))
 
         def render_body() -> bytes:
-            return _home_body(data, front_office, directory, champion).encode("utf-8")
+            return _home_body(data, front_office, directory, champion, owner_home=owner_home).encode("utf-8")
 
         body = home_body_render_cache.get_or_build(
             cache_key, generation, render_body,
@@ -111,7 +114,7 @@ def create_home_router(
         news = trade_news_render_cache.get_or_build(news_key, str(retained_generation),
             lambda: json.dumps(build_news(news_data, candidates, limitations, now=now)).encode()).decode()
         body = body.replace('<!--home-opportunities-->', '<style>' + OPPORTUNITY_CSS + BRIEF_CSS + '</style>' + opportunity_section(int(rid or 0)))
-        body = body.replace('<!--home-trade-news-->', '<style>' + NEWS_CSS + '</style>' + render_news(json.loads(news), viewer=viewer))
+        body = body.replace('<!--home-trade-news-->', '<style>' + NEWS_CSS + '</style>' + render_news(json.loads(news), viewer=viewer, compact=owner_home))
         # Outside the body cache: optional analytics can fail or recover without
         # changing roster/Market facts. No generation is triggered by this read.
         if active is not None and active.fois_state in {'pending', 'unavailable', 'retained'}:
@@ -129,7 +132,7 @@ def create_home_router(
             body += f'<div id="trade-home-boundary" hidden data-workspace-context="{context}"></div><script src="/static/js/trade_workspace.js" defer></script>'
         return page("Home", body)
 
-    def _home_body(data: dict[str, Any], front_office: int | None, directory: dict, champion=None) -> str:
+    def _home_body(data: dict[str, Any], front_office: int | None, directory: dict, champion=None, *, owner_home=False) -> str:
         teams = data.get("teams") or []
         team = _selected_team(data, front_office)
         selector = _team_selector(data, team)
@@ -146,6 +149,10 @@ def create_home_router(
         secondary = f'''<div class="home-secondary-controls">{selector}<details class="ds-home-detail"><summary>Team overview and shortcuts</summary><p>Team comparison: {escape(competitive)}. This is separate from official standings.</p><a class="ds-action" href="/teams/{roster_id}#full-roster">Roster · {len(team.get("players") or [])} players</a> <a class="ds-action" href="/teams/{roster_id}#draft-capital">Capital · {len(team.get("picks_owned") or [])} future picks</a><a class="ds-action" href="/league">League overview</a></details></div>'''
 
 
+        from services.weekly_report import weekly_facts
+        report_week = data.get("week") or 1
+        facts = weekly_facts(data, report_week)
+        report_state = {"completed": "Final", "in_progress": "In progress", "preview": "Preview"}.get(facts["state"], "Unavailable")
         actions = [
             ("Review my assets", "See your current players, lineup and exact owned picks.", f"/teams/{roster_id}#full-roster"),
             ("Check this week's matchup", "See actual scores and this week’s projections.", "/matchups"),
@@ -180,19 +187,79 @@ def create_home_router(
 
         assets = team.get("players") or []
         assets_html = f'<div class="card"><p><b>{len(assets)}</b> rostered players · <b>{len(team.get("picks_owned") or [])}</b> future picks</p><a href="/teams/{roster_id}#full-roster">Review my assets →</a></div>'
-        from services.weekly_report import weekly_facts
-        report_week = data.get("week") or 1
-        facts = weekly_facts(data, report_week)
-        report_state = {"completed": "Final", "in_progress": "In progress", "preview": "Preview"}.get(facts["state"], "Unavailable")
-        body = (
-            header + '<!--home-opportunities-->' + secondary + season_panel(data, roster_id, compact=True) + '<!--home-trade-news-->' + '<details class="ds-home-detail"><summary>League standings</summary>' + _section('Standings', 'Records and scoring from Sleeper', render_standings(data, champion=champion)) + '</details>'
-            + _section("Weekly Report", report_state + " · current week evidence", f'<div class="card ux-recap"><a href="/reports/weekly?week={report_week}">Open Week {report_week} report · {report_state} →</a></div>')
-            + _section("Explore", "Your team, matchup and trade workspace", action_html)
-            + '<details class="ds-home-detail"><summary>Team comparisons</summary>' + _section("Team Assessment Rankings" if rankings else "Projected lineup comparison", "Team assessments, separate from official standings" if rankings else "This week’s best projected legal lineups, with coverage shown for each team", rank_html) + '</details>'
+        deeper = (
+            '<details class="ds-home-detail"><summary>Team comparisons</summary>' + _section("Team Assessment Rankings" if rankings else "Projected lineup comparison", "Team assessments, separate from official standings" if rankings else "This week’s best projected legal lineups, with coverage shown for each team", rank_html) + '</details>'
             + '<details class="ds-home-detail"><summary>All matchups this week</summary>' + _section("Matchups this week", "Scores and projections from Sleeper", matchup_html) + '</details>'
             + '<details class="ds-home-detail"><summary>Market and league activity</summary>' + _section("Market Movers", "Observed Market changes", '<div class="card"><p class="muted">See value changes supported by recorded Market observations.</p><a href="/market#market-movers">View Market movement →</a></div>')
             + _section("League Activity", "Recent recorded transactions", activity_html)
             + _section("My Assets", "Roster and draft capital", assets_html) + '</details>'
+        )
+        if owner_home:
+            order = standings_order(data)
+            rank = order["ranks"].get(roster_id)
+            season = season_performance(data, roster_id)
+            average = season["average"]
+            points = "Unavailable" if average is None else f"{average:.2f}"
+            coverage = f'{len(season["weeks"])}/{len(season["expected_weeks"])} regular-season weeks covered.'
+            scoring_note = (f'{points} points per observed completed team week · {coverage}'
+                            if average is not None else
+                            ' '.join(filter(None, (coverage if season["expected_weeks"] else '', season["reason"]))))
+            if season["retained"]:
+                scoring_note += " Includes retained results after a failed refresh."
+            matchup_href = next((f'/matchups/{matchup_id}' for matchup_id, sides in current_matchup_groups(data).items()
+                                 if any(str(side.get("roster_id")) == str(roster_id) for side in sides)), "/matchups")
+            destinations = (
+                ("My Roster", f"/teams/{roster_id}#full-roster"),
+                ("Trade Center", f"/trades?front_office={roster_id}"),
+            )
+            shortcuts = ''.join(f'<a href="{escape(href, quote=True)}">{label}<span aria-hidden="true">›</span></a>'
+                                for label, href in destinations)
+            header = f'''<header class="ux-feature home-command home-team" data-signed-home>
+              <h1>{escape(str(team.get("team_name") or "Your franchise"))}{you_badge(data, roster_id)}</h1>
+              <!--home-league-switch-->
+              <dl class="home-stats">
+                <div><dt>Record</dt><dd>{escape(record)}</dd></div>
+                <div><dt>League rank</dt><dd>{f"#{rank}" if rank else "Unavailable"}</dd></div>
+                <div><dt>Points / week</dt><dd>{points}</dd></div>
+              </dl>{champion_badge(champion, roster_id)}
+            </header>'''
+            priority = f'''<section class="home-first" aria-labelledby="home-first-heading">
+              <h2 id="home-first-heading">Do this first</h2>
+              <div id="home-priority" aria-live="polite">
+                <h3>Checking your next step</h3><p>Review your roster while the team brief loads.</p>
+                <a class="ux-primary-action" href="/teams/{roster_id}">Open My Team</a>
+              </div>
+            </section>'''
+            this_week = f'''<section class="home-week" aria-labelledby="home-week-title">
+              <h2 id="home-week-title">This Week</h2>
+              <nav class="home-week-links" aria-label="This week’s lineup and matchup">
+                <a href="{escape(matchup_href, quote=True)}">Week {report_week} matchup<span aria-hidden="true">›</span></a>
+                <a href="/teams/{roster_id}#bye-week-details">Upcoming bye weeks<span aria-hidden="true">›</span></a>
+              </nav>
+              <details class="ds-home-detail"><summary>Week {report_week} report and season results</summary>
+                <p>{escape(report_state)} · <a href="/reports/weekly?week={report_week}">Open weekly report</a></p>
+                <div><h3>Season so far</h3><p>{escape(scoring_note)}</p>
+                <a href="/teams/{roster_id}#season-so-far">Review season results</a></div>
+              </details>
+            </section>'''
+            return (header + priority + f'<nav class="home-shortcuts" aria-label="Team shortcuts">{shortcuts}</nav>'
+                    + this_week + '<!--home-trade-news-->'
+                    + '<details class="ds-home-detail" id="home-brief-details"><summary>Front Office Brief and trade tools</summary><!--home-opportunities--></details>'
+                    + '<details class="ds-home-detail"><summary>League standings</summary>'
+                    + _section('Standings', 'Records and scoring from Sleeper', render_standings(data, champion=champion))
+                    + '</details>'
+                    + '<details class="ds-home-detail" id="home-more-tools"><summary>More team and league tools</summary>'
+                    + '<!--home-secondary-chrome-->' + secondary
+                    + deeper
+                    + '<a class="ds-action" href="/fois">Manager grades</a></details>')
+
+
+        body = (
+            header + '<!--home-opportunities-->' + secondary + season_panel(data, roster_id, compact=True) + '<!--home-trade-news-->' + '<details class="ds-home-detail"><summary>League standings</summary>' + _section('Standings', 'Records and scoring from Sleeper', render_standings(data, champion=champion)) + '</details>'
+            + _section("Weekly Report", report_state + " · current week evidence", f'<div class="card ux-recap"><a href="/reports/weekly?week={report_week}">Open Week {report_week} report · {report_state} →</a></div>')
+            + _section("Explore", "Your team, matchup and trade workspace", action_html)
+            + deeper
+
         )
         return body
 

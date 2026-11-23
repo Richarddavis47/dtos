@@ -463,9 +463,11 @@ class HomeOpportunityTests(unittest.TestCase):
             )
         self.assertEqual(hashes(), before)
         html = self.client.get("/").text
-        self.assertLess(html.index("Open My Team"), html.index("League Trade News"))
         self.assertLess(
-            html.index('id="home-opportunities"'), html.index("League Trade News")
+            html.index("Do this first"), html.index("Recent league trades")
+        )
+        self.assertGreater(
+            html.index('id="home-opportunities"'), html.index("Recent league trades")
         )
 
 

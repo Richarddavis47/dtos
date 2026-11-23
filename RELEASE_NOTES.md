@@ -1,3 +1,7 @@
+## v1.22.61 / build 2276 — A clearer signed-in Home
+
+Home highlights one supported next step, with quick access to your roster, Trade Center, matchup, and bye planner. Recent completed trades show dated Market comparisons when both packages can be compared, with transaction details available on demand.
+
 ## v1.22.60 / build 2275 — Compare a drop for a bye pickup
 
 When an active spot is needed, compare adding an unrostered pickup and dropping one of your active players. See the resulting lineup gaps for that week, availability dependencies, and the outgoing player’s prepared Market value when supported. All roster moves stay in Sleeper.

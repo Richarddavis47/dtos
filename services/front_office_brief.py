@@ -3,6 +3,7 @@
 The selected goal scopes the assessment cache; objective diagnostics can be reused
 across goals. Each family admits its own evidence, independently of Market.
 """
+from datetime import datetime, timedelta, timezone
 from math import isfinite
 
 from services.team_trade_need import prepared_need
@@ -11,6 +12,88 @@ from src.core.intelligence import intelligence_orchestrator
 from src.core.intelligence.roster_diagnostics import prepared_diagnostics
 from src.core.intelligence.team_strength import compatible_profile
 from src.ui.intelligence_presentation import manager_points
+
+
+def first_action(team, week, review, byes, items, *, now=None):
+    """Choose one action from evidence already admitted for this franchise."""
+    from src.core.intelligence.lineup_review import timestamp
+    now = now or datetime.now(timezone.utc)
+    team_url = f'/teams/{team["roster_id"]}'
+    lineup = []
+    for plan, conditional in ((review.get('fallback') or {}, True), (review, False)):
+        kickoff = timestamp(plan.get('kickoff_deadline'))
+        expiry = timestamp(plan.get('valid_until'))
+        if (kickoff is None or not now < kickoff <= now + timedelta(hours=48)
+                or expiry is None or expiry <= now):
+            continue
+        if conditional and plan.get('starter'):
+            title = 'Have a backup ready'
+            reason = f'If {plan["starter"]} can’t play, a verified fallback is available before the first affected game.'
+        elif not conditional and plan.get('actionable'):
+            title = f'Check your Week {week} lineup'
+            reason = ('A starting slot is empty and a legal replacement is available.'
+                      if plan.get('empty_slots') else
+                      'A legal lineup change could add projected points before the first affected game.')
+        else:
+            continue
+        lineup.append((kickoff, dict(title=title, reason=reason, action='Review lineup',
+                                     href=team_url + '#lineup-recheck', valid_until=expiry.isoformat(),
+                                     verified_at=now.isoformat())))
+    if lineup:
+        return min(lineup, key=lambda candidate: candidate[0])[1]
+
+    # Account for an earlier bye first. A confirmed vacancy takes precedence
+    # over a cover plan in the same week.
+    for row in sorted(byes or (), key=lambda row: (row['week'], row['state'] != 'shortfall')):
+        if not row.get('bye_starters'):
+            continue
+        week = row['week']
+        affected = {str(pid) for _, pid in row['bye_starters']}
+        names = [p.get('name') or p.get('full_name') for p in team.get('players') or []
+                 if str(p.get('id')) in affected]
+        if len(affected) <= 2 and len(names) == len(affected) and all(names):
+            situation = ' and '.join(names) + (' is on bye.' if len(names) == 1 else ' are on bye.')
+        else:
+            situation = f'{len(affected)} starters are on bye.' if len(affected) > 1 else 'A starter is on bye.'
+        title = f'Plan for Week {week} byes'
+        if row['state'] == 'shortfall' and row.get('unfilled'):
+            reason = 'Your roster can’t fill every starting slot with the confirmed byes.'
+        elif row['state'] == 'covered' and row.get('moves'):
+            title = f'Set your Week {week} lineup'
+            reason = situation + ' Your roster has a legal cover plan.'
+        elif row['state'] == 'conditional' and row.get('moves'):
+            reason = situation + ' Cover depends on player availability.'
+        else:
+            continue
+        return dict(title=title, reason=reason,
+                    action='Review bye plan', href=team_url + '#bye-week-details')
+
+    for families in ({'need', 'offer'}, {'goal'}):
+        chosen = next((item for item in items if item['family'] in families), None)
+        if chosen:
+            from src.ui.home_trade_opportunities import brief_text
+            return dict(title=brief_text(chosen['title']), reason=brief_text(chosen['reason']),
+                        action=chosen['action'], href=chosen['href'])
+    return None
+
+
+def prepared_first_action(data, roster_id, profile, reader, items):
+    league = data.get('league') or {}
+    team = next((t for t in data.get('teams') or [] if t.get('roster_id') == roster_id), None)
+    if team is None:
+        return None
+    week = data.get('week')
+    review, weeks = {}, None
+    if profile and league.get('status') == 'in_season' and type(week) is int:
+        from services.matchup_season import season_week_view
+        from src.core.intelligence.upcoming_byes import read_upcoming_byes
+        weeks = read_upcoming_byes(profile, league, team, players_fetched_at=data.get('players_fetched_at'))
+        if profile.get('lineup_review_schedule'):
+            view = season_week_view(data, week, reader, review_roster_id=roster_id)
+            side = next((side for group in view['groups'].values() for side in group
+                         if side['roster_id'] == roster_id), {})
+            review = side.get('lineup_review') or {}
+    return first_action(team, week, review, weeks, items)
 
 
 def prepared_evidence(data, roster_id, strategy, *, market_compatible=False):

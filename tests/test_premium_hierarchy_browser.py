@@ -26,7 +26,7 @@ VIEWPORTS = ((320, 432), (375, 667), (390, 844), (1280, 900))
 def capture(page, name, width, height, *, persist=True, **facts):
     row = page.evaluate("""() => {
       const box=e=>{const r=e.getBoundingClientRect();return {x:r.x,y:r.y+scrollY,width:r.width,height:r.height};};
-      const selectors={shell:'.ds-shell',heading:'.ds-page-header',insight:'#home-opportunity-cards article',search:'#market-search',searchHeading:'.market-filters h3',summary:'.ai-context',takeaway:'.ai-takeaway',concern:'.ai-summary-limit',shortcuts:'nav[aria-label="Roster sections"]'};
+      const selectors={shell:'.ds-shell',heading:'.ds-page-header',insight:'#home-priority',search:'#market-search',searchHeading:'.market-filters h3',summary:'.ai-context',takeaway:'.ai-takeaway',concern:'.ai-summary-limit',shortcuts:'nav[aria-label="Roster sections"]'};
       return {overflow:document.documentElement.scrollWidth-innerWidth,scrollY,
         boxes:Object.fromEntries(Object.entries(selectors).filter(([k,s])=>document.querySelector(s)).map(([k,s])=>[k,box(document.querySelector(s))])),
         controls:[...document.querySelectorAll('nav[aria-label="Roster sections"] a,.ds-shell .top button,.ds-shell .secondary-nav>summary')].filter(e=>e.getClientRects().length).map(e=>({text:e.innerText,...box(e)}))};
@@ -180,11 +180,13 @@ class PremiumPreparedBrowserTests(unittest.TestCase):
                     requests = []
                     page.on("request", lambda r: requests.append(r.url))
                     page.goto("https://dtos.test/")
+                    page.locator('#home-priority h3').get_by_text('Consider this prepared trade').wait_for()
+                    row = capture(page, "prepared-home", width, height)
+                    page.locator('#home-brief-details > summary').click()
                     page.locator(".home-opportunity").wait_for()
                     self.assertEqual(
                         page.locator("#home-opportunity-cards>article").count(), 2
                     )
-                    row = capture(page, "prepared-home", width, height)
                     if width < 760:
                         self.assertGreaterEqual(
                             baseline[width] - row["boxes"]["insight"]["y"], 120
@@ -200,7 +202,7 @@ class PremiumPreparedBrowserTests(unittest.TestCase):
                         "2028", page.locator(".home-opportunity").inner_text()
                     )
                     self.assertLess(
-                        page.locator("#home-opportunities").bounding_box()["y"],
+                        page.locator("#home-priority").bounding_box()["y"],
                         page.locator(".league-trade-news").bounding_box()["y"],
                     )
                     self.assertFalse(any("/api/trades/generate" in u for u in requests))

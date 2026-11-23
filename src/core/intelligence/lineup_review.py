@@ -387,6 +387,7 @@ def review_lineup(
         changes=changes,
         observed_at=observed_at,
         projection_observed_at=snapshot["generated_at"],
+        kickoff_deadline=min(deadlines[2:]).isoformat(),
         valid_until=min(deadlines).isoformat(),
         verified_at=now.isoformat(),
         reason="These moves fit your starting slots and precede their recorded kickoffs. Check Sleeper before submitting.",

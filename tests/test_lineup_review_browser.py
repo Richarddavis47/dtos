@@ -11,6 +11,40 @@ from tools.validation.browser_runtime import launch_chromium
 
 
 class LineupReviewBrowserTests(unittest.TestCase):
+    def test_signed_in_home_uses_verified_lineup_and_expires_with_keyboard_focus(self):
+        from datetime import datetime, timedelta, timezone
+        from unittest.mock import patch
+        fixture, data, service, _ = authenticated_prepared(self)
+        with patch("services.trade_intelligence._trade_projection_service", return_value=service), sync_playwright() as pw:
+            browser = launch_chromium(pw, headless=True)
+            try:
+                page = fixture.f.browser_page(browser, 390, 844)
+                page.clock.install(time=datetime.now(timezone.utc) - timedelta(hours=1))
+                requests = []
+                page.on('request', lambda request: requests.append(request.method))
+                page.goto('https://dtos.test/')
+                top = page.locator('#home-priority')
+                action = top.get_by_role('link', name='Review lineup', exact=True)
+                action.wait_for()
+                self.assertIn('starting slot is empty', top.inner_text())
+                self.assertEqual(action.get_attribute('href'), '/teams/1#lineup-recheck')
+                directory = os.environ.get('DTOS_BRIEF_EVIDENCE')
+                if directory:
+                    page.screenshot(path=str(Path(directory, 'home-lineup-priority-390.png')))
+                action.focus()
+                page.clock.fast_forward(16 * 60 * 1000)
+                calm = top.get_by_role('link', name='Open My Team', exact=True)
+                self.assertTrue(calm.evaluate('e=>e===document.activeElement'))
+                self.assertIn('lineup check expired', top.inner_text())
+                self.assertTrue(all(method == 'GET' for method in requests))
+                data['season_matchups']['weeks']['8']['observed_at'] = '2000-01-01T00:00:00+00:00'
+                with page.expect_response('**/api/trades/home-opportunities?*'):
+                    page.reload()
+                page.wait_for_function("document.querySelector('#home-opportunities').dataset.state")
+                self.assertEqual(action.count(), 0)
+            finally:
+                browser.close()
+
     def test_phone_desktop_exact_lineups_disclosures_navigation_and_expiry(self):
         fixture, data, service, _ = authenticated_prepared(self)
         client = fixture.f.f.client

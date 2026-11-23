@@ -181,15 +181,17 @@ class FrontOfficeWorkflowBrowserTests(unittest.TestCase):
         def posts():
             return [request for request in requests if request[0] == 'POST']
         page.goto(helper.origin + '/')
-        page.locator('#home-opportunity-cards article').first.wait_for()
-        leading = page.locator('#home-opportunity-cards article').first
+        leading = page.locator('#home-priority')
         action = leading.get_by_role('link', name=f'Explore {position} trades')
         self.assertEqual(action.get_attribute('href'), need_href)
-        self.assertIn('Cost and uncertainty', leading.inner_text())
+        page.locator('#home-brief-details > summary').click()
+        self.assertIn('Cost and uncertainty', page.locator('#home-opportunity-cards article').first.inner_text())
+        page.locator('#home-brief-details > summary').click()
         home_views = []
         for width, height in VIEWPORTS:
             page.set_viewport_size(dict(width=width, height=height))
             action.scroll_into_view_if_needed()
+            page.keyboard.press('Tab')
             action.focus()
             self.assertNotEqual(action.evaluate('e=>getComputedStyle(e).outlineStyle'), 'none')
             self.assertGreaterEqual(action.bounding_box()['height'], 44)

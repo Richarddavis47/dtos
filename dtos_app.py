@@ -929,6 +929,7 @@ def page(title: str, body: str, commissioner_chrome: bool = False) -> HTMLRespon
     league_name = str(((selected_state.get("data") or {}).get("league") or {}).get("name") or "Sleeper League")
     account = current_account()
     account_html = ""
+    home_switch = title == "Home" and "<!--home-league-switch-->" in body
     csrf_html = ""
     navigation_roster_id = None
     if account is not None:
@@ -942,7 +943,8 @@ def page(title: str, body: str, commissioner_chrome: bool = False) -> HTMLRespon
             if item.status == "active" and item.roster_id is not None
         )
         franchise = account.membership.franchise_name if account.membership else "Choose a league"
-        account_html = f'<aside aria-label="Account and league context"><details class="account-context"><summary><b>{escape(league_name)}</b><span>{escape(franchise or "Team name not recorded")} · Switch league</span></summary><div class="ds-actions">{switches}<a class="ds-action" href="/account">Account · {escape(account.display_name)}</a></div></details></aside>'
+        switch_label = f'{escape(franchise or "Team name not recorded")} · Switch league'
+        account_html = f'<aside aria-label="Account and league context"><details class="account-context"><summary><b>{escape(league_name)}</b><span>{switch_label}</span></summary><div class="ds-actions">{switches}<a class="ds-action" href="/account">Account · {escape(account.display_name)}</a></div></details></aside>'
     from services.contextual_navigation import navigation_markup, with_back
     back, navigation_head = navigation_markup()
     team_heading = 'data-my-team-context=' in body
@@ -952,7 +954,18 @@ def page(title: str, body: str, commissioner_chrome: bool = False) -> HTMLRespon
     elif own_heading:
         body = with_back(body, back)
     header = with_back(page_header(title, league_name=league_name, last_updated=str(sync)), '' if own_heading else back)
-    standard_chrome = f"""<div class="ds-shell"><header class="top"><div class="brand"><a class="brand-mark" href="/" aria-label="DTOS Home">{APPLICATION_NAME}</a><p>{escape(league_name)} Front Office</p></div><form method="post" action="/sync">{csrf_html}<button class="btn" type="submit">Sync League</button></form>{secondary_navigation()}</header>{account_html}
+    sync_control = f'<form method="post" action="/sync">{csrf_html}<button class="btn" type="submit">Sync League</button></form>'
+    tools = secondary_navigation()
+    brand_mark = f'<a class="brand-mark" href="/" aria-label="DTOS Home">{APPLICATION_NAME}</a>'
+    if home_switch:
+        body = body.replace("<!--home-league-switch-->", "", 1)
+        body = body.replace("<!--home-secondary-chrome-->", sync_control + tools, 1)
+        top = f'<header class="top home-top"><div class="brand">{brand_mark}</div>{account_html}</header>'
+        account_html = ""
+        header = back
+    else:
+        top = f'<header class="top"><div class="brand">{brand_mark}<p>{escape(league_name)} Front Office</p></div>{sync_control}{tools}</header>'
+    standard_chrome = f"""<div class="ds-shell">{top}{account_html}
 {manager_navigation(title, roster_id=navigation_roster_id, include_tools=False)}</div>{header}"""
     footer = f'<footer class="footer"><details class="cx-evidence"><summary>League data · {escape(readable_time(sync))}</summary><p>Last recorded league sync: <code>{escape(str(sync))}</code>. Automatic refresh is scheduled every {SYNC_MINUTES} minutes while the service is active. Projections, results and Market prices keep their own source dates and qualifications.</p></details></footer>'
     html = f"""<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{escape(title)} · {APPLICATION_NAME}</title><style>{CSS}</style>{navigation_head}</head>

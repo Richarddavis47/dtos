@@ -253,7 +253,8 @@ def remaining_regular_opponents(data: dict, roster_id: int) -> dict:
             "gaps": [week for week in weeks or [] if week not in matches]}
 
 
-def season_week_view(data: dict, week: int, projection_service, *, evidence_through_week: int | None = None) -> dict:
+def season_week_view(data: dict, week: int, projection_service, *, evidence_through_week: int | None = None,
+                     review_roster_id: int | None = None) -> dict:
     """Pin one projection generation; never substitute another week/league."""
     league = data.get("league") or {}
     current = int(data.get("week") or 0)
@@ -302,6 +303,8 @@ def season_week_view(data: dict, week: int, projection_service, *, evidence_thro
         if component and not locked:
             continue
         rid = row["roster_id"]
+        if review_roster_id is not None and rid != review_roster_id:
+            continue
         team = teams.get(rid, {})
         starter_ids = [str(pid) for pid in row.get("starters") or []]
         def player_row(pid, slot, actual):
