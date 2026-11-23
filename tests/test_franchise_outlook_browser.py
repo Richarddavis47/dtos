@@ -43,6 +43,7 @@ class FranchiseOutlookBrowserTests(unittest.TestCase):
                         if root:
                             page.screenshot(path=str(root/f'my-team-expanded-{width}.png'),full_page=True)
                         page.goto('https://dtos.test/')
+                        page.locator("#home-brief-details > summary").click()
                         page.wait_for_load_state('networkidle')
                         shared=page.locator('[aria-label="Franchise outlook"]')
                         self.assertEqual(shared.count(),1)

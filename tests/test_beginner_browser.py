@@ -52,7 +52,7 @@ class BeginnerBrowserTests(unittest.TestCase):
                     page.route('**/*', transport)
                     start = time.perf_counter()
                     self.assertEqual(page.goto('https://dtos.test/').status, 200)
-                    home_link = page.locator('.ux-action[href$="#full-roster"]')
+                    home_link = page.locator('.home-shortcuts a[href$="#full-roster"]')
                     self.assertEqual(home_link.get_attribute('href'), '/teams/1#full-roster')
                     home_link.click()
                     self.assertTrue(page.locator('#my-team-roster').evaluate('e=>e.open'))
@@ -123,7 +123,7 @@ class BeginnerBrowserTests(unittest.TestCase):
                     f.data['league']['league_id'] = 'league-2'
                     f.data['scoring_settings'] = {**source_scoring, 'rec': .5, 'bonus_rec_te': .5}
                     page.goto('https://dtos.test/')
-                    second_home = page.locator('.ux-action[href$="#full-roster"]')
+                    second_home = page.locator('.home-shortcuts a[href$="#full-roster"]')
                     self.assertEqual(second_home.get_attribute('href'), '/teams/2#full-roster')
                     second_home.click()
                     self.assertTrue(page.locator('#my-team-roster').evaluate('e=>e.open'))

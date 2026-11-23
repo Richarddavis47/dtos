@@ -251,6 +251,7 @@ class OpportunityIntegrityTests(unittest.TestCase):
                     errors = []
                     page.on("pageerror", lambda e: errors.append(str(e)))
                     page.goto("https://dtos.test/")
+                    page.locator("#home-brief-details > summary").click()
                     page.locator(".home-opportunity").wait_for()
                     self.assertIn(
                         self.row["evaluation"]["why_you_would_do_it"],
@@ -336,6 +337,7 @@ class OpportunityIntegrityTests(unittest.TestCase):
                 errors = []
                 page.on("pageerror", lambda e: errors.append(str(e)))
                 page.goto("https://dtos.test/")
+                page.locator("#home-brief-details > summary").click()
                 page.locator(".home-opportunity").wait_for()
                 self.f.store.upsert_membership(
                     self.f.account_id,
@@ -367,6 +369,7 @@ class OpportunityIntegrityTests(unittest.TestCase):
                 self.f.store.activate(self.f.account_id, "league-1")
                 self.f.data["league"]["league_id"] = "league-1"
                 page.reload()
+                page.locator("#home-brief-details > summary").click()
                 page.locator(".home-opportunity").wait_for()
                 self.assertEqual(errors, [])
             finally:
@@ -381,6 +384,7 @@ class OpportunityIntegrityTests(unittest.TestCase):
                 for change in ("market", "projection", "strategy", "unchanged"):
                     page = self.browser_page(browser)
                     page.goto("https://dtos.test/")
+                    page.locator("#home-brief-details > summary").click()
                     page.locator(".home-opportunity").wait_for()
                     page.get_by_role("link", name="Explore / Edit").click()
                     page.get_by_text("Trade review", exact=True).wait_for()
@@ -489,6 +493,7 @@ class OpportunityIntegrityTests(unittest.TestCase):
             try:
                 page = self.browser_page(browser)
                 page.goto("https://dtos.test/")
+                page.locator("#home-brief-details > summary").click()
                 page.locator(".home-opportunity").wait_for()
                 page.get_by_role("link", name="Explore / Edit").click()
                 page.get_by_role("button", name="Use this offer in my draft", exact=True).click()
