@@ -1,0 +1,72 @@
+{
+  "source": {
+    "baseline": "a3a859bc5d316eb5382ff6ab80b0cfc763275adf",
+    "baseline_tree": "161e801ae284ec307bb960e3ff9dbb8511680347",
+    "candidate": "96c9697a865d9725bb8d9e3a5c403530bad80b76",
+    "tree": "9bf70f099ca65ea9a137fdda1b8cf60f0335353c",
+    "branch": "feat/signed-in-home-2276",
+    "version": "1.22.61",
+    "build": 2276,
+    "expected_test_count": 4672,
+    "pr": 365
+  },
+  "command": [
+    "docker",
+    "create",
+    "--name",
+    "dtos-home-canonical-2276",
+    "--init",
+    "--user",
+    "1000:1000",
+    "--memory=2g",
+    "--memory-swap=2g",
+    "--cpus=2",
+    "--network=none",
+    "-v",
+    "/workspace/dtos-home-local-2276:/app",
+    "-v",
+    "/workspace/dtos/.git:/workspace/dtos/.git:ro",
+    "-v",
+    "/workspace/2276-signed-in-home/local-canonical:/output",
+    "-v",
+    "/dev/shm/dtos-2276-fixture-aligned:/fixture",
+    "-e",
+    "HOME=/tmp",
+    "-e",
+    "NODE_OPTIONS=--max-old-space-size=256",
+    "-e",
+    "GIT_CONFIG_COUNT=1",
+    "-e",
+    "GIT_CONFIG_KEY_0=safe.directory",
+    "-e",
+    "GIT_CONFIG_VALUE_0=/app",
+    "-e",
+    "DTOS_EXPECTED_HEAD=96c9697a865d9725bb8d9e3a5c403530bad80b76",
+    "-e",
+    "DTOS_EXPECTED_TREE=9bf70f099ca65ea9a137fdda1b8cf60f0335353c",
+    "-e",
+    "DTOS_EXPECTED_TEST_COUNT=4672",
+    "-w",
+    "/app",
+    "sha256:da2020c853b4c769eadb51c130e7a85938710b66cb866c43661a9dfb44ac5fe4",
+    "python",
+    "/output/runner.py"
+  ],
+  "container": "78c4ebba1d32e439ea74b862b15be708a205f504bbb981e5942be810f59a83ad",
+  "files": [
+    {
+      "name": "runner.py",
+      "sha256": "574308d9f64252575970aa19ce113f603ccb9927f2c6a523e8c228869fd37cac"
+    },
+    {
+      "name": "observer/sitecustomize.py",
+      "sha256": "3f43288a099e49a3ed2dea36f977b596707589eaefd2656b40a3b9c6533be2d4"
+    }
+  ],
+  "created_at": "2026-11-23T22:19:30.495976+00:00",
+  "status": "RUNNING_NOT_PASSED",
+  "fixture_free_after_container_creation": 9437425664,
+  "official_scratch_gate_unchanged": true,
+  "fixture_medium": "fresh validation-only tmpfs, same unchanged memory/scratch checks",
+  "toolchain": "fresh image based on the hosted Dockerfile with executor system CA passed as a build-only secret"
+}
