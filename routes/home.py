@@ -199,7 +199,8 @@ def create_home_router(
             rank = order["ranks"].get(roster_id)
             season = season_performance(data, roster_id)
             average = season["average"]
-            points = "Unavailable" if average is None else f"{average:.2f}"
+            points = "Not available" if average is None else f"{average:.2f}"
+            record_display = "Not started" if preseason else "Not available" if record == "Record unavailable" else record
             coverage = f'{len(season["weeks"])}/{len(season["expected_weeks"])} regular-season weeks covered.'
             scoring_note = (f'{points} points per observed completed team week · {coverage}'
                             if average is not None else
@@ -218,8 +219,8 @@ def create_home_router(
               <h1>{escape(str(team.get("team_name") or "Your franchise"))}{you_badge(data, roster_id)}</h1>
               <!--home-league-switch-->
               <dl class="home-stats">
-                <div><dt>Record</dt><dd>{escape(record)}</dd></div>
-                <div><dt>League rank</dt><dd>{f"#{rank}" if rank else "Unavailable"}</dd></div>
+                <div><dt>Record</dt><dd>{escape(record_display)}</dd></div>
+                <div><dt>League rank</dt><dd>{f"#{rank}" if rank else "Not available"}</dd></div>
                 <div><dt>Points / week</dt><dd>{points}</dd></div>
               </dl>{champion_badge(champion, roster_id)}
             </header>'''
