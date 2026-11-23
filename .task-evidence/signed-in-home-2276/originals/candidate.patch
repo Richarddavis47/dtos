@@ -1,0 +1,1554 @@
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index 45c8d0f..9ee4368 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -1,3 +1,7 @@
++## v1.22.61 / build 2276 — A clearer signed-in Home
++
++Home highlights one supported next step, with quick access to your roster, Trade Center, matchup, and bye planner. Recent completed trades show dated Market comparisons when both packages can be compared, with transaction details available on demand.
++
+ ## v1.22.60 / build 2275 — Compare a drop for a bye pickup
+ 
+ When an active spot is needed, compare adding an unrostered pickup and dropping one of your active players. See the resulting lineup gaps for that week, availability dependencies, and the outgoing player’s prepared Market value when supported. All roster moves stay in Sleeper.
+diff --git a/RELEASE_NOTES.md b/RELEASE_NOTES.md
+index 364c875..3a9ba45 100644
+--- a/RELEASE_NOTES.md
++++ b/RELEASE_NOTES.md
+@@ -1,3 +1,7 @@
++## v1.22.61 / build 2276 — A clearer signed-in Home
++
++Home highlights one supported next step, with quick access to your roster, Trade Center, matchup, and bye planner. Recent completed trades show dated Market comparisons when both packages can be compared, with transaction details available on demand.
++
+ ## v1.22.60 / build 2275 — Compare a drop for a bye pickup
+ 
+ When an active spot is needed, compare adding an unrostered pickup and dropping one of your active players. See the resulting lineup gaps for that week, availability dependencies, and the outgoing player’s prepared Market value when supported. All roster moves stay in Sleeper.
+diff --git a/app_metadata.py b/app_metadata.py
+index e80e5ee..42c479c 100644
+--- a/app_metadata.py
++++ b/app_metadata.py
+@@ -7,10 +7,10 @@ from datetime import datetime, timezone
+ from pathlib import Path
+ 
+ APPLICATION_NAME = "DTOS"
+-VERSION = "1.22.60"
+-PRODUCT_VERSION = "1.22.60"
+-BUILD_NUMBER = 2275
+-RELEASE_CODENAME = "Compare Bye Pickup Drops"
++VERSION = "1.22.61"
++PRODUCT_VERSION = "1.22.61"
++BUILD_NUMBER = 2276
++RELEASE_CODENAME = "A Clearer Signed-In Home"
+ APPLICATION_STARTED_AT = datetime.now(timezone.utc).isoformat()
+ 
+ _REPOSITORY_ROOT = Path(__file__).resolve().parent
+diff --git a/dtos_app.py b/dtos_app.py
+index 8b1215f..e121fae 100644
+--- a/dtos_app.py
++++ b/dtos_app.py
+@@ -929,6 +929,7 @@ def page(title: str, body: str, commissioner_chrome: bool = False) -> HTMLRespon
+     league_name = str(((selected_state.get("data") or {}).get("league") or {}).get("name") or "Sleeper League")
+     account = current_account()
+     account_html = ""
++    home_switch = title == "Home" and "<!--home-league-switch-->" in body
+     csrf_html = ""
+     navigation_roster_id = None
+     if account is not None:
+@@ -942,7 +943,8 @@ def page(title: str, body: str, commissioner_chrome: bool = False) -> HTMLRespon
+             if item.status == "active" and item.roster_id is not None
+         )
+         franchise = account.membership.franchise_name if account.membership else "Choose a league"
+-        account_html = f'<aside aria-label="Account and league context"><details class="account-context"><summary><b>{escape(league_name)}</b><span>{escape(franchise or "Team name not recorded")} · Switch league</span></summary><div class="ds-actions">{switches}<a class="ds-action" href="/account">Account · {escape(account.display_name)}</a></div></details></aside>'
++        switch_label = f'{escape(franchise or "Team name not recorded")} · Switch league'
++        account_html = f'<aside aria-label="Account and league context"><details class="account-context"><summary><b>{escape(league_name)}</b><span>{switch_label}</span></summary><div class="ds-actions">{switches}<a class="ds-action" href="/account">Account · {escape(account.display_name)}</a></div></details></aside>'
+     from services.contextual_navigation import navigation_markup, with_back
+     back, navigation_head = navigation_markup()
+     team_heading = 'data-my-team-context=' in body
+@@ -952,7 +954,18 @@ def page(title: str, body: str, commissioner_chrome: bool = False) -> HTMLRespon
+     elif own_heading:
+         body = with_back(body, back)
+     header = with_back(page_header(title, league_name=league_name, last_updated=str(sync)), '' if own_heading else back)
+-    standard_chrome = f"""<div class="ds-shell"><header class="top"><div class="brand"><a class="brand-mark" href="/" aria-label="DTOS Home">{APPLICATION_NAME}</a><p>{escape(league_name)} Front Office</p></div><form method="post" action="/sync">{csrf_html}<button class="btn" type="submit">Sync League</button></form>{secondary_navigation()}</header>{account_html}
++    sync_control = f'<form method="post" action="/sync">{csrf_html}<button class="btn" type="submit">Sync League</button></form>'
++    tools = secondary_navigation()
++    brand_mark = f'<a class="brand-mark" href="/" aria-label="DTOS Home">{APPLICATION_NAME}</a>'
++    if home_switch:
++        body = body.replace("<!--home-league-switch-->", "", 1)
++        body = body.replace("<!--home-secondary-chrome-->", sync_control + tools, 1)
++        top = f'<header class="top home-top"><div class="brand">{brand_mark}</div>{account_html}</header>'
++        account_html = ""
++        header = back
++    else:
++        top = f'<header class="top"><div class="brand">{brand_mark}<p>{escape(league_name)} Front Office</p></div>{sync_control}{tools}</header>'
++    standard_chrome = f"""<div class="ds-shell">{top}{account_html}
+ {manager_navigation(title, roster_id=navigation_roster_id, include_tools=False)}</div>{header}"""
+     footer = f'<footer class="footer"><details class="cx-evidence"><summary>League data · {escape(readable_time(sync))}</summary><p>Last recorded league sync: <code>{escape(str(sync))}</code>. Automatic refresh is scheduled every {SYNC_MINUTES} minutes while the service is active. Projections, results and Market prices keep their own source dates and qualifications.</p></details></footer>'
+     html = f"""<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{escape(title)} · {APPLICATION_NAME}</title><style>{CSS}</style>{navigation_head}</head>
+diff --git a/routes/home.py b/routes/home.py
+index ddc2e11..8d5b1fc 100644
+--- a/routes/home.py
++++ b/routes/home.py
+@@ -16,6 +16,7 @@ from services.home_trade_news import recent_candidates, news_identity, build_new
+ from src.ui.home_trade_opportunities import section as opportunity_section, CSS as OPPORTUNITY_CSS
+ from src.ui.home_trade_news import render_news, NEWS_CSS
+ from services.matchup_season import current_matchup_groups
++from services.season_performance import season_performance
+ from services.standings import standings_order
+ from src.ui.season_performance import season_panel
+ from src.ui.intelligence_presentation import league_is_preseason, record_evidence
+@@ -93,10 +94,12 @@ def create_home_router(
+         account = current_account()
+         viewer = account.membership.roster_id if account and account.membership else None
+         front_office = front_office if front_office is not None else viewer
+-        cache_key = (retained_generation, front_office, repr(directory), champion, viewer, data.get("week"))
++        owner_home = bool(viewer and front_office == viewer and account.membership
++                          and str(account.membership.league_id) == str((data.get("league") or {}).get("league_id")))
++        cache_key = (retained_generation, front_office, repr(directory), champion, viewer, owner_home, data.get("week"))
+ 
+         def render_body() -> bytes:
+-            return _home_body(data, front_office, directory, champion).encode("utf-8")
++            return _home_body(data, front_office, directory, champion, owner_home=owner_home).encode("utf-8")
+ 
+         body = home_body_render_cache.get_or_build(
+             cache_key, generation, render_body,
+@@ -111,7 +114,7 @@ def create_home_router(
+         news = trade_news_render_cache.get_or_build(news_key, str(retained_generation),
+             lambda: json.dumps(build_news(news_data, candidates, limitations, now=now)).encode()).decode()
+         body = body.replace('<!--home-opportunities-->', '<style>' + OPPORTUNITY_CSS + BRIEF_CSS + '</style>' + opportunity_section(int(rid or 0)))
+-        body = body.replace('<!--home-trade-news-->', '<style>' + NEWS_CSS + '</style>' + render_news(json.loads(news), viewer=viewer))
++        body = body.replace('<!--home-trade-news-->', '<style>' + NEWS_CSS + '</style>' + render_news(json.loads(news), viewer=viewer, compact=owner_home))
+         # Outside the body cache: optional analytics can fail or recover without
+         # changing roster/Market facts. No generation is triggered by this read.
+         if active is not None and active.fois_state in {'pending', 'unavailable', 'retained'}:
+@@ -129,7 +132,7 @@ def create_home_router(
+             body += f'<div id="trade-home-boundary" hidden data-workspace-context="{context}"></div><script src="/static/js/trade_workspace.js" defer></script>'
+         return page("Home", body)
+ 
+-    def _home_body(data: dict[str, Any], front_office: int | None, directory: dict, champion=None) -> str:
++    def _home_body(data: dict[str, Any], front_office: int | None, directory: dict, champion=None, *, owner_home=False) -> str:
+         teams = data.get("teams") or []
+         team = _selected_team(data, front_office)
+         selector = _team_selector(data, team)
+@@ -146,6 +149,10 @@ def create_home_router(
+         secondary = f'''<div class="home-secondary-controls">{selector}<details class="ds-home-detail"><summary>Team overview and shortcuts</summary><p>Team comparison: {escape(competitive)}. This is separate from official standings.</p><a class="ds-action" href="/teams/{roster_id}#full-roster">Roster · {len(team.get("players") or [])} players</a> <a class="ds-action" href="/teams/{roster_id}#draft-capital">Capital · {len(team.get("picks_owned") or [])} future picks</a><a class="ds-action" href="/league">League overview</a></details></div>'''
+ 
+ 
++        from services.weekly_report import weekly_facts
++        report_week = data.get("week") or 1
++        facts = weekly_facts(data, report_week)
++        report_state = {"completed": "Final", "in_progress": "In progress", "preview": "Preview"}.get(facts["state"], "Unavailable")
+         actions = [
+             ("Review my assets", "See your current players, lineup and exact owned picks.", f"/teams/{roster_id}#full-roster"),
+             ("Check this week's matchup", "See actual scores and this week’s projections.", "/matchups"),
+@@ -180,20 +187,81 @@ def create_home_router(
+ 
+         assets = team.get("players") or []
+         assets_html = f'<div class="card"><p><b>{len(assets)}</b> rostered players · <b>{len(team.get("picks_owned") or [])}</b> future picks</p><a href="/teams/{roster_id}#full-roster">Review my assets →</a></div>'
+-        from services.weekly_report import weekly_facts
+-        report_week = data.get("week") or 1
+-        facts = weekly_facts(data, report_week)
+-        report_state = {"completed": "Final", "in_progress": "In progress", "preview": "Preview"}.get(facts["state"], "Unavailable")
+-        body = (
+-            header + '<!--home-opportunities-->' + secondary + season_panel(data, roster_id, compact=True) + '<!--home-trade-news-->' + '<details class="ds-home-detail"><summary>League standings</summary>' + _section('Standings', 'Records and scoring from Sleeper', render_standings(data, champion=champion)) + '</details>'
+-            + _section("Weekly Report", report_state + " · current week evidence", f'<div class="card ux-recap"><a href="/reports/weekly?week={report_week}">Open Week {report_week} report · {report_state} →</a></div>')
+-            + _section("Explore", "Your team, matchup and trade workspace", action_html)
+-            + '<details class="ds-home-detail"><summary>Team comparisons</summary>' + _section("Team Assessment Rankings" if rankings else "Projected lineup comparison", "Team assessments, separate from official standings" if rankings else "This week’s best projected legal lineups, with coverage shown for each team", rank_html) + '</details>'
++        deeper = (
++            '<details class="ds-home-detail"><summary>Team comparisons</summary>' + _section("Team Assessment Rankings" if rankings else "Projected lineup comparison", "Team assessments, separate from official standings" if rankings else "This week’s best projected legal lineups, with coverage shown for each team", rank_html) + '</details>'
+             + '<details class="ds-home-detail"><summary>All matchups this week</summary>' + _section("Matchups this week", "Scores and projections from Sleeper", matchup_html) + '</details>'
+             + '<details class="ds-home-detail"><summary>Market and league activity</summary>' + _section("Market Movers", "Observed Market changes", '<div class="card"><p class="muted">See value changes supported by recorded Market observations.</p><a href="/market#market-movers">View Market movement →</a></div>')
+             + _section("League Activity", "Recent recorded transactions", activity_html)
+             + _section("My Assets", "Roster and draft capital", assets_html) + '</details>'
+         )
++        if owner_home:
++            order = standings_order(data)
++            rank = order["ranks"].get(roster_id)
++            season = season_performance(data, roster_id)
++            average = season["average"]
++            points = "Not available" if average is None else f"{average:.2f}"
++            record_display = "Not started" if preseason else "Not available" if record == "Record unavailable" else record
++            coverage = f'{len(season["weeks"])}/{len(season["expected_weeks"])} regular-season weeks covered.'
++            scoring_note = (f'{points} points per observed completed team week · {coverage}'
++                            if average is not None else
++                            ' '.join(filter(None, (coverage if season["expected_weeks"] else '', season["reason"]))))
++            if season["retained"]:
++                scoring_note += " Includes retained results after a failed refresh."
++            matchup_href = next((f'/matchups/{matchup_id}' for matchup_id, sides in current_matchup_groups(data).items()
++                                 if any(str(side.get("roster_id")) == str(roster_id) for side in sides)), "/matchups")
++            destinations = (
++                ("My Roster", f"/teams/{roster_id}#full-roster"),
++                ("Trade Center", f"/trades?front_office={roster_id}"),
++            )
++            shortcuts = ''.join(f'<a href="{escape(href, quote=True)}">{label}<span aria-hidden="true">›</span></a>'
++                                for label, href in destinations)
++            header = f'''<header class="ux-feature home-command home-team" data-signed-home data-dtos-component="page-header">
++              <h1>{escape(str(team.get("team_name") or "Your franchise"))}{you_badge(data, roster_id)}</h1>
++              <!--home-league-switch-->
++              <dl class="home-stats">
++                <div><dt>Record</dt><dd>{escape(record_display)}</dd></div>
++                <div><dt>League rank</dt><dd>{f"#{rank}" if rank else "Not available"}</dd></div>
++                <div><dt>Points / week</dt><dd>{points}</dd></div>
++              </dl>{champion_badge(champion, roster_id)}
++            </header>'''
++            priority = f'''<section class="home-first" aria-labelledby="home-first-heading">
++              <h2 id="home-first-heading">Do this first</h2>
++              <div id="home-priority" aria-live="polite">
++                <h3>Checking your next step</h3><p>Review your roster while the team brief loads.</p>
++                <a class="ux-primary-action" data-dtos-action="primary" href="/teams/{roster_id}">Open My Team</a>
++              </div>
++            </section>'''
++            this_week = f'''<section class="home-week" aria-labelledby="home-week-title">
++              <h2 id="home-week-title">This Week</h2>
++              <nav class="home-week-links" aria-label="This week’s lineup and matchup">
++                <a href="{escape(matchup_href, quote=True)}">Week {report_week} matchup<span aria-hidden="true">›</span></a>
++                <a href="/teams/{roster_id}#bye-week-details">Upcoming bye weeks<span aria-hidden="true">›</span></a>
++              </nav>
++              <details class="ds-home-detail"><summary>Week {report_week} report and season results</summary>
++                <p>{escape(report_state)} · <a href="/reports/weekly?week={report_week}">Open weekly report</a></p>
++                <div><h3>Season so far</h3><p>{escape(scoring_note)}</p>
++                <a href="/teams/{roster_id}#season-so-far">Review season results</a></div>
++              </details>
++            </section>'''
++            return (header + priority + f'<nav class="home-shortcuts" aria-label="Team shortcuts">{shortcuts}</nav>'
++                    + this_week + '<!--home-trade-news-->'
++                    + '<details class="ds-home-detail" id="home-brief-details"><summary>Front Office Brief and trade tools</summary><!--home-opportunities--></details>'
++                    + '<details class="ds-home-detail"><summary>League standings</summary>'
++                    + _section('Standings', 'Records and scoring from Sleeper', render_standings(data, champion=champion))
++                    + '</details>'
++                    + '<details class="ds-home-detail" id="home-more-tools"><summary>More team and league tools</summary>'
++                    + '<!--home-secondary-chrome-->' + secondary
++                    + deeper
++                    + '<a class="ds-action" href="/fois">Manager grades</a></details>')
++
++
++        body = (
++            header + '<!--home-opportunities-->' + secondary + season_panel(data, roster_id, compact=True) + '<!--home-trade-news-->' + '<details class="ds-home-detail"><summary>League standings</summary>' + _section('Standings', 'Records and scoring from Sleeper', render_standings(data, champion=champion)) + '</details>'
++            + _section("Weekly Report", report_state + " · current week evidence", f'<div class="card ux-recap"><a href="/reports/weekly?week={report_week}">Open Week {report_week} report · {report_state} →</a></div>')
++            + _section("Explore", "Your team, matchup and trade workspace", action_html)
++            + deeper
++
++        )
+         return body
+ 
+     @router.get("/league", response_class=HTMLResponse)
+diff --git a/routes/trades.py b/routes/trades.py
+index 882e29e..1b8d6b6 100644
+--- a/routes/trades.py
++++ b/routes/trades.py
+@@ -219,7 +219,7 @@ def create_trades_router(*, ensure_fresh: EnsureFresh, require_data: RequireData
+             if row is None:
+                 raise HTTPException(410, "This idea expired or its source, strategy or protections changed. Your draft is unchanged. Find current ideas again.")
+             return JSONResponse(row, headers={"Cache-Control": "no-store"})
+-        from services.front_office_brief import prepared_evidence, select_insights
++        from services.front_office_brief import prepared_evidence, prepared_first_action, select_insights
+         from services.home_attention import attention_state
+         from services.attention_changes import pick_changes
+         from src.ui.front_office_brief import cards as brief_cards
+@@ -230,6 +230,7 @@ def create_trades_router(*, ensure_fresh: EnsureFresh, require_data: RequireData
+             changes, coverage = pick_changes(data, rid, METADATA_DATABASE_FILE)
+             attention = attention_state(data, rid, reader.snapshot(), change_rows=changes, change_coverage=coverage)
+             items = select_insights(facts, attention['items'], result['rows'])
++            priority = prepared_first_action(data, rid, facts.get('strength'), reader, items)
+             rendered = brief_cards(items)
+             if facts.get('outlook'):
+                 from html import escape
+@@ -244,9 +245,9 @@ def create_trades_router(*, ensure_fresh: EnsureFresh, require_data: RequireData
+             same_generation = intelligence_orchestrator.context(current, rid, {'strategy': strategy}).evidence_generation == facts['generation']
+             if not same_generation or home_ideas.cache_key(current, rid, strategy, locks, omissions) != key:
+                 raise HTTPException(409, 'Prepared evidence changed. Reload Home to review current facts; your draft is unchanged.')
+-            return facts, items, rendered
++            return facts, items, rendered, priority
+ 
+-        facts, items, brief_html = await run_manager_read(prepared_brief)
++        facts, items, brief_html, priority = await run_manager_read(prepared_brief)
+         # Publication may change while the off-loop prepared read is pending.
+         # Do not let an obsolete response reintroduce an offer or roster claim.
+         if publication() != admitted_publication:
+@@ -254,6 +255,7 @@ def create_trades_router(*, ensure_fresh: EnsureFresh, require_data: RequireData
+         return JSONResponse({'workspace_context': context, 'csrf_token': account.csrf_token if account else '',
+             'strategy': strategy, 'source_identity': key[1] if key else None, 'count': len(result['rows']),
+             'brief_html': brief_html, 'brief_count': len(items), 'brief_generation': facts['generation'],
++            'priority': priority,
+             'state': result['state'], 'reason': result.get('reason'), 'html': opportunity_cards(result['rows'], rid),
+             'retained': bool(result.get('source_identity'))}, headers={"Cache-Control": "no-store"})
+ 
+diff --git a/services/front_office_brief.py b/services/front_office_brief.py
+index 674fc3f..e533630 100644
+--- a/services/front_office_brief.py
++++ b/services/front_office_brief.py
+@@ -3,6 +3,7 @@
+ The selected goal scopes the assessment cache; objective diagnostics can be reused
+ across goals. Each family admits its own evidence, independently of Market.
+ """
++from datetime import datetime, timedelta, timezone
+ from math import isfinite
+ 
+ from services.team_trade_need import prepared_need
+@@ -13,6 +14,88 @@ from src.core.intelligence.team_strength import compatible_profile
+ from src.ui.intelligence_presentation import manager_points
+ 
+ 
++def first_action(team, week, review, byes, items, *, now=None):
++    """Choose one action from evidence already admitted for this franchise."""
++    from src.core.intelligence.lineup_review import timestamp
++    now = now or datetime.now(timezone.utc)
++    team_url = f'/teams/{team["roster_id"]}'
++    lineup = []
++    for plan, conditional in ((review.get('fallback') or {}, True), (review, False)):
++        kickoff = timestamp(plan.get('kickoff_deadline'))
++        expiry = timestamp(plan.get('valid_until'))
++        if (kickoff is None or not now < kickoff <= now + timedelta(hours=48)
++                or expiry is None or expiry <= now):
++            continue
++        if conditional and plan.get('starter'):
++            title = 'Have a backup ready'
++            reason = f'If {plan["starter"]} can’t play, a verified fallback is available before the first affected game.'
++        elif not conditional and plan.get('actionable'):
++            title = f'Check your Week {week} lineup'
++            reason = ('A starting slot is empty and a legal replacement is available.'
++                      if plan.get('empty_slots') else
++                      'A legal lineup change could add projected points before the first affected game.')
++        else:
++            continue
++        lineup.append((kickoff, dict(title=title, reason=reason, action='Review lineup',
++                                     href=team_url + '#lineup-recheck', valid_until=expiry.isoformat(),
++                                     verified_at=now.isoformat())))
++    if lineup:
++        return min(lineup, key=lambda candidate: candidate[0])[1]
++
++    # Account for an earlier bye first. A confirmed vacancy takes precedence
++    # over a cover plan in the same week.
++    for row in sorted(byes or (), key=lambda row: (row['week'], row['state'] != 'shortfall')):
++        if not row.get('bye_starters'):
++            continue
++        week = row['week']
++        affected = {str(pid) for _, pid in row['bye_starters']}
++        names = [p.get('name') or p.get('full_name') for p in team.get('players') or []
++                 if str(p.get('id')) in affected]
++        if len(affected) <= 2 and len(names) == len(affected) and all(names):
++            situation = ' and '.join(names) + (' is on bye.' if len(names) == 1 else ' are on bye.')
++        else:
++            situation = f'{len(affected)} starters are on bye.' if len(affected) > 1 else 'A starter is on bye.'
++        title = f'Plan for Week {week} byes'
++        if row['state'] == 'shortfall' and row.get('unfilled'):
++            reason = 'Your roster can’t fill every starting slot with the confirmed byes.'
++        elif row['state'] == 'covered' and row.get('moves'):
++            title = f'Set your Week {week} lineup'
++            reason = situation + ' Your roster has a legal cover plan.'
++        elif row['state'] == 'conditional' and row.get('moves'):
++            reason = situation + ' Cover depends on player availability.'
++        else:
++            continue
++        return dict(title=title, reason=reason,
++                    action='Review bye plan', href=team_url + '#bye-week-details')
++
++    for families in ({'need', 'offer'}, {'goal'}):
++        chosen = next((item for item in items if item['family'] in families), None)
++        if chosen:
++            from src.ui.home_trade_opportunities import brief_text
++            return dict(title=brief_text(chosen['title']), reason=brief_text(chosen['reason']),
++                        action=chosen['action'], href=chosen['href'])
++    return None
++
++
++def prepared_first_action(data, roster_id, profile, reader, items):
++    league = data.get('league') or {}
++    team = next((t for t in data.get('teams') or [] if t.get('roster_id') == roster_id), None)
++    if team is None:
++        return None
++    week = data.get('week')
++    review, weeks = {}, None
++    if profile and league.get('status') == 'in_season' and type(week) is int:
++        from services.matchup_season import season_week_view
++        from src.core.intelligence.upcoming_byes import read_upcoming_byes
++        weeks = read_upcoming_byes(profile, league, team, players_fetched_at=data.get('players_fetched_at'))
++        if profile.get('lineup_review_schedule'):
++            view = season_week_view(data, week, reader, review_roster_id=roster_id)
++            side = next((side for group in view['groups'].values() for side in group
++                         if side['roster_id'] == roster_id), {})
++            review = side.get('lineup_review') or {}
++    return first_action(team, week, review, weeks, items)
++
++
+ def prepared_evidence(data, roster_id, strategy, *, market_compatible=False):
+     context = intelligence_orchestrator.context(data, roster_id, {'strategy': strategy})
+     prefix = f'snapshot:{context.snapshot_key}:'
+diff --git a/services/home_trade_news.py b/services/home_trade_news.py
+index 16b72fc..0af5844 100644
+--- a/services/home_trade_news.py
++++ b/services/home_trade_news.py
+@@ -258,6 +258,9 @@ def build_news(data: dict[str, Any], candidates, limitations, *, now=None):
+     market = data.get("market_data") or {}
+     coherent = data["_news_market_coherent"]
+     snapshot = _digest([league, market])
++    valuation_at = canonical_utc_timestamp(market.get("generated_at"))
++    if valuation_at and datetime.fromisoformat(valuation_at) > now:
++        valuation_at = None
+     player_ids = {
+         str(pid)
+         for item in candidates
+@@ -495,6 +498,7 @@ def build_news(data: dict[str, Any], candidates, limitations, *, now=None):
+                 "has_faab": bool(cash_seen),
+                 "consideration_partial": invalid,
+                 "snapshot": snapshot,
++                "valuation_at": valuation_at,
+                 "source": "Sleeper completed transaction; prepared selected-league evidence. Franchise names are season-source observations; exact trade-time manager tenure or renames are not established.",
+             }
+         )
+diff --git a/services/matchup_season.py b/services/matchup_season.py
+index 9a4dec2..6016221 100644
+--- a/services/matchup_season.py
++++ b/services/matchup_season.py
+@@ -253,7 +253,8 @@ def remaining_regular_opponents(data: dict, roster_id: int) -> dict:
+             "gaps": [week for week in weeks or [] if week not in matches]}
+ 
+ 
+-def season_week_view(data: dict, week: int, projection_service, *, evidence_through_week: int | None = None) -> dict:
++def season_week_view(data: dict, week: int, projection_service, *, evidence_through_week: int | None = None,
++                     review_roster_id: int | None = None) -> dict:
+     """Pin one projection generation; never substitute another week/league."""
+     league = data.get("league") or {}
+     current = int(data.get("week") or 0)
+@@ -302,6 +303,8 @@ def season_week_view(data: dict, week: int, projection_service, *, evidence_thro
+         if component and not locked:
+             continue
+         rid = row["roster_id"]
++        if review_roster_id is not None and rid != review_roster_id:
++            continue
+         team = teams.get(rid, {})
+         starter_ids = [str(pid) for pid in row.get("starters") or []]
+         def player_row(pid, slot, actual):
+diff --git a/src/core/intelligence/lineup_review.py b/src/core/intelligence/lineup_review.py
+index 4045457..f077ec6 100644
+--- a/src/core/intelligence/lineup_review.py
++++ b/src/core/intelligence/lineup_review.py
+@@ -387,6 +387,7 @@ def review_lineup(
+         changes=changes,
+         observed_at=observed_at,
+         projection_observed_at=snapshot["generated_at"],
++        kickoff_deadline=min(deadlines[2:]).isoformat(),
+         valid_until=min(deadlines).isoformat(),
+         verified_at=now.isoformat(),
+         reason="These moves fit your starting slots and precede their recorded kickoffs. Check Sleeper before submitting.",
+diff --git a/src/ui/home_trade_news.py b/src/ui/home_trade_news.py
+index 748cff5..8ba3d75 100644
+--- a/src/ui/home_trade_news.py
++++ b/src/ui/home_trade_news.py
+@@ -44,7 +44,42 @@ def _evaluation(side):
+     )
+ 
+ 
+-def render_news(model, *, viewer=None):
++def _market_edge(card):
++    sides = card["sides"]
++    if len(sides) != 2:
++        reason = "A two-sided comparison needs exactly two franchises."
++    elif card["consideration_partial"]:
++        reason = "Some assets or their trade direction could not be verified."
++    elif card["has_faab"]:
++        reason = "This trade includes waiver budget, which has no comparable Market value."
++    elif not all(side["received"] for side in sides):
++        reason = "A received package could not be established for both franchises."
++    elif not card["complete"]:
++        reason = "One or more assets lack comparable Market values."
++    elif not card.get("valuation_at"):
++        reason = "The date of the Market valuation could not be verified."
++    else:
++        reason = None
++    if reason:
++        return ('<p class="news-advantage"><b>Market edge unavailable.</b> '
++                + _safe(reason) + '</p>')
++
++    left, right = sides
++    a, b = left["total"], right["total"]
++    gap = abs(a - b)
++    share = a / (a + b) * 100 if a + b else 50
++    favored = "left" if a > b else "right" if b > a else "even"
++    name = left["name"] if a > b else right["name"]
++    verdict = f"{name} received {gap:g} more Market points" if gap else "Even · equal Market totals"
++    stamp = card["valuation_at"]
++    date = datetime.fromisoformat(stamp).strftime("%b %d, %Y UTC")
++    return (f'<div class="news-edge" data-edge="{favored}">'
++            f'<p class="news-market-label">Market edge · <time datetime="{escape(stamp, quote=True)}">{date}</time></p>'
++            f'<div class="news-bar" aria-hidden="true" style="--share:{share:.3f}%"><span></span></div>'
++            f'<p class="news-advantage"><b>{_safe(verdict)}</b></p></div>')
++
++
++def render_news(model, *, viewer=None, compact=False):
+     cards = []
+     for card in model["cards"]:
+         sides, complete_sides = [], []
+@@ -331,23 +366,46 @@ def render_news(model, *, viewer=None):
+         )
+         date = datetime.fromisoformat(card["completed_at"]).strftime("%b %d")
+         trade_url = "/trades/history/" + quote(card["id"], safe="") + "?from_home=1"
+-        cards.append(
+-            '<article class="news-card" data-news-trade="'
++        heading = ''
++        if compact:
++            teams_layout = ' news-teams-pair' if len(card["sides"]) == 2 else ''
++            heading = ('<div class="news-head-teams' + teams_layout + '">'
++                       + ' <span aria-hidden="true">↔</span> '.join(
++                           '<b>' + _safe(side["name"] + (" · You" if str(viewer) == side["roster_id"] else "")) + '</b>'
++                           for side in card["sides"])
++                       + '</div>')
++        opening = (
++            '<article class="news-card' + (' news-card-compact' if compact else '') + '" data-news-trade="'
+             + escape(card["id"], quote=True)
+             + '"><header><time datetime="'
+             + escape(card["completed_at"], quote=True)
+             + '">'
+-            + _safe(date + " · status update")
+-            + '</time><small class="news-completed">Completed</small></header><div class="news-sides">'
++            + _safe(date if compact else date + " · status update")
++            + '</time><small class="news-completed">Completed</small></header>'
++        )
++        received_sides = (
++            '<div class="news-sides">'
+             + "".join(sides)
+-            + '</div><p class="news-market-label">CURRENT DISPLAYED MARKET</p><p class="muted">Current values, not trade-date grades.</p>'
+-            + comparison
+-            + partial
+-            + qualifications
+-            + complete_assets
+-            + '<details class="news-evaluation"><summary>Evaluation · gains and costs</summary><p>Exchange facts using current player identities. Decision-time strategy and full current-roster fit are unavailable here; no historical motives or overall winner are inferred.</p>'
+-            + "".join(_evaluation(s) for s in card["sides"])
+-            + '<p>Market advantage, strategic fit, production while held and later outcomes are separate. Open the original trade for admitted historical evidence; retained FOIS grades remain NOT REVALIDATED.</p></details><div class="news-footer"><a class="ds-action" href="'
++            + '</div>'
++        )
++        if compact:
++            compact_notes = ('<p>Compares what each team received using one current Market snapshot. '
++                             'Trade-date prices, roster fit and later results are separate.</p>')
++            body = (heading + _market_edge(card) + qualifications
++                    + '<details class="news-evaluation"><summary>Why this edge</summary>'
++                    + compact_notes + partial + received_sides + complete_assets
++                    + "".join(_evaluation(s) for s in card["sides"])
++                    + '<p>Retained FOIS grades remain NOT REVALIDATED.</p></details>')
++        else:
++            body = (
++                received_sides + '<p class="news-market-label">CURRENT DISPLAYED MARKET</p><p class="muted">Current values, not trade-date grades.</p>'
++                + comparison + partial + qualifications + complete_assets
++                + '<details class="news-evaluation"><summary>Evaluation · gains and costs</summary><p>Exchange facts using current player identities. Decision-time strategy and full current-roster fit are unavailable here; no historical motives or overall winner are inferred.</p>'
++                + "".join(_evaluation(s) for s in card["sides"])
++                + '<p>Market advantage, strategic fit, production while held and later outcomes are separate. Open the original trade for admitted historical evidence; retained FOIS grades remain NOT REVALIDATED.</p></details>'
++            )
++        cards.append(
++            opening + body + '<div class="news-footer"><a class="ds-action" href="'
+             + escape(trade_url, quote=True)
+             + '">Original trade →</a><details class="news-evidence"><summary>Source &amp; pricing</summary><p>'
+             + _safe(card["source"])
+@@ -378,8 +436,13 @@ def render_news(model, *, viewer=None):
+             '<p class="muted news-quiet">No completed league trades in the past seven days with supported completion-time evidence.</p>'
+         ]
+     limits = "".join("<p>" + _safe(s) + "</p>" for s in model["limitations"])
++    title = "Recent league trades" if compact else "League Trade News"
++    history = ('<a class="news-history" aria-label="Full league trade history" href="/transactions?scope=all_history&amp;type=trade&amp;status=complete">View all trades&nbsp;→</a>'
++               if compact else '')
+     return (
+-        '<section class="ux-section league-trade-news" aria-labelledby="trade-news-title"><div class="ux-section-head"><h2 id="trade-news-title">League Trade News</h2><p>Last 7 days · Biggest deals first</p></div>'
++        '<section class="ux-section league-trade-news" aria-labelledby="trade-news-title"><div class="ux-section-head'
++        + (' news-section-head' if compact else '') + '"><h2 id="trade-news-title">' + title
++        + '</h2>' + history + '<p>Last 7 days · Biggest deals first</p></div>'
+         + "".join(cards[:2])
+         + (
+             '<details class="news-more"><summary>More completed trades · '
+@@ -412,3 +475,21 @@ NEWS_CSS += """
+ .news-footer{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;align-items:start}.news-footer:has(details[open]){grid-template-columns:1fr}.news-footer .ds-action{font-size:13px}.news-footer summary{font-size:13px}.news-remaining{color:var(--muted);font-size:12px}.news-qualification{font-size:12px;color:var(--muted);margin:4px 0}.news-full-side{min-width:0}.news-full-side h3{font-size:15px}.news-full-side li{overflow-wrap:anywhere}.news-card .player-summary-copy small{line-height:1.3}.news-total small{display:inline}.news-card .news-market-label{margin-top:8px}.news-evaluation,.news-evidence,.news-complete-assets{margin:2px 0}.league-trade-news .news-card{padding:12px}
+ @media(max-width:700px){.ux-command-grid:has(.home-secondary-rail){margin-bottom:8px}.ux-feature:has(+.home-secondary-rail){padding:12px}.ux-feature:has(+.home-secondary-rail) .ux-feature-copy{margin:6px 0}.ux-feature:has(+.home-secondary-rail) .ds-home-detail{margin:0}.ux-feature:has(+.home-secondary-rail) .ux-feature-actions{margin-top:8px;gap:6px}.ux-feature:has(+.home-secondary-rail) .identity-kicker{margin:0}.ux-feature:has(+.home-secondary-rail) h2{margin:6px 0}.ux-feature:has(+.home-secondary-rail) .ds-badges{margin:4px 0}}
+ """
++
++NEWS_CSS += """
++.news-head-teams{display:flex;flex-wrap:wrap;gap:3px 7px;align-items:baseline;margin:6px 0;line-height:1.3;font-size:15px}
++.news-head-teams b{min-width:0;overflow-wrap:anywhere}
++.news-teams-pair{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:start}
++.news-teams-pair b:last-child{text-align:right}
++.news-card-compact .news-edge .news-bar{position:relative;display:block;height:13px;background:#9777b1}
++.news-edge .news-bar span{display:block;height:100%;width:var(--share);background:#6599d4}
++.news-edge .news-bar::after{content:"";position:absolute;inset:0 auto 0 50%;border-left:2px solid var(--text);transform:translateX(-50%)}
++.news-card-compact .news-market-label{margin:10px 0 0;color:var(--text-secondary);font-size:12px;letter-spacing:0}
++.news-card-compact .news-advantage{font-size:14px;text-align:center;margin-bottom:5px}
++.news-card-compact .news-evaluation{border-top:1px solid var(--line)}
++.news-card-compact .news-evaluation summary{font-weight:650}
++.league-trade-news .news-section-head{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:0 8px}
++.league-trade-news .news-section-head h2{font-size:20px;color:var(--text);text-transform:none;letter-spacing:0;margin:0}
++.news-section-head p{grid-column:1/-1}
++.news-history{display:inline-flex;align-items:center;min-height:44px;color:var(--accent);font-size:13px;font-weight:650}
++"""
+diff --git a/src/ui/home_trade_opportunities.py b/src/ui/home_trade_opportunities.py
+index 59eee23..98617b2 100644
+--- a/src/ui/home_trade_opportunities.py
++++ b/src/ui/home_trade_opportunities.py
+@@ -10,7 +10,7 @@ def section(roster_id):
+     return f'''<section class="ux-section" id="home-opportunities" data-front-office="{roster_id}" data-presentation="loading" aria-labelledby="home-brief-title"><div class="ux-section-head"><h2 id="home-brief-title">Front Office Brief</h2></div><div id="home-opportunity-cards"></div><p class="home-brief-status" id="home-opportunity-status" role="status">Loading your team brief. No search runs automatically on Home.</p><div class="ux-feature-actions home-brief-actions"><button type="button" class="ds-action" id="home-find-ideas">Find Trade Ideas</button><button type="button" class="btn" id="home-reload-opportunities" hidden>Reload Home</button><a class="ds-action" href="/trades/recommended?front_office={roster_id}">Explore more trades →</a></div></section><script src="/static/js/strategy_session.js"></script><script src="/static/js/home-opportunities.js"></script>'''
+ 
+ 
+-def _brief(text):
++def brief_text(text):
+     text = plain_reason(str(text))
+     return text if len(text) <= 240 else text[:237].rstrip() + "…"
+ 
+@@ -50,10 +50,10 @@ def cards(rows, roster_id):
+         url = "/trades/create?" + urlencode(
+             {"front_office": roster_id, "home_offer": row["home_offer"]}
+         )
+-        partner = ('<p><b>Partner fit (inferred):</b> ' + escape(_brief(e["why_this_partner"])) + '</p>') if e.get("why_this_partner") else ""
++        partner = ('<p><b>Partner fit (inferred):</b> ' + escape(brief_text(e["why_this_partner"])) + '</p>') if e.get("why_this_partner") else ""
+         recorded_cost = ('<p><b>Original cost explanation:</b> ' + escape(str(drawback)) + '</p>') if str(drawback) != str(e.get("dominant_reason") or "") else ""
+         output.append(
+-            f'''<article class="home-opportunity"><p class="identity-kicker">{escape(kind)}</p><h3>{escape(str(p.get("partner_team_name") or "Counterparty"))}</h3><p><b>You send:</b> {assets("send")}</p><p><b>You receive:</b> {assets("receive")}</p><p>{escape(market)}</p><p><b>{escape(str(e.get("recommendation") or "Assessment unavailable"))}</b></p><p><b>Why consider:</b> {escape(_brief(reason))}</p><p><b>Cost and uncertainty:</b> {escape(_brief(drawback))}</p>{partner}<details><summary>Assessment evidence</summary><p>{escape(str(e.get("dominant_reason") or "Methodology details unavailable."))}</p>{recorded_cost}</details><a class="ds-action" href="{escape(url, quote=True)}">Explore / Edit · preview →</a></article>'''
++            f'''<article class="home-opportunity"><p class="identity-kicker">{escape(kind)}</p><h3>{escape(str(p.get("partner_team_name") or "Counterparty"))}</h3><p><b>You send:</b> {assets("send")}</p><p><b>You receive:</b> {assets("receive")}</p><p>{escape(market)}</p><p><b>{escape(str(e.get("recommendation") or "Assessment unavailable"))}</b></p><p><b>Why consider:</b> {escape(brief_text(reason))}</p><p><b>Cost and uncertainty:</b> {escape(brief_text(drawback))}</p>{partner}<details><summary>Assessment evidence</summary><p>{escape(str(e.get("dominant_reason") or "Methodology details unavailable."))}</p>{recorded_cost}</details><a class="ds-action" href="{escape(url, quote=True)}">Explore / Edit · preview →</a></article>'''
+         )
+     return "".join(output[:2]) + (
+         '<details class="ds-home-detail"><summary>Show more opportunities</summary>'
+@@ -68,3 +68,33 @@ CSS = """.home-opportunity{background:var(--surface,#202628);border:1px solid #3
+ .home-command{padding:0;border:0;background:transparent;border-radius:0}.home-command .identity-kicker{margin:0}.home-command h2{font-size:26px;margin:4px 0;overflow-wrap:anywhere}.home-record{display:flex;align-items:center;flex-wrap:wrap;gap:6px 10px}.home-command .ux-feature-actions{margin-top:8px;gap:8px}.home-command .ux-feature-actions>a{flex:1;padding:8px 12px}
+ #home-opportunities{margin-top:12px;display:flex;flex-direction:column}#home-opportunities>.ux-section-head{order:0}#home-opportunity-status{order:1}#home-opportunity-cards{order:2}#home-opportunities>.home-brief-actions{order:3}#home-opportunities[data-presentation="prepared"] #home-opportunity-cards{order:1}#home-opportunities[data-presentation="prepared"] #home-opportunity-status{order:2}#home-opportunities .ux-section-head{margin-bottom:8px}#home-opportunities .ux-section-head h2{margin:0}#home-opportunities .home-brief-actions{margin-top:8px;gap:8px}#home-opportunity-status{margin:8px 0;color:var(--text-secondary)}.home-secondary-controls .ds-home-detail{margin:8px 0}.home-secondary-controls .ds-action{margin:4px 0}
+ """
++
++CSS += """
++.ds-shell .top.home-top{grid-template-columns:minmax(0,1fr) fit-content(68%);align-items:start;gap:10px}
++.home-top aside{min-width:0;justify-self:end}
++.home-top .account-context{padding:0;border:0;margin:0}
++.home-top .account-context summary{padding:3px 10px;border:1px solid var(--line);border-radius:9px;background:var(--surface-elevated);gap:6px;min-height:44px}
++.home-top .account-context summary b{font-size:14px;overflow-wrap:anywhere}
++.home-top .account-context summary span{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
++.home-team,.home-first,.home-week{margin:0 0 14px;min-width:0}
++.home-team h1{font-size:clamp(26px,5vw,36px);margin:0;line-height:1.15;overflow-wrap:anywhere}
++.home-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));margin:10px 0 0;padding:6px 0;text-align:center;background:var(--surface-elevated);border:1px solid var(--line);border-radius:10px}
++.home-stats>div{display:flex;flex-direction:column;justify-content:center;min-width:0;padding:2px 7px}
++.home-stats>div+div{border-inline-start:1px solid var(--line)}
++.home-stats dt{color:var(--text-secondary);font-size:12px;line-height:1.35}
++.home-stats dd{order:-1;font-weight:800;font-size:clamp(13px,4vw,19px);margin:0;overflow-wrap:anywhere}
++.home-first{border:2px solid var(--accent);border-radius:12px;padding:12px;background:linear-gradient(150deg,#252f24,var(--surface-elevated) 70%);box-shadow:0 0 11px #80df4233}
++.home-first h2{font-size:15px;color:var(--accent);margin:0 0 5px}
++.home-first h3{font-size:clamp(19px,4.9vw,26px);line-height:1.2;margin:0;overflow-wrap:anywhere}
++.home-first p{font-size:14px;margin:7px 0 10px;max-width:58ch;line-height:1.45;overflow-wrap:anywhere}
++.home-first .ux-primary-action{min-height:44px;display:flex;justify-content:center;align-items:center;text-align:center}
++.home-week h2{font-size:20px;margin:0 0 8px}
++.home-shortcuts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin-bottom:14px}
++.home-week-links{background:var(--surface-elevated);border:1px solid var(--line);border-radius:10px;padding:0 10px}
++.home-shortcuts a,.home-week-links a{color:var(--text);font-weight:650;display:flex;align-items:center;justify-content:space-between;gap:5px;text-decoration:none;min-height:44px;min-width:0;overflow-wrap:anywhere}
++.home-shortcuts a{padding:6px 10px;background:var(--surface-elevated);border:1px solid var(--line);border-radius:10px}
++.home-week-links a+a{border-top:1px solid var(--line)}
++.home-shortcuts a:hover{border-color:var(--accent)}.home-shortcuts a span,.home-week-links a span{color:var(--accent);font-size:20px;line-height:1}
++.home-week .ds-home-detail{margin:4px 0 0}
++@media(min-width:700px){.home-stats{max-width:590px}.home-shortcuts{max-width:590px}.home-first .ux-primary-action{width:min(100%,330px)}}
++"""
+diff --git a/static/js/home-opportunities.js b/static/js/home-opportunities.js
+index d53580f..78ebbc2 100644
+--- a/static/js/home-opportunities.js
++++ b/static/js/home-opportunities.js
+@@ -6,6 +6,33 @@
+   const status = document.getElementById('home-opportunity-status'), cards = document.getElementById('home-opportunity-cards');
+   const find = document.getElementById('home-find-ideas'), rid = Number(root.dataset.frontOffice);
+   const reload = document.getElementById('home-reload-opportunities');
++  const priority = document.getElementById('home-priority');
++  const teamUrl = '/teams/' + rid;
++  let priorityExpiry, displayedPriority;
++  function showPriority(item, message, requestStartedAt) {
++    if (!priority) return;
++    const remaining = item?.valid_until
++      ? Date.parse(item.valid_until) - Date.parse(item.verified_at) - (performance.now() - requestStartedAt)
++      : null;
++    if (remaining !== null && (!Number.isFinite(remaining) || remaining <= 0)) item = null;
++    clearTimeout(priorityExpiry);
++    if (item && remaining !== null) priorityExpiry = setTimeout(
++      () => showPriority(null, 'The lineup check expired. Open My Team to recheck it.'), remaining);
++    const nextPriority = JSON.stringify([item?.title, item?.reason, item?.action, item?.href, message]);
++    if (nextPriority === displayedPriority) return;
++    displayedPriority = nextPriority;
++    const heading = document.createElement('h3'), reason = document.createElement('p');
++    const link = document.createElement('a');
++    heading.textContent = item?.title || 'No clear priority right now';
++    reason.textContent = item?.reason || message || 'Your prepared team data doesn’t point to a clear next move.';
++    link.textContent = item?.action || 'Open My Team';
++    link.href = item?.href || teamUrl;
++    link.className = 'ux-primary-action';
++    link.dataset.dtosAction = 'primary';
++    const focused = priority.contains(document.activeElement);
++    priority.replaceChildren(heading, reason, link);
++    if (focused) link.focus({preventScroll:true});
++  }
+   let context, metadata, displayedIdentity, revision = 0, request, departed = false, invalidated = false;
+   const locks = () => {
+     try { const saved = JSON.parse(sessionStorage.getItem('dtos-trade-workspace:' + context.binding) || '{}');
+@@ -19,8 +46,11 @@
+   async function load() {
+     if (departed || invalidated) return;
+     const run = ++revision; request?.abort(); request = new AbortController(); find.disabled = false;
+-    if (displayedIdentity && displayedIdentity !== identity()) cards.replaceChildren();
+-    const before = context && identity();
++    if (displayedIdentity && displayedIdentity !== identity()) {
++      cards.replaceChildren();
++      showPriority(null, 'Your team brief is being refreshed.');
++    }
++    const before = context && identity(), requestStartedAt = performance.now();
+     try {
+       const response = await fetch('/api/trades/home-opportunities?' + query(), {credentials:'same-origin', signal:request.signal});
+       if (!response.ok) throw new Error('Your team brief could not be loaded. Open Trade or try again.');
+@@ -28,6 +58,7 @@
+       if (run !== revision || departed || (before && before !== identity())) return;
+       if (body.workspace_context.roster_id !== rid || (context && body.workspace_context.binding !== context.binding)) {
+         cards.replaceChildren(); find.disabled = true; metadata = null;
++        showPriority(null, 'Reload Home to review the selected franchise.');
+         invalidated = true; displayedIdentity = null; reload.hidden = false;
+         status.textContent = 'Your active league or franchise changed. Reload Home to see its opportunities.';
+         root.dataset.presentation = 'empty'; root.dataset.state = 'context_changed'; return;
+@@ -37,6 +68,7 @@
+       if (initial && (locks().protected_assets.length || locks().excluded_assets.length)) return load();
+       const html = body.brief_html ?? body.html;
+       if (cards.innerHTML !== html) cards.innerHTML = html;
++      showPriority(body.priority, null, requestStartedAt);
+       displayedIdentity = identity(); // Escaped same-origin canonical presentation, no scoring here.
+       status.textContent = body.count ? 'Recently completed search · matches the current team and data. These offers have not been submitted.' : body.retained ? (body.reason || 'No supported opportunities in this bounded search.') : 'No current matching search has been completed. Find Trade Ideas when ready.';
+       if (!body.source_identity) status.textContent = 'Trade prices are unavailable or changing. Your roster facts are still shown separately. Review My Team or try again shortly.';
+@@ -45,6 +77,7 @@
+       root.dataset.presentation = body.brief_count ? 'prepared' : 'empty';
+     } catch (error) { if (run === revision && !departed && error.name !== 'AbortError') {
+       cards.replaceChildren(); metadata = null; displayedIdentity = null;
++      showPriority(null, 'Your team brief is unavailable right now.');
+       root.dataset.presentation = 'error'; status.textContent = error.message;
+     } }
+   }
+diff --git a/tests/test_beginner_browser.py b/tests/test_beginner_browser.py
+index 074934e..12701f7 100644
+--- a/tests/test_beginner_browser.py
++++ b/tests/test_beginner_browser.py
+@@ -52,7 +52,7 @@ class BeginnerBrowserTests(unittest.TestCase):
+                     page.route('**/*', transport)
+                     start = time.perf_counter()
+                     self.assertEqual(page.goto('https://dtos.test/').status, 200)
+-                    home_link = page.locator('.ux-action[href$="#full-roster"]')
++                    home_link = page.locator('.home-shortcuts a[href$="#full-roster"]')
+                     self.assertEqual(home_link.get_attribute('href'), '/teams/1#full-roster')
+                     home_link.click()
+                     self.assertTrue(page.locator('#my-team-roster').evaluate('e=>e.open'))
+@@ -123,7 +123,7 @@ class BeginnerBrowserTests(unittest.TestCase):
+                     f.data['league']['league_id'] = 'league-2'
+                     f.data['scoring_settings'] = {**source_scoring, 'rec': .5, 'bonus_rec_te': .5}
+                     page.goto('https://dtos.test/')
+-                    second_home = page.locator('.ux-action[href$="#full-roster"]')
++                    second_home = page.locator('.home-shortcuts a[href$="#full-roster"]')
+                     self.assertEqual(second_home.get_attribute('href'), '/teams/2#full-roster')
+                     second_home.click()
+                     self.assertTrue(page.locator('#my-team-roster').evaluate('e=>e.open'))
+diff --git a/tests/test_beginner_final_browser.py b/tests/test_beginner_final_browser.py
+index f531a72..91c37bf 100644
+--- a/tests/test_beginner_final_browser.py
++++ b/tests/test_beginner_final_browser.py
+@@ -147,7 +147,7 @@ class FinalResetBrowserTests(unittest.TestCase):
+                     page.route("**/*", transport)
+                     start = time.perf_counter()
+                     self.assertEqual(page.goto("https://dtos.test/").status, 200)
+-                    home_link = page.locator('.ux-action[href$="#full-roster"]')
++                    home_link = page.locator('.home-shortcuts a[href$="#full-roster"]')
+                     self.assertEqual(
+                         home_link.get_attribute("href"), "/teams/1#full-roster"
+                     )
+@@ -392,7 +392,7 @@ class FinalResetBrowserTests(unittest.TestCase):
+                         "bonus_rec_te": 0.5,
+                     }
+                     page.goto("https://dtos.test/")
+-                    second_home = page.locator('.ux-action[href$="#full-roster"]')
++                    second_home = page.locator('.home-shortcuts a[href$="#full-roster"]')
+                     self.assertEqual(
+                         second_home.get_attribute("href"), "/teams/2#full-roster"
+                     )
+@@ -637,6 +637,7 @@ class FinalNavigationBrowserTests(unittest.TestCase):
+                     )
+                     self.assertEqual(page.locator(".market-asset").count(), 0)
+                     page.goto("https://dtos.test/")
++                    page.locator("#home-more-tools > summary").click()
+                     page.get_by_text("View another franchise", exact=True).click()
+                     page.locator("#front-office").select_option("2")
+                     page.get_by_role(
+@@ -673,6 +674,7 @@ class FinalNavigationBrowserTests(unittest.TestCase):
+                     owner.store.activate(owner.account_id, "league-2")
+                     owner.data["league"]["league_id"] = "league-2"
+                     page.goto("https://dtos.test/")
++                    page.locator("#home-more-tools > summary").click()
+                     page.get_by_text("View another franchise", exact=True).click()
+                     page.locator("#front-office").select_option("1")
+                     page.get_by_role(
+diff --git a/tests/test_customer_home_team.py b/tests/test_customer_home_team.py
+index 8b9da15..a6fd3a4 100644
+--- a/tests/test_customer_home_team.py
++++ b/tests/test_customer_home_team.py
+@@ -284,6 +284,7 @@ class CustomerHomeFailureBrowserTests(unittest.TestCase):
+                                 {'detail': {'code': code, 'message': 'source diagnostic', 'retry': 'explicit'}}))
+                         page.route('**/api/trades/generate', refuse)
+                         page.goto('https://dtos.test/')
++                        page.locator('#home-brief-details > summary').click()
+                         page.locator('.home-opportunity').wait_for()
+                         before = page.locator('.home-opportunity').count()
+                         button = page.get_by_role('button', name='Find Trade Ideas', exact=True)
+diff --git a/tests/test_dynamic_needs_browser.py b/tests/test_dynamic_needs_browser.py
+index 53b9436..ab0e545 100644
+--- a/tests/test_dynamic_needs_browser.py
++++ b/tests/test_dynamic_needs_browser.py
+@@ -70,6 +70,7 @@ class DynamicNeedsBrowserTests(TestCase):
+                             page.evaluate("document.documentElement.scrollWidth"), width
+                         )
+                     page.goto("https://dtos.test/")
++                    page.locator("#home-brief-details > summary").click()
+                     page.locator(".home-opportunity").first.wait_for()
+                     self.assertIn(
+                         f.row["evaluation"]["why_you_would_do_it"],
+diff --git a/tests/test_franchise_outlook_browser.py b/tests/test_franchise_outlook_browser.py
+index 2786e75..b743486 100644
+--- a/tests/test_franchise_outlook_browser.py
++++ b/tests/test_franchise_outlook_browser.py
+@@ -43,6 +43,7 @@ class FranchiseOutlookBrowserTests(unittest.TestCase):
+                         if root:
+                             page.screenshot(path=str(root/f'my-team-expanded-{width}.png'),full_page=True)
+                         page.goto('https://dtos.test/')
++                        page.locator("#home-brief-details > summary").click()
+                         page.wait_for_load_state('networkidle')
+                         shared=page.locator('[aria-label="Franchise outlook"]')
+                         self.assertEqual(shared.count(),1)
+diff --git a/tests/test_front_office_brief_browser.py b/tests/test_front_office_brief_browser.py
+index c9522af..ba29140 100644
+--- a/tests/test_front_office_brief_browser.py
++++ b/tests/test_front_office_brief_browser.py
+@@ -31,6 +31,7 @@ class FrontOfficeBriefBrowserTests(unittest.TestCase):
+                         page.on('request', lambda r: requests.append(r.url))
+                         page.on('pageerror', lambda e: errors.append(str(e)))
+                         page.goto('https://dtos.test/')
++                        page.locator('#home-brief-details > summary').click()
+                         page.locator('.home-opportunity').wait_for()
+                         self.assertEqual(page.get_by_role('heading',name='Front Office Brief').count(), 1)
+                         self.assertEqual(page.get_by_role('heading',name='Attention',exact=True).count(), 0)
+@@ -43,16 +44,17 @@ class FrontOfficeBriefBrowserTests(unittest.TestCase):
+                         row = page.evaluate('''() => {
+                           const rect=s=>{const r=document.querySelector(s).getBoundingClientRect();return {y:r.y,height:r.height,width:r.width};};
+                           return {brief:rect('#home-opportunities'),news:rect('.league-trade-news'),
+-                            firstInsight:rect('#home-opportunity-cards article'),find:rect('#home-find-ideas'),
+-                            title:rect('#home-opportunity-cards article h3'),reason:rect('#home-opportunity-cards article p'),
+-                            drawback:rect('#home-opportunity-cards article p:nth-of-type(2)'),action:rect('#home-opportunity-cards article a'),
++                            firstInsight:rect('#home-priority'),find:rect('#home-find-ideas'),
++                            title:rect('#home-priority h3'),reason:rect('#home-priority p'),
++                            drawback:rect('#home-opportunity-cards article p:nth-of-type(2)'),action:rect('#home-priority a'),
+                             nav:rect('.manager-nav'),
+                             overflow:document.documentElement.scrollWidth-innerWidth,
+                             visibleText:document.querySelector('#home-opportunity-cards').innerText,
+                             font:getComputedStyle(document.querySelector('#home-opportunity-cards p')).fontSize};}''')
+                         row.update(width=width,height=height)
+                         row['initialVisibility'] = {key: row[key]['y'] >= 0 and row[key]['y'] + row[key]['height'] <= min(height, row['nav']['y'] if width < 761 else height) for key in ('title', 'reason', 'drawback', 'action')}
+-                        self.assertLess(row['brief']['y'],row['news']['y'])
++                        self.assertLess(row['firstInsight']['y'],row['news']['y'])
++                        self.assertGreater(row['brief']['y'],row['news']['y'])
+                         self.assertLessEqual(row['overflow'],0)
+                         self.assertLess(row['firstInsight']['y'], 550 if width < 761 else 600)
+                         if width in (375, 390):
+@@ -66,6 +68,7 @@ class FrontOfficeBriefBrowserTests(unittest.TestCase):
+                         self.assertEqual(page.locator('#home-opportunity-cards > article').count(),2)
+                         self.assertFalse(more.evaluate('e=>e.open'))
+                         summary = more.locator('summary').first
++                        page.keyboard.press('Tab')
+                         summary.focus()
+                         self.assertNotEqual(summary.evaluate('e=>getComputedStyle(e).outlineStyle'),'none')
+                         summary.press('Enter')
+@@ -77,6 +80,7 @@ class FrontOfficeBriefBrowserTests(unittest.TestCase):
+                         page.get_by_text('Trade review',exact=True).wait_for()
+                         page.get_by_role('button',name='Back to your draft',exact=True).click()
+                         page.goto('https://dtos.test/')
++                        page.locator('#home-brief-details > summary').click()
+                         page.locator('.home-opportunity').wait_for()
+                         page.locator('.home-opportunity').get_by_role('link',name='Explore / Edit').click()
+                         page.get_by_role('button',name='Use this offer in my draft',exact=True).click()
+@@ -85,6 +89,7 @@ class FrontOfficeBriefBrowserTests(unittest.TestCase):
+                         measurements.append(row)
+                         if os.environ.get('DTOS_BRIEF_EVIDENCE'):
+                             page.goto('https://dtos.test/')
++                            page.locator('#home-brief-details > summary').click()
+                             page.locator('.home-opportunity').wait_for()
+                             page.screenshot(path=str(Path(os.environ['DTOS_BRIEF_EVIDENCE'])/f'home-{width}.png'),full_page=True)
+                     finally:
+@@ -110,11 +115,13 @@ class FrontOfficeBriefBrowserTests(unittest.TestCase):
+                 page.on('pageerror', lambda e: errors.append(str(e)))
+                 with patch('services.home_trade_opportunities.source_identity',return_value=None):
+                     page.goto('https://dtos.test/')
++                    page.locator('#home-brief-details > summary').click()
+                     page.get_by_text('Trade prices are unavailable or changing.',exact=False).wait_for()
+                     self.assertIn('Review recorded draft picks',page.locator('#home-opportunity-cards').inner_text())
+                     self.assertIn('remaining totals are unknown',page.locator('#home-opportunity-cards').inner_text())
+                     self.assertEqual(page.locator('.home-opportunity').count(),0)
+                 page.reload()
++                page.locator('#home-brief-details > summary').click()
+                 page.locator('.home-opportunity').wait_for()
+                 pending=[]
+                 def hold(route):
+@@ -184,6 +191,7 @@ class FrontOfficeBriefBrowserTests(unittest.TestCase):
+                                 stack.enter_context(patch('services.front_office_brief.prepared_diagnostics', return_value=None))
+                                 stack.enter_context(patch('src.core.intelligence.cache.IntelligenceCache.peek', return_value=None))
+                             page.goto('https://dtos.test/', wait_until='domcontentloaded')
++                            page.locator('#home-brief-details > summary').click()
+                             if state != 'loading':
+                                 page.wait_for_function("document.querySelector('#home-opportunities').dataset.presentation !== 'loading'")
+                             text = page.locator('#home-opportunity-status').inner_text()
+@@ -201,6 +209,7 @@ class FrontOfficeBriefBrowserTests(unittest.TestCase):
+                             self.assertFalse(generated)
+                             self.assertTrue(page.get_by_role('button', name='Find Trade Ideas', exact=True).is_enabled())
+                             self.assertLessEqual(page.evaluate('document.documentElement.scrollWidth-innerWidth'), 0)
++                            page.keyboard.press('Tab')
+                             page.get_by_role('button', name='Find Trade Ideas', exact=True).focus()
+                             self.assertNotEqual(page.locator('#home-find-ideas').evaluate('e=>getComputedStyle(e).outlineStyle'), 'none')
+                             measurements.append({'width':width,'height':height,'state':state,'status':text,'automatic_discovery_calls':len(generated)})
+@@ -210,11 +219,12 @@ class FrontOfficeBriefBrowserTests(unittest.TestCase):
+                 # Exact capital action and existing My Team return use the real authenticated routes.
+                 page = f.f.browser_page(browser, 390, 844)
+                 page.goto('https://dtos.test/')
++                page.locator('#home-brief-details > summary').click()
+                 page.get_by_role('link', name='Review exact draft capital').click()
+                 self.assertIn('/teams/1#draft-capital', page.url)
+                 self.assertTrue(page.locator('#draft-capital').is_visible())
+                 page.go_back()
+-                page.get_by_role('heading', name='Front Office Brief').wait_for()
++                page.get_by_role('heading', name='Do this first').wait_for()
+                 page.close()
+                 # A current RB concern reuses the existing editable Trade filter.
+                 import base64
+@@ -236,7 +246,7 @@ class FrontOfficeBriefBrowserTests(unittest.TestCase):
+                 page.goto('https://dtos.test/')
+                 generated = []
+                 page.on('request', lambda request: generated.append(request.url) if request.method == 'POST' and '/api/trades/' in request.url else None)
+-                page.get_by_role('link', name='Explore RB trades').click()
++                page.locator('#home-priority').get_by_role('link', name='Explore RB trades').click()
+                 self.assertIn('/trades/recommended?', page.url)
+                 self.assertIn('team_need=', page.url)
+                 page.wait_for_function("document.querySelector('#trade-context') && !document.querySelector('#trade-context').textContent.includes('Loading')")
+@@ -244,7 +254,7 @@ class FrontOfficeBriefBrowserTests(unittest.TestCase):
+                 self.assertIn('depth need, not a starter-upgrade', page.locator('#recommendation-position-origin').inner_text())
+                 self.assertEqual(generated, [])
+                 page.go_back()
+-                page.get_by_role('heading', name='Front Office Brief').wait_for()
++                page.get_by_role('heading', name='Do this first').wait_for()
+                 page.close()
+             finally:
+                 browser.close()
+diff --git a/tests/test_front_office_brief_http.py b/tests/test_front_office_brief_http.py
+index dea4ecb..b175165 100644
+--- a/tests/test_front_office_brief_http.py
++++ b/tests/test_front_office_brief_http.py
+@@ -1,6 +1,6 @@
+ """Real prepared producer -> bounded offer cache -> authenticated HTTP."""
+ from contextlib import ExitStack
+-from datetime import datetime, timezone
++from datetime import datetime, timedelta, timezone
+ from hashlib import sha256
+ from html import unescape
+ from pathlib import Path
+@@ -11,6 +11,40 @@ from unittest.mock import patch
+ from tests import test_roster_diagnostic_http as fixtures
+ 
+ 
++class HomePriorityTests(unittest.TestCase):
++    def test_verified_cutoff_then_confirmed_bye_then_opportunity_then_goal(self):
++        from services.front_office_brief import first_action
++        now = datetime(2026, 11, 15, 16, tzinfo=timezone.utc)
++        team = {'roster_id': 1}
++        review = {'actionable': True, 'empty_slots': 1,
++                  'kickoff_deadline': (now + timedelta(hours=1)).isoformat(),
++                  'valid_until': (now + timedelta(minutes=10)).isoformat()}
++        byes = [{'week': 11, 'state': 'shortfall', 'bye_starters': [[1, '1-RB-1']], 'unfilled': ['RB']}]
++        goal = dict(family='goal', title='Choose a goal', reason='Set a strategy.',
++                    action='Choose goal', href='/teams/1#my-team-strategy')
++        need = dict(family='need', title='Find RB depth', reason='The roster lacks a healthy backup.',
++                    action='Review depth', href='/teams/1#positional-depth')
++        self.assertEqual(first_action(team, 10, review, byes, [goal, need], now=now)['href'],
++                         '/teams/1#lineup-recheck')
++        stale = {**review, 'valid_until': now.isoformat()}
++        self.assertEqual(first_action(team, 10, stale, byes, [goal, need], now=now)['title'], 'Plan for Week 11 byes')
++        self.assertEqual(first_action(team, 10, stale, None, [goal, need], now=now)['title'], need['title'])
++        self.assertEqual(first_action(team, 10, stale, None, [goal], now=now)['href'], goal['href'])
++        self.assertIsNone(first_action(team, 10, stale, [], [], now=now))
++
++    def test_conditional_fallback_and_bye_preserve_the_uncertainty(self):
++        from services.front_office_brief import first_action
++        now = datetime(2026, 11, 15, 16, tzinfo=timezone.utc)
++        fallback = dict(starter='Example Starter', kickoff_deadline=(now + timedelta(hours=1)).isoformat(),
++                        valid_until=(now + timedelta(minutes=5)).isoformat())
++        byes = [dict(week=11, state='conditional', bye_starters=[[0, 'rb']], moves=[[0, 'other', None]])]
++        first = first_action({'roster_id': 1}, 10, {'fallback': fallback}, byes, [], now=now)
++        self.assertIn('If Example Starter can’t play', first['reason'])
++        self.assertIn('depends on player availability', first_action({'roster_id': 1}, 10, {}, byes, [], now=now)['reason'])
++        byes[0]['state'] = 'unknown'
++        self.assertIsNone(first_action({'roster_id': 1}, 10, {}, byes, [], now=now))
++
++
+ class FrontOfficeBriefHTTPTests(unittest.TestCase):
+     def setUp(self):
+         self.f = fixtures.DiagnosticHTTPTests()
+@@ -60,7 +94,10 @@ class FrontOfficeBriefHTTPTests(unittest.TestCase):
+             for _ in range(10):
+                 response = self.client.get('/')
+                 self.assertEqual(response.status_code, 200)
+-                self.assertLess(response.text.index('Front Office Brief'), response.text.index('League Trade News'))
++                self.assertLess(response.text.index('Do this first'), response.text.index('Recent league trades'))
++                for label in ('Front Office Brief', 'Team comparisons', 'League standings',
++                              'All matchups this week', 'Market and league activity', 'My Assets'):
++                    self.assertIn(label, response.text)
+                 self.read()
+             for spy in spies:
+                 spy.assert_not_called()
+@@ -121,6 +158,11 @@ class FrontOfficeBriefHTTPTests(unittest.TestCase):
+             'roster_id': '1', 'csrf_token': self.f.f.f.csrf, 'strategy_scope': context['strategy_scope'],
+         }, follow_redirects=False)
+         self.assertEqual(saved.status_code, 303, saved.text)
++        from tools.validation.smoke_http import validate_product_contract
++        home = self.client.get('/')
++        self.assertEqual(home.status_code, 200)
++        validate_product_contract(home.content, '/')
++        self.assertRegex(home.text, r'<header\b[^>]*data-signed-home[^>]*data-dtos-component="page-header"')
+         team = self.client.get('/teams/1')
+         match = re.search(r'id="my-team-trade-need"[^>]*href="([^"]+)"', team.text)
+         self.assertIsNotNone(match)
+@@ -131,6 +173,7 @@ class FrontOfficeBriefHTTPTests(unittest.TestCase):
+         admission.assert_called_once()
+         self.assertEqual(meta['strategy'], 'WIN NOW')
+         self.assertIn('Explore QB trades', meta['brief_html'])
++        self.assertEqual(meta['priority']['href'], href)
+         self.assertIn(match[1], meta['brief_html'])
+         self.assertIn('Cost and uncertainty', meta['brief_html'])
+         destination = self.client.get(href)
+diff --git a/tests/test_front_office_workflow_browser.py b/tests/test_front_office_workflow_browser.py
+index 6a88b2d..801e612 100644
+--- a/tests/test_front_office_workflow_browser.py
++++ b/tests/test_front_office_workflow_browser.py
+@@ -181,15 +181,17 @@ class FrontOfficeWorkflowBrowserTests(unittest.TestCase):
+         def posts():
+             return [request for request in requests if request[0] == 'POST']
+         page.goto(helper.origin + '/')
+-        page.locator('#home-opportunity-cards article').first.wait_for()
+-        leading = page.locator('#home-opportunity-cards article').first
++        leading = page.locator('#home-priority')
+         action = leading.get_by_role('link', name=f'Explore {position} trades')
+         self.assertEqual(action.get_attribute('href'), need_href)
+-        self.assertIn('Cost and uncertainty', leading.inner_text())
++        page.locator('#home-brief-details > summary').click()
++        self.assertIn('Cost and uncertainty', page.locator('#home-opportunity-cards article').first.inner_text())
++        page.locator('#home-brief-details > summary').click()
+         home_views = []
+         for width, height in VIEWPORTS:
+             page.set_viewport_size(dict(width=width, height=height))
+             action.scroll_into_view_if_needed()
++            page.keyboard.press('Tab')
+             action.focus()
+             self.assertNotEqual(action.evaluate('e=>getComputedStyle(e).outlineStyle'), 'none')
+             self.assertGreaterEqual(action.bounding_box()['height'], 44)
+diff --git a/tests/test_home_opportunities.py b/tests/test_home_opportunities.py
+index 0ff64b7..e06077a 100644
+--- a/tests/test_home_opportunities.py
++++ b/tests/test_home_opportunities.py
+@@ -463,9 +463,11 @@ class HomeOpportunityTests(unittest.TestCase):
+             )
+         self.assertEqual(hashes(), before)
+         html = self.client.get("/").text
+-        self.assertLess(html.index("Open My Team"), html.index("League Trade News"))
+         self.assertLess(
+-            html.index('id="home-opportunities"'), html.index("League Trade News")
++            html.index("Do this first"), html.index("Recent league trades")
++        )
++        self.assertGreater(
++            html.index('id="home-opportunities"'), html.index("Recent league trades")
+         )
+ 
+ 
+diff --git a/tests/test_home_opportunities_browser.py b/tests/test_home_opportunities_browser.py
+index 7b1cb20..7997829 100644
+--- a/tests/test_home_opportunities_browser.py
++++ b/tests/test_home_opportunities_browser.py
+@@ -136,6 +136,7 @@ class HomeOpportunityBrowserTests(unittest.TestCase):
+ 
+                     page.route("**/*", transport)
+                     page.goto("https://dtos.test/")
++                    page.locator("#home-brief-details > summary").click()
+                     page.wait_for_function(
+                         "document.querySelector('#home-opportunities').dataset.state"
+                     )
+@@ -188,6 +189,7 @@ class HomeOpportunityBrowserTests(unittest.TestCase):
+                         "1-RB-2", page.locator("#trade-sent-chips").inner_text()
+                     )
+                     page.goto("https://dtos.test/")
++                    page.locator("#home-brief-details > summary").click()
+                     page.locator(".home-opportunity").first.wait_for()
+                     page.locator(".home-opportunity").first.get_by_role(
+                         "link", name="Explore / Edit"
+@@ -209,8 +211,10 @@ class HomeOpportunityBrowserTests(unittest.TestCase):
+                         "1-RB-2", page.locator("#trade-sent-chips").inner_text()
+                     )
+                     page.goto("https://dtos.test/")
++                    page.locator("#home-brief-details > summary").click()
+                     page.locator(".home-opportunity").first.wait_for()
+                     page.reload()
++                    page.locator("#home-brief-details > summary").click()
+                     page.locator(".home-opportunity").first.wait_for()
+                     # Actual authenticated A -> B -> A HTTP/browser isolation, same local roster IDs.
+                     original_name = f.data["teams"][0]["team_name"]
+@@ -226,6 +230,7 @@ class HomeOpportunityBrowserTests(unittest.TestCase):
+                     f.data["league"]["league_id"] = "league-2"
+                     f.data["teams"][0]["team_name"] = "Separate Franchise"
+                     page.goto("https://dtos.test/")
++                    page.locator("#home-brief-details > summary").click()
+                     page.wait_for_function(
+                         "document.querySelector('#home-opportunities').dataset.state"
+                     )
+@@ -237,6 +242,7 @@ class HomeOpportunityBrowserTests(unittest.TestCase):
+                     f.data["league"]["league_id"] = "league-1"
+                     f.data["teams"][0]["team_name"] = original_name
+                     page.goto("https://dtos.test/")
++                    page.locator("#home-brief-details > summary").click()
+                     page.locator(".home-opportunity").first.wait_for()
+                     self.assertEqual(page.locator(".home-opportunity").count(), 1)
+                     # Legacy browser-goal compatibility; explicit durable saves have separate HTTP/browser controls.
+diff --git a/tests/test_home_opportunity_integrity.py b/tests/test_home_opportunity_integrity.py
+index 4fdcb58..cc57a75 100644
+--- a/tests/test_home_opportunity_integrity.py
++++ b/tests/test_home_opportunity_integrity.py
+@@ -251,12 +251,13 @@ class OpportunityIntegrityTests(unittest.TestCase):
+                     errors = []
+                     page.on("pageerror", lambda e: errors.append(str(e)))
+                     page.goto("https://dtos.test/")
++                    page.locator("#home-brief-details > summary").click()
+                     page.locator(".home-opportunity").wait_for()
+                     self.assertIn(
+                         self.row["evaluation"]["why_you_would_do_it"],
+                         page.locator(".home-opportunity").inner_text(),
+                     )
+-                    page.get_by_role("link", name="Explore / Edit").click()
++                    page.locator(".home-opportunity").get_by_role("link", name="Explore / Edit").click()
+                     page.get_by_text("Trade review", exact=True).wait_for()
+                     moved = self.move()
+                     page.get_by_role(
+@@ -336,6 +337,7 @@ class OpportunityIntegrityTests(unittest.TestCase):
+                 errors = []
+                 page.on("pageerror", lambda e: errors.append(str(e)))
+                 page.goto("https://dtos.test/")
++                page.locator("#home-brief-details > summary").click()
+                 page.locator(".home-opportunity").wait_for()
+                 self.f.store.upsert_membership(
+                     self.f.account_id,
+@@ -367,6 +369,7 @@ class OpportunityIntegrityTests(unittest.TestCase):
+                 self.f.store.activate(self.f.account_id, "league-1")
+                 self.f.data["league"]["league_id"] = "league-1"
+                 page.reload()
++                page.locator("#home-brief-details > summary").click()
+                 page.locator(".home-opportunity").wait_for()
+                 self.assertEqual(errors, [])
+             finally:
+@@ -381,8 +384,9 @@ class OpportunityIntegrityTests(unittest.TestCase):
+                 for change in ("market", "projection", "strategy", "unchanged"):
+                     page = self.browser_page(browser)
+                     page.goto("https://dtos.test/")
++                    page.locator("#home-brief-details > summary").click()
+                     page.locator(".home-opportunity").wait_for()
+-                    page.get_by_role("link", name="Explore / Edit").click()
++                    page.locator(".home-opportunity").get_by_role("link", name="Explore / Edit").click()
+                     page.get_by_text("Trade review", exact=True).wait_for()
+                     if change == "market":
+                         self.source.prices(a=300)
+@@ -489,8 +493,9 @@ class OpportunityIntegrityTests(unittest.TestCase):
+             try:
+                 page = self.browser_page(browser)
+                 page.goto("https://dtos.test/")
++                page.locator("#home-brief-details > summary").click()
+                 page.locator(".home-opportunity").wait_for()
+-                page.get_by_role("link", name="Explore / Edit").click()
++                page.locator(".home-opportunity").get_by_role("link", name="Explore / Edit").click()
+                 page.get_by_role("button", name="Use this offer in my draft", exact=True).click()
+                 pending = []
+                 page.route(
+diff --git a/tests/test_home_trade_news.py b/tests/test_home_trade_news.py
+index d6a5a00..a5a9e05 100644
+--- a/tests/test_home_trade_news.py
++++ b/tests/test_home_trade_news.py
+@@ -126,6 +126,39 @@ class HomeTradeNewsTests(unittest.TestCase):
+         self.now = datetime.now(timezone.utc).replace(microsecond=0)
+         self.data = fixture(self.now)
+ 
++    def test_compact_market_edge_both_directions_even_partial_and_faab(self):
++        common = dict(draft_picks=[])
++        straight = trade(self.now, 'left', **common)
++        reverse = trade(self.now, 'right', **common, adds={'13346': 2, '13406': 1},
++                        drops={'13346': 1, '13406': 2})
++        incomplete = trade(self.now, 'incomplete', **common,
++                           adds={'13346': 1, 'unpriced': 2}, drops={'13346': 2, 'unpriced': 1})
++        faab = trade(self.now, 'budget', **common, waiver_budget=[{'sender': 1, 'receiver': 2, 'amount': 10}])
++        for raw, direction, message in (
++            (straight, 'left', 'Chase Bank received'),
++            (reverse, 'right', 'Week3 is a bigger joke received'),
++            (incomplete, None, 'lack comparable Market values'),
++            (faab, None, 'waiver budget'),
++        ):
++            self.data['transactions'] = [raw]
++            rendered = render_news(model(self.data, self.now), compact=True, viewer=1)
++            self.assertIn(message, rendered)
++            self.assertIn('Why this edge', rendered)
++            self.assertIn('Full league trade history', rendered)
++            if direction:
++                self.assertIn(f'data-edge="{direction}"', rendered)
++                self.assertIn(self.now.strftime('%b %d, %Y UTC'), rendered)
++            else:
++                self.assertNotIn('data-edge=', rendered)
++        self.data['transactions'] = [straight]
++        admitted = model(self.data, self.now)
++        admitted['cards'][0]['sides'][1]['total'] = admitted['cards'][0]['sides'][0]['total']
++        rendered = render_news(admitted, compact=True)
++        self.assertIn('data-edge="even"', rendered)
++        self.assertIn('Even · equal Market totals', rendered)
++        admitted['cards'][0]['valuation_at'] = None
++        self.assertIn('valuation could not be verified', render_news(admitted, compact=True))
++
+     def test_actual_three_team_source_faab_players_and_five_picks(self):
+         facts = json.loads(
+             (Path(__file__).parent / "fixtures/trade_faab_source.json").read_text()
+diff --git a/tests/test_home_trade_news_browser.py b/tests/test_home_trade_news_browser.py
+index 2987c0c..16e3940 100644
+--- a/tests/test_home_trade_news_browser.py
++++ b/tests/test_home_trade_news_browser.py
+@@ -105,7 +105,7 @@ class TradeNewsBrowserTests(unittest.TestCase):
+                     (390, 432),
+                     (1280, 900),
+                 ]:
+-                    page = browser.new_page(viewport={"width": width, "height": height})
++                    page = browser.new_page(viewport={"width": width, "height": height}, has_touch=width == 390)
+                     page.set_default_timeout(8000)
+                     errors = []
+                     requests = []
+@@ -142,6 +142,22 @@ class TradeNewsBrowserTests(unittest.TestCase):
+                     page.goto("http://dtos.test/", wait_until="networkidle")
+                     card = page.locator('[data-news-trade="1414718106177122304"]')
+                     self.assertTrue(card.is_visible())
++                    self.assertIn("Chase Bank", card.locator(".news-head-teams").inner_text())
++                    self.assertFalse(card.locator(".news-evaluation").evaluate("e=>e.open"))
++                    page.screenshot(path=f".validation/home-trade-news/home-default-{width}-{height}.png")
++                    collapsed_height = card.bounding_box()["height"]
++                    card.screenshot(path=f".validation/home-trade-news/card-{width}-{height}.png")
++                    summary = card.get_by_text("Why this edge", exact=True)
++                    summary.scroll_into_view_if_needed()
++                    summary.focus()
++                    self.assertNotEqual(
++                        summary.evaluate("e=>getComputedStyle(e).outlineStyle"), "none"
++                    )
++                    if width == 390:
++                        summary.tap()
++                    else:
++                        summary.press("Enter")
++                    self.assertTrue(card.locator(".news-evaluation").evaluate("e=>e.open"))
+                     self.assertIn(
+                         "Denzel Boston", card.locator(".news-side").nth(0).inner_text()
+                     )
+@@ -165,24 +181,7 @@ class TradeNewsBrowserTests(unittest.TestCase):
+                             "e=>e.complete && e.naturalWidth>0"
+                         )
+                     )
+-                    self.assertFalse(
+-                        card.locator(".news-evaluation").evaluate("e=>e.open")
+-                    )
+-                    collapsed_height = card.bounding_box()["height"]
+-                    card.screenshot(
+-                        path=f".validation/home-trade-news/card-{width}-{height}.png"
+-                    )
+-                    summary = card.locator(".news-evaluation summary")
+-                    summary.scroll_into_view_if_needed()
+-                    summary.focus()
+-                    self.assertNotEqual(
+-                        summary.evaluate("e=>getComputedStyle(e).outlineStyle"), "none"
+-                    )
+-                    summary.press("Enter")
+-                    self.assertTrue(
+-                        card.locator(".news-evaluation").evaluate("e=>e.open")
+-                    )
+-                    self.assertIn("Decision-time strategy", card.inner_text())
++                    self.assertIn("Trade-date prices", card.inner_text())
+                     self.assertIn("Cost:", card.inner_text())
+                     self.assertNotIn("manager intentionally", card.inner_text())
+                     self.assertLessEqual(
+@@ -328,21 +327,27 @@ class TradeNewsBrowserTests(unittest.TestCase):
+                     self.assertEqual(page.locator(".news-card:visible").count(), 2)
+                     first = page.locator(".news-card").first
+                     self.assertEqual(first.locator(".news-side").count(), 3)
+-                    self.assertIn("100 FAAB", first.inner_text())
++                    self.assertIn("100 FAAB", first.text_content())
+                     self.assertEqual(first.locator(".news-bar").count(), 0)
++                    first.get_by_text("Why this edge", exact=True).click()
++                    # Portraits now load when their disclosure opens. Wait for
++                    # the deliberately failed lazy image before checking its replacement.
++                    first.locator(".news-player").first.scroll_into_view_if_needed()
++                    first.locator(".player-headshot-fallback").first.wait_for()
+                     self.assertTrue(
+                         first.locator(".player-headshot").first.evaluate("e=>e.hidden")
+                     )
+                     self.assertTrue(
+                         first.locator(".player-headshot-fallback").first.is_visible()
+                     )
++                    first.get_by_text("Why this edge", exact=True).click()
+                     more = page.locator(".news-more>summary")
+                     more.scroll_into_view_if_needed()
+                     more.click()
+                     self.assertEqual(page.locator(".news-card:visible").count(), 6)
+                     last = page.locator('[data-news-trade="unknown"]')
+-                    self.assertIn("Unpriced", last.inner_text())
+-                    self.assertIn("Market advantage unavailable", last.inner_text())
++                    self.assertIn("Unpriced", last.text_content())
++                    self.assertIn("Market edge unavailable", last.inner_text())
+                     self.assertEqual(last.locator(".news-bar").count(), 0)
+                     self.assertEqual(page.locator(".news-evaluation[open]").count(), 0)
+                     self.assertLessEqual(
+@@ -449,7 +454,7 @@ class TradeNewsBrowserTests(unittest.TestCase):
+                     self.assertLess(
+                         header.bounding_box()["y"], news.bounding_box()["y"]
+                     )
+-                    actions = header.locator(".ux-feature-actions")
++                    actions = page.locator(".home-shortcuts")
+                     self.assertLess(
+                         actions.bounding_box()["y"], 550 if width < 700 else 720
+                     )
+@@ -463,7 +468,7 @@ class TradeNewsBrowserTests(unittest.TestCase):
+                             )
+                         )
+ 
+-                    hit(header.get_by_role("link", name="Open My Team", exact=True))
++                    hit(actions.get_by_role("link", name="My Roster", exact=True))
+                     large = page.locator('[data-news-trade="1415021723840966656"]')
+                     boston = page.locator('[data-news-trade="1414718106177122304"]')
+                     complete = large.locator(".news-complete-assets")
+@@ -498,6 +503,9 @@ class TradeNewsBrowserTests(unittest.TestCase):
+                             ),
+                         }
+                     )
++                    evaluation = large.locator(".news-evaluation>summary")
++                    hit(evaluation)
++                    evaluation.click()
+                     summary = complete.locator("summary")
+                     self.assertIn("11 items", summary.inner_text())
+                     hit(summary)
+@@ -516,20 +524,14 @@ class TradeNewsBrowserTests(unittest.TestCase):
+                     )
+                     self.assertEqual(complete.locator('a[href^="/picks/"]').count(), 6)
+                     self.assertEqual(complete.locator(".news-player").count(), 5)
+-                    self.assertFalse(
++                    self.assertTrue(
+                         large.locator(".news-evaluation").evaluate("e=>e.open")
+                     )
+                     summary.focus()
+                     summary.press("Enter")
+                     self.assertFalse(complete.evaluate("e=>e.open"))
+-                    evaluation = large.locator(".news-evaluation>summary")
+-                    hit(evaluation)
+-                    evaluation.click()
+-                    self.assertTrue(
+-                        large.locator(".news-evaluation").evaluate("e=>e.open")
+-                    )
+-                    self.assertFalse(complete.evaluate("e=>e.open"))
+                     evaluation.click()
++                    self.assertFalse(large.locator(".news-evaluation").evaluate("e=>e.open"))
+                     pricing = boston.locator(".news-evidence>summary")
+                     hit(pricing)
+                     pricing.click()
+@@ -612,6 +614,7 @@ class TradeNewsBrowserTests(unittest.TestCase):
+                     cash_card = page.locator('[data-news-trade="965057520920260608"]')
+                     self.assertEqual(cash_card.locator(".news-side").count(), 3)
+                     self.assertEqual(cash_card.locator(".news-bar").count(), 0)
++                    cash_card.get_by_text("Why this edge", exact=True).click()
+                     cash_summary = cash_card.locator(".news-complete-assets>summary")
+                     hit(cash_summary)
+                     cash_summary.click()
+diff --git a/tests/test_lineup_review_browser.py b/tests/test_lineup_review_browser.py
+index 78695d6..b6af7dc 100644
+--- a/tests/test_lineup_review_browser.py
++++ b/tests/test_lineup_review_browser.py
+@@ -11,6 +11,41 @@ from tools.validation.browser_runtime import launch_chromium
+ 
+ 
+ class LineupReviewBrowserTests(unittest.TestCase):
++    def test_signed_in_home_uses_verified_lineup_and_expires_with_keyboard_focus(self):
++        from datetime import datetime, timedelta, timezone
++        from unittest.mock import patch
++        fixture, data, service, _ = authenticated_prepared(self)
++        with patch("services.trade_intelligence._trade_projection_service", return_value=service), sync_playwright() as pw:
++            browser = launch_chromium(pw, headless=True)
++            try:
++                page = fixture.f.browser_page(browser, 390, 844)
++                page.clock.install(time=datetime.now(timezone.utc) - timedelta(hours=1))
++                requests = []
++                page.on('request', lambda request: requests.append(request.method))
++                page.goto('https://dtos.test/')
++                top = page.locator('#home-priority')
++                action = top.get_by_role('link', name='Review lineup', exact=True)
++                action.wait_for()
++                self.assertIn('starting slot is empty', top.inner_text())
++                self.assertEqual(action.get_attribute('href'), '/teams/1#lineup-recheck')
++                self.assertEqual(action.get_attribute('data-dtos-action'), 'primary')
++                directory = os.environ.get('DTOS_BRIEF_EVIDENCE')
++                if directory:
++                    page.screenshot(path=str(Path(directory, 'home-lineup-priority-390.png')))
++                action.focus()
++                page.clock.fast_forward(16 * 60 * 1000)
++                calm = top.get_by_role('link', name='Open My Team', exact=True)
++                self.assertTrue(calm.evaluate('e=>e===document.activeElement'))
++                self.assertIn('lineup check expired', top.inner_text())
++                self.assertTrue(all(method == 'GET' for method in requests))
++                data['season_matchups']['weeks']['8']['observed_at'] = '2000-01-01T00:00:00+00:00'
++                with page.expect_response('**/api/trades/home-opportunities?*'):
++                    page.reload()
++                page.wait_for_function("document.querySelector('#home-opportunities').dataset.state")
++                self.assertEqual(action.count(), 0)
++            finally:
++                browser.close()
++
+     def test_phone_desktop_exact_lineups_disclosures_navigation_and_expiry(self):
+         fixture, data, service, _ = authenticated_prepared(self)
+         client = fixture.f.f.client
+diff --git a/tests/test_phone_design_browser.py b/tests/test_phone_design_browser.py
+index 11fec91..a6e97b4 100644
+--- a/tests/test_phone_design_browser.py
++++ b/tests/test_phone_design_browser.py
+@@ -40,7 +40,8 @@ class SharedPhoneDesignBrowserTests(journey.ProductBrowserJourneyTests):
+                 node.bounding_box()["height"], 43, (path, node.inner_text())
+             )
+         if path == "/":
+-            self.assertIn("Official record:", page.locator(".ux-feature").inner_text())
++            self.assertEqual(page.locator(".home-stats dt").all_text_contents(), ["Record", "League rank", "Points / week"])
++            page.locator("#home-more-tools > summary").click()
+             context = page.locator(".home-secondary-controls details").filter(
+                 has=page.locator("summary", has_text="Team overview and shortcuts")
+             )
+diff --git a/tests/test_plain_english_final_browser.py b/tests/test_plain_english_final_browser.py
+index f27daec..dc33121 100644
+--- a/tests/test_plain_english_final_browser.py
++++ b/tests/test_plain_english_final_browser.py
+@@ -64,9 +64,10 @@ def capture_pages(folder=None):
+                             response = page.goto('https://dtos.test' + path)
+                             if response.status != 200:
+                                 raise AssertionError((name, response.status))
+-                            page.locator(selector).wait_for()
+                             if name.startswith('home'):
++                                page.locator('#home-brief-details > summary').click()
+                                 page.locator('#home-opportunity-cards article').first.wait_for()
++                            page.locator(selector).wait_for()
+                             if name == 'builder':
+                                 page.locator('#trade-context').get_by_text('Active league', exact=False).wait_for()
+                             page.wait_for_load_state('networkidle')
+diff --git a/tests/test_positional_presentation_browser.py b/tests/test_positional_presentation_browser.py
+index 7339ba2..13fb6be 100644
+--- a/tests/test_positional_presentation_browser.py
++++ b/tests/test_positional_presentation_browser.py
+@@ -48,6 +48,7 @@ class PositionalPresentationBrowserTests(unittest.TestCase):
+                             page.wait_for_load_state("networkidle")
+                             card = page.locator(selector)
+                             if label == "home":
++                                page.locator("#home-brief-details > summary").click()
+                                 card.locator("summary").press("Enter")
+                             self.assertIn(
+                                 "Supported positional strength: QB", card.inner_text()
+@@ -113,6 +114,7 @@ class PositionalPresentationBrowserTests(unittest.TestCase):
+                         page.wait_for_load_state('networkidle')
+                         self.assertIn('Provisional: QB: supported evidence identifies a starting-lineup need.', page.locator('#my-team-outlook').inner_text())
+                         page.goto('https://dtos.test/')
++                        page.locator("#home-brief-details > summary").click()
+                         page.wait_for_load_state('networkidle')
+                         outlook = page.locator('[aria-label="Franchise outlook"]')
+                         outlook.locator('summary').press('Enter')
+diff --git a/tests/test_premium_hierarchy_browser.py b/tests/test_premium_hierarchy_browser.py
+index f16df18..5773b1b 100644
+--- a/tests/test_premium_hierarchy_browser.py
++++ b/tests/test_premium_hierarchy_browser.py
+@@ -26,7 +26,7 @@ VIEWPORTS = ((320, 432), (375, 667), (390, 844), (1280, 900))
+ def capture(page, name, width, height, *, persist=True, **facts):
+     row = page.evaluate("""() => {
+       const box=e=>{const r=e.getBoundingClientRect();return {x:r.x,y:r.y+scrollY,width:r.width,height:r.height};};
+-      const selectors={shell:'.ds-shell',heading:'.ds-page-header',insight:'#home-opportunity-cards article',search:'#market-search',searchHeading:'.market-filters h3',summary:'.ai-context',takeaway:'.ai-takeaway',concern:'.ai-summary-limit',shortcuts:'nav[aria-label="Roster sections"]'};
++      const selectors={shell:'.ds-shell',heading:'.ds-page-header',insight:'#home-priority',search:'#market-search',searchHeading:'.market-filters h3',summary:'.ai-context',takeaway:'.ai-takeaway',concern:'.ai-summary-limit',shortcuts:'nav[aria-label="Roster sections"]'};
+       return {overflow:document.documentElement.scrollWidth-innerWidth,scrollY,
+         boxes:Object.fromEntries(Object.entries(selectors).filter(([k,s])=>document.querySelector(s)).map(([k,s])=>[k,box(document.querySelector(s))])),
+         controls:[...document.querySelectorAll('nav[aria-label="Roster sections"] a,.ds-shell .top button,.ds-shell .secondary-nav>summary')].filter(e=>e.getClientRects().length).map(e=>({text:e.innerText,...box(e)}))};
+@@ -117,7 +117,15 @@ class PremiumSharedJourneyTests(journey.ProductBrowserJourneyTests):
+                         or fit["bottom"] <= fit["portraitTop"],
+                         "Result label must not overlap the player portrait",
+                     )
+-        if path in ("/", "/market", "/teams/1", "/fois"):
++        if path == "/":
++            home_tools = page.locator("#home-more-tools > summary")
++            keyboard_disclosure(self, page, home_tools)
++            home_tools.press("Enter")
++            keyboard_disclosure(self, page, page.locator("#home-more-tools .secondary-nav>summary"))
++            self.assertEqual(page.evaluate("document.documentElement.scrollWidth-innerWidth"), 0)
++            home_tools.press("Enter")
++            self.assertFalse(home_tools.evaluate("e=>e.parentElement.open"))
++        if path in ("/market", "/teams/1", "/fois"):
+             keyboard_disclosure(
+                 self, page, page.locator(".ds-shell .secondary-nav>summary")
+             )
+@@ -180,11 +188,13 @@ class PremiumPreparedBrowserTests(unittest.TestCase):
+                     requests = []
+                     page.on("request", lambda r: requests.append(r.url))
+                     page.goto("https://dtos.test/")
++                    page.locator('#home-priority h3').get_by_text('Consider this prepared trade').wait_for()
++                    row = capture(page, "prepared-home", width, height)
++                    page.locator('#home-brief-details > summary').click()
+                     page.locator(".home-opportunity").wait_for()
+                     self.assertEqual(
+                         page.locator("#home-opportunity-cards>article").count(), 2
+                     )
+-                    row = capture(page, "prepared-home", width, height)
+                     if width < 760:
+                         self.assertGreaterEqual(
+                             baseline[width] - row["boxes"]["insight"]["y"], 120
+@@ -200,7 +210,7 @@ class PremiumPreparedBrowserTests(unittest.TestCase):
+                         "2028", page.locator(".home-opportunity").inner_text()
+                     )
+                     self.assertLess(
+-                        page.locator("#home-opportunities").bounding_box()["y"],
++                        page.locator("#home-priority").bounding_box()["y"],
+                         page.locator(".league-trade-news").bounding_box()["y"],
+                     )
+                     self.assertFalse(any("/api/trades/generate" in u for u in requests))
+diff --git a/tests/test_season_performance_browser.py b/tests/test_season_performance_browser.py
+index 4795f4a..948b3ad 100644
+--- a/tests/test_season_performance_browser.py
++++ b/tests/test_season_performance_browser.py
+@@ -67,6 +67,7 @@ class SeasonPerformanceBrowserTests(unittest.TestCase):
+                         if root:
+                             page.screenshot(path=str(root / f'team-expanded-{width}.png'), full_page=True)
+                         page.goto('https://dtos.test/')
++                        page.locator('.home-week details > summary').click()
+                         link = page.get_by_role('link', name='Review season results')
+                         self.assertEqual(link.count(), 1)
+                         self.assertEqual(page.get_by_text('How often did we outscore', exact=False).count(), 0)
+@@ -122,6 +123,7 @@ class SeasonPerformanceBrowserTests(unittest.TestCase):
+                         panel.get_by_text('Weeks, coverage and sources', exact=True).click()
+                         self.assertIn('partial-native', panel.inner_text())
+                         page.goto('https://dtos.test/')
++                        page.locator('.home-week details > summary').click()
+                         lead = page.get_by_role('heading', name='Season so far').locator('..')
+                         if points == 'Unknown':
+                             self.assertNotIn('0.00 points', lead.inner_text())
+@@ -185,6 +187,7 @@ class SeasonPerformanceBrowserTests(unittest.TestCase):
+             try:
+                 page = f.f.browser_page(browser, 390, 844)
+                 page.goto('https://dtos.test/')
++                page.locator('.home-week details > summary').click()
+                 home = page.get_by_role('heading', name='Season so far').locator('..')
+                 self.assertIn('175.35', home.inner_text())
+                 self.assertIn('10/10', home.inner_text())
+@@ -200,6 +203,7 @@ class SeasonPerformanceBrowserTests(unittest.TestCase):
+                 f.f.f.data = {**published, 'nfl_state': {**nfl_state, 'season': '2025'},
+                               'season_matchups': {**prepared, 'semantic_generation': 'foreign-clock'}}
+                 page.goto('https://dtos.test/')
++                page.locator('.home-week details > summary').click()
+                 self.assertIn('Compatible season team results are not prepared.', home.inner_text())
+                 page.goto('https://dtos.test/teams/1')
+                 self.assertNotIn('175.35', panel.inner_text())
+diff --git a/tests/test_trade_decision_http_browser.py b/tests/test_trade_decision_http_browser.py
+index 9f99248..146b1c5 100644
+--- a/tests/test_trade_decision_http_browser.py
++++ b/tests/test_trade_decision_http_browser.py
+@@ -302,7 +302,7 @@ class DecisionHTTPBrowserTests(unittest.TestCase):
+             )
+             page.goto("https://dtos.test/")
+             page.get_by_role(
+-                "link", name="Build a trade", exact=True
++                "link", name="Trade Center", exact=True
+             ).click()
+             page.get_by_role("link", name="Build a Trade", exact=False).first.click()
+             page.locator("#trade-context").get_by_text(

@@ -1,0 +1,387 @@
+{
+  "scope": "Observed pass in the aligned full local run; this is not a final full-run receipt.",
+  "source": {
+    "baseline": "a3a859bc5d316eb5382ff6ab80b0cfc763275adf",
+    "baseline_tree": "161e801ae284ec307bb960e3ff9dbb8511680347",
+    "candidate": "96c9697a865d9725bb8d9e3a5c403530bad80b76",
+    "tree": "9bf70f099ca65ea9a137fdda1b8cf60f0335353c",
+    "branch": "feat/signed-in-home-2276",
+    "version": "1.22.61",
+    "build": 2276,
+    "expected_test_count": 4672,
+    "pr": 365
+  },
+  "test": [
+    {
+      "event": "start",
+      "test": "test_source_evidence_browser.SourceEvidenceBrowserTests.test_trade_high_cardinality_provenance",
+      "time": 1795476580.6800988,
+      "pid": 32,
+      "rss": 1112055808,
+      "cgroup": 1379037184
+    },
+    {
+      "event": "stop",
+      "test": "test_source_evidence_browser.SourceEvidenceBrowserTests.test_trade_high_cardinality_provenance",
+      "time": 1795476604.7005668,
+      "pid": 32,
+      "rss": 1117974528,
+      "cgroup": 1385488384
+    }
+  ],
+  "requests": [
+    {
+      "timestamp": "2026-11-23T23:29:41.271175+00:00",
+      "level": "INFO",
+      "logger": "dtos.trade_resources",
+      "message": "trade_admission",
+      "request_id": "system",
+      "event": "trade_admission",
+      "diagnostic": {
+        "schema": "trade-resource-v1",
+        "observation": {
+          "admitted": true,
+          "reason": "ready",
+          "current_bytes": 1561997312,
+          "limit_bytes": 2147483648,
+          "raw_headroom_bytes": 585486336,
+          "clean_inactive_file_bytes": 93569024,
+          "conditional_file_credit_bytes": 46784512,
+          "admission_headroom_bytes": 632270848,
+          "working_bytes": 268435456,
+          "safety_bytes": 134217728,
+          "events": {
+            "oom": 0,
+            "oom_kill": 0
+          }
+        },
+        "recovery": null
+      }
+    },
+    {
+      "timestamp": "2026-11-23T23:29:41.306634+00:00",
+      "level": "INFO",
+      "logger": "httpx",
+      "message": "HTTP Request: POST http://testserver/api/trades/evaluate \"HTTP/1.1 200 OK\"",
+      "request_id": "system"
+    },
+    {
+      "timestamp": "2026-11-23T23:29:42.702391+00:00",
+      "level": "INFO",
+      "logger": "dtos.trade_resources",
+      "message": "trade_admission",
+      "request_id": "system",
+      "event": "trade_admission",
+      "diagnostic": {
+        "schema": "trade-resource-v1",
+        "observation": {
+          "admitted": true,
+          "reason": "ready",
+          "current_bytes": 1674215424,
+          "limit_bytes": 2147483648,
+          "raw_headroom_bytes": 473268224,
+          "clean_inactive_file_bytes": 95006720,
+          "conditional_file_credit_bytes": 47503360,
+          "admission_headroom_bytes": 520771584,
+          "working_bytes": 268435456,
+          "safety_bytes": 134217728,
+          "events": {
+            "oom": 0,
+            "oom_kill": 0
+          }
+        },
+        "recovery": null
+      }
+    },
+    {
+      "timestamp": "2026-11-23T23:29:42.803849+00:00",
+      "level": "INFO",
+      "logger": "httpx",
+      "message": "HTTP Request: POST http://testserver/api/trades/evaluate \"HTTP/1.1 200 OK\"",
+      "request_id": "system"
+    },
+    {
+      "timestamp": "2026-11-23T23:29:45.649282+00:00",
+      "level": "INFO",
+      "logger": "dtos.trade_resources",
+      "message": "trade_admission",
+      "request_id": "system",
+      "event": "trade_admission",
+      "diagnostic": {
+        "schema": "trade-resource-v1",
+        "observation": {
+          "admitted": true,
+          "reason": "ready",
+          "current_bytes": 1695510528,
+          "limit_bytes": 2147483648,
+          "raw_headroom_bytes": 451973120,
+          "clean_inactive_file_bytes": 94371840,
+          "conditional_file_credit_bytes": 47185920,
+          "admission_headroom_bytes": 499159040,
+          "working_bytes": 268435456,
+          "safety_bytes": 134217728,
+          "events": {
+            "oom": 0,
+            "oom_kill": 0
+          }
+        },
+        "recovery": null
+      }
+    },
+    {
+      "timestamp": "2026-11-23T23:29:45.741820+00:00",
+      "level": "INFO",
+      "logger": "httpx",
+      "message": "HTTP Request: POST http://testserver/api/trades/evaluate \"HTTP/1.1 200 OK\"",
+      "request_id": "system"
+    },
+    {
+      "timestamp": "2026-11-23T23:29:49.618309+00:00",
+      "level": "INFO",
+      "logger": "dtos.trade_resources",
+      "message": "trade_admission",
+      "request_id": "system",
+      "event": "trade_admission",
+      "diagnostic": {
+        "schema": "trade-resource-v1",
+        "observation": {
+          "admitted": true,
+          "reason": "ready",
+          "current_bytes": 1723260928,
+          "limit_bytes": 2147483648,
+          "raw_headroom_bytes": 424222720,
+          "clean_inactive_file_bytes": 93904896,
+          "conditional_file_credit_bytes": 46952448,
+          "admission_headroom_bytes": 471175168,
+          "working_bytes": 268435456,
+          "safety_bytes": 134217728,
+          "events": {
+            "oom": 0,
+            "oom_kill": 0
+          }
+        },
+        "recovery": null
+      }
+    },
+    {
+      "timestamp": "2026-11-23T23:29:49.718054+00:00",
+      "level": "INFO",
+      "logger": "httpx",
+      "message": "HTTP Request: POST http://testserver/api/trades/evaluate \"HTTP/1.1 200 OK\"",
+      "request_id": "system"
+    },
+    {
+      "timestamp": "2026-11-23T23:29:52.220231+00:00",
+      "level": "INFO",
+      "logger": "dtos.trade_resources",
+      "message": "trade_admission",
+      "request_id": "system",
+      "event": "trade_admission",
+      "diagnostic": {
+        "schema": "trade-resource-v1",
+        "observation": {
+          "admitted": true,
+          "reason": "ready",
+          "current_bytes": 1739411456,
+          "limit_bytes": 2147483648,
+          "raw_headroom_bytes": 408072192,
+          "clean_inactive_file_bytes": 93933568,
+          "conditional_file_credit_bytes": 46966784,
+          "admission_headroom_bytes": 455038976,
+          "working_bytes": 268435456,
+          "safety_bytes": 134217728,
+          "events": {
+            "oom": 0,
+            "oom_kill": 0
+          }
+        },
+        "recovery": null
+      }
+    },
+    {
+      "timestamp": "2026-11-23T23:29:52.303309+00:00",
+      "level": "INFO",
+      "logger": "httpx",
+      "message": "HTTP Request: POST http://testserver/api/trades/evaluate \"HTTP/1.1 200 OK\"",
+      "request_id": "system"
+    },
+    {
+      "timestamp": "2026-11-23T23:29:54.194326+00:00",
+      "level": "INFO",
+      "logger": "dtos.trade_resources",
+      "message": "trade_admission",
+      "request_id": "system",
+      "event": "trade_admission",
+      "diagnostic": {
+        "schema": "trade-resource-v1",
+        "observation": {
+          "admitted": true,
+          "reason": "ready",
+          "current_bytes": 1638719488,
+          "limit_bytes": 2147483648,
+          "raw_headroom_bytes": 508764160,
+          "clean_inactive_file_bytes": 93130752,
+          "conditional_file_credit_bytes": 46565376,
+          "admission_headroom_bytes": 555329536,
+          "working_bytes": 268435456,
+          "safety_bytes": 134217728,
+          "events": {
+            "oom": 0,
+            "oom_kill": 0
+          }
+        },
+        "recovery": null
+      }
+    },
+    {
+      "timestamp": "2026-11-23T23:29:54.227660+00:00",
+      "level": "INFO",
+      "logger": "httpx",
+      "message": "HTTP Request: POST http://testserver/api/trades/evaluate \"HTTP/1.1 200 OK\"",
+      "request_id": "system"
+    },
+    {
+      "timestamp": "2026-11-23T23:29:55.367902+00:00",
+      "level": "INFO",
+      "logger": "dtos.trade_resources",
+      "message": "trade_admission",
+      "request_id": "system",
+      "event": "trade_admission",
+      "diagnostic": {
+        "schema": "trade-resource-v1",
+        "observation": {
+          "admitted": true,
+          "reason": "ready",
+          "current_bytes": 1728221184,
+          "limit_bytes": 2147483648,
+          "raw_headroom_bytes": 419262464,
+          "clean_inactive_file_bytes": 94294016,
+          "conditional_file_credit_bytes": 47147008,
+          "admission_headroom_bytes": 466409472,
+          "working_bytes": 268435456,
+          "safety_bytes": 134217728,
+          "events": {
+            "oom": 0,
+            "oom_kill": 0
+          }
+        },
+        "recovery": null
+      }
+    },
+    {
+      "timestamp": "2026-11-23T23:29:55.455758+00:00",
+      "level": "INFO",
+      "logger": "httpx",
+      "message": "HTTP Request: POST http://testserver/api/trades/evaluate \"HTTP/1.1 200 OK\"",
+      "request_id": "system"
+    },
+    {
+      "timestamp": "2026-11-23T23:29:57.768322+00:00",
+      "level": "INFO",
+      "logger": "dtos.trade_resources",
+      "message": "trade_admission",
+      "request_id": "system",
+      "event": "trade_admission",
+      "diagnostic": {
+        "schema": "trade-resource-v1",
+        "observation": {
+          "admitted": true,
+          "reason": "ready",
+          "current_bytes": 1729163264,
+          "limit_bytes": 2147483648,
+          "raw_headroom_bytes": 418320384,
+          "clean_inactive_file_bytes": 93765632,
+          "conditional_file_credit_bytes": 46882816,
+          "admission_headroom_bytes": 465203200,
+          "working_bytes": 268435456,
+          "safety_bytes": 134217728,
+          "events": {
+            "oom": 0,
+            "oom_kill": 0
+          }
+        },
+        "recovery": null
+      }
+    },
+    {
+      "timestamp": "2026-11-23T23:29:57.868692+00:00",
+      "level": "INFO",
+      "logger": "httpx",
+      "message": "HTTP Request: POST http://testserver/api/trades/evaluate \"HTTP/1.1 200 OK\"",
+      "request_id": "system"
+    },
+    {
+      "timestamp": "2026-11-23T23:30:00.319172+00:00",
+      "level": "INFO",
+      "logger": "dtos.trade_resources",
+      "message": "trade_admission",
+      "request_id": "system",
+      "event": "trade_admission",
+      "diagnostic": {
+        "schema": "trade-resource-v1",
+        "observation": {
+          "admitted": true,
+          "reason": "ready",
+          "current_bytes": 1736708096,
+          "limit_bytes": 2147483648,
+          "raw_headroom_bytes": 410775552,
+          "clean_inactive_file_bytes": 93765632,
+          "conditional_file_credit_bytes": 46882816,
+          "admission_headroom_bytes": 457658368,
+          "working_bytes": 268435456,
+          "safety_bytes": 134217728,
+          "events": {
+            "oom": 0,
+            "oom_kill": 0
+          }
+        },
+        "recovery": null
+      }
+    },
+    {
+      "timestamp": "2026-11-23T23:30:00.408560+00:00",
+      "level": "INFO",
+      "logger": "httpx",
+      "message": "HTTP Request: POST http://testserver/api/trades/evaluate \"HTTP/1.1 200 OK\"",
+      "request_id": "system"
+    },
+    {
+      "timestamp": "2026-11-23T23:30:03.035269+00:00",
+      "level": "INFO",
+      "logger": "dtos.trade_resources",
+      "message": "trade_admission",
+      "request_id": "system",
+      "event": "trade_admission",
+      "diagnostic": {
+        "schema": "trade-resource-v1",
+        "observation": {
+          "admitted": true,
+          "reason": "ready",
+          "current_bytes": 1749356544,
+          "limit_bytes": 2147483648,
+          "raw_headroom_bytes": 398127104,
+          "clean_inactive_file_bytes": 93761536,
+          "conditional_file_credit_bytes": 46880768,
+          "admission_headroom_bytes": 445007872,
+          "working_bytes": 268435456,
+          "safety_bytes": 134217728,
+          "events": {
+            "oom": 0,
+            "oom_kill": 0
+          }
+        },
+        "recovery": null
+      }
+    },
+    {
+      "timestamp": "2026-11-23T23:30:03.122669+00:00",
+      "level": "INFO",
+      "logger": "httpx",
+      "message": "HTTP Request: POST http://testserver/api/trades/evaluate \"HTTP/1.1 200 OK\"",
+      "request_id": "system"
+    }
+  ],
+  "min_admitted_headroom": 445007872,
+  "previous_local_deferral_headroom": 398813184,
+  "unchanged_reserves": 402653184
+}
