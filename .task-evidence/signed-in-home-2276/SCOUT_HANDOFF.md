@@ -13,4 +13,4 @@ Screenshots and consoles use disposable Chromium fixtures. The captured baseline
 
 Validated candidate identity for the focused fixture run: `d48b53348b6867083e00acdd8550c756019581e4`. Tree `6c3df4e5fbe2b981fcd09c3bb4abf8d5693509b0`.
 
-Final application commit . Validated-source target tree . The [visual-source receipt](originals/visual-source-equivalence.json) binds the screenshots to identical non-test project bytes. Ten repaired navigation controls passed on this new candidate. Full exact-tree gates remain the release authority.
+Final application commit `6a052a736da455277e4e0a8055f06a41ba283f79`. Validated-source target tree `02aa9f3418289269928b7b9b0397be10f8ae1252`. The [visual-source receipt](originals/visual-source-equivalence.json) binds the screenshots to identical non-test project bytes. Ten repaired navigation controls passed on this new candidate. Full exact-tree gates remain the release authority.
