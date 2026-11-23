@@ -330,6 +330,10 @@ class TradeNewsBrowserTests(unittest.TestCase):
                     self.assertIn("100 FAAB", first.text_content())
                     self.assertEqual(first.locator(".news-bar").count(), 0)
                     first.get_by_text("Why this edge", exact=True).click()
+                    # Portraits now load when their disclosure opens. Wait for
+                    # the deliberately failed lazy image before checking its replacement.
+                    first.locator(".news-player").first.scroll_into_view_if_needed()
+                    first.locator(".player-headshot-fallback").first.wait_for()
                     self.assertTrue(
                         first.locator(".player-headshot").first.evaluate("e=>e.hidden")
                     )
