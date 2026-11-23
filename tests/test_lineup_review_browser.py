@@ -28,6 +28,7 @@ class LineupReviewBrowserTests(unittest.TestCase):
                 action.wait_for()
                 self.assertIn('starting slot is empty', top.inner_text())
                 self.assertEqual(action.get_attribute('href'), '/teams/1#lineup-recheck')
+                self.assertEqual(action.get_attribute('data-dtos-action'), 'primary')
                 directory = os.environ.get('DTOS_BRIEF_EVIDENCE')
                 if directory:
                     page.screenshot(path=str(Path(directory, 'home-lineup-priority-390.png')))

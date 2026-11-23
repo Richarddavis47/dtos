@@ -158,6 +158,11 @@ class FrontOfficeBriefHTTPTests(unittest.TestCase):
             'roster_id': '1', 'csrf_token': self.f.f.f.csrf, 'strategy_scope': context['strategy_scope'],
         }, follow_redirects=False)
         self.assertEqual(saved.status_code, 303, saved.text)
+        from tools.validation.smoke_http import validate_product_contract
+        home = self.client.get('/')
+        self.assertEqual(home.status_code, 200)
+        validate_product_contract(home.content, '/')
+        self.assertRegex(home.text, r'<header\b[^>]*data-signed-home[^>]*data-dtos-component="page-header"')
         team = self.client.get('/teams/1')
         match = re.search(r'id="my-team-trade-need"[^>]*href="([^"]+)"', team.text)
         self.assertIsNotNone(match)

@@ -28,6 +28,7 @@
     link.textContent = item?.action || 'Open My Team';
     link.href = item?.href || teamUrl;
     link.className = 'ux-primary-action';
+    link.dataset.dtosAction = 'primary';
     const focused = priority.contains(document.activeElement);
     priority.replaceChildren(heading, reason, link);
     if (focused) link.focus({preventScroll:true});

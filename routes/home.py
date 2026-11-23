@@ -215,7 +215,7 @@ def create_home_router(
             )
             shortcuts = ''.join(f'<a href="{escape(href, quote=True)}">{label}<span aria-hidden="true">›</span></a>'
                                 for label, href in destinations)
-            header = f'''<header class="ux-feature home-command home-team" data-signed-home>
+            header = f'''<header class="ux-feature home-command home-team" data-signed-home data-dtos-component="page-header">
               <h1>{escape(str(team.get("team_name") or "Your franchise"))}{you_badge(data, roster_id)}</h1>
               <!--home-league-switch-->
               <dl class="home-stats">
@@ -228,7 +228,7 @@ def create_home_router(
               <h2 id="home-first-heading">Do this first</h2>
               <div id="home-priority" aria-live="polite">
                 <h3>Checking your next step</h3><p>Review your roster while the team brief loads.</p>
-                <a class="ux-primary-action" href="/teams/{roster_id}">Open My Team</a>
+                <a class="ux-primary-action" data-dtos-action="primary" href="/teams/{roster_id}">Open My Team</a>
               </div>
             </section>'''
             this_week = f'''<section class="home-week" aria-labelledby="home-week-title">
