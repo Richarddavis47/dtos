@@ -117,7 +117,15 @@ class PremiumSharedJourneyTests(journey.ProductBrowserJourneyTests):
                         or fit["bottom"] <= fit["portraitTop"],
                         "Result label must not overlap the player portrait",
                     )
-        if path in ("/", "/market", "/teams/1", "/fois"):
+        if path == "/":
+            home_tools = page.locator("#home-more-tools > summary")
+            keyboard_disclosure(self, page, home_tools)
+            home_tools.press("Enter")
+            keyboard_disclosure(self, page, page.locator("#home-more-tools .secondary-nav>summary"))
+            self.assertEqual(page.evaluate("document.documentElement.scrollWidth-innerWidth"), 0)
+            home_tools.press("Enter")
+            self.assertFalse(home_tools.evaluate("e=>e.parentElement.open"))
+        if path in ("/market", "/teams/1", "/fois"):
             keyboard_disclosure(
                 self, page, page.locator(".ds-shell .secondary-nav>summary")
             )
