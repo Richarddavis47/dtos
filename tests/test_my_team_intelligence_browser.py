@@ -78,6 +78,7 @@ class MyTeamIntelligenceBrowserTests(journeys.ProductBrowserJourneyTests):
             back.click()
             page.wait_for_load_state('domcontentloaded')
             self.assertTrue(page.locator('#my-team-roster').evaluate('e => e.open'))
+            page.locator('.thq-tabs a[href="#team-picks"]').click()
             pick = page.locator('#draft-capital a[href^="/picks/"]').first
             pick.click()
             page.wait_for_load_state('domcontentloaded')

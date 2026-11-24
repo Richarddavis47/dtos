@@ -403,7 +403,7 @@ class MyTeamActivityContinuityTests(unittest.TestCase):
     @staticmethod
     def fixture():
         from tests import test_my_team_outlook_http as outlook
-        f = outlook.MyTeamOutlookHTTPTests('test_actual_my_team_takeaway_precedes_roster_and_capital')
+        f = outlook.MyTeamOutlookHTTPTests('test_actual_my_team_roster_links_to_outlook_and_capital')
         f.setUp()
         player = next(iter(f.data['players']))
         f.data['transactions'] = [{'transaction_id': 'activity-' + str(i), 'type': kind,

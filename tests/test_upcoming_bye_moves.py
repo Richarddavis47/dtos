@@ -65,7 +65,8 @@ class UpcomingByeMovesTests(unittest.TestCase):
 
     def _render_week(self, page):
         self.assertEqual(page.goto('https://dtos.test/teams/1').status, 200)
-        disclosure = page.get_by_text('See weeks and possible moves', exact=True)
+        page.locator('.thq-tabs a[href="#team-byes"]').click()
+        disclosure = page.locator('#bye-week-9 > summary')
         disclosure.focus()
         disclosure.press('Enter')
         return page.locator('[data-bye-week="9"]')
@@ -109,8 +110,8 @@ class UpcomingByeMovesTests(unittest.TestCase):
                 install_schedule(service, data, now, byes={'1-w'})
                 row = self._render_week(page)
                 self.assertEqual(row.get_attribute('data-bye-state'), 'covered')
-                self.assertIn('Example W 1 is on bye in FLEX.', row.inner_text())
-                self.assertIn('Start Example BQ 1 at FLEX.', row.inner_text())
+                self.assertIn('Example W 1\nOn bye', row.inner_text())
+                self.assertIn('Example BQ 1\nStart at FLEX', row.inner_text())
                 self._verify_moves(row, data, {'1-w'}, {2: '1-bq'})
                 text = row.inner_text()
                 if prior is not None:
@@ -133,8 +134,8 @@ class UpcomingByeMovesTests(unittest.TestCase):
         with phone(fixture) as page:
             row = self._render_week(page)
             self.assertEqual(row.get_attribute('data-bye-state'), 'covered')
-            self.assertIn('Move Example S 1 from Superflex to RB.', row.inner_text())
-            self.assertIn('Start Example BQ 1 at Superflex.', row.inner_text())
+            self.assertIn('Example S 1\nStart at RB · from Superflex', row.inner_text())
+            self.assertIn('Example BQ 1\nStart at Superflex', row.inner_text())
             self._verify_moves(row, data, {'1-r'}, {1: '1-s', 3: '1-bq'})
 
     def test_rendered_competing_replacement_shortfall_and_incomplete_eligibility(self):
@@ -143,8 +144,8 @@ class UpcomingByeMovesTests(unittest.TestCase):
         with phone(fixture) as page:
             row = self._render_week(page)
             self.assertEqual(row.get_attribute('data-bye-state'), 'shortfall')
-            self.assertIn('Example R 1 is on bye in RB.', row.inner_text())
-            self.assertIn('Example S 1 is on bye in Superflex.', row.inner_text())
+            self.assertIn('Example R 1\nOn bye', row.inner_text())
+            self.assertIn('Example S 1\nOn bye', row.inner_text())
             self.assertEqual(row.locator('[data-bye-move]').count(), 0)
             self.assertIn('leaves Superflex unfilled', row.inner_text())
             extra = dict(id='1-x', player_id='1-x', name='Example X 1', position=None,
@@ -172,7 +173,7 @@ class UpcomingByeMovesTests(unittest.TestCase):
         profile = install_schedule(service, data, now, byes={'1-w'})
         with phone(fixture) as page:
             row = self._render_week(page)
-            self.assertIn('Example W 1 is on bye in FLEX.', row.inner_text())
+            self.assertIn('Example W 1\nOn bye', row.inner_text())
             current = profile['upcoming_byes']['1']
             profile['upcoming_byes']['1'] = current['weeks']
             page.reload()
@@ -184,5 +185,5 @@ class UpcomingByeMovesTests(unittest.TestCase):
             self.assertIn('coverage is unavailable', page.locator('#upcoming-byes').inner_text())
             install_schedule(service, data, now, byes={'1-w'})
             row = self._render_week(page)
-            self.assertIn('Example W 1 is on bye in Superflex.', row.inner_text())
+            self.assertIn('Example W 1\nOn bye', row.inner_text())
             self._verify_moves(row, data, {'1-w'}, {3: '1-bq'})

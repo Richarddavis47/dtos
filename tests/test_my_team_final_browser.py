@@ -58,15 +58,22 @@ class MyTeamFinalBrowserTests(journeys.ProductBrowserJourneyTests):
                     self.assertIn('Availability not reported; participation remains unknown.', source.text_content())
                     self.assertIn('Participation unconfirmed', card.inner_text())
                     self.assertNotIn('Status unavailable', card.inner_text())
-            page.locator('#my-team-advanced').evaluate('e=>e.open=true')
-            page.locator('.thq-starters').locator('xpath=..').evaluate('e=>e.open=true')
+            page.locator('.thq-tabs a[href="#team-lineup"]').click()
+            submitted = page.locator('#my-team-submitted-details')
+            submitted.wait_for()
+            if not submitted.evaluate('e=>e.open'):
+                submitted.locator('summary').press('Enter')
             starter = page.locator('.thq-starters a[href^="/players/"]').first
-            self.assertIn('from_section=my-team-advanced', starter.get_attribute('href'))
-            starter.press('Enter')
+            self.assertIn('from_section=my-team-submitted', starter.get_attribute('href'))
+            target = starter.get_attribute('href')
+            starter.click()
+            page.wait_for_url(origin + target)
+            back = page.get_by_role('link', name='← Back to My Team lineup', exact=True)
+            self.assertEqual(back.get_attribute('href'), '/teams/1#my-team-submitted')
+            back.click()
             page.wait_for_load_state('domcontentloaded')
-            page.get_by_role('link', name='← Back to My Team intelligence', exact=True).click()
-            page.wait_for_load_state('domcontentloaded')
-            self.assertTrue(page.locator('#my-team-advanced').evaluate('e=>e.open'))
+            self.assertTrue(page.locator('#my-team-submitted-details').evaluate('e=>e.open'))
+            page.goto(origin + '/teams/1#my-team-advanced', wait_until='domcontentloaded')
             for selector in ('.thq-optimal a[href^="/players/"]', '.thq-depth a[href^="/players/"]'):
                 link = page.locator(selector).first
                 if not link.count():

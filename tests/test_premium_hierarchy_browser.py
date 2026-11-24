@@ -232,13 +232,15 @@ class PremiumPreparedBrowserTests(unittest.TestCase):
                         )
                         link.focus()
                         self.assertGreaterEqual(link.bounding_box()["height"], 44)
-                        self.assertTrue(
-                            link.evaluate(
-                                """e=>{const r=e.getBoundingClientRect();const h=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);return h===e||e.contains(h)}"""
-                            )
-                        )
+                        target = link.evaluate("""element => {
+                          const box=element.getBoundingClientRect();
+                          const hit=document.elementFromPoint(box.x+box.width/2,box.y+box.height/2);
+                          return {hit:element.contains(hit), tag:hit?.tagName, classes:hit?.className, box:box.toJSON()};
+                        }""")
+                        self.assertTrue(target['hit'], (width, fragment, target))
                         link.press("Enter")
                         self.assertTrue(page.url.endswith(fragment))
+                    page.locator('.thq-tabs a[href="#team-roster"]').click()
                     page.evaluate("scrollTo(0,0)")
                     row = capture(page, "prepared-my-team", width, height)
                     self.assertLessEqual(row["boxes"]["shortcuts"]["height"], 64)
@@ -354,7 +356,7 @@ class PremiumPreparedBrowserTests(unittest.TestCase):
         from components.asset_intelligence import player_dossier
         from src.core.asset_intelligence import AssetContext, evaluate_player
         from src.ui.front_office_brief import cards
-        from src.ui.my_team_outlook import outlook_panel
+        from src.ui.my_team_outlook import outlook_panel, roster_shortcuts
         from services.my_team_outlook import goal_options
 
         report = evaluate_player(
@@ -392,10 +394,8 @@ class PremiumPreparedBrowserTests(unittest.TestCase):
                     "Player decision summary", player_dossier(report, owner, [owner])
                 )
                 self.assertEqual(cards([]), "")
-                self.assertIn(
-                    "Roster sections",
-                    outlook_panel(outlook, editable=True, roster_id=1),
-                )
+                self.assertIn("Roster sections", roster_shortcuts())
+                self.assertIn("Missing evidence", outlook_panel(outlook, editable=True, roster_id=1))
                 self.assertTrue(goal_options(1))
             self.assertTrue(all(g.call_count == 0 for g in guards.values()))
         self.assertEqual(report, original)

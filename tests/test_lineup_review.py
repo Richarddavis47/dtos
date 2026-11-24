@@ -309,10 +309,10 @@ class LineupReviewTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn("Higher-projected lineup available", response.text)
         self.assertIn("+25.00 projected points", response.text)
-        self.assertLess(
-            response.text.index("Higher-projected lineup available"),
-            response.text.index('id="full-roster"'),
-        )
+        self.assertLess(response.text.index('id="team-lineup"'),
+                        response.text.index('id="lineup-action"'))
+        self.assertLess(response.text.index("Higher-projected lineup available"),
+                        response.text.index('id="my-team-submitted"'))
         other = f.f.f.client.get("/teams/2")
         self.assertEqual(other.status_code, 200)
         self.assertNotIn("Higher-projected lineup available", other.text)

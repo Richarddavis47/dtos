@@ -394,7 +394,7 @@ def create_transactions_router(
     def team_origin(data, from_team, from_section):
         if from_team is None or not any(t.get('roster_id') == from_team for t in data.get('teams') or []):
             return {}
-        return {'from_team': from_team, 'from_section': from_section if from_section in {'full-roster', 'my-team-advanced'} else 'full-roster'}
+        return {'from_team': from_team, 'from_section': from_section if from_section in {'full-roster', 'my-team-advanced', 'my-team-submitted'} else 'full-roster'}
 
     @router.get("/players/{player_id}/projections", response_class=HTMLResponse)
     async def player_week_projection(player_id: str, front_office: int | None = None,
@@ -531,8 +531,8 @@ def create_transactions_router(
 <h3>Ownership Timeline</h3>{current_observation_html}<ul>{ownership_history}</ul><p class="muted">Failed transactions remain behavioral evidence and never modify ownership. Missing weeks are not converted to zero. Current values are never backdated.</p></details>'''
         trade_return = f'<a class="back" href="/trades/history/{quote(original["transaction_id"], safe="")}">← Back to original trade timeline</a>' if original else ''
         matchup_return = ''
-        section = from_section if from_section in {'full-roster', 'my-team-advanced'} else 'full-roster'
-        team_return = (f'<a class="back" href="/teams/{from_team}#{section}">← Back to My Team {"intelligence" if section == "my-team-advanced" else "roster"}</a>'
+        section = from_section if from_section in {'full-roster', 'my-team-advanced', 'my-team-submitted'} else 'full-roster'
+        team_return = (f'<a class="back" href="/teams/{from_team}#{section}">← Back to My Team {"intelligence" if section == "my-team-advanced" else "lineup" if section == "my-team-submitted" else "roster"}</a>'
                        if from_team is not None and any(t.get('roster_id') == from_team for t in data.get('teams') or []) else '')
         if week is not None and matchup and (matchup.isdecimal() or (matchup.startswith('unassigned-') and matchup[11:].isdecimal())):
             matchup_return = f'<link rel="stylesheet" href="/static/css/matchups.css"><a class="back matchup-return" href="/matchups/{escape(matchup)}?week={week}">← Back to Week {week} matchup</a>'

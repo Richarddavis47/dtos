@@ -30,12 +30,13 @@ class MyTeamOutlookHTTPTests(unittest.TestCase):
         with TestClient(app) as client:
             return client.get('/teams')
 
-    def test_actual_my_team_takeaway_precedes_roster_and_capital(self):
+    def test_actual_my_team_roster_links_to_outlook_and_capital(self):
         response = self.client.get('/teams/1')
         self.assertEqual(response.status_code, 200)
         html = response.text
         self.assertIn('id="my-team-outlook"', html)
-        self.assertLess(html.index('id="my-team-outlook"'), html.index('id="full-roster"'))
+        self.assertLess(html.index('href="#my-team-outlook"'), html.index('id="full-roster"'))
+        self.assertLess(html.index('id="full-roster"'), html.index('id="my-team-outlook"'))
         self.assertLess(html.index('id="my-team-outlook"'), html.index('id="draft-capital"'))
         self.assertEqual(html.count('Your roster at a glance'), 1)
         self.assertIn('Why this outlook?', html)

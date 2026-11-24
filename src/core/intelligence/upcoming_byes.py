@@ -207,7 +207,7 @@ def read_upcoming_byes(profile, league, team, *, players_fetched_at=None):
     observed = timestamp(players_fetched_at)
     age = int((now - observed).total_seconds() // 60) if observed and freshness != 'Unavailable' else None
     return [
-        dict(row, state='conditional' if row['state'] == 'covered' and freshness != 'Fresh' else row['state'],
+        dict(row, starting_slots=record['starting_slots'], state='conditional' if row['state'] == 'covered' and freshness != 'Fresh' else row['state'],
              availability_freshness=freshness, availability_age_minutes=age)
         for row in record['weeks']
     ]

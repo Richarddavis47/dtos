@@ -12,7 +12,7 @@ def local_check_time(value):
             f'{instant.strftime("%a %b %d, %H:%M UTC")}</time>')
 
 
-def _primary_panel(review):
+def _primary_panel(review, *, show_kickoff=False):
     if not review or review.get("state") == "no_improvement":
         return ""
     active = bool(review.get("actionable"))
@@ -49,6 +49,9 @@ def _primary_panel(review):
             + "</ul>"
         )
         changes += "<p>Apply these changes together in Sleeper. DTOS has not changed your lineup.</p>"
+        if show_kickoff and timestamp(review.get('kickoff_deadline')):
+            changes += (f'<p class="thq-lineup-deadline">First affected game locks '
+                        f'{local_check_time(review["kickoff_deadline"])}.</p>')
         checked = local_check_time(review["observed_at"])
         changes += f"<p>Roster checked {checked} · roster and projection checks within 15 minutes.</p>"
         changes += (
@@ -113,5 +116,5 @@ def lineup_recheck_panel(recheck, fallback):
     )
 
 
-def review_panel(review, *, recheck=None):
-    return _primary_panel(review) + lineup_recheck_panel(recheck, (review or {}).get("fallback"))
+def review_panel(review, *, recheck=None, show_kickoff=False):
+    return _primary_panel(review, show_kickoff=show_kickoff) + lineup_recheck_panel(recheck, (review or {}).get("fallback"))

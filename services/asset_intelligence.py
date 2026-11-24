@@ -96,7 +96,7 @@ def contextual_player_url(player_id: str, *, from_team: int | None = None, secti
     if from_trade:
         query['from_trade'] = from_trade
     if from_team is not None and from_team > 0:
-        query.update(from_team=from_team, from_section=section if section in {'full-roster', 'my-team-advanced'} else 'full-roster')
+        query.update(from_team=from_team, from_section=section if section in {'full-roster', 'my-team-advanced', 'my-team-submitted'} else 'full-roster')
     if week is not None and 1 <= week <= 18:
         query['week'] = week
     path = '/players/' + quote(str(player_id), safe='')

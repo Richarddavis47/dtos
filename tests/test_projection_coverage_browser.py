@@ -70,7 +70,9 @@ class ProjectionCoverageBrowserTests(unittest.TestCase):
                                 link = page.get_by_role('navigation', name='Roster sections').get_by_role('link', name=label, exact=True)
                                 self.assertEqual(link.get_attribute('href'), target)
                                 link.click()
-                                self.assertTrue(page.locator(target).is_visible())
+                                page.locator(target).wait_for(state='visible')
+                                if target == '#draft-capital':
+                                    page.locator('.thq-tabs a[href="#team-roster"]').click()
                             self.assertEqual(page.goto('https://dtos.test/teams/8').status, 200)
                             page.locator('#my-team-outlook-evidence summary').click()
                             self.assertIn('1 QB slot', page.locator('#my-team-outlook').inner_text())

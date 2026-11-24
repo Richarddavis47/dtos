@@ -19,7 +19,8 @@ def add_bench(data, pid, position, *, status='Active', injury_status=None):
 def open_week(page):
     if page.goto('https://dtos.test/teams/1').status != 200:
         raise AssertionError('My Team unavailable')
-    page.get_by_text('See weeks and possible moves', exact=True).click()
+    page.locator('.thq-tabs a[href="#team-byes"]').click()
+    page.locator('#bye-week-9 > summary').click()
     return page.locator('[data-bye-week="9"]')
 
 
@@ -48,7 +49,7 @@ class UpcomingByeAvailabilityTests(unittest.TestCase):
                 fixtures.install_schedule(service, data, now, byes={'1-r'})
                 week = open_week(page)
                 self.assertEqual(week.get_attribute('data-bye-state'), 'covered')
-                self.assertIn('Start Example 1-z reserve at RB.', week.inner_text())
+                self.assertIn('Example 1-z reserve\nStart at RB', week.inner_text())
                 self.assertNotIn('Example BQ 1', week.inner_text())
                 self.assertIn('Sleeper player status checked 12 minutes ago.', week.inner_text())
                 self._check_moves(week, data, {'1-r'}, {1: '1-z'})
@@ -62,8 +63,8 @@ class UpcomingByeAvailabilityTests(unittest.TestCase):
         with fixtures.phone(fixture) as page:
             week = open_week(page)
             self.assertEqual(week.get_attribute('data-bye-state'), 'covered')
-            self.assertIn('Move Example S 1 from Superflex to RB.', week.inner_text())
-            self.assertIn('Start Example BQ 1 at Superflex.', week.inner_text())
+            self.assertIn('Example S 1\nStart at RB · from Superflex', week.inner_text())
+            self.assertIn('Example BQ 1\nStart at Superflex', week.inner_text())
             self._check_moves(week, data, {'1-r'}, {1: '1-s', 3: '1-bq'})
             week.get_by_role('link', name='View Week 9 Matchups').tap()
             page.wait_for_url('https://dtos.test/matchups?week=9')
