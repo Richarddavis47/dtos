@@ -31,6 +31,13 @@ class MyTeamSectionsBrowserTests(unittest.TestCase):
                     self.assertLessEqual(page.evaluate('document.documentElement.scrollWidth'), width)
                     for link in tabs.get_by_role('link').all():
                         self.assertGreaterEqual(link.bounding_box()['height'], 44)
+                    shortcuts = page.get_by_role('navigation', name='Roster sections')
+                    for link in shortcuts.get_by_role('link').all():
+                        self.assertEqual(link.evaluate('''e => {
+                            const text = document.createRange();
+                            text.selectNodeContents(e);
+                            return [...text.getClientRects()].filter(r => r.width > 0).length;
+                        }'''), 1, (width, link.inner_text()))
 
                     picks = tabs.get_by_role('link', name='Picks')
                     picks.focus()
