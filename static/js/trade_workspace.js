@@ -507,7 +507,7 @@
   function valuationGauge({mode, sent, received, difference, relative = 0, precisionLimit = false, missing, retained = false}) {
     const panel = node('section', null, 'tw-valuation-gauge');
     const unit = mode.startsWith('Custom') ? 'Custom points' : 'Market points';
-    panel.append(node('h3', 'Value comparison · ' + mode));
+    panel.append(node('h3', (mode === 'Neutral Market' ? 'Market comparison · ' : 'Value comparison · ') + mode));
     if (retained) panel.append(node('p', 'Recorded values · NOT REVALIDATED', 'tw-drawback'));
     const cards = node('dl', null, 'tw-gauge-totals');
     for (const [name, value] of [['You send', sent], ['You receive', received]]) {
@@ -636,6 +636,15 @@
     const complete = rows.every(r => r.length && r.every(a => known.includes(a)));
     const ownershipInvalid = ['sent', 'received'].some(which => selected[which].some(id => !team(which === 'sent' ? active : partner())?.assets.some(a => a.asset_id === id)));
     const box = el('trade-balance'); box.replaceChildren();
+    const draft = box.closest('.tw-calculator');
+    if (draft) {
+      // Start with the picker visible near the partner. Once both packages
+      // have assets, bring the draft controls forward in reading and tab order.
+      const board = el('trade-board');
+      const hasBothPackages = rows.every(row => row.length);
+      if (hasBothPackages && board.nextElementSibling === draft) board.before(draft);
+      if (!hasBothPackages && draft.nextElementSibling === board) board.after(draft);
+    }
     const amounts = rows.map((r, i) => r.length && r.every(a => known.includes(a)) ? shown(totals[i])
       : r.some(a => known.includes(a)) ? 'Partial · known subtotal ' + shown(totals[i]) : 'Unavailable');
     const difference = totals[1] - totals[0];
@@ -670,11 +679,13 @@
       const neutral = node('div');
       neutral.append(neutralGauge, verdict);
       if (marketGap) neutral.append(marketGap);
-      const priorNeutral = disclosure('Neutral Market values', neutral);
-      box.prepend(gauge('Custom DTOS · ' + (workspace.personalization?.method_label || 'saved rankings'),
+      const priorNeutral = disclosure('Neutral Market values', neutral, 'tw-neutral-values');
+      const customGauge = gauge('Custom DTOS · ' + (workspace.personalization?.method_label || 'saved rankings'),
         personalDisplay, personalTotals, personalTotals.every(n => n !== null) ? personalTotals[1] - personalTotals[0] : 0n,
-        personalShown, personalTotals.every(n => n !== null)), priorNeutral);
-      if (personalRows.flat().some(value => !knownPersonal(value))) box.append(node('p', 'This package includes an asset without a verified personal value. Check its saved rank in My DTOS, or use Neutral DTOS.'));
+        personalShown, personalTotals.every(n => n !== null));
+      customGauge.classList.add('tw-personal-comparison');
+      if (personalRows.flat().some(value => !knownPersonal(value))) customGauge.append(node('p', 'This package includes an asset without a verified personal value. Check its saved rank in My DTOS, or use Neutral DTOS.'));
+      box.prepend(customGauge, priorNeutral);
     }
     const locks = [...new Set([...session.protectedAssets, ...session.excludedAssets, session.requiredOutgoingAsset, session.requiredIncomingAsset].filter(Boolean))];
     if (locks.length) {

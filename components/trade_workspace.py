@@ -90,7 +90,7 @@ def trade_workspace(view: dict, workflow: str, asset_id=None, owner_roster_id=No
 {position_controls}
 {optional_search}
 <section id="trade-target" class="tw-target" hidden aria-label="Selected trade target"></section>
-<div class="tw-primary-actions">{primary}{next_ideas}</div>
+{f'<div class="tw-primary-actions">{primary}{next_ideas}</div>' if primary or next_ideas else ''}
 <p id="recommendation-status" class="ds-inline-feedback" role="status" aria-live="off" aria-atomic="true">Preparing current league assets…</p>
 <p id="trade-search-readiness" class="ds-inline-feedback">Search capacity will be checked when you generate or evaluate.</p>
 <button id="trade-cancel" type="button" hidden>Cancel current operation</button>
@@ -101,9 +101,9 @@ def trade_workspace(view: dict, workflow: str, asset_id=None, owner_roster_id=No
 {tray}
 {'<details id="trade-asset-options"><summary>Players, picks and protections · optional</summary>' if workflow == 'recommended' else ''}
 {partner_controls}
-{calculator_panel}
 <div id="trade-board"><div class="tw-side-tabs" role="group" aria-label="Asset side"><button type="button" data-side="sent" aria-pressed="true">My assets</button><button type="button" data-side="received" aria-pressed="false">Their assets</button></div>
 <div class="tw-boards"><section id="trade-sent-board"></section><section id="trade-received-board"></section></div></div>
+{calculator_panel}
 {'</details>' if workflow == 'recommended' else ''}
 <div id="trade-workspace-tools"><a href="/trades?front_office={active}" aria-label="All Trade Workflows">All workflows</a><button id="trade-start-new" type="button">Start New Trade</button><button id="trade-clear-package" type="button" hidden>Clear package · keep objective and protections</button></div>
 <section id="trade-review" tabindex="-1" hidden><h3>Your proposal</h3><div class="tw-packages"><section><h4>You send</h4><div id="trade-sent-chips"></div></section><section><h4>You receive</h4><div id="trade-received-chips"></div></section></div></section>

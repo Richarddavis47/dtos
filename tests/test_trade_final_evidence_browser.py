@@ -269,7 +269,7 @@ class TradeMarketDisplayBrowserTests(unittest.TestCase):
                 self.assertIn(f"Suggested Market: {manager_points(price)} sent / 600 received · Gap {manager_points(gap)}", compare.inner_text())
                 self.assertIn(f"Outgoing Market cost: {manager_points(original)} → {manager_points(price)}", compare.inner_text())
                 page.get_by_role("button", name="Use this offer in my draft", exact=True).click()
-                self.assertIn(f"You send: {manager_points(price)}", page.locator("#trade-balance").inner_text())
+                self.assertEqual(page.locator("#trade-balance dd").first.inner_text(), manager_points(price))
                 self.assertIn(f"Value gap: {manager_points(gap)}", page.locator("#trade-balance").inner_text())
                 self.assertLessEqual(page.evaluate("document.documentElement.scrollWidth"), width)
 
@@ -281,7 +281,7 @@ class TradeMarketDisplayBrowserTests(unittest.TestCase):
             data['teams'][1]['assets'][0]['trade_value'] = 0
             with self.subTest(price=price), self.f.fixture.page(workspace=data) as (page, requests):
                 self.f.build(page)
-                text = page.locator('#trade-balance').inner_text()
+                text = ' '.join(page.locator('#trade-balance').inner_text().split())
                 if price is None:
                     self.assertIn('You send: Unavailable', text)
                     self.assertIn('pricing evidence missing', text)

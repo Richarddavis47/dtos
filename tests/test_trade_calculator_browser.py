@@ -128,6 +128,7 @@ class CalculatorBrowserTests(unittest.TestCase):
             with self.subTest(width=width), self.fixture.page(width, workspace=data, api=evaluate) as (page, requests):
                 self.fixture.ready(page, '/trades/calculator?front_office=1')
                 page.select_option('#trade-partner', '2')
+                self.assertEqual(page.locator('#trade-board + .tw-calculator').count(), 1)
                 picker = page.locator('#trade-sent-board')
                 self.assertEqual(picker.locator('[data-picker-group]').all_text_contents(), ['WR', 'Draft picks'])
                 self.assertEqual(picker.locator('button[data-asset-id]').evaluate_all(
@@ -137,6 +138,7 @@ class CalculatorBrowserTests(unittest.TestCase):
                     page.locator(f'[data-add-side="{side}"]').click()
                     self.assertEqual(page.locator(f'#trade-{side}-board input').evaluate('e=>e===document.activeElement'), True)
                     page.locator(f'#trade-{side}-board button[data-asset-id="{asset}"]').click()
+                self.assertEqual(page.locator('.tw-calculator + #trade-board').count(), 1)
                 gauge = page.locator('#trade-balance > .tw-valuation-gauge')
                 difference = '−600 Custom points' if mode == 'custom' else '+200 Market points'
                 self.assertEqual(gauge.get_attribute('data-balance'), expected)

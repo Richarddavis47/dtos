@@ -143,7 +143,6 @@ body:has(#trade-builder) .ds-page-header>div:first-child{display:flex;flex-wrap:
 .tw-draft-packages .tw-add-asset{width:100%;color:var(--accent);border-color:var(--accent);padding-inline:6px}
 .tw-draft-packages .tw-calculator-asset{padding:6px 0;border-bottom:1px solid var(--border)}
 .tw-draft-packages .tw-calculator-asset button{padding-inline:7px}
-.tw-workspace .tw-balance-status:empty{display:none}
 .tw-workspace .tw-calculator #trade-balance{margin-top:10px}
 .tw-workspace .tw-calculator .tw-primary-actions>.tw-primary-action{width:100%}
 .tw-valuation-gauge{padding:12px;border:1px solid var(--border);border-radius:12px;background:var(--surface-elevated);margin:8px 0;overflow-wrap:anywhere}
@@ -168,3 +167,8 @@ body:has(#trade-builder) .ds-page-header>div:first-child{display:flex;flex-wrap:
 .tw-offer-summary .tw-offer-effects{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
 @media(max-width:540px){.tw-draft-packages{grid-template-columns:1fr}.tw-workspace .tw-valuation-gauge{padding:8px}.tw-gauge-totals>div{padding:5px}.tw-gauge-labels{font-size:.9rem}}
 @media(max-width:360px){.tw-review-packages{grid-template-columns:1fr}}
+@media(max-width:540px){
+  .tw-workspace .tw-intent-nav{padding:0}
+  .tw-workspace .tw-side-tabs{margin:8px 0}
+  .tw-workspace .tw-owner-header{margin-bottom:6px}
+}
