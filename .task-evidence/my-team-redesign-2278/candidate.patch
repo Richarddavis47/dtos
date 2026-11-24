@@ -1209,6 +1209,20 @@ index fde45b9..482c2ba 100644
                              self.assertEqual(page.goto('https://dtos.test/teams/8').status, 200)
                              page.locator('#my-team-outlook-evidence summary').click()
                              self.assertIn('1 QB slot', page.locator('#my-team-outlook').inner_text())
+diff --git a/tests/test_season_performance_browser.py b/tests/test_season_performance_browser.py
+index 948b3ad..75fa3e6 100644
+--- a/tests/test_season_performance_browser.py
++++ b/tests/test_season_performance_browser.py
+@@ -39,7 +39,8 @@ class SeasonPerformanceBrowserTests(unittest.TestCase):
+                     page = f.f.browser_page(browser, width, height)
+                     try:
+                         page.goto('https://dtos.test/teams/1')
+-                        record_link = page.locator('.thq-record-link')
++                        record_link = page.locator('.thq-header').get_by_role('link', name='Season results:')
++                        self.assertEqual(record_link.count(), 1)
+                         self.assertEqual(record_link.get_attribute('href'), '#season-so-far')
+                         record_link.click()
+                         self.assertTrue(page.url.endswith('#season-so-far'))
 diff --git a/tests/test_upcoming_bye_availability.py b/tests/test_upcoming_bye_availability.py
 index da1135e..fab2665 100644
 --- a/tests/test_upcoming_bye_availability.py
