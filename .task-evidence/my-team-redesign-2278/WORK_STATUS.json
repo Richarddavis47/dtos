@@ -1,5 +1,5 @@
 {
-  "state": "HOSTED_COMPLETE_FULL_LOCAL_RERUN_IN_PROGRESS",
+  "state": "COMPLETE_DEPLOYED_AND_VERIFIED",
   "source": {
     "candidate": "8de8dd7f1c4705b9985e1490b81858581af7879e",
     "tree": "9db7d69eadc1e960f65174deab22f4f0e85d47e1",
@@ -11,71 +11,28 @@
     "build": 2278,
     "expected_test_count": 4676
   },
-  "hosted": {
-    "candidate": "8de8dd7f1c4705b9985e1490b81858581af7879e",
-    "tree": "9db7d69eadc1e960f65174deab22f4f0e85d47e1",
-    "runs": [
-      {
-        "name": "Canonical release recovery",
-        "path": ".github/workflows/canonical-release-recovery.yml",
-        "jobs": [
-          "canonical-release"
-        ],
-        "id": 45356637218
-      },
-      {
-        "name": "Product browser journeys",
-        "path": ".github/workflows/product-browser.yml",
-        "jobs": [
-          "product-browser",
-          "my-team-browser",
-          "beginner-navigation",
-          "public-welcome-browser",
-          "historical-trade-timeline",
-          "projection-display-cross-version",
-          "resident-refresh-memory"
-        ],
-        "id": 45356637123
-      },
-      {
-        "name": "Validation tooling",
-        "path": ".github/workflows/validation-tooling.yml",
-        "jobs": [
-          "tooling (ubuntu-24.04)",
-          "tooling (windows-latest)"
-        ],
-        "id": 45356637163
-      },
-      {
-        "name": "Linux Asset Market lifecycle",
-        "path": ".github/workflows/linux-market-lifecycle.yml",
-        "jobs": [
-          "cgroup-lifecycle (ordinary)",
-          "cgroup-lifecycle (archive-warmed)",
-          "cgroup-lifecycle (combined-read)"
-        ],
-        "id": 45356636960
-      }
-    ]
+  "merge": "026a46dee6d1c1c454d90b994c6b72689694d16b",
+  "publisher_commit": "0482717d96366227fde4bf0d2267240906416f36",
+  "prepare_run": 45382334176,
+  "publish_run": 45383299867,
+  "release_url": "https://github.com/Richarddavis47/dtos/releases/tag/v1.22.63",
+  "immutable_asset_count": 23,
+  "validation": {
+    "matched_prepared_families": 16,
+    "full_local": 4676,
+    "full_hosted": 4676,
+    "canonical_gates_each": 10,
+    "required_hosted_jobs": 13,
+    "publisher_controls": 182,
+    "memory_limit_bytes": 2147483648,
+    "oom_kills_each": 0,
+    "originals": "originals/",
+    "earlier_attempts": "originals/prior-attempts/"
   },
-  "local": {
-    "container": "52ead3443f25a7ccd70f0751d08b21167c48af14265fd3e4229adcd953a6753a",
-    "created_at": "2026-11-24T09:31:07.862390+00:00",
-    "limit_bytes": 2147483648,
-    "scratch_bytes_verified_at_container_creation": 9162776576,
-    "prior_failure": "The original Market atomic-build disk guard rejected 13 fixtures when the runner temporary filesystem had under 384 MiB free.",
-    "focused_after_rehousing_scratch": 48,
-    "full_rerun": "In progress on the same candidate with the temporary directory on an adequately sized validation scratch mount."
-  },
-  "production": {
-    "version": "1.22.62",
-    "build": 2277,
-    "commit": "72fbb0bf16d1c48f0d8883c8ac71a096c30a07da"
-  },
-  "release": {
-    "version": "1.22.63",
-    "build": 2278,
-    "state": "HELD_REQUIRED_VALIDATION"
-  },
-  "updated_at": "2026-11-24T08:30:19.388254+00:00"
+  "verified": {
+    "production": "Read-only public health, Welcome, sign-in and unsigned boundary checks. Deployed My Team stylesheet and script bytes, deployment commit, tag target, main tree and release attachment identities match.",
+    "visual": "Chromium fixtures at 320, 390 and 1280 pixels. Anchored roster, lineup and bye access, with matched prepared output and expanded-week return.",
+    "signed_in_owner_production": false,
+    "physical_iphone_safari": false
+  }
 }

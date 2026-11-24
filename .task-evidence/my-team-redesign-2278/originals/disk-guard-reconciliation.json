@@ -1,0 +1,39 @@
+{
+  "source": {
+    "candidate": "8de8dd7f1c4705b9985e1490b81858581af7879e",
+    "tree": "9db7d69eadc1e960f65174deab22f4f0e85d47e1",
+    "baseline": "72fbb0bf16d1c48f0d8883c8ac71a096c30a07da",
+    "baseline_tree": "ecf99970f0f3e2a59a8c850fe55fbae630cd1536",
+    "pr": 367,
+    "branch": "feat/my-team-redesign-2278",
+    "version": "1.22.63",
+    "build": 2278,
+    "expected_test_count": 4676
+  },
+  "rule": {
+    "reserve_bytes": 134217728,
+    "maximum_entry_bytes": 134217728,
+    "atomic_available_at_least_bytes": 402653184
+  },
+  "scope": "Existing atomic Market disk-space rule. A validation-only scratch mount was the only rerun change.",
+  "previous_blocked_count": 13,
+  "previous_cases": [
+    "test_sleeper_actual_restoration.ActualRestorationTests.test_binding_precedes_publication_and_runs_once_per_source_path",
+    "test_sleeper_actual_restoration.ActualRestorationTests.test_matched_default_and_connected_restoration_reach_rendered_consumers",
+    "test_sleeper_actual_restoration.ActualRestorationTests.test_memory_deferral_does_not_start_actual_binding",
+    "test_sleeper_actual_restoration.ActualRestorationTests.test_reads_do_not_rebind_or_acquire_after_publication",
+    "test_sleeper_actual_restoration.ActualRestorationTests.test_real_canonical_publication_and_eviction_reopening_capture_bound_scores",
+    "test_sleeper_actual_restoration.ActualRestorationTests.test_source_clocks_reference_values_and_cached_decisions_are_preserved",
+    "test_sleeper_actual_restoration.ActualRestorationTests.test_source_generation_change_withholds_until_explicit_rebinding",
+    "test_sleeper_actual_results.ActualRenderedContractTests.test_current_scoring_change_cannot_reuse_old_prepared_actuals",
+    "test_sleeper_actual_results.ActualRenderedContractTests.test_missing_nflverse_special_teams_does_not_block_sleeper_actual",
+    "test_sleeper_actual_results.ActualRenderedContractTests.test_ordinary_disclosures_and_reads_perform_no_acquisition",
+    "test_sleeper_actual_results.ActualRenderedContractTests.test_zero_negative_and_conflicting_source_scores_reach_both_routes_and_api",
+    "test_sleeper_actual_results.LegacyConsumerRestorationTests.test_native_scores_replace_only_the_old_cached_result_disclosure",
+    "test_sleeper_actual_results.ResultUnitConsistencyTests.test_market_layer_and_profile_explanation_share_observation_units"
+  ],
+  "matched_replay_48_tests_passed": true,
+  "matched_replay_console_sha256": "fab98c675366d30ba6ceb206d838f3d44a42fafbbabfccea701b8a42e88200da",
+  "matching_48_passed_in_full_rerun": true,
+  "full_gate_receipt_expected_separately": "local-verified.json"
+}

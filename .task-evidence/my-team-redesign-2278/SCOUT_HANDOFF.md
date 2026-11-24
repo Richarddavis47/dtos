@@ -12,3 +12,11 @@ Use a prepared signed-in league. Avoid a forced refresh or any lineup, goal, or 
 6. Compare the matched semantic reads and inspect the screenshots in the evidence directory. They use disposable prepared inputs and Chromium. Verify signed-in production and physical iPhone/Safari separately if authorized access and hardware are available.
 
 The captured application bytes match this tree exactly. Two follow-ups changed browser assertions. A workflow-only follow-up fixes the Ubuntu download mirror that delayed the historical browser job. See the [identity record](rendered-input-identity.json).
+
+
+## Release verification
+
+- [Immutable v1.22.63 / build 2278](https://github.com/Richarddavis47/dtos/releases/tag/v1.22.63) deploys `026a46dee6d1c1c454d90b994c6b72689694d16b`. The validated application tree is `9db7d69eadc1e960f65174deab22f4f0e85d47e1`.
+- [Original validation logs](originals/) and [checksums](SHA256SUMS) identify the exact candidate. Earlier attempts are indexed in the [prior manifest](originals/prior-attempts/manifest.json) and retained in the immutable release attachments.
+- [Guarded prepare](https://github.com/Richarddavis47/dtos/actions/runs/45382334176) and [guarded publish](https://github.com/Richarddavis47/dtos/actions/runs/45383299867) admitted the exact source and 23 immutable attachments.
+- [Production verification](release/) covers deployed identity, public pages and unauthenticated API boundaries. Owner access and physical iPhone/Safari acceptance remain unverified.
