@@ -5,7 +5,8 @@
 - [My Team tool map](TOOL-MAP.md) and [Scout review route](SCOUT_HANDOFF.md)
 - [Before screenshots](before-final/) and [after screenshots](after-final/) at 320px, 390px and desktop
 - [Matched-input facts](my-team-parity.json) and [application byte identity](rendered-input-identity.json)
-- [Original focused checks and earlier attempts](originals/), including two historical workflow timeouts
+- [Original hosted canonical console](originals/hosted-verified/) and [Product Browser console](originals/product-verified/)
+- [Hosted gate receipts and earlier attempts](originals/), including the historical workflow timeouts and the local disk guard failure
 - [Patch](candidate.patch), [work status](WORK_STATUS.json) and [checksums](SHA256SUMS)
 
 Chromium fixtures used identical disposable prepared inputs. Signed-in production and physical iPhone/Safari acceptance remain unverified.

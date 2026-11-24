@@ -1,5 +1,5 @@
 {
-  "state": "FINAL_SOURCE_LOCAL_AND_HOSTED_RUNNING",
+  "state": "HOSTED_COMPLETE_FULL_LOCAL_RERUN_IN_PROGRESS",
   "source": {
     "candidate": "8de8dd7f1c4705b9985e1490b81858581af7879e",
     "tree": "9db7d69eadc1e960f65174deab22f4f0e85d47e1",
@@ -11,46 +11,61 @@
     "build": 2278,
     "expected_test_count": 4676
   },
-  "hosted": [
-    {
-      "conclusion": null,
-      "head_sha": "8de8dd7f1c4705b9985e1490b81858581af7879e",
-      "html_url": "https://github.com/Richarddavis47/dtos/actions/runs/45356636960",
-      "id": 45356636960,
-      "name": "Linux Asset Market lifecycle",
-      "status": "in_progress"
-    },
-    {
-      "conclusion": null,
-      "head_sha": "8de8dd7f1c4705b9985e1490b81858581af7879e",
-      "html_url": "https://github.com/Richarddavis47/dtos/actions/runs/45356637163",
-      "id": 45356637163,
-      "name": "Validation tooling",
-      "status": "in_progress"
-    },
-    {
-      "conclusion": null,
-      "head_sha": "8de8dd7f1c4705b9985e1490b81858581af7879e",
-      "html_url": "https://github.com/Richarddavis47/dtos/actions/runs/45356637218",
-      "id": 45356637218,
-      "name": "Canonical release recovery",
-      "status": "pending"
-    },
-    {
-      "conclusion": null,
-      "head_sha": "8de8dd7f1c4705b9985e1490b81858581af7879e",
-      "html_url": "https://github.com/Richarddavis47/dtos/actions/runs/45356637123",
-      "id": 45356637123,
-      "name": "Product browser journeys",
-      "status": "in_progress"
-    }
-  ],
+  "hosted": {
+    "candidate": "8de8dd7f1c4705b9985e1490b81858581af7879e",
+    "tree": "9db7d69eadc1e960f65174deab22f4f0e85d47e1",
+    "runs": [
+      {
+        "name": "Canonical release recovery",
+        "path": ".github/workflows/canonical-release-recovery.yml",
+        "jobs": [
+          "canonical-release"
+        ],
+        "id": 45356637218
+      },
+      {
+        "name": "Product browser journeys",
+        "path": ".github/workflows/product-browser.yml",
+        "jobs": [
+          "product-browser",
+          "my-team-browser",
+          "beginner-navigation",
+          "public-welcome-browser",
+          "historical-trade-timeline",
+          "projection-display-cross-version",
+          "resident-refresh-memory"
+        ],
+        "id": 45356637123
+      },
+      {
+        "name": "Validation tooling",
+        "path": ".github/workflows/validation-tooling.yml",
+        "jobs": [
+          "tooling (ubuntu-24.04)",
+          "tooling (windows-latest)"
+        ],
+        "id": 45356637163
+      },
+      {
+        "name": "Linux Asset Market lifecycle",
+        "path": ".github/workflows/linux-market-lifecycle.yml",
+        "jobs": [
+          "cgroup-lifecycle (ordinary)",
+          "cgroup-lifecycle (archive-warmed)",
+          "cgroup-lifecycle (combined-read)"
+        ],
+        "id": 45356636960
+      }
+    ]
+  },
   "local": {
-    "container": "71d1e9da0bebc75fc39a2488d197cc7c519efbbb27427c2f40dd95609672360b",
-    "created_at": "2026-11-24T08:18:26.672253+00:00",
+    "container": "52ead3443f25a7ccd70f0751d08b21167c48af14265fd3e4229adcd953a6753a",
+    "created_at": "2026-11-24T09:31:07.862390+00:00",
     "limit_bytes": 2147483648,
-    "scratch_bytes_verified_at_container_creation": 9166893056,
-    "last_known": "Running. Full run and all supplemental final-tree controls are required."
+    "scratch_bytes_verified_at_container_creation": 9162776576,
+    "prior_failure": "The original Market atomic-build disk guard rejected 13 fixtures when the runner temporary filesystem had under 384 MiB free.",
+    "focused_after_rehousing_scratch": 48,
+    "full_rerun": "In progress on the same candidate with the temporary directory on an adequately sized validation scratch mount."
   },
   "production": {
     "version": "1.22.62",
