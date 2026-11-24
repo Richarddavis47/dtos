@@ -28,17 +28,18 @@ def first_action(team, week, review, byes, items, *, now=None):
             continue
         if conditional and plan.get('starter'):
             title = 'Have a backup ready'
-            reason = f'If {plan["starter"]} can’t play, a verified fallback is available before the first affected game.'
+            reason = f'If {plan["starter"]} can’t play, you have a verified backup. Check the earliest kickoff.'
         elif not conditional and plan.get('actionable'):
             title = f'Check your Week {week} lineup'
             reason = ('A starting slot is empty and a legal replacement is available.'
                       if plan.get('empty_slots') else
-                      'A legal lineup change could add projected points before the first affected game.')
+                      'A legal lineup change could add projected points before kickoff.')
         else:
             continue
-        lineup.append((kickoff, dict(title=title, reason=reason, action='Review lineup',
-                                     href=team_url + '#lineup-recheck', valid_until=expiry.isoformat(),
-                                     verified_at=now.isoformat())))
+        lineup.append(((conditional, kickoff), dict(
+            title=title, reason=reason, action='Review lineup', href=team_url + '#lineup-recheck',
+            valid_until=min(kickoff, expiry).isoformat(), verified_at=now.isoformat(),
+        )))
     if lineup:
         return min(lineup, key=lambda candidate: candidate[0])[1]
 
@@ -71,6 +72,9 @@ def first_action(team, week, review, byes, items, *, now=None):
     for families in ({'need', 'offer'}, {'goal'}):
         chosen = next((item for item in items if item['family'] in families), None)
         if chosen:
+            if chosen['family'] == 'goal':
+                return dict(title='Choose your team goal', reason='Your goal helps guide trade suggestions.',
+                            action=chosen['action'], href=chosen['href'])
             from src.ui.home_trade_opportunities import brief_text
             return dict(title=brief_text(chosen['title']), reason=brief_text(chosen['reason']),
                         action=chosen['action'], href=chosen['href'])

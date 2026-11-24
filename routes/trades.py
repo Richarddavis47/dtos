@@ -252,10 +252,12 @@ def create_trades_router(*, ensure_fresh: EnsureFresh, require_data: RequireData
         # Do not let an obsolete response reintroduce an offer or roster claim.
         if publication() != admitted_publication:
             raise HTTPException(409, 'Prepared evidence changed. Reload Home to review current facts; your draft is unchanged.')
+        needs_preparation = any(item['family'] == 'preparation' for item in items)
         return JSONResponse({'workspace_context': context, 'csrf_token': account.csrf_token if account else '',
             'strategy': strategy, 'source_identity': key[1] if key else None, 'count': len(result['rows']),
             'brief_html': brief_html, 'brief_count': len(items), 'brief_generation': facts['generation'],
             'priority': priority,
+            'priority_state': 'insufficient_evidence' if priority is None and needs_preparation else 'ready',
             'state': result['state'], 'reason': result.get('reason'), 'html': opportunity_cards(result['rows'], rid),
             'retained': bool(result.get('source_identity'))}, headers={"Cache-Control": "no-store"})
 

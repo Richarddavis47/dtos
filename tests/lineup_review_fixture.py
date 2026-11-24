@@ -29,6 +29,7 @@ def prepared(
     uncertain=None,
     earlier_backup=False,
     bench_position="QB",
+    separate_early_rb=False,
 ):
     tmp = TemporaryDirectory()
     owner.addCleanup(tmp.cleanup)
@@ -61,7 +62,7 @@ def prepared(
         teams=[],
         players={},
     )
-    values = {"q": 10, "bq": 25, "r": 12, "w": 14, "s": 11}
+    values = {"q": 10, "bq": 25, "r": 12, "w": 14, "s": 11, "br": 2}
     values.update(points or {})
     payloads, rows = {8: [], 9: []}, []
     for rid in (1, 2):
@@ -74,15 +75,19 @@ def prepared(
         starters = [f"{rid}-q", f"{rid}-r", f"{rid}-w", f"{rid}-s"]
         if empty and rid == 1:
             starters[0] = "0"
-        for label, pos in [
+        positions = [
             ("q", "QB"),
             ("bq", bench_position),
             ("r", "RB"),
             ("w", "WR"),
             ("s", "RB"),
-        ]:
+        ]
+        if separate_early_rb:
+            positions.append(("br", "RB"))
+        for label, pos in positions:
             pid = f"{rid}-{label}"
-            player_team = "KC" if earlier_backup and label == "bq" else nfl_team
+            early = (earlier_backup and label == "bq") or label == "br"
+            player_team = "KC" if early else nfl_team
             player = dict(
                 id=pid,
                 player_id=pid,
@@ -158,7 +163,7 @@ def prepared(
         )
         for week in (8, 9)
     ]
-    if earlier_backup:
+    if earlier_backup or separate_early_rb:
         facts.append(dict(
             family="schedule", season=2026, week=8, provider="nflverse",
             fingerprint="fixture-early-game",

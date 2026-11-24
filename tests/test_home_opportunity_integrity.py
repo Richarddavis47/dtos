@@ -227,8 +227,8 @@ class OpportunityIntegrityTests(unittest.TestCase):
             body=r.content,
         )
 
-    def browser_page(self, browser, width=390, height=844):
-        page = browser.new_page(viewport=dict(width=width, height=height))
+    def browser_page(self, browser, width=390, height=844, *, touch=False):
+        page = browser.new_page(viewport=dict(width=width, height=height), has_touch=touch)
         page.set_default_timeout(15000)
         page.context.add_cookies(
             [dict(name="dtos_strategy", value=self.cookie, url="https://dtos.test/")]

@@ -83,11 +83,13 @@ CSS += """
 .home-stats>div+div{border-inline-start:1px solid var(--line)}
 .home-stats dt{color:var(--text-secondary);font-size:12px;line-height:1.35}
 .home-stats dd{order:-1;font-weight:800;font-size:clamp(13px,4vw,19px);margin:0;overflow-wrap:anywhere}
+.home-stats-context,.home-stats-unavailable{margin:6px 0 0;color:var(--text-secondary);font-size:12px;line-height:1.35}
+.home-stats-unavailable{padding:8px 10px;background:var(--surface-elevated);border:1px solid var(--line);border-radius:10px}
 .home-first{border:2px solid var(--accent);border-radius:12px;padding:12px;background:linear-gradient(150deg,#252f24,var(--surface-elevated) 70%);box-shadow:0 0 11px #80df4233}
 .home-first h2{font-size:15px;color:var(--accent);margin:0 0 5px}
 .home-first h3{font-size:clamp(19px,4.9vw,26px);line-height:1.2;margin:0;overflow-wrap:anywhere}
 .home-first p{font-size:14px;margin:7px 0 10px;max-width:58ch;line-height:1.45;overflow-wrap:anywhere}
-.home-first .ux-primary-action{min-height:44px;display:flex;justify-content:center;align-items:center;text-align:center}
+.home-first .ux-primary-action{min-height:44px;display:flex;justify-content:center;align-items:center;text-align:center;scroll-margin-block:8px 12px}
 .home-week h2{font-size:20px;margin:0 0 8px}
 .home-shortcuts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin-bottom:14px}
 .home-week-links{background:var(--surface-elevated);border:1px solid var(--line);border-radius:10px;padding:0 10px}
@@ -97,4 +99,10 @@ CSS += """
 .home-shortcuts a:hover{border-color:var(--accent)}.home-shortcuts a span,.home-week-links a span{color:var(--accent);font-size:20px;line-height:1}
 .home-week .ds-home-detail{margin:4px 0 0}
 @media(min-width:700px){.home-stats{max-width:590px}.home-shortcuts{max-width:590px}.home-first .ux-primary-action{width:min(100%,330px)}}
+@media(max-width:359px) and (max-height:500px){
+ .home-team,.home-first{margin-bottom:10px}
+ .home-stats{margin-top:7px;padding-block:4px}
+ .home-first{padding:9px}
+ .home-first p{margin:5px 0 8px}
+}
 """
