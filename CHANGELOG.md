@@ -1,3 +1,7 @@
+## v1.22.62 / build 2277 — Clearer Home lineup priorities
+
+Home shows a confirmed lineup move before an earlier conditional backup plan. It distinguishes a quiet team brief from missing evidence or a failed load, groups missing team stats, and keeps the primary action easier to reach on short screens.
+
 ## v1.22.61 / build 2276 — A clearer signed-in Home
 
 Home highlights one supported next step, with quick access to your roster, Trade Center, matchup, and bye planner. Recent completed trades show dated Market comparisons when both packages can be compared, with transaction details available on demand.

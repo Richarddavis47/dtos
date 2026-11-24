@@ -167,7 +167,8 @@ class FrontOfficeBriefBrowserTests(unittest.TestCase):
             browser = launch_chromium(pw, headless=True)
             try:
                 for width, height in ((320,432),(375,667),(390,844),(1280,900)):
-                    for state in ('loading', 'expired', 'empty', 'error'):
+                    states = ('loading', 'expired', 'empty', 'error')
+                    for state in (*states, 'insufficient') if width == 390 else states:
                         page = f.f.browser_page(browser, width, height)
                         generated = []
                         page.on('request', lambda r: generated.append(r.url) if '/api/trades/generate' in r.url else None)
@@ -185,11 +186,13 @@ class FrontOfficeBriefBrowserTests(unittest.TestCase):
                         # No prepared team facts and no saved search: actual empty API selector.
                         from contextlib import ExitStack
                         with ExitStack() as stack:
-                            if state == 'empty':
+                            if state in {'empty', 'insufficient'}:
                                 with ideas._lock:
                                     ideas._entries.clear()
                                 stack.enter_context(patch('services.front_office_brief.prepared_diagnostics', return_value=None))
                                 stack.enter_context(patch('src.core.intelligence.cache.IntelligenceCache.peek', return_value=None))
+                            if state == 'insufficient':
+                                stack.enter_context(patch('services.front_office_brief.compatible_profile', return_value=None))
                             page.goto('https://dtos.test/', wait_until='domcontentloaded')
                             page.locator('#home-brief-details > summary').click()
                             if state != 'loading':
@@ -200,9 +203,13 @@ class FrontOfficeBriefBrowserTests(unittest.TestCase):
                             elif state == 'error':
                                 self.assertIn('could not be loaded', text)
                                 self.assertEqual(page.locator('#home-opportunity-cards article').count(), 0)
+                                self.assertEqual(page.locator('#home-priority h3').inner_text(), 'Team brief couldn’t load')
                             elif state == 'empty':
                                 self.assertIn('No actionable insight qualifies', text)
                                 self.assertEqual(page.locator('#home-opportunity-cards article').count(), 0)
+                                self.assertEqual(page.locator('#home-priority h3').inner_text(), 'No clear priority right now')
+                            elif state == 'insufficient':
+                                self.assertEqual(page.locator('#home-priority h3').inner_text(), 'Not enough team data yet')
                             elif state == 'expired':
                                 self.assertEqual(page.locator('.home-opportunity').count(), 0)
                                 self.assertIn('Find Trade Ideas', text)

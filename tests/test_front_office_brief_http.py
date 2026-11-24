@@ -40,6 +40,11 @@ class HomePriorityTests(unittest.TestCase):
         byes = [dict(week=11, state='conditional', bye_starters=[[0, 'rb']], moves=[[0, 'other', None]])]
         first = first_action({'roster_id': 1}, 10, {'fallback': fallback}, byes, [], now=now)
         self.assertIn('If Example Starter can’t play', first['reason'])
+        fallback['valid_until'] = (now + timedelta(hours=2)).isoformat()
+        first = first_action({'roster_id': 1}, 10, {'fallback': fallback}, [], [], now=now)
+        self.assertEqual(first['valid_until'], fallback['kickoff_deadline'])
+        self.assertIsNone(first_action({'roster_id': 1}, 10, {'fallback': fallback}, [], [],
+                                       now=now + timedelta(hours=1)))
         self.assertIn('depends on player availability', first_action({'roster_id': 1}, 10, {}, byes, [], now=now)['reason'])
         byes[0]['state'] = 'unknown'
         self.assertIsNone(first_action({'roster_id': 1}, 10, {}, byes, [], now=now))
@@ -58,6 +63,23 @@ class FrontOfficeBriefHTTPTests(unittest.TestCase):
         r = self.client.get('/api/trades/home-opportunities?front_office=1')
         self.assertEqual(r.status_code, 200, r.text)
         return r.json()
+
+    def test_home_groups_missing_stats_and_keeps_the_supported_record(self):
+        self.data.pop('season_matchups', None)
+        team = self.data['teams'][0]
+        for key in ('wins', 'losses', 'ties', 'points_for'):
+            team.pop(key, None)
+        home = self.client.get('/').text.split('<header class="ux-feature home-command home-team"', 1)[1].split('</header>', 1)[0]
+        self.assertEqual(home.count('Record, league rank and weekly scoring can’t be confirmed yet.'), 1)
+        self.assertNotIn('Not available', home)
+        self.assertNotIn('<dl', home)
+        supported = dict(team, wins=0, losses=1, ties=0)
+        self.f.f.f.data = dict(self.data, teams=[supported, *self.data['teams'][1:]])
+        home = self.client.get('/').text.split('<header class="ux-feature home-command home-team"', 1)[1].split('</header>', 1)[0]
+        self.assertIn('<dt>Record</dt><dd>0-1-0</dd>', home)
+        self.assertIn('<dt>League rank</dt><dd>—</dd>', home)
+        self.assertIn('<dt>Points / week</dt><dd>—</dd>', home)
+        self.assertEqual(home.count('Dashes show figures we can’t confirm.'), 1)
 
     def test_real_eligible_proposal_exact_token_and_prepared_hq_capital(self):
         self.f.f.seed()

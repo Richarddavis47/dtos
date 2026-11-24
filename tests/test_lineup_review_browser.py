@@ -11,6 +11,71 @@ from tools.validation.browser_runtime import launch_chromium
 
 
 class LineupReviewBrowserTests(unittest.TestCase):
+    def _home_with_early_fallback(self, *, confirmed):
+        from unittest.mock import patch
+        from services.matchup_season import season_week_view
+
+        fixture, data, service, _ = authenticated_prepared(
+            self, empty=False, uncertain="r", separate_early_rb=True,
+            points=None if confirmed else {"bq": 1},
+        )
+        view = season_week_view(data, 8, service, review_roster_id=1)
+        review = next(side["lineup_review"] for group in view["groups"].values()
+                      for side in group if side["roster_id"] == 1)
+        self.assertEqual(review["fallback"]["starter"], "Example R 1")
+        self.assertEqual(review["actionable"], confirmed)
+        if confirmed:
+            self.assertLess(review["fallback"]["kickoff_deadline"], review["kickoff_deadline"])
+        with patch("services.trade_intelligence._trade_projection_service", return_value=service), sync_playwright() as pw:
+            browser = launch_chromium(pw, headless=True)
+            try:
+                page = fixture.f.browser_page(browser, 390, 844)
+                page.goto("https://dtos.test/")
+                action = page.locator("#home-priority").get_by_role("link", name="Review lineup", exact=True)
+                action.wait_for()
+                directory = os.environ.get("DTOS_BRIEF_EVIDENCE")
+                if directory:
+                    case = "confirmed" if confirmed else "conditional-only"
+                    page.screenshot(path=str(Path(directory, f"home-early-backup-{case}-390.png")))
+                self.assertEqual(action.get_attribute("href"), "/teams/1#lineup-recheck")
+                copy = page.locator("#home-priority").inner_text()
+                if confirmed:
+                    self.assertIn("Check your Week 8 lineup", copy)
+                    self.assertNotIn("If Example R 1", copy)
+                else:
+                    self.assertIn("Have a backup ready", copy)
+                    self.assertIn("If Example R 1 can’t play", copy)
+                    page.close()
+                    starter = data["players"]["1-r"]
+                    name = "Example Starter With A Long Multi-Part Name"
+                    starter.update(name=name, full_name=name)
+                    page = fixture.f.browser_page(browser, 320, 432, touch=True)
+                    page.goto("https://dtos.test/")
+                    action = page.locator("#home-priority").get_by_role("link", name="Review lineup", exact=True)
+                    action.wait_for()
+                    self.assertIn(name, page.locator("#home-priority").inner_text())
+                    self.assertLessEqual(page.evaluate("document.documentElement.scrollWidth"), 320)
+                    action.scroll_into_view_if_needed()
+                    self.assertTrue(action.evaluate("""e => {
+                        const box = e.getBoundingClientRect();
+                        const nav = document.querySelector('.manager-nav').getBoundingClientRect();
+                        const hits = [box.top + 2, box.top + box.height / 2, box.bottom - 2];
+                        return box.height >= 44 && box.top >= 0 && box.bottom <= nav.top
+                            && hits.every(y => e.contains(document.elementFromPoint(box.left + box.width / 2, y)));
+                    }"""))
+                    if directory:
+                        page.screenshot(path=str(Path(directory, "home-long-action-320.png")))
+                    action.tap()
+                    page.wait_for_url("**/teams/1#lineup-recheck")
+            finally:
+                browser.close()
+
+    def test_home_prioritizes_confirmed_change_over_earlier_fallback(self):
+        self._home_with_early_fallback(confirmed=True)
+
+    def test_home_keeps_conditional_fallback_when_it_is_the_only_lineup_action(self):
+        self._home_with_early_fallback(confirmed=False)
+
     def test_signed_in_home_uses_verified_lineup_and_expires_with_keyboard_focus(self):
         from datetime import datetime, timedelta, timezone
         from unittest.mock import patch
