@@ -1,0 +1,1182 @@
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index b5b3002..4c6ec84 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -1,3 +1,7 @@
++## v1.22.63 / build 2278 — My Team in four sections
++
++My Team organizes the existing roster, lineup, bye plans and picks into four sections. Home opens the specific lineup action or bye week. Bye plans show slot-by-slot moves, availability dependencies and remaining gaps. Returning from Matchups or a pickup restores the same expanded week.
++
+ ## v1.22.62 / build 2277 — Clearer Home lineup priorities
+ 
+ Home shows a confirmed lineup move before an earlier conditional backup plan. It distinguishes a quiet team brief from missing evidence or a failed load, groups missing team stats, and keeps the primary action easier to reach on short screens.
+diff --git a/RELEASE_NOTES.md b/RELEASE_NOTES.md
+index 64a12ed..018e748 100644
+--- a/RELEASE_NOTES.md
++++ b/RELEASE_NOTES.md
+@@ -1,3 +1,7 @@
++## v1.22.63 / build 2278 — My Team in four sections
++
++My Team organizes the existing roster, lineup, bye plans and picks into four sections. Home opens the specific lineup action or bye week. Bye plans show slot-by-slot moves, availability dependencies and remaining gaps. Returning from Matchups or a pickup restores the same expanded week.
++
+ ## v1.22.62 / build 2277 — Clearer Home lineup priorities
+ 
+ Home shows a confirmed lineup move before an earlier conditional backup plan. It distinguishes a quiet team brief from missing evidence or a failed load, groups missing team stats, and keeps the primary action easier to reach on short screens.
+diff --git a/app_metadata.py b/app_metadata.py
+index ecc31f1..c8d553d 100644
+--- a/app_metadata.py
++++ b/app_metadata.py
+@@ -7,10 +7,10 @@ from datetime import datetime, timezone
+ from pathlib import Path
+ 
+ APPLICATION_NAME = "DTOS"
+-VERSION = "1.22.62"
+-PRODUCT_VERSION = "1.22.62"
+-BUILD_NUMBER = 2277
+-RELEASE_CODENAME = "Clearer Home Lineup Priorities"
++VERSION = "1.22.63"
++PRODUCT_VERSION = "1.22.63"
++BUILD_NUMBER = 2278
++RELEASE_CODENAME = "My Team in Four Sections"
+ APPLICATION_STARTED_AT = datetime.now(timezone.utc).isoformat()
+ 
+ _REPOSITORY_ROOT = Path(__file__).resolve().parent
+diff --git a/routes/home.py b/routes/home.py
+index c4dfba8..47c91d1 100644
+--- a/routes/home.py
++++ b/routes/home.py
+@@ -243,7 +243,7 @@ def create_home_router(
+               <h2 id="home-week-title">This Week</h2>
+               <nav class="home-week-links" aria-label="This week’s lineup and matchup">
+                 <a href="{escape(matchup_href, quote=True)}">Week {report_week} matchup<span aria-hidden="true">›</span></a>
+-                <a href="/teams/{roster_id}#bye-week-details">Upcoming bye weeks<span aria-hidden="true">›</span></a>
++                <a href="/teams/{roster_id}#team-byes">Upcoming bye weeks<span aria-hidden="true">›</span></a>
+               </nav>
+               <details class="ds-home-detail"><summary>Week {report_week} report and season results</summary>
+                 <p>{escape(report_state)} · <a href="/reports/weekly?week={report_week}">Open weekly report</a></p>
+diff --git a/routes/market.py b/routes/market.py
+index 3068d71..229ccc8 100644
+--- a/routes/market.py
++++ b/routes/market.py
+@@ -417,7 +417,7 @@ def create_market_router(
+         membership = getattr(current_account(), 'membership', None)
+         team_url = '/teams'
+         if membership and str(membership.league_id) == str(selected_league) and membership.roster_id:
+-            team_url = f'/teams/{membership.roster_id}#upcoming-byes'
++            team_url = f'/teams/{membership.roster_id}#bye-week-{bye_week}'
+         back = f'<p><a class="back ds-action" href="{escape(team_url)}">Back to My Team</a></p>'
+         reason = 'This link does not match a confirmed upcoming bye gap for your selected team.'
+         data = selected_state.get('data') or {}
+diff --git a/routes/teams.py b/routes/teams.py
+index b092f5d..d45c5d7 100644
+--- a/routes/teams.py
++++ b/routes/teams.py
+@@ -3,12 +3,13 @@ from __future__ import annotations
+ 
+ from html import escape
+ import json
++from pathlib import Path
+ from types import SimpleNamespace
+ from typing import Any, Awaitable, Callable
+ from urllib.parse import quote, urlencode
+ 
+ from fastapi import APIRouter, HTTPException, Request
+-from fastapi.responses import HTMLResponse
++from fastapi.responses import HTMLResponse, Response
+ 
+ from config import LEAGUE_ID
+ from services.asset_intelligence import contextual_player_url
+@@ -36,6 +37,8 @@ EnsureFresh = Callable[[], Awaitable[None]]
+ RequireData = Callable[[], dict[str, Any]]
+ PageRenderer = Callable[[str, str], HTMLResponse]
+ 
++TEAM_ASSETS = Path(__file__).resolve().parents[1] / "static"
++
+ TEAM_HQ_CSS = """
+ <style>
+ .thq-header{display:flex;justify-content:space-between;align-items:center;gap:18px;padding:22px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);margin-bottom:20px}
+@@ -372,6 +375,16 @@ def create_teams_router(
+     """Create Team directory and Headquarters routes."""
+     router = APIRouter(tags=["teams"])
+ 
++    @router.get("/static/js/my-team-sections.js", include_in_schema=False)
++    async def my_team_script() -> Response:
++        return Response((TEAM_ASSETS / "js/my-team-sections.js").read_text(encoding="utf-8"),
++                        media_type="text/javascript", headers={"Cache-Control": "no-cache"})
++
++    @router.get("/static/css/my-team.css", include_in_schema=False)
++    async def my_team_styles() -> Response:
++        return Response((TEAM_ASSETS / "css/my-team.css").read_text(encoding="utf-8"),
++                        media_type="text/css", headers={"Cache-Control": "no-cache"})
++
+     @router.get("/teams", response_class=HTMLResponse)
+     async def teams_page() -> HTMLResponse:
+         await ensure_fresh()
+@@ -492,7 +505,9 @@ def create_teams_router(
+                                  if side['roster_id'] == roster_id), {})
+                 review = own_side.get('lineup_review') or {}
+                 if review.get('actionable'):
+-                    lineup_alert = review_panel({**review, 'fallback': None})
++                    lineup_alert = ('<div id="lineup-action">'
++                                    + review_panel({**review, 'fallback': None}, show_kickoff=True)
++                                    + '</div>')
+                 fallback = review.get('fallback')
+                 if not own_side and uncertain_starter:
+                     fallback = {'reason': 'The current submitted lineup is not prepared for review.'}
+@@ -501,7 +516,7 @@ def create_teams_router(
+                 lineup_assets = ('<link rel="stylesheet" href="/static/css/matchups.css">'
+                                  '<script src="/static/lineup-review.js" defer></script>')
+         starter_cards = "".join(
+-            f'<a class="card" href="{escape(contextual_player_url(str(player.get("id") or ""), from_team=roster_id, section="my-team-advanced", week=view["overview"]["projection_week"]))}">{player_summary(player_id=str(player.get("id") or ""), name=str(player.get("name") or "Unknown player"), position=str(player.get("position") or ""), nfl_team=str(player.get("team") or player.get("nfl_team") or "Free Agent"), context="Submitted starter", projection=card_projections.get(str(player.get("id") or "")))}</a>'
++            f'<a class="card" href="{escape(contextual_player_url(str(player.get("id") or ""), from_team=roster_id, section="my-team-submitted", week=view["overview"]["projection_week"]))}">{player_summary(player_id=str(player.get("id") or ""), name=str(player.get("name") or "Unknown player"), position=str(player.get("position") or ""), nfl_team=str(player.get("team") or player.get("nfl_team") or "Free Agent"), context="Submitted starter", projection=card_projections.get(str(player.get("id") or "")))}</a>'
+             for player in starters
+         ) or '<div class="ds-empty"><b>No starting lineup is available.</b>Sleeper has not supplied a current starter assignment.</div>'
+         from src.ui.team_strength import strength_panel
+@@ -547,21 +562,33 @@ def create_teams_router(
+ .thq-record-link{{display:inline-flex;align-items:center;min-height:44px;max-width:100%;text-decoration:underline;text-underline-offset:3px}}#season-so-far>summary{{display:list-item;list-style:disclosure-closed inside;align-content:center}}#season-so-far[open]>summary{{list-style-type:disclosure-open}}
+ @media(max-width:360px){{.thq-strategy{{grid-template-columns:56px minmax(0,1fr)}}.thq-strategy label{{white-space:normal;overflow-wrap:normal;line-height:1.3}}.thq-strategy select{{padding-left:4px;padding-right:4px}}}}
+ </style>
+-<section class="thq-content" data-my-team-context="{context_json}">
++<link rel="stylesheet" href="/static/css/my-team.css">
++<section class="thq-content" data-my-team-context="{context_json}" data-my-team-sections>
+ {scope_notice}
+-<header class="thq-header"><div class="thq-identity">{avatar}<div class="thq-title"><div class="identity-kicker">Manager: {escape(team['owner'])}</div><div class="thq-name-row"><h1>{escape(team['team_name'])}{you_badge(data, roster_id)}</h1>{champion_badge(defending_champion(data), roster_id)}</div><p><a class="thq-record-link" href="#season-so-far" aria-label="Season results: {escape(performance["record"], quote=True)} · {escape(performance["standing"], quote=True)}">{escape(performance["record"])} · {escape(performance["standing"])}</a></p></div></div><div class="thq-strategy">{strategy_control}<small>League evidence updated: {escape(view['last_updated'])}</small></div></header>
+-{outlook_panel(assessment_outlook, editable=editable, roster_id=roster_id)}
+-{lineup_assets}{lineup_alert}
++<header class="thq-header"><div class="thq-identity">{avatar}<div class="thq-title"><div class="identity-kicker">Manager: {escape(team['owner'])}</div><div class="thq-name-row"><h1>{escape(team['team_name'])}{you_badge(data, roster_id)}</h1>{champion_badge(defending_champion(data), roster_id)}</div><p><a class="thq-record-link" href="#season-so-far" aria-label="Season results: {escape(performance["record"], quote=True)} · {escape(performance["standing"], quote=True)}">{escape(performance["record"])} · {escape(performance["standing"])}</a></p></div></div></header>
++<nav class="thq-tabs" aria-label="My Team sections">
++<a href="#team-roster">Roster</a><a href="#team-lineup">Lineup</a><a href="#team-byes">Byes</a><a href="#team-picks">Picks</a>
++</nav>
++<section id="team-roster" data-team-section aria-label="Roster">
++<a class="thq-record-link" href="#my-team-outlook">Roster outlook and next step</a>
+ <section class="thq-section" id="full-roster"><details class="thq-strength-detail" id="my-team-roster" open><summary>Full Roster · {escape(_roster_projection_coverage(view))}</summary><div class="thq-roster">{_roster_rooms(view)}</div></details><details class="thq-strength-detail" id="my-team-key-players"><summary>Key players by Market value</summary>{_key_players(view)}</details></section>
+-{lineup_fallback}
+-{upcoming_byes}
++{outlook_panel(assessment_outlook, editable=editable, roster_id=roster_id)}
++<section class="thq-section thq-team-goal" aria-labelledby="team-goal-title"><h2 id="team-goal-title">Franchise goal</h2><div class="thq-strategy">{strategy_control}<small>League evidence updated: {escape(view['last_updated'])}</small></div></section>
+ {season_panel(data, roster_id)}
+-<section class="thq-section" id="draft-capital"><div class="thq-section-head"><h2>Draft Capital</h2><span>Your owned future picks</span></div><div class="thq-picks">{_draft_capital(view)}</div><p class="muted">Pick details preserve the original franchise and current owner. A pick’s future draft position is unknown unless a supported range is shown.</p></section>
+-
+ <section class="thq-section" id="positional-depth"><div class="thq-section-head"><h2>Starter strength and positional depth</h2><span>{escape('Week ' + str(overview['projection_week']) + ' · ' if overview['projection_week'] is not None else 'Current roster · ')}Lineup and backup projections from Sleeper</span></div>{_positional_depth(view)}</section>
+ <section class="thq-section">{team_observations(view.get("league_observations"), roster_id)}</section>
+-<section class="thq-section"><details class="thq-strength-detail" id="my-team-advanced"><summary>Calculations and sources</summary><div class="thq-evidence-body"><p>League evidence updated: {escape(view["last_updated"])}. Selected strategy overrides inferred direction and never changes Market prices.</p><p>Comparison ranks include only franchises with complete evidence for that named dimension. Coverage is evidence support, not an outcome probability. Overall dynasty utility and competitive-window aggregates remain unavailable without an approved model.</p><div class="thq-grades">{_team_intelligence(view)}</div>{_decision_horizons(view)}{multi_horizon_html}<h3>Submitted Starting Lineup</h3><p>Sleeper assignments remain separate from the DTOS optimal legal lineup.</p><details class="thq-strength-detail"><summary>View {len(starters)} submitted starters</summary><div class="thq-starters">{starter_cards}</div></details><h3>Roster facts</h3><p>{escape(roster_summary)} · {view['snapshot']['total_picks']} owned picks</p><div class="thq-cards">{_asset_cards(view['snapshot'])}</div><h3>Current Team Performance</h3><div class="thq-performance">{performance_cards}</div><div class="thq-summary">{summary}</div><h3>Activity</h3><div class="thq-timeline">{activity_html}</div><h3>Franchise History</h3><p>{historical_seasons} retained seasons · {historical_transactions} transactions. Historical FOIS grades are RETAINED / NOT REVALIDATED.</p><a class="thq-action" href="{franchise_history_url}">Franchise History</a><a class="thq-action" href="/history">League History</a><a class="thq-action" href="/front-offices?front_office={roster_id}">View franchise analysis</a><details><summary>About future forecasts</summary><div class="thq-future-grid">{future}</div></details></div></details></section>
+-</section><script src="/static/js/strategy_session.js" defer></script>
++<p><a class="thq-action" href="#my-team-activity">Activity and franchise history</a></p>
++<section class="thq-section"><details class="thq-strength-detail" id="my-team-advanced"><summary>Calculations and sources</summary><div class="thq-evidence-body"><p>League evidence updated: {escape(view["last_updated"])}. Selected strategy overrides inferred direction and never changes Market prices.</p><p>Comparison ranks include only franchises with complete evidence for that named dimension. Coverage is evidence support, not an outcome probability. Overall dynasty utility and competitive-window aggregates remain unavailable without an approved model.</p><div class="thq-grades">{_team_intelligence(view)}</div>{_decision_horizons(view)}{multi_horizon_html}<p><a class="thq-record-link" href="#my-team-submitted">View submitted Sleeper lineup</a></p><h3>Roster facts</h3><p>{escape(roster_summary)} · {view['snapshot']['total_picks']} owned picks</p><div class="thq-cards">{_asset_cards(view['snapshot'])}</div><h3>Current Team Performance</h3><div class="thq-performance">{performance_cards}</div><div class="thq-summary">{summary}</div><h3 id="my-team-activity">Activity</h3><div class="thq-timeline">{activity_html}</div><h3>Franchise History</h3><p>{historical_seasons} retained seasons · {historical_transactions} transactions. Historical FOIS grades are RETAINED / NOT REVALIDATED.</p><a class="thq-action" href="{franchise_history_url}">Franchise History</a><a class="thq-action" href="/history">League History</a><a class="thq-action" href="/front-offices?front_office={roster_id}">View franchise analysis</a><details><summary>About future forecasts</summary><div class="thq-future-grid">{future}</div></details></div></details></section>
++</section>
++<section id="team-lineup" data-team-section aria-label="Lineup">
++<h2 class="thq-tab-heading">Lineup</h2>{lineup_assets}{lineup_alert}{lineup_fallback}
++<section id="my-team-submitted" class="thq-section"><h3>Submitted Starting Lineup</h3><p>Sleeper assignments remain separate from the DTOS optimal legal lineup.</p><details class="thq-strength-detail" id="my-team-submitted-details" open><summary>View {len(starters)} submitted starters</summary><div class="thq-starters">{starter_cards}</div></details></section>
++</section>
++<section id="team-byes" data-team-section aria-label="Byes">
++{upcoming_byes or '<section class="thq-section" id="upcoming-byes"><h2>Upcoming bye weeks</h2><p>A bye plan is available for your own team when upcoming weeks are prepared.</p></section>'}
++</section>
++<section id="team-picks" data-team-section aria-label="Picks"><section class="thq-section" id="draft-capital"><div class="thq-section-head"><h2>Draft Capital</h2><span>Your owned future picks</span></div><div class="thq-picks">{_draft_capital(view)}</div><p class="muted">Pick details preserve the original franchise and current owner. A pick’s future draft position is unknown unless a supported range is shown.</p></section></section>
++</section><script src="/static/js/strategy_session.js" defer></script><script src="/static/js/my-team-sections.js" defer></script>
+ """
+         return page(f'{team["team_name"]} Headquarters', body)
+ 
+diff --git a/routes/transactions.py b/routes/transactions.py
+index ad6c997..ed5f555 100644
+--- a/routes/transactions.py
++++ b/routes/transactions.py
+@@ -394,7 +394,7 @@ def create_transactions_router(
+     def team_origin(data, from_team, from_section):
+         if from_team is None or not any(t.get('roster_id') == from_team for t in data.get('teams') or []):
+             return {}
+-        return {'from_team': from_team, 'from_section': from_section if from_section in {'full-roster', 'my-team-advanced'} else 'full-roster'}
++        return {'from_team': from_team, 'from_section': from_section if from_section in {'full-roster', 'my-team-advanced', 'my-team-submitted'} else 'full-roster'}
+ 
+     @router.get("/players/{player_id}/projections", response_class=HTMLResponse)
+     async def player_week_projection(player_id: str, front_office: int | None = None,
+@@ -531,8 +531,8 @@ def create_transactions_router(
+ <h3>Ownership Timeline</h3>{current_observation_html}<ul>{ownership_history}</ul><p class="muted">Failed transactions remain behavioral evidence and never modify ownership. Missing weeks are not converted to zero. Current values are never backdated.</p></details>'''
+         trade_return = f'<a class="back" href="/trades/history/{quote(original["transaction_id"], safe="")}">← Back to original trade timeline</a>' if original else ''
+         matchup_return = ''
+-        section = from_section if from_section in {'full-roster', 'my-team-advanced'} else 'full-roster'
+-        team_return = (f'<a class="back" href="/teams/{from_team}#{section}">← Back to My Team {"intelligence" if section == "my-team-advanced" else "roster"}</a>'
++        section = from_section if from_section in {'full-roster', 'my-team-advanced', 'my-team-submitted'} else 'full-roster'
++        team_return = (f'<a class="back" href="/teams/{from_team}#{section}">← Back to My Team {"intelligence" if section == "my-team-advanced" else "lineup" if section == "my-team-submitted" else "roster"}</a>'
+                        if from_team is not None and any(t.get('roster_id') == from_team for t in data.get('teams') or []) else '')
+         if week is not None and matchup and (matchup.isdecimal() or (matchup.startswith('unassigned-') and matchup[11:].isdecimal())):
+             matchup_return = f'<link rel="stylesheet" href="/static/css/matchups.css"><a class="back matchup-return" href="/matchups/{escape(matchup)}?week={week}">← Back to Week {week} matchup</a>'
+diff --git a/services/asset_intelligence.py b/services/asset_intelligence.py
+index ff60180..bb2bea3 100644
+--- a/services/asset_intelligence.py
++++ b/services/asset_intelligence.py
+@@ -96,7 +96,7 @@ def contextual_player_url(player_id: str, *, from_team: int | None = None, secti
+     if from_trade:
+         query['from_trade'] = from_trade
+     if from_team is not None and from_team > 0:
+-        query.update(from_team=from_team, from_section=section if section in {'full-roster', 'my-team-advanced'} else 'full-roster')
++        query.update(from_team=from_team, from_section=section if section in {'full-roster', 'my-team-advanced', 'my-team-submitted'} else 'full-roster')
+     if week is not None and 1 <= week <= 18:
+         query['week'] = week
+     path = '/players/' + quote(str(player_id), safe='')
+diff --git a/services/front_office_brief.py b/services/front_office_brief.py
+index 6c14512..880c9bf 100644
+--- a/services/front_office_brief.py
++++ b/services/front_office_brief.py
+@@ -37,7 +37,7 @@ def first_action(team, week, review, byes, items, *, now=None):
+         else:
+             continue
+         lineup.append(((conditional, kickoff), dict(
+-            title=title, reason=reason, action='Review lineup', href=team_url + '#lineup-recheck',
++            title=title, reason=reason, action='Review lineup', href=team_url + ('#lineup-recheck' if conditional else '#lineup-action'),
+             valid_until=min(kickoff, expiry).isoformat(), verified_at=now.isoformat(),
+         )))
+     if lineup:
+@@ -67,7 +67,7 @@ def first_action(team, week, review, byes, items, *, now=None):
+         else:
+             continue
+         return dict(title=title, reason=reason,
+-                    action='Review bye plan', href=team_url + '#bye-week-details')
++                    action='Review bye plan', href=team_url + f'#bye-week-{week}')
+ 
+     for families in ({'need', 'offer'}, {'goal'}):
+         chosen = next((item for item in items if item['family'] in families), None)
+diff --git a/src/core/intelligence/upcoming_byes.py b/src/core/intelligence/upcoming_byes.py
+index 7f08cec..bca7cda 100644
+--- a/src/core/intelligence/upcoming_byes.py
++++ b/src/core/intelligence/upcoming_byes.py
+@@ -207,7 +207,7 @@ def read_upcoming_byes(profile, league, team, *, players_fetched_at=None):
+     observed = timestamp(players_fetched_at)
+     age = int((now - observed).total_seconds() // 60) if observed and freshness != 'Unavailable' else None
+     return [
+-        dict(row, state='conditional' if row['state'] == 'covered' and freshness != 'Fresh' else row['state'],
++        dict(row, starting_slots=record['starting_slots'], state='conditional' if row['state'] == 'covered' and freshness != 'Fresh' else row['state'],
+              availability_freshness=freshness, availability_age_minutes=age)
+         for row in record['weeks']
+     ]
+diff --git a/src/ui/lineup_review.py b/src/ui/lineup_review.py
+index 152e2ee..3383bc8 100644
+--- a/src/ui/lineup_review.py
++++ b/src/ui/lineup_review.py
+@@ -12,7 +12,7 @@ def local_check_time(value):
+             f'{instant.strftime("%a %b %d, %H:%M UTC")}</time>')
+ 
+ 
+-def _primary_panel(review):
++def _primary_panel(review, *, show_kickoff=False):
+     if not review or review.get("state") == "no_improvement":
+         return ""
+     active = bool(review.get("actionable"))
+@@ -49,6 +49,9 @@ def _primary_panel(review):
+             + "</ul>"
+         )
+         changes += "<p>Apply these changes together in Sleeper. DTOS has not changed your lineup.</p>"
++        if show_kickoff and timestamp(review.get('kickoff_deadline')):
++            changes += (f'<p class="thq-lineup-deadline">First affected game locks '
++                        f'{local_check_time(review["kickoff_deadline"])}.</p>')
+         checked = local_check_time(review["observed_at"])
+         changes += f"<p>Roster checked {checked} · roster and projection checks within 15 minutes.</p>"
+         changes += (
+@@ -113,5 +116,5 @@ def lineup_recheck_panel(recheck, fallback):
+     )
+ 
+ 
+-def review_panel(review, *, recheck=None):
+-    return _primary_panel(review) + lineup_recheck_panel(recheck, (review or {}).get("fallback"))
++def review_panel(review, *, recheck=None, show_kickoff=False):
++    return _primary_panel(review, show_kickoff=show_kickoff) + lineup_recheck_panel(recheck, (review or {}).get("fallback"))
+diff --git a/src/ui/upcoming_byes.py b/src/ui/upcoming_byes.py
+index 94d2305..68bd108 100644
+--- a/src/ui/upcoming_byes.py
++++ b/src/ui/upcoming_byes.py
+@@ -50,77 +50,98 @@ def upcoming_byes_panel(weeks, players, *, active, league_id=None, season=None,
+     order = {'shortfall': 0, 'unknown': 1, 'conditional': 2, 'covered': 3, 'no_gap': 4}
+     priority = sorted(weeks, key=lambda row: (order[row['state']], row['week']))
+     names = {str(player['id']): escape(player.get('name') or 'Unnamed player') for player in players}
+-    pickup_links = []
+-    for row in priority:
+-        if row['state'] != 'shortfall' or not (league_id and season and roster_id):
+-            continue
+-        week = row['week']
+-        query = urlencode(dict(bye_week=week, market_league=league_id, season=season, from_team=roster_id,
+-                               availability='day_traders_free_agent'))
+-        needs = _slots(dict.fromkeys(row['unfilled']))
+-        pickup_links.append(f'<a class="thq-action" id="bye-pickup-{week}" href="/market?{escape(query)}">'
+-                            f'Find Week {week} {needs} cover</a>')
+ 
+     def finding(row):
+-        week = f"Week {row['week']}"
+         positions = _slots(dict.fromkeys(row['slots'][index] for index, _ in row['bye_starters']))
+         if row['state'] == 'shortfall':
+-            return f"{week} · Bye affects {positions}. This roster cannot fill every starting spot with its current eligible slots."
++            return f"Bye affects {positions}. This roster cannot fill every starting spot with its current eligible slots."
+         if row['state'] == 'conditional':
+-            return f"{week} · Legal cover for the {positions} bye depends on player availability."
++            return f"Legal cover for the {positions} bye depends on player availability."
+         if row['state'] == 'covered':
+-            return f"{week} · A legal lineup change can cover the {positions} bye."
++            return f"A legal lineup change can cover the {positions} bye."
+         if row['state'] == 'unknown':
+             if positions:
+-                return f"{week} · Bye affects {positions}. The roster and schedule do not confirm full cover."
+-            return f"{week} · Schedule or roster coverage is incomplete."
+-        return f"{week} · No starters on bye."
++                return f"Bye affects {positions}. The roster and schedule do not confirm full cover."
++            return "Schedule or roster coverage is incomplete."
++        return "No starters on bye."
+ 
+-    def detail(row, *, leading):
++    def detail(row):
+         slots = row['slots']
+-        absent = ''.join(
+-            f'<li data-bye-starter="{escape(pid, quote=True)}" data-slot-index="{index}">'
+-            f'{names.get(pid, "Unnamed player")} is on bye in {_indexed_slot(slots, index)}.</li>'
+-            for index, pid in row['bye_starters']
+-        )
+-        moves = []
+-        for index, pid, prior in row['moves']:
+-            name = names.get(pid, 'Unnamed player')
++        week = row['week']
++        absent = dict(row['bye_starters'])
++        movers = {index: (pid, prior) for index, pid, prior in row['moves']}
++        outgoing = {prior: (index, pid) for index, pid, prior in row['moves'] if prior is not None}
++        initial = row.get('starting_slots') or ()
++        rows = []
++        for index in sorted(absent.keys() | movers.keys()):
+             destination = _indexed_slot(slots, index)
+-            instruction = (f'Start {name} at {destination}.' if prior is None else
+-                           f'Move {name} from {_indexed_slot(slots, prior)} to {destination}.')
+-            moves.append(f'<li data-bye-move="{escape(pid, quote=True)}" data-slot-index="{index}">{instruction}</li>')
+-        if row['state'] == 'conditional':
+-            instruction_heading = 'Use this lineup only if all its players are available.'
+-        else:
+-            instruction_heading = 'Make this change.' if len(moves) == 1 else 'Make these changes together.'
++            if index in absent:
++                pid = absent[index]
++                before = (f'<p data-bye-starter="{escape(pid, quote=True)}" data-slot-index="{index}">'
++                          f'<b>{names.get(pid, "Unnamed player")}</b><small>On bye</small></p>')
++            elif index in outgoing:
++                next_index, pid = outgoing[index]
++                before = f'<p><b>{names.get(pid, "Unnamed player")}</b><small>Moves to {_indexed_slot(slots, next_index)}</small></p>'
++            elif index < len(initial):
++                previous = initial[index]
++                before = (f'<p><b>{names.get(previous, "Unnamed player")}</b>'
++                          f'<small>Previously at {destination}</small></p>' if previous else
++                          '<p><b>Open slot</b><small>Previous assignment</small></p>')
++            else:
++                before = '<p><b>Previous assignment</b><small>Not shown in this plan</small></p>'
++            if index in movers:
++                pid, prior = movers[index]
++                source = f' · from {_indexed_slot(slots, prior)}' if prior is not None else ''
++                after = (f'<p data-bye-move="{escape(pid, quote=True)}" data-slot-index="{index}">'
++                         f'<b>{names.get(pid, "Unnamed player")}</b><small>Start at {destination}{source}</small></p>')
++            else:
++                after = ('<p><b>No replacement shown</b></p>' if row['state'] != 'unknown' else
++                         '<p><b>Cover unconfirmed</b></p>')
++            rows.append(f'<div class="thq-bye-move"><span class="thq-bye-slot">{destination}</span>'
++                        f'{before}<span class="thq-bye-arrow" aria-hidden="true">→</span>{after}</div>')
++        instruction = (
++            ('<p class="thq-bye-warning">Use this lineup only if all its players are available.</p>'
++             if row['state'] == 'conditional' else '')
++            + ('<p>Make these changes together.</p>' if len(movers) > 1 else '<p>Make this change.</p>')
++            if movers else ''
++        )
+         dependencies = ''.join(
+             f'<li>{_status_dependency(names.get(pid, "Unnamed player"), status)}</li>'
+             for pid, status in row['availability_dependencies']
+         )
+         vacancy = _slots(row['unfilled'])
+         notes = (
+-            (f'<ul>{absent}</ul>' if absent else '')
+-            + (f'<p>{instruction_heading}</p><ul>{"".join(moves)}</ul><p>{_status_age(row)}</p>' if moves else '')
++            instruction
++            + (f'<div class="thq-bye-moves" role="group" aria-label="Before and after by starting slot">{"".join(rows)}</div>' if rows else '')
++            + (f'<p>{_status_age(row)}</p>' if movers else '')
+             + (f'<ul>{dependencies}</ul>' if dependencies else '')
+-            + (f'<p>One legal fit leaves {vacancy} unfilled.</p>' if vacancy else '')
++            + (f'<p class="thq-bye-warning">One legal fit leaves {vacancy} unfilled.</p>' if vacancy else '')
+             + ('<p>A complete projected lineup is unavailable for this week.</p>'
+                if not row['projection_ready'] else '')
+         )
+-        href = f'/matchups?week={row["week"]}'
+-        heading = f"Week {row['week']} details" if leading else finding(row)
+-        return (f'<section data-bye-week="{row["week"]}" data-bye-state="{row["state"]}">'
+-                f'<h3>{heading}</h3>{notes}'
+-                f'<a class="thq-record-link" href="{href}">View Week {row["week"]} Matchups</a></section>')
++        pickup = ''
++        if row['state'] == 'shortfall' and league_id and season and roster_id:
++            query = urlencode(dict(bye_week=week, market_league=league_id, season=season, from_team=roster_id,
++                                   availability='day_traders_free_agent'))
++            needs = _slots(dict.fromkeys(row['unfilled']))
++            pickup = (f'<a class="thq-action" id="bye-pickup-{week}" href="/market?{escape(query)}">'
++                      f'Find Week {week} {needs} cover</a>')
++        description = finding(row)
++        return (f'<details class="thq-bye-week" name="team-bye-weeks" id="bye-week-{week}" data-nav-disclosure '
++                f'data-bye-week="{week}" data-bye-state="{row["state"]}">'
++                f'<summary><span><b>Week {week} bye plan</b><small>{description}</small></span></summary>'
++                f'<div class="thq-bye-content">{notes}'
++                + ('<p class="thq-bye-warning">Recheck availability before kickoff. Set your lineup in Sleeper.</p>' if movers else '')
++                + f'<div class="thq-bye-actions">{pickup}'
++                f'<a class="thq-action" href="/matchups?week={week}">View Week {week} Matchups</a>'
++                '</div></div></details>')
+ 
+     return (
+-        '<section class="thq-section" id="upcoming-byes"><h2>Upcoming bye weeks</h2>'
+-        f'<p>{finding(priority[0])}</p>'
+-        + ('<div class="thq-actions">' + ''.join(pickup_links) + '</div>' if pickup_links else '') +
+-        '<details class="thq-strength-detail" id="bye-week-details" data-nav-disclosure><summary>See weeks and possible moves</summary>'
++        '<section id="upcoming-byes"><h2 class="thq-tab-heading">Upcoming bye weeks</h2>'
++        '<div id="bye-week-details">' + ''.join(map(detail, priority)) + '</div>'
++        '<details><summary>Schedule and lineup evidence</summary>'
+         '<p>This plan uses the latest prepared roster and NFL schedule. It shows who fits together under your league’s rules. '
+-        'Check player availability again before setting your Sleeper lineup.</p>'
+-        + ''.join(detail(row, leading=index == 0) for index, row in enumerate(priority)) + '</details></section>'
++        'Check player availability again before setting your Sleeper lineup.</p></details></section>'
+     )
+ 
+ 
+diff --git a/static/css/my-team.css b/static/css/my-team.css
+new file mode 100644
+index 0000000..bc4f783
+--- /dev/null
++++ b/static/css/my-team.css
+@@ -0,0 +1,96 @@
++[data-my-team-sections] .thq-header {
++  padding: 0;
++  border: 0;
++  background: transparent;
++  margin: 0 0 12px;
++}
++
++[data-my-team-sections] .thq-header > div:last-child { margin-top: 0; }
++[data-my-team-sections] .thq-title h1 { font-size: clamp(24px, 5vw, 34px); line-height: 1.15; }
++[data-my-team-sections] .thq-header .thq-record-link { min-height: 44px; color: var(--text-secondary); }
++[data-my-team-sections] .thq-strategy small { display: block; margin-top: 8px; color: var(--text-secondary); }
++.thq-team-goal h2, .thq-tab-heading { margin: 0 0 10px; font-size: 20px; }
++
++.thq-tabs {
++  display: grid;
++  grid-template-columns: repeat(4, minmax(0, 1fr));
++  gap: 2px;
++  padding: 3px;
++  background: var(--surface-elevated);
++  border: 1px solid var(--border);
++  border-radius: var(--radius-md);
++  margin-bottom: 12px;
++}
++
++.thq-tabs a {
++  display: grid;
++  place-items: center;
++  text-align: center;
++  min-height: 44px;
++  color: var(--text);
++  font-weight: 700;
++  border-radius: var(--radius-sm);
++  padding: 4px;
++  text-decoration: none;
++}
++
++.thq-tabs a[aria-current="location"] { background: var(--accent); color: #0c1908; }
++[data-team-section][hidden] { display: none !important; }
++[data-team-section] [id] { scroll-margin-top: 64px; scroll-margin-bottom: 96px; }
++.thq-lineup-deadline { font-weight: 650; color: var(--gold); margin: 4px 0 8px; }
++
++.thq-bye-week {
++  margin: 0 0 10px;
++  border: 1px solid var(--border);
++  border-radius: var(--radius-lg);
++  background: var(--surface);
++}
++
++.thq-bye-week > summary {
++  display: flex;
++  gap: 12px;
++  justify-content: space-between;
++  align-items: center;
++  min-height: 48px;
++  cursor: pointer;
++  padding: 12px;
++  list-style: none;
++}
++
++.thq-bye-week > summary::-webkit-details-marker { display: none; }
++.thq-bye-week > summary::after {
++  content: "";
++  width: 8px;
++  height: 8px;
++  flex: 0 0 8px;
++  border: solid currentColor;
++  border-width: 0 2px 2px 0;
++  transform: rotate(45deg);
++  margin: 0 3px 4px 0;
++}
++.thq-bye-week[open] > summary::after { transform: rotate(225deg); margin-bottom: 0; }
++.thq-bye-week > summary b { display: block; font-size: clamp(17px, 4.5vw, 22px); }
++.thq-bye-week > summary small, .thq-bye-move small { display: block; color: var(--text-secondary); font-size: .9rem; }
++.thq-bye-content { padding: 0 12px 12px; }
++.thq-bye-content p { margin: 6px 0; }
++.thq-bye-content ul { padding-inline-start: 20px; }
++.thq-bye-moves { display: grid; gap: 8px; margin: 8px 0; }
++
++.thq-bye-move {
++  display: grid;
++  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
++  gap: 8px;
++  align-items: center;
++  padding: 9px;
++  border-radius: var(--radius-md);
++  background: var(--surface-elevated);
++}
++
++.thq-bye-slot { grid-column: 1 / -1; color: var(--text-secondary); font-size: .875rem; font-weight: 700; }
++.thq-bye-move p { margin: 0; min-width: 0; }
++.thq-bye-arrow { padding-inline: 2px; }
++.thq-bye-warning { color: var(--gold); }
++.thq-bye-actions { display: grid; gap: 6px; margin-top: 8px; }
++.thq-bye-actions .thq-action { justify-content: center; text-align: center; text-decoration: none; }
++.thq-bye-actions .thq-action:first-child { background: var(--accent); color: #0c1908; border-color: var(--accent); }
++#upcoming-byes > details:not(.thq-bye-week) > summary { min-height: 44px; cursor: pointer; align-content: center; }
+diff --git a/static/js/contextual_navigation.js b/static/js/contextual_navigation.js
+index f46241c..b1bd003 100644
+--- a/static/js/contextual_navigation.js
++++ b/static/js/contextual_navigation.js
+@@ -13,6 +13,11 @@
+   const paths = new Set(['', 'teams', 'league', 'matchups', 'market', 'players', 'trades', 'picks', 'history', 'fois', 'front-offices', 'transactions', 'reports', 'settings', 'brain', 'valuation', 'commissioner', 'account', 'search']);
+   const queryKeys = new Set(['q','position','availability','sort','direction','front_office','selected','offset','limit','week','season','year','round','from_team','from_section','from_trade','from_market','market_league','matchup','asset_id','owner_roster_id','home_offer','partner_roster_id','shop_preference','league','league_id','view','tab','format','team','scope','owner','type','player','draft_pick','date_from','date_to','status','page','events_page','per_page','from_home','since','team_need','bye_week']);
+   const sections = new Set(['#full-roster','#positional-depth','#draft-capital','#my-team-advanced','#upcoming-byes']);
++  for (const section of ['roster', 'lineup', 'byes', 'picks']) sections.add('#team-' + section);
++  for (const fragment of ['#bye-week-details', '#lineup-action', '#lineup-recheck', '#my-team-submitted',
++    '#my-team-activity', '#my-team-outlook', '#my-team-strategy', '#season-so-far']) sections.add(fragment);
++  const byeWeekId = id => typeof id === 'string' && /^bye-week-(?:[1-9]|1[0-8])$/.test(id);
++  const teamHash = hash => sections.has(hash) || byeWeekId(hash.slice(1));
+   function safeUrl(raw) {
+     if (!raw || typeof raw !== 'string' || raw.length > 2400 || /[\x00-\x1f\\]/.test(raw)) return null;
+     try {
+@@ -28,7 +33,7 @@
+         query.append(k,v);
+       }
+       // Action/refresh/credential parameters are never replayed by Back.
+-      return (u.pathname.replace(/\/$/, '') || '/') + (query.size ? '?' + query : '') + (sections.has(u.hash) && /^\/teams(?:\/\d+)?\/?$/.test(u.pathname) ? u.hash : '');
++      return (u.pathname.replace(/\/$/, '') || '/') + (query.size ? '?' + query : '') + (teamHash(u.hash) && /^\/teams(?:\/\d+)?\/?$/.test(u.pathname) ? u.hash : '');
+     } catch (_) { return null; }
+   }
+   function identity(url) {
+@@ -53,7 +58,7 @@
+     const supplied = linked && safeUrl(linked.href);
+     if (supplied && /^\/(market\?|teams\/|matchups\/|trades\/history\/|players\/)/.test(supplied) && identity(supplied) !== identity(safeUrl(location.href) || '/')) return supplied;
+     if (p.startsWith('/players/') || p.startsWith('/picks/')) return p.startsWith('/players/') ? '/market' : '/picks';
+-    if (p.startsWith('/teams') && sections.has(location.hash)) return team;
++    if (p.startsWith('/teams') && teamHash(location.hash)) return team;
+     if (p.startsWith('/trades/')) return '/trades';
+     if (p.startsWith('/account/')) return '/account';
+     if (/^\/(fois|history|matchups|front-offices)(\/|$)/.test(p)) return '/league';
+@@ -78,7 +83,7 @@
+         entries:x.entries.map(e=>({id:e.id,pos:e.pos,url:e.url,
+           scroll:Number.isFinite(e.scroll)?Math.max(0,Math.min(1000000,e.scroll)):0,
+           focusId:typeof e.focusId==='string'?e.focusId.slice(0,80):'',focusHref:safeUrl(e.focusHref),
+-          byeDetailsOpen:e.byeDetailsOpen===true})),
++          openByeWeeks:Array.isArray(e.openByeWeeks) ? e.openByeWeeks.filter(byeWeekId).slice(0, 2) : []})),
+         pending:x.pending && typeof x.pending.from==='string' && safeUrl(x.pending.to) && x.pending.until>=now() && x.pending.until<=now()+30000 ? {from:x.pending.from,to:safeUrl(x.pending.to),until:x.pending.until,replace:x.pending.replace===true}:null,
+         left:x.left && typeof x.left.id==='string' && x.left.until>=now() && x.left.until<=now()+30000 ? {id:x.left.id,until:x.left.until}:null};
+     } catch (_) { return fresh(); }
+@@ -103,7 +108,8 @@
+     const active = document.activeElement;
+     entry.focusId = active?.id?.slice(0,80) || '';
+     entry.focusHref = active?.closest('a[href]') ? safeUrl(active.closest('a[href]').href) : null;
+-    entry.byeDetailsOpen = document.getElementById('bye-week-details')?.open === true;
++    entry.openByeWeeks = Array.from(document.querySelectorAll('details[data-bye-week][open]'), d => d.id)
++      .filter(byeWeekId).slice(0, 2);
+     save();
+   }
+   function setMeta() {
+@@ -145,8 +151,9 @@
+       if (!active || !restoring) return;
+       if (restoreByeOnReturn) {
+         restoreByeOnReturn = false;
+-        const byeDetails = document.getElementById('bye-week-details');
+-        if (byeDetails && entry.byeDetailsOpen) byeDetails.open = true;
++        if (entry.openByeWeeks) for (const details of document.querySelectorAll('details[data-bye-week]')) {
++          details.open = entry.openByeWeeks.includes(details.id);
++        }
+       }
+       const focused = document.activeElement;
+       if (focused && focused !== document.body && focused !== document.documentElement && focused !== lastRestoredFocus) {restoring=false;return;}
+diff --git a/static/js/my-team-sections.js b/static/js/my-team-sections.js
+new file mode 100644
+index 0000000..4376c8a
+--- /dev/null
++++ b/static/js/my-team-sections.js
+@@ -0,0 +1,37 @@
++/* Keep section links usable as ordinary anchors without scripting. */
++(() => {
++  const team = document.querySelector('[data-my-team-sections]');
++  if (!team) return;
++  const panels = Array.from(team.querySelectorAll('[data-team-section]'));
++  const links = team.querySelectorAll('.thq-tabs a');
++
++  function showSection() {
++    const target = document.getElementById(location.hash.slice(1));
++    const section = target && team.contains(target) && target.closest('[data-team-section]');
++    const missingWeek = !target && /^#bye-week-(?:[1-9]|1[0-8])$/.test(location.hash);
++    const selected = section || (missingWeek && document.getElementById('team-byes')) || panels[0];
++    if (section && target !== section) {
++      // Deep links also expose evidence nested inside a closed disclosure.
++      for (let node = target; node !== section; node = node.parentElement) {
++        if (node.tagName === 'DETAILS') node.open = true;
++      }
++      if (target.id === 'my-team-submitted') document.getElementById('my-team-submitted-details').open = true;
++      if (target.id === 'full-roster') document.getElementById('my-team-roster').open = true;
++    }
++    for (const panel of panels) panel.hidden = panel !== selected;
++    for (const link of links) {
++      if (link.hash === '#' + selected.id) link.setAttribute('aria-current', 'location');
++      else link.removeAttribute('aria-current');
++    }
++
++    if (!section || target === section) return;
++    requestAnimationFrame(() => {
++      if (location.hash === '#' + target.id && !section.hidden) {
++        target.scrollIntoView({block: 'start'});
++      }
++    });
++  }
++
++  showSection();
++  addEventListener('hashchange', showSection);
++})();
+diff --git a/tests/test_bye_pickups.py b/tests/test_bye_pickups.py
+index ff81497..602ac6c 100644
+--- a/tests/test_bye_pickups.py
++++ b/tests/test_bye_pickups.py
+@@ -57,7 +57,8 @@ class ByePickupTests(unittest.TestCase):
+         self.add_players(data, service, now)
+         install_schedule(service, data, now, byes={'1-w'})
+         with phone(fixture) as page:
+-            page.goto('https://dtos.test/teams/1')
++            page.goto('https://dtos.test/teams/1#team-byes')
++            page.locator('#bye-week-9 > summary').press('Enter')
+             action = page.get_by_role('link', name='Find Week 9 FLEX cover')
+             href = action.get_attribute('href')
+             self.assertEqual(parse_qs(urlsplit(href).query)['availability'], ['day_traders_free_agent'])
+@@ -86,7 +87,7 @@ class ByePickupTests(unittest.TestCase):
+             if directory:
+                 results.screenshot(path=str(Path(directory, 'market-390.png')))
+             page.locator('#dtos-back').click()
+-            page.wait_for_url('**/teams/1')
++            page.wait_for_url('**/teams/1#team-byes')
+             action.wait_for()
+ 
+     def test_superflex_plan_each_unrostered_candidate_fills_only_one_of_two_openings(self):
+@@ -137,10 +138,10 @@ class ByePickupTests(unittest.TestCase):
+     def test_chained_pickup_names_injured_starter_and_back_preserves_week_details(self):
+         fixture = self.chained_gap(injury='IR')
+         with phone(fixture) as page:
+-            page.goto('https://dtos.test/teams/1')
+-            details = page.locator('#bye-week-details')
++            page.goto('https://dtos.test/teams/1#team-byes')
++            details = page.locator('#bye-week-9')
+             details.locator('summary').click()
+-            self.assertTrue(details.locator('[data-bye-week="9"]').is_visible())
++            self.assertTrue(details.locator('.thq-bye-content').is_visible())
+             page.get_by_role('link', name='Find Week 9 RB cover').tap()
+             page.wait_for_url('**/market?**')
+             card = page.locator('#bye-pickup-results article').filter(has_text='Free Receiver')
+@@ -150,12 +151,12 @@ class ByePickupTests(unittest.TestCase):
+             self.assertIn('Start Free Receiver at FLEX.', copy)
+             self.assertIn('Sleeper listed Example W 1 as on injured reserve', copy)
+             page.locator('#dtos-back').click()
+-            page.wait_for_url('**/teams/1')
+-            page.locator('#bye-week-details[open] [data-bye-week="9"]').wait_for()
++            page.wait_for_url('**/teams/1#team-byes')
++            page.locator('#bye-week-9[open] > .thq-bye-content').wait_for()
+             page.reload()
+-            self.assertFalse(details.locator('[data-bye-week="9"]').is_visible())
++            self.assertFalse(details.locator('.thq-bye-content').is_visible())
+             details.locator('summary').press('Enter')
+-            self.assertTrue(details.locator('[data-bye-week="9"]').is_visible())
++            self.assertTrue(details.locator('.thq-bye-content').is_visible())
+ 
+     def test_chained_pickup_support_tracks_fresh_stale_and_missing_status(self):
+         cases = [
+@@ -218,8 +219,8 @@ class ByePickupTests(unittest.TestCase):
+                 self.add_players(data, service, now)
+                 install_schedule(service, data, now, byes={'1-r', '1-w'})
+                 with phone(fixture) as page:
+-                    page.goto('https://dtos.test/teams/1')
+-                    details = page.locator('#bye-week-details')
++                    page.goto('https://dtos.test/teams/1#team-byes')
++                    details = page.locator('#bye-week-9')
+                     details.locator('summary').press('Enter')
+                     page.get_by_role('link', name='Find Week 9', exact=False).tap()
+                     page.wait_for_url('**/market?**')
+@@ -240,8 +241,8 @@ class ByePickupTests(unittest.TestCase):
+                         destination.mkdir(parents=True, exist_ok=True)
+                         results.screenshot(path=str(destination / f'roster-space-{label}-390.png'))
+                     page.locator('#dtos-back').click()
+-                    page.wait_for_url('**/teams/1')
+-                    details.locator('[data-bye-week="9"]').wait_for()
++                    page.wait_for_url('**/teams/1#team-byes')
++                    details.locator('.thq-bye-content').wait_for()
+ 
+     def test_ir_blockers_and_active_space_on_phone(self):
+         cases = (
+@@ -276,8 +277,8 @@ class ByePickupTests(unittest.TestCase):
+                 data['players_fetched_at'] = (now - age).isoformat()
+                 install_schedule(service, data, now, byes={'1-r', '1-w'})
+                 with phone(fixture) as page:
+-                    page.goto('https://dtos.test/teams/1')
+-                    page.locator('#bye-week-details summary').press('Enter')
++                    page.goto('https://dtos.test/teams/1#team-byes')
++                    page.locator('#bye-week-9 > summary').press('Enter')
+                     page.get_by_role('link', name='Find Week 9', exact=False).tap()
+                     page.wait_for_url('**/market?**')
+                     results = page.locator('#bye-pickup-results')
+@@ -297,8 +298,8 @@ class ByePickupTests(unittest.TestCase):
+                     self.assertIn('waivers or locks', results.inner_text())
+                     self.assertLessEqual(page.evaluate('document.documentElement.scrollWidth'), 390)
+                     page.locator('#dtos-back').click()
+-                    page.wait_for_url('**/teams/1')
+-                    page.locator('#bye-week-details[open] [data-bye-week="9"]').wait_for()
++                    page.wait_for_url('**/teams/1#team-byes')
++                    page.locator('#bye-week-9[open] > .thq-bye-content').wait_for()
+ 
+     def test_compare_drop_rechecks_the_target_week_lineup_on_phone(self):
+         fixture, data, service, now = self.setup_league(
+@@ -318,8 +319,8 @@ class ByePickupTests(unittest.TestCase):
+         self.market_cache.current.return_value = active_market
+ 
+         with phone(fixture) as page:
+-            page.goto('https://dtos.test/teams/1')
+-            page.locator('#bye-week-details summary').press('Enter')
++            page.goto('https://dtos.test/teams/1#team-byes')
++            page.locator('#bye-week-9 > summary').press('Enter')
+             page.get_by_role('link', name='Find Week 9', exact=False).tap()
+             runner = page.locator('#bye-pickup-results article').filter(has_text='Free Runner')
+             runner.get_by_role('link', name='Compare a drop').tap()
+@@ -355,8 +356,8 @@ class ByePickupTests(unittest.TestCase):
+                     if directory := os.environ.get('DTOS_BYE_PICKUP_SCREENSHOTS'):
+                         comparison.screenshot(path=str(Path(directory, f'drop-{outgoing}-390.png')))
+             page.locator('#dtos-back').click()
+-            page.wait_for_url('**/teams/1')
+-            page.locator('#bye-week-details[open] [data-bye-week="9"]').wait_for()
++            page.wait_for_url('**/teams/1#team-byes')
++            page.locator('#bye-week-9[open] > .thq-bye-content').wait_for()
+ 
+         client = fixture.f.f.client
+         preview = '/market?bye_week=9&market_league=league-1&season=2026&from_team=1&compare_pickup=free-rb'
+diff --git a/tests/test_decision_history_continuity.py b/tests/test_decision_history_continuity.py
+index 55a73bb..cc9d714 100644
+--- a/tests/test_decision_history_continuity.py
++++ b/tests/test_decision_history_continuity.py
+@@ -403,7 +403,7 @@ class MyTeamActivityContinuityTests(unittest.TestCase):
+     @staticmethod
+     def fixture():
+         from tests import test_my_team_outlook_http as outlook
+-        f = outlook.MyTeamOutlookHTTPTests('test_actual_my_team_takeaway_precedes_roster_and_capital')
++        f = outlook.MyTeamOutlookHTTPTests('test_actual_my_team_roster_links_to_outlook_and_capital')
+         f.setUp()
+         player = next(iter(f.data['players']))
+         f.data['transactions'] = [{'transaction_id': 'activity-' + str(i), 'type': kind,
+diff --git a/tests/test_front_office_brief_http.py b/tests/test_front_office_brief_http.py
+index dda5db4..97b571a 100644
+--- a/tests/test_front_office_brief_http.py
++++ b/tests/test_front_office_brief_http.py
+@@ -25,7 +25,7 @@ class HomePriorityTests(unittest.TestCase):
+         need = dict(family='need', title='Find RB depth', reason='The roster lacks a healthy backup.',
+                     action='Review depth', href='/teams/1#positional-depth')
+         self.assertEqual(first_action(team, 10, review, byes, [goal, need], now=now)['href'],
+-                         '/teams/1#lineup-recheck')
++                         '/teams/1#lineup-action')
+         stale = {**review, 'valid_until': now.isoformat()}
+         self.assertEqual(first_action(team, 10, stale, byes, [goal, need], now=now)['title'], 'Plan for Week 11 byes')
+         self.assertEqual(first_action(team, 10, stale, None, [goal, need], now=now)['title'], need['title'])
+diff --git a/tests/test_lineup_review_browser.py b/tests/test_lineup_review_browser.py
+index 7fba9b5..1447508 100644
+--- a/tests/test_lineup_review_browser.py
++++ b/tests/test_lineup_review_browser.py
+@@ -37,11 +37,17 @@ class LineupReviewBrowserTests(unittest.TestCase):
+                 if directory:
+                     case = "confirmed" if confirmed else "conditional-only"
+                     page.screenshot(path=str(Path(directory, f"home-early-backup-{case}-390.png")))
+-                self.assertEqual(action.get_attribute("href"), "/teams/1#lineup-recheck")
++                fragment = "lineup-action" if confirmed else "lineup-recheck"
++                self.assertEqual(action.get_attribute("href"), "/teams/1#" + fragment)
+                 copy = page.locator("#home-priority").inner_text()
+                 if confirmed:
+                     self.assertIn("Check your Week 8 lineup", copy)
+                     self.assertNotIn("If Example R 1", copy)
++                    action.click()
++                    page.wait_for_url("**/teams/1#lineup-action")
++                    self.assertTrue(page.locator('#team-lineup').is_visible())
++                    self.assertTrue(page.locator('#lineup-action .thq-lineup-deadline time').is_visible())
++                    self.assertIn('Higher-projected lineup available', page.locator('#lineup-action').inner_text())
+                 else:
+                     self.assertIn("Have a backup ready", copy)
+                     self.assertIn("If Example R 1 can’t play", copy)
+@@ -67,6 +73,7 @@ class LineupReviewBrowserTests(unittest.TestCase):
+                         page.screenshot(path=str(Path(directory, "home-long-action-320.png")))
+                     action.tap()
+                     page.wait_for_url("**/teams/1#lineup-recheck")
++                    self.assertTrue(page.locator('#lineup-recheck [data-lineup-review="fallback"]').is_visible())
+             finally:
+                 browser.close()
+ 
+@@ -92,7 +99,7 @@ class LineupReviewBrowserTests(unittest.TestCase):
+                 action = top.get_by_role('link', name='Review lineup', exact=True)
+                 action.wait_for()
+                 self.assertIn('starting slot is empty', top.inner_text())
+-                self.assertEqual(action.get_attribute('href'), '/teams/1#lineup-recheck')
++                self.assertEqual(action.get_attribute('href'), '/teams/1#lineup-action')
+                 self.assertEqual(action.get_attribute('data-dtos-action'), 'primary')
+                 directory = os.environ.get('DTOS_BRIEF_EVIDENCE')
+                 if directory:
+@@ -355,7 +362,7 @@ class LineupReviewBrowserTests(unittest.TestCase):
+ 
+ 
+ class LineupFallbackBrowserTests(unittest.TestCase):
+-    def test_phone_fallback_below_roster_and_expiry(self):
++    def test_phone_fallback_in_lineup_section_and_expiry(self):
+         from urllib.parse import urlsplit
+ 
+         fixture, _, _, _ = authenticated_prepared(self, empty=False, uncertain="w", earlier_backup=True)
+@@ -377,13 +384,14 @@ class LineupFallbackBrowserTests(unittest.TestCase):
+                     context.route("**/*", transport)
+                     page = context.new_page()
+                     self.assertEqual(page.goto("https://dtos.test/teams/1").status, 200)
++                    self.assertTrue(page.locator("#full-roster").is_visible())
++                    page.locator('.thq-tabs a[href="#team-lineup"]').click()
+                     panel = page.get_by_role("region", name="Lineup fallback")
++                    self.assertTrue(panel.is_visible())
+                     self.assertIn("Example W 1 is ruled out", panel.inner_text())
+                     self.assertIn("Example BQ 1 in for Example S 1", panel.inner_text())
+                     self.assertIn("starts before the starter", panel.inner_text())
+-                    roster = page.locator("#full-roster")
+-                    self.assertGreaterEqual(panel.bounding_box()["y"],
+-                                            roster.bounding_box()["y"] + roster.bounding_box()["height"])
++                    self.assertFalse(page.locator("#full-roster").is_visible())
+                     self.assertLessEqual(page.evaluate("document.documentElement.scrollWidth"), width)
+                     action = panel.get_by_role("link", name="Review in Sleeper")
+                     action.focus()
+@@ -450,7 +458,7 @@ class LineupRecheckBrowserTests(unittest.TestCase):
+             context.route("**/*", transport)
+             page = context.new_page()
+             try:
+-                for path in ("/teams/1", "/matchups/1?week=8"):
++                for path in ("/teams/1#team-lineup", "/matchups/1?week=8"):
+                     backup_starts = True
+                     result = "updated"
+                     page.goto("https://dtos.test" + path)
+diff --git a/tests/test_my_team_final_browser.py b/tests/test_my_team_final_browser.py
+index 5e11b9f..07a5eb2 100644
+--- a/tests/test_my_team_final_browser.py
++++ b/tests/test_my_team_final_browser.py
+@@ -58,15 +58,22 @@ class MyTeamFinalBrowserTests(journeys.ProductBrowserJourneyTests):
+                     self.assertIn('Availability not reported; participation remains unknown.', source.text_content())
+                     self.assertIn('Participation unconfirmed', card.inner_text())
+                     self.assertNotIn('Status unavailable', card.inner_text())
+-            page.locator('#my-team-advanced').evaluate('e=>e.open=true')
+-            page.locator('.thq-starters').locator('xpath=..').evaluate('e=>e.open=true')
++            page.locator('.thq-tabs a[href="#team-lineup"]').click()
++            submitted = page.locator('#my-team-submitted-details')
++            submitted.wait_for()
++            if not submitted.evaluate('e=>e.open'):
++                submitted.locator('summary').press('Enter')
+             starter = page.locator('.thq-starters a[href^="/players/"]').first
+-            self.assertIn('from_section=my-team-advanced', starter.get_attribute('href'))
+-            starter.press('Enter')
++            self.assertIn('from_section=my-team-submitted', starter.get_attribute('href'))
++            target = starter.get_attribute('href')
++            starter.click()
++            page.wait_for_url(origin + target)
++            back = page.get_by_role('link', name='← Back to My Team lineup', exact=True)
++            self.assertEqual(back.get_attribute('href'), '/teams/1#my-team-submitted')
++            back.click()
+             page.wait_for_load_state('domcontentloaded')
+-            page.get_by_role('link', name='← Back to My Team intelligence', exact=True).click()
+-            page.wait_for_load_state('domcontentloaded')
+-            self.assertTrue(page.locator('#my-team-advanced').evaluate('e=>e.open'))
++            self.assertTrue(page.locator('#my-team-submitted-details').evaluate('e=>e.open'))
++            page.goto(origin + '/teams/1#my-team-advanced', wait_until='domcontentloaded')
+             for selector in ('.thq-optimal a[href^="/players/"]', '.thq-depth a[href^="/players/"]'):
+                 link = page.locator(selector).first
+                 if not link.count():
+diff --git a/tests/test_my_team_intelligence_browser.py b/tests/test_my_team_intelligence_browser.py
+index 731f081..2db2ad8 100644
+--- a/tests/test_my_team_intelligence_browser.py
++++ b/tests/test_my_team_intelligence_browser.py
+@@ -78,6 +78,7 @@ class MyTeamIntelligenceBrowserTests(journeys.ProductBrowserJourneyTests):
+             back.click()
+             page.wait_for_load_state('domcontentloaded')
+             self.assertTrue(page.locator('#my-team-roster').evaluate('e => e.open'))
++            page.locator('.thq-tabs a[href="#team-picks"]').click()
+             pick = page.locator('#draft-capital a[href^="/picks/"]').first
+             pick.click()
+             page.wait_for_load_state('domcontentloaded')
+diff --git a/tests/test_my_team_outlook_browser.py b/tests/test_my_team_outlook_browser.py
+index cdf0262..1975776 100644
+--- a/tests/test_my_team_outlook_browser.py
++++ b/tests/test_my_team_outlook_browser.py
+@@ -35,7 +35,10 @@ class MyTeamOutlookBrowserTests(unittest.TestCase):
+                         page.reload(wait_until='networkidle')
+                         root = page.locator('#my-team-outlook')
+                         self.assertEqual(root.count(), 1)
+-                        self.assertLess(root.bounding_box()['y'], page.locator('#full-roster').bounding_box()['y'])
++                        link = page.get_by_role('link', name='Roster outlook and next step')
++                        self.assertLess(link.bounding_box()['y'], page.locator('#full-roster').bounding_box()['y'])
++                        link.click()
++                        self.assertTrue(root.is_visible())
+                         self.assertIn('lineup', root.inner_text())
+                         self.assertIn('Choose your goal', root.inner_text())
+                         self.assertNotIn('Unavailable · Fresh · Unavailable', root.inner_text())
+@@ -68,12 +71,14 @@ class MyTeamOutlookBrowserTests(unittest.TestCase):
+                             Path(out).mkdir(parents=True, exist_ok=True)
+                             page.screenshot(path=str(Path(out) / f'my-team-{width}.png'), full_page=True)
+                             (Path(out) / 'phone-measurements.json').write_text(json.dumps(measurements, indent=2))
+-                        self.assertLess(row['outlook']['y'], height if height > 432 else 432)
++                        self.assertLess(link.bounding_box()['y'], height if height > 432 else 432)
+                         for label, target in (('Depth','#positional-depth'), ('Draft capital','#draft-capital'), ('View full roster','#full-roster')):
+                             link = page.get_by_role('navigation', name='Roster sections').get_by_role('link', name=label, exact=True)
+                             self.assertEqual(link.get_attribute('href'), target)
+                             link.click()
+                             self.assertTrue(page.locator(target).is_visible())
++                            if target == '#draft-capital':
++                                page.locator('.thq-tabs a[href="#team-roster"]').click()
+                         page.locator('#my-team-strategy').select_option('WIN NOW')
+                         explicit_save(page)
+                         page.reload(wait_until='networkidle')
+diff --git a/tests/test_my_team_outlook_http.py b/tests/test_my_team_outlook_http.py
+index b7e2ad0..5471f68 100644
+--- a/tests/test_my_team_outlook_http.py
++++ b/tests/test_my_team_outlook_http.py
+@@ -30,12 +30,13 @@ class MyTeamOutlookHTTPTests(unittest.TestCase):
+         with TestClient(app) as client:
+             return client.get('/teams')
+ 
+-    def test_actual_my_team_takeaway_precedes_roster_and_capital(self):
++    def test_actual_my_team_roster_links_to_outlook_and_capital(self):
+         response = self.client.get('/teams/1')
+         self.assertEqual(response.status_code, 200)
+         html = response.text
+         self.assertIn('id="my-team-outlook"', html)
+-        self.assertLess(html.index('id="my-team-outlook"'), html.index('id="full-roster"'))
++        self.assertLess(html.index('href="#my-team-outlook"'), html.index('id="full-roster"'))
++        self.assertLess(html.index('id="full-roster"'), html.index('id="my-team-outlook"'))
+         self.assertLess(html.index('id="my-team-outlook"'), html.index('id="draft-capital"'))
+         self.assertEqual(html.count('Your roster at a glance'), 1)
+         self.assertIn('Why this outlook?', html)
+diff --git a/tests/test_my_team_sections_browser.py b/tests/test_my_team_sections_browser.py
+new file mode 100644
+index 0000000..75df2ed
+--- /dev/null
++++ b/tests/test_my_team_sections_browser.py
+@@ -0,0 +1,79 @@
++"""My Team section navigation in a prepared, authorized browser fixture."""
++import unittest
++from unittest.mock import patch
++
++from routes.navigation import create_navigation_router
++from tests.lineup_review_fixture import authenticated_prepared
++from tests.test_upcoming_bye_moves import install_schedule, phone
++
++
++class MyTeamSectionsBrowserTests(unittest.TestCase):
++    def test_roster_and_exact_home_bye_survive_both_matchup_round_trips(self):
++        fixture, data, service, now = authenticated_prepared(self, empty=False, points={'bq': 1})
++        fixture.f.f.client.app.include_router(create_navigation_router())
++        install_schedule(service, data, now, byes={'1-r'})
++
++        with patch('services.trade_intelligence._trade_projection_service', return_value=service), phone(fixture) as page:
++            page.set_default_timeout(7500)
++            page.context.add_cookies([dict(name='dtos_strategy', value=fixture.f.cookie, url='https://dtos.test/')])
++            writes = []
++            page.on('request', lambda request: writes.append(request.url) if request.method != 'GET' else None)
++            for width, height in ((320, 432), (390, 844), (1280, 900)):
++                with self.subTest(width=width):
++                    page.set_viewport_size(dict(width=width, height=height))
++                    page.goto('https://dtos.test/teams/1')
++                    tabs = page.get_by_role('navigation', name='My Team sections')
++                    self.assertEqual(tabs.get_by_role('link').all_inner_texts(), ['Roster', 'Lineup', 'Byes', 'Picks'])
++                    self.assertEqual(tabs.locator('[aria-current]').inner_text(), 'Roster')
++                    self.assertEqual(page.locator('[data-team-section]:visible').count(), 1)
++                    self.assertTrue(page.locator('#full-roster .thq-player').first.is_visible())
++                    self.assertLess(page.locator('#full-roster .thq-player').first.bounding_box()['y'], 600)
++                    self.assertLessEqual(page.evaluate('document.documentElement.scrollWidth'), width)
++                    for link in tabs.get_by_role('link').all():
++                        self.assertGreaterEqual(link.bounding_box()['height'], 44)
++
++                    picks = tabs.get_by_role('link', name='Picks')
++                    picks.focus()
++                    picks.press('Enter')
++                    self.assertTrue(page.locator('#draft-capital').is_visible())
++                    page.reload()
++                    self.assertEqual(tabs.locator('[aria-current]').inner_text(), 'Picks')
++
++                    page.goto('https://dtos.test/')
++                    action = page.locator('#home-priority').get_by_role('link', name='Review bye plan')
++                    action.wait_for()
++                    self.assertEqual(action.get_attribute('href'), '/teams/1#bye-week-9')
++                    action.tap()
++                    self.assertEqual(tabs.locator('[aria-current]').inner_text(), 'Byes')
++                    week = page.locator('#bye-week-9')
++                    other = page.locator('#bye-week-10')
++                    self.assertTrue(week.evaluate('e=>e.open'))
++                    self.assertFalse(other.evaluate('e=>e.open'))
++                    self.assertIn('Make these changes together.', week.inner_text())
++                    self.assertIn('Start at RB · from Superflex', week.inner_text())
++                    page.reload()
++                    self.assertTrue(week.evaluate('e=>e.open'))
++                    week.get_by_role('link', name='View Week 9 Matchups').tap()
++                    page.wait_for_url('**/matchups?week=9')
++                    page.locator('#dtos-back').click()
++                    page.wait_for_url('**/teams/1#bye-week-9')
++                    self.assertTrue(week.evaluate('e=>e.open'))
++                    self.assertFalse(other.evaluate('e=>e.open'))
++
++                    page.goto('https://dtos.test/teams/1#team-byes')
++                    other.locator('summary').press('Enter')
++                    self.assertTrue(other.evaluate('e=>e.open'))
++                    other.get_by_role('link', name='View Week 10 Matchups').tap()
++                    page.wait_for_url('**/matchups?week=10')
++                    page.locator('#dtos-back').click()
++                    page.wait_for_url('**/teams/1#team-byes')
++                    other.locator('.thq-bye-content').wait_for()
++                    self.assertFalse(week.evaluate('e=>e.open'))
++                    self.assertEqual(tabs.locator('[aria-current]').inner_text(), 'Byes')
++                    self.assertLessEqual(page.evaluate('document.documentElement.scrollWidth'), width)
++
++            # Other franchises do not inherit the selected owner's plans.
++            page.goto('https://dtos.test/teams/2#bye-week-9')
++            self.assertEqual(page.locator('.thq-tabs [aria-current]').inner_text(), 'Byes')
++            self.assertEqual(page.locator('[data-bye-week]').count(), 0)
++            self.assertEqual(writes, [])
+diff --git a/tests/test_premium_hierarchy_browser.py b/tests/test_premium_hierarchy_browser.py
+index 5773b1b..cdf4673 100644
+--- a/tests/test_premium_hierarchy_browser.py
++++ b/tests/test_premium_hierarchy_browser.py
+@@ -239,6 +239,7 @@ class PremiumPreparedBrowserTests(unittest.TestCase):
+                         )
+                         link.press("Enter")
+                         self.assertTrue(page.url.endswith(fragment))
++                    page.locator('.thq-tabs a[href="#team-roster"]').click()
+                     page.evaluate("scrollTo(0,0)")
+                     row = capture(page, "prepared-my-team", width, height)
+                     self.assertLessEqual(row["boxes"]["shortcuts"]["height"], 64)
+diff --git a/tests/test_projection_coverage_browser.py b/tests/test_projection_coverage_browser.py
+index fde45b9..d2e1837 100644
+--- a/tests/test_projection_coverage_browser.py
++++ b/tests/test_projection_coverage_browser.py
+@@ -71,6 +71,8 @@ class ProjectionCoverageBrowserTests(unittest.TestCase):
+                                 self.assertEqual(link.get_attribute('href'), target)
+                                 link.click()
+                                 self.assertTrue(page.locator(target).is_visible())
++                                if target == '#draft-capital':
++                                    page.locator('.thq-tabs a[href="#team-roster"]').click()
+                             self.assertEqual(page.goto('https://dtos.test/teams/8').status, 200)
+                             page.locator('#my-team-outlook-evidence summary').click()
+                             self.assertIn('1 QB slot', page.locator('#my-team-outlook').inner_text())
+diff --git a/tests/test_upcoming_bye_availability.py b/tests/test_upcoming_bye_availability.py
+index da1135e..fab2665 100644
+--- a/tests/test_upcoming_bye_availability.py
++++ b/tests/test_upcoming_bye_availability.py
+@@ -19,7 +19,8 @@ def add_bench(data, pid, position, *, status='Active', injury_status=None):
+ def open_week(page):
+     if page.goto('https://dtos.test/teams/1').status != 200:
+         raise AssertionError('My Team unavailable')
+-    page.get_by_text('See weeks and possible moves', exact=True).click()
++    page.locator('.thq-tabs a[href="#team-byes"]').click()
++    page.locator('#bye-week-9 > summary').click()
+     return page.locator('[data-bye-week="9"]')
+ 
+ 
+@@ -48,7 +49,7 @@ class UpcomingByeAvailabilityTests(unittest.TestCase):
+                 fixtures.install_schedule(service, data, now, byes={'1-r'})
+                 week = open_week(page)
+                 self.assertEqual(week.get_attribute('data-bye-state'), 'covered')
+-                self.assertIn('Start Example 1-z reserve at RB.', week.inner_text())
++                self.assertIn('Example 1-z reserve\nStart at RB', week.inner_text())
+                 self.assertNotIn('Example BQ 1', week.inner_text())
+                 self.assertIn('Sleeper player status checked 12 minutes ago.', week.inner_text())
+                 self._check_moves(week, data, {'1-r'}, {1: '1-z'})
+@@ -62,8 +63,8 @@ class UpcomingByeAvailabilityTests(unittest.TestCase):
+         with fixtures.phone(fixture) as page:
+             week = open_week(page)
+             self.assertEqual(week.get_attribute('data-bye-state'), 'covered')
+-            self.assertIn('Move Example S 1 from Superflex to RB.', week.inner_text())
+-            self.assertIn('Start Example BQ 1 at Superflex.', week.inner_text())
++            self.assertIn('Example S 1\nStart at RB · from Superflex', week.inner_text())
++            self.assertIn('Example BQ 1\nStart at Superflex', week.inner_text())
+             self._check_moves(week, data, {'1-r'}, {1: '1-s', 3: '1-bq'})
+             week.get_by_role('link', name='View Week 9 Matchups').tap()
+             page.wait_for_url('https://dtos.test/matchups?week=9')
+diff --git a/tests/test_upcoming_bye_moves.py b/tests/test_upcoming_bye_moves.py
+index 1114444..e97818c 100644
+--- a/tests/test_upcoming_bye_moves.py
++++ b/tests/test_upcoming_bye_moves.py
+@@ -65,7 +65,8 @@ class UpcomingByeMovesTests(unittest.TestCase):
+ 
+     def _render_week(self, page):
+         self.assertEqual(page.goto('https://dtos.test/teams/1').status, 200)
+-        disclosure = page.get_by_text('See weeks and possible moves', exact=True)
++        page.locator('.thq-tabs a[href="#team-byes"]').click()
++        disclosure = page.locator('#bye-week-9 > summary')
+         disclosure.focus()
+         disclosure.press('Enter')
+         return page.locator('[data-bye-week="9"]')
+@@ -109,8 +110,8 @@ class UpcomingByeMovesTests(unittest.TestCase):
+                 install_schedule(service, data, now, byes={'1-w'})
+                 row = self._render_week(page)
+                 self.assertEqual(row.get_attribute('data-bye-state'), 'covered')
+-                self.assertIn('Example W 1 is on bye in FLEX.', row.inner_text())
+-                self.assertIn('Start Example BQ 1 at FLEX.', row.inner_text())
++                self.assertIn('Example W 1\nOn bye', row.inner_text())
++                self.assertIn('Example BQ 1\nStart at FLEX', row.inner_text())
+                 self._verify_moves(row, data, {'1-w'}, {2: '1-bq'})
+                 text = row.inner_text()
+                 if prior is not None:
+@@ -133,8 +134,8 @@ class UpcomingByeMovesTests(unittest.TestCase):
+         with phone(fixture) as page:
+             row = self._render_week(page)
+             self.assertEqual(row.get_attribute('data-bye-state'), 'covered')
+-            self.assertIn('Move Example S 1 from Superflex to RB.', row.inner_text())
+-            self.assertIn('Start Example BQ 1 at Superflex.', row.inner_text())
++            self.assertIn('Example S 1\nStart at RB · from Superflex', row.inner_text())
++            self.assertIn('Example BQ 1\nStart at Superflex', row.inner_text())
+             self._verify_moves(row, data, {'1-r'}, {1: '1-s', 3: '1-bq'})
+ 
+     def test_rendered_competing_replacement_shortfall_and_incomplete_eligibility(self):
+@@ -143,8 +144,8 @@ class UpcomingByeMovesTests(unittest.TestCase):
+         with phone(fixture) as page:
+             row = self._render_week(page)
+             self.assertEqual(row.get_attribute('data-bye-state'), 'shortfall')
+-            self.assertIn('Example R 1 is on bye in RB.', row.inner_text())
+-            self.assertIn('Example S 1 is on bye in Superflex.', row.inner_text())
++            self.assertIn('Example R 1\nOn bye', row.inner_text())
++            self.assertIn('Example S 1\nOn bye', row.inner_text())
+             self.assertEqual(row.locator('[data-bye-move]').count(), 0)
+             self.assertIn('leaves Superflex unfilled', row.inner_text())
+             extra = dict(id='1-x', player_id='1-x', name='Example X 1', position=None,
+@@ -172,7 +173,7 @@ class UpcomingByeMovesTests(unittest.TestCase):
+         profile = install_schedule(service, data, now, byes={'1-w'})
+         with phone(fixture) as page:
+             row = self._render_week(page)
+-            self.assertIn('Example W 1 is on bye in FLEX.', row.inner_text())
++            self.assertIn('Example W 1\nOn bye', row.inner_text())
+             current = profile['upcoming_byes']['1']
+             profile['upcoming_byes']['1'] = current['weeks']
+             page.reload()
+@@ -184,5 +185,5 @@ class UpcomingByeMovesTests(unittest.TestCase):
+             self.assertIn('coverage is unavailable', page.locator('#upcoming-byes').inner_text())
+             install_schedule(service, data, now, byes={'1-w'})
+             row = self._render_week(page)
+-            self.assertIn('Example W 1 is on bye in Superflex.', row.inner_text())
++            self.assertIn('Example W 1\nOn bye', row.inner_text())
+             self._verify_moves(row, data, {'1-w'}, {3: '1-bq'})
+diff --git a/tests/test_upcoming_byes.py b/tests/test_upcoming_byes.py
+index bfdc47a..c2c1dfb 100644
+--- a/tests/test_upcoming_byes.py
++++ b/tests/test_upcoming_byes.py
+@@ -109,7 +109,8 @@ class UpcomingByeTests(unittest.TestCase):
+                         page.reload()
+                         self.assertEqual(before, first.evaluate('e => e.getBoundingClientRect().top + scrollY'))
+                     page.reload()
+-                    summary = page.get_by_text('See weeks and possible moves', exact=True)
++                    page.locator('.thq-tabs a[href="#team-byes"]').click()
++                    summary = page.locator('#bye-week-9 > summary')
+                     summary.focus()
+                     summary.press('Enter')
+                     panel = page.locator('#upcoming-byes')
