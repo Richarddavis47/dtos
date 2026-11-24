@@ -1,8 +1,8 @@
 {
-  "state": "EXACT_HOSTED_AND_LOCAL_GATES_REQUIRED",
+  "state": "FINAL_SOURCE_LOCAL_AND_HOSTED_RUNNING",
   "source": {
-    "candidate": "b5f7eb4d2b8229246dd97e7e275b7da041eeba25",
-    "tree": "79818584dac088f820f8a1745defea0731608d98",
+    "candidate": "8de8dd7f1c4705b9985e1490b81858581af7879e",
+    "tree": "9db7d69eadc1e960f65174deab22f4f0e85d47e1",
     "baseline": "72fbb0bf16d1c48f0d8883c8ac71a096c30a07da",
     "baseline_tree": "ecf99970f0f3e2a59a8c850fe55fbae630cd1536",
     "pr": 367,
@@ -11,12 +11,56 @@
     "build": 2278,
     "expected_test_count": 4676
   },
-  "hosted": {
-    "Canonical release recovery": 45348103814,
-    "Product browser journeys": 45348103768,
-    "Validation tooling": 45348103789,
-    "Linux Asset Market lifecycle": 45348103849
+  "hosted": [
+    {
+      "conclusion": null,
+      "head_sha": "8de8dd7f1c4705b9985e1490b81858581af7879e",
+      "html_url": "https://github.com/Richarddavis47/dtos/actions/runs/45356636960",
+      "id": 45356636960,
+      "name": "Linux Asset Market lifecycle",
+      "status": "in_progress"
+    },
+    {
+      "conclusion": null,
+      "head_sha": "8de8dd7f1c4705b9985e1490b81858581af7879e",
+      "html_url": "https://github.com/Richarddavis47/dtos/actions/runs/45356637163",
+      "id": 45356637163,
+      "name": "Validation tooling",
+      "status": "in_progress"
+    },
+    {
+      "conclusion": null,
+      "head_sha": "8de8dd7f1c4705b9985e1490b81858581af7879e",
+      "html_url": "https://github.com/Richarddavis47/dtos/actions/runs/45356637218",
+      "id": 45356637218,
+      "name": "Canonical release recovery",
+      "status": "pending"
+    },
+    {
+      "conclusion": null,
+      "head_sha": "8de8dd7f1c4705b9985e1490b81858581af7879e",
+      "html_url": "https://github.com/Richarddavis47/dtos/actions/runs/45356637123",
+      "id": 45356637123,
+      "name": "Product browser journeys",
+      "status": "in_progress"
+    }
+  ],
+  "local": {
+    "container": "71d1e9da0bebc75fc39a2488d197cc7c519efbbb27427c2f40dd95609672360b",
+    "created_at": "2026-11-24T08:18:26.672253+00:00",
+    "limit_bytes": 2147483648,
+    "scratch_bytes_verified_at_container_creation": 9166893056,
+    "last_known": "Running. Full run and all supplemental final-tree controls are required."
   },
-  "local_state": "Healthy hosted validation takes precedence before restarting the superseded local full run. Candidate application bytes match the rendered evidence.",
-  "production": "v1.22.62 / build 2277"
+  "production": {
+    "version": "1.22.62",
+    "build": 2277,
+    "commit": "72fbb0bf16d1c48f0d8883c8ac71a096c30a07da"
+  },
+  "release": {
+    "version": "1.22.63",
+    "build": 2278,
+    "state": "HELD_REQUIRED_VALIDATION"
+  },
+  "updated_at": "2026-11-24T08:30:19.388254+00:00"
 }

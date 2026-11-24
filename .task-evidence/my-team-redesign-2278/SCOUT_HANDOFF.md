@@ -1,6 +1,6 @@
 # My Team review route
 
-**Baseline** v1.22.62 / build 2277. Candidate `b5f7eb4d2b8229246dd97e7e275b7da041eeba25`, application tree `79818584dac088f820f8a1745defea0731608d98`. [PR #367](https://github.com/Richarddavis47/dtos/pull/367).
+**Baseline** v1.22.62 / build 2277. Candidate `8de8dd7f1c4705b9985e1490b81858581af7879e`, application tree `9db7d69eadc1e960f65174deab22f4f0e85d47e1`. [PR #367](https://github.com/Richarddavis47/dtos/pull/367).
 
 Use a prepared signed-in league. Avoid a forced refresh or any lineup, goal, or transaction write. Compare with the matching disposable before/after screenshots and their prepared facts.
 
@@ -11,4 +11,4 @@ Use a prepared signed-in league. Avoid a forced refresh or any lineup, goal, or 
 5. Open Picks. Confirm exact original-franchise identity and pick details. Try keyboard navigation and the week disclosures at 320px, 390px, and desktop, along with touch in the browser fixture. Check overflow and fixed-navigation reachability.
 6. Compare the matched semantic reads and inspect the screenshots in the evidence directory. They use disposable prepared inputs and Chromium. Verify signed-in production and physical iPhone/Safari separately if authorized access and hardware are available.
 
-The captured application bytes match this tree exactly. The test-only follow-ups scoped the Season results assertion and waited for the Picks panel to become active before asserting its visibility. See the [identity record](rendered-input-identity.json).
+The captured application bytes match this tree exactly. Two follow-ups changed browser assertions. A workflow-only follow-up fixes the Ubuntu download mirror that delayed the historical browser job. See the [identity record](rendered-input-identity.json).

@@ -1,0 +1,28 @@
+{
+  "verified_at": "2026-11-24T08:11:41.892170+00:00",
+  "qualification": "GitHub's original job logs establish external download time. The bounded package transfer comparison ran on this executor, which is a different network environment.",
+  "completed_setup_first_attempt": "Only 14.81 seconds reached the historical test command before the unchanged 10 minute job budget ended.",
+  "incomplete_setup_second_attempt": "The same signed archive packages took 7 minutes 13 seconds for the 32.1 MB transfer. No test command was reached.",
+  "package": "fonts-wqy-zenhei_0.9.45-8_all.deb",
+  "comparison": {
+    "ubuntu_primary_https": {
+      "http_status": 200,
+      "bytes": 7471624,
+      "seconds": 0.683356,
+      "complete": true
+    },
+    "runner_ec2_https": {
+      "http_status": 200,
+      "bytes": 552610,
+      "seconds": 15.000358,
+      "complete": false,
+      "curl_exit": 28
+    }
+  },
+  "original_jobs": [
+    138287503338,
+    138300413306
+  ],
+  "bounded_remediation": "Rewrite recognized Ubuntu EC2 and Azure archive aliases to the official Ubuntu primary archive. Keep archive signatures, sources file settings, time limits, memory limits and test commands.",
+  "smoke_record": "historical-mirror-rewrite-smoke-original.log"
+}
