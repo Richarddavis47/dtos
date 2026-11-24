@@ -841,6 +841,22 @@ index 55a73bb..cc9d714 100644
          f.setUp()
          player = next(iter(f.data['players']))
          f.data['transactions'] = [{'transaction_id': 'activity-' + str(i), 'type': kind,
+diff --git a/tests/test_front_office_brief_browser.py b/tests/test_front_office_brief_browser.py
+index 3500c15..100008d 100644
+--- a/tests/test_front_office_brief_browser.py
++++ b/tests/test_front_office_brief_browser.py
+@@ -228,8 +228,9 @@ class FrontOfficeBriefBrowserTests(unittest.TestCase):
+                 page.goto('https://dtos.test/')
+                 page.locator('#home-brief-details > summary').click()
+                 page.get_by_role('link', name='Review exact draft capital').click()
+-                self.assertIn('/teams/1#draft-capital', page.url)
+-                self.assertTrue(page.locator('#draft-capital').is_visible())
++                page.wait_for_url('**/teams/1#draft-capital')
++                page.locator('.thq-tabs a[href="#team-picks"][aria-current="location"]').wait_for(state='visible')
++                page.locator('#draft-capital').wait_for(state='visible')
+                 page.go_back()
+                 page.get_by_role('heading', name='Do this first').wait_for()
+                 page.close()
 diff --git a/tests/test_front_office_brief_http.py b/tests/test_front_office_brief_http.py
 index dda5db4..97b571a 100644
 --- a/tests/test_front_office_brief_http.py

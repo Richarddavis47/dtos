@@ -1,10 +1,11 @@
 # My Team redesign
 
-[PR #367](https://github.com/Richarddavis47/dtos/pull/367) · [Exact source](source.json) · [Scout acceptance route](SCOUT_HANDOFF.md)
+[PR #367](https://github.com/Richarddavis47/dtos/pull/367) is held while required validation runs. The production baseline is v1.22.62 / build 2277. The candidate is `b5f7eb4d2b8229246dd97e7e275b7da041eeba25` with tree `79818584dac088f820f8a1745defea0731608d98`.
 
-- [Original tool inventory](TOOL-MAP.md)
-- [Before](before-final/) and [after](after-final/) screenshots of the same prepared disposable data
-- [Matched rendered facts](my-team-parity.json) and [visual review](task-visual-review.json)
-- [Original consoles](originals/) and [checksums](SHA256SUMS)
+- [My Team tool map](TOOL-MAP.md) and [Scout review route](SCOUT_HANDOFF.md)
+- [Before screenshots](before-final/) and [after screenshots](after-final/) at 320px, 390px and desktop
+- [Matched-input facts](my-team-parity.json) and [application byte identity](rendered-input-identity.json)
+- [Original focused runs and earlier attempts](originals/)
+- [Patch](candidate.patch), [work status](WORK_STATUS.json) and [checksums](SHA256SUMS)
 
-These are responsive Chromium fixtures. The final follow-up only narrowed a browser locator to the Season results control. The [application bytes match the capture](rendered-input-identity.json). The corrected season browser tests passed, and earlier errors are retained separately. The current exact-tree local and hosted gates are required before publication. Signed-in production and physical iPhone/Safari acceptance remain unverified.
+Chromium fixtures used identical disposable prepared inputs. Signed-in production and physical iPhone/Safari acceptance remain unverified.
