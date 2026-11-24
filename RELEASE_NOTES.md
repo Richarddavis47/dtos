@@ -1,3 +1,7 @@
+## v1.22.63 / build 2278 — My Team in four sections
+
+My Team organizes the existing roster, lineup, bye plans and picks into four sections. Home opens the specific lineup action or bye week. Bye plans show slot-by-slot moves, availability dependencies and remaining gaps. Returning from Matchups or a pickup restores the same expanded week.
+
 ## v1.22.62 / build 2277 — Clearer Home lineup priorities
 
 Home shows a confirmed lineup move before an earlier conditional backup plan. It distinguishes a quiet team brief from missing evidence or a failed load, groups missing team stats, and keeps the primary action easier to reach on short screens.

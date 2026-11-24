@@ -25,7 +25,7 @@ class HomePriorityTests(unittest.TestCase):
         need = dict(family='need', title='Find RB depth', reason='The roster lacks a healthy backup.',
                     action='Review depth', href='/teams/1#positional-depth')
         self.assertEqual(first_action(team, 10, review, byes, [goal, need], now=now)['href'],
-                         '/teams/1#lineup-recheck')
+                         '/teams/1#lineup-action')
         stale = {**review, 'valid_until': now.isoformat()}
         self.assertEqual(first_action(team, 10, stale, byes, [goal, need], now=now)['title'], 'Plan for Week 11 byes')
         self.assertEqual(first_action(team, 10, stale, None, [goal, need], now=now)['title'], need['title'])

@@ -243,7 +243,7 @@ def create_home_router(
               <h2 id="home-week-title">This Week</h2>
               <nav class="home-week-links" aria-label="This week’s lineup and matchup">
                 <a href="{escape(matchup_href, quote=True)}">Week {report_week} matchup<span aria-hidden="true">›</span></a>
-                <a href="/teams/{roster_id}#bye-week-details">Upcoming bye weeks<span aria-hidden="true">›</span></a>
+                <a href="/teams/{roster_id}#team-byes">Upcoming bye weeks<span aria-hidden="true">›</span></a>
               </nav>
               <details class="ds-home-detail"><summary>Week {report_week} report and season results</summary>
                 <p>{escape(report_state)} · <a href="/reports/weekly?week={report_week}">Open weekly report</a></p>

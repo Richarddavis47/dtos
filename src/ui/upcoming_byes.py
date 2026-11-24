@@ -50,77 +50,98 @@ def upcoming_byes_panel(weeks, players, *, active, league_id=None, season=None, 
     order = {'shortfall': 0, 'unknown': 1, 'conditional': 2, 'covered': 3, 'no_gap': 4}
     priority = sorted(weeks, key=lambda row: (order[row['state']], row['week']))
     names = {str(player['id']): escape(player.get('name') or 'Unnamed player') for player in players}
-    pickup_links = []
-    for row in priority:
-        if row['state'] != 'shortfall' or not (league_id and season and roster_id):
-            continue
-        week = row['week']
-        query = urlencode(dict(bye_week=week, market_league=league_id, season=season, from_team=roster_id,
-                               availability='day_traders_free_agent'))
-        needs = _slots(dict.fromkeys(row['unfilled']))
-        pickup_links.append(f'<a class="thq-action" id="bye-pickup-{week}" href="/market?{escape(query)}">'
-                            f'Find Week {week} {needs} cover</a>')
 
     def finding(row):
-        week = f"Week {row['week']}"
         positions = _slots(dict.fromkeys(row['slots'][index] for index, _ in row['bye_starters']))
         if row['state'] == 'shortfall':
-            return f"{week} · Bye affects {positions}. This roster cannot fill every starting spot with its current eligible slots."
+            return f"Bye affects {positions}. This roster cannot fill every starting spot with its current eligible slots."
         if row['state'] == 'conditional':
-            return f"{week} · Legal cover for the {positions} bye depends on player availability."
+            return f"Legal cover for the {positions} bye depends on player availability."
         if row['state'] == 'covered':
-            return f"{week} · A legal lineup change can cover the {positions} bye."
+            return f"A legal lineup change can cover the {positions} bye."
         if row['state'] == 'unknown':
             if positions:
-                return f"{week} · Bye affects {positions}. The roster and schedule do not confirm full cover."
-            return f"{week} · Schedule or roster coverage is incomplete."
-        return f"{week} · No starters on bye."
+                return f"Bye affects {positions}. The roster and schedule do not confirm full cover."
+            return "Schedule or roster coverage is incomplete."
+        return "No starters on bye."
 
-    def detail(row, *, leading):
+    def detail(row):
         slots = row['slots']
-        absent = ''.join(
-            f'<li data-bye-starter="{escape(pid, quote=True)}" data-slot-index="{index}">'
-            f'{names.get(pid, "Unnamed player")} is on bye in {_indexed_slot(slots, index)}.</li>'
-            for index, pid in row['bye_starters']
-        )
-        moves = []
-        for index, pid, prior in row['moves']:
-            name = names.get(pid, 'Unnamed player')
+        week = row['week']
+        absent = dict(row['bye_starters'])
+        movers = {index: (pid, prior) for index, pid, prior in row['moves']}
+        outgoing = {prior: (index, pid) for index, pid, prior in row['moves'] if prior is not None}
+        initial = row.get('starting_slots') or ()
+        rows = []
+        for index in sorted(absent.keys() | movers.keys()):
             destination = _indexed_slot(slots, index)
-            instruction = (f'Start {name} at {destination}.' if prior is None else
-                           f'Move {name} from {_indexed_slot(slots, prior)} to {destination}.')
-            moves.append(f'<li data-bye-move="{escape(pid, quote=True)}" data-slot-index="{index}">{instruction}</li>')
-        if row['state'] == 'conditional':
-            instruction_heading = 'Use this lineup only if all its players are available.'
-        else:
-            instruction_heading = 'Make this change.' if len(moves) == 1 else 'Make these changes together.'
+            if index in absent:
+                pid = absent[index]
+                before = (f'<p data-bye-starter="{escape(pid, quote=True)}" data-slot-index="{index}">'
+                          f'<b>{names.get(pid, "Unnamed player")}</b><small>On bye</small></p>')
+            elif index in outgoing:
+                next_index, pid = outgoing[index]
+                before = f'<p><b>{names.get(pid, "Unnamed player")}</b><small>Moves to {_indexed_slot(slots, next_index)}</small></p>'
+            elif index < len(initial):
+                previous = initial[index]
+                before = (f'<p><b>{names.get(previous, "Unnamed player")}</b>'
+                          f'<small>Previously at {destination}</small></p>' if previous else
+                          '<p><b>Open slot</b><small>Previous assignment</small></p>')
+            else:
+                before = '<p><b>Previous assignment</b><small>Not shown in this plan</small></p>'
+            if index in movers:
+                pid, prior = movers[index]
+                source = f' · from {_indexed_slot(slots, prior)}' if prior is not None else ''
+                after = (f'<p data-bye-move="{escape(pid, quote=True)}" data-slot-index="{index}">'
+                         f'<b>{names.get(pid, "Unnamed player")}</b><small>Start at {destination}{source}</small></p>')
+            else:
+                after = ('<p><b>No replacement shown</b></p>' if row['state'] != 'unknown' else
+                         '<p><b>Cover unconfirmed</b></p>')
+            rows.append(f'<div class="thq-bye-move"><span class="thq-bye-slot">{destination}</span>'
+                        f'{before}<span class="thq-bye-arrow" aria-hidden="true">→</span>{after}</div>')
+        instruction = (
+            ('<p class="thq-bye-warning">Use this lineup only if all its players are available.</p>'
+             if row['state'] == 'conditional' else '')
+            + ('<p>Make these changes together.</p>' if len(movers) > 1 else '<p>Make this change.</p>')
+            if movers else ''
+        )
         dependencies = ''.join(
             f'<li>{_status_dependency(names.get(pid, "Unnamed player"), status)}</li>'
             for pid, status in row['availability_dependencies']
         )
         vacancy = _slots(row['unfilled'])
         notes = (
-            (f'<ul>{absent}</ul>' if absent else '')
-            + (f'<p>{instruction_heading}</p><ul>{"".join(moves)}</ul><p>{_status_age(row)}</p>' if moves else '')
+            instruction
+            + (f'<div class="thq-bye-moves" role="group" aria-label="Before and after by starting slot">{"".join(rows)}</div>' if rows else '')
+            + (f'<p>{_status_age(row)}</p>' if movers else '')
             + (f'<ul>{dependencies}</ul>' if dependencies else '')
-            + (f'<p>One legal fit leaves {vacancy} unfilled.</p>' if vacancy else '')
+            + (f'<p class="thq-bye-warning">One legal fit leaves {vacancy} unfilled.</p>' if vacancy else '')
             + ('<p>A complete projected lineup is unavailable for this week.</p>'
                if not row['projection_ready'] else '')
         )
-        href = f'/matchups?week={row["week"]}'
-        heading = f"Week {row['week']} details" if leading else finding(row)
-        return (f'<section data-bye-week="{row["week"]}" data-bye-state="{row["state"]}">'
-                f'<h3>{heading}</h3>{notes}'
-                f'<a class="thq-record-link" href="{href}">View Week {row["week"]} Matchups</a></section>')
+        pickup = ''
+        if row['state'] == 'shortfall' and league_id and season and roster_id:
+            query = urlencode(dict(bye_week=week, market_league=league_id, season=season, from_team=roster_id,
+                                   availability='day_traders_free_agent'))
+            needs = _slots(dict.fromkeys(row['unfilled']))
+            pickup = (f'<a class="thq-action" id="bye-pickup-{week}" href="/market?{escape(query)}">'
+                      f'Find Week {week} {needs} cover</a>')
+        description = finding(row)
+        return (f'<details class="thq-bye-week" name="team-bye-weeks" id="bye-week-{week}" data-nav-disclosure '
+                f'data-bye-week="{week}" data-bye-state="{row["state"]}">'
+                f'<summary><span><b>Week {week} bye plan</b><small>{description}</small></span></summary>'
+                f'<div class="thq-bye-content">{notes}'
+                + ('<p class="thq-bye-warning">Recheck availability before kickoff. Set your lineup in Sleeper.</p>' if movers else '')
+                + f'<div class="thq-bye-actions">{pickup}'
+                f'<a class="thq-action" href="/matchups?week={week}">View Week {week} Matchups</a>'
+                '</div></div></details>')
 
     return (
-        '<section class="thq-section" id="upcoming-byes"><h2>Upcoming bye weeks</h2>'
-        f'<p>{finding(priority[0])}</p>'
-        + ('<div class="thq-actions">' + ''.join(pickup_links) + '</div>' if pickup_links else '') +
-        '<details class="thq-strength-detail" id="bye-week-details" data-nav-disclosure><summary>See weeks and possible moves</summary>'
+        '<section id="upcoming-byes"><h2 class="thq-tab-heading">Upcoming bye weeks</h2>'
+        '<div id="bye-week-details">' + ''.join(map(detail, priority)) + '</div>'
+        '<details><summary>Schedule and lineup evidence</summary>'
         '<p>This plan uses the latest prepared roster and NFL schedule. It shows who fits together under your league’s rules. '
-        'Check player availability again before setting your Sleeper lineup.</p>'
-        + ''.join(detail(row, leading=index == 0) for index, row in enumerate(priority)) + '</details></section>'
+        'Check player availability again before setting your Sleeper lineup.</p></details></section>'
     )
 
 

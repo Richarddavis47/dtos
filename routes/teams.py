@@ -3,12 +3,13 @@ from __future__ import annotations
 
 from html import escape
 import json
+from pathlib import Path
 from types import SimpleNamespace
 from typing import Any, Awaitable, Callable
 from urllib.parse import quote, urlencode
 
 from fastapi import APIRouter, HTTPException, Request
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, Response
 
 from config import LEAGUE_ID
 from services.asset_intelligence import contextual_player_url
@@ -35,6 +36,8 @@ from services.strategy_session import COOKIE, selected_strategy
 EnsureFresh = Callable[[], Awaitable[None]]
 RequireData = Callable[[], dict[str, Any]]
 PageRenderer = Callable[[str, str], HTMLResponse]
+
+TEAM_ASSETS = Path(__file__).resolve().parents[1] / "static"
 
 TEAM_HQ_CSS = """
 <style>
@@ -372,6 +375,16 @@ def create_teams_router(
     """Create Team directory and Headquarters routes."""
     router = APIRouter(tags=["teams"])
 
+    @router.get("/static/js/my-team-sections.js", include_in_schema=False)
+    async def my_team_script() -> Response:
+        return Response((TEAM_ASSETS / "js/my-team-sections.js").read_text(encoding="utf-8"),
+                        media_type="text/javascript", headers={"Cache-Control": "no-cache"})
+
+    @router.get("/static/css/my-team.css", include_in_schema=False)
+    async def my_team_styles() -> Response:
+        return Response((TEAM_ASSETS / "css/my-team.css").read_text(encoding="utf-8"),
+                        media_type="text/css", headers={"Cache-Control": "no-cache"})
+
     @router.get("/teams", response_class=HTMLResponse)
     async def teams_page() -> HTMLResponse:
         await ensure_fresh()
@@ -492,7 +505,9 @@ def create_teams_router(
                                  if side['roster_id'] == roster_id), {})
                 review = own_side.get('lineup_review') or {}
                 if review.get('actionable'):
-                    lineup_alert = review_panel({**review, 'fallback': None})
+                    lineup_alert = ('<div id="lineup-action">'
+                                    + review_panel({**review, 'fallback': None}, show_kickoff=True)
+                                    + '</div>')
                 fallback = review.get('fallback')
                 if not own_side and uncertain_starter:
                     fallback = {'reason': 'The current submitted lineup is not prepared for review.'}
@@ -501,7 +516,7 @@ def create_teams_router(
                 lineup_assets = ('<link rel="stylesheet" href="/static/css/matchups.css">'
                                  '<script src="/static/lineup-review.js" defer></script>')
         starter_cards = "".join(
-            f'<a class="card" href="{escape(contextual_player_url(str(player.get("id") or ""), from_team=roster_id, section="my-team-advanced", week=view["overview"]["projection_week"]))}">{player_summary(player_id=str(player.get("id") or ""), name=str(player.get("name") or "Unknown player"), position=str(player.get("position") or ""), nfl_team=str(player.get("team") or player.get("nfl_team") or "Free Agent"), context="Submitted starter", projection=card_projections.get(str(player.get("id") or "")))}</a>'
+            f'<a class="card" href="{escape(contextual_player_url(str(player.get("id") or ""), from_team=roster_id, section="my-team-submitted", week=view["overview"]["projection_week"]))}">{player_summary(player_id=str(player.get("id") or ""), name=str(player.get("name") or "Unknown player"), position=str(player.get("position") or ""), nfl_team=str(player.get("team") or player.get("nfl_team") or "Free Agent"), context="Submitted starter", projection=card_projections.get(str(player.get("id") or "")))}</a>'
             for player in starters
         ) or '<div class="ds-empty"><b>No starting lineup is available.</b>Sleeper has not supplied a current starter assignment.</div>'
         from src.ui.team_strength import strength_panel
@@ -547,21 +562,33 @@ def create_teams_router(
 .thq-record-link{{display:inline-flex;align-items:center;min-height:44px;max-width:100%;text-decoration:underline;text-underline-offset:3px}}#season-so-far>summary{{display:list-item;list-style:disclosure-closed inside;align-content:center}}#season-so-far[open]>summary{{list-style-type:disclosure-open}}
 @media(max-width:360px){{.thq-strategy{{grid-template-columns:56px minmax(0,1fr)}}.thq-strategy label{{white-space:normal;overflow-wrap:normal;line-height:1.3}}.thq-strategy select{{padding-left:4px;padding-right:4px}}}}
 </style>
-<section class="thq-content" data-my-team-context="{context_json}">
+<link rel="stylesheet" href="/static/css/my-team.css">
+<section class="thq-content" data-my-team-context="{context_json}" data-my-team-sections>
 {scope_notice}
-<header class="thq-header"><div class="thq-identity">{avatar}<div class="thq-title"><div class="identity-kicker">Manager: {escape(team['owner'])}</div><div class="thq-name-row"><h1>{escape(team['team_name'])}{you_badge(data, roster_id)}</h1>{champion_badge(defending_champion(data), roster_id)}</div><p><a class="thq-record-link" href="#season-so-far" aria-label="Season results: {escape(performance["record"], quote=True)} · {escape(performance["standing"], quote=True)}">{escape(performance["record"])} · {escape(performance["standing"])}</a></p></div></div><div class="thq-strategy">{strategy_control}<small>League evidence updated: {escape(view['last_updated'])}</small></div></header>
-{outlook_panel(assessment_outlook, editable=editable, roster_id=roster_id)}
-{lineup_assets}{lineup_alert}
+<header class="thq-header"><div class="thq-identity">{avatar}<div class="thq-title"><div class="identity-kicker">Manager: {escape(team['owner'])}</div><div class="thq-name-row"><h1>{escape(team['team_name'])}{you_badge(data, roster_id)}</h1>{champion_badge(defending_champion(data), roster_id)}</div><p><a class="thq-record-link" href="#season-so-far" aria-label="Season results: {escape(performance["record"], quote=True)} · {escape(performance["standing"], quote=True)}">{escape(performance["record"])} · {escape(performance["standing"])}</a></p></div></div></header>
+<nav class="thq-tabs" aria-label="My Team sections">
+<a href="#team-roster">Roster</a><a href="#team-lineup">Lineup</a><a href="#team-byes">Byes</a><a href="#team-picks">Picks</a>
+</nav>
+<section id="team-roster" data-team-section aria-label="Roster">
+<a class="thq-record-link" href="#my-team-outlook">Roster outlook and next step</a>
 <section class="thq-section" id="full-roster"><details class="thq-strength-detail" id="my-team-roster" open><summary>Full Roster · {escape(_roster_projection_coverage(view))}</summary><div class="thq-roster">{_roster_rooms(view)}</div></details><details class="thq-strength-detail" id="my-team-key-players"><summary>Key players by Market value</summary>{_key_players(view)}</details></section>
-{lineup_fallback}
-{upcoming_byes}
+{outlook_panel(assessment_outlook, editable=editable, roster_id=roster_id)}
+<section class="thq-section thq-team-goal" aria-labelledby="team-goal-title"><h2 id="team-goal-title">Franchise goal</h2><div class="thq-strategy">{strategy_control}<small>League evidence updated: {escape(view['last_updated'])}</small></div></section>
 {season_panel(data, roster_id)}
-<section class="thq-section" id="draft-capital"><div class="thq-section-head"><h2>Draft Capital</h2><span>Your owned future picks</span></div><div class="thq-picks">{_draft_capital(view)}</div><p class="muted">Pick details preserve the original franchise and current owner. A pick’s future draft position is unknown unless a supported range is shown.</p></section>
-
 <section class="thq-section" id="positional-depth"><div class="thq-section-head"><h2>Starter strength and positional depth</h2><span>{escape('Week ' + str(overview['projection_week']) + ' · ' if overview['projection_week'] is not None else 'Current roster · ')}Lineup and backup projections from Sleeper</span></div>{_positional_depth(view)}</section>
 <section class="thq-section">{team_observations(view.get("league_observations"), roster_id)}</section>
-<section class="thq-section"><details class="thq-strength-detail" id="my-team-advanced"><summary>Calculations and sources</summary><div class="thq-evidence-body"><p>League evidence updated: {escape(view["last_updated"])}. Selected strategy overrides inferred direction and never changes Market prices.</p><p>Comparison ranks include only franchises with complete evidence for that named dimension. Coverage is evidence support, not an outcome probability. Overall dynasty utility and competitive-window aggregates remain unavailable without an approved model.</p><div class="thq-grades">{_team_intelligence(view)}</div>{_decision_horizons(view)}{multi_horizon_html}<h3>Submitted Starting Lineup</h3><p>Sleeper assignments remain separate from the DTOS optimal legal lineup.</p><details class="thq-strength-detail"><summary>View {len(starters)} submitted starters</summary><div class="thq-starters">{starter_cards}</div></details><h3>Roster facts</h3><p>{escape(roster_summary)} · {view['snapshot']['total_picks']} owned picks</p><div class="thq-cards">{_asset_cards(view['snapshot'])}</div><h3>Current Team Performance</h3><div class="thq-performance">{performance_cards}</div><div class="thq-summary">{summary}</div><h3>Activity</h3><div class="thq-timeline">{activity_html}</div><h3>Franchise History</h3><p>{historical_seasons} retained seasons · {historical_transactions} transactions. Historical FOIS grades are RETAINED / NOT REVALIDATED.</p><a class="thq-action" href="{franchise_history_url}">Franchise History</a><a class="thq-action" href="/history">League History</a><a class="thq-action" href="/front-offices?front_office={roster_id}">View franchise analysis</a><details><summary>About future forecasts</summary><div class="thq-future-grid">{future}</div></details></div></details></section>
-</section><script src="/static/js/strategy_session.js" defer></script>
+<p><a class="thq-action" href="#my-team-activity">Activity and franchise history</a></p>
+<section class="thq-section"><details class="thq-strength-detail" id="my-team-advanced"><summary>Calculations and sources</summary><div class="thq-evidence-body"><p>League evidence updated: {escape(view["last_updated"])}. Selected strategy overrides inferred direction and never changes Market prices.</p><p>Comparison ranks include only franchises with complete evidence for that named dimension. Coverage is evidence support, not an outcome probability. Overall dynasty utility and competitive-window aggregates remain unavailable without an approved model.</p><div class="thq-grades">{_team_intelligence(view)}</div>{_decision_horizons(view)}{multi_horizon_html}<p><a class="thq-record-link" href="#my-team-submitted">View submitted Sleeper lineup</a></p><h3>Roster facts</h3><p>{escape(roster_summary)} · {view['snapshot']['total_picks']} owned picks</p><div class="thq-cards">{_asset_cards(view['snapshot'])}</div><h3>Current Team Performance</h3><div class="thq-performance">{performance_cards}</div><div class="thq-summary">{summary}</div><h3 id="my-team-activity">Activity</h3><div class="thq-timeline">{activity_html}</div><h3>Franchise History</h3><p>{historical_seasons} retained seasons · {historical_transactions} transactions. Historical FOIS grades are RETAINED / NOT REVALIDATED.</p><a class="thq-action" href="{franchise_history_url}">Franchise History</a><a class="thq-action" href="/history">League History</a><a class="thq-action" href="/front-offices?front_office={roster_id}">View franchise analysis</a><details><summary>About future forecasts</summary><div class="thq-future-grid">{future}</div></details></div></details></section>
+</section>
+<section id="team-lineup" data-team-section aria-label="Lineup">
+<h2 class="thq-tab-heading">Lineup</h2>{lineup_assets}{lineup_alert}{lineup_fallback}
+<section id="my-team-submitted" class="thq-section"><h3>Submitted Starting Lineup</h3><p>Sleeper assignments remain separate from the DTOS optimal legal lineup.</p><details class="thq-strength-detail" id="my-team-submitted-details" open><summary>View {len(starters)} submitted starters</summary><div class="thq-starters">{starter_cards}</div></details></section>
+</section>
+<section id="team-byes" data-team-section aria-label="Byes">
+{upcoming_byes or '<section class="thq-section" id="upcoming-byes"><h2>Upcoming bye weeks</h2><p>A bye plan is available for your own team when upcoming weeks are prepared.</p></section>'}
+</section>
+<section id="team-picks" data-team-section aria-label="Picks"><section class="thq-section" id="draft-capital"><div class="thq-section-head"><h2>Draft Capital</h2><span>Your owned future picks</span></div><div class="thq-picks">{_draft_capital(view)}</div><p class="muted">Pick details preserve the original franchise and current owner. A pick’s future draft position is unknown unless a supported range is shown.</p></section></section>
+</section><script src="/static/js/strategy_session.js" defer></script><script src="/static/js/my-team-sections.js" defer></script>
 """
         return page(f'{team["team_name"]} Headquarters', body)
 

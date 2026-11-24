@@ -37,11 +37,17 @@ class LineupReviewBrowserTests(unittest.TestCase):
                 if directory:
                     case = "confirmed" if confirmed else "conditional-only"
                     page.screenshot(path=str(Path(directory, f"home-early-backup-{case}-390.png")))
-                self.assertEqual(action.get_attribute("href"), "/teams/1#lineup-recheck")
+                fragment = "lineup-action" if confirmed else "lineup-recheck"
+                self.assertEqual(action.get_attribute("href"), "/teams/1#" + fragment)
                 copy = page.locator("#home-priority").inner_text()
                 if confirmed:
                     self.assertIn("Check your Week 8 lineup", copy)
                     self.assertNotIn("If Example R 1", copy)
+                    action.click()
+                    page.wait_for_url("**/teams/1#lineup-action")
+                    self.assertTrue(page.locator('#team-lineup').is_visible())
+                    self.assertTrue(page.locator('#lineup-action .thq-lineup-deadline time').is_visible())
+                    self.assertIn('Higher-projected lineup available', page.locator('#lineup-action').inner_text())
                 else:
                     self.assertIn("Have a backup ready", copy)
                     self.assertIn("If Example R 1 can’t play", copy)
@@ -67,6 +73,7 @@ class LineupReviewBrowserTests(unittest.TestCase):
                         page.screenshot(path=str(Path(directory, "home-long-action-320.png")))
                     action.tap()
                     page.wait_for_url("**/teams/1#lineup-recheck")
+                    self.assertTrue(page.locator('#lineup-recheck [data-lineup-review="fallback"]').is_visible())
             finally:
                 browser.close()
 
@@ -92,7 +99,7 @@ class LineupReviewBrowserTests(unittest.TestCase):
                 action = top.get_by_role('link', name='Review lineup', exact=True)
                 action.wait_for()
                 self.assertIn('starting slot is empty', top.inner_text())
-                self.assertEqual(action.get_attribute('href'), '/teams/1#lineup-recheck')
+                self.assertEqual(action.get_attribute('href'), '/teams/1#lineup-action')
                 self.assertEqual(action.get_attribute('data-dtos-action'), 'primary')
                 directory = os.environ.get('DTOS_BRIEF_EVIDENCE')
                 if directory:
@@ -355,7 +362,7 @@ class LineupReviewBrowserTests(unittest.TestCase):
 
 
 class LineupFallbackBrowserTests(unittest.TestCase):
-    def test_phone_fallback_below_roster_and_expiry(self):
+    def test_phone_fallback_in_lineup_section_and_expiry(self):
         from urllib.parse import urlsplit
 
         fixture, _, _, _ = authenticated_prepared(self, empty=False, uncertain="w", earlier_backup=True)
@@ -377,13 +384,14 @@ class LineupFallbackBrowserTests(unittest.TestCase):
                     context.route("**/*", transport)
                     page = context.new_page()
                     self.assertEqual(page.goto("https://dtos.test/teams/1").status, 200)
+                    self.assertTrue(page.locator("#full-roster").is_visible())
+                    page.locator('.thq-tabs a[href="#team-lineup"]').click()
                     panel = page.get_by_role("region", name="Lineup fallback")
+                    self.assertTrue(panel.is_visible())
                     self.assertIn("Example W 1 is ruled out", panel.inner_text())
                     self.assertIn("Example BQ 1 in for Example S 1", panel.inner_text())
                     self.assertIn("starts before the starter", panel.inner_text())
-                    roster = page.locator("#full-roster")
-                    self.assertGreaterEqual(panel.bounding_box()["y"],
-                                            roster.bounding_box()["y"] + roster.bounding_box()["height"])
+                    self.assertFalse(page.locator("#full-roster").is_visible())
                     self.assertLessEqual(page.evaluate("document.documentElement.scrollWidth"), width)
                     action = panel.get_by_role("link", name="Review in Sleeper")
                     action.focus()
@@ -450,7 +458,7 @@ class LineupRecheckBrowserTests(unittest.TestCase):
             context.route("**/*", transport)
             page = context.new_page()
             try:
-                for path in ("/teams/1", "/matchups/1?week=8"):
+                for path in ("/teams/1#team-lineup", "/matchups/1?week=8"):
                     backup_starts = True
                     result = "updated"
                     page.goto("https://dtos.test" + path)

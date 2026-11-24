@@ -417,7 +417,7 @@ def create_market_router(
         membership = getattr(current_account(), 'membership', None)
         team_url = '/teams'
         if membership and str(membership.league_id) == str(selected_league) and membership.roster_id:
-            team_url = f'/teams/{membership.roster_id}#upcoming-byes'
+            team_url = f'/teams/{membership.roster_id}#bye-week-{bye_week}'
         back = f'<p><a class="back ds-action" href="{escape(team_url)}">Back to My Team</a></p>'
         reason = 'This link does not match a confirmed upcoming bye gap for your selected team.'
         data = selected_state.get('data') or {}

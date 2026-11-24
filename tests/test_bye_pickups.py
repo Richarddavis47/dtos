@@ -57,7 +57,8 @@ class ByePickupTests(unittest.TestCase):
         self.add_players(data, service, now)
         install_schedule(service, data, now, byes={'1-w'})
         with phone(fixture) as page:
-            page.goto('https://dtos.test/teams/1')
+            page.goto('https://dtos.test/teams/1#team-byes')
+            page.locator('#bye-week-9 > summary').press('Enter')
             action = page.get_by_role('link', name='Find Week 9 FLEX cover')
             href = action.get_attribute('href')
             self.assertEqual(parse_qs(urlsplit(href).query)['availability'], ['day_traders_free_agent'])
@@ -86,7 +87,7 @@ class ByePickupTests(unittest.TestCase):
             if directory:
                 results.screenshot(path=str(Path(directory, 'market-390.png')))
             page.locator('#dtos-back').click()
-            page.wait_for_url('**/teams/1')
+            page.wait_for_url('**/teams/1#team-byes')
             action.wait_for()
 
     def test_superflex_plan_each_unrostered_candidate_fills_only_one_of_two_openings(self):
@@ -137,10 +138,10 @@ class ByePickupTests(unittest.TestCase):
     def test_chained_pickup_names_injured_starter_and_back_preserves_week_details(self):
         fixture = self.chained_gap(injury='IR')
         with phone(fixture) as page:
-            page.goto('https://dtos.test/teams/1')
-            details = page.locator('#bye-week-details')
+            page.goto('https://dtos.test/teams/1#team-byes')
+            details = page.locator('#bye-week-9')
             details.locator('summary').click()
-            self.assertTrue(details.locator('[data-bye-week="9"]').is_visible())
+            self.assertTrue(details.locator('.thq-bye-content').is_visible())
             page.get_by_role('link', name='Find Week 9 RB cover').tap()
             page.wait_for_url('**/market?**')
             card = page.locator('#bye-pickup-results article').filter(has_text='Free Receiver')
@@ -150,12 +151,12 @@ class ByePickupTests(unittest.TestCase):
             self.assertIn('Start Free Receiver at FLEX.', copy)
             self.assertIn('Sleeper listed Example W 1 as on injured reserve', copy)
             page.locator('#dtos-back').click()
-            page.wait_for_url('**/teams/1')
-            page.locator('#bye-week-details[open] [data-bye-week="9"]').wait_for()
+            page.wait_for_url('**/teams/1#team-byes')
+            page.locator('#bye-week-9[open] > .thq-bye-content').wait_for()
             page.reload()
-            self.assertFalse(details.locator('[data-bye-week="9"]').is_visible())
+            self.assertFalse(details.locator('.thq-bye-content').is_visible())
             details.locator('summary').press('Enter')
-            self.assertTrue(details.locator('[data-bye-week="9"]').is_visible())
+            self.assertTrue(details.locator('.thq-bye-content').is_visible())
 
     def test_chained_pickup_support_tracks_fresh_stale_and_missing_status(self):
         cases = [
@@ -218,8 +219,8 @@ class ByePickupTests(unittest.TestCase):
                 self.add_players(data, service, now)
                 install_schedule(service, data, now, byes={'1-r', '1-w'})
                 with phone(fixture) as page:
-                    page.goto('https://dtos.test/teams/1')
-                    details = page.locator('#bye-week-details')
+                    page.goto('https://dtos.test/teams/1#team-byes')
+                    details = page.locator('#bye-week-9')
                     details.locator('summary').press('Enter')
                     page.get_by_role('link', name='Find Week 9', exact=False).tap()
                     page.wait_for_url('**/market?**')
@@ -240,8 +241,8 @@ class ByePickupTests(unittest.TestCase):
                         destination.mkdir(parents=True, exist_ok=True)
                         results.screenshot(path=str(destination / f'roster-space-{label}-390.png'))
                     page.locator('#dtos-back').click()
-                    page.wait_for_url('**/teams/1')
-                    details.locator('[data-bye-week="9"]').wait_for()
+                    page.wait_for_url('**/teams/1#team-byes')
+                    details.locator('.thq-bye-content').wait_for()
 
     def test_ir_blockers_and_active_space_on_phone(self):
         cases = (
@@ -276,8 +277,8 @@ class ByePickupTests(unittest.TestCase):
                 data['players_fetched_at'] = (now - age).isoformat()
                 install_schedule(service, data, now, byes={'1-r', '1-w'})
                 with phone(fixture) as page:
-                    page.goto('https://dtos.test/teams/1')
-                    page.locator('#bye-week-details summary').press('Enter')
+                    page.goto('https://dtos.test/teams/1#team-byes')
+                    page.locator('#bye-week-9 > summary').press('Enter')
                     page.get_by_role('link', name='Find Week 9', exact=False).tap()
                     page.wait_for_url('**/market?**')
                     results = page.locator('#bye-pickup-results')
@@ -297,8 +298,8 @@ class ByePickupTests(unittest.TestCase):
                     self.assertIn('waivers or locks', results.inner_text())
                     self.assertLessEqual(page.evaluate('document.documentElement.scrollWidth'), 390)
                     page.locator('#dtos-back').click()
-                    page.wait_for_url('**/teams/1')
-                    page.locator('#bye-week-details[open] [data-bye-week="9"]').wait_for()
+                    page.wait_for_url('**/teams/1#team-byes')
+                    page.locator('#bye-week-9[open] > .thq-bye-content').wait_for()
 
     def test_compare_drop_rechecks_the_target_week_lineup_on_phone(self):
         fixture, data, service, now = self.setup_league(
@@ -318,8 +319,8 @@ class ByePickupTests(unittest.TestCase):
         self.market_cache.current.return_value = active_market
 
         with phone(fixture) as page:
-            page.goto('https://dtos.test/teams/1')
-            page.locator('#bye-week-details summary').press('Enter')
+            page.goto('https://dtos.test/teams/1#team-byes')
+            page.locator('#bye-week-9 > summary').press('Enter')
             page.get_by_role('link', name='Find Week 9', exact=False).tap()
             runner = page.locator('#bye-pickup-results article').filter(has_text='Free Runner')
             runner.get_by_role('link', name='Compare a drop').tap()
@@ -355,8 +356,8 @@ class ByePickupTests(unittest.TestCase):
                     if directory := os.environ.get('DTOS_BYE_PICKUP_SCREENSHOTS'):
                         comparison.screenshot(path=str(Path(directory, f'drop-{outgoing}-390.png')))
             page.locator('#dtos-back').click()
-            page.wait_for_url('**/teams/1')
-            page.locator('#bye-week-details[open] [data-bye-week="9"]').wait_for()
+            page.wait_for_url('**/teams/1#team-byes')
+            page.locator('#bye-week-9[open] > .thq-bye-content').wait_for()
 
         client = fixture.f.f.client
         preview = '/market?bye_week=9&market_league=league-1&season=2026&from_team=1&compare_pickup=free-rb'

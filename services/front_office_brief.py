@@ -37,7 +37,7 @@ def first_action(team, week, review, byes, items, *, now=None):
         else:
             continue
         lineup.append(((conditional, kickoff), dict(
-            title=title, reason=reason, action='Review lineup', href=team_url + '#lineup-recheck',
+            title=title, reason=reason, action='Review lineup', href=team_url + ('#lineup-recheck' if conditional else '#lineup-action'),
             valid_until=min(kickoff, expiry).isoformat(), verified_at=now.isoformat(),
         )))
     if lineup:
@@ -67,7 +67,7 @@ def first_action(team, week, review, byes, items, *, now=None):
         else:
             continue
         return dict(title=title, reason=reason,
-                    action='Review bye plan', href=team_url + '#bye-week-details')
+                    action='Review bye plan', href=team_url + f'#bye-week-{week}')
 
     for families in ({'need', 'offer'}, {'goal'}):
         chosen = next((item for item in items if item['family'] in families), None)

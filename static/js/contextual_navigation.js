@@ -13,6 +13,11 @@
   const paths = new Set(['', 'teams', 'league', 'matchups', 'market', 'players', 'trades', 'picks', 'history', 'fois', 'front-offices', 'transactions', 'reports', 'settings', 'brain', 'valuation', 'commissioner', 'account', 'search']);
   const queryKeys = new Set(['q','position','availability','sort','direction','front_office','selected','offset','limit','week','season','year','round','from_team','from_section','from_trade','from_market','market_league','matchup','asset_id','owner_roster_id','home_offer','partner_roster_id','shop_preference','league','league_id','view','tab','format','team','scope','owner','type','player','draft_pick','date_from','date_to','status','page','events_page','per_page','from_home','since','team_need','bye_week']);
   const sections = new Set(['#full-roster','#positional-depth','#draft-capital','#my-team-advanced','#upcoming-byes']);
+  for (const section of ['roster', 'lineup', 'byes', 'picks']) sections.add('#team-' + section);
+  for (const fragment of ['#bye-week-details', '#lineup-action', '#lineup-recheck', '#my-team-submitted',
+    '#my-team-activity', '#my-team-outlook', '#my-team-strategy', '#season-so-far']) sections.add(fragment);
+  const byeWeekId = id => typeof id === 'string' && /^bye-week-(?:[1-9]|1[0-8])$/.test(id);
+  const teamHash = hash => sections.has(hash) || byeWeekId(hash.slice(1));
   function safeUrl(raw) {
     if (!raw || typeof raw !== 'string' || raw.length > 2400 || /[\x00-\x1f\\]/.test(raw)) return null;
     try {
@@ -28,7 +33,7 @@
         query.append(k,v);
       }
       // Action/refresh/credential parameters are never replayed by Back.
-      return (u.pathname.replace(/\/$/, '') || '/') + (query.size ? '?' + query : '') + (sections.has(u.hash) && /^\/teams(?:\/\d+)?\/?$/.test(u.pathname) ? u.hash : '');
+      return (u.pathname.replace(/\/$/, '') || '/') + (query.size ? '?' + query : '') + (teamHash(u.hash) && /^\/teams(?:\/\d+)?\/?$/.test(u.pathname) ? u.hash : '');
     } catch (_) { return null; }
   }
   function identity(url) {
@@ -53,7 +58,7 @@
     const supplied = linked && safeUrl(linked.href);
     if (supplied && /^\/(market\?|teams\/|matchups\/|trades\/history\/|players\/)/.test(supplied) && identity(supplied) !== identity(safeUrl(location.href) || '/')) return supplied;
     if (p.startsWith('/players/') || p.startsWith('/picks/')) return p.startsWith('/players/') ? '/market' : '/picks';
-    if (p.startsWith('/teams') && sections.has(location.hash)) return team;
+    if (p.startsWith('/teams') && teamHash(location.hash)) return team;
     if (p.startsWith('/trades/')) return '/trades';
     if (p.startsWith('/account/')) return '/account';
     if (/^\/(fois|history|matchups|front-offices)(\/|$)/.test(p)) return '/league';
@@ -78,7 +83,7 @@
         entries:x.entries.map(e=>({id:e.id,pos:e.pos,url:e.url,
           scroll:Number.isFinite(e.scroll)?Math.max(0,Math.min(1000000,e.scroll)):0,
           focusId:typeof e.focusId==='string'?e.focusId.slice(0,80):'',focusHref:safeUrl(e.focusHref),
-          byeDetailsOpen:e.byeDetailsOpen===true})),
+          openByeWeeks:Array.isArray(e.openByeWeeks) ? e.openByeWeeks.filter(byeWeekId).slice(0, 2) : []})),
         pending:x.pending && typeof x.pending.from==='string' && safeUrl(x.pending.to) && x.pending.until>=now() && x.pending.until<=now()+30000 ? {from:x.pending.from,to:safeUrl(x.pending.to),until:x.pending.until,replace:x.pending.replace===true}:null,
         left:x.left && typeof x.left.id==='string' && x.left.until>=now() && x.left.until<=now()+30000 ? {id:x.left.id,until:x.left.until}:null};
     } catch (_) { return fresh(); }
@@ -103,7 +108,8 @@
     const active = document.activeElement;
     entry.focusId = active?.id?.slice(0,80) || '';
     entry.focusHref = active?.closest('a[href]') ? safeUrl(active.closest('a[href]').href) : null;
-    entry.byeDetailsOpen = document.getElementById('bye-week-details')?.open === true;
+    entry.openByeWeeks = Array.from(document.querySelectorAll('details[data-bye-week][open]'), d => d.id)
+      .filter(byeWeekId).slice(0, 2);
     save();
   }
   function setMeta() {
@@ -145,8 +151,9 @@
       if (!active || !restoring) return;
       if (restoreByeOnReturn) {
         restoreByeOnReturn = false;
-        const byeDetails = document.getElementById('bye-week-details');
-        if (byeDetails && entry.byeDetailsOpen) byeDetails.open = true;
+        if (entry.openByeWeeks) for (const details of document.querySelectorAll('details[data-bye-week]')) {
+          details.open = entry.openByeWeeks.includes(details.id);
+        }
       }
       const focused = document.activeElement;
       if (focused && focused !== document.body && focused !== document.documentElement && focused !== lastRestoredFocus) {restoring=false;return;}

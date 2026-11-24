@@ -239,6 +239,7 @@ class PremiumPreparedBrowserTests(unittest.TestCase):
                         )
                         link.press("Enter")
                         self.assertTrue(page.url.endswith(fragment))
+                    page.locator('.thq-tabs a[href="#team-roster"]').click()
                     page.evaluate("scrollTo(0,0)")
                     row = capture(page, "prepared-my-team", width, height)
                     self.assertLessEqual(row["boxes"]["shortcuts"]["height"], 64)
