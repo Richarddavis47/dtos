@@ -1,0 +1,3 @@
+The first final-source local run had three subtest timeouts in the existing Trade actionability browser journey at 375, 390 and 1280px. The normal Trade path correctly returned HTTP 503 as effective admission headroom fell to 399,747,072 bytes against the unchanged 402,653,184-byte working and safety reserve. Later admissions fell further after the first subtest timed out. The recorded browser driver process held about 230 MiB of private memory at the initial deferral. No OOM event occurred.
+
+The retry keeps the same application commit, official canonical runner, Chromium build, application safeguards, 2 GiB ceiling and scratch reservation. It reduces only the validation browser-driver heap ceiling from 256 to 128 MiB. Production memory policies remain unchanged.

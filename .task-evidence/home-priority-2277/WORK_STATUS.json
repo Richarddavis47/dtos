@@ -1,5 +1,5 @@
 {
-  "state": "EXACT_LOCAL_AND_HOSTED_IN_PROGRESS",
+  "state": "EXACT_LOCAL_RETRY_IN_PROGRESS",
   "source": {
     "candidate": "052800524d53736fe998c4f608cc2eddc7d1f051",
     "tree": "ecf99970f0f3e2a59a8c850fe55fbae630cd1536",
@@ -11,12 +11,14 @@
     "build": 2277,
     "expected_test_count": 4675
   },
-  "local_container": "e3ebac21f2c7978e2a1e792ecc5f22318496aabd3a8471a19eabe189a8a4b29a",
-  "updated_at": "2026-11-24T00:26:44.144707+00:00",
+  "local_container": "7b6f902656597e90a48b9afd4b494fc98eff3a926c9f7009a945d65623648a19",
+  "updated_at": "2026-11-24T01:58:46.361948+00:00",
   "hosted": {
     "canonical": 45297086894,
     "product": 45297086544,
     "tooling": 45297086496,
     "lifecycle": 45297086494
-  }
+  },
+  "local_toolchain": "same matched Chromium/Python image, with a tighter 128 MiB executor-only browser driver heap",
+  "local_first_gate_failure": "Trade 503 admission with 399747072 bytes effective headroom vs 402653184 required; three Trade-actionability viewport timeouts."
 }

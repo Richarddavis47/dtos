@@ -1,0 +1,72 @@
+{
+  "source": {
+    "candidate": "052800524d53736fe998c4f608cc2eddc7d1f051",
+    "tree": "ecf99970f0f3e2a59a8c850fe55fbae630cd1536",
+    "baseline": "23a11f18f5b95633e90291a9351f258caa3b7f7d",
+    "baseline_tree": "9bf70f099ca65ea9a137fdda1b8cf60f0335353c",
+    "pr": 366,
+    "branch": "feat/home-priority-2277",
+    "version": "1.22.62",
+    "build": 2277,
+    "expected_test_count": 4675
+  },
+  "command": [
+    "docker",
+    "create",
+    "--name",
+    "dtos-home-canonical-2277",
+    "--init",
+    "--user",
+    "1000:1000",
+    "--memory=2g",
+    "--memory-swap=2g",
+    "--cpus=2",
+    "--network=none",
+    "-v",
+    "/workspace/dtos-home-priority-2277:/app",
+    "-v",
+    "/workspace/dtos/.git:/workspace/dtos/.git:ro",
+    "-v",
+    "/workspace/2277-home-priority/local-canonical:/output",
+    "-v",
+    "/dev/shm/dtos-2277-fixture-driver128:/fixture",
+    "-e",
+    "HOME=/tmp",
+    "-e",
+    "NODE_OPTIONS=--max-old-space-size=128",
+    "-e",
+    "GIT_CONFIG_COUNT=1",
+    "-e",
+    "GIT_CONFIG_KEY_0=safe.directory",
+    "-e",
+    "GIT_CONFIG_VALUE_0=/app",
+    "-e",
+    "DTOS_EXPECTED_HEAD=052800524d53736fe998c4f608cc2eddc7d1f051",
+    "-e",
+    "DTOS_EXPECTED_TREE=ecf99970f0f3e2a59a8c850fe55fbae630cd1536",
+    "-e",
+    "DTOS_EXPECTED_TEST_COUNT=4675",
+    "-w",
+    "/app",
+    "sha256:da2020c853b4c769eadb51c130e7a85938710b66cb866c43661a9dfb44ac5fe4",
+    "python",
+    "/output/runner.py"
+  ],
+  "container": "7b6f902656597e90a48b9afd4b494fc98eff3a926c9f7009a945d65623648a19",
+  "files": [
+    {
+      "name": "runner.py",
+      "sha256": "574308d9f64252575970aa19ce113f603ccb9927f2c6a523e8c228869fd37cac"
+    },
+    {
+      "name": "observer/sitecustomize.py",
+      "sha256": "3f43288a099e49a3ed2dea36f977b596707589eaefd2656b40a3b9c6533be2d4"
+    }
+  ],
+  "created_at": "2026-11-24T01:58:33.807570+00:00",
+  "status": "RUNNING_NOT_PASSED",
+  "fixture_free_after_container_creation": 9419735040,
+  "official_scratch_gate_unchanged": true,
+  "fixture_medium": "fresh validation-only tmpfs, same unchanged memory/scratch checks",
+  "toolchain": "same matched Chromium/Python image, with a tighter 128 MiB executor-only browser driver heap"
+}
