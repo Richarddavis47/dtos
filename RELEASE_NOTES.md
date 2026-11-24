@@ -2,6 +2,8 @@
 
 Build a trade by adding owned players and exact picks from either side. The live value preview uses the selected Neutral or Custom method. Recommended offers can be reviewed in the same format as a manually evaluated offer. The projected-points table separates the selected week from later league weeks and identifies partial coverage.
 
+The gauge shows Even when the exact difference is at most 5% of the larger package. The signed amount stays visible. This range only changes the display. Trade decisions, rankings, and balancing calculations use their existing rules. The lineup table explains gaps using the available source evidence and labels partial totals.
+
 ## v1.22.63 / build 2278 — My Team in four sections
 
 My Team organizes the existing roster, lineup, bye plans and picks into four sections. Home opens the specific lineup action or bye week. Bye plans show slot-by-slot moves, availability dependencies and remaining gaps. Returning from Matchups or a pickup restores the same expanded week.

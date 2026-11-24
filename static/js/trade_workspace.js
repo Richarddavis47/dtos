@@ -504,7 +504,30 @@
     root.setAttribute('aria-busy', String(busy && !marketEditor));
     el('trade-board').setAttribute('aria-busy', String(busy));
   }
-  function valuationGauge({mode, sent, received, difference, relative = 0, precisionLimit = false, missing, retained = false}) {
+  function gaugePosition(difference, totals) {
+    const larger = totals.map(n => n < 0n ? -n : n).reduce((a, b) => a > b ? a : b);
+    const magnitude = difference < 0n ? -difference : difference;
+    // Display only: inclusive ±5% of the larger package, in unrounded units.
+    const even = magnitude * 20n <= larger;
+    const ratio = larger ? Number(magnitude * 10000n / larger) / 10000 : 0;
+    // The track's gray edges are 38% and 62%. Keep the marker center
+    // inside the corresponding color even at an exact boundary.
+    const offset = even ? 220 * ratio : 13 + Math.min(32, (ratio - 0.05) * 32);
+    return {
+      state: even ? 'even' : difference < 0n ? 'give' : 'receive',
+      offset: (difference < 0n ? -1 : 1) * offset,
+    };
+  }
+  function exactGaugeDifference(difference, scale) {
+    const sign = difference < 0n ? '−' : difference > 0n ? '+' : '';
+    let digits = String(difference < 0n ? -difference : difference);
+    if (!difference) return '0';
+    if (scale <= 0) return sign + digits + '0'.repeat(-scale);
+    digits = digits.padStart(scale + 1, '0');
+    const fraction = digits.slice(-scale).replace(/0+$/, '');
+    return sign + digits.slice(0, -scale) + (fraction ? '.' + fraction : '');
+  }
+  function valuationGauge({mode, sent, received, comparison, missing, retained = false}) {
     const panel = node('section', null, 'tw-valuation-gauge');
     const unit = mode.startsWith('Custom') ? 'Custom points' : 'Market points';
     panel.append(node('h3', (mode === 'Neutral Market' ? 'Market comparison · ' : 'Value comparison · ') + mode));
@@ -514,28 +537,26 @@
       const item = node('div'); item.append(node('dt', name + ':'), node('dd', value)); cards.append(item);
     }
     panel.append(cards);
-    if (difference == null) {
+    if (!comparison) {
       panel.dataset.balance = 'incomplete';
       panel.append(node('p', missing || 'A complete value comparison needs a compatible value for every asset.'));
       return panel;
     }
-    const state = relative < 0 ? 'give' : relative > 0 ? 'receive' : 'even';
+    const {difference, totals, scale} = comparison;
+    const {state, offset} = gaugePosition(difference, totals);
     panel.dataset.balance = state;
-    const sign = relative < 0 ? '−' : relative > 0 ? '+' : '';
-    const amount = precisionLimit ? (relative < 0 ? '> −0.01' : '< +0.01') : sign + difference;
-    panel.append(node('p', amount + ' ' + unit, 'tw-gauge-difference'),
-      node('p', state === 'even' ? 'Even · both packages have equal value'
-        : state === 'give' ? 'You give more value than you receive' : 'You receive more value than you give', 'tw-market-verdict'));
+    const verdict = state === 'even' ? (difference === 0n ? 'Even · equal package values' : 'Even · within 5% of the larger package')
+      : state === 'give' ? 'You give more value than you receive' : 'You receive more value than you give';
+    panel.append(node('p', exactGaugeDifference(difference, scale) + ' ' + unit, 'tw-gauge-difference'),
+      node('p', verdict, 'tw-market-verdict'));
     const track = node('div', null, 'tw-market-bar tw-gauge-track');
     track.setAttribute('role', 'img');
-    track.setAttribute('aria-label', (state === 'even' ? 'Equal package values.' : state === 'give' ? 'You give more value.' : 'You receive more value.') + ' Not an acceptance probability.');
+    track.setAttribute('aria-label', verdict + '. Not an acceptance probability.');
     const pointer = node('span', null, 'tw-gauge-pointer');
-    const distance = Math.min(32, Math.abs(relative) * 32);
-    const offset = state === 'even' ? 0 : Math.sign(relative) * (13 + distance);
     pointer.style.left = (50 + offset) + '%';
     track.append(pointer);
     const labels = node('div', null, 'tw-gauge-labels');
-    for (const label of ['You give more', 'Even · equal', 'You receive more']) labels.append(node('span', label));
+    for (const label of ['You give more', 'Even range', 'You receive more']) labels.append(node('span', label));
     panel.append(track, labels);
     return panel;
   }
@@ -552,12 +573,9 @@
     const valid = value?.availability === 'full' && [sent, received].every(v => typeof v === 'number' && Number.isFinite(v));
     const parts = valid ? [sent, received].map(marketParts) : [];
     const scale = valid ? Math.max(...parts.map(p => p.scale)) : 0;
-    const diff = valid ? parts[1].integer * 10n ** BigInt(scale - parts[1].scale) - parts[0].integer * 10n ** BigInt(scale - parts[0].scale) : 0n;
-    const magnitude = diff < 0n ? -diff : diff;
-    const difference = valid ? displayMarketUnits(magnitude, scale) : null;
-    const relative = valid ? Number(diff) / 10 ** scale / Math.max(1, Math.abs(sent) + Math.abs(received)) : 0;
-    return valuationGauge({mode, sent: amount('sent'), received: amount('received'), difference, relative,
-      precisionLimit: diff !== 0n && difference === '0', retained});
+    const totals = parts.map(p => p.integer * 10n ** BigInt(scale - p.scale));
+    return valuationGauge({mode, sent: amount('sent'), received: amount('received'),
+      comparison: valid ? {difference: totals[1] - totals[0], totals, scale} : null, retained});
   }
   function evaluationOverview(e, proposal, presentation, retained) {
     const header = node('section', null, 'tw-evaluation-overview');
@@ -591,26 +609,46 @@
     if ([decision.lineup_comparisons, decision.partner_lineup_comparisons].some(side => side?.current_week?.state === 'provisional')) {
       header.append(node('p', 'Selected-week lineup comparison is provisional.', 'tw-risk-summary'));
     }
-    const signed = value => typeof value === 'number' && Number.isFinite(value) ? (value > 0 ? '+' : '') + displayPoints(value) : 'Unavailable';
+    const numeric = value => typeof value === 'number' && Number.isFinite(value);
+    const signed = value => (value > 0 ? '+' : '') + displayPoints(value);
+    const lineupReason = reason => ({
+      incompatible: 'Projected lineups don’t match this assessment.',
+      missing_context: 'Projection source details are missing.',
+      missing_week: 'No projected lineups were recorded.',
+      missing_before: 'The projected lineup before the trade is missing or couldn’t be verified.',
+      missing_after: 'The projected lineup after the trade is missing or couldn’t be verified.',
+      missing_both: 'Neither projected lineup could be verified.',
+      unverified_change: 'The before-and-after point difference couldn’t be verified.',
+    })[reason];
     for (const [name, future] of [[week ? 'Week ' + week : 'Selected week', false], ['Rest of season', true]]) {
       const row = node('tr'), title = node('th', name); title.scope = 'row'; row.append(title);
       for (const side of ['active', 'partner']) {
         const cell = node('td');
+        const summary = remaining?.sides?.[side];
         if (!future) {
           const record = (side === 'active' ? decision.lineup_comparisons : decision.partner_lineup_comparisons)?.current_week;
-          const verified = record?.weeks?.length === 1 && record.weeks[0] === week && ['supported', 'provisional'].includes(record.state);
-          cell.append(node('b', signed(verified ? record.delta : null)));
+          const verified = record?.weeks?.length === 1 && record.weeks[0] === week &&
+            ['supported', 'provisional'].includes(record.state) && numeric(record.delta);
+          const reason = summary?.selected_reason || (record?.state === 'incompatible' ? 'incompatible' : null);
+          cell.append(verified ? node('b', signed(record.delta)) : node('span', week
+            ? lineupReason(reason) || 'No verified before-and-after comparison for this week.'
+            : 'This assessment doesn’t identify the selected week.'));
           if (verified && record.state === 'provisional') cell.append(node('small', 'Provisional'));
         } else {
-          const record = remaining?.sides?.[side];
+          const record = summary;
           const complete = record?.calendar_complete && record.weeks.length === record.compared.length;
-          const known = record?.compared?.length;
-          const value = known ? signed(record.subtotal) : complete ? 'No later weeks' : 'Unavailable';
-          cell.append(node('b', value));
+          const known = record?.compared?.length && numeric(record.subtotal);
+          const reason = complete && !record.weeks.length ? 'No later weeks'
+            : !record?.calendar_complete && !record?.weeks?.length ? 'Later league weeks couldn’t be verified.'
+            : lineupReason(record?.future_reason) || 'No verified before-and-after comparison for the later weeks.';
+          cell.append(known ? node('b', signed(record.subtotal) + (complete ? '' : ' · partial total')) : node('span', reason));
           if (known) cell.append(node('small', (complete ? 'Weeks ' : 'Partial · weeks ') + record.compared.join(', ') + (record.provisional ? ' · provisional' : '')));
           if (record && !complete) {
             const missing = record.weeks.filter(w => !record.compared.includes(w));
             if (missing.length) cell.append(node('small', 'Missing weeks ' + missing.join(', ')));
+            if (known && missing.length && lineupReason(record.future_reason)) {
+              cell.append(node('small', lineupReason(record.future_reason)));
+            }
             if (!record.calendar_complete) cell.append(node('small', 'Calendar coverage incomplete'));
           }
         }
@@ -648,18 +686,17 @@
     const amounts = rows.map((r, i) => r.length && r.every(a => known.includes(a)) ? shown(totals[i])
       : r.some(a => known.includes(a)) ? 'Partial · known subtotal ' + shown(totals[i]) : 'Unavailable');
     const difference = totals[1] - totals[0];
-    const verdict = node('h4', !complete ? rows.every(r => r.length) ? 'Cannot determine reliably · pricing evidence missing' : 'Choose assets on both sides' : difference === 0n ? 'Approximately balanced · equal Market totals' : `Side ${difference > 0n ? 'A' : 'B'} favored · ${difference > 0n ? 'you receive more' : 'your counterparty receives more'} Market value`);
-    if (complete && difference !== 0n) verdict.append(node('span', ' · ' + (team(difference > 0n ? active : partner())?.team_name || 'Manager unavailable')));
+    const even = complete && gaugePosition(difference, totals).state === 'even';
+    const verdict = node('h4', !complete ? rows.every(r => r.length) ? 'Cannot determine reliably · pricing evidence missing' : 'Choose assets on both sides' : even ? (difference === 0n ? 'Approximately balanced · equal Market totals' : 'Approximately balanced · within the display range') : `Side ${difference > 0n ? 'A' : 'B'} favored · ${difference > 0n ? 'you receive more' : 'your counterparty receives more'} Market value`);
+    if (complete && !even) verdict.append(node('span', ' · ' + (team(difference > 0n ? active : partner())?.team_name || 'Manager unavailable')));
     verdict.id = 'calculator-verdict'; box.append(verdict);
     const marketGap = complete ? node('p', 'Value gap: ' + shown(difference < 0n ? -difference : difference) + ' Market points.') : null;
     if (marketGap) box.append(marketGap);
     const abs = value => value < 0n ? -value : value;
-    const gauge = (mode, values, totals, gap, show, known) => valuationGauge({mode, sent: values[0], received: values[1],
-      difference: known && !ownershipInvalid ? show(abs(gap)) : null,
-      relative: known ? Math.sign(Number(gap)) * Math.max(Number.EPSILON, Number(abs(gap)) / Math.max(1, Number(abs(totals[0]) + abs(totals[1])))) : 0,
-      precisionLimit: gap !== 0n && show(abs(gap)) === '0',
+    const gauge = (mode, values, totals, scale, known) => valuationGauge({mode, sent: values[0], received: values[1],
+      comparison: known && !ownershipInvalid ? {difference: totals[1] - totals[0], totals, scale} : null,
       missing: ownershipInvalid ? 'Confirm current ownership for both packages.' : undefined});
-    const neutralGauge = gauge('Neutral Market', amounts, totals, difference, shown, complete);
+    const neutralGauge = gauge('Neutral Market', amounts, totals, scale, complete);
     box.prepend(neutralGauge);
     if (ownershipInvalid) box.append(node('p', 'Ownership invalid or unavailable: this retained hypothetical offer is not executable. Remove moved assets or select their current owner before balancing.', 'tw-error'));
     box.append(node('small', 'Market value ≠ lineup impact ≠ future capital ≠ strategy fit. Evaluate separately.'));
@@ -681,8 +718,7 @@
       if (marketGap) neutral.append(marketGap);
       const priorNeutral = disclosure('Neutral Market values', neutral, 'tw-neutral-values');
       const customGauge = gauge('Custom DTOS · ' + (workspace.personalization?.method_label || 'saved rankings'),
-        personalDisplay, personalTotals, personalTotals.every(n => n !== null) ? personalTotals[1] - personalTotals[0] : 0n,
-        personalShown, personalTotals.every(n => n !== null));
+        personalDisplay, personalTotals, personalScale, personalTotals.every(n => n !== null));
       customGauge.classList.add('tw-personal-comparison');
       if (personalRows.flat().some(value => !knownPersonal(value))) customGauge.append(node('p', 'This package includes an asset without a verified personal value. Check its saved rank in My DTOS, or use Neutral DTOS.'));
       box.prepend(customGauge, priorNeutral);

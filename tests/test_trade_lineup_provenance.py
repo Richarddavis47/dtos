@@ -65,10 +65,20 @@ class LineupProvenanceTests(unittest.TestCase):
         self.assertEqual(active["weeks"], [3, 4, 5])
         self.assertEqual(active["compared"], [3, 5])
         self.assertAlmostEqual(active["subtotal"], 12.62)
+        self.assertEqual(active["future_reason"], "missing_both")
         partial["dimensions"]["strategic_fit"]["active"]["horizons"]["playoff_window"]["weeks_requested"] = None
         active = decision_context(partial)["remaining_lineup_points"]["sides"]["active"]
         self.assertFalse(active["calendar_complete"])
         self.assertNotIn(2, active["weeks"])
+
+        unavailable = deepcopy(self.e)
+        unavailable["multi_horizon_impact"]["projection_generation"] = "foreign"
+        view = decision_context(unavailable)["remaining_lineup_points"]["sides"]
+        for side in view.values():
+            self.assertEqual(side["selected_reason"], "incompatible")
+            self.assertEqual(side["future_reason"], "incompatible")
+            self.assertEqual(side["compared"], [])
+            self.assertIsNone(side["subtotal"])
 
     def test_global_conflicts_fence_headline_horizons_and_expanded_weekly_rows(self):
         controls = [

@@ -37,12 +37,33 @@ def remaining_lineup_points(result, admissions):
                  and all(type(week) is int and 1 <= week <= 18 for week in period)]
         weeks = sorted({week for period in known for week in period if week > selected})
         compared = [week for week in weeks if number((evidence['weekly'].get(week) or {}).get('delta'))]
+        missing_reasons = {lineup_point_gap(evidence, week) for week in weeks if week not in compared}
         sides[side] = {
             'weeks': weeks, 'compared': compared, 'calendar_complete': len(known) == len(periods),
             'subtotal': total(evidence['weekly'][week]['delta'] for week in compared) if compared else None,
             'provisional': any(evidence['weekly'][week]['state'] != 'supported' for week in compared),
+            'selected_reason': None
+            if number((evidence['horizons'].get('current_week') or {}).get('delta'))
+            else lineup_point_gap(evidence, selected),
+            'future_reason': next(iter(missing_reasons)) if len(missing_reasons) == 1 else None,
         }
     return {'selected_week': selected, 'sides': sides}
+
+
+def lineup_point_gap(evidence, week):
+    """Explain a withheld value using the already admitted phase facts."""
+    if evidence['identity_state'] == 'incompatible':
+        return 'incompatible'
+    if evidence['identity_state'] == 'unavailable':
+        return 'missing_context'
+    row = evidence['weekly'].get(week)
+    if row is None:
+        return 'missing_week'
+    if row['pre'] is None:
+        return 'missing_both' if row['post'] is None else 'missing_before'
+    if row['post'] is None:
+        return 'missing_after'
+    return 'unverified_change'
 
 
 def total(values):

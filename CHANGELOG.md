@@ -2,6 +2,8 @@
 
 Trade Center puts editable packages, exact picks and the active valuation comparison up front. Reviews show both teams’ selected-week and later-week projected lineup changes where supported, with the weeks and coverage listed. Existing decisions, search controls and supporting evidence remain available.
 
+Build and Review use the same inclusive ±5% display range based on the larger package in the chosen valuation mode. The signed difference stays exact. Lineup comparisons explain gaps and distinguish partial totals from complete ones.
+
 ## v1.22.63 / build 2278 — My Team in four sections
 
 My Team organizes the existing roster, lineup, bye plans and picks into four sections. Home opens the specific lineup action or bye week. Bye plans show slot-by-slot moves, availability dependencies and remaining gaps. Returning from Matchups or a pickup restores the same expanded week.
