@@ -5,6 +5,15 @@ import json
 from services.my_team_outlook import goal_options
 
 
+def roster_shortcuts():
+    return '''<nav class="thq-actions" aria-label="Roster sections">
+<a class="thq-action" href="#full-roster" aria-label="View full roster">Players</a>
+<a class="thq-action" href="#my-team-outlook" aria-label="Roster outlook and next step">Outlook</a>
+<a class="thq-action" href="#positional-depth">Depth</a>
+<a class="thq-action" href="#draft-capital" aria-label="Draft capital">Picks</a>
+</nav>'''
+
+
 def outlook_panel(outlook, *, editable, roster_id):
     rows = [('Current position', outlook['brief']), ('Main strength', outlook['strength']),
             ('Depth and uncertainty', outlook['concern']), ('Future flexibility', outlook['future'])]

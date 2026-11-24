@@ -356,7 +356,7 @@ class PremiumPreparedBrowserTests(unittest.TestCase):
         from components.asset_intelligence import player_dossier
         from src.core.asset_intelligence import AssetContext, evaluate_player
         from src.ui.front_office_brief import cards
-        from src.ui.my_team_outlook import outlook_panel
+        from src.ui.my_team_outlook import outlook_panel, roster_shortcuts
         from services.my_team_outlook import goal_options
 
         report = evaluate_player(
@@ -394,10 +394,8 @@ class PremiumPreparedBrowserTests(unittest.TestCase):
                     "Player decision summary", player_dossier(report, owner, [owner])
                 )
                 self.assertEqual(cards([]), "")
-                self.assertIn(
-                    "Roster sections",
-                    outlook_panel(outlook, editable=True, roster_id=1),
-                )
+                self.assertIn("Roster sections", roster_shortcuts())
+                self.assertIn("Missing evidence", outlook_panel(outlook, editable=True, roster_id=1))
                 self.assertTrue(goal_options(1))
             self.assertTrue(all(g.call_count == 0 for g in guards.values()))
         self.assertEqual(report, original)

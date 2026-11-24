@@ -5,7 +5,10 @@
   const panels = Array.from(team.querySelectorAll('[data-team-section]'));
   const links = team.querySelectorAll('.thq-tabs a');
 
+  let shownHash;
+
   function showSection() {
+    shownHash = location.hash;
     const target = document.getElementById(location.hash.slice(1));
     const section = target && team.contains(target) && target.closest('[data-team-section]');
     const missingWeek = !target && /^#bye-week-(?:[1-9]|1[0-8])$/.test(location.hash);
@@ -32,5 +35,18 @@
   }
 
   showSection();
-  addEventListener('hashchange', showSection);
+  addEventListener('hashchange', () => {
+    if (location.hash !== shownHash) showSection();
+  });
+  addEventListener('click', event => {
+    if (event.defaultPrevented || event.button || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    const link = event.target.closest?.('a[href^="#"]');
+    const target = link && document.getElementById(link.hash.slice(1));
+    if (!target || !team.contains(link) || !team.contains(target) || !target.closest('[data-team-section]')) return;
+    // The normal document click handler has recorded the prior view. Finish
+    // this fragment jump now so hashchange cannot interrupt the next focus.
+    event.preventDefault();
+    location.hash = link.hash;
+    showSection();
+  });
 })();
