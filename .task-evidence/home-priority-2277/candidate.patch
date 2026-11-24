@@ -1,0 +1,477 @@
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index 9ee4368..b5b3002 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -1,3 +1,7 @@
++## v1.22.62 / build 2277 — Clearer Home lineup priorities
++
++Home shows a confirmed lineup move before an earlier conditional backup plan. It distinguishes a quiet team brief from missing evidence or a failed load, groups missing team stats, and keeps the primary action easier to reach on short screens.
++
+ ## v1.22.61 / build 2276 — A clearer signed-in Home
+ 
+ Home highlights one supported next step, with quick access to your roster, Trade Center, matchup, and bye planner. Recent completed trades show dated Market comparisons when both packages can be compared, with transaction details available on demand.
+diff --git a/RELEASE_NOTES.md b/RELEASE_NOTES.md
+index 3a9ba45..64a12ed 100644
+--- a/RELEASE_NOTES.md
++++ b/RELEASE_NOTES.md
+@@ -1,3 +1,7 @@
++## v1.22.62 / build 2277 — Clearer Home lineup priorities
++
++Home shows a confirmed lineup move before an earlier conditional backup plan. It distinguishes a quiet team brief from missing evidence or a failed load, groups missing team stats, and keeps the primary action easier to reach on short screens.
++
+ ## v1.22.61 / build 2276 — A clearer signed-in Home
+ 
+ Home highlights one supported next step, with quick access to your roster, Trade Center, matchup, and bye planner. Recent completed trades show dated Market comparisons when both packages can be compared, with transaction details available on demand.
+diff --git a/app_metadata.py b/app_metadata.py
+index 42c479c..ecc31f1 100644
+--- a/app_metadata.py
++++ b/app_metadata.py
+@@ -7,10 +7,10 @@ from datetime import datetime, timezone
+ from pathlib import Path
+ 
+ APPLICATION_NAME = "DTOS"
+-VERSION = "1.22.61"
+-PRODUCT_VERSION = "1.22.61"
+-BUILD_NUMBER = 2276
+-RELEASE_CODENAME = "A Clearer Signed-In Home"
++VERSION = "1.22.62"
++PRODUCT_VERSION = "1.22.62"
++BUILD_NUMBER = 2277
++RELEASE_CODENAME = "Clearer Home Lineup Priorities"
+ APPLICATION_STARTED_AT = datetime.now(timezone.utc).isoformat()
+ 
+ _REPOSITORY_ROOT = Path(__file__).resolve().parent
+diff --git a/routes/home.py b/routes/home.py
+index 8d5b1fc..c4dfba8 100644
+--- a/routes/home.py
++++ b/routes/home.py
+@@ -199,8 +199,20 @@ def create_home_router(
+             rank = order["ranks"].get(roster_id)
+             season = season_performance(data, roster_id)
+             average = season["average"]
+-            points = "Not available" if average is None else f"{average:.2f}"
+-            record_display = "Not started" if preseason else "Not available" if record == "Record unavailable" else record
++            points = None if average is None else f"{average:.2f}"
++            record_display = "Not started" if preseason else None if record == "Record unavailable" else record
++            stats = (("Record", record_display), ("League rank", f"#{rank}" if rank else None), ("Points / week", points))
++            if all(value is None for _, value in stats):
++                stats_html = '<p class="home-stats-unavailable">Record, league rank and weekly scoring can’t be confirmed yet.</p>'
++            else:
++                incomplete = any(value is None for _, value in stats)
++                described_by = ' aria-describedby="home-stats-context"' if incomplete else ''
++                stats_html = f'<dl class="home-stats"{described_by}>' + ''.join(
++                    f'<div><dt>{label}</dt><dd>{escape(value) if value is not None else "—"}</dd></div>'
++                    for label, value in stats
++                ) + '</dl>'
++                if incomplete:
++                    stats_html += '<p class="home-stats-context" id="home-stats-context">Dashes show figures we can’t confirm.</p>'
+             coverage = f'{len(season["weeks"])}/{len(season["expected_weeks"])} regular-season weeks covered.'
+             scoring_note = (f'{points} points per observed completed team week · {coverage}'
+                             if average is not None else
+@@ -218,11 +230,7 @@ def create_home_router(
+             header = f'''<header class="ux-feature home-command home-team" data-signed-home data-dtos-component="page-header">
+               <h1>{escape(str(team.get("team_name") or "Your franchise"))}{you_badge(data, roster_id)}</h1>
+               <!--home-league-switch-->
+-              <dl class="home-stats">
+-                <div><dt>Record</dt><dd>{escape(record_display)}</dd></div>
+-                <div><dt>League rank</dt><dd>{f"#{rank}" if rank else "Not available"}</dd></div>
+-                <div><dt>Points / week</dt><dd>{points}</dd></div>
+-              </dl>{champion_badge(champion, roster_id)}
++              {stats_html}{champion_badge(champion, roster_id)}
+             </header>'''
+             priority = f'''<section class="home-first" aria-labelledby="home-first-heading">
+               <h2 id="home-first-heading">Do this first</h2>
+diff --git a/routes/trades.py b/routes/trades.py
+index 1b8d6b6..ac4b8c5 100644
+--- a/routes/trades.py
++++ b/routes/trades.py
+@@ -252,10 +252,12 @@ def create_trades_router(*, ensure_fresh: EnsureFresh, require_data: RequireData
+         # Do not let an obsolete response reintroduce an offer or roster claim.
+         if publication() != admitted_publication:
+             raise HTTPException(409, 'Prepared evidence changed. Reload Home to review current facts; your draft is unchanged.')
++        needs_preparation = any(item['family'] == 'preparation' for item in items)
+         return JSONResponse({'workspace_context': context, 'csrf_token': account.csrf_token if account else '',
+             'strategy': strategy, 'source_identity': key[1] if key else None, 'count': len(result['rows']),
+             'brief_html': brief_html, 'brief_count': len(items), 'brief_generation': facts['generation'],
+             'priority': priority,
++            'priority_state': 'insufficient_evidence' if priority is None and needs_preparation else 'ready',
+             'state': result['state'], 'reason': result.get('reason'), 'html': opportunity_cards(result['rows'], rid),
+             'retained': bool(result.get('source_identity'))}, headers={"Cache-Control": "no-store"})
+ 
+diff --git a/services/front_office_brief.py b/services/front_office_brief.py
+index e533630..6c14512 100644
+--- a/services/front_office_brief.py
++++ b/services/front_office_brief.py
+@@ -28,17 +28,18 @@ def first_action(team, week, review, byes, items, *, now=None):
+             continue
+         if conditional and plan.get('starter'):
+             title = 'Have a backup ready'
+-            reason = f'If {plan["starter"]} can’t play, a verified fallback is available before the first affected game.'
++            reason = f'If {plan["starter"]} can’t play, you have a verified backup. Check the earliest kickoff.'
+         elif not conditional and plan.get('actionable'):
+             title = f'Check your Week {week} lineup'
+             reason = ('A starting slot is empty and a legal replacement is available.'
+                       if plan.get('empty_slots') else
+-                      'A legal lineup change could add projected points before the first affected game.')
++                      'A legal lineup change could add projected points before kickoff.')
+         else:
+             continue
+-        lineup.append((kickoff, dict(title=title, reason=reason, action='Review lineup',
+-                                     href=team_url + '#lineup-recheck', valid_until=expiry.isoformat(),
+-                                     verified_at=now.isoformat())))
++        lineup.append(((conditional, kickoff), dict(
++            title=title, reason=reason, action='Review lineup', href=team_url + '#lineup-recheck',
++            valid_until=min(kickoff, expiry).isoformat(), verified_at=now.isoformat(),
++        )))
+     if lineup:
+         return min(lineup, key=lambda candidate: candidate[0])[1]
+ 
+@@ -71,6 +72,9 @@ def first_action(team, week, review, byes, items, *, now=None):
+     for families in ({'need', 'offer'}, {'goal'}):
+         chosen = next((item for item in items if item['family'] in families), None)
+         if chosen:
++            if chosen['family'] == 'goal':
++                return dict(title='Choose your team goal', reason='Your goal helps guide trade suggestions.',
++                            action=chosen['action'], href=chosen['href'])
+             from src.ui.home_trade_opportunities import brief_text
+             return dict(title=brief_text(chosen['title']), reason=brief_text(chosen['reason']),
+                         action=chosen['action'], href=chosen['href'])
+diff --git a/src/ui/home_trade_opportunities.py b/src/ui/home_trade_opportunities.py
+index 98617b2..07b8ff9 100644
+--- a/src/ui/home_trade_opportunities.py
++++ b/src/ui/home_trade_opportunities.py
+@@ -83,11 +83,13 @@ CSS += """
+ .home-stats>div+div{border-inline-start:1px solid var(--line)}
+ .home-stats dt{color:var(--text-secondary);font-size:12px;line-height:1.35}
+ .home-stats dd{order:-1;font-weight:800;font-size:clamp(13px,4vw,19px);margin:0;overflow-wrap:anywhere}
++.home-stats-context,.home-stats-unavailable{margin:6px 0 0;color:var(--text-secondary);font-size:12px;line-height:1.35}
++.home-stats-unavailable{padding:8px 10px;background:var(--surface-elevated);border:1px solid var(--line);border-radius:10px}
+ .home-first{border:2px solid var(--accent);border-radius:12px;padding:12px;background:linear-gradient(150deg,#252f24,var(--surface-elevated) 70%);box-shadow:0 0 11px #80df4233}
+ .home-first h2{font-size:15px;color:var(--accent);margin:0 0 5px}
+ .home-first h3{font-size:clamp(19px,4.9vw,26px);line-height:1.2;margin:0;overflow-wrap:anywhere}
+ .home-first p{font-size:14px;margin:7px 0 10px;max-width:58ch;line-height:1.45;overflow-wrap:anywhere}
+-.home-first .ux-primary-action{min-height:44px;display:flex;justify-content:center;align-items:center;text-align:center}
++.home-first .ux-primary-action{min-height:44px;display:flex;justify-content:center;align-items:center;text-align:center;scroll-margin-block:8px 12px}
+ .home-week h2{font-size:20px;margin:0 0 8px}
+ .home-shortcuts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin-bottom:14px}
+ .home-week-links{background:var(--surface-elevated);border:1px solid var(--line);border-radius:10px;padding:0 10px}
+@@ -97,4 +99,10 @@ CSS += """
+ .home-shortcuts a:hover{border-color:var(--accent)}.home-shortcuts a span,.home-week-links a span{color:var(--accent);font-size:20px;line-height:1}
+ .home-week .ds-home-detail{margin:4px 0 0}
+ @media(min-width:700px){.home-stats{max-width:590px}.home-shortcuts{max-width:590px}.home-first .ux-primary-action{width:min(100%,330px)}}
++@media(max-width:359px) and (max-height:500px){
++ .home-team,.home-first{margin-bottom:10px}
++ .home-stats{margin-top:7px;padding-block:4px}
++ .home-first{padding:9px}
++ .home-first p{margin:5px 0 8px}
++}
+ """
+diff --git a/static/js/home-opportunities.js b/static/js/home-opportunities.js
+index 78ebbc2..2d98d17 100644
+--- a/static/js/home-opportunities.js
++++ b/static/js/home-opportunities.js
+@@ -8,23 +8,35 @@
+   const reload = document.getElementById('home-reload-opportunities');
+   const priority = document.getElementById('home-priority');
+   const teamUrl = '/teams/' + rid;
++  const priorityMessages = {
++    ready: ['No clear priority right now', 'Your team data doesn’t point to a clear next move.'],
++    insufficient_evidence: ['Not enough team data yet', 'Open My Team to see which details are available.'],
++    error: ['Team brief couldn’t load', 'Review My Team or reload Home to try again.'],
++    loading: ['Checking your next step', 'Your team brief is being refreshed.'],
++    context_changed: ['Your team selection changed', 'Reload Home to review the selected franchise.'],
++    expired: ['Lineup advice needs a recheck', 'The lineup check expired. Open My Team to recheck it.'],
++  };
+   let priorityExpiry, displayedPriority;
+-  function showPriority(item, message, requestStartedAt) {
++  function showPriority(item, state, requestStartedAt) {
+     if (!priority) return;
+     const remaining = item?.valid_until
+       ? Date.parse(item.valid_until) - Date.parse(item.verified_at) - (performance.now() - requestStartedAt)
+       : null;
+-    if (remaining !== null && (!Number.isFinite(remaining) || remaining <= 0)) item = null;
++    if (remaining !== null && (!Number.isFinite(remaining) || remaining <= 0)) {
++      item = null;
++      state = 'expired';
++    }
+     clearTimeout(priorityExpiry);
+     if (item && remaining !== null) priorityExpiry = setTimeout(
+-      () => showPriority(null, 'The lineup check expired. Open My Team to recheck it.'), remaining);
+-    const nextPriority = JSON.stringify([item?.title, item?.reason, item?.action, item?.href, message]);
++      () => showPriority(null, 'expired'), remaining);
++    const nextPriority = JSON.stringify([item?.title, item?.reason, item?.action, item?.href, state]);
+     if (nextPriority === displayedPriority) return;
+     displayedPriority = nextPriority;
+     const heading = document.createElement('h3'), reason = document.createElement('p');
+     const link = document.createElement('a');
+-    heading.textContent = item?.title || 'No clear priority right now';
+-    reason.textContent = item?.reason || message || 'Your prepared team data doesn’t point to a clear next move.';
++    const [title, explanation] = priorityMessages[state] || priorityMessages.ready;
++    heading.textContent = item?.title || title;
++    reason.textContent = item?.reason || explanation;
+     link.textContent = item?.action || 'Open My Team';
+     link.href = item?.href || teamUrl;
+     link.className = 'ux-primary-action';
+@@ -48,7 +60,7 @@
+     const run = ++revision; request?.abort(); request = new AbortController(); find.disabled = false;
+     if (displayedIdentity && displayedIdentity !== identity()) {
+       cards.replaceChildren();
+-      showPriority(null, 'Your team brief is being refreshed.');
++      showPriority(null, 'loading');
+     }
+     const before = context && identity(), requestStartedAt = performance.now();
+     try {
+@@ -58,7 +70,7 @@
+       if (run !== revision || departed || (before && before !== identity())) return;
+       if (body.workspace_context.roster_id !== rid || (context && body.workspace_context.binding !== context.binding)) {
+         cards.replaceChildren(); find.disabled = true; metadata = null;
+-        showPriority(null, 'Reload Home to review the selected franchise.');
++        showPriority(null, 'context_changed');
+         invalidated = true; displayedIdentity = null; reload.hidden = false;
+         status.textContent = 'Your active league or franchise changed. Reload Home to see its opportunities.';
+         root.dataset.presentation = 'empty'; root.dataset.state = 'context_changed'; return;
+@@ -68,7 +80,7 @@
+       if (initial && (locks().protected_assets.length || locks().excluded_assets.length)) return load();
+       const html = body.brief_html ?? body.html;
+       if (cards.innerHTML !== html) cards.innerHTML = html;
+-      showPriority(body.priority, null, requestStartedAt);
++      showPriority(body.priority, body.priority_state, requestStartedAt);
+       displayedIdentity = identity(); // Escaped same-origin canonical presentation, no scoring here.
+       status.textContent = body.count ? 'Recently completed search · matches the current team and data. These offers have not been submitted.' : body.retained ? (body.reason || 'No supported opportunities in this bounded search.') : 'No current matching search has been completed. Find Trade Ideas when ready.';
+       if (!body.source_identity) status.textContent = 'Trade prices are unavailable or changing. Your roster facts are still shown separately. Review My Team or try again shortly.';
+@@ -77,7 +89,7 @@
+       root.dataset.presentation = body.brief_count ? 'prepared' : 'empty';
+     } catch (error) { if (run === revision && !departed && error.name !== 'AbortError') {
+       cards.replaceChildren(); metadata = null; displayedIdentity = null;
+-      showPriority(null, 'Your team brief is unavailable right now.');
++      showPriority(null, 'error');
+       root.dataset.presentation = 'error'; status.textContent = error.message;
+     } }
+   }
+diff --git a/tests/lineup_review_fixture.py b/tests/lineup_review_fixture.py
+index 29db8ae..2407f66 100644
+--- a/tests/lineup_review_fixture.py
++++ b/tests/lineup_review_fixture.py
+@@ -29,6 +29,7 @@ def prepared(
+     uncertain=None,
+     earlier_backup=False,
+     bench_position="QB",
++    separate_early_rb=False,
+ ):
+     tmp = TemporaryDirectory()
+     owner.addCleanup(tmp.cleanup)
+@@ -61,7 +62,7 @@ def prepared(
+         teams=[],
+         players={},
+     )
+-    values = {"q": 10, "bq": 25, "r": 12, "w": 14, "s": 11}
++    values = {"q": 10, "bq": 25, "r": 12, "w": 14, "s": 11, "br": 2}
+     values.update(points or {})
+     payloads, rows = {8: [], 9: []}, []
+     for rid in (1, 2):
+@@ -74,15 +75,19 @@ def prepared(
+         starters = [f"{rid}-q", f"{rid}-r", f"{rid}-w", f"{rid}-s"]
+         if empty and rid == 1:
+             starters[0] = "0"
+-        for label, pos in [
++        positions = [
+             ("q", "QB"),
+             ("bq", bench_position),
+             ("r", "RB"),
+             ("w", "WR"),
+             ("s", "RB"),
+-        ]:
++        ]
++        if separate_early_rb:
++            positions.append(("br", "RB"))
++        for label, pos in positions:
+             pid = f"{rid}-{label}"
+-            player_team = "KC" if earlier_backup and label == "bq" else nfl_team
++            early = (earlier_backup and label == "bq") or label == "br"
++            player_team = "KC" if early else nfl_team
+             player = dict(
+                 id=pid,
+                 player_id=pid,
+@@ -158,7 +163,7 @@ def prepared(
+         )
+         for week in (8, 9)
+     ]
+-    if earlier_backup:
++    if earlier_backup or separate_early_rb:
+         facts.append(dict(
+             family="schedule", season=2026, week=8, provider="nflverse",
+             fingerprint="fixture-early-game",
+diff --git a/tests/test_front_office_brief_browser.py b/tests/test_front_office_brief_browser.py
+index ba29140..3500c15 100644
+--- a/tests/test_front_office_brief_browser.py
++++ b/tests/test_front_office_brief_browser.py
+@@ -167,7 +167,8 @@ class FrontOfficeBriefBrowserTests(unittest.TestCase):
+             browser = launch_chromium(pw, headless=True)
+             try:
+                 for width, height in ((320,432),(375,667),(390,844),(1280,900)):
+-                    for state in ('loading', 'expired', 'empty', 'error'):
++                    states = ('loading', 'expired', 'empty', 'error')
++                    for state in (*states, 'insufficient') if width == 390 else states:
+                         page = f.f.browser_page(browser, width, height)
+                         generated = []
+                         page.on('request', lambda r: generated.append(r.url) if '/api/trades/generate' in r.url else None)
+@@ -185,11 +186,13 @@ class FrontOfficeBriefBrowserTests(unittest.TestCase):
+                         # No prepared team facts and no saved search: actual empty API selector.
+                         from contextlib import ExitStack
+                         with ExitStack() as stack:
+-                            if state == 'empty':
++                            if state in {'empty', 'insufficient'}:
+                                 with ideas._lock:
+                                     ideas._entries.clear()
+                                 stack.enter_context(patch('services.front_office_brief.prepared_diagnostics', return_value=None))
+                                 stack.enter_context(patch('src.core.intelligence.cache.IntelligenceCache.peek', return_value=None))
++                            if state == 'insufficient':
++                                stack.enter_context(patch('services.front_office_brief.compatible_profile', return_value=None))
+                             page.goto('https://dtos.test/', wait_until='domcontentloaded')
+                             page.locator('#home-brief-details > summary').click()
+                             if state != 'loading':
+@@ -200,9 +203,13 @@ class FrontOfficeBriefBrowserTests(unittest.TestCase):
+                             elif state == 'error':
+                                 self.assertIn('could not be loaded', text)
+                                 self.assertEqual(page.locator('#home-opportunity-cards article').count(), 0)
++                                self.assertEqual(page.locator('#home-priority h3').inner_text(), 'Team brief couldn’t load')
+                             elif state == 'empty':
+                                 self.assertIn('No actionable insight qualifies', text)
+                                 self.assertEqual(page.locator('#home-opportunity-cards article').count(), 0)
++                                self.assertEqual(page.locator('#home-priority h3').inner_text(), 'No clear priority right now')
++                            elif state == 'insufficient':
++                                self.assertEqual(page.locator('#home-priority h3').inner_text(), 'Not enough team data yet')
+                             elif state == 'expired':
+                                 self.assertEqual(page.locator('.home-opportunity').count(), 0)
+                                 self.assertIn('Find Trade Ideas', text)
+diff --git a/tests/test_front_office_brief_http.py b/tests/test_front_office_brief_http.py
+index b175165..dda5db4 100644
+--- a/tests/test_front_office_brief_http.py
++++ b/tests/test_front_office_brief_http.py
+@@ -40,6 +40,11 @@ class HomePriorityTests(unittest.TestCase):
+         byes = [dict(week=11, state='conditional', bye_starters=[[0, 'rb']], moves=[[0, 'other', None]])]
+         first = first_action({'roster_id': 1}, 10, {'fallback': fallback}, byes, [], now=now)
+         self.assertIn('If Example Starter can’t play', first['reason'])
++        fallback['valid_until'] = (now + timedelta(hours=2)).isoformat()
++        first = first_action({'roster_id': 1}, 10, {'fallback': fallback}, [], [], now=now)
++        self.assertEqual(first['valid_until'], fallback['kickoff_deadline'])
++        self.assertIsNone(first_action({'roster_id': 1}, 10, {'fallback': fallback}, [], [],
++                                       now=now + timedelta(hours=1)))
+         self.assertIn('depends on player availability', first_action({'roster_id': 1}, 10, {}, byes, [], now=now)['reason'])
+         byes[0]['state'] = 'unknown'
+         self.assertIsNone(first_action({'roster_id': 1}, 10, {}, byes, [], now=now))
+@@ -59,6 +64,23 @@ class FrontOfficeBriefHTTPTests(unittest.TestCase):
+         self.assertEqual(r.status_code, 200, r.text)
+         return r.json()
+ 
++    def test_home_groups_missing_stats_and_keeps_the_supported_record(self):
++        self.data.pop('season_matchups', None)
++        team = self.data['teams'][0]
++        for key in ('wins', 'losses', 'ties', 'points_for'):
++            team.pop(key, None)
++        home = self.client.get('/').text.split('<header class="ux-feature home-command home-team"', 1)[1].split('</header>', 1)[0]
++        self.assertEqual(home.count('Record, league rank and weekly scoring can’t be confirmed yet.'), 1)
++        self.assertNotIn('Not available', home)
++        self.assertNotIn('<dl', home)
++        supported = dict(team, wins=0, losses=1, ties=0)
++        self.f.f.f.data = dict(self.data, teams=[supported, *self.data['teams'][1:]])
++        home = self.client.get('/').text.split('<header class="ux-feature home-command home-team"', 1)[1].split('</header>', 1)[0]
++        self.assertIn('<dt>Record</dt><dd>0-1-0</dd>', home)
++        self.assertIn('<dt>League rank</dt><dd>—</dd>', home)
++        self.assertIn('<dt>Points / week</dt><dd>—</dd>', home)
++        self.assertEqual(home.count('Dashes show figures we can’t confirm.'), 1)
++
+     def test_real_eligible_proposal_exact_token_and_prepared_hq_capital(self):
+         self.f.f.seed()
+         self.assertEqual(self.client.get('/teams/1').status_code, 200)
+diff --git a/tests/test_home_opportunity_integrity.py b/tests/test_home_opportunity_integrity.py
+index cc57a75..b9b362e 100644
+--- a/tests/test_home_opportunity_integrity.py
++++ b/tests/test_home_opportunity_integrity.py
+@@ -227,8 +227,8 @@ class OpportunityIntegrityTests(unittest.TestCase):
+             body=r.content,
+         )
+ 
+-    def browser_page(self, browser, width=390, height=844):
+-        page = browser.new_page(viewport=dict(width=width, height=height))
++    def browser_page(self, browser, width=390, height=844, *, touch=False):
++        page = browser.new_page(viewport=dict(width=width, height=height), has_touch=touch)
+         page.set_default_timeout(15000)
+         page.context.add_cookies(
+             [dict(name="dtos_strategy", value=self.cookie, url="https://dtos.test/")]
+diff --git a/tests/test_lineup_review_browser.py b/tests/test_lineup_review_browser.py
+index b6af7dc..7fba9b5 100644
+--- a/tests/test_lineup_review_browser.py
++++ b/tests/test_lineup_review_browser.py
+@@ -11,6 +11,71 @@ from tools.validation.browser_runtime import launch_chromium
+ 
+ 
+ class LineupReviewBrowserTests(unittest.TestCase):
++    def _home_with_early_fallback(self, *, confirmed):
++        from unittest.mock import patch
++        from services.matchup_season import season_week_view
++
++        fixture, data, service, _ = authenticated_prepared(
++            self, empty=False, uncertain="r", separate_early_rb=True,
++            points=None if confirmed else {"bq": 1},
++        )
++        view = season_week_view(data, 8, service, review_roster_id=1)
++        review = next(side["lineup_review"] for group in view["groups"].values()
++                      for side in group if side["roster_id"] == 1)
++        self.assertEqual(review["fallback"]["starter"], "Example R 1")
++        self.assertEqual(review["actionable"], confirmed)
++        if confirmed:
++            self.assertLess(review["fallback"]["kickoff_deadline"], review["kickoff_deadline"])
++        with patch("services.trade_intelligence._trade_projection_service", return_value=service), sync_playwright() as pw:
++            browser = launch_chromium(pw, headless=True)
++            try:
++                page = fixture.f.browser_page(browser, 390, 844)
++                page.goto("https://dtos.test/")
++                action = page.locator("#home-priority").get_by_role("link", name="Review lineup", exact=True)
++                action.wait_for()
++                directory = os.environ.get("DTOS_BRIEF_EVIDENCE")
++                if directory:
++                    case = "confirmed" if confirmed else "conditional-only"
++                    page.screenshot(path=str(Path(directory, f"home-early-backup-{case}-390.png")))
++                self.assertEqual(action.get_attribute("href"), "/teams/1#lineup-recheck")
++                copy = page.locator("#home-priority").inner_text()
++                if confirmed:
++                    self.assertIn("Check your Week 8 lineup", copy)
++                    self.assertNotIn("If Example R 1", copy)
++                else:
++                    self.assertIn("Have a backup ready", copy)
++                    self.assertIn("If Example R 1 can’t play", copy)
++                    page.close()
++                    starter = data["players"]["1-r"]
++                    name = "Example Starter With A Long Multi-Part Name"
++                    starter.update(name=name, full_name=name)
++                    page = fixture.f.browser_page(browser, 320, 432, touch=True)
++                    page.goto("https://dtos.test/")
++                    action = page.locator("#home-priority").get_by_role("link", name="Review lineup", exact=True)
++                    action.wait_for()
++                    self.assertIn(name, page.locator("#home-priority").inner_text())
++                    self.assertLessEqual(page.evaluate("document.documentElement.scrollWidth"), 320)
++                    action.scroll_into_view_if_needed()
++                    self.assertTrue(action.evaluate("""e => {
++                        const box = e.getBoundingClientRect();
++                        const nav = document.querySelector('.manager-nav').getBoundingClientRect();
++                        const hits = [box.top + 2, box.top + box.height / 2, box.bottom - 2];
++                        return box.height >= 44 && box.top >= 0 && box.bottom <= nav.top
++                            && hits.every(y => e.contains(document.elementFromPoint(box.left + box.width / 2, y)));
++                    }"""))
++                    if directory:
++                        page.screenshot(path=str(Path(directory, "home-long-action-320.png")))
++                    action.tap()
++                    page.wait_for_url("**/teams/1#lineup-recheck")
++            finally:
++                browser.close()
++
++    def test_home_prioritizes_confirmed_change_over_earlier_fallback(self):
++        self._home_with_early_fallback(confirmed=True)
++
++    def test_home_keeps_conditional_fallback_when_it_is_the_only_lineup_action(self):
++        self._home_with_early_fallback(confirmed=False)
++
+     def test_signed_in_home_uses_verified_lineup_and_expires_with_keyboard_focus(self):
+         from datetime import datetime, timedelta, timezone
+         from unittest.mock import patch
