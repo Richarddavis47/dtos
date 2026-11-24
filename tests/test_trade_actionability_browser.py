@@ -22,10 +22,10 @@ class TradeActionabilityBrowserTests(unittest.TestCase):
         h, f = self.fixture()
         evidence = []
         with sync_playwright() as pw:
-            browser = launch_chromium(pw, headless=True)
-            try:
-                for width, height in ((320, 432), (375, 667), (390, 844), (1280, 900)):
-                    with self.subTest(width=width):
+            for width, height in ((320, 432), (375, 667), (390, 844), (1280, 900)):
+                with self.subTest(width=width):
+                    browser = launch_chromium(pw, headless=True)
+                    try:
                         page, records, _, errors, _ = h.page(browser, f, width, height)
                         h.ready(page)
                         self.assertEqual(records, [])  # navigation is not discovery
@@ -41,6 +41,10 @@ class TradeActionabilityBrowserTests(unittest.TestCase):
                             self.assertEqual(json.loads(json.dumps(e[key])), json.loads(json.dumps(again[key])))
                         card = page.locator('.tw-offer').first
                         d = e['decision_context']
+                        # Keep the checked decision and request ledger, not
+                        # extra Python copies of the completed evaluation.
+                        del records[0]['body']
+                        del again, e, row, body
                         self.assertIn(d['decisive_reason'], card.inner_text())
                         lead = card.locator(':scope > .tw-decision-lead')
                         for selector in ('.tw-offer-reason', '.tw-drawback', '.tw-offer-effects', '.tw-offer-market'):
@@ -71,7 +75,10 @@ class TradeActionabilityBrowserTests(unittest.TestCase):
                         page.locator('.tw-offer').first.locator(':scope > .tw-next-action').click()
                         page.get_by_role('button', name='Use this offer in my draft', exact=True).click()
                         self.assertIn(d['decisive_reason'], page.locator('#trade-result').inner_text())
-                        page.get_by_role('button', name='Reevaluate Trade', exact=True).click()
+                        workflows._collect_retired_fixture_objects('validated_qualification_response')
+                        with page.expect_response(lambda response: response.url.endswith('/api/trades/evaluate')) as response:
+                            page.get_by_role('button', name='Reevaluate Trade', exact=True).click()
+                        self.assertEqual(response.value.status, 200)
                         page.wait_for_function("['fresh_complete','fresh_incomplete'].includes(document.querySelector('#trade-result').dataset.assessmentState)")
                         evaluated = next(r for r in reversed(records) if r['path'] == '/api/trades/evaluate')
                         self.assertEqual(evaluated['status'], 200)
@@ -91,9 +98,8 @@ class TradeActionabilityBrowserTests(unittest.TestCase):
                         if target:
                             Path(target).mkdir(parents=True, exist_ok=True)
                             page.screenshot(path=str(Path(target, f'evaluate-{width}.png')), full_page=True)
-                        page.close()
-            finally:
-                browser.close()
+                    finally:
+                        browser.close()
         target = os.environ.get('DTOS_TRADE_ACTIONABILITY_EVIDENCE')
         if target:
             Path(target, 'matched-journeys.json').write_text(json.dumps(evidence, indent=2) + '\n')
