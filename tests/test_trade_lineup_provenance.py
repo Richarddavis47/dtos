@@ -50,6 +50,26 @@ class LineupProvenanceTests(unittest.TestCase):
         self.assertEqual(self.e, before)
         self.save("admitted-lineup-context", a)
 
+    def test_remaining_season_uses_only_admitted_calendar_weeks_after_selection(self):
+        current = decision_context(self.e)["remaining_lineup_points"]
+        self.assertEqual(current["selected_week"], 2)
+        active = current["sides"]["active"]
+        self.assertEqual(active["weeks"], [3, 4, 5])
+        self.assertEqual(active["compared"], [3, 4, 5])
+        self.assertTrue(active["calendar_complete"])
+        self.assertAlmostEqual(active["subtotal"], 18.93)
+
+        partial = deepcopy(self.e)
+        del partial["provenance"]["inputs"]["projection_evidence"]["horizon_snapshot_ids"]["4"]
+        active = decision_context(partial)["remaining_lineup_points"]["sides"]["active"]
+        self.assertEqual(active["weeks"], [3, 4, 5])
+        self.assertEqual(active["compared"], [3, 5])
+        self.assertAlmostEqual(active["subtotal"], 12.62)
+        partial["dimensions"]["strategic_fit"]["active"]["horizons"]["playoff_window"]["weeks_requested"] = None
+        active = decision_context(partial)["remaining_lineup_points"]["sides"]["active"]
+        self.assertFalse(active["calendar_complete"])
+        self.assertNotIn(2, active["weeks"])
+
     def test_global_conflicts_fence_headline_horizons_and_expanded_weekly_rows(self):
         controls = [
             ("projection_generation", "foreign"),

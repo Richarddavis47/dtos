@@ -452,13 +452,6 @@
       searchFeedback = null; el('recommendation-status').textContent = ''; el('trade-operation-announcement').textContent = ''; delete el('recommendation-status').dataset.state;
     }
     board('sent'); board('received');
-    // Once Calculator has actual assets, its live comparison and Balance are
-    // primary. Empty construction still begins with selectable assets.
-    const calculatorPanel = root.querySelector('.tw-calculator');
-    if (calculator && calculatorPanel) {
-      if (selected.sent.length || selected.received.length) el('trade-board').before(calculatorPanel);
-      else el('trade-board').after(calculatorPanel);
-    }
     el('trade-clear-package').hidden = !session.requiredOutgoingAsset && !session.requiredIncomingAsset;
     root.querySelectorAll('[data-side]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.side === side)));
     const targetBox = el('trade-target'), targetId = session.requiredIncomingAsset || session.requiredOutgoingAsset, target = asset(targetId);
@@ -511,6 +504,125 @@
     root.setAttribute('aria-busy', String(busy && !marketEditor));
     el('trade-board').setAttribute('aria-busy', String(busy));
   }
+  function valuationGauge({mode, sent, received, difference, relative = 0, precisionLimit = false, missing, retained = false}) {
+    const panel = node('section', null, 'tw-valuation-gauge');
+    const unit = mode.startsWith('Custom') ? 'Custom points' : 'Market points';
+    panel.append(node('h3', 'Value comparison · ' + mode));
+    if (retained) panel.append(node('p', 'Recorded values · NOT REVALIDATED', 'tw-drawback'));
+    const cards = node('dl', null, 'tw-gauge-totals');
+    for (const [name, value] of [['You send', sent], ['You receive', received]]) {
+      const item = node('div'); item.append(node('dt', name + ':'), node('dd', value)); cards.append(item);
+    }
+    panel.append(cards);
+    if (difference == null) {
+      panel.dataset.balance = 'incomplete';
+      panel.append(node('p', missing || 'A complete value comparison needs a compatible value for every asset.'));
+      return panel;
+    }
+    const state = relative < 0 ? 'give' : relative > 0 ? 'receive' : 'even';
+    panel.dataset.balance = state;
+    const sign = relative < 0 ? '−' : relative > 0 ? '+' : '';
+    const amount = precisionLimit ? (relative < 0 ? '> −0.01' : '< +0.01') : sign + difference;
+    panel.append(node('p', amount + ' ' + unit, 'tw-gauge-difference'),
+      node('p', state === 'even' ? 'Even · both packages have equal value'
+        : state === 'give' ? 'You give more value than you receive' : 'You receive more value than you give', 'tw-market-verdict'));
+    const track = node('div', null, 'tw-market-bar tw-gauge-track');
+    track.setAttribute('role', 'img');
+    track.setAttribute('aria-label', (state === 'even' ? 'Equal package values.' : state === 'give' ? 'You give more value.' : 'You receive more value.') + ' Not an acceptance probability.');
+    const pointer = node('span', null, 'tw-gauge-pointer');
+    const distance = Math.min(32, Math.abs(relative) * 32);
+    const offset = state === 'even' ? 0 : Math.sign(relative) * (13 + distance);
+    pointer.style.left = (50 + offset) + '%';
+    track.append(pointer);
+    const labels = node('div', null, 'tw-gauge-labels');
+    for (const label of ['You give more', 'Even · equal', 'You receive more']) labels.append(node('span', label));
+    panel.append(track, labels);
+    return panel;
+  }
+  function assessedGauge(e, retained) {
+    const personal = e.personalization?.mode === 'custom';
+    const value = personal ? e.personal_value_evidence : e.market_evidence;
+    const mode = personal ? 'Custom DTOS · ' + valuationSummary(e).split(':', 1)[0].split(' · ').at(-1) : 'Neutral Market';
+    const amount = key => {
+      const row = value?.[key];
+      return typeof row?.total === 'number' && Number.isFinite(row.total) ? displayMarket(row.total)
+        : typeof row?.known_subtotal === 'number' && Number.isFinite(row.known_subtotal) ? 'Partial · known subtotal ' + displayMarket(row.known_subtotal) : 'Unavailable';
+    };
+    const sent = value?.sent?.total, received = value?.received?.total;
+    const valid = value?.availability === 'full' && [sent, received].every(v => typeof v === 'number' && Number.isFinite(v));
+    const parts = valid ? [sent, received].map(marketParts) : [];
+    const scale = valid ? Math.max(...parts.map(p => p.scale)) : 0;
+    const diff = valid ? parts[1].integer * 10n ** BigInt(scale - parts[1].scale) - parts[0].integer * 10n ** BigInt(scale - parts[0].scale) : 0n;
+    const magnitude = diff < 0n ? -diff : diff;
+    const difference = valid ? displayMarketUnits(magnitude, scale) : null;
+    const relative = valid ? Number(diff) / 10 ** scale / Math.max(1, Math.abs(sent) + Math.abs(received)) : 0;
+    return valuationGauge({mode, sent: amount('sent'), received: amount('received'), difference, relative,
+      precisionLimit: diff !== 0n && difference === '0', retained});
+  }
+  function evaluationOverview(e, proposal, presentation, retained) {
+    const header = node('section', null, 'tw-evaluation-overview');
+    const packages = node('div', null, 'tw-review-packages');
+    for (const [title, ids, facts] of [['You send', proposal.assets_sent, presentation?.send],
+                                      ['You receive', proposal.assets_received, presentation?.receive]]) {
+      const box = node('section', null, 'tw-offer-package'); box.append(node('h4', title));
+      const list = node('ul');
+      for (const id of ids || []) list.append(node('li', packageText([id], facts, retained)));
+      box.append(list); packages.append(box);
+    }
+    header.append(packages, assessedGauge(e, retained));
+    const decision = decisionPresentation(e);
+    const benefit = decision.decisive_reason || e.why_you_would_do_it;
+    const cost = decision.main_cost || e.major_drawback;
+    const concern = decision.partner_cost;
+    if (benefit || cost || concern) {
+      const summary = node('section', null, 'tw-trade-essentials');
+      for (const [label, copy] of [['Main reason', benefit], ['Main cost', cost], ['Partner concern', concern]]) {
+        if (copy) summary.append(node('p', label + ': ' + customerText(copy)));
+      }
+      header.append(summary);
+    }
+    const table = node('table', null, 'tw-projected-table');
+    const caption = node('caption', retained ? 'Projected points at the recorded assessment' : 'Compared with keeping each current roster');
+    const heads = node('thead'), heading = node('tr');
+    for (const title of ['Period', 'Your team', 'Their team']) { const th = node('th', title); th.scope = 'col'; heading.append(th); }
+    heads.append(heading);
+    const body = node('tbody'), remaining = decision.remaining_lineup_points;
+    const week = remaining?.selected_week || decision.lineup_comparisons?.current_week?.weeks?.[0] || decision.partner_lineup_comparisons?.current_week?.weeks?.[0];
+    if ([decision.lineup_comparisons, decision.partner_lineup_comparisons].some(side => side?.current_week?.state === 'provisional')) {
+      header.append(node('p', 'Selected-week lineup comparison is provisional.', 'tw-risk-summary'));
+    }
+    const signed = value => typeof value === 'number' && Number.isFinite(value) ? (value > 0 ? '+' : '') + displayPoints(value) : 'Unavailable';
+    for (const [name, future] of [[week ? 'Week ' + week : 'Selected week', false], ['Rest of season', true]]) {
+      const row = node('tr'), title = node('th', name); title.scope = 'row'; row.append(title);
+      for (const side of ['active', 'partner']) {
+        const cell = node('td');
+        if (!future) {
+          const record = (side === 'active' ? decision.lineup_comparisons : decision.partner_lineup_comparisons)?.current_week;
+          const verified = record?.weeks?.length === 1 && record.weeks[0] === week && ['supported', 'provisional'].includes(record.state);
+          cell.append(node('b', signed(verified ? record.delta : null)));
+          if (verified && record.state === 'provisional') cell.append(node('small', 'Provisional'));
+        } else {
+          const record = remaining?.sides?.[side];
+          const complete = record?.calendar_complete && record.weeks.length === record.compared.length;
+          const known = record?.compared?.length;
+          const value = known ? signed(record.subtotal) : complete ? 'No later weeks' : 'Unavailable';
+          cell.append(node('b', value));
+          if (known) cell.append(node('small', (complete ? 'Weeks ' : 'Partial · weeks ') + record.compared.join(', ') + (record.provisional ? ' · provisional' : '')));
+          if (record && !complete) {
+            const missing = record.weeks.filter(w => !record.compared.includes(w));
+            if (missing.length) cell.append(node('small', 'Missing weeks ' + missing.join(', ')));
+            if (!record.calendar_complete) cell.append(node('small', 'Calendar coverage incomplete'));
+          }
+        }
+        row.append(cell);
+      }
+      body.append(row);
+    }
+    table.append(caption, heads, body);
+    const detail = node('div'); detail.append(table, node('small', 'Sleeper projections for separately optimized legal lineups before and after. Rest of season includes only applicable weeks after the selected week. Partial totals use the listed weeks.'));
+    header.append(disclosure('Projected lineup points', detail, 'tw-projected-points'));
+    return header;
+  }
   function paintCalculator() {
     // Exact decimal arithmetic over the prepared canonical numbers, never
     // provider normalization, a fairness probability or strategic repricing.
@@ -523,28 +635,23 @@
     const shown = n => displayMarketUnits(n, scale);
     const complete = rows.every(r => r.length && r.every(a => known.includes(a)));
     const ownershipInvalid = ['sent', 'received'].some(which => selected[which].some(id => !team(which === 'sent' ? active : partner())?.assets.some(a => a.asset_id === id)));
-    const box = el('trade-balance'); box.replaceChildren(node('h3', 'Market comparison'));
-    rows.forEach((r, i) => box.append(node('p', `Side ${i ? 'B' : 'A'} · ${i ? 'You receive' : 'You send'}: ${r.length && r.every(a => known.includes(a)) ? shown(totals[i]) : r.some(a => known.includes(a)) ? 'Partial · known subtotal ' + shown(totals[i]) : 'Unavailable'}`)));
+    const box = el('trade-balance'); box.replaceChildren();
+    const amounts = rows.map((r, i) => r.length && r.every(a => known.includes(a)) ? shown(totals[i])
+      : r.some(a => known.includes(a)) ? 'Partial · known subtotal ' + shown(totals[i]) : 'Unavailable');
     const difference = totals[1] - totals[0];
     const verdict = node('h4', !complete ? rows.every(r => r.length) ? 'Cannot determine reliably · pricing evidence missing' : 'Choose assets on both sides' : difference === 0n ? 'Approximately balanced · equal Market totals' : `Side ${difference > 0n ? 'A' : 'B'} favored · ${difference > 0n ? 'you receive more' : 'your counterparty receives more'} Market value`);
     if (complete && difference !== 0n) verdict.append(node('span', ' · ' + (team(difference > 0n ? active : partner())?.team_name || 'Manager unavailable')));
     verdict.id = 'calculator-verdict'; box.append(verdict);
-    if (complete) box.append(node('p', 'Value gap: ' + shown(difference < 0n ? -difference : difference) + ' Market points.'));
-    if (complete) {
-      const sentence = difference === 0n ? 'Market totals are equal.' : difference < 0n
-        ? 'You are sending ' + shown(-difference) + ' more Market value than you receive.'
-        : 'You receive ' + shown(difference) + ' more Market value than you send.';
-      box.append(node('p', sentence, 'tw-market-verdict'));
-      const bar = node('div', null, 'tw-market-bar'); bar.setAttribute('role', 'img');
-      bar.setAttribute('aria-label', 'Relative Market totals. ' + sentence + ' Not an acceptance probability.');
-      const sum = totals[0] + totals[1];
-      for (let i = 0; i < 2; i++) {
-        const segment = node('span', null, difference === 0n ? 'neutral' : (i === 1) === (difference > 0n) ? 'advantage' : 'disadvantage');
-        segment.style.flexBasis = (sum > 0n ? Number(totals[i] * 10000n / sum) / 100 : 50) + '%'; bar.append(segment);
-      }
-      const caption = node('div', null, 'tw-market-caption'); caption.append(node('span', 'You send ' + shown(totals[0]) + ' · They receive'), node('span', 'You receive ' + shown(totals[1])));
-      box.append(caption, bar, node('small', 'Relative asset value · not an acceptance probability.'));
-    }
+    const marketGap = complete ? node('p', 'Value gap: ' + shown(difference < 0n ? -difference : difference) + ' Market points.') : null;
+    if (marketGap) box.append(marketGap);
+    const abs = value => value < 0n ? -value : value;
+    const gauge = (mode, values, totals, gap, show, known) => valuationGauge({mode, sent: values[0], received: values[1],
+      difference: known && !ownershipInvalid ? show(abs(gap)) : null,
+      relative: known ? Math.sign(Number(gap)) * Math.max(Number.EPSILON, Number(abs(gap)) / Math.max(1, Number(abs(totals[0]) + abs(totals[1])))) : 0,
+      precisionLimit: gap !== 0n && show(abs(gap)) === '0',
+      missing: ownershipInvalid ? 'Confirm current ownership for both packages.' : undefined});
+    const neutralGauge = gauge('Neutral Market', amounts, totals, difference, shown, complete);
+    box.prepend(neutralGauge);
     if (ownershipInvalid) box.append(node('p', 'Ownership invalid or unavailable: this retained hypothetical offer is not executable. Remove moved assets or select their current owner before balancing.', 'tw-error'));
     box.append(node('small', 'Market value ≠ lineup impact ≠ future capital ≠ strategy fit. Evaluate separately.'));
     let selectedValueComplete = complete, selectedValueDifference = difference;
@@ -558,10 +665,16 @@
         ? row.reduce((sum, value) => sum + personalUnits(value), 0n) : null);
       selectedValueComplete = complete && personalTotals.every(total => total != null);
       selectedValueDifference = selectedValueComplete ? personalTotals[1] - personalTotals[0] : 0n;
-      const panel = node('section', null, 'tw-personal-comparison');
-      panel.append(node('h3', 'Your Custom DTOS valuation'), node('p', `You send: ${personalTotals[0] == null ? 'Unavailable' : displayMarketUnits(personalTotals[0], personalScale)} · You receive: ${personalTotals[1] == null ? 'Unavailable' : displayMarketUnits(personalTotals[1], personalScale)}`), node('small', 'Saved rank-slot values express your preferences. The neutral Market comparison below and opponent evidence are unchanged.'));
-      if (personalRows.flat().some(value => !knownPersonal(value))) panel.append(node('p', 'This package includes an asset without a verified personal value. Check its saved rank and affected assets in My DTOS, or use Neutral DTOS. Your offer is unchanged.'));
-      box.prepend(panel);
+      const personalShown = n => displayMarketUnits(n, personalScale);
+      const personalDisplay = personalTotals.map(n => n == null ? 'Unavailable' : personalShown(n));
+      const neutral = node('div');
+      neutral.append(neutralGauge, verdict);
+      if (marketGap) neutral.append(marketGap);
+      const priorNeutral = disclosure('Neutral Market values', neutral);
+      box.prepend(gauge('Custom DTOS · ' + (workspace.personalization?.method_label || 'saved rankings'),
+        personalDisplay, personalTotals, personalTotals.every(n => n !== null) ? personalTotals[1] - personalTotals[0] : 0n,
+        personalShown, personalTotals.every(n => n !== null)), priorNeutral);
+      if (personalRows.flat().some(value => !knownPersonal(value))) box.append(node('p', 'This package includes an asset without a verified personal value. Check its saved rank in My DTOS, or use Neutral DTOS.'));
     }
     const locks = [...new Set([...session.protectedAssets, ...session.excludedAssets, session.requiredOutgoingAsset, session.requiredIncomingAsset].filter(Boolean))];
     if (locks.length) {
@@ -578,7 +691,7 @@
         const a = asset(id), row = node('div', null, 'tw-calculator-asset');
         const owner = workspace.teams.find(t => t.assets.some(item => item.asset_id === id));
         const identity = node('span', null, 'tw-calculator-identity');
-        identity.append(node('b', a ? label(a) : 'Ownership unavailable'), node('small', [a?.kind === 'pick' ? 'Pick' : a?.position || 'Position unavailable', a?.nfl_team, owner?.team_name || 'Owner unavailable', a?.trade_value != null ? displayMarket(a.trade_value) : 'Market unavailable'].filter(value => value != null && value !== '').join(' · ')));
+        identity.append(node('b', a ? label(a) : 'Ownership unavailable'), node('small', [a?.kind === 'pick' ? 'Originally ' + (team(a.original_roster_id)?.team_name || 'franchise #' + a.original_roster_id) : a?.position || 'Position unavailable', a?.nfl_team, owner?.team_name || 'Owner unavailable', a?.trade_value != null ? displayMarket(a.trade_value) : 'Market unavailable'].filter(value => value != null && value !== '').join(' · ')));
         row.append(identity);
         const remove = node('button', 'Remove'); remove.type = 'button'; remove.disabled = busy; remove.setAttribute('aria-label', 'Remove ' + (a ? label(a) : id) + ' from calculator'); remove.onclick = () => toggle(which, id); row.append(remove); const protection = lockDetail(id); if (protection) row.append(protection); list.append(row);
         const evidence = marketEvidence(a); if (evidence) list.append(evidence);
@@ -683,11 +796,13 @@
       return [key, {encoding: 'json-chunks-v1', chunks: text.match(/[\s\S]{1,1200}/g) || []}];
     })) : value;
     const d = value.decision_context;
-    const {lineup_comparisons, partner_lineup_comparisons, lineup_phase_admission, ...decisionRest} = d || {};
-    const compactDecision = d ? {lineup_comparisons: rows(lineup_comparisons),
-      partner_lineup_comparisons: rows(d.partner_lineup_comparisons),
-      lineup_phase_admission: d.lineup_phase_admission ? Object.fromEntries(Object.entries(d.lineup_phase_admission)
-        .map(([side,weeks]) => [side,rows(weeks)])) : d.lineup_phase_admission} : d;
+    const {lineup_comparisons, partner_lineup_comparisons, lineup_phase_admission,
+      remaining_lineup_points, ...decisionRest} = d || {};
+    const compactDecision = d ? {remaining_lineup_points: typeof remaining_lineup_points === 'string' ? remaining_lineup_points
+      : remaining_lineup_points ? JSON.stringify(remaining_lineup_points) : undefined, lineup_comparisons: rows(lineup_comparisons),
+      partner_lineup_comparisons: rows(partner_lineup_comparisons),
+      lineup_phase_admission: lineup_phase_admission ? Object.fromEntries(Object.entries(lineup_phase_admission)
+        .map(([side,weeks]) => [side,rows(weeks)])) : lineup_phase_admission} : d;
     if (compactDecision) Object.assign(compactDecision, decisionRest);
     const {decision_context, personalization, ...restValue} = value;
     return {personalization, recommendation: value.recommendation, dominant_reason: value.dominant_reason, major_drawback: value.major_drawback, assessment_state: value.assessment_state, provenance: value.provenance, decision_context: compactDecision, ...restValue, reserve_evidence: reserveEvidence, recommendation_trace: compactTrace,
@@ -838,6 +953,7 @@
     // existing 512-node analytical disclosure is full. The 64k context and
     // 100k offer limits remain unchanged; truncation never implies zero.
     const context = {schema: 1, recorded_lineup_text: boundedEvidence(recordedLineupText(e)), acquisition_comparison: boundedEvidence(row.acquisition_comparison), draft_capital_record: boundedEvidence(e.draft_capital_record), evaluation: recordedEvaluation(Object.fromEntries(keys.filter(key => key in e).map(key => [key, e[key]]))),
+      proposal_presentation: recordedPresentation(row),
       exploration: row.exploration === true, search_result_type: row.search_result_type || null,
       opportunity: boundedEvidence(row.opportunity || null),
       identity: {personalization: JSON.stringify(personalPayload()), package: packageIdentity(row.proposal || selected), strategy: row.home_assessment_strategy ?? el('trade-strategy').value,
@@ -963,6 +1079,10 @@
   }
   function decisionPresentation(e) {
     const decision = {...(e.decision_context || {})};
+    if (typeof decision.remaining_lineup_points === 'string') {
+      try { decision.remaining_lineup_points = JSON.parse(decision.remaining_lineup_points); }
+      catch (_) { decision.remaining_lineup_points = null; }
+    }
     const row = value => window.DTOSOfferComparison.recordedPeriod(value);
     const rows = value => Object.fromEntries(Object.entries(value || {}).map(([key,value]) => [key,row(value)]));
     decision.lineup_comparisons = rows(decision.lineup_comparisons);
@@ -1028,6 +1148,9 @@
     out.dataset.assessment = 'true';
     const retained = Boolean(previousContainer || contextQualification(context));
     out.dataset.assessmentFreshness = retained ? 'retained' : 'current';
+    if (!previousContainer) {
+      out.append(evaluationOverview(e, {assets_sent: selected.sent, assets_received: selected.received}, context?.proposal_presentation, retained));
+    }
     if (retained && !e.explanation_html) appendRecordedLineups(out, context);
     out.append(capitalDisclosure(context?.draft_capital_record || e.draft_capital_record, retained));
     const attemptState = context?.attempt_state || e.assessment_state?.state || 'fresh_incomplete';
@@ -1074,6 +1197,7 @@
       // Same-origin server renderer escapes all evidence text. No client-side
       // recommendation/scoring or reason-code interpretation is performed.
       const document = parsedExplanation(e);
+      document.querySelector('.tw-decision-market .tw-market-bar')?.remove();
       if (incomplete && e.recommendation && e.assessment_state?.recommendation_supported !== true) {
         const conclusion = document.querySelector('.dtos-explanation > p');
         if (conclusion) conclusion.textContent = 'Recommendation unavailable · current evaluation is incomplete.';
@@ -1400,7 +1524,7 @@
   }
 
   function recordedPresentation(row) {
-    const supplied = row.proposal_presentation || row.proposal.preview_presentation;
+    const supplied = row.proposal_presentation || row.proposal?.preview_presentation;
     if (!supplied) return null;
     return boundedEvidence(Object.fromEntries(['send', 'receive'].map(side => [side,
       Array.isArray(supplied[side]) ? supplied[side].slice(0, 32).map(item => Object.fromEntries(
@@ -1450,22 +1574,25 @@
     const balance = row.balance_adjustment || row.proposal.preview_balance_adjustment;
     if (balance && preview) {
       const review = balanceOfferCard(row, preview, context);
+      review.prepend(evaluationOverview(e, row.proposal, row.proposal_presentation || row.proposal.preview_presentation, retained));
       for (const capital of review.querySelectorAll(':scope > .tw-draft-capital')) capital.replaceWith(disclosure('Draft capital · picks before and after', capital));
       return review;
     }
     const card = node('article', null, preview ? 'tw-offer tw-offer-review' : 'tw-offer tw-offer-summary');
     if (row.exploration) card.append(node('p', 'Exploratory only · not a recommendation', 'tw-drawback'));
     if (retained) card.append(node('p', 'Retained assessment · NOT REVALIDATED', 'tw-drawback'));
-    card.append(node('h3', finalVerdict(e)), node('p', 'Trade with ' + (context.identity?.counterparty || (retained ? 'Franchise #' + row.proposal.partner_roster_id + ' · recorded name unavailable' : team(row.proposal.partner_roster_id)?.team_name || 'the selected partner')), 'tw-offer-partner'));
-    card.append(node('p', 'You send: ' + packageText(row.proposal.assets_sent, (row.proposal_presentation || row.proposal.preview_presentation)?.send, retained), 'tw-offer-package'),
+    const partnerName = context.identity?.counterparty || (retained ? 'Franchise #' + row.proposal.partner_roster_id + ' · recorded name unavailable' : team(row.proposal.partner_roster_id)?.team_name || 'the selected partner');
+    card.append(node('h3', partnerName, 'tw-offer-partner'), node('p', finalVerdict(e), 'tw-offer-verdict'));
+    if (preview) card.append(evaluationOverview(e, row.proposal, row.proposal_presentation || row.proposal.preview_presentation, retained));
+    if (!preview) card.append(node('p', 'You send: ' + packageText(row.proposal.assets_sent, (row.proposal_presentation || row.proposal.preview_presentation)?.send, retained), 'tw-offer-package'),
       node('p', 'You receive: ' + packageText(row.proposal.assets_received, (row.proposal_presentation || row.proposal.preview_presentation)?.receive, retained), 'tw-offer-package'));
     if (decision.qualification) card.append(node('p', customerText(decision.qualification), 'tw-verdict-qualification'));
     const lead = node('section', null, 'tw-decision-lead');
     const reason = decision.decisive_reason || decision.summary || e.why_you_would_do_it || e.dominant_reason;
-    if (reason) lead.append(node('p', 'Why: ' + customerText(reason), 'tw-offer-reason'));
+    if (reason && !preview) lead.append(node('p', 'Why: ' + customerText(reason), 'tw-offer-reason'));
     const mainCost = decision.main_cost || e.major_drawback || e.major_risks?.join('; ').replaceAll('_', ' ')
       || e.major_limitations?.join('; ').replaceAll('_', ' ') || 'The principal cost is not established in this assessment.';
-    lead.append(node('p', 'Main cost or risk: ' + customerText(mainCost), 'tw-drawback'));
+    if (!preview || !(decision.main_cost || e.major_drawback)) lead.append(node('p', 'Main cost or risk: ' + customerText(mainCost), 'tw-drawback'));
     const cautions = availabilityCautions(e);
     if (cautions.length) {
       const material = cautions.filter(line => /\b(?:OUT|IR|PUP|SUSPENDED|INACTIVE|RETIRED)\b|Bye \/ no scheduled game/.test(line)).filter(line => {
@@ -1474,7 +1601,7 @@
       }).map(line => line.replace(/ · Season (\d+) · Week (\d+): /, ' · week $2: '));
       lead.append(node('p', 'Availability and depth: ' + cautions.length + ' player-specific caution' + (cautions.length === 1 ? '' : 's') + '. ' + material.join(' ') + ' Full player details in Review trade.', 'tw-risk-summary'));
     }
-    appendCurrentLineupSummary(lead, decision);
+    if (!preview) appendCurrentLineupSummary(lead, decision);
     const balanceShown = balance ? balanceMarketDisplay(balance, 'suggested') : null;
     lead.append(node('p', balanceShown ? (balance.valuation_context?.startsWith('Custom') ? 'Your personal valuation' : 'Current Market') + ': You send ' + balanceShown.sent + ' / You receive ' + balanceShown.received + '. Difference: ' + balanceShown.gap + '.' : valuationSummary(e), 'tw-offer-market'));
     card.append(lead);
@@ -1515,6 +1642,7 @@
     if (retained && !e.explanation_html) appendRecordedLineups(card, context);
     if (e.explanation_html) {
       const parsed = parsedExplanation(e), explanation = parsed.querySelector('.dtos-explanation');
+      explanation?.querySelector('.tw-decision-market .tw-market-bar')?.remove();
       // Move the already-admitted slot view once; no new optimization or request.
       for (const detail of parsed.querySelectorAll('.dtos-explanation > .tw-lineup-details')) card.append(detail);
       for (const warning of parsed.querySelectorAll('.dtos-explanation > .tw-lineup-warning')) warning.remove();
@@ -1802,6 +1930,12 @@
       }
     }
   }
+  root.querySelectorAll('[data-add-side]').forEach(button => button.onclick = () => {
+    side = button.dataset.addSide;
+    paint();
+    const search = el('trade-' + side + '-board').querySelector('input[type=search]');
+    (search || el('trade-partner')).focus();
+  });
   el('trade-view').onclick = review; el('trade-tray-view').onclick = review; el('trade-edit').onclick = edit;
   el('trade-run').onclick = () => run('evaluate'); el('trade-find').onclick = () => run('generate');
   el('trade-cancel').onclick = () => {

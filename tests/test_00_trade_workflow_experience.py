@@ -99,8 +99,12 @@ class TradeWorkflowExperienceTests(unittest.TestCase):
             for path in ['/trades?front_office=1', '/trades/recommended?front_office=1', '/trades/calculator?front_office=1']:
                 response = f.f.client.get(path)
                 self.assertEqual(response.status_code, 200)
-                self.assertIn('Generate Trades', response.text)
-                self.assertIn('Evaluate Trade', response.text)
+                if path.startswith('/trades?'):
+                    self.assertIn('Generate Trades', response.text)
+                    self.assertIn('Evaluate Trade', response.text)
+                else:
+                    self.assertIn('Find a trade</a>', response.text)
+                    self.assertIn('Evaluate an offer</a>', response.text)
             generate.assert_not_called()
         html = f.f.client.get('/trades/recommended?front_office=1').text
         self.assertLess(html.index('id="trade-strategy"'), html.index('id="trade-board"'))
@@ -322,12 +326,12 @@ class TradeWorkflowExperienceTests(unittest.TestCase):
                     page, records, _, errors, _ = self.page(browser, f, width, height)
                     self.ready(page)
                     with page.expect_navigation(wait_until='domcontentloaded'):
-                        page.get_by_role('link', name='Evaluate Trade', exact=True).click()
+                        page.get_by_role('link', name='Evaluate an offer', exact=True).click()
                     page.locator('.tw-calculator').wait_for()
                     # This link replaces the calculator document. Wait for the
                     # real navigation before testing the new page's controls.
                     with page.expect_navigation(wait_until='domcontentloaded'):
-                        page.get_by_role('link', name='Generate Trades', exact=True).click()
+                        page.get_by_role('link', name='Find a trade', exact=True).click()
                     page.locator('#trade-find').wait_for(state='visible')
                     page.wait_for_function("!document.querySelector('#trade-find').disabled")
                     self.assertEqual(records, [])

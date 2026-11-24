@@ -1,3 +1,7 @@
+## v1.22.64 / build 2279 — Phone-first Trade Center
+
+Trade Center puts editable packages, exact picks and the active valuation comparison up front. Reviews show both teams’ selected-week and later-week projected lineup changes where supported, with the weeks and coverage listed. Existing decisions, search controls and supporting evidence remain available.
+
 ## v1.22.63 / build 2278 — My Team in four sections
 
 My Team organizes the existing roster, lineup, bye plans and picks into four sections. Home opens the specific lineup action or bye week. Bye plans show slot-by-slot moves, availability dependencies and remaining gaps. Returning from Matchups or a pickup restores the same expanded week.

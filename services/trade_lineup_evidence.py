@@ -22,6 +22,29 @@ def same_number(left, right):
     )
 
 
+def remaining_lineup_points(result, admissions):
+    """Summarize only recorded, calendar-scoped weeks after the selected week."""
+    selected = (((result.get('provenance') or {}).get('inputs') or {}).get('projection_evidence') or {}).get('week')
+    if type(selected) is not int or not 1 <= selected <= 18:
+        return None
+    strategies = (result.get('dimensions') or {}).get('strategic_fit') or {}
+    sides = {}
+    for side, evidence in admissions.items():
+        horizons = (strategies.get(side) or {}).get('horizons') or {}
+        periods = [(horizons.get(name) or {}).get('weeks_requested')
+                   for name in ('rest_of_regular_season', 'playoff_window')]
+        known = [period for period in periods if isinstance(period, (list, tuple))
+                 and all(type(week) is int and 1 <= week <= 18 for week in period)]
+        weeks = sorted({week for period in known for week in period if week > selected})
+        compared = [week for week in weeks if number((evidence['weekly'].get(week) or {}).get('delta'))]
+        sides[side] = {
+            'weeks': weeks, 'compared': compared, 'calendar_complete': len(known) == len(periods),
+            'subtotal': total(evidence['weekly'][week]['delta'] for week in compared) if compared else None,
+            'provisional': any(evidence['weekly'][week]['state'] != 'supported' for week in compared),
+        }
+    return {'selected_week': selected, 'sides': sides}
+
+
 def total(values):
     return float(sum((Decimal(str(v)) for v in values), Decimal(0)))
 
