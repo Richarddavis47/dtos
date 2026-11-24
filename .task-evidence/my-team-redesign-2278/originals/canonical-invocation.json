@@ -1,7 +1,7 @@
 {
   "source": {
-    "candidate": "b9fbe375cde1079d7ce7bc7e63fd087a18a62111",
-    "tree": "87c3bce4c0d1be34ad150778e3906beb421c0ba2",
+    "candidate": "4d6b7fcfac1a7f25f176db58a86afdd3e3f6cf6c",
+    "tree": "0053ac8ae3bfb26fb9f8de86cebb31d151de0b39",
     "baseline": "72fbb0bf16d1c48f0d8883c8ac71a096c30a07da",
     "baseline_tree": "ecf99970f0f3e2a59a8c850fe55fbae630cd1536",
     "pr": 367,
@@ -29,7 +29,7 @@
     "-v",
     "/workspace/2278-my-team/local-canonical:/output",
     "-v",
-    "/dev/shm/dtos-2278-fixture-driver128:/fixture",
+    "/dev/shm/dtos-2278-fixture-final-driver128:/fixture",
     "-e",
     "HOME=/tmp",
     "-e",
@@ -41,9 +41,9 @@
     "-e",
     "GIT_CONFIG_VALUE_0=/app",
     "-e",
-    "DTOS_EXPECTED_HEAD=b9fbe375cde1079d7ce7bc7e63fd087a18a62111",
+    "DTOS_EXPECTED_HEAD=4d6b7fcfac1a7f25f176db58a86afdd3e3f6cf6c",
     "-e",
-    "DTOS_EXPECTED_TREE=87c3bce4c0d1be34ad150778e3906beb421c0ba2",
+    "DTOS_EXPECTED_TREE=0053ac8ae3bfb26fb9f8de86cebb31d151de0b39",
     "-e",
     "DTOS_EXPECTED_TEST_COUNT=4676",
     "-w",
@@ -52,7 +52,7 @@
     "python",
     "/output/runner.py"
   ],
-  "container": "72e1a1143a9aaa7153a9716f79a2c994a4a79565d1ad8093b33abebfc7bfe8ee",
+  "container": "6eff7d3fb36fecee6c48aefbec4043b663498d76b87c3bf6ea24e711ce948c82",
   "files": [
     {
       "name": "runner.py",
@@ -63,9 +63,9 @@
       "sha256": "3f43288a099e49a3ed2dea36f977b596707589eaefd2656b40a3b9c6533be2d4"
     }
   ],
-  "created_at": "2026-11-24T04:56:12.028324+00:00",
+  "created_at": "2026-11-24T05:08:09.106859+00:00",
   "status": "RUNNING_NOT_PASSED",
-  "fixture_free_after_container_creation": 9405706240,
+  "fixture_free_after_container_creation": 9402208256,
   "official_scratch_gate_unchanged": true,
   "fixture_medium": "fresh validation-only tmpfs, same unchanged memory/scratch checks",
   "toolchain": "same matched Chromium/Python image, with a tighter 128 MiB executor-only browser driver heap"

@@ -785,8 +785,27 @@ index dda5db4..97b571a 100644
          stale = {**review, 'valid_until': now.isoformat()}
          self.assertEqual(first_action(team, 10, stale, byes, [goal, need], now=now)['title'], 'Plan for Week 11 byes')
          self.assertEqual(first_action(team, 10, stale, None, [goal, need], now=now)['title'], need['title'])
+diff --git a/tests/test_lineup_review.py b/tests/test_lineup_review.py
+index cc2c851..652c148 100644
+--- a/tests/test_lineup_review.py
++++ b/tests/test_lineup_review.py
+@@ -309,10 +309,10 @@ class LineupReviewTests(unittest.TestCase):
+         self.assertEqual(response.status_code, 200)
+         self.assertIn("Higher-projected lineup available", response.text)
+         self.assertIn("+25.00 projected points", response.text)
+-        self.assertLess(
+-            response.text.index("Higher-projected lineup available"),
+-            response.text.index('id="full-roster"'),
+-        )
++        self.assertLess(response.text.index('id="team-lineup"'),
++                        response.text.index('id="lineup-action"'))
++        self.assertLess(response.text.index("Higher-projected lineup available"),
++                        response.text.index('id="my-team-submitted"'))
+         other = f.f.f.client.get("/teams/2")
+         self.assertEqual(other.status_code, 200)
+         self.assertNotIn("Higher-projected lineup available", other.text)
 diff --git a/tests/test_lineup_review_browser.py b/tests/test_lineup_review_browser.py
-index 7fba9b5..1447508 100644
+index 7fba9b5..a787408 100644
 --- a/tests/test_lineup_review_browser.py
 +++ b/tests/test_lineup_review_browser.py
 @@ -37,11 +37,17 @@ class LineupReviewBrowserTests(unittest.TestCase):
@@ -802,7 +821,7 @@ index 7fba9b5..1447508 100644
                      self.assertNotIn("If Example R 1", copy)
 +                    action.click()
 +                    page.wait_for_url("**/teams/1#lineup-action")
-+                    self.assertTrue(page.locator('#team-lineup').is_visible())
++                    page.locator('#team-lineup').wait_for(state='visible')
 +                    self.assertTrue(page.locator('#lineup-action .thq-lineup-deadline time').is_visible())
 +                    self.assertIn('Higher-projected lineup available', page.locator('#lineup-action').inner_text())
                  else:
@@ -812,7 +831,7 @@ index 7fba9b5..1447508 100644
                          page.screenshot(path=str(Path(directory, "home-long-action-320.png")))
                      action.tap()
                      page.wait_for_url("**/teams/1#lineup-recheck")
-+                    self.assertTrue(page.locator('#lineup-recheck [data-lineup-review="fallback"]').is_visible())
++                    page.locator('#lineup-recheck [data-lineup-review="fallback"]').wait_for(state='visible')
              finally:
                  browser.close()
  
@@ -841,7 +860,7 @@ index 7fba9b5..1447508 100644
 +                    self.assertTrue(page.locator("#full-roster").is_visible())
 +                    page.locator('.thq-tabs a[href="#team-lineup"]').click()
                      panel = page.get_by_role("region", name="Lineup fallback")
-+                    self.assertTrue(panel.is_visible())
++                    panel.wait_for(state="visible")
                      self.assertIn("Example W 1 is ruled out", panel.inner_text())
                      self.assertIn("Example BQ 1 in for Example S 1", panel.inner_text())
                      self.assertIn("starts before the starter", panel.inner_text())
@@ -908,10 +927,10 @@ index 731f081..2db2ad8 100644
              pick.click()
              page.wait_for_load_state('domcontentloaded')
 diff --git a/tests/test_my_team_outlook_browser.py b/tests/test_my_team_outlook_browser.py
-index cdf0262..1975776 100644
+index cdf0262..95e3877 100644
 --- a/tests/test_my_team_outlook_browser.py
 +++ b/tests/test_my_team_outlook_browser.py
-@@ -35,7 +35,10 @@ class MyTeamOutlookBrowserTests(unittest.TestCase):
+@@ -35,13 +35,17 @@ class MyTeamOutlookBrowserTests(unittest.TestCase):
                          page.reload(wait_until='networkidle')
                          root = page.locator('#my-team-outlook')
                          self.assertEqual(root.count(), 1)
@@ -923,7 +942,14 @@ index cdf0262..1975776 100644
                          self.assertIn('lineup', root.inner_text())
                          self.assertIn('Choose your goal', root.inner_text())
                          self.assertNotIn('Unavailable · Fresh · Unavailable', root.inner_text())
-@@ -68,12 +71,14 @@ class MyTeamOutlookBrowserTests(unittest.TestCase):
+                         detail = page.locator('#my-team-outlook-evidence')
+                         self.assertFalse(detail.evaluate('e => e.open'))
+                         summary = detail.locator('summary')
++                        page.keyboard.press('Tab')
+                         summary.focus()
+                         self.assertNotEqual(summary.evaluate('e => getComputedStyle(e).outlineStyle'), 'none')
+                         summary.press('Enter')
+@@ -68,12 +72,14 @@ class MyTeamOutlookBrowserTests(unittest.TestCase):
                              Path(out).mkdir(parents=True, exist_ok=True)
                              page.screenshot(path=str(Path(out) / f'my-team-{width}.png'), full_page=True)
                              (Path(out) / 'phone-measurements.json').write_text(json.dumps(measurements, indent=2))
@@ -933,7 +959,8 @@ index cdf0262..1975776 100644
                              link = page.get_by_role('navigation', name='Roster sections').get_by_role('link', name=label, exact=True)
                              self.assertEqual(link.get_attribute('href'), target)
                              link.click()
-                             self.assertTrue(page.locator(target).is_visible())
+-                            self.assertTrue(page.locator(target).is_visible())
++                            page.locator(target).wait_for(state='visible')
 +                            if target == '#draft-capital':
 +                                page.locator('.thq-tabs a[href="#team-roster"]').click()
                          page.locator('#my-team-strategy').select_option('WIN NOW')
@@ -961,7 +988,7 @@ index b7e2ad0..5471f68 100644
          self.assertIn('Why this outlook?', html)
 diff --git a/tests/test_my_team_sections_browser.py b/tests/test_my_team_sections_browser.py
 new file mode 100644
-index 0000000..75df2ed
+index 0000000..8d412ff
 --- /dev/null
 +++ b/tests/test_my_team_sections_browser.py
 @@ -0,0 +1,79 @@
@@ -1002,7 +1029,7 @@ index 0000000..75df2ed
 +                    picks = tabs.get_by_role('link', name='Picks')
 +                    picks.focus()
 +                    picks.press('Enter')
-+                    self.assertTrue(page.locator('#draft-capital').is_visible())
++                    page.locator('#draft-capital').wait_for(state='visible')
 +                    page.reload()
 +                    self.assertEqual(tabs.locator('[aria-current]').inner_text(), 'Picks')
 +
@@ -1057,13 +1084,15 @@ index 5773b1b..cdf4673 100644
                      row = capture(page, "prepared-my-team", width, height)
                      self.assertLessEqual(row["boxes"]["shortcuts"]["height"], 64)
 diff --git a/tests/test_projection_coverage_browser.py b/tests/test_projection_coverage_browser.py
-index fde45b9..d2e1837 100644
+index fde45b9..482c2ba 100644
 --- a/tests/test_projection_coverage_browser.py
 +++ b/tests/test_projection_coverage_browser.py
-@@ -71,6 +71,8 @@ class ProjectionCoverageBrowserTests(unittest.TestCase):
+@@ -70,7 +70,9 @@ class ProjectionCoverageBrowserTests(unittest.TestCase):
+                                 link = page.get_by_role('navigation', name='Roster sections').get_by_role('link', name=label, exact=True)
                                  self.assertEqual(link.get_attribute('href'), target)
                                  link.click()
-                                 self.assertTrue(page.locator(target).is_visible())
+-                                self.assertTrue(page.locator(target).is_visible())
++                                page.locator(target).wait_for(state='visible')
 +                                if target == '#draft-capital':
 +                                    page.locator('.thq-tabs a[href="#team-roster"]').click()
                              self.assertEqual(page.goto('https://dtos.test/teams/8').status, 200)

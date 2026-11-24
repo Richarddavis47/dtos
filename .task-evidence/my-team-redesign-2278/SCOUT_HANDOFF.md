@@ -1,6 +1,6 @@
 # My Team review route
 
-**Baseline** v1.22.62 / build 2277. Candidate `b9fbe375cde1079d7ce7bc7e63fd087a18a62111`, application tree `87c3bce4c0d1be34ad150778e3906beb421c0ba2`. [PR #367](https://github.com/Richarddavis47/dtos/pull/367).
+**Baseline** v1.22.62 / build 2277. Candidate `4d6b7fcfac1a7f25f176db58a86afdd3e3f6cf6c`, application tree `0053ac8ae3bfb26fb9f8de86cebb31d151de0b39`. [PR #367](https://github.com/Richarddavis47/dtos/pull/367).
 
 Use a prepared signed-in league. Avoid a forced refresh or any lineup, goal, or transaction write. Compare with the matching disposable before/after screenshots and their prepared facts.
 
@@ -10,3 +10,5 @@ Use a prepared signed-in league. Avoid a forced refresh or any lineup, goal, or 
 4. Follow a week to Matchups, then use contextual Back. Check that the same week is expanded. Repeat through a pickup and add/drop preview. Reload a direct week link and verify the exact week reopens. Switch leagues through the existing switcher and open My Team to verify the new roster is selected and no other franchise's plan appears.
 5. Open Picks. Confirm exact original-franchise identity and pick details. Try keyboard navigation and the week disclosures at 320px, 390px, and desktop, along with touch in the browser fixture. Check overflow and fixed-navigation reachability.
 6. Compare the matched semantic reads and inspect the screenshots in the evidence directory. They use disposable prepared inputs and Chromium. Verify signed-in production and physical iPhone/Safari separately if authorized access and hardware are available.
+
+The original screenshots were captured before a test-only follow-up. The application bytes match the final source exactly. See the [identity record](rendered-input-identity.json).
