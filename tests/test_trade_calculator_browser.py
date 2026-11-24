@@ -152,6 +152,11 @@ class CalculatorBrowserTests(unittest.TestCase):
                 result = page.locator('#trade-result')
                 result.locator('.tw-projected-points > summary').wait_for()
                 self.assertIn('REJECT', result.inner_text())
+                if width == 320:
+                    packages = result.locator('.tw-review-packages > section')
+                    sent, received = (packages.nth(index).bounding_box() for index in range(2))
+                    self.assertGreaterEqual(received['y'], sent['y'] + sent['height'])
+                    self.assertAlmostEqual(received['width'], sent['width'], delta=1)
                 self.assertIn(difference, result.locator('.tw-valuation-gauge').inner_text())
                 result.locator('.tw-projected-points > summary').press('Enter')
                 table = result.locator('.tw-projected-table')
