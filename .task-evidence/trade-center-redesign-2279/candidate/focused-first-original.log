@@ -1,0 +1,169 @@
+/workspace/dtos/.venv/lib/python3.12/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+  from starlette.testclient import TestClient as TestClient  # noqa
+TradeCalculatorBrowserTests (unittest.loader._FailedTest.TradeCalculatorBrowserTests) ... ERROR
+test_completed_zero_qualified_has_recorded_diagnosis_and_separate_alternatives (tests.test_trade_actionability_browser.TradeActionabilityBrowserTests.test_completed_zero_qualified_has_recorded_diagnosis_and_separate_alternatives) ... {"event": "retired_fixture_cleanup", "phase": "before_fixture", "collected": 0, "gc_enabled": true, "process_rss_before": 63922176, "process_rss_after": 63922176, "container_before": 2281373696, "container_after": 2281373696, "limit": 17179869184, "scope": "Unreachable test objects only; container delta may include asynchronous browser exit."}
+{"timestamp":"2026-11-24T18:20:17.359244+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":false,"reason":"capacity","current_bytes":2296774656,"limit_bytes":2147483648,"raw_headroom_bytes":-149291008,"clean_inactive_file_bytes":253394944,"conditional_file_credit_bytes":126697472,"admission_headroom_bytes":-22593536,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-24T18:20:17.361418+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/workspace?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-24T18:20:17.364650+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_admission","request_id":"system","event":"trade_admission","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":false,"reason":"capacity","current_bytes":2296721408,"limit_bytes":2147483648,"raw_headroom_bytes":-149237760,"clean_inactive_file_bytes":253394944,"conditional_file_credit_bytes":126697472,"admission_headroom_bytes":-22540288,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"recovery":null}}
+{"timestamp":"2026-11-24T18:20:17.364733+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_execution_finished","request_id":"system","event":"trade_execution_finished","duration_ms":0.396,"diagnostic":{"schema":"trade-resource-v1","outcome":"deferred"}}
+{"timestamp":"2026-11-24T18:20:17.376073+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/trades/evaluate \"HTTP/1.1 503 Service Unavailable\"","request_id":"system"}
+ERROR
+test_qualified_offer_preview_evaluate_and_return_at_four_widths (tests.test_trade_actionability_browser.TradeActionabilityBrowserTests.test_qualified_offer_preview_evaluate_and_return_at_four_widths) ... {"event": "retired_fixture_cleanup", "phase": "before_fixture", "collected": 345, "gc_enabled": true, "process_rss_before": 80691200, "process_rss_after": 80699392, "container_before": 2300534784, "container_after": 2300268544, "limit": 17179869184, "scope": "Unreachable test objects only; container delta may include asynchronous browser exit."}
+{"timestamp":"2026-11-24T18:20:17.639058+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":false,"reason":"capacity","current_bytes":2300887040,"limit_bytes":2147483648,"raw_headroom_bytes":-153403392,"clean_inactive_file_bytes":253378560,"conditional_file_credit_bytes":126689280,"admission_headroom_bytes":-26714112,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-24T18:20:17.641269+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/workspace?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-24T18:20:17.645067+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_admission","request_id":"system","event":"trade_admission","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":false,"reason":"capacity","current_bytes":2300887040,"limit_bytes":2147483648,"raw_headroom_bytes":-153403392,"clean_inactive_file_bytes":253378560,"conditional_file_credit_bytes":126689280,"admission_headroom_bytes":-26714112,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"recovery":null}}
+{"timestamp":"2026-11-24T18:20:17.645136+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_execution_finished","request_id":"system","event":"trade_execution_finished","duration_ms":0.46,"diagnostic":{"schema":"trade-resource-v1","outcome":"deferred"}}
+{"timestamp":"2026-11-24T18:20:17.646346+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/trades/evaluate \"HTTP/1.1 503 Service Unavailable\"","request_id":"system"}
+ERROR
+test_timing_heading_requires_a_supported_matching_calendar_signal (tests.test_trade_actionability_browser.TradeActionabilityBrowserTests.test_timing_heading_requires_a_supported_matching_calendar_signal) ... {"event": "retired_fixture_cleanup", "phase": "before_fixture", "collected": 385, "gc_enabled": true, "process_rss_before": 80736256, "process_rss_after": 80736256, "container_before": 2300887040, "container_after": 2300887040, "limit": 17179869184, "scope": "Unreachable test objects only; container delta may include asynchronous browser exit."}
+{"timestamp":"2026-11-24T18:20:17.844555+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":false,"reason":"capacity","current_bytes":2301784064,"limit_bytes":2147483648,"raw_headroom_bytes":-154300416,"clean_inactive_file_bytes":253378560,"conditional_file_credit_bytes":126689280,"admission_headroom_bytes":-27611136,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-24T18:20:17.846894+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/workspace?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-24T18:20:17.850270+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_admission","request_id":"system","event":"trade_admission","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":false,"reason":"capacity","current_bytes":2301763584,"limit_bytes":2147483648,"raw_headroom_bytes":-154279936,"clean_inactive_file_bytes":253378560,"conditional_file_credit_bytes":126689280,"admission_headroom_bytes":-27590656,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"recovery":null}}
+{"timestamp":"2026-11-24T18:20:17.850330+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_execution_finished","request_id":"system","event":"trade_execution_finished","duration_ms":0.372,"diagnostic":{"schema":"trade-resource-v1","outcome":"deferred"}}
+{"timestamp":"2026-11-24T18:20:17.851228+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/trades/evaluate \"HTTP/1.1 503 Service Unavailable\"","request_id":"system"}
+ERROR
+test_compact_offer_review_compare_and_back_keeps_original_work (tests.test_customer_trade_experience.CustomerTradeJourneyTests.test_compact_offer_review_compare_and_back_keeps_original_work) ... Validation Chromium: /usr/bin/chromium
+Validation Chromium version: 151.0.7922.173
+
+  test_compact_offer_review_compare_and_back_keeps_original_work (tests.test_customer_trade_experience.CustomerTradeJourneyTests.test_compact_offer_review_compare_and_back_keeps_original_work) (width=320) ... FAIL
+Validation Chromium: /usr/bin/chromium
+Validation Chromium version: 151.0.7922.173
+  test_compact_offer_review_compare_and_back_keeps_original_work (tests.test_customer_trade_experience.CustomerTradeJourneyTests.test_compact_offer_review_compare_and_back_keeps_original_work) (width=375) ... FAIL
+Validation Chromium: /usr/bin/chromium
+Validation Chromium version: 151.0.7922.173
+  test_compact_offer_review_compare_and_back_keeps_original_work (tests.test_customer_trade_experience.CustomerTradeJourneyTests.test_compact_offer_review_compare_and_back_keeps_original_work) (width=390) ... FAIL
+Validation Chromium: /usr/bin/chromium
+Validation Chromium version: 151.0.7922.173
+  test_compact_offer_review_compare_and_back_keeps_original_work (tests.test_customer_trade_experience.CustomerTradeJourneyTests.test_compact_offer_review_compare_and_back_keeps_original_work) (width=1280) ... FAIL
+test_optional_custom_pricing_stays_collapsed_until_selected_or_opened (tests.test_customer_trade_experience.CustomerTradeJourneyTests.test_optional_custom_pricing_stays_collapsed_until_selected_or_opened) ... Validation Chromium: /usr/bin/chromium
+Validation Chromium version: 151.0.7922.173
+Validation Chromium: /usr/bin/chromium
+Validation Chromium version: 151.0.7922.173
+ok
+test_retained_pick_label_does_not_follow_today_franchise_rename (tests.test_customer_trade_experience.CustomerTradeJourneyTests.test_retained_pick_label_does_not_follow_today_franchise_rename) ... Validation Chromium: /usr/bin/chromium
+Validation Chromium version: 151.0.7922.173
+ERROR
+test_current_effects_and_principal_risk_lead_without_mutating_results (tests.test_customer_trade_experience.CustomerTradePresentationTests.test_current_effects_and_principal_risk_lead_without_mutating_results) ... ok
+test_missing_def_remains_incomplete_in_rendered_lineups (tests.test_customer_trade_experience.CustomerTradePresentationTests.test_missing_def_remains_incomplete_in_rendered_lineups) ... {"timestamp":"2026-11-24T18:20:33.526728+00:00","level":"WARNING","logger":"dtos.storage","message":"storage_review {'kind': 'projection', 'database_bytes': 479232, 'rows': {'projection_snapshots': 4, 'projection_source_history': 2, 'projection_player_states': 396}, 'free_bytes': 8791703552, 'row_delta': {'projection_snapshots': 2, 'projection_source_history': 1, 'projection_player_states': 132}, 'reasons': ['ROW_GROWTH_ACCELERATION_REVIEW']}","request_id":"system"}
+ok
+
+======================================================================
+ERROR: TradeCalculatorBrowserTests (unittest.loader._FailedTest.TradeCalculatorBrowserTests)
+----------------------------------------------------------------------
+AttributeError: module 'tests.test_trade_calculator_browser' has no attribute 'TradeCalculatorBrowserTests'. Did you mean: 'CalculatorBrowserTests'?
+
+======================================================================
+ERROR: test_completed_zero_qualified_has_recorded_diagnosis_and_separate_alternatives (tests.test_trade_actionability_browser.TradeActionabilityBrowserTests.test_completed_zero_qualified_has_recorded_diagnosis_and_separate_alternatives)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/dtos-trade-center-2279/tests/test_trade_actionability_browser.py", line 102, in test_completed_zero_qualified_has_recorded_diagnosis_and_separate_alternatives
+    h, f = self.fixture()
+           ^^^^^^^^^^^^^^
+  File "/workspace/dtos-trade-center-2279/tests/test_trade_actionability_browser.py", line 17, in fixture
+    f = h.fixture()
+        ^^^^^^^^^^^
+  File "/workspace/dtos-trade-center-2279/tests/test_00_trade_workflow_experience.py", line 48, in fixture
+    f.setUp()
+  File "/workspace/dtos-trade-center-2279/tests/test_home_opportunity_integrity.py", line 81, in setUp
+    self.assertEqual(self.row["evaluation"]["recommendation"], "WORTH PURSUING")
+                     ~~~~~~~~^^^^^^^^^^^^^^
+KeyError: 'evaluation'
+
+======================================================================
+ERROR: test_qualified_offer_preview_evaluate_and_return_at_four_widths (tests.test_trade_actionability_browser.TradeActionabilityBrowserTests.test_qualified_offer_preview_evaluate_and_return_at_four_widths)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/dtos-trade-center-2279/tests/test_trade_actionability_browser.py", line 22, in test_qualified_offer_preview_evaluate_and_return_at_four_widths
+    h, f = self.fixture()
+           ^^^^^^^^^^^^^^
+  File "/workspace/dtos-trade-center-2279/tests/test_trade_actionability_browser.py", line 17, in fixture
+    f = h.fixture()
+        ^^^^^^^^^^^
+  File "/workspace/dtos-trade-center-2279/tests/test_00_trade_workflow_experience.py", line 48, in fixture
+    f.setUp()
+  File "/workspace/dtos-trade-center-2279/tests/test_home_opportunity_integrity.py", line 81, in setUp
+    self.assertEqual(self.row["evaluation"]["recommendation"], "WORTH PURSUING")
+                     ~~~~~~~~^^^^^^^^^^^^^^
+KeyError: 'evaluation'
+
+======================================================================
+ERROR: test_timing_heading_requires_a_supported_matching_calendar_signal (tests.test_trade_actionability_browser.TradeActionabilityBrowserTests.test_timing_heading_requires_a_supported_matching_calendar_signal)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/dtos-trade-center-2279/tests/test_trade_actionability_browser.py", line 126, in test_timing_heading_requires_a_supported_matching_calendar_signal
+    h, f = self.fixture()
+           ^^^^^^^^^^^^^^
+  File "/workspace/dtos-trade-center-2279/tests/test_trade_actionability_browser.py", line 17, in fixture
+    f = h.fixture()
+        ^^^^^^^^^^^
+  File "/workspace/dtos-trade-center-2279/tests/test_00_trade_workflow_experience.py", line 48, in fixture
+    f.setUp()
+  File "/workspace/dtos-trade-center-2279/tests/test_home_opportunity_integrity.py", line 81, in setUp
+    self.assertEqual(self.row["evaluation"]["recommendation"], "WORTH PURSUING")
+                     ~~~~~~~~^^^^^^^^^^^^^^
+KeyError: 'evaluation'
+
+======================================================================
+ERROR: test_retained_pick_label_does_not_follow_today_franchise_rename (tests.test_customer_trade_experience.CustomerTradeJourneyTests.test_retained_pick_label_does_not_follow_today_franchise_rename)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/dtos-trade-center-2279/tests/test_customer_trade_experience.py", line 224, in test_retained_pick_label_does_not_follow_today_franchise_rename
+    package = page.locator('.tw-offer-review .tw-offer-package').first.inner_text()
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/dtos/.venv/lib/python3.12/site-packages/playwright/sync_api/_generated.py", line 19603, in inner_text
+    self._sync(self._impl_obj.inner_text(timeout=to_milliseconds(timeout)))
+  File "/workspace/dtos/.venv/lib/python3.12/site-packages/playwright/_impl/_sync_base.py", line 115, in _sync
+    return task.result()
+           ^^^^^^^^^^^^^
+  File "/workspace/dtos/.venv/lib/python3.12/site-packages/playwright/_impl/_locator.py", line 502, in inner_text
+    return await self._frame.inner_text(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/dtos/.venv/lib/python3.12/site-packages/playwright/_impl/_frame.py", line 744, in inner_text
+    return await self._channel.send(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/dtos/.venv/lib/python3.12/site-packages/playwright/_impl/_connection.py", line 76, in send
+    return await self._connection.wrap_api_call(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/dtos/.venv/lib/python3.12/site-packages/playwright/_impl/_connection.py", line 632, in wrap_api_call
+    raise rewrite_error(error, f"{parsed_st['apiName']}: {error}") from None
+playwright._impl._errors.TimeoutError: Locator.inner_text: Timeout 6000ms exceeded.
+Call log:
+  - waiting for locator(".tw-offer-review .tw-offer-package").first
+
+
+======================================================================
+FAIL: test_compact_offer_review_compare_and_back_keeps_original_work (tests.test_customer_trade_experience.CustomerTradeJourneyTests.test_compact_offer_review_compare_and_back_keeps_original_work) (width=320)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/dtos-trade-center-2279/tests/test_customer_trade_experience.py", line 138, in test_compact_offer_review_compare_and_back_keeps_original_work
+    self.assertIn('provisional', review.inner_text())
+AssertionError: 'provisional' not found in 'Partner\n\nWORTH PURSUING\n\nYou send\nA\nYou receive\nX\nY\nValue comparison · Neutral Market\nYou send:\n400\nYou receive:\n700\n\n+300 Market points\n\nYou receive more value than you give\n\nYou give more\nEven · equal\nYou receive more\n\nMain reason: The supported upgrade has a real cost for both teams.\n\nMain cost: You spend usable depth. Useful projected points from eligible backups fall 2.25 points per supported week; participation remains unknown.\n\nProjected lineup points\n\nProvisional: recorded participation needs review. Not a qualified recommendation for both teams.\n\nAvailability and depth: 1 player-specific caution. Your team · week 10: Incoming Player — Excluded from usable cover · IR. Full player details in Review trade.\n\nNeutral Market: 400 sent / 700 received\n\nBest-supported fit found\n\nGross outgoing Neutral Market cost: 400\n\nIncludes additional incoming assets worth 100 beyond the exact target. Packages with different extras are not equivalent purchases.\n\nBounded search, not a global minimum, asking price or guarantee of acceptance. Lower cost does not establish a better trade.\nAcquisition cost evidence · Neutral Market\n\nTheir manager direction is unconfirmed. Discuss the production sacrificed and exact compensation before pursuing this offer. Discuss the production sacrificed and exact compensation before pursuing this offer. Discuss the production sacrificed and exact compensation before pursuing this offer. Discuss the production sacrificed and exact compensation before pursuing this offer. Discuss the production sacrificed and exact compensation before pursuing this offer. Discuss the production sacrificed and exact compensation before pursuing this offer. Discuss the production sacrificed and exact compensation before pursuing this offer. Discuss the production sacrificed and exact compensation before pursuing this offer. Recorded decision conditions tail.\n\nPartner fit is an inference, not evidence that the manager will accept.\n\nWhy this may fit each team\nAvailability, depth and roster space · 1 cautions\nDraft capital · picks before and after\nBefore and after · both optimal lineups\nCalculations and sources\nAdd to comparison\n🔒 Required incoming Trade For target'
+
+======================================================================
+FAIL: test_compact_offer_review_compare_and_back_keeps_original_work (tests.test_customer_trade_experience.CustomerTradeJourneyTests.test_compact_offer_review_compare_and_back_keeps_original_work) (width=375)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/dtos-trade-center-2279/tests/test_customer_trade_experience.py", line 138, in test_compact_offer_review_compare_and_back_keeps_original_work
+    self.assertIn('provisional', review.inner_text())
+AssertionError: 'provisional' not found in 'Partner\n\nWORTH PURSUING\n\nYou send\nA\nYou receive\nX\nY\nValue comparison · Neutral Market\nYou send:\n400\nYou receive:\n700\n\n+300 Market points\n\nYou receive more value than you give\n\nYou give more\nEven · equal\nYou receive more\n\nMain reason: The supported upgrade has a real cost for both teams.\n\nMain cost: You spend usable depth. Useful projected points from eligible backups fall 2.25 points per supported week; participation remains unknown.\n\nProjected lineup points\n\nProvisional: recorded participation needs review. Not a qualified recommendation for both teams.\n\nAvailability and depth: 1 player-specific caution. Your team · week 10: Incoming Player — Excluded from usable cover · IR. Full player details in Review trade.\n\nNeutral Market: 400 sent / 700 received\n\nBest-supported fit found\n\nGross outgoing Neutral Market cost: 400\n\nIncludes additional incoming assets worth 100 beyond the exact target. Packages with different extras are not equivalent purchases.\n\nBounded search, not a global minimum, asking price or guarantee of acceptance. Lower cost does not establish a better trade.\nAcquisition cost evidence · Neutral Market\n\nTheir manager direction is unconfirmed. Discuss the production sacrificed and exact compensation before pursuing this offer. Discuss the production sacrificed and exact compensation before pursuing this offer. Discuss the production sacrificed and exact compensation before pursuing this offer. Discuss the production sacrificed and exact compensation before pursuing this offer. Discuss the production sacrificed and exact compensation before pursuing this offer. Discuss the production sacrificed and exact compensation before pursuing this offer. Discuss the production sacrificed and exact compensation before pursuing this offer. Discuss the production sacrificed and exact compensation before pursuing this offer. Recorded decision conditions tail.\n\nPartner fit is an inference, not evidence that the manager will accept.\n\nWhy this may fit each team\nAvailability, depth and roster space · 1 cautions\nDraft capital · picks before and after\nBefore and after · both optimal lineups\nCalculations and sources\nAdd to comparison\n🔒 Required incoming Trade For target'
+
+======================================================================
+FAIL: test_compact_offer_review_compare_and_back_keeps_original_work (tests.test_customer_trade_experience.CustomerTradeJourneyTests.test_compact_offer_review_compare_and_back_keeps_original_work) (width=390)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/dtos-trade-center-2279/tests/test_customer_trade_experience.py", line 138, in test_compact_offer_review_compare_and_back_keeps_original_work
+    self.assertIn('provisional', review.inner_text())
+AssertionError: 'provisional' not found in 'Partner\n\nWORTH PURSUING\n\nYou send\nA\nYou receive\nX\nY\nValue comparison · Neutral Market\nYou send:\n400\nYou receive:\n700\n\n+300 Market points\n\nYou receive more value than you give\n\nYou give more\nEven · equal\nYou receive more\n\nMain reason: The supported upgrade has a real cost for both teams.\n\nMain cost: You spend usable depth. Useful projected points from eligible backups fall 2.25 points per supported week; participation remains unknown.\n\nProjected lineup points\n\nProvisional: recorded participation needs review. Not a qualified recommendation for both teams.\n\nAvailability and depth: 1 player-specific caution. Your team · week 10: Incoming Player — Excluded from usable cover · IR. Full player details in Review trade.\n\nNeutral Market: 400 sent / 700 received\n\nBest-supported fit found\n\nGross outgoing Neutral Market cost: 400\n\nIncludes additional incoming assets worth 100 beyond the exact target. Packages with different extras are not equivalent purchases.\n\nBounded search, not a global minimum, asking price or guarantee of acceptance. Lower cost does not establish a better trade.\nAcquisition cost evidence · Neutral Market\n\nTheir manager direction is unconfirmed. Discuss the production sacrificed and exact compensation before pursuing this offer. Discuss the production sacrificed and exact compensation before pursuing this offer. Discuss the production sacrificed and exact compensation before pursuing this offer. Discuss the production sacrificed and exact compensation before pursuing this offer. Discuss the production sacrificed and exact compensation before pursuing this offer. Discuss the production sacrificed and exact compensation before pursuing this offer. Discuss the production sacrificed and exact compensation before pursuing this offer. Discuss the production sacrificed and exact compensation before pursuing this offer. Recorded decision conditions tail.\n\nPartner fit is an inference, not evidence that the manager will accept.\n\nWhy this may fit each team\nAvailability, depth and roster space · 1 cautions\nDraft capital · picks before and after\nBefore and after · both optimal lineups\nCalculations and sources\nAdd to comparison\n🔒 Required incoming Trade For target'
+
+======================================================================
+FAIL: test_compact_offer_review_compare_and_back_keeps_original_work (tests.test_customer_trade_experience.CustomerTradeJourneyTests.test_compact_offer_review_compare_and_back_keeps_original_work) (width=1280)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/dtos-trade-center-2279/tests/test_customer_trade_experience.py", line 138, in test_compact_offer_review_compare_and_back_keeps_original_work
+    self.assertIn('provisional', review.inner_text())
+AssertionError: 'provisional' not found in 'Partner\n\nWORTH PURSUING\n\nYou send\nA\nYou receive\nX\nY\nValue comparison · Neutral Market\nYou send:\n400\nYou receive:\n700\n\n+300 Market points\n\nYou receive more value than you give\n\nYou give more\nEven · equal\nYou receive more\n\nMain reason: The supported upgrade has a real cost for both teams.\n\nMain cost: You spend usable depth. Useful projected points from eligible backups fall 2.25 points per supported week; participation remains unknown.\n\nProjected lineup points\n\nProvisional: recorded participation needs review. Not a qualified recommendation for both teams.\n\nAvailability and depth: 1 player-specific caution. Your team · week 10: Incoming Player — Excluded from usable cover · IR. Full player details in Review trade.\n\nNeutral Market: 400 sent / 700 received\n\nBest-supported fit found\n\nGross outgoing Neutral Market cost: 400\n\nIncludes additional incoming assets worth 100 beyond the exact target. Packages with different extras are not equivalent purchases.\n\nBounded search, not a global minimum, asking price or guarantee of acceptance. Lower cost does not establish a better trade.\nAcquisition cost evidence · Neutral Market\n\nTheir manager direction is unconfirmed. Discuss the production sacrificed and exact compensation before pursuing this offer. Discuss the production sacrificed and exact compensation before pursuing this offer. Discuss the production sacrificed and exact compensation before pursuing this offer. Discuss the production sacrificed and exact compensation before pursuing this offer. Discuss the production sacrificed and exact compensation before pursuing this offer. Discuss the production sacrificed and exact compensation before pursuing this offer. Discuss the production sacrificed and exact compensation before pursuing this offer. Discuss the production sacrificed and exact compensation before pursuing this offer. Recorded decision conditions tail.\n\nPartner fit is an inference, not evidence that the manager will accept.\n\nWhy this may fit each team\nAvailability, depth and roster space · 1 cautions\nDraft capital · picks before and after\nBefore and after · both optimal lineups\nCalculations and sources\nAdd to comparison\n🔒 Required incoming Trade For target'
+
+----------------------------------------------------------------------
+Ran 9 tests in 17.282s
+
+FAILED (failures=4, errors=5)

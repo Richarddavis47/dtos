@@ -1,0 +1,714 @@
+From d9676a7ba9f82508ea72ab20fac2dd512959658d Mon Sep 17 00:00:00 2001
+From: Richard Davis <ricdav398@gmail.com>
+Date: Tue, 24 Nov 2026 18:27:13 +0000
+Subject: [PATCH] Redesign Trade Center for phone-first build and review
+
+
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index 4c6ec84..8bad7a0 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -1,3 +1,7 @@
++## v1.22.64 / build 2279 — Phone-first Trade Center
++
++Trade Center puts editable packages, exact picks and the active valuation comparison up front. Reviews show both teams’ selected-week and later-week projected lineup changes where supported, with the weeks and coverage listed. Existing decisions, search controls and supporting evidence remain available.
++
+ ## v1.22.63 / build 2278 — My Team in four sections
+ 
+ My Team organizes the existing roster, lineup, bye plans and picks into four sections. Home opens the specific lineup action or bye week. Bye plans show slot-by-slot moves, availability dependencies and remaining gaps. Returning from Matchups or a pickup restores the same expanded week.
+diff --git a/RELEASE_NOTES.md b/RELEASE_NOTES.md
+index 018e748..7298bbe 100644
+--- a/RELEASE_NOTES.md
++++ b/RELEASE_NOTES.md
+@@ -1,3 +1,7 @@
++## v1.22.64 / build 2279 — Phone-first Trade Center
++
++Build a trade by adding owned players and exact picks from either side. The live value preview uses the selected Neutral or Custom method. Recommended offers can be reviewed in the same format as a manually evaluated offer. The projected-points table separates the selected week from later league weeks and identifies partial coverage.
++
+ ## v1.22.63 / build 2278 — My Team in four sections
+ 
+ My Team organizes the existing roster, lineup, bye plans and picks into four sections. Home opens the specific lineup action or bye week. Bye plans show slot-by-slot moves, availability dependencies and remaining gaps. Returning from Matchups or a pickup restores the same expanded week.
+diff --git a/app_metadata.py b/app_metadata.py
+index c8d553d..b7c9415 100644
+--- a/app_metadata.py
++++ b/app_metadata.py
+@@ -7,10 +7,10 @@ from datetime import datetime, timezone
+ from pathlib import Path
+ 
+ APPLICATION_NAME = "DTOS"
+-VERSION = "1.22.63"
+-PRODUCT_VERSION = "1.22.63"
+-BUILD_NUMBER = 2278
+-RELEASE_CODENAME = "My Team in Four Sections"
++VERSION = "1.22.64"
++PRODUCT_VERSION = "1.22.64"
++BUILD_NUMBER = 2279
++RELEASE_CODENAME = "Phone-First Trade Center"
+ APPLICATION_STARTED_AT = datetime.now(timezone.utc).isoformat()
+ 
+ _REPOSITORY_ROOT = Path(__file__).resolve().parent
+diff --git a/components/trade_workspace.py b/components/trade_workspace.py
+index 4347084..902977d 100644
+--- a/components/trade_workspace.py
++++ b/components/trade_workspace.py
+@@ -6,7 +6,7 @@ import json
+ def trade_workspace(view: dict, workflow: str, asset_id=None, owner_roster_id=None) -> str:
+     active = int(view["active_team"]["roster_id"])
+     league = getattr(view.get("manager_context"), "league_id", "")
+-    titles = {"calculator": "Trade Calculator", "create": "Build a Trade", "trade-for": "Trade For", "shop": "Shop Asset", "recommended": "Generate Trades"}
++    titles = {"calculator": "Trade Calculator", "create": "Build a Trade", "trade-for": "Trade For", "shop": "Shop Asset", "recommended": "Recommended trades"}
+     title = titles[workflow]
+     market_origin = ''
+     if view.get('market_need'):
+@@ -26,7 +26,11 @@ def trade_workspace(view: dict, workflow: str, asset_id=None, owner_roster_id=No
+     strategy_close = '</section>'
+     market_panel = '<section id="trade-balance" class="ti-market-balance" aria-live="polite" tabindex="-1"></section>'
+     balance_controls = '<section id="trade-balancing" aria-label="Options to balance this trade"><h3>Options to balance this trade</h3><button id="trade-balance-offer" type="button" disabled aria-describedby="calculator-balance-status">Balance offer · preview options</button><p id="calculator-balance-status" class="tw-balance-status" role="status" aria-live="polite" aria-atomic="true"></p></section>'
+-    calculator_panel = (f'<section class="tw-calculator" aria-label="Market calculator">{market_panel}{balance_controls}<div class="ti-actions"><button id="calculator-protect" type="button">Protect assets</button></div><div class="tw-packages"><section><h4>Side A · You send</h4><div id="calculator-sent"></div></section><section><h4>Side B · You receive</h4><div id="calculator-received"></div></section></div><p class="muted">Use the searchable owned-asset lists to add players and exact picks. Market totals update immediately.</p></section>' if market_editor else '')
++    calculator_panel = (f'''<section class="tw-calculator" aria-label="Editable trade draft">
++<div class="tw-draft-packages"><section><h3>You send</h3><div id="calculator-sent"></div><button type="button" class="tw-add-asset" data-add-side="sent">Add asset to send</button></section>
++<section><h3>You receive</h3><div id="calculator-received"></div><button type="button" class="tw-add-asset" data-add-side="received">Add asset to receive</button></section></div>
++{market_panel}<div class="tw-primary-actions"><button id="trade-run" class="tw-primary-action" type="button" disabled>Evaluate Trade</button></div>
++{balance_controls}<button id="calculator-protect" type="button">Protect assets</button></section>''' if market_editor else '')
+     market_detail = '' if market_editor else f'<details class="tw-market-detail"><summary>Market Balance · acquisition-price evidence</summary>{market_panel}</details>'
+     calculator_link = '' if calculator else f'<a class="ti-action" href="/trades/calculator?front_office={active}">Open this workspace in Calculator</a>'
+     protect_control = '<button id="calculator-lock" type="button">Do not trade selected exact asset</button>' if market_editor else ''
+@@ -62,8 +66,8 @@ def trade_workspace(view: dict, workflow: str, asset_id=None, owner_roster_id=No
+     if workflow == 'recommended':
+         optional_search = (f'<details id="trade-search-options"><summary id="recommendation-protection-count">Protect assets &amp; options · none</summary>{search_protections}{recommended_controls}{pick_options}</details>'
+             '<section id="recommendation-protection-selection" class="tw-search-protections" aria-label="Selected outgoing protections" hidden><ul id="recommendation-protection-list" aria-label="Temporary outgoing protections"></ul><button id="recommendation-protection-clear" type="button" hidden disabled>Clear search protections</button></section>')
+-    intent_nav = f'<nav class="tw-intent-nav" aria-label="Trade purpose"><a href="/trades/recommended?front_office={active}" {"aria-current=page" if is_discovery else ""}>Generate Trades</a><a href="/trades/calculator?front_office={active}" {"aria-current=page" if not is_discovery else ""}>Evaluate Trade</a></nav>'
+-    primary = discovery if is_discovery else f'<button id="trade-run" class="tw-primary-action" type="button" disabled>{"Evaluate Trade" if calculator else "Evaluate Trade"}</button>'
++    intent_nav = f'<nav class="tw-intent-nav" aria-label="Trade purpose"><a href="/trades/recommended?front_office={active}" {"aria-current=page" if is_discovery else ""}>Find a trade</a><a href="/trades/calculator?front_office={active}" {"aria-current=page" if not is_discovery else ""}>Evaluate an offer</a></nav>'
++    primary = discovery
+     next_ideas = '<button id="recommendation-refresh" type="button" disabled hidden aria-describedby="recommendation-status">Show Next 5</button>' if workflow == 'recommended' else ''
+     tray = '<div id="trade-tray" class="tw-tray" hidden><span id="trade-tray-text"></span><button id="trade-tray-view" type="button">View Trade</button></div>'
+     adjustments = "".join(
+@@ -97,11 +101,11 @@ def trade_workspace(view: dict, workflow: str, asset_id=None, owner_roster_id=No
+ {tray}
+ {'<details id="trade-asset-options"><summary>Players, picks and protections · optional</summary>' if workflow == 'recommended' else ''}
+ {partner_controls}
++{calculator_panel}
+ <div id="trade-board"><div class="tw-side-tabs" role="group" aria-label="Asset side"><button type="button" data-side="sent" aria-pressed="true">My assets</button><button type="button" data-side="received" aria-pressed="false">Their assets</button></div>
+ <div class="tw-boards"><section id="trade-sent-board"></section><section id="trade-received-board"></section></div></div>
+ {'</details>' if workflow == 'recommended' else ''}
+ <div id="trade-workspace-tools"><a href="/trades?front_office={active}" aria-label="All Trade Workflows">All workflows</a><button id="trade-start-new" type="button">Start New Trade</button><button id="trade-clear-package" type="button" hidden>Clear package · keep objective and protections</button></div>
+-{calculator_panel}
+ <section id="trade-review" tabindex="-1" hidden><h3>Your proposal</h3><div class="tw-packages"><section><h4>You send</h4><div id="trade-sent-chips"></div></section><section><h4>You receive</h4><div id="trade-received-chips"></div></section></div></section>
+ <div class="ti-actions"><button id="trade-view" type="button">View Trade</button>{'' if market_editor else '<button id="trade-run" type="button">Evaluate Trade</button>'}<button id="trade-edit" type="button">Edit Trade</button><button id="trade-adjust" type="button">Adjust Offer / protect assets</button>{'' if workflow in ('recommended', 'shop', 'trade-for') else '<button id="trade-find" type="button" hidden>Find offers</button>'}{calculator_link}</div>
+ <section id="trade-assist" class="tw-protection-controls" hidden><label for="trade-instruction">How should DTOS adjust it?</label><input id="trade-instruction" maxlength="300" placeholder="Make it cheaper, or name an asset to protect"><label for="trade-constraint-asset">Exact asset to keep or replace</label><select id="trade-constraint-asset"><option value="">Choose a specific owned asset</option></select>{protect_control}<button id="trade-release-lock" type="button">Remove selected adjustment lock</button><p>Keep and replace controls apply to this exact identity. Alternatives are previews; your proposal changes only when you adopt one.</p><details><summary>More adjustment options</summary><div class="ti-actions">{adjustments}</div></details><button id="trade-apply-adjust" type="button">Preview revised offers</button><button id="trade-alternatives" type="button">Preview alternatives</button></section>
+diff --git a/services/trade_decision.py b/services/trade_decision.py
+index 1283cce..ed961ea 100644
+--- a/services/trade_decision.py
++++ b/services/trade_decision.py
+@@ -69,7 +69,7 @@ def lineup_comparisons(result, side="active", *, _admissions=None):
+ 
+ 
+ def decision_context(result, *, incoming=(), outgoing=(), _admissions=None, _lineup_view=None):
+-    from services.trade_lineup_evidence import completed_lineup_admissions, counterparty_summary_display
++    from services.trade_lineup_evidence import completed_lineup_admissions, counterparty_summary_display, remaining_lineup_points
+     admissions = _admissions or completed_lineup_admissions(result)
+     dimensions = result.get("dimensions") or {}
+     strategy = (dimensions.get("strategic_fit") or {}).get("active") or {}
+@@ -248,6 +248,7 @@ def decision_context(result, *, incoming=(), outgoing=(), _admissions=None, _lin
+         },
+         "lineup": {**current, "delta": delta, "state": numeric_state, "explanation": lineup},
+         "lineup_comparisons": comparisons,
++        "remaining_lineup_points": remaining_lineup_points(result, admissions),
+         "partner_lineup_comparisons": {name: {key: row.get(key) for key in
+             ('delta', 'state', 'weeks', 'pre_total', 'post_total', 'subtotal', 'comparable_weeks')}
+             for name, row in partner_admitted['horizons'].items()},
+diff --git a/services/trade_lineup_evidence.py b/services/trade_lineup_evidence.py
+index 8acecd2..ca3882a 100644
+--- a/services/trade_lineup_evidence.py
++++ b/services/trade_lineup_evidence.py
+@@ -22,6 +22,29 @@ def same_number(left, right):
+     )
+ 
+ 
++def remaining_lineup_points(result, admissions):
++    """Summarize only recorded, calendar-scoped weeks after the selected week."""
++    selected = (((result.get('provenance') or {}).get('inputs') or {}).get('projection_evidence') or {}).get('week')
++    if type(selected) is not int or not 1 <= selected <= 18:
++        return None
++    strategies = (result.get('dimensions') or {}).get('strategic_fit') or {}
++    sides = {}
++    for side, evidence in admissions.items():
++        horizons = (strategies.get(side) or {}).get('horizons') or {}
++        periods = [(horizons.get(name) or {}).get('weeks_requested')
++                   for name in ('rest_of_regular_season', 'playoff_window')]
++        known = [period for period in periods if isinstance(period, (list, tuple))
++                 and all(type(week) is int and 1 <= week <= 18 for week in period)]
++        weeks = sorted({week for period in known for week in period if week > selected})
++        compared = [week for week in weeks if number((evidence['weekly'].get(week) or {}).get('delta'))]
++        sides[side] = {
++            'weeks': weeks, 'compared': compared, 'calendar_complete': len(known) == len(periods),
++            'subtotal': total(evidence['weekly'][week]['delta'] for week in compared) if compared else None,
++            'provisional': any(evidence['weekly'][week]['state'] != 'supported' for week in compared),
++        }
++    return {'selected_week': selected, 'sides': sides}
++
++
+ def total(values):
+     return float(sum((Decimal(str(v)) for v in values), Decimal(0)))
+ 
+diff --git a/static/css/trade_workspace.css b/static/css/trade_workspace.css
+index 15b8119..523de09 100644
+--- a/static/css/trade_workspace.css
++++ b/static/css/trade_workspace.css
+@@ -131,3 +131,39 @@ body:has(#trade-builder) .ds-page-header>div:first-child{display:flex;flex-wrap:
+ .tw-owner-header{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin-bottom:12px}.tw-owner-header>h3{flex:1 1 12rem;min-width:0;margin:0;overflow-wrap:anywhere}.tw-owner-header>a{flex:0 0 auto;min-height:44px;display:flex;align-items:center}
+ 
+ .tw-target-actions{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-start}.tw-target-actions>a{min-width:0;max-width:100%;overflow-wrap:anywhere}
++
++/* Build and review share the same package and valuation hierarchy. */
++.tw-workspace .tw-intent-nav{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px;padding:4px;background:var(--surface-elevated);border:1px solid var(--border);border-radius:12px}
++.tw-workspace .tw-intent-nav a{justify-content:center;text-align:center;border:0;border-radius:8px;padding:6px;line-height:1.2}
++.tw-workspace .tw-intent-nav a[aria-current=page]{background:var(--accent);color:#0c1908}
++.tw-workspace .tw-calculator{border-color:var(--border);background:var(--surface);padding:12px}
++.tw-draft-packages,.tw-review-packages,.tw-gauge-totals{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
++.tw-draft-packages>section,.tw-review-packages>section,.tw-gauge-totals>div{padding:10px;border:1px solid var(--border);border-radius:10px;min-width:0;overflow-wrap:anywhere;background:var(--surface-elevated)}
++.tw-draft-packages h3,.tw-review-packages h4{margin:0 0 4px}
++.tw-draft-packages .tw-add-asset{width:100%;color:var(--accent);border-color:var(--accent);padding-inline:6px}
++.tw-draft-packages .tw-calculator-asset{padding:6px 0;border-bottom:1px solid var(--border)}
++.tw-draft-packages .tw-calculator-asset button{padding-inline:7px}
++.tw-workspace .tw-balance-status:empty{display:none}
++.tw-workspace .tw-calculator #trade-balance{margin-top:10px}
++.tw-workspace .tw-calculator .tw-primary-actions>.tw-primary-action{width:100%}
++.tw-valuation-gauge{padding:12px;border:1px solid var(--border);border-radius:12px;background:var(--surface-elevated);margin:8px 0;overflow-wrap:anywhere}
++.tw-valuation-gauge h3{margin:0}
++.tw-gauge-totals{margin:8px 0;text-align:center}
++.tw-gauge-totals dt{color:var(--muted)}
++.tw-gauge-totals dd{margin:0;font-size:1.35rem;font-weight:750;font-variant-numeric:tabular-nums}
++.tw-gauge-difference{margin:6px 0 0;font-size:1.55rem;font-weight:800;text-align:center}
++.tw-valuation-gauge .tw-market-verdict{margin:0 0 8px;text-align:center}
++.tw-valuation-gauge .tw-gauge-track{position:relative;display:block;height:27px;border:1px solid #798286;border-radius:20px;overflow:visible;background:linear-gradient(180deg,#0006,transparent 52%,#0005),linear-gradient(90deg,#843e37 0 38%,#515b62 38% 62%,#367845 62%);box-shadow:inset 0 1px 4px #000b;margin:8px 0 4px}
++.tw-valuation-gauge .tw-gauge-track::before{content:"";position:absolute;inset:auto 10px 4px;height:6px;background:repeating-linear-gradient(90deg,#fff7 0 1px,transparent 1px 12.5%)}
++.tw-valuation-gauge .tw-gauge-pointer{position:absolute;top:50%;width:12px;height:12px;background:#15191b;border:2px solid #fff;transform:translate(-50%,-50%) rotate(45deg);box-shadow:0 0 3px #000}
++.tw-gauge-labels{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;text-align:center}
++.tw-trade-essentials{padding:8px 12px;border:1px solid var(--border);border-radius:10px;background:var(--surface)}
++.tw-trade-essentials p{margin:4px 0}
++.tw-projected-table{border-collapse:collapse;width:100%;table-layout:fixed;margin:4px 0}
++.tw-projected-table caption,.tw-projected-table small{color:var(--muted)}
++.tw-projected-table td,.tw-projected-table th{padding:6px;border:1px solid var(--border);vertical-align:top;overflow-wrap:anywhere}
++.tw-projected-table small{display:block;margin-top:4px}
++.tw-review-packages ul{margin:6px 0;padding-inline-start:16px}
++.tw-offer-summary .tw-offer-verdict{font-weight:700;margin:0;color:var(--text-primary)}
++.tw-offer-summary .tw-offer-effects{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
++@media(max-width:540px){.tw-draft-packages{grid-template-columns:1fr}.tw-workspace .tw-valuation-gauge{padding:8px}.tw-gauge-totals>div{padding:5px}.tw-gauge-labels{font-size:.9rem}}
+diff --git a/static/js/trade_workspace.js b/static/js/trade_workspace.js
+index 86a5e9a..9defabd 100644
+--- a/static/js/trade_workspace.js
++++ b/static/js/trade_workspace.js
+@@ -452,13 +452,6 @@
+       searchFeedback = null; el('recommendation-status').textContent = ''; el('trade-operation-announcement').textContent = ''; delete el('recommendation-status').dataset.state;
+     }
+     board('sent'); board('received');
+-    // Once Calculator has actual assets, its live comparison and Balance are
+-    // primary. Empty construction still begins with selectable assets.
+-    const calculatorPanel = root.querySelector('.tw-calculator');
+-    if (calculator && calculatorPanel) {
+-      if (selected.sent.length || selected.received.length) el('trade-board').before(calculatorPanel);
+-      else el('trade-board').after(calculatorPanel);
+-    }
+     el('trade-clear-package').hidden = !session.requiredOutgoingAsset && !session.requiredIncomingAsset;
+     root.querySelectorAll('[data-side]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.side === side)));
+     const targetBox = el('trade-target'), targetId = session.requiredIncomingAsset || session.requiredOutgoingAsset, target = asset(targetId);
+@@ -511,6 +504,125 @@
+     root.setAttribute('aria-busy', String(busy && !marketEditor));
+     el('trade-board').setAttribute('aria-busy', String(busy));
+   }
++  function valuationGauge({mode, sent, received, difference, relative = 0, precisionLimit = false, missing, retained = false}) {
++    const panel = node('section', null, 'tw-valuation-gauge');
++    const unit = mode.startsWith('Custom') ? 'Custom points' : 'Market points';
++    panel.append(node('h3', 'Value comparison · ' + mode));
++    if (retained) panel.append(node('p', 'Recorded values · NOT REVALIDATED', 'tw-drawback'));
++    const cards = node('dl', null, 'tw-gauge-totals');
++    for (const [name, value] of [['You send', sent], ['You receive', received]]) {
++      const item = node('div'); item.append(node('dt', name + ':'), node('dd', value)); cards.append(item);
++    }
++    panel.append(cards);
++    if (difference == null) {
++      panel.dataset.balance = 'incomplete';
++      panel.append(node('p', missing || 'A complete value comparison needs a compatible value for every asset.'));
++      return panel;
++    }
++    const state = relative < 0 ? 'give' : relative > 0 ? 'receive' : 'even';
++    panel.dataset.balance = state;
++    const sign = relative < 0 ? '−' : relative > 0 ? '+' : '';
++    const amount = precisionLimit ? (relative < 0 ? '> −0.01' : '< +0.01') : sign + difference;
++    panel.append(node('p', amount + ' ' + unit, 'tw-gauge-difference'),
++      node('p', state === 'even' ? 'Even · both packages have equal value'
++        : state === 'give' ? 'You give more value than you receive' : 'You receive more value than you give', 'tw-market-verdict'));
++    const track = node('div', null, 'tw-market-bar tw-gauge-track');
++    track.setAttribute('role', 'img');
++    track.setAttribute('aria-label', (state === 'even' ? 'Equal package values.' : state === 'give' ? 'You give more value.' : 'You receive more value.') + ' Not an acceptance probability.');
++    const pointer = node('span', null, 'tw-gauge-pointer');
++    const distance = Math.min(32, Math.abs(relative) * 32);
++    const offset = state === 'even' ? 0 : Math.sign(relative) * (13 + distance);
++    pointer.style.left = (50 + offset) + '%';
++    track.append(pointer);
++    const labels = node('div', null, 'tw-gauge-labels');
++    for (const label of ['You give more', 'Even · equal', 'You receive more']) labels.append(node('span', label));
++    panel.append(track, labels);
++    return panel;
++  }
++  function assessedGauge(e, retained) {
++    const personal = e.personalization?.mode === 'custom';
++    const value = personal ? e.personal_value_evidence : e.market_evidence;
++    const mode = personal ? 'Custom DTOS · ' + valuationSummary(e).split(':', 1)[0].split(' · ').at(-1) : 'Neutral Market';
++    const amount = key => {
++      const row = value?.[key];
++      return typeof row?.total === 'number' && Number.isFinite(row.total) ? displayMarket(row.total)
++        : typeof row?.known_subtotal === 'number' && Number.isFinite(row.known_subtotal) ? 'Partial · known subtotal ' + displayMarket(row.known_subtotal) : 'Unavailable';
++    };
++    const sent = value?.sent?.total, received = value?.received?.total;
++    const valid = value?.availability === 'full' && [sent, received].every(v => typeof v === 'number' && Number.isFinite(v));
++    const parts = valid ? [sent, received].map(marketParts) : [];
++    const scale = valid ? Math.max(...parts.map(p => p.scale)) : 0;
++    const diff = valid ? parts[1].integer * 10n ** BigInt(scale - parts[1].scale) - parts[0].integer * 10n ** BigInt(scale - parts[0].scale) : 0n;
++    const magnitude = diff < 0n ? -diff : diff;
++    const difference = valid ? displayMarketUnits(magnitude, scale) : null;
++    const relative = valid ? Number(diff) / 10 ** scale / Math.max(1, Math.abs(sent) + Math.abs(received)) : 0;
++    return valuationGauge({mode, sent: amount('sent'), received: amount('received'), difference, relative,
++      precisionLimit: diff !== 0n && difference === '0', retained});
++  }
++  function evaluationOverview(e, proposal, presentation, retained) {
++    const header = node('section', null, 'tw-evaluation-overview');
++    const packages = node('div', null, 'tw-review-packages');
++    for (const [title, ids, facts] of [['You send', proposal.assets_sent, presentation?.send],
++                                      ['You receive', proposal.assets_received, presentation?.receive]]) {
++      const box = node('section', null, 'tw-offer-package'); box.append(node('h4', title));
++      const list = node('ul');
++      for (const id of ids || []) list.append(node('li', packageText([id], facts, retained)));
++      box.append(list); packages.append(box);
++    }
++    header.append(packages, assessedGauge(e, retained));
++    const decision = decisionPresentation(e);
++    const benefit = decision.decisive_reason || e.why_you_would_do_it;
++    const cost = decision.main_cost || e.major_drawback;
++    const concern = decision.partner_cost;
++    if (benefit || cost || concern) {
++      const summary = node('section', null, 'tw-trade-essentials');
++      for (const [label, copy] of [['Main reason', benefit], ['Main cost', cost], ['Partner concern', concern]]) {
++        if (copy) summary.append(node('p', label + ': ' + customerText(copy)));
++      }
++      header.append(summary);
++    }
++    const table = node('table', null, 'tw-projected-table');
++    const caption = node('caption', retained ? 'Projected points at the recorded assessment' : 'Compared with keeping each current roster');
++    const heads = node('thead'), heading = node('tr');
++    for (const title of ['Period', 'Your team', 'Their team']) { const th = node('th', title); th.scope = 'col'; heading.append(th); }
++    heads.append(heading);
++    const body = node('tbody'), remaining = decision.remaining_lineup_points;
++    const week = remaining?.selected_week || decision.lineup_comparisons?.current_week?.weeks?.[0] || decision.partner_lineup_comparisons?.current_week?.weeks?.[0];
++    if ([decision.lineup_comparisons, decision.partner_lineup_comparisons].some(side => side?.current_week?.state === 'provisional')) {
++      header.append(node('p', 'Selected-week lineup comparison is provisional.', 'tw-risk-summary'));
++    }
++    const signed = value => typeof value === 'number' && Number.isFinite(value) ? (value > 0 ? '+' : '') + displayPoints(value) : 'Unavailable';
++    for (const [name, future] of [[week ? 'Week ' + week : 'Selected week', false], ['Rest of season', true]]) {
++      const row = node('tr'), title = node('th', name); title.scope = 'row'; row.append(title);
++      for (const side of ['active', 'partner']) {
++        const cell = node('td');
++        if (!future) {
++          const record = (side === 'active' ? decision.lineup_comparisons : decision.partner_lineup_comparisons)?.current_week;
++          const verified = record?.weeks?.length === 1 && record.weeks[0] === week && ['supported', 'provisional'].includes(record.state);
++          cell.append(node('b', signed(verified ? record.delta : null)));
++          if (verified && record.state === 'provisional') cell.append(node('small', 'Provisional'));
++        } else {
++          const record = remaining?.sides?.[side];
++          const complete = record?.calendar_complete && record.weeks.length === record.compared.length;
++          const known = record?.compared?.length;
++          const value = known ? signed(record.subtotal) : complete ? 'No later weeks' : 'Unavailable';
++          cell.append(node('b', value));
++          if (known) cell.append(node('small', (complete ? 'Weeks ' : 'Partial · weeks ') + record.compared.join(', ') + (record.provisional ? ' · provisional' : '')));
++          if (record && !complete) {
++            const missing = record.weeks.filter(w => !record.compared.includes(w));
++            if (missing.length) cell.append(node('small', 'Missing weeks ' + missing.join(', ')));
++            if (!record.calendar_complete) cell.append(node('small', 'Calendar coverage incomplete'));
++          }
++        }
++        row.append(cell);
++      }
++      body.append(row);
++    }
++    table.append(caption, heads, body);
++    const detail = node('div'); detail.append(table, node('small', 'Sleeper projections for separately optimized legal lineups before and after. Rest of season includes only applicable weeks after the selected week. Partial totals use the listed weeks.'));
++    header.append(disclosure('Projected lineup points', detail, 'tw-projected-points'));
++    return header;
++  }
+   function paintCalculator() {
+     // Exact decimal arithmetic over the prepared canonical numbers, never
+     // provider normalization, a fairness probability or strategic repricing.
+@@ -523,28 +635,23 @@
+     const shown = n => displayMarketUnits(n, scale);
+     const complete = rows.every(r => r.length && r.every(a => known.includes(a)));
+     const ownershipInvalid = ['sent', 'received'].some(which => selected[which].some(id => !team(which === 'sent' ? active : partner())?.assets.some(a => a.asset_id === id)));
+-    const box = el('trade-balance'); box.replaceChildren(node('h3', 'Market comparison'));
+-    rows.forEach((r, i) => box.append(node('p', `Side ${i ? 'B' : 'A'} · ${i ? 'You receive' : 'You send'}: ${r.length && r.every(a => known.includes(a)) ? shown(totals[i]) : r.some(a => known.includes(a)) ? 'Partial · known subtotal ' + shown(totals[i]) : 'Unavailable'}`)));
++    const box = el('trade-balance'); box.replaceChildren();
++    const amounts = rows.map((r, i) => r.length && r.every(a => known.includes(a)) ? shown(totals[i])
++      : r.some(a => known.includes(a)) ? 'Partial · known subtotal ' + shown(totals[i]) : 'Unavailable');
+     const difference = totals[1] - totals[0];
+     const verdict = node('h4', !complete ? rows.every(r => r.length) ? 'Cannot determine reliably · pricing evidence missing' : 'Choose assets on both sides' : difference === 0n ? 'Approximately balanced · equal Market totals' : `Side ${difference > 0n ? 'A' : 'B'} favored · ${difference > 0n ? 'you receive more' : 'your counterparty receives more'} Market value`);
+     if (complete && difference !== 0n) verdict.append(node('span', ' · ' + (team(difference > 0n ? active : partner())?.team_name || 'Manager unavailable')));
+     verdict.id = 'calculator-verdict'; box.append(verdict);
+-    if (complete) box.append(node('p', 'Value gap: ' + shown(difference < 0n ? -difference : difference) + ' Market points.'));
+-    if (complete) {
+-      const sentence = difference === 0n ? 'Market totals are equal.' : difference < 0n
+-        ? 'You are sending ' + shown(-difference) + ' more Market value than you receive.'
+-        : 'You receive ' + shown(difference) + ' more Market value than you send.';
+-      box.append(node('p', sentence, 'tw-market-verdict'));
+-      const bar = node('div', null, 'tw-market-bar'); bar.setAttribute('role', 'img');
+-      bar.setAttribute('aria-label', 'Relative Market totals. ' + sentence + ' Not an acceptance probability.');
+-      const sum = totals[0] + totals[1];
+-      for (let i = 0; i < 2; i++) {
+-        const segment = node('span', null, difference === 0n ? 'neutral' : (i === 1) === (difference > 0n) ? 'advantage' : 'disadvantage');
+-        segment.style.flexBasis = (sum > 0n ? Number(totals[i] * 10000n / sum) / 100 : 50) + '%'; bar.append(segment);
+-      }
+-      const caption = node('div', null, 'tw-market-caption'); caption.append(node('span', 'You send ' + shown(totals[0]) + ' · They receive'), node('span', 'You receive ' + shown(totals[1])));
+-      box.append(caption, bar, node('small', 'Relative asset value · not an acceptance probability.'));
+-    }
++    const marketGap = complete ? node('p', 'Value gap: ' + shown(difference < 0n ? -difference : difference) + ' Market points.') : null;
++    if (marketGap) box.append(marketGap);
++    const abs = value => value < 0n ? -value : value;
++    const gauge = (mode, values, totals, gap, show, known) => valuationGauge({mode, sent: values[0], received: values[1],
++      difference: known && !ownershipInvalid ? show(abs(gap)) : null,
++      relative: known ? Math.sign(Number(gap)) * Math.max(Number.EPSILON, Number(abs(gap)) / Math.max(1, Number(abs(totals[0]) + abs(totals[1])))) : 0,
++      precisionLimit: gap !== 0n && show(abs(gap)) === '0',
++      missing: ownershipInvalid ? 'Confirm current ownership for both packages.' : undefined});
++    const neutralGauge = gauge('Neutral Market', amounts, totals, difference, shown, complete);
++    box.prepend(neutralGauge);
+     if (ownershipInvalid) box.append(node('p', 'Ownership invalid or unavailable: this retained hypothetical offer is not executable. Remove moved assets or select their current owner before balancing.', 'tw-error'));
+     box.append(node('small', 'Market value ≠ lineup impact ≠ future capital ≠ strategy fit. Evaluate separately.'));
+     let selectedValueComplete = complete, selectedValueDifference = difference;
+@@ -558,10 +665,16 @@
+         ? row.reduce((sum, value) => sum + personalUnits(value), 0n) : null);
+       selectedValueComplete = complete && personalTotals.every(total => total != null);
+       selectedValueDifference = selectedValueComplete ? personalTotals[1] - personalTotals[0] : 0n;
+-      const panel = node('section', null, 'tw-personal-comparison');
+-      panel.append(node('h3', 'Your Custom DTOS valuation'), node('p', `You send: ${personalTotals[0] == null ? 'Unavailable' : displayMarketUnits(personalTotals[0], personalScale)} · You receive: ${personalTotals[1] == null ? 'Unavailable' : displayMarketUnits(personalTotals[1], personalScale)}`), node('small', 'Saved rank-slot values express your preferences. The neutral Market comparison below and opponent evidence are unchanged.'));
+-      if (personalRows.flat().some(value => !knownPersonal(value))) panel.append(node('p', 'This package includes an asset without a verified personal value. Check its saved rank and affected assets in My DTOS, or use Neutral DTOS. Your offer is unchanged.'));
+-      box.prepend(panel);
++      const personalShown = n => displayMarketUnits(n, personalScale);
++      const personalDisplay = personalTotals.map(n => n == null ? 'Unavailable' : personalShown(n));
++      const neutral = node('div');
++      neutral.append(neutralGauge, verdict);
++      if (marketGap) neutral.append(marketGap);
++      const priorNeutral = disclosure('Neutral Market values', neutral);
++      box.prepend(gauge('Custom DTOS · ' + (workspace.personalization?.method_label || 'saved rankings'),
++        personalDisplay, personalTotals, personalTotals.every(n => n !== null) ? personalTotals[1] - personalTotals[0] : 0n,
++        personalShown, personalTotals.every(n => n !== null)), priorNeutral);
++      if (personalRows.flat().some(value => !knownPersonal(value))) box.append(node('p', 'This package includes an asset without a verified personal value. Check its saved rank in My DTOS, or use Neutral DTOS.'));
+     }
+     const locks = [...new Set([...session.protectedAssets, ...session.excludedAssets, session.requiredOutgoingAsset, session.requiredIncomingAsset].filter(Boolean))];
+     if (locks.length) {
+@@ -578,7 +691,7 @@
+         const a = asset(id), row = node('div', null, 'tw-calculator-asset');
+         const owner = workspace.teams.find(t => t.assets.some(item => item.asset_id === id));
+         const identity = node('span', null, 'tw-calculator-identity');
+-        identity.append(node('b', a ? label(a) : 'Ownership unavailable'), node('small', [a?.kind === 'pick' ? 'Pick' : a?.position || 'Position unavailable', a?.nfl_team, owner?.team_name || 'Owner unavailable', a?.trade_value != null ? displayMarket(a.trade_value) : 'Market unavailable'].filter(value => value != null && value !== '').join(' · ')));
++        identity.append(node('b', a ? label(a) : 'Ownership unavailable'), node('small', [a?.kind === 'pick' ? 'Originally ' + (team(a.original_roster_id)?.team_name || 'franchise #' + a.original_roster_id) : a?.position || 'Position unavailable', a?.nfl_team, owner?.team_name || 'Owner unavailable', a?.trade_value != null ? displayMarket(a.trade_value) : 'Market unavailable'].filter(value => value != null && value !== '').join(' · ')));
+         row.append(identity);
+         const remove = node('button', 'Remove'); remove.type = 'button'; remove.disabled = busy; remove.setAttribute('aria-label', 'Remove ' + (a ? label(a) : id) + ' from calculator'); remove.onclick = () => toggle(which, id); row.append(remove); const protection = lockDetail(id); if (protection) row.append(protection); list.append(row);
+         const evidence = marketEvidence(a); if (evidence) list.append(evidence);
+@@ -683,11 +796,13 @@
+       return [key, {encoding: 'json-chunks-v1', chunks: text.match(/[\s\S]{1,1200}/g) || []}];
+     })) : value;
+     const d = value.decision_context;
+-    const {lineup_comparisons, partner_lineup_comparisons, lineup_phase_admission, ...decisionRest} = d || {};
+-    const compactDecision = d ? {lineup_comparisons: rows(lineup_comparisons),
+-      partner_lineup_comparisons: rows(d.partner_lineup_comparisons),
+-      lineup_phase_admission: d.lineup_phase_admission ? Object.fromEntries(Object.entries(d.lineup_phase_admission)
+-        .map(([side,weeks]) => [side,rows(weeks)])) : d.lineup_phase_admission} : d;
++    const {lineup_comparisons, partner_lineup_comparisons, lineup_phase_admission,
++      remaining_lineup_points, ...decisionRest} = d || {};
++    const compactDecision = d ? {remaining_lineup_points: typeof remaining_lineup_points === 'string' ? remaining_lineup_points
++      : remaining_lineup_points ? JSON.stringify(remaining_lineup_points) : undefined, lineup_comparisons: rows(lineup_comparisons),
++      partner_lineup_comparisons: rows(partner_lineup_comparisons),
++      lineup_phase_admission: lineup_phase_admission ? Object.fromEntries(Object.entries(lineup_phase_admission)
++        .map(([side,weeks]) => [side,rows(weeks)])) : lineup_phase_admission} : d;
+     if (compactDecision) Object.assign(compactDecision, decisionRest);
+     const {decision_context, personalization, ...restValue} = value;
+     return {personalization, recommendation: value.recommendation, dominant_reason: value.dominant_reason, major_drawback: value.major_drawback, assessment_state: value.assessment_state, provenance: value.provenance, decision_context: compactDecision, ...restValue, reserve_evidence: reserveEvidence, recommendation_trace: compactTrace,
+@@ -838,6 +953,7 @@
+     // existing 512-node analytical disclosure is full. The 64k context and
+     // 100k offer limits remain unchanged; truncation never implies zero.
+     const context = {schema: 1, recorded_lineup_text: boundedEvidence(recordedLineupText(e)), acquisition_comparison: boundedEvidence(row.acquisition_comparison), draft_capital_record: boundedEvidence(e.draft_capital_record), evaluation: recordedEvaluation(Object.fromEntries(keys.filter(key => key in e).map(key => [key, e[key]]))),
++      proposal_presentation: recordedPresentation(row),
+       exploration: row.exploration === true, search_result_type: row.search_result_type || null,
+       opportunity: boundedEvidence(row.opportunity || null),
+       identity: {personalization: JSON.stringify(personalPayload()), package: packageIdentity(row.proposal || selected), strategy: row.home_assessment_strategy ?? el('trade-strategy').value,
+@@ -963,6 +1079,10 @@
+   }
+   function decisionPresentation(e) {
+     const decision = {...(e.decision_context || {})};
++    if (typeof decision.remaining_lineup_points === 'string') {
++      try { decision.remaining_lineup_points = JSON.parse(decision.remaining_lineup_points); }
++      catch (_) { decision.remaining_lineup_points = null; }
++    }
+     const row = value => window.DTOSOfferComparison.recordedPeriod(value);
+     const rows = value => Object.fromEntries(Object.entries(value || {}).map(([key,value]) => [key,row(value)]));
+     decision.lineup_comparisons = rows(decision.lineup_comparisons);
+@@ -1028,6 +1148,9 @@
+     out.dataset.assessment = 'true';
+     const retained = Boolean(previousContainer || contextQualification(context));
+     out.dataset.assessmentFreshness = retained ? 'retained' : 'current';
++    if (!previousContainer) {
++      out.append(evaluationOverview(e, {assets_sent: selected.sent, assets_received: selected.received}, context?.proposal_presentation, retained));
++    }
+     if (retained && !e.explanation_html) appendRecordedLineups(out, context);
+     out.append(capitalDisclosure(context?.draft_capital_record || e.draft_capital_record, retained));
+     const attemptState = context?.attempt_state || e.assessment_state?.state || 'fresh_incomplete';
+@@ -1074,6 +1197,7 @@
+       // Same-origin server renderer escapes all evidence text. No client-side
+       // recommendation/scoring or reason-code interpretation is performed.
+       const document = parsedExplanation(e);
++      document.querySelector('.tw-decision-market .tw-market-bar')?.remove();
+       if (incomplete && e.recommendation && e.assessment_state?.recommendation_supported !== true) {
+         const conclusion = document.querySelector('.dtos-explanation > p');
+         if (conclusion) conclusion.textContent = 'Recommendation unavailable · current evaluation is incomplete.';
+@@ -1400,7 +1524,7 @@
+   }
+ 
+   function recordedPresentation(row) {
+-    const supplied = row.proposal_presentation || row.proposal.preview_presentation;
++    const supplied = row.proposal_presentation || row.proposal?.preview_presentation;
+     if (!supplied) return null;
+     return boundedEvidence(Object.fromEntries(['send', 'receive'].map(side => [side,
+       Array.isArray(supplied[side]) ? supplied[side].slice(0, 32).map(item => Object.fromEntries(
+@@ -1450,22 +1574,25 @@
+     const balance = row.balance_adjustment || row.proposal.preview_balance_adjustment;
+     if (balance && preview) {
+       const review = balanceOfferCard(row, preview, context);
++      review.prepend(evaluationOverview(e, row.proposal, row.proposal_presentation || row.proposal.preview_presentation, retained));
+       for (const capital of review.querySelectorAll(':scope > .tw-draft-capital')) capital.replaceWith(disclosure('Draft capital · picks before and after', capital));
+       return review;
+     }
+     const card = node('article', null, preview ? 'tw-offer tw-offer-review' : 'tw-offer tw-offer-summary');
+     if (row.exploration) card.append(node('p', 'Exploratory only · not a recommendation', 'tw-drawback'));
+     if (retained) card.append(node('p', 'Retained assessment · NOT REVALIDATED', 'tw-drawback'));
+-    card.append(node('h3', finalVerdict(e)), node('p', 'Trade with ' + (context.identity?.counterparty || (retained ? 'Franchise #' + row.proposal.partner_roster_id + ' · recorded name unavailable' : team(row.proposal.partner_roster_id)?.team_name || 'the selected partner')), 'tw-offer-partner'));
+-    card.append(node('p', 'You send: ' + packageText(row.proposal.assets_sent, (row.proposal_presentation || row.proposal.preview_presentation)?.send, retained), 'tw-offer-package'),
++    const partnerName = context.identity?.counterparty || (retained ? 'Franchise #' + row.proposal.partner_roster_id + ' · recorded name unavailable' : team(row.proposal.partner_roster_id)?.team_name || 'the selected partner');
++    card.append(node('h3', partnerName, 'tw-offer-partner'), node('p', finalVerdict(e), 'tw-offer-verdict'));
++    if (preview) card.append(evaluationOverview(e, row.proposal, row.proposal_presentation || row.proposal.preview_presentation, retained));
++    if (!preview) card.append(node('p', 'You send: ' + packageText(row.proposal.assets_sent, (row.proposal_presentation || row.proposal.preview_presentation)?.send, retained), 'tw-offer-package'),
+       node('p', 'You receive: ' + packageText(row.proposal.assets_received, (row.proposal_presentation || row.proposal.preview_presentation)?.receive, retained), 'tw-offer-package'));
+     if (decision.qualification) card.append(node('p', customerText(decision.qualification), 'tw-verdict-qualification'));
+     const lead = node('section', null, 'tw-decision-lead');
+     const reason = decision.decisive_reason || decision.summary || e.why_you_would_do_it || e.dominant_reason;
+-    if (reason) lead.append(node('p', 'Why: ' + customerText(reason), 'tw-offer-reason'));
++    if (reason && !preview) lead.append(node('p', 'Why: ' + customerText(reason), 'tw-offer-reason'));
+     const mainCost = decision.main_cost || e.major_drawback || e.major_risks?.join('; ').replaceAll('_', ' ')
+       || e.major_limitations?.join('; ').replaceAll('_', ' ') || 'The principal cost is not established in this assessment.';
+-    lead.append(node('p', 'Main cost or risk: ' + customerText(mainCost), 'tw-drawback'));
++    if (!preview || !(decision.main_cost || e.major_drawback)) lead.append(node('p', 'Main cost or risk: ' + customerText(mainCost), 'tw-drawback'));
+     const cautions = availabilityCautions(e);
+     if (cautions.length) {
+       const material = cautions.filter(line => /\b(?:OUT|IR|PUP|SUSPENDED|INACTIVE|RETIRED)\b|Bye \/ no scheduled game/.test(line)).filter(line => {
+@@ -1474,7 +1601,7 @@
+       }).map(line => line.replace(/ · Season (\d+) · Week (\d+): /, ' · week $2: '));
+       lead.append(node('p', 'Availability and depth: ' + cautions.length + ' player-specific caution' + (cautions.length === 1 ? '' : 's') + '. ' + material.join(' ') + ' Full player details in Review trade.', 'tw-risk-summary'));
+     }
+-    appendCurrentLineupSummary(lead, decision);
++    if (!preview) appendCurrentLineupSummary(lead, decision);
+     const balanceShown = balance ? balanceMarketDisplay(balance, 'suggested') : null;
+     lead.append(node('p', balanceShown ? (balance.valuation_context?.startsWith('Custom') ? 'Your personal valuation' : 'Current Market') + ': You send ' + balanceShown.sent + ' / You receive ' + balanceShown.received + '. Difference: ' + balanceShown.gap + '.' : valuationSummary(e), 'tw-offer-market'));
+     card.append(lead);
+@@ -1515,6 +1642,7 @@
+     if (retained && !e.explanation_html) appendRecordedLineups(card, context);
+     if (e.explanation_html) {
+       const parsed = parsedExplanation(e), explanation = parsed.querySelector('.dtos-explanation');
++      explanation?.querySelector('.tw-decision-market .tw-market-bar')?.remove();
+       // Move the already-admitted slot view once; no new optimization or request.
+       for (const detail of parsed.querySelectorAll('.dtos-explanation > .tw-lineup-details')) card.append(detail);
+       for (const warning of parsed.querySelectorAll('.dtos-explanation > .tw-lineup-warning')) warning.remove();
+@@ -1802,6 +1930,12 @@
+       }
+     }
+   }
++  root.querySelectorAll('[data-add-side]').forEach(button => button.onclick = () => {
++    side = button.dataset.addSide;
++    paint();
++    const search = el('trade-' + side + '-board').querySelector('input[type=search]');
++    (search || el('trade-partner')).focus();
++  });
+   el('trade-view').onclick = review; el('trade-tray-view').onclick = review; el('trade-edit').onclick = edit;
+   el('trade-run').onclick = () => run('evaluate'); el('trade-find').onclick = () => run('generate');
+   el('trade-cancel').onclick = () => {
+diff --git a/tests/test_00_trade_workflow_experience.py b/tests/test_00_trade_workflow_experience.py
+index ad3b5c0..1da2894 100644
+--- a/tests/test_00_trade_workflow_experience.py
++++ b/tests/test_00_trade_workflow_experience.py
+@@ -99,8 +99,12 @@ class TradeWorkflowExperienceTests(unittest.TestCase):
+             for path in ['/trades?front_office=1', '/trades/recommended?front_office=1', '/trades/calculator?front_office=1']:
+                 response = f.f.client.get(path)
+                 self.assertEqual(response.status_code, 200)
+-                self.assertIn('Generate Trades', response.text)
+-                self.assertIn('Evaluate Trade', response.text)
++                if path.startswith('/trades?'):
++                    self.assertIn('Generate Trades', response.text)
++                    self.assertIn('Evaluate Trade', response.text)
++                else:
++                    self.assertIn('Find a trade</a>', response.text)
++                    self.assertIn('Evaluate an offer</a>', response.text)
+             generate.assert_not_called()
+         html = f.f.client.get('/trades/recommended?front_office=1').text
+         self.assertLess(html.index('id="trade-strategy"'), html.index('id="trade-board"'))
+@@ -322,12 +326,12 @@ class TradeWorkflowExperienceTests(unittest.TestCase):
+                     page, records, _, errors, _ = self.page(browser, f, width, height)
+                     self.ready(page)
+                     with page.expect_navigation(wait_until='domcontentloaded'):
+-                        page.get_by_role('link', name='Evaluate Trade', exact=True).click()
++                        page.get_by_role('link', name='Evaluate an offer', exact=True).click()
+                     page.locator('.tw-calculator').wait_for()
+                     # This link replaces the calculator document. Wait for the
+                     # real navigation before testing the new page's controls.
+                     with page.expect_navigation(wait_until='domcontentloaded'):
+-                        page.get_by_role('link', name='Generate Trades', exact=True).click()
++                        page.get_by_role('link', name='Find a trade', exact=True).click()
+                     page.locator('#trade-find').wait_for(state='visible')
+                     page.wait_for_function("!document.querySelector('#trade-find').disabled")
+                     self.assertEqual(records, [])
+diff --git a/tests/test_trade_calculator_browser.py b/tests/test_trade_calculator_browser.py
+index 49d3946..a552013 100644
+--- a/tests/test_trade_calculator_browser.py
++++ b/tests/test_trade_calculator_browser.py
+@@ -1,5 +1,7 @@
+ """Responsive Chromium calculator editing, preview/adoption and navigation."""
+ import copy
++import os
++from pathlib import Path
+ import unittest
+ 
+ from tests import test_trade_scout_state_browser as scout
+@@ -73,6 +75,9 @@ class CalculatorBrowserTests(unittest.TestCase):
+             page.click('[data-side=sent]')
+             page.locator('#trade-sent-board button[data-asset-id="player:b"]').click()
+             self.assertIn('Approximately balanced', page.locator('#calculator-verdict').inner_text())
++            gauge = page.locator('#trade-balance > .tw-valuation-gauge')
++            self.assertEqual(gauge.get_attribute('data-balance'), 'even')
++            self.assertEqual(gauge.locator('.tw-gauge-pointer').evaluate('e=>e.style.left'), '50%')
+         data['teams'][0]['assets'][1]['trade_value'] = None
+         with self.fixture.page(workspace=data) as (page, requests):
+             self.build(page)
+@@ -80,9 +85,87 @@ class CalculatorBrowserTests(unittest.TestCase):
+             page.locator('#trade-sent-board button[data-asset-id="player:b"]').click()
+             self.assertIn('Cannot determine reliably', page.locator('#calculator-verdict').inner_text())
+             self.assertIn('Partial · known subtotal 0.1', page.locator('#trade-balance').inner_text())
++            gauge = page.locator('#trade-balance > .tw-valuation-gauge')
++            self.assertEqual(gauge.get_attribute('data-balance'), 'incomplete')
++            self.assertEqual(gauge.locator('.tw-gauge-pointer').count(), 0)
+             self.assertTrue(page.locator('#trade-balance-offer').is_disabled())
+             self.assertEqual(requests, [])
+ 
++    def test_shared_value_gauge_and_selected_week_review_on_phone_and_desktop(self):
++        for width, mode, expected in ((320, 'neutral', 'receive'), (390, 'custom', 'give'), (1280, 'neutral', 'receive')):
++            data = copy.deepcopy(self.data)
++            owned = data['teams'][0]['assets']
++            owned.extend([
++                {**owned[0], 'asset_id': 'player:c', 'label': 'C', 'trade_value': 400},
++                {**owned[0], 'asset_id': 'player:missing', 'label': 'Missing value', 'trade_value': None},
++            ])
++            owned.reverse()
++            data['personalization'] = {
++                'mode': mode, 'revision': 1, 'available': True, 'method_label': 'Absolute Slot',
++                'values': {'player:a': 800, 'player:x': 200},
++            }
++            def values(sent, received):
++                return {'availability': 'full', 'sent': {'total': sent}, 'received': {'total': received}}
++            def evaluate(route, payload):
++                self.assertEqual(payload['assets_sent'], ['player:a'])
++                self.assertEqual(payload['assets_received'], ['player:x'])
++                self.assertEqual(payload['valuation_mode'], mode)
++                evaluation = {
++                    'recommendation': 'REJECT', 'personalization': {'mode': mode, 'method': 'personal-current-market-slot-curve-v1'},
++                    'market_evidence': values(400, 600), 'personal_value_evidence': values(800, 200),
++                    'assessment_state': {'state': 'fresh_complete', 'recommendation_supported': True},
++                    'decision_context': {
++                        'lineup_comparisons': {'current_week': {'weeks': [13], 'delta': 0, 'state': 'supported'}},
++                        'partner_lineup_comparisons': {'current_week': {'weeks': [13], 'delta': -2, 'state': 'provisional'}},
++                        'remaining_lineup_points': {'selected_week': 13, 'sides': {
++                            'active': {'weeks': [14, 15], 'compared': [14, 15], 'subtotal': 4, 'calendar_complete': True},
++                            'partner': {'weeks': [14, 15], 'compared': [14], 'subtotal': -3, 'calendar_complete': True},
++                        }},
++                    },
++                }
++                route.fulfill(json={'evaluation': evaluation, 'assessment_source_identity': {'fixture': True}})
++
++            with self.subTest(width=width), self.fixture.page(width, workspace=data, api=evaluate) as (page, requests):
++                self.fixture.ready(page, '/trades/calculator?front_office=1')
++                page.select_option('#trade-partner', '2')
++                picker = page.locator('#trade-sent-board')
++                self.assertEqual(picker.locator('[data-picker-group]').all_text_contents(), ['WR', 'Draft picks'])
++                self.assertEqual(picker.locator('button[data-asset-id]').evaluate_all(
++                    'els=>els.map(e=>e.dataset.assetId)'), ['player:a', 'player:c', 'player:b', 'player:d', 'player:missing',
++                                                          'pick:2028:1:3', 'pick:2028:2:3'])
++                for side, asset in (('sent', 'player:a'), ('received', 'player:x')):
++                    page.locator(f'[data-add-side="{side}"]').click()
++                    self.assertEqual(page.locator(f'#trade-{side}-board input').evaluate('e=>e===document.activeElement'), True)
++                    page.locator(f'#trade-{side}-board button[data-asset-id="{asset}"]').click()
++                gauge = page.locator('#trade-balance > .tw-valuation-gauge')
++                difference = '−600 Custom points' if mode == 'custom' else '+200 Market points'
++                self.assertEqual(gauge.get_attribute('data-balance'), expected)
++                self.assertIn(difference, gauge.inner_text())
++                offset = float(gauge.locator('.tw-gauge-pointer').evaluate('e=>parseFloat(e.style.left)'))
++                self.assertTrue(offset < 38 if expected == 'give' else offset > 62)
++                target = os.environ.get('DTOS_TRADE_REDESIGN_EVIDENCE')
++                if target:
++                    page.locator('.tw-calculator').screenshot(path=str(Path(target, f'build-{width}.png')))
++                self.assertEqual(requests, [])
++                original = self.state(page)['currentProposal']
++                page.locator('#trade-run').click()
++                result = page.locator('#trade-result')
++                result.locator('.tw-projected-points > summary').wait_for()
++                self.assertIn('REJECT', result.inner_text())
++                self.assertIn(difference, result.locator('.tw-valuation-gauge').inner_text())
++                result.locator('.tw-projected-points > summary').press('Enter')
++                table = result.locator('.tw-projected-table')
++                self.assertIn('0.00', table.inner_text())
++                self.assertIn('Partial · weeks 14', table.inner_text())
++                self.assertIn('Missing weeks 15', table.inner_text())
++                self.assertIn('Weeks 14, 15', table.inner_text())
++                self.assertLessEqual(page.evaluate('document.documentElement.scrollWidth'), width)
++                if target:
++                    result.locator('.tw-evaluation-overview').screenshot(path=str(Path(target, f'evaluated-{width}.png')))
++                page.locator('#trade-edit').click()
++                self.assertEqual(self.state(page)['currentProposal'], original)
++                self.assertEqual([path for path, _ in requests], ['evaluate'])
++
+     def test_preview_keep_adopt_reload_exact_pick_and_advanced_preserve_package(self):
+         with self.fixture.page(workspace=self.data, api=self.balancing) as (page, requests):
+             self.build(page)
+diff --git a/tests/test_trade_lineup_provenance.py b/tests/test_trade_lineup_provenance.py
+index df5eca2..181308b 100644
+--- a/tests/test_trade_lineup_provenance.py
++++ b/tests/test_trade_lineup_provenance.py
+@@ -50,6 +50,26 @@ class LineupProvenanceTests(unittest.TestCase):
+         self.assertEqual(self.e, before)
+         self.save("admitted-lineup-context", a)
+ 
++    def test_remaining_season_uses_only_admitted_calendar_weeks_after_selection(self):
++        current = decision_context(self.e)["remaining_lineup_points"]
++        self.assertEqual(current["selected_week"], 2)
++        active = current["sides"]["active"]
++        self.assertEqual(active["weeks"], [3, 4, 5])
++        self.assertEqual(active["compared"], [3, 4, 5])
++        self.assertTrue(active["calendar_complete"])
++        self.assertAlmostEqual(active["subtotal"], 18.93)
++
++        partial = deepcopy(self.e)
++        del partial["provenance"]["inputs"]["projection_evidence"]["horizon_snapshot_ids"]["4"]
++        active = decision_context(partial)["remaining_lineup_points"]["sides"]["active"]
++        self.assertEqual(active["weeks"], [3, 4, 5])
++        self.assertEqual(active["compared"], [3, 5])
++        self.assertAlmostEqual(active["subtotal"], 12.62)
++        partial["dimensions"]["strategic_fit"]["active"]["horizons"]["playoff_window"]["weeks_requested"] = None
++        active = decision_context(partial)["remaining_lineup_points"]["sides"]["active"]
++        self.assertFalse(active["calendar_complete"])
++        self.assertNotIn(2, active["weeks"])
++
+     def test_global_conflicts_fence_headline_horizons_and_expanded_weekly_rows(self):
+         controls = [
+             ("projection_generation", "foreign"),
