@@ -219,7 +219,7 @@ def create_trades_router(*, ensure_fresh: EnsureFresh, require_data: RequireData
             if row is None:
                 raise HTTPException(410, "This idea expired or its source, strategy or protections changed. Your draft is unchanged. Find current ideas again.")
             return JSONResponse(row, headers={"Cache-Control": "no-store"})
-        from services.front_office_brief import prepared_evidence, select_insights
+        from services.front_office_brief import prepared_evidence, prepared_first_action, select_insights
         from services.home_attention import attention_state
         from services.attention_changes import pick_changes
         from src.ui.front_office_brief import cards as brief_cards
@@ -230,6 +230,7 @@ def create_trades_router(*, ensure_fresh: EnsureFresh, require_data: RequireData
             changes, coverage = pick_changes(data, rid, METADATA_DATABASE_FILE)
             attention = attention_state(data, rid, reader.snapshot(), change_rows=changes, change_coverage=coverage)
             items = select_insights(facts, attention['items'], result['rows'])
+            priority = prepared_first_action(data, rid, facts.get('strength'), reader, items)
             rendered = brief_cards(items)
             if facts.get('outlook'):
                 from html import escape
@@ -244,9 +245,9 @@ def create_trades_router(*, ensure_fresh: EnsureFresh, require_data: RequireData
             same_generation = intelligence_orchestrator.context(current, rid, {'strategy': strategy}).evidence_generation == facts['generation']
             if not same_generation or home_ideas.cache_key(current, rid, strategy, locks, omissions) != key:
                 raise HTTPException(409, 'Prepared evidence changed. Reload Home to review current facts; your draft is unchanged.')
-            return facts, items, rendered
+            return facts, items, rendered, priority
 
-        facts, items, brief_html = await run_manager_read(prepared_brief)
+        facts, items, brief_html, priority = await run_manager_read(prepared_brief)
         # Publication may change while the off-loop prepared read is pending.
         # Do not let an obsolete response reintroduce an offer or roster claim.
         if publication() != admitted_publication:
@@ -254,6 +255,7 @@ def create_trades_router(*, ensure_fresh: EnsureFresh, require_data: RequireData
         return JSONResponse({'workspace_context': context, 'csrf_token': account.csrf_token if account else '',
             'strategy': strategy, 'source_identity': key[1] if key else None, 'count': len(result['rows']),
             'brief_html': brief_html, 'brief_count': len(items), 'brief_generation': facts['generation'],
+            'priority': priority,
             'state': result['state'], 'reason': result.get('reason'), 'html': opportunity_cards(result['rows'], rid),
             'retained': bool(result.get('source_identity'))}, headers={"Cache-Control": "no-store"})
 

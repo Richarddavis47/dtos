@@ -48,6 +48,7 @@ class PositionalPresentationBrowserTests(unittest.TestCase):
                             page.wait_for_load_state("networkidle")
                             card = page.locator(selector)
                             if label == "home":
+                                page.locator("#home-brief-details > summary").click()
                                 card.locator("summary").press("Enter")
                             self.assertIn(
                                 "Supported positional strength: QB", card.inner_text()
@@ -113,6 +114,7 @@ class PositionalPresentationBrowserTests(unittest.TestCase):
                         page.wait_for_load_state('networkidle')
                         self.assertIn('Provisional: QB: supported evidence identifies a starting-lineup need.', page.locator('#my-team-outlook').inner_text())
                         page.goto('https://dtos.test/')
+                        page.locator("#home-brief-details > summary").click()
                         page.wait_for_load_state('networkidle')
                         outlook = page.locator('[aria-label="Franchise outlook"]')
                         outlook.locator('summary').press('Enter')

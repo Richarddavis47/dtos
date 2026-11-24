@@ -31,6 +31,7 @@ class FrontOfficeBriefBrowserTests(unittest.TestCase):
                         page.on('request', lambda r: requests.append(r.url))
                         page.on('pageerror', lambda e: errors.append(str(e)))
                         page.goto('https://dtos.test/')
+                        page.locator('#home-brief-details > summary').click()
                         page.locator('.home-opportunity').wait_for()
                         self.assertEqual(page.get_by_role('heading',name='Front Office Brief').count(), 1)
                         self.assertEqual(page.get_by_role('heading',name='Attention',exact=True).count(), 0)
@@ -43,16 +44,17 @@ class FrontOfficeBriefBrowserTests(unittest.TestCase):
                         row = page.evaluate('''() => {
                           const rect=s=>{const r=document.querySelector(s).getBoundingClientRect();return {y:r.y,height:r.height,width:r.width};};
                           return {brief:rect('#home-opportunities'),news:rect('.league-trade-news'),
-                            firstInsight:rect('#home-opportunity-cards article'),find:rect('#home-find-ideas'),
-                            title:rect('#home-opportunity-cards article h3'),reason:rect('#home-opportunity-cards article p'),
-                            drawback:rect('#home-opportunity-cards article p:nth-of-type(2)'),action:rect('#home-opportunity-cards article a'),
+                            firstInsight:rect('#home-priority'),find:rect('#home-find-ideas'),
+                            title:rect('#home-priority h3'),reason:rect('#home-priority p'),
+                            drawback:rect('#home-opportunity-cards article p:nth-of-type(2)'),action:rect('#home-priority a'),
                             nav:rect('.manager-nav'),
                             overflow:document.documentElement.scrollWidth-innerWidth,
                             visibleText:document.querySelector('#home-opportunity-cards').innerText,
                             font:getComputedStyle(document.querySelector('#home-opportunity-cards p')).fontSize};}''')
                         row.update(width=width,height=height)
                         row['initialVisibility'] = {key: row[key]['y'] >= 0 and row[key]['y'] + row[key]['height'] <= min(height, row['nav']['y'] if width < 761 else height) for key in ('title', 'reason', 'drawback', 'action')}
-                        self.assertLess(row['brief']['y'],row['news']['y'])
+                        self.assertLess(row['firstInsight']['y'],row['news']['y'])
+                        self.assertGreater(row['brief']['y'],row['news']['y'])
                         self.assertLessEqual(row['overflow'],0)
                         self.assertLess(row['firstInsight']['y'], 550 if width < 761 else 600)
                         if width in (375, 390):
@@ -66,6 +68,7 @@ class FrontOfficeBriefBrowserTests(unittest.TestCase):
                         self.assertEqual(page.locator('#home-opportunity-cards > article').count(),2)
                         self.assertFalse(more.evaluate('e=>e.open'))
                         summary = more.locator('summary').first
+                        page.keyboard.press('Tab')
                         summary.focus()
                         self.assertNotEqual(summary.evaluate('e=>getComputedStyle(e).outlineStyle'),'none')
                         summary.press('Enter')
@@ -77,6 +80,7 @@ class FrontOfficeBriefBrowserTests(unittest.TestCase):
                         page.get_by_text('Trade review',exact=True).wait_for()
                         page.get_by_role('button',name='Back to your draft',exact=True).click()
                         page.goto('https://dtos.test/')
+                        page.locator('#home-brief-details > summary').click()
                         page.locator('.home-opportunity').wait_for()
                         page.locator('.home-opportunity').get_by_role('link',name='Explore / Edit').click()
                         page.get_by_role('button',name='Use this offer in my draft',exact=True).click()
@@ -85,6 +89,7 @@ class FrontOfficeBriefBrowserTests(unittest.TestCase):
                         measurements.append(row)
                         if os.environ.get('DTOS_BRIEF_EVIDENCE'):
                             page.goto('https://dtos.test/')
+                            page.locator('#home-brief-details > summary').click()
                             page.locator('.home-opportunity').wait_for()
                             page.screenshot(path=str(Path(os.environ['DTOS_BRIEF_EVIDENCE'])/f'home-{width}.png'),full_page=True)
                     finally:
@@ -110,11 +115,13 @@ class FrontOfficeBriefBrowserTests(unittest.TestCase):
                 page.on('pageerror', lambda e: errors.append(str(e)))
                 with patch('services.home_trade_opportunities.source_identity',return_value=None):
                     page.goto('https://dtos.test/')
+                    page.locator('#home-brief-details > summary').click()
                     page.get_by_text('Trade prices are unavailable or changing.',exact=False).wait_for()
                     self.assertIn('Review recorded draft picks',page.locator('#home-opportunity-cards').inner_text())
                     self.assertIn('remaining totals are unknown',page.locator('#home-opportunity-cards').inner_text())
                     self.assertEqual(page.locator('.home-opportunity').count(),0)
                 page.reload()
+                page.locator('#home-brief-details > summary').click()
                 page.locator('.home-opportunity').wait_for()
                 pending=[]
                 def hold(route):
@@ -184,6 +191,7 @@ class FrontOfficeBriefBrowserTests(unittest.TestCase):
                                 stack.enter_context(patch('services.front_office_brief.prepared_diagnostics', return_value=None))
                                 stack.enter_context(patch('src.core.intelligence.cache.IntelligenceCache.peek', return_value=None))
                             page.goto('https://dtos.test/', wait_until='domcontentloaded')
+                            page.locator('#home-brief-details > summary').click()
                             if state != 'loading':
                                 page.wait_for_function("document.querySelector('#home-opportunities').dataset.presentation !== 'loading'")
                             text = page.locator('#home-opportunity-status').inner_text()
@@ -201,6 +209,7 @@ class FrontOfficeBriefBrowserTests(unittest.TestCase):
                             self.assertFalse(generated)
                             self.assertTrue(page.get_by_role('button', name='Find Trade Ideas', exact=True).is_enabled())
                             self.assertLessEqual(page.evaluate('document.documentElement.scrollWidth-innerWidth'), 0)
+                            page.keyboard.press('Tab')
                             page.get_by_role('button', name='Find Trade Ideas', exact=True).focus()
                             self.assertNotEqual(page.locator('#home-find-ideas').evaluate('e=>getComputedStyle(e).outlineStyle'), 'none')
                             measurements.append({'width':width,'height':height,'state':state,'status':text,'automatic_discovery_calls':len(generated)})
@@ -210,11 +219,12 @@ class FrontOfficeBriefBrowserTests(unittest.TestCase):
                 # Exact capital action and existing My Team return use the real authenticated routes.
                 page = f.f.browser_page(browser, 390, 844)
                 page.goto('https://dtos.test/')
+                page.locator('#home-brief-details > summary').click()
                 page.get_by_role('link', name='Review exact draft capital').click()
                 self.assertIn('/teams/1#draft-capital', page.url)
                 self.assertTrue(page.locator('#draft-capital').is_visible())
                 page.go_back()
-                page.get_by_role('heading', name='Front Office Brief').wait_for()
+                page.get_by_role('heading', name='Do this first').wait_for()
                 page.close()
                 # A current RB concern reuses the existing editable Trade filter.
                 import base64
@@ -236,7 +246,7 @@ class FrontOfficeBriefBrowserTests(unittest.TestCase):
                 page.goto('https://dtos.test/')
                 generated = []
                 page.on('request', lambda request: generated.append(request.url) if request.method == 'POST' and '/api/trades/' in request.url else None)
-                page.get_by_role('link', name='Explore RB trades').click()
+                page.locator('#home-priority').get_by_role('link', name='Explore RB trades').click()
                 self.assertIn('/trades/recommended?', page.url)
                 self.assertIn('team_need=', page.url)
                 page.wait_for_function("document.querySelector('#trade-context') && !document.querySelector('#trade-context').textContent.includes('Loading')")
@@ -244,7 +254,7 @@ class FrontOfficeBriefBrowserTests(unittest.TestCase):
                 self.assertIn('depth need, not a starter-upgrade', page.locator('#recommendation-position-origin').inner_text())
                 self.assertEqual(generated, [])
                 page.go_back()
-                page.get_by_role('heading', name='Front Office Brief').wait_for()
+                page.get_by_role('heading', name='Do this first').wait_for()
                 page.close()
             finally:
                 browser.close()

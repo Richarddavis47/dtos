@@ -70,6 +70,7 @@ class DynamicNeedsBrowserTests(TestCase):
                             page.evaluate("document.documentElement.scrollWidth"), width
                         )
                     page.goto("https://dtos.test/")
+                    page.locator("#home-brief-details > summary").click()
                     page.locator(".home-opportunity").first.wait_for()
                     self.assertIn(
                         f.row["evaluation"]["why_you_would_do_it"],

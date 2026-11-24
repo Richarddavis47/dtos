@@ -64,9 +64,10 @@ def capture_pages(folder=None):
                             response = page.goto('https://dtos.test' + path)
                             if response.status != 200:
                                 raise AssertionError((name, response.status))
-                            page.locator(selector).wait_for()
                             if name.startswith('home'):
+                                page.locator('#home-brief-details > summary').click()
                                 page.locator('#home-opportunity-cards article').first.wait_for()
+                            page.locator(selector).wait_for()
                             if name == 'builder':
                                 page.locator('#trade-context').get_by_text('Active league', exact=False).wait_for()
                             page.wait_for_load_state('networkidle')

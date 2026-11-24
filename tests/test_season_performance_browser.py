@@ -67,6 +67,7 @@ class SeasonPerformanceBrowserTests(unittest.TestCase):
                         if root:
                             page.screenshot(path=str(root / f'team-expanded-{width}.png'), full_page=True)
                         page.goto('https://dtos.test/')
+                        page.locator('.home-week details > summary').click()
                         link = page.get_by_role('link', name='Review season results')
                         self.assertEqual(link.count(), 1)
                         self.assertEqual(page.get_by_text('How often did we outscore', exact=False).count(), 0)
@@ -122,6 +123,7 @@ class SeasonPerformanceBrowserTests(unittest.TestCase):
                         panel.get_by_text('Weeks, coverage and sources', exact=True).click()
                         self.assertIn('partial-native', panel.inner_text())
                         page.goto('https://dtos.test/')
+                        page.locator('.home-week details > summary').click()
                         lead = page.get_by_role('heading', name='Season so far').locator('..')
                         if points == 'Unknown':
                             self.assertNotIn('0.00 points', lead.inner_text())
@@ -185,6 +187,7 @@ class SeasonPerformanceBrowserTests(unittest.TestCase):
             try:
                 page = f.f.browser_page(browser, 390, 844)
                 page.goto('https://dtos.test/')
+                page.locator('.home-week details > summary').click()
                 home = page.get_by_role('heading', name='Season so far').locator('..')
                 self.assertIn('175.35', home.inner_text())
                 self.assertIn('10/10', home.inner_text())
@@ -200,6 +203,7 @@ class SeasonPerformanceBrowserTests(unittest.TestCase):
                 f.f.f.data = {**published, 'nfl_state': {**nfl_state, 'season': '2025'},
                               'season_matchups': {**prepared, 'semantic_generation': 'foreign-clock'}}
                 page.goto('https://dtos.test/')
+                page.locator('.home-week details > summary').click()
                 self.assertIn('Compatible season team results are not prepared.', home.inner_text())
                 page.goto('https://dtos.test/teams/1')
                 self.assertNotIn('175.35', panel.inner_text())

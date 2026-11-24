@@ -136,6 +136,7 @@ class HomeOpportunityBrowserTests(unittest.TestCase):
 
                     page.route("**/*", transport)
                     page.goto("https://dtos.test/")
+                    page.locator("#home-brief-details > summary").click()
                     page.wait_for_function(
                         "document.querySelector('#home-opportunities').dataset.state"
                     )
@@ -188,6 +189,7 @@ class HomeOpportunityBrowserTests(unittest.TestCase):
                         "1-RB-2", page.locator("#trade-sent-chips").inner_text()
                     )
                     page.goto("https://dtos.test/")
+                    page.locator("#home-brief-details > summary").click()
                     page.locator(".home-opportunity").first.wait_for()
                     page.locator(".home-opportunity").first.get_by_role(
                         "link", name="Explore / Edit"
@@ -209,8 +211,10 @@ class HomeOpportunityBrowserTests(unittest.TestCase):
                         "1-RB-2", page.locator("#trade-sent-chips").inner_text()
                     )
                     page.goto("https://dtos.test/")
+                    page.locator("#home-brief-details > summary").click()
                     page.locator(".home-opportunity").first.wait_for()
                     page.reload()
+                    page.locator("#home-brief-details > summary").click()
                     page.locator(".home-opportunity").first.wait_for()
                     # Actual authenticated A -> B -> A HTTP/browser isolation, same local roster IDs.
                     original_name = f.data["teams"][0]["team_name"]
@@ -226,6 +230,7 @@ class HomeOpportunityBrowserTests(unittest.TestCase):
                     f.data["league"]["league_id"] = "league-2"
                     f.data["teams"][0]["team_name"] = "Separate Franchise"
                     page.goto("https://dtos.test/")
+                    page.locator("#home-brief-details > summary").click()
                     page.wait_for_function(
                         "document.querySelector('#home-opportunities').dataset.state"
                     )
@@ -237,6 +242,7 @@ class HomeOpportunityBrowserTests(unittest.TestCase):
                     f.data["league"]["league_id"] = "league-1"
                     f.data["teams"][0]["team_name"] = original_name
                     page.goto("https://dtos.test/")
+                    page.locator("#home-brief-details > summary").click()
                     page.locator(".home-opportunity").first.wait_for()
                     self.assertEqual(page.locator(".home-opportunity").count(), 1)
                     # Legacy browser-goal compatibility; explicit durable saves have separate HTTP/browser controls.

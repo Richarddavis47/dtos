@@ -6,6 +6,33 @@
   const status = document.getElementById('home-opportunity-status'), cards = document.getElementById('home-opportunity-cards');
   const find = document.getElementById('home-find-ideas'), rid = Number(root.dataset.frontOffice);
   const reload = document.getElementById('home-reload-opportunities');
+  const priority = document.getElementById('home-priority');
+  const teamUrl = '/teams/' + rid;
+  let priorityExpiry, displayedPriority;
+  function showPriority(item, message, requestStartedAt) {
+    if (!priority) return;
+    const remaining = item?.valid_until
+      ? Date.parse(item.valid_until) - Date.parse(item.verified_at) - (performance.now() - requestStartedAt)
+      : null;
+    if (remaining !== null && (!Number.isFinite(remaining) || remaining <= 0)) item = null;
+    clearTimeout(priorityExpiry);
+    if (item && remaining !== null) priorityExpiry = setTimeout(
+      () => showPriority(null, 'The lineup check expired. Open My Team to recheck it.'), remaining);
+    const nextPriority = JSON.stringify([item?.title, item?.reason, item?.action, item?.href, message]);
+    if (nextPriority === displayedPriority) return;
+    displayedPriority = nextPriority;
+    const heading = document.createElement('h3'), reason = document.createElement('p');
+    const link = document.createElement('a');
+    heading.textContent = item?.title || 'No clear priority right now';
+    reason.textContent = item?.reason || message || 'Your prepared team data doesn’t point to a clear next move.';
+    link.textContent = item?.action || 'Open My Team';
+    link.href = item?.href || teamUrl;
+    link.className = 'ux-primary-action';
+    link.dataset.dtosAction = 'primary';
+    const focused = priority.contains(document.activeElement);
+    priority.replaceChildren(heading, reason, link);
+    if (focused) link.focus({preventScroll:true});
+  }
   let context, metadata, displayedIdentity, revision = 0, request, departed = false, invalidated = false;
   const locks = () => {
     try { const saved = JSON.parse(sessionStorage.getItem('dtos-trade-workspace:' + context.binding) || '{}');
@@ -19,8 +46,11 @@
   async function load() {
     if (departed || invalidated) return;
     const run = ++revision; request?.abort(); request = new AbortController(); find.disabled = false;
-    if (displayedIdentity && displayedIdentity !== identity()) cards.replaceChildren();
-    const before = context && identity();
+    if (displayedIdentity && displayedIdentity !== identity()) {
+      cards.replaceChildren();
+      showPriority(null, 'Your team brief is being refreshed.');
+    }
+    const before = context && identity(), requestStartedAt = performance.now();
     try {
       const response = await fetch('/api/trades/home-opportunities?' + query(), {credentials:'same-origin', signal:request.signal});
       if (!response.ok) throw new Error('Your team brief could not be loaded. Open Trade or try again.');
@@ -28,6 +58,7 @@
       if (run !== revision || departed || (before && before !== identity())) return;
       if (body.workspace_context.roster_id !== rid || (context && body.workspace_context.binding !== context.binding)) {
         cards.replaceChildren(); find.disabled = true; metadata = null;
+        showPriority(null, 'Reload Home to review the selected franchise.');
         invalidated = true; displayedIdentity = null; reload.hidden = false;
         status.textContent = 'Your active league or franchise changed. Reload Home to see its opportunities.';
         root.dataset.presentation = 'empty'; root.dataset.state = 'context_changed'; return;
@@ -37,6 +68,7 @@
       if (initial && (locks().protected_assets.length || locks().excluded_assets.length)) return load();
       const html = body.brief_html ?? body.html;
       if (cards.innerHTML !== html) cards.innerHTML = html;
+      showPriority(body.priority, null, requestStartedAt);
       displayedIdentity = identity(); // Escaped same-origin canonical presentation, no scoring here.
       status.textContent = body.count ? 'Recently completed search · matches the current team and data. These offers have not been submitted.' : body.retained ? (body.reason || 'No supported opportunities in this bounded search.') : 'No current matching search has been completed. Find Trade Ideas when ready.';
       if (!body.source_identity) status.textContent = 'Trade prices are unavailable or changing. Your roster facts are still shown separately. Review My Team or try again shortly.';
@@ -45,6 +77,7 @@
       root.dataset.presentation = body.brief_count ? 'prepared' : 'empty';
     } catch (error) { if (run === revision && !departed && error.name !== 'AbortError') {
       cards.replaceChildren(); metadata = null; displayedIdentity = null;
+      showPriority(null, 'Your team brief is unavailable right now.');
       root.dataset.presentation = 'error'; status.textContent = error.message;
     } }
   }

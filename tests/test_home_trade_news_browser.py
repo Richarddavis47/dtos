@@ -105,7 +105,7 @@ class TradeNewsBrowserTests(unittest.TestCase):
                     (390, 432),
                     (1280, 900),
                 ]:
-                    page = browser.new_page(viewport={"width": width, "height": height})
+                    page = browser.new_page(viewport={"width": width, "height": height}, has_touch=width == 390)
                     page.set_default_timeout(8000)
                     errors = []
                     requests = []
@@ -142,6 +142,22 @@ class TradeNewsBrowserTests(unittest.TestCase):
                     page.goto("http://dtos.test/", wait_until="networkidle")
                     card = page.locator('[data-news-trade="1414718106177122304"]')
                     self.assertTrue(card.is_visible())
+                    self.assertIn("Chase Bank", card.locator(".news-head-teams").inner_text())
+                    self.assertFalse(card.locator(".news-evaluation").evaluate("e=>e.open"))
+                    page.screenshot(path=f".validation/home-trade-news/home-default-{width}-{height}.png")
+                    collapsed_height = card.bounding_box()["height"]
+                    card.screenshot(path=f".validation/home-trade-news/card-{width}-{height}.png")
+                    summary = card.get_by_text("Why this edge", exact=True)
+                    summary.scroll_into_view_if_needed()
+                    summary.focus()
+                    self.assertNotEqual(
+                        summary.evaluate("e=>getComputedStyle(e).outlineStyle"), "none"
+                    )
+                    if width == 390:
+                        summary.tap()
+                    else:
+                        summary.press("Enter")
+                    self.assertTrue(card.locator(".news-evaluation").evaluate("e=>e.open"))
                     self.assertIn(
                         "Denzel Boston", card.locator(".news-side").nth(0).inner_text()
                     )
@@ -165,24 +181,7 @@ class TradeNewsBrowserTests(unittest.TestCase):
                             "e=>e.complete && e.naturalWidth>0"
                         )
                     )
-                    self.assertFalse(
-                        card.locator(".news-evaluation").evaluate("e=>e.open")
-                    )
-                    collapsed_height = card.bounding_box()["height"]
-                    card.screenshot(
-                        path=f".validation/home-trade-news/card-{width}-{height}.png"
-                    )
-                    summary = card.locator(".news-evaluation summary")
-                    summary.scroll_into_view_if_needed()
-                    summary.focus()
-                    self.assertNotEqual(
-                        summary.evaluate("e=>getComputedStyle(e).outlineStyle"), "none"
-                    )
-                    summary.press("Enter")
-                    self.assertTrue(
-                        card.locator(".news-evaluation").evaluate("e=>e.open")
-                    )
-                    self.assertIn("Decision-time strategy", card.inner_text())
+                    self.assertIn("Trade-date prices", card.inner_text())
                     self.assertIn("Cost:", card.inner_text())
                     self.assertNotIn("manager intentionally", card.inner_text())
                     self.assertLessEqual(
@@ -328,21 +327,27 @@ class TradeNewsBrowserTests(unittest.TestCase):
                     self.assertEqual(page.locator(".news-card:visible").count(), 2)
                     first = page.locator(".news-card").first
                     self.assertEqual(first.locator(".news-side").count(), 3)
-                    self.assertIn("100 FAAB", first.inner_text())
+                    self.assertIn("100 FAAB", first.text_content())
                     self.assertEqual(first.locator(".news-bar").count(), 0)
+                    first.get_by_text("Why this edge", exact=True).click()
+                    # Portraits now load when their disclosure opens. Wait for
+                    # the deliberately failed lazy image before checking its replacement.
+                    first.locator(".news-player").first.scroll_into_view_if_needed()
+                    first.locator(".player-headshot-fallback").first.wait_for()
                     self.assertTrue(
                         first.locator(".player-headshot").first.evaluate("e=>e.hidden")
                     )
                     self.assertTrue(
                         first.locator(".player-headshot-fallback").first.is_visible()
                     )
+                    first.get_by_text("Why this edge", exact=True).click()
                     more = page.locator(".news-more>summary")
                     more.scroll_into_view_if_needed()
                     more.click()
                     self.assertEqual(page.locator(".news-card:visible").count(), 6)
                     last = page.locator('[data-news-trade="unknown"]')
-                    self.assertIn("Unpriced", last.inner_text())
-                    self.assertIn("Market advantage unavailable", last.inner_text())
+                    self.assertIn("Unpriced", last.text_content())
+                    self.assertIn("Market edge unavailable", last.inner_text())
                     self.assertEqual(last.locator(".news-bar").count(), 0)
                     self.assertEqual(page.locator(".news-evaluation[open]").count(), 0)
                     self.assertLessEqual(
@@ -449,7 +454,7 @@ class TradeNewsBrowserTests(unittest.TestCase):
                     self.assertLess(
                         header.bounding_box()["y"], news.bounding_box()["y"]
                     )
-                    actions = header.locator(".ux-feature-actions")
+                    actions = page.locator(".home-shortcuts")
                     self.assertLess(
                         actions.bounding_box()["y"], 550 if width < 700 else 720
                     )
@@ -463,7 +468,7 @@ class TradeNewsBrowserTests(unittest.TestCase):
                             )
                         )
 
-                    hit(header.get_by_role("link", name="Open My Team", exact=True))
+                    hit(actions.get_by_role("link", name="My Roster", exact=True))
                     large = page.locator('[data-news-trade="1415021723840966656"]')
                     boston = page.locator('[data-news-trade="1414718106177122304"]')
                     complete = large.locator(".news-complete-assets")
@@ -498,6 +503,9 @@ class TradeNewsBrowserTests(unittest.TestCase):
                             ),
                         }
                     )
+                    evaluation = large.locator(".news-evaluation>summary")
+                    hit(evaluation)
+                    evaluation.click()
                     summary = complete.locator("summary")
                     self.assertIn("11 items", summary.inner_text())
                     hit(summary)
@@ -516,20 +524,14 @@ class TradeNewsBrowserTests(unittest.TestCase):
                     )
                     self.assertEqual(complete.locator('a[href^="/picks/"]').count(), 6)
                     self.assertEqual(complete.locator(".news-player").count(), 5)
-                    self.assertFalse(
+                    self.assertTrue(
                         large.locator(".news-evaluation").evaluate("e=>e.open")
                     )
                     summary.focus()
                     summary.press("Enter")
                     self.assertFalse(complete.evaluate("e=>e.open"))
-                    evaluation = large.locator(".news-evaluation>summary")
-                    hit(evaluation)
                     evaluation.click()
-                    self.assertTrue(
-                        large.locator(".news-evaluation").evaluate("e=>e.open")
-                    )
-                    self.assertFalse(complete.evaluate("e=>e.open"))
-                    evaluation.click()
+                    self.assertFalse(large.locator(".news-evaluation").evaluate("e=>e.open"))
                     pricing = boston.locator(".news-evidence>summary")
                     hit(pricing)
                     pricing.click()
@@ -612,6 +614,7 @@ class TradeNewsBrowserTests(unittest.TestCase):
                     cash_card = page.locator('[data-news-trade="965057520920260608"]')
                     self.assertEqual(cash_card.locator(".news-side").count(), 3)
                     self.assertEqual(cash_card.locator(".news-bar").count(), 0)
+                    cash_card.get_by_text("Why this edge", exact=True).click()
                     cash_summary = cash_card.locator(".news-complete-assets>summary")
                     hit(cash_summary)
                     cash_summary.click()

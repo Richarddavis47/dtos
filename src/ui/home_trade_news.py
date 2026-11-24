@@ -44,7 +44,42 @@ def _evaluation(side):
     )
 
 
-def render_news(model, *, viewer=None):
+def _market_edge(card):
+    sides = card["sides"]
+    if len(sides) != 2:
+        reason = "A two-sided comparison needs exactly two franchises."
+    elif card["consideration_partial"]:
+        reason = "Some assets or their trade direction could not be verified."
+    elif card["has_faab"]:
+        reason = "This trade includes waiver budget, which has no comparable Market value."
+    elif not all(side["received"] for side in sides):
+        reason = "A received package could not be established for both franchises."
+    elif not card["complete"]:
+        reason = "One or more assets lack comparable Market values."
+    elif not card.get("valuation_at"):
+        reason = "The date of the Market valuation could not be verified."
+    else:
+        reason = None
+    if reason:
+        return ('<p class="news-advantage"><b>Market edge unavailable.</b> '
+                + _safe(reason) + '</p>')
+
+    left, right = sides
+    a, b = left["total"], right["total"]
+    gap = abs(a - b)
+    share = a / (a + b) * 100 if a + b else 50
+    favored = "left" if a > b else "right" if b > a else "even"
+    name = left["name"] if a > b else right["name"]
+    verdict = f"{name} received {gap:g} more Market points" if gap else "Even · equal Market totals"
+    stamp = card["valuation_at"]
+    date = datetime.fromisoformat(stamp).strftime("%b %d, %Y UTC")
+    return (f'<div class="news-edge" data-edge="{favored}">'
+            f'<p class="news-market-label">Market edge · <time datetime="{escape(stamp, quote=True)}">{date}</time></p>'
+            f'<div class="news-bar" aria-hidden="true" style="--share:{share:.3f}%"><span></span></div>'
+            f'<p class="news-advantage"><b>{_safe(verdict)}</b></p></div>')
+
+
+def render_news(model, *, viewer=None, compact=False):
     cards = []
     for card in model["cards"]:
         sides, complete_sides = [], []
@@ -331,23 +366,46 @@ def render_news(model, *, viewer=None):
         )
         date = datetime.fromisoformat(card["completed_at"]).strftime("%b %d")
         trade_url = "/trades/history/" + quote(card["id"], safe="") + "?from_home=1"
-        cards.append(
-            '<article class="news-card" data-news-trade="'
+        heading = ''
+        if compact:
+            teams_layout = ' news-teams-pair' if len(card["sides"]) == 2 else ''
+            heading = ('<div class="news-head-teams' + teams_layout + '">'
+                       + ' <span aria-hidden="true">↔</span> '.join(
+                           '<b>' + _safe(side["name"] + (" · You" if str(viewer) == side["roster_id"] else "")) + '</b>'
+                           for side in card["sides"])
+                       + '</div>')
+        opening = (
+            '<article class="news-card' + (' news-card-compact' if compact else '') + '" data-news-trade="'
             + escape(card["id"], quote=True)
             + '"><header><time datetime="'
             + escape(card["completed_at"], quote=True)
             + '">'
-            + _safe(date + " · status update")
-            + '</time><small class="news-completed">Completed</small></header><div class="news-sides">'
+            + _safe(date if compact else date + " · status update")
+            + '</time><small class="news-completed">Completed</small></header>'
+        )
+        received_sides = (
+            '<div class="news-sides">'
             + "".join(sides)
-            + '</div><p class="news-market-label">CURRENT DISPLAYED MARKET</p><p class="muted">Current values, not trade-date grades.</p>'
-            + comparison
-            + partial
-            + qualifications
-            + complete_assets
-            + '<details class="news-evaluation"><summary>Evaluation · gains and costs</summary><p>Exchange facts using current player identities. Decision-time strategy and full current-roster fit are unavailable here; no historical motives or overall winner are inferred.</p>'
-            + "".join(_evaluation(s) for s in card["sides"])
-            + '<p>Market advantage, strategic fit, production while held and later outcomes are separate. Open the original trade for admitted historical evidence; retained FOIS grades remain NOT REVALIDATED.</p></details><div class="news-footer"><a class="ds-action" href="'
+            + '</div>'
+        )
+        if compact:
+            compact_notes = ('<p>Compares what each team received using one current Market snapshot. '
+                             'Trade-date prices, roster fit and later results are separate.</p>')
+            body = (heading + _market_edge(card) + qualifications
+                    + '<details class="news-evaluation"><summary>Why this edge</summary>'
+                    + compact_notes + partial + received_sides + complete_assets
+                    + "".join(_evaluation(s) for s in card["sides"])
+                    + '<p>Retained FOIS grades remain NOT REVALIDATED.</p></details>')
+        else:
+            body = (
+                received_sides + '<p class="news-market-label">CURRENT DISPLAYED MARKET</p><p class="muted">Current values, not trade-date grades.</p>'
+                + comparison + partial + qualifications + complete_assets
+                + '<details class="news-evaluation"><summary>Evaluation · gains and costs</summary><p>Exchange facts using current player identities. Decision-time strategy and full current-roster fit are unavailable here; no historical motives or overall winner are inferred.</p>'
+                + "".join(_evaluation(s) for s in card["sides"])
+                + '<p>Market advantage, strategic fit, production while held and later outcomes are separate. Open the original trade for admitted historical evidence; retained FOIS grades remain NOT REVALIDATED.</p></details>'
+            )
+        cards.append(
+            opening + body + '<div class="news-footer"><a class="ds-action" href="'
             + escape(trade_url, quote=True)
             + '">Original trade →</a><details class="news-evidence"><summary>Source &amp; pricing</summary><p>'
             + _safe(card["source"])
@@ -378,8 +436,13 @@ def render_news(model, *, viewer=None):
             '<p class="muted news-quiet">No completed league trades in the past seven days with supported completion-time evidence.</p>'
         ]
     limits = "".join("<p>" + _safe(s) + "</p>" for s in model["limitations"])
+    title = "Recent league trades" if compact else "League Trade News"
+    history = ('<a class="news-history" aria-label="Full league trade history" href="/transactions?scope=all_history&amp;type=trade&amp;status=complete">View all trades&nbsp;→</a>'
+               if compact else '')
     return (
-        '<section class="ux-section league-trade-news" aria-labelledby="trade-news-title"><div class="ux-section-head"><h2 id="trade-news-title">League Trade News</h2><p>Last 7 days · Biggest deals first</p></div>'
+        '<section class="ux-section league-trade-news" aria-labelledby="trade-news-title"><div class="ux-section-head'
+        + (' news-section-head' if compact else '') + '"><h2 id="trade-news-title">' + title
+        + '</h2>' + history + '<p>Last 7 days · Biggest deals first</p></div>'
         + "".join(cards[:2])
         + (
             '<details class="news-more"><summary>More completed trades · '
@@ -411,4 +474,22 @@ NEWS_CSS = """
 NEWS_CSS += """
 .news-footer{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;align-items:start}.news-footer:has(details[open]){grid-template-columns:1fr}.news-footer .ds-action{font-size:13px}.news-footer summary{font-size:13px}.news-remaining{color:var(--muted);font-size:12px}.news-qualification{font-size:12px;color:var(--muted);margin:4px 0}.news-full-side{min-width:0}.news-full-side h3{font-size:15px}.news-full-side li{overflow-wrap:anywhere}.news-card .player-summary-copy small{line-height:1.3}.news-total small{display:inline}.news-card .news-market-label{margin-top:8px}.news-evaluation,.news-evidence,.news-complete-assets{margin:2px 0}.league-trade-news .news-card{padding:12px}
 @media(max-width:700px){.ux-command-grid:has(.home-secondary-rail){margin-bottom:8px}.ux-feature:has(+.home-secondary-rail){padding:12px}.ux-feature:has(+.home-secondary-rail) .ux-feature-copy{margin:6px 0}.ux-feature:has(+.home-secondary-rail) .ds-home-detail{margin:0}.ux-feature:has(+.home-secondary-rail) .ux-feature-actions{margin-top:8px;gap:6px}.ux-feature:has(+.home-secondary-rail) .identity-kicker{margin:0}.ux-feature:has(+.home-secondary-rail) h2{margin:6px 0}.ux-feature:has(+.home-secondary-rail) .ds-badges{margin:4px 0}}
+"""
+
+NEWS_CSS += """
+.news-head-teams{display:flex;flex-wrap:wrap;gap:3px 7px;align-items:baseline;margin:6px 0;line-height:1.3;font-size:15px}
+.news-head-teams b{min-width:0;overflow-wrap:anywhere}
+.news-teams-pair{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:start}
+.news-teams-pair b:last-child{text-align:right}
+.news-card-compact .news-edge .news-bar{position:relative;display:block;height:13px;background:#9777b1}
+.news-edge .news-bar span{display:block;height:100%;width:var(--share);background:#6599d4}
+.news-edge .news-bar::after{content:"";position:absolute;inset:0 auto 0 50%;border-left:2px solid var(--text);transform:translateX(-50%)}
+.news-card-compact .news-market-label{margin:10px 0 0;color:var(--text-secondary);font-size:12px;letter-spacing:0}
+.news-card-compact .news-advantage{font-size:14px;text-align:center;margin-bottom:5px}
+.news-card-compact .news-evaluation{border-top:1px solid var(--line)}
+.news-card-compact .news-evaluation summary{font-weight:650}
+.league-trade-news .news-section-head{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:0 8px}
+.league-trade-news .news-section-head h2{font-size:20px;color:var(--text);text-transform:none;letter-spacing:0;margin:0}
+.news-section-head p{grid-column:1/-1}
+.news-history{display:inline-flex;align-items:center;min-height:44px;color:var(--accent);font-size:13px;font-weight:650}
 """

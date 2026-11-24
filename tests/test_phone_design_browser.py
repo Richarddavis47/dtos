@@ -40,7 +40,8 @@ class SharedPhoneDesignBrowserTests(journey.ProductBrowserJourneyTests):
                 node.bounding_box()["height"], 43, (path, node.inner_text())
             )
         if path == "/":
-            self.assertIn("Official record:", page.locator(".ux-feature").inner_text())
+            self.assertEqual(page.locator(".home-stats dt").all_text_contents(), ["Record", "League rank", "Points / week"])
+            page.locator("#home-more-tools > summary").click()
             context = page.locator(".home-secondary-controls details").filter(
                 has=page.locator("summary", has_text="Team overview and shortcuts")
             )

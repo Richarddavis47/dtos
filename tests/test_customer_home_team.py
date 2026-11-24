@@ -284,6 +284,7 @@ class CustomerHomeFailureBrowserTests(unittest.TestCase):
                                 {'detail': {'code': code, 'message': 'source diagnostic', 'retry': 'explicit'}}))
                         page.route('**/api/trades/generate', refuse)
                         page.goto('https://dtos.test/')
+                        page.locator('#home-brief-details > summary').click()
                         page.locator('.home-opportunity').wait_for()
                         before = page.locator('.home-opportunity').count()
                         button = page.get_by_role('button', name='Find Trade Ideas', exact=True)

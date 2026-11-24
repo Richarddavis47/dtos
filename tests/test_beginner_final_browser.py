@@ -147,7 +147,7 @@ class FinalResetBrowserTests(unittest.TestCase):
                     page.route("**/*", transport)
                     start = time.perf_counter()
                     self.assertEqual(page.goto("https://dtos.test/").status, 200)
-                    home_link = page.locator('.ux-action[href$="#full-roster"]')
+                    home_link = page.locator('.home-shortcuts a[href$="#full-roster"]')
                     self.assertEqual(
                         home_link.get_attribute("href"), "/teams/1#full-roster"
                     )
@@ -392,7 +392,7 @@ class FinalResetBrowserTests(unittest.TestCase):
                         "bonus_rec_te": 0.5,
                     }
                     page.goto("https://dtos.test/")
-                    second_home = page.locator('.ux-action[href$="#full-roster"]')
+                    second_home = page.locator('.home-shortcuts a[href$="#full-roster"]')
                     self.assertEqual(
                         second_home.get_attribute("href"), "/teams/2#full-roster"
                     )
@@ -637,6 +637,7 @@ class FinalNavigationBrowserTests(unittest.TestCase):
                     )
                     self.assertEqual(page.locator(".market-asset").count(), 0)
                     page.goto("https://dtos.test/")
+                    page.locator("#home-more-tools > summary").click()
                     page.get_by_text("View another franchise", exact=True).click()
                     page.locator("#front-office").select_option("2")
                     page.get_by_role(
@@ -673,6 +674,7 @@ class FinalNavigationBrowserTests(unittest.TestCase):
                     owner.store.activate(owner.account_id, "league-2")
                     owner.data["league"]["league_id"] = "league-2"
                     page.goto("https://dtos.test/")
+                    page.locator("#home-more-tools > summary").click()
                     page.get_by_text("View another franchise", exact=True).click()
                     page.locator("#front-office").select_option("1")
                     page.get_by_role(

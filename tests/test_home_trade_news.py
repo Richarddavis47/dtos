@@ -126,6 +126,39 @@ class HomeTradeNewsTests(unittest.TestCase):
         self.now = datetime.now(timezone.utc).replace(microsecond=0)
         self.data = fixture(self.now)
 
+    def test_compact_market_edge_both_directions_even_partial_and_faab(self):
+        common = dict(draft_picks=[])
+        straight = trade(self.now, 'left', **common)
+        reverse = trade(self.now, 'right', **common, adds={'13346': 2, '13406': 1},
+                        drops={'13346': 1, '13406': 2})
+        incomplete = trade(self.now, 'incomplete', **common,
+                           adds={'13346': 1, 'unpriced': 2}, drops={'13346': 2, 'unpriced': 1})
+        faab = trade(self.now, 'budget', **common, waiver_budget=[{'sender': 1, 'receiver': 2, 'amount': 10}])
+        for raw, direction, message in (
+            (straight, 'left', 'Chase Bank received'),
+            (reverse, 'right', 'Week3 is a bigger joke received'),
+            (incomplete, None, 'lack comparable Market values'),
+            (faab, None, 'waiver budget'),
+        ):
+            self.data['transactions'] = [raw]
+            rendered = render_news(model(self.data, self.now), compact=True, viewer=1)
+            self.assertIn(message, rendered)
+            self.assertIn('Why this edge', rendered)
+            self.assertIn('Full league trade history', rendered)
+            if direction:
+                self.assertIn(f'data-edge="{direction}"', rendered)
+                self.assertIn(self.now.strftime('%b %d, %Y UTC'), rendered)
+            else:
+                self.assertNotIn('data-edge=', rendered)
+        self.data['transactions'] = [straight]
+        admitted = model(self.data, self.now)
+        admitted['cards'][0]['sides'][1]['total'] = admitted['cards'][0]['sides'][0]['total']
+        rendered = render_news(admitted, compact=True)
+        self.assertIn('data-edge="even"', rendered)
+        self.assertIn('Even · equal Market totals', rendered)
+        admitted['cards'][0]['valuation_at'] = None
+        self.assertIn('valuation could not be verified', render_news(admitted, compact=True))
+
     def test_actual_three_team_source_faab_players_and_five_picks(self):
         facts = json.loads(
             (Path(__file__).parent / "fixtures/trade_faab_source.json").read_text()

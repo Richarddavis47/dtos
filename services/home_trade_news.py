@@ -258,6 +258,9 @@ def build_news(data: dict[str, Any], candidates, limitations, *, now=None):
     market = data.get("market_data") or {}
     coherent = data["_news_market_coherent"]
     snapshot = _digest([league, market])
+    valuation_at = canonical_utc_timestamp(market.get("generated_at"))
+    if valuation_at and datetime.fromisoformat(valuation_at) > now:
+        valuation_at = None
     player_ids = {
         str(pid)
         for item in candidates
@@ -495,6 +498,7 @@ def build_news(data: dict[str, Any], candidates, limitations, *, now=None):
                 "has_faab": bool(cash_seen),
                 "consideration_partial": invalid,
                 "snapshot": snapshot,
+                "valuation_at": valuation_at,
                 "source": "Sleeper completed transaction; prepared selected-league evidence. Franchise names are season-source observations; exact trade-time manager tenure or renames are not established.",
             }
         )

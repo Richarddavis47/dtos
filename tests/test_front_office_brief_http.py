@@ -1,6 +1,6 @@
 """Real prepared producer -> bounded offer cache -> authenticated HTTP."""
 from contextlib import ExitStack
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from hashlib import sha256
 from html import unescape
 from pathlib import Path
@@ -9,6 +9,40 @@ import unittest
 from unittest.mock import patch
 
 from tests import test_roster_diagnostic_http as fixtures
+
+
+class HomePriorityTests(unittest.TestCase):
+    def test_verified_cutoff_then_confirmed_bye_then_opportunity_then_goal(self):
+        from services.front_office_brief import first_action
+        now = datetime(2026, 11, 15, 16, tzinfo=timezone.utc)
+        team = {'roster_id': 1}
+        review = {'actionable': True, 'empty_slots': 1,
+                  'kickoff_deadline': (now + timedelta(hours=1)).isoformat(),
+                  'valid_until': (now + timedelta(minutes=10)).isoformat()}
+        byes = [{'week': 11, 'state': 'shortfall', 'bye_starters': [[1, '1-RB-1']], 'unfilled': ['RB']}]
+        goal = dict(family='goal', title='Choose a goal', reason='Set a strategy.',
+                    action='Choose goal', href='/teams/1#my-team-strategy')
+        need = dict(family='need', title='Find RB depth', reason='The roster lacks a healthy backup.',
+                    action='Review depth', href='/teams/1#positional-depth')
+        self.assertEqual(first_action(team, 10, review, byes, [goal, need], now=now)['href'],
+                         '/teams/1#lineup-recheck')
+        stale = {**review, 'valid_until': now.isoformat()}
+        self.assertEqual(first_action(team, 10, stale, byes, [goal, need], now=now)['title'], 'Plan for Week 11 byes')
+        self.assertEqual(first_action(team, 10, stale, None, [goal, need], now=now)['title'], need['title'])
+        self.assertEqual(first_action(team, 10, stale, None, [goal], now=now)['href'], goal['href'])
+        self.assertIsNone(first_action(team, 10, stale, [], [], now=now))
+
+    def test_conditional_fallback_and_bye_preserve_the_uncertainty(self):
+        from services.front_office_brief import first_action
+        now = datetime(2026, 11, 15, 16, tzinfo=timezone.utc)
+        fallback = dict(starter='Example Starter', kickoff_deadline=(now + timedelta(hours=1)).isoformat(),
+                        valid_until=(now + timedelta(minutes=5)).isoformat())
+        byes = [dict(week=11, state='conditional', bye_starters=[[0, 'rb']], moves=[[0, 'other', None]])]
+        first = first_action({'roster_id': 1}, 10, {'fallback': fallback}, byes, [], now=now)
+        self.assertIn('If Example Starter can’t play', first['reason'])
+        self.assertIn('depends on player availability', first_action({'roster_id': 1}, 10, {}, byes, [], now=now)['reason'])
+        byes[0]['state'] = 'unknown'
+        self.assertIsNone(first_action({'roster_id': 1}, 10, {}, byes, [], now=now))
 
 
 class FrontOfficeBriefHTTPTests(unittest.TestCase):
@@ -60,7 +94,10 @@ class FrontOfficeBriefHTTPTests(unittest.TestCase):
             for _ in range(10):
                 response = self.client.get('/')
                 self.assertEqual(response.status_code, 200)
-                self.assertLess(response.text.index('Front Office Brief'), response.text.index('League Trade News'))
+                self.assertLess(response.text.index('Do this first'), response.text.index('Recent league trades'))
+                for label in ('Front Office Brief', 'Team comparisons', 'League standings',
+                              'All matchups this week', 'Market and league activity', 'My Assets'):
+                    self.assertIn(label, response.text)
                 self.read()
             for spy in spies:
                 spy.assert_not_called()
@@ -121,6 +158,11 @@ class FrontOfficeBriefHTTPTests(unittest.TestCase):
             'roster_id': '1', 'csrf_token': self.f.f.f.csrf, 'strategy_scope': context['strategy_scope'],
         }, follow_redirects=False)
         self.assertEqual(saved.status_code, 303, saved.text)
+        from tools.validation.smoke_http import validate_product_contract
+        home = self.client.get('/')
+        self.assertEqual(home.status_code, 200)
+        validate_product_contract(home.content, '/')
+        self.assertRegex(home.text, r'<header\b[^>]*data-signed-home[^>]*data-dtos-component="page-header"')
         team = self.client.get('/teams/1')
         match = re.search(r'id="my-team-trade-need"[^>]*href="([^"]+)"', team.text)
         self.assertIsNotNone(match)
@@ -131,6 +173,7 @@ class FrontOfficeBriefHTTPTests(unittest.TestCase):
         admission.assert_called_once()
         self.assertEqual(meta['strategy'], 'WIN NOW')
         self.assertIn('Explore QB trades', meta['brief_html'])
+        self.assertEqual(meta['priority']['href'], href)
         self.assertIn(match[1], meta['brief_html'])
         self.assertIn('Cost and uncertainty', meta['brief_html'])
         destination = self.client.get(href)
