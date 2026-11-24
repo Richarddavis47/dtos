@@ -1,0 +1,685 @@
+﻿2026-11-24T18:34:41.8948368Z Current runner version: '2.338.2'
+2026-11-24T18:34:41.8975755Z ##[group]Runner Image Provisioner
+2026-11-24T18:34:41.8976600Z Hosted Compute Agent
+2026-11-24T18:34:41.8977354Z Version: 20261111.635
+2026-11-24T18:34:41.8978034Z Commit: b8a594ea514ff44cadb5342986c68b1eac6e22ed
+2026-11-24T18:34:41.8978889Z Build Date: 2026-11-11T01:49:01Z
+2026-11-24T18:34:41.8979611Z Worker ID: {ce4edaf0-e1f5-4752-9821-13f5c4af7f95}
+2026-11-24T18:34:41.8980316Z Region: eastus
+2026-11-24T18:34:41.8980969Z Cloud: Azure
+2026-11-24T18:34:41.8981525Z ##[endgroup]
+2026-11-24T18:34:41.8983504Z ##[group]Operating System
+2026-11-24T18:34:41.8984210Z Ubuntu
+2026-11-24T18:34:41.8984753Z 24.04.5
+2026-11-24T18:34:41.8985371Z LTS
+2026-11-24T18:34:41.8985897Z ##[endgroup]
+2026-11-24T18:34:41.8986640Z ##[group]Runner Image
+2026-11-24T18:34:41.8987287Z Image: ubuntu-24.04
+2026-11-24T18:34:41.8987864Z Version: 20261116.376.1
+2026-11-24T18:34:41.8989234Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20261116.376/images/ubuntu/Ubuntu2404-Readme.md
+2026-11-24T18:34:41.8990859Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20261116.376
+2026-11-24T18:34:41.8992280Z ##[endgroup]
+2026-11-24T18:34:41.8993478Z ##[group]GITHUB_TOKEN Permissions
+2026-11-24T18:34:41.8995779Z Contents: read
+2026-11-24T18:34:41.8996474Z Metadata: read
+2026-11-24T18:34:41.8997150Z ##[endgroup]
+2026-11-24T18:34:41.8999263Z Secret source: Actions
+2026-11-24T18:34:41.9000380Z Cache mode: write
+2026-11-24T18:34:41.9001363Z Prepare workflow directory
+2026-11-24T18:34:41.9394326Z Prepare all required actions
+2026-11-24T18:34:41.9442476Z Getting action download info
+2026-11-24T18:34:42.1727654Z Download action repository 'actions/checkout@v4' (SHA:11d5960a326750d5838078e36cf38b85af677262)
+2026-11-24T18:34:42.3378258Z Download action repository 'actions/setup-python@v5' (SHA:a26af69be951a213d495a4c3e4e4022e16d87065)
+2026-11-24T18:34:42.5560887Z Complete job name: beginner-navigation
+2026-11-24T18:34:42.6529175Z ##[group]Run actions/checkout@v4
+2026-11-24T18:34:42.6530110Z with:
+2026-11-24T18:34:42.6530578Z   repository: Richarddavis47/dtos
+2026-11-24T18:34:42.6534471Z   token: ***
+2026-11-24T18:34:42.6534936Z   ssh-strict: true
+2026-11-24T18:34:42.6535394Z   ssh-user: git
+2026-11-24T18:34:42.6535854Z   persist-credentials: true
+2026-11-24T18:34:42.6536357Z   clean: true
+2026-11-24T18:34:42.6536820Z   sparse-checkout-cone-mode: true
+2026-11-24T18:34:42.6537352Z   fetch-depth: 1
+2026-11-24T18:34:42.6537791Z   fetch-tags: false
+2026-11-24T18:34:42.6538243Z   show-progress: true
+2026-11-24T18:34:42.6538693Z   lfs: false
+2026-11-24T18:34:42.6539106Z   submodules: false
+2026-11-24T18:34:42.6539566Z   set-safe-directory: true
+2026-11-24T18:34:42.6540086Z   allow-unsafe-pr-checkout: false
+2026-11-24T18:34:42.6540988Z env:
+2026-11-24T18:34:42.6541465Z   NODE_OPTIONS: --max-old-space-size=256
+2026-11-24T18:34:42.6542196Z ##[endgroup]
+2026-11-24T18:34:42.9344992Z Syncing repository: Richarddavis47/dtos
+2026-11-24T18:34:42.9347986Z ##[group]Getting Git version info
+2026-11-24T18:34:42.9349316Z Working directory is '/home/runner/work/dtos/dtos'
+2026-11-24T18:34:42.9350911Z [command]/usr/bin/git version
+2026-11-24T18:34:42.9448677Z git version 2.56.1
+2026-11-24T18:34:42.9495499Z ##[endgroup]
+2026-11-24T18:34:42.9501214Z Temporarily overriding HOME='/home/runner/work/_temp/a5e48123-2955-419b-b48a-43c8e2d7e817' before making global git config changes
+2026-11-24T18:34:42.9504159Z Adding repository directory to the temporary git global config as a safe directory
+2026-11-24T18:34:42.9506377Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/dtos/dtos
+2026-11-24T18:34:42.9568721Z Deleting the contents of '/home/runner/work/dtos/dtos'
+2026-11-24T18:34:42.9578694Z ##[group]Initializing the repository
+2026-11-24T18:34:42.9580531Z [command]/usr/bin/git init /home/runner/work/dtos/dtos
+2026-11-24T18:34:42.9760141Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-11-24T18:34:42.9762699Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-11-24T18:34:42.9764676Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-11-24T18:34:42.9766017Z hint: call:
+2026-11-24T18:34:42.9766908Z hint:
+2026-11-24T18:34:42.9767935Z hint: 	git config --global init.defaultBranch <name>
+2026-11-24T18:34:42.9769040Z hint:
+2026-11-24T18:34:42.9770432Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-11-24T18:34:42.9772491Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-11-24T18:34:42.9774051Z hint:
+2026-11-24T18:34:42.9775181Z hint: 	git branch -m <name>
+2026-11-24T18:34:42.9776539Z hint:
+2026-11-24T18:34:42.9778427Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-11-24T18:34:42.9781013Z Initialized empty Git repository in /home/runner/work/dtos/dtos/.git/
+2026-11-24T18:34:42.9796811Z [command]/usr/bin/git remote add origin https://github.com/Richarddavis47/dtos
+2026-11-24T18:34:42.9873614Z ##[endgroup]
+2026-11-24T18:34:42.9875223Z ##[group]Disabling automatic garbage collection
+2026-11-24T18:34:42.9876590Z [command]/usr/bin/git config --local gc.auto 0
+2026-11-24T18:34:42.9899848Z ##[endgroup]
+2026-11-24T18:34:42.9901222Z ##[group]Setting up auth
+2026-11-24T18:34:42.9909172Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-11-24T18:34:42.9966010Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-11-24T18:34:43.0456541Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-11-24T18:34:43.0505583Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-11-24T18:34:43.0757291Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-11-24T18:34:43.0805936Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-11-24T18:34:43.1055483Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-11-24T18:34:43.1106598Z ##[endgroup]
+2026-11-24T18:34:43.1107712Z ##[group]Fetching the repository
+2026-11-24T18:34:43.1120093Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +8ae004ade4c98e568e24cd179d76625b393cb823:refs/remotes/pull/368/merge
+2026-11-24T18:34:44.7629003Z From https://github.com/Richarddavis47/dtos
+2026-11-24T18:34:44.7635460Z  * [new ref]         8ae004ade4c98e568e24cd179d76625b393cb823 -> pull/368/merge
+2026-11-24T18:34:44.7640609Z ##[endgroup]
+2026-11-24T18:34:44.7642979Z ##[group]Determining the checkout info
+2026-11-24T18:34:44.7645234Z ##[endgroup]
+2026-11-24T18:34:44.7646555Z [command]/usr/bin/git sparse-checkout disable
+2026-11-24T18:34:44.7723245Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-11-24T18:34:44.7763780Z ##[group]Checking out the ref
+2026-11-24T18:34:44.7767520Z [command]/usr/bin/git checkout --progress --force refs/remotes/pull/368/merge
+2026-11-24T18:34:45.4564266Z Note: switching to 'refs/remotes/pull/368/merge'.
+2026-11-24T18:34:45.4564730Z 
+2026-11-24T18:34:45.4564981Z You are in 'detached HEAD' state. You can look around, make experimental
+2026-11-24T18:34:45.4565575Z changes and commit them, and you can discard any commits you make in this
+2026-11-24T18:34:45.4566189Z state without impacting any branches by switching back to a branch.
+2026-11-24T18:34:45.4566578Z 
+2026-11-24T18:34:45.4566824Z If you want to create a new branch to retain commits you create, you may
+2026-11-24T18:34:45.4567359Z do so (now or later) by using -c with the switch command. Example:
+2026-11-24T18:34:45.4567748Z 
+2026-11-24T18:34:45.4568305Z   git switch -c <new-branch-name>
+2026-11-24T18:34:45.4568554Z 
+2026-11-24T18:34:45.4568696Z Or undo this operation with:
+2026-11-24T18:34:45.4568918Z 
+2026-11-24T18:34:45.4569036Z   git switch -
+2026-11-24T18:34:45.4569241Z 
+2026-11-24T18:34:45.4569531Z Turn off this advice by setting config variable advice.detachedHead to false
+2026-11-24T18:34:45.4569943Z 
+2026-11-24T18:34:45.4570318Z HEAD is now at 8ae004a Merge 76a5fef35ab1be52c045209dc176645a7e24a5a4 into 026a46dee6d1c1c454d90b994c6b72689694d16b
+2026-11-24T18:34:45.4606192Z ##[endgroup]
+2026-11-24T18:34:45.4662275Z [command]/usr/bin/git log -1 --format=%H
+2026-11-24T18:34:45.4696770Z 8ae004ade4c98e568e24cd179d76625b393cb823
+2026-11-24T18:34:45.4976858Z ##[group]Run actions/setup-python@v5
+2026-11-24T18:34:45.4977223Z with:
+2026-11-24T18:34:45.4977479Z   python-version: 3.12
+2026-11-24T18:34:45.4977760Z   check-latest: false
+2026-11-24T18:34:45.4980236Z   token: ***
+2026-11-24T18:34:45.5059378Z   update-environment: true
+2026-11-24T18:34:45.5060051Z   allow-prereleases: false
+2026-11-24T18:34:45.5060671Z   freethreaded: false
+2026-11-24T18:34:45.5061110Z env:
+2026-11-24T18:34:45.5061584Z   NODE_OPTIONS: --max-old-space-size=256
+2026-11-24T18:34:45.5062387Z ##[endgroup]
+2026-11-24T18:34:45.6450721Z ##[group]Installed versions
+2026-11-24T18:34:45.6845895Z (node:2278) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-11-24T18:34:45.6846782Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-11-24T18:34:45.6862278Z Successfully set up CPython (3.12.16)
+2026-11-24T18:34:45.6870017Z ##[endgroup]
+2026-11-24T18:34:45.7003729Z ##[group]Run docker build -f tools/validation/containers/browser.Dockerfile -t dtos-browser-validation .
+2026-11-24T18:34:45.7004653Z [36;1mdocker build -f tools/validation/containers/browser.Dockerfile -t dtos-browser-validation .[0m
+2026-11-24T18:34:45.7074379Z shell: /usr/bin/bash -e {0}
+2026-11-24T18:34:45.7074711Z env:
+2026-11-24T18:34:45.7075008Z   NODE_OPTIONS: --max-old-space-size=256
+2026-11-24T18:34:45.7075406Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-24T18:34:45.7075943Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib/pkgconfig
+2026-11-24T18:34:45.7076429Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-24T18:34:45.7076853Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-24T18:34:45.7077276Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-24T18:34:45.7077720Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib
+2026-11-24T18:34:45.7078107Z ##[endgroup]
+2026-11-24T18:34:48.1334287Z #0 building with "default" instance using docker driver
+2026-11-24T18:34:48.1334795Z 
+2026-11-24T18:34:48.1335059Z #1 [internal] load build definition from browser.Dockerfile
+2026-11-24T18:34:48.1335587Z #1 transferring dockerfile: 467B 0.0s done
+2026-11-24T18:34:48.1336036Z #1 DONE 0.0s
+2026-11-24T18:34:48.1336217Z 
+2026-11-24T18:34:48.1336562Z #2 [internal] load metadata for mcr.microsoft.com/playwright/python:v1.63.0-noble
+2026-11-24T18:34:48.3478771Z #2 DONE 0.4s
+2026-11-24T18:34:48.4690291Z 
+2026-11-24T18:34:48.4693195Z #3 [internal] load .dockerignore
+2026-11-24T18:34:48.4693723Z #3 transferring context: 2B done
+2026-11-24T18:34:48.4694946Z #3 DONE 0.0s
+2026-11-24T18:34:48.4695135Z 
+2026-11-24T18:34:48.4695296Z #4 [internal] load build context
+2026-11-24T18:34:48.4695830Z #4 transferring context: 316B done
+2026-11-24T18:34:48.4696235Z #4 DONE 0.0s
+2026-11-24T18:34:48.4696426Z 
+2026-11-24T18:34:48.4697591Z #5 [stage-0 1/4] FROM mcr.microsoft.com/playwright/python:v1.63.0-noble@sha256:72bd171a9ffc2b4b59532aaa6210e21014d07093120dc25528870c0b840da1f0
+2026-11-24T18:34:48.4699266Z #5 resolve mcr.microsoft.com/playwright/python:v1.63.0-noble@sha256:72bd171a9ffc2b4b59532aaa6210e21014d07093120dc25528870c0b840da1f0 done
+2026-11-24T18:34:48.4700644Z #5 sha256:96b39581c89131729a7ecb8d532314af54c7f9bcc7a61fe15c7a9e77602acf59 1.06kB / 1.06kB done
+2026-11-24T18:34:48.4702360Z #5 sha256:59fe35832a79d1324e778b737760b2afc11cffcbaeba325012f96cabae832a75 4.59kB / 4.59kB done
+2026-11-24T18:34:48.4703547Z #5 sha256:e51aee9c82ec5dd5ba2add49c45c6d85d460512757e2615b69bcdf9469c7cb58 16.78MB / 29.76MB 0.1s
+2026-11-24T18:34:48.4704708Z #5 sha256:8d325af5888b74be784c993fd685b8e9657598b353d41edf72820183c88d2378 11.53MB / 46.27MB 0.1s
+2026-11-24T18:34:48.4705725Z #5 sha256:780286d9a7ac6ce567a0b1125bbb28a1dbb2df0aebbf1a493789e23a31879f3d 9.44MB / 95.95MB 0.1s
+2026-11-24T18:34:48.4706375Z #5 sha256:72bd171a9ffc2b4b59532aaa6210e21014d07093120dc25528870c0b840da1f0 705B / 705B done
+2026-11-24T18:34:48.5914942Z #5 sha256:e51aee9c82ec5dd5ba2add49c45c6d85d460512757e2615b69bcdf9469c7cb58 29.76MB / 29.76MB 0.2s done
+2026-11-24T18:34:48.5916905Z #5 sha256:8d325af5888b74be784c993fd685b8e9657598b353d41edf72820183c88d2378 41.94MB / 46.27MB 0.2s
+2026-11-24T18:34:48.5918392Z #5 sha256:780286d9a7ac6ce567a0b1125bbb28a1dbb2df0aebbf1a493789e23a31879f3d 33.55MB / 95.95MB 0.2s
+2026-11-24T18:34:48.5928253Z #5 sha256:1b410ff087eccb9613563907f5381c27c0e2c02bad2a2bc9b408539c09efbac1 1.05MB / 841.95MB 0.2s
+2026-11-24T18:34:48.5930034Z #5 extracting sha256:e51aee9c82ec5dd5ba2add49c45c6d85d460512757e2615b69bcdf9469c7cb58
+2026-11-24T18:34:48.6929558Z #5 sha256:8d325af5888b74be784c993fd685b8e9657598b353d41edf72820183c88d2378 46.27MB / 46.27MB 0.2s done
+2026-11-24T18:34:48.6931125Z #5 sha256:780286d9a7ac6ce567a0b1125bbb28a1dbb2df0aebbf1a493789e23a31879f3d 58.72MB / 95.95MB 0.3s
+2026-11-24T18:34:48.8010924Z #5 sha256:1b410ff087eccb9613563907f5381c27c0e2c02bad2a2bc9b408539c09efbac1 48.23MB / 841.95MB 0.4s
+2026-11-24T18:34:48.9046184Z #5 sha256:780286d9a7ac6ce567a0b1125bbb28a1dbb2df0aebbf1a493789e23a31879f3d 82.84MB / 95.95MB 0.5s
+2026-11-24T18:34:49.0054024Z #5 sha256:780286d9a7ac6ce567a0b1125bbb28a1dbb2df0aebbf1a493789e23a31879f3d 95.95MB / 95.95MB 0.6s done
+2026-11-24T18:34:49.0058150Z #5 sha256:1b410ff087eccb9613563907f5381c27c0e2c02bad2a2bc9b408539c09efbac1 94.37MB / 841.95MB 0.6s
+2026-11-24T18:34:49.2693592Z #5 sha256:1b410ff087eccb9613563907f5381c27c0e2c02bad2a2bc9b408539c09efbac1 168.82MB / 841.95MB 0.9s
+2026-11-24T18:34:49.5387634Z #5 sha256:1b410ff087eccb9613563907f5381c27c0e2c02bad2a2bc9b408539c09efbac1 218.10MB / 841.95MB 1.1s
+2026-11-24T18:34:49.6688366Z #5 sha256:1b410ff087eccb9613563907f5381c27c0e2c02bad2a2bc9b408539c09efbac1 265.29MB / 841.95MB 1.3s
+2026-11-24T18:34:49.6689676Z #5 extracting sha256:e51aee9c82ec5dd5ba2add49c45c6d85d460512757e2615b69bcdf9469c7cb58 1.0s done
+2026-11-24T18:34:49.8281344Z #5 extracting sha256:8d325af5888b74be784c993fd685b8e9657598b353d41edf72820183c88d2378 0.1s
+2026-11-24T18:34:49.9288502Z #5 sha256:1b410ff087eccb9613563907f5381c27c0e2c02bad2a2bc9b408539c09efbac1 312.48MB / 841.95MB 1.5s
+2026-11-24T18:34:50.1385931Z #5 sha256:1b410ff087eccb9613563907f5381c27c0e2c02bad2a2bc9b408539c09efbac1 359.66MB / 841.95MB 1.7s
+2026-11-24T18:34:50.3584143Z #5 sha256:1b410ff087eccb9613563907f5381c27c0e2c02bad2a2bc9b408539c09efbac1 407.90MB / 841.95MB 1.9s
+2026-11-24T18:34:50.4682107Z #5 sha256:1b410ff087eccb9613563907f5381c27c0e2c02bad2a2bc9b408539c09efbac1 456.13MB / 841.95MB 2.1s
+2026-11-24T18:34:50.7055599Z #5 sha256:1b410ff087eccb9613563907f5381c27c0e2c02bad2a2bc9b408539c09efbac1 505.41MB / 841.95MB 2.3s
+2026-11-24T18:34:51.0680943Z #5 sha256:1b410ff087eccb9613563907f5381c27c0e2c02bad2a2bc9b408539c09efbac1 590.35MB / 841.95MB 2.7s
+2026-11-24T18:34:51.2930251Z #5 sha256:1b410ff087eccb9613563907f5381c27c0e2c02bad2a2bc9b408539c09efbac1 642.78MB / 841.95MB 2.9s
+2026-11-24T18:34:51.4682107Z #5 sha256:1b410ff087eccb9613563907f5381c27c0e2c02bad2a2bc9b408539c09efbac1 693.11MB / 841.95MB 3.1s
+2026-11-24T18:34:51.6682729Z #5 sha256:1b410ff087eccb9613563907f5381c27c0e2c02bad2a2bc9b408539c09efbac1 739.25MB / 841.95MB 3.3s
+2026-11-24T18:34:51.7683435Z #5 extracting sha256:8d325af5888b74be784c993fd685b8e9657598b353d41edf72820183c88d2378 2.0s done
+2026-11-24T18:34:51.8693813Z #5 sha256:1b410ff087eccb9613563907f5381c27c0e2c02bad2a2bc9b408539c09efbac1 788.53MB / 841.95MB 3.5s
+2026-11-24T18:34:52.0681841Z #5 sha256:1b410ff087eccb9613563907f5381c27c0e2c02bad2a2bc9b408539c09efbac1 831.52MB / 841.95MB 3.7s
+2026-11-24T18:34:53.8683709Z #5 sha256:1b410ff087eccb9613563907f5381c27c0e2c02bad2a2bc9b408539c09efbac1 841.95MB / 841.95MB 5.5s done
+2026-11-24T18:34:54.5964051Z #5 extracting sha256:780286d9a7ac6ce567a0b1125bbb28a1dbb2df0aebbf1a493789e23a31879f3d
+2026-11-24T18:34:55.0050926Z #5 extracting sha256:780286d9a7ac6ce567a0b1125bbb28a1dbb2df0aebbf1a493789e23a31879f3d 0.3s done
+2026-11-24T18:34:55.0052227Z #5 extracting sha256:1b410ff087eccb9613563907f5381c27c0e2c02bad2a2bc9b408539c09efbac1
+2026-11-24T18:35:00.0971568Z #5 extracting sha256:1b410ff087eccb9613563907f5381c27c0e2c02bad2a2bc9b408539c09efbac1 5.1s
+2026-11-24T18:35:05.3267950Z #5 extracting sha256:1b410ff087eccb9613563907f5381c27c0e2c02bad2a2bc9b408539c09efbac1 10.3s
+2026-11-24T18:35:08.1455759Z #5 extracting sha256:1b410ff087eccb9613563907f5381c27c0e2c02bad2a2bc9b408539c09efbac1 13.0s done
+2026-11-24T18:35:11.5937494Z #5 DONE 23.2s
+2026-11-24T18:35:11.7689566Z 
+2026-11-24T18:35:11.7690474Z #6 [stage-0 2/4] COPY requirements.txt requirements-validation.txt /tmp/
+2026-11-24T18:35:11.7691371Z #6 DONE 0.0s
+2026-11-24T18:35:11.7691619Z 
+2026-11-24T18:35:11.7693849Z #7 [stage-0 3/4] RUN --mount=type=secret,id=proxy_ca,target=/run/proxy-ca.pem     if [ -f /run/proxy-ca.pem ]; then export PIP_CERT=/run/proxy-ca.pem; fi;     pip install --no-cache-dir -r /tmp/requirements-validation.txt
+2026-11-24T18:35:12.2848332Z #7 0.667 Collecting fastapi<1.0,>=0.116 (from -r /tmp/requirements.txt (line 1))
+2026-11-24T18:35:12.3872028Z #7 0.769   Downloading fastapi-0.165.0-py3-none-any.whl.metadata (27 kB)
+2026-11-24T18:35:12.4887390Z #7 0.809 Collecting uvicorn<1.0,>=0.35 (from uvicorn[standard]<1.0,>=0.35->-r /tmp/requirements.txt (line 2))
+2026-11-24T18:35:12.4888146Z #7 0.830   Downloading uvicorn-0.54.0-py3-none-any.whl.metadata (6.6 kB)
+2026-11-24T18:35:12.4888855Z #7 0.850 Collecting httpx<1.0,>=0.28 (from -r /tmp/requirements.txt (line 3))
+2026-11-24T18:35:12.4889393Z #7 0.871   Downloading httpx-0.28.1-py3-none-any.whl.metadata (7.1 kB)
+2026-11-24T18:35:12.5950512Z #7 0.956 Collecting psutil<8.0,>=6.0 (from -r /tmp/requirements.txt (line 4))
+2026-11-24T18:35:12.5951290Z #7 0.977   Downloading psutil-7.2.2-cp36-abi3-manylinux2010_x86_64.manylinux_2_12_x86_64.manylinux_2_28_x86_64.whl.metadata (22 kB)
+2026-11-24T18:35:12.8236664Z #7 0.997 Collecting pwdlib<1.0,>=0.2 (from pwdlib[argon2]<1.0,>=0.2->-r /tmp/requirements.txt (line 5))
+2026-11-24T18:35:12.8237774Z #7 1.020   Downloading pwdlib-0.4.2-py3-none-any.whl.metadata (6.2 kB)
+2026-11-24T18:35:12.8571209Z #7 1.034 Collecting tzdata>=2025.1 (from -r /tmp/requirements.txt (line 6))
+2026-11-24T18:35:12.8572437Z #7 1.055   Downloading tzdata-2026.6-py2.py3-none-any.whl.metadata (1.4 kB)
+2026-11-24T18:35:12.8573367Z #7 1.239 Collecting cryptography<51,>=43 (from -r /tmp/requirements.txt (line 7))
+2026-11-24T18:35:13.0875723Z #7 1.261   Downloading cryptography-50.0.2-cp311-abi3-manylinux_2_34_x86_64.whl.metadata (4.4 kB)
+2026-11-24T18:35:13.0878207Z #7 1.298 Collecting playwright==1.63.0 (from -r /tmp/requirements-validation.txt (line 2))
+2026-11-24T18:35:13.0903029Z #7 1.319   Downloading playwright-1.63.0-py3-none-manylinux1_x86_64.whl.metadata (3.3 kB)
+2026-11-24T18:35:13.2578107Z #7 1.640 Collecting ruff==0.16.9 (from -r /tmp/requirements-validation.txt (line 3))
+2026-11-24T18:35:13.4298991Z #7 1.661   Downloading ruff-0.16.9-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (20 kB)
+2026-11-24T18:35:13.4539299Z #7 1.836 Collecting Pillow<13.0,>=11.0 (from -r /tmp/requirements-validation.txt (line 4))
+2026-11-24T18:35:13.6476667Z #7 1.857   Downloading pillow-12.3.0-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (9.1 kB)
+2026-11-24T18:35:13.6477880Z #7 1.875 Collecting pyee<14,>=13 (from playwright==1.63.0->-r /tmp/requirements-validation.txt (line 2))
+2026-11-24T18:35:13.6478972Z #7 1.896   Downloading pyee-13.0.1-py3-none-any.whl.metadata (3.0 kB)
+2026-11-24T18:35:13.6480134Z #7 2.030 Collecting greenlet<4.0.0,>=3.1.1 (from playwright==1.63.0->-r /tmp/requirements-validation.txt (line 2))
+2026-11-24T18:35:13.7571887Z #7 2.051   Downloading greenlet-3.5.6-cp312-cp312-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl.metadata (3.8 kB)
+2026-11-24T18:35:13.7573598Z #7 2.078 Collecting starlette>=1.6.0 (from fastapi<1.0,>=0.116->-r /tmp/requirements.txt (line 1))
+2026-11-24T18:35:13.7574665Z #7 2.099   Downloading starlette-1.10.0-py3-none-any.whl.metadata (6.6 kB)
+2026-11-24T18:35:13.7575766Z #7 2.118 Collecting anyio>=4.1.0 (from fastapi<1.0,>=0.116->-r /tmp/requirements.txt (line 1))
+2026-11-24T18:35:13.7576856Z #7 2.139   Downloading anyio-4.16.0-py3-none-any.whl.metadata (4.7 kB)
+2026-11-24T18:35:13.8747616Z #7 2.236 Collecting pydantic>=2.9.0 (from fastapi<1.0,>=0.116->-r /tmp/requirements.txt (line 1))
+2026-11-24T18:35:13.8748767Z #7 2.257   Downloading pydantic-2.14.4-py3-none-any.whl.metadata (143 kB)
+2026-11-24T18:35:13.9767193Z #7 2.305 Collecting typing-extensions>=4.8.0 (from fastapi<1.0,>=0.116->-r /tmp/requirements.txt (line 1))
+2026-11-24T18:35:13.9768543Z #7 2.326   Downloading typing_extensions-4.16.0-py3-none-any.whl.metadata (3.3 kB)
+2026-11-24T18:35:13.9769487Z #7 2.338 Collecting typing-inspection>=0.4.2 (from fastapi<1.0,>=0.116->-r /tmp/requirements.txt (line 1))
+2026-11-24T18:35:13.9770404Z #7 2.359   Downloading typing_inspection-0.4.5-py3-none-any.whl.metadata (2.6 kB)
+2026-11-24T18:35:14.0904239Z #7 2.372 Collecting annotated-doc>=0.0.2 (from fastapi<1.0,>=0.116->-r /tmp/requirements.txt (line 1))
+2026-11-24T18:35:14.0905537Z #7 2.393   Downloading annotated_doc-0.0.7-py3-none-any.whl.metadata (6.4 kB)
+2026-11-24T18:35:14.0907155Z #7 2.412 Collecting opentelemetry-api>=1.44.0 (from fastapi<1.0,>=0.116->-r /tmp/requirements.txt (line 1))
+2026-11-24T18:35:14.0908203Z #7 2.433   Downloading opentelemetry_api-1.45.2-py3-none-any.whl.metadata (1.4 kB)
+2026-11-24T18:35:14.0908977Z #7 2.452 Collecting click>=7.0 (from uvicorn<1.0,>=0.35->uvicorn[standard]<1.0,>=0.35->-r /tmp/requirements.txt (line 2))
+2026-11-24T18:35:14.0909725Z #7 2.473   Downloading click-8.5.1-py3-none-any.whl.metadata (2.6 kB)
+2026-11-24T18:35:14.2040678Z #7 2.485 Collecting h11>=0.8 (from uvicorn<1.0,>=0.35->uvicorn[standard]<1.0,>=0.35->-r /tmp/requirements.txt (line 2))
+2026-11-24T18:35:14.2041939Z #7 2.507   Downloading h11-0.16.0-py3-none-any.whl.metadata (8.3 kB)
+2026-11-24T18:35:14.2042920Z #7 2.528 Collecting certifi (from httpx<1.0,>=0.28->-r /tmp/requirements.txt (line 3))
+2026-11-24T18:35:14.2043796Z #7 2.549   Downloading certifi-2026.11.20-py3-none-any.whl.metadata (2.5 kB)
+2026-11-24T18:35:14.2044718Z #7 2.565 Collecting httpcore==1.* (from httpx<1.0,>=0.28->-r /tmp/requirements.txt (line 3))
+2026-11-24T18:35:14.2045535Z #7 2.586   Downloading httpcore-1.0.9-py3-none-any.whl.metadata (21 kB)
+2026-11-24T18:35:14.3394898Z #7 2.603 Collecting idna (from httpx<1.0,>=0.28->-r /tmp/requirements.txt (line 3))
+2026-11-24T18:35:14.3395822Z #7 2.624   Downloading idna-3.20-py3-none-any.whl.metadata (7.2 kB)
+2026-11-24T18:35:14.3396766Z #7 2.722 Collecting cffi>=2.0.0 (from cryptography<51,>=43->-r /tmp/requirements.txt (line 7))
+2026-11-24T18:35:14.4747976Z #7 2.743   Downloading cffi-2.1.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (2.5 kB)
+2026-11-24T18:35:14.4749644Z #7 2.765 Collecting argon2-cffi>=23.1.0 (from pwdlib[argon2]<1.0,>=0.2->-r /tmp/requirements.txt (line 5))
+2026-11-24T18:35:14.4751022Z #7 2.785   Downloading argon2_cffi-25.1.0-py3-none-any.whl.metadata (4.1 kB)
+2026-11-24T18:35:14.4752766Z #7 2.819 Collecting httptools>=0.8.0 (from uvicorn[standard]<1.0,>=0.35->-r /tmp/requirements.txt (line 2))
+2026-11-24T18:35:14.4754546Z #7 2.857   Downloading httptools-0.9.0-cp312-cp312-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl.metadata (3.5 kB)
+2026-11-24T18:35:14.5922054Z #7 2.874 Collecting python-dotenv>=0.13 (from uvicorn[standard]<1.0,>=0.35->-r /tmp/requirements.txt (line 2))
+2026-11-24T18:35:14.5923522Z #7 2.933   Downloading python_dotenv-1.2.4-py3-none-any.whl.metadata (29 kB)
+2026-11-24T18:35:14.5924867Z #7 2.974 Collecting pyyaml>=5.1 (from uvicorn[standard]<1.0,>=0.35->-r /tmp/requirements.txt (line 2))
+2026-11-24T18:35:14.7651998Z #7 2.996   Downloading pyyaml-6.0.4-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (2.3 kB)
+2026-11-24T18:35:14.7653165Z #7 3.033 Collecting uvloop>=0.15.1 (from uvicorn[standard]<1.0,>=0.35->-r /tmp/requirements.txt (line 2))
+2026-11-24T18:35:14.7654032Z #7 3.056   Downloading uvloop-0.23.0-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (5.1 kB)
+2026-11-24T18:35:14.7654925Z #7 3.147 Collecting watchfiles>=0.20 (from uvicorn[standard]<1.0,>=0.35->-r /tmp/requirements.txt (line 2))
+2026-11-24T18:35:14.8964903Z #7 3.168   Downloading watchfiles-1.3.0-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (4.9 kB)
+2026-11-24T18:35:14.8966252Z #7 3.279 Collecting websockets>=13.0 (from uvicorn[standard]<1.0,>=0.35->-r /tmp/requirements.txt (line 2))
+2026-11-24T18:35:15.0100455Z #7 3.300   Downloading websockets-17.4-cp312-cp312-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl.metadata (6.3 kB)
+2026-11-24T18:35:15.0102369Z #7 3.321 Collecting argon2-cffi-bindings (from argon2-cffi>=23.1.0->pwdlib[argon2]<1.0,>=0.2->-r /tmp/requirements.txt (line 5))
+2026-11-24T18:35:15.0103937Z #7 3.343   Downloading argon2_cffi_bindings-26.2.0-cp310-abi3-manylinux_2_26_x86_64.manylinux_2_28_x86_64.whl.metadata (7.6 kB)
+2026-11-24T18:35:15.0105360Z #7 3.356 Collecting pycparser (from cffi>=2.0.0->cryptography<51,>=43->-r /tmp/requirements.txt (line 7))
+2026-11-24T18:35:15.0106301Z #7 3.377   Downloading pycparser-3.12-py3-none-any.whl.metadata (9.7 kB)
+2026-11-24T18:35:15.0106953Z #7 3.392 Collecting annotated-types>=0.6.0 (from pydantic>=2.9.0->fastapi<1.0,>=0.116->-r /tmp/requirements.txt (line 1))
+2026-11-24T18:35:15.1813617Z #7 3.413   Downloading annotated_types-0.8.0-py3-none-any.whl.metadata (15 kB)
+2026-11-24T18:35:15.6655949Z #7 4.048 Collecting pydantic-core==2.50.5 (from pydantic>=2.9.0->fastapi<1.0,>=0.116->-r /tmp/requirements.txt (line 1))
+2026-11-24T18:35:15.8734442Z #7 4.069   Downloading pydantic_core-2.50.5-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (6.6 kB)
+2026-11-24T18:35:16.0924355Z #7 4.105 Downloading playwright-1.63.0-py3-none-manylinux1_x86_64.whl (48.2 MB)
+2026-11-24T18:35:16.0925662Z #7 4.359    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 48.2/48.2 MB 206.4 MB/s  0:00:00
+2026-11-24T18:35:16.0926521Z #7 4.381 Downloading ruff-0.16.9-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (10.4 MB)
+2026-11-24T18:35:16.0927699Z #7 4.432    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 10.4/10.4 MB 207.2 MB/s  0:00:00
+2026-11-24T18:35:16.0928476Z #7 4.453 Downloading fastapi-0.165.0-py3-none-any.whl (159 kB)
+2026-11-24T18:35:16.0929198Z #7 4.475 Downloading uvicorn-0.54.0-py3-none-any.whl (87 kB)
+2026-11-24T18:35:16.2114500Z #7 4.496 Downloading httpx-0.28.1-py3-none-any.whl (73 kB)
+2026-11-24T18:35:16.2115744Z #7 4.517 Downloading psutil-7.2.2-cp36-abi3-manylinux2010_x86_64.manylinux_2_12_x86_64.manylinux_2_28_x86_64.whl (155 kB)
+2026-11-24T18:35:16.2117038Z #7 4.540 Downloading pwdlib-0.4.2-py3-none-any.whl (9.9 kB)
+2026-11-24T18:35:16.2118032Z #7 4.561 Downloading cryptography-50.0.2-cp311-abi3-manylinux_2_34_x86_64.whl (4.8 MB)
+2026-11-24T18:35:16.2119325Z #7 4.572    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.8/4.8 MB 518.9 MB/s  0:00:00
+2026-11-24T18:35:16.2120295Z #7 4.594 Downloading pillow-12.3.0-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (6.9 MB)
+2026-11-24T18:35:16.3129895Z #7 4.609    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 6.9/6.9 MB 534.8 MB/s  0:00:00
+2026-11-24T18:35:16.3131104Z #7 4.630 Downloading greenlet-3.5.6-cp312-cp312-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl (621 kB)
+2026-11-24T18:35:16.3132635Z #7 4.633    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 621.4/621.4 kB 767.6 MB/s  0:00:00
+2026-11-24T18:35:16.3133452Z #7 4.653 Downloading httpcore-1.0.9-py3-none-any.whl (78 kB)
+2026-11-24T18:35:16.3134249Z #7 4.674 Downloading pyee-13.0.1-py3-none-any.whl (15 kB)
+2026-11-24T18:35:16.3134765Z #7 4.695 Downloading tzdata-2026.6-py2.py3-none-any.whl (348 kB)
+2026-11-24T18:35:16.4191548Z #7 4.716 Downloading annotated_doc-0.0.7-py3-none-any.whl (5.3 kB)
+2026-11-24T18:35:16.4192986Z #7 4.737 Downloading anyio-4.16.0-py3-none-any.whl (134 kB)
+2026-11-24T18:35:16.4194092Z #7 4.759 Downloading argon2_cffi-25.1.0-py3-none-any.whl (14 kB)
+2026-11-24T18:35:16.4195339Z #7 4.780 Downloading cffi-2.1.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (221 kB)
+2026-11-24T18:35:16.4196202Z #7 4.801 Downloading click-8.5.1-py3-none-any.whl (126 kB)
+2026-11-24T18:35:16.5284195Z #7 4.822 Downloading h11-0.16.0-py3-none-any.whl (37 kB)
+2026-11-24T18:35:16.5285143Z #7 4.844 Downloading httptools-0.9.0-cp312-cp312-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl (552 kB)
+2026-11-24T18:35:16.5286389Z #7 4.847    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 552.8/552.8 kB 322.9 MB/s  0:00:00
+2026-11-24T18:35:16.5287083Z #7 4.868 Downloading idna-3.20-py3-none-any.whl (69 kB)
+2026-11-24T18:35:16.5287726Z #7 4.889 Downloading opentelemetry_api-1.45.2-py3-none-any.whl (60 kB)
+2026-11-24T18:35:16.5288359Z #7 4.911 Downloading pydantic-2.14.4-py3-none-any.whl (494 kB)
+2026-11-24T18:35:16.6480889Z #7 4.932 Downloading pydantic_core-2.50.5-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (2.3 MB)
+2026-11-24T18:35:16.6482849Z #7 4.943    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.3/2.3 MB 230.0 MB/s  0:00:00
+2026-11-24T18:35:16.6483795Z #7 4.964 Downloading annotated_types-0.8.0-py3-none-any.whl (13 kB)
+2026-11-24T18:35:16.6485135Z #7 4.985 Downloading python_dotenv-1.2.4-py3-none-any.whl (23 kB)
+2026-11-24T18:35:16.6486443Z #7 5.006 Downloading pyyaml-6.0.4-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (849 kB)
+2026-11-24T18:35:16.6487312Z #7 5.009    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 849.2/849.2 kB 815.4 MB/s  0:00:00
+2026-11-24T18:35:16.6487769Z #7 5.030 Downloading starlette-1.10.0-py3-none-any.whl (80 kB)
+2026-11-24T18:35:16.7528980Z #7 5.051 Downloading typing_extensions-4.16.0-py3-none-any.whl (45 kB)
+2026-11-24T18:35:16.7529645Z #7 5.073 Downloading typing_inspection-0.4.5-py3-none-any.whl (14 kB)
+2026-11-24T18:35:16.7530579Z #7 5.096 Downloading uvloop-0.23.0-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (4.5 MB)
+2026-11-24T18:35:16.7532088Z #7 5.114    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.5/4.5 MB 277.0 MB/s  0:00:00
+2026-11-24T18:35:16.7532975Z #7 5.135 Downloading watchfiles-1.3.0-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (458 kB)
+2026-11-24T18:35:16.9897798Z #7 5.157 Downloading websockets-17.4-cp312-cp312-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl (226 kB)
+2026-11-24T18:35:16.9899265Z #7 5.178 Downloading argon2_cffi_bindings-26.2.0-cp310-abi3-manylinux_2_26_x86_64.manylinux_2_28_x86_64.whl (26 kB)
+2026-11-24T18:35:16.9900339Z #7 5.199 Downloading certifi-2026.11.20-py3-none-any.whl (127 kB)
+2026-11-24T18:35:16.9901130Z #7 5.221 Downloading pycparser-3.12-py3-none-any.whl (62 kB)
+2026-11-24T18:35:17.0439841Z #7 5.426 Installing collected packages: websockets, uvloop, tzdata, typing-extensions, ruff, pyyaml, python-dotenv, pycparser, pwdlib, psutil, Pillow, idna, httptools, h11, greenlet, click, certifi, annotated-types, annotated-doc, uvicorn, typing-inspection, pyee, pydantic-core, opentelemetry-api, httpcore, cffi, anyio, watchfiles, starlette, pydantic, playwright, httpx, cryptography, argon2-cffi-bindings, fastapi, argon2-cffi
+2026-11-24T18:35:19.9832160Z #7 8.365 
+2026-11-24T18:35:20.1392784Z #7 8.369 Successfully installed Pillow-12.3.0 annotated-doc-0.0.7 annotated-types-0.8.0 anyio-4.16.0 argon2-cffi-25.1.0 argon2-cffi-bindings-26.2.0 certifi-2026.11.20 cffi-2.1.1 click-8.5.1 cryptography-50.0.2 fastapi-0.165.0 greenlet-3.5.6 h11-0.16.0 httpcore-1.0.9 httptools-0.9.0 httpx-0.28.1 idna-3.20 opentelemetry-api-1.45.2 playwright-1.63.0 psutil-7.2.2 pwdlib-0.4.2 pycparser-3.12 pydantic-2.14.4 pydantic-core-2.50.5 pyee-13.0.1 python-dotenv-1.2.4 pyyaml-6.0.4 ruff-0.16.9 starlette-1.10.0 typing-extensions-4.16.0 typing-inspection-0.4.5 tzdata-2026.6 uvicorn-0.54.0 uvloop-0.23.0 watchfiles-1.3.0 websockets-17.4
+2026-11-24T18:35:20.1405859Z #7 8.369 WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+2026-11-24T18:35:20.1408256Z #7 8.370 
+2026-11-24T18:35:20.1408711Z #7 8.370 [notice] A new release of pip is available: 26.2.1 -> 26.3
+2026-11-24T18:35:20.1409420Z #7 8.370 [notice] To update, run: python -m pip install --upgrade pip
+2026-11-24T18:35:20.5306151Z #7 DONE 8.9s
+2026-11-24T18:35:20.6801255Z 
+2026-11-24T18:35:20.6802519Z #8 [stage-0 4/4] RUN apt-get update && apt-get install -y --no-install-recommends git && rm -rf /var/lib/apt/lists/*
+2026-11-24T18:35:20.6803749Z #8 0.149 Get:1 http://azure.archive.ubuntu.com/ubuntu noble InRelease [256 kB]
+2026-11-24T18:35:20.8432807Z #8 0.159 Get:2 http://azure.archive.ubuntu.com/ubuntu noble-updates InRelease [126 kB]
+2026-11-24T18:35:20.8435700Z #8 0.159 Get:3 http://azure.archive.ubuntu.com/ubuntu noble-backports InRelease [126 kB]
+2026-11-24T18:35:20.8437079Z #8 0.217 Get:4 http://azure.archive.ubuntu.com/ubuntu noble/universe amd64 Packages [19.3 MB]
+2026-11-24T18:35:20.8451998Z #8 0.312 Get:5 http://azure.archive.ubuntu.com/ubuntu noble/main amd64 Packages [1808 kB]
+2026-11-24T18:35:20.9653513Z #8 0.320 Get:6 http://azure.archive.ubuntu.com/ubuntu noble/restricted amd64 Packages [117 kB]
+2026-11-24T18:35:20.9654717Z #8 0.321 Get:7 http://azure.archive.ubuntu.com/ubuntu noble/multiverse amd64 Packages [331 kB]
+2026-11-24T18:35:20.9655846Z #8 0.323 Get:8 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 Packages [1842 kB]
+2026-11-24T18:35:20.9656933Z #8 0.330 Get:9 http://security.ubuntu.com/ubuntu noble-security InRelease [126 kB]
+2026-11-24T18:35:20.9658053Z #8 0.332 Get:10 http://azure.archive.ubuntu.com/ubuntu noble-updates/multiverse amd64 Packages [61.7 kB]
+2026-11-24T18:35:20.9659229Z #8 0.333 Get:11 http://azure.archive.ubuntu.com/ubuntu noble-updates/restricted amd64 Packages [2403 kB]
+2026-11-24T18:35:20.9659994Z #8 0.344 Get:12 http://azure.archive.ubuntu.com/ubuntu noble-updates/universe amd64 Packages [2184 kB]
+2026-11-24T18:35:20.9662581Z #8 0.354 Get:13 http://azure.archive.ubuntu.com/ubuntu noble-backports/multiverse amd64 Packages [669 B]
+2026-11-24T18:35:20.9663433Z #8 0.354 Get:14 http://azure.archive.ubuntu.com/ubuntu noble-backports/main amd64 Packages [49.0 kB]
+2026-11-24T18:35:20.9664206Z #8 0.354 Get:15 http://azure.archive.ubuntu.com/ubuntu noble-backports/universe amd64 Packages [36.0 kB]
+2026-11-24T18:35:20.9664920Z #8 0.434 Get:16 http://security.ubuntu.com/ubuntu noble-security/main amd64 Packages [1504 kB]
+2026-11-24T18:35:21.1871271Z #8 0.483 Get:17 http://security.ubuntu.com/ubuntu noble-security/restricted amd64 Packages [2272 kB]
+2026-11-24T18:35:21.1872669Z #8 0.499 Get:18 http://security.ubuntu.com/ubuntu noble-security/multiverse amd64 Packages [55.6 kB]
+2026-11-24T18:35:21.1873791Z #8 0.505 Get:19 http://security.ubuntu.com/ubuntu noble-security/universe amd64 Packages [1562 kB]
+2026-11-24T18:35:21.9317435Z #8 1.400 Fetched 34.2 MB in 1s (27.2 MB/s)
+2026-11-24T18:35:22.6943160Z #8 1.400 Reading package lists...
+2026-11-24T18:35:23.4854281Z #8 2.184 Reading package lists...
+2026-11-24T18:35:23.6732793Z #8 2.968 Building dependency tree...
+2026-11-24T18:35:23.8170090Z #8 3.142 Reading state information...
+2026-11-24T18:35:23.8170753Z #8 3.286 The following additional packages will be installed:
+2026-11-24T18:35:23.9313856Z #8 3.286   git-man
+2026-11-24T18:35:23.9314528Z #8 3.287 Suggested packages:
+2026-11-24T18:35:23.9315384Z #8 3.287   gettext-base git-daemon-run | git-daemon-sysvinit git-doc git-email git-gui
+2026-11-24T18:35:23.9316468Z #8 3.287   gitk gitweb git-cvs git-mediawiki git-svn
+2026-11-24T18:35:23.9316857Z #8 3.287 Recommended packages:
+2026-11-24T18:35:23.9317139Z #8 3.287   patch less
+2026-11-24T18:35:23.9317424Z #8 3.311 The following packages will be upgraded:
+2026-11-24T18:35:23.9317769Z #8 3.311   git git-man
+2026-11-24T18:35:23.9318123Z #8 3.343 2 upgraded, 0 newly installed, 0 to remove and 65 not upgraded.
+2026-11-24T18:35:23.9318564Z #8 3.343 Need to get 4781 kB of archives.
+2026-11-24T18:35:23.9319003Z #8 3.343 After this operation, 5120 B of additional disk space will be used.
+2026-11-24T18:35:23.9319798Z #8 3.343 Get:1 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 git-man all 1:2.43.0-1ubuntu7.4 [1101 kB]
+2026-11-24T18:35:23.9320727Z #8 3.400 Get:2 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 git amd64 1:2.43.0-1ubuntu7.4 [3681 kB]
+2026-11-24T18:35:24.2340928Z #8 3.703 debconf: delaying package configuration, since apt-utils is not installed
+2026-11-24T18:35:24.3443017Z #8 3.737 Fetched 4781 kB in 0s (20.3 MB/s)
+2026-11-24T18:35:24.3443542Z #8 3.754 (Reading database ... 
+2026-11-24T18:35:24.3444193Z (Reading database ... 5%
+2026-11-24T18:35:24.3444481Z (Reading database ... 10%
+2026-11-24T18:35:24.3444845Z (Reading database ... 15%
+2026-11-24T18:35:24.3445190Z (Reading database ... 20%
+2026-11-24T18:35:24.3445575Z (Reading database ... 25%
+2026-11-24T18:35:24.3445963Z (Reading database ... 30%
+2026-11-24T18:35:24.3446205Z (Reading database ... 35%
+2026-11-24T18:35:24.3446431Z (Reading database ... 40%
+2026-11-24T18:35:24.3446923Z (Reading database ... 45%
+2026-11-24T18:35:24.3447158Z (Reading database ... 50%
+2026-11-24T18:35:24.3447503Z (Reading database ... 55%
+2026-11-24T18:35:24.3447908Z (Reading database ... 60%
+2026-11-24T18:35:24.3448306Z (Reading database ... 65%
+2026-11-24T18:35:24.3448683Z (Reading database ... 70%
+2026-11-24T18:35:24.3449054Z (Reading database ... 75%
+2026-11-24T18:35:24.3449430Z (Reading database ... 80%
+2026-11-24T18:35:24.3449827Z (Reading database ... 85%
+2026-11-24T18:35:24.3450193Z (Reading database ... 90%
+2026-11-24T18:35:24.3450555Z (Reading database ... 95%
+2026-11-24T18:35:24.3450924Z (Reading database ... 100%
+2026-11-24T18:35:24.3451465Z (Reading database ... 28981 files and directories currently installed.)
+2026-11-24T18:35:24.3452541Z #8 3.776 Preparing to unpack .../git-man_1%3a2.43.0-1ubuntu7.4_all.deb ...
+2026-11-24T18:35:24.3453142Z #8 3.779 Unpacking git-man (1:2.43.0-1ubuntu7.4) over (1:2.43.0-1ubuntu7.3) ...
+2026-11-24T18:35:24.3453634Z #8 3.813 Preparing to unpack .../git_1%3a2.43.0-1ubuntu7.4_amd64.deb ...
+2026-11-24T18:35:24.5104530Z #8 3.829 Unpacking git (1:2.43.0-1ubuntu7.4) over (1:2.43.0-1ubuntu7.3) ...
+2026-11-24T18:35:24.5842715Z #8 4.053 Setting up git-man (1:2.43.0-1ubuntu7.4) ...
+2026-11-24T18:35:24.7831505Z #8 4.055 Setting up git (1:2.43.0-1ubuntu7.4) ...
+2026-11-24T18:35:24.7832423Z #8 DONE 4.1s
+2026-11-24T18:35:24.7832629Z 
+2026-11-24T18:35:24.7832777Z #9 exporting to image
+2026-11-24T18:35:24.7833175Z #9 exporting layers
+2026-11-24T18:35:26.6970907Z #9 exporting layers 2.1s done
+2026-11-24T18:35:26.7132082Z #9 writing image sha256:69095d619bc4db3fe9ef2980720f5e37a1dfbbaa088f630bb73c506eea2788ad done
+2026-11-24T18:35:26.7133229Z #9 naming to docker.io/library/dtos-browser-validation done
+2026-11-24T18:35:26.7133699Z #9 DONE 2.1s
+2026-11-24T18:35:26.7239931Z ##[group]Run docker run --rm --memory=2g --memory-swap=2g --cpus=2 --network=none -e NODE_OPTIONS -v "$PWD:$PWD" -w "$PWD" -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0="$PWD" dtos-browser-validation python -m unittest tests.test_front_office_brief tests.test_front_office_brief_http tests.test_front_office_brief_browser tests.test_beginner_market tests.test_beginner_browser tests.test_beginner_final tests.test_beginner_final_browser tests.test_home_trade_news tests.test_home_news_corrections tests.test_home_trade_news_browser tests.test_home_opportunities tests.test_home_opportunities_browser tests.test_home_opportunity_integrity tests.test_home_read_responsiveness tests.test_public_readiness tests.test_market_warming_middleware tests.test_import_commissioner_integrity tests.test_batch6_rank_presentation tests.test_cold_league_recovery tests.test_unmatched_import_recovery tests.test_navigation_residency tests.test_sync_diagnostics
+2026-11-24T18:35:26.7247133Z [36;1mdocker run --rm --memory=2g --memory-swap=2g --cpus=2 --network=none -e NODE_OPTIONS -v "$PWD:$PWD" -w "$PWD" -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0="$PWD" dtos-browser-validation python -m unittest tests.test_front_office_brief tests.test_front_office_brief_http tests.test_front_office_brief_browser tests.test_beginner_market tests.test_beginner_browser tests.test_beginner_final tests.test_beginner_final_browser tests.test_home_trade_news tests.test_home_news_corrections tests.test_home_trade_news_browser tests.test_home_opportunities tests.test_home_opportunities_browser tests.test_home_opportunity_integrity tests.test_home_read_responsiveness tests.test_public_readiness tests.test_market_warming_middleware tests.test_import_commissioner_integrity tests.test_batch6_rank_presentation tests.test_cold_league_recovery tests.test_unmatched_import_recovery tests.test_navigation_residency tests.test_sync_diagnostics[0m
+2026-11-24T18:35:26.7251295Z [36;1mdocker run --rm --memory=2g --memory-swap=2g --cpus=2 --network=none -e NODE_OPTIONS -v "$PWD:$PWD" -w "$PWD" -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0="$PWD" dtos-browser-validation python -m unittest tests.test_fois_navigation_reliability[0m
+2026-11-24T18:35:26.7273718Z shell: /usr/bin/bash -e {0}
+2026-11-24T18:35:26.7273973Z env:
+2026-11-24T18:35:26.7274191Z   NODE_OPTIONS: --max-old-space-size=256
+2026-11-24T18:35:26.7274530Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-24T18:35:26.7274957Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib/pkgconfig
+2026-11-24T18:35:26.7275385Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-24T18:35:26.7275755Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-24T18:35:26.7276151Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+2026-11-24T18:35:26.7276539Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib
+2026-11-24T18:35:26.7276866Z ##[endgroup]
+2026-11-24T18:35:27.8520484Z /usr/local/lib/python3.12/dist-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+2026-11-24T18:35:27.8522741Z   from starlette.testclient import TestClient as TestClient  # noqa
+2026-11-24T18:35:29.4314441Z ............{"timestamp":"2026-11-24T18:35:29.430852+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":84619264,"limit_bytes":2147483648,"raw_headroom_bytes":2062864384,"clean_inactive_file_bytes":622592,"conditional_file_credit_bytes":311296,"admission_headroom_bytes":2063175680,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+2026-11-24T18:35:29.4334415Z {"timestamp":"2026-11-24T18:35:29.432959+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/workspace?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:29.4396132Z {"timestamp":"2026-11-24T18:35:29.439013+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_admission","request_id":"system","event":"trade_admission","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":84742144,"limit_bytes":2147483648,"raw_headroom_bytes":2062741504,"clean_inactive_file_bytes":622592,"conditional_file_credit_bytes":311296,"admission_headroom_bytes":2063052800,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"recovery":null}}
+2026-11-24T18:35:29.5045531Z {"timestamp":"2026-11-24T18:35:29.503966+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_execution_finished","request_id":"system","event":"trade_execution_finished","duration_ms":65.616,"diagnostic":{"schema":"trade-resource-v1","outcome":"complete"}}
+2026-11-24T18:35:29.5180409Z {"timestamp":"2026-11-24T18:35:29.517648+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/trades/evaluate \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:29.5313528Z {"timestamp":"2026-11-24T18:35:29.530971+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:29.5444618Z {"timestamp":"2026-11-24T18:35:29.544095+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:29.5820119Z {"timestamp":"2026-11-24T18:35:29.581610+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=2 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:29.7476934Z .{"timestamp":"2026-11-24T18:35:29.746715+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":92770304,"limit_bytes":2147483648,"raw_headroom_bytes":2054713344,"clean_inactive_file_bytes":622592,"conditional_file_credit_bytes":311296,"admission_headroom_bytes":2055024640,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+2026-11-24T18:35:29.7499848Z {"timestamp":"2026-11-24T18:35:29.749587+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/workspace?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:29.7557314Z {"timestamp":"2026-11-24T18:35:29.755126+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_admission","request_id":"system","event":"trade_admission","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":93003776,"limit_bytes":2147483648,"raw_headroom_bytes":2054479872,"clean_inactive_file_bytes":622592,"conditional_file_credit_bytes":311296,"admission_headroom_bytes":2054791168,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"recovery":null}}
+2026-11-24T18:35:29.8383608Z {"timestamp":"2026-11-24T18:35:29.837783+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_execution_finished","request_id":"system","event":"trade_execution_finished","duration_ms":83.239,"diagnostic":{"schema":"trade-resource-v1","outcome":"complete"}}
+2026-11-24T18:35:29.8390710Z {"timestamp":"2026-11-24T18:35:29.838705+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/trades/evaluate \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:29.8497835Z {"timestamp":"2026-11-24T18:35:29.849399+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:29.8632833Z {"timestamp":"2026-11-24T18:35:29.862865+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:29.9038384Z {"timestamp":"2026-11-24T18:35:29.903431+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/ \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:29.9106378Z {"timestamp":"2026-11-24T18:35:29.910303+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/ \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:30.0687633Z .{"timestamp":"2026-11-24T18:35:30.067874+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":95301632,"limit_bytes":2147483648,"raw_headroom_bytes":2052182016,"clean_inactive_file_bytes":622592,"conditional_file_credit_bytes":311296,"admission_headroom_bytes":2052493312,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+2026-11-24T18:35:30.0708201Z {"timestamp":"2026-11-24T18:35:30.070426+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/workspace?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:30.0767540Z {"timestamp":"2026-11-24T18:35:30.076254+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_admission","request_id":"system","event":"trade_admission","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":95277056,"limit_bytes":2147483648,"raw_headroom_bytes":2052206592,"clean_inactive_file_bytes":622592,"conditional_file_credit_bytes":311296,"admission_headroom_bytes":2052517888,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"recovery":null}}
+2026-11-24T18:35:30.1144204Z {"timestamp":"2026-11-24T18:35:30.113881+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_execution_finished","request_id":"system","event":"trade_execution_finished","duration_ms":38.213,"diagnostic":{"schema":"trade-resource-v1","outcome":"complete"}}
+2026-11-24T18:35:30.1152437Z {"timestamp":"2026-11-24T18:35:30.114873+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/trades/evaluate \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:30.1259179Z {"timestamp":"2026-11-24T18:35:30.125539+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:30.1401324Z {"timestamp":"2026-11-24T18:35:30.139733+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:30.2296980Z {"timestamp":"2026-11-24T18:35:30.228860+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":96288768,"limit_bytes":2147483648,"raw_headroom_bytes":2051194880,"clean_inactive_file_bytes":745472,"conditional_file_credit_bytes":372736,"admission_headroom_bytes":2051567616,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+2026-11-24T18:35:30.2316373Z {"timestamp":"2026-11-24T18:35:30.231257+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/workspace?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:30.2434625Z {"timestamp":"2026-11-24T18:35:30.242907+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/account/franchise-goal \"HTTP/1.1 303 See Other\"","request_id":"system"}
+2026-11-24T18:35:30.2579366Z {"timestamp":"2026-11-24T18:35:30.257576+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/ \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:30.2994461Z {"timestamp":"2026-11-24T18:35:30.298974+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/teams/1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:30.3096970Z {"timestamp":"2026-11-24T18:35:30.309270+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:30.3147207Z {"timestamp":"2026-11-24T18:35:30.314332+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/recommended?front_office=1&team_need=d4fe93a5fe003ccdecd6600fe2e7a884d4f13c7102138477f4474d1b82e19f1d \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:30.3528199Z {"timestamp":"2026-11-24T18:35:30.352317+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/recommended?front_office=1&team_need=d4fe93a5fe003ccdecd6600fe2e7a884d4f13c7102138477f4474d1b82e19f1d \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:30.3605962Z {"timestamp":"2026-11-24T18:35:30.360214+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:30.5369612Z .{"timestamp":"2026-11-24T18:35:30.536116+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":98578432,"limit_bytes":2147483648,"raw_headroom_bytes":2048905216,"clean_inactive_file_bytes":622592,"conditional_file_credit_bytes":311296,"admission_headroom_bytes":2049216512,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+2026-11-24T18:35:30.5389322Z {"timestamp":"2026-11-24T18:35:30.538549+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/workspace?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:30.5444589Z {"timestamp":"2026-11-24T18:35:30.543923+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_admission","request_id":"system","event":"trade_admission","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":98545664,"limit_bytes":2147483648,"raw_headroom_bytes":2048937984,"clean_inactive_file_bytes":622592,"conditional_file_credit_bytes":311296,"admission_headroom_bytes":2049249280,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"recovery":null}}
+2026-11-24T18:35:30.5822131Z {"timestamp":"2026-11-24T18:35:30.581285+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_execution_finished","request_id":"system","event":"trade_execution_finished","duration_ms":37.926,"diagnostic":{"schema":"trade-resource-v1","outcome":"complete"}}
+2026-11-24T18:35:30.5825231Z {"timestamp":"2026-11-24T18:35:30.582135+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/trades/evaluate \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:30.5937058Z {"timestamp":"2026-11-24T18:35:30.593323+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:30.6069643Z {"timestamp":"2026-11-24T18:35:30.606580+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:30.6688483Z {"timestamp":"2026-11-24T18:35:30.668411+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/teams/1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:30.6759077Z {"timestamp":"2026-11-24T18:35:30.675546+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:30.8429232Z .{"timestamp":"2026-11-24T18:35:30.842293+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":100741120,"limit_bytes":2147483648,"raw_headroom_bytes":2046742528,"clean_inactive_file_bytes":626688,"conditional_file_credit_bytes":313344,"admission_headroom_bytes":2047055872,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+2026-11-24T18:35:30.8446871Z {"timestamp":"2026-11-24T18:35:30.844307+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/workspace?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:30.8503582Z {"timestamp":"2026-11-24T18:35:30.849748+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_admission","request_id":"system","event":"trade_admission","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":100970496,"limit_bytes":2147483648,"raw_headroom_bytes":2046513152,"clean_inactive_file_bytes":626688,"conditional_file_credit_bytes":313344,"admission_headroom_bytes":2046826496,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"recovery":null}}
+2026-11-24T18:35:30.8883042Z {"timestamp":"2026-11-24T18:35:30.887472+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_execution_finished","request_id":"system","event":"trade_execution_finished","duration_ms":38.387,"diagnostic":{"schema":"trade-resource-v1","outcome":"complete"}}
+2026-11-24T18:35:30.8886037Z {"timestamp":"2026-11-24T18:35:30.888260+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/trades/evaluate \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:30.8990059Z {"timestamp":"2026-11-24T18:35:30.898619+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:30.9122879Z {"timestamp":"2026-11-24T18:35:30.911946+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:30.9735764Z {"timestamp":"2026-11-24T18:35:30.973158+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/teams/1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:30.9826880Z {"timestamp":"2026-11-24T18:35:30.982337+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:30.9916988Z {"timestamp":"2026-11-24T18:35:30.991348+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/ \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:31.0017120Z {"timestamp":"2026-11-24T18:35:31.001336+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:31.0073626Z {"timestamp":"2026-11-24T18:35:31.007030+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/ \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:31.0166205Z {"timestamp":"2026-11-24T18:35:31.016226+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:31.0228894Z {"timestamp":"2026-11-24T18:35:31.022553+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/ \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:31.0325298Z {"timestamp":"2026-11-24T18:35:31.032127+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:31.0384994Z {"timestamp":"2026-11-24T18:35:31.038122+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/ \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:31.0479534Z {"timestamp":"2026-11-24T18:35:31.047606+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:31.0536529Z {"timestamp":"2026-11-24T18:35:31.053315+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/ \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:31.0630145Z {"timestamp":"2026-11-24T18:35:31.062655+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:31.0696784Z {"timestamp":"2026-11-24T18:35:31.069228+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/ \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:31.0795562Z {"timestamp":"2026-11-24T18:35:31.079143+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:31.0856353Z {"timestamp":"2026-11-24T18:35:31.085245+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/ \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:31.0953776Z {"timestamp":"2026-11-24T18:35:31.094977+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:31.1012732Z {"timestamp":"2026-11-24T18:35:31.100871+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/ \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:31.1107497Z {"timestamp":"2026-11-24T18:35:31.110367+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:31.1167176Z {"timestamp":"2026-11-24T18:35:31.116373+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/ \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:31.1264092Z {"timestamp":"2026-11-24T18:35:31.126010+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:31.1322365Z {"timestamp":"2026-11-24T18:35:31.131903+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/ \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:31.1416173Z {"timestamp":"2026-11-24T18:35:31.141274+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:31.3834472Z .{"timestamp":"2026-11-24T18:35:31.382544+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":103768064,"limit_bytes":2147483648,"raw_headroom_bytes":2043715584,"clean_inactive_file_bytes":626688,"conditional_file_credit_bytes":313344,"admission_headroom_bytes":2044028928,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+2026-11-24T18:35:31.3854903Z {"timestamp":"2026-11-24T18:35:31.385135+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/workspace?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:31.3912968Z {"timestamp":"2026-11-24T18:35:31.390761+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_admission","request_id":"system","event":"trade_admission","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":103645184,"limit_bytes":2147483648,"raw_headroom_bytes":2043838464,"clean_inactive_file_bytes":626688,"conditional_file_credit_bytes":313344,"admission_headroom_bytes":2044151808,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"recovery":null}}
+2026-11-24T18:35:31.4296198Z {"timestamp":"2026-11-24T18:35:31.429084+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_execution_finished","request_id":"system","event":"trade_execution_finished","duration_ms":38.908,"diagnostic":{"schema":"trade-resource-v1","outcome":"complete"}}
+2026-11-24T18:35:31.4304885Z {"timestamp":"2026-11-24T18:35:31.430092+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/trades/evaluate \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:31.4407408Z {"timestamp":"2026-11-24T18:35:31.440369+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:31.4541322Z {"timestamp":"2026-11-24T18:35:31.453803+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:31.4917390Z {"timestamp":"2026-11-24T18:35:31.491336+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:31.5054458Z {"timestamp":"2026-11-24T18:35:31.505045+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:31.5380604Z {"timestamp":"2026-11-24T18:35:31.537730+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/teams/1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:31.5493059Z {"timestamp":"2026-11-24T18:35:31.548894+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:31.5574615Z {"timestamp":"2026-11-24T18:35:31.557029+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1&offer=d932c4217cb3dfb19ef2ff0b941ef1562949f367 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:31.7359024Z .{"timestamp":"2026-11-24T18:35:31.734999+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":106196992,"limit_bytes":2147483648,"raw_headroom_bytes":2041286656,"clean_inactive_file_bytes":626688,"conditional_file_credit_bytes":313344,"admission_headroom_bytes":2041600000,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+2026-11-24T18:35:31.7379695Z {"timestamp":"2026-11-24T18:35:31.737640+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/workspace?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:31.7454978Z {"timestamp":"2026-11-24T18:35:31.743349+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_admission","request_id":"system","event":"trade_admission","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":106344448,"limit_bytes":2147483648,"raw_headroom_bytes":2041139200,"clean_inactive_file_bytes":626688,"conditional_file_credit_bytes":313344,"admission_headroom_bytes":2041452544,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"recovery":null}}
+2026-11-24T18:35:31.7814822Z {"timestamp":"2026-11-24T18:35:31.780971+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_execution_finished","request_id":"system","event":"trade_execution_finished","duration_ms":38.225,"diagnostic":{"schema":"trade-resource-v1","outcome":"complete"}}
+2026-11-24T18:35:31.7823913Z {"timestamp":"2026-11-24T18:35:31.781984+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/trades/evaluate \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:31.7932746Z {"timestamp":"2026-11-24T18:35:31.792857+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:31.8073890Z {"timestamp":"2026-11-24T18:35:31.807010+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:31.8486636Z {"timestamp":"2026-11-24T18:35:31.848202+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 409 Conflict\"","request_id":"system"}
+2026-11-24T18:35:32.0230560Z .{"timestamp":"2026-11-24T18:35:32.022450+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":107925504,"limit_bytes":2147483648,"raw_headroom_bytes":2039558144,"clean_inactive_file_bytes":626688,"conditional_file_credit_bytes":313344,"admission_headroom_bytes":2039871488,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+2026-11-24T18:35:32.0248956Z {"timestamp":"2026-11-24T18:35:32.024512+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/workspace?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:32.0304402Z {"timestamp":"2026-11-24T18:35:32.029858+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_admission","request_id":"system","event":"trade_admission","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":107900928,"limit_bytes":2147483648,"raw_headroom_bytes":2039582720,"clean_inactive_file_bytes":626688,"conditional_file_credit_bytes":313344,"admission_headroom_bytes":2039896064,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"recovery":null}}
+2026-11-24T18:35:32.0675046Z {"timestamp":"2026-11-24T18:35:32.066963+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_execution_finished","request_id":"system","event":"trade_execution_finished","duration_ms":37.675,"diagnostic":{"schema":"trade-resource-v1","outcome":"complete"}}
+2026-11-24T18:35:32.0682145Z {"timestamp":"2026-11-24T18:35:32.067812+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/trades/evaluate \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:32.0793728Z {"timestamp":"2026-11-24T18:35:32.078990+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:32.0927704Z {"timestamp":"2026-11-24T18:35:32.092338+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:32.1304757Z {"timestamp":"2026-11-24T18:35:32.130057+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 409 Conflict\"","request_id":"system"}
+2026-11-24T18:35:32.3163626Z ...{"timestamp":"2026-11-24T18:35:32.315697+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":110268416,"limit_bytes":2147483648,"raw_headroom_bytes":2037215232,"clean_inactive_file_bytes":626688,"conditional_file_credit_bytes":313344,"admission_headroom_bytes":2037528576,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+2026-11-24T18:35:32.3183557Z {"timestamp":"2026-11-24T18:35:32.317997+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/workspace?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:32.3239859Z {"timestamp":"2026-11-24T18:35:32.323491+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_admission","request_id":"system","event":"trade_admission","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":109977600,"limit_bytes":2147483648,"raw_headroom_bytes":2037506048,"clean_inactive_file_bytes":626688,"conditional_file_credit_bytes":313344,"admission_headroom_bytes":2037819392,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"recovery":null}}
+2026-11-24T18:35:32.3620964Z {"timestamp":"2026-11-24T18:35:32.361593+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_execution_finished","request_id":"system","event":"trade_execution_finished","duration_ms":38.729,"diagnostic":{"schema":"trade-resource-v1","outcome":"complete"}}
+2026-11-24T18:35:32.3628720Z {"timestamp":"2026-11-24T18:35:32.362563+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/trades/evaluate \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:32.3732751Z {"timestamp":"2026-11-24T18:35:32.372868+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:32.3863242Z {"timestamp":"2026-11-24T18:35:32.385932+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:32.4237677Z {"timestamp":"2026-11-24T18:35:32.423373+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:32.4373005Z {"timestamp":"2026-11-24T18:35:32.436886+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:32.4705172Z {"timestamp":"2026-11-24T18:35:32.470031+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/teams/1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:32.7966391Z Validation Chromium: /ms-playwright/chromium-1243/chrome-linux64/chrome
+2026-11-24T18:35:32.9669600Z Validation Chromium version: 153.0.8010.12
+2026-11-24T18:35:33.0426790Z {"timestamp":"2026-11-24T18:35:33.042012+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/ \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:33.2422001Z {"timestamp":"2026-11-24T18:35:33.241625+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:33.2430520Z {"timestamp":"2026-11-24T18:35:33.242438+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"368b8615059140ccb04363b518f24bd2","event":"request_complete","duration_ms":172.141,"status_code":200,"method":"GET","path":"/static/css/contextual_navigation.css"}
+2026-11-24T18:35:33.2494524Z {"timestamp":"2026-11-24T18:35:33.249018+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:33.2503326Z {"timestamp":"2026-11-24T18:35:33.249687+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"00914415f6fb419ca1d6d25e94421a5b","event":"request_complete","duration_ms":2.042,"status_code":200,"method":"GET","path":"/static/js/contextual_navigation.js"}
+2026-11-24T18:35:33.2557571Z {"timestamp":"2026-11-24T18:35:33.255394+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/strategy_session.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:33.2610576Z {"timestamp":"2026-11-24T18:35:33.260718+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/home-opportunities.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:33.2669476Z {"timestamp":"2026-11-24T18:35:33.266616+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:33.2683623Z {"timestamp":"2026-11-24T18:35:33.267317+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"87be58fc38bc471f92f8ae72be80c84a","event":"request_complete","duration_ms":2.346,"status_code":200,"method":"GET","path":"/static/css/matchups.css"}
+2026-11-24T18:35:33.2738287Z {"timestamp":"2026-11-24T18:35:33.273418+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/trade_workspace.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:33.2946478Z {"timestamp":"2026-11-24T18:35:33.294049+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1&protected=%5B%5D&excluded=%5B%5D \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:33.4001498Z {"timestamp":"2026-11-24T18:35:33.399700+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/ \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:33.4198733Z {"timestamp":"2026-11-24T18:35:33.419269+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:33.4204645Z {"timestamp":"2026-11-24T18:35:33.419882+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"9556228db7c04d0f8c34975503ee7213","event":"request_complete","duration_ms":2.556,"status_code":200,"method":"GET","path":"/static/css/contextual_navigation.css"}
+2026-11-24T18:35:33.4260231Z {"timestamp":"2026-11-24T18:35:33.425642+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:33.4270283Z {"timestamp":"2026-11-24T18:35:33.426355+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"3b833828fcca404f94255cb3c5cd8f67","event":"request_complete","duration_ms":1.984,"status_code":200,"method":"GET","path":"/static/js/contextual_navigation.js"}
+2026-11-24T18:35:33.4322972Z {"timestamp":"2026-11-24T18:35:33.431855+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/strategy_session.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:33.4379568Z {"timestamp":"2026-11-24T18:35:33.437550+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/home-opportunities.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:33.4434100Z {"timestamp":"2026-11-24T18:35:33.443004+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:33.4442512Z {"timestamp":"2026-11-24T18:35:33.443721+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"2b0811d903bc4485a9ca44d10d7b5e30","event":"request_complete","duration_ms":2.078,"status_code":200,"method":"GET","path":"/static/css/matchups.css"}
+2026-11-24T18:35:33.4497507Z {"timestamp":"2026-11-24T18:35:33.449301+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/trade_workspace.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:33.4674043Z {"timestamp":"2026-11-24T18:35:33.466815+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1&protected=%5B%5D&excluded=%5B%5D \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:33.5585084Z {"timestamp":"2026-11-24T18:35:33.557884+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1&protected=%5B%5D&excluded=%5B%5D \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:33.5720567Z {"timestamp":"2026-11-24T18:35:33.571621+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1&protected=%5B%5D&excluded=%5B%5D \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:34.2757463Z .{"timestamp":"2026-11-24T18:35:34.274876+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":120418304,"limit_bytes":2147483648,"raw_headroom_bytes":2027065344,"clean_inactive_file_bytes":626688,"conditional_file_credit_bytes":313344,"admission_headroom_bytes":2027378688,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+2026-11-24T18:35:34.2777160Z {"timestamp":"2026-11-24T18:35:34.277340+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/workspace?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:34.2834725Z {"timestamp":"2026-11-24T18:35:34.282590+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_admission","request_id":"system","event":"trade_admission","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":120655872,"limit_bytes":2147483648,"raw_headroom_bytes":2026827776,"clean_inactive_file_bytes":626688,"conditional_file_credit_bytes":313344,"admission_headroom_bytes":2027141120,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"recovery":null}}
+2026-11-24T18:35:34.3202242Z {"timestamp":"2026-11-24T18:35:34.319781+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_execution_finished","request_id":"system","event":"trade_execution_finished","duration_ms":37.801,"diagnostic":{"schema":"trade-resource-v1","outcome":"complete"}}
+2026-11-24T18:35:34.3210925Z {"timestamp":"2026-11-24T18:35:34.320696+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/trades/evaluate \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:34.3316802Z {"timestamp":"2026-11-24T18:35:34.331119+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:34.3449064Z {"timestamp":"2026-11-24T18:35:34.344498+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:34.3826639Z {"timestamp":"2026-11-24T18:35:34.382223+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:34.3959169Z {"timestamp":"2026-11-24T18:35:34.395513+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:34.4287530Z {"timestamp":"2026-11-24T18:35:34.428389+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/teams/1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:34.7566600Z Validation Chromium: /ms-playwright/chromium-1243/chrome-linux64/chrome
+2026-11-24T18:35:34.8338181Z Validation Chromium version: 153.0.8010.12
+2026-11-24T18:35:34.9175210Z {"timestamp":"2026-11-24T18:35:34.915753+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/ \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:34.9447352Z {"timestamp":"2026-11-24T18:35:34.944156+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:34.9467326Z {"timestamp":"2026-11-24T18:35:34.945575+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"94d1d72b20ac45b49fc8752410f07ac7","event":"request_complete","duration_ms":3.455,"status_code":200,"method":"GET","path":"/static/css/contextual_navigation.css"}
+2026-11-24T18:35:34.9529246Z {"timestamp":"2026-11-24T18:35:34.952337+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:34.9537640Z {"timestamp":"2026-11-24T18:35:34.953254+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"0f1499507108490eaa792394c493860b","event":"request_complete","duration_ms":2.937,"status_code":200,"method":"GET","path":"/static/js/contextual_navigation.js"}
+2026-11-24T18:35:34.9607485Z {"timestamp":"2026-11-24T18:35:34.960275+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/strategy_session.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:34.9670666Z {"timestamp":"2026-11-24T18:35:34.966465+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/home-opportunities.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:34.9735850Z {"timestamp":"2026-11-24T18:35:34.972991+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:34.9757975Z {"timestamp":"2026-11-24T18:35:34.974935+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"93b2331c9d304334b13b441d3ab5deeb","event":"request_complete","duration_ms":3.885,"status_code":200,"method":"GET","path":"/static/css/matchups.css"}
+2026-11-24T18:35:34.9823440Z {"timestamp":"2026-11-24T18:35:34.981850+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/trade_workspace.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:35.0283060Z {"timestamp":"2026-11-24T18:35:35.027741+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1&protected=%5B%5D&excluded=%5B%5D \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:35.2783508Z {"timestamp":"2026-11-24T18:35:35.277744+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/create?front_office=1&home_offer=8bd3025f8e9087da95eb56662e93f6f4e93befbc \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:35.3003513Z {"timestamp":"2026-11-24T18:35:35.299479+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:35.3010775Z {"timestamp":"2026-11-24T18:35:35.300526+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"97e5ee58b2374e708960bb98357705e0","event":"request_complete","duration_ms":3.147,"status_code":200,"method":"GET","path":"/static/css/contextual_navigation.css"}
+2026-11-24T18:35:35.3073181Z {"timestamp":"2026-11-24T18:35:35.306930+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:35.3082339Z {"timestamp":"2026-11-24T18:35:35.307627+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"9cd513c81c3244be8af83f0d1a9feb7c","event":"request_complete","duration_ms":2.215,"status_code":200,"method":"GET","path":"/static/js/contextual_navigation.js"}
+2026-11-24T18:35:35.3147028Z {"timestamp":"2026-11-24T18:35:35.314312+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/trade_workspace.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:35.3211600Z {"timestamp":"2026-11-24T18:35:35.319918+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/strategy_session.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:35.3547346Z {"timestamp":"2026-11-24T18:35:35.354135+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/trade_comparison.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:35.3557662Z {"timestamp":"2026-11-24T18:35:35.355040+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"00dd0c2e255d4bb1aba36ae2179d6671","event":"request_complete","duration_ms":31.0,"status_code":200,"method":"GET","path":"/static/js/trade_comparison.js"}
+2026-11-24T18:35:35.3611373Z {"timestamp":"2026-11-24T18:35:35.360762+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/trade_workspace.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:35.3894076Z {"timestamp":"2026-11-24T18:35:35.388829+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":299667456,"limit_bytes":2147483648,"raw_headroom_bytes":1847816192,"clean_inactive_file_bytes":0,"conditional_file_credit_bytes":0,"admission_headroom_bytes":1847816192,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+2026-11-24T18:35:35.3912436Z {"timestamp":"2026-11-24T18:35:35.390794+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/workspace?front_office=1&mode=calculator \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:35.4125438Z {"timestamp":"2026-11-24T18:35:35.411906+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1&offer=8bd3025f8e9087da95eb56662e93f6f4e93befbc&protected=%5B%5D&excluded=%5B%5D \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:35.6179493Z {"timestamp":"2026-11-24T18:35:35.617412+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/ \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:35.6414916Z {"timestamp":"2026-11-24T18:35:35.640990+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:35.6420998Z {"timestamp":"2026-11-24T18:35:35.641552+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"a6e89ee13da548a68bbc5315b976e03b","event":"request_complete","duration_ms":2.132,"status_code":200,"method":"GET","path":"/static/css/contextual_navigation.css"}
+2026-11-24T18:35:35.6473682Z {"timestamp":"2026-11-24T18:35:35.646931+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:35.6488628Z {"timestamp":"2026-11-24T18:35:35.647753+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"8f5bd0c1a9c94d97a9272741cddaec2f","event":"request_complete","duration_ms":2.097,"status_code":200,"method":"GET","path":"/static/js/contextual_navigation.js"}
+2026-11-24T18:35:35.6544273Z {"timestamp":"2026-11-24T18:35:35.653744+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/strategy_session.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:35.6590100Z {"timestamp":"2026-11-24T18:35:35.658679+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/home-opportunities.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:35.6643688Z {"timestamp":"2026-11-24T18:35:35.664005+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:35.6652523Z {"timestamp":"2026-11-24T18:35:35.664724+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"88f6c202f3c845a395914e1027491b3f","event":"request_complete","duration_ms":2.097,"status_code":200,"method":"GET","path":"/static/css/matchups.css"}
+2026-11-24T18:35:35.6709863Z {"timestamp":"2026-11-24T18:35:35.670598+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/trade_workspace.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:35.6873366Z {"timestamp":"2026-11-24T18:35:35.686790+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1&protected=%5B%5D&excluded=%5B%5D \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:35.7946604Z {"timestamp":"2026-11-24T18:35:35.794091+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/create?front_office=1&home_offer=8bd3025f8e9087da95eb56662e93f6f4e93befbc \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:35.8181516Z {"timestamp":"2026-11-24T18:35:35.817667+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:35.8189585Z {"timestamp":"2026-11-24T18:35:35.818364+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"9b4eed80f52543f5982e1999778a8ee9","event":"request_complete","duration_ms":2.328,"status_code":200,"method":"GET","path":"/static/css/contextual_navigation.css"}
+2026-11-24T18:35:35.8243246Z {"timestamp":"2026-11-24T18:35:35.823900+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:35.8256672Z {"timestamp":"2026-11-24T18:35:35.824724+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"81d9c40e3c9a4f67bfc6b704c57ee7bf","event":"request_complete","duration_ms":2.117,"status_code":200,"method":"GET","path":"/static/js/contextual_navigation.js"}
+2026-11-24T18:35:35.8308219Z {"timestamp":"2026-11-24T18:35:35.830451+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/trade_workspace.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:35.8367385Z {"timestamp":"2026-11-24T18:35:35.836228+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/strategy_session.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:35.8439646Z {"timestamp":"2026-11-24T18:35:35.843136+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/trade_comparison.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:35.8448752Z {"timestamp":"2026-11-24T18:35:35.844118+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"65b96b794fa343468aa46e95f47bf7bd","event":"request_complete","duration_ms":2.831,"status_code":200,"method":"GET","path":"/static/js/trade_comparison.js"}
+2026-11-24T18:35:35.8510883Z {"timestamp":"2026-11-24T18:35:35.850641+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/trade_workspace.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:35.8766740Z {"timestamp":"2026-11-24T18:35:35.875949+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":332865536,"limit_bytes":2147483648,"raw_headroom_bytes":1814618112,"clean_inactive_file_bytes":0,"conditional_file_credit_bytes":0,"admission_headroom_bytes":1814618112,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+2026-11-24T18:35:35.8786824Z {"timestamp":"2026-11-24T18:35:35.878272+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/workspace?front_office=1&mode=calculator \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:35.8970495Z {"timestamp":"2026-11-24T18:35:35.896338+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1&offer=8bd3025f8e9087da95eb56662e93f6f4e93befbc&protected=%5B%5D&excluded=%5B%5D \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:36.0564842Z {"timestamp":"2026-11-24T18:35:36.056024+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/ \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:36.0738590Z {"timestamp":"2026-11-24T18:35:36.073325+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:36.0748682Z {"timestamp":"2026-11-24T18:35:36.074160+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"c12cebb4622d4f90a0eff6e0880f5b61","event":"request_complete","duration_ms":2.442,"status_code":200,"method":"GET","path":"/static/css/contextual_navigation.css"}
+2026-11-24T18:35:36.0804085Z {"timestamp":"2026-11-24T18:35:36.079995+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:36.0813836Z {"timestamp":"2026-11-24T18:35:36.080719+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"3c21bd4785e0484c96ff4249dcb4ecbb","event":"request_complete","duration_ms":2.024,"status_code":200,"method":"GET","path":"/static/js/contextual_navigation.js"}
+2026-11-24T18:35:36.0870880Z {"timestamp":"2026-11-24T18:35:36.086723+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/strategy_session.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:36.0919911Z {"timestamp":"2026-11-24T18:35:36.091641+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/home-opportunities.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:36.0972856Z {"timestamp":"2026-11-24T18:35:36.096823+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:36.0981253Z {"timestamp":"2026-11-24T18:35:36.097514+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"36efbdb4623545849ad63d0dc58cd693","event":"request_complete","duration_ms":1.791,"status_code":200,"method":"GET","path":"/static/css/matchups.css"}
+2026-11-24T18:35:36.1041265Z {"timestamp":"2026-11-24T18:35:36.103671+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/trade_workspace.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:36.1250268Z {"timestamp":"2026-11-24T18:35:36.124500+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1&protected=%5B%5D&excluded=%5B%5D \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:36.3779659Z {"timestamp":"2026-11-24T18:35:36.377442+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/create?front_office=1&home_offer=8bd3025f8e9087da95eb56662e93f6f4e93befbc \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:36.3985048Z {"timestamp":"2026-11-24T18:35:36.397921+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:36.3991933Z {"timestamp":"2026-11-24T18:35:36.398693+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"86080b01a2804f67934709c64e211f12","event":"request_complete","duration_ms":2.612,"status_code":200,"method":"GET","path":"/static/css/contextual_navigation.css"}
+2026-11-24T18:35:36.4044537Z {"timestamp":"2026-11-24T18:35:36.404060+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:36.4053175Z {"timestamp":"2026-11-24T18:35:36.404687+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"be9215d4954440209d5563d0553ac341","event":"request_complete","duration_ms":1.842,"status_code":200,"method":"GET","path":"/static/js/contextual_navigation.js"}
+2026-11-24T18:35:36.4099500Z {"timestamp":"2026-11-24T18:35:36.409596+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/trade_workspace.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:36.4163467Z {"timestamp":"2026-11-24T18:35:36.415160+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/strategy_session.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:36.4223866Z {"timestamp":"2026-11-24T18:35:36.421930+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/trade_comparison.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:36.4235415Z {"timestamp":"2026-11-24T18:35:36.422913+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"dbf1be24c68d43c19fc7f4f4c9897038","event":"request_complete","duration_ms":3.376,"status_code":200,"method":"GET","path":"/static/js/trade_comparison.js"}
+2026-11-24T18:35:36.4295357Z {"timestamp":"2026-11-24T18:35:36.429124+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/trade_workspace.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:36.4644518Z {"timestamp":"2026-11-24T18:35:36.463649+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":312786944,"limit_bytes":2147483648,"raw_headroom_bytes":1834696704,"clean_inactive_file_bytes":0,"conditional_file_credit_bytes":0,"admission_headroom_bytes":1834696704,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+2026-11-24T18:35:36.4664449Z {"timestamp":"2026-11-24T18:35:36.465975+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/workspace?front_office=1&mode=calculator \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:36.4866928Z {"timestamp":"2026-11-24T18:35:36.486110+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1&offer=8bd3025f8e9087da95eb56662e93f6f4e93befbc&protected=%5B%5D&excluded=%5B%5D \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:36.5999101Z {"timestamp":"2026-11-24T18:35:36.599372+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/ \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:36.6219365Z {"timestamp":"2026-11-24T18:35:36.621375+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:36.6229127Z {"timestamp":"2026-11-24T18:35:36.622247+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"b8703041d8d747ac8a081185b6d13e0a","event":"request_complete","duration_ms":2.572,"status_code":200,"method":"GET","path":"/static/css/contextual_navigation.css"}
+2026-11-24T18:35:36.6284720Z {"timestamp":"2026-11-24T18:35:36.627896+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:36.6291026Z {"timestamp":"2026-11-24T18:35:36.628579+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"ca0a938dc3074f3b9a2233279b546ef5","event":"request_complete","duration_ms":2.097,"status_code":200,"method":"GET","path":"/static/js/contextual_navigation.js"}
+2026-11-24T18:35:36.6354136Z {"timestamp":"2026-11-24T18:35:36.634860+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/strategy_session.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:36.6407232Z {"timestamp":"2026-11-24T18:35:36.640385+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/home-opportunities.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:36.6462259Z {"timestamp":"2026-11-24T18:35:36.645880+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:36.6470464Z {"timestamp":"2026-11-24T18:35:36.646489+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"dba55c7ca1854ce3ac96dbf0db6ffef6","event":"request_complete","duration_ms":1.879,"status_code":200,"method":"GET","path":"/static/css/matchups.css"}
+2026-11-24T18:35:36.6534114Z {"timestamp":"2026-11-24T18:35:36.652939+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/trade_workspace.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:36.6709902Z {"timestamp":"2026-11-24T18:35:36.670502+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1&protected=%5B%5D&excluded=%5B%5D \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:36.7772084Z {"timestamp":"2026-11-24T18:35:36.776634+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/create?front_office=1&home_offer=8bd3025f8e9087da95eb56662e93f6f4e93befbc \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:36.7956600Z {"timestamp":"2026-11-24T18:35:36.795147+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:36.7963238Z {"timestamp":"2026-11-24T18:35:36.795805+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"e59559934cc4403488d6e6ae49c82e22","event":"request_complete","duration_ms":2.421,"status_code":200,"method":"GET","path":"/static/css/contextual_navigation.css"}
+2026-11-24T18:35:36.8019309Z {"timestamp":"2026-11-24T18:35:36.801475+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:36.8035935Z {"timestamp":"2026-11-24T18:35:36.802526+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"d8d1a2d9007d4464ac9d5f26cbdabab4","event":"request_complete","duration_ms":2.525,"status_code":200,"method":"GET","path":"/static/js/contextual_navigation.js"}
+2026-11-24T18:35:36.8088585Z {"timestamp":"2026-11-24T18:35:36.808442+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/trade_workspace.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:36.8146522Z {"timestamp":"2026-11-24T18:35:36.814055+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/strategy_session.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:36.8223845Z {"timestamp":"2026-11-24T18:35:36.821715+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/trade_comparison.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:36.8232087Z {"timestamp":"2026-11-24T18:35:36.822608+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"352cf0f4d197460ca2ede757d73e6958","event":"request_complete","duration_ms":2.206,"status_code":200,"method":"GET","path":"/static/js/trade_comparison.js"}
+2026-11-24T18:35:36.8299376Z {"timestamp":"2026-11-24T18:35:36.829391+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/trade_workspace.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:36.8550179Z {"timestamp":"2026-11-24T18:35:36.854280+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":352387072,"limit_bytes":2147483648,"raw_headroom_bytes":1795096576,"clean_inactive_file_bytes":0,"conditional_file_credit_bytes":0,"admission_headroom_bytes":1795096576,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+2026-11-24T18:35:36.8571596Z {"timestamp":"2026-11-24T18:35:36.856718+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/workspace?front_office=1&mode=calculator \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:36.8752193Z {"timestamp":"2026-11-24T18:35:36.874618+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1&offer=8bd3025f8e9087da95eb56662e93f6f4e93befbc&protected=%5B%5D&excluded=%5B%5D \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:37.0322477Z {"timestamp":"2026-11-24T18:35:37.031778+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/ \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:37.0491125Z {"timestamp":"2026-11-24T18:35:37.048552+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:37.0500202Z {"timestamp":"2026-11-24T18:35:37.049248+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"062d2cdc8dc9404aaf334b5df8a8e5d6","event":"request_complete","duration_ms":2.806,"status_code":200,"method":"GET","path":"/static/css/contextual_navigation.css"}
+2026-11-24T18:35:37.0565304Z {"timestamp":"2026-11-24T18:35:37.056063+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+2026-11-24T18:35:37.0574167Z {"timestamp":"2026-11-24T18:35:37.056777+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"f273ae3b3ef141f7b53beb7c29b47a50","event":"request_complete","duration_ms":2.677,"status_code":200,"method":"GET","path":"/static/js/contextual_navigation.js"}
+2026-11-24T18:35:37.0624057Z {"timestamp":"2026-11-24T18:35:37.061957+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/strategy_session.js \"HTT

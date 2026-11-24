@@ -1,0 +1,40 @@
+{
+  "container": "376fd586ae4f99a915535ee46607acb6c4fdb893066085c6ec66ca363ef5012e",
+  "source": {
+    "candidate": "aa4ff31ded3c1412019942d3b2d0810b6516d71c",
+    "tree": "0b84f62d3e0fea44d21d2e9327ce6808d8fe52bb",
+    "baseline": "026a46dee6d1c1c454d90b994c6b72689694d16b",
+    "baseline_tree": "9db7d69eadc1e960f65174deab22f4f0e85d47e1",
+    "branch": "feat/trade-center-redesign-2279",
+    "version": "1.22.64",
+    "build": 2279,
+    "expected_test_count": 4678,
+    "pr": 368
+  },
+  "files": [
+    {
+      "name": "runner.py",
+      "sha256": "574308d9f64252575970aa19ce113f603ccb9927f2c6a523e8c228869fd37cac"
+    },
+    {
+      "name": "observer/sitecustomize.py",
+      "sha256": "3f43288a099e49a3ed2dea36f977b596707589eaefd2656b40a3b9c6533be2d4"
+    }
+  ],
+  "created_at": "2026-11-24T18:49:34.475740+00:00",
+  "command": [
+    "bash",
+    "/workspace/2279-trade-center/docker-validation.sh",
+    "create",
+    "dtos-canonical-2279",
+    "/workspace/dtos-trade-center-2279",
+    "/workspace/2279-trade-center/local-canonical",
+    "/dev/shm/dtos-2279-canonical-aa4ff31d",
+    "python",
+    "/output/runner.py"
+  ],
+  "wrapper_sha256": "1ef65ac4006b9b384fe7a2ebdc27f95639f104173f00e932438d43486719ec13",
+  "fixture_free_after_container_creation": 9010216960,
+  "toolchain": "Read-only /usr and browser settings mounts from the pinned existing matching image. Thin bookworm container root avoids needless VFS copies. Real 2 GiB, 2 CPUs and no network.",
+  "status": "RUNNING_NOT_PASSED"
+}
