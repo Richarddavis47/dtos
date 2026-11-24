@@ -1,14 +1,10 @@
-# DTOS signed-in Home · build 2276 candidate
+# DTOS signed-in Home · build 2276
 
-The approved iPhone mockup supplies the visual hierarchy. The candidate uses existing prepared evidence. Browser images come from disposable fixtures.
+Production is running [immutable v1.22.61 / build 2276](https://github.com/Richarddavis47/dtos/releases/tag/v1.22.61). Home highlights one supported next action and keeps the existing team and trade intelligence available from its original workflows and Home disclosures.
 
-- [Baseline screenshots](before/)
-- [Candidate screenshots](after/)
-- [Original validation records](originals/)
-- [Exact source](source.json)
-- [Scout acceptance](SCOUT_HANDOFF.md)
-- [Checksums](SHA256SUMS)
+- [Before screenshots](before/) · [After screenshots](after/) · [Standing visual review](screenshots/standing-review/)
+- [Original validation logs and checksums](originals/) · [Earlier attempts](originals/superseded/)
+- [Source identity](source.json) · [Guarded release and production verification](release/)
+- [Scout acceptance](SCOUT_HANDOFF.md) · [Checksums](SHA256SUMS)
 
-The base build is v1.22.60 / 2275. PR #365 is gated on full local and hosted validation and guarded publication. This directory makes no signed-in production or physical iPhone/Safari claim.
-
-The [shared-header integration result](originals/shared-header/) records the original smoke failure and the passing focused correction. Earlier screenshots demonstrate the design before the two nonvisual design-system attributes were restored. Fresh candidate screenshots will document final acceptance.
+Screenshots use disposable Chromium fixtures. The final deployment checks use public, read-only production endpoints. Signed-in production owner acceptance and physical iPhone/Safari remain open.
